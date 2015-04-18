@@ -5,21 +5,19 @@
 CONFIG=/etc/ossim.conf
 OSSIM_PATH=`grep ^base_dir $CONFIG | cut -d= -f 2`
 LOG=`grep ^ossim_log $CONFIG | cut -d= -f 2`
-OUT_LOG=$OSSIM_PATH/parser/parser.log
 
 # End of configuration
 
 
-# test -x $OSSIM_PATH//parser/parser || exit 0
 test -x $OSSIM_PATH/server/server || exit 0
 
 case "$1" in
      start)
 	echo "Starting Open Source Security Information Management: OSSIM"
 
-    # start ossim server 
+    # start ossim server
     cd $OSSIM_PATH/server
-	./server  >> $OUT_LOG &
+	./server &
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/

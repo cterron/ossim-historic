@@ -65,7 +65,7 @@
   </table>
 
 <p><i>* You must share dsa keys between hosts in order to use this
-functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partially broken. Use with care or fix.</i></p>
+functionality</i><br/><i>(see README.sensors for more details).</i></p>
 
 </body>
 </html>

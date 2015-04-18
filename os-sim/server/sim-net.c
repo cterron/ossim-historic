@@ -1,32 +1,53 @@
-/**
+/* Copyright (c) 2003 ossim.net
+ * All rights reserved.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *    from the author.
+ *
+ * 4. Products derived from this software may not be called "Os-sim" nor
+ *    may "Os-sim" appear in their names without specific prior written
+ *    permission from the author.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <netdb.h>
 #include <config.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include "sim-database.h"
-#include "sim-host.h"
+ 
 #include "sim-net.h"
 
-enum 
+enum
 {
   DESTROY,
   LAST_SIGNAL
 };
 
 struct _SimNetPrivate {
-  gchar *name;
-  glong a;
-  glong c;
-  GList *hosts;
+  gchar           *name;
+  gchar           *ips;
+  gint             asset;
+
+  GList           *ias;
 };
 
 static gpointer parent_class = NULL;
@@ -34,12 +55,32 @@ static gint sim_net_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
+static void 
+sim_net_impl_dispose (GObject  *gobject)
+{
+  G_OBJECT_CLASS (parent_class)->dispose (gobject);
+}
+
+static void 
+sim_net_impl_finalize (GObject  *gobject)
+{
+  SimNet *net = SIM_NET (gobject);
+
+  g_free (net->_priv->name);
+  g_free (net->_priv->ips);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
+}
+
 static void
 sim_net_class_init (SimNetClass * class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
 
   parent_class = g_type_class_peek_parent (class);
+
+  object_class->dispose = sim_net_impl_dispose;
+  object_class->finalize = sim_net_impl_finalize;
 }
 
 static void
@@ -48,9 +89,10 @@ sim_net_instance_init (SimNet *net)
   net->_priv = g_new0 (SimNetPrivate, 1);
 
   net->_priv->name = NULL;
-  net->_priv->c = 0;
-  net->_priv->a = 0;
-  net->_priv->hosts = NULL;
+  net->_priv->ips = NULL;
+  net->_priv->asset = 0;
+
+  net->_priv->ias = NULL;
 }
 
 /* Public Methods */
@@ -90,18 +132,54 @@ sim_net_get_type (void)
  *
  */
 SimNet*
-sim_net_new (gchar  *name,
-	     gint    c,
-	     gint    a)
+sim_net_new (gchar   *name,
+	     gchar   *ips,
+	     gint     asset)
 {
   SimNet *net = NULL;
 
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (name, NULL);
+  g_return_val_if_fail (ips, NULL);
 
   net = SIM_NET (g_object_new (SIM_TYPE_NET, NULL));
   net->_priv->name = name;
-  net->_priv->c = c;
-  net->_priv->a = a;
+  net->_priv->ips = ips;
+  net->_priv->asset = asset;
+
+  return net;
+}
+
+/*
+ *
+ *
+ *
+ */
+SimNet*
+sim_net_new_from_dm (GdaDataModel  *dm,
+		     gint           row)
+{
+  SimNet     *net;
+  GdaValue   *value;
+  gchar      *ips;
+  gchar      *name;
+  gint        asset;
+
+  g_return_val_if_fail (dm, NULL);
+  g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
+
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+  name = gda_value_stringify (value);
+
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+  ips = gda_value_stringify (value);
+  
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
+  asset = gda_value_get_integer (value);
+
+  net = SIM_NET (g_object_new (SIM_TYPE_NET, NULL));
+  net->_priv->name = name;
+  net->_priv->ips = ips;
+  net->_priv->asset = asset;
 
   return net;
 }
@@ -112,9 +190,9 @@ sim_net_new (gchar  *name,
  *
  */
 gchar*
-sim_net_get_name (SimNet         *net)
+sim_net_get_name (SimNet  *net)
 {
-  g_return_val_if_fail (net != NULL, NULL);
+  g_return_val_if_fail (net, NULL);
   g_return_val_if_fail (SIM_IS_NET (net), NULL);
 
   return net->_priv->name;
@@ -126,12 +204,12 @@ sim_net_get_name (SimNet         *net)
  *
  */
 void
-sim_net_set_name (SimNet          *net,
-		  gchar           *name)
+sim_net_set_name (SimNet      *net,
+		  gchar       *name)
 {
-  g_return_if_fail (net != NULL);
+  g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (name != NULL);
+  g_return_if_fail (name);
 
   net->_priv->name = name;
 }
@@ -142,12 +220,12 @@ sim_net_set_name (SimNet          *net,
  *
  */
 gint
-sim_net_get_c (SimNet  *net)
+sim_net_get_asset (SimNet  *net)
 {
-  g_return_val_if_fail (net != NULL, 0);
+  g_return_val_if_fail (net, 0);
   g_return_val_if_fail (SIM_IS_NET (net), 0);
 
-  return net->_priv->c;
+  return net->_priv->asset;
 }
 
 /*
@@ -156,27 +234,13 @@ sim_net_get_c (SimNet  *net)
  *
  */
 void
-sim_net_set_c (SimNet  *net,
-		gint      c)
+sim_net_set_asset (SimNet  *net,
+		   gint     asset)
 {
-  g_return_if_fail (net != NULL);
+  g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
 
-  net->_priv->c = c;
-}
-
-/*
- *
- *
- *
- */
-gint
-sim_net_get_a (SimNet  *net)
-{
-  g_return_val_if_fail (net != NULL, 0);
-  g_return_val_if_fail (SIM_IS_NET (net), 0);
-
-  return net->_priv->a;
+  net->_priv->asset = asset;
 }
 
 /*
@@ -185,13 +249,14 @@ sim_net_get_a (SimNet  *net)
  *
  */
 void
-sim_net_set_a (SimNet  *net,
-	       gint      a)
+sim_net_append_ia (SimNet     *net,
+		  GInetAddr  *ia)
 {
-  g_return_if_fail (net != NULL);
+  g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-
-  net->_priv->a = a;
+  g_return_if_fail (ia);
+  
+  net->_priv->ias = g_list_append (net->_priv->ias, ia);
 }
 
 /*
@@ -200,80 +265,14 @@ sim_net_set_a (SimNet  *net,
  *
  */
 void
-sim_net_add_host (SimNet          *net,
-		  GObject         *host)
+sim_net_remove_ia (SimNet   *net,
+		   GInetAddr  *ia)
 {
-  g_return_if_fail (net != NULL);
+  g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (host != NULL);
-  g_return_if_fail (SIM_IS_HOST (host));
+  g_return_if_fail (ia);
 
-  net->_priv->hosts = g_list_append (net->_priv->hosts, host);
-}
-
-/*
- *
- *
- *
- */
-void
-sim_net_add_host_ip (SimNet          *net,
-		     gchar           *ip)
-{
-  g_return_if_fail (net != NULL);
-  g_return_if_fail (SIM_IS_NET (net));
-
-  net->_priv->hosts = g_list_append (net->_priv->hosts, ip);
-}
-
-/*
- *
- *
- *
- */
-void
-sim_net_remove_host (SimNet          *net,
-		     GObject         *host)
-{
-  g_return_if_fail (net != NULL);
-  g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (host != NULL);
-  g_return_if_fail (SIM_IS_HOST (host));
-
-  net->_priv->hosts = g_list_remove (net->_priv->hosts, host);
-}
-
-/*
- *
- *
- *
- */
-gboolean
-sim_net_has_host (SimNet          *net,
-		  GObject         *host)
-{ 
-  struct in_addr  hip;
-  gchar          *ip;
-  gint i;
-
-  g_return_if_fail (net != NULL);
-  g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (host != NULL);
-  g_return_if_fail (SIM_IS_HOST (host));
-
-  for (i = 0; i < g_list_length (net->_priv->hosts); i++)
-    {
-      ip = (gchar *) g_list_nth_data (net->_priv->hosts, i);
-
-      hip = sim_host_get_ip (SIM_HOST (host));
-
-      if (!strcmp (inet_ntoa (hip), ip))
-	{
-	  return TRUE;
-	}
-    }
-
-  return FALSE;
+  net->_priv->ias = g_list_remove (net->_priv->ias, ia);
 }
 
 /*
@@ -282,12 +281,12 @@ sim_net_has_host (SimNet          *net,
  *
  */
 GList*
-sim_net_get_hosts (SimNet          *net)
+sim_net_get_ias (SimNet        *net)
 {
-  g_return_if_fail (net != NULL);
-  g_return_if_fail (SIM_IS_NET (net));
+  g_return_val_if_fail (net, NULL);
+  g_return_val_if_fail (SIM_IS_NET (net), NULL);
 
-  return net->_priv->hosts;
+  return net->_priv->ias;
 }
 
 /*
@@ -295,21 +294,28 @@ sim_net_get_hosts (SimNet          *net)
  *
  *
  */
-void
-sim_net_set_recovery (SimNet  *net,
-		       gint      recovery)
-{
-  g_return_if_fail (net != NULL);
+gboolean
+sim_net_has_ia (SimNet     *net,
+		GInetAddr  *ia)
+{ 
+  GList  *list;
+
+  g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (ia);
 
-  if (net->_priv->c > recovery)
-    net->_priv->c -= recovery;
-  else
-    net->_priv->c = 0;
+  list = net->_priv->ias;
+  while (list)
+    {
+      GInetAddr *cmp = (GInetAddr *) list->data;
 
-  if (net->_priv->a > recovery)
-    net->_priv->a -= recovery;
-  else
-    net->_priv->a = 0;
+      if (gnet_inetaddr_noport_equal (cmp, ia))
+	{
+	  return TRUE;
+	}
+
+      list = list->next;
+    }
+
+  return FALSE;
 }

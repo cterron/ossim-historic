@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<config>
+    <serverip>127.0.0.1</serverip>
+    <serverport>40001</serverport>
+    <plugins>
+
+        <!-- snort and spade plugin (syslog format) -->
+        <plugin name="snort" enable="yes">
+            <path>/usr/bin/snort</path>
+            <logfile>
+                <type>syslog</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+        
+        <!-- snort and spade plugin (fast format) -->
+        <plugin name="snort" enable="yes">
+            <path>/usr/bin/snort</path>
+            <logfile>
+                <type>fast</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+        
+        <!-- FireWall-1 plugin -->
+        <plugin name="fw-1" enable="yes">
+            <path></path>
+            <logfile>
+                <type>syslog</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+        
+        <!-- Apache plugin -->
+        <plugin name="apache" enable="yes">
+            <path></path>
+            <logfile>
+                <type>syslog</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+
+        <!-- IIS plugin -->
+        <plugin name="iis" enable="yes">
+            <path></path>
+            <logfile>
+                <type>syslog</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+
+        <!-- iptables plugin -->
+        <plugin name="iptables" enable="yes">
+            <path></path>
+            <logfile>
+                <type>syslog</type>
+                <location>auth.log</location>
+            </logfile>
+        </plugin>
+
+    </plugins>
+</config>
+

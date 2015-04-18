@@ -1,5 +1,4 @@
-This documentation is intended to get better over time, anyhow, this is beta 
-code. Install can become quite difficult at this time.
+Sorry, installation is even more difficult than on past releases. Mail us if you need help, this doc is incomplete.
 
 - Read CONFIG
 
@@ -17,6 +16,7 @@ satisfying all their dependencies:
 - Apache 1.3.28, php 4.3.3.
 - Snort 2.0.2
     - Spade latest (http://www.silicondefense.com)
+    - Hint: Use spade.more.conf as a base.
 - Nmap 3.48
 - Acid v0.9.6b23
 - Mrtg 2.9.29
@@ -24,6 +24,7 @@ satisfying all their dependencies:
 - Arpwatch 2.1a11
 
 Server deps:
+- Flex (soon to be removed)
 - From ftp.gnome.org/pub/GNOME/sources/:
     - latest glib2
         (note for debian users: install "libglib2.0-dev")
@@ -31,22 +32,28 @@ Server deps:
     - latest libgda
     - latest libxml2
     - latest libxslt
+- From www.gnetlibrary.org
+    - latest 2.x gnet (patched, patch included in /contrib/)
 - A quite new auto* version => 2.53
 
 
 - Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web
 server is able to read it.
 
-- Update your libgda config file with your DB information. Sample config
+- Create snort & acid DB's; use db/create_ossim_tables.pl after creating a
+database suitable for ossim (name it "ossim" or what you want, put it in
+/etc/ossim.conf)
+
+- Update your libgda config file with your information. Sample config
   included.
 
 - Notes about patched ntop: init rrd plugin, limit hosts to your LAN since the number of files (and space used) can grow very fast.
 
 After that:
 
-- Run $OSSIM_HOME/autogen.sh; make
+- Use scripts/readsids to update server/sids if you use additional snort rules.
+- compile server.
 - IMPORTANT: make sure any paths you can define at this point in /etc/ossim.conf are correct (snort_rules_path is needed to correctly setup the DB)
-- Create snort, snort-extra & acid DB's; use db/create_ossim_tables.pl after creating a database suitable for ossim (name it "ossim" or what you want, put it in /etc/ossim.conf)
 - Create the whole database structure (Acid, snort, snort-extra, os-sim)
 - start mysql
 - Edit /etc/snort.conf so it logs both to mysql & syslog.
@@ -61,8 +68,9 @@ After that:
   fire it up. (launch-mrtg) ($ossim_home/contrib/mrtg.diff)
 - try to launch launch-mrtg, note and correct any errors
 - put $ossim_home/etc/cron.d/mrtg in roots crontab (will be removed soon)
-- Edit /etc/ossim.conf and point ossim_log to snorts syslog file (/var/log/messages?).
+- Edit /etc/ossim.conf and point ossim_log to snorts syslog file (/var/log/messages?) if you want the server to read syslog data in directly.
 - $ossim_home/etc/init.d/ossim start
+- Edit agent/config.xml and edit server ip. Enable/disable plugins.
 - copy $ossim_home/scripts/draw_graph.pl to your cgi-bin directory.
 - Start apache
 - Start patched ntop
@@ -70,49 +78,7 @@ After that:
 - Start opennms (not needed as of today)
 - Point your browser at the web root.
 
-Note: The server reads its data from a standard text file. For remote
-logging/parsing we use syslog but you can use anything you want that logs in syslog-like format.
-
 Note2: Make sure everything is fine at /etc/ossim.conf...
 
 Please post any suggestions, help requests, etc. to the lists and forums
-provided by sourceforge or have a look at http://www.ossim.net.
-
-
---- Important notes when installing on separate machines --- (incomplete)
-
-Using the following setup:
-
-host-1=ntop,snort
-host-2=core,mysql,acid
-host-3=opennms,pgsql
-
-Do the following, besides everything mentioned above and in CONFIG.
-
-Host-1
-------
-- Copy ossim.conf 
-- Copy ossim_conf.pm and make it available to @perl
-- Install experimental rrdtool 
-- Patch ntop
-- Recompile ntop
-- Install p0f
-- Install mysql headers
-- Install perl DBI && DBD,
-- Copy os.pl
-- Copy check_rrd*.pl
-- Copy get_rrd_value.pl
-- Make sure ossim.conf points to correct ntop_rrd, base_dir, etc..
-- Edit etc/init.d/ossim, remove those you don't need, add ntop & snort.
-
-Host-2
-------
-- Install framework on host-2
-- Install experimental rrdtool on host-2
-- Install mrtg
-- Patch mrtg
-
-
-Host-3
-------
-- Nothing special as of today; opennms not integrated yet. Just install it.
+provided by sourceforge.

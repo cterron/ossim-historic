@@ -1,6 +1,35 @@
-/* Server
+/* Copyright (c) 2003 ossim.net
+ * All rights reserved.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *    from the author.
+ *
+ * 4. Products derived from this software may not be called "Os-sim" nor
+ *    may "Os-sim" appear in their names without specific prior written
+ *    permission from the author.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef __SIM_SERVER_H__
@@ -8,10 +37,9 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <netinet/in.h>
 
-#include "sim-enums.h"
-#include "sim-config.h"
+#include "sim-container.h"
+#include "sim-database.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,99 +68,14 @@ struct _SimServerClass {
   GObjectClass parent_class;
 };
 
-GType           sim_server_get_type                        (void);
-SimServer*      sim_server_new                             (SimConfig       *config);
+GType             sim_server_get_type                      (void);
+SimServer*        sim_server_new                           (SimContainer  *container,
+							    SimDatabase   *database);
 
-GObject*        sim_server_get_config                      (SimServer       *server);
-void            sim_server_set_config                      (SimServer       *server,
-							    GObject         *config);
-void            sim_server_db_load_config                  (SimServer       *server);
+void              sim_server_run                           (SimServer     *server);
 
-gint            sim_server_get_recovery                    (SimServer       *server);
-void            sim_server_set_recovery                    (SimServer       *server,
-							    gint             recovery);
+SimContainer*     sim_server_get_container                 (SimServer     *server);
 
-void            sim_server_run                             (SimServer       *server);
-
-/* Messages Functions */
-void            sim_server_push_tail_messages              (SimServer       *server,
-							    GObject         *message);
-GObject*        sim_server_pop_head_messages               (SimServer       *server);
-gint            sim_server_get_messages_num                (SimServer       *server);
-
-/* Policies Functions */
-void            sim_server_add_policy                      (SimServer       *server,
-							    GObject         *policy);
-void            sim_server_remove_policy                   (SimServer       *server,
-							    GObject         *policy);
-GList*          sim_server_get_policies                    (SimServer       *server);
-GObject*        sim_server_get_policy_by_match             (SimServer       *server,
-							    gint             date,
-							    gchar           *src_ip,
-							    gchar           *dst_ip,
-							    gint             port,
-							    SimProtocolType  protocol,
-							    gchar           *signature);
-
-/* Hosts Functions */
-void            sim_server_add_host                        (SimServer       *server,
-							    GObject         *phost);
-void            sim_server_remove_host                     (SimServer       *server,
-							    GObject         *host);
-GList*          sim_server_get_hosts                       (SimServer       *server);
-GList*          sim_server_get_hosts_by_net_name           (SimServer       *server,
-							    gchar           *net_name);
-GObject*        sim_server_get_host_by_ip                  (SimServer       *server,
-							    struct in_addr   ip);
-void            sim_server_set_hosts_recovery              (SimServer       *server,
-							    gint             recovery);
-gint            sim_server_db_insert_host                  (SimServer       *server,
-							    GObject         *host);
-gint            sim_server_db_update_host                  (SimServer       *server,
-							    GObject         *host);
-gint            sim_server_db_delete_host                  (SimServer       *server,
-							    GObject         *host);
-
-void            sim_server_add_host_asset                  (SimServer       *server,
-							    GObject         *host_asset);
-void            sim_server_remove_host_asset               (SimServer       *server,
-							    GObject         *host_asset);
-GList*          sim_server_get_host_assets                 (SimServer       *server);
-GObject*        sim_server_get_host_asset_by_ip            (SimServer       *server,
-							    struct in_addr   ip);
-
-/* Nets Functions */
-void            sim_server_add_net                         (SimServer       *server,
-							    GObject         *policy);
-void            sim_server_remove_net                      (SimServer       *server,
-							    GObject         *policy);
-GList*          sim_server_get_nets                        (SimServer       *server);
-GList*          sim_server_get_nets_by_host                (SimServer       *server,
-							    GObject         *host);
-GObject*        sim_server_get_net_by_name                 (SimServer       *server,
-							    gchar           *name);
-void            sim_server_set_nets_recovery                (SimServer      *server,
-							    gint             recovery);
-GList*          sim_server_db_get_nets                     (SimServer       *server);
-gint            sim_server_db_insert_net                   (SimServer       *server,
-							    GObject          *net);
-gint            sim_server_db_update_net                   (SimServer       *server,
-							    GObject         *net);
-gint            sim_server_db_delete_net                   (SimServer       *server,
-							    GObject         *net);
-
-/* Net Assets Functions */
-void            sim_server_add_net_asset                   (SimServer       *server,
-							    GObject         *net_asset);
-void            sim_server_remove_net_asset                (SimServer       *server,
-							    GObject         *net_asset);
-GList*          sim_server_get_net_assets                  (SimServer       *server);
-
-/* Signatures Functions */
-GObject*        sim_server_get_sig_subgroup_from_sid       (SimServer       *server,
-							    gint             sid);
-GObject*        sim_server_get_sig_subgroup_from_type      (SimServer       *server,
-							    gint             type);
 
 G_END_DECLS
 

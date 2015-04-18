@@ -1,7 +1,7 @@
 <html>
 <head>
   <title> Control Panel </title>
-  <meta http-equiv="refresh" content="60">
+  <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
@@ -20,6 +20,7 @@ require_once ('classes/Host.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Host_mac.inc');
+require_once ('classes/Backlog.inc');
 require_once ('acid_funcs.inc');
 require ('common.inc');
 
@@ -321,6 +322,71 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
       </td>
     </tr>
     </table>
+
+
+    <br/>
+    <table width="100%">
+    <form action="handle_alarm.php" method="GET">
+      <tr><th colspan="13">Alarms</th></tr>
+      <tr>
+        <th>Date</th>
+        <th>Id</th>
+        <th>Alarm</th>
+        <th>Time out</th>
+        <th>Level</th>
+        <th>Rule name</th>
+        <th>Source Ip</th>
+        <th>Destination Ip</th>
+        <th>Source Port</th>
+        <th>Destination Port</th>
+        <th>plugin</th>
+        <th>tplugin</th>
+        <th>Delete</th>
+      </tr>
+<?php
+    if ($backlog_list = Backlog::get_list($conn)) {
+        foreach($backlog_list as $backlog) {
+?>
+      <tr>
+        <td><?php echo date ("d/m/Y - H:i:s" , 
+                             $backlog->get_utime()/1000000) ?> 
+        </td>
+        <td><?php echo $backlog->get_id() ?></td>
+        <td><?php 
+        if ($backlog->get_matched() == 1)
+            echo "<font color=\"red\">" . $backlog->get_name() ."</font>";
+        else
+            echo $backlog->get_name();
+        ?></td>
+        <td><?php echo $backlog->get_time_out() ?></td>
+        <td><?php echo $backlog->get_level() ?></td>
+        <td><?php echo $backlog->get_rule_name() ?></td>
+        <td><?php echo $backlog->get_src_ip() ?></td>
+        <td><?php echo $backlog->get_dst_ip() ?></td>
+        <td><?php echo $backlog->get_src_port() ?></td>
+        <td><?php echo $backlog->get_dst_port() ?></td>
+        <td><?php echo $backlog->get_plugin() ?></td>
+        <td><?php echo $backlog->get_tplugin() ?></td>
+        <td><input type="checkbox" 
+                   name="<?php echo $backlog->get_utime() ?>"/>
+        </td>
+      </tr>
+<?php
+        } /* foreach backlog_list */
+?>
+      <tr>
+        <td colspan="13">
+          <input type="submit" value="OK"/>
+          <input type="reset" />
+        </td>
+      </tr>
+<?php
+    } /* if backlog_list */
+?>
+    </form>
+    </table>
+
+
     <br/>
     <table width="100%">
     <tr>

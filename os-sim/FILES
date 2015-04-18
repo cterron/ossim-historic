@@ -1,10 +1,11 @@
 AUTHORS     : Just that, who is working on this.
-autogen.sh  : New server framework
+agent       : Data collection.
+autogen.sh  : New parser framework
 backups     : DB backups
 BUGS        : Some new bugs.
 ChangeLog   : Changes done in the last few weeks.
 CONFIG      : Some additions to external programs
-contrib     : Misc config & support files
+contrib     : Misc config & support files. Patches.
 COPYING     : Licensing for anything written by use
 db          : Database structure
 etc         : Config files, linked to /etc/
@@ -18,7 +19,7 @@ NEWS        : Changelog
 pixmaps     : Images
 README      : short readme
 README.sensors : short readme regarding remote sensor management
-scripts     : server support scripts
+scripts     : parser support scripts
 server      : New parser framework
-TODO        : Things todo during the next few days
+TODO        : Things todo during the next few days (No longer used)
 www         : whole web structure

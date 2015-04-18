@@ -1,4 +1,2 @@
-- SQL Injection; validate input. Fixed ?
-- Security fixes.
-- Remote sensor edit. Very alpha.
-- Rebuild graphing functionality 
+- SQL Injection; validate input.
+- Strange core dumps...

@@ -1,0 +1,28 @@
+diff -urNb gnet-2.0.4/src/inetaddr.c gnet-2.0.4-ossim/src/inetaddr.c
+--- gnet-2.0.4/src/inetaddr.c	2003-07-24 03:34:53.000000000 +0200
++++ gnet-2.0.4-ossim/src/inetaddr.c	2003-11-20 10:58:32.000000000 +0100
+@@ -1451,6 +1451,7 @@
+       struct sockaddr_in* sa_inp;
+ 
+       ia = g_new0(GInetAddr, 1);
++      ia->name = g_strdup (hostname);
+       ia->ref_count = 1;
+       sa_inp = (struct sockaddr_in*) &ia->sa;
+ 
+@@ -1465,6 +1466,7 @@
+       struct sockaddr_in6* sa_inp;
+ 
+       ia = g_new0(GInetAddr, 1);
++      ia->name = g_strdup (hostname);
+       ia->ref_count = 1;
+       sa_inp = (struct sockaddr_in6*) &ia->sa;
+ 
+@@ -1649,6 +1651,8 @@
+ gchar* 
+ gnet_inetaddr_get_name_nonblock (GInetAddr* inetaddr)
+ {
++  g_return_val_if_fail (inetaddr != NULL, NULL);
++
+   if (inetaddr->name)
+     return g_strdup(inetaddr->name);
+ 

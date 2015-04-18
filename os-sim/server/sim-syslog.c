@@ -1,6 +1,35 @@
-/**
+/* Copyright (c) 2003 ossim.net
+ * All rights reserved.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *    from the author.
+ *
+ * 4. Products derived from this software may not be called "Os-sim" nor
+ *    may "Os-sim" appear in their names without specific prior written
+ *    permission from the author.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <sys/types.h>
@@ -9,7 +38,6 @@
 #include <config.h>
 
 #include "sim-syslog.h"
-#include "sim-server.h"
 #include "sim-message.h"
  
 enum 
@@ -19,16 +47,28 @@ enum
 };
 
 struct _SimSyslogPrivate {
-  SimServer   *server;
+  SimContainer   *container;
 
   gint         fd;
   GIOChannel  *io;
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+static gint sim_container_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
+
+static void 
+sim_syslog_impl_dispose (GObject  *gobject)
+{
+  G_OBJECT_CLASS (parent_class)->dispose (gobject);
+}
+
+static void 
+sim_syslog_impl_finalize (GObject  *gobject)
+{
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
+}
 
 static void
 sim_syslog_class_init (SimSyslogClass * class)
@@ -36,6 +76,9 @@ sim_syslog_class_init (SimSyslogClass * class)
   GObjectClass *object_class = G_OBJECT_CLASS (class);
 
   parent_class = g_type_class_peek_parent (class);
+
+  object_class->dispose = sim_syslog_impl_dispose;
+  object_class->finalize = sim_syslog_impl_finalize;
 }
 
 static void
@@ -83,7 +126,8 @@ sim_syslog_get_type (void)
  *
  */
 SimSyslog *
-sim_syslog_new (const gchar *filename)
+sim_syslog_new (SimContainer  *container,
+		const gchar   *filename)
 {
   SimSyslog *syslog = NULL;
   GIOChannel  *io;
@@ -119,6 +163,7 @@ sim_syslog_new (const gchar *filename)
     }
 
   syslog = SIM_SYSLOG (g_object_new (SIM_TYPE_SYSLOG, NULL));
+  syslog->_priv->container = container;
   syslog->_priv->io = io;
 
   return syslog;
@@ -130,15 +175,15 @@ sim_syslog_new (const gchar *filename)
  *
  */
 void
-sim_syslog_set_server (SimSyslog *syslog,
-		       SimServer *server)
+sim_syslog_set_container (SimSyslog *syslog,
+		       SimContainer *container)
 {
   g_return_if_fail (syslog != NULL);
   g_return_if_fail (SIM_IS_SYSLOG (syslog));
-  g_return_if_fail (server != NULL);
-  g_return_if_fail (SIM_IS_SERVER (server));
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
 
-  syslog->_priv->server = server;
+  syslog->_priv->container = container;
 }
 
 /*
@@ -158,8 +203,8 @@ sim_syslog_run (SimSyslog *syslog)
 
   g_return_if_fail (syslog != NULL);
   g_return_if_fail (SIM_IS_SYSLOG (syslog));
-  g_return_if_fail (syslog->_priv->server != NULL);
-  g_return_if_fail (SIM_IS_SERVER (syslog->_priv->server));
+  g_return_if_fail (syslog->_priv->container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (syslog->_priv->container));
 
   buffer = g_string_sized_new (BUFFER_SIZE);
 
@@ -191,7 +236,7 @@ sim_syslog_run (SimSyslog *syslog)
 	continue;
       }
 
-    sim_server_push_tail_messages (syslog->_priv->server, G_OBJECT (msg));
+    sim_container_push_message (syslog->_priv->container, msg);
   }
 
   g_io_channel_unref(syslog->_priv->io);

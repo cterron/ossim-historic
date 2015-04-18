@@ -12,6 +12,25 @@ CREATE TABLE conf (
 );
 INSERT INTO conf VALUES (1, 300, 300, 300, 200);
 
+/* ======== correlation - event backlog ======== */
+DROP TABLE if EXISTS backlog;
+CREATE TABLE backlog (
+    utime           bigint NOT NULL,
+    id              int NOT NULL,
+    name            varchar(255),
+    time_out        int,
+    matched         tinyint,
+    level           int,
+    rule_name       varchar(255),
+    src_ip          varchar(15),
+    dst_ip          varchar(15),
+    src_port        int,
+    dst_port        int,
+    plugin          int,
+    tplugin         int,
+    PRIMARY KEY (utime, id)
+);
+
 /* ======== hosts & nets ======== */
 DROP TABLE IF EXISTS host;
 CREATE TABLE host (

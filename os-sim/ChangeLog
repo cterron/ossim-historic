@@ -1,5 +1,40 @@
 # ChangeLog for OSSIM
 
+    22 Nov 2003 DK <dk@ossim.net> :
+    * 0.7 released
+    * Paperwork xD
+
+* OSSIM-0.7 (22 Nov 2003)
+
+    04 Nov 2003 - 22 Nov 2003 DK <dk@ossim.net> :
+    * (FOT, update the changelog yourself !!!)
+    * Data model rewrite.
+    * Event correlation.
+    * Socket data input.
+    * etc...
+
+    20 Nov 2003 David Gil <dgil@ossim.net>:
+    * New plugins support added to Agent
+      - Apache
+      - Internet Information Server
+      - Iptables
+
+    19 Nov 2003 David Gil <dgil@ossim.net>:
+    * Simple alarms viewer/manager added to control panel
+
+    17 Nov 2003 David Gil <dgil@ossim.net>:
+    * First plugins support added to Agent
+      - Snort & Spade (syslog)
+      - Snort & Spade (fast)
+      - Firewall-1 (syslog)
+
+    05 Nov 2003 David Gil <dgil@ossim.net>:
+    * Python Agents
+      - xml config file, sax parsing
+      - syslog input
+      - agent <-> server communication
+      - multithreaded plugin functionality
+
     04 Nov 2003 DK <dk@ossim.net> :
     * 0.6.3 released
     * Bugfixes

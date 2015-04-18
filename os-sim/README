@@ -3,7 +3,7 @@ http://sourceforge.net/projects/os-sim/
 
 About Os-sim
 ------------
-Our goal es to obtain a working SIM (Security Infrastructure Monitor) able to
+Our goal is to obtain a working SIM (Security Infrastructure Monitor) able to
 integrate, qualify and correlate both high level and low level security and
 network events which is able to compete with commercial products recently
 appearing on the security market.
@@ -21,11 +21,13 @@ Components
 - Acid: log viewer (Event Database)
 - Ntop: network use monitor
 - OpenNMS: Service availability monitoring
-- HotSanic: graphing
+- Mrtg: graphing
 - Mysql & PostgreSQL: data storage
 - rrdtool: Round robin data storage
 - Nessus: vulnerability assesment
 - Nmap: Network discovery
+- P0f: OS Fingerprinting.
+- Arpwatch: Host - Mac.
 - More to come....
 
 Development languages
@@ -34,6 +36,7 @@ Development languages
 - Perl
 - PHP
 - Java
+- Python
 
 Supported platforms
 -----------------

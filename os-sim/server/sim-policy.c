@@ -1,14 +1,39 @@
-/**
+/* Copyright (c) 2003 ossim.net
+ * All rights reserved.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *    from the author.
+ *
+ * 4. Products derived from this software may not be called "Os-sim" nor
+ *    may "Os-sim" appear in their names without specific prior written
+ *    permission from the author.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <config.h>
 
-#include "sim-database.h"
 #include "sim-policy.h"
  
 enum 
@@ -18,32 +43,94 @@ enum
 };
 
 struct _SimPolicyPrivate {
-  gint   id;
-  gchar *description;
+  gint    id;
+  gint    priority;
+  gchar  *description;
 
-  gint   priority;
-  gint   begin_hour;
-  gint   end_hour;
-  gint   begin_day;
-  gint   end_day;
+  gint    begin_hour;
+  gint    end_hour;
+  gint    begin_day;
+  gint    end_day;
 
-  GList *src_ips;
-  GList *dst_ips;
-  GList *ports;
-  GList *signatures;
-  GList *sensors;
+  GList  *src_ias;
+  GList  *dst_ias;
+  GList  *ports;
+  GList  *signatures;
+  GList  *sensors;
 };
-
-struct {
-  gint     port;
-  
-  GList   *protocols;
-} SimPolicyPort;
 
 static gpointer parent_class = NULL;
 static gint sim_policy_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
+
+static void 
+sim_policy_impl_dispose (GObject  *gobject)
+{
+  G_OBJECT_CLASS (parent_class)->dispose (gobject);
+}
+
+static void 
+sim_policy_impl_finalize (GObject  *gobject)
+{
+  SimPolicy  *policy = SIM_POLICY (gobject);
+  GList   *list;
+
+  g_free (policy->_priv->description);
+
+  /* src ips list */
+  list = policy->_priv->src_ias;
+  while (list)
+    {
+      gchar *ip = (gchar *) list->data;
+      g_free (ip);
+      list = list->next;
+    }
+
+  /* dst ips list */
+  list = policy->_priv->dst_ias;
+  while (list)
+    {
+      gchar *ip = (gchar *) list->data;
+      g_free (ip);
+      list = list->next;
+    }
+
+  /* ports list */
+  list = policy->_priv->ports;
+  while (list)
+    {
+      gchar *port = (gchar *) list->data;
+      g_free (port);
+      list = list->next;
+    }
+
+  /* signatures list */
+  list = policy->_priv->signatures;
+  while (list)
+    {
+      gchar *signature = (gchar *) list->data;
+      g_free (signature);
+      list = list->next;
+    }
+
+  /* sensors list */
+  list = policy->_priv->sensors;
+  while (list)
+    {
+      gchar *sensor = (gchar *) list->data;
+      g_free (sensor);
+      list = list->next;
+    }
+
+  g_list_free (policy->_priv->src_ias);
+  g_list_free (policy->_priv->dst_ias);
+  g_list_free (policy->_priv->ports);
+  g_list_free (policy->_priv->signatures);
+  g_list_free (policy->_priv->sensors);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
+}
 
 static void
 sim_policy_class_init (SimPolicyClass * class)
@@ -51,6 +138,9 @@ sim_policy_class_init (SimPolicyClass * class)
   GObjectClass *object_class = G_OBJECT_CLASS (class);
 
   parent_class = g_type_class_peek_parent (class);
+
+  object_class->dispose = sim_policy_impl_dispose;
+  object_class->finalize = sim_policy_impl_finalize;
 }
 
 static void
@@ -58,8 +148,8 @@ sim_policy_instance_init (SimPolicy *policy)
 {
   policy->_priv = g_new0 (SimPolicyPrivate, 1);
 
-  policy->_priv->src_ips = NULL;
-  policy->_priv->dst_ips = NULL;
+  policy->_priv->src_ias = NULL;
+  policy->_priv->dst_ias = NULL;
   policy->_priv->ports = NULL;
   policy->_priv->signatures = NULL;
   policy->_priv->sensors = NULL;
@@ -101,550 +191,98 @@ sim_policy_get_type (void)
  *
  *
  */
-SimPolicy *
+SimPolicy*
 sim_policy_new (void)
 {
-  SimPolicy *policy = NULL;
+  SimPolicy *policy;
 
   policy = SIM_POLICY (g_object_new (SIM_TYPE_POLICY, NULL));
 
   return policy;
 }
 
-/**
- *
+/*
  *
  *
  *
  */
-GList*
-sim_policy_load_from_db (GObject  *db)
+SimPolicy*
+sim_policy_new_from_dm (GdaDataModel  *dm,
+			gint           row)
 {
-  SimPolicy *policy;
-  GdaDataModel *dm;
-  GdaDataModel *dm1;
-  GdaValue *value;
-  GList *policies = NULL;
-  GList *list = NULL;
-  GList *list2 = NULL;
-  GList *node0 = NULL;
-  GList *node = NULL; 
-  GList *node2 = NULL;
-  gchar *query2 = NULL;
-  gint row_id;
-  gint row_id1;
-  gint i;
+  SimPolicy  *policy;
+  GdaValue   *value;
+  gchar      *description;
+  gint        id;
+  gint        priority;
+  gint        begin_hour;
+  gint        end_hour;
+  gint        begin_day;
+  gint        end_day;
 
-  gchar *query = "select * from policy";
+  g_return_val_if_fail (dm, NULL);
+  g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
 
-  g_return_if_fail (db != NULL);
-  g_return_if_fail (SIM_IS_DATABASE (db));
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+  id = gda_value_get_integer (value);
+  
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+  priority = gda_value_get_smallint (value);
 
-  /* List of policies */
-  list = sim_database_execute_command (SIM_DATABASE (db), query);
-  if (list != NULL)
-    {
-      for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	{
-	  dm = (GdaDataModel *) node->data;
-	  if (dm == NULL)
-	    {
-	      g_message ("POLICIES DATA MODEL ERROR");
-	    }
-	  else
-	    {
-	      for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		{
-		  /* New policy */
-		  policy  = sim_policy_new ();
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
+  description = gda_value_stringify (value);
 
-		  /* Set id*/
-		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row_id);
-		  policy->_priv->id = gda_value_get_integer (value);
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row);
+  begin_hour = gda_value_get_smallint (value);
 
-		  /* Set  priority */
-		  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		  policy->_priv->priority = gda_value_get_smallint (value);
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
+  end_hour = gda_value_get_smallint (value);
 
-		  /* Set description */
-		  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row_id);
-		  policy->_priv->description = gda_value_stringify (value);
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 5, row);
+  begin_day = gda_value_get_smallint (value);
 
-		  /* Added policy */
-		  policies = g_list_append (policies, policy);
-		}
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 6, row);
+  end_day = gda_value_get_smallint (value);
 
-	      g_object_unref(dm);
-	    }
-	}
-    }
-  else
-    {
-      g_message ("POLICIES LIST ERROR");
-    }
+  policy = SIM_POLICY (g_object_new (SIM_TYPE_POLICY, NULL));
+  policy->_priv->id = id;
+  policy->_priv->priority = priority;
+  policy->_priv->description = description;
+  policy->_priv->begin_hour = begin_hour;
+  policy->_priv->end_hour = end_hour;
+  policy->_priv->begin_day = begin_day;
+  policy->_priv->end_day = end_day;
 
-  for (i = 0; i < g_list_length (policies); i++)
-    {
-      node0 = g_list_nth (policies, i);
-      policy = (SimPolicy *) node0->data;
+  return policy;
+}
 
-      /* Gets ip, source */
-      query = g_strdup_printf ("select * from policy_host_reference  where policy_id = %d and direction = 'source'",
-			       policy->_priv->id);
+/*
+ *
+ *
+ *
+ */
+gint
+sim_policy_get_id (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, 0);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *source_ip;
+  return policy->_priv->id;
+}
 
-		      /* Set source ip */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      source_ip = gda_value_stringify (value);
- 
-		      if (!g_ascii_strncasecmp (source_ip, "any", 3))
-			{
-			  g_free (source_ip);
-			  source_ip = g_strdup ("0.0.0.0");
-			}
-   
-		      /* Added source ip */
-		      policy->_priv->src_ips = g_list_append (policy->_priv->src_ips, source_ip);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_set_id (SimPolicy* policy,
+		   gint       id)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
 
-
-      /* Gets ip, dest */
-      query = g_strdup_printf ("select * from policy_host_reference  where policy_id = %d and direction = 'dest'",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *dest_ip;
-
-		      /* Set dest ip */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      dest_ip = gda_value_stringify (value);
-    
-		      if (!g_ascii_strncasecmp (dest_ip, "any", 3))
-			{
-			  g_free (dest_ip);
-			  dest_ip = g_strdup ("0.0.0.0");
-			}
-   
-		      /* Added dest ip */
-		      policy->_priv->dst_ips = g_list_append (policy->_priv->dst_ips, dest_ip);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-
-      /* Gets sensor */
-      query = g_strdup_printf ("select * from policy_sensor_reference where policy_id = %d",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *sensor;
-
-		      /* Set sensor */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      sensor = gda_value_stringify (value);
-    
-		      /* Added sensor */
-		      policy->_priv->sensors = g_list_append (policy->_priv->sensors, sensor);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-
-      /* Get ports */
-      query = g_strdup_printf ("select * from policy_port_reference  where policy_id = %d",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *str;
-
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      str = gda_value_stringify (value);
-
-		      query2 = g_strdup_printf ("select * from port_group_reference where port_group_name = '%s'", str);
-
-		      list2 = sim_database_execute_command (SIM_DATABASE (db), query2);
-		      if (list2 != NULL)
-			{
-			  for (node2 = g_list_first (list2); node2 != NULL; node2 = g_list_next (node2))
-			    {
-			      dm1 = (GdaDataModel *) node2->data;
-			      if (dm1 == NULL)
-				{
-				  g_message ("POLICIES DATA MODEL ERROR 1");
-				}
-			      else
-				{
-				  for (row_id1 = 0; row_id1 < gda_data_model_get_n_rows (dm1); row_id1++)
-				    {
-				      gchar  *protocol, *str;
-				      gint    port;
-
-				      /* Set port */
-				      value = (GdaValue *) gda_data_model_get_value_at (dm1, 1, row_id1);
-				      port = gda_value_get_integer (value);
-				      
-				      /* Set protocol */
-				      value = (GdaValue *) gda_data_model_get_value_at (dm1, 2, row_id1);
-				      protocol = gda_value_stringify (value);
-				      
-				      str = g_strdup_printf ("%d/%s", port, protocol);
-				      
-				      /* Added port */
-				      policy->_priv->ports = g_list_append (policy->_priv->ports, str);
-
-				      g_free (protocol);
-				    }
-				  
-				  g_object_unref(dm1);
-				}
-			    }
-			}
-
-		      g_free (str);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-
-      /* Get signatures */
-      query = g_strdup_printf ("select * from policy_sig_reference where policy_id = %d",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *str;
-
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      str = gda_value_stringify (value);
-
-		      query2 = g_strdup_printf ("select * from signature_group_reference where sig_group_name = '%s'", str);
-
-		      list2 = sim_database_execute_command (SIM_DATABASE (db), query2);
-		      if (list2 != NULL)
-			{
-			  for (node2 = g_list_first (list2); node2 != NULL; node2 = g_list_next (node2))
-			    {
-			      dm1 = (GdaDataModel *) node2->data;
-			      if (dm1 == NULL)
-				{
-				  g_message ("POLICIES DATA MODEL ERROR 1");
-				}
-			      else
-				{
-				  for (row_id1 = 0; row_id1 < gda_data_model_get_n_rows (dm1); row_id1++)
-				    {
-				      gchar *sig;
-				      
-				      /* Set sig */
-				      value = (GdaValue *) gda_data_model_get_value_at (dm1, 1, row_id1);
-				      sig = gda_value_stringify (value);
-				      
-				      /* Added sig */
-				      policy->_priv->signatures = g_list_append (policy->_priv->signatures, sig);
-				    }
-				  
-				  g_object_unref(dm1);
-				}
-			    }
-			}
-
-		      g_free (str);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-      /* Get sources nets */
-      query = g_strdup_printf ("select * from policy_net_reference  where policy_id = %d and direction = 'source'",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *str;
-
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      str = gda_value_stringify (value);
-
-		      query2 = g_strdup_printf ("select * from net_host_reference where net_name = '%s'", str);
-
-		      list2 = sim_database_execute_command (SIM_DATABASE (db), query2);
-		      if (list2 != NULL)
-			{
-			  for (node2 = g_list_first (list2); node2 != NULL; node2 = g_list_next (node2))
-			    {
-			      dm1 = (GdaDataModel *) node2->data;
-			      if (dm1 == NULL)
-				{
-				  g_message ("POLICIES DATA MODEL ERROR 1");
-				}
-			      else
-				{
-				  for (row_id1 = 0; row_id1 < gda_data_model_get_n_rows (dm1); row_id1++)
-				    {
-				      gchar *net;
-				      
-				      /* Set net */
-				      value = (GdaValue *) gda_data_model_get_value_at (dm1, 1, row_id1);
-				      net = gda_value_stringify (value);
-				      
-				      /* Added net */
-				      policy->_priv->src_ips = g_list_append (policy->_priv->src_ips, net);
-				    }
-				  
-				  g_object_unref(dm1);
-				}
-			    }
-			}
-
-		      g_free (str);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-
-      /* Get dest  nets */
-      query = g_strdup_printf ("select * from policy_net_reference  where policy_id = %d and direction = 'dest'",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      gchar *str;
-
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      str = gda_value_stringify (value);
-
-		      query2 = g_strdup_printf ("select * from net_host_reference where net_name = '%s'", str);
-
-		      list2 = sim_database_execute_command (SIM_DATABASE (db), query2);
-		      if (list2 != NULL)
-			{
-			  for (node2 = g_list_first (list2); node2 != NULL; node2 = g_list_next (node2))
-			    {
-			      dm1 = (GdaDataModel *) node2->data;
-			      if (dm1 == NULL)
-				{
-				  g_message ("POLICIES DATA MODEL ERROR 1");
-				}
-			      else
-				{
-				  for (row_id1 = 0; row_id1 < gda_data_model_get_n_rows (dm1); row_id1++)
-				    {
-				      gchar *net;
-				      
-				      /* Set net */
-				      value = (GdaValue *) gda_data_model_get_value_at (dm1, 1, row_id1);
-				      net = gda_value_stringify (value);
-				      
-				      /* Added net */
-				      policy->_priv->dst_ips = g_list_append (policy->_priv->dst_ips, net);
-				    }
-				  
-				  g_object_unref(dm1);
-				}
-			    }
-			}
-
-		      g_free (str);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-
-      /* Get timeframe */
-      query = g_strdup_printf ("select * from policy_time where policy_id = %d",
-			       policy->_priv->id);
-      
-      list = sim_database_execute_command (SIM_DATABASE (db), query);
-      if (list != NULL)
-	{
-	  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-	    {
-	      dm = (GdaDataModel *) node->data;
-	      if (dm == NULL)
-		{
-		  g_message ("POLICIES DATA MODEL ERROR 1");
-		}
-	      else
-		{
-		  for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
-		    {
-		      /* Set begin_hour */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row_id);
-		      policy->_priv->begin_hour = gda_value_get_smallint (value);
-
-		      /* Set end_hour */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row_id);
-		      policy->_priv->end_hour = gda_value_get_smallint (value);
-
-		      /* Set begin_day */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row_id);
-		      policy->_priv->begin_day = gda_value_get_smallint (value);
-
-		      /* Set end_day */
-		      value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row_id);
-		      policy->_priv->end_day = gda_value_get_smallint (value);
-		    }
-		  
-		  g_object_unref(dm);
-		}
-	    }
-	}
-      else
-	{
-	  g_message ("POLICIES LIST ERROR 1");
-	}
-      g_free (query);
-
-    }
-
-  return policies;
+  policy->_priv->id = id;
 }
 
 /*
@@ -655,7 +293,7 @@ sim_policy_load_from_db (GObject  *db)
 gint
 sim_policy_get_priority (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, 0);
+  g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
   return policy->_priv->priority;
@@ -670,7 +308,7 @@ void
 sim_policy_set_priority (SimPolicy* policy,
 			 gint       priority)
 {
-  g_return_if_fail (policy != NULL);
+  g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->priority = priority;
@@ -684,7 +322,7 @@ sim_policy_set_priority (SimPolicy* policy,
 gint
 sim_policy_get_begin_day (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, 0);
+  g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
   return policy->_priv->begin_day;
@@ -699,7 +337,7 @@ void
 sim_policy_set_begin_day (SimPolicy* policy,
 			 gint       begin_day)
 {
-  g_return_if_fail (policy != NULL);
+  g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->begin_day = begin_day;
@@ -713,7 +351,7 @@ sim_policy_set_begin_day (SimPolicy* policy,
 gint
 sim_policy_get_end_day (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, 0);
+  g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
   return policy->_priv->end_day;
@@ -728,7 +366,7 @@ void
 sim_policy_set_end_day (SimPolicy* policy,
 			 gint       end_day)
 {
-  g_return_if_fail (policy != NULL);
+  g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->end_day = end_day;
@@ -742,7 +380,7 @@ sim_policy_set_end_day (SimPolicy* policy,
 gint
 sim_policy_get_begin_hour (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, 0);
+  g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
   return policy->_priv->begin_hour;
@@ -757,7 +395,7 @@ void
 sim_policy_set_begin_hour (SimPolicy* policy,
 			 gint       begin_hour)
 {
-  g_return_if_fail (policy != NULL);
+  g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->begin_hour = begin_hour;
@@ -771,7 +409,7 @@ sim_policy_set_begin_hour (SimPolicy* policy,
 gint
 sim_policy_get_end_hour (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, 0);
+  g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
   return policy->_priv->end_hour;
@@ -786,7 +424,7 @@ void
 sim_policy_set_end_hour (SimPolicy* policy,
 			 gint       end_hour)
 {
-  g_return_if_fail (policy != NULL);
+  g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->end_hour = end_hour;
@@ -797,13 +435,31 @@ sim_policy_set_end_hour (SimPolicy* policy,
  *
  *
  */
-GList*
-sim_policy_get_sources (SimPolicy* policy)
+void
+sim_policy_append_src_ia (SimPolicy        *policy,
+			  GInetAddr        *ia)
 {
-  g_return_val_if_fail (policy != NULL, NULL);
-  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (ia);
 
-  return policy->_priv->src_ips;
+  policy->_priv->src_ias = g_list_append (policy->_priv->src_ias, ia);
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_remove_src_ia (SimPolicy        *policy,
+			  GInetAddr        *ia)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (ia);
+
+  policy->_priv->src_ias = g_list_remove (policy->_priv->src_ias, ia);
 }
 
 /*
@@ -812,12 +468,90 @@ sim_policy_get_sources (SimPolicy* policy)
  *
  */
 GList*
-sim_policy_get_destinations (SimPolicy* policy)
+sim_policy_get_src_ias (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, NULL);
+  g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
-  return policy->_priv->dst_ips;
+  return policy->_priv->src_ias;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_append_dst_ia (SimPolicy        *policy,
+			  GInetAddr        *ia)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (ia);
+
+  policy->_priv->dst_ias = g_list_append (policy->_priv->dst_ias, ia);
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_remove_dst_ia (SimPolicy        *policy,
+			  GInetAddr        *ia)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (ia);
+
+  policy->_priv->dst_ias = g_list_remove (policy->_priv->dst_ias, ia);
+}
+
+/*
+ *
+ *
+ *
+ */
+GList*
+sim_policy_get_dst_ias (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+
+  return policy->_priv->dst_ias;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_append_port (SimPolicy        *policy,
+			SimPortProtocol  *pp)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (pp);
+
+  policy->_priv->ports = g_list_append (policy->_priv->ports, pp);
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_remove_port (SimPolicy        *policy,
+			SimPortProtocol  *pp)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (pp);
+
+  policy->_priv->ports = g_list_remove (policy->_priv->ports, pp);
 }
 
 /*
@@ -828,7 +562,7 @@ sim_policy_get_destinations (SimPolicy* policy)
 GList*
 sim_policy_get_ports (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, NULL);
+  g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
   return policy->_priv->ports;
@@ -839,10 +573,42 @@ sim_policy_get_ports (SimPolicy* policy)
  *
  *
  */
+void
+sim_policy_append_signature (SimPolicy        *policy,
+			     gchar            *signature)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (signature);
+
+  policy->_priv->signatures = g_list_append (policy->_priv->signatures, signature);
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_remove_signature (SimPolicy        *policy,
+			     gchar            *signature)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (signature);
+
+  policy->_priv->signatures = g_list_remove (policy->_priv->signatures, signature);
+}
+
+/*
+ *
+ *
+ *
+ */
 GList*
 sim_policy_get_signatures (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, NULL);
+  g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
   return policy->_priv->signatures;
@@ -856,7 +622,7 @@ sim_policy_get_signatures (SimPolicy* policy)
 GList*
 sim_policy_get_sensors (SimPolicy* policy)
 {
-  g_return_val_if_fail (policy != NULL, NULL);
+  g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
   return policy->_priv->sensors;
@@ -867,22 +633,19 @@ sim_policy_get_sensors (SimPolicy* policy)
  *
  *
  */
-gboolean 
+gboolean
 sim_policy_match (SimPolicy        *policy,
 		  gint              date,
-		  gchar            *src_ip,
-		  gchar            *dst_ip,
-		  gint              port,
-		  SimProtocolType   protocol,
+		  GInetAddr        *src_ia,
+		  GInetAddr        *dst_ia,
+		  SimPortProtocol  *pp,
 		  gchar            *signature)
 {
+  GList     *list;
   gboolean   found = FALSE;
-  gchar     *str, *sport;
-  gchar     *sprotocol = NULL;
   gint       start, end;
-  gint       i;
 
-  g_return_val_if_fail (policy != NULL, FALSE);
+  g_return_val_if_fail (policy, FALSE);
   g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
 
   start = ((policy->_priv->begin_day - 1) * 7 + policy->_priv->begin_hour);
@@ -890,86 +653,74 @@ sim_policy_match (SimPolicy        *policy,
   
   if ((start > date) || (end < date))
     return FALSE;
-  
+
   /* Find source ip*/
   found = FALSE;
-  for (i = 0; i < g_list_length(policy->_priv->src_ips); i++)
+  list = policy->_priv->src_ias;
+  while (list)
     {
-      str = (gchar *) g_list_nth_data (policy->_priv->src_ips, i);
-      
-      if ((!strcmp (str, "0.0.0.0")) || (!strcmp (str, src_ip)))
+      GInetAddr *cmp = (GInetAddr *) list->data;
+
+      if ((gnet_inetaddr_is_reserved (cmp)) || (gnet_inetaddr_noport_equal (cmp, src_ia)))
 	{
 	  found = TRUE;
 	  break;
 	}
+
+      list = list->next;
     }
-  if (!found)
-    return FALSE;
-  
+  if (!found) return FALSE;
+
   /* Find destination ip */
   found = FALSE;
-  for (i = 0; i < g_list_length(policy->_priv->dst_ips); i++)
+  list = policy->_priv->dst_ias;
+  while (list)
     {
-      str = (gchar *) g_list_nth_data (policy->_priv->dst_ips, i);
+      GInetAddr *cmp = (GInetAddr *) list->data;
       
-      if ((!strcmp (str, "0.0.0.0")) || (!strcmp (str, dst_ip)))
+      if ((gnet_inetaddr_is_reserved (cmp)) || (gnet_inetaddr_noport_equal (cmp, dst_ia)))
 	{
 	  found = TRUE;
 	  break;
 	}
-    }
-  if (!found)
-    return FALSE;
 
-  switch (protocol)
-    {
-    case SIM_PROTOCOL_TYPE_ICMP:
-      sprotocol = g_strdup ("icmp");
-      break;
-    case SIM_PROTOCOL_TYPE_UDP:
-      sprotocol = g_strdup ("udp");
-      break;
-    case SIM_PROTOCOL_TYPE_TCP:
-      sprotocol = g_strdup ("tcp");
-      break;
-    default:
-      sprotocol = NULL;
-      break;
+      list = list->next;
     }
-  sport = g_strdup_printf ("%d/%s", port, sprotocol);
+  if (!found) return FALSE;
 
   /* Find port */
   found = FALSE;
-  for (i = 0; i < g_list_length(policy->_priv->ports); i++)
+  list = policy->_priv->ports;
+  while (list)
     {
-      str = (gchar *) g_list_nth_data (policy->_priv->ports, i);
+      SimPortProtocol *cmp = (SimPortProtocol *) list->data;
       
-      if (!strcmp (str, sport))
+      if (sim_port_protocol_equal (cmp, pp))
 	{
 	  found = TRUE;
 	  break;
 	}
-    }
-  g_free (sprotocol);
-  g_free (sport);
 
-  if (!found)
-    return FALSE;
-  
+      list = list->next;
+    }
+  if (!found) return FALSE;
+
   /* Find signature subgroups  */
   found = FALSE;
-  for (i = 0; i < g_list_length(policy->_priv->signatures); i++)
+  list = policy->_priv->signatures;
+  while (list)
     {
-      str = (gchar *) g_list_nth_data (policy->_priv->signatures, i);
+      gchar *cmp = (gchar *) list->data;
       
-      if (!strcmp (str, signature))
+      if (!strcmp (cmp, signature))
 	{
 	  found = TRUE;
 	  break;
 	}
+
+      list = list->next;
     }
-  if (!found)
-    return FALSE;
-  
+  if (!found) return FALSE;
+
   return TRUE;
 }

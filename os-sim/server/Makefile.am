@@ -6,17 +6,26 @@ INCLUDES = -DG_LOG_DOMAIN=\"Ossim\"
 bin_PROGRAMS = server
 
 server_SOURCES = \
-		sim-config.c \
+		sim-util.c \
 		sim-database.c \
-		sim-signature.c \
-		sim-policy.c \
 		sim-host.c \
-		sim-host-asset.c \
 		sim-net.c \
-		sim-net-asset.c \
+		sim-signature.c \
 		sim-message.c \
-		sim-scheduler.c \
+		sim-policy.c \
+		sim-action.c \
+		sim-rule.c \
+		sim-alert.c \
+		sim-directive.c \
+		sim-host-level.c \
+		sim-net-level.c \
+		sim-container.c \
+		sim-xml-directive.c \
+		sim-config.c \
+		sim-command.c \
+		sim-session.c \
 		sim-syslog.c \
+		sim-scheduler.c \
 		sim-organizer.c \
 		sim-server.c \
 		main.c
