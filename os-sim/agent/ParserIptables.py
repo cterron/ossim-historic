@@ -32,6 +32,18 @@ class ParserIptables(Parser.Parser):
         fd.seek(0, 2)
             
         while 1:
+            
+            if self.plugin["enable"] == 'no':
+
+                # plugin disabled, wait for enabled
+                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                while self.plugin["enable"] == 'no':
+                    time.sleep(1)
+                    
+                # lets parse again
+                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
+                fd.seek(0, 2)
+
             where = fd.tell()
             line = fd.readline()
             if not line: # EOF reached

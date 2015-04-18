@@ -2,11 +2,11 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                        Updated March 08, 2004
-                              version 0.9
+                         Updated March 24, 2004
+                             version 0.9.2
                         
-                        David Gil <dgil@ossim.net>
-                           http://www.ossim.net
+                       David Gil <dgil@ossim.net>
+                          http://www.ossim.net
 
 
   Index:
@@ -27,6 +27,7 @@
       3.4 Server
       3.5 Agents
     4. Start up
+    5. TODO
 
 
   1. Introduction
@@ -57,6 +58,14 @@
 
   Unpack it to '/opt/ossim' (or wherever you want)
   This directory will be called $OSSIM_PATH in the rest of the document.
+
+  Most packages need to be patched and build from sources. Install the
+  following packages:
+
+    - dpkg-dev  (>= 1.10.19)
+    - fakeroot  (>= 0.8.5)
+
+    $ apt-get install dpkg-dev fakeroot
 
 
   2.1 Apache + PHP + ADOdb
@@ -140,9 +149,6 @@
     $ dpkg -i snort-mysql_XXX.deb snort-common_XXX.deb
       snort-rules-default_XXX.deb snort-doc_XXX.deb
 
-  Copy $OSSIM_PATH/contrib/spade/spade.conf.sample to /etc/snort/spade.conf and
-  configure it.
-
   Installing debs, you will be asked for the database configuration. 
   Use these values:
 
@@ -155,19 +161,22 @@
   
   You can also edit the configuration files at '/etc/snort/snort.conf'.
 
-  Make sure that the lines 'var HOME_NET' and 'var EXTERNAL_NET' of the snort
-  configuration file have valid values.
-  
-  Example:
-    var HOME_NET [192.168.1.0/24]
-    var EXTERNAL_NET !$HOME_NET  
-
   Create the snort tables:
   
     $ mysql -u root -p
     mysql> create database snort;
     mysql> exit
     $ zcat /usr/share/doc/snort-mysql/contrib/create_mysql.gz | mysql -u root -p snort
+
+  Copy $OSSIM_PATH/contrib/spade.conf.sample to /etc/snort/spade.conf and
+  configure it.
+
+  Make sure that the lines 'var HOME_NET' and 'var EXTERNAL_NET' of the snort
+  configuration file have valid values.
+  
+  Example:
+    var HOME_NET [192.168.1.0/24]
+    var EXTERNAL_NET !$HOME_NET  
     
   Make sure that snort logs alerts to syslog, uncommenting the 
   'output alert_syslog: LOG_AUTH LOG_ALERT' line from the snort configuration
@@ -214,7 +223,7 @@
     $ apt-get install php4-mysql php4-gd libphp-phplot wwwconfig-common
 
   You must load mysql and gd modules into PHP. Edit the
-  '/etc/php/apache/php.ini' file and make sure that the following lines are in
+  '/etc/php4/apache/php.ini' file and make sure that the following lines are in
   the file:
   
     extension=gd.so
@@ -224,19 +233,18 @@
   find in the OSSIM contrib directory.
 
     $ apt-get source acidlab
-    $ cd acidlab_XXX
-    $ patch -p0 < /root/os-sim/contrib/acid.patch
+    $ cd acidlab-XXX
+    $ patch -p0 < $OSSIM_PATH/contrib/acid.patch
     $ dpkg-buildpackage -rfakeroot -uc -b
     $ dpkg -i acidlab_XXX.deb acidlab-mysql_XXX.deb acidlab-doc_XXX.deb
     
-  Check the DB abstraction library variable $DBlib_path in acid_conf.php
-  and set it to "/usr/share/adodb/" and complete the database configuration.
+  Check the DB abstraction library variable $DBlib_path in
+  /etc/acidlab/acid_conf.php and set it to "/usr/share/adodb/" and complete
+  the database configuration.
 
-  Go to 'http://yourhost/acid/acid_main.php'. You will get a message that
-  says something about the database not being valid, and will tell you to use
-  the setup page to config and optimise the DB. Click on that link, and then
-  on the next page click on the button that says: 'Create Acid AD'.
-  Now you are done. You can go to the main Acid page to view your alerts, etc.
+  Create acid tables in snort database:
+
+    $ cat /usr/share/acidlab/create_acid_tbls_mysql.sql | mysql -u root snort -p
 
 
   2.5 Ntop
@@ -268,7 +276,8 @@
   The ntop daemon should listen at port 3000, and 3001 (ssl).
 
   Go to 'http://yourhost:3000/ to see Ntop in action. Activate the rrdPlugin
-  at Admin->plugins.
+  at Admin->plugins. Click on Host at Data Dump and specify your
+  netmask at Hosts Filter.
 
 
   2.6 rrdtool
@@ -298,7 +307,7 @@
     $ wget http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/beta/rrdtool-cvs-snap.tar.gz
     $ tar -xvzf rrdtool-cvs-snap.tar.gz
     $ cd rrdtool-XXXX-XX-XX
-    $ export CPPFLAGS="-I/usr/include/libart_2.0 -I/usr/include/freetype2"
+    $ export CPPFLAGS="-I/usr/include/libart-2.0 -I/usr/include/freetype2"
     $ ./configure --prefix=/usr/local/rrdtool-1.1.0
 
   You will probably have to edit bindings/perl-shared/Makefile.PL in order to
@@ -314,7 +323,7 @@
     $ make install
 
   If you have problems compiling rrdtool, you can download a pre-compilate
-  version at http://www.ossim.net/download/current/debs/deps/
+  version at http://www.ossim.net/download/current/debs/
 
 
   2.7 Mrtg
@@ -327,16 +336,17 @@
     $ apt-get source mrtg
     
   You have to patch mrtg in order to use the new rrdtool improvements. You
-  will find this patch at '$PATH_TO_OSSIM/contrib/mrtg/mrtg.diff'.
+  will find this patch at '$OSSIM_PATH/contrib/mrtg/mrtg.diff'.
   
     $ cd mrtg-XXX/bin
-    $ patch -p0 < $PATH_TO_OSSIM/contrib/mrtg/mrtg.diff
+    $ patch -p0 < $OSSIM_PATH/contrib/mrtg/mrtg.diff
   
   Compile and install mrtg:
   
     $ cd ..
     $ dpkg-buildpackage -rfakeroot -uc -b
     $ cd ..
+    $ apt-get install libsnmp-session-perl
     $ dpkg -i mrtg_XXX.deb mrtg-contrib_XXX.deb
 
 
@@ -409,7 +419,7 @@
   Add the following alias at the apache configuration file pointing to ossim
   www directory:
   
-    "Alias /ossim/ $OSSIM_PATH/www"
+    "Alias /ossim/ $OSSIM_PATH/www/"
   
   Make PHP to include the files from the $OSSIM_PATH/include directory. Edit the
   /etc/php4/apache/php.ini file and search for the include_path value. Add the
@@ -430,12 +440,17 @@
   broken link, modify it at the ossim configuration file (special atention at
   the Links section)
 
-  Install aditional packages needed by the directive viewer:
+  Note:
+    adodb debian package is placed at /usr/share/adodb/. Edit adodb path at
+    /etc/ossim/framework/ossim.conf correctly.
+
+  Install aditional packages needed by the directive viewer and restart apache:
     
     - php4-domxml   (>= 4.3.3)
     - php4-xslt     (>= 4.3.3)
 
     $ apt-get install php4-domxml php4-xslt
+    $ /etc/init.d/apache restart
 
 
   3.3 Graphs
@@ -453,7 +468,29 @@
   Copy the mrtg config files from the etc ossim directory to /etc:
 
     $ cp $OSSIM_PATH/etc/framework/mrtg* /etc/ossim/framework/
+
+  Edit /etc/ossim/framework/mrtg*:
+
+    WorkDir: $OSSIM_PATH/www/mrtg
+    PathAdd: /usr/local/rrdtool-1.1.0/bin
+    LibAdd: /usr/local/rrdtool-1.1.0/lib/perl
+    Include: $OSSIM_PATH/mrtg/hosts/host_qualification.cfg
+    Include: $OSSIM_PATH/mrtg/nets/net_qualification.cfg
+    Include: $OSSIM_PATH/mrtg/global/global_qualification.cfg
   
+  Important paths in order to draw graphs are:
+  
+    # rrdtool compiled with --prefix=/usr/local
+    rrdtool_path=/usr/local/rrdtool-1.1.0/bin/
+    rrdtool_lib_path=/usr/local/rrdtool-1.1.0/lib/perl/
+    mrtg_rrd_files_path=$OSSIM_PATH/www/mrtg
+
+    rrdpath_host=$OSSIM_PATH/www/mrtg/host_qualification/
+    rrdpath_net=$OSSIM_PATH/www/mrtg/net_qualification/
+    rrdpath_global=$OSSIM_PATH/www/mrtg/global_qualification/
+      
+    rrdpath_ntop=/var/lib/ntop/rrd
+
   Run the script named 'launch-mrtg':
     
     $ cd $OSSIM_PATH/mrtg
@@ -471,12 +508,6 @@
 
   and take a look at the section links of '/etc/ossim/framework/ossim.conf'
   again ;).
-
-  Important paths in order to draw graphs are:
-  
-      # rrdtool compiled with --prefix=/usr/local
-      rrdtool_path=/usr/local/rrdtool-1.1.0/bin/
-      rrdtool_lib_path=/usr/local/rrdtool-1.1.0/lib/perl/
 
   Ah, obtain a .ttf font and put it somewhere visible to ossim. Adjust
   /etc/ossim/framework/ossim.conf and make sure rrdtool can find its default
@@ -534,14 +565,23 @@
   Agents support at this time:
    
    Detectors:
-   - snort and spade (fast format)
-   - firewall-1 (syslog)
-   - apache (access log)
-   - iis (syslog)
-   - iptables (syslog)
+   - snort and spade
+   - firewall-1
+   - apache
+   - iis
+   - iptables
+   - rrd anomaly/threshold
+   - realsecure
+   - arpwatch
+   - p0f
 
    Monitors:
    - ntop
+     · hostinfo
+     · session
+   - compromise & attack levels
+   - start/shutdown plugins
+   - watchdog plugins
  
   Edit the agent config file at '$OSSIM_PATH/agent/config.xml'
   Make sure that location files exists.
@@ -580,13 +620,17 @@
     $ cd $OSSIM_PATH/scripts/
     $ ./control_panel.pl &
     $ ./rrd_plugin.pl &
-    $ ./os.pl &
-    $ ./mac.pl &
-    $ ./check_rrd.pl >> temp_rrd.log &
-    $ ./check_rrd_global.pl >> temp_rrd.log &
 
   If you have installed OSSIM in one computer, you can also start OSSIM with
   this rc file:
 
     $ $OSSIM_PATH/etc/init.d/ossim start.
 
+
+
+  5. Todo
+  ===========================================================================
+
+  Nessus integration.
+  Take a look at README.nessus for details.
+  

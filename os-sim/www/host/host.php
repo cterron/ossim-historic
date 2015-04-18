@@ -12,6 +12,7 @@
 <?php 
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
+    require_once 'classes/Host_os.inc';
 
     if (!$order = $_GET["order"]) $order = "hostname"; 
     if (!$search = $_POST["search"]) 
@@ -63,7 +64,9 @@
 
     <tr>
       <td><a href="../report/index.php?host=<?php 
-        echo $ip ?>"><?php echo $host->get_hostname(); ?></a></td>
+        echo $ip ?>"><?php echo $host->get_hostname(); ?></a>
+      <?php echo Host_os::get_os_pixmap($conn, $host->get_ip()); ?>
+      </td>
       <td><?php echo $host->get_ip(); ?></td>
       <td><?php if ($nat = $host->get_nat()) echo $nat; else echo "-" ?></td>
       <td><?php echo $host->get_asset(); ?></td>

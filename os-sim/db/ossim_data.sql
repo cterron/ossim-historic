@@ -2603,8 +2603,10 @@ INSERT INTO plugin (id, type, name, description) VALUES (1507, 1, 'rrd_threshold
 INSERT INTO plugin (id, type, name, description) VALUES (1508, 1, 'rrd_anomaly', 'RRD Anomaly');
 INSERT INTO plugin (id, type, name, description) VALUES (1509, 1, 'threshold', 'Threshold exceeded');
 INSERT INTO plugin (id, type, name, description) VALUES (1510, 1, 'cisco', 'Cisco router');
+INSERT INTO plugin (id, type, name, description) VALUES (1511, 1, 'p0f', 'Passive OS fingerprinting tool');
+INSERT INTO plugin (id, type, name, description) VALUES (1512, 1, 'arpwatch', 'Ethernet/FDDI station monitor daemon');
 
-INSERT INTO plugin (id, type, name, description) VALUES (2001, 2, 'os_sim', 'OS-SIM');
+INSERT INTO plugin (id, type, name, description) VALUES (2001, 2, 'ossim', 'OS-SIM');
 INSERT INTO plugin (id, type, name, description) VALUES (2002, 2, 'arp_watch', 'Arpwatch');
 INSERT INTO plugin (id, type, name, description) VALUES (2003, 2, 'p0f', 'P0f');
 INSERT INTO plugin (id, type, name, description) VALUES (2004, 2, 'open_nms', 'OpenNMS');
@@ -5021,6 +5023,17 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1510, 1, NULL, NULL, 'cisco: Attempted to connect to RSHELL');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1510, 2, NULL, NULL, 'cisco: Clear counter on all interfaces');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1510, 3, NULL, NULL, 'cisco: Line protocol changed state');
+
+
+--
+-- P0f Sids
+--
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1511, 1, NULL, NULL, 'p0f: Operating system change');
+
+--
+-- Arpwatch Sids
+--
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1512, 1, NULL, NULL, 'arpwatch: Mac address change');
 
 
 --

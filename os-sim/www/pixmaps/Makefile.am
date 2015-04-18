@@ -1,3 +1,5 @@
+SUBDIRS = os
+
 pixmapsdir = $(localstatedir)/www/ossim/pixmaps
 pixmaps_DATA = arrow.gif \
 	arrow2.gif \

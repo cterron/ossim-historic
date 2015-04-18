@@ -11,7 +11,7 @@ class Agent:
     
     def __init__(self):
         self.serverIp = ''
-        self.plugins = []
+        self.plugins = {}
         self.listenPort = 0
         self.conn = None
         self.sequence = 0
@@ -61,10 +61,20 @@ class Agent:
     def append_plugins(self):
         util.debug (__name__, "Apending plugins...", '=>', 'YELLOW')
         for key, plugin in self.plugins.iteritems():
+            self.sequence += 1
             if plugin["enable"] == 'yes':
-                self.sequence += 1
-                self.conn.send('session-append-plugin id="%d" plugin-id="%s"\n' %\
-                    (self.sequence, plugin["id"]))
+                msg = 'session-append-plugin ' + \
+                      'id="%d" plugin_id="%s" ' % \
+                        (self.sequence, plugin["id"]) + \
+                      'enabled="true" ' + \
+                      'state="start"\n'
+            else:
+                msg = 'session-append-plugin ' + \
+                      'id="%d" plugin_id="%s" ' % \
+                        (self.sequence, plugin["id"]) + \
+                      'enabled="false" ' + \
+                      'state="stop"\n'
+            self.conn.send(msg)
 
     def reconnect(self):
         "Reset the current connection by closing and reopening it"
@@ -87,6 +97,7 @@ class Agent:
         monitor = Monitor.Monitor(self)
         monitor.start()
 
+
     def parser(self):
 
         for key, plugin in self.plugins.iteritems():
@@ -95,7 +106,8 @@ class Agent:
             #  multithreading at this point !!!!
             #
 
-            if plugin["enable"] == 'yes' and plugin["type"] == 'detector':
+#            if plugin["enable"] == 'yes' and plugin["type"] == 'detector':
+            if plugin["type"] == 'detector':
                 parser = Parser.Parser(self, plugin)
                 parser.start()
 
@@ -104,7 +116,7 @@ class Agent:
 
     def sendMessage(self, type, date, sensor, interface, 
                     plugin_id, plugin_sid, priority, protocol, 
-                    src_ip, src_port, dst_ip, dst_port, 
+                    src_ip, src_port, dst_ip, dst_port, data="",
                     condition="", value=""):
 
         message = 'alert '
@@ -120,6 +132,7 @@ class Agent:
         if src_port:    message +=  'src_port="'    + str(src_port)     + '" '
         if dst_ip:      message +=  'dst_ip="'      + str(dst_ip)       + '" '
         if dst_port:    message +=  'dst_port="'    + str(dst_port)     + '" '
+        if data:        message +=  'data="'        + str(data)         + '" '
 
         # Monitors specific
         if condition:   message +=  'condition="'   + str(condition)    + '" '

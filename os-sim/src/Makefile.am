@@ -26,6 +26,7 @@ ossim_SOURCES = \
 		sim-xml-config.c \
 		sim-xml-directive.c \
 		sim-command.c \
+		sim-plugin-state.c \
 		sim-session.c \
 		sim-scheduler.c \
 		sim-organizer.c \

@@ -44,6 +44,16 @@ typedef enum {
   SIM_COMMAND_SCOPE_CONNECT,
   SIM_COMMAND_SCOPE_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS,
+  SIM_COMMAND_SCOPE_SENSOR_PLUGIN,
+  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_START,
+  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_STOP,
+  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_ENABLED,
+  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLED,
+  SIM_COMMAND_SCOPE_PLUGIN_START,
+  SIM_COMMAND_SCOPE_PLUGIN_STOP,
+  SIM_COMMAND_SCOPE_PLUGIN_ENABLED,
+  SIM_COMMAND_SCOPE_PLUGIN_DISABLED,
   SIM_COMMAND_SCOPE_ALERT,
   SIM_COMMAND_SCOPE_RELOAD_PLUGINS,
   SIM_COMMAND_SCOPE_RELOAD_SENSORS,
@@ -61,6 +71,16 @@ typedef enum {
   SIM_COMMAND_SYMBOL_CONNECT,
   SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS,
+  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN,
+  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START,
+  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_STOP,
+  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLED,
+  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLED,
+  SIM_COMMAND_SYMBOL_PLUGIN_START,
+  SIM_COMMAND_SYMBOL_PLUGIN_STOP,
+  SIM_COMMAND_SYMBOL_PLUGIN_ENABLED,
+  SIM_COMMAND_SYMBOL_PLUGIN_DISABLED,
   SIM_COMMAND_SYMBOL_ALERT,
   SIM_COMMAND_SYMBOL_RELOAD_PLUGINS,
   SIM_COMMAND_SYMBOL_RELOAD_SENSORS,
@@ -75,6 +95,8 @@ typedef enum {
   SIM_COMMAND_SYMBOL_USERNAME,
   SIM_COMMAND_SYMBOL_PASSWORD,
   SIM_COMMAND_SYMBOL_SENSOR,
+  SIM_COMMAND_SYMBOL_STATE,
+  SIM_COMMAND_SYMBOL_ENABLED,
   SIM_COMMAND_SYMBOL_INTERFACE,
   SIM_COMMAND_SYMBOL_TYPE,
   SIM_COMMAND_SYMBOL_NAME,
@@ -91,6 +113,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_CONDITION,
   SIM_COMMAND_SYMBOL_VALUE,
   SIM_COMMAND_SYMBOL_INTERVAL,
+  SIM_COMMAND_SYMBOL_DATA
 } SimCommandSymbolType;
 
 static const struct
@@ -101,6 +124,16 @@ static const struct
   { "connect", SIM_COMMAND_SYMBOL_CONNECT },
   { "session-append-plugin", SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN },
   { "session-remove-plugin", SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN },
+  { "server-get-sensor-plugins", SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS },
+  { "sensor-plugin", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN },
+  { "sensor-plugin-start", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START },
+  { "sensor-plugin-stop", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_STOP },
+  { "sensor-plugin-enabled", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLED },
+  { "sensor-plugin-disabled", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLED },
+  { "plugin-start", SIM_COMMAND_SYMBOL_PLUGIN_START },
+  { "plugin-stop", SIM_COMMAND_SYMBOL_PLUGIN_STOP },
+  { "plugin-enabled", SIM_COMMAND_SYMBOL_PLUGIN_ENABLED },
+  { "plugin-disabled", SIM_COMMAND_SYMBOL_PLUGIN_DISABLED },
   { "alert", SIM_COMMAND_SYMBOL_ALERT },
   { "reload-plugins", SIM_COMMAND_SYMBOL_RELOAD_PLUGINS },
   { "reload-sensors", SIM_COMMAND_SYMBOL_RELOAD_SENSORS },
@@ -129,9 +162,11 @@ static const struct
   guint token;
 } session_append_plugin_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
-  { "plugin-id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
   { "type", SIM_COMMAND_SYMBOL_TYPE },
   { "name", SIM_COMMAND_SYMBOL_NAME },
+  { "state", SIM_COMMAND_SYMBOL_STATE },
+  { "enabled", SIM_COMMAND_SYMBOL_ENABLED },
 };
 
 static const struct
@@ -140,9 +175,107 @@ static const struct
   guint token;
 } session_remove_plugin_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
-  { "plugin-id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
   { "type", SIM_COMMAND_SYMBOL_TYPE },
   { "name", SIM_COMMAND_SYMBOL_NAME },
+  { "state", SIM_COMMAND_SYMBOL_STATE },
+  { "enabled", SIM_COMMAND_SYMBOL_ENABLED },
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} server_get_sensor_plugins_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_plugin_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "state", SIM_COMMAND_SYMBOL_STATE },
+  { "enabled", SIM_COMMAND_SYMBOL_ENABLED }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_plugin_start_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_plugin_stop_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_plugin_enabled_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_plugin_disabled_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} plugin_start_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} plugin_stop_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} plugin_enabled_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} plugin_disabled_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
 };
 
 static const struct
@@ -164,7 +297,8 @@ static const struct
   { "dst_port", SIM_COMMAND_SYMBOL_DST_PORT },
   { "condition", SIM_COMMAND_SYMBOL_CONDITION },
   { "value", SIM_COMMAND_SYMBOL_VALUE },
-  { "interval", SIM_COMMAND_SYMBOL_INTERVAL }
+  { "interval", SIM_COMMAND_SYMBOL_INTERVAL },
+  { "data", SIM_COMMAND_SYMBOL_DATA }
 };
 
 static const struct
@@ -237,6 +371,28 @@ static void sim_command_session_append_plugin_scan (SimCommand    *command,
 						    GScanner      *scanner);
 static void sim_command_session_remove_plugin_scan (SimCommand    *command,
 						    GScanner      *scanner);
+
+static void sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
+							GScanner      *scanner);
+static void sim_command_sensor_plugin_scan (SimCommand    *command,
+					    GScanner      *scanner);
+static void sim_command_sensor_plugin_start_scan (SimCommand    *command,
+						  GScanner      *scanner);
+static void sim_command_sensor_plugin_stop_scan (SimCommand    *command,
+						 GScanner      *scanner);
+static void sim_command_sensor_plugin_enabled_scan (SimCommand    *command,
+						    GScanner      *scanner);
+static void sim_command_sensor_plugin_disabled_scan (SimCommand    *command,
+						     GScanner      *scanner);
+static void sim_command_plugin_start_scan (SimCommand    *command,
+					   GScanner      *scanner);
+static void sim_command_plugin_stop_scan (SimCommand    *command,
+					  GScanner      *scanner);
+static void sim_command_plugin_enabled_scan (SimCommand    *command,
+					     GScanner      *scanner);
+static void sim_command_plugin_disabled_scan (SimCommand    *command,
+					      GScanner      *scanner);
+
 static void sim_command_alert_scan (SimCommand    *command,
 				    GScanner      *scanner);
 static void sim_command_reload_plugins_scan (SimCommand    *command,
@@ -303,11 +459,32 @@ sim_command_impl_finalize (GObject  *gobject)
       break;
     case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:
       if (cmd->data.session_append_plugin.name)
-	g_free (cmd->data.connect.username);
+	g_free (cmd->data.session_append_plugin.name);
       break;
     case SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN:
       if (cmd->data.session_remove_plugin.name)
-	g_free (cmd->data.connect.username);
+	g_free (cmd->data.session_remove_plugin.name);
+      break;
+
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN:
+      if (cmd->data.sensor_plugin.sensor)
+	g_free (cmd->data.sensor_plugin.sensor);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_START:
+      if (cmd->data.sensor_plugin_start.sensor)
+	g_free (cmd->data.sensor_plugin_start.sensor);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP:
+      if (cmd->data.sensor_plugin_stop.sensor)
+	g_free (cmd->data.sensor_plugin_stop.sensor);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_ENABLED:
+      if (cmd->data.sensor_plugin_enabled.sensor)
+	g_free (cmd->data.sensor_plugin_enabled.sensor);
+      break;
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLED:
+      if (cmd->data.sensor_plugin_disabled.sensor)
+	g_free (cmd->data.sensor_plugin_disabled.sensor);
       break;
 
     case SIM_COMMAND_TYPE_WATCH_RULE:
@@ -616,6 +793,46 @@ sim_command_scan (SimCommand    *command,
   for (i = 0; i < G_N_ELEMENTS (session_remove_plugin_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN, session_remove_plugin_symbols[i].name, GINT_TO_POINTER (session_remove_plugin_symbols[i].token));
 
+  /* Added server get sensor plugins symbols */
+  for (i = 0; i < G_N_ELEMENTS (server_get_sensor_plugins_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS, server_get_sensor_plugins_symbols[i].name, GINT_TO_POINTER (server_get_sensor_plugins_symbols[i].token));
+
+  /* Added sensor plugin symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_plugin_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN, sensor_plugin_symbols[i].name, GINT_TO_POINTER (sensor_plugin_symbols[i].token));
+
+  /* Added sensor plugin start symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_plugin_start_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_START, sensor_plugin_start_symbols[i].name, GINT_TO_POINTER (sensor_plugin_start_symbols[i].token));
+
+  /* Added sensor plugin stop symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_plugin_stop_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_STOP, sensor_plugin_stop_symbols[i].name, GINT_TO_POINTER (sensor_plugin_stop_symbols[i].token));
+
+  /* Added sensor plugin enabled symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_plugin_enabled_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_ENABLED, sensor_plugin_enabled_symbols[i].name, GINT_TO_POINTER (sensor_plugin_enabled_symbols[i].token));
+
+  /* Added sensor plugin disabled symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_plugin_disabled_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLED, sensor_plugin_disabled_symbols[i].name, GINT_TO_POINTER (sensor_plugin_disabled_symbols[i].token));
+
+  /* Added plugin start symbols */
+  for (i = 0; i < G_N_ELEMENTS (plugin_start_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_START, plugin_start_symbols[i].name, GINT_TO_POINTER (plugin_start_symbols[i].token));
+
+  /* Added plugin stop symbols */
+  for (i = 0; i < G_N_ELEMENTS (plugin_stop_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_STOP, plugin_stop_symbols[i].name, GINT_TO_POINTER (plugin_stop_symbols[i].token));
+
+  /* Added plugin enabled symbols */
+  for (i = 0; i < G_N_ELEMENTS (plugin_enabled_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_ENABLED, plugin_enabled_symbols[i].name, GINT_TO_POINTER (plugin_enabled_symbols[i].token));
+
+  /* Added plugin disabled symbols */
+  for (i = 0; i < G_N_ELEMENTS (plugin_disabled_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_DISABLED, plugin_disabled_symbols[i].name, GINT_TO_POINTER (plugin_disabled_symbols[i].token));
+
   /* Added alert symbols */
   for (i = 0; i < G_N_ELEMENTS (alert_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_ALERT, alert_symbols[i].name, GINT_TO_POINTER (alert_symbols[i].token));
@@ -625,7 +842,7 @@ sim_command_scan (SimCommand    *command,
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_RELOAD_PLUGINS, reload_plugins_symbols[i].name, GINT_TO_POINTER (reload_plugins_symbols[i].token));
 
   /* Added reload sensors symbols */
-  for (i = 0; i < G_N_ELEMENTS (reload_plugins_symbols); i++)
+  for (i = 0; i < G_N_ELEMENTS (reload_sensors_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_RELOAD_SENSORS, reload_sensors_symbols[i].name, GINT_TO_POINTER (reload_sensors_symbols[i].token));
 
   /* Added reload hosts symbols */
@@ -666,6 +883,36 @@ sim_command_scan (SimCommand    *command,
           break;
         case SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN:
 	  sim_command_session_remove_plugin_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS:
+	  sim_command_server_get_sensor_plugins_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR_PLUGIN:
+	  sim_command_sensor_plugin_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START:
+	  sim_command_sensor_plugin_start_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_STOP:
+	  sim_command_sensor_plugin_stop_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLED:
+	  sim_command_sensor_plugin_enabled_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLED:
+	  sim_command_sensor_plugin_disabled_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_START:
+	  sim_command_plugin_start_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_STOP:
+	  sim_command_plugin_stop_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ENABLED:
+	  sim_command_plugin_enabled_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_DISABLED:
+	  sim_command_plugin_disabled_scan (command, scanner);
           break;
         case SIM_COMMAND_SYMBOL_ALERT:
 	  sim_command_alert_scan (command, scanner);
@@ -791,6 +1038,8 @@ sim_command_session_append_plugin_scan (SimCommand    *command,
   command->data.session_append_plugin.id = 0;
   command->data.session_append_plugin.type = SIM_PLUGIN_TYPE_NONE;
   command->data.session_append_plugin.name = NULL;
+  command->data.session_append_plugin.state = 0;
+  command->data.session_append_plugin.enabled = FALSE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SESSION_APPEND_PLUGIN);
   do
@@ -835,6 +1084,31 @@ sim_command_session_append_plugin_scan (SimCommand    *command,
 
 	  command->data.session_append_plugin.name = g_strdup (scanner->value.v_string);
           break;
+        case SIM_COMMAND_SYMBOL_STATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "start"))
+	    command->data.session_append_plugin.state = 1;
+	  else if (!g_ascii_strcasecmp (scanner->value.v_string, "stop"))
+	    command->data.session_remove_plugin.state = 2;
+          break;
+        case SIM_COMMAND_SYMBOL_ENABLED:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "true"))
+	    command->data.session_append_plugin.enabled = TRUE;
+	  else if (!g_ascii_strcasecmp (scanner->value.v_string, "false"))
+	    command->data.session_remove_plugin.enabled = FALSE;
+	  break;
+
         default:
           break;
         }
@@ -856,9 +1130,11 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
   g_return_if_fail (scanner != NULL);
 
   command->type = SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN;
-  command->data.session_append_plugin.id = 0;
-  command->data.session_append_plugin.type = SIM_PLUGIN_TYPE_NONE;
-  command->data.session_append_plugin.name = NULL;
+  command->data.session_remove_plugin.id = 0;
+  command->data.session_remove_plugin.type = SIM_PLUGIN_TYPE_NONE;
+  command->data.session_remove_plugin.name = NULL;
+  command->data.session_remove_plugin.state = 0;
+  command->data.session_remove_plugin.enabled = FALSE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN);
   do
@@ -883,7 +1159,7 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
 	  if (scanner->token != G_TOKEN_STRING)
 	    break;
 
-	  command->data.session_append_plugin.id = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  command->data.session_remove_plugin.id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         case SIM_COMMAND_SYMBOL_TYPE:
 	  g_scanner_get_next_token (scanner); /* = */
@@ -892,7 +1168,7 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
 	  if (scanner->token != G_TOKEN_STRING)
 	    break;
 
-	  command->data.session_append_plugin.type = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  command->data.session_remove_plugin.type = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         case SIM_COMMAND_SYMBOL_NAME:
 	  g_scanner_get_next_token (scanner); /* = */
@@ -901,7 +1177,569 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
 	  if (scanner->token != G_TOKEN_STRING)
 	    break;
 
-	  command->data.session_append_plugin.name = g_strdup (scanner->value.v_string);
+	  command->data.session_remove_plugin.name = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_STATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "start"))
+	    command->data.session_remove_plugin.state = 1;
+	  else if (!g_ascii_strcasecmp (scanner->value.v_string, "stop"))
+	    command->data.session_remove_plugin.state = 2;
+          break;
+        case SIM_COMMAND_SYMBOL_ENABLED:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "true"))
+	    command->data.session_remove_plugin.enabled = TRUE;
+	  else if (!g_ascii_strcasecmp (scanner->value.v_string, "false"))
+	    command->data.session_remove_plugin.enabled = FALSE;
+	  break;
+
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
+					    GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_sensor_plugin_scan (SimCommand    *command,
+				GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR_PLUGIN;
+  command->data.sensor_plugin.sensor = NULL;
+  command->data.sensor_plugin.plugin_id = 0;
+  command->data.sensor_plugin.state = 0;
+  command->data.sensor_plugin.state = FALSE;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin.sensor = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_STATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (g_ascii_strcasecmp (scanner->value.v_string, "start"))
+	    command->data.sensor_plugin.state = 1;
+	  else if (g_ascii_strcasecmp (scanner->value.v_string, "stop"))
+	    command->data.sensor_plugin.state = 2;
+          break;
+        case SIM_COMMAND_SYMBOL_ENABLED:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  if (g_ascii_strcasecmp (scanner->value.v_string, "true"))
+	    command->data.sensor_plugin.enabled = TRUE;
+	  else if (g_ascii_strcasecmp (scanner->value.v_string, "false"))
+	    command->data.sensor_plugin.enabled = FALSE;
+
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_sensor_plugin_start_scan (SimCommand    *command,
+				      GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR_PLUGIN_START;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_START);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_start.sensor = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_start.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_sensor_plugin_stop_scan (SimCommand    *command,
+				     GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_STOP);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_stop.sensor = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_stop.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_sensor_plugin_enabled_scan (SimCommand    *command,
+					GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR_PLUGIN_ENABLED;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_ENABLED);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_enabled.sensor = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_enabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_sensor_plugin_disabled_scan (SimCommand    *command,
+					 GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLED;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLED);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_SENSOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_disabled.sensor = g_strdup (scanner->value.v_string);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.sensor_plugin_disabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_plugin_start_scan (SimCommand    *command,
+			       GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_PLUGIN_START;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_PLUGIN_START);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.plugin_start.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_plugin_stop_scan (SimCommand    *command,
+			      GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_PLUGIN_STOP;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_PLUGIN_STOP);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.plugin_stop.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_plugin_enabled_scan (SimCommand    *command,
+				 GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_PLUGIN_ENABLED;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_PLUGIN_ENABLED);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.plugin_enabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_plugin_disabled_scan (SimCommand    *command,
+				  GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_PLUGIN_DISABLED;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_PLUGIN_DISABLED);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.plugin_disabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
           break;
@@ -1133,6 +1971,18 @@ sim_command_alert_scan (SimCommand    *command,
 
 	  command->data.alert.interval = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
+        case SIM_COMMAND_SYMBOL_DATA:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.data = g_strdup (scanner->value.v_string);
+	  break;
         default:
           break;
         }
@@ -1416,6 +2266,7 @@ sim_command_get_string (SimCommand    *command)
 {
   SimRule  *rule;
   gchar    *str = NULL;
+  gchar    *state;
 
   g_return_val_if_fail (command != NULL, NULL);
   g_return_val_if_fail (SIM_IS_COMMAND (command), NULL);
@@ -1434,6 +2285,41 @@ sim_command_get_string (SimCommand    *command)
 
       str = g_strdup (command->data.watch_rule.str);
       break;
+
+    case SIM_COMMAND_TYPE_SENSOR_PLUGIN:
+      switch (command->data.sensor_plugin.state)
+	{
+	case 1:
+	  state = g_strdup ("start");
+	  break;
+	case 2:
+	  state = g_strdup ("stop");
+	  break;
+	default:
+	  state = g_strdup ("unknow");
+	}
+
+      str = g_strdup_printf ("sensor-plugin sensor=\"%s\" plugin_id=\"%d\" state=\"%s\" enabled=\"%s\"\n",
+			     command->data.sensor_plugin.sensor,
+			     command->data.sensor_plugin.plugin_id,
+			     state,
+			     (command->data.sensor_plugin.enabled) ? "true" : "false");
+
+      g_free (state);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_START:
+      str = g_strdup_printf ("plugin-start plugin_id=\"%d\"\n", command->data.plugin_start.plugin_id);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_STOP:
+      str = g_strdup_printf ("plugin-stop plugin_id=\"%d\"\n", command->data.plugin_stop.plugin_id);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_ENABLED:
+      str = g_strdup_printf ("plugin-enabled plugin_id=\"%d\"\n", command->data.plugin_enabled.plugin_id);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_DISABLED:
+      str = g_strdup_printf ("plugin-disabled plugin_id=\"%d\"\n", command->data.plugin_disabled.plugin_id);
+      break;
+
     default:
       break;
     }
@@ -1498,6 +2384,9 @@ sim_command_get_alert (SimCommand     *command)
     alert->value = g_strdup (command->data.alert.value);
   if (command->data.alert.interval)
     alert->interval = command->data.alert.interval;
+
+  if (command->data.alert.data)
+    alert->data = g_strdup (command->data.alert.data);
 
   if (command->data.alert.priority)
     {

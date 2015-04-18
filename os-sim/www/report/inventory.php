@@ -9,9 +9,7 @@
 
 <?php 
     if (!$ip = $_GET["host"]) { 
-?>
-    <p>Wrong ip</p>
-<?php 
+        echo "<p>Wrong ip</p>";
         exit;
     }
 ?>
@@ -32,6 +30,21 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
+    /* services update */
+    if ($_GET["update"] == 'services') 
+    {
+        $services = shell_exec("nmap -sV $ip");
+        $lines = split("[\n\r]", $services);
+        Host_services::delete($conn, $ip);
+        foreach ($lines as $line) {
+            preg_match ('/open\s+([\w\-\_\?]+)(\s+)?(.*)$/', $line, $regs);
+            if ($regs[0]) {
+                $service = $regs[1];
+                $version = $regs[3];
+                Host_services::insert($conn, $ip, $service, $version);
+            }
+        }
+    }
 ?>
     <table align="center">
       <tr><td colspan="2"></td></tr>
@@ -55,12 +68,17 @@
 <?php
     }
 
-    if ($os_list = Host_os::get_list($conn, "WHERE ip = '$ip'")) {
+    if ($os_list = Host_os::get_list($conn, "WHERE ip = inet_aton('$ip')")) {
         $os = $os_list[0];
 ?>
       <tr>
         <th>Operating System</th>
-        <td><?php echo $os->os ?></td>
+        <td>
+<?php 
+            echo $os->os . " ";
+            echo Host_os::get_os_pixmap($conn, $host->get_ip()); 
+?>
+        </td>
       </tr>
 <?php
     }
@@ -68,7 +86,7 @@
 
 <?php
 
-    if ($mac_list = Host_mac::get_list($conn, "WHERE ip = '$ip'")) {
+    if ($mac_list = Host_mac::get_list($conn, "WHERE ip = inet_aton('$ip')")) {
         $mac = $mac_list[0];
 ?>
       <tr>
@@ -128,7 +146,10 @@
 
       <tr><td colspan="2"></td></tr>
       <tr><td colspan="2"></td></tr>
-      <tr><th colspan="2">Active services and aplications names/versions</th></h2>
+      <tr><th colspan="2">Active services and aplications names/versions 
+      [ <a href="<?php 
+        echo $_SERVER["PHP_SELF"]?>?host=<?php 
+        echo $ip ?>&update=services">update</a> ]</th></h2>
       <tr>
         <th>Service</th>
         <th>Version</th>

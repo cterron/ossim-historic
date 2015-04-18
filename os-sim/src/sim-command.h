@@ -77,13 +77,73 @@ struct _SimCommand {
       gint            id;
       SimPluginType   type;
       gchar          *name;
+      gboolean        enabled;
+      gint            state;
     } session_append_plugin;
 
     struct {
       gint            id;
       SimPluginType   type;
       gchar          *name;
+      gboolean        enabled;
+      gint            state;
     } session_remove_plugin;
+
+    struct {
+      gint            id;
+    } server_get_sensor_plugins;
+
+    struct {
+      gint            id;
+      gchar          *sensor;
+      gint            plugin_id;
+      gboolean        enabled;
+      gint            state;
+    } sensor_plugin;
+
+    struct {
+      gint            id;
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_start;
+
+    struct {
+      gint            id;
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_stop;
+
+    struct {
+      gint            id;
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_enabled;
+
+    struct {
+      gint            id;
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_disabled;
+
+    struct {
+      gint            id;
+      gint            plugin_id;
+    } plugin_start;
+
+    struct {
+      gint            id;
+      gint            plugin_id;
+    } plugin_stop;
+
+    struct {
+      gint            id;
+      gint            plugin_id;
+    } plugin_enabled;
+
+    struct {
+      gint            id;
+      gint            plugin_id;
+    } plugin_disabled;
 
     struct {
       /* Alert Info */
@@ -109,6 +169,8 @@ struct _SimCommand {
       gchar             *condition;
       gchar             *value;
       gint               interval;
+
+      gchar             *data;
     } alert;
 
     struct {

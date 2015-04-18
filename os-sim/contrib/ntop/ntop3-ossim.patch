@@ -1,0 +1,125 @@
+--- Makefile.am.org	2004-03-23 14:01:03.000000000 +0100
++++ Makefile.am	2004-03-23 14:09:15.000000000 +0100
+@@ -61,7 +61,7 @@
+                        stamp-h.in
+ 
+ 
+-SUBDIRS = myrrd . @PLUGINS@
++SUBDIRS = . @PLUGINS@
+ 
+ ETTER_PASSIVE_FILE = etter.passive.os.fp
+ ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
+@@ -160,7 +160,7 @@
+                      traffic.c    vendor.c      version.c      \
+                      ntop_darwin.c
+ 
+-libntop_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
++libntop_la_DEPENDENCIES = config.h
+ libntop_la_LIBADD       = 
+ libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
+ 
+@@ -171,15 +171,12 @@
+                            webInterface.c
+ 
+ 
+-libntopreport_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
++libntopreport_la_DEPENDENCIES = config.h
+ libntopreport_la_LIBADD       = 
+ libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
+ 
+ man_MANS = ntop.8
+ 
+-myrrd/libmyrrd.a:
+-	cd myrrd; make
+-
+ .PHONY: snapshot
+ 
+ 
+--- configure.in.org	2004-03-23 13:59:27.000000000 +0100
++++ configure.in	2004-03-23 14:10:13.000000000 +0100
+@@ -128,7 +128,7 @@
+ AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
+ 
+ # Set constants and defaults
+-MYRRD=`pwd`/myrrd
++MYRRD=/usr/lib
+ SO_VERSION_PATCH=
+ MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
+ 
+@@ -2800,7 +2800,7 @@
+ fi
+ 
+ dnl> Append RRD finally
+-NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
++NTOP_APPENDS([${MYRRD}], [${MYRRD}], [rrd_th])
+ 
+ echo
+ echo "-------------------------------------------------------------------"
+@@ -2975,7 +2975,6 @@
+ AC_SUBST(SO_VERSION_PATCH)
+ 
+ AC_CONFIG_FILES([Makefile])
+-AC_CONFIG_FILES([myrrd/Makefile])
+ 
+ if test ".${ac_disable_plugins}" != ".yes"; then
+     AC_CONFIG_FILES([plugins/Makefile])
+--- plugins/Makefile.am.org	2004-03-23 14:07:32.000000000 +0100
++++ plugins/Makefile.am	2004-03-23 14:08:14.000000000 +0100
+@@ -37,7 +37,7 @@
+ # 
+ plugindir = $(libdir)/ntop/plugins
+ 
+-INCLUDES = -I.. @INCS@
++INCLUDES = -DHAVE_RRD_ABERRANT_BEHAVIOR -I.. @INCS@
+ 
+ #
+ # The meat for ntop
+@@ -81,7 +81,7 @@
+ 
+ librrdPlugin_la_SOURCES = rrdPlugin.c
+ librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+-librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
++librrdPlugin_la_LIBADD = -lrrd_th
+ 
+ libsflowPlugin_la_SOURCES = sflowPlugin.c
+ libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+--- plugins/rrdPlugin.c.org	2004-03-23 14:10:34.000000000 +0100
++++ plugins/rrdPlugin.c	2004-03-23 15:34:23.000000000 +0100
+@@ -476,7 +476,7 @@
+ 		  char *startTime, char* endTime, char *rrdPrefix) {
+   char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
+ #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+-  char buf2[384], buf3[384], buf4[384];
++  char buf2[384], buf3[384], buf4[384], buf5[384];
+ #endif
+   struct stat statbuf;
+   int argc = 0, rc, x, y;
+@@ -545,7 +545,9 @@
+     if(snprintf(buf4, sizeof(buf4), "DEF:fail=%s:counter:FAILURES", path) < 0)
+       BufferTooShort();
+     argv[argc++] = buf4;
+-    argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
++    if(snprintf(buf5, sizeof(buf5), "TICK:fail#ffffa0:%.1f:Anomaly", 1.0) < 0)
++      BufferTooShort();
++    argv[argc++] = buf5;
+     argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
+     argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
+     argv[argc++] = "LINE1:upper#ff0000:Upper";
+@@ -560,7 +562,7 @@
+ 
+     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+     rrd_clear_error();
+-    rc = rrd_graph(argc, argv, &calcpr, &x, &y);
++    rc = rrd_graph(argc, argv, &calcpr, &x, &y, NULL);
+ 
+     calfree();
+ 
+@@ -693,7 +695,7 @@
+     }
+ 
+ #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
+-    if(snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20") < 0)
++    if(snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:%.1f:%.4f:20", 0.1, 0.0035) < 0)
+       BufferTooShort();
+     argv[argc++] = tempStr;
+ #endif

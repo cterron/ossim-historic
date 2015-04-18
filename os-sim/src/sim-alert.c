@@ -69,6 +69,8 @@ sim_alert_impl_finalize (GObject  *gobject)
     gnet_inetaddr_unref (alert->dst_ia);
   if (alert->value)
     g_free (alert->value);
+  if (alert->data)
+    g_free (alert->data);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -113,6 +115,8 @@ sim_alert_instance_init (SimAlert *alert)
   alert->asset_dst = 1;
   alert->risk_c = 1;
   alert->risk_a = 1;
+
+  alert->data = NULL;
 }
 
 /* Public Methods */

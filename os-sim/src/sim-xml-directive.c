@@ -954,9 +954,10 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 	  while (children_rules)
 	    {
 	      /* Recursive call */
-	      if (!strcmp (children->name, OBJECT_RULE))
+	      if (!strcmp (children_rules->name, OBJECT_RULE)) {
 		sim_xml_directive_new_rule_from_node (xmldirect, children_rules, rule_node, level + 1);
-	      
+	      }
+
 	      children_rules = children_rules->next;
 	    }
 	}

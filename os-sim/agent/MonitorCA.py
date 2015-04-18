@@ -10,7 +10,7 @@ class MonitorCA(Monitor.Monitor):
 
     def run(self):
     
-        util.debug (__name__, "plugin started", '--')
+        util.debug (__name__, "monitor started", '--')
         rule = self.split_data(self.data)
         util.debug (__name__, "request received... (%s)" % str(rule), 
                     '<=', 'GREEN')
@@ -27,7 +27,7 @@ class MonitorCA(Monitor.Monitor):
             else:
                 self.__evaluate(rule = rule)
                 
-        util.debug (__name__, 'plugin finished', '--')
+        util.debug (__name__, 'monitor finished', '--')
 
 
     def __get_value(self, db, rule):
@@ -45,7 +45,7 @@ class MonitorCA(Monitor.Monitor):
                             WHERE host_ip = '%s'""" % rule["from"]
         else:
             util.debug(__name__, "Unknown plugin_sid: %s" % plugin_sid, "**", "RED")
-            util.debug (__name__, 'plugin finished', '--')
+            util.debug (__name__, 'monitor finished', '--')
             sys.exit()
         
         try:

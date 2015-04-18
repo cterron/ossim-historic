@@ -14,8 +14,9 @@
              enable snort fast logging adding this line to the snort.conf:
                output alert_fast: fast.log 
         -->
-        <plugin id="1001" name="snort" type="detector" enable="yes">
-            <path>/usr/bin/snort</path>
+        <plugin id="1001" name="snort" type="detector" start="yes" enable="yes">
+            <startup>/etc/init.d/snort restart</startup>
+            <shutdown>/etc/init.d/snort stop</shutdown>
             <source>fast</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -27,8 +28,9 @@
              location must point to an apache access log
              (for example: /var/log/apache/access.log)
         -->
-        <plugin id="1501" name="apache" type="detector" enable="yes">
-            <path></path>
+        <plugin id="1501" name="apache" type="detector" start="yes" enable="no">
+            <startup>/etc/init.d/apache restart</startup>
+            <shutdown>/etc/init.d/apache stop</shutdown>
             <source>common</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -36,8 +38,9 @@
         </plugin>
 
         <!-- IIS detector -->
-        <plugin id="1502" name="iis" type="detector" enable="no">
-            <path></path>
+        <plugin id="1502" name="iis" type="detector" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>syslog</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -45,8 +48,9 @@
         </plugin>
 
         <!-- iptables detector -->
-        <plugin id="1503" name="iptables" type="detector" enable="no">
-            <path></path>
+        <plugin id="1503" name="iptables" type="detector" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>syslog</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -57,8 +61,9 @@
              FireWall-1 detector 
              source = syslog | opsec
         -->
-        <plugin id="1504" name="fw-1" type="detector" enable="no">
-            <path></path>
+        <plugin id="1504" name="fw-1" type="detector" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>syslog</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -66,8 +71,9 @@
         </plugin>
  
         <!-- Real Secure detector -->
-        <plugin id="1506" name="realsecure" type="detector" enable="no">
-            <path></path>
+        <plugin id="1506" name="realsecure" type="detector" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>snmp</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -75,8 +81,9 @@
         </plugin>
 
         <!-- RRD threahold detector -->
-        <plugin id="1507" name="rrd_threshold" type="detector" enable="yes">
-            <path></path>
+        <plugin id="1507" name="rrd_plugin.pl" type="detector" start="yes" enable="yes">
+            <startup>/usr/share/ossim/scripts/rrd_plugin.pl &amp;</startup>
+            <shutdown>killall rrd_plugin.pl</shutdown>
             <source>rrd_plugin</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -84,8 +91,9 @@
         </plugin>
         
         <!-- RRD anomaly detector -->
-        <plugin id="1508" name="rrd_anomaly" type="detector" enable="yes">
-            <path></path>
+        <plugin id="1508" name="rrd_plugin.pl" type="detector" start="yes" enable="yes">
+            <startup>/usr/share/ossim/scripts/rrd_plugin.pl &amp;</startup>
+            <shutdown>killall rrd_plugin.pl</shutdown>
             <source>rrd_plugin</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -93,8 +101,9 @@
         </plugin>
 
         <!-- C & A detector -->
-        <plugin id="1509" name="ca" type="detector" enable="yes">
-            <path></path>
+        <plugin id="1509" name="mysqld" type="detector" start="yes" enable="yes">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>database</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -103,12 +112,42 @@
         </plugin>
         
         <!-- Cisco routers detector -->
-        <plugin id="1510" name="cisco" type="detector" enable="no">
-            <path></path>
-            <source>syslog</source>
+        <plugin id="1510" name="cisco" type="detector" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
+            <source>common</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
             <location>/var/log/messages</location>
+        </plugin>
+        
+        <!-- 
+             P0f detector - OS changes
+             You must run p0f this way:
+             p0f -i $interface -lNtd -o /var/log/p0f.log
+        -->
+        <plugin id="1511" name="p0f" type="detector" start="yes" enable="yes">
+            <startup>p0f -i eth0 -lNtd -o /var/log/p0f.log</startup>
+            <shutdown>killall p0f</shutdown>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/p0f.log</location>
+        </plugin>
+
+        <!-- 
+             Arpwatch detector - MAC changes
+             You must run arpwatch this way:
+             arpwatch -d -i $interface -f /var/log/arp.dat >> \
+                /var/log/arpwatch.log
+        -->
+        <plugin id="1512" name="arpwatch" type="detector" start="yes" enable="yes">
+            <startup>arpwatch -d -i $interface -f /var/log/arp.dat >> /var/log/arpwatch.log &amp;</startup>
+            <shutdown>killall arpwatch</shutdown>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/arpwatch.log</location>
         </plugin>
 
         <!-- 
@@ -117,8 +156,9 @@
              (for example: 127.0.0.1:3000)
              frequency: if server make a request, get ntop info every N seconds
         -->
-        <plugin id="2005" name="ntop" type="monitor" enable="yes">
-            <path></path>
+        <plugin id="2005" name="ntop" type="monitor" start="yes" enable="yes">
+            <startup>/etc/init.d/ntop restart</startup>
+            <shutdown>/etc/init.d/ntop stop</shutdown>
             <source>socket</source>
             <location>127.0.0.1:3000</location>
             <interface>eth0</interface>
@@ -130,8 +170,9 @@
             C & A monitor
             location must be: database:host:db:user:pass 
         -->
-        <plugin id="2001" name="ca" type="monitor" enable="yes">
-            <path></path>
+        <plugin id="2001" name="mysqld" type="monitor" start="yes" enable="yes">
+            <startup></startup>
+            <shutdown></shutdown>
             <source>database</source>
             <location>mysql:host:database:user:password</location>
             <interface>eth0</interface>

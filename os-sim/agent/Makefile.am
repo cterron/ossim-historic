@@ -5,6 +5,7 @@ agent_DATA    = util.py \
 	Agent.py \
 	Parser.py \
 	Monitor.py \
+	ParserArpwatch.py \
 	ParserCisco.py \
 	ParserSnort.py \
 	ParserApache.py \
@@ -14,10 +15,13 @@ agent_DATA    = util.py \
 	ParserRealSecure.py \
 	ParserRRD.py \
 	ParserCA.py \
+	ParserP0f.py \
 	MonitorCA.py \
 	MonitorNtop.py \
 	MonitorNtopHostinfo.py \
-	MonitorNtopSession.py
+	MonitorNtopSession.py \
+	MonitorPlugin.py \
+	MonitorWatchdog.py
 
 EXTRA_DIST   = $(agent_DATA)
 

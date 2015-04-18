@@ -92,6 +92,8 @@ struct _SimAlert {
   gint               asset_dst;
   gdouble            risk_c;
   gdouble            risk_a;
+
+  gchar             *data;
 };
 
 struct _SimAlertClass {

@@ -53,6 +53,8 @@ my $row;
 my $host_ip;
 my $query = "SELECT *, inet_ntoa(host_ip) as temporal from host_scan where plugin_id = 3001;";
 my $sth = $dbh->prepare($query);
+my $sth2;
+my $sth3;
 $sth->execute();
 while($row = $sth->fetchrow_hashref){
 $host_ip = $row->{temporal};
@@ -82,9 +84,9 @@ my $key;
 
 `$nessus -T text -i $nessus_tmp/temp_res.nsr -o $nessus_tmp/temp_res.txt`;
 
-open (JODER, "/bin/cat $nessus_tmp/temp_res.txt |");
+open (VULNS, "/bin/cat $nessus_tmp/temp_res.txt |");
 
-while (<JODER>) {
+while (<VULNS>) {
 
     if (/^\+\s+(\d+\.\d+\.\d+\.\d+) :/) {
       $host = $1; 
@@ -112,7 +114,7 @@ while (<JODER>) {
     }
 }
 
-close(JODER);
+close(VULNS);
 
 foreach $key ( keys(%hv) ) {
     
@@ -149,15 +151,15 @@ foreach $key ( keys(%hv) ) {
         $net = $row->{name};
 
         $query = "SELECT * FROM net_host_reference WHERE net_name='$net'";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-        while ($row2 = $sth->fetchrow_hashref) {
+        $sth2 = $dbh->prepare($query);
+        $sth2->execute();
+        while ($row2 = $sth2->fetchrow_hashref) {
             $host_ip = $row2->{host_ip};
             $query = "SELECT * FROM host_vulnerability
                             WHERE ip = '$host_ip'";
-            $sth = $dbh->prepare($query);
-            $sth->execute();
-            if ($row3 = $sth->fetchrow_hashref) {
+            $sth3 = $dbh->prepare($query);
+            $sth3->execute();
+            if ($row3 = $sth3->fetchrow_hashref) {
                 $vulnerability += $row3->{vulnerability};
                 $rows += 1;
             }
@@ -166,9 +168,10 @@ foreach $key ( keys(%hv) ) {
             $query = "UPDATE net_vulnerability 
                 SET vulnerability = $vulnerability
                 WHERE net = '$net'";
-            $sth = $dbh->prepare($query);
-            $sth->execute();
+            $sth3 = $dbh->prepare($query);
+            $sth3->execute();
         }
+        $vulnerability = 0;
         $rows = 0;
     }
 }
@@ -207,20 +210,17 @@ my $otro_indice;
 
 my $y_dale = $nessus_tmp . "/temp_res." . $today_date . ".nsr";
 
-open(OTRO_TEMP, "<$y_dale") || die "Error open() $y_dale \n";
+open(TEMP_BIS, "<$y_dale") || die "Error open() $y_dale \n";
 
 
-while(<OTRO_TEMP>){
+while(<TEMP_BIS>){
 
 if(/^([^\|]*)\|[^\|]*\|([^\|]*)\|.*/){
 if($refs{$1} =~ /$2/){
 ;
 } else {
 $refs{$1} .= "$2|";
-}
-}
-
-}
+}}}
 
 if(keys %refs){
 print "Updating...\n";
@@ -234,11 +234,9 @@ foreach $otro_indice (0 .. $#temp_array) {
 my $query = "INSERT INTO host_plugin_sid(host_ip, plugin_id, plugin_sid) values(inet_aton(\"$key\"), 3001, $temp_array[$otro_indice]);";
 my $sth = $dbh->prepare($query);
 $sth->execute();
-}
-}
-}
+}}}
 
-close(OTRO_TEMP);
+close(TEMP_BIS);
 
 $dbh->disconnect;
 

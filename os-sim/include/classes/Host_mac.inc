@@ -25,12 +25,12 @@ class Host_mac{
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM host_mac $args";
+        $query = "SELECT *, inet_ntoa(ip) FROM host_mac $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new host_mac ( $rs->fields["ip"],
+                $list[] = new host_mac ( $rs->fields["inet_ntoa(ip)"],
                                             $rs->fields["mac"],
                                             $rs->fields["previous"],
                                             $rs->fields["anom"],
@@ -43,7 +43,8 @@ class Host_mac{
 
     function ack($conn, $host, $mac)
     {
-        $query = "UPDATE host_mac SET anom = 0, mac = '$mac', previous = '$mac' where ip = '$host';";
+        $query = "UPDATE host_mac SET anom = 0, mac = '$mac', 
+            previous = '$mac' where ip = inet_aton('$host');";
         if ($conn->Execute($query) === false) {
             print 'error acking: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -52,7 +53,8 @@ class Host_mac{
 
     function ignore($conn, $host, $mac)
     {
-        $query = "UPDATE host_mac SET anom = 0, mac = '$mac', previous = '$mac' where ip = '$host';";
+        $query = "UPDATE host_mac SET anom = 0, mac = '$mac', 
+            previous = '$mac' where ip = inet_aton('$host');";
         if ($conn->Execute($query) === false) {
             print 'error acking: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -61,7 +63,7 @@ class Host_mac{
 
 
     function delete($conn, $host) {
-        $query = "DELETE FROM host_mac WHERE ip = '$host';";
+        $query = "DELETE FROM host_mac WHERE ip = inet_aton('$host');";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;

@@ -137,7 +137,7 @@ CREATE TABLE host_sensor_reference (
 
 DROP TABLE IF EXISTS net_sensor_reference;
 CREATE TABLE net_sensor_reference (
-    net_name        varchar(15) NOT NULL,
+    net_name        varchar(128) NOT NULL,
     sensor_name     varchar(64) NOT NULL,
     PRIMARY KEY     (net_name, sensor_name)
 );
@@ -257,24 +257,31 @@ CREATE TABLE control_panel_net (
     PRIMARY KEY     (net_name, time_range)
 );
 
+--
+-- Table: Host Mac. 
+--
 DROP TABLE IF EXISTS host_mac;
 CREATE TABLE host_mac (
-  ip                        varchar(15) UNIQUE NOT NULL,
-  mac	                    varchar(255) NOT NULL,	
-  previous	                varchar(255) NOT NULL,	
-  anom                      int NOT NULL,
-  mac_time                 varchar(100) NOT NULL,
-  PRIMARY KEY       (ip)
+	ip		INTEGER UNSIGNED NOT NULL,
+	mac	        VARCHAR(255) NOT NULL,
+	previous	VARCHAR(255) NOT NULL,
+	date            DATETIME NOT NULL,
+	vendor		VARCHAR(255),
+    anom        int NOT NULL DEFAULT 1,
+	PRIMARY KEY     (ip)
 );
 
+--
+-- Table: Host OS.
+--
 DROP TABLE IF EXISTS host_os;
 CREATE TABLE host_os (
-  ip                        varchar(15) UNIQUE NOT NULL,
-  os	                    varchar(255) NOT NULL,	
-  previous	                varchar(255) NOT NULL,	
-  anom                      int NOT NULL,
-  os_time                 varchar(100) NOT NULL,
-  PRIMARY KEY       (ip)
+	ip		INTEGER UNSIGNED NOT NULL,
+	os		VARCHAR(255) NOT NULL,
+	previous	VARCHAR(255) NOT NULL,
+	date		DATETIME NOT NULL,
+    anom        int NOT NULL DEFAULT 1,
+	PRIMARY KEY	(ip)
 );
 
 DROP TABLE IF EXISTS host_services;

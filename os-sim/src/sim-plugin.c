@@ -43,9 +43,9 @@ enum
 };
 
 struct _SimPluginPrivate {
-  gint     id;
-  gchar   *name;
-  gchar   *description;
+  gint                 id;
+  gchar               *name;
+  gchar               *description;
 };
 
 static gpointer parent_class = NULL;

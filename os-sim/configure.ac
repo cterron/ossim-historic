@@ -49,6 +49,7 @@ www/host/Makefile
 www/net/Makefile
 www/ntop/Makefile
 www/pixmaps/Makefile
+www/pixmaps/os/Makefile
 www/policy/Makefile
 www/port/Makefile
 www/report/Makefile

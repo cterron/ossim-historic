@@ -32,6 +32,23 @@ class Host_services {
         }
         return $list;
     }
+
+    function delete($conn, $ip) 
+    {
+        $query = "DELETE FROM host_services WHERE ip = '$ip'";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        }
+    }
+
+    function insert($conn, $ip, $service, $version)
+    {
+        $query = "INSERT INTO host_services 
+            VALUES ('$ip', '$service', '$version')";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        }
+    }
 }
 
 

@@ -1,0 +1,224 @@
+                            OSSIM RPM INSTALL
+
+Updated March 16, 2004
+Version 0.9.1
+Author: Fabio Ospitia Trujillo <fot@ossim.net>
+
+This document explains how to install OSSIM and its dependencies with RPMs in 
+a Fedora Core 1 for version 0.9.0 with MySQL. During the installation 
+others dependencies can be found in the FC1 CDs of Installation. Some package 
+versions may change, please download the latest version.
+
+1. Download RPMs.
+
+http://www.ossim.net/download/0.9/rpms/
+
+You can get the dependencies from:
+
+http://www.ossim.net/download/0.9/rpms/deps
+http://www.ossim.net/download/0.9/rpms/noarch
+
+These dependencies have been created and modified by the ossim architecture.
+
+2. Snort.
+
+snort-2.1.0-0.fc1.2.ossim.i386.rpm
+snort-mysql-2.1.0-0.fc1.2.ossim.i386.rpm
+
+Create the 'snort' DB.
+
+mysql -e "create database snort"
+mysql snort < /usr/share/doc/snort-2.1.0/contrib/create_mysql
+
+In the file /etc/sysconfig/snort comment the follow line:
+
+ALERTMODE=fast
+
+In the file /etc/snort/snort.conf
+
+- Configure the HOME_NET and EXTERNAL_NET parameter.
+- Change the line
+
+include spade.conf
+
+by 
+
+include spade.more.conf
+
+- Add the following lines to the output plugins section:
+
+output alert_fast: alert_fast.log
+output database: alert, mysql, user=root dbname=snort host=localhost
+
+- Uncomment the following lines
+
+# include $RULE_PATH/web-attacks.rules
+# include $RULE_PATH/backdoor.rules
+# include $RULE_PATH/shellcode.rules
+# include $RULE_PATH/policy.rules
+# include $RULE_PATH/porn.rules
+# include $RULE_PATH/info.rules
+# include $RULE_PATH/icmp-info.rules
+# include $RULE_PATH/virus.rules
+# include $RULE_PATH/chat.rules
+# include $RULE_PATH/multimedia.rules
+# include $RULE_PATH/p2p.rules
+
+In the file /etc/snort/spade.more.conf add the follow line:
+
+preprocessor spade-detect: type=closed-dport tcpflags=synonly wait=3 revwaitrpt
+
+Start snort with:
+
+service snortd start
+
+3. Acid.
+
+php-acid-0.9.6b23-2.ossim.noarch.rpm
+
+You need the follows dependencies:
+
+php-adodb-4.11-1.ossim.noarch.rpm
+php-jpgraph-1.14-1.ossim.noarch.rpm
+
+Create acid tables in the 'snort' database.
+
+mysql snort < /usr/share/doc/php-acid-0.9.6b23/create_acid_tbls_mysql.sql
+
+Create the 'snort_archive' DB and create acid tables.
+
+mysql -e "create database snort_archive"
+mysql snort_archive < /usr/share/doc/snort-2.1.0/contrib/create_mysql
+mysql snort_archive < /usr/share/doc/php-acid-0.9.6b23/create_acid_tbls_mysql.sql
+
+In the file /var/www/acid/acid_conf.php edit the follows parameters to suit your needs:
+
+$DBlib_path = "/var/www/adodb-411/";
+
+$alert_dbname   = "snort";
+$alert_host     = "localhost";
+$alert_port     = "";
+$alert_user     = "root";
+$alert_password = "";
+
+$archive_dbname   = "snort_archive";
+$archive_host     = "localhost";
+$archive_port     = "";
+$archive_user     = "root";
+$archive_password = "";
+
+$ChartLib_path = "/var/www/jpgraph-1.14/";
+
+Create an acid web user:
+
+htpasswd -c /var/www/acid-users acid
+
+4. NTop.
+
+ntop-2.2c-1.ossim.i386.rpm
+
+You need the following dependencies;
+
+cgilib-0.5-1.ossim.i386.rpm
+rrdtool-20040205-2.ossim.i386.rpm
+
+After installing the ntop rpm execute the following command:
+
+cp /etc/ntop.conf.sample /etc/ntop.conf
+
+In the file /etc/ntop.conf set the parameters:
+
+--interface
+--use-syslog
+--http-server
+--local-subnets
+
+Execute the following command in order to enter the admin password
+
+ntop @/etc/ntop.conf -A
+
+Start NTop:
+
+service ntop start
+
+5. OSSIM Server.
+
+os-sim-0.9.0-1.i386.rpm
+
+You'll need the following dependencies:
+
+gnet2-2.0.4-1.i386.rpm
+libgda-1.0.3-1.i386.rpm
+gda-mysql-1.0.3-1.i386.rpm
+
+Create 'ossim' database, you need be root:
+
+mysql -e "create database ossim"
+mysql ossim < /usr/share/ossim/db/create_mysql.sql
+mysql ossim < /usr/share/ossim/db/ossim_data.sql
+mysql ossim < /usr/share/ossim/db/nessus_plugin_sid.sql
+mysql ossim < /usr/share/ossim/db/snort_nessus.sql
+
+Edit the file /etc/ossim/server/config.xml for your system.
+Edit the file /etc/ossim/server/directives.xml for your system.
+
+Start the server with:
+
+ossim
+
+6. OSSIM Agent.
+
+http://www.ossim.net/download/0.9/rpms/os-sim-agent-0.9.0-1.i386.rpm
+
+You'll need the following dependencies:
+
+http://www.python.org/ftp/python/2.3.3/rpms/fedora-1/python2.3-2.3.3-2pydotorg.i386.rpm
+MySQL-python-0.9.2-1.ossim.i386.rpm
+
+Edit the file /etc/ossim/agent/config.xml for your system. Replace 127.0.0.1 
+or localhost by your IP, and comment the plugins that you not have.
+
+Verify the symbolic link /usr/bin/agent to /usr/share/ossim/agent/agent
+
+Start the Agent with:
+
+agent
+
+7. OSSIM Web FrameWork.
+
+http://www.ossim.net/download/0.9/rpms/os-sim-framework-0.9.0-1.i386.rpm
+
+You'll need the following dependencies:
+
+cgilib-0.5-1.ossim.i386.rpm
+rrdtool-20040205-2.ossim.i386.rpm
+mrtg-2.10.13-1.ossim.i386.rpm
+nmap-3.50-1.i386.rpm
+p0f-2.0.3-0.i386.rpm
+php-adodb-4.11-1.ossim.noarch.rpm
+
+In the file /etc/php.ini add the line:
+
+include_path = ".:/usr/share/ossim/php"
+
+Edit the file /etc/ossim/framework/ossim.conf for your system.
+
+Create an ossim web user:
+
+htpasswd -c /var/www/ossim-users ossim
+
+Restart httpd daemon with:
+
+sevice httpd restart
+
+Add to the cron the follow line:
+
+0-59/5 * * * * /usr/share/ossim/mrtg/launch-mrtg
+
+Start the follows scripts:
+
+/usr/share/ossim/scripts/control_panel.pl
+
+Start the RRD plugin with the NTop installation:
+
+/usr/share/ossim/scripts/rrd_plugin.pl

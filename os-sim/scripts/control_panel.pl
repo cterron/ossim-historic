@@ -14,10 +14,9 @@ my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) 
     or die "Can't connect to DBI\n";
 
-my $base_dir = $ossim_conf::ossim_data->{"base_dir"};
+my $data_dir = $ossim_conf::ossim_data->{"data_dir"};
 
-my $UPDATE_INTERVAL = $ossim_conf::ossim_data->{"UPDATE_INTERVAL"};
-my $SLEEP = $UPDATE_INTERVAL * 15;
+my $SLEEP = 600;
 
 my $day_seconds = 86400;
 my $month_seconds = 2592000;
@@ -36,17 +35,17 @@ while ((my $rrd_file =
     $net_name =~ s/\.rrd$//;
     $net_name =~ s/\/.*\///;
 
-    my $day_max_c=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise MAX`;
-    my $day_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise AVERAGE`;
-    my $day_max_a=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack MAX`;
-    my $day_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack AVERAGE`;
+    my $day_max_c=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise MAX`;
+    my $day_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise AVERAGE`;
+    my $day_max_a=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack MAX`;
+    my $day_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack AVERAGE`;
 
     chop($day_max_c); chop($day_avg_c);
     chop($day_max_a); chop($day_avg_a);
     
-    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1D compromise net`;
+    my $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1D compromise net`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1D attack net`;
+    my $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1D attack net`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     my $query = "SELECT net_name FROM control_panel_net 
@@ -70,24 +69,24 @@ while ((my $rrd_file =
     }
     
     # clean up!
-    elsif ($day_max_c == 'nan' || $day_max_a == 'nan') {
-        $query = "DELETE FROM control_panel_net
-                    WHERE net_name = '$net_name' AND time_range = 'day'";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-    }
+#    elsif ($day_max_c == 'nan' && $day_max_a == 'nan') {
+#        $query = "DELETE FROM control_panel_net
+#                    WHERE net_name = '$net_name' AND time_range = 'day'";
+#        $sth = $dbh->prepare($query);
+#        $sth->execute();
+#    }
 
-    my $month_max_c=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise MAX`;
-    my $month_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise AVERAGE`;
-    my $month_max_a=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack MAX`;
-    my $month_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack AVERAGE`;
+    my $month_max_c=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise MAX`;
+    my $month_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise AVERAGE`;
+    my $month_max_a=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack MAX`;
+    my $month_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack AVERAGE`;
 
     chop($month_max_c); chop($month_avg_c);
     chop($month_max_a); chop($month_avg_a);
 
-    $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1M compromise net`;
+    $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1M compromise net`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1M attack net`;
+    $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1M attack net`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     $query = "SELECT net_name FROM control_panel_net 
@@ -111,33 +110,26 @@ while ((my $rrd_file =
     }
     
     # clean up!
-    elsif ($month_max_c == 'nan' || $month_max_a == 'nan') {
-        $query = "DELETE FROM control_panel_net
-                    WHERE net_name = '$net_name' AND time_range = 'month'";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-    }
+#    elsif ($month_max_c == 'nan' && $month_max_a == 'nan') {
+#        $query = "DELETE FROM control_panel_net
+#                    WHERE net_name = '$net_name' AND time_range = 'month'";
+#        $sth = $dbh->prepare($query);
+#        $sth->execute();
+#    }
 
-    my $year_max_c=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise MAX`;
-    my $year_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise AVERAGE`;
-    my $year_max_a=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack MAX`;
-    my $year_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack AVERAGE`;
+    my $year_max_c=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise MAX`;
+    my $year_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise AVERAGE`;
+    my $year_max_a=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack MAX`;
+    my $year_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack AVERAGE`;
 
     chop($year_max_c); chop($year_avg_c);
     chop($year_max_a); chop($year_avg_a);
     
-    $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1Y compromise net`;
+    $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1Y compromise net`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1Y attack net`;
+    $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $net_name 1Y attack net`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
-    # clean up!
-    if ($year_max_c == 'nan' || $year_max_a == 'nan') {
-        $query = "DELETE FROM control_panel_net
-                    WHERE net_name = '$net_name' AND time_range = 'year'";
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-    } else {
 
     $query = "SELECT net_name FROM control_panel_net 
         WHERE net_name = '$net_name' AND time_range = 'year'";
@@ -158,7 +150,14 @@ while ((my $rrd_file =
         $sth = $dbh->prepare($query);
         $sth->execute();        
     }
-    }
+
+    # clean up!
+#    elsif ($year_max_c == 'nan' && $year_max_a == 'nan') {
+#        $query = "DELETE FROM control_panel_net
+#                    WHERE net_name = '$net_name' AND time_range = 'year'";
+#        $sth = $dbh->prepare($query);
+#        $sth->execute();
+#    }
     
 }
 
@@ -179,17 +178,17 @@ while ((my $rrd_file =
     my $stat_time = (stat($rrd_file))[9];
 
 if($stat_time + $day_seconds >= time()){
-    my $day_max_c=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise MAX`;
-    my $day_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise AVERAGE`;
-    my $day_max_a=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack MAX`;
-    my $day_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack AVERAGE`;
+    my $day_max_c=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise MAX`;
+    my $day_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file compromise AVERAGE`;
+    my $day_max_a=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack MAX`;
+    my $day_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1D N $rrd_file attack AVERAGE`;
 
     chop($day_max_c); chop($day_avg_c);
     chop($day_max_a); chop($day_avg_a);
 
-    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1D compromise host`;
+    my $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1D compromise host`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1D attack host`;
+    my $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1D attack host`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     my $query = "SELECT host_ip FROM control_panel_host 
@@ -222,17 +221,17 @@ if($stat_time + $day_seconds >= time()){
 
 if($stat_time + $month_seconds >= time()){
 
-    my $month_max_c=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise MAX`;
-    my $month_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise AVERAGE`;
-    my $month_max_a=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack MAX`;
-    my $month_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack AVERAGE`;
+    my $month_max_c=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise MAX`;
+    my $month_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file compromise AVERAGE`;
+    my $month_max_a=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack MAX`;
+    my $month_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1M N $rrd_file attack AVERAGE`;
 
     chop($month_max_c); chop($month_avg_c);
     chop($month_max_a); chop($month_avg_a);
 
-    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1M compromise host`;
+    my $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1M compromise host`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1M attack host`;
+    my $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1M attack host`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     $query = "SELECT host_ip FROM control_panel_host 
@@ -264,17 +263,17 @@ if($stat_time + $month_seconds >= time()){
 
 if($stat_time + $year_seconds >= time()){
 
-    my $year_max_c=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise MAX`;
-    my $year_avg_c=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise AVERAGE`;
-    my $year_max_a=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack MAX`;
-    my $year_avg_a=`$base_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack AVERAGE`;
+    my $year_max_c=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise MAX`;
+    my $year_avg_c=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file compromise AVERAGE`;
+    my $year_max_a=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack MAX`;
+    my $year_avg_a=`$data_dir/scripts/get_rrd_value.pl N-1Y N $rrd_file attack AVERAGE`;
 
     chop($year_max_c); chop($year_avg_c);
     chop($year_max_a); chop($year_avg_a);
     
-    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1Y compromise host`;
+    my $max_c_date= `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1Y compromise host`;
     $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
-    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1Y attack host`;
+    my $max_a_date = `$ossim_conf::ossim_data->{data_dir}/scripts/get_date.pl $host_ip 1Y attack host`;
     $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     $query = "SELECT host_ip FROM control_panel_host 

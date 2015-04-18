@@ -15,7 +15,14 @@
 
 <?php
 
-function directives_table($dom)
+require_once ('classes/Plugin.inc');
+require_once ('classes/Plugin_sid.inc');
+require_once ('ossim_db.inc');
+
+$db = new ossim_db();
+$conn = $db->connect();
+
+function directives_table($dom, $directive_id)
 {
 ?>
     <!-- main table: directives -->
@@ -32,7 +39,9 @@ function directives_table($dom)
 ?>
       <tr>
         <td><?php echo $id ?></td>
-        <td><a href="<?php 
+        <td><a 
+<?php if (!strcmp($id, $directive_id)) echo "class=\"selected\""; ?>
+            href="<?php 
             echo $_SERVER["PHP_SELF"] ?>?directive=<?php 
             echo $id ?>"><?php echo $name ?></a></td>
       </tr>
@@ -54,7 +63,7 @@ function rule_table_header($directive_id)
     <table align="center">
       <tr><th colspan="12">Rules (Directive <?php echo $directive_id ?>)</th></tr>
       <tr>
-        <th></th>
+        <td></td>
         <th>Name</th>
         <th>Priority</th>
         <th>Reliability</th>
@@ -82,6 +91,8 @@ function rule_table_foot() {
 
 function rule_table($dom, $directive_id, $directive, $level, $ilevel)
 {
+    global $conn;
+
     if($directive->has_child_nodes()) {
         $rules = $directive->child_nodes();
 
@@ -125,8 +136,26 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <td><?php echo $rule->get_attribute('to'); ?></td>
         <td><?php echo $rule->get_attribute('port_from'); ?></td>
         <td><?php echo $rule->get_attribute('port_to'); ?></td>
-        <td><?php echo $rule->get_attribute('plugin_id'); ?></td>
-        <td><?php echo $rule->get_attribute('plugin_sid'); ?></td>
+        <td>
+<?php 
+    $plugin_id = $rule->get_attribute('plugin_id'); 
+    if ($plugin_list = Plugin::get_list($conn, "WHERE id = $plugin_id")) {
+        $name = $plugin_list[0]->get_name();
+        echo "$name ($plugin_id)";
+    }
+?>
+        </td>
+        <td>
+<?php 
+    $plugin_sid = $rule->get_attribute('plugin_sid'); 
+    if ($plugin_list = Plugin_sid::get_list($conn, 
+            "WHERE plugin_id = $plugin_id AND sid = $plugin_sid")) 
+    {
+        $name = $plugin_list[0]->get_name();
+        echo "$name ($plugin_sid)";
+    }
+?>
+        </td>
       </tr>
                 
 <?php
@@ -152,12 +181,13 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         exit;
     }
 
-    directives_table($dom);
+    $directive_id = $_GET["directive"];
+    directives_table($dom, $directive_id);
 
-    if ($directive_id = $_GET["directive"]) {
+    if ($directive_id) {
     
         $doc = $dom->document_element();
-        $doc = $doc -> child_nodes();
+        $doc = $doc->child_nodes();
         $directive = $doc[$directive_id * 2 -1];
 
         if (!$level = $_GET["level"])   $level = 1;
@@ -167,6 +197,8 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         rule_table($dom, $directive_id, $directive, $level, $level);
         rule_table_foot();
     }
+
+$db->close($conn);
 
 ?>
 

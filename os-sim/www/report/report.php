@@ -40,7 +40,8 @@
         foreach($host_list as $host) {
             $ip = $host->get_ip();
 
-            if ($os_list = Host_os::get_list($conn, "WHERE ip = '$ip'")) {
+            if ($os_list = Host_os::get_list($conn, 
+                                             "WHERE ip = inet_aton('$ip')")) {
                 $os = $os_list[0]->get_os();
                 $os_prev = $os_list[0]->get_previous();
             } else {
@@ -55,7 +56,8 @@
       <td><?php echo $host->get_asset(); ?></td>
       <td>
         <?php 
-        echo $os;
+        echo "$os ";
+        echo Host_os::get_os_pixmap($conn, $host->get_ip());
         if (strcmp($os, $os_prev) && ($os)) {
             echo "&nbsp;<img src=\"../pixmaps/major.gif\"/>";
         }

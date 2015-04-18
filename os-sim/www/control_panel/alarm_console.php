@@ -28,7 +28,8 @@ if ($id = $_GET["delete"]) {
 if (!$order = $_GET["order"]) $order = "timestamp";
 
 if (($src_ip = $_GET["src_ip"]) && ($dst_ip = $_GET["dst_ip"])) {
-    $where = "WHERE alarm = 1 AND inet_ntoa(src_ip) = '$src_ip' OR inet_ntoa(dst_ip) = '$dst_ip'";
+    $where = "WHERE (alarm = 1) AND (inet_ntoa(src_ip) = '$src_ip' 
+                                        OR inet_ntoa(dst_ip) = '$dst_ip')";
 } elseif ($src_ip = $_GET["src_ip"]) {
     $where = "WHERE alarm = 1 AND inet_ntoa(src_ip) = '$src_ip'";
 } elseif ($dst_ip = $_GET["dst_ip"]) {
@@ -101,7 +102,10 @@ if (!$sup = $_GET["sup"])
       </tr>
 
 <?php
-    if ($alert_list = Alert::get_list($conn, "$where ORDER BY $order")) {
+    if ($alert_list = Alert::get_list($conn, 
+                                      "$where ORDER BY $order", 
+                                      $inf, $sup)) 
+    {
         foreach ($alert_list as $alert) {
 
             $id  = $alert->get_plugin_id();

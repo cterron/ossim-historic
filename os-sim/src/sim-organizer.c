@@ -58,6 +58,14 @@ enum
   LAST_SIGNAL
 };
 
+typedef struct {
+  gulong     ip;
+  gchar     *current;
+  gchar     *previous;
+  gchar     *vendor;
+  gchar     *date;
+} SimHostMacOs;
+
 struct _SimOrganizerPrivate {
   SimConfig     *config;
   SimDatabase   *db_ossim;
@@ -199,6 +207,7 @@ sim_organizer_run (SimOrganizer *organizer)
       switch (alert->type)
 	{
 	case SIM_ALERT_TYPE_DETECTOR:
+	  sim_organizer_mac_os_change (organizer, alert);
 	  sim_organizer_correlation_plugin (organizer, alert);
 	  sim_organizer_calificate (organizer, alert);
 	  sim_organizer_correlation (organizer, alert);
@@ -222,6 +231,339 @@ sim_organizer_run (SimOrganizer *organizer)
 	}
 
       g_object_unref (alert);
+    }
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static SimHostMacOs*
+host_mac_has_host (SimDatabase     *db_ossim,
+		   GInetAddr       *ia)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gint           row;
+  SimHostMacOs  *data = NULL;
+
+  g_return_val_if_fail (db_ossim, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (db_ossim), NULL);
+  g_return_val_if_fail (ia, NULL);
+
+  query = g_strdup_printf ("SELECT ip, mac, previous FROM host_mac WHERE ip = %lu",
+			   sim_inetaddr_ntohl (ia));
+
+  dm = sim_database_execute_single_command (db_ossim, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  data = g_new0 (SimHostMacOs, 1);
+	  data->ip = sim_inetaddr_ntohl (ia);
+
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+	  if (!gda_value_is_null (value))
+	    data->current = gda_value_stringify (value);
+
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
+	  if (!gda_value_is_null (value))
+	    data->previous = gda_value_stringify (value);
+	  
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST MAC DATA MODEL ERROR");
+    }
+
+  g_message (query);
+  g_free (query);
+
+  return data;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static SimHostMacOs*
+host_os_has_host (SimDatabase     *db_ossim,
+		  GInetAddr       *ia)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gint           row;
+  SimHostMacOs  *data = NULL;
+
+  g_return_val_if_fail (db_ossim, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (db_ossim), NULL);
+  g_return_val_if_fail (ia, NULL);
+
+  query = g_strdup_printf ("SELECT ip, os, previous FROM host_os WHERE ip = %lu",
+			   sim_inetaddr_ntohl (ia));
+  dm = sim_database_execute_single_command (db_ossim, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  data = g_new0 (SimHostMacOs, 1);
+	  data->ip = sim_inetaddr_ntohl (ia);
+
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+	  if (!gda_value_is_null (value))
+	    data->current = gda_value_stringify (value);
+
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
+	  if (!gda_value_is_null (value))
+	    data->previous = gda_value_stringify (value);
+	  
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST OS DATA MODEL ERROR");
+    }
+  g_message (query);
+  g_free (query);
+
+  return data;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static void
+host_mac_db_insert (SimDatabase     *db_ossim,
+		    SimHostMacOs    *data)
+{
+  gchar         *query;
+
+  g_return_if_fail (db_ossim);
+  g_return_if_fail (SIM_IS_DATABASE (db_ossim));
+  g_return_if_fail (data);
+
+  query = g_strdup_printf ("INSERT INTO host_mac (ip, mac, previous, vendor, date)"
+			   " VALUES (%lu, '%s', '%s', '%s', '%s')",
+			   data->ip,
+			   data->current,
+			   data->previous,
+			   data->vendor,
+			   data->date);
+  sim_database_execute_no_query (db_ossim, query);
+
+  g_message (query);
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static void
+host_os_db_insert (SimDatabase     *db_ossim,
+		   SimHostMacOs    *data)
+{
+  gchar         *query;
+
+  g_return_if_fail (db_ossim);
+  g_return_if_fail (SIM_IS_DATABASE (db_ossim));
+  g_return_if_fail (data);
+
+  query = g_strdup_printf ("INSERT INTO host_os (ip, os, previous, date)"
+			   " VALUES (%lu, '%s', '%s', '%s')",
+			   data->ip,
+			   data->current,
+			   data->previous,
+			   data->date);
+  sim_database_execute_no_query (db_ossim, query);
+
+  g_message (query);
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static void
+host_mac_db_update (SimDatabase     *db_ossim,
+		    SimHostMacOs    *data)
+{
+  gchar         *query;
+
+  g_return_if_fail (db_ossim);
+  g_return_if_fail (SIM_IS_DATABASE (db_ossim));
+  g_return_if_fail (data);
+
+  query = g_strdup_printf ("UPDATE host_mac SET mac='%s', previous='%s', vendor='%s', date='%s'"
+			   " WHERE ip = %lu",
+			   data->current,
+			   data->previous,
+			   data->vendor,
+			   data->date,
+			   data->ip);
+  sim_database_execute_no_query (db_ossim, query);
+
+  g_message (query);
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static void
+host_os_db_update (SimDatabase     *db_ossim,
+		   SimHostMacOs    *data)
+{
+  gchar         *query;
+
+  g_return_if_fail (db_ossim);
+  g_return_if_fail (SIM_IS_DATABASE (db_ossim));
+  g_return_if_fail (data);
+
+  query = g_strdup_printf ("UPDATE host_os SET os='%s', previous='%s', date='%s'"
+			   " WHERE ip = %lu",
+			   data->current,
+			   data->previous,
+			   data->date,
+			   data->ip);
+  sim_database_execute_no_query (db_ossim, query);
+
+  g_message (query);
+  g_free (query);
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_organizer_mac_os_change (SimOrganizer  *organizer, 
+			     SimAlert      *alert)
+{
+  SimDatabase     *db_ossim;
+  SimHostMacOs    *data = NULL;
+  gchar          **values;
+  gchar            timestamp[32];
+
+  g_return_if_fail (organizer);
+  g_return_if_fail (SIM_IS_ORGANIZER (organizer));
+  g_return_if_fail (alert);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (alert->src_ia);
+
+  if (!alert->data)
+    return;
+
+  if (alert->plugin_id != 1511 && alert->plugin_id != 1512)
+    return;
+
+  db_ossim = organizer->_priv->db_ossim;
+  strftime (timestamp, 32, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &alert->time));
+
+  switch (alert->plugin_id)
+    {
+    case 1511:
+      data = host_os_has_host (db_ossim, alert->src_ia);
+      if (data)
+	{
+	  if (g_ascii_strcasecmp (data->current, alert->data))
+	    {
+	      g_free (data->previous);
+	      data->previous = g_strdup (data->current);
+
+	      g_free (data->current);
+	      data->current = g_strdup (alert->data);
+
+	      data->date = g_strdup (timestamp);
+
+	      host_os_db_update (db_ossim, data);
+	    }
+	}
+      else
+	{
+	  data = g_new0 (SimHostMacOs, 1);
+	  data->ip = sim_inetaddr_ntohl (alert->src_ia);
+	  data->current = g_strdup (alert->data);
+	  data->previous = g_strdup (alert->data);
+	  data->date = g_strdup (timestamp);
+
+	  host_os_db_insert (db_ossim, data);
+	}
+      break;
+
+    case 1512:
+      values = g_strsplit (alert->data, "|", 0);
+
+      data = host_mac_has_host (db_ossim, alert->src_ia);
+      if (data)
+	{
+	  if (g_ascii_strcasecmp (data->current, values[0]))
+	    {
+	      g_free (data->previous);
+	      data->previous = g_strdup (data->current);
+
+	      g_free (data->current);
+	      data->current = g_strdup (values[0]);
+
+	      g_free (data->vendor);
+	      data->vendor = g_strdup (values[1]);
+
+	      data->date = g_strdup (timestamp);
+
+	      host_mac_db_update (db_ossim, data);
+	    }
+	}
+      else
+	{
+	  data = g_new0 (SimHostMacOs, 1);
+	  data->ip = sim_inetaddr_ntohl (alert->src_ia);
+	  data->current = g_strdup (values[0]);
+	  data->previous = g_strdup (values[0]);
+	  data->vendor = g_strdup (values[1]);
+	  data->date = g_strdup (timestamp);
+
+	  host_mac_db_insert (db_ossim, data);
+	}
+
+      g_strfreev (values);
+      break;
+
+    default:
+      break;
+    }
+  
+  /* Data free */
+  if (data)
+    {
+      g_free (data->current);
+      g_free (data->previous);
+      g_free (data->vendor);
+      g_free (data->date);
     }
 }
 

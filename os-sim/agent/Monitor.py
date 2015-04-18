@@ -107,6 +107,11 @@ class Monitor(threading.Thread):
 
 
     def run(self):
+        
+        from MonitorWatchdog import MonitorWatchdog
+        watchdog = MonitorWatchdog(self.agent)
+        watchdog.start()
+        
         while 1:
             data = self.recv_line(self.agent.conn)
             if not data: break;
@@ -118,13 +123,31 @@ class Monitor(threading.Thread):
 
                 # ntop
                 if data.__contains__('plugin_id="2005"'):
-                    from MonitorNtop import MonitorNtop
-                    ntop = MonitorNtop(self.agent, data)
-                    ntop.start()
+                    if self.plugins[2005]["enable"] == 'yes':
+                        from MonitorNtop import MonitorNtop
+                        ntop = MonitorNtop(self.agent, data)
+                        ntop.start()
+                    else:
+                        util.debug (__name__, 'plugin NTOP is disabled',
+                                    '**', 'RED');
                     
                 # C & A levels
                 elif data.__contains__('plugin_id="2001"'):
-                    from MonitorCA import MonitorCA
-                    ca = MonitorCA(self.agent, data)
-                    ca.start()
+                    if self.plugins[2001]["enable"] == 'yes':
+                        from MonitorCA import MonitorCA
+                        ca = MonitorCA(self.agent, data)
+                        ca.start()
+                    else:
+                        util.debug (__name__, 'plugin CA is disabled',
+                                    '**', 'RED');
+
+
+            elif data.__contains__('plugin-start') or \
+               data.__contains__('plugin-stop') or \
+               data.__contains__('plugin-enabled') or \
+               data.__contains__('plugin-disabled'):
+                from MonitorPlugin import MonitorPlugin
+                mp = MonitorPlugin(self.agent, data)
+                mp.start()
+
 

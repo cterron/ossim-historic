@@ -27,7 +27,8 @@
                 $name = $sensor->get_name();
                 $ip   = $sensor->get_ip();
                 echo "<a href=\"" . $_SERVER["PHP_SELF"] . 
-                    "?sensor=$ip\">" . $name . " (". $ip .")</a><br/>";
+                    "?sensor=$ip\">" . $name . " (". $ip .
+                    ")</a><br/>";
             }
         }
         echo "</p>";
@@ -43,7 +44,7 @@
             split(':', $conf->get_conf("ntop_link"));
 ?>
 <frameset cols="18%,82%" border="0" frameborder="0">
-<frame src="menu.php?sensor=<?php echo $ip ?>&port=<?php echo $port ?>&proto=<?php echo $protocol ?>">
+<frame src="menu.php?sensor=<?php echo $sensor ?>&port=<?php echo $port ?>&proto=<?php echo $protocol ?>">
 <frame src="<?php echo "http://$sensor:$port" ?>/trafficStats.html" name="ntop">
 
 <?php

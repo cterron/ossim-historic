@@ -12,6 +12,8 @@
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
+    require_once 'classes/Plugin.inc';
+    require_once 'get_sensor_plugins.php';
 
     if (!$order = $_GET["order"]) $order = "name";
 ?>
@@ -43,15 +45,17 @@
 
     $db = new ossim_db();
     $conn = $db->connect();
+
     
     if ($sensor_list = Sensor::get_list($conn, "ORDER BY $order")) {
         foreach($sensor_list as $sensor) {
             $ip = $sensor->get_ip();
             $name = $sensor->get_name();
+
 ?>
 
     <tr>
-      <td><?php echo $sensor->get_name(); ?></td>
+      <td><a href="sensor_plugins.php?sensor=<?php echo $ip ?>"><?php echo $sensor->get_name(); ?></a></td>
       <td><?php echo $sensor->get_ip(); ?></td>
       <td><?php echo $sensor->get_priority(); ?></td>
       <td><?php echo $sensor->get_port(); ?></td>

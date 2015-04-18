@@ -25,8 +25,10 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
             plugin = {'id' : '', \
                       'name' : '', \
                       'type' : '', \
+                      'start': '', \
                       'enable' : '', \
-                      'path' : '', \
+                      'startup' : '', \
+                      'shutdown' : '', \
                       'source' : '', \
                       'interface' : '', \
                       'sensor' : '', \
@@ -36,6 +38,7 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
             self.plugin_id = plugin["id"]
             plugin["name"] = util.normalizeWhitespace(attrs.get('name', None))
             plugin["type"] = util.normalizeWhitespace(attrs.get('type', None))
+            plugin["start"] = util.normalizeWhitespace(attrs.get('start', None))
             plugin["enable"] = util.normalizeWhitespace(attrs.get('enable', None))
             ConfigHandler.plugins[plugin["id"]] = plugin
         
@@ -45,30 +48,39 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
         if self.inContent:
             self.theContent = util.normalizeWhitespace(self.theContent)
         if name == 'serverip':
-            ConfigHandler.serverIp = self.theContent.encode("iso-8859-1")
+            ConfigHandler.serverIp = self.theContent.encode("UTF-8")
         if name == 'serverport':
-            ConfigHandler.serverPort = int(self.theContent.encode("iso-8859-1"))
-        if name == 'path':
-            ConfigHandler.plugins[self.plugin_id]["path"] = \
-                self.theContent.encode("iso-8859-1")
+            ConfigHandler.serverPort = int(self.theContent.encode("UTF-8"))
+        if name == 'startup':
+            ConfigHandler.plugins[self.plugin_id]["startup"] = \
+                self.theContent.encode("UTF-8")
+        if name == 'shutdown':
+            ConfigHandler.plugins[self.plugin_id]["shutdown"] = \
+                self.theContent.encode("UTF-8")
         if name == 'source':
             ConfigHandler.plugins[self.plugin_id]["source"] = \
-                self.theContent.encode("iso-8859-1")
+                self.theContent.encode("UTF-8")
         if name == 'location':
             ConfigHandler.plugins[self.plugin_id]["location"] = \
-                self.theContent.encode("iso-8859-1")
+                self.theContent.encode("UTF-8")
         if name == 'interface':
             ConfigHandler.plugins[self.plugin_id]["interface"] = \
-                self.theContent.encode("iso-8859-1")
+                self.theContent.encode("UTF-8")
         if name == 'sensor':
             ConfigHandler.plugins[self.plugin_id]["sensor"] = \
-                self.theContent.encode("iso-8859-1")
+                self.theContent.encode("UTF-8")
         if name == 'frequency':
             ConfigHandler.plugins[self.plugin_id]["frequency"] = \
-                self.theContent.encode("iso-8859-1")
+                self.theContent.encode("UTF-8")
  
     def characters (self, string):
-        if self.inContent:
+        
+        # why sax parser break lines when an entity appears?
+        # is it a python bug?
+        if string == '&':
+            self.theContent += string
+        
+        elif self.inContent:
             self.theContent = string
 
 

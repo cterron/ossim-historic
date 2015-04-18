@@ -78,6 +78,8 @@ void              sim_organizer_run                             (SimOrganizer  *
 void              sim_organizer_correlation_plugin              (SimOrganizer *organizer, 
 								 SimAlert     *alert);
 
+void              sim_organizer_mac_os_change                   (SimOrganizer *organizer, 
+								 SimAlert     *alert);
 /* Correlate Function */
 void              sim_organizer_calificate                      (SimOrganizer  *organizer,
 								 SimAlert      *alert);

@@ -95,7 +95,7 @@ switch ($_GET["acked"]){
     break;
 }
 
-$perl_interval = 3600 / ($conf->get_conf("UPDATE_INTERVAL") * 300);
+$perl_interval = 3600 / 300;
 
 if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "order by anomaly_time desc")) {
@@ -189,10 +189,10 @@ echo $alert->get_what();?>"></input></td>
     </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
 <form action="handle_os.php" method="GET">
 <?php
-if ($host_os_list = Host_os::get_list($conn, "where anom = 1", "")) {
+if ($host_os_list = Host_os::get_list($conn, "where anom = 1 and os != previous", "")) {
     foreach($host_os_list as $host_os) {
     $ip = $host_os->get_ip();
-    $os_time = $host_os->get_os_time();
+    $date = $host_os->get_date();
     $os = $host_os->get_os();
     if(ereg("\|",$os)){
     $os = ereg_replace("\|", " or ", $os);
@@ -212,7 +212,7 @@ echo $ip;?>">
 </th>
 <td colspan="1"><font color="red"><?php echo $os;?></font></td>
 <td colspan="1"><?php echo $previous;?></td>
-<td colspan="1"><?php echo $os_time;?></td>
+<td colspan="1"><?php echo $date;?></td>
 <td>
 <?php $encoded = base64_encode("ack" . $os);?>
 <input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo
@@ -254,7 +254,7 @@ $encoded;?>"></input>
     </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
 <form action="handle_mac.php" method="GET">
 <?php
-if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1", "")) {
+if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1 and mac != previous", "")) {
     foreach($host_mac_list as $host_mac) {
     $ip = $host_mac->get_ip();
     $mac_time = $host_mac->get_mac_time();

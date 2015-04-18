@@ -48,6 +48,17 @@ class ParserCA(Parser.Parser):
         db.query("""SELECT ip, threshold_c, threshold_a FROM host""")
         r = db.store_result()
         while 1:
+            
+            if self.plugin["enable"] == 'no':
+
+                # plugin disabled, wait for enabled
+                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                while self.plugin["enable"] == 'no':
+                    time.sleep(1)
+                    
+                # lets parse again
+                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
+
             try:
                 h = r.fetch_row(maxrows = 1, how = 1)
                 host_info[h[0]["ip"]] = h[0]

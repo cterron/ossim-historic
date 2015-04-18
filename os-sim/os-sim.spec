@@ -1,8 +1,8 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.1
+Version:   0.9.2
 Release:   1
-License:   GPL
+License:   BSD
 Group:     Applications/Security
 URL:       http://www.ossim.net
 Requires:  glib2 > 2.0
@@ -50,11 +50,12 @@ OSSIM Web framework
 %{__rm} -rf $RPM_BUILD_ROOT
 %makeinstall prefix=$RPM_BUILD_ROOT
 
-%{__install} -d -m0755 $RPM_BUILD_ROOT/%{perl_archlib}
-%{__cp} -f include/ossim_conf.pm $RPM_BUILD_ROOT/%{perl_archlib}
+%{__install} -d -m0755 $RPM_BUILD_ROOT/%{perl_sitearch}
+%{__cp} -f include/ossim_conf.pm $RPM_BUILD_ROOT/%{perl_sitearch}
 
 %{__install} -d -m0755 $RPM_BUILD_ROOT/var/www/cgi-bin
 %{__cp} -f scripts/draw_graph.pl $RPM_BUILD_ROOT/var/www/cgi-bin
+%{__cp} -f scripts/draw_graph_combined.pl $RPM_BUILD_ROOT/var/www/cgi-bin
 
 %{__install} -d -m0755 $RPM_BUILD_ROOT/etc/httpd/conf.d
 %{__cp} -f etc/httpd/ossim.conf $RPM_BUILD_ROOT/etc/httpd/conf.d
@@ -99,13 +100,17 @@ fi
 %{_datadir}/ossim/php/
 %{_datadir}/ossim/pixmaps/
 %{_datadir}/ossim/scripts/
-%{perl_archlib}
+%{perl_sitearch}
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph.pl
+%attr(0755,root,root) /var/www/cgi-bin/draw_graph_combined.pl
 /var/www/ossim/
 /var/www/ossim-users
 
 
 %changelog
+* Wed Mar 24 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.2-1
+- New Release
+
 * Thu Mar 03 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.1-1
 - New Release
 

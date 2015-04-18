@@ -1,7 +1,7 @@
 Ossim + Nessus FAQ (2004-03-11)
 -------------------------------
 
-This mini-doc tries to explain the basics of using nessus with ossim.
+This mini-doc tries to explain the basics of using Nessus with ossim.
 
 There are two important scripts that do this:
 
@@ -21,5 +21,5 @@ them.
 You can add hosts to the host_scan table from the main interface,
 Configuration->Host_scan.
 
-Be careful with the nessus script, it needs more testing and has to be
+Be careful with the Nessus script, it needs more testing and has to be
 partially rewritten.

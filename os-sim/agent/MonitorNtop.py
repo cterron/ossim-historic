@@ -12,7 +12,7 @@ class MonitorNtop(Monitor.Monitor):
 
     def run(self):
     
-        util.debug (__name__, "plugin started", '--')
+        util.debug (__name__, "monitor started", '--')
         rule = self.split_data(self.data)
         util.debug (__name__, "request received... (%s)" % str(rule), 
                     '<=', 'GREEN')
@@ -29,7 +29,7 @@ class MonitorNtop(Monitor.Monitor):
             else:
                 self.__evaluate(rule = rule)
                 
-        util.debug (__name__, 'plugin finished', '--')
+        util.debug (__name__, 'monitor finished', '--')
 
 
     def __get_value(self, rule):

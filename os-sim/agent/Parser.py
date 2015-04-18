@@ -63,10 +63,20 @@ class Parser(threading.Thread):
             cisco = ParserCisco(self.agent, self.plugin)
             cisco.process()
 
+        elif self.plugin["id"] == '1511':
+            from ParserP0f import ParserP0f
+            p0f = ParserP0f(self.agent, self.plugin)
+            p0f.process()
+            
+        elif self.plugin["id"] == '1512':
+            from ParserArpwatch import ParserArpwatch
+            arpwatch = ParserArpwatch(self.agent, self.plugin)
+            arpwatch.process()
+
         else:
             util.debug (__name__, 
-                        "Plugin " + self.plugin["name"] + " is not implemented..."
-                        '!!', 'RED')
+                        "Plugin " + self.plugin["name"] + 
+                        " is not implemented...", '!!', 'RED')
             sys.exit()
 
 

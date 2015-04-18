@@ -23,7 +23,6 @@ class ParserSnort(Parser.Parser):
 
     def __processSyslog(self):
         
-        print 'processing snort (syslog)...'
         util.debug (__name__, 'plugin started (syslog)...', '--')
 
         pattern = '(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+([\w\-\_]+|\d+.\d+.\d+.\d+)\s+snort:\s+\[(\d+):(\d+):\d+\].*?{(\w+)}\s+([\d\.]+):?(\d+)?\s+.*\s+([\d\.]+):?(\d+)?'
@@ -36,6 +35,18 @@ class ParserSnort(Parser.Parser):
         fd.seek(0, 2)
             
         while 1:
+            
+            if self.plugin["enable"] == 'no':
+
+                # plugin disabled, wait for enabled
+                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                while self.plugin["enable"] == 'no':
+                    time.sleep(1)
+                    
+                # lets parse again
+                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
+                fd.seek(0, 2)
+
             where = fd.tell()
             line = fd.readline()
             if not line: # EOF reached
@@ -91,8 +102,19 @@ class ParserSnort(Parser.Parser):
         fd.seek(0, 2)
 
         while 1:
-            where = fd.tell()
             
+            if self.plugin["enable"] == 'no':
+
+                # plugin disabled, wait for enabled
+                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                while self.plugin["enable"] == 'no':
+                    time.sleep(1)
+                    
+                # lets parse again
+                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
+                fd.seek(0, 2)
+
+            where = fd.tell()            
             line = fd.readline()
 
             if not line: # EOF reached
