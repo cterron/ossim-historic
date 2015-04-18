@@ -1,4 +1,41 @@
 # ChangeLog for OSSIM
+    
+    04 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Control panel visual cleanup.
+    * RRD sort order. Still buggy...
+    * Added global NTOP file support.
+    * Starting to qualify ntop-rrd-thresholds.
+    * Anchor trick so reload works fine.
+    * NTOP links.
+    * Cleanup.
+
+    03 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Control panel anomaly integration.
+    * RRD threshold script.
+    * DB mods, cleanup.
+
+    03 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * Fixed serious parser bug.
+
+    03 Sep 2003 DK <dk@ipsoluciones.com> :
+    * ossim_conf.pm completely rewritten.
+    * Perl cleanup, now everything uses a more generic ossim_conf
+    * RRD_conf default values modification
+
+    02 Sep 2003 DK <dk@ipsoluciones.com> :
+    * check_rrd.pl used to check ntop's rrd files
+    * Config file mods
+
+    02 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * PHP classes for use with rrds.
+
+    01 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Thresholds, priority and aberrant behaviour values for rrds.
+
+    29 Aug 2003 DK <dk@ipsoluciones.com> :
+    * Many bugfixes.
+    * INSTALL additions.
+    * 0-2alpha released.
 
 * OSSIM-0.2 (29 Aug 2003)
 
@@ -16,10 +53,12 @@
     * INSTALL & init.d modification.
 
     22 Aug 2003 Santiago Gonzalez <sgonzalez@ipsoluciones.com> :
-    * Perl scripts traduced to C
+    * Perl scripts translated to C
     
     22 Aug 2003 DK <dk@ipsoluciones.com> :
     * First release, cleanup, Sourceforge cvs setup
+
+* OSSIM-0.1 (22 Aug 2003)
 
     21 Aug 2003 DK <dk@ipsoluciones.com> :
     * Cleanup, anomaly detection cleanup, draw_graph additions.

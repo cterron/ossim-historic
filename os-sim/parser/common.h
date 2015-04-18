@@ -93,3 +93,6 @@ int insert_fw1_alert(unsigned long int source_ip,
 /* graph.c */
 void graph (MYSQL *mysql, char *source_ip, char *dest_ip);
 
+/* rrd_anomaly.c */
+void log_rrd(MYSQL *mysql, char source_ip[16], char what[128]);
+

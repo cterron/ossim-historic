@@ -30,24 +30,33 @@ Create snort & acid DB's; use db/create_ossim_tables.pl after creating a
 database suitable for ossim (name it "ossim" or what you want, put it in
 /etc/ossim.conf)
 
+Notes about patched ntop: init rrd plugin, limit hosts to your LAN since the number of files (and space used) can grow very fast.
+
 After that:
 
 - edit $ossim_home/parser/Makefile and point snort rules path to your snort
   rules path.
 - compile parser
+- IMPORTANT: make sure any paths you can define at this point in /etc/ossim.conf are correct (snort_rules_path is needed to correctly setup the DB)
 - Create the whole database structure (Acid, snort, snort-extra, os-sim)
 - start mysql
+- Edit /etc/snort.conf so it logs both to mysql & syslog.
 - Add an apache alias pointing to os-sim's www directory
-- put $ossim_home/etc/cron.d/mrtg in roots crontab (will be removed soon)
-- put $ossim_home/contrib/mrtg-ossim.cron in roots crontab
+- Add another apache alias pointing to acid and re-edit /etc/ossim.conf.
+- Obtain arial.ttf and put it somewhere visible to ossim. Adjust /etc/ossim.conf.
+- copy $ossim_home/etc/mrtg*.cfg to /etc and edit
 - put contrib/mrtg.tgz stuff where the crontab entry can find it (launch-mrtg)
 - After patching mrtg adding the HWPREDICT line that appears in CONFIG write
   an additional config file that uses rrd (with additions from CONFIG) and
-  fire it up. ($ossim_home/contrib/mrtg.diff)
+  fire it up. (launch-mrtg) ($ossim_home/contrib/mrtg.diff)
+- try to launch launch-mrtg, note and correct any errors
+- put $ossim_home/etc/cron.d/mrtg in roots crontab (will be removed soon)
+- Edit /etc/ossim.conf and point ossim_log to snorts syslog file (/var/log/messages?)
 - $ossim_home/etc/init.d/ossim start
 - copy $ossim_home/scripts/draw_graph.pl to your cgi-bin directory.
 - Start apache
 - Start patched ntop
+- Start snort
 - Start opennms (not needed as of today)
 - Point your browser at the web root.
 

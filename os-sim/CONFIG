@@ -39,5 +39,5 @@ RunAsDaemon: Yes
 
 Perl
 ====
-* 'ln -s $OSSIM_SRC/lib/ossim_conf.pm /usr/local/lib/perl/5.8.0'
+* 'ln -s $OSSIM_SRC/include/ossim_conf.pm /usr/lib/perl5/5.8.0'
 

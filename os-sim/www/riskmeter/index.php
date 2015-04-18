@@ -67,6 +67,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
 
 <?php
 
+if($net_stats)
     foreach ($net_stats as $stat) {
 
         $net = $stat->get_net_name();
@@ -213,7 +214,8 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
 
 
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3">Hosts</th></tr>
+    <tr><th align="center" colspan="3"><A NAME="Hosts" HREF="<?php echo
+        $_SERVER["PHP_SELF"]?>?#Hosts">Fix </A>Hosts</th></tr>
     <tr><td colspan="3"></td></tr>
 
     <!-- rule for threshold -->
@@ -342,7 +344,9 @@ $graphs_stats = Graph_qualification::get_list($conn);
 ?>
     <!-- graphs -->
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3">Graphs</th></tr>
+    <tr><th align="center" colspan="3">
+    <A NAME="Graphs" HREF="<?php echo
+        $_SERVER["PHP_SELF"]?>?#Graphs">Fix </A>Graphs</th></tr>
 <!--    <tr><td colspan="3"><br/></td></tr> -->
     
     <!-- rule for threshold -->

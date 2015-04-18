@@ -2,7 +2,7 @@
 
 use ossim_conf;
 use DBI;
-use lib $ossim_conf::rrdtool_lib_path;
+use lib $ossim_conf::ossim_data->{"rrdtool_lib_path"};
 use RRDs;
 use CGI;
 use File::Temp;
@@ -19,13 +19,13 @@ print "\n\n";
 exit 0;
 }
 
-my $dsn = "dbi:mysql:".$ossim_conf::base.":".$ossim_conf::host.":".$ossim_conf::port;
-my $dbh = DBI->connect($dsn, $ossim_conf::user, $ossim_conf::pass) 
-    or die "Can't connect to DBI\n\n\n";
+my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
+my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) or die "Can't connect to DBI\n";
+
 
 my $q = new CGI;
 
-print $q->header(-type => "image/gif", -expires => "+10s");
+print $q->header(-type => "image/png", -expires => "+10s");
 
 #print $q->header();
 
@@ -40,11 +40,9 @@ my $start;
 my $end;
 my $type;
 my $rrdpath;
-my $arial=$ossim_conf::arial_path;
+my $arial=$ossim_conf::ossim_data->{arial_path};
 my $ds;
 my $tempname=tmpnam();
-my $outpath=$ossim_conf::out_path;
-my $webpath=$ossim_conf::out_web_path;
 my $zoom=1;
 
 $zoom = $q->param('zoom') if (defined $q->param('zoom'));
@@ -62,11 +60,11 @@ if (defined $q->param('ip') && defined $q->param('what') && defined $q->param('s
 #close_all($dbh, "Wrong IP fmt") if(!($ip =~ m/\d+\.\d+\.\d+\.\d+/) || !($ip eq "global"));
 
 if($type eq "host"){
-    $rrdpath = $ossim_conf::rrdpath_host;
+    $rrdpath = $ossim_conf::ossim_data->{rrdpath_host};
 } elsif($type eq "net"){
-    $rrdpath = $ossim_conf::rrdpath_net;
+    $rrdpath = $ossim_conf::ossim_data->{rrdpath_net};
 } elsif($type eq "global"){
-    $rrdpath = $ossim_conf::rrdpath_global;
+    $rrdpath = $ossim_conf::ossim_data->{rrdpath_global};
 } else {
     close_all($dbh,"Wrong type");
 }
@@ -132,7 +130,6 @@ if($type eq "net"){ # Networks are supposed to have their own threshold
     }
     $hostname = $ip;
 }
-
 
 my ($prints,$xs,$ys)=RRDs::graph $tempname, "-s", $start, "-e", $end,
     "DEF:obs=$rrdpath/$ip.rrd:$ds:AVERAGE",

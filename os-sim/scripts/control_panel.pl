@@ -9,11 +9,11 @@ use warnings;
 $| = 1;
 
 
-my $dsn = "dbi:mysql:".$ossim_conf::base.":".$ossim_conf::host.":".$ossim_conf::port;
-my $dbh = DBI->connect($dsn, $ossim_conf::user, $ossim_conf::pass) 
+my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
+my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) 
     or die "Can't connect to DBI\n";
 
-my $base_dir = $ossim_conf::base_dir;
+my $base_dir = $ossim_conf::ossim_data->{"base_dir"};
 
 my $SLEEP = 30;
 
@@ -23,7 +23,7 @@ while (1) {
 # Host rrds
 # 
 while ((my $rrd_file = 
-            glob("$ossim_conf::mrtg_rrd_files_path/host_qualification/*")))
+            glob("$ossim_conf::ossim_data->{mrtg_rrd_files_path}/host_qualification/*")))
 {
     my $host_ip = $rrd_file;
     $host_ip =~ s/\.rrd$//;
@@ -129,7 +129,7 @@ while ((my $rrd_file =
 # Net rrds
 # 
 while ((my $rrd_file = 
-            glob("$ossim_conf::mrtg_rrd_files_path/net_qualification/*")))
+            glob("$ossim_conf::ossim_data->{mrtg_rrd_files_path}/net_qualification/*")))
 {
     my $net_name = $rrd_file;
     $net_name =~ s/\.rrd$//;

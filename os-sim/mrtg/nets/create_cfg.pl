@@ -9,9 +9,8 @@ use ossim_conf;
 my $OUTPUT_FILE = "net_qualification.cfg";
 open CFG, ">$OUTPUT_FILE" or die "Can't open file: $!";
 
-my $dsn = 'dbi:mysql:'.$ossim_conf::base.':'.$ossim_conf::host.':'.
-            $ossim_conf::port;
-my $dbh = DBI->connect($dsn, $ossim_conf::user, $ossim_conf::pass) 
+my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
+my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
 my $query = "SELECT net_name FROM net_qualification;";
@@ -23,7 +22,7 @@ if ($sth->rows > 0) {
         my $net_name = $row->{net_name};
 
         print CFG <<"EOF";
-Target[$net_name]: `$ossim_conf::base_dir/mrtg/nets/read_data.pl $net_name`
+Target[$net_name]: `$ossim_conf::ossim_data->{base_dir}/mrtg/nets/read_data.pl $net_name`
 Title[$net_name]: OSSIM Level graphics
 Background[$net_name]: #ffffff
 PageTop[$net_name]: <H1>Level for $net_name</H1>

@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title> Riskmeter </title>
+  <title> Control Panel </title>
   <meta http-equiv="refresh" content="60">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
@@ -18,6 +18,7 @@ require_once ('ossim_db.inc');
 require_once ('classes/Control_panel_host.inc');
 require_once ('classes/Control_panel_net.inc');
 require_once ('classes/Host.inc');
+require_once ('classes/Net.inc');
 require_once ('acid_funcs.inc');
 require_once ('common.inc');
 
@@ -90,11 +91,13 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         <table width="100%">
 <?php 
     if ($hosts_order_by_c)
-    foreach ($hosts_order_by_c as $host) { ?>
+    foreach ($hosts_order_by_c as $host) { 
+        $host_ip = $host->get_host_ip();
+?>
           <tr>
-            <td><a href="<?php echo get_acid_info($host->get_host_ip(), 
+            <td><a href="<?php echo get_acid_info($host_ip, 
                                                   $acid_link); ?>">
-            <?php echo Host::ip2hostname($conn, $host->get_host_ip()); ?></a>
+            <?php echo Host::ip2hostname($conn, $host_ip); ?></a>
             </td>
           </tr>
 <?php } ?>
@@ -105,11 +108,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) {
-    $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                              $start, "N", 1); 
+        $image = graph_image_link($host->get_host_ip(), "host", "compromise",
+                                  $start, "N", 1); 
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_max_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_max_c(), 
+                            Host::ipthresh_c($conn,$host->get_host_ip())); ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -119,11 +125,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) { 
-    $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                              $start, "N", 1); 
+        $image = graph_image_link($host->get_host_ip(), "host", "compromise",
+                                  $start, "N", 1); 
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_min_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_min_c(), 
+                            Host::ipthresh_c($conn, $host->get_host_ip())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -133,11 +142,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) { 
-    $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                              $start, "N", 1); 
+        $image = graph_image_link($host->get_host_ip(), "host", "compromise",
+                                  $start, "N", 1); 
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_avg_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_avg_c(), 
+                            Host::ipthresh_c($conn, $host->get_host_ip())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -146,11 +158,13 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         <table width="100%">
 <?php 
     if ($hosts_order_by_a)
-    foreach ($hosts_order_by_a as $host) { ?>
+    foreach ($hosts_order_by_a as $host) { 
+        $host_ip = $host->get_host_ip();
+    ?>
           <tr>
-            <td><a href="<?php echo get_acid_info($host->get_host_ip(), 
+            <td><a href="<?php echo get_acid_info($host_ip, 
                                                   $acid_link); ?>">
-            <?php echo Host::ip2hostname($conn, $host->get_host_ip()); ?></a>
+            <?php echo Host::ip2hostname($conn, $host_ip); ?></a>
             </td>
           </tr>
 <?php } ?>
@@ -161,11 +175,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) {
-    $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                              $start, "N", 1);
+        $image = graph_image_link($host->get_host_ip(), "host", "attack",
+                                  $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_max_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_max_a(), 
+                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -175,11 +192,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) { 
-    $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                              $start, "N", 1);
+        $image = graph_image_link($host->get_host_ip(), "host", "attack",
+                                  $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_min_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_min_a(), 
+                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -189,11 +209,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) { 
-    $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                              $start, "N", 1);
+        $image = graph_image_link($host->get_host_ip(), "host", "attack",
+                                  $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $host->get_avg_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($host->get_avg_a(), 
+                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -232,7 +255,10 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_max_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_max_c(), 
+                            Net::netthresh_c($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -246,7 +272,10 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_min_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_min_c(), 
+                            Net::netthresh_c($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -260,7 +289,10 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_avg_c(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_avg_c(), 
+                            Net::netthresh_c($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -281,11 +313,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
-    $image = graph_image_link($net->get_net_name(), "net", "compromise",
+    $image = graph_image_link($net->get_net_name(), "net", "attack",
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_max_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_max_a(), 
+                            Net::netthresh_a($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -295,11 +330,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
-    $image = graph_image_link($net->get_net_name(), "net", "compromise",
+    $image = graph_image_link($net->get_net_name(), "net", "attack",
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_min_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_min_a(), 
+                            Net::netthresh_a($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
@@ -309,15 +347,115 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
-    $image = graph_image_link($net->get_net_name(), "net", "compromise",
+    $image = graph_image_link($net->get_net_name(), "net", "attack",
                               $start, "N", 1);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>"><?php echo $net->get_avg_a(); ?></a></td>
+            <td><a href="<?php echo $image ?>">
+            <?php echocolor($net->get_avg_a(), 
+                            Net::netthresh_a($conn, $net->get_net_name())) ?></a>
+            </td>
           </tr>
 <?php } ?>
         </table>
       </td>
+    </tr>
+    <tr>
+    <td colspan = 8>
+    <table align="center" width="100%">
+    <tr>
+    <th colspan=4><A NAME="Anomalies" HREF="<?php echo
+    $_SERVER["PHP_SELF"]?>?#Anomalies">Fix</A> RRD anomalies</th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=1">Acknowledged</A></th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=0">Not Acknowledged</A></th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=-1">All</A></th>
+    </tr>
+    <tr>
+    <th> Host </th><th> What </th><th> When </th>
+    <th> Not acked count (hours)</th><th> Over threshold (absolute)</th>
+    <th align="center">Ack</th>
+    <th align="center">Delete</th>
+    </tr>
+
+<form action="handle_anomaly.php" method="GET">
+<?php
+require_once 'ossim_db.inc';
+require_once 'classes/RRD_anomaly.inc';
+require_once 'classes/RRD_anomaly_global.inc';
+require_once 'classes/RRD_data.inc';
+
+$db = new ossim_db();
+$conn = $db->connect();
+$where_clause = "where acked = 0";
+switch ($_GET["acked"]){
+    case -1:
+    $where_clause = "";
+    break;
+    case 0:
+    $where_clause = "where acked = 0";
+    break;
+    case 1:
+    $where_clause = "where acked = 1";
+    break;
+}
+if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
+"order by anomaly_time desc")) {
+    foreach($alert_list_global as $alert) {
+    $ip = "Global";
+?>
+<tr>
+<th> 
+
+<A HREF="<?php echo
+"$ntop_link/plugins/rrdPlugin?action=list&key=interfaces/eth0&title=interface%20eth0";?>" target="_blank"> 
+<?php echo $ip;?></A> </th><td> <?php echo $rrd_names_global[$alert->get_what()];?></td>
+<td> <?php echo $alert->get_anomaly_time();?></td>
+<td> <?php echo ($alert->get_count())/2;?> </td>
+<td><font color="red"> <?php echo $alert->get_over();?></font></td>
+<td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
+echo $alert->get_what();?>"></input></td>
+<td align="center"><input type="checkbox" name="del,<?php echo $ip?>,<?php
+echo $alert->get_what();?>"></input></td>
+</tr>
+<?php }}
+
+?>
+<tr><th colspan="8"><hr noshade></th></tr>
+<tr>
+<th> Host </th><th> What </th><th> When </th>
+<th> Not acked count (hours)</th><th> Over threshold (absolute)</th>
+<th align="center">Ack</th>
+<th align="center">Delete</th>
+</tr>
+<?php
+if ($alert_list = RRD_anomaly::get_list($conn, $where_clause, "order by
+anomaly_time desc")) {
+    foreach($alert_list as $alert) {
+    $ip = $alert->get_ip();
+?>
+<tr>
+<th>
+<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+echo $ip;?>">
+<?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $rrd_names[$alert->get_what()];?></td>
+<td> <?php echo $alert->get_anomaly_time();?></td>
+<td> <?php echo ($alert->get_count())/2;?> </td>
+<td><font color="red"> <?php echo $alert->get_over();?></font></td>
+<td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
+echo $alert->get_what();?>"></input></td>
+<td align="center"><input type="checkbox" name="del,<?php echo $ip?>,<?php
+echo $alert->get_what();?>"></input></td>
+</tr>
+<?php }}?>
+<tr>
+<td align="center" colspan="7">
+<input type="submit" value="OK">
+<input type="reset" value="reset">
+</td>
+</tr>
+</form>
+    </table>
+    </td>
     </tr>
   </table>
 

@@ -7,9 +7,8 @@ use warnings;
 
 $| = 1;
 
-
-my $dsn = "dbi:mysql:".$ossim_conf::base.":".$ossim_conf::host.":".$ossim_conf::port;
-my $dbh = DBI->connect($dsn, $ossim_conf::user, $ossim_conf::pass) 
+my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
+my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
 my $SLEEP = 30;

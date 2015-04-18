@@ -66,8 +66,8 @@ class Net {
             exit;
         }
         $ips_sane = escapeshellcmd($ips);
-        $ip_string = 
-            shell_exec("nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \"");
+        $ip_string = shell_exec("nmap -n -sL $ips_sane | grep Host | cut -f 2
+        -d \" \" ");   
         $ip_list = explode("\n", $ip_string);
         $lala = array_pop($ip_list);
         
@@ -93,6 +93,37 @@ class Net {
         Control_panel_net::delete($conn, $name);
         Net_qualification::delete($conn, $name);
     }
+
+    function netthresh_c($conn, $name) {
+        $query = "SELECT * FROM net WHERE name = '$name';";
+        if (!$rs = $conn->Execute($query)) {
+            print 'error: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        } 
+        if (!$rs->EOF)
+            return $rs->fields["threshold_c"]; 
+        else {
+            /* net is not in db, return default threshold */
+            $conf = Conf::get_conf($conn);
+            return $conf->get_threshold();
+        }
+    }
+
+    function netthresh_a($conn, $name) {
+        $query = "SELECT * FROM net WHERE name = '$name';";
+        if (!$rs = $conn->Execute($query)) {
+            print 'error: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        } 
+        if (!$rs->EOF)
+            return $rs->fields["threshold_a"]; 
+        else {
+            /* net is not in db, return default threshold */
+            $conf = Conf::get_conf($conn);
+            return $conf->get_threshold();
+        }
+    }
+
 }
 
 ?>

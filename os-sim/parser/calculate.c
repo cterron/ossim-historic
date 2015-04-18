@@ -45,7 +45,7 @@ static char *get_signature(int sid) {
 
     while(!feof(fd)) {
         fscanf(fd, "%d", &sf);
-        fscanf(fd, "%s", sig);
+        fscanf(fd, "%64s", sig);
         if (sid == sf) break;
     }
     fclose(fd);
@@ -109,34 +109,44 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
      */
     query_l1 = (char *) malloc(sizeof(char) * QUERY_MAX_SIZE);
     snprintf(query_l1, QUERY_MAX_SIZE, 
-            "SELECT DISTINCT p.priority FROM \n\
-                policy p, \n\
-                policy_net_reference pns, policy_host_reference phs,\n\
-                policy_net_reference pnd, policy_host_reference phd, \n\
-                policy_port_reference pp, policy_sig_reference ps, \n\
-                signature_group_reference sg, port_group_reference pg, \n\
-                net_host_reference nh \n\
-            WHERE \n\
-            ((phs.host_ip = '%s' AND phs.direction = 'source') OR \n\
-             (pns.net_name = nh.net_name AND \n\
-              nh.host_ip = '%s' AND pns.direction = 'source')) AND \n\
-            ((phd.host_ip = '%s' AND phd.direction = 'dest') OR \n\
-             (pnd.net_name = nh.net_name AND \n\
-              nh.host_ip = '%s' AND pnd.direction = 'dest')) AND \n\
-            (pp.port_group_name = pg.port_group_name AND \n\
-             ((pg.port_number = %d) OR (pg.port_number = %d)) AND \n\
-             ((pg.protocol_name = LCASE('%s') OR\
-              pg.protocol_name = '%s'))) AND \n\
-            ((ps.sig_group_name = sg.sig_group_name) AND \n\
-             (sg.sig_name = '%s')) AND \n\
-            p.id = pns.policy_id AND \n\
-            p.id = pnd.policy_id AND \n\
-            p.id = phs.policy_id AND \n\
-            p.id = phd.policy_id AND \n\
-            p.id = pp.policy_id AND \n\
-            p.id = ps.policy_id;",
-            source_ip, source_ip, dest_ip, dest_ip, dest_port, ANY_PORT,
-            protocol, protocol, signature);
+            
+"(select distinct p.priority from \ 
+    policy p, policy_host_reference phs, policy_host_reference phd, \
+    policy_port_reference pp, policy_sig_reference ps, \
+    signature_group_reference sg, port_group_reference pg \
+ where (phs.host_ip = '%s' and phs.direction = 'source') and \
+       (phd.host_ip = '%s' and phd.direction = 'dest') and \
+       (pp.port_group_name = pg.port_group_name and \
+        (pg.port_number = %d or pg.port_number = %d) and \
+        (pg.protocol_name = '%s')) and \
+       (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
+       (p.id = phs.policy_id) and \
+       (p.id = phd.policy_id) and \
+       (p.id = pp.policy_id) and \
+       (p.id = ps.policy_id) \
+) \
+union \
+(select distinct p.priority from \
+    policy p, policy_net_reference pns, policy_net_reference pnd, \
+    policy_port_reference pp, policy_sig_reference ps, \
+    signature_group_reference sg, port_group_reference pg, \
+    net_host_reference nh \
+ where \
+       (pns.net_name = nh.net_name and \
+        nh.host_ip = '%s' and pns.direction = 'source') and \
+       (pnd.net_name = nh.net_name and \
+        nh.host_ip = '%s' and pnd.direction = 'dest') and \
+       (pp.port_group_name = pg.port_group_name and \
+        (pg.port_number = %d or pg.port_number = %d) and \
+        (pg.protocol_name = '%s')) and \
+       (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
+       (p.id = pns.policy_id) and \
+       (p.id = pnd.policy_id) and \
+       (p.id = pp.policy_id) and \
+       (p.id = ps.policy_id) \
+);",
+            source_ip, dest_ip, dest_port, ANY_PORT, protocol, signature,
+            source_ip, dest_ip, dest_port, ANY_PORT, protocol, signature);
 
     /*
      * Level 2
@@ -145,23 +155,35 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
      */
     query_l2 = (char *) malloc(sizeof(char) * QUERY_MAX_SIZE);
     snprintf(query_l2, QUERY_MAX_SIZE, 
-            "SELECT DISTINCT p.priority FROM \n\
-                policy p, \n\
-                policy_net_reference pnd, policy_host_reference phd, \n\
-                policy_port_reference pp, policy_sig_reference ps, \n\
-                port_group_reference pg, net_host_reference nh \n\
-            WHERE \
-            ((phd.host_ip = '%s' AND phd.direction = 'dest') OR \n\
-             (pnd.net_name = nh.net_name AND \n\
-              nh.host_ip = '%s' AND pnd.direction = 'dest')) AND \n\
-            (pp.port_group_name = pg.port_group_name AND \n\
-             ((pg.port_number = %d) OR (pg.port_number = %d)) AND \n\
-             ((pg.protocol_name = LCASE('%s') OR\
-              pg.protocol_name = '%s'))) AND \n\
-            p.id = pnd.policy_id AND \n\
-            p.id = phd.policy_id AND \n\
-            p.id = pp.policy_id;",
-            dest_ip, dest_ip, dest_port, ANY_PORT, protocol, protocol);
+"(select distinct p.priority from \
+    policy p, policy_host_reference phs, policy_host_reference phd, \
+    policy_port_reference pp, port_group_reference pg \
+ where \
+       (phd.host_ip = '%s' and phd.direction = 'dest') and \
+       (pp.port_group_name = pg.port_group_name and \
+        (pg.port_number = %d or pg.port_number = %d) and \
+        (pg.protocol_name = '%s')) and \
+       (p.id = phs.policy_id) and \
+       (p.id = phd.policy_id) and \
+       (p.id = pp.policy_id) \
+) \
+union \
+(select distinct p.priority from \
+    policy p, policy_net_reference pns, policy_net_reference pnd, \
+    policy_port_reference pp, port_group_reference pg, \
+    net_host_reference nh \
+ where \
+       (pnd.net_name = nh.net_name and \
+        nh.host_ip = '%s' and pnd.direction = 'dest') and \
+       (pp.port_group_name = pg.port_group_name and \
+        (pg.port_number = %d or pg.port_number = %d) and \
+        (pg.protocol_name = '%s')) and \
+       (p.id = pns.policy_id) and \
+       (p.id = pnd.policy_id) and \
+       (p.id = pp.policy_id) \
+);",
+            dest_ip, dest_port, ANY_PORT, protocol,
+            dest_ip, dest_port, ANY_PORT, protocol);
 
     if (get_priority(mysql, query_l1, &priority)) {
 #ifdef VERBOSE

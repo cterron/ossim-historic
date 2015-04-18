@@ -18,7 +18,7 @@ int getportbyservice(char *service) {
     }
 
     while(!feof(fd)) {
-        fscanf(fd, "%s", fw1_service);
+        fscanf(fd, "%128s", fw1_service);
         if (!strcmp(fw1_service, service)) {
             fscanf(fd, "%d", &port);
         }

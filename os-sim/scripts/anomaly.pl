@@ -5,7 +5,7 @@ use ossim_conf;
 use strict;
 use warnings;
 
-my $rrdtool = "$ossim_conf::rrdtool_path/rrdtool";
+my $rrdtool = "$ossim_conf::ossim_data->{"rrdtool_path"}/rrdtool";
 
 sub usage {
     print("Usage: $0 file range\n");

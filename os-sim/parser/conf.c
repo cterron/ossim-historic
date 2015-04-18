@@ -17,7 +17,7 @@ char* get_conf(char *option) {
     }
 
     while(!feof(fd)) {
-        fscanf(fd, "%s", line);
+        fscanf(fd, "%128s", line);
         if (strncmp(line, "#", 1)) {
             if (NULL != (val = strchr(line, '='))) {
                 val++;

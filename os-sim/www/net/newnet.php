@@ -28,7 +28,7 @@
 } elseif($_POST["insert"]) {
 
     $name        = $_POST["name"];
-    $ip          = $_POST["ips"];
+    $ips          = $_POST["ips"];
     $priority    = $_POST["priority"];
     $threshold_c = $_POST["threshold_c"];
     $threshold_a = $_POST["threshold_a"];

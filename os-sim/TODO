@@ -28,11 +28,11 @@
 + Parser keeps dying... can't open /etc/ossim.conf. Why is configuration
   re-read everytime an alert arrives ? why is an mysql connection established
   everytime an alert arrives ? Parser rewrite...
-- Parser doesn't take policy into account.
++ Parser doesn't take policy into account.
 + Add ossim_log to ossim.conf. ossim.init.d...
 + Using "buffer" may suppose loosing alerts (they get cut in two). Use tail blocking instead.
 + Popup host graph when clicking on A or C value in control panel.
-- Control Panel. Draw numbers in red when they get too high (threshold)
++ Control Panel. Draw numbers in red when they get too high (threshold)
 + control_panel.pl relative paths...
 + Ntop link doesn't work well with 2 "//" in frameoptions popup..
 + When modifying policy, hosts get selected twice (source/dest is not being
@@ -40,5 +40,6 @@
 + Serious vulnerability when calculating networks with nmap. Sanity check !!!!
 - Ntop keeps dying after ntop modifications. sigh... 4 days without diying, debug.
 + Ips aren't substitued with Hostnames in Control Panel
+- Don't open a mysql connection every time you insert a fw-1 alert.
 
 - Much much more...

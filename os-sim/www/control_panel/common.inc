@@ -13,7 +13,7 @@ function graph_image_link($ip, $type, $what, $start, $end, $zoom) {
 function echocolor ($val, $max)
 {
     if ($val - $max > 0) {
-    echo "<font color=\"red\">$val</font>";
+    echo "<font color=\"#991e1e\">$val</font>";
     } else {
     echo $val;
     }

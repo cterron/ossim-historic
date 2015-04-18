@@ -4,6 +4,7 @@
 
 base_dir=/opt/ossim
 ossim_log=/var/log/auth.log
+ossim_interface=eth0
 
 #################################################
 # OSSIM db configuration
@@ -13,6 +14,7 @@ ossim_base=ossim
 ossim_user=ossimuser
 ossim_pass=
 ossim_host=localhost
+ossim_port=3306
 
 
 #################################################
@@ -24,6 +26,7 @@ snort_base=snort
 snort_user=snortuser
 snort_pass=
 snort_host=localhost
+snort_port=3306
 
 
 #################################################
@@ -62,6 +65,7 @@ mailstats_link=http://mailstats_server/
 rrdpath_host=/opt/ossim/www/mrtg/host_qualification/
 rrdpath_net=/opt/ossim/www/mrtg/net_qualification/
 rrdpath_global=/opt/ossim/www/mrtg/global_qualification/
+rrdpath_ntop=/usr/local/var/ntop/rrd/
 arial_path=/opt/fonts/arial.ttf
 out_path=/opt/ossim/www/mrtg-html/tmp/
 out_web_path=/ossim/mrtg-html/tmp/

@@ -9,9 +9,8 @@ use ossim_conf;
 my $OUTPUT_FILE = "host_qualification.cfg";
 open CFG, ">$OUTPUT_FILE" or die "Can't open file: $!";
 
-my $dsn = 'dbi:mysql:'.$ossim_conf::base.':'.$ossim_conf::host.':'.
-            $ossim_conf::port;
-my $dbh = DBI->connect($dsn, $ossim_conf::user, $ossim_conf::pass) 
+my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
+my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
 my $query = "SELECT host_ip FROM host_qualification;";
@@ -24,7 +23,7 @@ if ($sth->rows > 0) {
 
 
         print CFG <<"EOF";
-Target[$host_ip]: `$ossim_conf::base_dir/mrtg/hosts/read_data.pl $host_ip`
+Target[$host_ip]: `$ossim_conf::ossim_data->{base_dir}/mrtg/hosts/read_data.pl $host_ip`
 Title[$host_ip]: OSSIM Level graphics
 Background[$host_ip]: #ffffff
 PageTop[$host_ip]: <H1>Level for $host_ip</H1>

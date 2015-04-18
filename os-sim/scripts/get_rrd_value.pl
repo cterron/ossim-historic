@@ -9,7 +9,7 @@ $| = 1;
 sub usage {
 
 print "get_value start_time end_time rrd_file ";
-print "[compromise|attack] [MAX|MIN|AVERAGE]\n";
+print "[compromise|attack|ntop] [MAX|MIN|AVERAGE]\n";
 print "time can be: relative, using N-1H, N-2H, etc...\n";
 print "or using AT style syntax\n";
 exit 0;
@@ -25,8 +25,9 @@ my $type = $ARGV[4];
 
 $what = "ds0" if $what eq "compromise";
 $what = "ds1" if $what eq "attack";
+$what = "counter" if $what eq "ntop";
 
-my @result= `$ossim_conf::rrdtool_path/rrdtool graph /dev/null -s $start -e $end -X 2 DEF:obs=$rrd_file:$what:AVERAGE PRINT:obs:$type:%lf`;
+my @result= `$ossim_conf::ossim_data->{"rrdtool_path"}/rrdtool graph /dev/null -s $start -e $end -X 2 DEF:obs=$rrd_file:$what:AVERAGE PRINT:obs:$type:%lf`;
 
 print "$result[1]";
 

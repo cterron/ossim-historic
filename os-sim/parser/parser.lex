@@ -11,6 +11,7 @@ L   [A-Za-z\-\_]
 %x SOURCE_PORT
 %x DEST_IP
 %x DEST_PORT
+%x RRD
 %x FIREWALL
 %x FIREWALL_SENSOR
 
@@ -61,6 +62,14 @@ MYSQL   mysql;
     printf("sensor     %s\n", yytext);
 #endif
 
+/*
+    if (!strcmp(yytext, "RRD_anomaly")) {
+        BEGIN(RRD);
+    } else {
+        BEGIN(PROG);
+    }
+*/
+
 #ifdef FW1
     if (!strcmp(yytext, "logger")) {
         BEGIN(FIREWALL);
@@ -77,12 +86,16 @@ MYSQL   mysql;
     printf("program:  %s\n", yytext);
 #endif
 
-    if (strcmp(yytext, "snort")) {
-        BEGIN(INITIAL);
+    if (!strcmp(yytext, "snort")) {
+        BEGIN(PLUGIN);
         continue;
+    } else if (!strcmp(yytext, "RRD_anomaly")) {
+        BEGIN(RRD);
+        continue;
+    } else {
+        BEGIN(INITIAL);
     }
         
-    BEGIN(PLUGIN);
 }
 
 <PLUGIN>{D}+ {
@@ -198,6 +211,14 @@ MYSQL   mysql;
     BEGIN(INITIAL);
 }
 
+<RRD>"host: "({D}|\.)+ {
+    snprintf(source_ip, sizeof(source_ip), "%s", yytext + strlen("host: "));
+}
+<RRD>"what: "{L}+ {
+    snprintf(service, sizeof(service), "%s", yytext + strlen("what: "));
+    log_rrd(&mysql, source_ip, service);
+    BEGIN(INITIAL);
+}
 
 <FIREWALL>"src: "({D}|\.)+ {
     snprintf(source_ip, sizeof(source_ip), "%s", yytext + strlen("src: "));
@@ -268,7 +289,7 @@ MYSQL   mysql;
 }
 
 
-<INITIAL,SENSOR,PROG,PLUGIN,TPLUGIN,DESCR,PROTOCOL,SOURCE_IP,SOURCE_PORT,DEST_IP,DEST_PORT,FIREWALL>.|\n /* crap */
+<INITIAL,SENSOR,PROG,PLUGIN,TPLUGIN,DESCR,PROTOCOL,SOURCE_IP,SOURCE_PORT,DEST_IP,DEST_PORT,FIREWALL,RRD>.|\n /* crap */
 
 %%
 

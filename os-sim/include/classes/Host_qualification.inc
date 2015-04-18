@@ -24,7 +24,7 @@ class Host_qualification {
             if (!$rs->EOF)
                 return $rs->fields["attack"];
             else {
-                /* there is not attack level of this host */
+                /* there is no attack level for this host */
                 return 0;
             }
         }
@@ -37,15 +37,13 @@ class Host_qualification {
             if (!$rs->EOF)
                 return $rs->fields["attack"];
             else {
-                /* there is not compromise level of this host */
+                /* there is no compromise level for this host */
                 return 0;
             }
         }
     }
 
 
-            
-    
     function get_list($conn, $where = "", $order = "") 
     {
         if (!$rs = &$conn->Execute("SELECT * FROM host_qualification $where
