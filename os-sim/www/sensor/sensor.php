@@ -24,7 +24,7 @@
             echo ossim_db::get_order("name", $order);
           ?>">Hostname</a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("ip", $order);
+            echo ossim_db::get_order("inet_aton(ip)", $order);
           ?>">Ip</a></th>
       <th>Description</th>
       <th>Action</th>

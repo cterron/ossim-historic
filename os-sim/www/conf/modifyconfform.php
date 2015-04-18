@@ -47,6 +47,8 @@
       </td>
     </tr>
     <tr><th colspan="2"></th></tr>
+    <tr><td colspan="2"><a href="sensoredit.php">Edit local sensor</a></td></tr>
+    <tr><th colspan="2"></th></tr>
     <tr><th colspan="2">Appearance</th></tr>
     <tr>
       <td align="right">Left Bar length</td>

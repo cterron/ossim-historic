@@ -65,7 +65,7 @@ Tasks
       clicked, expand host list. Contract if it gets clicked a second time.
       Don't use javascript. Allow multiple networks to get expanded.
     + Reinsert search functionality into Hosts.php
-    - Host sort order -> Order by ip.
+    + Host sort order -> Order by ip.
     - Be able to specify a time range of "any" to make things easier. (Sort of
       a checkbox)
     - Be able to change relative policy order so that policies are read from

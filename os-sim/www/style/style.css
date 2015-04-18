@@ -24,6 +24,10 @@ a:hover {
   font-weight: bold;
 }
 
+a.selected {
+  color: #991e1e;
+}
+
 h1 {
   background: #f5f5f5;
   color: black;

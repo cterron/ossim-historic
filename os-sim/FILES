@@ -1,14 +1,24 @@
-ChangeLog: Changes done in the last few weeks.
-CONFIG: Some additions to external programs
-contrib: Misc config & support files
-db: Database structure
-etc: Config files, linked to /etc/
-include: Perl & php includes
-INSTALL: Short installation instructions.
-LICENSE: Licensing for anything written by us
-mrtg: Mrtg launch script & config data.
-parser: The main syslog parser
-README: short readme
-scripts: parser support scripts
-TODO: Things todo during the next few days
-www: whole web structure
+AUTHORS     : Just that, who is working on this.
+autogen.sh  : New parser framework
+backups     : DB backups
+BUGS        : Some new bugs.
+ChangeLog   : Changes done in the last few weeks.
+CONFIG      : Some additions to external programs
+contrib     : Misc config & support files
+COPYING     : Licensing for anything written by use
+db          : Database structure
+etc         : Config files, linked to /etc/
+FAQ         : Frequently Asked Questions
+FILES       : This file
+include     : Perl & php includes
+INSTALL     : Short installation instructions.
+LICENSE     : Licensing for anything written by us
+mrtg        : Mrtg launch script & config data.
+NEWS        : Changelog
+parser      : The main syslog parser
+pixmaps     : Images
+README      : short readme
+scripts     : parser support scripts
+server      : New parser framework
+TODO        : Things todo during the next few days
+www         : whole web structure

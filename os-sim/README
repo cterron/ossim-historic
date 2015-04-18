@@ -3,7 +3,10 @@ http://sourceforge.net/projects/os-sim/
 
 About Os-sim
 ------------
-Our goal es to obtain a working SIM (Security Infrastructure Monitor) able to integrate, qualificate and correlate both high level and low level security and network events which is capable to compete with commercial products recently appearing on the security market.
+Our goal es to obtain a working SIM (Security Infrastructure Monitor) able to
+integrate, qualify and correlate both high level and low level security and
+network events which is able to compete with commercial products recently
+appearing on the security market.
 Integrate multiple opensource security/network monitoring products to obtain
 three network/host visibility levels:
 
@@ -51,7 +54,8 @@ the most information out of every tool with the following objectives in mind:
 Authors
 -------
 
-    Dominique Karg <dk@ipsoluciones.com>
-    David Gil <dgil@ipsoluciones.com>
-    Julio Casal <jcasal@ipsoluciones.com>
-    Jesus D. Munoz <jesusd@ipsoluciones.com>
+    Dominique Karg <dk@ossim.net>
+    David Gil <dgil@ossim.net>
+    Fabio Ospitia Trujillo <fot@ossim.net>
+    Julio Casal <jcasal@ossim.net>
+    Jesus D. Munoz <jesusd@ossim.net>

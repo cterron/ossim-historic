@@ -24,13 +24,13 @@
     require_once 'classes/Host.inc';
     require_once 'classes/Scan.inc';
 
-    if (!$order = $_GET["order"]) $order = "ip";
+    if (!$order = $_GET["order"]) $order = "inet_aton(ip)";
 ?>
 
   <table align="center">
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("ip", $order);
+            echo ossim_db::get_order("inet_aton(ip)", $order);
           ?>">Host</a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("active", $order);

@@ -6,23 +6,33 @@ code. Install can become quite difficult at this time.
 In order to get os-sim up and working you need (at least) the following,
 satisfying all their dependencies:
 
-- A working experimental rrdtool release (1.1.0)
-- ADOdb 3.72
-- Mysql 4.0.15
+- A working experimental rrdtool release (1.1.0) (Development snapshot)
+- ADOdb 3.94
+- Mysql 4.0.15a
 - OpenNMS 1.0.2
     - PostgreSQL 7.3.2
     - Tomcat
 - Ntop 2.2.95 (patched, patch included)
 - A bunch of perl modules
-- Apache 1.3.28, php 4.3.2.
+- Apache 1.3.28, php 4.3.3.
 - Snort 2.0.2
-    - Spade
-- Nmap 3.45
-- Acid v0.9.6b20
+    - Spade latest (http://www.silicondefense.com)
+- Nmap 3.48
+- Acid v0.9.6b23
 - Mrtg 2.9.29
-- Flex
-- P0f 2.0.2
+- P0f 2.0.3
 - Arpwatch 2.1a11
+
+Parser deps:
+- Flex (soon to be removed)
+- From ftp.gnome.org/pub/GNOME/sources/:
+    - latest glib2
+        (note for debian users: install "libglib2.0-dev")
+    - latest intltool
+    - latest libgda
+    - latest libxml2
+    - latest libxslt
+- A quite new auto* version => 2.53
 
 
 Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web

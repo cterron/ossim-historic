@@ -26,11 +26,11 @@ update_level (MYSQL * mysql, char *ip, char *type, int level)
 
   if (!strcmp (type, A))
     snprintf (query, QUERY_MAX_SIZE,
-	      "UPDATE host_qualification SET attack = attack + %d \
+	      "UPDATE host_qualification SET attack = %d \
                  WHERE host_ip = '%s';", level, ip);
   else if (!strcmp (type, C))
     snprintf (query, QUERY_MAX_SIZE,
-	      "UPDATE host_qualification SET compromise = compromise + %d \
+	      "UPDATE host_qualification SET compromise = %d \
                  WHERE host_ip = '%s';", level, ip);
   else
     {

@@ -29,7 +29,7 @@
             echo ossim_db::get_order("hostname", $order);
           ?>">Hostname</a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
-            echo ossim_db::get_order("ip", $order);
+            echo ossim_db::get_order("inet_aton(ip)", $order);
           ?>">Ip</a></th>
       <th>NAT</th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 

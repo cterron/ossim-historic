@@ -250,7 +250,7 @@ calculate (MYSQL * mysql, int plugin, int tplugin,
   /* C level */
   if (get_host_level (hosts, source_ip, 'c', &sourceC))
     {
-      update_level (mysql, source_ip, "compromise", impactC);
+      update_level (mysql, source_ip, "compromise", impactC + sourceC);
       update_host_level (hosts, source_ip, 'c', impactC);
       update_nets_level (mysql, source_ip, 'c', impactC);
 #ifdef VERBOSE
@@ -280,7 +280,7 @@ calculate (MYSQL * mysql, int plugin, int tplugin,
   /* A level */
   if (get_host_level (hosts, dest_ip, 'a', &destA))
     {
-      update_level (mysql, dest_ip, "attack", impactA);
+      update_level (mysql, dest_ip, "attack", impactA + destA);
       update_host_level (hosts, dest_ip, 'a', impactA);
       update_nets_level (mysql, dest_ip, 'a', impactA);
 #ifdef VERBOSE
@@ -314,7 +314,7 @@ calculate (MYSQL * mysql, int plugin, int tplugin,
 #ifdef VERBOSE
 	  printf ("ip %s compromise equals %d\n", dest_ip, destC);
 #endif
-	  update_level (mysql, dest_ip, "compromise", impactC);
+	  update_level (mysql, dest_ip, "compromise", impactC + destC);
 	  update_host_level (hosts, dest_ip, 'c', impactC);
 	  update_nets_level (mysql, dest_ip, 'c', impactC);
 	}

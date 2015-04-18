@@ -1,0 +1,6 @@
+3 parsers included:
+
+-  parser.tgz --> fully functional but slowest parser
+- ~/parser/ --> Partially rewritten, will be discarded soon
+- ~/server/, ~/autogen.sh --> Improved parser using glib, threads, binary
+  trees, will be used soon

@@ -1,0 +1,3 @@
+pixmapsdir   = $(datadir)/pixmaps
+pixmaps_DATA = server-ico.png
+EXTRA_DIST   = $(pixmaps_DATA)
