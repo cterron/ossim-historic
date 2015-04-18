@@ -41,7 +41,7 @@ class Port {
         settype($port_number, "int");
 
         $query = "INSERT INTO port VALUES 
-            (NULL, $port_number, '$protocol_name', '$service', '$descr');";
+            ($port_number, '$protocol_name', '$service', '$descr');";
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;

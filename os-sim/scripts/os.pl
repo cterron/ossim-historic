@@ -36,11 +36,21 @@ my $time = localtime;
         if($os =~ /(.*)\s\(or\s(.*)\)/){
         $os = $1 . "|" . $2;
         }
+        if($os =~ /UNKNOWN/){
+        next;
+        }
         my $query = "SELECT * FROM host_os WHERE ip = '$host';";
         my $sth = $dbh->prepare($query);
         $sth->execute();
         if (my $row = $sth->fetchrow_hashref) {
         my $prev_os = $row->{previous};
+# Skip too similar. Rebuild when needed.
+        if(($prev_os =~ /Windows/) && ($os =~ /Windows/)){
+        next;
+        }
+        if(($prev_os =~ /Linux/) && ($os =~ /Linux/)){
+        next;
+        }
             if($os ne $prev_os && $row->{anom} == 0){
                 $query = "UPDATE host_os SET anom = 1, os = '$os', os_time = '$time' WHERE ip = '$host';";
                 my $sth = $dbh->prepare($query);

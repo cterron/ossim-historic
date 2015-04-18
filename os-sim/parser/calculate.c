@@ -159,8 +159,10 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
     policy_port_reference pp, policy_sig_reference ps, \
     signature_group_reference sg, port_group_reference pg, \
     policy_time pt \
- where (phs.host_ip = '%s' and phs.direction = 'source') and \
-       (phd.host_ip = '%s' and phd.direction = 'dest') and \
+ where ((phs.host_ip = '%s' OR phs.host_ip = 'any') and \
+        phs.direction = 'source') and \
+       ((phd.host_ip = '%s' OR phd.host_ip = 'any') and \
+        phd.direction = 'dest') and \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
@@ -212,7 +214,8 @@ union \
     policy p, policy_host_reference phs, policy_host_reference phd, \
     policy_port_reference pp, port_group_reference pg, policy_time pt \
  where \
-       (phd.host_ip = '%s' and phd.direction = 'dest') and \
+       ((phd.host_ip = '%s' OR phs.host_ip = 'any') \
+         and phd.direction = 'dest') and \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \

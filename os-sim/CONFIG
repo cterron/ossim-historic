@@ -11,7 +11,7 @@ Parser
 Ntop
 ====
 * Patch ntop so that it can make use of aberrant behaviour detection.
-* Recompile ntop specifing rrdtool-cvs-snap location within configure.
+* Recompile ntop specifying rrdtool-cvs-snap location within configure.
 
 Apache
 ======

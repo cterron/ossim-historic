@@ -13,9 +13,9 @@
 
     /* check params */
     if (($_POST["insert"]) &&
-        (!$_POST["hostname"] || !$_POST["ip"] || !$_POST["asset"] ||
+        (!$_POST["hostname"] || !$_POST["ip"] ||
          !$_POST["threshold_c"] || !$_POST["threshold_a"] || 
-         !$_POST["descr"])) 
+         !$_POST["persistence"] || !$_POST["descr"])) 
     {
 ?>
 
@@ -29,18 +29,21 @@
 
     $hostname    = mysql_escape_string($_POST["hostname"]);
     $ip          = mysql_escape_string($_POST["ip"]);
-    $asset    = mysql_escape_string($_POST["asset"]);
+    $asset       = mysql_escape_string($_POST["asset"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
     $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $alert       = mysql_escape_string($_POST["alert"]);
+    $persistence = mysql_escape_string($_POST["persistence"]);
+    $nat         = mysql_escape_string($_POST["nat"]);
     $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-   
+
     Host::insert ($conn, $ip, $hostname, $asset, $threshold_c, 
-                  $threshold_a, $descr);
+                  $threshold_a, $alert, $persistence, $nat, $descr);
 
     $db->close($conn);
 }

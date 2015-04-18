@@ -97,6 +97,24 @@
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $net->get_threshold_a(); ?>"></td>
   </tr>
+    <tr>
+    <th>Alert</th>
+    <td class="left">
+      <select name="alert">
+        <option <?php if ($net->get_alert() == 1) echo " SELECTED "; ?>
+            value="1">Yes</option>
+        <option <?php if ($net->get_alert() == 0) echo " SELECTED "; ?>
+            value="0">No</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th>Persistence</th>
+    <td class="left">
+      <input type="text" name="persistence" size="3"
+             value="<?php echo $net->get_persistence(); ?>">min.
+    </td>
+  </tr>
   <tr>
     <th>Description</th>
     <td class="left">

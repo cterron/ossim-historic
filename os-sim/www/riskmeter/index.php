@@ -1,7 +1,7 @@
 <html>
 <head>
   <title> Riskmeter </title>
-  <meta http-equiv="refresh" content="5">
+  <meta http-equiv="refresh" content="10">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/riskmeter.css"/>
 </head>

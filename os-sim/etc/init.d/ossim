@@ -28,6 +28,7 @@ case "$1" in
     nice -n 19 ./control_panel.pl &
     nice -n 19 ./update_graph_levels.pl &
     nice -n 19 ./os.pl &
+    nice -n 19 ./alert.pl &
     # Log to be removed soon
     nice -n 19 ./check_rrd.pl >> temp_rrd.log &
     nice -n 19 ./check_rrd_global.pl >> temp_rrd.log &
@@ -54,6 +55,7 @@ case "$1" in
         killall -KILL control_panel.pl
         killall -KILL update_graph_levels.pl
         killall -KILL os.pl
+        killall -KILL alert.pl
         killall -KILL check_rrd.pl
         killall -KILL check_rrd_global.pl
         killall -KILL p0f

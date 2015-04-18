@@ -17,6 +17,10 @@
     require_once 'classes/Host.inc';
 
     if (!$order = $_GET["order"]) $order = "hostname"; 
+    if (!$search = $_POST["search"]) 
+        $search = "";
+    else 
+        $search = "WHERE ip like '%$search%' OR hostname like '%$search%'";
 ?>
 
   <table align="center">
@@ -27,6 +31,7 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("ip", $order);
           ?>">Ip</a></th>
+      <th>NAT</th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("asset", $order);
           ?>">Asset</a></th>
@@ -36,6 +41,12 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("threshold_a", $order);
           ?>">Threshold_A</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("alert", $order);
+          ?>">Alert</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("persistence", $order);
+          ?>">Persistence</a></th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -45,7 +56,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($host_list = Host::get_list($conn, "", "ORDER BY $order")) {
+    if ($host_list = Host::get_list($conn, "$search", "ORDER BY $order")) {
         foreach($host_list as $host) {
             $ip = $host->get_ip();
 ?>
@@ -53,9 +64,12 @@
     <tr>
       <td><?php echo $host->get_hostname(); ?></td>
       <td><?php echo $host->get_ip(); ?></td>
+      <td><?php if ($nat = $host->get_nat()) echo $nat; else echo "-" ?></td>
       <td><?php echo $host->get_asset(); ?></td>
       <td><?php echo $host->get_threshold_c(); ?></td>
       <td><?php echo $host->get_threshold_a(); ?></td>
+      <td><?php if ($host->get_alert()) echo "Yes"; else echo "No" ?></td>
+      <td><?php echo $host->get_persistence() . " min."; ?></td>
       <td><?php echo $host->get_descr(); ?></td>
       <td><a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>
           <a href="deletehost.php?ip=<?php echo $ip ?>">Delete</a></td>
@@ -68,8 +82,19 @@
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="7"><a href="newhostform.php">Insert new host</a></td>
+      <td colspan="10"><a href="newhostform.php">Insert new host</a></td>
     </tr>
+  </table>
+
+  <br/><br/>
+  <table align="center">
+  <form action="<?php echo $_SERVER["PHP_SELF"]?>" method="post">
+    <tr>
+      <th>Search</th>
+      <td><input type="text" name="search"></td>
+    </tr>
+    <tr><td colspan="2"><input type="submit" value="OK"></td></tr>
+  </form>
   </table>
     
 </body>

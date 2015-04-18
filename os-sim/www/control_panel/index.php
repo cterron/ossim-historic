@@ -9,7 +9,6 @@
 <body>
 
   <h1 align="center">OSSIM Framework</h1>
-  <h2 align="center">Control Panel</h2>
 
 <?php
 
@@ -22,10 +21,29 @@ require_once ('classes/Net.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Host_mac.inc');
 require_once ('acid_funcs.inc');
-require_once ('common.inc');
+require ('common.inc');
+
+function echo_values($val, $max, $ip, $image) {
+
+    global $acid_link;
+
+    if ($val - $max > 0) {
+        echo "<a href=\"". get_acid_info($ip, $acid_link) . 
+            "\"><font color=\"#991e1e\">$val</font></a>/" . 
+            "<a href=\"$image\">" . intval($val * 100 / $max) ."</a>%";
+    } else {
+        echo "<a href=\"". get_acid_info($ip, $acid_link) .
+             "\">$val</a>/" . 
+            "<a href=\"$image\">" . intval($val * 100 / $max) ."</a>%";
+    } 
+}
+
 
 if (!$range = mysql_escape_string($_GET["range"]))  $range = 'day';
 
+?>
+  <h2 align="center">Control Panel - Last <?php echo $range;?> </h2>
+<?php
 /* get conf */
 $conf = new ossim_conf();
 $mrtg_link = $conf->get_conf("mrtg_link");
@@ -95,9 +113,9 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         $host_ip = $host->get_host_ip();
 ?>
           <tr>
-            <td><a href="<?php echo get_acid_info($host_ip, 
-                                                  $acid_link); ?>">
-            <?php echo Host::ip2hostname($conn, $host_ip); ?></a>
+            <td><a href="<?php echo "$ntop_link/$host_ip"?>.html" title="<?php
+            echo get_caption($host_ip,"host","compromise",$range);?>"><?php 
+                   echo Host::ip2hostname($conn, $host_ip) ?></a>
             </td>
           </tr>
 <?php } ?>
@@ -109,12 +127,15 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) {
         $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                                  $start, "N", 1); 
+                                  $start, "N", 1, $range); 
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_max_c(), 
-                            Host::ipthresh_c($conn,$host->get_host_ip())); ?></a>
+            <td>
+        <?php
+            echo_values($host->get_max_c(),
+                        Host::ipthresh_c($conn,$host->get_host_ip()),
+                        $host->get_host_ip(), $image);
+        ?>
             </td>
           </tr>
 <?php } ?>
@@ -126,12 +147,15 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) { 
         $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                                  $start, "N", 1); 
+                                  $start, "N", 1, $range); 
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_avg_c(), 
-                            Host::ipthresh_c($conn, $host->get_host_ip())) ?></a>
+            <td>        
+        <?php
+            echo_values($host->get_avg_c(),
+                        Host::ipthresh_c($conn,$host->get_host_ip()),
+                        $host->get_host_ip(), $image);
+        ?>
             </td>
           </tr>
 <?php } ?>
@@ -145,9 +169,9 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         $host_ip = $host->get_host_ip();
     ?>
           <tr>
-            <td><a href="<?php echo get_acid_info($host_ip, 
-                                                  $acid_link); ?>">
-            <?php echo Host::ip2hostname($conn, $host_ip); ?></a>
+            <td><a href="<?php echo "$ntop_link/$host_ip"?>.html"title="<?php
+            echo get_caption($host_ip,"host","attack",$range);?>"><?php 
+                   echo Host::ip2hostname($conn, $host_ip) ?></a>
             </td>
           </tr>
 <?php } ?>
@@ -159,12 +183,15 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) {
         $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                                  $start, "N", 1);
+                                  $start, "N", 1, $range);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_max_a(), 
-                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
+            <td>
+        <?php
+            echo_values($host->get_max_a(),
+                        Host::ipthresh_a($conn,$host->get_host_ip()),
+                        $host->get_host_ip(), $image);
+        ?>
             </td>
           </tr>
 <?php } ?>
@@ -176,12 +203,15 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) { 
         $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                                  $start, "N", 1);
+                                  $start, "N", 1, $range);
 ?>
           <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_avg_a(), 
-                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
+            <td>
+        <?php
+            echo_values($host->get_avg_a(),
+                        Host::ipthresh_a($conn,$host->get_host_ip()),
+                        $host->get_host_ip(), $image);
+        ?>
             </td>
           </tr>
 <?php } ?>
@@ -216,7 +246,7 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($nets_order_by_c)
     foreach ($nets_order_by_c as $net) { 
     $image = graph_image_link($net->get_net_name(), "net", "compromise",
-                              $start, "N", 1);
+                              $start, "N", 1, $range);
 ?>
           <tr>
             <td><a href="<?php echo $image ?>">
@@ -233,7 +263,7 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($nets_order_by_c)
     foreach ($nets_order_by_c as $net) { 
     $image = graph_image_link($net->get_net_name(), "net", "compromise",
-                              $start, "N", 1);
+                              $start, "N", 1, $range);
 ?>
           <tr>
             <td><a href="<?php echo $image ?>">
@@ -261,7 +291,7 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
     $image = graph_image_link($net->get_net_name(), "net", "attack",
-                              $start, "N", 1);
+                              $start, "N", 1, $range);
 ?>
           <tr>
             <td><a href="<?php echo $image ?>">
@@ -278,7 +308,7 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
     $image = graph_image_link($net->get_net_name(), "net", "attack",
-                              $start, "N", 1);
+                              $start, "N", 1, $range);
 ?>
           <tr>
             <td><a href="<?php echo $image ?>">
@@ -357,7 +387,7 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "$ntop_link/plugins/rrdPlugin?action=list&key=interfaces/eth0&title=interface%20eth0";?>" target="_blank"> 
 <?php echo $ip;?></A> </th><td> <?php echo $rrd_names_global[$alert->get_what()];?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
-<td> <?php echo ($alert->get_count())/$perl_interval;?> </td>
+<td> <?php echo round(($alert->get_count())/$perl_interval);?>h. </td>
 <td><font color="red"><?php echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
 echo $alert->get_what();?>"></input></td>
@@ -396,7 +426,7 @@ anomaly_time desc")) {
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $rrd_names[$alert->get_what()];?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
-<td> <?php echo ($alert->get_count())/$perl_interval;?> </td>
+<td> <?php echo round(($alert->get_count())/$perl_interval);?>h. </td>
 <td><font color="red"><?php echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
 echo $alert->get_what();?>"></input></td>
@@ -546,9 +576,34 @@ $encoded;?>"></input>
 
 </table>
 
-<p>&nbsp;</p>
+<br/>
+<table align="center" width="100%">
+  <tr><th>Service Availability</th><tr>
+  <tr><td><img src="<?php echo $ntop_link ?>/thptGraph.png?col=1"></td></tr>
+</table>
+
+
+<br/>
+<table align="center" width="100%">
+  <tr><th>Network Usage</th></tr>
+  <tr><td><!-- aquí va el gráfico ese enorme --></td></tr>
+  <tr>
+    <td>
+      <a href="<?php echo $ntop_link ?>/IpR2L.html?col=3">External Access</a>
+      &nbsp;·&nbsp;
+      <a href="<?php echo $ntop_link ?>/IpL2R.html?col=3">Internal Access</a>
+      &nbsp;·&nbsp;
+      <a href="<?php echo $ntop_link ?>/sortDataThpt.html?col=1">Throughput</a>
+      &nbsp;·&nbsp;
+      <a href="<?php echo $ntop_link ?>/sortDataIP.html">Service Data</a>
+      &nbsp;·&nbsp;
+      <a href="<?php echo $ntop_link ?>/ipTrafficMatrix.html">Time Usage</a>
+    </td>
+  </tr>
+</table>
 
   <!-- static code -->
+<p>&nbsp;</p>
 <center><h3> Static code. work in progress...</h3></center>
  <table align="center">
   <tr>
@@ -672,7 +727,7 @@ $encoded;?>"></input>
     <td align="center" colspan="2"><font color="red">102%</font></td>
   </tr>
 <FORM name="temp" action="">
-  <tr><th colspan="6" bgcolor="silver">Profile anomalies</th></tr>
+<!--  <tr><th colspan="6" bgcolor="silver">Profile anomalies</th></tr>
   <tr>
     <td colspan="3" align="center">Show anomalies</td>
     <td align="center"><A HREF="">Acknowledged</A></td>
@@ -688,64 +743,64 @@ $encoded;?>"></input>
   <tr>
     <td align="center"> Jul-03 16:35 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $ntop_link?>/sortDataThpt.html?col=3">
+        <a href="<?php //echo $ntop_link?>/sortDataThpt.html?col=3">
           <font color="red"><u>Over 600% traffic transmitted</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jul-03 04:10 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.203">vixen</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.203">vixen</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $ntop_link?>/192.168.1.203.html">
+        <a href="<?php //echo $ntop_link?>/192.168.1.203.html">
           <font color="green"><u>New port 442 used 100MB</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jul-02 18:22 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.7">kaneda</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.7">kaneda</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $ntop_link?>/192.168.1.7.html">
+        <a href="<?php //echo $ntop_link?>/192.168.1.7.html">
           <font color="orange"><u>620% more connections established</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jul-02 09:50 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $stats_link?>/stats/system/load.html">
+        <a href="<?php //echo $stats_link?>/stats/system/load.html">
           <font color="orange"><u>System load too high. 300% over average</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jul-01 19:50 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr
+        <a href="<?php //echo $rootaddr
         ?>/stats/frameoptions.php?ip=192.168.1.40">Router_Mad</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $opennms_link?>/element/node.jsp?node=3">
+        <a href="<?php //echo $opennms_link?>/element/node.jsp?node=3">
           <font color="red"><u>Smtp availability under 97%</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jun-30 17:03 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $ntop_link?>/dataHostTraffic.html">
+        <a href="<?php //echo $ntop_link?>/dataHostTraffic.html">
           <font color="orange"><u>Traffic at strange hours</u></font></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
     <td align="center"> Jun-28 12:21 </td>
     <td colspan="2" align="center">
-        <a href="<?php echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
+        <a href="<?php //echo $rootaddr ?>/stats/frameoptions.php?ip=192.168.1.97">golgotha</a></td>
     <td colspan="2" align="left">
-        <a href="<?php echo $ntop_link?>/localHostsInfo.html"><u>OS Change: Linux 2.4.1</u></a></td>
+        <a href="<?php //echo $ntop_link?>/localHostsInfo.html"><u>OS Change: Linux 2.4.1</u></a></td>
     <td align="center"><input type="checkbox"></input> 
   </tr>
   <tr>
@@ -753,6 +808,7 @@ $encoded;?>"></input>
   VALUE="Aceptar"></INPUT></td>
   </TR>
   </FORM>
+-->
   <!-- end static code -->
 
 

@@ -48,7 +48,7 @@ while ((my $rrd_file =
                             '$day_max_a', '$day_avg_c', '$day_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($day_max_c > 0) || ($day_max_a > 0)) { 
         $query = "UPDATE control_panel_host 
             SET max_c = '$day_max_c', max_a = '$day_max_a',
                 avg_c = '$day_avg_c', avg_a = '$day_avg_a' 
@@ -75,7 +75,7 @@ while ((my $rrd_file =
                             '$month_max_a', '$month_avg_c', '$month_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($month_max_c > 0) || ($month_max_a > 0)) {
         $query = "UPDATE control_panel_host 
             SET max_c = '$month_max_c', max_a = '$month_max_a',
                 avg_c = '$month_avg_c', avg_a = '$month_avg_a' 
@@ -102,7 +102,7 @@ while ((my $rrd_file =
                             '$year_max_a', '$year_avg_c', '$year_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($year_max_c > 0) || ($year_max_a > 0)) {
         $query = "UPDATE control_panel_host 
             SET max_c = '$year_max_c', max_a = '$year_max_a',
                 avg_c = '$year_avg_c', avg_a = '$year_avg_a' 
@@ -142,7 +142,7 @@ while ((my $rrd_file =
                             '$day_max_a', '$day_avg_c', '$day_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($day_max_c > 0) || ($day_max_a > 0)) { 
         $query = "UPDATE control_panel_net 
             SET max_c = '$day_max_c', max_a = '$day_max_a',
                 avg_c = '$day_avg_c', avg_a = '$day_avg_a' 
@@ -169,7 +169,7 @@ while ((my $rrd_file =
                             '$month_max_a', '$month_avg_c', '$month_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($month_max_c > 0) || ($month_max_a > 0)) {
         $query = "UPDATE control_panel_net 
             SET max_c = '$month_max_c', max_a = '$month_max_a',
                 avg_c = '$month_avg_c', avg_a = '$month_avg_a' 
@@ -196,7 +196,7 @@ while ((my $rrd_file =
                             '$year_max_a', '$year_avg_c', '$year_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
-    } else {
+    } elsif (($year_max_c > 0) || ($year_max_a > 0)) {
         $query = "UPDATE control_panel_net 
             SET max_c = '$year_max_c', max_a = '$year_max_a',
                 avg_c = '$year_avg_c', avg_a = '$year_avg_a' 

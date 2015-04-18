@@ -14,16 +14,17 @@ require_once 'ossim_db.inc';
 require_once 'classes/Host_mac.inc';
 require_once 'classes/Host.inc';
 
+if (!$order = $_GET["order"]) $order = "ip";
 if (!$offset = intval($_GET["offset"])){ $offset = 0;}
 if (!$count = intval($_GET["count"])){ $count = 50;}
 
-$where_clause = " limit $count offset $offset ";
+$args = "ORDER BY $order LIMIT $count OFFSET $offset ";
 
 ?>
 <ul>
-<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=10"> Show 10 </a>
-<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=50"> Show 50 </a>
-<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=100"> Show 100 </a>
+<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=10&order=<?php echo $order ?>"> Show 10 </a>
+<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=50&order=<?php echo $order ?>"> Show 50 </a>
+<li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset); ?>&count=100&order=<?php echo $order ?>"> Show 100 </a>
 </ul>
 <?php
 
@@ -31,12 +32,29 @@ $db = new ossim_db();
 $conn = $db->connect();
 ?>
 <table width="100%">
-<tr><th> Host </th><th> Mac </th><th> Vendor </th><th> Previous Mac</th><th>
-Previous Vendor</th><th> When </th></tr>
+<tr>
+<th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
+intval($offset); ?>&count=<?php echo $count ?>&order=<?php
+            echo ossim_db::get_order("ip", $order);
+          ?>">Host</a></th>
+<th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
+intval($offset); ?>&count=<?php echo $count ?>&order=<?php
+            echo ossim_db::get_order("mac", $order);
+          ?>">Mac</a></th>
+<th>Vendor </th>
+<th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
+intval($offset); ?>&count=<?php echo $count ?>&order=<?php
+            echo ossim_db::get_order("previous", $order);
+          ?>">Previous Mac</a></th>
+<th>Previous Vendor</th>
+<th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
+intval($offset); ?>&count=<?php echo $count ?>&order=<?php
+            echo ossim_db::get_order("mac_time", $order);
+          ?>">When</a></th></tr>
 
 
 <?php
-if ($host_mac_list = Host_mac::get_list($conn, $where_clause, "")) {
+if ($host_mac_list = Host_mac::get_list($conn, $args)) {
     foreach($host_mac_list as $host_mac) {
 ?>
 <tr>
@@ -80,12 +98,18 @@ if($anom){
 <?php
 if($offset == 0){
 ?>
-<td colspan=6><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset+$count); ?>&count=<?php echo $count;?>"> Next <?php echo $count ?> </a></td>
+<td colspan=6><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
+intval($offset+$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
+?>"> Next <?php echo $count ?> </a></td>
 <?php
 } else {
 ?>
-<td colspan=3><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset-$count); ?>&count=<?php echo $count;?>"> Previous <?php echo $count ?></a></td>
-<td colspan=3><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo intval($offset+$count); ?>&count=<?php echo $count;?>"> Next <?php echo $count ?> </a></td>
+<td colspan=3><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
+intval($offset-$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
+?>"> Previous <?php echo $count ?></a></td>
+<td colspan=3><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
+intval($offset+$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
+?>"> Next <?php echo $count ?> </a></td>
 <?php
 }
 ?>

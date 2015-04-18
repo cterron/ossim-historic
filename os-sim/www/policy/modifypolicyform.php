@@ -8,7 +8,7 @@
 <body>
                                                                                 
   <h1>OSSIM Framework</h1>
-  <h2>Insert new policy</h2>
+  <h2>Update policy</h2>
 
 <?php
     
@@ -182,7 +182,7 @@
 <?php
             if (Policy_host_reference::in_policy_host_reference
                                                     ($conn, $id, 'any',
-                                                    'source'))
+                                                    'dest'))
             {
                 echo " CHECKED ";
             }

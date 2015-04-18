@@ -43,6 +43,8 @@ mrtg_path=/usr/bin/
 # look at mrtg.cfg and mrtg-rrd.cfg
 mrtg_rrd_files_path=/opt/ossim/www/mrtg/
 
+# you'd better make sure it exists
+backup_dir=/opt/ossim/backups/
 
 #################################################
 # Paths to other applications
@@ -51,7 +53,7 @@ mrtg_rrd_files_path=/opt/ossim/www/mrtg/
 nmap_path=/usr/local/bin/nmap
 p0f_path=/usr/local/bin/p0f
 arpwatch_path=/usr/sbin/arpwatch
-
+mail_path=/usr/bin/mail
 
 
 #################################################
@@ -64,6 +66,7 @@ ntop_link_ext=http://external_host:3000
 opennms_link=http://localhost:8080/opennms/
 mrtg_link=http://localhost/ossim-beta/mrtg-html/
 graph_link=http://localhost/cgi-bin/draw_graph.pl
+show_image_link=show_image.php
 stats_link=http://external_host/
 mailstats_link=http://mailstats_server/
 
@@ -87,4 +90,9 @@ out_web_path=/ossim/mrtg-html/tmp/
 #################################################
 
 UPDATE_INTERVAL=3
+
+#################################################
+# Mail Alert
+#################################################
+email_alert=root@localhost
 

@@ -33,7 +33,13 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold_a", $order);
           ?>">Threshold_A</a></th>
-      <th>Description</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("alert", $order);
+          ?>">Alert</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("persistence", $order);
+          ?>">Persistence</a></th>
+     <th>Description</th>
       <th>Action</th>
     </tr>
 
@@ -53,6 +59,8 @@
       <td><?php echo $net->get_priority(); ?></td>
       <td><?php echo $net->get_threshold_c(); ?></td>
       <td><?php echo $net->get_threshold_a(); ?></td>
+      <td><?php if ($net->get_alert()) echo "Yes"; else echo "No" ?></td>
+      <td><?php echo $net->get_persistence() . " min."; ?></td>
       <td><?php echo $net->get_descr(); ?></td>
       <td><a href="modifynetform.php?name=<?php echo $name ?>">Modify</a>
           <a href="deletenet.php?name=<?php echo $name ?>">Delete</a></td>
@@ -65,7 +73,7 @@
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="7"><a href="newnetform.php">Insert new network</a></td>
+      <td colspan="9"><a href="newnetform.php">Insert new network</a></td>
     </tr>
   </table>
     

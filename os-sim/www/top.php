@@ -43,9 +43,12 @@
         [<a href="<?php echo $conf->get_conf("acid_link"); ?>" 
            title="(SNORT)" 
            target="main"><font color="#991e1e">Forensics</font></a>]
+        [<a href="<?php echo $conf->get_conf("ntop_link"); ?>/NetNetstat.html" 
+           title="(NTOP - Active TCP Sessions)" 
+           target="main"><font color="#991e1e">Session Monitor</font></a>]
         [<a href="<?php echo $conf->get_conf("ntop_link"); ?>" 
            title="(NTOP)" 
-           target="main"><font color="#991e1e">Usage</font></a>]
+           target="main"><font color="#991e1e">Usage Monitor</font></a>]
         [<a href="<?php echo $conf->get_conf("opennms_link"); ?>" 
            title="(OpenNMS)" 
            target="main"><font color="#991e1e">Service availability</font></a>]

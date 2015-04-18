@@ -293,7 +293,7 @@
         <tr>
           <td>
             <select name="begin_day">
-              <option value="1">Mon</option>
+              <option selected value="1">Mon</option>
               <option value="2">Tue</option>
               <option value="3">Wed</option>
               <option value="4">Thu</option>
@@ -302,6 +302,7 @@
               <option value="7">Sun</option>
             </select>
             <select name="begin_hour">
+              <option selected value="0">0h</option>
               <option value="1">1h</option>
               <option value="2">2h</option>
               <option value="3">3h</option>
@@ -325,7 +326,6 @@
               <option value="21">21h</option>
               <option value="22">22h</option>
               <option value="23">23h</option>
-              <option value="0">0h</option>
             </select>
           </td>
           <td>-</td>
@@ -337,9 +337,10 @@
               <option value="4">Thu</option>
               <option value="5">Fri</option>
               <option value="6">Sat</option>
-              <option value="7">Sun</option>
+              <option selected value="7">Sun</option>
             </select>
             <select name="end_hour">
+              <option value="0">0h</option>
               <option value="1">1h</option>
               <option value="2">2h</option>
               <option value="3">3h</option>
@@ -362,8 +363,7 @@
               <option value="20">20h</option>
               <option value="21">21h</option>
               <option value="22">22h</option>
-              <option value="23">23h</option>
-              <option value="0">0h</option>
+              <option selected value="23">23h</option>
             </select>
           </td>
         </tr>

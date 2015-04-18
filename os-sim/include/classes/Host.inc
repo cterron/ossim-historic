@@ -9,25 +9,33 @@ class Host {
     var $asset;
     var $threshold_c;
     var $threshold_a;
-    var $active;
+    var $alert;
+    var $persistence;
+    var $nat;
     var $descr;
 
     function Host ($ip, $hostname, $asset, $threshold_c, $threshold_a,
-                   $descr)
+                   $alert, $persistence, $nat, $descr)
     {
         $this->ip          = $ip;
         $this->hostname    = $hostname;
-        $this->asset    = $asset;
+        $this->asset       = $asset;
         $this->threshold_c = $threshold_c;
         $this->threshold_a = $threshold_a;
+        $this->alert       = $alert;
+        $this->persistence = $persistence;
+        $this->nat         = $nat;
         $this->descr       = $descr;
     }
 
     function get_ip()           { return $this->ip; }
     function get_hostname()     { return $this->hostname; }
-    function get_asset()     { return $this->asset; }
+    function get_asset()        { return $this->asset; }
     function get_threshold_c()  { return $this->threshold_c; }
     function get_threshold_a()  { return $this->threshold_a; }
+    function get_alert()        { return $this->alert; }
+    function get_persistence()  { return $this->persistence; }
+    function get_nat()          { return $this->nat; }
     function get_descr()        { return $this->descr; }
 
     function get_list($conn, $where = "", $order = "") 
@@ -42,6 +50,9 @@ class Host {
                                     $rs->fields["asset"],
                                     $rs->fields["threshold_c"],
                                     $rs->fields["threshold_a"],
+                                    $rs->fields["alert"],
+                                    $rs->fields["persistence"],
+                                    $rs->fields["nat"],
                                     $rs->fields["descr"]);
                 $rs->MoveNext();
             }
@@ -50,15 +61,17 @@ class Host {
     }
 
     function insert($conn, $ip, $hostname, $asset, $threshold_c, 
-                    $threshold_a, $descr)
+                    $threshold_a, $alert, $persistence, $nat, $descr)
     {
         settype($asset, "int");
         settype($threshold_c, "int");
         settype($threshold_a, "int");
+        settype($alert, "int");
+        settype($persistence, "int");
 
         $query = "INSERT INTO host VALUES 
             ('$ip', '$hostname', $asset, $threshold_c,
-             $threshold_a, '$descr');";
+             $threshold_a, '$alert', '$persistence', '$nat', '$descr');";
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -66,15 +79,18 @@ class Host {
     }
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, 
-                    $threshold_a, $descr)
+                    $threshold_a, $alert, $persistence, $nat, $descr)
     {
         settype($asset, "int");
         settype($threshold_c, "int");
         settype($threshold_a, "int");
+        settype($alert, "int");
+        settype($persistence, "int");
 
         $query = "UPDATE host SET hostname = '$hostname', 
             ip = '$ip', asset = $asset, 
             threshold_c = $threshold_c, threshold_a = $threshold_a, 
+            alert = $alert, persistence = $persistence, nat = '$nat',
             descr = '$descr' WHERE ip = '$ip';";
         if ($conn->Execute($query) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';

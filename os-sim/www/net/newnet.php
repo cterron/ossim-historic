@@ -15,7 +15,7 @@
     if (($_POST["insert"]) &&
         (!$_POST["name"] || !$_POST["ips"] || !$_POST["priority"] ||
          !$_POST["threshold_c"] || !$_POST["threshold_a"] || 
-         !$_POST["descr"])) 
+         !$_POST["persistence"] || !$_POST["descr"])) 
     {
 ?>
 
@@ -32,6 +32,8 @@
     $priority    = mysql_escape_string($_POST["priority"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
     $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $alert       = mysql_escape_string($_POST["alert"]);
+    $persistence = mysql_escape_string($_POST["persistence"]);
     $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
@@ -40,7 +42,7 @@
     $conn = $db->connect();
    
     Net::insert ($conn, $name, $ips, $priority, $threshold_c, 
-                 $threshold_a, $descr);
+                 $threshold_a, $alert, $persistence, $descr);
 
     $db->close($conn);
 }

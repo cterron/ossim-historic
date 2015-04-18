@@ -62,7 +62,8 @@
 ?>
     <tr>
       <td colspan="4" align="center">
-        <a href="newportform.php">Insert new Port Group</a>
+        <a href="newportform.php">Insert new Port Group</a><br/>
+        <a href="newsingleportform.php">Insert new Port</a>
       </td>
     </td>
 </table>

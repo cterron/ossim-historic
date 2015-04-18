@@ -1,5 +1,48 @@
 # ChangeLog for OSSIM
 
+    03 Oct 2003 DK <dk@ipsoluciones.com> :
+    * Bug fixes
+    * Some control_panel improvements
+    * 0.6 released.
+
+* OSSIM-0.5 (19 Sep 2003)
+
+    02 Oct 2003 DK <dk@ipsoluciones.com> :
+    * Fixed some parser bugs
+    * FAQ (alpha ;))
+    * Some script improvements
+    * DB cleanup
+    * Code cleanup
+    * Added new ntop patch
+    * Added some bugs (parser memory leaks)
+    * Changed licensing info (ipsoluciones -> ossim)
+    * I didn't code too much but the movie was great xD
+    * Control panel improvements
+    * More control panel improvements
+    * Fixed another serious parser bug
+
+    01 Oct 2003 DK <dk@ipsoluciones.com> :
+    * Heavy parser modifications
+      - Pre-load policy
+      - Pre-load host_qualification
+      - Pre-load assets
+    * Still many things todo, the first one the ability to reload the parser when something changes.
+
+    30 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * Few framework addons
+      - Insert new ports (not groups)
+        Before this, only /etc/services ports could be in db
+      - Now we can specify host natted addresses
+      - Search functionality into Hosts
+      - Can block hosts setting asset to 0
+      - Added default values at insert host/net forms
+    * Backup ossim db everyday and compress
+    * Mail alert when a host or a net exceed its threshold
+
+    29 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Policy bugfixes
+    * More bugfixes
+
     25 Sep 2003 DK <dk@ipsoluciones.com> :
     * 0.5.1 Released
 

@@ -13,16 +13,20 @@ class Net {
     var $priority;
     var $threshold_c;
     var $threshold_a;
+    var $alert;
+    var $persistence;
     var $descr;
     
     function Net ($name, $ips, $priority, $threshold_c, $threshold_a,
-        $descr)
+                  $alert, $persistence, $descr)
     {
         $this->name        = $name;
         $this->ips         = $ips;
         $this->priority    = $priority;
         $this->threshold_c = $threshold_c;
         $this->threshold_a = $threshold_a;
+        $this->alert       = $alert;
+        $this->persistence = $persistence;
         $this->descr       = $descr;
     }
 
@@ -31,6 +35,8 @@ class Net {
     function get_priority()     { return $this->priority; }
     function get_threshold_c()  { return $this->threshold_c; }
     function get_threshold_a()  { return $this->threshold_a; }
+    function get_alert()        { return $this->alert; }
+    function get_persistence()  { return $this->persistence; }
     function get_descr()        { return $this->descr; }
 
     function get_reference_ips($conn, $net_name) {
@@ -48,6 +54,8 @@ class Net {
                                     $rs->fields["priority"],
                                     $rs->fields["threshold_c"],
                                     $rs->fields["threshold_a"],
+                                    $rs->fields["alert"],
+                                    $rs->fields["persistence"],
                                     $rs->fields["descr"]);
                 $rs->MoveNext();
             }
@@ -56,23 +64,27 @@ class Net {
     }
 
     function insert($conn, $name, $ips, $priority, $threshold_c, 
-                    $threshold_a, $descr)
+                    $threshold_a, $alert, $persistence, $descr)
     {
         settype($priority, "int");
         settype($threshold_c, "int");
         settype($threshold_a, "int");
+        settype($alert, "int");
+        settype($persistence, "int");
 
-	$name = ereg_replace(" ", "_", $name);
-	
+        $name = ereg_replace(" ", "_", $name);
+
         $query = "INSERT INTO net VALUES 
             ('$name', '$ips', $priority, $threshold_c,
-             $threshold_a, '$descr');";
+             $threshold_a, '$alert', '$persistence', '$descr');";
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
-	$conf = new ossim_conf();
-	$nmap = $conf->get_conf("nmap_path");
+        
+        $conf = new ossim_conf();
+        $nmap = $conf->get_conf("nmap_path");
+        
         $ips_sane = escapeshellcmd($ips);
         $ip_string = shell_exec("$nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \" ");   
         $ip_list = explode("\n", $ip_string);
@@ -83,11 +95,12 @@ class Net {
     }
 
     function update($conn, $name, $ips, $priority, $threshold_c, 
-                    $threshold_a, $descr)
+                    $threshold_a, $alert, $persistence, $descr)
     {
         Net::delete($conn, $name);
         Net::insert($conn, $name, $ips, $priority, 
-                    $threshold_c, $threshold_a, $descr);
+                    $threshold_c, $threshold_a, 
+                    $alert, $persistence, $descr);
     }
 
     function delete($conn, $name) {

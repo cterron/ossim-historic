@@ -23,9 +23,10 @@ class Host_os{
     function get_anom()            { return $this->anom; }
     function get_os_time()            { return $this->os_time; }
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM host_os $where $order")) {
+        $query = "SELECT * FROM host_os $args";
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

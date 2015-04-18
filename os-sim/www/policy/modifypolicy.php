@@ -19,8 +19,6 @@
          !mysql_escape_string($_POST["nprts"]) ||
          !mysql_escape_string($_POST["nsens"]) ||
          !mysql_escape_string($_POST["nsigs"]) ||
-         !mysql_escape_string($_POST["begin_hour"]) ||
-         !mysql_escape_string($_POST["end_hour"]) ||
          !mysql_escape_string($_POST["begin_day"]) ||
          !mysql_escape_string($_POST["end_day"]) ||
          !mysql_escape_string($_POST["descr"])))

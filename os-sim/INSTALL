@@ -8,20 +8,20 @@ satisfying all their dependencies:
 
 - A working experimental rrdtool release (1.1.0)
 - ADOdb 3.72
-- Mysql 4.0.13
+- Mysql 4.0.15
 - OpenNMS 1.0.2
     - PostgreSQL 7.3.2
     - Tomcat
-- Ntop 2.2.0 (patched, patch included)
+- Ntop 2.2.95 (patched, patch included)
 - A bunch of perl modules
 - Apache 1.3.28, php 4.3.2.
-- Snort 2.0
+- Snort 2.0.2
     - Spade
-- Nmap 3.27
+- Nmap 3.45
 - Acid v0.9.6b20
 - Mrtg 2.9.29
 - Flex
-- P0f 2.0.1
+- P0f 2.0.2
 - Arpwatch 2.1a11
 
 

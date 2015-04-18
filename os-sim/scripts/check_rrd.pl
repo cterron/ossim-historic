@@ -51,6 +51,8 @@ my $time = localtime;
 
 my $real_rrd = $rrd_values{$rrd}[0];
 
+$real_ip =~ s/\./\//g;
+
 my $file = $rrdpath . $real_ip . "/" . $real_rrd . ".rrd";
 
 if(stat($file)) { # at least the file exists

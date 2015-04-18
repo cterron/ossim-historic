@@ -23,9 +23,10 @@ class Host_mac{
     function get_anom()            { return $this->anom; }
     function get_mac_time()            { return $this->mac_time; }
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM host_mac $where $order")) {
+        $query = "SELECT * FROM host_mac $args";
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

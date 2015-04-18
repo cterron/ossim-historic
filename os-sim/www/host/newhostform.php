@@ -10,6 +10,17 @@
   <h1>OSSIM Framework</h1>
   <h2>Insert new host</h2>
 
+<?php
+    require_once ('ossim_db.inc');
+    require_once ('classes/Conf.inc');
+
+    $db = new ossim_db();
+    $conn = $db->connect();
+    $conf = Conf::get_conf($conn);
+    $threshold = $conf->get_threshold();
+    $db->close($conn);
+?>
+
 <form method="post" action="newhost.php">
 <table align="center">
   <input type="hidden" name="insert" value="insert">
@@ -19,18 +30,18 @@
   </tr>
   <tr>
     <th>IP</th>
-    <td class="left"><input type="text" value="<?php echo $ip ?>" name="ip"></td>
+    <td class="left"><input type="text" value="<?php echo $_GET["ip"] ?>" name="ip"></td>
   </tr>
   <tr>
     <th>Asset</th>
     <td class="left">
       <select name="asset">
-   <!-- <option value="0">0</option> -->
+        <option value="0">0</option>
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
         <option value="4">4</option>
-        <option value="5">5</option>
+        <option selected value="5">5</option>
         <option value="6">6</option>
         <option value="7">7</option>
         <option value="8">8</option>
@@ -41,12 +52,39 @@
   </tr>
   <tr>
     <th>Threshold C</th>
-    <td class="left"><input type="text" name="threshold_c" size="4"></td>
+    <td class="left">
+      <input type="text" value="<?php echo $threshold ?>" 
+             name="threshold_c" size="4">
+    </td>
   </tr>
   <tr>
     <th>Threshold A</th>
-    <td class="left"><input type="text" name="threshold_a" size="4"></td>
+    <td class="left">
+      <input type="text" value="<?php echo $threshold ?>" 
+             name="threshold_a" size="4">
+    </td>
   </tr>
+  <tr>
+    <th>Alert</th>
+    <td class="left">
+      <select name="alert">
+        <option value="1">Yes</option>
+        <option selected value="0">No</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th>Persistence</th>
+    <td class="left">
+      <input type="text" name="persistence" value="15" size="3"></input>min.
+    </td>
+  </tr>
+  <tr>
+  </tr>
+    <th>NAT</th>
+    <td class="left">
+      <input type="text" name="nat">
+    </td>
   <tr>
     <th>Description</th>
     <td class="left">
