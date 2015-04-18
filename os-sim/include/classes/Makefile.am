@@ -12,6 +12,7 @@ classes_DATA = Alert.inc \
 	Host_os.inc \
 	Host_position.inc \
 	Host_qualification.inc \
+	Host_scan.inc \
 	Host_sensor_reference.inc \
 	Host_services.inc \
 	Host_vulnerability.inc \
@@ -22,6 +23,7 @@ classes_DATA = Alert.inc \
 	Net_qualification.inc \
 	Net_vulnerability.inc \
 	Plugin.inc \
+	Plugin_reference.inc \
 	Plugin_sid.inc \
 	Policy_host_reference.inc \
 	Policy.inc \

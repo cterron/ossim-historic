@@ -75,6 +75,9 @@ SimOrganizer*     sim_organizer_new                             (SimConfig     *
 
 void              sim_organizer_run                             (SimOrganizer  *organizer);
 
+void              sim_organizer_correlation_plugin              (SimOrganizer *organizer, 
+								 SimAlert     *alert);
+
 /* Correlate Function */
 void              sim_organizer_calificate                      (SimOrganizer  *organizer,
 								 SimAlert      *alert);

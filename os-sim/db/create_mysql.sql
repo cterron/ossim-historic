@@ -483,3 +483,38 @@ CREATE TABLE backlog (
 	reliability     INTEGER,
 	PRIMARY KEY (utime, id)
 );
+
+--
+-- Table: plugin_reference
+--
+DROP TABLE IF EXISTS plugin_reference;
+CREATE TABLE plugin_reference (
+	plugin_id	INTEGER NOT NULL,
+	plugin_sid	INTEGER NOT NULL,
+	reference_id	INTEGER NOT NULL,
+	reference_sid	INTEGER NOT NULL,
+	PRIMARY KEY (plugin_id, plugin_sid, reference_id, reference_sid)
+);
+
+--
+-- Table: Host plugin sid
+--
+DROP TABLE IF EXISTS host_plugin_sid;
+CREATE TABLE host_plugin_sid (
+	host_ip         INTEGER UNSIGNED NOT NULL,
+	plugin_id	INTEGER NOT NULL,
+	plugin_sid	INTEGER NOT NULL,
+	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
+);
+
+--
+-- Table: Host scan
+--
+DROP TABLE IF EXISTS host_scan;
+CREATE TABLE host_scan (
+	host_ip         INTEGER UNSIGNED NOT NULL,
+	plugin_id	INTEGER NOT NULL,
+	plugin_sid	INTEGER NOT NULL,
+	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
+);
+

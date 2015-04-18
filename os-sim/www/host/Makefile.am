@@ -1,5 +1,6 @@
 hostdir = $(localstatedir)/www/ossim/host
-host_DATA = modifyhostform.php \
+host_DATA = host.php \
+	modifyhostform.php \
 	newhostform.php \
 	deletehost.php \
 	modifyhost.php \

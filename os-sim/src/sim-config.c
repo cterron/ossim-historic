@@ -96,6 +96,10 @@ sim_config_class_init (SimConfigClass * class)
 static void
 sim_config_instance_init (SimConfig *config)
 {
+  config->sensor.name = NULL;
+  config->sensor.ip = NULL;
+  config->sensor.interface = NULL;
+
   config->log.filename = NULL;
 
   config->datasources = NULL;

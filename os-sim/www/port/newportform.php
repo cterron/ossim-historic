@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Insert new port group</h2>
+  <h1>Insert new port group</h1>
 
 <form method="post" action="newport.php">
 <table align="center">

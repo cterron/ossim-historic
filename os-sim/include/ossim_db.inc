@@ -81,7 +81,7 @@ class ossim_db {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
             list($protocol, $ip, $port)  = split(':', $conf->get_conf("ntop_link"));
-            $sensor_ip = 'http://' . $rs->fields["ip"] . ":$port";
+            $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
         } 
 
         if ($sensor_ip == '') {
@@ -98,7 +98,7 @@ class ossim_db {
                 print $conn->ErrorMsg();
             } elseif (!$rs->EOF) {
                 list($protocol, $ip, $port)  = split(':', $conf->get_conf("ntop_link"));
-                $sensor_ip = 'http://' . $rs->fields["ip"] . ":$port";
+                $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
             }
         }
        

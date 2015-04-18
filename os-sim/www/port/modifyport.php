@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Modify Port group</h2>
+  <h1>Modify Port group</h1>
 
 <?php
 

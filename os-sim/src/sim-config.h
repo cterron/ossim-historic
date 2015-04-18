@@ -67,6 +67,12 @@ struct _SimConfig {
   } log;
 
   struct {
+    gchar    *name;
+    gchar    *ip;
+    gchar    *interface;
+  } sensor;
+
+  struct {
     gchar    *filename;
   } directive;
 

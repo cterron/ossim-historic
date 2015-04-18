@@ -493,18 +493,21 @@ sim_directive_get_rule_level (SimDirective   *directive)
  */
 gboolean
 sim_directive_match_by_alert (SimDirective  *directive,
-				SimAlert    *alert)
+			      SimAlert      *alert)
 {
   SimRule *rule;
   gboolean match;
 
   g_return_val_if_fail (directive, FALSE);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
+  g_return_val_if_fail (!directive->_priv->matched, FALSE);
   g_return_val_if_fail (directive->_priv->rule_root, FALSE);
+  g_return_val_if_fail (directive->_priv->rule_root->data, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_root->data), FALSE);
   g_return_val_if_fail (alert, FALSE);
   g_return_val_if_fail (SIM_IS_ALERT (alert), FALSE);
 
-  rule = (SimRule *) directive->_priv->rule_root->data;
+  rule = SIM_RULE (directive->_priv->rule_root->data);
 
   match = sim_rule_match_by_alert (rule, alert);
 
@@ -521,18 +524,17 @@ sim_directive_backlog_match_by_alert (SimDirective  *directive,
 				      SimAlert    *alert)
 {
   GNode      *node = NULL;
-  GNode      *children = NULL;
 
   g_return_val_if_fail (directive, FALSE);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
   g_return_val_if_fail (!directive->_priv->matched, FALSE);
+  g_return_val_if_fail (directive->_priv->rule_curr, FALSE);
+  g_return_val_if_fail (directive->_priv->rule_curr->data, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_curr->data), FALSE);
   g_return_val_if_fail (alert, FALSE);
   g_return_val_if_fail (SIM_IS_ALERT (alert), FALSE);
-  g_return_val_if_fail (directive->_priv->rule_curr, FALSE);
-  g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_curr->data), FALSE);
 
   node = directive->_priv->rule_curr->children;
-
   while (node)
     {
       SimRule *rule = (SimRule *) node->data;
@@ -548,7 +550,7 @@ sim_directive_backlog_match_by_alert (SimDirective  *directive,
 
 	  if (!G_NODE_IS_LEAF (node))
 	    {
-	      children = node->children;
+	      GNode *children = node->children;
 	      while (children)
 		{
 		  SimRule *rule_child = (SimRule *) children->data;
@@ -582,12 +584,13 @@ sim_directive_backlog_match_by_not (SimDirective  *directive)
 {
   GNode      *node = NULL;
   GNode      *children = NULL;
-  GTimeVal    curr_time;
 
   g_return_val_if_fail (directive, FALSE);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
-
-  g_get_current_time (&curr_time);
+  g_return_val_if_fail (!directive->_priv->matched, FALSE);
+  g_return_val_if_fail (directive->_priv->rule_curr, FALSE);
+  g_return_val_if_fail (directive->_priv->rule_curr->data, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_curr->data), FALSE);
 
   node = directive->_priv->rule_curr->children;
 
@@ -597,15 +600,22 @@ sim_directive_backlog_match_by_not (SimDirective  *directive)
       
       if ((sim_rule_is_time_out (rule)) && (sim_rule_get_not (rule)) && (!sim_rule_is_not_invalid (rule))) 
 	{
+	  GTime time_last = time (NULL);
 	  directive->_priv->rule_curr = node;
-	  directive->_priv->time_last = curr_time.tv_sec;
+	  directive->_priv->time_last = time_last;
 	  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
+
+	  sim_rule_set_not_data (rule);
 
 	  if (!G_NODE_IS_LEAF (node))
 	    {
 	      children = node->children;
 	      while (children)
 		{
+		  SimRule *rule_child = (SimRule *) children->data;
+
+		  sim_rule_set_time_last (rule_child, time_last);
+
 		  sim_directive_set_rule_vars (directive, children);
 		  children = children->next;
 		}
@@ -638,6 +648,7 @@ sim_directive_set_rule_vars (SimDirective     *directive,
   GList      *vars;
   GInetAddr  *ia;
   gint        port;
+  gint        sid;
 
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
@@ -724,6 +735,11 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 	    default:
 	      break;
 	    }
+	  break;
+
+	case SIM_RULE_VAR_PLUGIN_SID:
+	  sid = sim_rule_get_plugin_sid (rule_up);
+	  sim_rule_append_plugin_sid (rule, sid);
 	  break;
 
 	default:

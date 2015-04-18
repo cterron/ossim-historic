@@ -6,10 +6,8 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
-  <h1>OSSIM Framework</h1>
-                                                                                
-  <h2>Rule viewer</h2>
+  
+  <h1>Rule viewer</h1>
 
 <?php
     require_once ('ossim_conf.inc');

@@ -97,6 +97,30 @@ sub rrd_graph_average {
     return $result[1];
 }
 
+sub rrd_fetch_hwpredict_by_time {
+    my ($file, $stime, $etime) = @_;
+
+    my $result = `$rrd_bin fetch $file HWPREDICT -s $stime -e $etime | grep $etime | cut -d\  -f 2`;
+
+    return $result;
+}
+
+sub rrd_fetch_devpredict_by_time {
+    my ($file, $stime, $etime) = @_;
+
+    my $result = `$rrd_bin fetch $file DEVPREDICT -s $stime -e $etime | grep $etime | cut -d\  -f 2`;
+
+    return $result;
+}
+
+sub rrd_fetch_average_by_time {
+    my ($file, $stime, $etime) = @_;
+
+    my $result = `$rrd_bin fetch $file AVERAGE -s $stime -e $etime | grep $etime | cut -d\  -f 2`;
+
+    return $result;
+}
+
 # Return the last faliure interval
 sub rrd_fetch_last_failure {
     my ($file, $range) = @_;
@@ -136,6 +160,14 @@ sub rrd_anomaly {
 
     return 0 if (($last_failure != $last_time) || ($first_failure != $first_time));
 
+    my $hwpredict = rrd_fetch_hwpredict_by_time ($file, $last_failure - 1, $last_failure);
+    my $devpredict = rrd_fetch_devpredict_by_time ($file, $last_failure - 1, $last_failure);
+    my $average = rrd_fetch_average_by_time ($file, $last_failure - 1, $last_failure);
+
+    print "$file, $hwpredict, $devpredict, $average\n";
+
+    return 0 if ($average < ($hwpredict - (2 * $devpredict)));
+
     print OUTPUT "rrd_anomaly: $curr_time $ip $interface $att $priority $last_failure\n";
 
     return 1;
@@ -165,7 +197,6 @@ sub rrd_hosts {
     while (my $row = $stm->fetchrow_hashref) {
 	my $ip = $row->{ip};
 	my $val;
-	
 	foreach $val (keys %rrd_host_atts){
 	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/hosts/". $ip . "/" . $rrd_host_atts{$val}[0] . ".rrd";
 	    

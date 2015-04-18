@@ -24,8 +24,7 @@
 </head>
 <body>
                                                                                 
-  <h1>Ossim Framework</h1>
-  <h2>Edit sensor <?php echo $_REQUEST["ip"] ?> properties</h2>
+  <h1>Edit sensor <?php echo $_REQUEST["ip"] ?> properties</h1>
 
 <?php
 

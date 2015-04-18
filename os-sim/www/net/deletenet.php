@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Delete net</h2>
+  <h1>Delete net</h1>
 
 <?php 
     if (!$_GET["name"]) { 

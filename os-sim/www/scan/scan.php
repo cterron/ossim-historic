@@ -6,10 +6,8 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
-  <h1>OSSIM Framework</h1>
-
-  <h2>Scan</h2>
+  
+  <h1>Scan</h1>
 
   <table align="center">
     <tr><th>Update Scan</th></tr>

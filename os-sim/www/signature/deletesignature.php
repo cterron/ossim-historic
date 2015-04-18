@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Delete signature group</h2>
+  <h1>Delete signature group</h1>
 
 <?php 
     if (!$sig_name = mysql_escape_string($_GET["signame"])) { 

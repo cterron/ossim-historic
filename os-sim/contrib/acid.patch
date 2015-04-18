@@ -1,6 +1,6 @@
-diff -urNb acid/acid_cache.inc acid/acid_cache.inc
---- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_cache.inc	2004-02-09 14:34:37.000000000 +0100
+diff -urNb acid_cache.inc acid_cache.inc
+--- acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid_cache.inc	2004-02-09 14:34:37.000000000 +0100
 @@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -13,9 +13,9 @@ diff -urNb acid/acid_cache.inc acid/acid_cache.inc
    $update_sql = array(4);
    
    /* TCP events */
-diff -urNb acid/acid_hdr2.html acid/acid_hdr2.html
---- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_hdr2.html	2004-03-01 16:20:55.000000000 +0100
+diff -urNb acid_hdr2.html acid_hdr2.html
+--- acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
++++ acid_hdr2.html	2004-03-01 16:20:55.000000000 +0100
 @@ -1,7 +1,10 @@
  <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
  <TR>
@@ -28,9 +28,9 @@ diff -urNb acid/acid_hdr2.html acid/acid_hdr2.html
  </TR>
  <TR>
  <TD><A class="menuitem" href="acid_qry_main.php?new=1">Search</A>&nbsp&nbsp</TD>
-diff -urNb acid/acid_main.php acid/acid_main.php
---- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_main.php	2004-03-01 16:32:58.000000000 +0100
+diff -urNb acid_main.php acid_main.php
+--- acid_main.php	2003-01-09 02:04:07.000000000 +0100
++++ acid_main.php	2004-03-01 16:32:58.000000000 +0100
 @@ -143,6 +143,8 @@
  ?>
  
@@ -40,9 +40,9 @@ diff -urNb acid/acid_main.php acid/acid_main.php
  <LI><B><A HREF="acid_qry_main.php?new=1">Search</A></B>
  <LI><B><A HREF="acid_graph_main.php">Graph Alert data</A></B>&nbsp;
  
-diff -urNb acid/acid_output_query.inc acid/acid_output_query.inc
---- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
+diff -urNb acid_output_query.inc acid_output_query.inc
+--- acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -61,9 +61,9 @@ diff -urNb acid/acid_output_query.inc acid/acid_output_query.inc
       }
  
      echo "   </TR>\n";
-diff -urNb acid/acid_qry_common.php acid/acid_qry_common.php
---- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_qry_common.php	2004-03-01 15:57:15.000000000 +0100
+diff -urNb acid_qry_common.php acid_qry_common.php
+--- acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
++++ acid_qry_common.php	2004-03-01 15:57:15.000000000 +0100
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -168,9 +168,9 @@ diff -urNb acid/acid_qry_common.php acid/acid_qry_common.php
    $criteria_sql = $criteria_sql.$tmp_meta;
  
    /* ********************** IP Criteria ********************************************** */ 
-diff -urNb acid/acid_qry_form.php acid/acid_qry_form.php
---- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_qry_form.php	2004-02-06 18:47:32.000000000 +0100
+diff -urNb acid_qry_form.php acid_qry_form.php
+--- acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
++++ acid_qry_form.php	2004-02-06 18:47:32.000000000 +0100
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -203,9 +203,9 @@ diff -urNb acid/acid_qry_form.php acid/acid_qry_form.php
          echo '
  </TABLE>';
  
-diff -urNb acid/acid_qry_sqlcalls.php acid/acid_qry_sqlcalls.php
---- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_qry_sqlcalls.php	2004-03-01 15:46:20.000000000 +0100
+diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
+--- acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
++++ acid_qry_sqlcalls.php	2004-03-01 15:46:20.000000000 +0100
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -303,9 +303,9 @@ diff -urNb acid/acid_qry_sqlcalls.php acid/acid_qry_sqlcalls.php
        qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
  
        qroPrintEntryFooter();
-diff -urNb acid/acid_state_citems.inc acid/acid_state_citems.inc
---- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_state_citems.inc	2004-03-01 15:53:14.000000000 +0100
+diff -urNb acid_state_citems.inc acid_state_citems.inc
+--- acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid_state_citems.inc	2004-03-01 15:53:14.000000000 +0100
 @@ -1459,4 +1459,472 @@
     }
  };
@@ -779,9 +779,9 @@ diff -urNb acid/acid_state_citems.inc acid/acid_state_citems.inc
 +    }
 + };  /* OssimTypeCriteria */
  ?>
-diff -urNb acid/acid_state_criteria.inc acid/acid_state_criteria.inc
---- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid/acid_state_criteria.inc	2004-02-06 18:48:50.000000000 +0100
+diff -urNb acid_state_criteria.inc acid_state_criteria.inc
+--- acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid_state_criteria.inc	2004-02-06 18:48:50.000000000 +0100
 @@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
@@ -797,9 +797,9 @@ diff -urNb acid/acid_state_criteria.inc acid/acid_state_criteria.inc
       /* 
        * For new criteria, add a call to the appropriate constructor here, and implement
        * the appropriate class in acid_stat_citems.inc.
-diff -urNb acid/create_acid_tbls_mysql.sql acid/create_acid_tbls_mysql.sql
---- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid/create_acid_tbls_mysql.sql	2004-02-09 13:48:43.000000000 +0100
+diff -urNb create_acid_tbls_mysql.sql create_acid_tbls_mysql.sql
+--- create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
++++ create_acid_tbls_mysql.sql	2004-02-09 13:48:43.000000000 +0100
 @@ -81,3 +81,51 @@
  
                              PRIMARY KEY         (ipc_ip),
@@ -852,9 +852,9 @@ diff -urNb acid/create_acid_tbls_mysql.sql acid/create_acid_tbls_mysql.sql
 +CREATE INDEX acid_event_ossim_risk_c ON acid_event (ossim_risk_c);
 +CREATE INDEX acid_event_ossim_risk_a ON acid_event (ossim_risk_a);
 +
-diff -urNb acid/create_acid_tbls_pgsql.sql acid/create_acid_tbls_pgsql.sql
---- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid/create_acid_tbls_pgsql.sql	2004-02-09 14:03:50.000000000 +0100
+diff -urNb create_acid_tbls_pgsql.sql create_acid_tbls_pgsql.sql
+--- create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
++++ create_acid_tbls_pgsql.sql	2004-02-09 14:03:50.000000000 +0100
 @@ -57,8 +57,8 @@
  CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
                              ag_name             TEXT,

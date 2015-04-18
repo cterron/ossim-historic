@@ -38,6 +38,7 @@
 #include "sim-session.h"
 #include "sim-rule.h"
 #include "sim-directive.h"
+#include "sim-plugin-sid.h"
 #include "sim-server.h"
 #include "sim-container.h"
 #include "sim-sensor.h"
@@ -332,7 +333,8 @@ static void
 sim_session_cmd_alert (SimSession  *session,
 		       SimCommand  *command)
 {
-  SimAlert    *alert;
+  SimPluginSid  *plugin_sid;
+  SimAlert      *alert;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
@@ -348,6 +350,15 @@ sim_session_cmd_alert (SimSession  *session,
     {
       g_object_unref (alert);
       return;
+    }
+
+  if ((alert->plugin_id) && (alert->plugin_sid))
+    {
+      plugin_sid = sim_container_get_plugin_sid_by_pky (sim_ctn,
+						       alert->plugin_id,
+						       alert->plugin_sid);
+      alert->priority = sim_plugin_sid_get_priority (plugin_sid);
+      alert->reliability = sim_plugin_sid_get_reliability (plugin_sid);
     }
 
   sim_container_push_alert (sim_ctn, alert);
@@ -504,6 +515,10 @@ sim_session_cmd_reload_directives (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
+  sim_container_db_delete_plugin_sid_directive_ul (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_delete_backlogs_ul (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_backlogs (sim_ctn);
   sim_container_free_directives (sim_ctn);
   sim_container_load_directives_from_file (sim_ctn,
 					   session->_priv->db_ossim,
@@ -531,6 +546,29 @@ sim_session_cmd_reload_all (SimSession  *session,
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
+
+  sim_container_db_delete_plugin_sid_directive_ul (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_delete_backlogs_ul (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_plugins (sim_ctn);
+  sim_container_db_load_plugins (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_sensors (sim_ctn);
+  sim_container_db_load_sensors (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_hosts (sim_ctn);
+  sim_container_db_load_hosts (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_nets (sim_ctn);
+  sim_container_db_load_nets (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_policies (sim_ctn);
+  sim_container_db_load_policies (sim_ctn, session->_priv->db_ossim);
+
+  sim_container_free_backlogs (sim_ctn);
+  sim_container_free_directives (sim_ctn);
+  sim_container_load_directives_from_file (sim_ctn, session->_priv->db_ossim, SIM_XML_DIRECTIVE_FILE);
+
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;

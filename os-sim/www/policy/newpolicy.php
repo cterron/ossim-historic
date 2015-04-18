@@ -7,7 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
+  <h1>New policy</h1>
 
 <?php
     /* check params */

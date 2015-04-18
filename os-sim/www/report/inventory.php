@@ -38,10 +38,10 @@
       <tr><th colspan="2">Host Info</th></tr>
 <?php
 
-    $host_list = Host::get_list($conn, "WHERE ip = '$ip'");
-    $host = $host_list[0];
+    if ($host_list = Host::get_list($conn, "WHERE ip = '$ip'")) {
+        $host = $host_list[0];
 
-    $sensor_list = $host->get_sensors($conn);
+        $sensor_list = $host->get_sensors($conn);
 ?>
       <tr>
         <th>Name</th>
@@ -53,6 +53,7 @@
       </tr>
 
 <?php
+    }
 
     if ($os_list = Host_os::get_list($conn, "WHERE ip = '$ip'")) {
         $os = $os_list[0];
@@ -117,8 +118,7 @@
 ?>
       <tr>
         <th>Sensor</th>
-        <td><?php echo $sensor->get_sensor_name() . " (".
-                $sensor->get_host_ip() .")" ?></td>
+        <td><?php echo $sensor->get_sensor_name() ?></td>
       </tr>
 <?php
         }

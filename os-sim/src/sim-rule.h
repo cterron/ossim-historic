@@ -87,6 +87,9 @@ SimRule*          sim_rule_new                             (void);
 gint              sim_rule_get_level                       (SimRule     *rule);
 void              sim_rule_set_level                       (SimRule     *rule,
 							    gint         level);
+gboolean          sim_rule_get_sticky                      (SimRule     *rule);
+void              sim_rule_set_sticky                      (SimRule     *rule,
+							    gboolean     sticky);
 gboolean          sim_rule_get_not                         (SimRule     *rule);
 void              sim_rule_set_not                         (SimRule     *rule,
 							    gboolean     not);

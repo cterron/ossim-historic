@@ -50,6 +50,7 @@ extern "C" {
 #define SIM_DST_IP_CONST            "DST_IP"
 #define SIM_SRC_PORT_CONST          "SRC_PORT"
 #define SIM_DST_PORT_CONST          "DST_PORT"
+#define SIM_PLUGIN_SID_CONST        "PLUGIN_SID"
 
 #define SIM_DETECTOR_CONST          "DETECTOR"
 #define SIM_MONITOR_CONST           "MONITOR"
@@ -127,7 +128,8 @@ typedef enum {
   SIM_RULE_VAR_SRC_IA,
   SIM_RULE_VAR_DST_IA,
   SIM_RULE_VAR_SRC_PORT,
-  SIM_RULE_VAR_DST_PORT
+  SIM_RULE_VAR_DST_PORT,
+  SIM_RULE_VAR_PLUGIN_SID
 } SimRuleVarType;
 
 typedef enum {

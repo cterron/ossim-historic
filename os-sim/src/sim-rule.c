@@ -47,6 +47,7 @@ enum
 struct _SimRulePrivate {
   gint        level;
   gchar      *name;
+  gboolean    sticky;
   gboolean    not;
   gboolean    not_invalid;
 
@@ -71,6 +72,12 @@ struct _SimRulePrivate {
   GInetAddr  *dst_ia;
   gint        src_port;
   gint        dst_port;
+
+  gboolean    plugin_sids_not;
+  gboolean    src_ias_not;
+  gboolean    dst_ias_not;
+  gboolean    src_ports_not;
+  gboolean    dst_ports_not;
 
   GList      *actions;
   GList      *vars;
@@ -201,6 +208,7 @@ sim_rule_instance_init (SimRule *rule)
 
   rule->_priv->level = 0;
   rule->_priv->name = NULL;
+  rule->_priv->sticky = FALSE;
   rule->_priv->not = FALSE;
   rule->_priv->not_invalid = FALSE;
 
@@ -225,6 +233,12 @@ sim_rule_instance_init (SimRule *rule)
   rule->_priv->dst_ia = NULL;
   rule->_priv->src_port = 0;
   rule->_priv->dst_port = 0;
+
+  rule->_priv->plugin_sids_not = FALSE;
+  rule->_priv->src_ias_not = FALSE;
+  rule->_priv->dst_ias_not = FALSE;
+  rule->_priv->src_ports_not = FALSE;
+  rule->_priv->dst_ports_not = FALSE;
 
   rule->_priv->actions = NULL;
   rule->_priv->vars = NULL;
@@ -343,6 +357,38 @@ sim_rule_set_not (SimRule   *rule,
 
   rule->_priv->not = not;
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_sticky (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->sticky;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_sticky (SimRule   *rule,
+		  gboolean   sticky)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+
+  rule->_priv->sticky = sticky;
+}
+
 
 /*
  *
@@ -1188,6 +1234,162 @@ sim_rule_get_vars (SimRule     *rule)
  *
  *
  */
+gboolean
+sim_rule_get_plugin_sids_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->plugin_sids_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_plugin_sids_not (SimRule   *rule,
+			      gboolean   plugin_sids_not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  
+  rule->_priv->plugin_sids_not = plugin_sids_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_src_ias_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->src_ias_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_src_ias_not (SimRule   *rule,
+			  gboolean   src_ias_not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  
+  rule->_priv->src_ias_not = src_ias_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_dst_ias_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->dst_ias_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_dst_ias_not (SimRule   *rule,
+			  gboolean   dst_ias_not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  
+  rule->_priv->dst_ias_not = dst_ias_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_src_ports_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->src_ports_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_src_ports_not (SimRule   *rule,
+			  gboolean   src_ports_not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  
+  rule->_priv->src_ports_not = src_ports_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_dst_ports_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->dst_ports_not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_dst_ports_not (SimRule   *rule,
+			  gboolean   dst_ports_not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  
+  rule->_priv->dst_ports_not = dst_ports_not;
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
 SimRule*
 sim_rule_clone (SimRule     *rule)
 {
@@ -1202,6 +1404,7 @@ sim_rule_clone (SimRule     *rule)
   new_rule->_priv->level = rule->_priv->level;
   new_rule->_priv->name = g_strdup (rule->_priv->name);
   new_rule->_priv->not = rule->_priv->not;
+  new_rule->_priv->sticky = rule->_priv->sticky;
 
   new_rule->_priv->priority = rule->_priv->priority;
   new_rule->_priv->reliability = rule->_priv->reliability;
@@ -1221,6 +1424,12 @@ sim_rule_clone (SimRule     *rule)
   new_rule->_priv->condition = rule->_priv->condition;
   new_rule->_priv->value = (rule->_priv->value) ? g_strdup (rule->_priv->value) : NULL;
   new_rule->_priv->interval = rule->_priv->interval;
+
+  new_rule->_priv->plugin_sids_not = rule->_priv->plugin_sids_not;
+  new_rule->_priv->src_ias_not = rule->_priv->src_ias_not;
+  new_rule->_priv->dst_ias_not = rule->_priv->dst_ias_not;
+  new_rule->_priv->src_ports_not = rule->_priv->src_ports_not;
+  new_rule->_priv->dst_ports_not = rule->_priv->dst_ports_not;
 
   /* vars */
   list = rule->_priv->vars;
@@ -1413,9 +1622,16 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  
 	  list = list->next;
 	}
-      if (!match)
-	return FALSE;
-
+      if (match)
+	{
+	  if (rule->_priv->plugin_sids_not)
+	    return FALSE;
+	}
+      else
+	{
+	  if (!rule->_priv->plugin_sids_not)
+	    return FALSE;
+	}
     }
 
   /* Match src_ia */
@@ -1436,8 +1652,16 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  
 	  list = list->next;
 	}
-      if (!match)
-	return FALSE;
+      if (match)
+	{
+	  if (rule->_priv->src_ias_not)
+	    return FALSE;
+	}
+      else
+	{
+	  if (!rule->_priv->src_ias_not)
+	    return FALSE;
+	}
     }
   
   /* Find dst_ia */
@@ -1458,8 +1682,16 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  
 	  list = list->next;
 	}
-      if (!match)
-	return FALSE;
+      if (match)
+	{
+	  if (rule->_priv->dst_ias_not)
+	    return FALSE;
+	}
+      else
+	{
+	  if (!rule->_priv->dst_ias_not)
+	    return FALSE;
+	}
     }
 
   /* Find src_port */
@@ -1479,8 +1711,16 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  
 	  list = list->next;
 	}
-      if (!match)
-	return FALSE;
+      if (match)
+	{
+	  if (rule->_priv->src_ports_not)
+	    return FALSE;
+	}
+      else
+	{
+	  if (!rule->_priv->src_ports_not)
+	    return FALSE;
+	}
     }
 
   /* Find dst_port */
@@ -1500,8 +1740,16 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  
 	  list = list->next;
 	}
-      if (!match)
-	return FALSE;
+      if (match)
+	{
+	  if (rule->_priv->dst_ports_not)
+	    return FALSE;
+	}
+      else
+	{
+	  if (!rule->_priv->dst_ports_not)
+	    return FALSE;
+	}
     }
 
   /* Match Condition */
@@ -1573,6 +1821,30 @@ sim_rule_set_alert_data (SimRule      *rule,
  *
  */
 void
+sim_rule_set_not_data (SimRule      *rule)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+
+  if ((rule->_priv->plugin_sids) && (rule->_priv->plugin_sids->data))
+    rule->_priv->plugin_sid = GPOINTER_TO_INT (rule->_priv->plugin_sids->data);
+  if ((rule->_priv->src_ias) && (rule->_priv->src_ias->data))
+    rule->_priv->src_ia = gnet_inetaddr_clone (rule->_priv->src_ias->data);
+  if ((rule->_priv->dst_ias) && (rule->_priv->dst_ias->data))
+    rule->_priv->dst_ia = gnet_inetaddr_clone (rule->_priv->dst_ias->data);
+  if ((rule->_priv->src_ports) && (rule->_priv->src_ports->data))
+    rule->_priv->src_port = GPOINTER_TO_INT (rule->_priv->src_ports->data);
+  if ((rule->_priv->dst_ports) && (rule->_priv->dst_ports->data))
+    rule->_priv->dst_port = GPOINTER_TO_INT (rule->_priv->dst_ports->data);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
 sim_rule_print (SimRule      *rule)
 {
   gchar  *src_name;
@@ -1585,6 +1857,7 @@ sim_rule_print (SimRule      *rule)
   dst_name = (rule->_priv->dst_ia) ? gnet_inetaddr_get_canonical_name (rule->_priv->dst_ia) : NULL;
 
   g_print ("Rule: ");
+  g_print ("sticky=%d ", rule->_priv->sticky);
   g_print ("not=%d ", rule->_priv->not);
   g_print ("name=%s ", rule->_priv->name);
   g_print ("level=%d ", rule->_priv->level);

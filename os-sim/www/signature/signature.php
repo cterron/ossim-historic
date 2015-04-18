@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Signatures</h2>
+  <h1>Signatures</h1>
 
 <?php
     require_once 'ossim_db.inc';

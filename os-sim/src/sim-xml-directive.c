@@ -51,6 +51,7 @@ struct _SimXmlDirectivePrivate {
 
 #define PROPERTY_ID             "id"
 #define PROPERTY_NAME           "name"
+#define PROPERTY_STICKY         "sticky"
 #define PROPERTY_NOT            "not"
 #define PROPERTY_TYPE           "type"
 #define PROPERTY_PRIORITY       "priority"
@@ -218,8 +219,6 @@ sim_xml_directive_new_from_file (SimContainer *container,
 
     if (!strcmp (node->name, OBJECT_DIRECTIVE))
       sim_xml_directive_new_directive_from_node (xmldirect, node);
-    else
-      g_message ("Invalid directive element");
 
     node = node->next;
   }
@@ -465,15 +464,35 @@ sim_xml_directive_set_rule_plugin_sids (SimXmlDirective  *xmldirect,
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (value != NULL);
 
+  if (value[0] == '!')
+    {
+      sim_rule_set_plugin_sids_not (rule, TRUE);
+      value++;
+    }
+
   values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
   for (i = 0; values[i] != NULL; i++)
     {
-      if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST)) 
+      if (strstr (values[i], SIM_DELIMITER_LEVEL))
+	{
+	  SimRuleVar *var = g_new0 (SimRuleVar, 1);
+
+	  level = g_strsplit (values[i], SIM_DELIMITER_LEVEL, 0);
+
+	  var->type = sim_get_rule_var_from_char (level[1]);
+	  var->attr = SIM_RULE_VAR_PLUGIN_SID;
+	  var->level = atoi(level[0]);
+	  
+	  sim_rule_append_var (rule, var);
+
+	  g_strfreev (level);
+	}
+      else if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST)) 
 	{
 	  sim_rule_append_plugin_sid (rule, 0);
-	  break;
 	}
-      sim_rule_append_plugin_sid (rule, strtol(values[i], (char **)NULL, 10));
+      else
+	sim_rule_append_plugin_sid (rule, strtol(values[i], (char **)NULL, 10));
     }
   g_strfreev (values);
 }
@@ -493,7 +512,7 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,
   SimNet        *net;
   gchar        **values;
   gchar        **level;
-  gint        i;
+  gint           i;
 
   g_return_if_fail (xmldirect != NULL);
   g_return_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect));
@@ -502,6 +521,12 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,
   g_return_if_fail (value != NULL);
 
   container = xmldirect->_priv->container;
+
+  if (value[0] == '!')
+    {
+      sim_rule_set_src_ias_not (rule, TRUE);
+      value++;
+    }
 
   values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
   for (i = 0; values[i] != NULL; i++)
@@ -582,6 +607,12 @@ sim_xml_directive_set_rule_dst_ips (SimXmlDirective  *xmldirect,
   g_return_if_fail (value != NULL);
 
   container = xmldirect->_priv->container;
+
+  if (value[0] == '!')
+    {
+      sim_rule_set_dst_ias_not (rule, TRUE);
+      value++;
+    }
 
   values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
   for (i = 0; values[i] != NULL; i++)
@@ -665,6 +696,12 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
 
   container = xmldirect->_priv->container;
 
+  if (value[0] == '!')
+    {
+      sim_rule_set_src_ports_not (rule, TRUE);
+      value++;
+    }
+
   values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
   for (i = 0; values[i] != NULL; i++)
     {
@@ -721,6 +758,12 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
 
   container = xmldirect->_priv->container;
 
+  if (value[0] == '!')
+    {
+      sim_rule_set_dst_ports_not (rule, TRUE);
+      value++;
+    }
+
   values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
   for (i = 0; values[i] != NULL; i++)
     {
@@ -776,6 +819,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   gchar         *par_value = NULL;
   gint           interval = 0;
   gboolean       absolute = FALSE;
+  gboolean       sticky = FALSE;
   gboolean       not = FALSE;
   gint           priority = 1;
   gint           reliability = 1;
@@ -806,6 +850,12 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 
       xmlFree(value);
     }
+  if ((value = xmlGetProp (node, PROPERTY_STICKY)))
+    {
+      if (!g_ascii_strcasecmp (value, "TRUE"))
+	sticky = TRUE;
+      xmlFree(value);
+    } 
   if ((value = xmlGetProp (node, PROPERTY_NOT)))
     {
       if (!g_ascii_strcasecmp (value, "TRUE"))
@@ -868,6 +918,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 
   rule = sim_rule_new ();
   rule->type = type;
+  if (sticky) sim_rule_set_sticky (rule, sticky);
   if (not) sim_rule_set_not (rule, not);
   sim_rule_set_level (rule, level);
   sim_rule_set_name (rule, name);
@@ -903,7 +954,8 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 	  while (children_rules)
 	    {
 	      /* Recursive call */
-	      sim_xml_directive_new_rule_from_node (xmldirect, children_rules, rule_node, level + 1);
+	      if (!strcmp (children->name, OBJECT_RULE))
+		sim_xml_directive_new_rule_from_node (xmldirect, children_rules, rule_node, level + 1);
 	      
 	      children_rules = children_rules->next;
 	    }

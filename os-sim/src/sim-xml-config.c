@@ -41,13 +41,16 @@ struct _SimXmlConfigPrivate {
 
 #define OBJECT_CONFIG           "config"
 #define OBJECT_LOG              "log"
+#define OBJECT_SENSOR           "sensor"
 #define OBJECT_DATASOURCES      "datasources"
 #define OBJECT_DATASOURCE       "datasource"
 #define OBJECT_DIRECTIVE        "directive"
 #define OBJECT_SCHEDULER        "scheduler"
 #define OBJECT_SERVER           "server"
-#
+
 #define PROPERTY_NAME           "name"
+#define PROPERTY_IP             "ip"
+#define PROPERTY_INTERFACE      "interface"
 #define PROPERTY_FILENAME       "filename"
 #define PROPERTY_PROVIDER       "provider"
 #define PROPERTY_DSN            "dsn"
@@ -301,8 +304,8 @@ sim_xml_config_to_string (SimXmlConfig *xmlconfig)
  */
 void
 sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
-				  SimConfig     *config,
-				  xmlNodePtr     node)
+			       SimConfig     *config,
+			       xmlNodePtr     node)
 {
   gchar  *value;
 
@@ -321,6 +324,48 @@ sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
   if ((value = xmlGetProp (node, PROPERTY_FILENAME)))
     {
       config->log.filename = g_strdup (value);
+      xmlFree(value);      
+    }
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_xml_config_set_config_sensor (SimXmlConfig  *xmlconfig,
+				  SimConfig     *config,
+				  xmlNodePtr     node)
+{
+  gchar  *value;
+  
+  g_return_if_fail (xmlconfig);
+  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
+  g_return_if_fail (config);
+  g_return_if_fail (SIM_IS_CONFIG (config));
+  g_return_if_fail (node);
+
+  if (strcmp (node->name, OBJECT_SENSOR))
+    {
+      g_message ("Invalid sensor log node %s", node->name);
+      return;
+    }
+
+  if ((value = xmlGetProp (node, PROPERTY_NAME)))
+    {
+      config->sensor.name = g_strdup (value);
+      xmlFree(value);      
+    }
+  if ((value = xmlGetProp (node, PROPERTY_IP)))
+    {
+      config->sensor.ip = g_strdup (value);
+      xmlFree(value);      
+    }
+  if ((value = xmlGetProp (node, PROPERTY_INTERFACE)))
+    {
+      config->sensor.interface = g_strdup (value);
       xmlFree(value);      
     }
 }
@@ -536,6 +581,10 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
     if (!strcmp (children->name, OBJECT_LOG))
       {
 	sim_xml_config_set_config_log (xmlconfig, config, children);
+      }
+    if (!strcmp (children->name, OBJECT_SENSOR))
+      {
+	sim_xml_config_set_config_sensor (xmlconfig, config, children);
       }
     if (!strcmp (children->name, OBJECT_DATASOURCES))
       {

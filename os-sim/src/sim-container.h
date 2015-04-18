@@ -100,8 +100,17 @@ G_LOCK_DEFINE_STATIC (s_mutex_alerts);
 GType             sim_container_get_type                        (void);
 SimContainer*     sim_container_new                             (SimConfig     *config);
 
+
+GList*            sim_container_db_host_get_plugin_sids_ul      (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gint           plugin_id,
+								 gint           plugin_sid);
+
 /* Recovery Function */
 
+void              sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,
+								 SimDatabase   *database);
 void              sim_container_db_delete_backlogs_ul           (SimContainer  *container,
 								 SimDatabase   *database);
 gint              sim_container_db_get_recovery_ul              (SimContainer  *container,

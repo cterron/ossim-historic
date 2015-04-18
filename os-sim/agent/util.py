@@ -1,7 +1,7 @@
 import string
 
 CONFIG = '/etc/ossim/agent/config.xml'
-VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.8.1 (2004 Jan 27)'
+VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.9.0 (2004 Mar 01)'
 VERBOSE = True
 
 def debug(module, message, mark = "", color = ""):

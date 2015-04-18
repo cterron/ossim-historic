@@ -36,7 +36,7 @@
         </plugin>
 
         <!-- IIS detector -->
-        <plugin id="1502" name="iis" type="detector" enable="yes">
+        <plugin id="1502" name="iis" type="detector" enable="no">
             <path></path>
             <source>syslog</source>
             <interface>eth0</interface>
@@ -45,7 +45,7 @@
         </plugin>
 
         <!-- iptables detector -->
-        <plugin id="1503" name="iptables" type="detector" enable="yes">
+        <plugin id="1503" name="iptables" type="detector" enable="no">
             <path></path>
             <source>syslog</source>
             <interface>eth0</interface>
@@ -57,7 +57,7 @@
              FireWall-1 detector 
              source = syslog | opsec
         -->
-        <plugin id="1504" name="fw-1" type="detector" enable="yes">
+        <plugin id="1504" name="fw-1" type="detector" enable="no">
             <path></path>
             <source>syslog</source>
             <interface>eth0</interface>
@@ -66,7 +66,7 @@
         </plugin>
  
         <!-- Real Secure detector -->
-        <plugin id="1506" name="realsecure" type="detector" enable="yes">
+        <plugin id="1506" name="realsecure" type="detector" enable="no">
             <path></path>
             <source>snmp</source>
             <interface>eth0</interface>
@@ -100,6 +100,15 @@
             <sensor>127.0.0.1</sensor>
             <location>mysql:localhost:ossim:youruser:yourpass</location>
             <frequency>300</frequency>
+        </plugin>
+        
+        <!-- Cisco routers detector -->
+        <plugin id="1510" name="cisco" type="detector" enable="no">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
         </plugin>
 
         <!-- 

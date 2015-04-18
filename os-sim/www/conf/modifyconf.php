@@ -7,8 +7,7 @@
                                                                                 
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Configuration</h2>
+  <h1>Configuration</h1>
 
 <?php
 

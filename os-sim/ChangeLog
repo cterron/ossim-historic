@@ -1,6 +1,45 @@
 # ChangeLog for OSSIM
 
-    01 Mar 2004 DK <dk@ossim.net>
+    11 Mar 2004 DK <dk@ossim.net> :
+    * 0.9.1 released
+    * Bugfixes
+
+* OSSIM-0.9.1 (11 Mar 2004)
+
+    10 Mar 2004 DK <dk@ossim.net> :
+    * Nessus automation script added
+
+    10 Mar 2004 David Gil <dgil@ossim.net> :
+    * framework: Sensor combo selector at monitor->session
+
+    09 Mar 2004 David Gil <dgil@ossim.net> :
+    * agent: 
+      - new parser for cisco routers
+      - session monitor bugfixes
+
+    08 Mar 2004 David Gil <dgil@ossim.net> :
+    * agent: session monitor bugfixes
+    * framework: snort-nessus correlation table
+
+    04 Mar 2004 David Gil <dgil@ossim.net> :
+    * framework: 
+      - added 'prev' and 'next' navigation menus to alarm console and backlog
+      - added option to delete all alarms at alarm console and backlog
+
+    03 Mar 2004 David Gil <dgil@ossim.net> :
+    * framework: Sensor combo selector at monitor->network
+    * agent: FireWall-1 opsec-ng and opsec-4.1 parsers
+    * bugfixes: invalid back buttons and forgotten entrys in Makefiles
+      Thanks to Edward Brookhouse <ebroo@phillips.com>
+
+    02 Mar 2004 David Gil <dgil@ossim.net> :
+    * www/ntop/index.php, www/ntop/menu.php: Choose sensor at network monitor
+    * www/report/inventory.php: bugfix
+    * include/ossim_db.inc: bugfix
+    * framework: alarm console now reads from alert table. Old alarm console
+      moved to tools->backlog
+
+    01 Mar 2004 DK <dk@ossim.net> :
     * 0.9 released
     * Bugfixes
 

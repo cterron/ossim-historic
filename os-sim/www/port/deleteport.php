@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Delete port group</h2>
+  <h1>Delete port group</h1>
 
 <?php 
     if (!$port_name = mysql_escape_string($_GET["portname"])) { 

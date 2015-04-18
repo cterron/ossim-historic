@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.0
+Version:   0.9.1
 Release:   1
 License:   GPL
 Group:     Applications/Security
@@ -22,7 +22,7 @@ over every network or security aspect.
 %package agent
 Summary:   OSSIM Agent
 Group:     Applications/Security
-Requires:  %{name} >= %{version}
+#Requires:  %{name} >= %{version}
 
 %description agent
 OSSIM Agent
@@ -30,7 +30,7 @@ OSSIM Agent
 %package framework
 Summary:   OSSIM Web framework
 Group:     Applications/Security
-Requires:  %{name} >= %{version}
+Requires:  php >= 4.0
 
 %description framework
 OSSIM Web framework
@@ -59,8 +59,7 @@ OSSIM Web framework
 %{__install} -d -m0755 $RPM_BUILD_ROOT/etc/httpd/conf.d
 %{__cp} -f etc/httpd/ossim.conf $RPM_BUILD_ROOT/etc/httpd/conf.d
 
-%{__install} -d -m0755 $RPM_BUILD_ROOT/etc/php.d/
-%{__cp} -f etc/ossim.ini $RPM_BUILD_ROOT/etc/php.d
+touch $RPM_BUILD_ROOT/var/www/ossim-users
 
 %post agent
 rm -f %{_bindir}/agent ; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
@@ -94,7 +93,6 @@ fi
 %config %{_sysconfdir}/ossim/framework/mrtg.cfg
 %config %{_sysconfdir}/ossim/framework/mrtg-rrd.cfg
 %config %{_sysconfdir}/httpd/conf.d/ossim.conf
-%config %{_sysconfdir}/php.d/ossim.ini
 %{_datadir}/ossim/fonts/
 %{_datadir}/ossim/mrtg/
 %{_datadir}/ossim/perl/
@@ -104,8 +102,12 @@ fi
 %{perl_archlib}
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph.pl
 /var/www/ossim/
+/var/www/ossim-users
 
 
 %changelog
+* Thu Mar 03 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.1-1
+- New Release
+
 * Thu Jan 29 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.0-1
 - Initial build.

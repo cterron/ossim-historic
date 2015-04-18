@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Delete host</h2>
+  <h1>Delete host</h1>
 
 <?php 
     if (!$_GET["ip"]) { 

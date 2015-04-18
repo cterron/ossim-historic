@@ -101,17 +101,17 @@ class MonitorCA(Monitor.Monitor):
                 #  calculate time to sleep
                 if int(rule["interval"]) < pfreq:
                     util.debug (__name__, 
-                                "waitting %d secs..." % int(rule["interval"]),
+                                "waiting %d secs..." % int(rule["interval"]),
                                 '**')
                     time.sleep(float(rule["interval"]))
                 else:
                     if int(rule["interval"]) < f + pfreq:
                         util.debug (__name__,
-                            "waitting %d secs..." % (int(rule["interval"])-f),
+                            "waiting %d secs..." % (int(rule["interval"])-f),
                             '**')
                         time.sleep(int(rule["interval"]) - f)
                     else:
-                        util.debug (__name__, "waitting %d secs..." % pfreq,
+                        util.debug (__name__, "waiting %d secs..." % pfreq,
                                     '**')
                         time.sleep(pfreq)
 

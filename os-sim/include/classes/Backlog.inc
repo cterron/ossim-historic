@@ -77,36 +77,51 @@ class Backlog {
     function get_priority()         { return $this->priority;      }
     function get_reliability()      { return $this->reliability;   }
 
-    function get_list($conn, $args = "") 
+    function get_count($conn) 
     {
+        $query = "SELECT count(*) FROM backlog;";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            return $rs->fields["count(*)"];
+        }
+    }
+
+    function get_list($conn, $args = "", $inf = 0, $sup = 25) 
+    {
+        $i = 0;
+
         $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
             FROM backlog $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new Backlog ($rs->fields["utime"], 
-                                       $rs->fields["id"],
-                                       $rs->fields["name"],
-                                       $rs->fields["rule_level"],
-                                       $rs->fields["rule_type"],
-                                       $rs->fields["rule_name"],
-                                       $rs->fields["ocurrences"],
-                                       $rs->fields["time_out"],
-                                       $rs->fields["matched"],
-                                       $rs->fields["plugin_id"],
-                                       $rs->fields["plugin_sid"],
-                                       $rs->fields["inet_ntoa(src_ip)"],
-                                       $rs->fields["inet_ntoa(dst_ip)"],
-                                       $rs->fields["src_port"],
-                                       $rs->fields["dst_port"],
-                                       $rs->fields["condition"],
-                                       $rs->fields["value"],
-                                       $rs->fields["time_interval"],
-                                       $rs->fields["absolute"],
-                                       $rs->fields["priority"],
-                                       $rs->fields["reliability"]
-                                       );
+                if (($i++ >= $inf) && ($inf++ <= $sup)) {
+                    $list[] = new Backlog ($rs->fields["utime"], 
+                                           $rs->fields["id"],
+                                           $rs->fields["name"],
+                                           $rs->fields["rule_level"],
+                                           $rs->fields["rule_type"],
+                                           $rs->fields["rule_name"],
+                                           $rs->fields["ocurrences"],
+                                           $rs->fields["time_out"],
+                                           $rs->fields["matched"],
+                                           $rs->fields["plugin_id"],
+                                           $rs->fields["plugin_sid"],
+                                           $rs->fields["inet_ntoa(src_ip)"],
+                                           $rs->fields["inet_ntoa(dst_ip)"],
+                                           $rs->fields["src_port"],
+                                           $rs->fields["dst_port"],
+                                           $rs->fields["condition"],
+                                           $rs->fields["value"],
+                                           $rs->fields["time_interval"],
+                                           $rs->fields["absolute"],
+                                           $rs->fields["priority"],
+                                           $rs->fields["reliability"]);
+                } elseif ($inf > $sup) {
+                    break;
+                }
                 $rs->MoveNext();
             }
         }
@@ -114,7 +129,11 @@ class Backlog {
     }
 
     function delete($conn, $utime) {
-        $query = "DELETE FROM backlog WHERE utime = '$utime';";
+        if (!strcmp($utime, "all")) {
+            $query = "DELETE FROM backlog;";
+        } else {
+            $query = "DELETE FROM backlog WHERE utime = '$utime';";
+        }
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;

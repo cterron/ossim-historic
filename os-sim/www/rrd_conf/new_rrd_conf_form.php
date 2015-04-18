@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>New RRD Config</h2>
+  <h1>New RRD Config</h1>
 
 <h3>Hints</h3>
 <ul>

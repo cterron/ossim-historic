@@ -8,8 +8,7 @@
 
 <body>
 
-  <h1 align="center">OSSIM Framework</h1>
-  <h2 align="center">Riskmeter</h2>
+  <h1 align="center">Riskmeter</h1>
 
 <?php
 require_once ('ossim_conf.inc');

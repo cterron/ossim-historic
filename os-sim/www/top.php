@@ -162,8 +162,7 @@
 <?php
     } elseif ($_GET["menu"] == "monitors") {
 ?>
-        [<a href="<?php 
-           echo $conf->get_conf("ntop_link"); ?>/NetNetstat.html"
+        [<a href="ntop/session.php"
            title="(NTOP - Active TCP Sessions)" 
            target="main">Session</a>]
         [<a href="ntop/index.php" 
@@ -183,8 +182,12 @@
            target="main">Main</a>]
         [<a href="directives/index.php" title="directive viewer" 
            target="main">Directives</a>]
+        [<a href="conf/pluginref.php" title="correlation reference viewer" 
+           target="main">Correlation</a>]
         [<a href="rrd_conf/rrd_conf.php" title="RRD Conf Management" 
            target="main">RRD Config</a>]
+        [<a href="scan/hostscan.php" title="Host Scan configuration" 
+           target="main">Host Scan</a>]
         [<a href="conf/modifyconfform.php" title="Riskmeter Configuration" 
            target="main">Riskmeter</a>]
 <?php
@@ -192,6 +195,9 @@
 ?>
         [<a href="scan/scan.php" title="host scanning" 
            target="main">Scan</a>]
+        [<a href="control_panel/backlog.php" 
+           title="OSSIM Control Panel - Backlog"
+           target="main">Backlog</a>]
         [<a href="editor/editor.php" title="rule viewer" 
            target="main">Rule Viewer</a>]
 <?php

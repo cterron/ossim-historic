@@ -6,8 +6,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Main Configuration</h2>
+  <h1>Main Configuration</h1>
   
   <table align="center">
     <tr><th colspan="2">Reload server structures</th></tr>

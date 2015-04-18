@@ -11,7 +11,7 @@ class Parser(threading.Thread):
         # link agent atributes and methods to use them. why???
         self.conn      = agent.conn
         self.reconnect = agent.reconnect
-        self.my_ip     = agent.my_ip
+#        self.my_ip     = agent.my_ip
 
         self.plugin = plugin
         threading.Thread.__init__(self)
@@ -58,6 +58,11 @@ class Parser(threading.Thread):
             ca = ParserCA(self.agent, self.plugin)
             ca.process()
             
+        elif self.plugin["id"] == '1510':
+            from ParserCisco import ParserCisco
+            cisco = ParserCisco(self.agent, self.plugin)
+            cisco.process()
+
         else:
             util.debug (__name__, 
                         "Plugin " + self.plugin["name"] + " is not implemented..."

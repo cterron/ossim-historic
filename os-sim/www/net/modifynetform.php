@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Modify network</h2>
+  <h1>Modify network</h1>
 
 <?php
     require_once 'classes/Net.inc';

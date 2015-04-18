@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Modify host</h2>
+  <h1>Modify host</h1>
 
 <?php
     require_once 'classes/Host.inc';

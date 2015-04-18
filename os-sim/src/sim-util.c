@@ -181,6 +181,8 @@ sim_get_rule_var_from_char (const gchar *var)
     return SIM_RULE_VAR_SRC_PORT;
   else if (!strcmp (var, SIM_DST_PORT_CONST))
     return SIM_RULE_VAR_DST_PORT;
+  else if (!strcmp (var, SIM_PLUGIN_SID_CONST))
+    return SIM_RULE_VAR_PLUGIN_SID;
 
   return SIM_RULE_VAR_NONE;
 }

@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Insert new network</h2>
+  <h1>Insert new network</h1>
 
 <?php
     require_once ('ossim_db.inc');

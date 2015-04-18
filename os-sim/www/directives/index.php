@@ -1,5 +1,5 @@
 <?php
-    $XML_FILE = '../../src/directives.xml';
+    $XML_FILE = '/etc/ossim/server/directives.xml';
 ?>
 
 <html>
@@ -11,8 +11,7 @@
 
 <body>
 
-  <h1 align="center">OSSIM Framework</h1>
-  <h2 align="center">Directives Editor</h2>
+  <h1 align="center">Directives Editor</h1>
 
 <?php
 

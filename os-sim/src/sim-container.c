@@ -190,6 +190,7 @@ sim_container_new (SimConfig  *config)
   database = sim_database_new (ds);
 
   container = SIM_CONTAINER (g_object_new (SIM_TYPE_CONTAINER, NULL));
+  sim_container_db_delete_plugin_sid_directive_ul (container, database);
   sim_container_db_delete_backlogs_ul (container, database);
   sim_container_db_load_categories (container, database);
   sim_container_db_load_classifications (container, database);
@@ -231,6 +232,95 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
   
   sim_database_execute_no_query (database, query);
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,
+						 SimDatabase   *database)
+{
+  gchar         *query = "DELETE FROM plugin_sid WHERE plugin_id = 1505";
+  
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  
+  sim_database_execute_no_query (database, query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+GList*
+sim_container_db_host_get_plugin_sids_ul (SimContainer  *container,
+					 SimDatabase   *database,
+					 GInetAddr     *ia,
+					 gint           plugin_id,
+					 gint           plugin_sid)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gint           row;
+  GList         *list = NULL;
+  gint           reference_id;
+  gint           reference_sid;
+
+  g_return_val_if_fail (container, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+  g_return_val_if_fail (ia, 0);
+  g_return_val_if_fail (plugin_id > 0, 0);
+  g_return_val_if_fail (plugin_sid > 0, 0);
+
+  query = g_strdup_printf ("SELECT reference_id, reference_sid "
+			   "FROM host_plugin_sid INNER JOIN plugin_reference "
+			   "ON (host_plugin_sid.plugin_id = plugin_reference.reference_id "
+			   "AND host_plugin_sid.plugin_sid = plugin_reference.reference_sid) "
+			   "WHERE host_ip = %u "
+			   "AND plugin_reference.plugin_id = %d "
+			   "AND plugin_reference.plugin_sid = %d",
+			   sim_inetaddr_ntohl (ia), plugin_id, plugin_sid);
+
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  SimPluginSid *sid;
+
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  reference_id = gda_value_get_integer (value);
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+	  reference_sid = gda_value_get_integer (value);
+
+	  sid = sim_container_get_plugin_sid_by_pky (container,
+						     reference_id,
+						     reference_sid);
+
+	  if (sid)
+	    list = g_list_append (list, sid);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST PLUGIN SID DATA MODEL ERROR");
+    }
+
+  return list;
+}
+
 
 /*
  *
@@ -3460,7 +3550,7 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
       if (!plugin_sid)
 	{
 	  plugin_sid = sim_plugin_sid_new_from_data (SIM_PLUGIN_ID_DIRECTIVE,
-						     ++max_sid,
+						     sim_directive_get_id (directive),
 						     0,
 						     0,
 						     1,
@@ -3471,7 +3561,6 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
 	  query = sim_plugin_sid_get_insert_clause (plugin_sid);
 	  g_message (query);
 	  sim_database_execute_no_query (db_ossim, query); 
-	  
 	  g_free (query);
 	}
 

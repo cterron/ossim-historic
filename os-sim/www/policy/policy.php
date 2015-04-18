@@ -7,9 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-
-  <h2>Policy</h2>
+  <h1>Policy</h1>
 
 <?php
     require_once ('classes/Policy.inc');

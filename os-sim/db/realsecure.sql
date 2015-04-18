@@ -1,9 +1,3 @@
---
--- Real Secure Sid
---
--- (IN TEST)
---
-
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1, NULL, NULL, 'realsecure: 6in4_Tunnel');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 2, NULL, NULL, 'realsecure: AIX_Pdnsd_Overflow');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 3, NULL, NULL, 'realsecure: AOLIM_AddExternalApp_Overflow');
@@ -879,7 +873,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 873, NULL, NULL, 'realsecure: HackATack_UDP_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 874, NULL, NULL, 'realsecure: HackersParadise_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 875, NULL, NULL, 'realsecure: HostControl_Response');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 876, NULL, NULL, 'realsecure: ICMP Incoming');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 876, NULL, NULL, 'realsecure: ICMP');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 877, NULL, NULL, 'realsecure: ICMP_Flood');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 878, NULL, NULL, 'realsecure: ICMP_Modem_DoS');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 879, NULL, NULL, 'realsecure: ICMP_Redirect');
@@ -903,7 +897,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 897, NULL, NULL, 'realsecure: IMAP_Password');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 898, NULL, NULL, 'realsecure: IMAP_Too_Many_Connects');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 899, NULL, NULL, 'realsecure: IMAP_WU_Imapd_BO');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 900, NULL, NULL, 'realsecure: IP Incoming');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 900, NULL, NULL, 'realsecure: IP');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 901, NULL, NULL, 'realsecure: IPDuplicate');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 902, NULL, NULL, 'realsecure: IP_Duplicate');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 903, NULL, NULL, 'realsecure: IP_Flushot');
@@ -1529,7 +1523,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1523, NULL, NULL, 'realsecure: Syphillis_Scan_Request');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1524, NULL, NULL, 'realsecure: Syphillis_Scan_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1525, NULL, NULL, 'realsecure: Syslog_Cisco_Zero_Size_DoS');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1526, NULL, NULL, 'realsecure: TCP Incoming');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1526, NULL, NULL, 'realsecure: TCP');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1527, NULL, NULL, 'realsecure: TCP_ACK_Ping');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1528, NULL, NULL, 'realsecure: TCP_Data_Changed');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1529, NULL, NULL, 'realsecure: TCP_FIN_Scan');
@@ -1658,7 +1652,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1652, NULL, NULL, 'realsecure: Trusted_domain_removed');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1653, NULL, NULL, 'realsecure: Truva_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1654, NULL, NULL, 'realsecure: Twinge_Attack');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1655, NULL, NULL, 'realsecure: UDP Incoming');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1655, NULL, NULL, 'realsecure: UDP');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1656, NULL, NULL, 'realsecure: UDP_Bomb');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1657, NULL, NULL, 'realsecure: UDP_Port_Loopback');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1658, NULL, NULL, 'realsecure: UDP_Port_Scan');
@@ -1685,7 +1679,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1679, NULL, NULL, 'realsecure: Ultors_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1680, NULL, NULL, 'realsecure: Unexplained_Backdoor_Response');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1681, NULL, NULL, 'realsecure: Use_of_user_rights');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1682, NULL, NULL, 'realsecure: User Defined Audit Policy');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1682, NULL, NULL, 'realsecure: User');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1683, NULL, NULL, 'realsecure: User_account_changed');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1684, NULL, NULL, 'realsecure: User_account_created');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1685, NULL, NULL, 'realsecure: User_account_deleted');
@@ -1758,3 +1752,5 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1752, NULL, NULL, 'realsecure: scm_logon_fail');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1753, NULL, NULL, 'realsecure: sec_auditlost');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1754, NULL, NULL, 'realsecure: sscan_Scan');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1755, NULL, NULL, 'realsecure: pool aceptadas');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1756, NULL, NULL, 'realsecure: Port_Scan');

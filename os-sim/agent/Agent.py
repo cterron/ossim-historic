@@ -15,7 +15,7 @@ class Agent:
         self.listenPort = 0
         self.conn = None
         self.sequence = 0
-        self.my_ip = socket.gethostbyname(socket.gethostname())
+#        self.my_ip = socket.gethostbyname(socket.gethostname())
 
     def parseConfig(self, config_file):
         """parse config file with the SAX API"""

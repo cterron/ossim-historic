@@ -5,6 +5,7 @@ agent_DATA    = util.py \
 	Agent.py \
 	Parser.py \
 	Monitor.py \
+	ParserCisco.py \
 	ParserSnort.py \
 	ParserApache.py \
 	ParserFW1.py \

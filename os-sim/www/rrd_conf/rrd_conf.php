@@ -7,9 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-
-  <h2>RRD Config</h2>
+  <h1>RRD Config</h1>
 
 <?php
     require_once 'ossim_db.inc';

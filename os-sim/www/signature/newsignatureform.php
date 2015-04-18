@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Insert new signature group</h2>
+  <h1>Insert new signature group</h1>
 
 <form method="post" action="newsignature.php">
 <table align="center">

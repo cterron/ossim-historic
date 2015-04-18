@@ -7,8 +7,7 @@
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
-  <h2>Delete policy</h2>
+  <h1>Delete policy</h1>
 
 <?php 
     if (!$id = mysql_escape_string($_GET["id"])) { 

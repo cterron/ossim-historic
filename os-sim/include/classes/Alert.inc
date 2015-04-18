@@ -82,43 +82,70 @@ class Alert {
     function get_asset_src()        { return $this->asset_src;      }
     function get_asset_dst()        { return $this->asset_dst;      }
     function alarm()                { return $this->alarm;          }
-
-    function get_list($conn, $args = "") 
+    
+    function get_count($conn) 
     {
+        $query = "SELECT count(*) FROM alert WHERE alarm = 1;";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            return $rs->fields["count(*)"];
+        }
+    }
+
+    function get_list($conn, $args = "", $inf = 0, $sup = 25) 
+    {
+        $i = 0;
+    
         $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
             FROM alert $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new Alert (  $rs->fields["id"],
-                                       $rs->fields["timestamp"],
-                                       $rs->fields["sensor"],
-                                       $rs->fields["interface"],
-                                       $rs->fields["type"],
-                                       $rs->fields["plugin_id"],
-                                       $rs->fields["plugin_sid"],
-                                       $rs->fields["protocol"],
-                                       $rs->fields["inet_ntoa(src_ip)"],
-                                       $rs->fields["inet_ntoa(dst_ip)"],
-                                       $rs->fields["src_port"],
-                                       $rs->fields["dst_port"],
-                                       $rs->fields["condition"],
-                                       $rs->fields["value"],
-                                       $rs->fields["time_interval"],
-                                       $rs->fields["absolute"],
-                                       $rs->fields["priority"],
-                                       $rs->fields["reliability"],
-                                       $rs->fields["risk_c"],
-                                       $rs->fields["risk_a"],
-                                       $rs->fields["asset_src"],
-                                       $rs->fields["asset_dst"],
-                                       $rs->fields["alarm"]
-                                       );
+                if (($i++ >= $inf) && ($inf++ <= $sup)) {
+                        $list[] = new Alert (  $rs->fields["id"],
+                                           $rs->fields["timestamp"],
+                                           $rs->fields["sensor"],
+                                           $rs->fields["interface"],
+                                           $rs->fields["type"],
+                                           $rs->fields["plugin_id"],
+                                           $rs->fields["plugin_sid"],
+                                           $rs->fields["protocol"],
+                                           $rs->fields["inet_ntoa(src_ip)"],
+                                           $rs->fields["inet_ntoa(dst_ip)"],
+                                           $rs->fields["src_port"],
+                                           $rs->fields["dst_port"],
+                                           $rs->fields["condition"],
+                                           $rs->fields["value"],
+                                           $rs->fields["time_interval"],
+                                           $rs->fields["absolute"],
+                                           $rs->fields["priority"],
+                                           $rs->fields["reliability"],
+                                           $rs->fields["risk_c"],
+                                           $rs->fields["risk_a"],
+                                           $rs->fields["asset_src"],
+                                           $rs->fields["asset_dst"],
+                                           $rs->fields["alarm"]);
+                } elseif ($inf > $sup) {
+                    break;
+                }
                 $rs->MoveNext();
             }
         }
         return $list;
+    }
+
+    function delete($conn, $id)
+    {
+        if (!strcmp($id, "all")) {
+            $query = "DELETE FROM alert;";
+        } else {
+            $query = "DELETE FROM alert WHERE id = '$id'";
+        }
+        if ($conn->Execute($query) === false) {
+            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
+        }
     }
 
 }

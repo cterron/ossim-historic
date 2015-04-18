@@ -61,8 +61,11 @@ class MonitorNtop(Monitor.Monitor):
         if absolute == 'true':
             vfirst = 0
         else:
-            vfirst = int(self.__get_value(rule))
-            if vfirst is None: vfirst = 0
+            try:
+                vfirst = int(self.__get_value(rule))
+                if vfirst is None: vfirst = 0
+            except TypeError:
+                vfirst = 0
 
         pfreq = int(self.plugins[MonitorNtop.plugin_id]['frequency'])
         f = 0
@@ -74,17 +77,17 @@ class MonitorNtop(Monitor.Monitor):
                 #  calculate time to sleep
                 if int(rule["interval"]) < pfreq:
                     util.debug (__name__, 
-                                "waitting %d secs..." % int(rule["interval"]),
+                                "waiting %d secs..." % int(rule["interval"]),
                                 '**')
                     time.sleep(float(rule["interval"]))
                 else:
                     if int(rule["interval"]) < f + pfreq:
                         util.debug (__name__,
-                            "waitting %d secs..." % (int(rule["interval"])-f),
+                            "waiting %d secs..." % (int(rule["interval"])-f),
                             '**')
                         time.sleep(int(rule["interval"]) - f)
                     else:
-                        util.debug (__name__, "waitting %d secs..." % pfreq,
+                        util.debug (__name__, "waiting %d secs..." % pfreq,
                                     '**')
                         time.sleep(pfreq)
 
@@ -94,6 +97,7 @@ class MonitorNtop(Monitor.Monitor):
             if vlast is None:
                 util.debug (__name__, "no data for %s" % rule["to"],
                             '!!', 'YELLOW')
+                break
 
             if ((rule["condition"] == 'eq') and \
                  (vlast == vfirst + int(rule["value"])) or \

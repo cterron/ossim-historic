@@ -80,8 +80,15 @@ class ParserFW1(Parser.Parser):
         
         util.debug (__name__, 'plugin started (opsec)...', '--')
         
-        pattern = 'loc=.*time=(\d{1,2})(\w+)(\d{4})\s+(\d\d):(\d\d):(\d\d)\|action=([^\|]*)\|orig=([^\|]*)\|[^\|]*\|i/f_name=([^\|]*)\|has_ac.*src=([^\|]*)\|(?:s_port=([^\|]*)\|)?dst=([^\|]*)\|(?:service=([^\|]*)\|)?proto=([^\|]*)\|.*'
-            
+        pattern = "loc=.*" +\
+            "time=\s*(\d{1,2})(\w+)(\d{4})\s+(\d\d):(\d\d):(\d\d)\|" +\
+            "action=([^\|]*)\|orig=([^\|]*)\|"
+        patternIface = "\|i/f_name=([^\|]*)\|"
+        patternIps = "src=([^\|]*)\|(?:s_port=([^\|]*)\|)?" +\
+            "dst=([^\|]*)\|(?:service=([^\|]*)\|)?"
+        patternSport = "s_port=([^\|]*)"
+        patternProto = "proto=([^\|]*)\|"
+        
         location = self.plugin["location"]
         fd = open(location, 'r')
             
@@ -96,10 +103,34 @@ class ParserFW1(Parser.Parser):
                 fd.seek(where)
             else:
                 result = re.findall(str(pattern), line)
+                resultIface = re.findall(str(patternIface), line)
+                resultIps = re.findall(str(patternIps), line)
+                resultSport = re.findall(str(patternSport), line)
+                resultProto = re.findall(str(patternProto), line)
+                
+                try: 
+                    interface = resultIface[0]
+                except IndexError:
+                    pass
+                
+                try:
+                    (src, s_port, dst, service) = resultIps[0]
+                except IndexError:
+                    pass
+
+                try:
+                    proto = resultProto[0]
+                except IndexError:
+                    pass
+
+                try:
+                    s_port = resultSport[0]
+                except IndexError:
+                    pass
+                
                 try: 
                     (day, month, year, hour, minute, second, action, 
-                    originator, interface, src, s_port, dst, service, 
-                    proto) = result[0]
+                    originator) = result[0]
                    
                     datestring = "%s-%s-%s %s:%s:%s" % \
                         (year, month, day, hour, minute, second)

@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Update policy</h2>
+  <h1>Update policy</h1>
 
 <?php
     

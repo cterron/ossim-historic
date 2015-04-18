@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Modify signature group</h2>
+  <h1>Modify signature group</h1>
 
 <?php
     require_once 'classes/Signature_group.inc';

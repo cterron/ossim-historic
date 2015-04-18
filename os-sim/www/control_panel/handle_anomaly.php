@@ -52,7 +52,7 @@ if($ip == "Global"){
     $db->close($conn);
 ?>
     <p>Successfully Acked/Deleted</p>
-    <p><a href="index.php">Back</a></p>
+    <p><a href="anomalies.php">Back</a></p>
 
 </body>
 </html>

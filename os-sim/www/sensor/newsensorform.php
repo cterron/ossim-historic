@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Insert new sensor</h2>
+  <h1>Insert new sensor</h1>
 
 <form method="post" action="newsensor.php">
 <table align="center">

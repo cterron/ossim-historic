@@ -6,7 +6,7 @@
 		<datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=;DATABASE=ossim;HOST=localhost"/>
 		<datasource name="snortDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=;DATABASE=snort;HOST=localhost"/>
 	</datasources>
-	<directive filename="directives.xml"/>
+	<directive filename="/etc/ossim/server/directives.xml"/>
 	<scheduler interval="15"/>
 	<server port="40001"/>
 </config>

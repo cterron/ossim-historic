@@ -40,8 +40,11 @@
 #include "sim-database.h"
 #include "sim-config.h"
 #include "sim-directive.h"
+#include "sim-command.h"
+#include "sim-server.h"
 
 extern SimContainer  *sim_ctn;
+extern SimServer     *sim_svr;
 
 G_LOCK_EXTERN (s_mutex_backlogs);
 
@@ -258,6 +261,7 @@ sim_scheduler_run (SimScheduler *scheduler)
 void
 sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 {
+  SimConfig     *config;
   SimDatabase   *db_ossim;
   GList         *list;
 
@@ -265,6 +269,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
   db_ossim = scheduler->_priv->db_ossim;
+  config = scheduler->_priv->config;
 
   G_LOCK (s_mutex_backlogs);
   list = sim_container_get_backlogs_ul (sim_ctn);
@@ -275,21 +280,87 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
       if (sim_directive_is_time_out (backlog))
 	{
 	  /* Rule NOT */
-	  /*
-	    if ((!matched) && (sim_directive_backlog_match_by_not (backlog)))
+	  if (sim_directive_backlog_match_by_not (backlog))
 	    {
-	    sim_organizer_backlog_match (db_ossim, backlog, NULL);
-	    sim_container_remove_backlog_ul (sim_ctn, backlog);
-	    g_object_unref (backlog);
-	    list = list->next;
-	    continue;
+	      SimAlert     *new_alert;
+	      SimRule      *rule_curr;
+	      GNode        *rule_node;
+
+	      rule_node = sim_directive_get_curr_node (backlog);
+	      rule_curr = sim_directive_get_curr_rule (backlog);
+	      
+	      /* Create New Alert */
+	      new_alert = sim_alert_new ();
+	      new_alert->type = SIM_ALERT_TYPE_DETECTOR;
+	      new_alert->alarm = FALSE;
+	      if (config->sensor.ip)
+		new_alert->sensor = g_strdup (config->sensor.ip);
+	      if (config->sensor.interface)
+		new_alert->interface = g_strdup (config->sensor.interface);
+
+	      new_alert->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
+	      new_alert->plugin_sid = sim_directive_get_id (backlog);
+
+	      if (sim_rule_get_src_ia (rule_curr))
+		new_alert->src_ia = gnet_inetaddr_clone (sim_rule_get_src_ia (rule_curr));
+	      if (sim_rule_get_dst_ia (rule_curr))
+		new_alert->dst_ia = gnet_inetaddr_clone (sim_rule_get_dst_ia (rule_curr));
+	      new_alert->src_port = sim_rule_get_src_port (rule_curr);
+	      new_alert->dst_port = sim_rule_get_dst_port (rule_curr);
+	      new_alert->condition = sim_rule_get_condition (rule_curr);
+	      if (sim_rule_get_value (rule_curr))
+		new_alert->value = g_strdup (sim_rule_get_value (rule_curr));
+
+	      /* Rule reliability */
+	      if (sim_rule_get_rel_abs (rule_curr))
+		new_alert->reliability = sim_rule_get_reliability (rule_curr);
+	      else
+		new_alert->reliability = sim_rule_get_reliability_relative (rule_node);
+
+	      /* Directive Priority */
+	      new_alert->priority = sim_directive_get_priority (backlog);
+
+	      sim_container_push_alert (sim_ctn, new_alert);
+	      
+	      sim_container_db_update_backlog_ul (sim_ctn, db_ossim, backlog);
+	      
+	      /* Children Rules with type MONITOR */
+	      if (!G_NODE_IS_LEAF (rule_node))
+		{
+		  GNode *children = rule_node->children;
+		  while (children)
+		    {
+		      SimRule *rule = children->data;
+		      
+		      if (rule->type == SIM_RULE_TYPE_MONITOR)
+			{
+			  SimCommand *cmd = sim_command_new_from_rule (rule);
+			  sim_server_push_session_plugin_command (sim_svr, 
+								  SIM_SESSION_TYPE_SENSOR, 
+								  sim_rule_get_plugin_id (rule),
+								  cmd);
+			}
+		      
+		      children = children->next;
+		    }
+		} 
+	      else
+		{
+		  sim_container_remove_backlog_ul (sim_ctn, backlog);
+		  if (sim_directive_get_rule_level (backlog) <= 1)
+		    sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
+
+		  g_object_unref (backlog);
+		}
+	      
+	      list = list->next;
+	      continue;
 	    }
-	  */
-	  if (sim_directive_get_rule_level (backlog) <= 1)
-	    {
-	      sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
-	    }
+
 	  sim_container_remove_backlog_ul (sim_ctn, backlog);
+	  if (sim_directive_get_rule_level (backlog) <= 1)
+	      sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
+
 	  g_object_unref (backlog);
 	}
 

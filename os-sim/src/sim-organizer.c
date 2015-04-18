@@ -199,10 +199,13 @@ sim_organizer_run (SimOrganizer *organizer)
       switch (alert->type)
 	{
 	case SIM_ALERT_TYPE_DETECTOR:
+	  sim_organizer_correlation_plugin (organizer, alert);
 	  sim_organizer_calificate (organizer, alert);
 	  sim_organizer_correlation (organizer, alert);
 	  break;
 	case SIM_ALERT_TYPE_MONITOR:
+	  sim_organizer_correlation_plugin (organizer, alert);
+	  sim_organizer_calificate (organizer, alert);
 	  sim_organizer_correlation (organizer, alert);
 	  break;
 	default:
@@ -222,7 +225,60 @@ sim_organizer_run (SimOrganizer *organizer)
     }
 }
 
+
 /*
+ *
+ *
+ *
+ *
+ *
+ */
+void
+sim_organizer_correlation_plugin (SimOrganizer *organizer, 
+				  SimAlert     *alert)
+{
+  SimDatabase     *db_ossim;
+  GList           *list;
+
+  g_return_if_fail (organizer);
+  g_return_if_fail (SIM_IS_ORGANIZER (organizer));
+  g_return_if_fail (alert);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (alert->dst_ia);
+
+  db_ossim = organizer->_priv->db_ossim;
+
+  list = sim_container_db_host_get_plugin_sids_ul (sim_ctn,
+						   db_ossim,
+						   alert->dst_ia,
+						   alert->plugin_id,
+						   alert->plugin_sid);
+
+  if (!list)
+    return;
+
+  while (list)
+    {
+      SimPluginSid *plugin_sid = (SimPluginSid *) list->data;
+
+      alert->priority += sim_plugin_sid_get_priority (plugin_sid);
+      alert->reliability += sim_plugin_sid_get_reliability (plugin_sid);
+
+      list = list->next;
+    }
+
+  alert->alarm = TRUE;
+
+  if (alert->priority > 5)
+    alert->priority = 5;
+  if (alert->reliability > 10)
+    alert->reliability = 10;
+}
+
+/*
+ *
+ *
+ *
  *
  *
  */
@@ -291,7 +347,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
     }
 
   /* Get the reliability of thr plugin sid */
-  if (alert->plugin_id != SIM_PLUGIN_ID_DIRECTIVE)
+  if ((alert->reliability == 1) && (alert->plugin_id != SIM_PLUGIN_ID_DIRECTIVE))
     {
       alert->reliability = sim_plugin_sid_get_reliability (plugin_sid);
     }
@@ -368,7 +424,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
 
       /* Threshold */
       threshold = sim_container_db_get_threshold (sim_ctn, db_ossim);
-      if (alert->risk_a >= threshold) {
+      if (alert->risk_a > 2) {
 	alert->alarm = TRUE;
       }
 
@@ -460,115 +516,16 @@ sim_organizer_calificate (SimOrganizer *organizer,
  *
  */
 void
-sim_organizer_backlog_match (SimDatabase   *db_ossim,
-			     SimDirective  *backlog,
-			     SimAlert      *alert)
-{
-  SimPluginSid  *plugin_sid;
-  GNode         *rule_node;
-  SimRule       *rule_curr;
-  SimAlert      *new_alert = NULL;
-  GNode         *node = NULL;
-  GNode         *children = NULL;
-  gchar         *query;
-  gboolean       rel_abs;
-  gchar         *name;
-
-  g_return_if_fail (db_ossim);
-  g_return_if_fail (SIM_IS_DATABASE (db_ossim));
-  g_return_if_fail (backlog);
-  g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
-
-  name = sim_directive_get_name (backlog);
-  rule_node = sim_directive_get_curr_node (backlog);
-  rule_curr = sim_directive_get_curr_rule (backlog);
-
-  g_return_if_fail (rule_node);
-  g_return_if_fail (rule_curr);
-  g_return_if_fail (SIM_IS_RULE (rule_curr));
-
-  rel_abs = sim_rule_get_rel_abs (rule_curr);
-
-  /* Create New Alert */
-  if (alert)
-    {
-      new_alert = sim_alert_clone(alert);
-    }
-  else
-    {
-      new_alert = sim_alert_new ();
-      new_alert->type = SIM_ALERT_TYPE_DETECTOR;
-    }
-  new_alert->alarm = FALSE;
-  new_alert->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
-
-  plugin_sid = sim_container_get_plugin_sid_by_name (sim_ctn,
-						     SIM_PLUGIN_ID_DIRECTIVE,
-						     name);
-  if (!plugin_sid)
-    g_message ("3 ERROR DIRECTIVE PLUGIN SID %s", name);
-  
-  new_alert->plugin_sid = sim_plugin_sid_get_sid (plugin_sid);
-
-  /* Rule reliability */
-  if (rel_abs)
-    new_alert->reliability = sim_rule_get_reliability (rule_curr);
-  else
-    new_alert->reliability = sim_rule_get_reliability_relative (rule_node);
-
-  /* Directive Priority */
-  new_alert->priority = sim_directive_get_priority (backlog);
-
-  sim_container_push_alert (sim_ctn, new_alert);
-
-  /* Children Rules with type MONITOR */
-  if (!G_NODE_IS_LEAF (rule_node))
-    {
-      children = rule_node->children;
-      while (children)
-	{
-	  SimRule *rule = children->data;
-	  
-	  if (rule->type == SIM_RULE_TYPE_MONITOR)
-	    {
-	      SimCommand *cmd = sim_command_new_from_rule (rule);
-	      sim_server_push_session_plugin_command (sim_svr, 
-						      SIM_SESSION_TYPE_SENSOR, 
-						      sim_rule_get_plugin_id (rule),
-						      cmd);
-	    }
-	  
-	  children = children->next;
-	}
-    } 
-  else
-    {
-      g_message ("3 DIRECTIVE MATCHED %s", sim_directive_get_name (backlog));
-    }
-
-  query = sim_directive_backlog_get_update_clause (backlog);
-  sim_database_execute_no_query (db_ossim, query);
-  g_free (query);
-
-}
-
-/*
- *
- *
- *
- */
-void
 sim_organizer_correlation (SimOrganizer  *organizer,
-			   SimAlert    *alert)
+			   SimAlert      *alert)
 {
-  SimPluginSid  *plugin_sid;
-  GNode         *rule_node;
-  SimRule       *rule_curr;
   SimDatabase   *db_ossim;
   GList         *list;
+  GList         *stickys = NULL;
+  GList         *tmp = NULL;
   SimAlert      *new_alert = NULL;
-  gboolean       rel_abs;
-  gchar         *name;
+  gint           id;
+  gboolean       found = FALSE;
 
   g_return_if_fail (organizer);
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
@@ -586,55 +543,35 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
       if (sim_directive_backlog_match_by_alert (backlog, alert))
 	{
+	  GNode         *rule_node;
+	  SimRule       *rule_curr;
+
 	  if (sim_directive_get_matched (backlog))
 	    sim_container_remove_backlog_ul (sim_ctn, backlog);
 
-	  name = g_strdup (sim_directive_get_name (backlog));
+	  id = sim_directive_get_id (backlog);
 	  rule_node = sim_directive_get_curr_node (backlog);
 	  rule_curr = sim_directive_get_curr_rule (backlog);
 
-	  g_print ("2 DIRECTIVE MATCHED %s RULE %s LEVEL %d\n", name,
-		     sim_rule_get_name (rule_curr),
-		     sim_rule_get_level (rule_curr));
+	  if (sim_rule_get_sticky (rule_curr))
+	    stickys = g_list_append (stickys, GINT_TO_POINTER (id));
 
-	  g_return_if_fail (rule_node);
-	  g_return_if_fail (rule_curr);
-	  g_return_if_fail (SIM_IS_RULE (rule_curr));
-	  
-	  rel_abs = sim_rule_get_rel_abs (rule_curr);
-	  
 	  /* Create New Alert */
-	  if (alert)
-	    {
-	      new_alert = sim_alert_clone(alert);
-	    }
-	  else
-	    {
-	      new_alert = sim_alert_new ();
-	      new_alert->type = SIM_ALERT_TYPE_DETECTOR;
-	    }
+	  new_alert = sim_alert_clone(alert);
+	  new_alert->type = SIM_ALERT_TYPE_DETECTOR;
 	  new_alert->alarm = FALSE;
 	  new_alert->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
-	  
-	  plugin_sid = sim_container_get_plugin_sid_by_name (sim_ctn,
-							     SIM_PLUGIN_ID_DIRECTIVE,
-							     name);
-	  if (!plugin_sid)
-	    g_message ("2 ERROR DIRECTIVE PLUGIN SID %s", name);
-	  
-	  g_free (name);
-
-	  new_alert->plugin_sid = sim_plugin_sid_get_sid (plugin_sid);
+	  new_alert->plugin_sid = sim_directive_get_id (backlog);
 	  
 	  /* Rule reliability */
-	  if (rel_abs)
+	  if (sim_rule_get_rel_abs (rule_curr))
 	    new_alert->reliability = sim_rule_get_reliability (rule_curr);
 	  else
 	    new_alert->reliability = sim_rule_get_reliability_relative (rule_node);
 	  
 	  /* Directive Priority */
 	  new_alert->priority = sim_directive_get_priority (backlog);
-	  
+
 	  sim_container_push_alert (sim_ctn, new_alert);
 
 	  sim_container_db_update_backlog_ul (sim_ctn, db_ossim, backlog);
@@ -675,14 +612,33 @@ sim_organizer_correlation (SimOrganizer  *organizer,
   while (list)
     {
       SimDirective *directive = (SimDirective *) list->data;
+      id = sim_directive_get_id (directive);
+
+      found = FALSE;
+      tmp = stickys;
+      while (tmp) {
+	gint cmp = GPOINTER_TO_INT (tmp->data);
+
+	if (cmp == id)
+	  {
+	    found = TRUE;
+	    break;
+	  }
+
+	tmp = tmp->next;
+      }
+
+      if (found)
+	{
+	  list = list->next;
+	  break;
+	}
 
       if (sim_directive_match_by_alert (directive, alert))
 	{
 	  SimDirective *backlog;
 	  SimRule      *rule_root;
 	  GNode        *node_root;
-	  GNode        *children;
-	  gchar        *query;
 
 	  GTime          time_last = time (NULL);
 
@@ -698,7 +654,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	  
 	  if (!G_NODE_IS_LEAF (node_root))
 	    {
-	      children = node_root->children;
+	      GNode *children = node_root->children;
 	      while (children)
 		{
 		  SimRule *rule = children->data;
@@ -719,46 +675,29 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		}
 
 	      sim_container_append_backlog (sim_ctn, backlog);
-
-	      query = sim_directive_backlog_get_insert_clause (backlog);
-	      sim_database_execute_no_query (db_ossim, query);
-	      g_free (query);
+	      sim_container_db_insert_backlog_ul (sim_ctn, db_ossim, backlog);
 	    } 
 	  else
 	    {
-	      name = sim_directive_get_name (backlog);
 	      sim_directive_set_matched (backlog, TRUE);
+	      sim_container_db_insert_backlog_ul (sim_ctn, db_ossim, backlog);
 
-	      rel_abs = sim_rule_get_rel_abs (rule_root);
-	      
 	      new_alert = sim_alert_clone (alert);
 	      new_alert->type = SIM_ALERT_TYPE_DETECTOR;
-
 	      new_alert->alarm = FALSE;
 	      new_alert->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
-	      
-	      plugin_sid = sim_container_get_plugin_sid_by_name (sim_ctn,
-								 SIM_PLUGIN_ID_DIRECTIVE,
-								 name);
+	      new_alert->plugin_sid = sim_directive_get_id (backlog);
 
-	      if (!plugin_sid)
-		g_message ("1 ERROR DIRECTIVE PLUGIN SID %s", name);
-
-	      new_alert->plugin_sid = sim_plugin_sid_get_sid (plugin_sid);
 	      /* Rule reliability */
-	      if (rel_abs)
+	      if (sim_rule_get_rel_abs (rule_root))
 		new_alert->reliability = sim_rule_get_reliability (rule_root);
 	      else
 		new_alert->reliability = sim_rule_get_reliability_relative (node_root);
 	      
 	      /* Directive Priority */
 	      new_alert->priority = sim_directive_get_priority (backlog);
-	      
-	      sim_container_push_alert (sim_ctn, new_alert);
 
-	      query = sim_directive_backlog_get_insert_clause (backlog);
-	      sim_database_execute_no_query (db_ossim, query);
-	      g_free (query);
+	      sim_container_push_alert (sim_ctn, new_alert);
 
 	      g_object_unref (backlog);
 	    }
@@ -767,6 +706,8 @@ sim_organizer_correlation (SimOrganizer  *organizer,
     }
   g_list_free (list);
   G_UNLOCK (s_mutex_directives);
+
+  g_list_free (stickys);
 }
 
 /*

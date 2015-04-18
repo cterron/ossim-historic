@@ -2,6 +2,7 @@ import urllib2
 import HTMLParser
 import sys
 import socket
+import re
 
 def get_value(rule, url):
 
@@ -14,20 +15,18 @@ def get_value(rule, url):
         pass
    
     for session in NtopSessionParser.session_data:
-        
+
         if session["client"] == rule["from"] and \
            session["server"] == rule["to"] and \
-           session["client_port"] == rule["port_from"] or \
-                rule["port_from"] == '' and \
-           session["server_port"] == rule["port_to"] or \
-                rule["port_to"] == '':
+           ((str(session["client_port"]) == str(rule["port_from"]))) and \
+           ((str(session["server_port"]) == str(rule["port_to"]))):
             
             if int(rule["plugin_sid"]) == 246:
-                return session["data_sent"]
+                return int(session["data_sent"])
             elif int(rule["plugin_sid"]) == 247:
-                return session["data_recv"]
+                return int(session["data_recv"])
             elif int(rule["plugin_sid"]) == 248:
-                return session["duration"]
+                return int(session["duration"])
    
     # no session opened
     return None
@@ -42,6 +41,7 @@ class NtopSessionParser(HTMLParser.HTMLParser):
         self.end = ''       # end tag
         self.col = 0        # column in the main <tr></tr>
         self.data = {}      # session data
+        NtopSessionParser.session_data = []
         HTMLParser.HTMLParser.__init__(self)
 
     def handle_starttag(self, tag, attrs):
@@ -71,7 +71,7 @@ class NtopSessionParser(HTMLParser.HTMLParser):
                 if data.startswith(':'):
                     try:
                         self.data["client_port"] = \
-                            socket.getprotobyname(data[1:])
+                            socket.getservbyname(data[1:], 'tcp')
                     except socket.error:
                         self.data["client_port"] = data[1:]
                 else:
@@ -96,7 +96,7 @@ class NtopSessionParser(HTMLParser.HTMLParser):
                 if data.startswith(':'):
                     try:
                         self.data["server_port"] = \
-                            socket.getprotobyname(data[1:])
+                            socket.getservbyname(data[1:], 'tcp')
                     except socket.error:
                         self.data["server_port"] = data[1:]
                 else:
@@ -145,7 +145,7 @@ class NtopSessionParser(HTMLParser.HTMLParser):
                 self.data["last_seen_hour"] = data
                 
             elif self.col == 10:
-                
+               
                 # duration
                 if data.endswith('sec'):
                     self.data["duration"] = data[:-4]
@@ -153,21 +153,29 @@ class NtopSessionParser(HTMLParser.HTMLParser):
                 #
                 # FIXME!!
                 #
-                elif data.endswith('Days'):
-                    self.data["duration"] = int(data[:-5]) * 86400;
-                elif data.endswith('Day'):
-                    self.data["duration"] = int(data[:-4]) * 86400;
+                # 1 day(s) 1:52:27
+                elif data.__contains__('day(s)'):
+                    result = re.findall('(\d+) day\(s\) (\S+)', data)
+                    (days, time) = result[0]
+                    seconds = int(days) * 86400
+                    
+                    dt = time.split(':')
+                    seconds += int(dt.pop())
+                    try:
+                        seconds += seconds + int(dt.pop()) * 60
+                        seconds += seconds + int(dt.pop()) * 3600
+                    except IndexError: pass
+                    self.data["duration"] = str(seconds)
                     
                 else:
                     dt = data.split(':')
                     seconds = int(dt.pop())
                     try:
-                        seconds = seconds + int(dt.pop()) * 60
-                        seconds = seconds + int(dt.pop()) * 3600
-                    except IndexError:
-                        pass
+                        seconds += seconds + int(dt.pop()) * 60
+                        seconds += seconds + int(dt.pop()) * 3600
+                    except IndexError: pass
                     self.data["duration"] = str(seconds)
-                
+               
             elif self.col == 11:
                 
                 # inactive
@@ -198,7 +206,7 @@ class NtopSessionParser(HTMLParser.HTMLParser):
 #                print "duration: %s" % self.data["duration"]
 #                print "inactive: %s" % self.data["inactive"]
 #                print "latency: %s" % self.data["latency"]
-                
+            
                 NtopSessionParser.session_data.append(self.data);
                 self.data = {}
                 

@@ -7,8 +7,7 @@
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework</h1>
-  <h2>Modify sensor</h2>
+  <h1>Modify sensor</h1>
 
 <?php
     require_once 'classes/Sensor.inc';
