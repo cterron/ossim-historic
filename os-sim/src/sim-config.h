@@ -56,11 +56,15 @@ G_BEGIN_DECLS
 typedef struct _SimConfig        SimConfig;
 typedef struct _SimConfigClass   SimConfigClass;
 typedef struct _SimConfigDS      SimConfigDS;
+typedef struct _SimConfigNotify  SimConfigNotify;
 
 struct _SimConfig {
   GObject parent;
 
   GList   *datasources;
+  GList   *notifies;
+
+  gchar   *notify_prog;
 
   struct {
     gchar    *filename;
@@ -83,6 +87,12 @@ struct _SimConfig {
   struct {
     gint      port;
   } server;
+
+  struct {
+    gchar    *host;
+    gint      port;
+  } smtp;
+
 };
 
 struct _SimConfigClass {
@@ -90,19 +100,25 @@ struct _SimConfigClass {
 };
 
 struct _SimConfigDS {
-    gchar    *name;
-    gchar    *provider;
-    gchar    *dsn;
+  gchar    *name;
+  gchar    *provider;
+  gchar    *dsn;
 };
 
-GType           sim_config_get_type                        (void);
-SimConfig*      sim_config_new                             ();
-SimConfigDS*    sim_config_ds_new                          ();
-void            sim_config_ds_free                         (SimConfigDS *ds);
+struct _SimConfigNotify {
+  gchar    *emails;
+  GList    *alarm_risks;
+};
 
+GType             sim_config_get_type                        (void);
+SimConfig*        sim_config_new                             (void);
+SimConfigDS*      sim_config_ds_new                          (void);
+void              sim_config_ds_free                         (SimConfigDS  *ds);
+SimConfigDS*      sim_config_get_ds_by_name                  (SimConfig    *config,
+							      const gchar  *name);
 
-SimConfigDS*    sim_config_get_ds_by_name                  (SimConfig    *config,
-							    const gchar  *name);
+SimConfigNotify*  sim_config_notify_new                      (void);
+void              sim_config_notify_free                     (SimConfigNotify *notify);
 
 G_END_DECLS
 

@@ -43,6 +43,8 @@
 #include <sim-util.h>
 #include <gnet.h>
 
+#include "sim-inet.h"
+
 struct _SimPortProtocol {
   gint              port;
   SimProtocolType   protocol;
@@ -181,11 +183,54 @@ sim_get_rule_var_from_char (const gchar *var)
     return SIM_RULE_VAR_SRC_PORT;
   else if (!strcmp (var, SIM_DST_PORT_CONST))
     return SIM_RULE_VAR_DST_PORT;
+  else if (!strcmp (var, SIM_PROTOCOL_CONST))
+    return SIM_RULE_VAR_PROTOCOL;
   else if (!strcmp (var, SIM_PLUGIN_SID_CONST))
     return SIM_RULE_VAR_PLUGIN_SID;
 
   return SIM_RULE_VAR_NONE;
 }
+
+/*
+ *
+ *
+ *
+ */
+SimAlarmRiskType
+sim_get_alarm_risk_from_char (const gchar *var)
+{
+  g_return_val_if_fail (var != NULL, SIM_ALARM_RISK_TYPE_NONE);
+
+  if (!g_ascii_strcasecmp (var, "low"))
+    return SIM_ALARM_RISK_TYPE_LOW;
+  else if (!g_ascii_strcasecmp (var, "medium"))
+    return SIM_ALARM_RISK_TYPE_MEDIUM;
+  else if (!g_ascii_strcasecmp (var, "high"))
+    return SIM_ALARM_RISK_TYPE_HIGH;
+  else if (!g_ascii_strcasecmp (var, "all"))
+    return SIM_ALARM_RISK_TYPE_ALL;
+  else
+    return SIM_ALARM_RISK_TYPE_NONE;
+}
+
+/*
+ *
+ *
+ *
+ */
+SimAlarmRiskType
+sim_get_alarm_risk_from_risk (gint risk)
+{
+  if (risk >= 1 || risk <= 4)
+    return SIM_ALARM_RISK_TYPE_LOW;
+  else if (risk >= 5 || risk <= 7)
+    return SIM_ALARM_RISK_TYPE_MEDIUM;
+  else if (risk >= 8 || risk <= 10)
+    return SIM_ALARM_RISK_TYPE_HIGH;
+  else
+    return SIM_ALARM_RISK_TYPE_NONE;
+}
+
 
 /*
  *
@@ -203,6 +248,62 @@ sim_get_ias (const gchar *value)
   ia = gnet_inetaddr_new_nonblock (value, 0);
 
   list = g_list_append (list, ia);
+
+  return list;
+}
+
+/*
+ *
+ *
+ *
+ */
+GList*
+sim_get_inets (const gchar *value)
+{
+  SimInet    *inet;
+  GList      *list = NULL;
+  gchar      *endptr;
+  gchar      *slash;
+  gint        from;
+  gint        to;
+  gint        i;
+
+  g_return_val_if_fail (value != NULL, NULL);
+
+  /* Look for a range */
+  slash = strchr (value, '-');
+  if (slash)
+    {
+      gchar **values0 = g_strsplit(value, ".", 0);
+      if (values0[3])
+	{
+	  gchar **values1 = g_strsplit(values0[3], "-", 0);
+
+	  from = strtol (values1[0], &endptr, 10);
+	  to = strtol (values1[1], &endptr, 10);
+
+	  for (i = 0; i <= (to - from); i++)
+	    {
+	      gchar *ip = g_strdup_printf ("%s.%s.%s.%d/32",
+					   values0[0], values0[1],
+					   values0[2], from + i);
+
+	      inet = sim_inet_new (ip);
+	      list = g_list_append (list, inet);
+
+	      g_free (ip);
+	    }
+
+	  g_strfreev (values1);
+	}
+
+      g_strfreev (values0);
+    }
+  else
+    {
+      inet = sim_inet_new (value);
+      list = g_list_append (list, inet);
+    }
 
   return list;
 }

@@ -42,6 +42,7 @@
 #include "sim-enums.h"
 #include "sim-alert.h"
 #include "sim-action.h"
+#include "sim-inet.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,6 +91,10 @@ void              sim_rule_set_level                       (SimRule     *rule,
 gboolean          sim_rule_get_sticky                      (SimRule     *rule);
 void              sim_rule_set_sticky                      (SimRule     *rule,
 							    gboolean     sticky);
+SimRuleVarType    sim_rule_get_sticky_different            (SimRule     *rule);
+void              sim_rule_set_sticky_different            (SimRule     *rule,
+							    SimRuleVarType  sticky_different);
+
 gint              sim_rule_get_protocol                    (SimRule     *rule);
 void              sim_rule_set_protocol                    (SimRule     *rule,
 							    gint       protocol);
@@ -115,6 +120,9 @@ void              sim_rule_set_time_out                    (SimRule     *rule,
 gint              sim_rule_get_occurrence                  (SimRule     *rule);
 void              sim_rule_set_occurrence                  (SimRule     *rule,
 							    gint         occurrence);
+gint              sim_rule_get_count                       (SimRule     *rule);
+void              sim_rule_set_count                       (SimRule     *rule,
+							    gint         count);
 
 SimConditionType  sim_rule_get_condition                   (SimRule     *rule);
 void              sim_rule_set_condition                   (SimRule           *rule,
@@ -138,10 +146,10 @@ void              sim_rule_set_plugin_sid                  (SimRule     *rule,
 
 GInetAddr*        sim_rule_get_src_ia                      (SimRule     *rule);
 void              sim_rule_set_src_ia                      (SimRule     *rule,
-							    GInetAddr   *src_ia);
+							    GInetAddr   *ia);
 GInetAddr*        sim_rule_get_dst_ia                      (SimRule     *rule);
 void              sim_rule_set_dst_ia                      (SimRule     *rule,
-							    GInetAddr   *dst_ia);
+							    GInetAddr   *ia);
 
 gint              sim_rule_get_src_port                    (SimRule     *rule);
 void              sim_rule_set_src_port                    (SimRule     *rule,
@@ -156,17 +164,19 @@ void              sim_rule_remove_plugin_sid               (SimRule     *rule,
 							    gint         plugin_sid);
 GList*            sim_rule_get_plugin_sids                 (SimRule     *rule);
 
-void              sim_rule_append_src_ia                   (SimRule     *rule,
-							    GInetAddr   *src_ia);
-void              sim_rule_remove_src_ia                   (SimRule     *rule,
-							    GInetAddr   *src_ia);
-GList*            sim_rule_get_src_ias                     (SimRule     *rule);
 
-void              sim_rule_append_dst_ia                   (SimRule     *rule,
-							    GInetAddr   *dst_ia);
-void              sim_rule_remove_dst_ia                   (SimRule     *rule,
-							    GInetAddr   *dst_ia);
-GList*            sim_rule_get_dst_ias                     (SimRule     *rule);
+void              sim_rule_append_src_inet                 (SimRule     *rule,
+							    SimInet     *inet);
+void              sim_rule_remove_src_inet                 (SimRule     *rule,
+							    SimInet     *inet);
+GList*            sim_rule_get_src_inets                   (SimRule     *rule);
+
+void              sim_rule_append_dst_inet                 (SimRule     *rule,
+							    SimInet     *inet);
+void              sim_rule_remove_dst_inet                 (SimRule     *rule,
+							    SimInet     *inet);
+GList*            sim_rule_get_dst_inets                   (SimRule     *rule);
+
 
 void              sim_rule_append_src_port                 (SimRule     *rule,
 							    gint         src_port);
@@ -179,6 +189,13 @@ void              sim_rule_append_dst_port                 (SimRule     *rule,
 void              sim_rule_remove_dst_port                 (SimRule     *rule,
 							    gint         dst_port);
 GList*            sim_rule_get_dst_ports                   (SimRule     *rule);
+
+void              sim_rule_append_protocol                 (SimRule     *rule,
+							    SimProtocolType  protocol);
+void              sim_rule_remove_protocol                 (SimRule     *rule,
+							    SimProtocolType  protocol);
+GList*            sim_rule_get_protocols                   (SimRule     *rule);
+
 
 void              sim_rule_append_var                      (SimRule     *rule,
 							    SimRuleVar  *var);

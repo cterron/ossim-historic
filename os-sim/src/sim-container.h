@@ -312,6 +312,8 @@ void              sim_container_free_sensors_ul                 (SimContainer  *
 
 SimSensor*        sim_container_get_sensor_by_name_ul           (SimContainer  *container,
 								 gchar         *name);
+SimSensor*        sim_container_get_sensor_by_ia_ul             (SimContainer  *container,
+								 GInetAddr     *ia);
 
 void              sim_container_db_load_sensors                 (SimContainer  *container,
 								 SimDatabase   *database);
@@ -326,6 +328,8 @@ void              sim_container_free_sensors                    (SimContainer  *
 
 SimSensor*        sim_container_get_sensor_by_name              (SimContainer  *container,
 								 gchar         *name);
+SimSensor*        sim_container_get_sensor_by_ia                (SimContainer  *container,
+								 GInetAddr     *ia);
 
 /* Hosts Functions */
 

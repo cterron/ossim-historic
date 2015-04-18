@@ -191,7 +191,7 @@ sim_container_new (SimConfig  *config)
 
   container = SIM_CONTAINER (g_object_new (SIM_TYPE_CONTAINER, NULL));
   sim_container_db_delete_plugin_sid_directive_ul (container, database);
-  sim_container_db_delete_backlogs_ul (container, database);
+  //sim_container_db_delete_backlogs_ul (container, database);
   sim_container_db_load_categories (container, database);
   sim_container_db_load_classifications (container, database);
   sim_container_db_load_plugins (container, database);
@@ -280,8 +280,12 @@ sim_container_db_insert_host_os_ul (SimContainer  *container,
   g_return_if_fail (date);
   g_return_if_fail (os);
 
-  query = g_strdup_printf ("INSERT INTO host_os (ip, date, os) VALUES (%lu, '%s', '%s')",
-			   sim_inetaddr_ntohl (ia), date, os);
+  if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+  return;
+  
+
+  query = g_strdup_printf ("INSERT INTO host_os (ip, date, previous, os) VALUES (%lu, '%s', '%s', '%s')",
+			   sim_inetaddr_ntohl (ia), date, os, os);
 
   sim_database_execute_no_query (database, query);
 
@@ -313,7 +317,10 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
   g_return_if_fail (curr_os);
   g_return_if_fail (prev_os);
 
-  query = g_strdup_printf ("UPDATE host_os SET date='%s', os='%s', previous='%s' WHERE ip = %lu",
+  if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+  return;
+ 
+  query = g_strdup_printf ("UPDATE host_os SET date='%s', os='%s', previous='%s', anom = 1 WHERE ip = %lu",
 			   date, curr_os, prev_os, sim_inetaddr_ntohl (ia));
 
   sim_database_execute_no_query (database, query);
@@ -359,7 +366,7 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
     }
   else
     {
-      g_message ("HOST OS DATA MODEL ERROR");
+      g_message ("HOST MAC DATA MODEL ERROR");
     }
   g_free (query);
 
@@ -404,7 +411,7 @@ sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
     }
   else
     {
-      g_message ("HOST OS DATA MODEL ERROR");
+      g_message ("HOST MAC DATA MODEL ERROR");
     }
   g_free (query);
 
@@ -435,8 +442,8 @@ sim_container_db_insert_host_mac_ul (SimContainer  *container,
   g_return_if_fail (date);
   g_return_if_fail (mac);
 
-  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor) VALUES (%lu, '%s', '%s', '%s')",
-			   sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "");
+  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, previous, vendor) VALUES (%lu, '%s', '%s', '%s', '%s')",
+			   sim_inetaddr_ntohl (ia), date, mac, mac, (vendor) ? vendor : "");
 
   sim_database_execute_no_query (database, query);
 
@@ -469,7 +476,7 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
   g_return_if_fail (curr_mac);
   g_return_if_fail (prev_mac);
 
-  query = g_strdup_printf ("UPDATE host_mac SET date='%s', mac='%s', previous='%s', vendor='%s' WHERE ip = %lu",
+  query = g_strdup_printf ("UPDATE host_mac SET date='%s', mac='%s', previous='%s', vendor='%s', anom = 1 WHERE ip = %lu",
 			   date, curr_mac, prev_mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (ia));
 
   sim_database_execute_no_query (database, query);
@@ -477,6 +484,76 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
   g_free (query);
 }
 
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_insert_alert_ul (SimContainer  *container,
+				  SimDatabase   *database,
+				  SimAlert      *alert)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query = NULL;
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (alert != NULL);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+  
+  query = sim_alert_get_insert_clause (alert);
+  sim_database_execute_no_query (database, query);
+  g_free (query);
+
+  query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+      if (!gda_value_is_null (value))
+	alert->id = gda_value_get_bigint (value);
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("BACKLOG INSERT DATA MODEL ERROR");
+    }
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_update_alert_ul (SimContainer  *container,
+				  SimDatabase   *database,
+				  SimAlert      *alert)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  GList         *list = NULL;
+  gchar         *query = NULL;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (alert);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+  
+  query = sim_alert_get_update_clause (alert);
+  sim_database_execute_no_query (database, query);
+  g_free (query);
+}
 
 /*
  *
@@ -488,14 +565,68 @@ void
 sim_container_db_delete_backlogs_ul (SimContainer  *container,
 				     SimDatabase   *database)
 {
-  gchar         *query = "DELETE FROM backlog";
+  GdaDataModel  *dm;
+  GdaDataModel  *dm1;
+  GdaValue      *value;
+  gchar         *query0 = "SELECT id FROM backlog WHERE matched = 0";
+  gchar         *query1 = NULL;
+  gchar         *query2 = NULL;
+  gint           row, row1;
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database != NULL);
   g_return_if_fail (SIM_IS_DATABASE (database));
-  
-  sim_database_execute_no_query (database, query);
+
+  dm = sim_database_execute_single_command (database, query0);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    {
+	      guint32 id = gda_value_get_bigint (value);
+	      
+	      query1 = g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE backlog_id=%lu", id);
+	      dm1 = sim_database_execute_single_command (database, query1);
+	      if (dm1)
+		{
+		  for (row1 = 0; row1 < gda_data_model_get_n_rows (dm1); row1++)
+		    {
+		      value = (GdaValue *) gda_data_model_get_value_at (dm1, 0, row1);
+		      if (!gda_value_is_null (value))
+			{
+			  guint32 alert_id = gda_value_get_bigint (value);
+
+			  query2 = g_strdup_printf ("DELETE FROM alert WHERE id=%lu", alert_id);
+			  sim_database_execute_no_query (database, query2);
+			  g_free (query2);
+			}
+		    }
+		}
+	      else
+		{
+		  g_message ("BACKLOG ALERT SELECT DATA MODEL ERROR");
+		}
+	      g_free (query1);
+
+	      query1 = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id=%lu", id);
+	      sim_database_execute_no_query (database, query1);
+	      g_free (query1);
+
+	      query1 = g_strdup_printf ("DELETE FROM backlog WHERE id=%lu", id);
+	      sim_database_execute_no_query (database, query1);
+	      g_free (query1);	      
+	    }
+	}
+
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("BACKLOG DELETE DATA MODEL ERROR");
+    }
 }
 
 /*
@@ -2414,6 +2545,45 @@ sim_container_get_sensor_by_name_ul (SimContainer  *container,
   return sensor;
 }
 
+
+/*
+ *
+ *
+ *
+ *
+ */
+SimSensor*
+sim_container_get_sensor_by_ia_ul (SimContainer  *container,
+				   GInetAddr     *ia)
+{
+  SimSensor  *sensor;
+  GList      *list;
+  gboolean    found = FALSE;
+  
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (ia, NULL);
+
+  list = container->_priv->sensors;
+  while (list)
+    {
+      sensor = (SimSensor *) list->data;
+
+      if (gnet_inetaddr_noport_equal (sim_sensor_get_ia (sensor), ia))
+	{
+	  found = TRUE;
+	  break;
+	}
+
+      list = list->next;
+    }
+
+  if (!found)
+    return NULL;
+
+  return sensor;
+}
+
 /*
  *
  *
@@ -2553,6 +2723,30 @@ sim_container_get_sensor_by_name (SimContainer  *container,
 
   return sensor;
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+SimSensor*
+sim_container_get_sensor_by_ia (SimContainer  *container,
+				GInetAddr     *ia)
+{
+  SimSensor   *sensor;
+
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (ia, NULL);
+
+  G_LOCK (s_mutex_sensors);
+  sensor = sim_container_get_sensor_by_ia_ul (container, ia);
+  G_UNLOCK (s_mutex_sensors);
+
+  return sensor;
+}
+
 
 /*
  *
@@ -2899,6 +3093,7 @@ sim_container_db_load_nets_ul (SimContainer  *container,
 	{
 	  net  = sim_net_new_from_dm (dm, row);
 
+	  /*
 	  query2 = g_strdup_printf ("SELECT host_ip FROM net_host_reference WHERE net_name = '%s'",
 				    sim_net_get_name (net));
 
@@ -2925,6 +3120,7 @@ sim_container_db_load_nets_ul (SimContainer  *container,
 	    }
 
 	  g_free (query2);
+	  */
 
 	  container->_priv->nets = g_list_append (container->_priv->nets, net);
 	}
@@ -3045,25 +3241,30 @@ GList*
 sim_container_get_nets_has_ia_ul (SimContainer  *container,
 				  GInetAddr     *ia)
 {
-  GList *list;
-  GList *nets = NULL;
+  SimInet  *inet;
+  GList    *list;
+  GList    *nets = NULL;
 
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (ia, NULL);
+
+  inet = sim_inet_new_from_ginetaddr (ia);
 
   list = container->_priv->nets;
   while (list)
     {
       SimNet *net = (SimNet *) list->data;
 
-      if (sim_net_has_ia (net, ia))
+      if (sim_net_has_inet (net, inet))
 	{
 	  nets = g_list_append (nets, net);
 	}
 
       list = list->next;
     }
+
+  g_object_unref (inet);
 
   return nets;
 }
@@ -5134,17 +5335,39 @@ sim_container_db_insert_backlog_ul (SimContainer  *container,
 				    SimDatabase   *database,
 				    SimDirective  *backlog)
 {
-  gchar *query;
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  GList         *list = NULL;
+  gchar         *query = NULL;
+  guint          backlog_id = 0;
 
-  g_return_if_fail (container);
+  g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
+  g_return_if_fail (database != NULL);
   g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (backlog);
+  g_return_if_fail (backlog != NULL);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
-
+  
   query = sim_directive_backlog_get_insert_clause (backlog);
   sim_database_execute_no_query (database, query);
+  g_free (query);
+
+  query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+      if (!gda_value_is_null (value))
+	backlog_id = gda_value_get_bigint (value);
+      
+      sim_directive_set_backlog_id (backlog, backlog_id);
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("BACKLOG INSERT DATA MODEL ERROR");
+    }
   g_free (query);
 }
 
@@ -5195,6 +5418,34 @@ sim_container_db_delete_backlog_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
   query = sim_directive_backlog_get_delete_clause (backlog);
+  sim_database_execute_no_query (database, query);
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void 
+sim_container_db_insert_backlog_alert_ul (SimContainer  *container,
+					  SimDatabase   *database,
+					  SimDirective  *backlog,
+					  SimAlert      *alert)
+{
+  gchar *query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (backlog);
+  g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
+  g_return_if_fail (alert);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+
+  query = sim_directive_backlog_alert_get_insert_clause (backlog, alert);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }
@@ -5363,6 +5614,32 @@ sim_container_db_delete_backlog (SimContainer  *container,
 
   G_LOCK (s_mutex_backlogs);
   sim_container_db_delete_backlog_ul (container, database, backlog);
+  G_UNLOCK (s_mutex_backlogs);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void 
+sim_container_db_insert_backlog_alert (SimContainer  *container,
+				       SimDatabase   *database,
+				       SimDirective  *backlog,
+				       SimAlert      *alert)
+{
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (backlog);
+  g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
+  g_return_if_fail (alert);
+  g_return_if_fail (SIM_IS_ALERT (alert));
+
+  G_LOCK (s_mutex_backlogs);
+  sim_container_db_insert_backlog_alert_ul (container, database, backlog, alert);
   G_UNLOCK (s_mutex_backlogs);
 }
 

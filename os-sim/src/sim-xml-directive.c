@@ -36,6 +36,8 @@
 #include <sim-net.h>
 #include <sim-xml-directive.h>
 
+#include "sim-inet.h"
+
 struct _SimXmlDirectivePrivate {
   SimContainer  *container;
 
@@ -52,6 +54,7 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_ID             "id"
 #define PROPERTY_NAME           "name"
 #define PROPERTY_STICKY         "sticky"
+#define PROPERTY_STICKY_DIFFERENT "sticky_different"
 #define PROPERTY_NOT            "not"
 #define PROPERTY_TYPE           "type"
 #define PROPERTY_PRIORITY       "priority"
@@ -67,6 +70,7 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_DST_IP         "to"
 #define PROPERTY_SRC_PORT       "port_from"
 #define PROPERTY_DST_PORT       "port_to"
+#define PROPERTY_PROTOCOL       "protocol"
 #define PROPERTY_PLUGIN_ID      "plugin_id"
 #define PROPERTY_PLUGIN_SID     "plugin_sid"
 
@@ -547,34 +551,35 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,
 	}
       else if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST))
 	{
-	  GInetAddr *ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-	  sim_rule_append_src_ia (rule, ia);
+	  gchar *ip = g_strdup (SIM_IN_ADDR_ANY_IP_STR);
+	  sim_rule_append_src_inet (rule, sim_inet_new (ip));
+	  g_free (ip);
 	}
       else
 	{
 	  net = (SimNet *) sim_container_get_net_by_name (container, values[i]);
 	  if (net)
 	    {
-	      GList *ias = sim_net_get_ias (net);
-	      while (ias)
+	      GList *inets = sim_net_get_inets (net);
+	      while (inets)
 		{
-		  GInetAddr *ia = (GInetAddr *) ias->data;
+		  SimInet *inet = (SimInet *) inets->data;
 
-		  sim_rule_append_src_ia (rule, ia);
+		  sim_rule_append_src_inet (rule, inet);
 		  
-		  ias = ias->next;
+		  inets = inets->next;
 		}
 	    }
 	  else
 	    {
-	      GList *ias = sim_get_ias (values[i]);
-	      while (ias)
+	      GList *inets = sim_get_inets (values[i]);
+	      while (inets)
 		{
-		  GInetAddr *ia = (GInetAddr *) ias->data;
+		  SimInet *inet = (SimInet *) inets->data;
 		  
-		  sim_rule_append_src_ia (rule, ia);
+		  sim_rule_append_src_inet (rule, inet);
 		  
-		  ias = ias->next;
+		  inets = inets->next;
 		}
 	    }
 	}
@@ -633,34 +638,35 @@ sim_xml_directive_set_rule_dst_ips (SimXmlDirective  *xmldirect,
 	}
       else if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST))
 	{
-	  GInetAddr *ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-	  sim_rule_append_dst_ia (rule, ia);
+	  gchar *ip = g_strdup (SIM_IN_ADDR_ANY_IP_STR);
+	  sim_rule_append_dst_inet (rule, sim_inet_new (ip));
+	  g_free (ip);
 	}
       else
 	{
 	  net = (SimNet *) sim_container_get_net_by_name (container, values[i]);
 	  if (net)
 	    {
-	      GList *ias = sim_net_get_ias (net);
-	      while (ias)
+	      GList *inets = sim_net_get_inets (net);
+	      while (inets)
 		{
-		  GInetAddr *ia = (GInetAddr *) ias->data;
+		  SimInet *inet = (SimInet *) inets->data;
 
-		  sim_rule_append_dst_ia (rule, ia);
+		  sim_rule_append_dst_inet (rule, inet);
 		  
-		  ias = ias->next;
+		  inets = inets->next;
 		}
 	    }
 	  else
 	    {
-	      GList *ias = sim_get_ias (values[i]);
-	      while (ias)
+	      GList *inets = sim_get_inets (values[i]);
+	      while (inets)
 		{
-		  GInetAddr *ia = (GInetAddr *) ias->data;
+		  SimInet *inet = (SimInet *) inets->data;
 		  
-		  sim_rule_append_dst_ia (rule, ia);
+		  sim_rule_append_dst_inet (rule, inet);
 		  
-		  ias = ias->next;
+		  inets = inets->next;
 		}
 	    }
 	}
@@ -799,6 +805,60 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
  *
  *
  */
+static void
+sim_xml_directive_set_rule_protocol (SimXmlDirective  *xmldirect,
+				     SimRule          *rule,
+				     gchar            *value)
+{
+  gchar     **values;
+  gchar     **level;
+  gint        i;
+
+  g_return_if_fail (xmldirect != NULL);
+  g_return_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect));
+  g_return_if_fail (rule != NULL);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (value != NULL);
+
+  if (value[0] == '!')
+    {
+      sim_rule_set_protocols_not (rule, TRUE);
+      value++;
+    }
+
+  values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
+  for (i = 0; values[i] != NULL; i++)
+    {
+      if (strstr (values[i], SIM_DELIMITER_LEVEL))
+	{
+	  SimRuleVar *var = g_new0 (SimRuleVar, 1);
+
+	  level = g_strsplit (values[i], SIM_DELIMITER_LEVEL, 0);
+
+	  var->type = sim_get_rule_var_from_char (level[1]);
+	  var->attr = SIM_RULE_VAR_PROTOCOL;
+	  var->level = atoi(level[0]);
+	  
+	  sim_rule_append_var (rule, var);
+
+	  g_strfreev (level);
+	}
+      else if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST)) 
+	{
+	  sim_rule_append_protocol (rule, 0);
+	}
+      else
+	sim_rule_append_protocol (rule, sim_protocol_get_type_from_str (values[i]));
+    }
+  g_strfreev (values);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
 GNode*
 sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 				      xmlNodePtr        node,
@@ -820,6 +880,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   gint           interval = 0;
   gboolean       absolute = FALSE;
   gboolean       sticky = FALSE;
+  gint           sticky_different = SIM_RULE_VAR_NONE;
   gboolean       not = FALSE;
   gint           priority = 1;
   gint           reliability = 1;
@@ -854,6 +915,11 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
     {
       if (!g_ascii_strcasecmp (value, "TRUE"))
 	sticky = TRUE;
+      xmlFree(value);
+    } 
+  if ((value = xmlGetProp (node, PROPERTY_STICKY_DIFFERENT)))
+    {
+      sticky_different = sim_get_rule_var_from_char (value);
       xmlFree(value);
     } 
   if ((value = xmlGetProp (node, PROPERTY_NOT)))
@@ -919,6 +985,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   rule = sim_rule_new ();
   rule->type = type;
   if (sticky) sim_rule_set_sticky (rule, sticky);
+  if (sticky_different) sim_rule_set_sticky_different (rule, sticky_different);
   if (not) sim_rule_set_not (rule, not);
   sim_rule_set_level (rule, level);
   sim_rule_set_name (rule, name);
@@ -933,11 +1000,36 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   sim_rule_set_occurrence (rule, occurrence);
   sim_rule_set_plugin_id (rule, plugin);
 
-  sim_xml_directive_set_rule_plugin_sids (xmldirect, rule, xmlGetProp (node, PROPERTY_PLUGIN_SID));
-  sim_xml_directive_set_rule_src_ips (xmldirect, rule, xmlGetProp (node, PROPERTY_SRC_IP));
-  sim_xml_directive_set_rule_dst_ips (xmldirect, rule, xmlGetProp (node, PROPERTY_DST_IP));
-  sim_xml_directive_set_rule_src_ports (xmldirect, rule, xmlGetProp (node, PROPERTY_SRC_PORT));
-  sim_xml_directive_set_rule_dst_ports (xmldirect, rule, xmlGetProp (node, PROPERTY_DST_PORT));
+  if ((value = xmlGetProp (node, PROPERTY_PLUGIN_SID)))
+    {
+      sim_xml_directive_set_rule_plugin_sids (xmldirect, rule, value);
+      xmlFree(value);
+    }
+  if ((value = xmlGetProp (node, PROPERTY_SRC_IP)))
+    {
+      sim_xml_directive_set_rule_src_ips (xmldirect, rule, value);
+      xmlFree(value);
+    }
+  if ((value = xmlGetProp (node, PROPERTY_DST_IP)))
+    {
+      sim_xml_directive_set_rule_dst_ips (xmldirect, rule, value);
+      xmlFree(value);
+    }
+  if ((value = xmlGetProp (node, PROPERTY_SRC_PORT)))
+    {
+      sim_xml_directive_set_rule_src_ports (xmldirect, rule, value);
+      xmlFree(value);
+    }
+  if ((value = xmlGetProp (node, PROPERTY_DST_PORT)))
+    {
+      sim_xml_directive_set_rule_dst_ports (xmldirect, rule, value);
+      xmlFree(value);
+    }
+  if ((value = xmlGetProp (node, PROPERTY_PROTOCOL)))
+    {
+      sim_xml_directive_set_rule_protocol (xmldirect, rule, value);
+      xmlFree(value);
+    }
 
   if (!root)
     rule_node = g_node_new (rule);

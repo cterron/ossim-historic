@@ -38,6 +38,7 @@
 #include "sim-directive.h"
 #include "sim-rule.h"
 #include "sim-action.h"
+#include "sim-inet.h"
 
 #include <time.h>
 
@@ -48,6 +49,8 @@ enum
 };
 
 struct _SimDirectivePrivate {
+  guint      backlog_id;
+
   gint       id;
   gchar     *name;
 
@@ -110,6 +113,8 @@ static void
 sim_directive_instance_init (SimDirective *directive)
 {
   directive->_priv = g_new0 (SimDirectivePrivate, 1);
+
+  directive->_priv->backlog_id = 0;
 
   directive->_priv->id = 0;
   directive->_priv->name = NULL;
@@ -247,6 +252,38 @@ void sim_directive_set_id (SimDirective   *directive,
   g_return_if_fail (id > 0);
 
   directive->_priv->id = id;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_directive_get_backlog_id (SimDirective   *directive)
+{
+  g_return_val_if_fail (directive, 0);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), 0);
+
+  return directive->_priv->backlog_id;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_set_backlog_id (SimDirective   *directive,
+			      gint            backlog_id)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+  g_return_if_fail (backlog_id > 0);
+
+  directive->_priv->backlog_id = backlog_id;
 }
 
 /*
@@ -699,6 +736,7 @@ sim_directive_set_rule_vars (SimDirective     *directive,
   GInetAddr  *ia;
   gint        port;
   gint        sid;
+  SimProtocolType  protocol;
 
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
@@ -729,10 +767,10 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 	  switch (var->attr)
 	    {
 	    case SIM_RULE_VAR_SRC_IA:
-	      sim_rule_append_src_ia (rule, gnet_inetaddr_clone (ia));
+	      sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr (ia));
 	      break;
 	    case SIM_RULE_VAR_DST_IA:
-	      sim_rule_append_dst_ia (rule, gnet_inetaddr_clone (ia));
+	      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr (ia));
 	      break;
 	    default:
 	      break;
@@ -745,10 +783,10 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 	  switch (var->attr)
 	    {
 	    case SIM_RULE_VAR_SRC_IA:
-	      sim_rule_append_src_ia (rule, gnet_inetaddr_clone (ia));
+	      sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr  (ia));
 	      break;
 	    case SIM_RULE_VAR_DST_IA:
-	      sim_rule_append_dst_ia (rule, gnet_inetaddr_clone (ia));
+	      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr  (ia));
 	      break;
 	    default:
 	      break;
@@ -790,6 +828,11 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 	case SIM_RULE_VAR_PLUGIN_SID:
 	  sid = sim_rule_get_plugin_sid (rule_up);
 	  sim_rule_append_plugin_sid (rule, sid);
+	  break;
+
+	case SIM_RULE_VAR_PROTOCOL:
+	  protocol = sim_rule_get_protocol (rule_up);
+	  sim_rule_append_protocol (rule, protocol);
 	  break;
 
 	default:
@@ -974,88 +1017,47 @@ sim_directive_clone (SimDirective     *directive)
 gchar*
 sim_directive_backlog_get_insert_clause (SimDirective *directive)
 {
-  SimRule  *rule;
+  gchar    timestamp[TIMEBUF_SIZE];
   gchar    *query;
+  time_t    time;
 
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
-  g_return_val_if_fail (directive->_priv->rule_curr, NULL);
-  
-  rule = (SimRule *) directive->_priv->rule_curr->data;
+
+  time = (time_t) (directive->_priv->time / G_USEC_PER_SEC);
+  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime (&time));
 
   query = g_strdup_printf ("INSERT INTO backlog "
-			   "(utime, id, name, rule_level, rule_type, rule_name, "
-			   "occurrence, time_out, matched, plugin_id, plugin_sid, "
-			   "src_ip, dst_ip, src_port, dst_port, condition, value, "
-			   "time_interval, absolute, priority, reliability) "
-			   "VALUES (%lld, %d, '%s', %d, %d, '%s', %d, %d, %d, %d, %d, "
-			   "%u, %u, %d, %d, %d, '%s', %d, %d, %d, %d)",
-			   directive->_priv->time,
+			   "(directive_id, timestamp, matched) "
+			   "VALUES (%d, '%s', %d)",
 			   directive->_priv->id,
-			   directive->_priv->name,
-			   sim_directive_get_rule_level (directive),
-			   rule->type,
-			   sim_rule_get_name (rule),
-			   sim_rule_get_occurrence (rule),
-			   directive->_priv->time_out,
-			   directive->_priv->matched,
-			   sim_rule_get_plugin_id (rule),
-			   sim_rule_get_plugin_sid (rule),
-			   (sim_rule_get_src_ia (rule)) ? sim_inetaddr_ntohl (sim_rule_get_src_ia (rule)) : -1,
-			   (sim_rule_get_dst_ia (rule)) ? sim_inetaddr_ntohl (sim_rule_get_dst_ia (rule)) : -1,
-			   sim_rule_get_src_port (rule),
-			   sim_rule_get_dst_port (rule),
-			   sim_rule_get_condition (rule),
-			   sim_rule_get_value (rule),
-			   sim_rule_get_interval (rule),
-			   sim_rule_get_absolute (rule),
-			   sim_rule_get_priority (rule),
-			   sim_rule_get_reliability (rule));
+			   timestamp,
+			   directive->_priv->matched);
 
   return query;
 }
 
 /*
  *
- * 
+ *
  *
  */
 gchar*
 sim_directive_backlog_get_update_clause (SimDirective *directive)
 {
-  SimRule  *rule;
-  gchar *query;
+  gchar    *query;
 
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
-  g_return_val_if_fail (directive->_priv->rule_curr, NULL);
 
-  rule = (SimRule *) directive->_priv->rule_curr->data;
-
-  query = g_strdup_printf ("UPDATE backlog SET rule_level = %d, rule_type = %d, rule_name = '%s', "
-			   "occurrence = %d, time_out = %d, matched = %d, plugin_id = %d, plugin_sid = %d, "
-			   "condition = %d, value = '%s', time_interval = %d, absolute = %d, "
-			   "priority = %d, reliability = %d "
-			   "WHERE utime = %lld AND id = %d",
-			   sim_directive_get_rule_level (directive),
-			   rule->type,
-			   sim_rule_get_name (rule),
-			   sim_rule_get_occurrence (rule),
-			   directive->_priv->time_out,
+  query = g_strdup_printf ("UPDATE backlog SET matched = %d"
+			   " WHERE id = %lu",
 			   directive->_priv->matched,
-			   sim_rule_get_plugin_id (rule),
-			   sim_rule_get_plugin_sid (rule),
-			   sim_rule_get_condition (rule),
-			   sim_rule_get_value (rule),
-			   sim_rule_get_interval (rule),
-			   sim_rule_get_absolute (rule),
-			   sim_rule_get_priority (rule),
-			   sim_rule_get_reliability (rule),
-			   directive->_priv->time,
-			   directive->_priv->id);
+			   directive->_priv->backlog_id);
 
   return query;
 }
+
 
 /*
  *
@@ -1069,15 +1071,73 @@ sim_directive_backlog_get_delete_clause (SimDirective *directive)
 
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
-  g_return_val_if_fail (directive->_priv->rule_curr, NULL);
 
-  query = g_strdup_printf ("DELETE FROM backlog WHERE utime = %lld AND id = %d",
-			   directive->_priv->time,
-			   directive->_priv->id);
-
+  query = g_strdup_printf ("DELETE FROM backlog WHERE id = %lu",
+			   directive->_priv->backlog_id);
 
   return query;
 }
+
+/*
+ *
+ *
+ *
+ */
+gchar*
+sim_directive_backlog_alert_get_insert_clause (SimDirective *directive,
+					       SimAlert     *alert)
+{
+  gchar    *query;
+  
+  g_return_val_if_fail (directive, NULL);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
+  g_return_val_if_fail (alert, NULL);
+  g_return_val_if_fail (SIM_IS_ALERT (alert), NULL);
+  
+  query = g_strdup_printf ("INSERT INTO backlog_alert"
+			   " (backlog_id, alert_id, time_out,"
+			   " occurrence, rule_level, matched)"
+			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
+			   directive->_priv->backlog_id,
+			   alert->id,
+			   directive->_priv->time_out,
+			   alert->count,
+			   alert->level,
+			   alert->matched);
+
+  return query;
+}
+
+/*
+ *
+ *
+ *
+ */
+gchar*
+sim_directive_backlog_alert_get_delete_clause (SimDirective *directive,
+					       SimAlert     *alert)
+{
+  gchar    *query;
+  
+  g_return_val_if_fail (directive, NULL);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
+  g_return_val_if_fail (alert, NULL);
+  g_return_val_if_fail (SIM_IS_ALERT (alert), NULL);
+  
+  query = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id ="
+			   " (backlog_id, alert_id, time_out,"
+			   " occurrence, rule_level, matched)"
+			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
+			   directive->_priv->backlog_id,
+			   alert->id,
+			   directive->_priv->time_out,
+			   alert->count,
+			   alert->level,
+			   alert->matched);
+
+  return query;
+}
+
 
 /*
  *

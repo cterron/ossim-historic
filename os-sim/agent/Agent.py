@@ -58,7 +58,7 @@ class Agent:
             sys.exit()
         
         self.sequence = 1
-        self.conn.send('connect id="%s"\n' % (self.sequence))
+        self.conn.send('connect id="%s" type="sensor"\n' % (self.sequence))
         util.debug (__name__,  "Waiting for server...", '->', 'YELLOW')
         data = self.conn.recv(1024)
         if data == 'ok id="' + str(self.sequence) + '"\n':

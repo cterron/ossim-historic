@@ -118,7 +118,6 @@ class Policy {
     {
         $id = intval($id);
 
-
         Policy::delete($conn, $id);
         Policy::insert($conn, $priority, $begin_hour, $end_hour, 
                        $begin_day, $end_day, $descr,

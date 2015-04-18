@@ -56,7 +56,11 @@ gchar*           sim_condition_get_str_from_type (SimConditionType  type);
 
 SimRuleVarType sim_get_rule_var_from_char (const gchar *var);
 
+SimAlarmRiskType sim_get_alarm_risk_from_char (const gchar *var);
+SimAlarmRiskType sim_get_alarm_risk_from_risk (gint risk);
+
 GList       *sim_get_ias (const gchar *value);
+GList       *sim_get_inets (const gchar *value);
 
 GList       *sim_string_hash_to_list (GHashTable *hash_table);
 

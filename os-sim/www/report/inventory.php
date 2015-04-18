@@ -26,7 +26,7 @@
     require_once 'classes/Host_mac.inc';
     require_once 'classes/Host_services.inc';
     require_once 'classes/Host_netbios.inc';
-    require_once 'classes/Net_host_reference.inc';
+    require_once 'classes/Net.inc';
     
     $db = new ossim_db();
     $conn = $db->connect();
@@ -124,16 +124,17 @@
       <tr><th colspan="2">Host belongs to:</td></tr>
 
 <?php
-    if ($net_list = Net_host_reference::get_list($conn, 
-                                                 "WHERE host_ip = '$ip'"))
+    if ($net_list = Net::get_list($conn))
     {
         foreach ($net_list as $net) {
+            if (Net::isIpInNet($ip, $net->get_ips())) {
 ?>
       <tr>
         <th>Net</th>
-        <td><?php echo $net->get_net_name() ?></td>
+        <td><?php echo $net->get_name() ?></td>
       </tr>
 <?php
+            }
         }
     }
 

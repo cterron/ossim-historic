@@ -36,6 +36,11 @@
 
 #include "sim-database.h"
 
+#define PROVIDER_MYSQL   "MySQL"
+#define PROVIDER_PGSQL   "PostgreSQL"
+#define PROVIDER_ORACLE  "Oracle"
+#define PROVIDER_ODBC    "odbc"
+
 enum 
 {
   DESTROY,
@@ -98,6 +103,8 @@ sim_database_instance_init (SimDatabase *database)
 {
   database->_priv = g_new0 (SimDatabasePrivate, 1);
 
+  database->type = SIM_DATABASE_TYPE_NONE;
+
   database->_priv->client = NULL;
   database->_priv->conn = NULL;
   database->_priv->name = NULL;
@@ -142,11 +149,11 @@ sim_database_get_type (void)
 SimDatabase*
 sim_database_new (SimConfigDS  *config)
 {
-  SimDatabase *db = NULL;
+  SimDatabase    *db = NULL;
   GdaError       *error;
   GList          *errors = NULL;
   gint            i;
-
+  
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (config->name, NULL);
   g_return_val_if_fail (config->provider, NULL);
@@ -157,6 +164,17 @@ sim_database_new (SimConfigDS  *config)
   db->_priv->name = g_strdup (config->name);
   db->_priv->provider = g_strdup (config->provider);
   db->_priv->dsn = g_strdup (config->dsn);
+
+  if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_MYSQL))
+    db->type = SIM_DATABASE_TYPE_MYSQL;
+  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_PGSQL))
+    db->type = SIM_DATABASE_TYPE_PGSQL;
+  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ORACLE))
+    db->type = SIM_DATABASE_TYPE_ORACLE;
+  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ODBC))
+    db->type = SIM_DATABASE_TYPE_ODBC;
+  else
+    db->type = SIM_DATABASE_TYPE_NONE;
 
   db->_priv->client = gda_client_new ();
   db->_priv->conn = gda_client_open_connection_from_string  (db->_priv->client,

@@ -67,7 +67,7 @@ if ($list = Host::get_list($conn, "WHERE ip = '$ip'")) {
 
 /* max C */
 $list = Control_panel_host::get_list($conn,
-    "WHERE host_ip = '$ip' ORDER BY time_range", 3);
+    "WHERE id = '$ip' ORDER BY time_range", 3);
     
 if ($list[0]) {
     $max_c["day"]   = $list[0]->get_max_c();
@@ -84,7 +84,7 @@ if ($list[2]) {
 
 /* max A */
 $list = Control_panel_host::get_list($conn, 
-    "WHERE host_ip = '$ip' ORDER BY time_range", 3);
+    "WHERE id = '$ip' ORDER BY time_range", 3);
 if ($list[0]) {
     $max_a["day"]   = $list[0]->get_max_a();
     $max_a_date["day"]   = $list[0]->get_max_a_date();

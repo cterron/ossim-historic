@@ -1,6 +1,5 @@
 <?php
 
-require_once 'classes/Net_host_reference.inc';
 require_once 'classes/Net_qualification.inc';
 require_once 'classes/Net_vulnerability.inc';
 require_once 'classes/Net_sensor_reference.inc';
@@ -41,9 +40,6 @@ class Net {
     function get_persistence()  { return $this->persistence; }
     function get_descr()        { return $this->descr; }
 
-    function get_reference_ips($conn, $net_name) {
-        return Net_host_reference::get_list($conn, "WHERE name = '$net_name'");
-    }
 
     function get_sensors($conn) {
         return Net_sensor_reference::get_list($conn, $this->name);
@@ -89,15 +85,6 @@ class Net {
             exit;
         }
         
-        $conf = new ossim_conf();
-        $nmap = $conf->get_conf("nmap_path");
-        
-        $ips_sane = escapeshellcmd($ips);
-        $ip_string = shell_exec("$nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \" ");   
-        $ip_list = explode("\n", $ip_string);
-        $lala = array_pop($ip_list);
-        
-        Net_host_reference::insert($conn, $name, $ip_list);
         Net_qualification::insert($conn, $name, 1, 1);
         Net_vulnerability::insert($conn, $name, 1);
         Net_sensor_reference::insert($conn, $name, $sensors);
@@ -118,7 +105,6 @@ class Net {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
-        Net_host_reference::delete($conn, $name);
         Control_panel_net::delete($conn, $name);
         Net_qualification::delete($conn, $name);
         Net_vulnerability::delete($conn, $name);
@@ -152,6 +138,48 @@ class Net {
             /* net is not in db, return default threshold */
             $conf = Conf::get_conf($conn);
             return $conf->get_threshold();
+        }
+    }
+
+    /*
+     * PRE: 
+     *   ip in ipv4 format (X.X.X.X)
+     *   nets in net/mask format (X.X.X.X/X,X.X.X.X/X,...)
+     */
+    function isIpInNet($ip, $nets)
+    {
+
+        $net_list = explode(",", $nets);
+        foreach ($net_list as $n) 
+        {
+            list($net, $mask) = split("/", $n);
+            
+            $val1 = ip2long($ip);
+            $val2 = ip2long($net);
+
+            if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask)))
+                return True;
+        }
+
+        return False;
+    }
+
+    function enable_nessus($conn, $net_name)
+    {
+        $query = "INSERT INTO net_scan (net_name, plugin_id, plugin_sid) 
+            VALUES ('$net_name', 3001, 0)";
+        if ($conn->Execute($query) === false) {
+            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        }
+    }
+    function disable_nessus($conn, $net_name)
+    {
+        $query = "DELETE FROM net_scan 
+            WHERE net_name = '$net_name' AND plugin_id = 3001";
+        if ($conn->Execute($query) === false) {
+            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
+            exit;
         }
     }
 

@@ -1,6 +1,7 @@
 scriptsdir   = $(datadir)/ossim/scripts
 scripts_SCRIPTS = rrd_plugin.pl \
-	control_panel.pl \
+	control_panel.py \
+	create_sidmap.pl \
 	do_nessus.pl \
 	draw_graph.pl \
 	draw_graph_combined.pl \

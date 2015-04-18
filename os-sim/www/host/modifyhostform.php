@@ -11,6 +11,7 @@
 
 <?php
     require_once 'classes/Host.inc';
+    require_once 'classes/Host_scan.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     
@@ -151,6 +152,19 @@
 ?>
     </td>
   </tr>
+    <tr>
+    <th> Scan options </th>
+    <td class="left">
+        <input type="checkbox" 
+        <?php
+        if(Host_scan::in_host_scan($conn, $host->get_ip(), 3001)){
+            echo " CHECKED ";
+        }
+        ?>
+        name="nessus" value="1"> Enable nessus scan </input>
+    </td> 
+    </tr>
+<tr>
   <tr>
     <th>Description</th>
     <td class="left">

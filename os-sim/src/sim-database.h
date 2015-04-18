@@ -62,6 +62,8 @@ typedef struct _SimDatabasePrivate SimDatabasePrivate;
 struct _SimDatabase {
   GObject parent;
 
+  SimDatabaseType     type;
+
   SimDatabasePrivate *_priv;
 };
 

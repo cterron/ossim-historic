@@ -1,6 +1,8 @@
 classesdir   = $(datadir)/ossim/php/classes
-classes_DATA = Alert.inc \
+classes_DATA = Alarm.inc \
+	Alert.inc \
 	Backlog.inc \
+	Backlog_alert.inc \
 	Category.inc \
 	Classification.inc \
 	Conf.inc \
@@ -17,10 +19,10 @@ classes_DATA = Alert.inc \
 	Host_services.inc \
 	Host_vulnerability.inc \
 	Link.inc \
-	Net_host_reference.inc \
 	Net_sensor_reference.inc \
 	Net.inc \
 	Net_qualification.inc \
+	Net_scan.inc \
 	Net_vulnerability.inc \
 	Plugin.inc \
 	Plugin_reference.inc \

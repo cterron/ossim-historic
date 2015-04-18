@@ -156,7 +156,6 @@ Create 'ossim' database, you need be root:
 mysql -e "create database ossim"
 mysql ossim < /usr/share/ossim/db/create_mysql.sql
 mysql ossim < /usr/share/ossim/db/ossim_data.sql
-mysql ossim < /usr/share/ossim/db/nessus_plugin_sid.sql
 mysql ossim < /usr/share/ossim/db/snort_nessus.sql
 
 Edit the file /etc/ossim/server/config.xml for your system.
@@ -214,12 +213,12 @@ sevice httpd restart
 Add to the cron the follow lines:
 
 0-59/5 * * * *  /usr/share/ossim/mrtg/launch-mrtg
-0-59/5 * * * *  /usr/bin/php -f /var/www/acid/acid_update_db.php > /dev/null
 1 0 * * * *     /usr/share/ossim/scripts/backupdb.pl
 
 Start the follows scripts:
 
-/usr/share/ossim/scripts/control_panel.pl
+/usr/share/ossim/scripts/control_panel.py -d
+/usr/share/ossim/scripts/acid_cache.pl
 
 Start the RRD plugin with the NTop installation:
 

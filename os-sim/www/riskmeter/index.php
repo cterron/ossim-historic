@@ -1,7 +1,7 @@
 <html>
 <head>
   <title> Riskmeter </title>
-  <meta http-equiv="refresh" content="15">
+  <meta http-equiv="refresh" content="3">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/riskmeter.css"/>
 </head>
@@ -18,7 +18,7 @@ require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host.inc');
-require_once ('classes/Net_host_reference.inc');
+require_once ('classes/Host_os.inc');
 
 $ossim_conf = new ossim_conf();
 $mrtg_link = $ossim_conf->get_conf("mrtg_link");
@@ -125,7 +125,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
         <img src="../pixmaps/solid-red.jpg" border="0" height="8" 
              width="<?php echo $width_a - $BAR_LENGTH_LEFT?>"
              title="<?php echo $attack ?>">
-        C=<?php echo $attack; ?>
+        A=<?php echo $attack; ?>
         <img src="<?php echo $icon ?>">
 <?php
     }
@@ -284,27 +284,30 @@ if($net_stats)
  */
 if ($_GET["net"]) {
 
-    $net = $_GET["net"];
+    $net_name = $_GET["net"];
     
-    foreach (Net_host_reference::get_list($conn, "WHERE net_name = '$net'")
-             as $net_host_reference) 
+    if ($net_list = Net::get_list($conn, "WHERE name = '$net_name'"))
     {
-        $ip = $net_host_reference->get_host_ip();
-    
-        $host_list = Host_qualification::get_list
-                                            ($conn, "WHERE host_ip = '$ip'");
-        if ($host_list) {
-            foreach (Host_qualification::get_list
-                                            ($conn, "WHERE host_ip = '$ip'")
-                     as $host_qualification)
+        $ips = $net_list[0]->get_ips();
+        print "<h1>$ips</h1>";
+
+
+        if ($ip_list = Host_qualification::get_list($conn))
+        {
+            foreach ($ip_list as $host_qualification)
             {
-                $ip_stats[] = new Host_qualification 
-                                ($host_qualification->get_host_ip(),
-                                 $host_qualification->get_compromise(),
-                                 $host_qualification->get_attack());
+                if (Net::isIpInNet($host_qualification->get_host_ip(), $ips))
+                {
+                    $ip_stats[] = new Host_qualification 
+                                    ($host_qualification->get_host_ip(),
+                                     $host_qualification->get_compromise(),
+                                     $host_qualification->get_attack());
+                }
             }
         }
     }
+
+    
 } else {
 
     $ip_stats = Host_qualification::get_list
@@ -366,6 +369,7 @@ if ($ip_stats) {
       <td align="center">
         <a href="../report/index.php?host=<?php echo $ip ?>&section=metrics" 
            title="<?php echo $ip ?>"><?php echo $hostname ?></a>
+        <?php echo Host_os::get_os_pixmap($conn, $ip); ?>
       </td>
       <td align="center">
         <a href="<?php 

@@ -27,6 +27,7 @@
 
     require_once ('classes/Host.inc');
     require_once ('classes/Host_os.inc');
+    require_once ('classes/Sensor.inc');
 
     /* 
      * convert net argument into an array of hosts
@@ -46,7 +47,7 @@
         /* 
          * get ntop link associated with host 
          */
-        $ntop_link = ossim_db::get_sensor_link($conn, $host);
+        $ntop_link = Sensor::get_sensor_link($conn, $host);
         
         if ($fd = @fopen("$ntop_link/$host.html", "r"))
         {
@@ -75,11 +76,12 @@
     <TITLE>Active TCP Sessions</TITLE>
     <LINK REL=stylesheet HREF="$ntop_link/style.css" type="text/css">
   </HEAD>
-  <BODY>
+  <BODY BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
     <H2 align="center">
       <a href="../report/index.php?section=usage&host=$host">$hostname</a>
       $os_pixmap
     </H2>
+<CENTER>
 EOF;
                 }
 
@@ -90,6 +92,7 @@ EOF;
                     $show = 0;
                     $found = 0;
                     echo <<<EOF
+</CENTER>
     </TABLE>
     <BR/>
   </BODY>

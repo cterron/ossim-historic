@@ -46,11 +46,15 @@
 
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
+    require_once 'classes/Net_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
    
     Net::insert ($conn, $net_name, $ips, $priority, $threshold_c, 
                  $threshold_a, $alert, $persistence, $sensors, $descr);
+    if($_POST["nessus"]){
+        Net_scan::insert ($conn, $net_name, 3001, 0);
+    }
 
     $db->close($conn);
 }

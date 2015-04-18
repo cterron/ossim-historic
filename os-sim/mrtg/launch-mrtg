@@ -14,6 +14,9 @@ cd $data_dir/mrtg/nets
 cd $data_dir/mrtg/global
 ./create_cfg.pl
 
+cd $data_dir/mrtg/level
+./create_cfg.pl
+
 #`$mrtg_path/mrtg /etc/ossim/framework/mrtg.cfg`
 `$mrtg_path/mrtg /etc/ossim/framework/mrtg-rrd.cfg`
 

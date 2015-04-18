@@ -46,13 +46,6 @@ CREATE TABLE net (
 );
 
 
-DROP TABLE net_host_reference;
-CREATE TABLE net_host_reference (
-  net_name          varchar(128) NOT NULL,
-  host_ip           varchar(15) NOT NULL,
-  PRIMARY KEY       (net_name,host_ip)
-);
-
 
 
 -- /* ======== signatures ======== */
@@ -234,31 +227,18 @@ CREATE TABLE net_vulnerability (
     vulnerability   int NOT NULL DEFAULT 1,
     PRIMARY KEY     (net)
 );
-
-DROP TABLE control_panel_host;
-CREATE TABLE control_panel_host (
-    host_ip         varchar(15) NOT NULL,
+DROP TABLE IF EXISTS control_panel;
+CREATE TABLE control_panel (
+    id              varchar(15) NOT NULL,
+    rrd_type        varchar(6) NOT NULL DEFAULT 'host',
     time_range      varchar(5) NOT NULL DEFAULT 'day',
     max_c           int NOT NULL,
     max_a           int NOT NULL,
     max_c_date      TIMESTAMP,
     max_a_date      TIMESTAMP,
-    avg_c           int NOT NULL,
-    avg_a           int NOT NULL,
-    PRIMARY KEY     (host_ip, time_range)
-);
-
-DROP TABLE control_panel_net;
-CREATE TABLE control_panel_net (
-    net_name        varchar(15) NOT NULL,
-    time_range      varchar(5) NOT NULL DEFAULT 'day',
-    max_c           int NOT NULL,
-    max_a           int NOT NULL,
-    max_c_date      TIMESTAMP,
-    max_a_date      TIMESTAMP,
-    avg_c           int NOT NULL,
-    avg_a           int NOT NULL,
-    PRIMARY KEY     (net_name, time_range)
+    c_sec_level     float NOT NULL,
+    a_sec_level     float NOT NULL,
+    PRIMARY KEY     (id, rrd_type, time_range)
 );
 
 --
@@ -317,26 +297,6 @@ CREATE TABLE rrd_config (
     PRIMARY KEY (ip, rrd_attrib)
 );
 
-DROP TABLE rrd_conf;
-CREATE TABLE rrd_conf (
-  ip                        varchar(15) UNIQUE NOT NULL,
-  pkt_sent	                varchar(60) NOT NULL,	
-  pkt_rcvd       	        varchar(60) NOT NULL,	
-  bytes_sent	            varchar(60) NOT NULL,	
-  bytes_rcvd	            varchar(60) NOT NULL,	
-  tot_contacted_sent_peers	varchar(60) NOT NULL,	
-  tot_contacted_rcvd_peers	varchar(60) NOT NULL,	
-  ip_dns_sent_bytes	        varchar(60) NOT NULL,	
-  ip_dns_rcvd_bytes	        varchar(60) NOT NULL,	
-  ip_nbios_ip_sent_bytes	varchar(60) NOT NULL,
-  ip_nbios_ip_rcvd_bytes	varchar(60) NOT NULL,
-  ip_mail_sent_bytes	    varchar(60) NOT NULL,
-  ip_mail_rcvd_bytes	    varchar(60) NOT NULL,
-  mrtg_a	                varchar(60) NOT NULL,
-  mrtg_c	                varchar(60) NOT NULL,
-  PRIMARY KEY       (ip)
-);
-
 DROP TABLE rrd_anomalies;
 CREATE TABLE rrd_anomalies (
     ip                      varchar(15) NOT NULL,
@@ -346,47 +306,6 @@ CREATE TABLE rrd_anomalies (
     range                   varchar(30) NOT NULL,
     over                    int NOT NULL,
     acked                   int DEFAULT 0
-);
-
-DROP TABLE rrd_conf_global;
-CREATE TABLE rrd_conf_global (
-active_host_senders_num VARCHAR(60) NOT NULL,
-arp_rarp_bytes    VARCHAR(60) NOT NULL,
-broadcast_pkts    VARCHAR(60) NOT NULL,
-ethernet_bytes    VARCHAR(60) NOT NULL, 
-ethernet_pkts     VARCHAR(60) NOT NULL, 
-icmp_bytes        VARCHAR(60) NOT NULL, 
-igmp_bytes        VARCHAR(60) NOT NULL, 
-ip_bytes          VARCHAR(60) NOT NULL, 
-ip_dhcp_bootp_bytes VARCHAR(60) NOT NULL, 
-ip_dns_bytes      VARCHAR(60) NOT NULL,
-ip_edonkey_bytes  VARCHAR(60) NOT NULL, 
-ip_ftp_bytes      VARCHAR(60) NOT NULL, 
-ip_gnutella_bytes VARCHAR(60) NOT NULL, 
-ip_http_bytes     VARCHAR(60) NOT NULL, 
-ip_kazaa_bytes    VARCHAR(60) NOT NULL, 
-ip_mail_bytes     VARCHAR(60) NOT NULL, 
-ip_messenger_bytes VARCHAR(60) NOT NULL,
-ip_nbios_ip_bytes VARCHAR(60) NOT NULL, 
-ip_nfs_bytes      VARCHAR(60) NOT NULL, 
-ip_nttp_bytes     VARCHAR(60) NOT NULL, 
-ip_snmp_bytes     VARCHAR(60) NOT NULL, 
-ip_ssh_bytes      VARCHAR(60) NOT NULL, 
-ip_telnet_bytes   VARCHAR(60) NOT NULL, 
-ip_winmx_bytes    VARCHAR(60) NOT NULL, 
-ip_x11_bytes      VARCHAR(60) NOT NULL, 
-ipx_bytes         VARCHAR(60) NOT NULL,
-known_hosts_num   VARCHAR(60) NOT NULL,
-multicast_pkts    VARCHAR(60) NOT NULL,
-ospf_bytes        VARCHAR(60) NOT NULL,
-other_bytes       VARCHAR(60) NOT NULL,
-tcp_bytes         VARCHAR(60) NOT NULL,
-udp_bytes         VARCHAR(60) NOT NULL,
-up_to_1024_pkts   VARCHAR(60) NOT NULL,
-up_to_128_pkts    VARCHAR(60) NOT NULL,
-up_to_1518_pkts   VARCHAR(60) NOT NULL,
-up_to_512_pkts    VARCHAR(60) NOT NULL,
-up_to_64_pkts     VARCHAR(60) NOT NULL
 );
 
 DROP TABLE rrd_anomalies_global;
@@ -451,61 +370,83 @@ CREATE TABLE plugin_sid (
 --
 -- Table: Alert
 --
+DROP SEQUENCE alert_id_seq;
+CREATE SEQUENCE alert_id_seq;
+
 DROP TABLE alert;
 CREATE TABLE alert (
-	id		SERIAL,
-	timestamp	TIMESTAMP,
+	id		BIGINT PRIMARY KEY DEFAULT nextval('alert_id_seq'),
+	timestamp	TIMESTAMP NOT NULL,
 	sensor		TEXT NOT NULL,
 	interface	TEXT NOT NULL,
 	type		INTEGER NOT NULL,
 	plugin_id	INTEGER NOT NULL,
-	plugin_sid	INTEGER,
+	plugin_sid	INTEGER NOT NULL,
 	protocol	INTEGER,
-	src_ip		INT8,
+	src_ip		INT9,
 	dst_ip		INT8,
 	src_port	INTEGER,
 	dst_port	INTEGER,
 	condition	INTEGER,
 	value		TEXT,
 	time_interval	INTEGER,
-	absolute	SMALLINT,
+	absolute	BOOLEAN,
 	priority	INTEGER DEFAULT 1,
 	reliability	INTEGER DEFAULT 1,
 	asset_src	INTEGER DEFAULT 1,
 	asset_dst	INTEGER DEFAULT 1,
 	risk_a		INTEGER DEFAULT 1,
 	risk_c		INTEGER DEFAULT 1,
-	alarm           SMALLINT DEFAULT 1,
-	PRIMARY KEY (id)
+	alarm           BOOLEAN DEFAULT 'f',
+	snort_sid	INT8,
+	snort_cid       INT8
 );
 
 --
 -- Table: Backlog
 --
-DROP TABLE backlog;
+DROP SEQUENCE backlog_id_seq;
+CREATE SEQUENCE backlog_id_seq;
+
+DROP TABLE  backlog;
 CREATE TABLE backlog (
-	utime		BIGINT,
-	id		INTEGER NOT NULL,
-	name		TEXT,
-	rule_level	INTEGER,
-	rule_type	SMALLINT,
-	rule_name	TEXT,
-	occurrence      INTEGER,
+	id		BIGINT PRIMARY KEY DEFAULT nextval('backlog_id_seq'),
+	directive_id	INTEGER NOT NULL,
+	timestamp	TIMESTAMP NOT NULL,
+	matched		BOOLEAN
+);
+
+--
+-- Table: Backlog Alert
+--
+DROP TABLE backlog_alert;
+CREATE TABLE backlog_alert (
+	backlog_id	INT8,
+	alert_id	INT8,
 	time_out	INTEGER,
-	matched		SMALLINT,
-	plugin_id	INTEGER,
-	plugin_sid	INTEGER,
+	occurrence	INTEGER,
+	rule_level	INTEGER,
+	matched		BOOLEAN,
+	PRIMARY KEY (backlog_id, alert_id)
+);
+
+--
+-- Table: Alarm
+--
+DROP TABLE alarm;
+CREATE TABLE alarm (
+	alert_id	INT8 PRIMARY KEY,
+	timestamp	TIMESTAMP NOT NULL,
+	plugin_id	INTEGER NOT NULL,
+	plugin_sid	INTEGER NOT NULL,
+	protocol	INTEGER,
 	src_ip		INT8,
 	dst_ip		INT8,
 	src_port	INTEGER,
 	dst_port	INTEGER,
-	condition       INTEGER,
-	value		TEXT,
-	time_interval	INTEGER,
-	absolute	SMALLINT,
-	priority	INTEGER,
-	reliability     INTEGER,
-	PRIMARY KEY (utime, id)
+	risk		INTEGER,
+	snort_sid	INT8,
+	snort_cid	INT8
 );
 
 --
@@ -540,4 +481,15 @@ CREATE TABLE host_scan (
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
 	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
+);
+
+--
+-- Table: Net scan
+--
+DROP TABLE net_scan;
+CREATE TABLE net_scan (
+    net_name    VARCHAR(128) NOT NULL,
+	plugin_id	INTEGER NOT NULL,
+	plugin_sid	INTEGER NOT NULL,
+	PRIMARY KEY (net_name, plugin_id, plugin_sid)
 );

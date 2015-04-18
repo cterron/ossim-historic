@@ -35,9 +35,10 @@
     elseif (!strcmp($_GET["section"], 'usage')) {
     
         require_once ('ossim_db.inc');
+        require_once ('classes/Sensor.inc');
         $db = new ossim_db();
         $conn = $db->connect();
-        $ntop_link = ossim_db::get_sensor_link($conn, $_GET["host"]);
+        $ntop_link = Sensor::get_sensor_link($conn, $_GET["host"]);
         $db->close($conn);
         
         echo "<frame src=\"$ntop_link/" . $_GET["host"] . 

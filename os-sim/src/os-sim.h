@@ -41,18 +41,30 @@ extern "C" {
 
 #include <libos-sim.h>
 
+#include <sim-organizer.h>
+#include <sim-scheduler.h>
 #include <sim-server.h>
 
 typedef struct {
   SimConfig          *config;
 
   SimContainer       *container;
+  SimOrganizer       *organizer;
+  SimScheduler       *scheduler;
   SimServer          *server;
 
   SimDatabase        *dbossim;
   SimDatabase        *dbsnort;
+
+  struct {
+    gchar            *filename;
+    gint              fd;
+    gint              level;
+  } log;
+
 } SimMain;
 
+extern SimMain        ossim;
 extern SimContainer  *sim_ctn;
 extern SimServer     *sim_svr;
 

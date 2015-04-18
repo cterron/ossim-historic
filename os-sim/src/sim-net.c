@@ -35,6 +35,7 @@
 #include <config.h>
  
 #include "sim-net.h"
+#include "sim-util.h"
 
 enum
 {
@@ -47,7 +48,7 @@ struct _SimNetPrivate {
   gchar           *ips;
   gint             asset;
 
-  GList           *ias;
+  GList           *inets;
 };
 
 static gpointer parent_class = NULL;
@@ -72,7 +73,7 @@ sim_net_impl_finalize (GObject  *gobject)
   if (net->_priv->ips)
     g_free (net->_priv->ips);
 
-  sim_net_free_ias (net);
+  sim_net_free_inets (net);
 
   g_free (net->_priv);
 
@@ -99,7 +100,7 @@ sim_net_instance_init (SimNet *net)
   net->_priv->ips = NULL;
   net->_priv->asset = 0;
 
-  net->_priv->ias = NULL;
+  net->_priv->inets = NULL;
 }
 
 /* Public Methods */
@@ -144,6 +145,7 @@ sim_net_new (const gchar   *name,
 	     gint     asset)
 {
   SimNet *net = NULL;
+  gint        i;
 
   g_return_val_if_fail (name, NULL);
   g_return_val_if_fail (ips, NULL);
@@ -152,6 +154,34 @@ sim_net_new (const gchar   *name,
   net->_priv->name = g_strdup (name);
   net->_priv->ips = g_strdup (ips);
   net->_priv->asset = asset;
+
+  if (net->_priv->ips)
+    {
+      if (strchr (net->_priv->ips, ','))
+	{
+	  gchar **values = g_strsplit(net->_priv->ips, ",", 0);
+	  for (i = 0; values[i] != NULL; i++)
+	    {
+	      GList *list = sim_get_inets (values[i]);
+	      while (list)
+		{
+		  SimInet *inet = (SimInet *) list->data;
+		  sim_net_append_inet (net, inet);
+		  list = list->next;
+		}
+	    }
+	}
+      else
+	{
+	  GList *list = sim_get_inets (net->_priv->ips);
+	  while (list)
+	    {
+	      SimInet *inet = (SimInet *) list->data;
+	      sim_net_append_inet (net, inet);
+	      list = list->next;
+	    }
+	}
+    }
 
   return net;
 }
@@ -167,6 +197,7 @@ sim_net_new_from_dm (GdaDataModel  *dm,
 {
   SimNet     *net;
   GdaValue   *value;
+  gint        i;
 
   g_return_val_if_fail (dm, NULL);
   g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
@@ -181,6 +212,34 @@ sim_net_new_from_dm (GdaDataModel  *dm,
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   net->_priv->asset = gda_value_get_integer (value);
+
+  if (net->_priv->ips)
+    {
+      if (strchr (net->_priv->ips, ','))
+	{
+	  gchar **values = g_strsplit(net->_priv->ips, ",", 0);
+	  for (i = 0; values[i] != NULL; i++)
+	    {
+	      GList *list = sim_get_inets (values[i]);
+	      while (list)
+		{
+		  SimInet *inet = (SimInet *) list->data;
+		  sim_net_append_inet (net, inet);
+		  list = list->next;
+		}
+	    }
+	}
+      else
+	{
+	  GList *list = sim_get_inets (net->_priv->ips);
+	  while (list)
+	    {
+	      SimInet *inet = (SimInet *) list->data;
+	      sim_net_append_inet (net, inet);
+	      list = list->next;
+	    }
+	}
+    }
 
   return net;
 }
@@ -253,14 +312,15 @@ sim_net_set_asset (SimNet  *net,
  *
  */
 void
-sim_net_append_ia (SimNet     *net,
-		  GInetAddr  *ia)
+sim_net_append_inet (SimNet     *net,
+		     SimInet    *inet)
 {
   g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (ia);
+  g_return_if_fail (inet);
+  g_return_if_fail (SIM_IS_INET (inet));
   
-  net->_priv->ias = g_list_append (net->_priv->ias, ia);
+  net->_priv->inets = g_list_append (net->_priv->inets, inet);
 }
 
 /*
@@ -269,14 +329,15 @@ sim_net_append_ia (SimNet     *net,
  *
  */
 void
-sim_net_remove_ia (SimNet   *net,
-		   GInetAddr  *ia)
+sim_net_remove_inet (SimNet     *net,
+		     SimInet    *inet)
 {
   g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (ia);
+  g_return_if_fail (inet);
+  g_return_if_fail (SIM_IS_INET (inet));
 
-  net->_priv->ias = g_list_remove (net->_priv->ias, ia);
+  net->_priv->inets = g_list_remove (net->_priv->inets, inet);
 }
 
 /*
@@ -285,12 +346,12 @@ sim_net_remove_ia (SimNet   *net,
  *
  */
 GList*
-sim_net_get_ias (SimNet        *net)
+sim_net_get_inets (SimNet        *net)
 {
   g_return_val_if_fail (net, NULL);
   g_return_val_if_fail (SIM_IS_NET (net), NULL);
 
-  return net->_priv->ias;
+  return net->_priv->inets;
 }
 
 /*
@@ -299,14 +360,14 @@ sim_net_get_ias (SimNet        *net)
  *
  */
 void
-sim_net_set_ias (SimNet           *net,
-		 GList            *list)
+sim_net_set_inets (SimNet           *net,
+		   GList            *list)
 {
   g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
   g_return_if_fail (list);
 
-  net->_priv->ias = g_list_concat (net->_priv->ias, list);
+  net->_priv->inets = g_list_concat (net->_priv->inets, list);
 }
 
 /*
@@ -315,24 +376,23 @@ sim_net_set_ias (SimNet           *net,
  *
  */
 void 
-sim_net_free_ias (SimNet           *net)
+sim_net_free_inets (SimNet           *net)
 {
   GList   *list;
 
   g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
 
-  list =  net->_priv->ias;
+  list =  net->_priv->inets;
   while (list)
     {
-      GInetAddr *ia = (GInetAddr *) list->data;
-      gnet_inetaddr_unref (ia);
+      SimInet *inet = (SimInet *) list->data;
+      g_object_unref (inet);
       list = list->next;
     }
 
-  g_list_free (net->_priv->ias);
+  g_list_free (net->_priv->inets);
 }
-
 
 /*
  *
@@ -340,27 +400,26 @@ sim_net_free_ias (SimNet           *net)
  *
  */
 gboolean
-sim_net_has_ia (SimNet           *net,
-		const GInetAddr  *ia)
-{ 
+sim_net_has_inet (SimNet         *net,
+		  SimInet        *inet)
+{
   GList  *list;
 
   g_return_if_fail (net);
   g_return_if_fail (SIM_IS_NET (net));
-  g_return_if_fail (ia);
+  g_return_if_fail (inet);
+  g_return_if_fail (SIM_IS_INET (inet));
 
-  list = net->_priv->ias;
+  list = net->_priv->inets;
   while (list)
     {
-      GInetAddr *cmp = (GInetAddr *) list->data;
+      SimInet *cmp = (SimInet *) list->data;
 
-      if (gnet_inetaddr_noport_equal (cmp, ia))
-	{
-	  return TRUE;
-	}
-
+      if (sim_inet_has_inet (cmp, inet))
+	return TRUE;
+      
       list = list->next;
     }
-
+  
   return FALSE;
 }

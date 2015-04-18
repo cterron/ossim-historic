@@ -24,6 +24,7 @@ $conn = $db->connect();
 
 function directives_table($dom, $directive_id)
 {
+    $count = 0;
 ?>
     <!-- main table: directives -->
     <table align="center">
@@ -36,11 +37,17 @@ function directives_table($dom, $directive_id)
     foreach ($dom->get_elements_by_tagname('directive') as $directive) {
         $id   = $directive->get_attribute('id');
         $name = $directive->get_attribute('name');
+        $count++;
 ?>
       <tr>
         <td><?php echo $id ?></td>
         <td><a 
-<?php if (!strcmp($id, $directive_id)) echo "class=\"selected\""; ?>
+<?php 
+        if (!strcmp($id, $directive_id)) {
+            echo "class=\"selected\""; 
+            $order = $count;
+        }
+?>
             href="<?php 
             echo $_SERVER["PHP_SELF"] ?>?directive=<?php 
             echo $id ?>"><?php echo $name ?></a></td>
@@ -52,6 +59,8 @@ function directives_table($dom, $directive_id)
     <br/>
     <!-- end main table: directives -->
 <?php
+
+    return $order;
 }
 
 
@@ -191,13 +200,13 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
     }
 
     $directive_id = $_GET["directive"];
-    directives_table($dom, $directive_id);
+    $order = directives_table($dom, $directive_id);
 
     if ($directive_id) {
     
         $doc = $dom->document_element();
         $doc = $doc->child_nodes();
-        $directive = $doc[$directive_id * 2 -1];
+        $directive = $doc[$order * 2 -1];
 
         if (!$level = $_GET["level"])   $level = 1;
         $_SESSION["path"] = 0;

@@ -10,11 +10,11 @@
   <br/>&nbsp;
   <font style="font-size: 12pt; font-weight: bold;">Security Report</font>
   <br/><br/>
-  
+<!--
   &nbsp;&nbsp;
   <a href="sec_report.php?section=risk" 
      target="report">Top Risk Metrics</a><br/><br/>
-  
+-->
   &nbsp;&nbsp;
   <a href="sec_report.php?section=attacked" 
      target="report">Top Attacked Hosts</a><br/><br/>

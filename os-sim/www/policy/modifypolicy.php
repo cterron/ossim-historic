@@ -10,6 +10,12 @@
   <h1>Update Policy</h1>
 
 <?php
+
+    if (!$id = $_POST["id"]) {
+        echo "No polici id specified";
+        exit;
+    }
+
     /* check params */
     if ((mysql_escape_string($_POST["insert"])) &&
         (!mysql_escape_string($_POST["sourcenips"]) ||
@@ -115,6 +121,7 @@
     require_once ('ossim_db.inc');
     $db = new ossim_db();
     $conn = $db->connect();
+
 
     Policy::update($conn, $id, $priority, $begin_hour, $end_hour, 
                    $begin_day, $end_day, $descr,

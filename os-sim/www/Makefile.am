@@ -28,7 +28,9 @@ install-data-hook:
 	mkdir -p $(localstatedir)/www/ossim/mrtg/global_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg/host_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg/net_qualification
+	mkdir -p $(localstatedir)/www/ossim/mrtg/level_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/global_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/host_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/net_qualification
+	mkdir -p $(localstatedir)/www/ossim/mrtg-html/level_qualification
 

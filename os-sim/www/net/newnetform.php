@@ -26,11 +26,14 @@
   <input type="hidden" name="insert" value="insert">
   <tr>
     <th>Name</th>
-    <td class="left"><input type="text" name="name"></td>
+    <td class="left"><input type="text" name="name" size="30"></td>
   </tr>
   <tr>
     <th>Ips</th>
-    <td class="left"><input type="text" name="ips"></td>
+    <td class="left">
+       <i>example: 192.168.0.0/24,192.168.1.0/24</i><br/>
+      <input type="text" name="ips" size="30">
+    </td>
   </tr>
   <tr>
     <th>Priority</th>
@@ -111,13 +114,18 @@
 ?>
     </td>
   </tr>
-
+    <tr>
+    <th> Scan options </th>
+    <td class="left">
+        <input type="checkbox" name="nessus" value="1"> Enable nessus scan </input>
+    </td> 
+  </tr>
 
 
   <tr>
     <th>Description</th>
     <td class="left">
-      <textarea name="descr" rows="2" cols="20"></textarea>
+      <textarea name="descr" rows="2" cols="30"></textarea>
     </td>
   </tr>
   <tr>

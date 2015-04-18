@@ -10,10 +10,10 @@
   <h1>OSSIM Framework</h1>
 
 <?php
+
 require_once 'ossim_db.inc';
 require_once 'classes/RRD_anomaly.inc';
 require_once 'classes/RRD_anomaly_global.inc';
-require_once 'classes/RRD_data.inc';
 
 ?>
 

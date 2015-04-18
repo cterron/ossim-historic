@@ -65,6 +65,8 @@ if($type eq "host"){
     $rrdpath = $ossim_conf::ossim_data->{rrdpath_net};
 } elsif($type eq "global"){
     $rrdpath = $ossim_conf::ossim_data->{rrdpath_global};
+} elsif($type eq "level"){
+    $rrdpath = $ossim_conf::ossim_data->{rrdpath_level};
 } else {
     close_all($dbh,"Wrong type");
 }

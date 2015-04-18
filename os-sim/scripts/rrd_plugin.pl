@@ -50,6 +50,8 @@ my $rrd_bin = $ossim_conf::ossim_data->{"rrdtool_path"} . "/rrdtool";
 my $rrd_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};
 my $rrd_log = "/var/log/rrd_plugin.log";
 
+# [threshold, priority, persistence]
+
 my %rrd_worm_atts = 
     ("synPktsSent" => [4,5,1],
      "synPktsRcvd" => [3,5,1],

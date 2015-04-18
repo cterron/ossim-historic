@@ -9,6 +9,10 @@
                                                                                 
   <h1>Insert new sensor</h1>
 
+<?php
+    $ip = $_GET["ip"];
+?>
+
 <form method="post" action="newsensor.php">
 <table align="center">
   <input type="hidden" name="insert" value="insert">

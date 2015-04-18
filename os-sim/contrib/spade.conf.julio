@@ -3,7 +3,7 @@
 # include it in your snort config file or put lines of this form in it
 
 # set this to a directory Spade can read and write to store its files
-var SPADEDIR .
+var SPADEDIR /var/log/snort/
 
 # see the Usage.Spade file for the full meaning of and all the options
 #   available for all these lines
@@ -21,7 +21,7 @@ preprocessor spade:  dest=alert logfile=$SPADEDIR/spade.log statefile=$SPADEDIR/
 #   connecting to the larger network at the point Spade is running.
 # It is important to configure this line.
 # Your networks should be like [10.0.0.0/8,192.168.0.0/16] or space separated
-preprocessor spade-homenet: 192.168.1.0/24
+#preprocessor spade-homenet: 192.168.1.0/24
 
 # Turn on some detectors with "spade-detect" lines.  Each of these enables
 #   a cetain type of detector for a certain type of packet.  If you start to

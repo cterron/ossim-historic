@@ -13,41 +13,45 @@
 <?php
 require_once ('ossim_db.inc');
 require_once ('common.inc');
-require_once ('classes/Alert.inc');
+require_once ('classes/Host.inc');
+require_once ('classes/Host_os.inc');
+require_once ('classes/Alarm.inc');
 require_once ('classes/Plugin.inc');
 require_once ('classes/Plugin_sid.inc');
 
-function timestamp2date($timestamp){ 
-    return(substr($timestamp, 0, 4) . '-' . substr($timestamp, 4, 2) . '-' . substr($timestamp, 6, 2)
-    . ' ' . substr($timestamp, 8, 2) . ':' . substr($timestamp, 10, 2) . ':' . substr($timestamp, 12, 2));
-} 
+/* number of alerts by page */
+$ROWS = 50;
 
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
 
 if ($id = $_GET["delete"]) {
-    Alert::delete($conn, $id);
+    Alarm::delete($conn, $id);
+}
+
+if ($id = $_GET["delete_backlog"]) {
+    Alarm::delete_from_backlog($conn, $id);
 }
 
 
 if (!$order = $_GET["order"]) $order = "timestamp DESC";
 
 if (($src_ip = $_GET["src_ip"]) && ($dst_ip = $_GET["dst_ip"])) {
-    $where = "WHERE (alarm = 1) AND (inet_ntoa(src_ip) = '$src_ip' 
-                                        OR inet_ntoa(dst_ip) = '$dst_ip')";
+    $where = "WHERE inet_ntoa(src_ip) = '$src_ip' 
+                     OR inet_ntoa(dst_ip) = '$dst_ip'";
 } elseif ($src_ip = $_GET["src_ip"]) {
-    $where = "WHERE alarm = 1 AND inet_ntoa(src_ip) = '$src_ip'";
+    $where = "WHERE inet_ntoa(src_ip) = '$src_ip'";
 } elseif ($dst_ip = $_GET["dst_ip"]) {
-    $where = "WHERE alarm = 1 AND inet_ntoa(dst_ip) = '$dst_ip'";
+    $where = "WHERE inet_ntoa(dst_ip) = '$dst_ip'";
 } else {
-    $where = 'WHERE alarm = 1';
+    $where = '';
 }
 
 if (!$inf = $_GET["inf"])
     $inf = 0;
 if (!$sup = $_GET["sup"])
-    $sup = 25;
+    $sup = $ROWS;
 
 ?>
     <table width="100%">
@@ -60,12 +64,12 @@ if (!$sup = $_GET["sup"])
      */
     $inf_link = $_SERVER["PHP_SELF"] . 
             "?order=$order" . 
-            "&sup=" . ($sup - 25) .
-            "&inf=" . ($inf - 25);
+            "&sup=" . ($sup - $ROWS) .
+            "&inf=" . ($inf - $ROWS);
     $sup_link = $_SERVER["PHP_SELF"] . 
         "?order=$order" . 
-        "&sup=" . ($sup + 25) .
-        "&inf=" . ($inf + 25);
+        "&sup=" . ($sup + $ROWS) .
+        "&inf=" . ($inf + $ROWS);
     if ($src_ip) {
         $inf_link .= "&src_ip=$src_ip";
         $sup_link .= "&src_ip=$src_ip";
@@ -74,14 +78,14 @@ if (!$sup = $_GET["sup"])
         $inf_link .= "&dst_ip=$dst_ip";
         $sup_link .= "&dst_ip=$dst_ip";
     }
-    $count = Alert::get_count($conn, $where);
+    $count = Alarm::get_count($conn, $src_ip, $dst_ip);
     
-    if ($inf >= 25) {
-        echo "<a href=\"$inf_link\">&lt;- Prev 25</a>";
+    if ($inf >= $ROWS) {
+        echo "<a href=\"$inf_link\">&lt;- Prev $ROWS</a>";
     }
     echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
     if ($sup < $count) {
-        echo "<a href=\"$sup_link\">Next 25 -&gt;</a>";
+        echo "<a href=\"$sup_link\">Next $ROWS -&gt;</a>";
     }
 ?>
         </td>
@@ -96,36 +100,38 @@ if (!$sup = $_GET["sup"])
 -->
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("plugin_sid", $order) .
-                "&inf=$inf&sup=$sup"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
             ?>">Alarm</a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("risk_a", $order) .
-                "&inf=$inf&sup=$sup"
+                echo ossim_db::get_order("risk", $order) .
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
             ?>">Risk</a></th>
+        <th>Since</th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("timestamp", $order) .
-                "&inf=$inf&sup=$sup"
-            ?>">Date</a></th>
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+            ?>">Last</a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("src_ip", $order) .
-                "&inf=$inf&sup=$sup"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
             ?>">Source</a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("dst_ip", $order) .
-                "&inf=$inf&sup=$sup"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
             ?>">Destination</a></th>
         <th>Action</th>
       </tr>
 
 <?php
-    if ($alert_list = Alert::get_list($conn, 
-                                      "$where ORDER BY $order", 
-                                      $inf, $sup)) 
+    if ($alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip,
+                                      "ORDER by $order", 
+                                      $inf, $sup))
     {
-        foreach ($alert_list as $alert) {
+        foreach ($alarm_list as $alarm) {
 
-            $id  = $alert->get_plugin_id();
-            $sid = $alert->get_plugin_sid();
+            $id  = $alarm->get_plugin_id();
+            $sid = $alarm->get_plugin_sid();
+            $backlog_id = $alarm->get_backlog_id();
 
             /* get plugin_id and plugin_sid names */
             $plugin_id_list = Plugin::get_list($conn, "WHERE id = $id");
@@ -141,62 +147,106 @@ if (!$sup = $_GET["sup"])
         
 ?>
       <tr>
-<!--    <td><?php // echo "$id_name ($id)"; ?></td>    -->
-        <td><b><?php 
-                echo ereg_replace("directive_alert: ", "", $sid_name);
-        ?></b></td>
+        <td><b>
+<?php
+    $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
+    if ($backlog_id != 0) {
+        $alarm_name = "<a href=\"alerts.php?backlog_id=$backlog_id \">$alarm_name</a>";
+    }
+    echo $alarm_name;
+?>
+        </b></td>
         
-        <!-- risk A -->
+        <!-- risk -->
 <?php 
-        $date = timestamp2date($alert->get_timestamp());
-        $src_ip = $alert->get_src_ip();
-        $dest_ip = $alert->get_dst_ip();
+        $date = timestamp2date($alarm->get_timestamp());
+        if ($backlog_id != 0) {
+            $since = timestamp2date($alarm->get_since());
+        } else {
+            $since = $date;
+        }
+        
+        $src_ip   = $alarm->get_src_ip();
+        $dst_ip   = $alarm->get_dst_ip();
+        $src_port = $alarm->get_src_port();
+        $dst_port = $alarm->get_dst_port();
 
-        $risk_a = $alert->get_risk_a();
-        if ($risk_a  > 7) {
+        $risk = $alarm->get_risk();
+        if ($risk  > 7) {
             echo "<td bgcolor=\"red\"><b><a href=\"".
                 get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk_a</font></a></b></td>";
-        } elseif ($risk_a > 4) {
+                ."\"><font color=\"white\">$risk</font></a></b></td>";
+        } elseif ($risk > 4) {
             echo "<td bgcolor=\"orange\"><b><a href=\"".
                 get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"black\">$risk_a</font></b></td>";
-        } elseif ($risk_a > 2) {
+                ."\"><font color=\"black\">$risk</font></b></td>";
+        } elseif ($risk > 2) {
             echo "<td bgcolor=\"green\"><b><a href=\"".
                 get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk_a</font></b></td>";
+                ."\"><font color=\"white\">$risk</font></b></td>";
         } else {
             echo "<td><a href=\"".
                 get_acid_date_link($date, $src_ip, "ip_src")
-                ."\">$risk_a</a></td>";
+                ."\">$risk</a></td>";
         }
 ?>
-        <!-- end risk A -->
+        <!-- end risk -->
+        
+        <td nowrap>
+        <?php
+            $acid_link = get_acid_alerts_link($since, $date, "time_a");
+            echo "<a href=\"$acid_link\">$since</a>";
+        ?>
+        </td>
+        <td nowrap>
+        <?php
+            $acid_link = get_acid_alerts_link($since, $date, "time_d");
+            echo "<a href=\"$acid_link\">$date</a>";
+        ?>
+        </td>
+        
+<?php
+    $src_link = "../report/index.php?host=$src_ip&section=alerts";
+    $dst_link = "../report/index.php?host=$dst_ip&section=alerts";
+    $src_name = Host::ip2hostname($conn, $src_ip);
+    $dst_name = Host::ip2hostname($conn, $dst_ip);
+    $src_img  = Host_os::get_os_pixmap($conn, $src_ip);
+    $dst_img  = Host_os::get_os_pixmap($conn, $dst_ip);
 
-        <td nowrap><?php echo $date ?></td>
+?>
+        <!-- src & dst hosts -->
         <td bgcolor="#eeeeee">
-        <a href="../report/index.php?host=<?php echo $alert->get_src_ip() 
-        ?>&section=alerts"><?php echo $alert->get_src_ip(); ?></a> <?php echo ":" . 
-        $alert->get_src_port() ?>
-        </td>
+            <?php echo "<a href=\"$src_link\">$src_name</a>:$src_port $src_img"; ?></td>
         <td bgcolor="#eeeeee">
-        <a href="../report/index.php?host=<?php echo $alert->get_dst_ip()
-        ?>&section=alerts"><?php echo $alert->get_dst_ip(); ?></a> <?php echo ":" .
-        $alert->get_dst_port() ?>
+            <?php echo "<a href=\"$dst_link\">$dst_name</a>:$dst_port $dst_img"; ?></td>
+        <!-- end src & dst hosts -->
+        
+        <td>
+<?php
+        if ($backlog_id == 0) {
+?>
+        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
+            echo $alarm->get_alert_id() ?>">Ack</a>
+<?php
+        } else {
+?>
+        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
+            echo $backlog_id ?>">Ack</a>
+<?php
+        }
+?>
         </td>
-        <td><a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alert->get_id() ?>">Ack</a></td>
       </tr>
 <?php
-        } /* foreach alert_list */
+        } /* foreach alarm_list */
 ?>
       <tr>
         <td colspan="8"><a href="<?php 
-            echo $_SERVER["PHP_SELF"] ?>?delete=all">Delete ALL</a>
+            echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all">Delete ALL</a>
         </td>
       </tr>
 <?php
-    } /* if alert_list */
+    } /* if alarm_list */
 ?>
     </table>
 

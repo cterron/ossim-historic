@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.4
+Version:   0.9.5
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -78,8 +78,8 @@ OSSIM Scripts
 %{__rm} -rf $RPM_BUILD_ROOT
 
 %post agent
-if [ -L %{_bindir}/agent ] || [ ! -e %{_bindir}/agent ] ; then
-	rm -f %{_bindir}/agent; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
+if [ -L %{_bindir}/ossim-agent ] || [ ! -e %{_bindir}/ossim-agent ] ; then
+	rm -f %{_bindir}/ossim-agent; ln -sf %{_datadir}/ossim/agent/ossim-agent %{_bindir}/ossim-agent
 fi
 
 %post framework
@@ -88,8 +88,8 @@ if [ ! -e /var/www/ossim-users ] ; then
 fi
 
 %postun agent
-if [ -L %{_bindir}/agent ] ; then
-	rm -f %{_bindir}/agent
+if [ -L %{_bindir}/ossim-agent ] ; then
+	rm -f %{_bindir}/ossim-agent
 fi
 
 %files
@@ -98,7 +98,7 @@ fi
 %doc NEWS README* TODO
 %config %{_sysconfdir}/ossim/server/config.xml
 %config %{_sysconfdir}/ossim/server/directives.xml
-%{_bindir}/ossim
+%{_bindir}/ossim-server
 %{_datadir}/ossim/db/
 /var/log/ossim
 
@@ -106,7 +106,7 @@ fi
 %defattr(-,root,root,0755)
 %config %{_sysconfdir}/ossim/agent/config.xml
 %{_datadir}/ossim/agent/
-%attr(0755,root,root) %{_datadir}/ossim/agent/agent
+%attr(0755,root,root) %{_datadir}/ossim/agent/ossim-agent
 /var/log/ossim
 
 %files perl
@@ -124,11 +124,12 @@ fi
 %{_datadir}/ossim/mrtg/
 %{_datadir}/ossim/php/
 %{_datadir}/ossim/pixmaps/
-%{_datadir}/ossim/scripts/control_panel.pl
+%{_datadir}/ossim/scripts/control_panel.py
 %{_datadir}/ossim/scripts/draw_graph.pl
 %{_datadir}/ossim/scripts/draw_graph_combined.pl
 %{_datadir}/ossim/scripts/get_date.pl
 %{_datadir}/ossim/scripts/get_rrd_value.pl
+%{_datadir}/ossim/scripts/create_sidmap.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph_combined.pl
 /var/www/ossim/

@@ -18,12 +18,11 @@
     require_once ('classes/Host.inc');
     require_once ('classes/Host_os.inc');
 
+    require_once ('sec_util.php');
+
 
     $server = $_SERVER["SERVER_ADDR"];
     $file   = $_SERVER["REQUEST_URI"];
-    print "<p align=\"center\">
-        <a href=\"topdf.php?url=http://$server/$file\">Generate Report</a>
-        </p>";
 
     /* database connect */
     $db = new ossim_db();
@@ -100,13 +99,19 @@
     }
 
     elseif ($_GET["section"] == 'all') {
-        ip_max_risk();
+        // ip_max_risk();
+        // echo "<br/>";
         ip_max_occurrences("ip_dst");
+        echo "<br/><br/>";
         ip_max_occurrences("ip_src");
-        alert_max_occurrences();
-        alert_max_risk();
+        echo "<br/><br/>";
         port_max_occurrences();
-        less_stable_services();
+        echo "<br/><br/>";
+        alert_max_occurrences();
+        echo "<br/><br/>";
+        alert_max_risk();
+        // echo "<br/>";
+        // less_stable_services();
     }
 
     $db->close($conn);
@@ -185,6 +190,8 @@
 ?>
         <h2>Top <?php echo "$NUM_HOSTS $title" ?></h2>
         <table align="center">
+        <tr><td valign="top">
+        <table align="center">
           <tr>
             <th>Host</th>
             <th>Occurrences</th>
@@ -208,7 +215,8 @@
 ?>
           <tr>
             <td>
-              <a href="<?php echo $link ?>"><?php echo $hostname ?></a>
+              <a title="<?php echo $ip ?>" 
+                 href="<?php echo $link ?>"><?php echo $hostname ?></a>
               <?php echo $os_pixmap ?>
             </td>
             <td><?php echo $occurrences ?></td>
@@ -218,7 +226,15 @@
             }
         }
         $snort_db->close($snort_conn);
-        echo "</table><br/>\n";
+?>
+        </table>
+        </td>
+        <td valign="top"><img src="graphs/attack_graph.php?target=<?php 
+                 echo $target ?>&hosts=<?php echo $NUM_HOSTS ?>" 
+                 alt="attack_graph"/></td>
+        </tr>
+        </table>
+<?php
     }
 
     /* 
@@ -228,6 +244,10 @@
     {
         global $NUM_HOSTS;
     
+        /* ossim framework conf */
+        $conf = new ossim_conf();
+        $acid_link = $conf->get_conf("acid_link");
+        
         /* snort db connect */
         $snort_db = new ossim_db();
         $snort_conn = $snort_db->snort_connect();
@@ -253,7 +273,16 @@
                 $occurrences = $rs->fields["occurrences"];
 ?>
           <tr>
-            <td><?php echo $alert ?></a></td>
+             <?php
+               $link = "$acid_link/acid_qry_main.php?new=1&" . 
+                    "sig[0]==&" . 
+                    "sig[1]=$alert&" . 
+                    "sig[2]==&" . 
+                    "submit=Query+DB&" . 
+                    "num_result_rows=-1&" . 
+                    "sort_order=time_d";
+             ?>
+            <td><a href="<?php echo $link ?>"><?php echo $alert ?></a></td>
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
@@ -261,7 +290,16 @@
             }
         }
         $snort_db->close($snort_conn);
-        echo "</table><br/>\n";
+?>
+        <tr>
+          <td colspan="2">
+            <br/>
+            <img src="graphs/alerts_received_graph.php?hosts=<?php 
+                 echo $NUM_HOSTS ?>" alt="alerts graph"/>
+          </td>
+        <tr/>
+        </table>
+<?php
     }
 
     
@@ -299,7 +337,7 @@
 ?>
           <tr>
             <td><?php echo $alert ?></a></td>
-            <td><?php echo $risk ?></td>
+            <?php echo_risk($risk); ?>
           </tr>
 <?php
                 $rs->MoveNext();
@@ -336,7 +374,11 @@
         <h2>Top <?php echo "$NUM_HOSTS" ?> Used Ports</h2>
         <table align="center">
           <tr>
+            <td valign="top">
+        <table align="center">
+          <tr>
             <th>Port</th>
+            <th>Service</th>
             <th>Occurrences</th>
           </tr>
 <?php
@@ -346,7 +388,30 @@
                 $occurrences = $rs->fields["occurrences"];
 ?>
           <tr>
-            <td><?php echo $port ?></td>
+            <td>
+              <?php 
+                $link = "$acid_link/acid_stat_uaddr.php?" . 
+                    "tcp_port[0][0]=+&" . 
+                    "tcp_port[0][1]=layer4_dport&" . 
+                    "tcp_port[0][2]==&" . 
+                    "tcp_port[0][3]=$port&" . 
+                    "tcp_port[0][4]=+&" . "tcp_port[0][5]=+&" . 
+                    "tcp_port_cnt=1&" . 
+                    "layer4=TCP&" . 
+                    "num_result_rows=-1&" . 
+                    "current_view=-1&" . 
+                    "addr_type=1&" . 
+                    "sort_order=occur_d";
+                echo "<a href=\"$link\">$port</a>";
+              ?>
+            </td>
+            <td>
+              <?php
+                $service = "";
+                if ($port) $service = port2service($port);
+                if ($service) echo "$service";
+               ?>
+            </td>
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
@@ -354,7 +419,18 @@
             }
         }
         $snort_db->close($snort_conn);
-        echo "</table><br/>\n";
+        echo "</table>\n";
+?>
+            </td>
+            <td valign="top">
+              <img src="graphs/ports_graph.php?ports=<?php 
+                   echo $NUM_HOSTS ?>"/>
+            </td>
+          </tr>
+        </table>
+            
+<?php
+
     }
 
     /* 
@@ -408,23 +484,4 @@
         echo "</table><br/>\n";
     }
 
-
-    function ip2hostname($ip) {
-
-        $db = new ossim_db();
-        $conn = $db->connect();
-        $hostname = Host::ip2hostname($conn, $ip);
-        $db->close($conn);
-
-        return $hostname;
-    }
-
-    function get_os_pixmap($ip) {
-        $db = new ossim_db();
-        $conn = $db->connect();
-        $os = Host_os::get_os_pixmap($conn, $ip);
-        $db->close($conn);
-        
-        return $os;
-    }
 ?>

@@ -11,13 +11,10 @@ class Control_panel_host {
     var $max_a;
     var $max_c_date;
     var $max_a_date;
-    var $avg_c;
-    var $avg_a;
 
     function Control_panel_host ($host_ip, $time_range, 
                                  $max_c, $max_a, 
-                                 $max_c_date, $max_a_date,
-                                 $avg_c, $avg_a)
+                                 $max_c_date, $max_a_date)
     {
         $this->host_ip    = $host_ip;
         $this->time_range = $time_range;
@@ -25,8 +22,6 @@ class Control_panel_host {
         $this->max_a      = $max_a;
         $this->max_c_date = $max_c_date;
         $this->max_a_date = $max_a_date;
-        $this->avg_c      = $avg_c;
-        $this->avg_a      = $avg_a;
     }
 
     function get_host_ip()    { return $this->host_ip; }
@@ -35,26 +30,22 @@ class Control_panel_host {
     function get_max_a()      { return $this->max_a; }
     function get_max_c_date() { return $this->max_c_date; }
     function get_max_a_date() { return $this->max_a_date; }
-    function get_avg_c()      { return $this->avg_c; }
-    function get_avg_a()      { return $this->avg_a; }
 
     function get_list($conn, $args, $limit)
     {
-        $query = "SELECT * FROM control_panel_host $args LIMIT $limit;";
+        $query = "SELECT * FROM control_panel $args LIMIT $limit;";
         if (!$rs = &$conn->Execute("$query")) 
         {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
 
-                $list[] = new Control_panel_host ($rs->fields["host_ip"],
+                $list[] = new Control_panel_host ($rs->fields["id"],
                                                   $rs->fields["time_range"],
                                                   $rs->fields["max_c"],
                                                   $rs->fields["max_a"],
                                                   $rs->fields["max_c_date"],
-                                                  $rs->fields["max_a_date"],
-                                                  $rs->fields["avg_c"],
-                                                  $rs->fields["avg_a"]);
+                                                  $rs->fields["max_a_date"]);
                 $rs->MoveNext();
             }
         }
@@ -68,12 +59,14 @@ class Control_panel_host {
     function get_metric_list($conn, $time_range, $type) {
 
         if ($type == 'compromise') {
-            $query = "SELECT * FROM control_panel_host 
-                WHERE time_range = '$time_range' AND max_c > 0
+            $query = "SELECT * FROM control_panel 
+                WHERE rrd_type = 'host' AND 
+                    time_range = '$time_range' AND max_c > 0
                 ORDER BY max_c_date DESC";
         } elseif($type == 'attack') {
-            $query = "SELECT * FROM control_panel_host 
-                WHERE time_range = '$time_range' AND max_a > 0
+            $query = "SELECT * FROM control_panel 
+                WHERE rrd_type = 'host' AND 
+                    time_range = '$time_range' AND max_a > 0
                 ORDER BY max_a_date DESC";
         }
         
@@ -86,10 +79,10 @@ class Control_panel_host {
                 /* get host threshold */
                 if (!strcmp($type, 'compromise')) {
                     $threshold = Host::ipthresh_c($conn,
-                                                  $rs->fields["host_ip"]);
+                                                  $rs->fields["id"]);
                 } elseif (!strcmp($type, 'attack')) {
                     $threshold = Host::ipthresh_a($conn,
-                                                  $rs->fields["host_ip"]);
+                                                  $rs->fields["id"]);
                 } else {
                     /* defensive programming */
                     $conf = Conf::get_conf($conn);
@@ -101,14 +94,12 @@ class Control_panel_host {
                     ((!strcmp($type, 'attack')) and 
                         ($rs->fields["max_a"] > $threshold))) 
                 {
-                    $list[] = new Control_panel_host ($rs->fields["host_ip"],
+                    $list[] = new Control_panel_host ($rs->fields["id"],
                                                       $rs->fields["time_range"],
                                                       $rs->fields["max_c"],
                                                       $rs->fields["max_a"],
                                                       $rs->fields["max_c_date"],
-                                                      $rs->fields["max_a_date"],
-                                                      $rs->fields["avg_c"],
-                                                      $rs->fields["avg_a"]);
+                                                      $rs->fields["max_a_date"]);
                 }
                 $rs->MoveNext();
             }

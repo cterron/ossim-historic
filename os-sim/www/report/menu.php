@@ -10,6 +10,7 @@
 <?php
     require_once ('ossim_conf.inc');
     require_once ('ossim_db.inc');
+    require_once ('classes/Sensor.inc');
 
     $db = new ossim_db();
     $conn = $db->connect();
@@ -57,9 +58,9 @@
     echo ereg_replace("\.","_", $_GET["host"]); ?>/index.html"
     target="report">Security Problems</a><br/><br/>
 
-&nbsp;&nbsp;<a href="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+&nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/$ip.html" ?>" target="report">Usage</a><br/><br/>
-&nbsp;&nbsp;<a href="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+&nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/plugins/rrdPlugin?action=list&key=interfaces/$interface/hosts/$ip&title=host%20$ip" ?>" target="report">Anomalies</a><br/><br/>
 
 <?php

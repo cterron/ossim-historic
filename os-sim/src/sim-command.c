@@ -45,6 +45,7 @@ typedef enum {
   SIM_COMMAND_SCOPE_CONNECT,
   SIM_COMMAND_SCOPE_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_SCOPE_SERVER_GET_SENSORS,
   SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS,
   SIM_COMMAND_SCOPE_SENSOR_PLUGIN,
   SIM_COMMAND_SCOPE_SENSOR_PLUGIN_START,
@@ -74,6 +75,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_CONNECT,
   SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS,
   SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS,
   SIM_COMMAND_SYMBOL_SENSOR_PLUGIN,
   SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START,
@@ -133,6 +135,7 @@ static const struct
   { "connect", SIM_COMMAND_SYMBOL_CONNECT },
   { "session-append-plugin", SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN },
   { "session-remove-plugin", SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN },
+  { "server-get-sensors", SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS },
   { "server-get-sensor-plugins", SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS },
   { "sensor-plugin", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN },
   { "sensor-plugin-start", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START },
@@ -163,6 +166,7 @@ static const struct
   guint token;
 } connect_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
+  { "type", SIM_COMMAND_SYMBOL_TYPE },
   { "username", SIM_COMMAND_SYMBOL_USERNAME },
   { "password", SIM_COMMAND_SYMBOL_PASSWORD }
 };
@@ -191,6 +195,24 @@ static const struct
   { "name", SIM_COMMAND_SYMBOL_NAME },
   { "state", SIM_COMMAND_SYMBOL_STATE },
   { "enabled", SIM_COMMAND_SYMBOL_ENABLED },
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} server_get_sensors_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} sensor_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "host", SIM_COMMAND_SYMBOL_HOST },
+  { "state", SIM_COMMAND_SYMBOL_STATE }
 };
 
 static const struct
@@ -408,8 +430,11 @@ static void sim_command_session_append_plugin_scan (SimCommand    *command,
 static void sim_command_session_remove_plugin_scan (SimCommand    *command,
 						    GScanner      *scanner);
 
+static void sim_command_server_get_sensors_scan (SimCommand    *command,
+						 GScanner      *scanner);
 static void sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
 							GScanner      *scanner);
+
 static void sim_command_sensor_plugin_scan (SimCommand    *command,
 					    GScanner      *scanner);
 static void sim_command_sensor_plugin_start_scan (SimCommand    *command,
@@ -473,8 +498,8 @@ sim_command_impl_finalize (GObject  *gobject)
 	g_free (cmd->data.connect.username);
       if (cmd->data.connect.password)
 	g_free (cmd->data.connect.password);
-      if (cmd->data.connect.sensor)
-	g_free (cmd->data.connect.sensor);
+      if (cmd->data.connect.type)
+	g_free (cmd->data.connect.type);
       break;
     case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:
       if (cmd->data.session_append_plugin.name)
@@ -509,6 +534,12 @@ sim_command_impl_finalize (GObject  *gobject)
       if (cmd->data.alert.data)
 	g_free (cmd->data.alert.data);
       break;
+
+    case SIM_COMMAND_TYPE_SENSOR:
+      if (cmd->data.sensor.host)
+	g_free (cmd->data.sensor.host);
+      break;
+
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN:
       if (cmd->data.sensor_plugin.sensor)
 	g_free (cmd->data.sensor_plugin.sensor);
@@ -765,14 +796,14 @@ sim_command_new_from_rule (SimRule  *rule)
     }
 
   /* SRC IAS */
-  list = sim_rule_get_src_ias (rule);
+  list = sim_rule_get_src_inets (rule);
   if (list)
     str = g_string_append (str, "from=\"");
   while (list)
     {
-      GInetAddr *ia = (GInetAddr *) list->data;
+      SimInet *inet = (SimInet *) list->data;
       
-      ip = gnet_inetaddr_get_canonical_name (ia);
+      ip = sim_inet_ntop (inet);
       str = g_string_append (str, ip);
       g_free (ip);
       
@@ -785,14 +816,14 @@ sim_command_new_from_rule (SimRule  *rule)
     }
 
   /* DST IAS */
-  list = sim_rule_get_dst_ias (rule);
+  list = sim_rule_get_dst_inets (rule);
   if (list)
     str = g_string_append (str, "to=\"");
   while (list)
     {
-      GInetAddr *ia = (GInetAddr *) list->data;
+      SimInet *inet = (SimInet *) list->data;
 
-      ip = gnet_inetaddr_get_canonical_name (ia);
+      ip = sim_inet_ntop (inet);
       str = g_string_append (str, ip);
       g_free (ip);
 
@@ -857,6 +888,10 @@ sim_command_scan (SimCommand    *command,
   /* Added remove plugin symbols */
   for (i = 0; i < G_N_ELEMENTS (session_remove_plugin_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN, session_remove_plugin_symbols[i].name, GINT_TO_POINTER (session_remove_plugin_symbols[i].token));
+
+  /* Added server get sensors symbols */
+  for (i = 0; i < G_N_ELEMENTS (server_get_sensors_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SENSORS, server_get_sensors_symbols[i].name, GINT_TO_POINTER (server_get_sensors_symbols[i].token));
 
   /* Added server get sensor plugins symbols */
   for (i = 0; i < G_N_ELEMENTS (server_get_sensor_plugins_symbols); i++)
@@ -957,6 +992,9 @@ sim_command_scan (SimCommand    *command,
         case SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN:
 	  sim_command_session_remove_plugin_scan (command, scanner);
           break;
+        case SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS:
+	  sim_command_server_get_sensors_scan (command, scanner);
+          break;
         case SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS:
 	  sim_command_server_get_sensor_plugins_scan (command, scanner);
           break;
@@ -1048,7 +1086,7 @@ sim_command_connect_scan (SimCommand    *command,
   command->type = SIM_COMMAND_TYPE_CONNECT;
   command->data.connect.username = NULL;
   command->data.connect.password = NULL;
-  command->data.connect.sensor = NULL;
+  command->data.connect.type = NULL;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_CONNECT);
   do
@@ -1084,14 +1122,14 @@ sim_command_connect_scan (SimCommand    *command,
 
 	  command->data.connect.password = g_strdup (scanner->value.v_string);
           break;
-        case SIM_COMMAND_SYMBOL_SENSOR:
+        case SIM_COMMAND_SYMBOL_TYPE:
 	  g_scanner_get_next_token (scanner); /* = */
 	  g_scanner_get_next_token (scanner); /* value */
 
 	  if (scanner->token != G_TOKEN_STRING)
 	    break;
 
-	  command->data.connect.sensor = g_strdup (scanner->value.v_string);
+	  command->data.connect.type = g_strdup (scanner->value.v_string);
           break;
         default:
           break;
@@ -1297,6 +1335,44 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
  *
  */
 static void
+sim_command_server_get_sensors_scan (SimCommand    *command,
+				     GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SERVER_GET_SENSORS;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SENSORS);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
 sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
 					    GScanner      *scanner)
 {
@@ -1327,7 +1403,6 @@ sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
         }
     }
   while(scanner->token != G_TOKEN_EOF);
-
 }
 
 /*
@@ -2574,6 +2649,12 @@ sim_command_get_string (SimCommand    *command)
 	break;
 
       str = g_strdup (command->data.watch_rule.str);
+      break;
+
+    case SIM_COMMAND_TYPE_SENSOR:
+      str = g_strdup_printf ("sensor host=\"%s\" state=\"%s\"\n", 
+			     command->data.sensor.host,
+			     (command->data.sensor.state) ? "on" : "off");
       break;
 
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN:

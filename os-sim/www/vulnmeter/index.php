@@ -55,7 +55,8 @@ if($mon < 10){ $mon = 0 . $mon; }
 if($mday < 10){ $mday = 0 . $mday; }
 $datedir = $today[year] . $mon . $mday;
 ?> 
-      <td colspan="2"><a href="last/index.html">Last scan</a></td>
+      <td><a href="last/index.html">Last scan</a></td>
+      <td> / <a href="do_nessus.php">Update scan</a></td>
     </tr>
 </table>
 <table align="center">

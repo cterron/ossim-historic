@@ -39,7 +39,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define SIM_CONFIG_FILE             "/etc/ossim.conf"
+#define SIM_LOG_FILE                "server.log"
 
 #define SIM_DELIMITER_LIST          ","
 #define SIM_DELIMITER_LEVEL         ":"
@@ -50,6 +50,7 @@ extern "C" {
 #define SIM_DST_IP_CONST            "DST_IP"
 #define SIM_SRC_PORT_CONST          "SRC_PORT"
 #define SIM_DST_PORT_CONST          "DST_PORT"
+#define SIM_PROTOCOL_CONST          "PROTOCOL"
 #define SIM_PLUGIN_SID_CONST        "PLUGIN_SID"
 
 #define SIM_DETECTOR_CONST          "DETECTOR"
@@ -85,6 +86,31 @@ extern "C" {
 #define SIM_DS_SNORT                "snortDS"
 
 #define SIM_PLUGIN_ID_DIRECTIVE     1505
+
+typedef enum
+{
+  SIM_ALARM_RISK_TYPE_NONE,
+  SIM_ALARM_RISK_TYPE_LOW,
+  SIM_ALARM_RISK_TYPE_MEDIUM,
+  SIM_ALARM_RISK_TYPE_HIGH,
+  SIM_ALARM_RISK_TYPE_ALL
+} SimAlarmRiskType;
+
+typedef enum
+{
+  SIM_INET_TYPE_NONE,
+  SIM_INET_TYPE_INET,
+  SIM_INET_TYPE_CIDR
+} SimInetType;
+
+typedef enum
+{
+  SIM_DATABASE_TYPE_NONE,
+  SIM_DATABASE_TYPE_MYSQL,
+  SIM_DATABASE_TYPE_PGSQL,
+  SIM_DATABASE_TYPE_ORACLE,
+  SIM_DATABASE_TYPE_ODBC
+} SimDatabaseType;
 
 typedef enum
 {
@@ -135,6 +161,7 @@ typedef enum {
   SIM_RULE_VAR_DST_IA,
   SIM_RULE_VAR_SRC_PORT,
   SIM_RULE_VAR_DST_PORT,
+  SIM_RULE_VAR_PROTOCOL,
   SIM_RULE_VAR_PLUGIN_SID
 } SimRuleVarType;
 
@@ -155,7 +182,9 @@ typedef enum {
   SIM_COMMAND_TYPE_CONNECT,
   SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_TYPE_SERVER_GET_SENSORS,
   SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS,
+  SIM_COMMAND_TYPE_SENSOR,
   SIM_COMMAND_TYPE_SENSOR_PLUGIN,
   SIM_COMMAND_TYPE_SENSOR_PLUGIN_START,
   SIM_COMMAND_TYPE_SENSOR_PLUGIN_STOP,
@@ -188,6 +217,12 @@ typedef enum {
   SIM_SESSION_TYPE_WEB,
   SIM_SESSION_TYPE_ALL
 } SimSessionType;
+
+typedef enum {
+  SIM_SESSION_STATE_NONE,
+  SIM_SESSION_STATE_DISCONNECT,
+  SIM_SESSION_STATE_CONNECT
+} SimSessionState;
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,7 @@ LOG=`grep ^ossim_log $CONFIG | cut -d= -f 2`
 # End of configuration
 
 
-test -x $OSSIM_PATH/src/ossim || exit 0
+test -x $OSSIM_PATH/src/ossim-server || exit 0
 
 case "$1" in
      start)
@@ -17,16 +17,16 @@ case "$1" in
 
     # start ossim server
     cd $OSSIM_PATH/src
-	./ossim -d -c /etc/ossim/server/config.xml
+	./ossim-server -d -c /etc/ossim/server/config.xml
 
     # Start agent
     sleep 5
     cd $OSSIM_PATH/agent
-    ./agent -d -c /etc/ossim/agent/config.xml
+    ./ossim-agent -d -c /etc/ossim/agent/config.xml
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
-    nice -n 19 ./control_panel.pl &
+    nice -n 19 ./control_panel.py -d
     
 	if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 		echo "OSSIM is up and running!"
@@ -38,9 +38,9 @@ case "$1" in
 
      stop)
 	echo "Stoping Open Source Security Information Management: OSSIM"
-	if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
+	if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
 	
-	    kill -TERM `pidof $OSSIM_PATH/src/ossim`
+	    kill -TERM `pidof $OSSIM_PATH/src/ossim-server`
 
 
 
@@ -49,7 +49,7 @@ case "$1" in
 	    numdots=0
 	    while ([ $count != 0 ]) do
 		let count=$count-1
-		if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
+		if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
 		    echo -n .
 		    let numdots=$numdots+1
 		    sleep 1
@@ -60,9 +60,9 @@ case "$1" in
 
 	    # If it's not dead yet, kill it.
 
-	    if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
+	    if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
 		echo " TIMEOUT!"
-		killall -KILL ossim
+		killall -KILL ossim-server
 	    else
 		case $numdots in
 		  0) echo "." ;;
@@ -77,9 +77,9 @@ case "$1" in
 	fi
 
     # kill agent
-    killall -KILL agent
+    killall -KILL ossim-agent
     # kill misc scripts (provisional!)
-    killall -KILL control_panel.pl
+    killall -KILL control_panel.py
 	;;
      restart)
 	$0 stop

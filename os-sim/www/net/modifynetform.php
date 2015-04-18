@@ -11,6 +11,7 @@
 
 <?php
     require_once 'classes/Net.inc';
+    require_once 'classes/Net_scan.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Net_sensor_reference.inc';
@@ -145,7 +146,18 @@
 ?>
     </td>
   </tr>
-
+    <tr>
+    <th> Scan options </th>
+    <td class="left">
+    <input type="checkbox" 
+    <?php
+    if(Net_scan::in_net_scan($conn, $net->get_name(), 3001)){
+        echo " CHECKED ";
+    }
+    ?>
+    name="nessus" value="1"> Enable nessus scan </input>
+</td>
+</tr>
 
   <tr>
     <th>Description</th>

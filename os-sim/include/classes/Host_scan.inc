@@ -23,6 +23,7 @@ class Host_scan {
     {
 
         $query = "SELECT *, inet_ntoa(host_ip) FROM host_scan $args";
+
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -69,6 +70,15 @@ class Host_scan {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+    }
+    function in_host_scan($conn, $host, $plugin_id) {
+        $query = "SELECT * FROM host_scan WHERE inet_ntoa(host_ip) = '$host' AND plugin_id=$plugin_id;";
+        echo $query;
+        
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        }
+        return $rs->fields[0];
     }
 }
 

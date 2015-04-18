@@ -40,6 +40,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <sim-enums.h>
+#include <sim-inet.h>
 #include <sim-config.h>
 #include <sim-database.h>
 #include <sim-alert.h>

@@ -9,6 +9,7 @@ controlpanel_DATA = acid_funcs.inc \
 	handle_mac.php \
 	global_score.php \
 	alarm_console.php \
+	alerts.php \
 	anomalies.php \
 	show_image.php
 

@@ -51,18 +51,14 @@
 #include "sim-server.h"
 #include "sim-xml-config.h"
 
-/* Globals Variables */
-SimContainer  *sim_ctn = NULL;
-SimServer     *sim_svr = NULL;
-
-typedef struct {
-  SimConfig      *config;
-} SimThreadData;
-
 typedef struct {
   gchar          *config;
-  gint            daemon;
+  gboolean        daemon;
+  gint            debug;
 } SimCmdArgs;
+
+/* Globals Variables */
+SimMain        ossim;
 
 SimCmdArgs simCmdArgs;
 
@@ -78,10 +74,47 @@ sim_log_handler (const gchar     *log_domain,
 		 const gchar     *message,
 		 gpointer         data)
 {
-  gint fd = GPOINTER_TO_INT (data);
+  gchar   *msg;
 
-  write (fd, message, strlen(message));
-  write (fd, "\n", 1);
+  g_return_if_fail (message);
+  g_return_if_fail (ossim.log.fd);
+
+  if (ossim.log.level < log_level)
+    return;
+
+  switch (log_level)
+    {
+      case G_LOG_LEVEL_ERROR:
+	msg = g_strdup_printf ("%s-Error: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+      case G_LOG_LEVEL_CRITICAL:
+	msg = g_strdup_printf ("%s-Critical: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+      case G_LOG_LEVEL_WARNING:
+	msg = g_strdup_printf ("%s-Warning: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+      case G_LOG_LEVEL_MESSAGE:
+	msg = g_strdup_printf ("%s-Message: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+      case G_LOG_LEVEL_INFO:
+	msg = g_strdup_printf ("%s-Info: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+      case G_LOG_LEVEL_DEBUG:
+	msg = g_strdup_printf ("%s-Debug: %s\n", log_domain, message);
+	write (ossim.log.fd, msg, strlen(msg));
+	g_free (msg);
+	break;
+    }
 }
 
 /*
@@ -94,14 +127,10 @@ sim_log_handler (const gchar     *log_domain,
 static gpointer
 sim_thread_scheduler (gpointer data)
 {
-  SimThreadData   *thr_data = (SimThreadData *) data;
-  SimConfig       *config = thr_data->config;
-  SimScheduler    *scheduler;
- 
   g_message ("sim_thread_scheduler");
 
-  scheduler = sim_scheduler_new (config);
-  sim_scheduler_run (scheduler);
+  ossim.scheduler = sim_scheduler_new (ossim.config);
+  sim_scheduler_run (ossim.scheduler);
 
   return NULL;
 }
@@ -117,17 +146,10 @@ sim_thread_scheduler (gpointer data)
 static gpointer
 sim_thread_organizer (gpointer data)
 {
-  SimThreadData   *thr_data = (SimThreadData *) data;
-  SimConfig       *config = thr_data->config;
-  SimOrganizer    *organizer;
- 
-  g_return_if_fail (config);
-  g_return_if_fail (SIM_IS_CONFIG (config));
-
   g_message ("sim_thread_organizer");
 
-  organizer = sim_organizer_new (config);
-  sim_organizer_run (organizer);
+  ossim.organizer = sim_organizer_new (ossim.config);
+  sim_organizer_run (ossim.organizer);
 
   return NULL;
 }
@@ -143,16 +165,10 @@ sim_thread_organizer (gpointer data)
 static gpointer
 sim_thread_server (gpointer data)
 {
-  SimThreadData   *thr_data = (SimThreadData *) data;
-  SimConfig       *config = thr_data->config;
- 
-  g_return_if_fail (config);
-  g_return_if_fail (SIM_IS_CONFIG (config));
-
   g_message ("sim_thread_server");
 
-  sim_svr = sim_server_new (config);
-  sim_server_run (sim_svr);
+  ossim.server = sim_server_new (ossim.config);
+  sim_server_run (ossim.server);
 
   return NULL;
 }
@@ -170,7 +186,8 @@ options (int argc, char **argv)
 
   /* Default Command Line Options */
   simCmdArgs.config = NULL;
-  simCmdArgs.daemon = 0;
+  simCmdArgs.daemon = FALSE;
+  simCmdArgs.debug = 4;
 
   while (TRUE)
     {
@@ -180,10 +197,11 @@ options (int argc, char **argv)
 	{
 	  {"config", 1, 0, 'c'},
 	  {"daemon", 0, 0, 'd'},
+	  {"debug", 0, 0, 'D'},
 	  {0, 0, 0, 0}
 	};
       
-      c = getopt_long (argc, argv, "dc:", options, &option_index);
+      c = getopt_long (argc, argv, "dc:D:", options, &option_index);
       if (c == -1)
 	break;
 
@@ -194,24 +212,119 @@ options (int argc, char **argv)
 	  break;
 
 	case 'd':
-	  simCmdArgs.daemon = 1;
+	  simCmdArgs.daemon = TRUE;
+	  break;
+	  
+	case 'D':
+	  simCmdArgs.debug = strtol (optarg, (char **)NULL, 10);
 	  break;
 	  
 	case '?':
 	  break;
 	  
 	default:
-	  printf ("?\? getopt() return the caracter %c ?\?\n", c);
+	  g_print ("?\? getopt() return the caracter %c ?\?\n", c);
 	}
     }
-  
+
   if (optind < argc)
     {
-      printf ("elements from ARGV are not option: ");
+      g_print ("Elements from ARGV are not option: ");
       while (optind < argc)
-	printf ("%s ", argv[optind++]);
-      printf ("\n");
+	g_print ("%s ", argv[optind++]);
+      g_print ("\n");
     }
+
+  if ((simCmdArgs.config) && !g_file_test (simCmdArgs.config, G_FILE_TEST_EXISTS))
+    g_error ("Config XML File %s: Don't exists", simCmdArgs.config);
+  
+  if ((simCmdArgs.debug < 0) || (simCmdArgs.debug > 6))
+    g_error ("Debug level %d: Is invalid", simCmdArgs.debug);
+
+  if (simCmdArgs.daemon) 
+    {
+      if (fork ())
+	exit (0);
+      else
+	;
+    }
+}
+
+/*
+ *
+ *
+ *
+ */
+sim_log_init (void)
+{
+  /* Init */
+  ossim.log.filename = NULL;
+  ossim.log.fd = 0;
+  ossim.log.level = G_LOG_LEVEL_MESSAGE;
+
+  /* File Logs */
+
+  if (ossim.config->log.filename)
+    {
+      ossim.log.filename = g_strdup (ossim.config->log.filename);
+    }
+  else
+    {
+      /* Verify Directory */
+      if (!g_file_test (OS_SIM_LOG_DIR, G_FILE_TEST_IS_DIR))
+	g_error ("Log Directory %s: Is invalid", OS_SIM_LOG_DIR);
+      
+      ossim.log.filename = g_strdup_printf ("%s/%s", OS_SIM_LOG_DIR, SIM_LOG_FILE);
+    }
+
+  if ((ossim.log.fd = creat (ossim.log.filename, S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH)) < 0)
+    g_error ("Log File %s: Can't create", ossim.log.filename);
+  
+  switch (simCmdArgs.debug)
+    {
+    case 0:
+      ossim.log.level = 0;
+      break;
+    case 1:
+      ossim.log.level = G_LOG_LEVEL_ERROR;
+      break;
+    case 2:
+      ossim.log.level = G_LOG_LEVEL_CRITICAL;
+      break;
+    case 3:
+      ossim.log.level = G_LOG_LEVEL_WARNING;
+      break;
+    case 4:
+      ossim.log.level = G_LOG_LEVEL_MESSAGE;
+      break;
+    case 5:
+      ossim.log.level = G_LOG_LEVEL_INFO;
+      break;
+    case 6:
+      ossim.log.level = G_LOG_LEVEL_DEBUG;
+      break;
+    }
+
+  /* Log Handler */
+  g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+
+  g_log_set_handler ("GLib", G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+
+  g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+}
+
+/*
+ *
+ *
+ *
+ */
+sim_log_free (void)
+{
+  g_free (ossim.log.filename);
+  close (ossim.log.fd);
 }
 
 /*
@@ -222,79 +335,66 @@ options (int argc, char **argv)
 int
 main (int argc, char *argv[])
 {
-  SimThreadData  *data;
   SimXmlConfig   *xmlconfig;
-  SimConfig      *config;
   GMainLoop      *loop;
   GThread        *thread;
-  gint            fd;
+
+  /* Global variable OSSIM Init */
+  ossim.config = NULL;
+  ossim.container = NULL;
+  ossim.server = NULL;
+  ossim.dbossim = NULL;
+  ossim.dbsnort = NULL;
 
   /* Command Line Options */
   options (argc, argv);
 
-  if(simCmdArgs.daemon){
-    if(fork()){
-      exit(0);
-    } else {
-      ;
-    }
-  }
-
   /* Thread Init */
-  if (!g_thread_supported ()) 
+  if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  gda_init (NULL, "0.9.4", argc, argv);
+  /* GDA Init */
+  gda_init (NULL, "0.9.5", argc, argv);
 
   /* Config Init */
   if (simCmdArgs.config)
-    xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config);
+    {
+      if (!(xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config)))
+	g_error ("Config XML File %s is invalid", simCmdArgs.config);
+      
+      if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
+	g_error ("Config is %s invalid", simCmdArgs.config);
+    }
   else
-    xmlconfig = sim_xml_config_new_from_file (OS_SIM_GLOBAL_CONFIG_FILE);
-  config = sim_xml_config_get_config (xmlconfig);
+    {
+      if (!g_file_test (OS_SIM_GLOBAL_CONFIG_FILE, G_FILE_TEST_EXISTS))
+	g_error ("Config XML File %s: Not Exists", OS_SIM_GLOBAL_CONFIG_FILE);
+      
+      if (!(xmlconfig = sim_xml_config_new_from_file (OS_SIM_GLOBAL_CONFIG_FILE)))
+	g_error ("Config XML File %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+      
+      if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
+	g_error ("Config %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+    }
 
-  /* File Logs */
-  fd = creat (OS_SIM_LOG_DIR "/debug.log", S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH);
-
-  g_log_set_handler (NULL,
-		     G_LOG_LEVEL_ERROR |
-		     G_LOG_LEVEL_CRITICAL |
-		     G_LOG_LEVEL_WARNING |
-		     G_LOG_LEVEL_MESSAGE |
-		     G_LOG_LEVEL_INFO |
-		     G_LOG_LEVEL_DEBUG,
-		     sim_log_handler, 
-		     GINT_TO_POINTER (fd));
-  
-  g_log_set_handler (G_LOG_DOMAIN,
-		     G_LOG_LEVEL_ERROR |
-		     G_LOG_LEVEL_CRITICAL |
-		     G_LOG_LEVEL_WARNING |
-		     G_LOG_LEVEL_MESSAGE |
-		     G_LOG_LEVEL_INFO |
-		     G_LOG_LEVEL_DEBUG,
-		     sim_log_handler, 
-		     GINT_TO_POINTER (fd));
+  /* Log Init */
+  sim_log_init ();
 
   /* Container init */
-  sim_ctn = sim_container_new (config);
-
-  /* Data Thread */
-  data = g_new0 (SimThreadData, 1);
-  data->config = config;
-
-  /* Server Thread */
-  thread = g_thread_create (sim_thread_server, data, TRUE, NULL);
-  g_return_if_fail (thread);
-  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
+  ossim.container = sim_container_new (ossim.config);
 
   /* Scheduler Thread */
-  thread = g_thread_create (sim_thread_scheduler, data, TRUE, NULL);
+  thread = g_thread_create (sim_thread_scheduler, NULL, TRUE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
   /* Organizer Thread */
-  thread = g_thread_create (sim_thread_organizer, data, TRUE, NULL);
+  thread = g_thread_create (sim_thread_organizer, NULL, TRUE, NULL);
+  g_return_if_fail (thread);
+  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
+
+  /* Server Thread */
+  thread = g_thread_create (sim_thread_server, NULL, TRUE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
@@ -302,7 +402,8 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
-  close (fd);
+  /* Log Free */
+  sim_log_free ();
 
   return 0;
 }

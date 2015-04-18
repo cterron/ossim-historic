@@ -33,9 +33,12 @@ if (!$_GET["confirm"]) {
 
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
+    require_once 'classes/Net_scan.inc';
+
     $db = new ossim_db();
     $conn = $db->connect();
     Net::delete($conn, $name);
+    Net_scan::delete($conn, $name, 3001);
     $db->close($conn);
 
 ?>

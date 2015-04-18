@@ -117,6 +117,12 @@
     </td>
   </tr>
   <tr>
+    <th> Scan options </th>
+    <td class="left">
+        <input type="checkbox" name="nessus" value="1"> Enable nessus scan </input>
+    </td>
+  </tr>
+  <tr>
     <th>Description</th>
     <td class="left">
       <textarea name="descr" rows="2" cols="20"></textarea>

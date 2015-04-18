@@ -22,20 +22,42 @@ my $nessus_host = $ossim_conf::ossim_data->{"nessus_host"};
 my $nessus_port = $ossim_conf::ossim_data->{"nessus_port"};
 
 
-open (PLUGINS, "$nessus -q -p $nessus_host $nessus_port $nessus_user $nessus_pass|");
+open (PLUGINS, "$nessus -x -q -p $nessus_host $nessus_port $nessus_user $nessus_pass|");
 
 my @plugin_rel_db = ();
 my %plugin_rel_hash = ();
+my %plugin_prio_hash = ();
 my $index;
 my $key;
 
 while(<PLUGINS>){
-if(/^([^\|]*)\|[^\|]*\|([^\|]*)\|.*/){
+if(/^([^\|]*)\|[^\|]*\|([^\|]*)\|.*\\n(.*)$/){
 $plugin_rel_hash{$1} = $2;
+my $risk_level = 2;
+my $temp_risk = $3;
+my $temp_plugin_id = $1;
+
+    if ($temp_risk =~ /Risk factor : (.*)/) {
+    my $risk=$1; 
+    $risk =~ s/ \(.*|if.*//g; 
+    $risk =~ s/ //g;        
+    if ($risk eq "Verylow/none") { $risk_level = 1 }
+    if ($risk eq "Low") { $risk_level = 1 }
+    if ($risk eq "Low/Medium") { $risk_level = 2 }
+    if ($risk eq "Medium/Low") { $risk_level = 2 }
+    if ($risk eq "Medium") { $risk_level = 3 }
+    if ($risk eq "Medium/High") { $risk_level = 3 }
+    if ($risk eq "High/Medium") { $risk_level = 4 }
+    if ($risk eq "High") { $risk_level = 4 }
+    if ($risk eq "Veryhigh") { $risk_level = 5 }
+    }
+
+$plugin_prio_hash{$temp_plugin_id} = $risk_level; 
 }
 }
 
 close(PLUGINS);
+print "plugins fetched\n";
 
 my $query = "SELECT * from plugin_sid where plugin_id = 3001;";
 
@@ -47,6 +69,7 @@ my $row;
 while($row = $sth->fetchrow_hashref){
 if(exists($plugin_rel_hash{$row->{sid}})){
 delete $plugin_rel_hash{$row->{sid}};
+delete $plugin_prio_hash{$row->{sid}};
 }
 }
 
@@ -55,9 +78,11 @@ $query = "INSERT INTO plugin_sid(plugin_id, sid, category_id, class_id, reliabil
 if(keys %plugin_rel_hash){
 print "Updating...\n";
 foreach $key (keys %plugin_rel_hash){
-print "$key:$plugin_rel_hash{$key}\n";
-$plugin_rel_hash{$key} =~ s/'/''/; 
-$query .= "(3001, $key, NULL, NULL, 2, 5, 'nessus: $plugin_rel_hash{$key}'),";
+print "$key:$plugin_rel_hash{$key}:$plugin_prio_hash{$key}\n";
+#$plugin_rel_hash{$key} =~ s/'/''/; 
+$plugin_rel_hash{$key} =~ s/'/\\'/gs;
+$plugin_rel_hash{$key} =~ s/"/\\"/gs;
+$query .= "(3001, $key, NULL, NULL, $plugin_prio_hash{$key}, 5, 'nessus: $plugin_rel_hash{$key}'),";
 }
 
 chop($query);

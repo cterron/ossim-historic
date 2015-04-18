@@ -33,6 +33,8 @@
  */
 
 #include <config.h>
+#include <gnet.h>
+#include <stdlib.h>
 
 #include "sim-config.h"
 
@@ -66,12 +68,17 @@ sim_config_impl_finalize (GObject  *gobject)
   while (list)
     {
       SimConfigDS *ds = (SimConfigDS *) list->data;
-
-      sim_config_ds_new (ds);
-
+      sim_config_ds_free (ds);
       list = list->next;
     }
 
+  list = config->notifies;
+  while (list)
+    {
+      SimConfigNotify *notify = (SimConfigNotify *) list->data;
+      sim_config_notify_free (notify);
+      list = list->next;
+    }
 
   if (config->log.filename)
     g_free (config->log.filename);
@@ -103,12 +110,18 @@ sim_config_instance_init (SimConfig *config)
   config->log.filename = NULL;
 
   config->datasources = NULL;
+  config->notifies = NULL;
+
+  config->notify_prog = NULL;
 
   config->directive.filename = NULL;
 
   config->scheduler.interval = 0;
 
   config->server.port = 0;
+
+  config->smtp.host = NULL;
+  config->smtp.port = 0;
 }
 
 /* Public Methods */
@@ -147,7 +160,7 @@ sim_config_get_type (void)
  *
  */
 SimConfig*
-sim_config_new ()
+sim_config_new (void)
 {
   SimConfig *config = NULL;
 
@@ -162,7 +175,7 @@ sim_config_new ()
  *
  */
 SimConfigDS*
-sim_config_ds_new ()
+sim_config_ds_new (void)
 {
   SimConfigDS *ds;
 
@@ -222,4 +235,47 @@ sim_config_get_ds_by_name (SimConfig    *config,
     }
 
   return NULL;
+}
+
+/*
+ *
+ *
+ *
+ */
+SimConfigNotify*
+sim_config_notify_new (void)
+{
+  SimConfigNotify *notify;
+
+  notify = g_new0 (SimConfigNotify, 1);
+  notify->emails = NULL;
+  notify->alarm_risks = NULL;
+
+  return notify;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_config_notify_free (SimConfigNotify *notify)
+{
+  GList *list;
+
+  g_return_if_fail (notify);
+
+  if (notify->emails)
+    g_free (notify->emails);
+
+  list = notify->alarm_risks;
+  while (list)
+    {
+      gint *level = (gint *) list->data;
+      g_free (level);
+      list = list->next;
+    }
+
+  g_free (notify);
 }

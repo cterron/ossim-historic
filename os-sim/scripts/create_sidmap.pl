@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create-sidmap.pl,v 1.1 2004/05/05 07:59:45 dvgil Exp $ #
+# $Id: create_sidmap.pl,v 1.1 2004/06/14 14:45:34 dkarg Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 

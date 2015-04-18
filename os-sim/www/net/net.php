@@ -12,6 +12,21 @@
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
+    require_once 'classes/Net_scan.inc';
+    require_once 'classes/Plugin.inc';
+
+
+    if (($nessus_action = $_GET["nessus"]) AND ($net_name = $_GET["net_name"])) 
+    {
+        $db = new ossim_db();
+        $conn = $db->connect();
+        if ($nessus_action == "enable") {
+            Net::enable_nessus($conn, $net_name);
+        } elseif ($nessus_action = "disable") {
+            Net::disable_nessus($conn, $net_name);
+        }
+        $db->close($conn);
+    }
 
     if (!$order = $_GET["order"]) $order = "name";
 ?>
@@ -40,6 +55,7 @@
           ?>">Persistence</a></th>
 -->
       <th>Sensors</th>
+      <th>Nessus Scan</th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -71,6 +87,35 @@
                 }
             }
 ?>    </td>
+
+    <td>
+<?php
+    if($scan_list = Net_scan::get_list($conn, 
+        "WHERE net_name = '$name' AND plugin_id = 3001"))
+    {
+
+        echo "<a href=\"". $_SERVER["PHP_SELF"] .
+            "?nessus=disable&net_name=$name\">ENABLED</a>";
+/*
+    foreach($scan_list as $scan){
+        $id = $scan->get_plugin_id();
+        $plugin_name = "";
+        if ($plugin_list = Plugin::get_list($conn, "WHERE id = $id")) {
+            $plugin_name = $plugin_list[0]->get_name();
+            echo "$plugin_name<BR>";
+        } else {
+            echo $id;
+        }
+    }
+*/
+    } else {
+        echo "<a href=\"". $_SERVER["PHP_SELF"] .
+            "?nessus=enable&net_name=$name\">DISABLED</a>";
+    }
+
+?>
+</td>
+
       <td><?php echo $net->get_descr(); ?></td>
       <td><a href="modifynetform.php?name=<?php echo $name ?>">Modify</a>
           <a href="deletenet.php?name=<?php echo $name ?>">Delete</a></td>

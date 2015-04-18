@@ -91,6 +91,12 @@ $nets_order_by_c = Control_panel_net::get_metric_list($conn, $range, 'compromise
 $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
 
 
+/* get global values */
+$query = "SELECT * FROM control_panel 
+    WHERE id = 'global' AND time_range = '$range';";
+if (!$rs_global = &$conn->Execute("$query"))
+    print $conn->ErrorMsg();
+
 ?>
 
   <table align="center" width="100%">
@@ -98,6 +104,9 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
       [<a
       <?php if ($range == 'day') echo "class=\"selected\"" ?>
       href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day">Last Day</a>]
+      [<a 
+      <?php if ($range == 'week') echo "class=\"selected\"" ?>
+      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week">Last Week</a>]
       [<a 
       <?php if ($range == 'month') echo "class=\"selected\"" ?>
       href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month">Last Month</a>]
@@ -109,18 +118,20 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
 <?php
 
         if ($range == 'day') {
-            $image2 = "$graph_link?ip=global&what=attack&start=N-24h&end=N&type=global&zoom=0.85";
-            $image1 = "$graph_link?ip=global&what=compromise&start=N-24h&end=N&type=global&zoom=0.85";
             $start = "N-1D";
+        } elseif ($range == 'week') {
+            $start = "N-7D";
         } elseif ($range == 'month') {
-            $image2 = "$graph_link?ip=global&what=attack&start=N-1M&end=N&type=global&zoom=0.85";
-            $image1 = "$graph_link?ip=global&what=compromise&start=N-1M&end=N&type=global&zoom=0.85";
             $start = "N-1M";
         } elseif ($range == 'year') {
-            $image2 = "$graph_link?ip=global&what=attack&start=N-1Y&end=N&type=global&zoom=0.85";
-            $image1 = "$graph_link?ip=global&what=compromise&start=N-1Y&end=N&type=global&zoom=0.85";
             $start = "N-1Y";
         }
+
+        $image2 = "$graph_link?ip=global&what=attack&start=$start&" . 
+            "end=N&type=global&zoom=0.85";
+        $image1 = "$graph_link?ip=global&what=compromise&start=$start&" . 
+            "end=N&type=global&zoom=0.85";
+
 ?>
       <img src="<?php echo "$image1"; ?>">
       <!-- <img src="<?php // echo "$image2"; ?>"> -->
@@ -129,44 +140,127 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
       <table align="center">
         <tr><td colspan="2"></td></tr>
         <tr>
-          <th colspan="2"><a href="../riskmeter/index.php">Riskmeter - Real Time Monitoring</a></th>
+          <th>Riskmeter</th>
+          <th>Service Level</th>
         </tr>
-        <tr><td colspan="2"></td></tr>
         <tr>
-          <td bgcolor="#eeeeee"><b>Global compromise</b></td>
-<?php
-            $compromise = Host_qualification::get_global_compromise($conn);
-            if ($compromise / $THRESHOLD > 5)
-                echo "<td bgcolor=\"red\"><font color=\"white\"><b>$compromise</b></font></td>";
-            elseif ($compromise / $THRESHOLD > 3)
-                echo "<td bgcolor=\"orange\"><font color=\"black\"><b>$compromise</b></font></td>";
-            elseif ($compromise / $THRESHOLD > 1)
-                echo "<td bgcolor=\"green\"><font color=\"white\"><b>$compromise</b></font></td>";
-            else
-                echo "<td>$compromise</td>";
-?>
-        </tr>
-        <tr><td colspan="2"></td></tr>
-        <tr>
-          <td bgcolor="eeeeee"><b>Global attack</b></td>
-<?php
-            $attack = Host_qualification::get_global_attack($conn);
-            if ($attack / $THRESHOLD > 5)
-                echo "<td bgcolor=\"red\"><font color=\"white\"><b>$attack</b></font></td>";
-            elseif ($attack / $THRESHOLD > 3)
-                echo "<td bgcolor=\"orange\"><font color=\"black\"><b>$attack</b></font></td>";
-            elseif ($attack / $THRESHOLD > 1)
-                echo "<td bgcolor=\"green\"><font color=\"white\"><b>$attack</b></font></td>";
-            else
-                echo "<td>$attack</td>";
-?>
+          <td><a href="../riskmeter/index.php">
+            <img border="0" src="../pixmaps/riskmeter.png"/></a>
+          </td>
+            <?php 
+            $image = graph_image_link("level", "level", "attack",
+                              $start, "N", 1, $range);
+            $sec_level = ($rs_global->fields["c_sec_level"] + 
+                              $rs_global->fields["a_sec_level"]) / 2;
+                $sec_level = sprintf("%.2f", $sec_level);
+                if ($sec_level >= 95) {
+                    $bgcolor = "green";
+                    $fontcolor = "white";
+                } elseif ($sec_level >= 90) {
+                    $bgcolor = "#CCFF00";
+                    $fontcolor = "black";
+                } elseif ($sec_level >= 85) {
+                    $bgcolor = "orange";
+                    $fontcolor = "black";
+                } elseif ($sec_level >= 80) {
+                    $bgcolor = "#FFFF00";
+                    $fontcolor = "black";
+                } elseif ($sec_level >= 75) {
+                    $bgcolor = "#FF3300";
+                    $fontcolor = "white";
+                } else {
+                    $bgcolor = "red";
+                    $fontcolor = "white";
+                }
+                echo "
+            <td bgcolor=\"$bgcolor\">
+              <b>
+                <a href=\"$image\">
+                  <font size=\"+1\"color=\"$fontcolor\">$sec_level%</font>
+                </a>
+              </b>
+            </td>
+                ";
+            ?>
         </tr>
         <tr><td colspan="2"></td></tr>
       </table>
     </td>
     </tr>
 
-  <tr><th colspan="6">Global Score - Networks</th></tr>
+    <tr><th colspan="6">Global</th></tr>
+    <tr>
+      <!-- Global C levels -->
+      <td valign="top">
+        <table width="100%">
+          <tr>
+            <th colspan="2">Global</th>
+            <th>Max C date</th>
+            <th>Max C</th>
+            <th>Current C</th>
+          </tr>
+          <tr>
+<?php
+    $image = graph_image_link("global", "global", "compromise",
+                              $start, "N", 1, $range);
+    
+?>
+            <td nowrap><b>GLOBAL SCORE</b></td>
+            <td>
+              <a href="<?php echo $image ?>"><img 
+                 src="../pixmaps/graph.gif" border="0"/></a>
+            </td>
+            <td nowrap><font size="-2">
+              <?php echo $rs_global->fields["max_c_date"] ?>
+            </font></td>
+<?php
+            echocolor($rs_global->fields["max_c"], $THRESHOLD,
+                get_acid_date_link($rs_global->fields["max_c_date"]));
+            echocolor(Host_qualification::get_global_compromise($conn), 
+                      $THRESHOLD, $image);
+?>
+          </tr>
+        </table>
+      </td>
+      <!-- End Global C levels -->
+
+      <!-- Global A levels -->
+      <td valign="top">
+        <table width="100%">
+          <tr>
+            <th colspan="2">Global</th>
+            <th>Max A date</th>
+            <th>Max A</th>
+            <th>Current A</th>
+          </tr>
+          <tr>
+<?php
+    $image = graph_image_link("global", "global", "attack",
+                              $start, "N", 1, $range);
+    
+?>
+            <td nowrap><b>GLOBAL SCORE</b></td>
+            <td>
+              <a href="<?php echo $image ?>"><img 
+                 src="../pixmaps/graph.gif" border="0"/></a>
+            </td>
+            <td nowrap><font size="-2">
+              <?php echo $rs_global->fields["max_a_date"] ?>
+            </font></td>
+<?php
+            echocolor($rs_global->fields["max_a"], $THRESHOLD,
+                get_acid_date_link($rs_global->fields["max_a_date"]));
+            echocolor(Host_qualification::get_global_attack($conn), 
+                      $THRESHOLD, $image);
+?>
+          </tr>
+        </table>
+      </td>
+      <!-- End Global A levels -->
+
+    </tr>
+    
+    <tr><th colspan="6">Networks</th></tr>
     <tr>
 
       <!-- Net C levels -->
@@ -174,9 +268,9 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
         <table width="100%">
           <tr>
             <th colspan="2">Network</th>
-            <th>Date Max C</th>
-            <th>C Max</th>
-            <th>C Actual</th>
+            <th>Max C date</th>
+            <th>Max C</th>
+            <th>Current C</th>
           </tr>
 <?php 
     if ($nets_order_by_c)
@@ -185,7 +279,7 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
                               $start, "N", 1, $range);
 ?>
           <tr>
-            <td nowrap><a href=""><?php echo $net->get_net_name(); ?></a></td>
+            <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
@@ -214,9 +308,9 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
         <table width="100%">
           <tr>
             <th colspan="2">Network</th>
-            <th>Date Max A</th>
-            <th>A Max</th>
-            <th>A Actual</th>
+            <th>Max A date</th>
+            <th>Max A</th>
+            <th>Current A</th>
           </tr>
 <?php 
     if ($nets_order_by_a)
@@ -225,7 +319,7 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
                               $start, "N", 1, $range);
 ?>
           <tr>
-            <td nowrap><a href=""><?php echo $net->get_net_name(); ?></a></td>
+            <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
@@ -249,7 +343,7 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
     </tr>
     <!-- end net A levels -->
 
-    <tr><th colspan="6">Global Score - Hosts</th></tr>
+    <tr><th colspan="6">Hosts</th></tr>
     <tr>
       
       <!-- host C levels -->
@@ -257,9 +351,9 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
         <table width="100%">
           <tr>
             <th colspan="2">Host</th>
-            <th>Date Max C</th>
-            <th>C Max</th>
-            <th>C Actual</th>
+            <th>Max C date</th>
+            <th>Max C</th>
+            <th>Current C</th>
           </tr>
           
 <?php 
@@ -310,9 +404,9 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
         <table width="100%">
         <tr>
           <th colspan="2">Host</th>
-          <th>Date Max A</th>
-          <th>A Max</th>
-          <th>A Actual</th>
+          <th>Max A date</th>
+          <th>Max A</th>
+          <th>Current A</th>
         </tr>
 <?php 
     if ($hosts_order_by_a)

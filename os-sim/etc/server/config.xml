@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 
 <config>
-	<log filename="/tmp/ossim.log"/>
+	<log filename="/var/log/ossim/server.log"/>
         <sensor name="server" ip="127.0.0.1" interface="eth0"/>
 	<datasources>
 		<datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=ossim;HOST=localhost"/>
@@ -10,4 +10,7 @@
 	<directive filename="/etc/ossim/server/directives.xml"/>
 	<scheduler interval="15"/>
 	<server port="40001"/>
+    <notifies program="/usr/sbin/sendmail">
+        <notify emails="root@localhost" alarm_risks="all" /> <!-- low,medium,high,all -->
+    </notifies>
 </config>

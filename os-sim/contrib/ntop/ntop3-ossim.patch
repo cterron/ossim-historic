@@ -229,14 +229,14 @@ diff -urNb sessions.c sessions.c
 -    } else
 +    } else if (myGlobals.newSock)
 +#ifdef LINUX
-+      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL | MSG_DONTWAIT);
++      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL);
 +#else
        rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 +#endif /* LINUX */
 +#else
 +    if (myGlobals.newSock)
 +#ifdef LINUX
-+      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL | MSG_DONTWAIT);
++      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL);
  #else
      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
 -#endif

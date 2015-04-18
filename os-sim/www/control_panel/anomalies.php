@@ -18,6 +18,7 @@ require_once ('classes/Host.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Host_mac.inc');
+require_once ('classes/Sensor.inc');
 
 function echo_values($val, $max, $ip, $image) {
 
@@ -102,10 +103,10 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
     if($rrd_list_temp = RRD_config::get_list($conn, "WHERE ip = 0")) {
     $rrd_temp = $rrd_list_temp[0];
     }
-    if(($alert->get_count() / $perl_interval) <
+/*    if(($alert->get_count() / $perl_interval) <
     ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
     continue;
-    }
+    } */
 ?>
 <tr>
 <th> 
@@ -143,21 +144,23 @@ anomaly_time desc")) {
     {
         $rrd_temp = $rrd_list_temp[0];
     }
+    /*
     if(($alert->get_count() / $perl_interval) < ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
     continue;
     }
+    */
 
 
 ?>
 <tr>
 <th>
-<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+<A HREF="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
-<?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $rrd_names[$alert->get_what()];?></td>
+<?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $alert->get_what();?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
 <td> <?php echo round(($alert->get_count())/$perl_interval);?>h. </td>
-<td><font color="red"><?php echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
+<td><font color="red"><?php echo 0;//echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
 echo $alert->get_what();?>"></input></td>
 <td align="center"><input type="checkbox" name="del,<?php echo $ip?>,<?php
@@ -205,7 +208,7 @@ if ($host_os_list = Host_os::get_list($conn, "where anom = 1 and os != previous"
     ?>
 
 <tr><th>
-<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+<A HREF="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A>
@@ -270,7 +273,7 @@ if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1 and mac != previo
     ?>
 
 <tr><th>
-<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+<A HREF="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A>

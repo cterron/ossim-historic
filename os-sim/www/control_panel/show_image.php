@@ -23,6 +23,8 @@ $conf = new ossim_conf();
     <tr><td align="center">
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day&ip=<?php echo
       "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>">Last Day</a>]
+      [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week&ip=<?php echo
+      "$ip&what=$what&start=N-7D&type=$type&zoom=$zoom"?>">Last Week</a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month&ip=<?php echo
       "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>">Last Month</a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year&ip=<?php echo

@@ -47,11 +47,15 @@
 
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
+    require_once 'classes/Host_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
 
     Host::insert ($conn, $ip, $hostname, $asset, $threshold_c, 
                   $threshold_a, $alert, $persistence, $nat, $sensors, $descr);
+    if($_POST["nessus"]){
+    Host_scan::insert ($conn, $ip, 3001, 0);
+    }
 
     $db->close($conn);
 }

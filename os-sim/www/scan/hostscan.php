@@ -19,6 +19,10 @@
     $conn = $db->connect();
 ?>
 
+<p align="center">
+* Use policy->hosts or networks to define nessus scans or else you'll get unexpected results.
+</p>
+
   <table align="center">
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php

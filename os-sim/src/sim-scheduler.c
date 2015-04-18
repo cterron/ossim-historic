@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <config.h>
 
+#include "os-sim.h"
 #include "sim-scheduler.h"
 #include "sim-container.h"
 #include "sim-database.h"
@@ -43,8 +44,7 @@
 #include "sim-command.h"
 #include "sim-server.h"
 
-extern SimContainer  *sim_ctn;
-extern SimServer     *sim_svr;
+extern SimMain  ossim;
 
 G_LOCK_EXTERN (s_mutex_backlogs);
 
@@ -205,9 +205,9 @@ sim_scheduler_task_calculate (SimScheduler  *scheduler,
 
   timer = config->scheduler.interval;
 
-  recovery = sim_container_db_get_recovery (sim_ctn, db_ossim);
-  sim_container_set_host_levels_recovery (sim_ctn, db_ossim, recovery);
-  sim_container_set_net_levels_recovery (sim_ctn, db_ossim, recovery);
+  recovery = sim_container_db_get_recovery (ossim.container, db_ossim);
+  sim_container_set_host_levels_recovery (ossim.container, db_ossim, recovery);
+  sim_container_set_net_levels_recovery (ossim.container, db_ossim, recovery);
 }
 
 /*
@@ -272,7 +272,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
   config = scheduler->_priv->config;
 
   G_LOCK (s_mutex_backlogs);
-  list = sim_container_get_backlogs_ul (sim_ctn);
+  list = sim_container_get_backlogs_ul (ossim.container);
   while (list)
     {
       SimDirective *backlog = (SimDirective *) list->data;
@@ -323,9 +323,9 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 	      /* Directive Priority */
 	      new_alert->priority = sim_directive_get_priority (backlog);
 
-	      sim_container_push_alert (sim_ctn, new_alert);
+	      sim_container_push_alert (ossim.container, new_alert);
 	      
-	      sim_container_db_update_backlog_ul (sim_ctn, db_ossim, backlog);
+	      sim_container_db_update_backlog_ul (ossim.container, db_ossim, backlog);
 	      
 	      /* Children Rules with type MONITOR */
 	      if (!G_NODE_IS_LEAF (rule_node))
@@ -338,7 +338,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 		      if (rule->type == SIM_RULE_TYPE_MONITOR)
 			{
 			  SimCommand *cmd = sim_command_new_from_rule (rule);
-			  sim_server_push_session_plugin_command (sim_svr, 
+			  sim_server_push_session_plugin_command (ossim.server, 
 								  SIM_SESSION_TYPE_SENSOR, 
 								  sim_rule_get_plugin_id (rule),
 								  cmd);
@@ -350,9 +350,9 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 		} 
 	      else
 		{
-		  sim_container_remove_backlog_ul (sim_ctn, backlog);
+		  sim_container_remove_backlog_ul (ossim.container, backlog);
 		  if (sim_directive_get_rule_level (backlog) <= 1)
-		    sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
+		    sim_container_db_delete_backlog_ul (ossim.container, db_ossim, backlog);
 
 		  g_object_unref (backlog);
 		}
@@ -361,9 +361,9 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 	      continue;
 	    }
 
-	  sim_container_remove_backlog_ul (sim_ctn, backlog);
+	  sim_container_remove_backlog_ul (ossim.container, backlog);
 	  if (sim_directive_get_rule_level (backlog) <= 1)
-	      sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
+	      sim_container_db_delete_backlog_ul (ossim.container, db_ossim, backlog);
 
 	  g_object_unref (backlog);
 	}

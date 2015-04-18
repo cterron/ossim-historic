@@ -69,7 +69,7 @@ struct _SimCommand {
     struct {
       gchar          *username;
       gchar          *password;
-      gchar          *sensor;
+      gchar          *type;
     } connect;
 
     struct {
@@ -194,6 +194,16 @@ struct _SimCommand {
       gint               plugin_id;
       gint               plugin_sid;
     } host_mac_change;
+
+
+    struct {
+      gint               id;
+    } server_get_sensors;
+
+    struct {
+      gchar             *host;
+      gboolean           state;
+    } sensor;
 
   } data;
 };

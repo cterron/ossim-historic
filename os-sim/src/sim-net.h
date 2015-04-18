@@ -40,6 +40,8 @@
 #include <gnet.h>
 #include <libgda/libgda.h>
 
+#include "sim-inet.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -82,17 +84,17 @@ gint              sim_net_get_asset                       (SimNet           *net
 void              sim_net_set_asset                       (SimNet           *net,
 							   gint              asset);
 
-void              sim_net_append_ia                       (SimNet           *net,
-							   GInetAddr        *ia);
-void              sim_net_remove_ia                       (SimNet           *net,
-							   GInetAddr        *ia);
-GList*            sim_net_get_ias                         (SimNet           *net);
-void              sim_net_set_ias                         (SimNet           *net,
+void              sim_net_append_inet                     (SimNet           *net,
+							   SimInet          *inet);
+void              sim_net_remove_inet                     (SimNet           *net,
+							   SimInet          *inet);
+GList*            sim_net_get_inets                       (SimNet           *net);
+void              sim_net_set_inets                       (SimNet           *net,
 							   GList            *list);
-void              sim_net_free_ias                        (SimNet           *net);
+void              sim_net_free_inets                      (SimNet           *net);
 
-gboolean          sim_net_has_ia                          (SimNet           *net,
-							   const GInetAddr  *ia);
+gboolean          sim_net_has_inet                        (SimNet           *net,
+							   SimInet          *inet);
 
 G_END_DECLS
 

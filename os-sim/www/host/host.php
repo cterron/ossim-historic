@@ -13,6 +13,8 @@
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
     require_once 'classes/Host_os.inc';
+    require_once 'classes/Host_scan.inc';
+    require_once 'classes/Plugin.inc';
 
     if (!$order = $_GET["order"]) $order = "hostname"; 
     if (!$search = $_POST["search"]) 
@@ -48,6 +50,7 @@
           ?>">Persistence</a></th>
 -->
       <th>Sensors</th>
+      <th>Scantype</th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -82,6 +85,25 @@
                 }
             }
 ?>    </td>
+    <td>
+<?php
+if($scan_list = Host_scan::get_list($conn, "WHERE host_ip = inet_aton('$ip')")){
+    foreach($scan_list as $scan){
+    $id = $scan->get_plugin_id();
+    $plugin_name = "";
+    if ($plugin_list = Plugin::get_list($conn, "WHERE id = $id")) {
+        $plugin_name = $plugin_list[0]->get_name();
+        echo "$plugin_name<BR>";
+    } else {
+        echo $id;
+    }
+}
+} else {
+echo "None";
+}
+
+?>
+    </td>
       <td><?php echo $host->get_descr(); ?></td>
       <td>
           <a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>

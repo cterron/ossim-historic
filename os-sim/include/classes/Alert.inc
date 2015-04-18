@@ -22,17 +22,21 @@ class Alert {
     var $absolute;
     var $priority;
     var $reliability;
+    var $asset_src;
+    var $asset_dst;
     var $risk_c;
     var $risk_a;
     var $asset_src;
     var $asset_dst;
+    var $snort_sid;
+    var $snort_cid;
     var $alarm;
     
     function Alert ($id, $timestamp, $sensor, $interface, $type, 
                     $plugin_id, $plugin_sid, $protocol, $src_ip, $dst_ip,
                     $src_port, $dst_port, $condition, $value, $time_interval,
                     $absolute, $priority, $reliability, $risk_c, $risk_a,
-                    $asset_src, $asset_dst, $alarm)
+                    $asset_src, $asset_dst, $snort_sid, $snort_cid, $alarm)
     {
         $this->id           = $id;
         $this->timestamp    = $timestamp;
@@ -56,6 +60,8 @@ class Alert {
         $this->risk_a       = $risk_a;
         $this->asset_src    = $asset_src;
         $this->asset_dst    = $asset_dst;
+        $this->snort_sid    = $snort_sid;
+        $this->snort_cid    = $snort_cid;
         $this->alarm        = $alarm;
     }
 
@@ -81,6 +87,8 @@ class Alert {
     function get_risk_a()           { return $this->risk_a;         }
     function get_asset_src()        { return $this->asset_src;      }
     function get_asset_dst()        { return $this->asset_dst;      }
+    function get_snort_sid()        { return $this->snort_sid;      }
+    function get_snort_cid()        { return $this->snort_cid;      }
     function alarm()                { return $this->alarm;          }
     
     function get_count($conn, $where = "") 
@@ -126,6 +134,8 @@ class Alert {
                                            $rs->fields["risk_a"],
                                            $rs->fields["asset_src"],
                                            $rs->fields["asset_dst"],
+                                           $rs->fields["snort_sid"],
+                                           $rs->fields["snort_cid"],
                                            $rs->fields["alarm"]);
                 } elseif ($inf > $sup) {
                     break;

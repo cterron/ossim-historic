@@ -82,62 +82,6 @@ class ossim_db {
         }
     }
 
-    /*
-     * Given a host ip, return its sensor ip asociated.
-     *
-     * Look at:
-     *  1st) host table
-     *  2nd) net table
-     *  3rd) /etc/ossim.conf
-     */
-    function get_sensor_link($conn, $host_ip)
-    {
-        require_once "ossim_conf.inc";
-        $conf = new ossim_conf();
-
-        $sensor_ip = '';
-
-        /* read from host table */
-        $query = "SELECT sensor.ip FROM host_sensor_reference, sensor 
-            WHERE host_sensor_reference.host_ip = '$host_ip' AND 
-            sensor.name = host_sensor_reference.sensor_name 
-            ORDER BY sensor.priority DESC LIMIT 1;";
-
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-        } elseif (!$rs->EOF) {
-            list($protocol, $ip, $port)  = 
-                split(':', $conf->get_conf("ntop_link"));
-            $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
-        } 
-
-        if ($sensor_ip == '') {
-        
-            /* read from net table */
-            $query = "SELECT * FROM net_host_reference nhr, 
-                                net_sensor_reference nsr, 
-                                sensor s 
-                    WHERE s.name = nsr.sensor_name AND 
-                          nhr.net_name = nsr.net_name AND 
-                          nhr.host_ip = '$host_ip' ORDER BY s.priority DESC;";
-
-            if (!$rs = &$conn->Execute($query)) {
-                print $conn->ErrorMsg();
-            } elseif (!$rs->EOF) {
-                list($protocol, $ip, $port) = 
-                    split(':', $conf->get_conf("ntop_link"));
-                $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
-            }
-        }
-       
-        /* read from /etc/ossim.conf */
-        if ($sensor_ip == '') {
-            $sensor_ip = $conf->get_conf("ntop_link");
-        }
-
-        return $sensor_ip;
-    }
 }
 
 ?>
-

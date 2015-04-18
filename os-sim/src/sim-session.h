@@ -43,6 +43,7 @@
 #include "sim-command.h"
 #include "sim-config.h"
 #include "sim-database.h"
+#include "sim-sensor.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,6 +86,10 @@ gboolean          sim_session_has_plugin_type                 (SimSession     *s
 							       SimPluginType   type);
 gboolean          sim_session_has_plugin_id                   (SimSession     *session,
 							       gint            plugin_id);
+
+SimSensor*        sim_session_get_sensor                      (SimSession *session);
+void              sim_session_close                           (SimSession *session);
+
 G_END_DECLS
 
 #ifdef __cplusplus

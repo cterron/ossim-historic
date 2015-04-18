@@ -4,6 +4,19 @@
 require_once ('ossim_conf.inc');
 $conf = new ossim_conf();
 
+
+function timestamp2date($timestamp){
+                                                                                
+    # YYYY-MM-DD HH:MM:SS
+    return (substr($timestamp, 0, 4)  . '-' .  # YYYY
+            substr($timestamp, 4, 2)  . '-' .  # MM
+            substr($timestamp, 6, 2)  . ' ' .  # DD
+            substr($timestamp, 8, 2)  . ':' .  # HH
+            substr($timestamp, 10, 2) . ':' .  # MM
+            substr($timestamp, 12, 2));        # SS
+}
+
+
 /*
  *  PRE: $date must be in format YYYY-MM-DD HH-MM
  *       $target must be ip_src or ip_dst
@@ -49,8 +62,62 @@ function get_acid_date_link($date, $ip = "", $target = "")
         $link .= "&ip_addr[0][1]=$target&ip_addr[0][2]==&ip_addr[0][3]=$ip&";
     }
 
-    $link .= "&sort_order=time_d&".
+    $link .= "&sort_order=time_a&".
              "submit=Query+DB&num_result_rows=-1&time_cnt=1&ip_addr_cnt=1";
+
+    return $link;
+}
+
+
+/*
+ *  PRE: 
+ *     $since and $last must be in format YYYY-MM-DD HH-MM-SS
+ *     $desc must be "time_d" or "time_a"
+ */
+function get_acid_alerts_link($since, $last, $order = "time_d")
+{
+
+    require_once ('ossim_conf.inc');
+    $conf = new ossim_conf();
+    $acid_link = $conf->get_conf("acid_link");
+    
+    $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/";
+    
+    /*
+     * regs[1] => year
+     * regs[2] => month
+     * regs[3] => day
+     * regs[4] => hour
+     * regs[5] => minute
+     * regs[6] => secs
+     */
+    preg_match($pattern, $since, $regs_since);
+    preg_match($pattern, $last, $regs_last);
+
+    $link = "$acid_link" . 
+        "/acid_qry_main.php?new=1" . 
+        "&time[0][0]=(" .
+        "&time[0][1]=>=" . 
+        "&time[0][2]=" . $regs_since[2] .
+        "&time[0][3]=" . $regs_since[3] .
+        "&time[0][4]=" . $regs_since[1] .
+        "&time[0][5]=" . $regs_since[4] .
+        "&time[0][6]=" . $regs_since[5] .
+        "&time[0][7]=" . $regs_since[6] .
+        "&time[0][8]=)" . 
+        "&time[0][9]=AND" .
+        "&time[1][0]=(" .
+        "&time[1][1]=<=" . 
+        "&time[1][2]=" . $regs_last[2] .
+        "&time[1][3]=" . $regs_last[3] .
+        "&time[1][4]=" . $regs_last[1] .
+        "&time[1][5]=" . $regs_last[4] .
+        "&time[1][6]=" . $regs_last[5] .
+        "&time[1][7]=" . $regs_last[6] .
+        "&time[1][8]=)";
+
+    $link .= "&sort_order=$order&".
+             "submit=Query+DB&num_result_rows=-1&time_cnt=2&ip_addr_cnt=1";
 
     return $link;
 }

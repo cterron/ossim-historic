@@ -7,6 +7,7 @@ sensor_DATA = editsensor.php \
 	modifysensor.php \
 	newsensor.php \
 	get_sensor_plugins.php \
+	get_sensors.php \
 	sensor_plugins.php
 EXTRA_DIST   = $(sensor_DATA)
 

@@ -80,6 +80,9 @@ gboolean          sim_directive_trylock                         (SimDirective   
 gint              sim_directive_get_id                          (SimDirective     *directive);
 void              sim_directive_set_id                          (SimDirective     *directive,
 								 gint              id);
+gint              sim_directive_get_backlog_id                  (SimDirective     *directive);
+void              sim_directive_set_backlog_id                  (SimDirective     *directive,
+								 gint              backlog_id);
 gchar*            sim_directive_get_name                        (SimDirective     *directive);
 void              sim_directive_set_name                        (SimDirective     *directive,
 								 const gchar      *name);
@@ -137,6 +140,8 @@ gchar*            sim_directive_backlog_get_update_clause       (SimDirective   
 gchar*            sim_directive_backlog_get_delete_clause       (SimDirective     *directive);
 gchar*            sim_directive_backlog_to_string               (SimDirective     *directive);
 
+gchar*            sim_directive_backlog_alert_get_insert_clause (SimDirective     *directive,
+								 SimAlert         *alert);
 G_END_DECLS
 
 #ifdef __cplusplus

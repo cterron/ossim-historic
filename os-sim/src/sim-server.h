@@ -89,6 +89,8 @@ void              sim_server_push_session_plugin_command   (SimServer       *ser
 							    gint             plugin_id,
 							    SimCommand      *command);
 
+SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,
+							    SimSensor   *sensor);
 
 G_END_DECLS
 

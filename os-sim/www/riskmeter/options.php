@@ -24,6 +24,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
+    require_once "classes/Sensor.inc";
 ?>
 
 <p align="center">
@@ -36,7 +37,7 @@
         echo "../control_panel/show_image.php?range=day&ip=$ip&what=compromise&start=N-1D&type=host&zoom=1"
 ?>"
      target="main">History</a> ] 
-[ <a href="<?php echo ossim_db::get_sensor_link($conn, $ip) . "/$ip" ?>.html" 
+[ <a href="<?php echo Sensor::get_sensor_link($conn, $ip) . "/$ip" ?>.html" 
      target="main">Monitor</a> ]
 <!--
 [ <a href="<?php echo "$ntop_link/$ip" ?>.html" 

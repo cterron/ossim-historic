@@ -48,13 +48,6 @@ CREATE TABLE net (
 );
 
 
-DROP TABLE IF EXISTS net_host_reference;
-CREATE TABLE net_host_reference (
-  net_name          varchar(128) NOT NULL,
-  host_ip           varchar(15) NOT NULL,
-  PRIMARY KEY       (net_name,host_ip)
-);
-
 
 
 /* ======== signatures ======== */
@@ -176,7 +169,7 @@ CREATE TABLE policy_host_reference (
 DROP TABLE IF EXISTS policy_net_reference;
 CREATE TABLE policy_net_reference (
     policy_id       int NOT NULL,
-    net_name        varchar(64) NOT NULL,
+    net_name        varchar(128) NOT NULL,
     direction       enum ('source', 'dest') NOT NULL,
     PRIMARY KEY (policy_id, net_name, direction)
 );
@@ -217,7 +210,7 @@ CREATE TABLE host_qualification (
 
 DROP TABLE IF EXISTS net_qualification;
 CREATE TABLE net_qualification (
-    net_name        varchar(64) NOT NULL,
+    net_name        varchar(128) NOT NULL,
     compromise      int NOT NULL DEFAULT 1,
     attack          int NOT NULL DEFAULT 1,
     PRIMARY KEY     (net_name)
@@ -232,35 +225,23 @@ CREATE TABLE host_vulnerability (
 
 DROP TABLE IF EXISTS net_vulnerability;
 CREATE TABLE net_vulnerability (
-    net             varchar(15) NOT NULL,
+    net             varchar(128) NOT NULL,
     vulnerability   int NOT NULL DEFAULT 1,
     PRIMARY KEY     (net)
 );
 
-DROP TABLE IF EXISTS control_panel_host;
-CREATE TABLE control_panel_host (
-    host_ip         varchar(15) NOT NULL,
+DROP TABLE IF EXISTS control_panel;
+CREATE TABLE control_panel (
+    id              varchar(15) NOT NULL,
+    rrd_type        varchar(6) NOT NULL DEFAULT 'host',
     time_range      varchar(5) NOT NULL DEFAULT 'day',
     max_c           int NOT NULL,
     max_a           int NOT NULL,
     max_c_date      datetime,
     max_a_date      datetime,
-    avg_c           int NOT NULL,
-    avg_a           int NOT NULL,
-    PRIMARY KEY     (host_ip, time_range)
-);
-
-DROP TABLE IF EXISTS control_panel_net;
-CREATE TABLE control_panel_net (
-    net_name        varchar(15) NOT NULL,
-    time_range      varchar(5) NOT NULL DEFAULT 'day',
-    max_c           int NOT NULL,
-    max_a           int NOT NULL,
-    max_c_date      datetime,
-    max_a_date      datetime,
-    avg_c           int NOT NULL,
-    avg_a           int NOT NULL,
-    PRIMARY KEY     (net_name, time_range)
+    c_sec_level     float NOT NULL,
+    a_sec_level     float NOT NULL,
+    PRIMARY KEY     (id, rrd_type, time_range)
 );
 
 --
@@ -394,32 +375,35 @@ CREATE TABLE plugin_sid (
 --
 -- Table: Alert
 --
+
 DROP TABLE IF EXISTS alert;
 CREATE TABLE alert (
-	id		BIGINT NOT NULL AUTO_INCREMENT,
-	timestamp	TIMESTAMP,
-	sensor		TEXT NOT NULL,
-	interface	TEXT NOT NULL,
-	type		INTEGER NOT NULL,
-	plugin_id	INTEGER NOT NULL,
-	plugin_sid	INTEGER,
-	protocol	INTEGER,
-	src_ip		INTEGER UNSIGNED,
-	dst_ip		INTEGER UNSIGNED,
-	src_port	INTEGER,
-	dst_port	INTEGER,
-	condition	INTEGER,
-	value		TEXT,
-	time_interval	INTEGER,
-	absolute	TINYINT,
-	priority	INTEGER DEFAULT 1,
-	reliability	INTEGER DEFAULT 1,
-	asset_src	INTEGER DEFAULT 1,
-	asset_dst	INTEGER DEFAULT 1,
-	risk_a		INTEGER DEFAULT 1,
-	risk_c		INTEGER DEFAULT 1,
-	alarm           TINYINT DEFAULT 1,
-	PRIMARY KEY (id)
+        id              BIGINT NOT NULL AUTO_INCREMENT,
+        timestamp       TIMESTAMP NOT NULL,
+        sensor          TEXT NOT NULL,
+        interface       TEXT NOT NULL,
+        type            INTEGER NOT NULL,
+        plugin_id       INTEGER NOT NULL,
+        plugin_sid      INTEGER NOT NULL,
+        protocol        INTEGER,
+        src_ip          INTEGER UNSIGNED,
+        dst_ip          INTEGER UNSIGNED,
+        src_port        INTEGER,
+        dst_port        INTEGER,
+        condition       INTEGER,
+        value           TEXT,
+        time_interval   INTEGER,
+        absolute        TINYINT,
+        priority        INTEGER DEFAULT 1,
+        reliability     INTEGER DEFAULT 1,
+        asset_src       INTEGER DEFAULT 1,
+        asset_dst       INTEGER DEFAULT 1,
+        risk_a          INTEGER DEFAULT 1,
+        risk_c          INTEGER DEFAULT 1,
+        alarm           TINYINT DEFAULT 1,
+        snort_sid       INTEGER UNSIGNED,
+        snort_cid       INTEGER UNSIGNED,
+        PRIMARY KEY (id)
 );
 
 --
@@ -427,28 +411,46 @@ CREATE TABLE alert (
 --
 DROP TABLE IF EXISTS backlog;
 CREATE TABLE backlog (
-	utime		BIGINT NOT NULL,
-	id		INTEGER NOT NULL,
-	name		TEXT,
-	rule_level	INTEGER,
-	rule_type	TINYINT,
-	rule_name	TEXT,
-	occurrence      INTEGER,
-	time_out	INTEGER,
+	id		BIGINT NOT NULL AUTO_INCREMENT,
+	directive_id	INTEGER NOT NULL,
+	timestamp	TIMESTAMP NOT NULL,
 	matched		TINYINT,
-	plugin_id	INTEGER,
-	plugin_sid	INTEGER,
-	src_ip		INTEGER UNSIGNED,
-	dst_ip		INTEGER UNSIGNED,
-	src_port	INTEGER,
-	dst_port	INTEGER,
-	condition       INTEGER,
-	value		TEXT,
-	time_interval	INTEGER,
-	absolute	TINYINT,
-	priority	INTEGER,
-	reliability     INTEGER,
-	PRIMARY KEY (utime, id)
+	PRIMARY KEY (id)
+);
+
+--
+-- Table: Backlog Alert
+--
+DROP TABLE IF EXISTS backlog_alert;
+CREATE TABLE backlog_alert (
+	backlog_id	BIGINT NOT NULL,
+	alert_id	BIGINT NOT NULL,
+	time_out	INTEGER,
+	occurrence	INTEGER,
+	rule_level	INTEGER,
+	matched		TINYINT,
+	PRIMARY KEY (backlog_id, alert_id)
+);
+
+--
+-- Table: Alarm
+--
+DROP TABLE IF EXISTS alarm;
+CREATE TABLE alarm (
+        alert_id        BIGINT NOT NULL,
+        backlog_id      BIGINT NOT NULL,
+        timestamp       TIMESTAMP NOT NULL,
+        plugin_id       INTEGER NOT NULL,
+        plugin_sid      INTEGER NOT NULL,
+        protocol        INTEGER,
+        src_ip          INTEGER UNSIGNED,
+        dst_ip          INTEGER UNSIGNED,
+        src_port        INTEGER,
+        dst_port        INTEGER,
+        risk            INTEGER,
+        snort_sid       INTEGER UNSIGNED,
+        snort_cid       INTEGER UNSIGNED,
+        PRIMARY KEY (alert_id)
 );
 
 --
@@ -484,4 +486,17 @@ CREATE TABLE host_scan (
 	plugin_sid	INTEGER NOT NULL,
 	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
 );
+
+--
+-- Table: Net scan
+--
+DROP TABLE IF EXISTS net_scan;
+CREATE TABLE net_scan (
+    net_name               varchar(128) NOT NULL,
+      plugin_id       INTEGER NOT NULL,
+      plugin_sid      INTEGER NOT NULL,
+      PRIMARY KEY (net_name, plugin_id, plugin_sid)
+);
+
+
 

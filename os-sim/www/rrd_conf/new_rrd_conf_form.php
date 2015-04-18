@@ -34,6 +34,14 @@
     </table>
     <br/>
     <table align="center">
+      <tr>
+        <th>Attribute</th>
+        <th>Threshold</th>
+        <th>Priority</th>
+        <th>Alpha</th>
+        <th>Beta</th>
+        <th>Persistence</th>
+      </tr>
     
 <?php
 

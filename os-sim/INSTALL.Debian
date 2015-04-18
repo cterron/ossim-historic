@@ -2,8 +2,8 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                         Updated March 25, 2004
-                          version 0.9.3+0.9.4
+                          Updated May 12, 2004
+                              version 0.9.4
                         
                        David Gil <dgil@ossim.net>
                           http://www.ossim.net
@@ -224,11 +224,12 @@
   Install the following packages and their respective dependencies:
     - php4-mysql       : MySQL module for php4         (>= 4.3.3)
     - php4-pgsql       : PostgreSQL module for php4    (>= 4.3.3)
-    - php4-gd          : GD module for php4            (>= 4.3.3)
+    - php4-gd2         : GD module (with GD2) for php4 (>= 4.3.3)
     - libphp-phplot    : The graphic library for php   (>= 4.4.6)
+    - libphp-jpgraph   : Object oriented graph library for php4 (>= 1.5.2)
     - wwwconfig-common : Debian web auto configuration (>= 0.0.34)
 
-    $ apt-get install php4-mysql php4-pgsql php4-gd libphp-phplot wwwconfig-common
+    $ apt-get install php4-mysql php4-pgsql php4-gd2 libphp-phplot libphp-jpgraph wwwconfig-common
 
   Install aditional packages needed by the directive viewer and restart apache:
     
@@ -270,7 +271,7 @@
 
   Install the following packages and their respective dependencies 
   from sources:
-    - ntop : display network usage in top-like format (== 2.2c)
+    - ntop : display network usage in top-like format (>= 3.0rc1)
 
   Download ntop source code:
 
@@ -278,12 +279,11 @@
 
   Patch it:
   
-    $ cd ntop-XXX/ntop/plugins
-    $ patch -p0 < $OSSIM_PATH/contrib/ntop/rrdPlugin.c.diff
+    $ cd ntop-XXX/
+    $ patch -p0 < $OSSIM_PATH/contrib/ntop/ntop3-ossim.patch
 
   Build ntop .deb:
   
-    $ cd ../../
     $ dpkg-buildpackage -rfakeroot -uc -b
     
   Install it:
@@ -482,12 +482,11 @@
 
     $ cp $OSSIM_PATH/contrib/acid_update_db.php /usr/share/acidlab/
   
-  An add an entry to your crontab:
-
-    $ crontab -e
-    0-59/5 * * * * php4 /usr/share/acidlab/acid_update_db.php > /dev/null
-
-
+  Edit framework/ossim.conf and set acid_dir=/usr/share/acidlab/
+  
+  Execute it.
+  
+  
   In order to make database backups, you must run the script called
   'backupdb.pl' placed in $OSSIM_PATH/scripts directory.
 
@@ -674,18 +673,19 @@
   To start ossim server:
    
     $ cd $OSSIM_PATH/src
-    $ ./ossim -c /etc/ossim/server/config.xml
+    $ ./ossim-server -d -c /etc/ossim/server/config.xml
 
   To start agents:
   
     $ cd $OSSIM_PATH/agent/
-    $ ./agent -c /etc/ossim/agent/config.xml
+    $ ./ossim-agent -d -c /etc/ossim/agent/config.xml
  
   To start misc scripts:
   
     $ cd $OSSIM_PATH/scripts/
-    $ ./control_panel.pl &
-    $ ./rrd_plugin.pl &
+    $ ./control_panel.py -d
+    $ ./acid_cache.pl
+    $ ./rrd_plugin.pl
 
   If you have installed OSSIM in one computer, you can also start OSSIM with
   this rc file:

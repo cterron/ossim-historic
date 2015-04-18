@@ -16,12 +16,14 @@ function server_get_sensor_plugins() {
             socket_strerror ($socket) . "\n";
     }
 
+    $list = array();
+
     /* connect */
-    $result = socket_connect ($socket, $address, $port);
-    if ($result < 0) {
-        echo "socket_connect() failed.\nReason: ($result) " .
-            socket_strerror($result) . "\n\n";
-    } 
+    $result = @socket_connect ($socket, $address, $port);
+    if (!$result) {
+        echo "socket error: Is OSSIM server running at $address:$port?";
+        return $list;
+} 
 
     $in = 'server-get-sensor-plugins id="1"' . "\n";
     $out = '';

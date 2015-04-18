@@ -1,0 +1,63 @@
+                           INSTALL OSSIM FROM SOURCES
+
+Author: Fabio Ospitia Trujillo <fot@ossim.net>
+Date:   2004-05-13
+
+This document is a guie for the instalation of OSSIM and his dependences in a UNIX system from the sources. All de packages have been install in the /usr/local directory
+
+Download the last sources of OSSIM from http://sourceforge.net/projects/os-sim and untar in the /usr/local/src directory
+
+- MySQL
+
+Home Page:	http://www.mysql.com
+Version:	4.0.18
+
+- GLib
+
+Home Page:	http://www.gtk.org
+Version:	2.4.1
+
+- LibXML2
+
+Home Page:	http://xmlsoft.org
+Version:	2.6.9
+
+- GNet
+
+Home Page:	http://www.gnetlibrary.org
+Version:	2.0.5
+
+- LibGDA
+
+Home Page:	http://www.gnome-db.org
+Version:	1.0.4
+
+- RRD Tool
+
+Home Page:	http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+Version:	CVS 1.1.x
+
+- Snort
+
+Home Page:	http://www.snort.org
+Version:        2.1.2
+
+- Ntop
+
+Home Page:	http://www.ntop.org
+Version:	3.0
+
+- Httpd Apache
+
+Home Page:	http://httpd.apache.org
+Version:	2.0.49
+
+- PHP
+
+Home Page:	http://www.php.net
+Version:	4.3.6
+
+- Acid
+
+Home Page:	http://acidlab.sourceforge.net
+Version:	0.9.6b23

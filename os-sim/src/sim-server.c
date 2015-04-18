@@ -37,8 +37,7 @@
 
 #include "sim-session.h"
 #include "sim-server.h"
-
-extern SimConfig  *sim_cnt;
+#include "sim-sensor.h"
 
 enum 
 {
@@ -382,4 +381,35 @@ sim_server_reload (SimServer       *server)
 
       list = list->next;
     }
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+SimSession*
+sim_server_get_session_by_sensor (SimServer   *server,
+				  SimSensor   *sensor)
+{
+  GList *list;
+
+  g_return_val_if_fail (server, NULL);
+  g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
+  g_return_val_if_fail (sensor, NULL);
+  g_return_val_if_fail (SIM_IS_SENSOR (sensor), NULL);
+
+  list = server->_priv->sessions;
+  while (list)
+    {
+      SimSession *session = (SimSession *) list->data;
+
+      if (sim_session_get_sensor (session) == sensor)
+	return session;
+
+      list = list->next;
+    }
+
+  return NULL;
 }

@@ -33,9 +33,11 @@ if (!$_GET["confirm"]) {
 
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
+    require_once 'classes/Host_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
     Host::delete($conn, $ip);
+    Host_scan::delete($conn, $ip, 3001);
     $db->close($conn);
 
 ?>

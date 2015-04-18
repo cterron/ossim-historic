@@ -1,5 +1,65 @@
 # ChangeLog for OSSIM
 
+    14 Jun 2004 DK <dk@ossim.net> :
+    * 0.9.5 released
+
+* OSSIM-0.9.5 (14 Jun 2004)
+
+    14 Jun 2004 Fabio Ospitia Trujillo <fot@ossim.net> :
+    * Add Debug Log levels
+    * Fedora Core 2 RPMS
+    * Directives new attributes
+    * Sensor status
+
+    14 Jun 2004 DK <dk@ossim.net> :
+    * New directives. Thanks to Santiago Gonzalez.
+    * Directive numeration.
+
+    11 Jun 2004 DK <dk@ossim.net> :
+    * New directives.
+
+    07 Jun 2004 David Gil <dgil@ossim.net>:
+    * Control panel script rewritten
+    * new table: control_panel
+    * removed tables: control_panel_host, control_panel_net
+    * New global service level.
+
+    06 Jun 2004 DK <dk@ossim.net> :
+    * added oinkmaster rule management mods
+    * nessus bugfixes. Thanks to Stephane Fournier.
+    * nessus new network functionality.
+    * new table: net_scan.
+    * nessus distributed scanning.
+
+    04 Jun 2004 DK <dk@ossim.net> :
+    * added oinkmaster rule management mods
+    * nessus bugfixes
+
+    03 Jun 2004 David Gil <dgil@ossim.net>:
+    * Alarm console improvements
+
+    02 Jun 2004 DK <dk@ossim.net> :
+    * do_nessus.pl fix.
+    * Sensor status
+
+    20 May 2004 DK <dk@ossim.net> :
+    * Mac, OS, rrd anomalies fixed
+    * Server bugfixes
+    * Misc.
+
+    19 May 2004 David Gil <dgil@ossim.net> :
+    * www/sec_report/sec_report.php: Security report improvements.
+    * www/sec_report/graphs/*: New graphs (jpgraph library)
+
+    17 May 2004 DK <dk@ossim.net> :
+    * update_nessus fix. Thanks to Jeremie Laurent.
+    * Cleanup.
+
+    12 May 2004 DK <dk@ossim.net> :
+    * 0.9.4 released
+
+* OSSIM-0.9.4 (12 May 2004)
+
     06 May 2004 Fabio Ospitia Trujill <fot@ossim.net> :
     * scripts/acid_cache.pl: Acid cache
     * New rpm packages: perl and scripts

@@ -35,6 +35,7 @@
 #include <gnet.h>
 #include <config.h>
 
+#include "os-sim.h"
 #include "sim-session.h"
 #include "sim-rule.h"
 #include "sim-directive.h"
@@ -45,7 +46,7 @@
 #include "sim-server.h"
 #include "sim-plugin-state.h"
 
-extern SimContainer  *sim_ctn;
+extern SimMain    ossim;
 
 G_LOCK_EXTERN (s_mutex_directives);
 
@@ -70,6 +71,8 @@ struct _SimSessionPrivate {
 
   GInetAddr     *ia;
   gint           seq;
+  gboolean       close;
+  gboolean       connect;
 };
 
 static gpointer parent_class = NULL;
@@ -93,7 +96,14 @@ sim_session_impl_finalize (GObject  *gobject)
 
   g_object_unref (session->_priv->db_ossim);
 
+  if (session->_priv->socket)
+    gnet_tcp_socket_delete (session->_priv->socket);
+  if (session->_priv->ia)
+    gnet_inetaddr_unref (session->_priv->ia);
+
   g_free (session->_priv);
+
+  g_message ("Session: REMOVED");
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -132,6 +142,9 @@ sim_session_instance_init (SimSession *session)
   session->_priv->ia = NULL;
 
   session->_priv->seq = 0;
+
+  session->_priv->connect = TRUE;
+  session->_priv->connect = FALSE;
 }
 
 /* Public Methods */
@@ -223,14 +236,20 @@ sim_session_cmd_connect (SimSession  *session,
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
-
-  if (command->data.connect.sensor)
+  
+  if (command->data.connect.type)
     {
-      sensor = sim_container_get_sensor_by_name (sim_ctn, command->data.connect.sensor);
+      sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
       if (sensor)
 	{
-	  session->type = SIM_SESSION_TYPE_SENSOR;
+	  SimSession *sess = sim_server_get_session_by_sensor (session->_priv->server, sensor);
+	  if (sess)
+	    { 
+	      sim_session_close (sess);
+	    }
+
 	  session->_priv->sensor = sensor;
+	  session->type = SIM_SESSION_TYPE_SENSOR;
 	}
     }
 
@@ -239,6 +258,8 @@ sim_session_cmd_connect (SimSession  *session,
 
   sim_session_write (session, cmd);
   g_object_unref (cmd);
+
+  session->_priv->connect = TRUE;
 }
 
 /*
@@ -261,7 +282,7 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
 
   session->type = SIM_SESSION_TYPE_SENSOR;
 
-  plugin = sim_container_get_plugin_by_id (sim_ctn, command->data.session_append_plugin.id);
+  plugin = sim_container_get_plugin_by_id (ossim.container, command->data.session_append_plugin.id);
   if (plugin)
     {
       plugin_state = sim_plugin_state_new_from_data (plugin,
@@ -280,8 +301,9 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
       /* Directives with root rule type MONITOR */
       if (plugin->type == SIM_PLUGIN_TYPE_MONITOR)
 	{      
+	  GList *directives = NULL;
 	  G_LOCK (s_mutex_directives);
-	  GList *directives = sim_container_get_directives_ul (sim_ctn);
+	  directives = sim_container_get_directives_ul (ossim.container);
 	  while (directives)
 	    {
 	      SimDirective *directive = (SimDirective *) directives->data;
@@ -327,7 +349,7 @@ sim_session_cmd_session_remove_plugin (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  plugin = sim_container_get_plugin_by_id (sim_ctn, command->data.session_remove_plugin.id);
+  plugin = sim_container_get_plugin_by_id (ossim.container, command->data.session_remove_plugin.id);
   if (plugin)
     {
       session->_priv->plugins = g_list_remove (session->_priv->plugins, plugin);
@@ -346,6 +368,49 @@ sim_session_cmd_session_remove_plugin (SimSession  *session,
       sim_session_write (session, cmd);
       g_object_unref (cmd);
     }
+}
+
+static void
+sim_session_cmd_server_get_sensors (SimSession  *session,
+				    SimCommand  *command)
+{
+  SimCommand  *cmd;
+  GList       *list;
+  GList       *sessions;
+
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+
+  sessions = sim_server_get_sessions (session->_priv->server);
+  while (sessions)
+    {
+      SimSession *sess = (SimSession *) sessions->data;
+      SimSensor *sensor = sim_session_get_sensor (sess);
+
+      if (!sensor)
+	{
+	  sessions = sessions->next;
+	  continue;
+	}
+
+      cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR);
+      cmd->data.sensor.host = gnet_inetaddr_get_canonical_name (sess->_priv->ia);
+      cmd->data.sensor.state = TRUE;
+
+      sim_session_write (session, cmd);
+      g_object_unref (cmd);
+
+      sessions = sessions->next;
+    }
+  g_list_free (sessions);
+
+  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+  cmd->id = command->id;
+  
+  sim_session_write (session, cmd);
+  g_object_unref (cmd);
 }
 
 static void
@@ -676,14 +741,14 @@ sim_session_cmd_alert (SimSession  *session,
 
   if ((alert->plugin_id) && (alert->plugin_sid))
     {
-      plugin_sid = sim_container_get_plugin_sid_by_pky (sim_ctn,
+      plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container,
 						       alert->plugin_id,
 						       alert->plugin_sid);
       alert->priority = sim_plugin_sid_get_priority (plugin_sid);
       alert->reliability = sim_plugin_sid_get_reliability (plugin_sid);
     }
 
-  sim_container_push_alert (sim_ctn, alert);
+  sim_container_push_alert (ossim.container, alert);
 }
 
 /*
@@ -703,8 +768,8 @@ sim_session_cmd_reload_plugins (SimSession  *session,
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 
-  sim_container_free_plugins (sim_ctn);
-  sim_container_db_load_plugins (sim_ctn, session->_priv->db_ossim);
+  sim_container_free_plugins (ossim.container);
+  sim_container_db_load_plugins (ossim.container, session->_priv->db_ossim);
   
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -730,8 +795,8 @@ sim_session_cmd_reload_sensors (SimSession  *session,
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 
-  sim_container_free_sensors (sim_ctn);
-  sim_container_db_load_sensors (sim_ctn, session->_priv->db_ossim);
+  sim_container_free_sensors (ossim.container);
+  sim_container_db_load_sensors (ossim.container, session->_priv->db_ossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -757,8 +822,8 @@ sim_session_cmd_reload_hosts (SimSession  *session,
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 
-  sim_container_free_hosts (sim_ctn);
-  sim_container_db_load_hosts (sim_ctn,
+  sim_container_free_hosts (ossim.container);
+  sim_container_db_load_hosts (ossim.container,
 			       session->_priv->db_ossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -784,8 +849,8 @@ sim_session_cmd_reload_nets (SimSession  *session,
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  sim_container_free_nets (sim_ctn);
-  sim_container_db_load_nets (sim_ctn,
+  sim_container_free_nets (ossim.container);
+  sim_container_db_load_nets (ossim.container,
 			      session->_priv->db_ossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -811,8 +876,8 @@ sim_session_cmd_reload_policies (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  sim_container_free_policies (sim_ctn);
-  sim_container_db_load_policies (sim_ctn, session->_priv->db_ossim);
+  sim_container_free_policies (ossim.container);
+  sim_container_db_load_policies (ossim.container, session->_priv->db_ossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -837,12 +902,12 @@ sim_session_cmd_reload_directives (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  sim_container_db_delete_plugin_sid_directive_ul (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_delete_backlogs_ul (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, session->_priv->db_ossim);
+  sim_container_db_delete_backlogs_ul (ossim.container, session->_priv->db_ossim);
 
-  sim_container_free_backlogs (sim_ctn);
-  sim_container_free_directives (sim_ctn);
-  sim_container_load_directives_from_file (sim_ctn,
+  sim_container_free_backlogs (ossim.container);
+  sim_container_free_directives (ossim.container);
+  sim_container_load_directives_from_file (ossim.container,
 					   session->_priv->db_ossim,
 					   SIM_XML_DIRECTIVE_FILE);
 
@@ -872,35 +937,35 @@ sim_session_cmd_reload_all (SimSession  *session,
 
   config = session->_priv->config;
 
-  sim_container_free_directives (sim_ctn);
-  sim_container_free_backlogs (sim_ctn);
-  sim_container_free_net_levels (sim_ctn);
-  sim_container_free_host_levels (sim_ctn);
-  sim_container_free_policies (sim_ctn);
-  sim_container_free_nets (sim_ctn);
-  sim_container_free_hosts (sim_ctn);
-  sim_container_free_sensors (sim_ctn);
-  sim_container_free_plugin_sids (sim_ctn);
-  sim_container_free_plugins (sim_ctn);
-  sim_container_free_classifications (sim_ctn);
-  sim_container_free_categories (sim_ctn);
+  sim_container_free_directives (ossim.container);
+  sim_container_free_backlogs (ossim.container);
+  sim_container_free_net_levels (ossim.container);
+  sim_container_free_host_levels (ossim.container);
+  sim_container_free_policies (ossim.container);
+  sim_container_free_nets (ossim.container);
+  sim_container_free_hosts (ossim.container);
+  sim_container_free_sensors (ossim.container);
+  sim_container_free_plugin_sids (ossim.container);
+  sim_container_free_plugins (ossim.container);
+  sim_container_free_classifications (ossim.container);
+  sim_container_free_categories (ossim.container);
 
-  sim_container_db_delete_plugin_sid_directive_ul (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_delete_backlogs_ul (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, session->_priv->db_ossim);
+  sim_container_db_delete_backlogs_ul (ossim.container, session->_priv->db_ossim);
 
-  sim_container_db_load_categories (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_classifications (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_plugins (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_plugin_sids (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_sensors (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_hosts (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_nets (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_policies (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_host_levels (sim_ctn, session->_priv->db_ossim);
-  sim_container_db_load_net_levels (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_load_categories (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_classifications (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_plugins (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_plugin_sids (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_sensors (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_hosts (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_nets (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_policies (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_host_levels (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_net_levels (ossim.container, session->_priv->db_ossim);
 
   if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
-    sim_container_load_directives_from_file (sim_ctn, session->_priv->db_ossim, config->directive.filename);
+    sim_container_load_directives_from_file (ossim.container, session->_priv->db_ossim, config->directive.filename);
 
   sim_server_reload (session->_priv->server);
 
@@ -938,13 +1003,13 @@ sim_session_cmd_host_os_change (SimSession  *session,
   config = session->_priv->config;
 
   ia = gnet_inetaddr_new_nonblock (command->data.host_os_change.host, 0);
-  os = sim_container_db_get_host_os_ul (sim_ctn,
+  os = sim_container_db_get_host_os_ul (ossim.container,
 				       session->_priv->db_ossim,
 				       ia);
 
   if (!os)
     {
-      sim_container_db_insert_host_os_ul (sim_ctn,
+      sim_container_db_insert_host_os_ul (ossim.container,
 					 session->_priv->db_ossim,
 					 ia,
 					 command->data.host_os_change.date,
@@ -960,7 +1025,7 @@ sim_session_cmd_host_os_change (SimSession  *session,
       return;
     }
 
-  sim_container_db_update_host_os_ul (sim_ctn,
+  sim_container_db_update_host_os_ul (ossim.container,
 				     session->_priv->db_ossim,
 				     ia,
 				     command->data.host_os_change.date,
@@ -987,7 +1052,7 @@ sim_session_cmd_host_os_change (SimSession  *session,
   alert->data = g_strdup_printf ("%s --> %s", os,
 				 command->data.host_os_change.os);
 
-  sim_container_push_alert (sim_ctn, alert);
+  sim_container_push_alert (ossim.container, alert);
   g_free (os);
 }
 
@@ -1020,13 +1085,13 @@ sim_session_cmd_host_mac_change (SimSession  *session,
   config = session->_priv->config;
 
   ia = gnet_inetaddr_new_nonblock (command->data.host_mac_change.host, 0);
-  mac = sim_container_db_get_host_mac_ul (sim_ctn,
+  mac = sim_container_db_get_host_mac_ul (ossim.container,
 					 session->_priv->db_ossim,
 					 ia);
 
   if (!mac)
     {
-      sim_container_db_insert_host_mac_ul (sim_ctn,
+      sim_container_db_insert_host_mac_ul (ossim.container,
 					  session->_priv->db_ossim,
 					  ia,
 					  command->data.host_mac_change.date,
@@ -1043,11 +1108,11 @@ sim_session_cmd_host_mac_change (SimSession  *session,
       return;
     }
 
-  vendor = sim_container_db_get_host_mac_vendor_ul (sim_ctn,
+  vendor = sim_container_db_get_host_mac_vendor_ul (ossim.container,
 						    session->_priv->db_ossim,
 						    ia);
 
-  sim_container_db_update_host_mac_ul (sim_ctn,
+  sim_container_db_update_host_mac_ul (ossim.container,
 				      session->_priv->db_ossim,
 				      ia,
 				      command->data.host_mac_change.date,
@@ -1076,7 +1141,7 @@ sim_session_cmd_host_mac_change (SimSession  *session,
 				 command->data.host_mac_change.mac,
 				 (command->data.host_mac_change.vendor) ? command->data.host_mac_change.vendor : "");
 
-  sim_container_push_alert (sim_ctn, alert);
+  sim_container_push_alert (ossim.container, alert);
 
   g_free (mac);
   if (vendor) g_free (vendor);
@@ -1133,7 +1198,8 @@ sim_session_read (SimSession  *session)
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (session->_priv->io != NULL);
 
-  while ((error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n > 0))
+  while (!(session->_priv->close) && 
+	 (error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n > 0))
     {
       if (error != G_IO_ERROR_NONE)
 	{
@@ -1141,7 +1207,7 @@ sim_session_read (SimSession  *session)
 	  break;
 	}
 
-      g_message ("READ: %s", buffer);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: %s", buffer);
 
       cmd = sim_command_new_from_buffer (buffer);
 
@@ -1166,6 +1232,9 @@ sim_session_read (SimSession  *session)
 	  break;
 	case SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN:
 	  sim_session_cmd_session_remove_plugin (session, cmd);
+	  break;
+	case SIM_COMMAND_TYPE_SERVER_GET_SENSORS:
+	  sim_session_cmd_server_get_sensors (session, cmd);
 	  break;
 	case SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS:
 	  sim_session_cmd_server_get_sensor_plugins (session, cmd);
@@ -1264,7 +1333,7 @@ sim_session_write (SimSession  *session,
   if (!str)
     return 0;
 
-  g_message ("WRITE: %s", str);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_write: %s", str);
 
   error = gnet_io_channel_writen (session->_priv->io, str, strlen(str), &n);
 
@@ -1357,10 +1426,52 @@ sim_session_reload (SimSession     *session)
       SimPluginState  *plugin_state = (SimPluginState *) list->data;
       gint plugin_id = sim_plugin_state_get_plugin_id (plugin_state);
 
-      SimPlugin *plugin = sim_container_get_plugin_by_id (sim_ctn, plugin_id);
+      SimPlugin *plugin = sim_container_get_plugin_by_id (ossim.container, plugin_id);
 
       sim_plugin_state_set_plugin (plugin_state, plugin);
 
       list = list->next;
     }
+}
+
+/*
+ *
+ *
+ *
+ */
+SimSensor*
+sim_session_get_sensor (SimSession *session)
+{
+  g_return_val_if_fail (session, NULL);
+  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
+
+  return session->_priv->sensor;
+}
+
+/*
+ *
+ *
+ *
+ */
+gboolean
+sim_session_is_connected (SimSession *session)
+{
+  g_return_val_if_fail (session, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
+
+  return session->_priv->connect; 
+} 
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_session_close (SimSession *session)
+{
+  g_return_if_fail (session);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  
+  session->_priv->close = TRUE;
 }

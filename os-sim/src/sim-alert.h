@@ -40,6 +40,8 @@
 #include <gnet.h>
 
 #include "sim-enums.h"
+#include "sim-plugin.h"
+#include "sim-plugin-sid.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +61,10 @@ typedef struct _SimAlertClass   SimAlertClass;
 
 struct _SimAlert {
   GObject parent;
+
+  guint              id;
+  guint              snort_sid;
+  guint              snort_cid;
 
   SimAlertType       type;
 
@@ -94,26 +100,38 @@ struct _SimAlert {
 
   gchar             *data;
 
-  guint              sid;
-  guint              cid;
+  SimPlugin         *plugin;
+  SimPluginSid      *pluginsid;
 
+  /* Directives */
+  gboolean           sticky;
   gboolean           match;
+  gboolean           matched;
+  gint               count;
+  gint               level;
+  guint32            backlog_id;
 };
 
 struct _SimAlertClass {
   GObjectClass parent_class;
 };
 
-GType             sim_alert_get_type                        (void);
-SimAlert*         sim_alert_new                             (void);
-SimAlert*         sim_alert_new_from_type                   (SimAlertType    type);
+GType		sim_alert_get_type			(void);
+SimAlert*	sim_alert_new				(void);
+SimAlert*	sim_alert_new_from_type			(SimAlertType	 type);
 
-SimAlert*         sim_alert_clone                           (SimAlert       *alert);
+SimAlert*	sim_alert_clone				(SimAlert	*alert);
 
+gchar*		sim_alert_get_insert_clause		(SimAlert	*alert);
+gchar*		sim_alert_get_update_clause		(SimAlert	*alert);
+gchar*		sim_alert_get_alarm_insert_clause	(SimAlert	*alert);
 
-gchar*            sim_alert_get_ossim_insert_clause         (SimAlert       *alert);
+gchar*		sim_alert_to_string			(SimAlert	*alert);
 
-void              sim_alert_print                           (SimAlert       *alert);
+void		sim_alert_print				(SimAlert	*alert);
+
+gchar*		sim_alert_get_msg			(SimAlert	*alert);
+
 
 G_END_DECLS
 
