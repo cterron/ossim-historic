@@ -17,13 +17,14 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
 
     def startElement (self, name, attrs):
 
-        if name == 'serverip' or name == 'serverport' or name == 'path' \
-          or name == 'source' or name == 'location':
+        if name in ['serverip', 'serverport', 'source', 'location', \
+                    'interface', 'sensor', 'startup', 'shutdown', 'logdir'] :
             self.inContent = 1
 
         if name == 'plugin':
+
             plugin = {'id' : '', \
-                      'name' : '', \
+                      'process' : '', \
                       'type' : '', \
                       'start': '', \
                       'enable' : '', \
@@ -36,12 +37,18 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
                       'frequency': ''}
             plugin["id"] = util.normalizeWhitespace(attrs.get('id', None))
             self.plugin_id = plugin["id"]
-            plugin["name"] = util.normalizeWhitespace(attrs.get('name', None))
+            plugin["process"] = util.normalizeWhitespace(attrs.get('process', None))
             plugin["type"] = util.normalizeWhitespace(attrs.get('type', None))
             plugin["start"] = util.normalizeWhitespace(attrs.get('start', None))
             plugin["enable"] = util.normalizeWhitespace(attrs.get('enable', None))
             ConfigHandler.plugins[plugin["id"]] = plugin
-        
+            
+        elif name == 'watchdog':
+            ConfigHandler.watchdog_enable = \
+                util.normalizeWhitespace(attrs.get('enable', None))
+            ConfigHandler.watchdog_interval = \
+                util.normalizeWhitespace(attrs.get('interval', None))
+
         
     def endElement (self, name):
 
@@ -51,6 +58,8 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
             ConfigHandler.serverIp = self.theContent.encode("UTF-8")
         if name == 'serverport':
             ConfigHandler.serverPort = int(self.theContent.encode("UTF-8"))
+        if name == 'logdir':
+            ConfigHandler.logdir = self.theContent.encode("UTF-8")
         if name == 'startup':
             ConfigHandler.plugins[self.plugin_id]["startup"] = \
                 self.theContent.encode("UTF-8")

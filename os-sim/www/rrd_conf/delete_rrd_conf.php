@@ -10,13 +10,11 @@
   <h1>Delete RRD Conf</h1>
 
 <?php 
-    if (!$_GET["ip"]) { 
-?>
-    <p>Wrong ip</p>
-<?php 
-        exit;
-    }
 
+if (!$_GET["ip"]) { 
+    echo "<p align=\"center\">Wrong ip</p>";
+    exit;
+}
 
 $ip = mysql_escape_string($_GET["ip"]);
 
@@ -32,10 +30,10 @@ if (!$_GET["confirm"]) {
 }
 
     require_once 'ossim_db.inc';
-    require_once 'classes/RRD_conf.inc';
+    require_once 'classes/RRD_config.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-    RRD_conf::delete($conn, $ip);
+    RRD_config::delete($conn, $ip);
     $db->close($conn);
 
 ?>

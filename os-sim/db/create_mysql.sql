@@ -105,6 +105,12 @@ CREATE TABLE port_group_reference (
 );
 
 
+INSERT INTO port_group (name, descr) VALUES ('ANY', 'Any port');
+INSERT INTO port_group_reference (port_group_name, port_number, protocol_name) VALUES ('ANY', 0, 'tcp');
+INSERT INTO port_group_reference (port_group_name, port_number, protocol_name) VALUES ('ANY', 0, 'udp');
+INSERT INTO port_group_reference (port_group_name, port_number, protocol_name) VALUES ('ANY', 0, 'icmp');
+
+
 DROP TABLE IF EXISTS protocol;
 CREATE TABLE protocol (
   id                int NOT NULL,
@@ -267,7 +273,7 @@ CREATE TABLE host_mac (
 	previous	VARCHAR(255) NOT NULL,
 	date            DATETIME NOT NULL,
 	vendor		VARCHAR(255),
-    anom        int NOT NULL DEFAULT 1,
+    anom        int NOT NULL DEFAULT 0,
 	PRIMARY KEY     (ip)
 );
 
@@ -280,7 +286,7 @@ CREATE TABLE host_os (
 	os		VARCHAR(255) NOT NULL,
 	previous	VARCHAR(255) NOT NULL,
 	date		DATETIME NOT NULL,
-    anom        int NOT NULL DEFAULT 1,
+    anom        int NOT NULL DEFAULT 0,
 	PRIMARY KEY	(ip)
 );
 
@@ -300,25 +306,19 @@ CREATE TABLE host_netbios (
     PRIMARY KEY (ip)
 );
 
-DROP TABLE IF EXISTS rrd_conf;
-CREATE TABLE rrd_conf (
-  ip                        varchar(15) UNIQUE NOT NULL,
-  pkt_sent	                varchar(60) NOT NULL,	
-  pkt_rcvd       	        varchar(60) NOT NULL,	
-  bytes_sent	            varchar(60) NOT NULL,	
-  bytes_rcvd	            varchar(60) NOT NULL,	
-  tot_contacted_sent_peers	varchar(60) NOT NULL,	
-  tot_contacted_rcvd_peers	varchar(60) NOT NULL,	
-  ip_dns_sent_bytes	        varchar(60) NOT NULL,	
-  ip_dns_rcvd_bytes	        varchar(60) NOT NULL,	
-  ip_nbios_ip_sent_bytes	varchar(60) NOT NULL,
-  ip_nbios_ip_rcvd_bytes	varchar(60) NOT NULL,
-  ip_mail_sent_bytes	    varchar(60) NOT NULL,
-  ip_mail_rcvd_bytes	    varchar(60) NOT NULL,
-  mrtg_a	                varchar(60) NOT NULL,
-  mrtg_c	                varchar(60) NOT NULL,
-  PRIMARY KEY       (ip)
+DROP TABLE IF EXISTS rrd_config;
+CREATE TABLE rrd_config (
+    ip          INTEGER UNSIGNED NOT NULL,
+    rrd_attrib  VARCHAR(60) NOT NULL,
+    threshold   INTEGER UNSIGNED NOT NULL,
+    priority    INTEGER UNSIGNED NOT NULL,
+    alpha       FLOAT UNSIGNED  NOT NULL,
+    beta        FLOAT UNSIGNED NOT NULL,
+    persistence INTEGER UNSIGNED NOT NULL,
+    descripcion TEXT,
+    PRIMARY KEY (ip, rrd_attrib)
 );
+
 
 DROP TABLE IF EXISTS rrd_anomalies;
 CREATE TABLE rrd_anomalies (
@@ -331,46 +331,6 @@ CREATE TABLE rrd_anomalies (
     acked                   int DEFAULT 0
 );
 
-DROP TABLE IF EXISTS rrd_conf_global;
-CREATE TABLE rrd_conf_global (
-active_host_senders_num VARCHAR(60) NOT NULL,
-arp_rarp_bytes    VARCHAR(60) NOT NULL,
-broadcast_pkts    VARCHAR(60) NOT NULL,
-ethernet_bytes    VARCHAR(60) NOT NULL, 
-ethernet_pkts     VARCHAR(60) NOT NULL, 
-icmp_bytes        VARCHAR(60) NOT NULL, 
-igmp_bytes        VARCHAR(60) NOT NULL, 
-ip_bytes          VARCHAR(60) NOT NULL, 
-ip_dhcp_bootp_bytes VARCHAR(60) NOT NULL, 
-ip_dns_bytes      VARCHAR(60) NOT NULL,
-ip_edonkey_bytes  VARCHAR(60) NOT NULL, 
-ip_ftp_bytes      VARCHAR(60) NOT NULL, 
-ip_gnutella_bytes VARCHAR(60) NOT NULL, 
-ip_http_bytes     VARCHAR(60) NOT NULL, 
-ip_kazaa_bytes    VARCHAR(60) NOT NULL, 
-ip_mail_bytes     VARCHAR(60) NOT NULL, 
-ip_messenger_bytes VARCHAR(60) NOT NULL,
-ip_nbios_ip_bytes VARCHAR(60) NOT NULL, 
-ip_nfs_bytes      VARCHAR(60) NOT NULL, 
-ip_nttp_bytes     VARCHAR(60) NOT NULL, 
-ip_snmp_bytes     VARCHAR(60) NOT NULL, 
-ip_ssh_bytes      VARCHAR(60) NOT NULL, 
-ip_telnet_bytes   VARCHAR(60) NOT NULL, 
-ip_winmx_bytes    VARCHAR(60) NOT NULL, 
-ip_x11_bytes      VARCHAR(60) NOT NULL, 
-ipx_bytes         VARCHAR(60) NOT NULL,
-known_hosts_num   VARCHAR(60) NOT NULL,
-multicast_pkts    VARCHAR(60) NOT NULL,
-ospf_bytes        VARCHAR(60) NOT NULL,
-other_bytes       VARCHAR(60) NOT NULL,
-tcp_bytes         VARCHAR(60) NOT NULL,
-udp_bytes         VARCHAR(60) NOT NULL,
-up_to_1024_pkts   VARCHAR(60) NOT NULL,
-up_to_128_pkts    VARCHAR(60) NOT NULL,
-up_to_1518_pkts   VARCHAR(60) NOT NULL,
-up_to_512_pkts    VARCHAR(60) NOT NULL,
-up_to_64_pkts     VARCHAR(60) NOT NULL
-);
 
 DROP TABLE IF EXISTS rrd_anomalies_global;
 CREATE TABLE rrd_anomalies_global (

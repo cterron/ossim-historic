@@ -4,6 +4,8 @@ import time
 import Parser
 import util
 
+import MySQLdb
+
 class ParserCA(Parser.Parser):
 
     def process(self):
@@ -30,12 +32,12 @@ class ParserCA(Parser.Parser):
         dbconfig = self.plugin['location'].split(':')
 
         if dbconfig[0] == 'mysql':
-            import _mysql
             
-            db=_mysql.connect(host   = dbconfig[1],
-                              db     = dbconfig[2],
-                              user   = dbconfig[3],
-                              passwd = dbconfig[4])
+            db = MySQLdb.connect(host   = dbconfig[1],
+                                 db     = dbconfig[2],
+                                 user   = dbconfig[3],
+                                 passwd = dbconfig[4])
+            st = db.cursor()
  
         else:
             util.debug (__name__, 'database %s not supported' % (dbconfig[0]),
@@ -45,9 +47,9 @@ class ParserCA(Parser.Parser):
 
         # obtain host thresholds
         host_info = {}
-        db.query("""SELECT ip, threshold_c, threshold_a FROM host""")
-        r = db.store_result()
-        while 1:
+        st.execute("""SELECT ip, threshold_c, threshold_a FROM host""")
+        res = st.fetchmany()
+        for h in res:
             
             if self.plugin["enable"] == 'no':
 
@@ -60,58 +62,62 @@ class ParserCA(Parser.Parser):
                 util.debug (__name__, 'plugin enabled', '**', 'GREEN')
 
             try:
-                h = r.fetch_row(maxrows = 1, how = 1)
-                host_info[h[0]["ip"]] = h[0]
+                host_info[h[0]] = h
             except IndexError:
                 break
 
         # obtain default thresholds
-        db.query ("""SELECT * FROM conf""")
-        r = db.store_result()
-        conf = r.fetch_row(maxrows = 1, how = 1)
-        default_threshold = int(conf[0]["threshold"])
+        st.execute ("""SELECT threshold FROM conf""")
+        res = st.fetchone()
+        default_threshold = int(res[0])
 
         while 1:
             
             # get actual qualification info
-            db.query("""SELECT * FROM host_qualification""")
-            r = db.store_result()
-            result = r.fetch_row(maxrows = 0, how = 1)
+            st.execute("""SELECT host_ip, compromise, attack 
+                          FROM host_qualification""")
+            res = st.fetchmany()
             
             # host exceeded its threshold?
-            for host in result:
+            for host in res:
+                # host[0] -> ip
+                # host[1] -> compromise
+                # host[2] -> attack
+                # host_info[x][0] -> ip
+                # host_info[x][1] -> threshold_c
+                # host_info[x][2] -> threshold_a
                 try:
-                    if int(host["compromise"]) > \
-                       int(host_info[host["host_ip"]]["threshold_c"]):
+                    if int(host[1]) > \
+                       int(host_info[host[0]][1]):
 
-                        diff = int(host["compromise"]) / \
-                            int(host_info[host["host_ip"]]["threshold_c"])
-                        self.exceeded(host, sid = 1, diff = diff)
+                        diff = int(host[1]) / \
+                            int(host_info[host[0]][1])
+                        self.exceeded(host[0], sid = 1, diff = diff)
 
-                    if int(host["attack"]) > \
-                       int(host_info[host["host_ip"]]["threshold_a"]):
+                    if int(host[2]) > \
+                       int(host_info[host[0]][2]):
 
-                        diff = int(host["attack"]) / \
-                            int(host_info[host["host_ip"]]["threshold_a"])
-                        self.exceeded(host, sid = 2, diff = diff)
+                        diff = int(host[2]) / \
+                            int(host_info[host[0]][2])
+                        self.exceeded(host[0], sid = 2, diff = diff)
 
                 except KeyError:
-                    if int(host["compromise"]) > default_threshold:
+                    if int(host[1]) > default_threshold:
 
-                        diff = int(host["compromise"]) / default_threshold
-                        self.exceeded(host, sid = 1, diff = diff)
+                        diff = int(host[1]) / default_threshold
+                        self.exceeded(host[0], sid = 1, diff = diff)
 
-                    if int(host["attack"]) > default_threshold:
+                    if int(host[2]) > default_threshold:
 
-                        diff = int(host["attack"]) / default_threshold
-                        self.exceeded(host, sid = 2, diff = diff)
+                        diff = int(host[2]) / default_threshold
+                        self.exceeded(host[0], sid = 2, diff = diff)
 
             time.sleep(float(self.plugin["frequency"]))
 
         db.close()
 
 
-    def exceeded (self, host, sid, diff):
+    def exceeded (self, ip, sid, diff):
 
         date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 
@@ -121,7 +127,7 @@ class ParserCA(Parser.Parser):
         elif diff >= 2: priority = 2
         elif diff >= 1: priority = 1
 
-        self.agent.sendMessage(type = 'detector',
+        self.agent.sendAlert  (type = 'detector',
                          date       = date,
                          sensor     = self.plugin["sensor"],
                          interface  = self.plugin["interface"],
@@ -129,8 +135,9 @@ class ParserCA(Parser.Parser):
                          plugin_sid = sid,
                          priority   = priority,
                          protocol   = '',
-                         src_ip     = host["host_ip"],
+                         src_ip     = ip,
                          src_port   = '',
                          dst_ip     = '',
                          dst_port   = '')
+
 

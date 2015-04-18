@@ -56,7 +56,6 @@ G_BEGIN_DECLS
 
 typedef struct _SimAlert        SimAlert;
 typedef struct _SimAlertClass   SimAlertClass;
-typedef struct _SimAlertPrivate SimAlertPrivate;
 
 struct _SimAlert {
   GObject parent;
@@ -94,6 +93,11 @@ struct _SimAlert {
   gdouble            risk_a;
 
   gchar             *data;
+
+  guint              sid;
+  guint              cid;
+
+  gboolean           match;
 };
 
 struct _SimAlertClass {

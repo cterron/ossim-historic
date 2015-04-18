@@ -90,6 +90,9 @@ void              sim_rule_set_level                       (SimRule     *rule,
 gboolean          sim_rule_get_sticky                      (SimRule     *rule);
 void              sim_rule_set_sticky                      (SimRule     *rule,
 							    gboolean     sticky);
+gint              sim_rule_get_protocol                    (SimRule     *rule);
+void              sim_rule_set_protocol                    (SimRule     *rule,
+							    gint       protocol);
 gboolean          sim_rule_get_not                         (SimRule     *rule);
 void              sim_rule_set_not                         (SimRule     *rule,
 							    gboolean     not);
@@ -189,6 +192,8 @@ gboolean          sim_rule_match_by_alert                  (SimRule     *rule,
 							    SimAlert    *alert);
 
 void              sim_rule_print                           (SimRule     *rule);
+
+gchar*            sim_rule_to_string                       (SimRule     *rule);
 
 G_END_DECLS
 

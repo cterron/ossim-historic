@@ -131,8 +131,8 @@ sim_host_level_get_type (void)
  */
 SimHostLevel*
 sim_host_level_new (const GInetAddr     *ia,
-		    gint           c,
-		    gint           a)
+		    gint                 c,
+		    gint                 a)
 {
   SimHostLevel *host_level = NULL;
 

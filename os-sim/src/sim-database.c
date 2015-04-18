@@ -143,6 +143,9 @@ SimDatabase*
 sim_database_new (SimConfigDS  *config)
 {
   SimDatabase *db = NULL;
+  GdaError       *error;
+  GList          *errors = NULL;
+  gint            i;
 
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (config->name, NULL);
@@ -169,6 +172,15 @@ sim_database_new (SimConfigDS  *config)
       g_print (" DSN: %s", db->_priv->dsn);
       g_print ("\n");
     }
+
+  errors = gda_error_list_copy (gda_connection_get_errors (db->_priv->conn));
+  for (i = 0; i < g_list_length(errors); i++)
+    {
+      error = (GdaError *) g_list_nth_data (errors, i);
+      
+      g_message ("ERROR %d: %s", gda_error_get_number (error), gda_error_get_description (error));
+    }
+  gda_error_list_free (errors);
 
   return db;
 }

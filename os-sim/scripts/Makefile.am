@@ -8,4 +8,6 @@ scripts_SCRIPTS = rrd_plugin.pl \
 	get_rrd_value.pl \
 	netbios.pl \
 	services.pl \
-	update_nessus_ids.pl
+	update_nessus_ids.pl \
+	backupdb.pl \
+	acid_cache.pl

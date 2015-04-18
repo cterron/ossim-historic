@@ -73,6 +73,10 @@ struct _SimDirectiveClass {
 GType             sim_directive_get_type                        (void);
 SimDirective*     sim_directive_new                             (void);
 
+void              sim_directive_lock                            (SimDirective     *directive);
+void              sim_directive_unlock                          (SimDirective     *directive);
+gboolean          sim_directive_trylock                         (SimDirective     *directive);
+
 gint              sim_directive_get_id                          (SimDirective     *directive);
 void              sim_directive_set_id                          (SimDirective     *directive,
 								 gint              id);
@@ -128,10 +132,10 @@ GNode*            sim_directive_node_data_clone                 (GNode          
 void              sim_directive_node_data_destroy               (GNode            *node);
 SimDirective*     sim_directive_clone                           (SimDirective     *directive);
 
-gchar*            sim_directive_backlog_get_insert_clause       (SimDirective *directive);
-gchar*            sim_directive_backlog_get_update_clause       (SimDirective *directive);
-gchar*            sim_directive_backlog_get_delete_clause       (SimDirective *directive);
-
+gchar*            sim_directive_backlog_get_insert_clause       (SimDirective     *directive);
+gchar*            sim_directive_backlog_get_update_clause       (SimDirective     *directive);
+gchar*            sim_directive_backlog_get_delete_clause       (SimDirective     *directive);
+gchar*            sim_directive_backlog_to_string               (SimDirective     *directive);
 
 G_END_DECLS
 

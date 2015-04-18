@@ -1,6 +1,7 @@
 import xml.sax
 import socket
 import time
+import sys
 
 import Config
 import Parser
@@ -11,8 +12,11 @@ class Agent:
     
     def __init__(self):
         self.serverIp = ''
-        self.plugins = {}
         self.listenPort = 0
+        self.watchdog_enable = True
+        self.watchdog_interval = 60
+        self.logdir = ''
+        self.plugins = {}
         self.conn = None
         self.sequence = 0
 #        self.my_ip = socket.gethostbyname(socket.gethostname())
@@ -31,6 +35,12 @@ class Agent:
         # store data
         self.serverIp = Config.ConfigHandler.serverIp
         self.listenPort = Config.ConfigHandler.serverPort
+        if Config.ConfigHandler.watchdog_enable in ['yes', 'true']:
+            self.watchdog_enable = True
+        else: 
+            self.watchdog_enable = False
+        self.watchdog_interval = Config.ConfigHandler.watchdog_interval
+        self.logdir = Config.ConfigHandler.logdir
         self.plugins = Config.ConfigHandler.plugins
 
 
@@ -45,7 +55,7 @@ class Agent:
                 'Error connecting to server (' + self.serverIp + \
                 ', ' + str(self.listenPort) + ') ... ' + str(e),
                 '!!', 'RED')
-            return None
+            sys.exit()
         
         self.sequence = 1
         self.conn.send('connect id="%s"\n' % (self.sequence))
@@ -114,10 +124,30 @@ class Agent:
     def close(self):
         self.conn.close()
 
-    def sendMessage(self, type, date, sensor, interface, 
-                    plugin_id, plugin_sid, priority, protocol, 
-                    src_ip, src_port, dst_ip, dst_port, data="",
-                    condition="", value=""):
+
+    def sendMessage(self, message) :
+        try:
+            if self.conn:
+                self.conn.send(message + '\n')
+                util.debug (__name__, message + '\n',
+                            '=>', 'CYAN')
+            else:
+                util.debug (__name__, 'Trying to connect in 10 seconds\n',
+                            '**', 'YELLOW')
+                time.sleep(10)
+                self.conn = self.reconnect()
+        except socket.error, e:
+            util.debug (__name__, 
+                'Error sending data: %s, retrying in 10 seconds\n' % (e),
+                '!!', 'RED')
+            time.sleep(10)
+            self.conn = self.reconnect()
+        
+
+    def sendAlert(self, type, date, sensor, interface, 
+                  plugin_id, plugin_sid, priority, protocol, 
+                  src_ip, src_port, dst_ip, dst_port, data="",
+                  condition="", value=""):
 
         message = 'alert '
         if type:        message +=  'type="'        + str(type)         + '" '
@@ -138,22 +168,30 @@ class Agent:
         if condition:   message +=  'condition="'   + str(condition)    + '" '
         if value:       message +=  'value="'       + str(value)        + '" '
 
-        try:
-            if self.conn:
-                if priority > 0 :
-                    self.conn.send(message + '\n')
-                    util.debug (__name__, message + '\n',
-                                '=>', 'CYAN')
-            else:
-                util.debug (__name__, 'Trying to connect in 10 seconds\n',
-                            '**', 'YELLOW')
-                time.sleep(10)
-                self.conn = self.reconnect()
-        except socket.error, e:
-            util.debug (__name__, 
-                'Error sending data: %s, retrying in 10 seconds\n' % (e),
-                '!!', 'RED')
-            time.sleep(10)
-            self.conn = self.reconnect()
+        if priority > 0 :
+            self.sendMessage(message)
 
+
+    def sendOsChange(self, host, os, date, plugin_id, plugin_sid):
+        
+        message = 'host-os-change ' +\
+            'host="'        + str(host)         + '" ' +\
+            'os="'          + str(os)           + '" ' +\
+            'date="'        + str(date)         + '" ' +\
+            'plugin_id="'   + str(plugin_id)    + '" ' +\
+            'plugin_sid="'  + str(plugin_sid)   + '" '
+            
+        self.sendMessage(message)
+            
+    def sendMacChange(self, host, mac, vendor, date, plugin_id, plugin_sid):
+        
+        message = 'host-mac-change ' +\
+            'host="'        + str(host)         + '" ' +\
+            'mac="'         + str(mac)          + '" ' +\
+            'vendor="'      + str(vendor)       + '" ' +\
+            'date="'        + str(date)         + '" ' +\
+            'plugin_id="'   + str(plugin_id)    + '" ' +\
+            'plugin_sid="'  + str(plugin_sid)   + '" '
+            
+        self.sendMessage(message)
 

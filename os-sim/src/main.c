@@ -61,6 +61,7 @@ typedef struct {
 
 typedef struct {
   gchar          *config;
+  gint            daemon;
 } SimCmdArgs;
 
 SimCmdArgs simCmdArgs;
@@ -169,6 +170,7 @@ options (int argc, char **argv)
 
   /* Default Command Line Options */
   simCmdArgs.config = NULL;
+  simCmdArgs.daemon = 0;
 
   while (TRUE)
     {
@@ -177,10 +179,11 @@ options (int argc, char **argv)
       static struct option options[] =
 	{
 	  {"config", 1, 0, 'c'},
+	  {"daemon", 0, 0, 'd'},
 	  {0, 0, 0, 0}
 	};
       
-      c = getopt_long (argc, argv, "c:", options, &option_index);
+      c = getopt_long (argc, argv, "dc:", options, &option_index);
       if (c == -1)
 	break;
 
@@ -189,18 +192,22 @@ options (int argc, char **argv)
 	case 'c':
 	  simCmdArgs.config = g_strdup (optarg);
 	  break;
+
+	case 'd':
+	  simCmdArgs.daemon = 1;
+	  break;
 	  
 	case '?':
 	  break;
 	  
 	default:
-	  printf ("?\? getopt() devolvió el carácter de código 0%o ?\?\n", c);
+	  printf ("?\? getopt() return the caracter %c ?\?\n", c);
 	}
     }
   
   if (optind < argc)
     {
-      printf ("elementos de ARGV que no son opciones: ");
+      printf ("elements from ARGV are not option: ");
       while (optind < argc)
 	printf ("%s ", argv[optind++]);
       printf ("\n");
@@ -225,11 +232,19 @@ main (int argc, char *argv[])
   /* Command Line Options */
   options (argc, argv);
 
+  if(simCmdArgs.daemon){
+    if(fork()){
+      exit(0);
+    } else {
+      ;
+    }
+  }
+
   /* Thread Init */
   if (!g_thread_supported ()) 
     g_thread_init (NULL);
 
-  gda_init (NULL, "0.1", argc, argv);
+  gda_init (NULL, "0.9.4", argc, argv);
 
   /* Config Init */
   if (simCmdArgs.config)
@@ -239,15 +254,25 @@ main (int argc, char *argv[])
   config = sim_xml_config_get_config (xmlconfig);
 
   /* File Logs */
-  fd = creat ("/tmp/ossim.log", S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH);
+  fd = creat (OS_SIM_LOG_DIR "/debug.log", S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH);
 
   g_log_set_handler (NULL,
-		     G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE, 
+		     G_LOG_LEVEL_ERROR |
+		     G_LOG_LEVEL_CRITICAL |
+		     G_LOG_LEVEL_WARNING |
+		     G_LOG_LEVEL_MESSAGE |
+		     G_LOG_LEVEL_INFO |
+		     G_LOG_LEVEL_DEBUG,
 		     sim_log_handler, 
 		     GINT_TO_POINTER (fd));
   
-  g_log_set_handler (G_LOG_DOMAIN, 
-		     G_LOG_LEVEL_WARNING | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_MESSAGE, 
+  g_log_set_handler (G_LOG_DOMAIN,
+		     G_LOG_LEVEL_ERROR |
+		     G_LOG_LEVEL_CRITICAL |
+		     G_LOG_LEVEL_WARNING |
+		     G_LOG_LEVEL_MESSAGE |
+		     G_LOG_LEVEL_INFO |
+		     G_LOG_LEVEL_DEBUG,
 		     sim_log_handler, 
 		     GINT_TO_POINTER (fd));
 

@@ -1,30 +1,72 @@
-import xml.sax
 import urllib2
+import os
+import time
 
 import util
 import sys
 
+import mutex
+
+m = mutex.mutex()
+
+#
+# get host info from ntop dump data
+#
+def get_hostinfo(url):
+
+    try:
+        fd = urllib2.urlopen(url)
+        util.debug(__name__, "Reading ntop dump data...", "<-", "YELLOW")
+    except urllib2.URLError, e:
+        util.debug (__name__, e, '!!', 'RED');
+        sys.exit()
+
+    fhost = open('ntop_hostinfo.py', 'w')
+    while 1:
+        line = fd.readline()
+        if not line: break
+        fhost.write(line)
+        
+    fhost.close()
+
 
 def get_value(rule, url):
    
-    (pattern, category) = sid2pattern(int(rule["plugin_sid"]))
-    ntopParser = xml.sax.make_parser()
-    ntopHandler = NtopHandler(pattern, category)
-    ntopParser.setContentHandler(ntopHandler)
+    (pattern, category, proto) = sid2pattern(int(rule["plugin_sid"]))
+
+    #
+    # Try to read dump data from disc. 
+    #
+    #   if modified_time(file) + 1min > local_time:
+    #       update disc dump data
+    #   else:
+    #       read actual disc dump data
+   
     try:
-        ntopParser.parse(xml.sax.saxutils.prepare_input_source(url))
-    except urllib2.URLError:
-        util.debug (__name__, "Error: Ntop is not running!",
-                    '!!', 'RED')
-        return None
-    except xml.sax.SAXParseException, e:
-        util.debug (__name__, "%s" % (e), "!!", "RED")
-        return sys.exit()
-    
+        if os.path.getmtime('ntop_hostinfo.py') + 60 <= int(time.time()) \
+           and m.test() == 0:
+            m.lock(get_hostinfo, url)
+    except OSError:
+        if m.test() == 0:
+            m.lock(get_hostinfo, url)
+
+    m.unlock()
+
     try:
-        return NtopHandler.ntop_data[rule["to"]]
-    except KeyError:
-        return sys.exit()
+        import ntop_hostinfo
+
+        if category != '':
+            return ntop_hostinfo.ntopDict[rule["to"]][proto][category][pattern]
+        elif proto != '':
+            return ntop_hostinfo.ntopDict[rule["to"]][proto][pattern]
+        else:
+            return ntop_hostinfo.ntopDict[rule["to"]][pattern]
+    except SyntaxError:
+        util.debug(__name__, 
+            "Unexpected error reading dump data (not well-formed)",
+            '!!', 'RED')
+        sys.exit()
+
 
 
 def sid2pattern(sid):
@@ -32,548 +74,503 @@ def sid2pattern(sid):
     """Returns a tuple with the search pattern and the category"""
     
     if sid == 1:
-        (pattern, category) = ('firstSeen', '')
+        (pattern, category, proto) = ('firstSeen', '', '')
     elif sid == 2:
-        (pattern, category) = ('lastSeen', '')
+        (pattern, category, proto) = ('lastSeen', '', '')
     elif sid == 3:
-        (pattern, category) = ('minTTL', '')
+        (pattern, category, proto) = ('minTTL', '', '')
     elif sid == 4:
-        (pattern, category) = ('maxTTL', '')
+        (pattern, category, proto) = ('maxTTL', '', '')
     elif sid == 5:
-        (pattern, category) = ('pktSent', '')
+        (pattern, category, proto) = ('pktSent', '', '')
     elif sid == 6:
-        (pattern, category) = ('pktRcvd', '')
+        (pattern, category, proto) = ('pktRcvd', '', '')
     elif sid == 7:
-        (pattern, category) = ('bytesSent', '')
+        (pattern, category, proto) = ('bytesSent', '', '')
     elif sid == 8:
-        (pattern, category) = ('bytesRcvd', '')
+        (pattern, category, proto) = ('bytesRcvd', '', '')
     elif sid == 9:
-        (pattern, category) = ('pktDuplicatedAckSent', '')
+        (pattern, category, proto) = ('pktDuplicatedAckSent', '', '')
     elif sid == 10:
-        (pattern, category) = ('pktDuplicatedAckRcvd', '')
+        (pattern, category, proto) = ('pktDuplicatedAckRcvd', '', '')
     elif sid == 11:
-        (pattern, category) = ('pktBroadcastSent', '')
+        (pattern, category, proto) = ('pktBroadcastSent', '', '')
     elif sid == 12:
-        (pattern, category) = ('bytesMulticastSent', '')
+        (pattern, category, proto) = ('bytesMulticastSent', '', '')
     elif sid == 13:
-        (pattern, category) = ('pktMulticastSent', '')
+        (pattern, category, proto) = ('pktMulticastSent', '', '')
     elif sid == 14:
-        (pattern, category) = ('bytesMulticastRcvd', '')
+        (pattern, category, proto) = ('bytesMulticastRcvd', '', '')
     elif sid == 15:
-        (pattern, category) = ('pktMulticastRcvd', '')
+        (pattern, category, proto) = ('pktMulticastRcvd', '', '')
     elif sid == 16:
-        (pattern, category) = ('bytesSent', '')
+        (pattern, category, proto) = ('bytesSent', '', '')
     elif sid == 17:
-        (pattern, category) = ('bytesSentLoc', '')
+        (pattern, category, proto) = ('bytesSentLoc', '', '')
     elif sid == 18:
-        (pattern, category) = ('bytesSentRem', '')
+        (pattern, category, proto) = ('bytesSentRem', '', '')
     elif sid == 19:
-        (pattern, category) = ('bytesRcvd', '')
+        (pattern, category, proto) = ('bytesRcvd', '', '')
     elif sid == 20:
-        (pattern, category) = ('bytesRcvdLoc', '')
+        (pattern, category, proto) = ('bytesRcvdLoc', '', '')
     elif sid == 21:
-        (pattern, category) = ('bytesRcvdFromRem', '')
+        (pattern, category, proto) = ('bytesRcvdFromRem', '', '')
     elif sid == 22:
-        (pattern, category) = ('actualRcvdThpt', '')
+        (pattern, category, proto) = ('actualRcvdThpt', '', '')
     elif sid == 23:
-        (pattern, category) = ('lastHourRcvdThpt', '')
+        (pattern, category, proto) = ('lastHourRcvdThpt', '', '')
     elif sid == 24:
-        (pattern, category) = ('averageRcvdThpt', '')
+        (pattern, category, proto) = ('averageRcvdThpt', '', '')
     elif sid == 25:
-        (pattern, category) = ('peakRcvdThpt', '')
+        (pattern, category, proto) = ('peakRcvdThpt', '', '')
     elif sid == 26:
-        (pattern, category) = ('actualSentThpt', '')
+        (pattern, category, proto) = ('actualSentThpt', '', '')
     elif sid == 27:
-        (pattern, category) = ('lastHourSentThpt', '')
+        (pattern, category, proto) = ('lastHourSentThpt', '', '')
     elif sid == 28:
-        (pattern, category) = ('averageSentThpt', '')
+        (pattern, category, proto) = ('averageSentThpt', '', '')
     elif sid == 29:
-        (pattern, category) = ('peakSentThpt', '')
+        (pattern, category, proto) = ('peakSentThpt', '', '')
     elif sid == 30:
-        (pattern, category) = ('actualTThpt', '')
+        (pattern, category, proto) = ('actualTThpt', '', '')
     elif sid == 31:
-        (pattern, category) = ('averageTThpt', '')
+        (pattern, category, proto) = ('averageTThpt', '', '')
     elif sid == 32:
-        (pattern, category) = ('peakTThpt', '')
+        (pattern, category, proto) = ('peakTThpt', '', '')
     elif sid == 33:
-        (pattern, category) = ('actualRcvdPktThpt', '')
+        (pattern, category, proto) = ('actualRcvdPktThpt', '', '')
     elif sid == 34:
-        (pattern, category) = ('averageRcvdPktThpt', '')
+        (pattern, category, proto) = ('averageRcvdPktThpt', '', '')
     elif sid == 35:
-        (pattern, category) = ('peakRcvdPktThpt', '')
+        (pattern, category, proto) = ('peakRcvdPktThpt', '', '')
     elif sid == 36:
-        (pattern, category) = ('actualSentPktThpt', '')
+        (pattern, category, proto) = ('actualSentPktThpt', '', '')
     elif sid == 37:
-        (pattern, category) = ('averageSentPktThpt', '')
+        (pattern, category, proto) = ('averageSentPktThpt', '', '')
     elif sid == 38:
-        (pattern, category) = ('peakSentPktThpt', '')
+        (pattern, category, proto) = ('peakSentPktThpt', '', '')
     elif sid == 39:
-        (pattern, category) = ('actualTPktThpt', '')
+        (pattern, category, proto) = ('actualTPktThpt', '', '')
     elif sid == 40:
-        (pattern, category) = ('averageTPktThpt', '')
+        (pattern, category, proto) = ('averageTPktThpt', '', '')
     elif sid == 41:
-        (pattern, category) = ('peakTPktThpt', '')
+        (pattern, category, proto) = ('peakTPktThpt', '', '')
     elif sid == 42:
-        (pattern, category) = ('ipBytesSent', '')
+        (pattern, category, proto) = ('ipBytesSent', '', '')
     elif sid == 43:
-        (pattern, category) = ('ipBytesRcvd', '')
+        (pattern, category, proto) = ('ipBytesRcvd', '', '')
     elif sid == 44:
-        (pattern, category) = ('tcpBytesSent', '')
+        (pattern, category, proto) = ('tcpBytesSent', '', '')
     elif sid == 45:
-        (pattern, category) = ('tcpBytesRcvd', '')
+        (pattern, category, proto) = ('tcpBytesRcvd', '', '')
     elif sid == 46:
-        (pattern, category) = ('udpBytesSent', '')
+        (pattern, category, proto) = ('udpBytesSent', '', '')
     elif sid == 47:
-        (pattern, category) = ('udpBytesRcvd', '')
+        (pattern, category, proto) = ('udpBytesRcvd', '', '')
     elif sid == 48:
-        (pattern, category) = ('icmpSent', '')
+        (pattern, category, proto) = ('icmpSent', '', '')
     elif sid == 49:
-        (pattern, category) = ('icmpRcvd', '')
+        (pattern, category, proto) = ('icmpRcvd', '', '')
     elif sid == 50:
-        (pattern, category) = ('tcpSentRem', '')
+        (pattern, category, proto) = ('tcpSentRem', '', '')
     elif sid == 51:
-        (pattern, category) = ('udpSentLoc', '')
+        (pattern, category, proto) = ('udpSentLoc', '', '')
     elif sid == 52:
-        (pattern, category) = ('udpSentRem', '')
+        (pattern, category, proto) = ('udpSentRem', '', '')
     elif sid == 53:
-        (pattern, category) = ('ospfSent', '')
+        (pattern, category, proto) = ('ospfSent', '', '')
     elif sid == 54:
-        (pattern, category) = ('igmpSent', '')
+        (pattern, category, proto) = ('igmpSent', '', '')
     elif sid == 55:
-        (pattern, category) = ('tcpRcvdLoc', '')
+        (pattern, category, proto) = ('tcpRcvdLoc', '', '')
     elif sid == 56:
-        (pattern, category) = ('tcpRcvdFromRem', '')
+        (pattern, category, proto) = ('tcpRcvdFromRem', '', '')
     elif sid == 57:
-        (pattern, category) = ('udpRcvdLoc', '')
+        (pattern, category, proto) = ('udpRcvdLoc', '', '')
     elif sid == 58:
-        (pattern, category) = ('udpRcvdFromRem', '')
+        (pattern, category, proto) = ('udpRcvdFromRem', '', '')
     elif sid == 59:
-        (pattern, category) = ('ospfRcvd', '')
+        (pattern, category, proto) = ('ospfRcvd', '', '')
     elif sid == 60:
-        (pattern, category) = ('igmpRcvd', '')
+        (pattern, category, proto) = ('igmpRcvd', '', '')
     elif sid == 61:
-        (pattern, category) = ('tcpFragmentsSent', '')
+        (pattern, category, proto) = ('tcpFragmentsSent', '', '')
     elif sid == 62:
-        (pattern, category) = ('tcpFragmentsRcvd', '')
+        (pattern, category, proto) = ('tcpFragmentsRcvd', '', '')
     elif sid == 63:
-        (pattern, category) = ('udpFragmentsSent', '')
+        (pattern, category, proto) = ('udpFragmentsSent', '', '')
     elif sid == 64:
-        (pattern, category) = ('udpFragmentsRcvd', '')
+        (pattern, category, proto) = ('udpFragmentsRcvd', '', '')
     elif sid == 65:
-        (pattern, category) = ('icmpFragmentsSent', '')
+        (pattern, category, proto) = ('icmpFragmentsSent', '', '')
     elif sid == 66:
-        (pattern, category) = ('icmpFragmentsRcvd', '')
+        (pattern, category, proto) = ('icmpFragmentsRcvd', '', '')
     elif sid == 67:
-        (pattern, category) = ('stpSent', '')
+        (pattern, category, proto) = ('stpSent', '', '')
     elif sid == 68:
-        (pattern, category) = ('stpRcvd', '')
+        (pattern, category, proto) = ('stpRcvd', '', '')
     elif sid == 69:
-        (pattern, category) = ('ipxSent', '')
+        (pattern, category, proto) = ('ipxSent', '', '')
     elif sid == 70:
-        (pattern, category) = ('ipxRcvd', '')
+        (pattern, category, proto) = ('ipxRcvd', '', '')
     elif sid == 71:
-        (pattern, category) = ('osiSent', '')
+        (pattern, category, proto) = ('osiSent', '', '')
     elif sid == 72:
-        (pattern, category) = ('osiRcvd', '')
+        (pattern, category, proto) = ('osiRcvd', '', '')
     elif sid == 73:
-        (pattern, category) = ('dlcSent', '')
+        (pattern, category, proto) = ('dlcSent', '', '')
     elif sid == 74:
-        (pattern, category) = ('dlcRcvd', '')
+        (pattern, category, proto) = ('dlcRcvd', '', '')
     elif sid == 75:
-        (pattern, category) = ('arp_rarpSent', '')
+        (pattern, category, proto) = ('arp_rarpSent', '', '')
     elif sid == 76:
-        (pattern, category) = ('arp_rarpRcvd', '')
+        (pattern, category, proto) = ('arp_rarpRcvd', '', '')
     elif sid == 77:
-        (pattern, category) = ('arpReqPktsSent', '')
+        (pattern, category, proto) = ('arpReqPktsSent', '', '')
     elif sid == 78:
-        (pattern, category) = ('arpReplyPktsSent', '')
+        (pattern, category, proto) = ('arpReplyPktsSent', '', '')
     elif sid == 79:
-        (pattern, category) = ('arpReplyPktsRcvd', '')
+        (pattern, category, proto) = ('arpReplyPktsRcvd', '', '')
     elif sid == 80:
-        (pattern, category) = ('decnetSent', '')
+        (pattern, category, proto) = ('decnetSent', '', '')
     elif sid == 81:
-        (pattern, category) = ('decnetRcvd', '')
+        (pattern, category, proto) = ('decnetRcvd', '', '')
     elif sid == 82:
-        (pattern, category) = ('appletalkSent', '')
+        (pattern, category, proto) = ('appletalkSent', '', '')
     elif sid == 83:
-        (pattern, category) = ('appletalkRcvd', '')
+        (pattern, category, proto) = ('appletalkRcvd', '', '')
     elif sid == 84:
-        (pattern, category) = ('netbiosSent', '')
+        (pattern, category, proto) = ('netbiosSent', '', '')
     elif sid == 85:
-        (pattern, category) = ('netbiosRcvd', '')
+        (pattern, category, proto) = ('netbiosRcvd', '', '')
     elif sid == 86:
-        (pattern, category) = ('ipv6Sent', '')
+        (pattern, category, proto) = ('ipv6Sent', '', '')
     elif sid == 87:
-        (pattern, category) = ('ipv6Rcvd', '')
+        (pattern, category, proto) = ('ipv6Rcvd', '', '')
     elif sid == 88:
-        (pattern, category) = ('otherSent', '')
+        (pattern, category, proto) = ('otherSent', '', '')
     elif sid == 89:
-        (pattern, category) = ('otherRcvd', '')
+        (pattern, category, proto) = ('otherRcvd', '', '')
     elif sid == 90:
-        (pattern, category) = ('synPktsSent', '')
+        (pattern, category, proto) = ('synPktsSent', '', '')
     elif sid == 91:
-        (pattern, category) = ('synPktsRcvd', '')
+        (pattern, category, proto) = ('synPktsRcvd', '', '')
     elif sid == 92:
-        (pattern, category) = ('rstPktsSent', '')
+        (pattern, category, proto) = ('rstPktsSent', '', '')
     elif sid == 93:
-        (pattern, category) = ('rstPktsRcvd', '')
+        (pattern, category, proto) = ('rstPktsRcvd', '', '')
     elif sid == 94:
-        (pattern, category) = ('rstAckPktsSent', '')
+        (pattern, category, proto) = ('rstAckPktsSent', '', '')
     elif sid == 95:
-        (pattern, category) = ('rstAckPktsRcvd', '')
+        (pattern, category, proto) = ('rstAckPktsRcvd', '', '')
     elif sid == 96:
-        (pattern, category) = ('synFinPktsSent', '')
+        (pattern, category, proto) = ('synFinPktsSent', '', '')
     elif sid == 97:
-        (pattern, category) = ('synFinPktsRcvd', '')
+        (pattern, category, proto) = ('synFinPktsRcvd', '', '')
     elif sid == 98:
-        (pattern, category) = ('finPushUrgPktsSent', '')
+        (pattern, category, proto) = ('finPushUrgPktsSent', '', '')
     elif sid == 99:
-        (pattern, category) = ('finPushUrgPktsRcvd', '')
+        (pattern, category, proto) = ('finPushUrgPktsRcvd', '', '')
     elif sid == 100:
-        (pattern, category) = ('nullPktsSent', '')
+        (pattern, category, proto) = ('nullPktsSent', '', '')
     elif sid == 101:
-        (pattern, category) = ('nullPktsRcvd', '')
+        (pattern, category, proto) = ('nullPktsRcvd', '', '')
     elif sid == 102:
-        (pattern, category) = ('ackScanSent', '')
+        (pattern, category, proto) = ('ackScanSent', '', '')
     elif sid == 103:
-        (pattern, category) = ('ackScanRcvd', '')
+        (pattern, category, proto) = ('ackScanRcvd', '', '')
     elif sid == 104:
-        (pattern, category) = ('xmasScanSent', '')
+        (pattern, category, proto) = ('xmasScanSent', '', '')
     elif sid == 105:
-        (pattern, category) = ('xmasScanRcvd', '')
+        (pattern, category, proto) = ('xmasScanRcvd', '', '')
     elif sid == 106:
-        (pattern, category) = ('finScanSent', '')
+        (pattern, category, proto) = ('finScanSent', '', '')
     elif sid == 107:
-        (pattern, category) = ('finScanRcvd', '')
+        (pattern, category, proto) = ('finScanRcvd', '', '')
     elif sid == 108:
-        (pattern, category) = ('nullScanSent', '')
+        (pattern, category, proto) = ('nullScanSent', '', '')
     elif sid == 109:
-        (pattern, category) = ('nullScanRcvd', '')
+        (pattern, category, proto) = ('nullScanRcvd', '', '')
     elif sid == 110:
-        (pattern, category) = ('rejectedTCPConnSent', '')
+        (pattern, category, proto) = ('rejectedTCPConnSent', '', '')
     elif sid == 111:
-        (pattern, category) = ('rejectedTCPConnRcvd', '')
+        (pattern, category, proto) = ('rejectedTCPConnRcvd', '', '')
     elif sid == 112:
-        (pattern, category) = ('establishedTCPConnSent', '')
+        (pattern, category, proto) = ('establishedTCPConnSent', '', '')
     elif sid == 113:
-        (pattern, category) = ('establishedTCPConnRcvd', '')
+        (pattern, category, proto) = ('establishedTCPConnRcvd', '', '')
     elif sid == 114:
-        (pattern, category) = ('terminatedTCPConnServer', '' )
+        (pattern, category, proto) = ('terminatedTCPConnServer', '', '')
     elif sid == 115:
-        (pattern, category) = ('terminatedTCPConnClient', '' )
+        (pattern, category, proto) = ('terminatedTCPConnClient', '', '')
     elif sid == 116:
-        (pattern, category) = ('udpToClosedPortSent', '')
+        (pattern, category, proto) = ('udpToClosedPortSent', '', '')
     elif sid == 117:
-        (pattern, category) = ('udpToClosedPortRcvd', '')
+        (pattern, category, proto) = ('udpToClosedPortRcvd', '', '')
     elif sid == 118:
-        (pattern, category) = ('udpToDiagnosticPortSent', '' )
+        (pattern, category, proto) = ('udpToDiagnosticPortSent', '', '')
     elif sid == 119:
-        (pattern, category) = ('udpToDiagnosticPortRcvd', '' )
+        (pattern, category, proto) = ('udpToDiagnosticPortRcvd', '', '')
     elif sid == 120:
-        (pattern, category) = ('tcpToDiagnosticPortSent', '' )
+        (pattern, category, proto) = ('tcpToDiagnosticPortSent', '', '')
     elif sid == 121:
-        (pattern, category) = ('tcpToDiagnosticPortRcvd', '' )
+        (pattern, category, proto) = ('tcpToDiagnosticPortRcvd', '', '')
     elif sid == 122:
-        (pattern, category) = ('tinyFragmentSent', '')
+        (pattern, category, proto) = ('tinyFragmentSent', '', '')
     elif sid == 123:
-        (pattern, category) = ('tinyFragmentRcvd', '')
+        (pattern, category, proto) = ('tinyFragmentRcvd', '', '')
     elif sid == 124:
-        (pattern, category) = ('icmpFragmentSent', '')
+        (pattern, category, proto) = ('icmpFragmentSent', '', '')
     elif sid == 125:
-        (pattern, category) = ('icmpFragmentRcvd', '')
+        (pattern, category, proto) = ('icmpFragmentRcvd', '', '')
     elif sid == 126:
-        (pattern, category) = ('overlappingFragmentSent', '' )
+        (pattern, category, proto) = ('overlappingFragmentSent', '', '')
     elif sid == 127:
-        (pattern, category) = ('overlappingFragmentRcvd', '' )
+        (pattern, category, proto) = ('overlappingFragmentRcvd', '', '')
     elif sid == 128:
-        (pattern, category) = ('closedEmptyTCPConnSent', '')
+        (pattern, category, proto) = ('closedEmptyTCPConnSent', '', '')
     elif sid == 129:
-        (pattern, category) = ('closedEmptyTCPConnRcvd', '')
+        (pattern, category, proto) = ('closedEmptyTCPConnRcvd', '', '')
     elif sid == 130:
-        (pattern, category) = ('icmpPortUnreachSent', '')
+        (pattern, category, proto) = ('icmpPortUnreachSent', '', '')
     elif sid == 131:
-        (pattern, category) = ('icmpPortUnreachRcvd', '')
+        (pattern, category, proto) = ('icmpPortUnreachRcvd', '', '')
     elif sid == 132:
-        (pattern, category) = ('icmpHostNetUnreachSent', '')
+        (pattern, category, proto) = ('icmpHostNetUnreachSent', '', '')
     elif sid == 133:
-        (pattern, category) = ('icmpProtocolUnreachSent', '' )
+        (pattern, category, proto) = ('icmpProtocolUnreachSent', '', '')
     elif sid == 134:
-        (pattern, category) = ('icmpProtocolUnreachRcvd', '' )
+        (pattern, category, proto) = ('icmpProtocolUnreachRcvd', '', '')
     elif sid == 135:
-        (pattern, category) = ('icmpHostNetUnreachRcvd', '')
+        (pattern, category, proto) = ('icmpHostNetUnreachRcvd', '', '')
     elif sid == 136:
-        (pattern, category) = ('icmpAdminProhibitedSent', '' )
+        (pattern, category, proto) = ('icmpAdminProhibitedSent', '', '')
     elif sid == 137:
-        (pattern, category) = ('icmpAdminProhibitedRcvd', '' )
+        (pattern, category, proto) = ('icmpAdminProhibitedRcvd', '', '')
     elif sid == 138:
-        (pattern, category) = ('malformedPktsSent', '')
+        (pattern, category, proto) = ('malformedPktsSent', '', '')
     elif sid == 139:
-        (pattern, category) = ('malformedPktsRcvd', '')
+        (pattern, category, proto) = ('malformedPktsRcvd', '', '')
+
+    # IP Specific
     elif sid == 140:
-        (pattern, category) = ('sentLoc', 'FTP')
+        (pattern, category, proto) = ('sentLoc', 'FTP', 'IP')
     elif sid == 141:
-        (pattern, category) = ('sentRem', 'FTP')
+        (pattern, category, proto) = ('sentRem', 'FTP', 'IP')
     elif sid == 142:
-        (pattern, category) = ('rcvdLoc', 'FTP')
+        (pattern, category, proto) = ('rcvdLoc', 'FTP', 'IP')
     elif sid == 143:
-        (pattern, category) = ('rcvdFromRem', 'FTP')
+        (pattern, category, proto) = ('rcvdFromRem', 'FTP', 'IP')
     elif sid == 144:
-        (pattern, category) = ('sentLoc', 'HTTP')
+        (pattern, category, proto) = ('sentLoc', 'HTTP', 'IP')
     elif sid == 145:
-        (pattern, category) = ('sentRem', 'HTTP')
+        (pattern, category, proto) = ('sentRem', 'HTTP', 'IP')
     elif sid == 146:
-        (pattern, category) = ('rcvdLoc', 'HTTP')
+        (pattern, category, proto) = ('rcvdLoc', 'HTTP', 'IP')
     elif sid == 147:
-        (pattern, category) = ('rcvdFromRem', 'HTTP')
+        (pattern, category, proto) = ('rcvdFromRem', 'HTTP', 'IP')
     elif sid == 148:
-        (pattern, category) = ('sentLoc', 'DNS')
+        (pattern, category, proto) = ('sentLoc', 'DNS', 'IP')
     elif sid == 149:
-        (pattern, category) = ('sentRem', 'DNS')
+        (pattern, category, proto) = ('sentRem', 'DNS', 'IP')
     elif sid == 150:
-        (pattern, category) = ('rcvdLoc', 'DNS')
+        (pattern, category, proto) = ('rcvdLoc', 'DNS', 'IP')
     elif sid == 151:
-        (pattern, category) = ('rcvdFromRem', 'DNS')
+        (pattern, category, proto) = ('rcvdFromRem', 'DNS', 'IP')
     elif sid == 152:
-        (pattern, category) = ('sentLoc', 'Telnet')
+        (pattern, category, proto) = ('sentLoc', 'Telnet', 'IP')
     elif sid == 153:
-        (pattern, category) = ('sentRem', 'Telnet')
+        (pattern, category, proto) = ('sentRem', 'Telnet', 'IP')
     elif sid == 154:
-        (pattern, category) = ('rcvdLoc', 'Telnet')
+        (pattern, category, proto) = ('rcvdLoc', 'Telnet', 'IP')
     elif sid == 155:
-        (pattern, category) = ('rcvdFromRem', 'Telnet')
+        (pattern, category, proto) = ('rcvdFromRem', 'Telnet', 'IP')
     elif sid == 156:
-        (pattern, category) = ('sentLoc', 'NBios-IP')
+        (pattern, category, proto) = ('sentLoc', 'NBios-IP', 'IP')
     elif sid == 157:
-        (pattern, category) = ('sentRem', 'NBios-IP')
+        (pattern, category, proto) = ('sentRem', 'NBios-IP', 'IP')
     elif sid == 158:
-        (pattern, category) = ('rcvdLoc', 'NBios-IP')
+        (pattern, category, proto) = ('rcvdLoc', 'NBios-IP', 'IP')
     elif sid == 159:
-        (pattern, category) = ('rcvdFromRem', 'NBios-IP')
+        (pattern, category, proto) = ('rcvdFromRem', 'NBios-IP', 'IP')
     elif sid == 160:
-        (pattern, category) = ('sentLoc', 'Mail')
+        (pattern, category, proto) = ('sentLoc', 'Mail', 'IP')
     elif sid == 161:
-        (pattern, category) = ('sentRem', 'Mail')
+        (pattern, category, proto) = ('sentRem', 'Mail', 'IP')
     elif sid == 162:
-        (pattern, category) = ('rcvdLoc', 'Mail')
+        (pattern, category, proto) = ('rcvdLoc', 'Mail', 'IP')
     elif sid == 163:
-        (pattern, category) = ('rcvdFromRem', 'Mail')
+        (pattern, category, proto) = ('rcvdFromRem', 'Mail', 'IP')
     elif sid == 164:
-        (pattern, category) = ('sentLoc', 'DHCP-BOOTP')
+        (pattern, category, proto) = ('sentLoc', 'DHCP-BOOTP', 'IP')
     elif sid == 165:
-        (pattern, category) = ('sentRem', 'DHCP-BOOTP')
+        (pattern, category, proto) = ('sentRem', 'DHCP-BOOTP', 'IP')
     elif sid == 166:
-        (pattern, category) = ('rcvdLoc', 'DHCP-BOOTP')
+        (pattern, category, proto) = ('rcvdLoc', 'DHCP-BOOTP', 'IP')
     elif sid == 167:
-        (pattern, category) = ('rcvdFromRem', 'DHCP-BOOTP')
+        (pattern, category, proto) = ('rcvdFromRem', 'DHCP-BOOTP', 'IP')
     elif sid == 168:
-        (pattern, category) = ('sentLoc', 'SNMP')
+        (pattern, category, proto) = ('sentLoc', 'SNMP', 'IP')
     elif sid == 169:
-        (pattern, category) = ('sentRem', 'SNMP')
+        (pattern, category, proto) = ('sentRem', 'SNMP', 'IP')
     elif sid == 170:
-        (pattern, category) = ('rcvdLoc', 'SNMP')
+        (pattern, category, proto) = ('rcvdLoc', 'SNMP', 'IP')
     elif sid == 171:
-        (pattern, category) = ('rcvdFromRem', 'SNMP')
+        (pattern, category, proto) = ('rcvdFromRem', 'SNMP', 'IP')
     elif sid == 172:
-        (pattern, category) = ('sentLoc', 'NNTP')
+        (pattern, category, proto) = ('sentLoc', 'NNTP', 'IP')
     elif sid == 173:
-        (pattern, category) = ('sentRem', 'NNTP')
+        (pattern, category, proto) = ('sentRem', 'NNTP', 'IP')
     elif sid == 174:
-        (pattern, category) = ('rcvdLoc', 'NNTP')
+        (pattern, category, proto) = ('rcvdLoc', 'NNTP', 'IP')
     elif sid == 175:
-        (pattern, category) = ('rcvdFromRem', 'NNTP')
+        (pattern, category, proto) = ('rcvdFromRem', 'NNTP', 'IP')
     elif sid == 176:
-        (pattern, category) = ('sentLoc', 'NFS')
+        (pattern, category, proto) = ('sentLoc', 'NFS', 'IP')
     elif sid == 177:
-        (pattern, category) = ('sentRem', 'NFS')
+        (pattern, category, proto) = ('sentRem', 'NFS', 'IP')
     elif sid == 178:
-        (pattern, category) = ('rcvdLoc', 'NFS')
+        (pattern, category, proto) = ('rcvdLoc', 'NFS', 'IP')
     elif sid == 179:
-        (pattern, category) = ('rcvdFromRem', 'NFS')
+        (pattern, category, proto) = ('rcvdFromRem', 'NFS', 'IP')
     elif sid == 180:
-        (pattern, category) = ('sentLoc', 'X11')
+        (pattern, category, proto) = ('sentLoc', 'X11', 'IP')
     elif sid == 181:
-        (pattern, category) = ('sentRem', 'X11')
+        (pattern, category, proto) = ('sentRem', 'X11', 'IP')
     elif sid == 182:
-        (pattern, category) = ('rcvdLoc', 'X11')
+        (pattern, category, proto) = ('rcvdLoc', 'X11', 'IP')
     elif sid == 183:
-        (pattern, category) = ('rcvdFromRem', 'X11')
+        (pattern, category, proto) = ('rcvdFromRem', 'X11', 'IP')
     elif sid == 184:
-        (pattern, category) = ('sentLoc', 'SSH')
+        (pattern, category, proto) = ('sentLoc', 'SSH', 'IP')
     elif sid == 185:
-        (pattern, category) = ('sentRem', 'SSH')
+        (pattern, category, proto) = ('sentRem', 'SSH', 'IP')
     elif sid == 186:
-        (pattern, category) = ('rcvdLoc', 'SSH')
+        (pattern, category, proto) = ('rcvdLoc', 'SSH', 'IP')
     elif sid == 187:
-        (pattern, category) = ('rcvdFromRem', 'SSH')
+        (pattern, category, proto) = ('rcvdFromRem', 'SSH', 'IP')
     elif sid == 188:
-        (pattern, category) = ('sentLoc', 'Gnutella')
+        (pattern, category, proto) = ('sentLoc', 'Gnutella', 'IP')
     elif sid == 189:
-        (pattern, category) = ('sentRem', 'Gnutella')
+        (pattern, category, proto) = ('sentRem', 'Gnutella', 'IP')
     elif sid == 190:
-        (pattern, category) = ('rcvdLoc', 'Gnutella')
+        (pattern, category, proto) = ('rcvdLoc', 'Gnutella', 'IP')
     elif sid == 191:
-        (pattern, category) = ('rcvdFromRem', 'Gnutella')
+        (pattern, category, proto) = ('rcvdFromRem', 'Gnutella', 'IP')
     elif sid == 192:
-        (pattern, category) = ('sentLoc', 'Kazaa')
+        (pattern, category, proto) = ('sentLoc', 'Kazaa', 'IP')
     elif sid == 193:
-        (pattern, category) = ('sentRem', 'Kazaa')
+        (pattern, category, proto) = ('sentRem', 'Kazaa', 'IP')
     elif sid == 194:
-        (pattern, category) = ('rcvdLoc', 'Kazaa')
+        (pattern, category, proto) = ('rcvdLoc', 'Kazaa', 'IP')
     elif sid == 195:
-        (pattern, category) = ('rcvdFromRem', 'Kazaa')
+        (pattern, category, proto) = ('rcvdFromRem', 'Kazaa', 'IP')
     elif sid == 196:
-        (pattern, category) = ('sentLoc', 'WinMX')
+        (pattern, category, proto) = ('sentLoc', 'WinMX', 'IP')
     elif sid == 197:
-        (pattern, category) = ('sentRem', 'WinMX')
+        (pattern, category, proto) = ('sentRem', 'WinMX', 'IP')
     elif sid == 198:
-        (pattern, category) = ('rcvdLoc', 'WinMX')
+        (pattern, category, proto) = ('rcvdLoc', 'WinMX', 'IP')
     elif sid == 199:
-        (pattern, category) = ('rcvdFromRem', 'WinMX')
+        (pattern, category, proto) = ('rcvdFromRem', 'WinMX', 'IP')
     elif sid == 200:
-        (pattern, category) = ('sentLoc', 'DirectConnect')
+        (pattern, category, proto) = ('sentLoc', 'DirectConnect', 'IP')
     elif sid == 201:
-        (pattern, category) = ('sentRem', 'DirectConnect')
+        (pattern, category, proto) = ('sentRem', 'DirectConnect', 'IP')
     elif sid == 202:
-        (pattern, category) = ('rcvdLoc', 'DirectConnect')
+        (pattern, category, proto) = ('rcvdLoc', 'DirectConnect', 'IP')
     elif sid == 203:
-        (pattern, category) = ('rcvdFromRem', 'DirectConnect')
+        (pattern, category, proto) = ('rcvdFromRem', 'DirectConnect', 'IP')
     elif sid == 204:
-        (pattern, category) = ('sentLoc', 'eDonkey')
+        (pattern, category, proto) = ('sentLoc', 'eDonkey', 'IP')
     elif sid == 205:
-        (pattern, category) = ('sentRem', 'eDonkey')
+        (pattern, category, proto) = ('sentRem', 'eDonkey', 'IP')
     elif sid == 206:
-        (pattern, category) = ('rcvdLoc', 'eDonkey')
+        (pattern, category, proto) = ('rcvdLoc', 'eDonkey', 'IP')
     elif sid == 207:
-        (pattern, category) = ('rcvdFromRem', 'eDonkey')
+        (pattern, category, proto) = ('rcvdFromRem', 'eDonkey', 'IP')
     elif sid == 208:
-        (pattern, category) = ('sentLoc', 'Messenger')
+        (pattern, category, proto) = ('sentLoc', 'Messenger', 'IP')
     elif sid == 209:
-        (pattern, category) = ('sentRem', 'Messenger')
+        (pattern, category, proto) = ('sentRem', 'Messenger', 'IP')
     elif sid == 210:
-        (pattern, category) = ('rcvdLoc', 'Messenger')
+        (pattern, category, proto) = ('rcvdLoc', 'Messenger', 'IP')
     elif sid == 211:
-        (pattern, category) = ('rcvdFromRem', 'Messenger')
+        (pattern, category, proto) = ('rcvdFromRem', 'Messenger', 'IP')
     elif sid == 212:
-        (pattern, category) = ('sentLoc', 'PROXY')
+        (pattern, category, proto) = ('sentLoc', 'PROXY', 'IP')
     elif sid == 213:
-        (pattern, category) = ('sentRem', 'PROXY')
+        (pattern, category, proto) = ('sentRem', 'PROXY', 'IP')
     elif sid == 214:
-        (pattern, category) = ('rcvdLoc', 'PROXY')
+        (pattern, category, proto) = ('rcvdLoc', 'PROXY', 'IP')
     elif sid == 215:
-        (pattern, category) = ('rcvdFromRem', 'PROXY')
+        (pattern, category, proto) = ('rcvdFromRem', 'PROXY', 'IP')
     elif sid == 216:
-        (pattern, category) = ('sentLoc', 'NEWS')
+        (pattern, category, proto) = ('sentLoc', 'NEWS', 'IP')
     elif sid == 217:
-        (pattern, category) = ('sentRem', 'NEWS')
+        (pattern, category, proto) = ('sentRem', 'NEWS', 'IP')
     elif sid == 218:
-        (pattern, category) = ('rcvdLoc', 'NEWS')
+        (pattern, category, proto) = ('rcvdLoc', 'NEWS', 'IP')
     elif sid == 219:
-        (pattern, category) = ('rcvdFromRem', 'NEWS')
+        (pattern, category, proto) = ('rcvdFromRem', 'NEWS', 'IP')
+
+    # ICMP
     elif sid == 220:
-        (pattern, category) = ('SENT_ECHO', '')
+        (pattern, category, proto) = ('SENT_ECHO', '', 'ICMP')
     elif sid == 221:
-        (pattern, category) = ('SENT_ECHOREPLY', '')
+        (pattern, category, proto) = ('SENT_ECHOREPLY', '', 'ICMP')
     elif sid == 222:
-        (pattern, category) = ('SENT_UNREACH', '')
+        (pattern, category, proto) = ('SENT_UNREACH', '', 'ICMP')
     elif sid == 223:
-        (pattern, category) = ('SENT_ROUTERADVERT', '')
+        (pattern, category, proto) = ('SENT_ROUTERADVERT', '', 'ICMP')
     elif sid == 224:
-        (pattern, category) = ('SENT_TMXCEED', '')
+        (pattern, category, proto) = ('SENT_TMXCEED', '', 'ICMP')
     elif sid == 225:
-        (pattern, category) = ('SENT_PARAMPROB', '')
+        (pattern, category, proto) = ('SENT_PARAMPROB', '', 'ICMP')
     elif sid == 226:
-        (pattern, category) = ('SENT_MASKREPLY', '')
+        (pattern, category, proto) = ('SENT_MASKREPLY', '', 'ICMP')
     elif sid == 227:
-        (pattern, category) = ('SENT_MASKREQ', '')
+        (pattern, category, proto) = ('SENT_MASKREQ', '', 'ICMP')
     elif sid == 228:
-        (pattern, category) = ('SENT_INFO_REQUEST', '')
+        (pattern, category, proto) = ('SENT_INFO_REQUEST', '', 'ICMP')
     elif sid == 229:
-        (pattern, category) = ('SENT_INFO_REPLY', '')
+        (pattern, category, proto) = ('SENT_INFO_REPLY', '', 'ICMP')
     elif sid == 230:
-        (pattern, category) = ('SENT_TIMESTAMP', '')
+        (pattern, category, proto) = ('SENT_TIMESTAMP', '', 'ICMP')
     elif sid == 231:
-        (pattern, category) = ('SENT_TIMESTAMPREPLY', '')
+        (pattern, category, proto) = ('SENT_TIMESTAMPREPLY', '', 'ICMP')
     elif sid == 232:
-        (pattern, category) = ('SENT_SOURCE_QUENCH', '')
+        (pattern, category, proto) = ('SENT_SOURCE_QUENCH', '', 'ICMP')
     elif sid == 233:
-        (pattern, category) = ('RCVD_ECHO', '')
+        (pattern, category, proto) = ('RCVD_ECHO', '', 'ICMP')
     elif sid == 234:
-        (pattern, category) = ('RCVD_ECHOREPLY', '')
+        (pattern, category, proto) = ('RCVD_ECHOREPLY', '', 'ICMP')
     elif sid == 235:
-        (pattern, category) = ('RCVD_UNREACH', '')
+        (pattern, category, proto) = ('RCVD_UNREACH', '', 'ICMP')
     elif sid == 236:
-        (pattern, category) = ('RCVD_ROUTERADVERT', '')
+        (pattern, category, proto) = ('RCVD_ROUTERADVERT', '', 'ICMP')
     elif sid == 237:
-        (pattern, category) = ('RCVD_TMXCEED', '')
+        (pattern, category, proto) = ('RCVD_TMXCEED', '', 'ICMP')
     elif sid == 238:
-        (pattern, category) = ('RCVD_PARAMPROB', '')
+        (pattern, category, proto) = ('RCVD_PARAMPROB', '', 'ICMP')
     elif sid == 239:
-        (pattern, category) = ('RCVD_MASKREPLY', '')
+        (pattern, category, proto) = ('RCVD_MASKREPLY', '', 'ICMP')
     elif sid == 240:
-        (pattern, category) = ('RCVD_MASKREQ', '')
+        (pattern, category, proto) = ('RCVD_MASKREQ', '', 'ICMP')
     elif sid == 241:
-        (pattern, category) = ('RCVD_INFO_REQUEST', '')
+        (pattern, category, proto) = ('RCVD_INFO_REQUEST', '', 'ICMP')
     elif sid == 242:
-        (pattern, category) = ('RCVD_INFO_REPLY', '')
+        (pattern, category, proto) = ('RCVD_INFO_REPLY', '', 'ICMP')
     elif sid == 243:
-        (pattern, category) = ('RCVD_TIMESTAMP', '')
+        (pattern, category, proto) = ('RCVD_TIMESTAMP', '', 'ICMP')
     elif sid == 244:
-        (pattern, category) = ('RCVD_TIMESTAMPREPLY', '')
+        (pattern, category, proto) = ('RCVD_TIMESTAMPREPLY', '', 'ICMP')
     elif sid == 245:
-        (pattern, category) = ('RCVD_SOURCE_QUENCH', '')
+        (pattern, category, proto) = ('RCVD_SOURCE_QUENCH', '', 'ICMP')
     else:
         util.debug(__name__, "%d: Bad plugin_sid" % (sid), "**", 'RED')
         sys.exit()
         
-    return (pattern, category)
+    return (pattern, category, proto)
 
-
-class NtopHandler(xml.sax.handler.ContentHandler):
-    
-    ntop_data = {}
-    
-    def __init__(self, pattern, category):
-        self.inContent = 0
-        self.inCategory = 0
-        self.theContent = ""
-        self.pattern = pattern
-        self.category = category
-        self.ip = ''
-        xml.sax.handler.ContentHandler.__init__(self)
-
-
-    def startElement (self, name, attrs):
-        if name == 'hostNumIpAddress':
-            self.inContent = 1
-
-        if name == self.category:
-            self.inCategory = 1
-
-        if name == self.pattern:
-            self.inContent = 1
-
-
-    def endElement (self, name):
-        if self.inContent:
-            self.theContent = util.normalizeWhitespace(self.theContent)
-
-        if name == 'hostNumIpAddress':
-            self.ip = self.theContent.encode("iso-8859-1")
-
-        if self.category == '':
-            if name == self.pattern:
-                NtopHandler.ntop_data[self.ip] = \
-                    self.theContent.encode("iso-8859-1")
-        else:
-            if name == self.pattern and self.inCategory:
-                NtopHandler.ntop_data[self.ip] = \
-                    self.theContent.encode("iso-8859-1")
-
-        if name == self.category:
-            self.inCategory = 0
-            
-
-    def characters (self, string):
-        if self.inContent:
-            self.theContent = string
 

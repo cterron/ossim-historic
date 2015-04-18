@@ -29,6 +29,32 @@ class ossim_db {
         return $conn;
     }
 
+    function snort_connect() {
+        global $conf;
+
+        $base = $conf->get_conf("snort_base");
+        $user = $conf->get_conf("snort_user");
+        $pass = $conf->get_conf("snort_pass");
+        $host = $conf->get_conf("snort_host");
+
+        $conn = &ADONewConnection('mysql');
+        $conn->PConnect($host, $user, $pass, $base);
+        return $conn;
+    }
+
+    function opennms_connect() {
+        global $conf;
+
+        $base = $conf->get_conf("opennms_base");
+        $user = $conf->get_conf("opennms_user");
+        $pass = $conf->get_conf("opennms_pass");
+        $host = $conf->get_conf("opennms_host");
+
+        $conn = &ADONewConnection('pgsql');
+        $conn->PConnect($host, $user, $pass, $base);
+        return $conn;
+    }
+
     function close($conn) {
         $conn->Close();
     }
@@ -80,7 +106,8 @@ class ossim_db {
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
-            list($protocol, $ip, $port)  = split(':', $conf->get_conf("ntop_link"));
+            list($protocol, $ip, $port)  = 
+                split(':', $conf->get_conf("ntop_link"));
             $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
         } 
 
@@ -97,7 +124,8 @@ class ossim_db {
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg();
             } elseif (!$rs->EOF) {
-                list($protocol, $ip, $port)  = split(':', $conf->get_conf("ntop_link"));
+                list($protocol, $ip, $port) = 
+                    split(':', $conf->get_conf("ntop_link"));
                 $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
             }
         }

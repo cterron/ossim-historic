@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.3
+Version:   0.9.4
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -22,18 +22,32 @@ over every network or security aspect.
 %package agent
 Summary:   OSSIM Agent
 Group:     Applications/Security
-#Requires:  %{name} >= %{version}
 
 %description agent
 OSSIM Agent
 
+%package perl
+Summary:   OSSIM Perl Module
+Group:     Applications/Security
+
+%description perl
+OSSIM Perl Module
+
 %package framework
 Summary:   OSSIM Web framework
 Group:     Applications/Security
-Requires:  php >= 4.0
+Requires:  php >= 4.0 php-domxml >= 4.0 os-sim-perl >= %{version}
 
 %description framework
 OSSIM Web framework
+
+%package scripts
+Summary:   OSSIM Scripts
+Group:     Applications/Security
+Requires:  os-sim-perl >= %{version}
+
+%description scripts
+OSSIM Scripts
 
 %prep
 %setup -q
@@ -60,20 +74,23 @@ OSSIM Web framework
 %{__install} -d -m0755 $RPM_BUILD_ROOT/etc/httpd/conf.d
 %{__cp} -f etc/httpd/ossim.conf $RPM_BUILD_ROOT/etc/httpd/conf.d
 
-touch $RPM_BUILD_ROOT/var/www/ossim-users
+%clean
+%{__rm} -rf $RPM_BUILD_ROOT
 
 %post agent
 if [ -L %{_bindir}/agent ] || [ ! -e %{_bindir}/agent ] ; then
-  rm -f %{_bindir}/agent ; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
+	rm -f %{_bindir}/agent; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
+fi
+
+%post framework
+if [ ! -e /var/www/ossim-users ] ; then
+	touch /var/www/ossim-users
 fi
 
 %postun agent
 if [ -L %{_bindir}/agent ] ; then
 	rm -f %{_bindir}/agent
 fi
-
-%clean
-%{__rm} -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,0755)
@@ -83,33 +100,54 @@ fi
 %config %{_sysconfdir}/ossim/server/directives.xml
 %{_bindir}/ossim
 %{_datadir}/ossim/db/
+/var/log/ossim
 
 %files agent
 %defattr(-,root,root,0755)
 %config %{_sysconfdir}/ossim/agent/config.xml
 %{_datadir}/ossim/agent/
 %attr(0755,root,root) %{_datadir}/ossim/agent/agent
+/var/log/ossim
+
+%files perl
+%defattr(-,root,root,0755)
+%config %{_sysconfdir}/ossim/framework/ossim.conf
+%{perl_sitearch}
+%{_datadir}/ossim/perl/
 
 %files framework
 %defattr(-,root,root,0755)
-%config %{_sysconfdir}/ossim/framework/ossim.conf
 %config %{_sysconfdir}/ossim/framework/mrtg.cfg
 %config %{_sysconfdir}/ossim/framework/mrtg-rrd.cfg
 %config %{_sysconfdir}/httpd/conf.d/ossim.conf
 %{_datadir}/ossim/fonts/
 %{_datadir}/ossim/mrtg/
-%{_datadir}/ossim/perl/
 %{_datadir}/ossim/php/
 %{_datadir}/ossim/pixmaps/
-%{_datadir}/ossim/scripts/
-%{perl_sitearch}
+%{_datadir}/ossim/scripts/control_panel.pl
+%{_datadir}/ossim/scripts/draw_graph.pl
+%{_datadir}/ossim/scripts/draw_graph_combined.pl
+%{_datadir}/ossim/scripts/get_date.pl
+%{_datadir}/ossim/scripts/get_rrd_value.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph_combined.pl
 /var/www/ossim/
-/var/www/ossim-users
 
+%files scripts
+%{_datadir}/ossim/scripts/rrd_plugin.pl
+%{_datadir}/ossim/scripts/do_nessus.pl
+%{_datadir}/ossim/scripts/netbios.pl
+%{_datadir}/ossim/scripts/services.pl
+%{_datadir}/ossim/scripts/update_nessus_ids.pl
+%{_datadir}/ossim/scripts/backupdb.pl
+%{_datadir}/ossim/scripts/acid_cache.pl
+/var/lib/ossim/backup
 
 %changelog
+* Fri May 05 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.4-1
+- New packages: perl and scripts.
+- New Release
+
 * Wed Mar 24 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.3-1
 - New Release
 

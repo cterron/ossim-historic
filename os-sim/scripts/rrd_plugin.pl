@@ -7,6 +7,25 @@
 
 use DBI;
 use ossim_conf;
+use Socket;
+
+sub byebye {
+    print "$0: forking into background...\n";
+    exit;
+}
+
+fork and byebye;
+
+my $pidfile = "/var/run/rrd_plugin.pid";
+
+sub die_clean {
+    unlink $pidfile;
+    exit;
+}
+
+open(PID, ">$pidfile") or die "Unable to open $pidfile\n";
+print PID $$;
+close(PID);
 
 # Data Source 
 my $ds_type = "mysql";
@@ -16,75 +35,46 @@ my $ds_port = $ossim_conf::ossim_data->{"ossim_port"};
 my $ds_user = $ossim_conf::ossim_data->{"ossim_user"};
 my $ds_pass = $ossim_conf::ossim_data->{"ossim_pass"};
 
-# Interfaces (comma separate)
-my $interfaces = "eth0";
+# Interfaces (comma separated)
+my $main_interface = $ossim_conf::ossim_data->{"ossim_interface"};
+my $interfaces = "$main_interface";
 
 # Anomaly
 my $rrd_sleep = 300;
 my $rrd_interval = 300;
 my $rrd_range = "1H";
+my $rrd_worm = 1;
 
 # RRD Path Files
 my $rrd_bin = $ossim_conf::ossim_data->{"rrdtool_path"} . "/rrdtool";
 my $rrd_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};
 my $rrd_log = "/var/log/rrd_plugin.log";
 
-# RRD Files
-my %rrd_global_atts =
-    ("active_host_senders_num" => ["activeHostSendersNum"],
-     "arp_rarp_bytes"    => ["arpRarpBytes"],
-     "broadcast_pkts"    => ["broadcastPkts"],
-     "ethernet_bytes"    => ["ethernetBytes"],
-     "ethernet_pkts"     => ["ethernetPkts"],
-     "icmp_bytes"        => ["icmpBytes"],
-     "igmp_bytes"        => ["igmpBytes"],
-     "ip_bytes"          => ["ipBytes"],
-     "ip_dhcp_bootp_bytes" => ["IP_DHCP-BOOTPBytes"],
-     "ip_dns_bytes"      => ["IP_DNSBytes"],
-     "ip_edonkey_bytes"  => ["IP_eDonkeyBytes"],
-     "ip_ftp_bytes"      => ["IP_FTPBytes"],
-     "ip_gnutella_bytes" => ["IP_GnutellaBytes"],
-     "ip_http_bytes"     => ["IP_HTTPBytes"],
-     "ip_kazaa_bytes"    => ["IP_KazaaBytes"],
-     "ip_mail_bytes"     => ["IP_MailBytes"],
-     "ip_messenger_bytes" => ["IP_MessengerBytes"],
-     "ip_nbios_ip_bytes" => ["IP_NBios-IPBytes"],
-     "ip_nfs_bytes"      => ["IP_NFSBytes"],
-     "ip_nttp_bytes"     => ["IP_NNTPBytes"],
-     "ip_snmp_bytes"     => ["IP_SNMPBytes"],
-     "ip_ssh_bytes"      => ["IP_SSHBytes"],
-     "ip_telnet_bytes"   => ["IP_TelnetBytes"],
-     "ip_winmx_bytes"    => ["IP_WinMXBytes"],
-     "ip_x11_bytes"      => ["IP_X11Bytes"],
-     "ipx_bytes"         => ["ipxBytes"],
-     "known_hosts_num"   => ["knownHostsNum"],
-     "multicast_pkts"    => ["multicastPkts"],
-     "ospf_bytes"        => ["ospfBytes"],
-     "other_bytes"       => ["otherBytes"],
-     "tcp_bytes"         => ["tcpBytes"],
-     "udp_bytes"         => ["udpBytes"],
-     "up_to_1024_pkts"   => ["upTo1024Pkts"],
-     "up_to_128_pkts"    => ["upTo128Pkts"],
-     "up_to_1518_pkts"   => ["upTo1518Pkts"],
-     "up_to_512_pkts"    => ["upTo512Pkts"],
-     "up_to_64_pkts"     => ["upTo64Pkts"]);
+my %rrd_worm_atts = 
+    ("synPktsSent" => [4,5,1],
+     "synPktsRcvd" => [3,5,1],
+     "totContactedSentPeers" => [1,5,1],
+     "totContactedRcvdPeers" => [1,5,1],
+     "web_sessions" => [5,5,1],
+     "mail_sessions" => [1,5,1],
+     "nb_sessions" => [1,5,1]);
 
-my %rrd_host_atts=
-    ("pkt_sent" => ["pktSent"],
-     "pkt_rcvd" => ["pktRcvd"],
-     "bytes_sent" => ["bytesSent"],
-     "bytes_rcvd" => ["bytesRcvd"],
-     "tot_contacted_sent_peers" => ["totContactedSentPeers"],
-     "tot_contacted_rcvd_peers" => ["totContactedRcvdPeers"],
-     "ip_dns_sent_bytes" => ["IP_DNSSentBytes"],
-     "ip_dns_rcvd_bytes" => ["IP_DNSRcvdBytes"],
-     "ip_nbios_ip_sent_bytes" => ["IP_NBios-IPSentBytes"],
-     "ip_nbios_ip_rcvd_bytes" => ["IP_NBios-IPRcvdBytes"],
-     "ip_mail_sent_bytes" => ["IP_MailSentBytes"],
-     "ip_mail_rcvd_bytes" => ["IP_MailRcvdBytes"]);
+#Host to exclude
+my @rrd_worm_hosts = ();
 
 my $dsn = "dbi:" . $ds_type . ":" . $ds_name . ":" . $ds_host . ":" . $ds_port . ":";
 my $conn;
+
+sub rrd_worm_has_host {
+    my ($host) = @_;
+
+    foreach $var (@rrd_worm_hosts) {
+	if ($host eq $var) {
+	    return 1;
+	}
+    }
+    return 0;
+}
 
 # Return the average
 sub rrd_graph_average {
@@ -121,6 +111,16 @@ sub rrd_fetch_average_by_time {
     my ($file, $stime, $etime) = @_;
 
     my $result = `$rrd_bin fetch $file AVERAGE -s $stime -e $etime | grep $etime`;
+
+    my @tmp = split (" ", $result); 
+
+    return $tmp[1];
+}
+
+sub rrd_fetch_max_by_time {
+    my ($file, $stime, $etime) = @_;
+
+    my $result = `$rrd_bin fetch $file MAX -s $stime -e $etime | grep $etime`;
 
     my @tmp = split (" ", $result); 
 
@@ -168,10 +168,11 @@ sub rrd_anomaly {
 
     my $hwpredict = rrd_fetch_hwpredict_by_time ($file, $last_failure - 1, $last_failure);
     my $devpredict = rrd_fetch_devpredict_by_time ($file, $last_failure - 1, $last_failure);
-    my $average = rrd_fetch_average_by_time ($file, $last_failure - 1, $last_failure);
+    #my $average = rrd_fetch_average_by_time ($file, $last_failure - 1, $last_failure);
+    my $max = rrd_fetch_max_by_time ($file, $last_failure - 1, $last_failure);
 
     # If average is by excess
-    return 0 unless ($average > ($hwpredict - (2 * $devpredict)));
+    return 0 unless ($max > ($hwpredict + (2 * $devpredict)));
 
     print OUTPUT "rrd_anomaly: $curr_time $ip $interface $att $priority $last_failure\n";
 
@@ -191,56 +192,62 @@ sub rrd_threshold {
     return 1;
 }
 
-# Get Host attributes from DB
-sub rrd_hosts {
-    my ($interface) = @_; 
-
-    my $query = "SELECT * FROM rrd_conf;";
-    my $stm = $conn->prepare($query);
-    $stm->execute();
-
-    while (my $row = $stm->fetchrow_hashref) {
-	my $ip = $row->{ip};
-	my $val;
-	foreach $val (keys %rrd_host_atts){
-	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/hosts/". $ip . "/" . $rrd_host_atts{$val}[0] . ".rrd";
-	    
-	    next unless (-e $file);
-	    next unless ($row->{$val} =~ m/^(.*),(.*),(.*),(.*),(.*)$/);
-
-	    my $threshold = $1;
-	    my $priority = $2;
-	    my $persistence = $5;
-	    
-	    rrd_threshold ($ip, $interface, $rrd_host_atts{$val}[0], $priority, $file, $threshold);
-	    rrd_anomaly ($ip, $interface, $rrd_host_atts{$val}[0], $priority, $file, $persistence);
-       }
-    }
-}
-
-# Get Global Attributes from BD
-sub rrd_global {
+sub rrd_config {
     my ($interface) = @_;
 
-    my $query = "SELECT * FROM rrd_conf_global;";
+    my $query = "SELECT INET_NTOA(ip) AS ip, rrd_attrib, threshold, priority, persistence FROM rrd_config;";
     my $stm = $conn->prepare($query);
     $stm->execute();
-    
-    while (my $row = $stm->fetchrow_hashref) {
-	my $val;
-	foreach $val (keys %rrd_global_atts){
-	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/" . $rrd_global_atts{$val}[0] . ".rrd";
-	    
-	    next unless (-e $file);
-	    next unless ($row->{$val} =~ m/^(.*),(.*),(.*),(.*),(.*)$/);
 
-	    my $threshold = $1;
-	    my $priority = $2;
-	    my $persistence = $5;
+    while (my $row = $stm->fetchrow_hashref) {
+	my $hl = $row->{ip};
+	my $att = $row->{rrd_attrib};
+	my $threshold = $row->{threshold};
+	my $priority = $row->{priority};
+	my $persistence = $row->{persistence};
+
+	if (ip == 0) {
+	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/" . $att . ".rrd";
+	    next unless (-e $file);
+
+	    rrd_threshold ("GLOBAL", $interface, $att, $priority, $file, $threshold);
+	    rrd_anomaly ("GLOBAL", $interface, $att, $priority, $file, $persistence);
+	} else {
+	    my $ip = inet_aton ($hl);
+
+	    my $dir = "$ip";
+	    $dir =~ tr/\./\//;
+	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/hosts/". $dir . "/" . $atts . ".rrd";
+
+	    next unless (-e $file);
 	    
-	    rrd_threshold ("GLOBAL", $interface, $rrd_global_atts{$val}[0], $priority, $file, $threshold);
-	    rrd_anomaly ("GLOBAL", $interface, $rrd_global_atts{$val}[0], $priority, $file, $persistence);
-       }
+	    rrd_threshold ($ip, $interface, $att, $priority, $file, $threshold);
+	    rrd_anomaly ($ip, $interface, $att, $priority, $file, $persistence);
+	}
+    }
+
+    if ($rrd_worm == 1) {
+	foreach $att (keys %rrd_worm_atts){
+	    my $threshold = $rrd_worm_atts{$att}[0];
+	    my $priority = $rrd_worm_atts{$att}[1];
+	    my $persistence = $rrd_worm_atts{$att}[2];
+
+	    my @result= `find $rrd_ntop/interfaces/$interface | grep $att`;
+	    foreach $file (@result) {
+		my @tmp = split ("/", $file);
+
+		$failure[$#failure];
+
+		my $ip = "$tmp[$#tmp - 4].$tmp[$#tmp - 3].$tmp[$#tmp - 2].$tmp[$#tmp - 1]";
+
+		next if (rrd_worm_has_host ($ip));
+
+		chomp($file);
+
+		rrd_threshold ($ip, $interface, $att, $priority, $file, $threshold);
+		rrd_anomaly ($ip, $interface, $att, $priority, $file, $persistence);
+	    }
+	}
     }
 }
 
@@ -252,8 +259,7 @@ sub rrd_main {
 	open (OUTPUT, ">>$rrd_log") or die "Can't open file log";
 	my $interface;
 	foreach $interface (split (",", $interfaces)) {
-	    rrd_global ($interface);
-	    rrd_hosts ($interface);
+	    rrd_config ($interface);
 	}
 	close (OUTPUT);
 	$conn->disconnect;

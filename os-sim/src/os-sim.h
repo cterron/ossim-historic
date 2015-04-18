@@ -43,6 +43,16 @@ extern "C" {
 
 #include <sim-server.h>
 
+typedef struct {
+  SimConfig          *config;
+
+  SimContainer       *container;
+  SimServer          *server;
+
+  SimDatabase        *dbossim;
+  SimDatabase        *dbsnort;
+} SimMain;
+
 extern SimContainer  *sim_ctn;
 extern SimServer     *sim_svr;
 

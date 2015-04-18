@@ -62,7 +62,7 @@ struct _SimDirectivePrivate {
   GNode     *rule_root;
   GNode     *rule_curr;
 
-  GList     *actions;
+  GMutex    *mutex;
 };
 
 static gpointer parent_class = NULL;
@@ -87,6 +87,8 @@ sim_directive_impl_finalize (GObject  *gobject)
 
   sim_directive_node_data_destroy (directive->_priv->rule_root);
   g_node_destroy (directive->_priv->rule_root);
+
+  g_mutex_free (directive->_priv->mutex);
 
   g_free (directive->_priv);
   
@@ -122,7 +124,7 @@ sim_directive_instance_init (SimDirective *directive)
   directive->_priv->rule_root = NULL;
   directive->_priv->rule_curr = NULL;
 
-  directive->_priv->actions =  NULL;
+  directive->_priv->mutex = g_mutex_new ();
 }
 
 /* Public Methods */
@@ -169,6 +171,51 @@ sim_directive_new (void)
   directive = SIM_DIRECTIVE (g_object_new (SIM_TYPE_DIRECTIVE, NULL));
 
   return directive;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_lock (SimDirective     *directive)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+
+  g_mutex_lock (directive->_priv->mutex);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_unlock (SimDirective     *directive)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+
+  g_mutex_unlock (directive->_priv->mutex);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_directive_trylock (SimDirective     *directive)
+{
+  g_return_val_if_fail (directive, FALSE);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
+
+  return g_mutex_trylock (directive->_priv->mutex);
 }
 
 /*
@@ -415,6 +462,7 @@ sim_directive_get_root_rule (SimDirective  *directive)
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
   g_return_val_if_fail (directive->_priv->rule_root, NULL);
+  g_return_val_if_fail (directive->_priv->rule_root->data, NULL);
 
   return (SimRule *) directive->_priv->rule_root->data;
 }
@@ -431,6 +479,7 @@ sim_directive_get_curr_rule (SimDirective  *directive)
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
   g_return_val_if_fail (directive->_priv->rule_curr, NULL);
+  g_return_val_if_fail (directive->_priv->rule_curr->data, NULL);
 
   return (SimRule *) directive->_priv->rule_curr->data;
 }
@@ -547,6 +596,7 @@ sim_directive_backlog_match_by_alert (SimDirective  *directive,
 	  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
 
 	  sim_rule_set_alert_data (rule, alert);
+	  sim_rule_set_time_last (rule, time_last);
 
 	  if (!G_NODE_IS_LEAF (node))
 	    {
@@ -967,7 +1017,7 @@ sim_directive_backlog_get_insert_clause (SimDirective *directive)
 
 /*
  *
- *
+ * 
  *
  */
 gchar*
@@ -1029,6 +1079,11 @@ sim_directive_backlog_get_delete_clause (SimDirective *directive)
   return query;
 }
 
+/*
+ *
+ *
+ *
+ */
 void
 sim_directive_print (SimDirective  *directive)
 {
@@ -1036,4 +1091,47 @@ sim_directive_print (SimDirective  *directive)
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
 
   g_print ("DIRECTIVE: name=\"%s\"\n", directive->_priv->name);
+}
+
+/*
+ *
+ *
+ *
+ */
+gchar*
+sim_directive_backlog_to_string (SimDirective  *directive)
+{
+  GString  *str, *vals;
+  GNode    *node;
+  gchar    *val;
+  gint      i;
+
+  g_return_val_if_fail (directive, NULL);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
+  g_return_val_if_fail (directive->_priv->rule_curr, NULL);
+
+  str = g_string_sized_new (0);
+  g_string_append_printf (str, "%s, Priority: %d\n",
+			  directive->_priv->name,
+			  directive->_priv->priority);
+
+  vals = g_string_sized_new (0);
+  node = directive->_priv->rule_curr;
+  while (node)
+    {
+      SimRule *rule = (SimRule *) node->data;
+      
+      if ((val = sim_rule_to_string (rule)))
+	{
+	  g_string_prepend (vals, val);
+	  g_free (val);
+	}
+
+      node = node->parent;
+    }
+
+  g_string_append (str, vals->str);
+  g_string_free (vals, TRUE);
+
+  return g_string_free (str, FALSE);
 }

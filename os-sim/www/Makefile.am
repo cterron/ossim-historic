@@ -12,6 +12,7 @@ SUBDIRS=conf \
 	riskmeter \
 	rrd_conf \
 	scan \
+	sec_report \
 	sensor \
 	signature \
 	style \

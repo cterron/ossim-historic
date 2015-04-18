@@ -75,7 +75,7 @@ class Parser(threading.Thread):
 
         else:
             util.debug (__name__, 
-                        "Plugin " + self.plugin["name"] + 
+                        "Plugin " + self.plugin["process"] + 
                         " is not implemented...", '!!', 'RED')
             sys.exit()
 

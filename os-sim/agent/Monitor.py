@@ -14,6 +14,8 @@ class Monitor(threading.Thread):
         self.sequence  = agent.sequence
         self.plugins   = agent.plugins
         self.data      = data
+        self.watchdog_enable = agent.watchdog_enable
+        self.watchdog_interval = agent.watchdog_interval
 
         threading.Thread.__init__(self)
 
@@ -107,10 +109,12 @@ class Monitor(threading.Thread):
 
 
     def run(self):
-        
-        from MonitorWatchdog import MonitorWatchdog
-        watchdog = MonitorWatchdog(self.agent)
-        watchdog.start()
+       
+        # watchdog monitor
+        if self.agent.watchdog_enable:
+            from MonitorWatchdog import MonitorWatchdog
+            watchdog = MonitorWatchdog(self.agent)
+            watchdog.start()
         
         while 1:
             data = self.recv_line(self.agent.conn)
@@ -119,35 +123,51 @@ class Monitor(threading.Thread):
 #            print " * server said: " + str(data) # debug
 #            TODO: CHECK FOR ERROR MESSAGES
 
-            if data.__contains__('watch-rule'):
+            try:
+                if data.__contains__('watch-rule'):
 
-                # ntop
-                if data.__contains__('plugin_id="2005"'):
-                    if self.plugins['2005']["enable"] == 'yes':
-                        from MonitorNtop import MonitorNtop
-                        ntop = MonitorNtop(self.agent, data)
-                        ntop.start()
-                    else:
-                        util.debug (__name__, 'plugin NTOP is disabled',
-                                    '**', 'RED');
-                    
-                # C & A levels
-                elif data.__contains__('plugin_id="2001"'):
-                    if self.plugins['2001']["enable"] == 'yes':
-                        from MonitorCA import MonitorCA
-                        ca = MonitorCA(self.agent, data)
-                        ca.start()
-                    else:
-                        util.debug (__name__, 'plugin CA is disabled',
-                                    '**', 'RED');
+                    # ntop monitor
+                    if data.__contains__('plugin_id="2005"'):
+                        if self.plugins['2005']["enable"] == 'yes':
+                            from MonitorNtop import MonitorNtop
+                            ntop = MonitorNtop(self.agent, data)
+                            ntop.start()
+                        else:
+                            util.debug (__name__, 'plugin NTOP is disabled',
+                                        '**', 'RED');
+                        
+                    # C & A levels monitor
+                    elif data.__contains__('plugin_id="2001"'):
+                        if self.plugins['2001']["enable"] == 'yes':
+                            from MonitorCA import MonitorCA
+                            ca = MonitorCA(self.agent, data)
+                            ca.start()
+                        else:
+                            util.debug (__name__, 'plugin CA is disabled',
+                                        '**', 'RED');
+
+                    # OpenNMS monitor
+                    elif data.__contains__('plugin_id="2004"'):
+                        if self.plugins['2004']["enable"] == 'yes':
+                            from MonitorOpennms import MonitorOpennms
+                            opennms = MonitorOpennms(self.agent, data)
+                            opennms.start()
+                        else:
+                            util.debug (__name__, 'plugin Opennms is disabled',
+                                        '**', 'RED');
 
 
-            elif data.__contains__('plugin-start') or \
-               data.__contains__('plugin-stop') or \
-               data.__contains__('plugin-enabled') or \
-               data.__contains__('plugin-disabled'):
-                from MonitorPlugin import MonitorPlugin
-                mp = MonitorPlugin(self.agent, data)
-                mp.start()
+                elif data.__contains__('plugin-start') or \
+                   data.__contains__('plugin-stop') or \
+                   data.__contains__('plugin-enabled') or \
+                   data.__contains__('plugin-disabled'):
+
+                    # Plugin monitor
+                    from MonitorPlugin import MonitorPlugin
+                    mp = MonitorPlugin(self.agent, data)
+                    mp.start()
+
+            except Exception, e:
+                util.debug (__name__, e, '!!', 'RED')
 
 

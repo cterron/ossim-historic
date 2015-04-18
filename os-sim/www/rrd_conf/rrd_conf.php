@@ -6,13 +6,12 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
+
   <h1>RRD Config</h1>
 
 <?php
     require_once 'ossim_db.inc';
-    require_once 'classes/RRD_conf.inc';
-    require_once 'classes/RRD_conf_global.inc';
+    require_once 'classes/RRD_config.inc';
     require_once 'classes/Host.inc';
 
     if (!$order = $_GET["order"]) $order = "inet_aton(ip)";
@@ -31,40 +30,36 @@
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($rrd_list_global = RRD_conf_global::get_list($conn)) {
-        foreach($rrd_list_global as $rrd_global) {
+    if ($rrd_list = RRD_config::get_ip_list($conn)) {
+        foreach($rrd_list as $ip) {
 ?>
     <tr>
-      <td><?php echo "Global"; ?></td>
-    <td><a href="modify_rrd_conf_form.php?ip=<?php echo "global"  ?>">Modify</a>
-    </tr>
-
+      <td>
+<?php 
+            if (!strcmp($ip, '0.0.0.0')) echo 'GLOBAL';
+            else echo Host::ip2hostname($conn, $ip);
+?>
+      </td>
+      <td>
+        <a href="modify_rrd_conf_form.php?ip=<?php echo $ip  ?>">Modify</a>
 <?php
-        } /* rrd_list */
-    } /* foreach */
-
+            if (strcmp($ip, '0.0.0.0')) {
+?>
+        &nbsp;<a href="delete_rrd_conf.php?ip=<?php echo $ip  ?>">Delete</a>
+<?php
+            }
+?>
+       </td>
+    </tr>
+<?php
+        }
+    }
     
-    if ($rrd_list = RRD_conf::get_list($conn, "ORDER BY $order")) {
-        foreach($rrd_list as $rrd) {
-            $ip = $rrd->get_ip();
-?>
-
-    <tr>
-      <td><?php echo Host::ip2hostname($conn, $ip) . " ($ip)" ;?></td> 
-
-
-      <td><a href="modify_rrd_conf_form.php?ip=<?php echo $ip ?>">Modify</a>
-          <a href="delete_rrd_conf.php?ip=<?php echo $ip ?>">Delete</a></td>
-    </tr>
-
-<?php
-        } /* rrd_list */
-    } /* foreach */
 
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="7"><a href="new_rrd_conf_form.php">Insert new rrd_conf</a></td>
+      <td colspan="2"><a href="new_rrd_conf_form.php">Insert new rrd_conf</a></td>
     </tr>
   </table>
     

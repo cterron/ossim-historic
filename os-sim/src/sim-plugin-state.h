@@ -70,6 +70,7 @@ struct _SimPluginStateClass {
 GType             sim_plugin_state_get_type                        (void);
 SimPluginState*   sim_plugin_state_new                             (void);
 SimPluginState*   sim_plugin_state_new_from_data                   (SimPlugin        *plugin,
+								    gint              plugin_id,
 								    gint              state,
 								    gboolean          enable);
 

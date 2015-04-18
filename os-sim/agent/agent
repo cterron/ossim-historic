@@ -1,24 +1,36 @@
 #!/usr/bin/python2.3
 
+import util, time, os, signal, sys
 from optparse import OptionParser
 
 from Agent import Agent
-import util
-import time
-import os
-import signal
+
+
 
 def main():
-    
+
     # parse command line options
     options = parse_options()
-    
+
     if options.config_file is None:
         options.config_file = util.CONFIG
 
     # Init agent and read config
     agent = Agent()
     agent.parseConfig(options.config_file)
+
+    # daemonize
+    if options.daemon is not None:
+        daemonize()
+        sys.stderr = open(os.path.join(agent.logdir, 'agent_error.log'), 'a+')
+
+    # Redirect standard file descriptors
+    if not os.path.isdir(agent.logdir):
+        os.mkdir(agent.logdir, 0755)
+    sys.stdin  = open('/dev/null', 'r')
+    sys.stdout = open(os.path.join(agent.logdir, 'agent.log'), 'w')
+    util.watchlog = open(os.path.join(agent.logdir, 'agent_watch.log'), 'a+')
+    util.debug_watchlog('Agent startup')
 
     # connect to server
     if agent.connect():
@@ -28,27 +40,48 @@ def main():
 
 
 def parse_options():
-    
-    """ parse command line options """
+    """Parse command line options"""
 
-    parser = OptionParser(usage = "usage: %prog [-v] [-q] [-c config_file]", 
+    parser = OptionParser(usage = "%prog [-v] [-q] [-d] [-c config_file]", 
                           version = util.VERSION)
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
-                      help="make lots of noise [default]")
+                      help="make lots of noise")
     parser.add_option("-q", "--quiet", dest="quiet", action="store_true",
-                      help="don't show debug messages")
+                      help="don't show debug messages [default]")
+    parser.add_option("-d", "--daemon", dest="daemon", action="store_true",
+                      help="Run agent in daemon mode")
     parser.add_option("-c", "--config", dest="config_file", action="store",
                       help = "read config from FILE", metavar="FILE")
     (options, args) = parser.parse_args()
 
     if len(args) > 1:
         parser.error("incorrect number of arguments")
+
+    if options.verbose and options.daemon:
+        parser.error("incompatible options -v -d")
+
     if options.quiet:
         util.VERBOSE = False
-    if options.verbose:
+    elif options.verbose:
         util.VERBOSE = True
+    else:
+        util.VERBOSE = False
 
     return options
+
+
+def daemonize():
+    """Run agent in daemon mode"""
+
+    try:
+        util.debug (__name__, 'Forking into background...', '**', 'GREEN')
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError, e:
+        print >>sys.stderr, "fork failed: %d (%s)" % (e.errno, e.strerror)
+        sys.exit(1)
+
 
 
 def waitforever():
@@ -60,6 +93,7 @@ def waitforever():
         except KeyboardInterrupt:
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)
+
 
 if __name__ == '__main__':
     main()

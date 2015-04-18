@@ -58,7 +58,6 @@ G_BEGIN_DECLS
 
 typedef struct _SimCommand        SimCommand;
 typedef struct _SimCommandClass   SimCommandClass;
-typedef struct _SimCommandPrivate SimCommandPrivate;
 
 struct _SimCommand {
   GObject parent;
@@ -165,7 +164,6 @@ struct _SimCommand {
       gint               dst_port;
 
       /* Plugin Type Monitor */
-      gchar             *parameter;
       gchar             *condition;
       gchar             *value;
       gint               interval;
@@ -177,9 +175,27 @@ struct _SimCommand {
       gchar             *str;
     } watch_rule;
 
-  } data;
 
-  SimCommandPrivate  *_priv;
+    struct {
+      gchar             *date;
+      gchar             *host;
+      gchar             *os;
+
+      gint               plugin_id;
+      gint               plugin_sid;
+    } host_os_change;
+
+    struct {
+      gchar             *date;
+      gchar             *host;
+      gchar             *mac;
+      gchar             *vendor;
+
+      gint               plugin_id;
+      gint               plugin_sid;
+    } host_mac_change;
+
+  } data;
 };
 
 struct _SimCommandClass {

@@ -20,6 +20,7 @@ agent_DATA    = util.py \
 	MonitorNtop.py \
 	MonitorNtopHostinfo.py \
 	MonitorNtopSession.py \
+	MonitorOpennms.py \
 	MonitorPlugin.py \
 	MonitorWatchdog.py
 

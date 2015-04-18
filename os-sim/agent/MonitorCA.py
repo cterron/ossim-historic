@@ -4,6 +4,8 @@ import time
 import Monitor
 import util
 
+import MySQLdb
+
 class MonitorCA(Monitor.Monitor):
 
     plugin_id = '2001'
@@ -30,7 +32,7 @@ class MonitorCA(Monitor.Monitor):
         util.debug (__name__, 'monitor finished', '--')
 
 
-    def __get_value(self, db, rule):
+    def __get_value(self, st, rule):
 
         # get plugin_sid
         plugin_sid = rule['plugin_sid']
@@ -47,16 +49,12 @@ class MonitorCA(Monitor.Monitor):
             util.debug(__name__, "Unknown plugin_sid: %s" % plugin_sid, "**", "RED")
             util.debug (__name__, 'monitor finished', '--')
             sys.exit()
-        
-        try:
-            db.query(query)
-            r = db.store_result()
-            
-            result = r.fetch_row(maxrows = 1, # returns first row
-                                 how = 0)     # return it as an array
-            return result[0][0]
-            
-        except IndexError:
+
+        st.execute(query)
+        res = st.fetchone()
+        if res is not None:
+            return res[0]
+        else:
             return 0
 
 
@@ -72,12 +70,12 @@ class MonitorCA(Monitor.Monitor):
         dbconfig = self.plugins[MonitorCA.plugin_id]['location'].split(':')
         
         if dbconfig[0] == 'mysql':
-            import _mysql
             
-            db=_mysql.connect(host   = dbconfig[1],
-                              db     = dbconfig[2],
-                              user   = dbconfig[3],
-                              passwd = dbconfig[4])
+            db = MySQLdb.connect(host   = dbconfig[1],
+                                 db     = dbconfig[2],
+                                 user   = dbconfig[3],
+                                 passwd = dbconfig[4])
+            st = db.cursor()
  
         else:
             util.debug (__name__, 'database %s not supported' % (dbconfig[0]),
@@ -88,7 +86,7 @@ class MonitorCA(Monitor.Monitor):
         if absolute == 'true':
             vfirst = 0
         else:
-            vfirst = int(self.__get_value(db, rule))
+            vfirst = int(self.__get_value(st, rule))
             if vfirst is None: vfirst = 0
 
         pfreq = int(self.plugins[MonitorCA.plugin_id]['frequency'])
@@ -117,7 +115,7 @@ class MonitorCA(Monitor.Monitor):
 
 
             util.debug (__name__, "getting CA value...", '<=')
-            vlast = self.__get_value(db, rule)
+            vlast = self.__get_value(st, rule)
             if vlast is None:
                 util.debug (__name__, "no data for %s" % rule["to"],
                             '!!', 'YELLOW')
@@ -140,7 +138,7 @@ class MonitorCA(Monitor.Monitor):
                 date = time.strftime('%Y-%m-%d %H:%M:%S', 
                                      time.localtime(time.time()))
 
-                self.agent.sendMessage(type         = 'monitor', 
+                self.agent.sendAlert  (type         = 'monitor', 
                                        date         = date, 
                                        sensor       = sensor, 
                                        interface    = interface,
@@ -159,10 +157,13 @@ class MonitorCA(Monitor.Monitor):
                 
             else:
                 util.debug (__name__, 'No alert', '--', 'GREEN')
+                if rule["interval"] == '': # no alert, finished
+                    break
             
-            f += pfreq
-            if f >= int(rule["interval"]):  # finish if interval exceded
-                break
+            if rule["interval"] != '':
+                f += pfreq
+                if f >= int(rule["interval"]):  # finish if interval exceded
+                    break
         
         db.close()
 

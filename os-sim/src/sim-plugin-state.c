@@ -45,6 +45,7 @@ enum
 struct _SimPluginStatePrivate {
   SimPlugin   *plugin;
 
+  gint         plugin_id;
   gint         state;
   gboolean     enabled;
 };
@@ -84,6 +85,7 @@ sim_plugin_state_instance_init (SimPluginState *plugin)
 {
   plugin->_priv = g_new0 (SimPluginStatePrivate, 1);
 
+  plugin->_priv->plugin_id = 0;
   plugin->_priv->plugin = NULL;
   plugin->_priv->state = 0;
   plugin->_priv->enabled = FALSE;
@@ -143,6 +145,7 @@ sim_plugin_state_new (void)
  */
 SimPluginState*
 sim_plugin_state_new_from_data (SimPlugin    *plugin,
+				gint          plugin_id,
 				gint          state,
 				gboolean      enabled)
 {
@@ -154,6 +157,7 @@ sim_plugin_state_new_from_data (SimPlugin    *plugin,
 
   plugin_state = SIM_PLUGIN_STATE (g_object_new (SIM_TYPE_PLUGIN_STATE, NULL));
   plugin_state->_priv->plugin = plugin;
+  plugin_state->_priv->plugin_id = plugin_id;
   plugin_state->_priv->state = state;
   plugin_state->_priv->enabled = enabled;
 
@@ -191,6 +195,37 @@ sim_plugin_state_set_plugin (SimPluginState   *plugin_state,
   g_return_if_fail (SIM_IS_PLUGIN (plugin));
 
   plugin_state->_priv->plugin = plugin;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_plugin_state_get_plugin_id (SimPluginState   *plugin_state)
+{
+  g_return_val_if_fail (plugin_state, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_STATE (plugin_state), 0);
+
+  return plugin_state->_priv->plugin_id;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_plugin_state_set_plugin_id (SimPluginState   *plugin_state,
+				gint              plugin_id)
+{
+  g_return_if_fail (plugin_state);
+  g_return_if_fail (SIM_IS_PLUGIN_STATE (plugin_state));
+
+  plugin_state->_priv->plugin_id = plugin_id;
 }
 
 /*
@@ -255,3 +290,4 @@ sim_plugin_state_set_enabled (SimPluginState   *plugin_state,
 
   plugin_state->_priv->enabled = enabled;
 }
+

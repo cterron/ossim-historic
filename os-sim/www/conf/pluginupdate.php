@@ -13,8 +13,8 @@
         exit();
     }
 
-    if ((!$priority = $_REQUEST["priority"]) or 
-        (!$reliability = $_REQUEST["reliability"])) {
+    if (((!$priority = $_REQUEST["priority"]) and ($priority != 0)) or 
+        ((!$reliability = $_REQUEST["reliability"]) and ($reliability != 0))) {
         echo "<p align=\"center\">No values for priority or reliability</p>";
         echo "<p align=\"center\"><a href=\"pluginsid.php?id=$id\">Back</a></p>";
         exit();

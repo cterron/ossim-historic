@@ -141,18 +141,27 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
     $plugin_id = $rule->get_attribute('plugin_id'); 
     if ($plugin_list = Plugin::get_list($conn, "WHERE id = $plugin_id")) {
         $name = $plugin_list[0]->get_name();
-        echo "$name ($plugin_id)";
+        echo "<a href=\"../conf/pluginsid.php?id=$plugin_id&" . 
+                "name=$name\">$name</a> ($plugin_id)";
     }
 ?>
         </td>
         <td>
 <?php 
     $plugin_sid = $rule->get_attribute('plugin_sid'); 
-    if ($plugin_list = Plugin_sid::get_list($conn, 
-            "WHERE plugin_id = $plugin_id AND sid = $plugin_sid")) 
-    {
-        $name = $plugin_list[0]->get_name();
-        echo "$name ($plugin_sid)";
+    foreach (split(',', $plugin_sid) as $sid) {
+
+        /* sid == ANY */
+        if (!strcmp($sid, "ANY")) {
+            echo "ANY";
+        } 
+        
+        /* get name of plugin_sid */
+        elseif ($plugin_list = Plugin_sid::get_list
+                ($conn, "WHERE plugin_id = $plugin_id AND sid = $sid")) {
+            $name = $plugin_list[0]->get_name();
+            echo "<a title=\"$name\">$sid</a>&nbsp; ";
+        }
     }
 ?>
         </td>

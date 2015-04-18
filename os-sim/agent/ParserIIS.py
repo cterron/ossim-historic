@@ -67,7 +67,7 @@ class ParserIIS(Parser.Parser):
 
                     # TODO: adjust priority depending of the result ?
                     
-                    self.agent.sendMessage(type     = 'detector',
+                    self.agent.sendAlert  (type     = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

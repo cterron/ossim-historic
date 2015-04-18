@@ -19,6 +19,7 @@
 <?php
 
     require_once 'ossim_db.inc';
+    require_once 'ossim_conf.inc';
     require_once 'classes/Host.inc';
     
     require_once 'classes/Host_os.inc';
@@ -33,7 +34,11 @@
     /* services update */
     if ($_GET["update"] == 'services') 
     {
-        $services = shell_exec("nmap -sV $ip");
+        $conf = new ossim_conf();
+        $nmap = $conf->get_conf("nmap_path");
+
+        $ip_sane = escapeshellcmd($ip);
+        $services = shell_exec("$nmap -sV $ip");
         $lines = split("[\n\r]", $services);
         Host_services::delete($conn, $ip);
         foreach ($lines as $line) {
@@ -60,14 +65,15 @@
         <th>Name</th>
         <td><?php echo $host->hostname ?></td>
       </tr>
-      <tr>
-        <th>Ip</th>
-        <td><b><?php echo $host->ip ?></b></td>
-      </tr>
 
 <?php
     }
-
+?>
+      <tr>
+        <th>Ip</th>
+        <td><b><?php echo $ip ?></b></td>
+      </tr>
+<?php
     if ($os_list = Host_os::get_list($conn, "WHERE ip = inet_aton('$ip')")) {
         $os = $os_list[0];
 ?>
@@ -76,7 +82,7 @@
         <td>
 <?php 
             echo $os->os . " ";
-            echo Host_os::get_os_pixmap($conn, $host->get_ip()); 
+            echo Host_os::get_os_pixmap($conn, $os->get_ip()); 
 ?>
         </td>
       </tr>

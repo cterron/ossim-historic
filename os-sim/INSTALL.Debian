@@ -2,8 +2,8 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                         Updated March 24, 2004
-                             version 0.9.2
+                         Updated March 25, 2004
+                          version 0.9.3+0.9.4
                         
                        David Gil <dgil@ossim.net>
                           http://www.ossim.net
@@ -23,9 +23,10 @@
     3. OSSIM configuration
       3.1 Database
       3.2 Web
-      3.3 Graphs
-      3.4 Server
-      3.5 Agents
+      3.3 Acid
+      3.4 Graphs
+      3.5 Server
+      3.6 Agents
     4. Start up
     5. TODO
 
@@ -59,11 +60,16 @@
   Unpack it to '/opt/ossim' (or wherever you want)
   This directory will be called $OSSIM_PATH in the rest of the document.
 
+  Copy the etc files:
+
+   $ mkdir /etc/ossim
+   $ cp -r $OSSIM_PATH/etc/* /etc/ossim
+
   Most packages need to be patched and build from sources. Install the
   following packages:
 
-    - dpkg-dev  (>= 1.10.19)
-    - fakeroot  (>= 0.8.5)
+    - dpkg-dev : Package building tools for Debian  (>= 1.10.19)
+    - fakeroot : Gives a fake root environment      (>= 0.8.5)
 
     $ apt-get install dpkg-dev fakeroot
 
@@ -77,13 +83,14 @@
   the OSSIM PHP code.
   
   Install the following packages and their respective dependencies:
-   - apache         (>= 1.3.29)
-   - php4           (>= 4.3.3)
-   - libphp-adodb   (>= 4.05)
+   - apache       : Versatile, high-performance HTTP server         (>= 1.3.29)
+   - php4         : A server-side, HTML-embedded scripting language (>= 4.3.3)
+   - php4-cgi     : A server-side, HTML-embedded scripting language (>= 4.3.3)
+   - libphp-adodb : The 'adodb' database abstraction layer for php  (>= 4.05)
 
-   $ apt-get install apache php4 libphp-adodb
+   $ apt-get install apache php4 php4-cgi libphp-adodb
 
-  Edit the Apache configuration file at '/etc/apache/http.conf' and make sure
+  Edit the Apache configuration file at '/etc/apache/modules.conf' and make sure
   that the php module is loaded.
   Also, you can use 'dpkg-reconfigure apache' and mark the module 'mod_php4'
   from the configuration list.
@@ -97,8 +104,8 @@
   reasons, we are going to install mysql.
 
   Install the following packages and their respective dependencies:
-   - mysql-server (>= 4.0.16)
-   - mysql-client (>= 4.0.16)
+   - mysql-server : mysql database server binaries (>= 4.0.16)
+   - mysql-client : mysql database client binaries (>= 4.0.16)
 
    $ apt-get install mysql-server mysql-client
 
@@ -124,7 +131,7 @@
   Install the following packages and their respective dependencies
   from sources:
   
-    - snort-mysql   (>= 2.1.0)
+    - snort-mysql : Flexible Network Intrusion Detection System (>= 2.1.1)
   
     $ apt-get source snort-mysql [-t unstable]
     
@@ -215,26 +222,37 @@
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies:
-    - php4-mysql        (>= 4.3.3)
-    - php4-gd           (>= 4.3.3)
-    - libphp-phplot     (>= 4.4.6)
-    - wwwconfig-common  (>= 0.0.34)
+    - php4-mysql       : MySQL module for php4         (>= 4.3.3)
+    - php4-pgsql       : PostgreSQL module for php4    (>= 4.3.3)
+    - php4-gd          : GD module for php4            (>= 4.3.3)
+    - libphp-phplot    : The graphic library for php   (>= 4.4.6)
+    - wwwconfig-common : Debian web auto configuration (>= 0.0.34)
 
-    $ apt-get install php4-mysql php4-gd libphp-phplot wwwconfig-common
+    $ apt-get install php4-mysql php4-pgsql php4-gd libphp-phplot wwwconfig-common
 
-  You must load mysql and gd modules into PHP. Edit the
-  '/etc/php4/apache/php.ini' file and make sure that the following lines are in
-  the file:
+  Install aditional packages needed by the directive viewer and restart apache:
+    
+    - php4-domxml : XMLv2 module for php4 (>= 4.3.3)
+    - php4-xslt   : XSLT module for php4  (>= 4.3.3)
+
+    $ apt-get install php4-domxml php4-xslt
+
+  You must load modules into PHP. Edit the '/etc/php4/apache/php.ini' and 
+  '/etc/php4/cgi/php.ini' files and make sure that the following lines are in:
   
     extension=gd.so
     extension=mysql.so
+    extension=pgsql.so
+    extension=domxml.so
+    extension=xslt.so
+
 
   Download the latest version of Acid and patch it with the patch that you will
   find in the OSSIM contrib directory.
 
     $ apt-get source acidlab
     $ cd acidlab-XXX
-    $ patch -p0 < $OSSIM_PATH/contrib/acid.patch
+    $ patch -p1 < $OSSIM_PATH/contrib/acid.patch
     $ dpkg-buildpackage -rfakeroot -uc -b
     $ dpkg -i acidlab_XXX.deb acidlab-mysql_XXX.deb acidlab-doc_XXX.deb
     
@@ -245,14 +263,14 @@
   Create acid tables in snort database:
 
     $ cat /usr/share/acidlab/create_acid_tbls_mysql.sql | mysql -u root snort -p
-
+ 
 
   2.5 Ntop
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies 
   from sources:
-    - ntop (>= 2.2c)
+    - ntop : display network usage in top-like format (== 2.2c)
 
   Download ntop source code:
 
@@ -322,8 +340,17 @@
     $ make
     $ make install
 
+
   If you have problems compiling rrdtool, you can download a pre-compilate
-  version at http://www.ossim.net/download/current/debs/
+  version of these packages at http://www.ossim.net/download/deps/fc1/rpms
+  
+    - cgilib
+    - rrdtool 
+
+  and convert it to debs packages with alien.
+
+    $ alien cgilib... rrdtool... --to-deb
+    $ dpkg -i cgilib... rddtool...
 
 
   2.7 Mrtg
@@ -331,7 +358,7 @@
     
   Install Mrtg from sources:
   
-    - mrtg (>= 2.9.29)
+    - mrtg : Multi Router Traffic Grapher (>= 2.9.29)
 
     $ apt-get source mrtg
     
@@ -354,9 +381,9 @@
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies:
-    - nmap      (>= 3.48)
-    - p0f       (>= 2.0.2)
-    - arpwatch  (>= 2.1all)
+    - nmap     : The Network Mapper                     (>= 3.50)
+    - p0f      : Passive OS fingerprinting tool         (>= 2.0.2)
+    - arpwatch : Ethernet/FDDI station activity monitor (>= 2.1all)
   
   If you get this error executing p0f:
 
@@ -384,6 +411,7 @@
 
     data_dir=$OSSIM_PATH
     base_dir=$OSSIM_PATH
+
     
   3.1 Database
   ---------------------------------------------------------------------------
@@ -444,16 +472,42 @@
     adodb debian package is placed at /usr/share/adodb/. Edit adodb path at
     /etc/ossim/framework/ossim.conf correctly.
 
-  Install aditional packages needed by the directive viewer and restart apache:
-    
-    - php4-domxml   (>= 4.3.3)
-    - php4-xslt     (>= 4.3.3)
 
-    $ apt-get install php4-domxml php4-xslt
-    $ /etc/init.d/apache restart
+  3.3 Acid
+  ---------------------------------------------------------------------------
+
+  In order to auto-update the acid cache, edit '/etc/acidlab/acid_conf.php'
+  and set $event_cache_auto_update variable to 0. Copy the script that you
+  will find at contrib directory and placed it into acid directory:
+
+    $ cp $OSSIM_PATH/contrib/acid_update_db.php /usr/share/acidlab/
+  
+  An add an entry to your crontab:
+
+    $ crontab -e
+    0-59/5 * * * * php4 /usr/share/acidlab/acid_update_db.php > /dev/null
 
 
-  3.3 Graphs
+  In order to make database backups, you must run the script called
+  'backupdb.pl' placed in $OSSIM_PATH/scripts directory.
+
+  Create the '/var/lib/ossim/backup' directory and add an entry to your
+  crontab:
+
+    $ crontab -e
+    5 0 * * * $OSSIM_PATH/scripts/backupdb.pl
+
+  Note: the script uses Zlib perl module. Install it:
+
+    $ cpan
+    cpan> install Compress::Zlib
+    cpan> exit
+
+  And you must include the $OSSIM_PATH/include/ossim_conf.pm in any place 
+  where Perl can find it.
+
+
+  3.4 Graphs
   ---------------------------------------------------------------------------
   
   Make the following directories (if they don't exist)
@@ -477,6 +531,11 @@
     Include: $OSSIM_PATH/mrtg/hosts/host_qualification.cfg
     Include: $OSSIM_PATH/mrtg/nets/net_qualification.cfg
     Include: $OSSIM_PATH/mrtg/global/global_qualification.cfg
+    
+    * NOTE: Use these paths if you install rrdtool from rpms:
+    PathAdd: /usr/bin/
+    LibAdd: /usr/lib/perl5/site_perl/5.8.3/i386-linux-thread-multi/
+    
   
   Important paths in order to draw graphs are:
   
@@ -490,6 +549,10 @@
     rrdpath_global=$OSSIM_PATH/www/mrtg/global_qualification/
       
     rrdpath_ntop=/var/lib/ntop/rrd
+
+    * NOTE: Use these paths if you install rrdtool from rpms:
+    rrdtool_path=/usr/bin/
+    rrdtool_lib_path=/usr/lib/perl5/site_perl/5.8.3/i386-linux-thread-multi/
 
   Run the script named 'launch-mrtg':
     
@@ -514,16 +577,16 @@
   font. (Look for fonts at $OSSIM_PATH/contrib/fonts)
 
 
-  3.4 Server
+  3.5 Server
   ---------------------------------------------------------------------------
 
   Now, we are going to compile the server. You'll need the following packages
   and their respective dependencies:
 
-    - libglib2.0-dev    (>= 2.2.3)
-    - libgda2-dev       (>= 1.0.1)
-    - gda2-mysql        (>= 1.0.1)
-    - libgnet2.0-dev    (>= 2.0.3)
+    - libglib2.0-dev : Development files for the GLib library         (>= 2.2.3)
+    - libgda2-dev    : Development files for GNOME Data Access lib    (>= 1.0.1)
+    - gda2-mysql     : MySQL backend plugin for GNOME Data Access lib (>= 1.0.1)
+    - libgnet2.0-dev : Developer files for GNet network library       (>= 2.0.3)
 
     $ apt-get install libglib2.0-dev libgda2-dev gda2-mysql libgnet2.0-dev
 
@@ -546,12 +609,14 @@
     $ ./ossim -c /etc/ossim/server/config.xml
   
 
-  3.5 Agents
+  3.6 Agents
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies:
-    - python (>= 2.3.3)
-    - python-mysqldb (>= 0.9.2)
+
+    - python : An interactive high-level object-oriented language (>= 2.3.3)
+    - python-mysqldb : A Python interface for MySQL               (>= 0.9.2)
+    - python-pgsql : A Python DB-API 2.0 interface to PostgreSQL  (>= 2.4.0-4)
   
     $ apt-get install python python-mysqldb
   
@@ -577,11 +642,12 @@
 
    Monitors:
    - ntop
-     · hostinfo
-     · session
+     - hostinfo
+     - session
    - compromise & attack levels
    - start/shutdown plugins
    - watchdog plugins
+   - opennms
  
   Edit the agent config file at '$OSSIM_PATH/agent/config.xml'
   Make sure that location files exists.

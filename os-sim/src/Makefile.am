@@ -1,6 +1,7 @@
 INCLUDES = -DG_LOG_DOMAIN=\"OSSIM\" \
 	-DOS_SIM_GLOBAL_CONFIG_FILE=\""$(sysconfdir)/ossim/server/config.xml"\" \
-	-DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(datadir)/ossim/server/directives.xml"\"
+	-DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(datadir)/ossim/server/directives.xml"\" \
+	-DOS_SIM_LOG_DIR=\""$(localstatedir)/log/ossim/"\"
 
 bin_PROGRAMS = ossim
 

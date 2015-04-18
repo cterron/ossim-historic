@@ -39,9 +39,7 @@ classes_DATA = Alert.inc \
 	Protocol.inc \
 	RRD_anomaly_global.inc \
 	RRD_anomaly.inc \
-	RRD_conf_global.inc \
-	RRD_conf.inc \
-	RRD_data.inc \
+	RRD_config.inc \
 	Scan.inc \
 	Sensor.inc \
 	Signature_group.inc \

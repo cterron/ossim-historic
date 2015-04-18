@@ -107,6 +107,43 @@ GList*            sim_container_db_host_get_plugin_sids_ul      (SimContainer  *
 								 gint           plugin_id,
 								 gint           plugin_sid);
 
+
+
+gchar*            sim_container_db_get_host_os_ul               (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia);
+void              sim_container_db_insert_host_os_ul            (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gchar         *os);
+void              sim_container_db_update_host_os_ul            (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gchar         *curr_os,
+								 gchar         *prev_os);
+
+gchar*            sim_container_db_get_host_mac_ul              (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia);
+gchar*            sim_container_db_get_host_mac_vendor_ul       (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia);
+void              sim_container_db_insert_host_mac_ul           (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gchar         *mac,
+								 gchar         *vendor);
+void              sim_container_db_update_host_mac_ul           (SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gchar         *curr_mac,
+								 gchar         *prev_mac,
+								 gchar         *vendor);
+
 /* Recovery Function */
 
 void              sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,

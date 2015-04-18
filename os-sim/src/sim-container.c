@@ -202,16 +202,281 @@ sim_container_new (SimConfig  *config)
   sim_container_db_load_policies (container, database);
   sim_container_db_load_host_levels (container, database);
   sim_container_db_load_net_levels (container, database);
-
-  if (config->directive.filename)
+  
+  if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
     sim_container_load_directives_from_file (container, database, config->directive.filename);
-  else
-    sim_container_load_directives_from_file (container, database, SIM_XML_DIRECTIVE_FILE);
-
+  
   g_object_unref (database);
 
   return container;
 }
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
+sim_container_db_get_host_os_ul (SimContainer  *container,
+				 SimDatabase   *database,
+				 GInetAddr     *ia)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gchar         *os = NULL;
+  gint           row;
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+
+  query = g_strdup_printf ("SELECT os FROM host_os WHERE ip = %lu",
+			   sim_inetaddr_ntohl (ia));
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    os = gda_value_stringify (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST OS DATA MODEL ERROR");
+    }
+  g_free (query);
+
+  return os;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_insert_host_os_ul (SimContainer  *container,
+				    SimDatabase   *database,
+				    GInetAddr     *ia,
+				    gchar         *date,
+				    gchar         *os)
+{
+  gchar         *query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (os);
+
+  query = g_strdup_printf ("INSERT INTO host_os (ip, date, os) VALUES (%lu, '%s', '%s')",
+			   sim_inetaddr_ntohl (ia), date, os);
+
+  sim_database_execute_no_query (database, query);
+
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_update_host_os_ul (SimContainer  *container,
+				    SimDatabase   *database,
+				    GInetAddr     *ia,
+				    gchar         *date,
+				    gchar         *curr_os,
+				    gchar         *prev_os)
+{
+  gchar         *query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (curr_os);
+  g_return_if_fail (prev_os);
+
+  query = g_strdup_printf ("UPDATE host_os SET date='%s', os='%s', previous='%s' WHERE ip = %lu",
+			   date, curr_os, prev_os, sim_inetaddr_ntohl (ia));
+
+  sim_database_execute_no_query (database, query);
+
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
+sim_container_db_get_host_mac_ul (SimContainer  *container,
+				 SimDatabase   *database,
+				 GInetAddr     *ia)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gchar         *mac = NULL;
+  gint           row;
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+
+  query = g_strdup_printf ("SELECT mac FROM host_mac WHERE ip = %lu",
+			   sim_inetaddr_ntohl (ia));
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    mac = gda_value_stringify (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST OS DATA MODEL ERROR");
+    }
+  g_free (query);
+
+  return mac;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
+sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
+					 SimDatabase   *database,
+					 GInetAddr     *ia)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gchar         *vendor = NULL;
+  gint           row;
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+
+  query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu",
+			   sim_inetaddr_ntohl (ia));
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    vendor = gda_value_stringify (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST OS DATA MODEL ERROR");
+    }
+  g_free (query);
+
+  return vendor;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_insert_host_mac_ul (SimContainer  *container,
+				     SimDatabase   *database,
+				     GInetAddr     *ia,
+				     gchar         *date,
+				     gchar         *mac,
+				     gchar         *vendor)
+{
+  gchar         *query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (mac);
+
+  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor) VALUES (%lu, '%s', '%s', '%s')",
+			   sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "");
+
+  sim_database_execute_no_query (database, query);
+
+  g_free (query);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_update_host_mac_ul (SimContainer  *container,
+				     SimDatabase   *database,
+				     GInetAddr     *ia,
+				     gchar         *date,
+				     gchar         *curr_mac,
+				     gchar         *prev_mac,
+				     gchar         *vendor)
+{
+  gchar         *query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (curr_mac);
+  g_return_if_fail (prev_mac);
+
+  query = g_strdup_printf ("UPDATE host_mac SET date='%s', mac='%s', previous='%s', vendor='%s' WHERE ip = %lu",
+			   date, curr_mac, prev_mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (ia));
+
+  sim_database_execute_no_query (database, query);
+
+  g_free (query);
+}
+
 
 /*
  *
@@ -223,7 +488,7 @@ void
 sim_container_db_delete_backlogs_ul (SimContainer  *container,
 				     SimDatabase   *database)
 {
-  gchar         *query = "DELETE FROM backlog WHERE rule_level <= 1 AND matched = 0";
+  gchar         *query = "DELETE FROM backlog";
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -317,6 +582,7 @@ sim_container_db_host_get_plugin_sids_ul (SimContainer  *container,
     {
       g_message ("HOST PLUGIN SID DATA MODEL ERROR");
     }
+  g_free (query);
 
   return list;
 }
@@ -3554,7 +3820,7 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
 						     0,
 						     0,
 						     1,
-						     1,
+						     sim_directive_get_priority (directive),
 						     sim_directive_get_name (directive));
 	  sim_container_append_plugin_sid (container, plugin_sid);
 	  
@@ -4318,6 +4584,7 @@ sim_container_set_host_levels_recovery (SimContainer  *container,
   sim_container_set_host_levels_recovery_ul (container, database, recovery);
   G_UNLOCK (s_mutex_host_levels);
 }
+
 
 /*
  *

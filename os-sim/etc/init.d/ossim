@@ -17,26 +17,16 @@ case "$1" in
 
     # start ossim server
     cd $OSSIM_PATH/src
-	./ossim -c /etc/ossim/server/config.xml &
+	./ossim -d -c /etc/ossim/server/config.xml
 
     # Start agent
     sleep 5
     cd $OSSIM_PATH/agent
-    ./agent -c /etc/ossim/agent/config.xml &
+    ./agent -d -c /etc/ossim/agent/config.xml
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
     nice -n 19 ./control_panel.pl &
-#    nice -n 19 ./os.pl &
-#    nice -n 19 ./mac.pl &
-    nice -n 19 ./rrd_plugin.pl &
-    
-    # Log to be removed soon
-#    nice -n 19 ./check_rrd.pl >> temp_rrd.log &
-#    nice -n 19 ./check_rrd_global.pl >> temp_rrd.log &
-
-#    nice -n 19 ./services.pl &
-#    nice -n 19 ./netbios.pl &
     
 	if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 		echo "OSSIM is up and running!"
@@ -90,15 +80,6 @@ case "$1" in
     killall -KILL agent
     # kill misc scripts (provisional!)
     killall -KILL control_panel.pl
-#    killall -KILL os.pl
-#    killall -KILL mac.pl
-    killall -KILL rrd_plugin.pl
-    
-#    killall -KILL check_rrd.pl
-#    killall -KILL check_rrd_global.pl
-#    killall -KILL arpwatch
-#    killall -KILL services.pl
-#    killall -KILL netbios.pl
 	;;
      restart)
 	$0 stop

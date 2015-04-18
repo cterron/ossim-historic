@@ -215,7 +215,7 @@ sim_server_session (gpointer data)
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
   g_return_val_if_fail (server, NULL);
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
-   g_return_val_if_fail (socket, NULL);
+  g_return_val_if_fail (socket, NULL);
 
   g_message ("New session");
 
@@ -224,6 +224,7 @@ sim_server_session (gpointer data)
 
   sim_session_read (session);
 
+  g_message ("Remove Session");
   sim_server_remove_session (server, session);
 
   g_object_unref (session);
@@ -357,3 +358,28 @@ sim_server_push_session_plugin_command (SimServer       *server,
     }
 }
 
+/*
+ *
+ *
+ *
+ *
+ *
+ */
+void
+sim_server_reload (SimServer       *server)
+{
+  GList *list;
+
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+
+  list = server->_priv->sessions;
+  while (list)
+    {
+      SimSession *session = (SimSession *) list->data;
+
+      sim_session_reload (session);
+
+      list = list->next;
+    }
+}

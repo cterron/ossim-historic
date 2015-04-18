@@ -38,6 +38,7 @@
 
 #include "sim-command.h"
 #include "sim-rule.h"
+#include "sim-util.h"
 
 typedef enum {
   SIM_COMMAND_SCOPE_COMMAND,
@@ -62,6 +63,8 @@ typedef enum {
   SIM_COMMAND_SCOPE_RELOAD_POLICIES,
   SIM_COMMAND_SCOPE_RELOAD_DIRECTIVES,
   SIM_COMMAND_SCOPE_RELOAD_ALL,
+  SIM_COMMAND_SCOPE_HOST_OS_CHANGE,
+  SIM_COMMAND_SCOPE_HOST_MAC_CHANGE,
   SIM_COMMAND_SCOPE_OK,
   SIM_COMMAND_SCOPE_ERROR
 } SimCommandScopeType;
@@ -90,6 +93,8 @@ typedef enum {
   SIM_COMMAND_SYMBOL_RELOAD_DIRECTIVES,
   SIM_COMMAND_SYMBOL_RELOAD_ALL,
   SIM_COMMAND_SYMBOL_OK,
+  SIM_COMMAND_SYMBOL_HOST_OS_CHANGE,
+  SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE,
   SIM_COMMAND_SYMBOL_ERROR,
   SIM_COMMAND_SYMBOL_ID,
   SIM_COMMAND_SYMBOL_USERNAME,
@@ -113,6 +118,10 @@ typedef enum {
   SIM_COMMAND_SYMBOL_CONDITION,
   SIM_COMMAND_SYMBOL_VALUE,
   SIM_COMMAND_SYMBOL_INTERVAL,
+  SIM_COMMAND_SYMBOL_HOST,
+  SIM_COMMAND_SYMBOL_OS,
+  SIM_COMMAND_SYMBOL_MAC,
+  SIM_COMMAND_SYMBOL_VENDOR,
   SIM_COMMAND_SYMBOL_DATA
 } SimCommandSymbolType;
 
@@ -142,6 +151,8 @@ static const struct
   { "reload-policies", SIM_COMMAND_SYMBOL_RELOAD_POLICIES },
   { "reload-directives", SIM_COMMAND_SYMBOL_RELOAD_DIRECTIVES },
   { "reload-all", SIM_COMMAND_SYMBOL_RELOAD_ALL },
+  { "host-os-change", SIM_COMMAND_SYMBOL_HOST_OS_CHANGE },
+  { "host-mac-change", SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE },
   { "ok", SIM_COMMAND_SYMBOL_OK },
   { "error", SIM_COMMAND_SYMBOL_ERROR }
 };
@@ -357,6 +368,31 @@ static const struct
   { "id", SIM_COMMAND_SYMBOL_ID },
 };
 
+static const struct
+{
+  gchar *name;
+  guint token;
+} host_os_change_symbols[] = {
+  { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "host", SIM_COMMAND_SYMBOL_HOST },
+  { "os", SIM_COMMAND_SYMBOL_OS },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} host_mac_change_symbols[] = {
+  { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "host", SIM_COMMAND_SYMBOL_HOST },
+  { "mac", SIM_COMMAND_SYMBOL_MAC },
+  { "vendor", SIM_COMMAND_SYMBOL_VENDOR },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID }
+};
+
 enum 
 {
   DESTROY,
@@ -392,7 +428,6 @@ static void sim_command_plugin_enabled_scan (SimCommand    *command,
 					     GScanner      *scanner);
 static void sim_command_plugin_disabled_scan (SimCommand    *command,
 					      GScanner      *scanner);
-
 static void sim_command_alert_scan (SimCommand    *command,
 				    GScanner      *scanner);
 static void sim_command_reload_plugins_scan (SimCommand    *command,
@@ -409,6 +444,10 @@ static void sim_command_reload_directives_scan (SimCommand    *command,
 						GScanner      *scanner);
 static void sim_command_reload_all_scan (SimCommand    *command,
 					 GScanner      *scanner);
+static void sim_command_host_os_change_scan (SimCommand    *command,
+					     GScanner      *scanner);
+static void sim_command_host_mac_change_scan (SimCommand    *command,
+					      GScanner      *scanner);
 
 
 static gpointer parent_class = NULL;
@@ -437,26 +476,6 @@ sim_command_impl_finalize (GObject  *gobject)
       if (cmd->data.connect.sensor)
 	g_free (cmd->data.connect.sensor);
       break;
-    case SIM_COMMAND_TYPE_ALERT:
-      if (cmd->data.alert.type)
-	g_free (cmd->data.alert.type);
-      if (cmd->data.alert.date)
-	g_free (cmd->data.alert.date);
-      if (cmd->data.alert.sensor)
-	g_free (cmd->data.alert.sensor);
-      
-      if (cmd->data.alert.protocol)
-	g_free (cmd->data.alert.protocol);
-      if (cmd->data.alert.src_ip)
-	g_free (cmd->data.alert.src_ip);
-      if (cmd->data.alert.dst_ip)
-	g_free (cmd->data.alert.dst_ip);
-      
-      if (cmd->data.alert.condition)
-	g_free (cmd->data.alert.condition);
-      if (cmd->data.alert.value)
-	g_free (cmd->data.alert.value);
-      break;
     case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:
       if (cmd->data.session_append_plugin.name)
 	g_free (cmd->data.session_append_plugin.name);
@@ -465,7 +484,31 @@ sim_command_impl_finalize (GObject  *gobject)
       if (cmd->data.session_remove_plugin.name)
 	g_free (cmd->data.session_remove_plugin.name);
       break;
+    case SIM_COMMAND_TYPE_ALERT:
+      if (cmd->data.alert.type)
+	g_free (cmd->data.alert.type);
+      if (cmd->data.alert.date)
+	g_free (cmd->data.alert.date);
+      if (cmd->data.alert.sensor)
+	g_free (cmd->data.alert.sensor);
+      if (cmd->data.alert.interface)
+	g_free (cmd->data.alert.interface);
+      
+      if (cmd->data.alert.protocol)
+	g_free (cmd->data.alert.protocol);
+      if (cmd->data.alert.src_ip)
+	g_free (cmd->data.alert.src_ip);
+      if (cmd->data.alert.dst_ip)
+	g_free (cmd->data.alert.dst_ip);
 
+      if (cmd->data.alert.condition)
+	g_free (cmd->data.alert.condition);
+      if (cmd->data.alert.value)
+	g_free (cmd->data.alert.value);
+
+      if (cmd->data.alert.data)
+	g_free (cmd->data.alert.data);
+      break;
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN:
       if (cmd->data.sensor_plugin.sensor)
 	g_free (cmd->data.sensor_plugin.sensor);
@@ -490,6 +533,26 @@ sim_command_impl_finalize (GObject  *gobject)
     case SIM_COMMAND_TYPE_WATCH_RULE:
       if (cmd->data.watch_rule.str)
 	g_free (cmd->data.watch_rule.str);
+      break;
+
+    case SIM_COMMAND_TYPE_HOST_OS_CHANGE:
+      if (cmd->data.host_os_change.date)
+	g_free (cmd->data.host_os_change.date);
+      if (cmd->data.host_os_change.host)
+	g_free (cmd->data.host_os_change.host);
+      if (cmd->data.host_os_change.os)
+	g_free (cmd->data.host_os_change.os);
+      break;
+
+    case SIM_COMMAND_TYPE_HOST_MAC_CHANGE:
+      if (cmd->data.host_mac_change.date)
+	g_free (cmd->data.host_mac_change.date);
+      if (cmd->data.host_mac_change.host)
+	g_free (cmd->data.host_mac_change.host);
+      if (cmd->data.host_mac_change.mac)
+	g_free (cmd->data.host_mac_change.mac);
+      if (cmd->data.host_mac_change.vendor)
+	g_free (cmd->data.host_mac_change.vendor);
       break;
 
     default:
@@ -609,7 +672,7 @@ sim_command_new_from_type (SimCommandType  type)
 SimCommand*
 sim_command_new_from_rule (SimRule  *rule)
 {
-  SimCommand        *command = NULL;
+  SimCommand        *command;
   GString           *str = NULL;
   GList             *list = NULL;
   gint               plugin_id;
@@ -646,7 +709,9 @@ sim_command_new_from_rule (SimRule  *rule)
   condition = sim_rule_get_condition (rule);
   if (condition != SIM_CONDITION_TYPE_NONE)
     {
-      g_string_append_printf (str, "condition=\"%s\" ", sim_condition_get_str_from_type (condition));
+      value = sim_condition_get_str_from_type (condition);
+      g_string_append_printf (str, "condition=\"%s\" ", value);
+      g_free (value);
     }
 
   /* Value */
@@ -865,6 +930,14 @@ sim_command_scan (SimCommand    *command,
   for (i = 0; i < G_N_ELEMENTS (reload_all_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_RELOAD_ALL, reload_all_symbols[i].name, GINT_TO_POINTER (reload_all_symbols[i].token));
 
+  /* Added host os change symbols */
+  for (i = 0; i < G_N_ELEMENTS (host_os_change_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_HOST_OS_CHANGE, host_os_change_symbols[i].name, GINT_TO_POINTER (host_os_change_symbols[i].token));
+
+  /* Added host mac change symbols */
+  for (i = 0; i < G_N_ELEMENTS (host_mac_change_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_HOST_MAC_CHANGE, host_mac_change_symbols[i].name, GINT_TO_POINTER (host_mac_change_symbols[i].token));
+
   /* Sets input text */
   g_scanner_input_text (scanner, buffer, strlen (buffer));
 
@@ -938,6 +1011,12 @@ sim_command_scan (SimCommand    *command,
         case SIM_COMMAND_SYMBOL_RELOAD_ALL:
 	  sim_command_reload_all_scan (command, scanner);
           break;
+        case SIM_COMMAND_SYMBOL_HOST_OS_CHANGE:
+	  sim_command_host_os_change_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE:
+	  sim_command_host_mac_change_scan (command, scanner);
+          break;
         case SIM_COMMAND_SYMBOL_OK:
 	  command->type = SIM_COMMAND_TYPE_OK;
           break;
@@ -949,7 +1028,7 @@ sim_command_scan (SimCommand    *command,
         }
     }
   while(scanner->token != G_TOKEN_EOF);
-                                                                                                                                                                            
+
   g_scanner_destroy (scanner);
 }
 
@@ -2255,6 +2334,217 @@ sim_command_reload_all_scan (SimCommand    *command,
     }
   while(scanner->token != G_TOKEN_EOF);
 }
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_host_os_change_scan (SimCommand    *command,
+				 GScanner      *scanner)
+{
+  g_return_if_fail (command);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner);
+
+  command->type = SIM_COMMAND_TYPE_HOST_OS_CHANGE;
+  command->data.host_os_change.date = NULL;
+  command->data.host_os_change.host = NULL;
+  command->data.host_os_change.os = NULL;
+  command->data.host_os_change.plugin_id = 0;
+  command->data.host_os_change.plugin_id = 0;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_HOST_OS_CHANGE);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_DATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_os_change.date = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_HOST:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_os_change.host = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_OS:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_os_change.os = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_os_change.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_SID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_os_change.plugin_sid = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_host_mac_change_scan (SimCommand    *command,
+				  GScanner      *scanner)
+{
+  g_return_if_fail (command);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner);
+
+  command->type = SIM_COMMAND_TYPE_HOST_MAC_CHANGE;
+  command->data.host_mac_change.date = NULL;
+  command->data.host_mac_change.host = NULL;
+  command->data.host_mac_change.mac = NULL;
+  command->data.host_mac_change.vendor = NULL;
+  command->data.host_mac_change.plugin_id = 0;
+  command->data.host_mac_change.plugin_id = 0;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_HOST_MAC_CHANGE);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_DATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.date = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_HOST:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.host = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_MAC:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.mac = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_VENDOR:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.vendor = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_SID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_mac_change.plugin_sid = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+
+        default:
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
 
 /*
  *

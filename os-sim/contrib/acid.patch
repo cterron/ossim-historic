@@ -1,6 +1,6 @@
-diff -urNb acid_cache.inc acid_cache.inc
---- acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid_cache.inc	2004-02-09 14:34:37.000000000 +0100
+diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
+--- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_cache.inc	2004-05-04 19:12:25.000000000 +0200
 @@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -13,24 +13,52 @@ diff -urNb acid_cache.inc acid_cache.inc
    $update_sql = array(4);
    
    /* TCP events */
-diff -urNb acid_hdr2.html acid_hdr2.html
---- acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
-+++ acid_hdr2.html	2004-03-01 16:20:55.000000000 +0100
-@@ -1,7 +1,10 @@
+diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
+--- acid/acid_conf.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_conf.php	2004-05-05 11:04:33.000000000 +0200
+@@ -229,8 +229,8 @@
+ $external_all_link = "http://www.samspade.org/t/lookat?a=";
+ 
+ /* TCP/UDP port database */
+-$external_port_link = "http://www.snort.org/ports.html?port=";
+-//$external_port_link = "http://www.portsdb.org/bin/portsdb.cgi?portnumber=";
++//$external_port_link = "http://www.snort.org/ports.html?port=";
++$external_port_link = "http://www.portsdb.org/bin/portsdb.cgi?portnumber=";
+ 
+ /* Signature references */
+ $external_sig_link = array("bugtraq"   => array("http://www.securityfocus.com/bid/", ""),
+diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
+--- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_hdr2.html	2004-05-06 10:10:20.000000000 +0200
+@@ -1,11 +1,20 @@
  <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
  <TR>
- <TD><A class="menuitem" href="acid_main.php">Home</A>&nbsp&nbsp</TD>
+-<TD><A class="menuitem" href="acid_main.php">Home</A>&nbsp&nbsp</TD>
 -<TD></TD>
-+<TD>|&nbsp&nbsp
-+    <A class="menuitem" href="acid_stat_uaddr.php?caller=&addr_type=1&sort_order=sig_d">Src</A>
-+    &nbsp&nbsp|&nbsp&nbsp
-+    <A class="menuitem" href="acid_stat_alerts.php?caller=&sort_order=occur_d">Uniq</A></TD>
++<TD  align="right">
++    <A class="menuitem" href="acid_main.php">Home</A>&nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_qry_main.php?new=1">Search</A>&nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_ag_main.php?ag_action=list">AG Maintenance</A>
++</TD>
  </TR>
  <TR>
- <TD><A class="menuitem" href="acid_qry_main.php?new=1">Search</A>&nbsp&nbsp</TD>
-diff -urNb acid_main.php acid_main.php
---- acid_main.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid_main.php	2004-03-01 16:32:58.000000000 +0100
+-<TD><A class="menuitem" href="acid_qry_main.php?new=1">Search</A>&nbsp&nbsp</TD>
+-<TD>|&nbsp&nbsp
+-    <A class="menuitem" href="acid_ag_main.php?ag_action=list">AG Maintenance</A></TD>
++<TD class="menuitem"><FONT color="FFFF66"><B>Cached:&nbsp&nbsp</B></FONT>
++    <A class="menuitem" href="acid_stat_alerts.html">Uniq</A>
++    &nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_stat_uaddr1.html">Src</A>
++    &nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_stat_uaddr2.html">Dst</A>
++    &nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_stat_ports2.html">Dst Port</A>
++</TD>
+ </TR>
+ </TABLE>
+diff -urNb acid/acid_main.php acid-ossim/acid_main.php
+--- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_main.php	2004-05-04 19:12:25.000000000 +0200
 @@ -143,6 +143,8 @@
  ?>
  
@@ -40,9 +68,9 @@ diff -urNb acid_main.php acid_main.php
  <LI><B><A HREF="acid_qry_main.php?new=1">Search</A></B>
  <LI><B><A HREF="acid_graph_main.php">Graph Alert data</A></B>&nbsp;
  
-diff -urNb acid_output_query.inc acid_output_query.inc
---- acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
+diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
+--- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_output_query.inc	2004-05-04 19:12:25.000000000 +0200
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -61,9 +89,9 @@ diff -urNb acid_output_query.inc acid_output_query.inc
       }
  
      echo "   </TR>\n";
-diff -urNb acid_qry_common.php acid_qry_common.php
---- acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid_qry_common.php	2004-03-01 15:57:15.000000000 +0100
+diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
+--- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_common.php	2004-05-04 19:12:25.000000000 +0200
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -168,9 +196,9 @@ diff -urNb acid_qry_common.php acid_qry_common.php
    $criteria_sql = $criteria_sql.$tmp_meta;
  
    /* ********************** IP Criteria ********************************************** */ 
-diff -urNb acid_qry_form.php acid_qry_form.php
---- acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid_qry_form.php	2004-02-06 18:47:32.000000000 +0100
+diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
+--- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_form.php	2004-05-04 19:12:25.000000000 +0200
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -203,9 +231,9 @@ diff -urNb acid_qry_form.php acid_qry_form.php
          echo '
  </TABLE>';
  
-diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
---- acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid_qry_sqlcalls.php	2004-03-01 15:46:20.000000000 +0100
+diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
+--- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_sqlcalls.php	2004-05-04 19:12:25.000000000 +0200
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -246,7 +274,7 @@ diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
        qroPrintEntryHeader($i);
  
        $tmp_rowid = "#".(($qs->GetCurrentView() * $show_rows)+$i).
-@@ -208,6 +230,56 @@
+@@ -208,6 +230,58 @@
         else
           qroPrintEntry('<A HREF="acid_app_faq.php#1">unknown</A>');    
  
@@ -255,11 +283,13 @@ diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
 +           qroPrintEntry($current_oasset_d);
 +        else
 +           qroPrintEntry("--");
++	$current_orisk = $current_oriska;
 +      } else {
 +        if ($current_oasset_s != "")
 +           qroPrintEntry($current_oasset_s);
 +        else
 +           qroPrintEntry("--");
++	$current_orisk = $current_oriskc;
 +      }
 +
 +      if ($current_oprio != "")
@@ -268,29 +298,29 @@ diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
 +         qroPrintEntry("--");
 +
 +      if ($current_otype == 2) {
-+         if ($current_oriska == "")
++         if ($current_orisk == "")
 +            qroPrintEntry("--");
-+         else if ($current_oriska == 0)
-+            qroPrintEntry('<B>'.$current_oriska.'</B>');
-+         else if ($current_oriska >= 1 && $current_oriska <= 4)
-+            qroPrintEntry('<FONT color="green"><B>'.$current_oriska.'</B></FONT>');
-+         else if ($current_oriska >= 5 && $current_oriska <= 7)
-+            qroPrintEntry('<FONT color="orange"><B>'.$current_oriska.'</B></FONT>');
-+         else if ($current_oriska >= 8 && $current_oriska <= 10)
-+            qroPrintEntry('<FONT color="red"><B>'.$current_oriska.'</B></FONT>');
++         else if ($current_orisk == 0)
++            qroPrintEntry('<B>'.$current_orisk.'</B>');
++         else if ($current_orisk >= 1 && $current_orisk <= 4)
++            qroPrintEntry('<FONT color="green"><B>'.$current_orisk.'</B></FONT>');
++         else if ($current_orisk >= 5 && $current_orisk <= 7)
++            qroPrintEntry('<FONT color="orange"><B>'.$current_orisk.'</B></FONT>');
++         else if ($current_orisk >= 8 && $current_orisk <= 10)
++            qroPrintEntry('<FONT color="red"><B>'.$current_orisk.'</B></FONT>');
 +         else
 +            qroPrintEntry("--");
 +      } else {
-+         if ($current_oriska == "")
++         if ($current_orisk == "")
 +            qroPrintEntry("--");
-+         else if ($current_oriska == 0)
-+            qroPrintEntry($current_oriska);
-+         else if ($current_oriska >= 1 && $current_oriska <= 4)
-+            qroPrintEntry('<FONT color="green">'.$current_oriska.'</FONT>');
-+         else if ($current_oriska >= 5 && $current_oriska <= 7)
-+            qroPrintEntry('<FONT color="orange">'.$current_oriska.'</FONT>');
-+         else if ($current_oriska >= 8 && $current_oriska <= 10)
-+            qroPrintEntry('<FONT color="red">'.$current_oriska.'</FONT>');
++         else if ($current_orisk == 0)
++            qroPrintEntry($current_orisk);
++         else if ($current_orisk >= 1 && $current_orisk <= 4)
++            qroPrintEntry('<FONT color="green">'.$current_orisk.'</FONT>');
++         else if ($current_orisk >= 5 && $current_orisk <= 7)
++            qroPrintEntry('<FONT color="orange">'.$current_orisk.'</FONT>');
++         else if ($current_orisk >= 8 && $current_orisk <= 10)
++            qroPrintEntry('<FONT color="red">'.$current_orisk.'</FONT>');
 +         else
 +            qroPrintEntry("--");
 +      }
@@ -303,10 +333,10 @@ diff -urNb acid_qry_sqlcalls.php acid_qry_sqlcalls.php
        qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
  
        qroPrintEntryFooter();
-diff -urNb acid_state_citems.inc acid_state_citems.inc
---- acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid_state_citems.inc	2004-03-01 15:53:14.000000000 +0100
-@@ -1459,4 +1459,472 @@
+diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
+--- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_state_citems.inc	2004-05-04 19:25:47.000000000 +0200
+@@ -1459,4 +1459,457 @@
     }
  };
  
@@ -343,17 +373,12 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 + 
 +        echo '<SELECT NAME="ossim_priority[1]">
 +                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Priority }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_priority from acid_event ORDER BY ossim_priority ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
++                <OPTION VALUE="0" '.chk_select($this->criteria[1], "0").'>0</OPTION>
++                <OPTION VALUE="1" '.chk_select($this->criteria[1], "1").'>1</OPTION>
++                <OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>2</OPTION>
++                <OPTION VALUE="3" '.chk_select($this->criteria[1], "3").'>3</OPTION>
++                <OPTION VALUE="4" '.chk_select($this->criteria[1], "4").'>4</OPTION>
++                <OPTION VALUE="5" '.chk_select($this->criteria[1], "5").'>5</OPTION>';
 +        echo '</SELECT>&nbsp;&nbsp';
 +      }     
 +    }
@@ -462,18 +487,18 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 + 
 +        echo '<SELECT NAME="ossim_risk_c[1]">
 +                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Risk }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_risk_c from acid_event ORDER BY ossim_risk_c ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
-+        echo '</SELECT>&nbsp;&nbsp';
++                <OPTION VALUE="0" '.chk_select($this->criteria[1], "0").'>0</OPTION>
++                <OPTION VALUE="1" '.chk_select($this->criteria[1], "1").'>1</OPTION>
++                <OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>2</OPTION>
++                <OPTION VALUE="3" '.chk_select($this->criteria[1], "3").'>3</OPTION>
++                <OPTION VALUE="4" '.chk_select($this->criteria[1], "4").'>4</OPTION>
++                <OPTION VALUE="5" '.chk_select($this->criteria[1], "5").'>5</OPTION>
++                <OPTION VALUE="6" '.chk_select($this->criteria[1], "6").'>6</OPTION>
++                <OPTION VALUE="7" '.chk_select($this->criteria[1], "7").'>7</OPTION>
++                <OPTION VALUE="8" '.chk_select($this->criteria[1], "8").'>8</OPTION>
++                <OPTION VALUE="9" '.chk_select($this->criteria[1], "9").'>9</OPTION>
++                <OPTION VALUE="10" '.chk_select($this->criteria[1], "10").'>10</OPTION>';
++        echo '</;SELECT>&nbsp;&nbsp';
 +      }     
 +    }
 + 
@@ -533,20 +558,20 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 +                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
 +                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
 +                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
-+ 
++
 +        echo '<SELECT NAME="ossim_reliability[1]">
 +                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Reliability }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_reliability from acid_event ORDER BY ossim_reliability ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
++                <OPTION VALUE="0" '.chk_select($this->criteria[1], "0").'>0</OPTION>
++                <OPTION VALUE="1" '.chk_select($this->criteria[1], "1").'>1</OPTION>
++                <OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>2</OPTION>
++                <OPTION VALUE="3" '.chk_select($this->criteria[1], "3").'>3</OPTION>
++                <OPTION VALUE="4" '.chk_select($this->criteria[1], "4").'>4</OPTION>
++                <OPTION VALUE="5" '.chk_select($this->criteria[1], "5").'>5</OPTION>
++                <OPTION VALUE="6" '.chk_select($this->criteria[1], "6").'>6</OPTION>
++                <OPTION VALUE="7" '.chk_select($this->criteria[1], "7").'>7</OPTION>
++                <OPTION VALUE="8" '.chk_select($this->criteria[1], "8").'>8</OPTION>
++                <OPTION VALUE="9" '.chk_select($this->criteria[1], "9").'>9</OPTION>
++                <OPTION VALUE="10" '.chk_select($this->criteria[1], "10").'>10</OPTION>';
 +        echo '</SELECT>&nbsp;&nbsp';
 +      }     
 +    }
@@ -610,17 +635,12 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 + 
 +        echo '<SELECT NAME="ossim_asset_src[1]">
 +                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Asset }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_asset_src from acid_event ORDER BY ossim_asset_src ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
++                <OPTION VALUE="0" '.chk_select($this->criteria[1], "0").'>0</OPTION>
++                <OPTION VALUE="1" '.chk_select($this->criteria[1], "1").'>1</OPTION>
++                <OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>2</OPTION>
++                <OPTION VALUE="3" '.chk_select($this->criteria[1], "3").'>3</OPTION>
++                <OPTION VALUE="4" '.chk_select($this->criteria[1], "4").'>4</OPTION>
++                <OPTION VALUE="5" '.chk_select($this->criteria[1], "5").'>5</OPTION>';
 +        echo '</SELECT>&nbsp;&nbsp';
 +      }     
 +    }
@@ -684,17 +704,12 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 + 
 +        echo '<SELECT NAME="ossim_asset_dst[1]">
 +                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Asset }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_asset_dst from acid_event ORDER BY ossim_asset_dst ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
++ 	        <OPTION VALUE="0" '.chk_select($this->criteria[1], "0").'>0</OPTION>
++		<OPTION VALUE="1" '.chk_select($this->criteria[1], "1").'>1</OPTION>
++		<OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>2</OPTION>
++		<OPTION VALUE="3" '.chk_select($this->criteria[1], "3").'>3</OPTION>
++		<OPTION VALUE="4" '.chk_select($this->criteria[1], "4").'>4</OPTION>
++		<OPTION VALUE="5" '.chk_select($this->criteria[1], "5").'>5</OPTION>';
 +        echo '</SELECT>&nbsp;&nbsp';
 +      }     
 +    }
@@ -779,9 +794,9 @@ diff -urNb acid_state_citems.inc acid_state_citems.inc
 +    }
 + };  /* OssimTypeCriteria */
  ?>
-diff -urNb acid_state_criteria.inc acid_state_criteria.inc
---- acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid_state_criteria.inc	2004-02-06 18:48:50.000000000 +0100
+diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
+--- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_state_criteria.inc	2004-05-04 19:12:25.000000000 +0200
 @@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
@@ -797,9 +812,9 @@ diff -urNb acid_state_criteria.inc acid_state_criteria.inc
       /* 
        * For new criteria, add a call to the appropriate constructor here, and implement
        * the appropriate class in acid_stat_citems.inc.
-diff -urNb create_acid_tbls_mysql.sql create_acid_tbls_mysql.sql
---- create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ create_acid_tbls_mysql.sql	2004-02-09 13:48:43.000000000 +0100
+diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
+--- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/create_acid_tbls_mysql.sql	2004-05-04 19:12:25.000000000 +0200
 @@ -81,3 +81,51 @@
  
                              PRIMARY KEY         (ipc_ip),
@@ -852,9 +867,9 @@ diff -urNb create_acid_tbls_mysql.sql create_acid_tbls_mysql.sql
 +CREATE INDEX acid_event_ossim_risk_c ON acid_event (ossim_risk_c);
 +CREATE INDEX acid_event_ossim_risk_a ON acid_event (ossim_risk_a);
 +
-diff -urNb create_acid_tbls_pgsql.sql create_acid_tbls_pgsql.sql
---- create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ create_acid_tbls_pgsql.sql	2004-02-09 14:03:50.000000000 +0100
+diff -urNb acid/create_acid_tbls_pgsql.sql acid-ossim/create_acid_tbls_pgsql.sql
+--- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/create_acid_tbls_pgsql.sql	2004-05-04 19:12:25.000000000 +0200
 @@ -57,8 +57,8 @@
  CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
                              ag_name             TEXT,

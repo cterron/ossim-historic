@@ -6,22 +6,24 @@ class Host_mac{
     var $mac;
     var $previous;
     var $anom;
-    var $mac_time;
+    var $date;
 
-    function Host_mac($ip, $mac, $previous, $anom, $mac_time)
+    function Host_mac($ip, $mac, $vendor, $previous, $anom, $date)
     {
         $this->ip           = $ip;
         $this->mac          = $mac;
+        $this->vendor       = $vendor;
         $this->previous     = $previous;
         $this->anom         = $anom;
-        $this->mac_time     = $mac_time;
+        $this->date     = $date;
     }
 
-    function get_ip()             { return $this->ip; }
-    function get_mac()            { return $this->mac; }
+    function get_ip()           { return $this->ip; }
+    function get_mac()          { return $this->mac; }
+    function get_vendor()       { return $this->vendor; }
     function get_previous()     { return $this->previous; }
-    function get_anom()            { return $this->anom; }
-    function get_mac_time()            { return $this->mac_time; }
+    function get_anom()         { return $this->anom; }
+    function get_date()         { return $this->date; }
 
     function get_list($conn, $args = "") 
     {
@@ -32,9 +34,10 @@ class Host_mac{
             while (!$rs->EOF) {
                 $list[] = new host_mac ( $rs->fields["inet_ntoa(ip)"],
                                             $rs->fields["mac"],
+                                            $rs->fields["vendor"],
                                             $rs->fields["previous"],
                                             $rs->fields["anom"],
-                                            $rs->fields["mac_time"]);
+                                            $rs->fields["date"]);
                 $rs->MoveNext();
             }
         }

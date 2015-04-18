@@ -1,5 +1,59 @@
---- Makefile.am.org	2004-03-23 14:01:03.000000000 +0100
-+++ Makefile.am	2004-03-23 14:09:15.000000000 +0100
+diff -urNb configure.in configure.in
+--- configure.in	2004-03-22 00:45:04.000000000 +0100
++++ configure.in	2004-04-12 16:58:55.000000000 +0200
+@@ -128,7 +128,7 @@
+ AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
+ 
+ # Set constants and defaults
+-MYRRD=`pwd`/myrrd
++MYRRD=/usr/lib
+ SO_VERSION_PATCH=
+ MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
+ 
+@@ -2800,7 +2800,7 @@
+ fi
+ 
+ dnl> Append RRD finally
+-NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
++NTOP_APPENDS([${MYRRD}], [${MYRRD}], [rrd_th])
+ 
+ echo
+ echo "-------------------------------------------------------------------"
+@@ -2975,7 +2975,6 @@
+ AC_SUBST(SO_VERSION_PATCH)
+ 
+ AC_CONFIG_FILES([Makefile])
+-AC_CONFIG_FILES([myrrd/Makefile])
+ 
+ if test ".${ac_disable_plugins}" != ".yes"; then
+     AC_CONFIG_FILES([plugins/Makefile])
+diff -urNb globals-defines.h globals-defines.h
+--- globals-defines.h	2004-03-21 15:39:45.000000000 +0100
++++ globals-defines.h	2004-04-12 16:58:55.000000000 +0200
+@@ -598,7 +602,7 @@
+  *
+  * Valid values are 0 (disables) up to whatever.
+  */
+-#define MAX_NUM_BAD_IP_ADDRESSES            3
++#define MAX_NUM_BAD_IP_ADDRESSES            0
+ 
+ 
+ /* Maximum number of queued addresses waiting to be resolved */
+diff -urNb globals-structtypes.h globals-structtypes.h
+--- globals-structtypes.h	2004-03-21 15:39:46.000000000 +0100
++++ globals-structtypes.h	2004-04-12 16:58:55.000000000 +0200
+@@ -444,6 +444,8 @@
+   UsageCounter icmpProtocolUnreachSent, icmpProtocolUnreachRcvd;
+   UsageCounter icmpAdminProhibitedSent, icmpAdminProhibitedRcvd;
+   UsageCounter malformedPktsSent,       malformedPktsRcvd;
++  /* OSSIM */
++  UsageCounter mailSynPkts, webSynPkts, nbSynPkts;
+ } SecurityHostProbes;
+ 
+ /* NOTE: anything added here must be also added in the SecurityHostProbes structure */
+diff -urNb Makefile.am Makefile.am
+--- Makefile.am	2004-03-22 00:16:42.000000000 +0100
++++ Makefile.am	2004-04-12 16:58:55.000000000 +0200
 @@ -61,7 +61,7 @@
                         stamp-h.in
  
@@ -35,36 +89,9 @@
  .PHONY: snapshot
  
  
---- configure.in.org	2004-03-23 13:59:27.000000000 +0100
-+++ configure.in	2004-03-23 14:10:13.000000000 +0100
-@@ -128,7 +128,7 @@
- AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
- 
- # Set constants and defaults
--MYRRD=`pwd`/myrrd
-+MYRRD=/usr/lib
- SO_VERSION_PATCH=
- MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
- 
-@@ -2800,7 +2800,7 @@
- fi
- 
- dnl> Append RRD finally
--NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
-+NTOP_APPENDS([${MYRRD}], [${MYRRD}], [rrd_th])
- 
- echo
- echo "-------------------------------------------------------------------"
-@@ -2975,7 +2975,6 @@
- AC_SUBST(SO_VERSION_PATCH)
- 
- AC_CONFIG_FILES([Makefile])
--AC_CONFIG_FILES([myrrd/Makefile])
- 
- if test ".${ac_disable_plugins}" != ".yes"; then
-     AC_CONFIG_FILES([plugins/Makefile])
---- plugins/Makefile.am.org	2004-03-23 14:07:32.000000000 +0100
-+++ plugins/Makefile.am	2004-03-23 14:08:14.000000000 +0100
+diff -urNb plugins/Makefile.am plugins/Makefile.am
+--- plugins/Makefile.am	2004-01-16 19:26:44.000000000 +0100
++++ plugins/Makefile.am	2004-04-12 16:58:55.000000000 +0200
 @@ -37,7 +37,7 @@
  # 
  plugindir = $(libdir)/ntop/plugins
@@ -83,8 +110,9 @@
  
  libsflowPlugin_la_SOURCES = sflowPlugin.c
  libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
---- plugins/rrdPlugin.c.org	2004-03-23 14:10:34.000000000 +0100
-+++ plugins/rrdPlugin.c	2004-03-23 15:34:23.000000000 +0100
+diff -urNb plugins/rrdPlugin.c plugins/rrdPlugin.c
+--- plugins/rrdPlugin.c	2004-03-17 21:05:40.000000000 +0100
++++ plugins/rrdPlugin.c	2004-04-12 16:58:55.000000000 +0200
 @@ -476,7 +476,7 @@
  		  char *startTime, char* endTime, char *rrdPrefix) {
    char path[512], *argv[32], buf[384], buf1[384], fname[384], *label;
@@ -99,7 +127,7 @@
        BufferTooShort();
      argv[argc++] = buf4;
 -    argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
-+    if(snprintf(buf5, sizeof(buf5), "TICK:fail#ffffa0:%.1f:Anomaly", 1.0) < 0)
++    if(snprintf(buf5, sizeof(buf5), "TICK:fail#ffffa0:%.1f:Anomaly", 0.2) < 0)
 +      BufferTooShort();
 +    argv[argc++] = buf5;
      argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
@@ -123,3 +151,97 @@
        BufferTooShort();
      argv[argc++] = tempStr;
  #endif
+@@ -1869,8 +1871,10 @@
+ 	      if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
+ 		updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
+ 		updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
++		/*
+ 		updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
+ 		updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
++		*/
+ 		updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
+ 		updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
+ 		updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
+@@ -1880,8 +1884,10 @@
+ 		updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
+ 		updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
+ 		updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
++		/*
+ 		updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
+ 		updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
++		*/
+ 		updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
+ 		updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
+ 		updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
+@@ -1922,6 +1928,15 @@
+ 		updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
+ 		updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
+ 
++ 
++		if (el->secHostPkts != NULL) {
++			updateCounter(rrdPath, "synPktsSent", el->secHostPkts->synPktsSent.value.value);
++                	updateCounter(rrdPath, "synPktsRcvd", el->secHostPkts->synPktsRcvd.value.value);
++			updateCounter(rrdPath, "mail_sessions", el->secHostPkts->mailSynPkts.value.value);
++			updateCounter(rrdPath, "web_sessions", el->secHostPkts->webSynPkts.value.value);
++			updateCounter(rrdPath, "nb_sessions", el->secHostPkts->nbSynPkts.value.value);
++		}
++
+ 		protoList = myGlobals.ipProtosList, idx=0;
+ 		while(protoList != NULL) {
+ 		  char buf[64];
+diff -urNb sessions.c sessions.c
+--- sessions.c	2004-03-02 00:41:29.000000000 +0100
++++ sessions.c	2004-04-12 17:15:25.000000000 +0200
+@@ -1674,6 +1674,27 @@
+ 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.synPkts, 1);
+       }
+ 
++	
++	switch (dport)
++	{
++	case 25:
++		incrementUsageCounter(&srcHost->secHostPkts->mailSynPkts, dstHost, actualDeviceId);
++		incrementUsageCounter(&dstHost->secHostPkts->mailSynPkts, srcHost, actualDeviceId);
++		break;
++	case 80:
++		incrementUsageCounter(&srcHost->secHostPkts->webSynPkts, dstHost, actualDeviceId);
++                incrementUsageCounter(&dstHost->secHostPkts->webSynPkts, srcHost, actualDeviceId);
++		break;
++	case 135:
++	case 137:
++	case 138:
++	case 139:
++	case 445:
++		incrementUsageCounter(&srcHost->secHostPkts->nbSynPkts, dstHost, actualDeviceId);
++                incrementUsageCounter(&dstHost->secHostPkts->nbSynPkts, srcHost, actualDeviceId);
++		break;
++	}
++
+       incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+     }
+ 
+--- http.c.orig	2004-04-26 17:03:39.000000000 +0200
++++ http.c	2004-04-27 12:31:22.000000000 +0200
+@@ -521,11 +521,20 @@
+ #ifdef HAVE_OPENSSL
+     if(myGlobals.newSock < 0) {
+       rc = SSL_write(getSSLsocket(-myGlobals.newSock), &theString[bytesSent], len);
+-    } else
++    } else if (myGlobals.newSock)
++#ifdef LINUX
++      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL | MSG_DONTWAIT);
++#else
+       rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
++#endif /* LINUX */
++#else
++    if (myGlobals.newSock)
++#ifdef LINUX
++      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL | MSG_DONTWAIT);
+ #else
+     rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
+-#endif
++#endif /* LINUX */
++#endif /* HAVE_OPENSSL */
+ 
+     if((errno != 0) || (rc < 0)) {
+ #ifdef DEBUG

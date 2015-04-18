@@ -16,7 +16,7 @@
         (!$_POST["hostname"] || !$_POST["ip"] ||
          !$_POST["threshold_c"] || !$_POST["threshold_a"] || 
          // !$_POST["persistence"] || 
-         !$_POST["nsens"] || !$_POST["descr"])) 
+         !$_POST["nsens"])) 
     {
 ?>
 

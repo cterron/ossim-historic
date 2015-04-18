@@ -72,7 +72,7 @@ class ParserCisco(Parser.Parser):
                                          time.strptime(datestring, 
                                                        "%Y %b %d %H %M %S"))
 
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

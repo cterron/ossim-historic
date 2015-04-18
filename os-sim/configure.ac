@@ -57,6 +57,7 @@ www/riskmeter/Makefile
 www/rrd_conf/Makefile
 www/scan/Makefile
 www/sensor/Makefile
+www/sec_report/Makefile
 www/signature/Makefile
 www/style/Makefile
 www/vulnmeter/Makefile

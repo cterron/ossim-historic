@@ -17,26 +17,27 @@ require_once ('ossim_db.inc');
 require_once ('classes/Control_panel_host.inc');
 require_once ('classes/Control_panel_net.inc');
 require_once ('classes/Host.inc');
+require_once ('classes/Host_os.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
 require_once ('classes/Conf.inc');
 require_once ('acid_funcs.inc');
-require ('common.inc');
+require_once ('common.inc');
 
 
 $mrtg_link = $conf->get_conf("mrtg_link");
 
 
 
-function echo_values($val, $max, $ip, $date) {
+function echo_values($val, $max, $ip, $date, $target) {
 
     global $acid_link;
 
     if ($val / $max > 5) {
 ?>
         <td bgcolor="red">
-          <a href="<?php echo get_acid_date_link($ip, $date) ?>">
+          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
             <font color="white"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -44,7 +45,7 @@ function echo_values($val, $max, $ip, $date) {
     } elseif ($val / $max > 3) {
 ?>
         <td bgcolor="orange">
-          <a href="<?php echo get_acid_date_link($ip, $date) ?>">
+          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
             <font color="black"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -52,7 +53,7 @@ function echo_values($val, $max, $ip, $date) {
     } elseif ($val / $max > 1) {
 ?>
         <td bgcolor="green">
-          <a href="<?php echo get_acid_date_link($ip, $date) ?>">
+          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
             <font color="white"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -60,7 +61,7 @@ function echo_values($val, $max, $ip, $date) {
     } else {
 ?>
         <td>
-          <a href="<?php echo get_acid_date_link($ip, $date) ?>">
+          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
             <font color="black"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -89,43 +90,6 @@ $hosts_order_by_a = Control_panel_host::get_metric_list($conn, $range, 'attack')
 $nets_order_by_c = Control_panel_net::get_metric_list($conn, $range, 'compromise');
 $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
 
-
-function get_acid_date_link($ip, $date)
-{
-    global $acid_link;
-    
-    $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+)/";
-    
-    /*
-     * regs[1] => year
-     * regs[2] => month
-     * regs[3] => day
-     * regs[4] => hour
-     * regs[5] => minute
-     */
-    preg_match($pattern, $date, $regs);
-
-    /* 10 minutes before */
-    if ($regs[5] >= 10) {            // 3:45 -> 3:35
-        $regs[5] -= 10;
-    } else {
-        $regs[5] = 60 - (10 - $regs[5]);
-        if ($regs[4] > 0) {         // 3:06 -> 2:56
-            $regs[4] -= 1;
-        } else {                    // 0:07 -> 23:57
-            $regs[4] = 23;
-        }
-    }
-
-    return "$acid_link/acid_qry_main.php?new=1&time[0][1]=>=&time[0][2]=". $regs[2] .
-            "&time[0][3]=" . $regs[3] .
-            "&time[0][4]=" . $regs[1] .
-            "&time[0][5]=" . $regs[4] .
-            "&time[0][6]=" . $regs[5] .
-            "&ip_addr[0][1]=ip_dst&ip_addr[0][2]==&ip_addr[0][3]=$ip&".
-            "sort_order=time_d&".
-            "submit=Query+DB&num_result_rows=-1&time_cnt=1&ip_addr_cnt=1";
-}
 
 ?>
 
@@ -230,7 +194,7 @@ function get_acid_date_link($ip, $date)
             <?php 
                   echocolor($net->get_max_c(), 
                             Net::netthresh_c($conn, $net->get_net_name()),
-                            $image);
+                            get_acid_date_link($net->get_max_c_date()));
                   $net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
                                         $net->get_net_name() . "'");
@@ -270,7 +234,7 @@ function get_acid_date_link($ip, $date)
             <?php 
                   echocolor($net->get_max_a(), 
                             Net::netthresh_a($conn, $net->get_net_name()),
-                            $image);
+                            get_acid_date_link($net->get_max_c_date()));
                   $net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
                                         $net->get_net_name() . "'");
@@ -309,6 +273,7 @@ function get_acid_date_link($ip, $date)
             <td nowrap><a href="../report/index.php?host=<?php 
                 echo $host_ip ?>&section=metrics"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
+            <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
             </td>
             <td>
               <a href="<?php echo $image ?>"><img
@@ -319,7 +284,8 @@ function get_acid_date_link($ip, $date)
             echo_values($host->get_max_c(),
                         Host::ipthresh_c($conn, $host->get_host_ip()),
                         $host->get_host_ip(),
-                        $host->get_max_c_date());
+                        $host->get_max_c_date(),
+                        "ip_src");
             $host_list = Host_qualification::get_list($conn, 
                                         "WHERE host_ip = '" . 
                                         $host->get_host_ip() . "'");
@@ -359,6 +325,7 @@ function get_acid_date_link($ip, $date)
             <td nowrap><a href="../report/index.php?host=<?php 
                 echo $host_ip ?>&section=metrics"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
+            <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
             </td>
             <td>
               <a href="<?php echo $image ?>"><img
@@ -369,7 +336,8 @@ function get_acid_date_link($ip, $date)
             echo_values($host->get_max_a(),
                         Host::ipthresh_a($conn,$host->get_host_ip()),
                         $host->get_host_ip(),
-                        $host->get_max_a_date());
+                        $host->get_max_a_date(),
+                        "ip_dst");
             $host_list = Host_qualification::get_list($conn, 
                                         "WHERE host_ip = '" . 
                                         $host->get_host_ip() . "'");

@@ -15,32 +15,56 @@ class MonitorWatchdog(Monitor.Monitor):
             
             for id, plugin  in self.plugins.iteritems():
                 
-                if util.pidof(plugin["name"]) is not None:
-                    util.debug (__name__, 
-                                'plugin %s (%s) is running' % \
-                                (id, plugin["name"]), '->', 'GREEN')
-                    self.agent.conn.send("plugin-start plugin_id=\"%s\"\n" % id)
+                if util.pidof(plugin["process"]) is not None:
+                    
+                    # debug
+                    msg = 'plugin %s (%s) is running' % (id, plugin["process"])
+                    util.debug_watchlog (msg, '--', 'GREEN')
+                    
+                    # plugin started
+                    msg = "plugin-start plugin_id=\"%s\"\n" % id
+                    self.agent.sendMessage(msg)
+
                 else:
-                    util.debug (__name__,
-                                'plugin %s (%s) is not running' % \
-                                (id, plugin["name"]), '->', 'RED')
                     
                     # restart daemon
                     if plugin["start"] == 'yes' and \
-                       util.pidof(plugin["name"]) is None:
+                       util.pidof(plugin["process"]) is None:
+                       
+                        # debug
+                        msg = 'plugin %s (%s) is not running' % \
+                            (id, plugin["process"])
+                        util.debug_watchlog (msg, '--', 'RED')
+
+                        # startup command
                         cmd = plugin["startup"]
-                        util.debug (__name__, 'startup command: ' + 
-                                    cmd, '->', 'YELLOW')
                         os.system(cmd)
-                        if util.pidof(plugin["name"]) is not None:
-                            self.agent.conn.send("plugin-start plugin_id=\"%s\"\n" % id)
+                        
+                        # debug
+                        msg = 'starting service %s (%s): %s' % \
+                            (id, plugin["process"], cmd)
+                        util.debug_watchlog (msg, '->', 'YELLOW')
+
+                        # notify result to server
+                        time.sleep(1)
+                        if util.pidof(plugin["process"]) is not None:
+                            msg = "plugin-start plugin_id=\"%s\"\n" % id
+                            util.debug_watchlog('service %s (%s) started' % \
+                                (id, plugin["process"]), '<-', 'GREEN')
                         else:
-                            self.agent.conn.send("plugin-stop plugin_id=\"%s\"\n" % id)
+                            msg = "plugin-stop plugin_id=\"%s\"\n" % id
+                            util.debug_watchlog('error starting service %s' % \
+                                (plugin["process"]), '!!', 'RED')
+                        self.agent.sendMessage(msg)
                             
                     else:
-                        self.agent.conn.send("plugin-stop plugin_id=\"%s\"\n"\
-                        % id)
+                        # debug
+                        msg = 'plugin %s (%s) is not running' % \
+                            (id, plugin["process"])
+                        util.debug_watchlog (msg, '--', 'YELLOW')
 
-            # check every 5 mins
-            time.sleep(300)
+                        msg = "plugin-stop plugin_id=\"%s\"\n" % id
+                        self.agent.sendMessage(msg)
+
+            time.sleep(float(self.watchdog_interval))
 

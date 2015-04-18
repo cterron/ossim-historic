@@ -194,25 +194,32 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
   plugin_sid = SIM_PLUGIN_SID (g_object_new (SIM_TYPE_PLUGIN_SID, NULL));
 
   value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-  plugin_sid->_priv->plugin_id = gda_value_get_integer (value);
-  
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->plugin_id = gda_value_get_integer (value);
+
   value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
-  plugin_sid->_priv->sid = gda_value_get_integer (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->sid = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
-  plugin_sid->_priv->category_id = gda_value_get_integer (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->category_id = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row);
-  plugin_sid->_priv->class_id = gda_value_get_integer (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->class_id = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
-  plugin_sid->_priv->reliability = gda_value_get_integer (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->reliability = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 5, row);
-  plugin_sid->_priv->priority = gda_value_get_integer (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->priority = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 6, row);
-  plugin_sid->_priv->name = gda_value_stringify (value);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->name = gda_value_stringify (value);
 
   return plugin_sid;
 }

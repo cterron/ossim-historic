@@ -105,13 +105,13 @@
 ?>
       <td><font color="GREEN"><b>UP</b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$sensor&ip=$ip&cmd=stop&id=$id" ?>">stop</a></td>
+            "?sensor=$ip&ip=$ip&cmd=stop&id=$id" ?>">stop</a></td>
 <?php
                     } else {
 ?>
       <td><font color="RED"><b>DOWN</b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$sensor&ip=$ip&cmd=start&id=$id" ?>">start</a></td>
+            "?sensor=$ip&ip=$ip&cmd=start&id=$id" ?>">start</a></td>
       
 <?php
                     }
@@ -119,13 +119,13 @@
 ?>
       <td><font color="GREEN"><b>ENABLED</b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$sensor&ip=$ip&cmd=disabled&id=$id" ?>">disable</a></td>
+            "?sensor=$ip&ip=$ip&cmd=disabled&id=$id" ?>">disable</a></td>
 <?php
                     } else {
 ?>
       <td><font color="RED"><b>DISABLED</b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$sensor&ip=$ip&cmd=enabled&id=$id" ?>">enable</a></td>
+            "?sensor=$ip&ip=$ip&cmd=enabled&id=$id" ?>">enable</a></td>
 <?php
                     }
 ?>

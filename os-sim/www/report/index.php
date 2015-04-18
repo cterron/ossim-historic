@@ -7,6 +7,7 @@
 <frame src="menu.php?host=<?php echo $_GET["host"] ?>">
 
 <?php 
+
     /* inventory */
     if (!strcmp($_GET["section"], 'inventory')) {
         echo "<frame src=\"inventory.php?host=" . $_GET["host"] . "\" name=\"report\">";
@@ -16,6 +17,33 @@
     elseif (!strcmp($_GET["section"], 'metrics')) {
         echo "<frame src=\"metrics.php?host=" . $_GET["host"] . "\" name=\"report\">";
     }
+
+    /* alerts */
+    elseif (!strcmp($_GET["section"], 'alerts')) {
+        require_once ('ossim_conf.inc');
+
+        $conf = new ossim_conf();
+        $ip = $_GET["host"];
+
+        $acid_link = $conf->get_conf("acid_link");
+        $acid_main_link = $conf->get_conf("acid_link") .  "acid_stat_ipaddr.php?ip=$ip&netmask=32";
+
+        echo "<frame src=\"". $acid_main_link . "\" name=\"report\">";
+    }
+
+    /* ntop */
+    elseif (!strcmp($_GET["section"], 'usage')) {
+    
+        require_once ('ossim_db.inc');
+        $db = new ossim_db();
+        $conn = $db->connect();
+        $ntop_link = ossim_db::get_sensor_link($conn, $_GET["host"]);
+        $db->close($conn);
+        
+        echo "<frame src=\"$ntop_link/" . $_GET["host"] . 
+            ".html\" name=\"report\">";
+    }
+    
 
     /* default */
     else {

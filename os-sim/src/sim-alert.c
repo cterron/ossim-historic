@@ -63,6 +63,8 @@ sim_alert_impl_finalize (GObject  *gobject)
 
   if (alert->sensor)
     g_free (alert->sensor);
+  if (alert->interface)
+    g_free (alert->interface);
   if (alert->src_ia)
     gnet_inetaddr_unref (alert->src_ia);
   if (alert->dst_ia)
@@ -117,6 +119,11 @@ sim_alert_instance_init (SimAlert *alert)
   alert->risk_a = 1;
 
   alert->data = NULL;
+
+  alert->sid = 0;
+  alert->cid = 0;
+
+  alert->match = FALSE;
 }
 
 /* Public Methods */
@@ -241,6 +248,9 @@ sim_alert_clone (SimAlert       *alert)
   new_alert->risk_c = alert->risk_c;
   new_alert->risk_a = alert->risk_a;
 
+  new_alert->sid = alert->sid;
+  new_alert->cid = alert->cid;
+
   return new_alert;
 }
 
@@ -255,22 +265,22 @@ void
 sim_alert_print (SimAlert   *alert)
 {
   gchar    timestamp[TIMEBUF_SIZE];
+  gchar    *ip;
 
   g_return_if_fail (alert);
   g_return_if_fail (SIM_IS_ALERT (alert));
-
 
   g_print ("alert");
   switch (alert->type)
     {
     case SIM_ALERT_TYPE_DETECTOR:
-      g_print (" type=\"detector\"");
+      g_print (" type=\"D\"");
       break;
     case SIM_ALERT_TYPE_MONITOR:
-      g_print (" type=\"monitor\"");
+      g_print (" type=\"M\"");
       break;
     case SIM_ALERT_TYPE_NONE:
-      g_print (" type=\"none\"");
+      g_print (" type=\"N\"");
       break;
     }
 
@@ -280,7 +290,7 @@ sim_alert_print (SimAlert   *alert)
       g_print (" timestamp=\"%s\"", timestamp);
     }
 
-  g_print (" alarm=\"%s\"", (alert->alarm) ? "true" : "false");
+  g_print (" alarm=\"%d\"", alert->alarm);
 
   if (alert->sensor)
       g_print (" sensor=\"%s\"", alert->sensor);
@@ -296,11 +306,19 @@ sim_alert_print (SimAlert   *alert)
       g_print (" protocol=\"%d\"", alert->protocol);
 
   if (alert->src_ia)
-      g_print (" src_ia=\"%s\"", gnet_inetaddr_get_canonical_name (alert->src_ia));
+    {
+      ip = gnet_inetaddr_get_canonical_name (alert->src_ia);
+      g_print (" src_ia=\"%s\"", ip);
+      g_free (ip);
+    }
   if (alert->src_port)
       g_print (" src_port=\"%d\"", alert->src_port);
   if (alert->dst_ia)
-      g_print (" dst_ia=\"%s\"", gnet_inetaddr_get_canonical_name (alert->dst_ia));
+    {
+      ip = gnet_inetaddr_get_canonical_name (alert->dst_ia);
+      g_print (" dst_ia=\"%s\"", ip);
+      g_free (ip);
+    }
   if (alert->dst_port)
       g_print (" dst_port=\"%d\"", alert->dst_port);
 
@@ -324,6 +342,13 @@ sim_alert_print (SimAlert   *alert)
   if (alert->risk_a)
       g_print (" risk_a=\"%d\"", alert->risk_a);
 
+  if (alert->sid)
+      g_print (" sid =\"%d\"", alert->sid);
+  if (alert->cid)
+      g_print (" cid =\"%d\"", alert->cid);
+
+  if (alert->data)
+      g_print (" data=\"%s\"", alert->data);
 
   g_print ("\n");
 }

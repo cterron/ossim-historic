@@ -1,11 +1,120 @@
-
 # ChangeLog for OSSIM
+
+    06 May 2004 Fabio Ospitia Trujill <fot@ossim.net> :
+    * scripts/acid_cache.pl: Acid cache
+    * New rpm packages: perl and scripts
+
+    03 May 2004 David Gil <dgil@ossim.net> :
+    * scripts/create-sidmap.pl: new script that parses all snort active rules
+      in *.rules in all specified directories and creates a SQL file in order
+      to update OSSIM database. 
+      Modified from oinkmaster (http://oinkmaster.sf.net) create-sidmap.pl
+      script, made by Andreas Östling <andreaso@it.su.se>.
+    * db/ossim_data.sql: snort rules updated
+      
+    30 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorWatchdog.py, agent/MonitorPlugin.py:
+      Reconnect threads if the conn dies in message sending
+
+    29 Apr 2004 Fabio Ospitia Trujillo <fot@ossim.net> :
+    * backup script fix
+    * ntop patch
+    * acid patch
+    * rrdtool patch
+    * server memmory lacks fix
+    * postgresql create tables script
+    * rrd_plugin.pl fix
+
+    29 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorWatchdog.py, agent/MonitorPlugin.py, 
+      agent/util.py, agent/agent: 
+      watchdog and start/stop plugins specific log at 
+      /var/log/ossim/agent_watch.log
+
+    23 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/agent: 
+      - daemon mode (-d, --daemon)
+      - log debug and error messages to '/var/log/ossim/agent.log' and 
+        '/var/log/ossim/agent_error.log' respectively.
+      - quite mode by default (-v to show debug messages)
+
+    22 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorNtopSession.py: Ntop-3 session date format adjust.
+    * www/rrd_conf/*: Insert/Modify rrd settings in the new rrd_config table.
+
+    21 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/Monitor.py: 
+      - Captured exception when monitor creates excessive
+        threads, causing server blocking.
+      - Lock web requests to ntop with a mutex to avoid it crash when more
+        than one request is made.
+
+    20 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorNtopHostinfo.py, agent/MonitorNtopSession.py: 
+      serious bugfixes.
+    * agent/Agent.py, agent/ParserP0f.py, agent/ParserArpwatch.py: 
+      new method to send notifications like OS and Mac changes.
+    * agent/Config.py: 
+      attribute 'name' changed to 'process'.
+    * agent/Config.py, agent/MonitorWatchdog.py: 
+      watchdog interval configuration via config.xml.
+
+    15 Apr 2004 David Gil <dgil@ossim.net> :
+    * include/classes/RRD_config.inc, www/rrd_conf/*: 
+      new rrd_config table (substitute of rrd_conf and rrd_conf_global tables)
+
+    14 Apr 2004 David Gil <dgil@ossim.net> :
+    * agent/ParserP0f.py: important bug fixed. ParserP0f did not save OS
+      information correctly and sent numerous and repeated alerts.
+    * db/create_mysql.sql: new rrd_config table (substitute of rrd_conf and
+      rrd_conf_global tables).
+    * db/ossim_data.sql: new ntop sids.
+    * include/classes/Host_mac.inc, include/classes/Host_os.inc,
+      www/control_panel/mac.php, www/control_panel/os.php,.
+      www/control_panel/anomalies.php: many bugfixes related to date formats.
+
+    13 Apr 2004 David Gil <dgil@ossim.net> :
+    * db/ossim_data.sql: priority and reliability tunning (snort)
+
+    07 Apr 2004 David Gil <dgil@ossim.net> :
+    * www/conf/pluginupdate.php: plugin's priority & reliability can be 0
+    * www/control_panel/mac.php, www/control_panel/os.php: 
+      Important bug fixed regarding mysql 3.X compatibility. 
+      Thanks to Jordi Figueras <jfigueras at semic.es>
+
+    05 Apr 2004 David Gil: <dgil@ossim.net> :
+    * agent/MonitorNtopSession.py: Complete rewrite of Session Monitor. 
+      Now it should work with ntop-3.0.
+
+    02 Apr 2004 David Gil <dgil@ossim.net> :
+    * db/ossim_data.sql: priority and reliability tuning (rrd_anomalies).
+    * os-sim/agent/ParserP0f.py: Important bug fixed. ParserP0f did not work
+      with some date formats.
+
+    01 Apr 2004 David Gil <dgil@ossim.net> 
+    * www/ntop/menu.php: menu updated (ntop 3.0)
+
+    31 Mar 2004 David Gil <dgil@ossim.net> :
+    * www/ntop/net_session.php: net active TCP sessions
+    * www/control_panel/global_score.php: OS pixmaps & bugfixes
+
+    30 Mar 2004 David Gil <dgil@ossim.net> :
+    * www/directives/index.php: directive viewer improvements and bugfixes
+    * agent/MonitorNtop.py: read session info from host page
+
+    29 Mar 2004 David Gil <dgil@ossim.net> :
+    * www/sec_report/: new security report.
+
+    26 Mar 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorOpennms.py: new OpenNMS monitor. Ability to ask for 
+      service states.
+    * agent/MonitorCA.py, agent/ParserCA.py: compliant with the 
+      Python DB API 2.0.
 
     25 Mar 2004 DK <dk@ossim.net> :
     * 0.9.3 released: Serious bugfixes.
 
 * OSSIM-0.9.3 (25 Mar 2004)
-
 
     24 Mar 2004 DK <dk@ossim.net> :
     * 0.9.2 released

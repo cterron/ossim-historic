@@ -34,29 +34,39 @@
     
     if ($plugin_list = Plugin::get_list($conn, "ORDER BY $order")) {
         foreach ($plugin_list as $plugin) {
+        
             $id = $plugin->get_id();
-            $type = $plugin->get_type();
+           
+            # 1505 => OSSIM directives
+            # 2000 - 3000 => Monitors
+            if (($id != 1505) && (($id < 2000) || ($id >= 3000))) 
+            {
+                $name = $plugin->get_name();
+                $type = $plugin->get_type();
 ?>
       <tr>
-        <td><a href="pluginsid.php?id=<?php echo $id ?>">
-            <?php echo $plugin->get_id(); ?></a></td>
-        <td bgcolor="#eeeee"><b><?php echo $plugin->get_name(); ?></b></td>
+        <td>
+        <a href="pluginsid.php?id=<?php echo $id ?>&name=<?php echo $name ?>">
+            <?php echo $id; ?></a>
+        </td>
+        <td bgcolor="#eeeee"><b><?php echo $name; ?></b></td>
         <td>
 <?php
-        if ($type == '1') {
-            echo "Detector ($type)"; 
-        } elseif ($type == '2') {
-            echo "Monitor ($type)";
-        } else {
-            echo "Other ($type)";
-        }
+                if ($type == '1') {
+                    echo "Detector ($type)"; 
+                } elseif ($type == '2') {
+                    echo "Monitor ($type)";
+                } else {
+                    echo "Other ($type)";
+                }
 ?>
         </td>
         <td><?php echo $plugin->get_description(); ?></td>
       </tr>
 <?php
-        }
-    }
+            } /* if 1505 */
+        } /* foreach */
+    } /* if plugin_list */
 ?>
     </table>
 

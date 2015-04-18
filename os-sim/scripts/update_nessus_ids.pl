@@ -56,6 +56,7 @@ if(keys %plugin_rel_hash){
 print "Updating...\n";
 foreach $key (keys %plugin_rel_hash){
 print "$key:$plugin_rel_hash{$key}\n";
+$plugin_rel_hash{$key} =~ s/'/''/; 
 $query .= "(3001, $key, NULL, NULL, 2, 5, 'nessus: $plugin_rel_hash{$key}'),";
 }
 

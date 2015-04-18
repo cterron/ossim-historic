@@ -335,8 +335,7 @@ sim_inetaddr_ntohl (GInetAddr     *ia)
   if (!(ip = gnet_inetaddr_get_canonical_name (ia)))
     return -1;
 
-  if (inet_aton (ip, &in))
-    val = g_ntohl (in.s_addr);
+  if (inet_aton (ip, &in)) val = g_ntohl (in.s_addr);
 
   g_free (ip);
 

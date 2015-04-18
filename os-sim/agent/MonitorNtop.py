@@ -6,6 +6,10 @@ import MonitorNtopHostinfo
 import MonitorNtopSession
 import util
 
+import mutex
+
+m = mutex.mutex()
+
 class MonitorNtop(Monitor.Monitor):
 
     plugin_id = '2005'
@@ -42,9 +46,16 @@ class MonitorNtop(Monitor.Monitor):
             # search url to connect ntop
             url = 'http://' + \
                 self.plugins[MonitorNtop.plugin_id]['location'] + \
-                '/dumpData.html?language=xml'
+                '/dumpData.html?language=python'
 
-            return MonitorNtopHostinfo.get_value(rule, url)
+            # lock
+            while m.testandset() == False: 
+                time.sleep(0.1)
+            value = MonitorNtopHostinfo.get_value(rule, url)
+            m.unlock()
+            # end lock
+            
+            return value
         
         #
         # Session Monitor
@@ -52,8 +63,16 @@ class MonitorNtop(Monitor.Monitor):
         else:
             url = 'http://' + \
                 self.plugins[MonitorNtop.plugin_id]['location'] + \
-                '/NetNetstat.html'
-            return MonitorNtopSession.get_value(rule, url)
+                 '/' + rule["from"] + '.html'
+            
+            # lock
+            while m.testandset() == False:
+                time.sleep(0.1)
+            value = MonitorNtopSession.get_value(rule, url)
+            m.unlock()
+            # end lock
+            
+            return value
 
 
     def __evaluate(self, rule, absolute = ""):
@@ -95,7 +114,7 @@ class MonitorNtop(Monitor.Monitor):
             util.debug (__name__, "getting ntop value...", '<=')
             vlast = self.__get_value(rule)
             if vlast is None:
-                util.debug (__name__, "no data for %s" % rule["to"],
+                util.debug (__name__, "no data for %s" % rule["from"],
                             '!!', 'YELLOW')
                 break
 
@@ -117,7 +136,7 @@ class MonitorNtop(Monitor.Monitor):
                 date = time.strftime('%Y-%m-%d %H:%M:%S', 
                                      time.localtime(time.time()))
 
-                self.agent.sendMessage(type         = 'monitor', 
+                self.agent.sendAlert  (type         = 'monitor', 
                                        date         = date, 
                                        sensor       = sensor, 
                                        interface    = interface,
@@ -136,10 +155,13 @@ class MonitorNtop(Monitor.Monitor):
                 
             else:
                 util.debug (__name__, 'No alert', '--', 'GREEN')
-            
-            f += pfreq
-            if f >= int(rule["interval"]):  # finish if interval exceded
-                break
+                if rule["interval"] == '': # no alert, finished
+                    break
+ 
+            if rule["interval"] != '':
+                f += pfreq
+                if f >= int(rule["interval"]):  # finish if interval exceded
+                    break
  
 
 

@@ -283,11 +283,11 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 	  if (sim_directive_backlog_match_by_not (backlog))
 	    {
 	      SimAlert     *new_alert;
-	      SimRule      *rule_curr;
+	      SimRule      *rule_root;
 	      GNode        *rule_node;
 
+	      rule_root = sim_directive_get_root_rule (backlog);
 	      rule_node = sim_directive_get_curr_node (backlog);
-	      rule_curr = sim_directive_get_curr_rule (backlog);
 	      
 	      /* Create New Alert */
 	      new_alert = sim_alert_new ();
@@ -301,19 +301,22 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 	      new_alert->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
 	      new_alert->plugin_sid = sim_directive_get_id (backlog);
 
-	      if (sim_rule_get_src_ia (rule_curr))
-		new_alert->src_ia = gnet_inetaddr_clone (sim_rule_get_src_ia (rule_curr));
-	      if (sim_rule_get_dst_ia (rule_curr))
-		new_alert->dst_ia = gnet_inetaddr_clone (sim_rule_get_dst_ia (rule_curr));
-	      new_alert->src_port = sim_rule_get_src_port (rule_curr);
-	      new_alert->dst_port = sim_rule_get_dst_port (rule_curr);
-	      new_alert->condition = sim_rule_get_condition (rule_curr);
-	      if (sim_rule_get_value (rule_curr))
-		new_alert->value = g_strdup (sim_rule_get_value (rule_curr));
+	      if (sim_rule_get_src_ia (rule_root))
+		new_alert->src_ia = gnet_inetaddr_clone (sim_rule_get_src_ia (rule_root));
+	      if (sim_rule_get_dst_ia (rule_root))
+		new_alert->dst_ia = gnet_inetaddr_clone (sim_rule_get_dst_ia (rule_root));
+	      new_alert->src_port = sim_rule_get_src_port (rule_root);
+	      new_alert->dst_port = sim_rule_get_dst_port (rule_root);
+	      new_alert->protocol = sim_rule_get_protocol (rule_root);
+	      new_alert->condition = sim_rule_get_condition (rule_root);
+	      if (sim_rule_get_value (rule_root))
+		new_alert->value = g_strdup (sim_rule_get_value (rule_root));
+
+	      new_alert->data = sim_directive_backlog_to_string (backlog);
 
 	      /* Rule reliability */
-	      if (sim_rule_get_rel_abs (rule_curr))
-		new_alert->reliability = sim_rule_get_reliability (rule_curr);
+	      if (sim_rule_get_rel_abs (rule_root))
+		new_alert->reliability = sim_rule_get_reliability (rule_root);
 	      else
 		new_alert->reliability = sim_rule_get_reliability_relative (rule_node);
 
@@ -339,6 +342,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 								  SIM_SESSION_TYPE_SENSOR, 
 								  sim_rule_get_plugin_id (rule),
 								  cmd);
+			  g_object_unref (cmd);
 			}
 		      
 		      children = children->next;

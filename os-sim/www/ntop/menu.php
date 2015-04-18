@@ -17,10 +17,14 @@ if (!$sensor = $_GET["sensor"])
 require_once ('ossim_conf.inc');
 $conf = new ossim_conf();
 
+#
 # get ntop port from default ntop entry at
 # /etc/ossim/framework/ossim.conf
 # a better solution ??
-list($proto, $ip, $port) = split(':', $conf->get_conf("ntop_link"));
+#
+$url_parsed = parse_url($conf->get_conf("ntop_link"));
+$port = $url_parsed["port"];
+$proto = $url_parsed["scheme"];
 
 require_once ('ossim_db.inc');
 require_once ('classes/Sensor.inc');
@@ -65,13 +69,13 @@ $conf = new ossim_conf();
 
 <b>Services</b><br/><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=0"
    target="ntop">By host: Total</a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataSentIP.html"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=1"
    target="ntop">By host: Sent</a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataReceivedIP.html"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=2"
    target="ntop">By host: Recv</a><br/>
    
 &nbsp;&nbsp;&nbsp;
@@ -84,13 +88,13 @@ $conf = new ossim_conf();
 
 <b>Throughput</b><br/><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=0"
    target="ntop">By host: Total</a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataSentThpt.html?col=1"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=1"
    target="ntop">By host: Sent</a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataReceivedThpt.html?col=1"
+<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=2"
    target="ntop">By host: Recv</a><br/>
 &nbsp;&nbsp;&nbsp;
 <a href="<?php echo "$proto://$sensor:$port"?>/thptStats.html?col=1"
@@ -112,10 +116,10 @@ $conf = new ossim_conf();
 <a href="<?php echo "$proto://$sensor:$port"?>/vlanList.html"
    target="ntop">VLANs</a><br/><br/>
 
-<a href="<?php echo "$proto://$sensor:$port"?>/localHostsInfo.html"
+<a href="<?php echo "$proto://$sensor:$port"?>/localHostsFingerprint.html"
 target="ntop">OS and Users</a><br/>
 
-<a href="<?php echo "$proto://$sensor:$port"?>/domainTrafficStats.html"
+<a href="<?php echo "$proto://$sensor:$port"?>/domainStats.html"
 target="ntop">Domains</a><br/>
 
 

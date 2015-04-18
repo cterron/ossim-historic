@@ -18,7 +18,7 @@ if (!$order = $_GET["order"]) $order = "ip";
 if (!$offset = intval($_GET["offset"])){ $offset = 0;}
 if (!$count = intval($_GET["count"])){ $count = 50;}
 
-$args = "ORDER by $order LIMIT $count OFFSET $offset ";
+$args = "ORDER by $order LIMIT $offset,$count ";
 ?>
 
 <ul>
@@ -49,7 +49,7 @@ intval($offset); ?>&count=<?php echo $count ?>&order=<?php
           ?>">Previous OS</a></th>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
 intval($offset); ?>&count=<?php echo $count ?>&order=<?php
-            echo ossim_db::get_order("os_time", $order);
+            echo ossim_db::get_order("date", $order);
           ?>">When</a></th>
 </tr>
 
@@ -61,7 +61,7 @@ if ($host_os_list = Host_os::get_list($conn, $args)) {
 <tr>
 <?php
         $ip = $host_os->get_ip();
-        $os_time = $host_os->get_os_time();
+        $date = $host_os->get_date();
         $os = $host_os->get_os();
         if(ereg("\|",$os)){
             $os = ereg_replace("\|", " or ", $os);
@@ -84,7 +84,7 @@ if($anom){
 }
 ?>
 <td><?php echo $os;?></td>
-<td><?php echo $previous;?></td><td><?php echo $os_time?></td></tr>
+<td><?php echo $previous;?></td><td><?php echo $date?></td></tr>
 <?php
     }
 }

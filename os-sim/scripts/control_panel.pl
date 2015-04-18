@@ -7,8 +7,25 @@ use POSIX;
 use strict;
 use warnings;
 
-$| = 1;
+sub byebye {
+print "$0: forking into background...\n";
+exit;
+}
 
+fork and byebye;
+
+my $pidfile = "/var/run/control_panel.pid";
+
+sub die_clean {
+unlink $pidfile;
+exit;
+}
+
+open(PID, ">$pidfile") or die "Unable to open $pidfile\n";
+print PID $$;
+close(PID);
+
+$| = 1;
 
 my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) 

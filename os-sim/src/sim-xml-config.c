@@ -483,6 +483,10 @@ sim_xml_config_set_config_directive (SimXmlConfig  *xmlconfig,
       config->directive.filename = g_strdup (value);
       xmlFree(value);      
     }
+  else
+    {
+      config->directive.filename = g_strdup (OS_SIM_GLOBAL_DIRECTIVE_FILE);
+    }
 }
 
 /*

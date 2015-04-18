@@ -265,6 +265,7 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
   if (plugin)
     {
       plugin_state = sim_plugin_state_new_from_data (plugin,
+						     command->data.session_append_plugin.id,
 						     command->data.session_append_plugin.state,
 						     command->data.session_append_plugin.enabled);
 
@@ -290,6 +291,7 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
 		{
 		  cmd = sim_command_new_from_rule (rule);
 		  sim_session_write (session, cmd);
+		  g_object_unref (cmd);
 		}
 
 	      directives = directives->next;
@@ -363,22 +365,19 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
   while (sessions)
     {
       SimSession *sess = (SimSession *) sessions->data;
-      
+
       list = sess->_priv->plugin_states;
       while (list)
 	{
 	  SimPluginState  *plugin_state = (SimPluginState *) list->data;
 	  SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
-	  
+
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR_PLUGIN);
 	  cmd->data.sensor_plugin.plugin_id = sim_plugin_get_id (plugin);
 	  cmd->data.sensor_plugin.sensor = gnet_inetaddr_get_canonical_name (sess->_priv->ia);
-	  /*
-	  cmd->data.sensor_plugin.sensor = g_strdup (sim_sensor_get_name (sess->_priv->sensor));
-	  */
 	  cmd->data.sensor_plugin.state = sim_plugin_state_get_state (plugin_state);
 	  cmd->data.sensor_plugin.enabled = sim_plugin_state_get_enabled (plugin_state);
-	  
+
 	  sim_session_write (session, cmd);
 	  g_object_unref (cmd);
 	  
@@ -387,6 +386,8 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 
       sessions = sessions->next;
     }
+  g_list_free (sessions);
+
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
   
@@ -862,42 +863,224 @@ sim_session_cmd_reload_all (SimSession  *session,
 			    SimCommand  *command)
 {
   SimCommand  *cmd;
+  SimConfig   *config;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
+  config = session->_priv->config;
+
+  sim_container_free_directives (sim_ctn);
+  sim_container_free_backlogs (sim_ctn);
+  sim_container_free_net_levels (sim_ctn);
+  sim_container_free_host_levels (sim_ctn);
+  sim_container_free_policies (sim_ctn);
+  sim_container_free_nets (sim_ctn);
+  sim_container_free_hosts (sim_ctn);
+  sim_container_free_sensors (sim_ctn);
+  sim_container_free_plugin_sids (sim_ctn);
+  sim_container_free_plugins (sim_ctn);
+  sim_container_free_classifications (sim_ctn);
+  sim_container_free_categories (sim_ctn);
+
   sim_container_db_delete_plugin_sid_directive_ul (sim_ctn, session->_priv->db_ossim);
   sim_container_db_delete_backlogs_ul (sim_ctn, session->_priv->db_ossim);
 
-  sim_container_free_plugins (sim_ctn);
+  sim_container_db_load_categories (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_load_classifications (sim_ctn, session->_priv->db_ossim);
   sim_container_db_load_plugins (sim_ctn, session->_priv->db_ossim);
-
-  sim_container_free_sensors (sim_ctn);
+  sim_container_db_load_plugin_sids (sim_ctn, session->_priv->db_ossim);
   sim_container_db_load_sensors (sim_ctn, session->_priv->db_ossim);
-
-  sim_container_free_hosts (sim_ctn);
   sim_container_db_load_hosts (sim_ctn, session->_priv->db_ossim);
-
-  sim_container_free_nets (sim_ctn);
   sim_container_db_load_nets (sim_ctn, session->_priv->db_ossim);
-
-  sim_container_free_policies (sim_ctn);
   sim_container_db_load_policies (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_load_host_levels (sim_ctn, session->_priv->db_ossim);
+  sim_container_db_load_net_levels (sim_ctn, session->_priv->db_ossim);
 
-  sim_container_free_backlogs (sim_ctn);
-  sim_container_free_directives (sim_ctn);
-  sim_container_load_directives_from_file (sim_ctn, session->_priv->db_ossim, SIM_XML_DIRECTIVE_FILE);
+  if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
+    sim_container_load_directives_from_file (sim_ctn, session->_priv->db_ossim, config->directive.filename);
 
+  sim_server_reload (session->_priv->server);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
-  
   sim_session_write (session, cmd);
   g_object_unref (cmd);
 }
 
+/*
+ *
+ *
+ *
+ */
+static void
+sim_session_cmd_host_os_change (SimSession  *session,
+				SimCommand  *command)
+{
+  SimConfig   *config;
+  SimAlert    *alert;
+  GInetAddr   *ia;
+  gchar       *os = NULL;
+  struct tm    tm;
+
+  g_return_if_fail (session);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.host_os_change.date);
+  g_return_if_fail (command->data.host_os_change.host);
+  g_return_if_fail (command->data.host_os_change.os);
+  g_return_if_fail (command->data.host_os_change.plugin_id > 0);
+  g_return_if_fail (command->data.host_os_change.plugin_sid > 0);
+
+  config = session->_priv->config;
+
+  ia = gnet_inetaddr_new_nonblock (command->data.host_os_change.host, 0);
+  os = sim_container_db_get_host_os_ul (sim_ctn,
+				       session->_priv->db_ossim,
+				       ia);
+
+  if (!os)
+    {
+      sim_container_db_insert_host_os_ul (sim_ctn,
+					 session->_priv->db_ossim,
+					 ia,
+					 command->data.host_os_change.date,
+					 command->data.host_os_change.os);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+
+  if (!g_ascii_strcasecmp (os, command->data.host_os_change.os))
+    {
+      g_free (os);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+
+  sim_container_db_update_host_os_ul (sim_ctn,
+				     session->_priv->db_ossim,
+				     ia,
+				     command->data.host_os_change.date,
+				     command->data.host_os_change.os,
+				     os);
+
+  alert = sim_alert_new ();
+  alert->type = SIM_ALERT_TYPE_DETECTOR;
+  alert->alarm = FALSE;
+
+  if (config->sensor.ip)
+    alert->sensor = g_strdup (config->sensor.ip);
+  if (config->sensor.interface)
+    alert->interface = g_strdup (config->sensor.interface);
+  if (strptime (command->data.host_os_change.date, "%Y-%m-%d %H:%M:%S", &tm))
+    alert->time =  mktime (&tm);
+  else
+    alert->time = time (NULL);
+
+  alert->plugin_id = command->data.host_os_change.plugin_id;
+  alert->plugin_sid = command->data.host_os_change.plugin_sid;
+  alert->src_ia = ia;
+
+  alert->data = g_strdup_printf ("%s --> %s", os,
+				 command->data.host_os_change.os);
+
+  sim_container_push_alert (sim_ctn, alert);
+  g_free (os);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_session_cmd_host_mac_change (SimSession  *session,
+				 SimCommand  *command)
+{
+  SimConfig   *config;
+  SimAlert    *alert;
+  GInetAddr   *ia;
+  gchar       *mac = NULL;
+  gchar       *vendor = NULL;
+  struct tm    tm;
+
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.host_mac_change.date);
+  g_return_if_fail (command->data.host_mac_change.host);
+  g_return_if_fail (command->data.host_mac_change.mac);
+  g_return_if_fail (command->data.host_mac_change.plugin_id > 0);
+  g_return_if_fail (command->data.host_mac_change.plugin_sid > 0);
+
+  config = session->_priv->config;
+
+  ia = gnet_inetaddr_new_nonblock (command->data.host_mac_change.host, 0);
+  mac = sim_container_db_get_host_mac_ul (sim_ctn,
+					 session->_priv->db_ossim,
+					 ia);
+
+  if (!mac)
+    {
+      sim_container_db_insert_host_mac_ul (sim_ctn,
+					  session->_priv->db_ossim,
+					  ia,
+					  command->data.host_mac_change.date,
+					  command->data.host_mac_change.mac,
+					  command->data.host_mac_change.vendor);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+  
+  if (!g_ascii_strcasecmp (mac, command->data.host_mac_change.mac))
+    {
+      g_free (mac);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+
+  vendor = sim_container_db_get_host_mac_vendor_ul (sim_ctn,
+						    session->_priv->db_ossim,
+						    ia);
+
+  sim_container_db_update_host_mac_ul (sim_ctn,
+				      session->_priv->db_ossim,
+				      ia,
+				      command->data.host_mac_change.date,
+				      command->data.host_mac_change.mac,
+				      mac,
+				      command->data.host_mac_change.vendor);
+
+  alert = sim_alert_new ();
+  alert->type = SIM_ALERT_TYPE_DETECTOR;
+  alert->alarm = FALSE;
+
+  if (config->sensor.ip)
+    alert->sensor = g_strdup (config->sensor.ip);
+  if (config->sensor.interface)
+    alert->interface = g_strdup (config->sensor.interface);
+  if (strptime (command->data.host_mac_change.date, "%Y-%m-%d %H:%M:%S", &tm))
+    alert->time =  mktime (&tm);
+  else
+    alert->time = time (NULL);
+
+  alert->plugin_id = command->data.host_mac_change.plugin_id;
+  alert->plugin_sid = command->data.host_mac_change.plugin_sid;
+  alert->src_ia = ia;
+
+  alert->data = g_strdup_printf ("%s|%s --> %s|%s", mac, (vendor) ? vendor : "",
+				 command->data.host_mac_change.mac,
+				 (command->data.host_mac_change.vendor) ? command->data.host_mac_change.vendor : "");
+
+  sim_container_push_alert (sim_ctn, alert);
+
+  g_free (mac);
+  if (vendor) g_free (vendor);
+}
 
 /*
  *
@@ -957,8 +1140,8 @@ sim_session_read (SimSession  *session)
 	  g_message ("Recived error %d (closing socket)", error);
 	  break;
 	}
-      g_message ("READ: %s", buffer);
 
+      g_message ("READ: %s", buffer);
 
       cmd = sim_command_new_from_buffer (buffer);
 
@@ -1034,6 +1217,12 @@ sim_session_read (SimSession  *session)
 	  break;
 	case SIM_COMMAND_TYPE_RELOAD_ALL:
 	  sim_session_cmd_reload_all (session, cmd);
+	  break;
+	case SIM_COMMAND_TYPE_HOST_OS_CHANGE:
+	  sim_session_cmd_host_os_change (session, cmd);
+	  break;
+	case SIM_COMMAND_TYPE_HOST_MAC_CHANGE:
+	  sim_session_cmd_host_mac_change (session, cmd);
 	  break;
 	case SIM_COMMAND_TYPE_OK:
 	  sim_session_cmd_ok (session, cmd);
@@ -1150,4 +1339,28 @@ sim_session_has_plugin_id (SimSession     *session,
     }
 
   return found;
+}
+
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_session_reload (SimSession     *session)
+{
+  GList  *list;
+  list = session->_priv->plugin_states;
+  while (list)
+    {
+      SimPluginState  *plugin_state = (SimPluginState *) list->data;
+      gint plugin_id = sim_plugin_state_get_plugin_id (plugin_state);
+
+      SimPlugin *plugin = sim_container_get_plugin_by_id (sim_ctn, plugin_id);
+
+      sim_plugin_state_set_plugin (plugin_state, plugin);
+
+      list = list->next;
+    }
 }

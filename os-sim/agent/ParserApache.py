@@ -56,7 +56,7 @@ class ParserApache(Parser.Parser):
                 result = re.findall(str(pattern), line)
                 try: 
                     (source, user, authuser, day, monthmmm, year, hour,
-                     minute, second, request, result, size) = result[0]
+                     minute, second, request, code, size) = result[0]
 
                     datestring = "%s %s %s %s %s %s" % \
                         (year, monthmmm, day, hour, minute, second)
@@ -66,12 +66,12 @@ class ParserApache(Parser.Parser):
                                                        "%Y %b %d %H %M %S"))
 
                     # TODO: adjust priority depending of the result ?
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],
                                      plugin_id  = self.plugin["id"],
-                                     plugin_sid = result,
+                                     plugin_sid = code,
                                      priority   = 1,
                                      protocol   = 'TCP',
                                      src_ip     = source,

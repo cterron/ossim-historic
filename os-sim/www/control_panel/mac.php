@@ -18,7 +18,7 @@ if (!$order = $_GET["order"]) $order = "ip";
 if (!$offset = intval($_GET["offset"])){ $offset = 0;}
 if (!$count = intval($_GET["count"])){ $count = 50;}
 
-$args = "ORDER BY $order LIMIT $count OFFSET $offset ";
+$args = "ORDER BY $order LIMIT $offset,$count ";
 
 ?>
 <ul>
@@ -49,7 +49,7 @@ intval($offset); ?>&count=<?php echo $count ?>&order=<?php
 <th>Previous Vendor</th>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
 intval($offset); ?>&count=<?php echo $count ?>&order=<?php
-            echo ossim_db::get_order("mac_time", $order);
+            echo ossim_db::get_order("date", $order);
           ?>">When</a></th></tr>
 
 
@@ -60,20 +60,12 @@ if ($host_mac_list = Host_mac::get_list($conn, $args)) {
 <tr>
 <?php
         $ip = $host_mac->get_ip();
-        $mac_time = $host_mac->get_mac_time();
+        $date = $host_mac->get_date();
         $mac = $host_mac->get_mac();
+        $mac_vendor = $host_mac->get_vendor();
         $anom = $host_mac->get_anom();
-        if(ereg("\|",$mac)){
-            list($mac, $mac_vendor) = split ("\|", $mac, 2);
-        } else {
-        $mac_vendor = "Unknown";
-        }
         $previous = $host_mac->get_previous();
-        if(ereg("\|",$previous)){
-            list($previous, $previous_vendor) = split ("\|", $previous, 2);
-        } else {
         $previous_vendor = "Unknown";
-        }
 if($anom){
         ?>
 <th><font color="red"><?php echo Host::ip2hostname($conn, $ip);?></font></th>
@@ -86,7 +78,7 @@ if($anom){
 ?>
 <td><?php echo $mac;?></td>
 <td><?php echo $mac_vendor;?></td><td><?php echo $previous?></td>
-<td><?php echo $previous_vendor;?></td><td><?php echo $mac_time;?></tr>
+<td><?php echo $previous_vendor;?></td><td><?php echo $date;?></tr>
 <?php
     }
 }

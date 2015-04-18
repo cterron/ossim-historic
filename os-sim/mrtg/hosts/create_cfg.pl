@@ -13,13 +13,16 @@ my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
-my $query = "SELECT host_ip FROM host_qualification;";
+my $query = "SELECT distinct hq.host_ip 
+    FROM host_qualification hq, net_host_reference n, host h 
+    WHERE hq.host_ip = n.host_ip or hq.host_ip = h.ip;";
+#my $query = "select h.host_ip from host_qualification h, net_host_reference n where h.host_ip = n.host_ip";
 my $sth = $dbh->prepare($query);
 $sth->execute();
 if ($sth->rows > 0) {
     while (my $row = $sth->fetchrow_hashref)
     {
-        my $host_ip = $row->{host_ip};
+        my $host_ip = $row->{"host_ip"};
 
         print CFG <<"EOF";
 

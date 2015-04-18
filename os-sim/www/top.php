@@ -11,6 +11,9 @@
 <?php
     require_once ('ossim_conf.inc');
     $conf = new ossim_conf();
+
+    $ntop_link = $conf->get_conf("ntop_link");
+    $sensor = parse_url($ntop_link);
 ?>
 
   <table align="center" border="0">
@@ -64,13 +67,13 @@
     if ($_GET["menu"] == "monitors") {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=monitors" 
-           title="monitors"><font color="#991e1e">Monitors</font>&nbsp;<img
+           title="Monitors"><font color="#991e1e">Monitors</font>&nbsp;<img
            border="0" src="pixmaps/arrow.gif"/></a>]
 <?php
     } else {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=monitors" 
-           title="Reports">Monitors&nbsp;<img border="0"
+           title="Monitors">Monitors&nbsp;<img border="0"
            src="pixmaps/arrow2.gif"/></a>]
 <?php
     }
@@ -126,7 +129,7 @@
            title="OSSIM Control Panel - Alarm Console"
            target="main">Alarms</a>]
         [<a href="<?php 
-           echo $conf->get_conf("acid_link"); ?>" 
+           echo $conf->get_conf("acid_link") . "/acid_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"; ?>" 
            title="(ACID)" 
            target="main">Alerts</a>]
         [<a href="vulnmeter/index.php" title="OSSIM vulnmeter" 
@@ -158,14 +161,16 @@
 ?>
         [<a href="report/report.php" title="host report" 
            target="main">Host Report</a>]
+        [<a href="sec_report/index.php" title="security report" 
+           target="main">Security Report</a>]
 
 <?php
     } elseif ($_GET["menu"] == "monitors") {
 ?>
-        [<a href="ntop/session.php"
+        [<a href="ntop/session.php?sensor=<?php echo $sensor["host"] ?>"
            title="(NTOP - Active TCP Sessions)" 
            target="main">Session</a>]
-        [<a href="ntop/index.php" 
+        [<a href="ntop/index.php?sensor=<?php echo $sensor["host"] ?>" 
            title="(NTOP)" 
            target="main">Network</a>]
         [<a href="<?php 

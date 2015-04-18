@@ -19,11 +19,15 @@
         echo "<p align=\"center\">Unknown plugin id</p>";
         exit();
     }
+
+    $title = $_GET["name"] . " ($id)";
     
     require_once 'classes/Plugin_sid.inc';
     require_once 'classes/Classification.inc';
     require_once 'classes/Category.inc';
 ?>
+
+    <h2><?php echo $title ?></h2>
 
     <table align="center">
       <tr>

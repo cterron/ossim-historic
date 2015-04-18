@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
+
   <h1>Modify RRD Config</h1>
     
   <h3>Hints</h3>
@@ -15,112 +15,129 @@
   <li> Priority: Resulting impact if threshold is being exceeded.
   <li> Alpha: Intercept adaption parameter.
   <li> Beta: Slope adaption parameter.
-  <li> Persistence: How long has this event to last before we alert. (Hours)
+  <li> Persistence: How long has this event to last before we alert. (20 mins)
   </ul>
 
+
 <?php
-    require_once 'classes/RRD_conf.inc';
-    require_once 'classes/RRD_conf_global.inc';
-    require_once 'classes/RRD_data.inc';
+    require_once 'classes/RRD_config.inc';
     require_once 'classes/Host.inc';
     require_once 'ossim_db.inc';
+
+  
+    if (!$order = $_GET["order"]) $order = "rrd_attrib";
+    
+    $ip = $_REQUEST["ip"];
+
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$ip = mysql_escape_string($_GET["ip"])) {
-        echo "<p>Wrong ip</p>";
-        exit;
-    }
 
-    $global = 0;
-
-    if($ip == "global"){
-    $global = 1;
-        if($rrd_list = RRD_conf_global::get_list($conn, "")) {
-            $rrd = $rrd_list[0];
+    if (($_POST["ip"]) && ($_POST["insert"])) 
+    {
+        $rrd_list = RRD_Config::get_list($conn, 
+            "WHERE ip = inet_aton('$ip')");
+        
+        if ($rrd_list) 
+        {
+            foreach ($rrd_list as $rrd) 
+            {
+                $attrib = $rrd->get_rrd_attrib();
+            
+                if (isset($_POST["$attrib#rrd_attrib"]))
+                {
+                    RRD_Config::update ($conn, 
+                                        $_POST["ip"], 
+                                        $_POST["$attrib#rrd_attrib"], 
+                                        $_POST["$attrib#threshold"], 
+                                        $_POST["$attrib#priority"], 
+                                        $_POST["$attrib#alpha"], 
+                                        $_POST["$attrib#beta"], 
+                                        $_POST["$attrib#persistence"]);
+                }
+            }
         }
-    } else {
-        if ($rrd_list = RRD_conf::get_list($conn, "WHERE ip = '$ip'")) {
-            $rrd = $rrd_list[0];
-        }
     }
+    
+    /* 
+     * title: 
+     *  ip -> hostname | 0.0.0.0 -> GLOBAL
+     */
+    $host = Host::ip2hostname($conn, $ip);
+    echo "<h2>";
+    if (!strcmp($host, "0.0.0.0")) echo "GLOBAL";
+    else echo $host;
+    echo "</h2>";
 
+    
+    $rrd_list = RRD_Config::get_list($conn, 
+        "WHERE ip = inet_aton('$ip') ORDER BY $order");    
+    
     $db->close($conn);
 ?>
 
-<form method="post" action="modify_rrd_conf.php">
-<table align="center">
-  <input type="hidden" name="insert" value="insert">
-  <tr>
-    <th>IP</th>
-    <?php 
-    if($global){
-    ?>
-     <input type="hidden" name="ip" value="global">
-    <th class="center">
-      <font color="blue"><b>Global</b></font>
-    <?php
-    } else {
-    ?>
-        <input type="hidden" name="ip" 
-               value="<?php echo $rrd->get_ip(); ?>">
-    <th class="center">
-     <font color="blue"><b><?php echo Host::ip2hostname($conn,$ip);?></b></font>
-<?php } ?>
-    </th>
-  </tr>
-  <tr>
-  <th>Modify</th><th> Threshold / Priority / Alpha / Beta / Persistence</th>
-  </tr>
-    <?php
-    if($global) {
-        $count_values = count($rrd_values_global);
-        $count_names = count($rrd_names_global);
-        if($count_values != $count_names){
-            print "Consistency check failed, please check RRD_data.inc\n";
-            exit;
-        }
-        $temp_values = &$rrd_values_global;
-        $temp_names = &$rrd_names_global;
-    } else {
-        $count_values = count($rrd_values);
-        $count_names = count($rrd_names);
-        if($count_values != $count_names){
-            print "Consistency check failed, please check RRD_data.inc\n";
-            exit;
-        }
-        $temp_values = &$rrd_values;
-        $temp_names = &$rrd_names;
-    }
-    foreach($temp_names as $key => $value) {
-    ?>
+  <table align="center">
     <tr>
-    <th><?php print $value?></th>
-    <td class="center">
-
-      <input type="text" name="<?php echo $key?>_threshold" size="5" 
-             value="<?php echo $rrd->get_col($key, "threshold");?>">
-      <input type="text" name="<?php echo $key?>_priority" size="5" 
-             value="<?php echo $rrd->get_col($key, "priority");?>">
-      <input type="text" name="<?php echo $key?>_alpha" size="5" 
-             value="<?php echo $rrd->get_col($key, "alpha"); ?>">
-      <input type="text" name="<?php echo $key?>_beta" size="5" 
-             value="<?php echo $rrd->get_col($key, "beta"); ?>">
-      <input type="text" name="<?php echo $key?>_persistence" size="5" 
-             value="<?php echo $rrd->get_col($key, "persistence"); ?>">
-    </td>
-  </tr>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("rrd_attrib", $order); ?>&ip=<?php
+                echo $ip ?>">Attribute</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("threshold", $order); ?>&ip=<?php
+                echo $ip ?>">Threshold</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("priority", $order); ?>&ip=<?php
+                echo $ip ?>">Priority</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("alpha", $order); ?>&ip=<?php
+                echo $ip ?>">Alpha</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("beta", $order); ?>&ip=<?php
+                echo $ip ?>">Beta</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("persistence", $order); ?>&ip=<?php
+                echo $ip ?>">Persistence</a></th>
+      <td></td>
+    </tr>
+      <form method="post" action="<?php echo $_SERVER["PHP_SELF"]?>">
+        <input type="hidden" name="insert" value="1" />
+        <input type="hidden" name="ip" value="<?php echo $ip ?>"/>
 <?php
+    if ($rrd_list) {
+        foreach ($rrd_list as $rrd) {
+
+            $rrd_attrib     = $rrd->get_rrd_attrib();
+            $threshold      = $rrd->get_threshold();
+            $priority       = $rrd->get_priority();
+            $alpha          = $rrd->get_alpha();
+            $beta           = $rrd->get_beta();
+            $persistence    = $rrd->get_persistence();
+?>
+    <tr>
+        <td bgcolor="#eeeeee"><?php echo $rrd->get_rrd_attrib(); ?></td>
+        <input type="hidden" name="<?php echo $rrd_attrib ?>#rrd_attrib" 
+            value="<?php echo $rrd_attrib ?>"/>
+        <td><input type="text" name="<?php echo $rrd_attrib ?>#threshold" 
+            size="8" value="<?php echo $threshold ?>"/></td>
+        <td><input type="text" name="<?php echo $rrd_attrib ?>#priority" 
+            size="2" value="<?php echo $priority ?>"/></td>
+        <td><input type="text" name="<?php echo $rrd_attrib ?>#alpha" 
+            size="8" value="<?php echo $alpha ?>"/></td>
+        <td><input type="text" name="<?php echo $rrd_attrib ?>#beta" 
+            size="8" value="<?php echo $beta ?>"/></td>
+        <td><input type="text" name="<?php echo $rrd_attrib ?>#persistence" 
+            size="2" value="<?php echo $persistence ?>"/></td>
+    </tr>
+<?php
+        }
     }
-    ?>
-   <tr>
-    <td colspan="2" align="center">
-      <input type="submit" value="OK">
-      <input type="reset" value="reset">
-    </td>
-  </tr>
-</table>
-</form>
+?>
+    <tr>
+        <td colspan="6"><input type="submit" value="Modify"/></td>
+    </tr>
+    </form>
+  </table>
+
 
 </body>
 </html>
+

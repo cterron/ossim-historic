@@ -19,64 +19,62 @@
 </ul>
 
 <?php
-require_once 'classes/RRD_conf.inc';
-require_once 'classes/RRD_data.inc';
+    require_once 'classes/RRD_config.inc';
+    require_once 'ossim_db.inc';
+
+    $db = new ossim_db();
+    $conn = $db->connect();
 ?>
-<?php $DEFAULT_THRESHOLD = 100 ?>
-<?php $DEFAULT_PRIORITY = 5 ?>
-<?php $DEFAULT_ALPHA = 0.1 ?>
-<?php $DEFAULT_BETA = 0.0035 ?>
-<?php $DEFAULT_PERSISTENCE = 4 ?>
 
-<form method="post" action="new_rrd_conf.php">
-<table align="center">
-  <input type="hidden" name="insert" value="insert">
-  <tr>
-    <th>IP</th>
-    <th class="center">
-        <input type="text" name="ip">
-    </th>
-  </tr>
-    <tr>
-    <th>Modify</th><th> Threshold / Priority / Alpha / Beta / Persistence</th>
-    </tr>
-    <?php
-    $count_values = count($rrd_values);
-    $count_names = count($rrd_names);
-    if($count_values != $count_names){
-    print "Consistency check failed, please check RRD_data.inc\n";
-    exit;
-    }
-    foreach($rrd_names as $key => $value) {
-    ?>
-    <tr>
-    <th><?php print $value?></th>
-    <td class="center">
-
-      <input type="text" name="<?php echo $key?>_threshold" size="5" 
-             value="<?php echo $DEFAULT_THRESHOLD ?>">
-      <input type="text" name="<?php echo $key?>_priority" size="5" 
-             value="<?php echo $DEFAULT_PRIORITY ?>">
-      <input type="text" name="<?php echo $key?>_alpha" size="5" 
-             value="<?php echo $DEFAULT_ALPHA ?>">
-      <input type="text" name="<?php echo $key?>_beta" size="5" 
-             value="<?php echo $DEFAULT_BETA ?>">
-      <input type="text" name="<?php echo $key?>_persistence" size="5" 
-             value="<?php echo $DEFAULT_PERSISTENCE ?>">
-
-    </td>
-  </tr>
+    <form method="post" action="new_rrd_conf.php">
+    
+    <table align="center">
+      <tr><th>Ip</th></tr>
+      <tr><td><input type="text" name="ip"></td></tr>
+    </table>
+    <br/>
+    <table align="center">
+    
 <?php
+
+    if ($rrd_global_list = RRD_Config::get_list($conn, "WHERE ip = 0"))
+    {
+        foreach ($rrd_global_list as $global)
+        {
+            $attrib         = $global->get_rrd_attrib();
+            $threshold      = $global->get_threshold();
+            $priority       = $global->get_priority();
+            $alpha          = $global->get_alpha();
+            $beta           = $global->get_beta();
+            $persistence    = $global->get_persistence();
+?>
+      <tr>
+        <th><?php echo $attrib ?></th>
+        <input type="hidden" name="<?php echo $attrib ?>#rrd_attrib"
+            value="<?php echo $attrib ?>"/>
+        <td><input type="text" name="<?php echo $attrib ?>#threshold"
+            size="8" value="<?php echo $threshold ?>"></td>
+        <td><input type="text" name="<?php echo $attrib ?>#priority"
+            size="2" value="<?php echo $priority ?>"/></td>
+        <td><input type="text" name="<?php echo $attrib ?>#alpha"
+            size="8" value="<?php echo $alpha ?>"/></td>
+        <td><input type="text" name="<?php echo $attrib ?>#beta"
+            size="8" value="<?php echo $beta ?>"/></td>
+        <td><input type="text" name="<?php echo $attrib ?>#persistence"
+            size="2" value="<?php echo $persistence ?>"/></td>
+      </tr>
+<?php
+        }
     }
-    ?>
-  <tr>
-    <td colspan="2" align="center">
-      <input type="submit" value="OK">
-      <input type="reset" value="reset">
-    </td>
-  </tr>
-</table>
-</form>
+    
+    $db->close($conn);
+?>
+
+      <tr>
+        <td colspan="6"><input type="submit" value="Insert"/></td>
+      </tr>
+    </table>
+    </form>
 
 </body>
 </html>

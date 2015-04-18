@@ -74,11 +74,9 @@ $conn = $db->connect();
 <form action="handle_anomaly.php" method="GET">
 <?php
 require_once 'ossim_db.inc';
-require_once 'classes/RRD_conf_global.inc';
-require_once 'classes/RRD_conf.inc';
+require_once 'classes/RRD_config.inc';
 require_once 'classes/RRD_anomaly.inc';
 require_once 'classes/RRD_anomaly_global.inc';
-require_once 'classes/RRD_data.inc';
 
 $db = new ossim_db();
 $conn = $db->connect();
@@ -101,7 +99,7 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "order by anomaly_time desc")) {
     foreach($alert_list_global as $alert) {
     $ip = "Global";
-    if($rrd_list_temp = RRD_conf_global::get_list($conn, "")) {
+    if($rrd_list_temp = RRD_config::get_list($conn, "WHERE ip = 0")) {
     $rrd_temp = $rrd_list_temp[0];
     }
     if(($alert->get_count() / $perl_interval) <
@@ -140,8 +138,10 @@ if ($alert_list = RRD_anomaly::get_list($conn, $where_clause, "order by
 anomaly_time desc")) {
     foreach($alert_list as $alert) {
     $ip = $alert->get_ip();
-    if($rrd_list_temp = RRD_conf::get_list($conn, "where ip = '$ip'")) {
-    $rrd_temp = $rrd_list_temp[0];
+    if($rrd_list_temp = RRD_config::get_list($conn, 
+                                             "where ip = inet_ntoa('$ip')"))
+    {
+        $rrd_temp = $rrd_list_temp[0];
     }
     if(($alert->get_count() / $perl_interval) < ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
     continue;
@@ -257,7 +257,7 @@ $encoded;?>"></input>
 if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1 and mac != previous", "")) {
     foreach($host_mac_list as $host_mac) {
     $ip = $host_mac->get_ip();
-    $mac_time = $host_mac->get_mac_time();
+    $date = $host_mac->get_date();
     $mac = $host_mac->get_mac();
     if(ereg("\|",$mac)){
     $mac = ereg_replace("\|", " or ", $mac);
@@ -277,7 +277,7 @@ echo $ip;?>">
 </th>
 <td colspan="1"><font color="red"><?php echo $mac;?></font></td>
 <td colspan="1"><?php echo $previous;?></td>
-<td colspan="1"><?php echo $mac_time;?></td>
+<td colspan="1"><?php echo $date;?></td>
 <td>
 <?php $encoded = base64_encode("ack" . $mac);?>
 <input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo

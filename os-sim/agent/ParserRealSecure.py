@@ -1852,7 +1852,7 @@ class ParserRealSecure(Parser.Parser):
                         icmp_code, src_port, dst_port) = result[0]
                         sid = ParserRealSecure.eventEntryNames.index(name) + 1
 
-                        self.agent.sendMessage(type = 'detector',
+                        self.agent.sendAlert  (type = 'detector',
                                          date       = date,
                                          sensor     = self.plugin["sensor"],
                                          interface  = self.plugin["interface"],

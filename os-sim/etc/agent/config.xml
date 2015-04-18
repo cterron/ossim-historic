@@ -3,15 +3,16 @@
 <config>
 
     <!--
-        NOTE: atribute name of each plugin is the name of the running
+        NOTE: atribute process of each plugin is the name of the running
         proccess (needed in order to obtain pid, kill it, etc...)
-        Soon to be changed
     -->
 
 
     <!-- Ip and port number where the ossim server is listening -->
     <serverip>localhost</serverip>
     <serverport>40001</serverport>
+    <watchdog enable="yes" interval="30"/>
+    <logdir>/var/log/ossim</logdir>
 
     <plugins>
 
@@ -21,7 +22,7 @@
              enable snort fast logging adding this line to the snort.conf:
                output alert_fast: fast.log 
         -->
-        <plugin id="1001" name="snort" type="detector" start="yes" enable="yes">
+        <plugin id="1001" process="snort" type="detector" start="yes" enable="yes">
             <startup>/etc/init.d/snort restart</startup>
             <shutdown>/etc/init.d/snort stop</shutdown>
             <source>fast</source>
@@ -35,7 +36,7 @@
              location must point to an apache access log
              (for example: /var/log/apache/access.log)
         -->
-        <plugin id="1501" name="apache" type="detector" start="yes" enable="no">
+        <plugin id="1501" process="apache" type="detector" start="yes" enable="no">
             <startup>/etc/init.d/apache restart</startup>
             <shutdown>/etc/init.d/apache stop</shutdown>
             <source>common</source>
@@ -45,7 +46,7 @@
         </plugin>
 
         <!-- IIS detector -->
-        <plugin id="1502" name="iis" type="detector" start="no" enable="no">
+        <plugin id="1502" process="iis" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
@@ -55,7 +56,7 @@
         </plugin>
 
         <!-- iptables detector -->
-        <plugin id="1503" name="iptables" type="detector" start="no" enable="no">
+        <plugin id="1503" process="iptables" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
@@ -68,7 +69,7 @@
              FireWall-1 detector 
              source = syslog | opsec
         -->
-        <plugin id="1504" name="fw-1" type="detector" start="no" enable="no">
+        <plugin id="1504" process="fw-1" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
@@ -78,9 +79,9 @@
         </plugin>
  
         <!-- Real Secure detector -->
-        <plugin id="1506" name="realsecure" type="detector" start="no" enable="no">
-            <startup></startup>
-            <shutdown></shutdown>
+        <plugin id="1506" process="realsecure" type="detector" start="no" enable="no">
+            <startup>snmptrapd -o /var/log/realsecure.log -m ISS-MIB</startup>
+            <shutdown>killall -9 snmptrapd</shutdown>
             <source>snmp</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -88,7 +89,7 @@
         </plugin>
 
         <!-- RRD threshold and anomaly detector -->
-        <plugin id="1507" name="rrd_plugin.pl" type="detector" start="yes" enable="yes">
+        <plugin id="1507" process="rrd_plugin.pl" type="detector" start="yes" enable="yes">
             <startup>/usr/share/ossim/scripts/rrd_plugin.pl &amp;</startup>
             <shutdown>killall rrd_plugin.pl</shutdown>
             <source>rrd_plugin</source>
@@ -98,20 +99,20 @@
         </plugin>
         
         <!-- C & A detector -->
-        <plugin id="1509" name="mysqld" type="detector" start="yes" enable="yes">
+        <plugin id="1509" process="mysqld" type="detector" start="yes" enable="yes">
             <startup></startup>
             <shutdown></shutdown>
             <source>database</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
-            <location>mysql:localhost:ossim:youruser:yourpass</location>
+            <location>mysql:localhost:ossim:root:yourpassword</location>
             <frequency>300</frequency>
         </plugin>
         
         <!-- Cisco routers detector -->
-        <plugin id="1510" name="cisco" type="detector" start="no" enable="no">
-            <startup></startup>
-            <shutdown></shutdown>
+        <plugin id="1510" process="cisco" type="detector" start="no" enable="no">
+            <startup>/sbin/syslogd -r -m 0</startup>
+            <shutdown>killall -9 syslogd</shutdown>
             <source>common</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -123,9 +124,9 @@
              You must run p0f this way:
              p0f -i $interface -lNtd -o /var/log/p0f.log
         -->
-        <plugin id="1511" name="p0f" type="detector" start="yes" enable="yes">
+        <plugin id="1511" process="p0f" type="detector" start="yes" enable="yes">
             <startup>p0f -i eth0 -lNtd -o /var/log/p0f.log</startup>
-            <shutdown>killall p0f</shutdown>
+            <shutdown>killall -9 p0f</shutdown>
             <source>syslog</source>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
@@ -138,7 +139,7 @@
              arpwatch -d -i $interface -f /var/log/arp.dat >> \
                 /var/log/arpwatch.log
         -->
-        <plugin id="1512" name="arpwatch" type="detector" start="yes" enable="yes">
+        <plugin id="1512" process="arpwatch" type="detector" start="yes" enable="yes">
             <startup>arpwatch -d -i eth0 -f /var/log/arp.dat >> /var/log/arpwatch.log &amp;</startup>
             <shutdown>killall arpwatch</shutdown>
             <source>syslog</source>
@@ -153,7 +154,7 @@
              (for example: 127.0.0.1:3000)
              frequency: if server make a request, get ntop info every N seconds
         -->
-        <plugin id="2005" name="ntop" type="monitor" start="yes" enable="yes">
+        <plugin id="2005" process="ntop" type="monitor" start="yes" enable="yes">
             <startup>/etc/init.d/ntop restart</startup>
             <shutdown>/etc/init.d/ntop stop</shutdown>
             <source>socket</source>
@@ -167,11 +168,25 @@
             C & A monitor
             location must be: database:host:db:user:pass 
         -->
-        <plugin id="2001" name="mysqld" type="monitor" start="yes" enable="yes">
+        <plugin id="2001" process="mysqld" type="monitor" start="yes" enable="yes">
             <startup></startup>
             <shutdown></shutdown>
             <source>database</source>
-            <location>mysql:host:database:user:password</location>
+            <location>mysql:localhost:ossim:root:yourpassword</location>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <frequency>20</frequency>
+        </plugin>
+        
+        <!--
+            OpenNMS monitor
+            location must be: database:host:db:user:pass 
+        -->
+        <plugin id="2004" process="opennms" type="monitor" start="no" enable="no">
+            <startup></startup>
+            <shutdown></shutdown>
+            <source>database</source>
+            <location>pgsql:127.0.0.1:opennms:postgres:</location>
             <interface>eth0</interface>
             <sensor>127.0.0.1</sensor>
             <frequency>20</frequency>

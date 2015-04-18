@@ -95,6 +95,13 @@ class ParserRRD(Parser.Parser):
                 'totContactedRcvdPeers':'73',
                 'totContactedSentPeers':'74',
                 'udpRcvdLoc':           '75',
+                'synPktsSent':          '76',
+                'synPktsRcvd':          '77',
+                'totContactedSentPeers':'78',
+                'totContactedRcvdPeers':'79',
+                'web_sessions':         '80',
+                'mail_sessions':        '81',
+                'nb_sessions':          '82',
             },
     }
 
@@ -159,7 +166,7 @@ class ParserRRD(Parser.Parser):
                     date = time.strftime('%Y-%m-%d %H:%M:%S', 
                                          time.localtime(float(time_alert)))
 
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = interface,

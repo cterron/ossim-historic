@@ -12,16 +12,16 @@
 <?php
     /* check params */
     if ((mysql_escape_string($_POST["insert"])) &&
-        (!mysql_escape_string($_POST["sourcenips"]) ||
-        !mysql_escape_string($_POST["destnips"]) ||
-         !mysql_escape_string($_POST["sourcengrps"]) ||
-         !mysql_escape_string($_POST["destngrps"]) ||
+        (!(mysql_escape_string($_POST["sourcenips"]) ||
+           mysql_escape_string($_POST["sourcengrps"]))) ||
+        (!(mysql_escape_string($_POST["destnips"]) ||
+           mysql_escape_string($_POST["destngrps"]))) ||
          !mysql_escape_string($_POST["nprts"]) ||
          !mysql_escape_string($_POST["nsens"]) ||
          !mysql_escape_string($_POST["nsigs"]) ||
          !mysql_escape_string($_POST["begin_day"]) ||
          !mysql_escape_string($_POST["end_day"]) ||
-         !mysql_escape_string($_POST["descr"])))
+         !mysql_escape_string($_POST["descr"]))
 {
 ?>
 

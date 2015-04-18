@@ -23,7 +23,7 @@ class ParserP0f(Parser.Parser):
 
         os_hash = {}
 
-        pattern = '<\S+ (\S+) (\S+) (\d+):(\d+):(\d+) (\S+)> (\d+\.\d+\.\d+\.\d+):\d+ - ([^\(]*)'
+        pattern = '<\S+\s+(\S+)\s+(\S+)\s+(\d+):(\d+):(\d+)\s+(\S+)>\s+(\d+\.\d+\.\d+\.\d+):\d+\s+-\s+([^\(]*)'
             
         location = self.plugin["location"]
         try:
@@ -60,17 +60,14 @@ class ParserP0f(Parser.Parser):
                      minute, second, year, source, os) = result[0]
 
                     os = util.normalizeWhitespace(os)
-                    prev = ''
-                    
-                    try:
-                        prev = os_hash[source]
-                    except KeyError:
-                        os_hash[source] = os
+                    prev = os_hash.get(source, '')
 
                     # os change !
                     if os != prev and \
                        (not os.__contains__('UNKNOWN')) and \
                        (not os.__contains__('NMAP')):
+
+                        os_hash[source] = os
 
                         datestring = "%s %s %s %s %s %s" % \
                             (year, monthmmm, day, hour, minute, second)
@@ -79,19 +76,11 @@ class ParserP0f(Parser.Parser):
                                              time.strptime(datestring, 
                                                            "%Y %b %d %H %M %S"))
 
-                        self.agent.sendMessage(type = 'detector',
-                                         date       = date,
-                                         sensor     = self.plugin["sensor"],
-                                         interface  = self.plugin["interface"],
-                                         plugin_id  = self.plugin["id"],
-                                         plugin_sid = 1,
-                                         priority   = 1,
-                                         protocol   = 'TCP',
-                                         src_ip     = source,
-                                         src_port   = '',
-                                         dst_ip     = '',
-                                         dst_port   = '',
-                                         data       = os)
+                        self.agent.sendOsChange (host = source,
+                             os   = os,
+                             date = date,
+                             plugin_id = self.plugin["id"],
+                             plugin_sid = 1)
 
                 except IndexError: 
                     pass

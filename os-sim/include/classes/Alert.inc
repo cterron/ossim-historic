@@ -83,9 +83,9 @@ class Alert {
     function get_asset_dst()        { return $this->asset_dst;      }
     function alarm()                { return $this->alarm;          }
     
-    function get_count($conn) 
+    function get_count($conn, $where = "") 
     {
-        $query = "SELECT count(*) FROM alert WHERE alarm = 1;";
+        $query = "SELECT count(*) FROM alert $where;";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {

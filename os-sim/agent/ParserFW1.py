@@ -75,7 +75,7 @@ class ParserFW1(Parser.Parser):
                     elif action == 'drop' or action == 'deny':
                         plugin_sid = 3
  
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],
@@ -162,7 +162,7 @@ class ParserFW1(Parser.Parser):
                     elif action == 'drop' or action == 'deny':
                         plugin_sid = 3
  
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert  (type = 'detector',
                                      date       = date,
                                      sensor     = originator,
                                      interface  = interface,

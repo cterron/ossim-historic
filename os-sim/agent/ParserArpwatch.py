@@ -75,19 +75,13 @@ class ParserArpwatch(Parser.Parser):
                                       "%A, %B %d, %Y %H:%M:%S")
                     date = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
 
-                    self.agent.sendMessage(type = 'detector',
-                                     date       = date,
-                                     sensor     = self.plugin["sensor"],
-                                     interface  = self.plugin["interface"],
-                                     plugin_id  = self.plugin["id"],
-                                     plugin_sid = 1,
-                                     priority   = 1,
-                                     protocol   = 'TCP',
-                                     src_ip     = ip,
-                                     src_port   = '',
-                                     dst_ip     = '',
-                                     dst_port   = '',
-                                     data       = addr + "|" + vendor)
+                                     
+                    self.agent.sendMacChange (host   = ip,
+                         mac        = addr,
+                         vendor     = vendor,
+                         date       = date,
+                         plugin_id  = self.plugin["id"],
+                         plugin_sid = 1)
 
                     
                 except IndexError:

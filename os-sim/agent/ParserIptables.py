@@ -78,7 +78,7 @@ class ParserIptables(Parser.Parser):
                     elif action == 'DROP' or action == 'DENY':
                         plugin_sid = 3
 
-                    self.agent.sendMessage(type = 'detector',
+                    self.agent.sendAlert  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

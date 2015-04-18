@@ -14,14 +14,14 @@ class Host_os {
         $this->os           = $os;
         $this->previous     = $previous;
         $this->anom         = $anom;
-        $this->date      = $date;
+        $this->date         = $date;
     }
 
     function get_ip()           { return $this->ip; }
     function get_os()           { return $this->os; }
     function get_previous()     { return $this->previous; }
     function get_anom()         { return $this->anom; }
-    function get_date()      { return $this->date; }
+    function get_date()         { return $this->date; }
 
     function get_list($conn, $args = "") 
     {
@@ -78,15 +78,15 @@ class Host_os {
         } else {
             $os = $rs->fields["os"];
             if (preg_match('/win/i', $os)) {
-                echo "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
+                return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
             } elseif (preg_match('/linux/i', $os)) {
-                echo "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
+                return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
             } elseif (preg_match('/bsd/i', $os)) {
-                echo "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
+                return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
             } elseif (preg_match('/mac/i', $os)) {
-                echo "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
+                return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
             } elseif (preg_match('/sun|solaris/i', $os)) {
-                echo "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
+                return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
             }
         }
     }
