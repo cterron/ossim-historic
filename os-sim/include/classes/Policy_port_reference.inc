@@ -16,6 +16,7 @@ class Policy_port_reference {
     
     function get_list($conn, $policy_id) 
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_port_reference 
                     WHERE policy_id = $policy_id";
         if (!$rs = &$conn->Execute($query)) {
@@ -51,6 +52,7 @@ class Policy_port_reference {
 
     function in_policy_port_reference($conn, $policy_id, $port_group_name)
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_port_reference 
                     WHERE policy_id = $policy_id AND 
                           port_group_name = '$port_group_name';";
@@ -74,6 +76,7 @@ class Policy_port_reference {
 */
 
     function delete($conn, $policy_id) {
+        $policy_id = intval($policy_id);
         $query = "DELETE FROM policy_port_reference 
                     WHERE policy_id = $policy_id;";
         if ($conn->Execute($query) === false) {

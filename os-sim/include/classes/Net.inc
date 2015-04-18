@@ -58,6 +58,10 @@ class Net {
     function insert($conn, $name, $ips, $priority, $threshold_c, 
                     $threshold_a, $descr)
     {
+        settype($priority, "int");
+        settype($threshold_c, "int");
+        settype($threshold_a, "int");
+
         $query = "INSERT INTO net VALUES 
             ('$name', '$ips', $priority, $threshold_c,
              $threshold_a, '$descr');";
@@ -66,8 +70,7 @@ class Net {
             exit;
         }
         $ips_sane = escapeshellcmd($ips);
-        $ip_string = shell_exec("nmap -n -sL $ips_sane | grep Host | cut -f 2
-        -d \" \" ");   
+        $ip_string = shell_exec("nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \" ");   
         $ip_list = explode("\n", $ip_string);
         $lala = array_pop($ip_list);
         

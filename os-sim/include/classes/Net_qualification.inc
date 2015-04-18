@@ -35,6 +35,9 @@ class Net_qualification {
 
     function insert($conn, $net_name, $compromise, $attack)
     {
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "INSERT INTO net_qualification VALUES 
             ('$net_name', $compromise, $attack);";
         if ($conn->Execute($query) === false) {
@@ -45,6 +48,9 @@ class Net_qualification {
 
     function update($conn, $net_name, $compromise, $attack)
     {
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "UPDATE net_qualification SET net_name = '$net_name', 
             compromise = $compromise, attack = $attack WHERE net_name =
             '$net_name';";

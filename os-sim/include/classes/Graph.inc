@@ -32,6 +32,8 @@ class Graph {
 
     function get_link_list($conn, $graph_id) 
     {
+        $graph_id = intval($graph_id);
+
         $query = "SELECT DISTINCT l.source, l.dest, l.occurrences
             FROM link l, graph g WHERE g.id = $graph_id AND
             (g.ip = l.source or g.ip = l.dest) ORDER BY l.occurrences desc;";

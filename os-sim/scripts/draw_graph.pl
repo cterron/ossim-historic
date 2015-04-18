@@ -145,7 +145,8 @@ my ($prints,$xs,$ys)=RRDs::graph $tempname, "-s", $start, "-e", $end,
     "-t", "$hostname $what level",
     "--font", "TITLE:12:$arial",
     "--font", "AXIS:7:$arial",
-    "HRULE:$threshold#adbada", "--no-minor", "-X", "2", "-l", "0","-r",
+    # -X argument == multiple of 3...
+    "HRULE:$threshold#adbada", "--no-minor", "-X", "3", "-l", "0","-r",
     "--zoom", "$zoom";
 
 my $ERR=RRDs::error;

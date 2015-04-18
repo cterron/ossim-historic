@@ -62,8 +62,11 @@ class Host_qualification {
 
     function insert($conn, $host_ip, $compromise, $attack)
         {
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "INSERT INTO host_qualification VALUES 
-            ($host_ip, $compromise, $attack);";
+            ('$host_ip', $compromise, $attack);";
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -72,6 +75,9 @@ class Host_qualification {
 
     function update($conn, $host_ip, $compromise, $attack)
     {
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "UPDATE host_qualification SET host_ip = '$host_ip', 
             compromise = $compromise, attack = $attack WHERE host_ip =
             '$host_ip';";

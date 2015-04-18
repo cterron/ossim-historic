@@ -1,5 +1,27 @@
 # ChangeLog for OSSIM
 
+    12 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Releasing 0.4-alpha.
+
+    11 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Lots of installation corrections, hopefully now it is a little bit
+    * easier to install.  
+
+    10 Sep 2003 DK <dk@ipsoluciones.com> :
+    * More SQL. PHP should be almost fixed, now let´s look after perl & C.
+    * Added persistence to RRD events.
+    * Started using persistence at check_rrd & chech_rrd_global.
+    * Started using persistence at control panel. Hosts || global only show up
+    * if event lasts at least $persistence hours.
+    * Added a little help at rrd_conf
+    * Fixed a small bug in draw_graph.pl. Perhaps a rrdtool bug ?
+    * Control panel is now able to display all rrd anomalies.
+
+    09 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Fixed some more SQL injection. Huge number to fix. Thx Frame.
+
+* OSSIM-0.3.1 (08 Sep 2003)
+
     08 Sep 2003 DK <dk@ipsoluciones.com> :
     * Fixed a lot of SQL injection. Still more to fix, sure.
     * Silly parser bug fixed.
@@ -7,6 +29,7 @@
     * Control panel changes.
     * P0f integration fixed.
     * Visual modifications.
+    * Releasing 0.3.1-alpha since important changes have been made.
 
     05 Sep 2003 DK <dk@ipsoluciones.com> :
     * Corrected buffer overflow.

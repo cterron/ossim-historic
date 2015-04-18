@@ -16,6 +16,8 @@ class Policy_sig_reference {
     
     function get_list($conn, $policy_id) 
     {
+        $policy_id = intval($policy_id);
+
         $query = "SELECT * FROM policy_sig_reference 
                     WHERE policy_id = $policy_id";
         if (!$rs = &$conn->Execute($query)) {
@@ -33,6 +35,8 @@ class Policy_sig_reference {
 
     function in_policy_sig_reference($conn, $policy_id, $sig_group_name)
     {
+        $policy_id = intval($policy_id);
+
         $query = "SELECT * FROM policy_sig_reference 
                     WHERE policy_id = $policy_id AND 
                           sig_group_name='$sig_group_name';";
@@ -73,6 +77,8 @@ class Policy_sig_reference {
 */
 
     function delete($conn, $policy_id) {
+        $policy_id = intval($policy_id);
+
         $query = "DELETE FROM policy_sig_reference 
                     WHERE policy_id = $policy_id;";
         if ($conn->Execute($query) === false) {

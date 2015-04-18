@@ -55,6 +55,7 @@ case "$1" in
         killall -KILL os.pl
         killall -KILL check_rrd.pl
         killall -KILL check_rrd_global.pl
+        killall -KILL p0f
 
 
 	    # Wait until the timeout

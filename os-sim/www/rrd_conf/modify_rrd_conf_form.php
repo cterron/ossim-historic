@@ -9,6 +9,15 @@
                                                                                 
   <h1>OSSIM Framework</h1>
   <h2>Modify RRD Config</h2>
+    
+  <h3>Hints</h3>
+  <ul>
+  <li> Threshold: Absolute value above which is being alerted.
+  <li> Priority: Resulting impact if threshold is being exceeded.
+  <li> Alpha: Intercept adaption parameter.
+  <li> Beta: Slope adaption parameter.
+  <li> Persistence: How long has this event to last before we alert. (Hours)
+  </ul>
 
 <?php
     require_once 'classes/RRD_conf.inc';
@@ -62,7 +71,7 @@
     </th>
   </tr>
   <tr>
-  <th>Modify</th><th> Threshold / Priority / Alpha / Beta</th>
+  <th>Modify</th><th> Threshold / Priority / Alpha / Beta / Persistence</th>
   </tr>
     <?php
     if($global) {
@@ -98,6 +107,8 @@
              value="<?php echo $rrd->get_col($key, "alpha"); ?>">
       <input type="text" name="<?php echo $key?>_beta" size="5" 
              value="<?php echo $rrd->get_col($key, "beta"); ?>">
+      <input type="text" name="<?php echo $key?>_persistence" size="5" 
+             value="<?php echo $rrd->get_col($key, "persistence"); ?>">
     </td>
   </tr>
 <?php

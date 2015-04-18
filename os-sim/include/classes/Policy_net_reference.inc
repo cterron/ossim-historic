@@ -19,6 +19,7 @@ class Policy_net_reference {
     
     function get_list($conn, $policy_id, $direction) 
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_net_reference 
                     WHERE policy_id = $policy_id AND direction = '$direction'";
         if (!$rs = &$conn->Execute($query)) {
@@ -54,6 +55,7 @@ class Policy_net_reference {
 
     function in_policy_net_reference($conn, $policy_id, $net_name, $direction)
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_net_reference 
                     WHERE policy_id = $policy_id and net_name = '$net_name'
                     and direction = '$direction';";
@@ -77,6 +79,7 @@ class Policy_net_reference {
 */
 
     function delete($conn, $policy_id) {
+        $policy_id = intval($policy_id);
         $query = "DELETE FROM policy_net_reference 
                     WHERE policy_id = $policy_id;";
         if ($conn->Execute($query) === false) {

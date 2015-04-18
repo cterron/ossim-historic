@@ -44,6 +44,12 @@ class Conf {
     function insert($conn, $recovery, $threshold, $graph_threshold,
                     $bar_length_left, $bar_length_right)
     {
+        settype($recovery, "int");
+        settype($threshold, "int");
+        settype($graph_threshold, "int");
+        settype($bar_length_left, "int");
+        settype($bar_length_right, "int");
+
         $query = "INSERT INTO conf VALUES ('$recovery', '$theshold',
         '$graph_threshold', '$bar_length_left', '$bar_length_right');" ;
 
@@ -56,6 +62,12 @@ class Conf {
     function update($conn, $recovery, $threshold, $graph_threshold,
                     $bar_length_left, $bar_length_right)
     {
+        settype($recovery, "int");
+        settype($threshold, "int");
+        settype($graph_threshold, "int");
+        settype($bar_length_left, "int");
+        settype($bar_length_right, "int");
+
         $query = "UPDATE conf SET recovery='$recovery',
                     graph_threshold='$graph_threshold', 
                     threshold='$threshold', 

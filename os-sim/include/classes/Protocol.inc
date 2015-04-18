@@ -38,6 +38,8 @@ class Protocol {
 
     function insert($conn, $id, $name, $alias, $descr)
     {
+        settype($id, "int");
+
         $query = "INSERT INTO protocol VALUES 
             (NULL, $id, '$name', '$alias', '$descr');";
         if ($conn->Execute($query) === false) {
@@ -48,6 +50,8 @@ class Protocol {
 
     function update($conn, $id, $name, $alias, $descr)
     {
+        settype($id, "int");
+
         $query = "UPDATE protocol SET id = $id, name = '$name', 
             alias = '$alias', descr = '$descr' WHERE id = $id;";
         if ($conn->Execute($query) === false) {
@@ -57,6 +61,8 @@ class Protocol {
     }
 
     function delete($conn, $id) {
+        settype($id, "int");
+
         $query = "DELETE FROM protocol WHERE id = $id;";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';

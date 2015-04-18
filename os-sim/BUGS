@@ -3,3 +3,55 @@
 - Networks. Network modification (adding ips).
 - Riskmeter. Why do some networks disappear ?
 - SQL Injection; validate input.
+
+
+- Why ?:
+
+(gdb) c
+Continuing.
+dest_port: 139
+Failed to make query (select distinct p.priority from     policy p,
+policy_host_reference phs, policy_host_reference phd,
+policy_port_reference pp, policy_sig_reference ps,
+signature_group_reference sg, port_group_reference pg  where (phs.host_ip =
+'192.168.0.2' and phs.direction = 'source') and        (phd.host_ip =
+'192.168.1.2' and phd.direction = 'dest') and        (pp.port_group_name =
+pg.port_group_name and         (pg.port_number = 139 or pg.port_number = 0)
+and         (pg.protocol_name = 'TCP')) and        (ps.sig_group_name =
+sg.sig_group_name and sg.sig_name = 'netbios') and        (p.id =
+phs.policy_id) and        (p.id = phd.policy_id) and        (p.id =
+pp.policy_id) and        (p.id = ps.policy_id) ) union (select distinct
+p.priority from     policy p, policy_net_reference pns, policy_net_reference
+pnd,     policy_port_reference pp, policy_sig_reference ps,
+signature_group_reference sg, port_group_reference pg,     net_host_reference
+nh  where        (pns.net_name = nh.net_name and         nh.host_ip =
+'192.168.0.2' and pns.direction = 'source') and        (pnd.net_name =
+nh.net_name and         nh.host_ip = '192.168.1.2' and pnd.direction = 'dest')
+and        (pp.port_group_name = pg.port_group_name and
+(pg.port_number = 139 or pg.port_number = 0) and         (pg.protocol_name =
+'TCP')) and        (ps.sig_group_name = sg.sig_group_name and sg.sig_name =
+'netbios') and        (p.id = pns.policy_id) and        (p.id = pnd.policy_id)
+and        (p.id = pp.policy_id) and        (p.id = ps.policy_id) );
+You have an error in your SQL syntax near '(select distinct p.priority from
+policy p, policy_host_reference phs, policy' at line 1
+Failed to make query (select distinct p.priority from     policy p,
+policy_host_reference phs, policy_host_reference phd,
+policy_port_reference pp, port_group_reference pg  where        (phd.host_ip =
+'192.168.1.2' and phd.direction = 'dest') and        (pp.port_group_name =
+pg.port_group_name and         (pg.port_number = 139 or pg.port_number = 0)
+and         (pg.protocol_name = 'TCP')) and        (p.id = phs.policy_id) and
+(p.id = phd.policy_id) and        (p.id = pp.policy_id) ) union (select
+distinct p.priority from     policy p, policy_net_reference pns,
+policy_net_reference pnd,     policy_port_reference pp, port_group_reference
+pg,     net_host_reference nh  where        (pnd.net_name = nh.net_name and
+nh.host_ip = '192.168.1.2' and pnd.direction = 'dest') and
+(pp.port_group_name = pg.port_group_name and         (pg.port_number = 139 or
+pg.port_number = 0) and         (pg.protocol_name = 'TCP')) and        (p.id =
+pns.policy_id) and        (p.id = pnd.policy_id) and        (p.id =
+pp.policy_id) );
+You have an error in your SQL syntax near '(select distinct p.priority from
+policy p, policy_host_reference phs, policy' at line 1
+
+Breakpoint 1, 0x4205a2b8 in printf () from /lib/i686/libc.so.6
+(gdb) 
+

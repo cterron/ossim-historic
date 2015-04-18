@@ -9,7 +9,9 @@ use ossim_conf;
 
 $| = 1;
 
-my $SLEEP=1800;
+# Define also at www/control_panel/index.php so stats are displayed correctly.
+#my $SLEEP=1800; 
+my $SLEEP=900;  # 1/4 hour
 
 my $interface = $ossim_conf::ossim_data->{"ossim_interface"};
 my $rrdpath_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};
@@ -59,7 +61,7 @@ my %rrd_values_global = ("active_host_senders_num" => ["activeHostSendersNum"],
 
 
 sub is_over_threshold {
-my ($rrd, $real_threshold, $start, $end) = @_;
+my ($rrd, $real_threshold, $persistence, $start, $end) = @_;
 my $type = "ntop";
 my $what = "MAX";
 my $res;
@@ -87,9 +89,28 @@ if(stat($file)) {
         my $sth = $dbh->prepare($query);
         $sth->execute();
         }
-   }
-}
-}
+   } # Over threshold
+   else { # Reset without taking persistence into account.
+    my $query = "SELECT * FROM rrd_anomalies_global where what = '$rrd' and acked = 0;";
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    if (my $row = $sth->fetchrow_hashref) {
+        my $count = $row->{count};
+        if($count < $persistence) {
+            $query = "DELETE from rrd_anomalies_global where what = '$rrd' and acked = 0;";
+            my $sth = $dbh->prepare($query);
+            $sth->execute();
+            } # if count < persistence
+            else {
+            $count += 1;
+            $query = "UPDATE rrd_anomalies_global set count = $count where what = '$rrd' and acked = 0;";
+            my $sth = $dbh->prepare($query);
+            $sth->execute();
+            } # ifelse count < persistence
+    } # If rows
+   } # Else
+} # stat file
+} # sub
 
 
 
@@ -104,8 +125,8 @@ while(1){
        my $element;
 
        foreach $val (keys %rrd_values_global){
-            if($row->{$val} =~ m/^(.*),(.*),(.*),(.*)$/){ 
-            is_over_threshold ($val,$1, "N-1H", "N" );
+            if($row->{$val} =~ m/^(.*),(.*),(.*),(.*),(.*)$/){ 
+            is_over_threshold ($val,$1,$5, "N-1H", "N" );
             }
         }
     }

@@ -38,6 +38,8 @@ class Port {
 
     function insert($conn, $port_number, $protocol_name, $service, $descr)
     {
+        settype($port_number, "int");
+
         $query = "INSERT INTO port VALUES 
             (NULL, $port_number, '$protocol_name', '$service', '$descr');";
         if ($conn->Execute($query) === false) {
@@ -48,6 +50,8 @@ class Port {
 
     function update($conn, $por_number, $protocol_name, $sevice, $descr)
     {
+        settype($port_number, "int");
+
         $query = "UPDATE port SET port_number = $port_number, protocol_name =
         '$protocol_name', service = '$service', descr = '$descr' WHERE
         port_number = $port_number AND protocol_name = '$protocol_name';";
@@ -58,6 +62,8 @@ class Port {
     }
 
     function delete($conn, $port_number, $protocol_name) {
+        settype($port_number, "int");
+
         $query = "DELETE FROM port WHERE port_number = $port_number AND
         protocol_name = '$protocol_name';";
         if ($conn->Execute($query) === false) {

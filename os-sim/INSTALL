@@ -44,7 +44,8 @@ After that:
 - Edit /etc/snort.conf so it logs both to mysql & syslog.
 - Add an apache alias pointing to os-sim's www directory
 - Add another apache alias pointing to acid and re-edit /etc/ossim.conf.
-- Obtain arial.ttf and put it somewhere visible to ossim. Adjust /etc/ossim.conf.
+- Obtain arial.ttf and put it somewhere visible to ossim. Adjust
+  /etc/ossim.conf and make sure rrdtool can find its default font.
 - copy $ossim_home/etc/mrtg*.cfg to /etc and edit
 - put contrib/mrtg.tgz stuff where the crontab entry can find it (launch-mrtg)
 - After patching mrtg adding the HWPREDICT line that appears in CONFIG write
@@ -68,3 +69,42 @@ Note2: Make sure everything is fine at /etc/ossim.conf...
 
 Please post any suggestions, help requests, etc. to the lists and forums
 provided by sourceforge.
+
+
+--- Important notes when installing on separate machines --- (incomplete)
+
+Using the following setup:
+
+host-1=ntop,snort
+host-2=core,mysql,acid
+host-3=opennms,pgsql
+
+Do the following, besides everything mentioned above and in CONFIG.
+
+Host-1
+------
+- Copy ossim.conf 
+- Copy ossim_conf.pm and make it available to @perl
+- Install experimental rrdtool 
+- Patch ntop
+- Recompile ntop
+- Install p0f
+- Install mysql headers
+- Install perl DBI && DBD,
+- Copy os.pl
+- Copy check_rrd*.pl
+- Copy get_rrd_value.pl
+- Make sure ossim.conf points to correct ntop_rrd, base_dir, etc..
+- Edit etc/init.d/ossim, remove those you don't need, add ntop & snort.
+
+Host-2
+------
+- Install framework on host-2
+- Install experimental rrdtool on host-2
+- Install mrtg
+- Patch mrtg
+
+
+Host-3
+------
+- Nothing special as of today; opennms not integrated yet. Just install it.

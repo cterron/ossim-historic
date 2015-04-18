@@ -79,12 +79,13 @@ class RRD_conf {
             return -1;
         }
         
-        list($threshold, $priority, $alpha, $beta) = split (",", $col_val, 4);
+        list($threshold, $priority, $alpha, $beta, $persistence) = split (",", $col_val, 5);
             
         if ($type == "threshold") return $threshold;
         if ($type == "priority")  return $priority;
         if ($type == "alpha")     return $alpha;
         if ($type == "beta")      return $beta;
+        if ($type == "persistence")      return $persistence;
 
     }
 

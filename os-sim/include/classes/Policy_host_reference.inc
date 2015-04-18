@@ -19,6 +19,7 @@ class Policy_host_reference {
     
     function get_list($conn, $policy_id, $direction) 
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_host_reference 
                     WHERE policy_id = $policy_id 
                     AND direction = '$direction';";
@@ -55,6 +56,7 @@ class Policy_host_reference {
 
     function in_policy_host_reference($conn, $policy_id, $host_ip, $direction)
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_host_reference 
                     WHERE policy_id = $policy_id and host_ip = '$host_ip' and
                     direction = '$direction';";
@@ -79,6 +81,7 @@ class Policy_host_reference {
 
     function delete($conn, $policy_id) 
     {
+        $policy_id = intval($policy_id);
         $query = "DELETE FROM policy_host_reference 
                     WHERE policy_id = $policy_id;";
         if ($conn->Execute($query) === false) {

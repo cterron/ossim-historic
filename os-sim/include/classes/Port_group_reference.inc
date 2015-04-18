@@ -48,6 +48,8 @@ class Port_group_reference {
             $port_number = $port_array[0];
             $protocol_name = $port_array[1];
 
+            settype($port_number, "int");
+
             $query = "INSERT INTO port_group_reference VALUES 
                 ('$port_group_name', $port_number, '$protocol_name');";
             if ($conn->Execute($query) === false) {
@@ -69,6 +71,8 @@ class Port_group_reference {
     function in_port_group_reference($conn, $port_group_name, $port_number,
                                      $protocol_name)
     {
+        settype($port_number, "int");
+
         $query = "SELECT * FROM port_group_reference WHERE
             port_group_name = '$port_group_name' AND 
             port_number = $port_number AND protocol_name = '$protocol_name';";

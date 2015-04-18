@@ -9,13 +9,17 @@ use ossim_conf;
 
 $| = 1;
 
-my $SLEEP=1800;
+# Define also at www/control_panel/index.php so stats are displayed correctly.
+# my $SLEEP=1800;
+my $SLEEP=900;  # 1/4 hour
 
+# Some vars
 my $interface = $ossim_conf::ossim_data->{"ossim_interface"};
 my $rrdpath_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};
 my $rrdpath = $rrdpath_ntop . "/interfaces/" . $interface . "/hosts/";
 my $rrdpath_global = $rrdpath_ntop . "/interfaces/" . $interface . "/";
 
+# Setup DB connection
 my $dsn = 'dbi:mysql:'.$ossim_conf::ossim_data->{"ossim_base"}.':'.$ossim_conf::ossim_data->{"ossim_host"}.':'.  $ossim_conf::ossim_data->{"ossim_port"};
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) or 
     die "Can't connect to DBI\n";
@@ -37,7 +41,7 @@ my %rrd_values=
     "mrtg_c" => ["pktSent"]); 
 
 sub is_over_threshold {
-my ($real_ip, $rrd, $real_threshold, $start, $end) = @_;
+my ($real_ip, $rrd, $real_threshold, $persistence, $start, $end) = @_;
 my $type = "ntop";
 my $what = "MAX";
 my $res;
@@ -47,7 +51,8 @@ my $time = localtime;
 my $real_rrd = $rrd_values{$rrd}[0];
 
 my $file = $rrdpath . $real_ip . "/" . $real_rrd . ".rrd";
-if(stat($file)) {
+
+if(stat($file)) { # at least the file exists
     $res = `$execute $start $end $file $type $what`;
     if($res > $real_threshold){
     syslog('auth.info','RRD_anomaly: host: %s what: %s ', $real_ip, $rrd);
@@ -64,10 +69,30 @@ if(stat($file)) {
         $query = "INSERT INTO rrd_anomalies(ip, what, count, anomaly_time, range, over, acked) VALUES('$real_ip', '$rrd', 1, '$time', 'day', $res - $real_threshold, 0);";
         my $sth = $dbh->prepare($query);
         $sth->execute();
-        }
-   }
-}
-}
+        } # already there 'else'
+    } # Over threshold
+    else { # Reset without taking persistence into account.
+        my $query = "SELECT * FROM rrd_anomalies where what = '$rrd' and ip = '$real_ip' and acked = 0;";
+        my $sth = $dbh->prepare($query);
+        $sth->execute();
+            if (my $row = $sth->fetchrow_hashref) {
+            my $count = $row->{count};
+                if($count < $persistence) {
+                $query = "DELETE from rrd_anomalies where what = '$rrd' and acked = 0 and ip = '$real_ip';";
+                my $sth = $dbh->prepare($query);
+                $sth->execute();
+                } # if count < persistence
+                else {
+                $count += 1;
+                $query = "UPDATE rrd_anomalies set count = $count where ip = '$real_ip' and what = '$rrd' and acked = 0;";
+                my $sth = $dbh->prepare($query);
+                $sth->execute();
+                } # elseif count < persistence
+            } # If rows
+        } # Else
+    } # stat file
+} # sub
+
 
 
 
@@ -83,8 +108,8 @@ while(1){
        my $element;
 
        foreach $val (keys %rrd_values){
-            if($row->{$val} =~ m/^(.*),(.*),(.*),(.*)$/){ 
-            is_over_threshold ($ip, $val,$1, "N-1H", "N" );
+            if($row->{$val} =~ m/^(.*),(.*),(.*),(.*),(.*)$/){ 
+            is_over_threshold ($ip, $val,$1,$5, "N-1H", "N" );
             }
         }
     }

@@ -42,5 +42,6 @@
 + Ips aren't substitued with Hostnames in Control Panel
 - Don't open a mysql connection every time you insert a fw-1 alert.
 - Only get MAX|MIN|AVG rrd values for top 5 control-panel hosts.
+- Use intval() to escape integers (instead of settype()). Fix SQL injection.
 
 - Much much more...

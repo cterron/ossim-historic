@@ -59,7 +59,7 @@ if($id_list)
     <td align="center">
       <table align="center" width="100%">
 <?php
-    
+    settype($id, "int");    
     $graph_list = Graph::get_list($conn, "WHERE id = $id");
 if($graph_list)
     foreach ($graph_list as $graph) {

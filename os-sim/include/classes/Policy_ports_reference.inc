@@ -34,6 +34,8 @@ class Policy_ports_reference {
 
     function insert($conn, $policy_id, $port_number, $port_protocol)
     {
+        $policy_id = intval($policy_id);
+        $port_number = intval($port_number);
         $query = "INSERT INTO policy_ports_reference VALUES 
             ($policy_id, $port_number, '$port_protocol');";
         if ($conn->Execute($query) === false) {
@@ -44,7 +46,10 @@ class Policy_ports_reference {
 
     function update($conn, $policy_id, $port_number, $port_protocol)
     {
-        $query = "UPDATE policy_ports_reference SET policy_id = policy_id, 
+        $policy_id = intval($policy_id);
+        $port_number = intval($port_number);
+
+        $query = "UPDATE policy_ports_reference SET policy_id = $policy_id, 
             port_number = $port_number, port_protocol = '$port_protocol' WHERE policy_id =
             $policy_id AND port_number = $port_number AND port_protocol = '$protocol';";
         if ($conn->Execute($query) === false) {
@@ -54,6 +59,9 @@ class Policy_ports_reference {
     }
 
     function delete($conn, $policy_id, $port_number, $port_protocol) {
+        $policy_id = intval($policy_id);
+        $port_number = intval($port_number);
+
         $query = "DELETE FROM policy_ports_reference WHERE policy_id =
         $policy_id AND port_number = $port_number AND port_protocol =
         '$port_protocol';";

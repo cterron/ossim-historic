@@ -22,11 +22,14 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$id = mysql_escape_string($_GET["id"])) {
+
+    if (!$id = $_GET["id"]) {
         echo "<p>Wrong policy id</p>";
         exit;
     }
 
+    settype($id, "int");
+    
     if ($policy_list = Policy::get_list($conn, "WHERE id = $id")) {
         $policy = $policy_list[0];
     }

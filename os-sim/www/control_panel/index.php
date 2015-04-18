@@ -60,16 +60,16 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
     <tr><td colspan="8">
 <?php
         if ($range == 'day') {
-            $image1 = "$graph_link?ip=global&what=attack&start=N-24h&end=N&type=global&zoom=0.85";
-            $image2 = "$graph_link?ip=global&what=compromise&start=N-24h&end=N&type=global&zoom=0.85";
+            $image2 = "$graph_link?ip=global&what=attack&start=N-24h&end=N&type=global&zoom=0.85";
+            $image1 = "$graph_link?ip=global&what=compromise&start=N-24h&end=N&type=global&zoom=0.85";
             $start = "N-1D";
         } elseif ($range == 'month') {
-            $image1 = "$graph_link?ip=global&what=attack&start=N-1M&end=N&type=global&zoom=0.85";
-            $image2 = "$graph_link?ip=global&what=compromise&start=N-1M&end=N&type=global&zoom=0.85";
+            $image2 = "$graph_link?ip=global&what=attack&start=N-1M&end=N&type=global&zoom=0.85";
+            $image1 = "$graph_link?ip=global&what=compromise&start=N-1M&end=N&type=global&zoom=0.85";
             $start = "N-1M";
         } elseif ($range == 'year') {
-            $image1 = "$graph_link?ip=global&what=attack&start=N-1Y&end=N&type=global&zoom=0.85";
-            $image2 = "$graph_link?ip=global&what=compromise&start=N-1Y&end=N&type=global&zoom=0.85";
+            $image2 = "$graph_link?ip=global&what=attack&start=N-1Y&end=N&type=global&zoom=0.85";
+            $image1 = "$graph_link?ip=global&what=compromise&start=N-1Y&end=N&type=global&zoom=0.85";
             $start = "N-1Y";
         }
 ?>
@@ -401,6 +401,9 @@ switch ($_GET["acked"]){
     $where_clause = "where acked = 1";
     break;
 }
+
+$perl_interval = 4; // Global perl is being executed every 15 minutes
+
 if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "order by anomaly_time desc")) {
     foreach($alert_list_global as $alert) {
@@ -408,7 +411,10 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
     if($rrd_list_temp = RRD_conf_global::get_list($conn, "")) {
     $rrd_temp = $rrd_list_temp[0];
     }
-
+    if(($alert->get_count() / $perl_interval) <
+    ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
+    continue;
+    }
 ?>
 <tr>
 <th> 
@@ -417,7 +423,7 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "$ntop_link/plugins/rrdPlugin?action=list&key=interfaces/eth0&title=interface%20eth0";?>" target="_blank"> 
 <?php echo $ip;?></A> </th><td> <?php echo $rrd_names_global[$alert->get_what()];?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
-<td> <?php echo ($alert->get_count())/2;?> </td>
+<td> <?php echo ($alert->get_count())/$perl_interval;?> </td>
 <td><font color="red"><?php echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
 echo $alert->get_what();?>"></input></td>
@@ -435,6 +441,8 @@ echo $alert->get_what();?>"></input></td>
 <th align="center">Delete</th>
 </tr>
 <?php
+
+$perl_interval = 4; // Host perl is being executed every 15 minutes
 if ($alert_list = RRD_anomaly::get_list($conn, $where_clause, "order by
 anomaly_time desc")) {
     foreach($alert_list as $alert) {
@@ -442,6 +450,10 @@ anomaly_time desc")) {
     if($rrd_list_temp = RRD_conf::get_list($conn, "where ip = '$ip'")) {
     $rrd_temp = $rrd_list_temp[0];
     }
+    if(($alert->get_count() / $perl_interval) < ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
+    continue;
+    }
+
 
 ?>
 <tr>
@@ -450,7 +462,7 @@ anomaly_time desc")) {
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $rrd_names[$alert->get_what()];?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
-<td> <?php echo ($alert->get_count())/2;?> </td>
+<td> <?php echo ($alert->get_count())/$perl_interval;?> </td>
 <td><font color="red"><?php echo ($alert->get_over()/$rrd_temp->get_col($alert->get_what(),"threshold"))*100;?>%</font>/<?php echo $alert->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
 echo $alert->get_what();?>"></input></td>

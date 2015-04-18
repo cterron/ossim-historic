@@ -68,6 +68,8 @@ class Policy {
                     $net_source_list, $net_dest_list, 
                     $port_list, $sig_list, $sensor_list)
     {
+        $priority = intval($priority);
+
         $query = "INSERT INTO policy VALUES 
           (NULL, $priority, '$descr');";
         if ($conn->Execute($query) === false) {
@@ -97,6 +99,7 @@ class Policy {
                     $net_source_list, $net_dest_list,
                     $port_list, $sig_list, $sensor_list)
     {
+        $id = intval($id);
 
 
         Policy::delete($conn, $id);
@@ -107,6 +110,8 @@ class Policy {
     }
 
     function delete($conn, $id) {
+        $id = intval($id);
+
         $query = "DELETE FROM policy WHERE id = $id;";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';

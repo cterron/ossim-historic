@@ -39,6 +39,10 @@ class Host_position {
 
     function insert($conn, $ip, $x, $y, $z)
     {
+        $x = intval($x);
+        $y = intval($y);
+        $z = intval($z);
+
         $query = "INSERT INTO host_position VALUES ('$ip', $x, $y, $z);";
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
@@ -48,6 +52,10 @@ class Host_position {
 
     function update($conn, $ip, $x, $y, $z)
     {
+        $x = intval($x);
+        $y = intval($y);
+        $z = intval($z);
+
         $query = "UPDATE host_position SET host_ip = '$ip', 
                     x = $x, y = $y, z = $z WHERE host_ip = '$ip';";
         if ($conn->Execute($query) === false) {

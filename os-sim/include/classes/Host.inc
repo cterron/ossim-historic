@@ -51,6 +51,10 @@ class Host {
     function insert($conn, $ip, $hostname, $asset, $threshold_c, 
                     $threshold_a, $descr)
     {
+        settype($asset, "int");
+        settype($threshold_c, "int");
+        settype($threshold_a, "int");
+
         $query = "INSERT INTO host VALUES 
             ('$ip', '$hostname', $asset, $threshold_c,
              $threshold_a, '$descr');";
@@ -63,6 +67,10 @@ class Host {
     function update($conn, $ip, $hostname, $asset, $threshold_c, 
                     $threshold_a, $descr)
     {
+        settype($asset, "int");
+        settype($threshold_c, "int");
+        settype($threshold_a, "int");
+
         $query = "UPDATE host SET hostname = '$hostname', 
             ip = '$ip', asset = $asset, 
             threshold_c = $threshold_c, threshold_a = $threshold_a, 

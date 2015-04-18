@@ -16,6 +16,7 @@ class Policy_sensor_reference {
     
     function get_list($conn, $policy_id) 
     {
+        $policy_id = intval($policy_id);
         $query = "SELECT * FROM policy_sensor_reference 
                     WHERE policy_id = $policy_id;";
         if (!$rs = &$conn->Execute($query)) {
@@ -51,10 +52,12 @@ class Policy_sensor_reference {
 
     function in_policy_sensor_reference($conn, $policy_id, $sensor_name)
     {
+        $policy_id = intval($policy_id);
+
         $query = "SELECT * FROM policy_sensor_reference 
                     WHERE policy_id = $policy_id AND 
                           sensor_name='$sensor_name';";
-        echo $query;
+// Debug ? //       echo $query;
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         }
@@ -75,6 +78,8 @@ class Policy_sensor_reference {
 */
 
     function delete($conn, $policy_id) {
+        $policy_id = intval($policy_id);
+
         $query = "DELETE FROM policy_sensor_reference 
                     WHERE policy_id = $policy_id;";
         if ($conn->Execute($query) === false) {

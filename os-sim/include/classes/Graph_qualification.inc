@@ -35,6 +35,10 @@ class Graph_qualification {
 
     function insert($conn, $graph_id, $compromise, $attack)
         {
+        $graph_id = intval($graph_id);
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "INSERT INTO graph_qualification VALUES 
             ($graph_id, $compromise, $attack);";
         if ($conn->Execute($query) === false) {
@@ -45,6 +49,10 @@ class Graph_qualification {
 
     function update($conn, $graph_id, $compromise, $attack)
     {
+        $graph_id = intval($graph_id);
+        $compromise = intval($compromise);
+        $attack = intval($attack);
+
         $query = "UPDATE graph_qualification SET graph_id = '$graph_id', 
             compromise = $compromise, attack = $attack WHERE graph_id =
             '$graph_id';";
@@ -55,6 +63,8 @@ class Graph_qualification {
     }
 
     function delete($conn, $graph_id) {
+        $graph_id = intval($graph_id);
+
         $query = "DELETE FROM graph_qualification 
             WHERE graph_id = '$graph_id';";
         if ($conn->Execute($query) === false) {
