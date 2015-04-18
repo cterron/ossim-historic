@@ -45,18 +45,18 @@ if (!$show_all = $_GET["show_all"]) {
     <table width="100%">
    
        <tr>
-         <td colspan="8"><a href="alarm_console.php">Back to main</a></td>
+         <td colspan="9"><a href="alarm_console.php">Back to main</a></td>
        </tr>
    
        <tr>
         <td></td>
-        <!-- <th>Id</th> -->
+        <th>Id</th>
         <th>Alarm</th>
         <th>Risk</th>
         <th>Date</th>
         <th>Source</th>
         <th>Destination</th>
-        <th>Level</th>
+        <th>Correlation Level</th>
         <th>Action</th>
       </tr>
 
@@ -110,8 +110,9 @@ if (!$show_all = $_GET["show_all"]) {
         <!-- end expand alarms -->
 
         <!-- id & name alert -->
-        <!-- <td><?php echo $aid ?></td> -->
-        <td><?php 
+        <td><?php echo $aid ?></td>
+        <td <?php if ($risk > 1) echo " bgcolor=\"#eeeeee\"" ?>>
+        <?php 
             if (($snort_sid > 0) and ($snort_cid)) {
                 $href = "$acid_link/" . 
                     "acid_qry_alert.php?submit=%230-%28" . 
@@ -133,26 +134,48 @@ if (!$show_all = $_GET["show_all"]) {
         $dst_port = $alarm->get_dst_port();
 
         if ($risk  > 7) {
-            echo "<td bgcolor=\"red\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk</font></a></b></td>";
+            echo "
+            <td bgcolor=\"red\">
+              <b>
+                <a href=\"$href\">
+                  <font color=\"white\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } elseif ($risk > 4) {
-            echo "<td bgcolor=\"orange\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"black\">$risk</font></b></td>";
+            echo "
+            <td bgcolor=\"orange\">
+              <b>
+                <a href=\"$href\">
+                  <font color=\"black\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } elseif ($risk > 2) {
-            echo "<td bgcolor=\"green\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk</font></b></td>";
+            echo "
+            <td bgcolor=\"green\">
+              <b>
+                <a href=\"$href\">
+                  <font color=\"white\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } else {
-            echo "<td><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\">$risk</a></td>";
+            echo "
+            <td><a href=\"$href\">$risk</a></td>
+            ";
         }
 ?>
         <!-- end risk -->
 
-        <td nowrap><?php echo $date ?></td>
+        <td nowrap>
+          <a href="<?php echo get_acid_date_link($date, $src_ip, "ip_src") ?>">
+            <font color="black"><?php echo $date ?></font>
+          </a>
+        </td>
 
 <?php
     $src_link = "../report/index.php?host=$src_ip&section=alerts";
@@ -164,9 +187,9 @@ if (!$show_all = $_GET["show_all"]) {
 
 ?>
         <!-- src & dst hosts -->
-        <td bgcolor="#eeeeee">
+        <td bgcolor="#eeeeee" nowrap>
             <?php echo "<a href=\"$src_link\">$src_name</a>:$src_port $src_img"; ?></td>
-        <td bgcolor="#eeeeee">
+        <td bgcolor="#eeeeee" nowrap>
             <?php echo "<a href=\"$dst_link\">$dst_name</a>:$dst_port $dst_img"; ?></td>
         <!-- src & dst hosts -->
 

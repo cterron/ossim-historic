@@ -2,93 +2,96 @@
 
 # set config file & path to ossim
 
-CONFIG=/etc/ossim/framework/ossim.conf
-OSSIM_PATH=`grep ^base_dir $CONFIG | cut -d= -f 2`
-LOG=`grep ^ossim_log $CONFIG | cut -d= -f 2`
+OSSIM_SERVER=/usr/bin/ossim-server
+OSSIM_AGENT=/usr/share/ossim/agent/ossim-agent
+OSSIM_PANEL=/usr/share/ossim/scripts/control_panel.py
 
 # End of configuration
 
 
-test -x $OSSIM_PATH/src/ossim-server || exit 0
+test -x $OSSIM_SERVER || exit 0
 
 case "$1" in
-     start)
-	echo "Starting Open Source Security Information Management: OSSIM"
+    start)
 
-    # start ossim server
-    cd $OSSIM_PATH/src
-	./ossim-server -d -c /etc/ossim/server/config.xml
+        echo "Starting Open Source Security Information Management: OSSIM"
 
-    # Start agent
-    sleep 5
-    cd $OSSIM_PATH/agent
-    ./ossim-agent -d -c /etc/ossim/agent/config.xml
+        # Start ossim server
+        $OSSIM_SERVER -d -c /etc/ossim/server/config.xml
 
-    # start misc scripts (provisional!)
-    cd $OSSIM_PATH/scripts/
-    nice -n 19 ./control_panel.py -d
+        # Start agent
+        sleep 5
+        $OSSIM_AGENT -d -c /etc/ossim/agent/config.xml
+
+        # Start control panel
+        nice -n 19 $OSSIM_PANEL -d -s 600
     
-	if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
-		echo "OSSIM is up and running!"
-	else
-		exit 0
-	fi
-	echo -n "."
-	;;
+        if [ "`pidof $OSSIM_SERVER`" ] ; then
+            echo "OSSIM is up and running!"
+        else
+            exit 0
+        fi
+        echo -n "."
+        ;;
 
-     stop)
-	echo "Stoping Open Source Security Information Management: OSSIM"
-	if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
+    stop)
+    
+    	echo "Stoping Open Source Security Information Management: OSSIM"
+    	if [ "`pidof $OSSIM_SERVER`" ] ; then
 	
-	    kill -TERM `pidof $OSSIM_PATH/src/ossim-server`
+            kill -TERM `pidof $OSSIM_SERVER`
 
 
+            # Wait until the timeout
+            count=120
+            numdots=0
+            while ([ $count != 0 ]) do
+            let count=$count-1
+            if [ "`pidof $OSSIM_SERVER`" ] ; then
+                echo -n .
+                let numdots=$numdots+1
+                sleep 1
+            else
+                count=0
+            fi
+            done
 
-	    # Wait until the timeout
-	    count=120
-	    numdots=0
-	    while ([ $count != 0 ]) do
-		let count=$count-1
-		if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
-		    echo -n .
-		    let numdots=$numdots+1
-		    sleep 1
-		else
-		    count=0
-		fi
-	    done
 
-	    # If it's not dead yet, kill it.
-
-	    if [ "`pidof $OSSIM_PATH/src/ossim-server`" ] ; then
-		echo " TIMEOUT!"
-		killall -KILL ossim-server
-	    else
-		case $numdots in
-		  0) echo "." ;;
-		  1) echo ;;
-		  *) echo " done" ;;
-		esac
-	    fi
+            # If it's not dead yet, kill it.
+            if [ "`pidof $OSSIM_SERVER`" ] ; then
+                echo " TIMEOUT!"
+                kill -9 `pidof $OSSIM_SERVER`
+            else
+                case $numdots in
+                  0) echo "." ;;
+                  1) echo ;;
+                  *) echo " done" ;;
+                esac
+            fi
 
         
-	else
-	    echo "OSSIM is  not running!";
-	fi
+        else
+            echo "OSSIM is not running!";
+        fi
 
-    # kill agent
-    killall -KILL ossim-agent
-    # kill misc scripts (provisional!)
-    killall -KILL control_panel.py
-	;;
-     restart)
-	$0 stop
-	$0 start
-	;;
-     *)
-	echo 'Usage: $0 {start|stop|restart}'
-	exit 1
-	;;
+        # kill agent
+        killall `basename $OSSIM_AGENT`
+        
+        # kill control panel
+        killall `basename $OSSIM_PANEL`
+        ;;
+    
+    restart)
+
+	    $0 stop
+    	$0 start
+	    ;;
+
+    *)
+        echo 'Usage: $0 {start|stop|restart}'
+        exit 1
+        ;;
 esac
 exit 0
 ;;
+

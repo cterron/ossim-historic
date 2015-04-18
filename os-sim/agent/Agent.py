@@ -2,6 +2,7 @@ import xml.sax
 import socket
 import time
 import sys
+import os
 
 import Config
 import Parser
@@ -49,18 +50,19 @@ class Agent:
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.conn.connect((self.serverIp, self.listenPort))
+            self.conn.connect((self.serverIp, self.listenPort)) 
+            self.sequence = 1
+            self.conn.send('connect id="%s" type="sensor"\n' % (self.sequence))
+            util.debug (__name__,  "Waiting for server...", '->', 'YELLOW')
+            data = self.conn.recv(1024)
         except socket.error, e:
             util.debug (__name__, 
                 'Error connecting to server (' + self.serverIp + \
                 ', ' + str(self.listenPort) + ') ... ' + str(e),
                 '!!', 'RED')
+            os.remove(os.path.join(util.RUN_DIR, 'ossim_agent.pid'))
             sys.exit()
-        
-        self.sequence = 1
-        self.conn.send('connect id="%s" type="sensor"\n' % (self.sequence))
-        util.debug (__name__,  "Waiting for server...", '->', 'YELLOW')
-        data = self.conn.recv(1024)
+
         if data == 'ok id="' + str(self.sequence) + '"\n':
             util.debug (__name__, "Server connected\n", '<-', 'GREEN')
             return self.conn
@@ -146,8 +148,9 @@ class Agent:
 
     def sendAlert(self, type, date, sensor, interface, 
                   plugin_id, plugin_sid, priority, protocol, 
-                  src_ip, src_port, dst_ip, dst_port, data="",
-                  condition="", value=""):
+                  src_ip, src_port, dst_ip, dst_port, 
+                  snort_cid="", snort_sid="",
+                  data="", condition="", value=""):
 
         message = 'alert '
         if type:        message +=  'type="'        + str(type)         + '" '
@@ -163,6 +166,10 @@ class Agent:
         if dst_ip:      message +=  'dst_ip="'      + str(dst_ip)       + '" '
         if dst_port:    message +=  'dst_port="'    + str(dst_port)     + '" '
         if data:        message +=  'data="'        + str(data)         + '" '
+
+        # snort specific
+        if snort_cid:   message +=  'snort_cid="'   + str(snort_cid)    + '" '
+        if snort_sid:   message +=  'snort_sid="'   + str(snort_sid)    + '" '
 
         # Monitors specific
         if condition:   message +=  'condition="'   + str(condition)    + '" '

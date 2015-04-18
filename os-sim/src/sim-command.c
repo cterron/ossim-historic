@@ -124,7 +124,9 @@ typedef enum {
   SIM_COMMAND_SYMBOL_OS,
   SIM_COMMAND_SYMBOL_MAC,
   SIM_COMMAND_SYMBOL_VENDOR,
-  SIM_COMMAND_SYMBOL_DATA
+  SIM_COMMAND_SYMBOL_DATA,
+  SIM_COMMAND_SYMBOL_SNORT_SID,
+  SIM_COMMAND_SYMBOL_SNORT_CID
 } SimCommandSymbolType;
 
 static const struct
@@ -331,7 +333,9 @@ static const struct
   { "condition", SIM_COMMAND_SYMBOL_CONDITION },
   { "value", SIM_COMMAND_SYMBOL_VALUE },
   { "interval", SIM_COMMAND_SYMBOL_INTERVAL },
-  { "data", SIM_COMMAND_SYMBOL_DATA }
+  { "data", SIM_COMMAND_SYMBOL_DATA },
+  { "snort_sid", SIM_COMMAND_SYMBOL_SNORT_SID },
+  { "snort_cid", SIM_COMMAND_SYMBOL_SNORT_CID }
 };
 
 static const struct
@@ -1938,6 +1942,10 @@ sim_command_alert_scan (SimCommand    *command,
   command->data.alert.value = NULL;
   command->data.alert.interval = 0;
 
+  command->data.alert.data = NULL;
+  command->data.alert.snort_sid = 0;
+  command->data.alert.snort_cid = 0;
+
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_ALERT);
   do
     {
@@ -2136,6 +2144,32 @@ sim_command_alert_scan (SimCommand    *command,
 	    }
 
 	  command->data.alert.data = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_SNORT_SID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.snort_sid = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_SNORT_CID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.snort_cid = strtol (scanner->value.v_string, (char **) NULL, 10);
 	  break;
         default:
           break;
@@ -2758,6 +2792,12 @@ sim_command_get_alert (SimCommand     *command)
 
   if (command->data.alert.data)
     alert->data = g_strdup (command->data.alert.data);
+
+  if (command->data.alert.snort_sid)
+    alert->snort_sid = command->data.alert.snort_sid;
+
+  if (command->data.alert.snort_cid)
+    alert->snort_cid = command->data.alert.snort_cid;
 
   if (command->data.alert.priority)
     {

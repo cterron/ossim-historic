@@ -1,10 +1,9 @@
 #!/usr/bin/python2.3
 
-import util, time, os, signal, sys
+import util, time, os, signal, sys, string, errno
 from optparse import OptionParser
 
 from Agent import Agent
-
 
 
 def main():
@@ -14,6 +13,13 @@ def main():
 
     if options.config_file is None:
         options.config_file = util.CONFIG
+
+    # Check if there is already a running instance
+    check_pid()
+
+    # Install a handler for the terminate and hangup signals
+    signal.signal(signal.SIGTERM, terminate)
+    signal.signal(signal.SIGHUP, hangup)
 
     # Init agent and read config
     agent = Agent()
@@ -37,6 +43,24 @@ def main():
         agent.monitor()
         agent.append_plugins()
         agent.parser()
+
+
+# Check if there is already a running instance
+def check_pid():
+
+    if os.path.isfile(os.path.join(util.RUN_DIR, 'ossim_agent.pid')):
+        f = open(os.path.join(util.RUN_DIR, 'ossim_agent.pid'), 'r')
+        pid = string.atoi(string.strip(f.readline()))
+        f.close()
+        util.debug (__name__, 'There is already a running instance ' + \
+                    '(%s)' % (os.path.join(util.RUN_DIR, 'ossim_agent.pid')), 
+                    '**', 'RED')
+        sys.exit(1)
+    else:
+        # Write our process id into the pid file
+        f = open(os.path.join(util.RUN_DIR, 'ossim_agent.pid'), 'w')
+        f.write("%d" % os.getpid())
+        f.close()
 
 
 def parse_options():
@@ -82,6 +106,22 @@ def daemonize():
         print >>sys.stderr, "fork failed: %d (%s)" % (e.errno, e.strerror)
         sys.exit(1)
 
+
+def hangup(sig, params):
+    pass
+
+
+def terminate(sig, params):
+
+    try:
+        # Remove the pid file
+        os.remove(os.path.join(util.RUN_DIR, 'ossim_agent.pid'))
+    except:
+        # Ignore any errors
+        pass
+
+    pid = os.getpid()
+    os.kill(pid, signal.SIGKILL)
 
 
 def waitforever():

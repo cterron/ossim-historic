@@ -16,6 +16,9 @@ class Parser(threading.Thread):
         self.plugin = plugin
         threading.Thread.__init__(self)
 
+    def process(self):
+        pass
+
     def run(self):
     
         if self.plugin["id"] == '1001':

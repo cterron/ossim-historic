@@ -4,7 +4,8 @@ import sys, os, string, re, time
 from optparse import OptionParser
 import MySQLdb
 
-RRD_BIN = "/usr/bin/rrdtool" # overriden if there is an entry at ossim.conf
+RRD_BIN = "/usr/bin/rrdtool"  # overriden if there is an entry at ossim.conf
+SLEEP   = 300                 # overriden by -s command line option
 LOG_DIR = "/var/log/ossim/"
 
 
@@ -26,18 +27,20 @@ def __update(st, type, rrdtool_bin, rrd_path):
 
     for rrd_file in os.listdir(rrd_path):
         
-        rrd_file = os.path.join(rrd_path, rrd_file)
-        rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
+        if rrd_file.rfind(".rrd") != -1:
         
-        rrd_info_day   = get_rrd_value("N-1D", "N", rrdtool_bin, rrd_file)
-        rrd_info_week  = get_rrd_value("N-7D", "N", rrdtool_bin, rrd_file)
-        rrd_info_month = get_rrd_value("N-1M", "N", rrdtool_bin, rrd_file)
-        rrd_info_year  = get_rrd_value("N-1Y", "N", rrdtool_bin, rrd_file)
+            rrd_file = os.path.join(rrd_path, rrd_file)
+            rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
+            
+            rrd_info_day   = get_rrd_value("N-1D", "N", rrdtool_bin, rrd_file)
+            rrd_info_week  = get_rrd_value("N-7D", "N", rrdtool_bin, rrd_file)
+            rrd_info_month = get_rrd_value("N-1M", "N", rrdtool_bin, rrd_file)
+            rrd_info_year  = get_rrd_value("N-1Y", "N", rrdtool_bin, rrd_file)
 
-        __update_db(st, type, rrd_info_day,   rrd_name, 'day')
-        __update_db(st, type, rrd_info_week,  rrd_name, 'week')
-        __update_db(st, type, rrd_info_month, rrd_name, 'month')
-        __update_db(st, type, rrd_info_year,  rrd_name, 'year')
+            __update_db(st, type, rrd_info_day,   rrd_name, 'day')
+            __update_db(st, type, rrd_info_week,  rrd_name, 'week')
+            __update_db(st, type, rrd_info_month, rrd_name, 'month')
+            __update_db(st, type, rrd_info_year,  rrd_name, 'year')
 
 
 # connect to ossim database
@@ -308,7 +311,7 @@ def main():
 
     # seconds between iterations
     if options.sleep is None:
-        options.sleep = 300
+        options.sleep = SLEEP
 
     # read config from framework/ossim.conf
     if options.config_file is not None:

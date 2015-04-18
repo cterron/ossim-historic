@@ -131,7 +131,9 @@ class Alarm {
                 print $conn->ErrorMsg();
             } else {
                 while (!$rs->EOF) {
-                    if (($i++ >= $inf) && ($inf++ <= $sup)) {
+                    $array_backlog_id = array_shift($backlog_ids);
+                    $array_since = array_shift($since);
+                    if (($i++ >= $inf) && ($inf++ < $sup)) {
                     
                         /* check for src & dest ips */
                         $can_insert = 0;
@@ -157,9 +159,9 @@ class Alarm {
                         if ($can_insert) {
                             $list[] = new Alarm (
                                     $alert_id,
-                                    array_shift($backlog_ids),
+                                    $array_backlog_id,
                                     $rs->fields["timestamp"],
-                                    array_shift($since),
+                                    $array_since,
                                     $rs->fields["plugin_id"],
                                     $rs->fields["plugin_sid"],
                                     $rs->fields["protocol"],

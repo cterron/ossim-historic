@@ -2,8 +2,8 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                          Updated May 12, 2004
-                              version 0.9.4
+                          Updated Jun 17, 2004
+                              version 0.9.5p1
                         
                        David Gil <dgil@ossim.net>
                           http://www.ossim.net
@@ -16,14 +16,16 @@
       2.2 Mysql
       2.3 Snort
       2.4 Acid
-      2.5 Ntop
-      2.6 rrdtool
-      2.7 Mrtg
+      2.5 RRDtool
+      2.6 Mrtg
+      2.7 Ntop
       2.8 Nmap + P0f + arpwatch
     3. OSSIM configuration
       3.1 Database
       3.2 Web
       3.3 Acid
+        3.3.1 Cache auto update
+        3.3.2 Acid backups
       3.4 Graphs
       3.5 Server
       3.6 Agents
@@ -68,8 +70,8 @@
   Most packages need to be patched and build from sources. Install the
   following packages:
 
-    - dpkg-dev : Package building tools for Debian  (>= 1.10.19)
-    - fakeroot : Gives a fake root environment      (>= 0.8.5)
+    - dpkg-dev : Package building tools for Debian  (>= 1.10.22)
+    - fakeroot : Gives a fake root environment      (>= 0.9.5)
 
     $ apt-get install dpkg-dev fakeroot
 
@@ -83,10 +85,10 @@
   the OSSIM PHP code.
   
   Install the following packages and their respective dependencies:
-   - apache       : Versatile, high-performance HTTP server         (>= 1.3.29)
-   - php4         : A server-side, HTML-embedded scripting language (>= 4.3.3)
-   - php4-cgi     : A server-side, HTML-embedded scripting language (>= 4.3.3)
-   - libphp-adodb : The 'adodb' database abstraction layer for php  (>= 4.05)
+   - apache       : Versatile, high-performance HTTP server         (>= 1.3.31)
+   - php4         : A server-side, HTML-embedded scripting language (>= 4.3.4)
+   - php4-cgi     : A server-side, HTML-embedded scripting language (>= 4.3.4)
+   - libphp-adodb : The 'adodb' database abstraction layer for php  (>= 4.21)
 
    $ apt-get install apache php4 php4-cgi libphp-adodb
 
@@ -104,8 +106,8 @@
   reasons, we are going to install mysql.
 
   Install the following packages and their respective dependencies:
-   - mysql-server : mysql database server binaries (>= 4.0.16)
-   - mysql-client : mysql database client binaries (>= 4.0.16)
+   - mysql-server : mysql database server binaries (>= 4.0.20)
+   - mysql-client : mysql database client binaries (>= 4.0.20)
 
    $ apt-get install mysql-server mysql-client
 
@@ -131,9 +133,9 @@
   Install the following packages and their respective dependencies
   from sources:
   
-    - snort-mysql : Flexible Network Intrusion Detection System (>= 2.1.1)
+    - snort-mysql : Flexible Network Intrusion Detection System (>= 2.1.2)
   
-    $ apt-get source snort-mysql [-t unstable]
+    $ apt-get source snort-mysql
     
   Patch snort with spade patch that you will find at 
   $OSSIM_PATH/contrib/spade/Spade-XXXXXX.tgz
@@ -145,9 +147,13 @@
     $ vi Makefile <-- edit SNORTBASE variable
     $ make
   
+  Patch snort with the OSSIM patch:
+
+    $ cd snort-X.X.X
+    $ patch -p0 < $OSSIM_PATH/contrib/snort-2.1-ossim.patch
+  
   Compile snort:
   
-    $ cd snort-X.X.X
     $ dpkg-buildpackage -rfakeroot -uc -b
 
   Install debs generated:
@@ -189,10 +195,10 @@
   'output alert_syslog: LOG_AUTH LOG_ALERT' line from the snort configuration
   file.
 
-  Add this line to the config file, so snort will log alerts on fast
-  format (needed by agent).
-  
-    "output alert_fast: fast.log"
+  Add 'logfile' argument to the config file at 'output database' entry, so
+  snort will log alerts on fast format (needed by agent):
+
+    "output database: alert, mysql, user= dbname= host= logfile=fast.log"
 
   Uncomment the following rules:
   
@@ -222,9 +228,9 @@
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies:
-    - php4-mysql       : MySQL module for php4         (>= 4.3.3)
-    - php4-pgsql       : PostgreSQL module for php4    (>= 4.3.3)
-    - php4-gd2         : GD module (with GD2) for php4 (>= 4.3.3)
+    - php4-mysql       : MySQL module for php4         (>= 4.3.4)
+    - php4-pgsql       : PostgreSQL module for php4    (>= 4.3.4)
+    - php4-gd2         : GD module (with GD2) for php4 (>= 4.3.4)
     - libphp-phplot    : The graphic library for php   (>= 4.4.6)
     - libphp-jpgraph   : Object oriented graph library for php4 (>= 1.5.2)
     - wwwconfig-common : Debian web auto configuration (>= 0.0.34)
@@ -233,8 +239,8 @@
 
   Install aditional packages needed by the directive viewer and restart apache:
     
-    - php4-domxml : XMLv2 module for php4 (>= 4.3.3)
-    - php4-xslt   : XSLT module for php4  (>= 4.3.3)
+    - php4-domxml : XMLv2 module for php4 (>= 4.3.4)
+    - php4-xslt   : XSLT module for php4  (>= 4.3.4)
 
     $ apt-get install php4-domxml php4-xslt
 
@@ -264,41 +270,9 @@
   Create acid tables in snort database:
 
     $ cat /usr/share/acidlab/create_acid_tbls_mysql.sql | mysql -u root snort -p
- 
-
-  2.5 Ntop
-  ---------------------------------------------------------------------------
-
-  Install the following packages and their respective dependencies 
-  from sources:
-    - ntop : display network usage in top-like format (>= 3.0rc1)
-
-  Download ntop source code:
-
-    $ apt-get source ntop
-
-  Patch it:
-  
-    $ cd ntop-XXX/
-    $ patch -p0 < $OSSIM_PATH/contrib/ntop/ntop3-ossim.patch
-
-  Build ntop .deb:
-  
-    $ dpkg-buildpackage -rfakeroot -uc -b
-    
-  Install it:
-  
-    $ cd ..
-    $ dpkg -i ntop_XXX.deb
-
-  The ntop daemon should listen at port 3000, and 3001 (ssl).
-
-  Go to 'http://yourhost:3000/ to see Ntop in action. Activate the rrdPlugin
-  at Admin->plugins. Click on Host at Data Dump and specify your
-  netmask at Hosts Filter.
 
 
-  2.6 rrdtool
+  2.5 rrdtool
   ---------------------------------------------------------------------------
   
   The rrdtool libs used by OSSIM are still in a development status. This is
@@ -325,40 +299,17 @@
     $ wget http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/beta/rrdtool-cvs-snap.tar.gz
     $ tar -xvzf rrdtool-cvs-snap.tar.gz
     $ cd rrdtool-XXXX-XX-XX
-    $ export CPPFLAGS="-I/usr/include/libart-2.0 -I/usr/include/freetype2"
-    $ ./configure --prefix=/usr/local/rrdtool-1.1.0
-
-  You will probably have to edit bindings/perl-shared/Makefile.PL in order to
-  compile rrdtool:
-  Change:
-      'depend' => {'RRDs.c' => "../../src/.libs/librrd_private.a"},
-  by:
-      'depend' => {'RRDs.c' => "../../src/.libs/librrd.a"},
-
-  Compile and install:
-  
-    $ make
-    $ make install
+    $ dpkg-buildpackage -rfakeroot -uc -b
+    $ cd ..
+    $ dpkg -i librrd0-dev_1.1.0-1_i386.deb librrd0_1.1.0-1_i386.deb librrdp-perl_1.1.0-1_all.deb librrds-perl_1.1.0-1_i386.deb rrdtool_1.1.0-1_i386.deb
 
 
-  If you have problems compiling rrdtool, you can download a pre-compilate
-  version of these packages at http://www.ossim.net/download/deps/fc1/rpms
-  
-    - cgilib
-    - rrdtool 
-
-  and convert it to debs packages with alien.
-
-    $ alien cgilib... rrdtool... --to-deb
-    $ dpkg -i cgilib... rddtool...
-
-
-  2.7 Mrtg
+  2.6 Mrtg
   ---------------------------------------------------------------------------
     
   Install Mrtg from sources:
   
-    - mrtg : Multi Router Traffic Grapher (>= 2.9.29)
+    - mrtg : Multi Router Traffic Grapher (>= 2.10.13)
 
     $ apt-get source mrtg
     
@@ -377,13 +328,64 @@
     $ dpkg -i mrtg_XXX.deb mrtg-contrib_XXX.deb
 
 
+  2.7 Ntop
+  ---------------------------------------------------------------------------
+
+  Install the following packages and their respective dependencies 
+  from sources:
+    - ntop : display network usage in top-like format (>= 3.0rc1)
+    - libgd-dev: GD Graphics Library (>= 1.8.4)
+
+  Install gd library:
+
+    $ apt-get install libgd-dev
+
+  Download ntop source code:
+
+    $ apt-get source ntop
+
+  Patch it:
+  
+    $ cd ntop-XXX/
+    $ patch -p0 < $OSSIM_PATH/contrib/ntop/ntop3-ossim.patch
+    $ aclocal-1.6
+    $ autoheader
+    $ autoconf
+    $ automake-1.6 --add-missing --gnu
+
+  Edit debian/rules file and remove '--enable-i18n' option from the
+  'configure-stamp-ntop' section.
+
+  Build ntop .deb:
+  
+    $ dpkg-buildpackage -rfakeroot -uc -b
+    
+  Install it:
+  
+    $ cd ..
+    $ dpkg -i ntop_XXX.deb
+
+  The ntop daemon should listen at port 3000, and 3001 (ssl).
+
+  Go to 'http://yourhost:3000/ to see Ntop in action. 
+  
+  Activate the rrdPlugin at Admin->plugins. Click on Host at Data Dump and
+  specify your netmask at Hosts Filter.
+
+  Note: The RRD Files Path should be set to /var/lib/ntop/rrd
+  
+  In order to make ntop to work with ips instead of macs (needed by agent),
+  edit '/etc/default/ntop' file and add "--no-mac" to GETOPT="".
+  
+
+
   2.8 Nmap + P0f + arpwatch
   ---------------------------------------------------------------------------
 
   Install the following packages and their respective dependencies:
     - nmap     : The Network Mapper                     (>= 3.50)
-    - p0f      : Passive OS fingerprinting tool         (>= 2.0.2)
-    - arpwatch : Ethernet/FDDI station activity monitor (>= 2.1all)
+    - p0f      : Passive OS fingerprinting tool         (>= 2.0.3)
+    - arpwatch : Ethernet/FDDI station activity monitor (>= 2.1a11)
   
   If you get this error executing p0f:
 
@@ -476,34 +478,44 @@
   3.3 Acid
   ---------------------------------------------------------------------------
 
-  In order to auto-update the acid cache, edit '/etc/acidlab/acid_conf.php'
-  and set $event_cache_auto_update variable to 0. Copy the script that you
-  will find at contrib directory and placed it into acid directory:
-
-    $ cp $OSSIM_PATH/contrib/acid_update_db.php /usr/share/acidlab/
+  3.3.1 Cache auto update (OPTIONAL)
   
-  Edit framework/ossim.conf and set acid_dir=/usr/share/acidlab/
+      In order to auto-update the acid cache, edit '/etc/acidlab/acid_conf.php'
+      and set $event_cache_auto_update variable to 0.
+      
+      Edit /etc/ossim/framework/ossim.conf and set acid properties:
+      
+        acid_link=/acidlab/
+        acid_dir=/usr/share/acidlab/
+
+        # acid dir with password (htpasswd)?
+        acid_user=ossim
+        acid_pass=ossim
+      
+      Execute the following script, that auto-update the cache:
+       
+        $ $OSSIM_PATH/scripts/acid_cache.pl
   
-  Execute it.
   
+  3.3.2 Acid backups (OPTIONAL)
   
-  In order to make database backups, you must run the script called
-  'backupdb.pl' placed in $OSSIM_PATH/scripts directory.
+      In order to make db backups and clean acid database, you must run the
+      script called 'backupdb.pl' placed in $OSSIM_PATH/scripts directory.
 
-  Create the '/var/lib/ossim/backup' directory and add an entry to your
-  crontab:
+      Create the '/var/lib/ossim/backup' directory and add an entry to your
+      crontab:
 
-    $ crontab -e
-    5 0 * * * $OSSIM_PATH/scripts/backupdb.pl
+        $ crontab -e
+        5 0 * * * $OSSIM_PATH/scripts/backupdb.pl
 
-  Note: the script uses Zlib perl module. Install it:
+      Note: the script uses Zlib perl module. Install it:
 
-    $ cpan
-    cpan> install Compress::Zlib
-    cpan> exit
+        $ cpan
+        cpan> install Compress::Zlib
+        cpan> exit
 
-  And you must include the $OSSIM_PATH/include/ossim_conf.pm in any place 
-  where Perl can find it.
+      And you must include the $OSSIM_PATH/include/ossim_conf.pm in any place 
+      where Perl can find it.
 
 
   3.4 Graphs
@@ -525,22 +537,14 @@
   Edit /etc/ossim/framework/mrtg*:
 
     WorkDir: $OSSIM_PATH/www/mrtg
-    PathAdd: /usr/local/rrdtool-1.1.0/bin
-    LibAdd: /usr/local/rrdtool-1.1.0/lib/perl
     Include: $OSSIM_PATH/mrtg/hosts/host_qualification.cfg
     Include: $OSSIM_PATH/mrtg/nets/net_qualification.cfg
     Include: $OSSIM_PATH/mrtg/global/global_qualification.cfg
-    
-    * NOTE: Use these paths if you install rrdtool from rpms:
-    PathAdd: /usr/bin/
-    LibAdd: /usr/lib/perl5/site_perl/5.8.3/i386-linux-thread-multi/
-    
   
   Important paths in order to draw graphs are:
   
-    # rrdtool compiled with --prefix=/usr/local
-    rrdtool_path=/usr/local/rrdtool-1.1.0/bin/
-    rrdtool_lib_path=/usr/local/rrdtool-1.1.0/lib/perl/
+    rrdtool_path=/usr/bin/
+    rrdtool_lib_path=/usr/lib/perl5/
     mrtg_rrd_files_path=$OSSIM_PATH/www/mrtg
 
     rrdpath_host=$OSSIM_PATH/www/mrtg/host_qualification/
@@ -549,9 +553,6 @@
       
     rrdpath_ntop=/var/lib/ntop/rrd
 
-    * NOTE: Use these paths if you install rrdtool from rpms:
-    rrdtool_path=/usr/bin/
-    rrdtool_lib_path=/usr/lib/perl5/site_perl/5.8.3/i386-linux-thread-multi/
 
   Run the script named 'launch-mrtg':
     
@@ -582,10 +583,10 @@
   Now, we are going to compile the server. You'll need the following packages
   and their respective dependencies:
 
-    - libglib2.0-dev : Development files for the GLib library         (>= 2.2.3)
-    - libgda2-dev    : Development files for GNOME Data Access lib    (>= 1.0.1)
-    - gda2-mysql     : MySQL backend plugin for GNOME Data Access lib (>= 1.0.1)
-    - libgnet2.0-dev : Developer files for GNet network library       (>= 2.0.3)
+    - libglib2.0-dev : Development files for the GLib library         (>= 2.4.2)
+    - libgda2-dev    : Development files for GNOME Data Access lib    (>= 1.0.4)
+    - gda2-mysql     : MySQL backend plugin for GNOME Data Access lib (>= 1.0.4)
+    - libgnet2.0-dev : Developer files for GNet network library       (>= 2.0.4)
 
     $ apt-get install libglib2.0-dev libgda2-dev gda2-mysql libgnet2.0-dev
 
@@ -605,7 +606,7 @@
 
   Run server:
     $ cd $OSSIM_PATH/src/
-    $ ./ossim -c /etc/ossim/server/config.xml
+    $ ./ossim-server -c /etc/ossim/server/config.xml
   
 
   3.6 Agents
@@ -613,7 +614,7 @@
 
   Install the following packages and their respective dependencies:
 
-    - python : An interactive high-level object-oriented language (>= 2.3.3)
+    - python : An interactive high-level object-oriented language (>= 2.3.4)
     - python-mysqldb : A Python interface for MySQL               (>= 0.9.2)
     - python-pgsql : A Python DB-API 2.0 interface to PostgreSQL  (>= 2.4.0-4)
   

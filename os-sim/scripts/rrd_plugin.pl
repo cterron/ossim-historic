@@ -48,7 +48,7 @@ my $rrd_worm = 1;
 # RRD Path Files
 my $rrd_bin = $ossim_conf::ossim_data->{"rrdtool_path"} . "/rrdtool";
 my $rrd_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};
-my $rrd_log = "/var/log/rrd_plugin.log";
+my $rrd_log = "/var/log/ossim/rrd_plugin.log";
 
 # [threshold, priority, persistence]
 

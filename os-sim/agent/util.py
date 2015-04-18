@@ -2,6 +2,7 @@ import string, sys, time
 
 CONFIG = '/etc/ossim/agent/config.xml'
 VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.9.5'
+RUN_DIR = '/var/run'
 
 def debug(module, message, mark = "", color = ""):
     """print debug message"""

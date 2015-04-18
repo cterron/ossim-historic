@@ -241,7 +241,7 @@ diff -urNb sessions.c sessions.c
 -	len -= rc;
 -	bytesSent += rc;
 +#ifdef LINUX
-+	usleep (10);
++	usleep (1000);
 +#endif /* LINUX */
  	retries++;
  	goto RESEND;

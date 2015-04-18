@@ -24,6 +24,13 @@ AC_STDC_HEADERS
 #AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
+AC_CANONICAL_HOST
+
+case "$host" in 
+    *darwin*)
+    LDFLAGS="${LDFLAGS} -bind_at_load"
+    ;;
+esac
 
 # Check for structures
 AC_CHECK_MEMBER([struct sockaddr.sa_len],

@@ -83,9 +83,11 @@ if (!$sup = $_GET["sup"])
     if ($inf >= $ROWS) {
         echo "<a href=\"$inf_link\">&lt;- Prev $ROWS</a>";
     }
-    echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
     if ($sup < $count) {
+        echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
         echo "<a href=\"$sup_link\">Next $ROWS -&gt;</a>";
+    } else {
+        echo "&nbsp;&nbsp;($inf-$count of $count)&nbsp;&nbsp;";
     }
 ?>
         </td>
@@ -98,6 +100,7 @@ if (!$sup = $_GET["sup"])
                 "&inf=$inf&sup=$sup"
             */ ?>">Plugin id</a></th>
 -->
+        <th>#</th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("plugin_sid", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
@@ -127,6 +130,8 @@ if (!$sup = $_GET["sup"])
                                       "ORDER by $order", 
                                       $inf, $sup))
     {
+        $datemark = "";
+
         foreach ($alarm_list as $alarm) {
 
             $id  = $alarm->get_plugin_id();
@@ -144,27 +149,52 @@ if (!$sup = $_GET["sup"])
             } else {
                 $sid_name = "Unknown (id=$id sid=$sid)";
             }
-        
+
+            $date = timestamp2date($alarm->get_timestamp());
+            if ($backlog_id != 0) {
+                $since = timestamp2date($alarm->get_since());
+            } else {
+                $since = $date;
+            }
+ 
+            /* break alarms of different days */
+            $date_slices = split(" ", $date);
+            if ($datemark != $date_slices[0]) 
+            {
+                echo "
+                <tr>
+                  <td colspan=\"8\">
+                    <hr border=\"0\"/>
+                    <b>$date_slices[0]</b><br/>
+                    <hr border=\"0\"/>
+                  </td>
+                </tr>
+                ";
+            }
+            $datemark = $date_slices[0];
 ?>
       <tr>
+        <td><?php echo ++$inf ?></td>
         <td><b>
 <?php
             $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
-            if ($backlog_id != 0) {
-                $alarm_name = "<a href=\"alerts.php?backlog_id=$backlog_id \">$alarm_name</a>";
+            if ($backlog_id != 0) 
+            {
+                $alerts_link = "alerts.php?backlog_id=$backlog_id";
+                $alarm_name = "
+                <a href=\"$alerts_link\">
+                  $alarm_name
+                </a>
+                ";
+            } else {
+                $alerts_link = $_SERVER["PHP_SELF"];
             }
-    echo $alarm_name;
+            echo $alarm_name;
 ?>
         </b></td>
         
         <!-- risk -->
 <?php 
-        $date = timestamp2date($alarm->get_timestamp());
-        if ($backlog_id != 0) {
-            $since = timestamp2date($alarm->get_since());
-        } else {
-            $since = $date;
-        }
         
         $src_ip   = $alarm->get_src_ip();
         $dst_ip   = $alarm->get_dst_ip();
@@ -173,21 +203,39 @@ if (!$sup = $_GET["sup"])
 
         $risk = $alarm->get_risk();
         if ($risk  > 7) {
-            echo "<td bgcolor=\"red\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk</font></a></b></td>";
+            echo "
+            <td bgcolor=\"red\">
+              <b>
+                <a href=\"$alerts_link\">
+                  <font color=\"white\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } elseif ($risk > 4) {
-            echo "<td bgcolor=\"orange\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"black\">$risk</font></b></td>";
+            echo "
+            <td bgcolor=\"orange\">
+              <b>
+                <a href=\"$alerts_link\">
+                  <font color=\"black\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } elseif ($risk > 2) {
-            echo "<td bgcolor=\"green\"><b><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\"><font color=\"white\">$risk</font></b></td>";
+            echo "
+            <td bgcolor=\"green\">
+              <b>
+                <a href=\"$alerts_link\">
+                  <font color=\"white\">$risk</font>
+                </a>
+              </b>
+            </td>
+            ";
         } else {
-            echo "<td><a href=\"".
-                get_acid_date_link($date, $src_ip, "ip_src")
-                ."\">$risk</a></td>";
+            echo "
+            <td><a href=\"$alerts_link\">$risk</a></td>
+            ";
         }
 ?>
         <!-- end risk -->

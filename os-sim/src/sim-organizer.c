@@ -1334,8 +1334,14 @@ sim_organizer_snort (SimOrganizer	*organizer,
   g_return_if_fail (alert->sensor);
   g_return_if_fail (alert->interface);
 
-  if (alert->snort_sid)
-    return;
+  if (alert->snort_sid && alert->snort_cid)
+    {
+      sim_organizer_snort_ossim_event_insert (organizer->_priv->db_snort,
+					      alert,
+					      alert->snort_sid,
+					      alert->snort_cid);
+      return;
+    }
 
   plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container, alert->plugin_id, alert->plugin_sid);
   if (!plugin_sid)

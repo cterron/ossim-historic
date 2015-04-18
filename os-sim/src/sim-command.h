@@ -169,6 +169,9 @@ struct _SimCommand {
       gint               interval;
 
       gchar             *data;
+
+      guint32            snort_sid;
+      guint32            snort_cid;
     } alert;
 
     struct {

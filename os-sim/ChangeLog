@@ -1,5 +1,21 @@
 # ChangeLog for OSSIM
 
+    18 Jun 2004 DK <dk@ossim.net> :
+    * 0.9.5p2 released
+
+* OSSIM-0.9.5p2 (18 Jun 2004)
+
+    18 Jun 2004 David Gil <dgil@ossim.net> :
+    * agent/ossim-agent: avoid multiple instances of agent
+
+    17 Jun 2004 David Gil <dgil@ossim.net> :
+    * etc/init.d/ossim: Generic start-up script (one machine architecture)
+    * Debian packages for most of the OSSIM dependencies
+    * INSTALL.Debian: up-to-date documentation
+
+    16 Jun 2004 David Gil <dgil@ossim.net> :
+    * Important bug fixed related to alarm/alert console
+
     15 Jun 2004 DK <dk@ossim.net> :
     * 0.9.5p1 released
 

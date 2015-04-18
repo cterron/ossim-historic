@@ -1,0 +1,193 @@
+--- src/output-plugins/spo_database.c.orig	2004-06-15 16:43:46.283424992 +0200
++++ src/output-plugins/spo_database.c	2004-06-16 11:58:28.107986728 +0200
+@@ -50,6 +50,12 @@
+ #include "config.h"
+ #endif
+ 
++#ifndef WIN32
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#endif /* !WIN32 */
++
+ #include <sys/types.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -62,6 +68,7 @@
+ #include "parser.h"
+ #include "debug.h"
+ #include "util.h"
++#include "log.h"
+ 
+ #include "snort.h"
+ 
+@@ -175,6 +182,8 @@
+     PLOGINREC   ms_login;
+     DBINT       ms_col;
+ #endif
++    char   *logfile;
++    FILE   *file;
+ } DatabaseData;
+ 
+ /* list for lookup of shared data information */
+@@ -212,7 +221,7 @@
+ #define KEYWORD_IGNOREBPF_ZERO "0"
+ #define KEYWORD_IGNOREBPF_YES  "yes"
+ #define KEYWORD_IGNOREBPF_ONE  "1"
+-
++#define KEYWORD_LOGFILE      "logfile"
+ 
+ #define LATEST_DB_SCHEMA_VERSION 106
+ 
+@@ -316,11 +325,19 @@
+     SharedDatabaseDataNode *current = NULL;
+     char * escapedSensorName = NULL;
+     char * escapedInterfaceName = NULL;
+-
++    char * filename=NULL;
+ 
+     /* parse the argument list from the rules file */
+     data = ParseDatabaseArgs(args);
+ 
++    /* File Log */
++    if (data->logfile != NULL)
++    {
++        filename = ProcessFileOption(data->logfile);
++        data->file = OpenAlertFile(filename);
++        free(filename);
++    }
++
+     /* find a unique name for sensor if one was not supplied as an option */
+     if(!data->sensor_name)
+     {
+@@ -657,6 +674,8 @@
+     data->encoding = ENCODING_HEX;
+     data->detail = DETAIL_FULL;
+     data->ignore_bpf = 0;
++    data->logfile = NULL;
++    data->file = NULL;
+ 
+     facility = strtok(args, ", ");
+     if(facility != NULL)
+@@ -839,6 +858,11 @@
+ 
+             if( !pv.quiet_flag ) printf("database: ignore_bpf = %s\n", a1);
+         }
++	if(!strncasecmp(dbarg,KEYWORD_LOGFILE,strlen(KEYWORD_LOGFILE)))
++        {
++            data->logfile = a1;
++            if( !pv.quiet_flag ) printf("database:            logfile = %s\n", data->logfile);
++        }
+         dbarg = strtok(NULL, "=");
+     } 
+ 
+@@ -894,8 +918,75 @@
+     return rval;
+ }  
+ 
++void DatabaseLog(DatabaseData *data, char *msg,  Packet *p, Event *event)
++{
++    char timestamp[TIMEBUF_SIZE];
++
++    bzero((char *) timestamp, TIMEBUF_SIZE);
++    ts_print(p == NULL ? NULL : (struct timeval *) & p->pkth->ts, timestamp);
++                                                                                                                            
++    fwrite(timestamp, strlen(timestamp), 1, data->file);                                                                    
++
++    if (msg != NULL)
++    {
++        fwrite(" [**] ", 6, 1, data->file);
++
++        fprintf(data->file, "[%lu:%lu:%lu] ",
++                (unsigned long) event->sig_generator,
++                (unsigned long) event->sig_id,
++                (unsigned long) event->sig_rev);
++
++        fprintf(data->file, "<%s> ", PRINT_INTERFACE(pv.interface));
++	fwrite(msg, strlen(msg), 1, data->file);
++
++        fwrite(" [**] ", 6, 1, data->file);
++    }
++
++    if(p && p->iph)
++    {
++        fprintf(data->file, "{%s} ", protocol_names[p->iph->ip_proto]);
++
++        if(p->frag_flag)
++        {
++            /* just print the straight IP header */
++            fputs(inet_ntoa(p->iph->ip_src), data->file);
++            fwrite(" -> ", 4, 1, data->file);
++            fputs(inet_ntoa(p->iph->ip_dst), data->file);
++        }
++        else
++        {
++            switch(p->iph->ip_proto)
++            {
++                case IPPROTO_UDP:
++                case IPPROTO_TCP:
++                    /* print the header complete with port information */
++                    fputs(inet_ntoa(p->iph->ip_src), data->file);
++                    fprintf(data->file, ":%d -> ", p->sp);
++                    fputs(inet_ntoa(p->iph->ip_dst), data->file);
++                    fprintf(data->file, ":%d", p->dp);
++                    break;
++                case IPPROTO_ICMP:
++                default:
++                    /* just print the straight IP header */
++                    fputs(inet_ntoa(p->iph->ip_src), data->file);
++                    fwrite(" -> ", 4, 1, data->file);
++                    fputs(inet_ntoa(p->iph->ip_dst), data->file);
++            }
++        }
++    }               /* end of if (p) */
++
++    fprintf(data->file, " [%lu:%lu]",
++            (unsigned long) data->shared->sid,
++            (unsigned long) data->shared->cid);
++
++    fputc('\n', data->file);
++                                                                                                                            
++    fflush(data->file);
++    return;
++}
++
+ /*******************************************************************************
+- * Function: Database(Packet *, char * msg, void *arg)
++ * Function: DatabasePacket *, char * msg, void *arg)
+  *
+  * Purpose: Insert data into the database
+  *
+@@ -1642,6 +1733,9 @@
+     FreeQueryNode(root); 
+     root = NULL;
+ 
++    if (data->file != NULL)
++        DatabaseLog (data, msg, p, event);
++
+     /* Increment the cid*/
+     data->shared->cid++;
+ 
+@@ -2740,6 +2834,8 @@
+     puts(" ignore_bpf - specify if you want to ignore the BPF part for a sensor\n");
+     puts("              definition (yes or no, no is default)\n");
+ 
++    puts(" logfile - file for log alerts with sid and cid values\n");
++
+     puts(" FOR EXAMPLE:");
+     puts(" The configuration I am currently using is MySQL with the database");
+     puts(" name of \"snort\". The user \"snortusr@localhost\" has INSERT and SELECT");
+@@ -2757,6 +2853,13 @@
+ 
+     UpdateLastCid(data, data->shared->sid, data->shared->cid-1);
+     Disconnect(data); 
++
++    if (data->logfile != NULL)
++        free (data->logfile);
++
++    if (data->file != NULL)
++        fclose (data->file);
++
+     if(data != NULL) 
+     {
+        free(data);

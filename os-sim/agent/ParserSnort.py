@@ -99,6 +99,7 @@ class ParserSnort(Parser.Parser):
         patternl1 = '^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?'
         patternl2 = '\[(\d+):(\d+):\d+\]'
         patternl3 = '\[Priority:\s+(\d+)\]'
+        patternl4 = '\[(\d+):(\d+)\]$'
             
         location = self.plugin["location"]
         try:
@@ -134,10 +135,18 @@ class ParserSnort(Parser.Parser):
                 result1 = re.findall(str(patternl1), line)
                 result2 = re.findall(str(patternl2), line)
                 result3 = re.findall(str(patternl3), line)
-                try:
+                result4 = re.findall(str(patternl4), line)
+                
+                if result3 != []:
                     priority = result3[0]
-                except IndexError:
+                else:
                     priority = 3
+
+                if result4 != []:
+                    (sid, cid) = result4[0]
+                else:
+                    (sid, cid) = ""
+                
                 try:
                     (month, day, date, protocol, 
                      src_ip, src_port, dst_ip, dst_port) = result1[0]
@@ -155,7 +164,9 @@ class ParserSnort(Parser.Parser):
                                      src_ip     = src_ip,
                                      src_port   = src_port,
                                      dst_ip     = dst_ip,
-                                     dst_port   = dst_port)
+                                     dst_port   = dst_port,
+                                     snort_cid  = cid,
+                                     snort_sid  = sid)
      
                 except IndexError: 
                     pass
