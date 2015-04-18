@@ -14,7 +14,8 @@
     /* check params */
     if (($_POST["insert"]) &&
         (!$_POST["hostname"] || !$_POST["ip"] || !$_POST["threshold_c"] || 
-         !$_POST["threshold_a"] || !$_POST["persistence"] || !$_POST["descr"])) 
+         !$_POST["threshold_a"] || !$_POST["persistence"] || 
+         !$_POST["nsens"] || !$_POST["descr"])) 
     {
 ?>
 
@@ -37,13 +38,20 @@
     $nat         = mysql_escape_string($_POST["nat"]);
     $descr       = mysql_escape_string($_POST["descr"]);
 
+    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
+        $name = "mboxs" . $i;
+        if (mysql_escape_string($_POST[$name])) {
+            $sensors[] = mysql_escape_string($_POST[$name]);
+        }
+    }
+
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
     $db = new ossim_db();
     $conn = $db->connect();
     
     Host::update ($conn, $ip, $hostname, $asset, $threshold_c, 
-                  $threshold_a, $alert, $persistence, $nat, $descr);
+                  $threshold_a, $alert, $persistence, $nat, $sensors, $descr);
 
     $db->close($conn);
 }

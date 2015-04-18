@@ -1,11 +1,23 @@
 # ChangeLog for OSSIM
 
+    10 Oct 2003 DK <dk@ipsoluciones.com> :
+    * 0.6 released.
+
+* OSSIM-0.6 (10 OCT 2003)
+
+    09 Oct 2003 DK <dk@ipsoluciones.com> :
+    * Parser mods:
+	- Sync hosts<->nets
+	- Lower nets
+	- Implement net & net_assets linked lists
+    * Erased some perl files
+
     03 Oct 2003 DK <dk@ipsoluciones.com> :
     * Bug fixes
     * Some control_panel improvements
-    * 0.6 released.
+    * 0.5.2 released.
 
-* OSSIM-0.5 (19 Sep 2003)
+* OSSIM-0.5.2 (03 OCT 2003)
 
     02 Oct 2003 DK <dk@ipsoluciones.com> :
     * Fixed some parser bugs

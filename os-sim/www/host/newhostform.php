@@ -13,12 +13,12 @@
 <?php
     require_once ('ossim_db.inc');
     require_once ('classes/Conf.inc');
+    require_once ('classes/Sensor.inc');
 
     $db = new ossim_db();
     $conn = $db->connect();
     $conf = Conf::get_conf($conn);
     $threshold = $conf->get_threshold();
-    $db->close($conn);
 ?>
 
 <form method="post" action="newhost.php">
@@ -85,6 +85,41 @@
     <td class="left">
       <input type="text" name="nat">
     </td>
+  </tr>
+  <tr>
+    <th>Sensors<br/>
+        <font size="-2">
+          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+        </font><br/>
+    </th>
+    <td class="left">
+<?php
+                                                                                
+    /* ===== sensors ==== */
+    $i = 1;
+    if ($sensor_list = Sensor::get_list($conn)) {
+        foreach($sensor_list as $sensor) {
+            $sensor_name = $sensor->get_name();
+            $sensor_ip =   $sensor->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "nsens"; ?>"
+            value="<?php echo count($sensor_list); ?>">
+<?php
+            }
+            $name = "mboxs" . $i;
+?>
+        <input type="checkbox" name="<?php echo $name;?>"
+            value="<?php echo $sensor_name; ?>">
+            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+?>
+    </td>
+  </tr>
   <tr>
     <th>Description</th>
     <td class="left">
@@ -102,4 +137,8 @@
 
 </body>
 </html>
+
+<?php
+    $db->close($conn);
+?>
 

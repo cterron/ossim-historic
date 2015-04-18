@@ -25,7 +25,7 @@ while(1) {
     my $recovery = $row->{recovery};
     
 
-    $query = "SELECT * FROM net_qualification;";
+    $query = "SELECT * FROM host_qualification;";
     $sth = $dbh->prepare($query);
     $sth->execute();
 
@@ -33,34 +33,17 @@ while(1) {
 
         my $compromise = $row->{compromise};
         my $attack = $row->{attack};
-        my $net_name = $row->{net_name};
+        my $host_ip = $row->{host_ip};
         my $query = "";
 
-        # compromise
+        # Remove inactive ips
         # 
-        if ($compromise > $recovery) {
-            $query = "UPDATE net_qualification SET compromise = 
-                        compromise - $recovery 
-                        WHERE net_name = '$net_name'";
-        } else {
-            $query = "UPDATE net_qualification SET compromise = 1 
-                        WHERE net_name = '$net_name'";
+        if (($compromise <= $recovery) and ($attack <= $recovery)) {
+            my $query = "DELETE FROM host_qualification 
+                            WHERE host_ip = '$host_ip'";
+            my $sth = $dbh->prepare($query);
+            $sth->execute();
         }
-        my $sth = $dbh->prepare($query);
-        $sth->execute();
-
-        # attack
-        # 
-        if ($attack > $recovery) {
-            $query = "UPDATE net_qualification SET attack = 
-                        attack - $recovery WHERE net_name = '$net_name'";
-        } else {
-            $query = "UPDATE net_qualification SET attack = 1 
-                        WHERE net_name = '$net_name'";
-        }
-        $sth = $dbh->prepare($query);
-        $sth->execute();
-    
     }
 
     sleep($SLEEP);

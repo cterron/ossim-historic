@@ -1,6 +1,7 @@
 <?php
 
 require_once ('classes/Conf.inc');
+require_once ('classes/Host_sensor_reference.inc');
 
 class Host {
 
@@ -38,6 +39,10 @@ class Host {
     function get_nat()          { return $this->nat; }
     function get_descr()        { return $this->descr; }
 
+    function get_sensors($conn) {
+        return Host_sensor_reference::get_list($conn, $this->ip);
+    }
+
     function get_list($conn, $where = "", $order = "") 
     {
         $query = "SELECT * FROM host $where $order";
@@ -61,7 +66,7 @@ class Host {
     }
 
     function insert($conn, $ip, $hostname, $asset, $threshold_c, 
-                    $threshold_a, $alert, $persistence, $nat, $descr)
+                    $threshold_a, $alert, $persistence, $nat, $sensors, $descr)
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -75,11 +80,13 @@ class Host {
         if ($conn->Execute($query) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
+        } else {
+            Host_sensor_reference::insert($conn, $ip, $sensors);
         }
     }
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, 
-                    $threshold_a, $alert, $persistence, $nat, $descr)
+                    $threshold_a, $alert, $persistence, $nat, $sensors, $descr)
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -95,6 +102,9 @@ class Host {
         if ($conn->Execute($query) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
+        } else {
+            Host_sensor_reference::delete($conn, $ip);
+            Host_sensor_reference::insert($conn, $ip, $sensors);
         }
     }
 
@@ -103,6 +113,8 @@ class Host {
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
+        } else {
+            Host_sensor_reference::delete($conn, $ip);
         }
     }
 

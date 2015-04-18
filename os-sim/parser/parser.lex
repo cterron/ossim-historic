@@ -1,3 +1,5 @@
+/* Main parser, distribute tasks */
+
 D   [0-9]
 L   [A-Za-z\-\_]
 
@@ -42,10 +44,23 @@ int     action_type;
 char    sensor_fw[16];
 int     rule;
 unsigned int priority_fw1 = FW1_DEFAULT_PRIORITY;
+time_t  global_time;
+time_t  *global_time_loc;
+int update_interval;
+
 
 /* rrd specific */
 unsigned int priority_rrd = RRD_DEFAULT_PRIORITY;
 char what[64];
+
+/* Linked lists */
+POL_LINK policy = NULL;
+HOST_LINK hosts = NULL;
+NET_LINK nets = NULL;
+ASSET_LINK assets = NULL;
+NET_ASSET_LINK net_assets = NULL;
+
+
 
 struct servent *serv;
 
@@ -225,7 +240,7 @@ MYSQL   mysql;
     printf("rrd_anomaly => priority: %s\n", yytext + strlen("priority: "));
 #endif
     priority_rrd = atoi(yytext + strlen("priority: "));
-    log_rrd(&mysql, source_ip, what, priority_rrd);
+    log_rrd(&mysql, source_ip, what, priority_rrd, hosts, assets);
     BEGIN(INITIAL);
 }
 
@@ -309,7 +324,11 @@ int main (int argc, char **argv)
    char buf[256];
 
     if (argc > 1) {
+#ifdef TEST
+   	snprintf( buf, 255, "/bin/cat %s", argv[1]);
+#else
    	snprintf( buf, 255, "/usr/bin/tail -f %s", argv[1]);
+#endif
         yyin = popen(buf, "r");
     } else {
         yyin = stdin;
@@ -331,8 +350,27 @@ int main (int argc, char **argv)
                 mysql_error(&mysql));
     }
 
-     yylex();
+    /* Load policy into memory */
+    policy = load_policy(&mysql);
+    hosts = load_hosts(&mysql);
+    nets = load_nets(&mysql);
+    assets = load_assets(&mysql);
+    net_assets = load_net_assets(&mysql);
 
+    /* Soon we'll be using pthreads, linked lists and all that stuff */
+
+    /* What time is it ? */
+    
+    global_time = time(global_time_loc);
+    update_interval = (atoi(get_conf("UPDATE_INTERVAL")) * 5);
+
+    yylex();
+
+    free_policy(policy);
+    free_hosts(hosts);
+    free_assets(assets);
+    free_nets(nets);
+    free_net_assets(net_assets);
     mysql_close(&mysql);
 	pclose(yyin);
 

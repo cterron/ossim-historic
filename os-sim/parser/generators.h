@@ -1,4 +1,4 @@
-/* $Id: generators.h,v 1.1.1.1 2003/08/22 11:07:36 dkarg Exp $ */
+/* $Id: generators.h,v 1.3 2003/10/09 15:26:10 dkarg Exp $ */
 /*
 ** Copyright (C) 1998-2002 Martin Roesch <roesch@sourcefire.com>
 **
@@ -169,7 +169,7 @@
 
 #define FRAG2_DUPFIRST_STR "(spp_frag2) Duplicate first fragments"
 #define FRAG2_IPOPTIONS_STR "(spp_frag2) IP Options on Fragmented Packet"
-#define FRAG2_OUTOFORDER_STR "(spp_frag2) Out of order fragments" 
+#define FRAG2_OUTOFORDER_STR "(spp_frag2) Out of order fragments"
 #define FRAG2_OVERLAP_STR "(spp_frag2) Overlapping new fragment (probable fragroute)"
 #define FRAG2_OVERSIZE_FRAG_STR "(spp_frag2) Oversized fragment, probable DoS"
 #define FRAG2_TEARDROP_STR "(spp_frag2) Teardrop attack"

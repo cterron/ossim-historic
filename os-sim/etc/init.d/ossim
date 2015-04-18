@@ -22,9 +22,7 @@ case "$1" in
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
-    nice -n 15 ./lower_host_levels.pl &
-    nice -n 15 ./lower_net_levels.pl &
-    nice -n 19 ./update_net_levels.pl &
+    nice -n 15 ./delete_hosts.pl &
     nice -n 19 ./control_panel.pl &
     nice -n 19 ./update_graph_levels.pl &
     nice -n 19 ./os.pl &
@@ -49,9 +47,7 @@ case "$1" in
 	    kill -TERM `pidof $OSSIM_PATH/parser/parser`
 
         # kill misc scripts (provisional!)
-        killall -KILL lower_host_levels.pl
-        killall -KILL lower_net_levels.pl
-        killall -KILL update_net_levels.pl
+        killall -KILL delete_hosts.pl
         killall -KILL control_panel.pl
         killall -KILL update_graph_levels.pl
         killall -KILL os.pl

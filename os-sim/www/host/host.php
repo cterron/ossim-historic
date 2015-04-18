@@ -47,6 +47,7 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("persistence", $order);
           ?>">Persistence</a></th>
+      <th>Sensors</th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -70,6 +71,14 @@
       <td><?php echo $host->get_threshold_a(); ?></td>
       <td><?php if ($host->get_alert()) echo "Yes"; else echo "No" ?></td>
       <td><?php echo $host->get_persistence() . " min."; ?></td>
+      <!-- sensors -->
+      <td><?php
+            if ($sensor_list = $host->get_sensors ($conn)) {
+                foreach($sensor_list as $sensor) {
+                    echo $sensor->get_sensor_name() . '<br/>';
+                }
+            }
+?>    </td>
       <td><?php echo $host->get_descr(); ?></td>
       <td><a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>
           <a href="deletehost.php?ip=<?php echo $ip ?>">Delete</a></td>
@@ -82,7 +91,7 @@
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="10"><a href="newhostform.php">Insert new host</a></td>
+      <td colspan="11"><a href="newhostform.php">Insert new host</a></td>
     </tr>
   </table>
 
