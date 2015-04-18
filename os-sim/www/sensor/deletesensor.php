@@ -19,7 +19,7 @@
     }
 
 
-$name = $_GET["name"];
+$name = mysql_escape_string($_GET["name"]);
 
 if (!$_GET["confirm"]) {
 ?>

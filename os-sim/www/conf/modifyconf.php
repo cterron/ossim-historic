@@ -24,11 +24,11 @@
                                                                                 
 <?php
     } else {
-        $recovery         = $_POST["recovery"];
-        $threshold        = $_POST["threshold"];
-        $graph_threshold  = $_POST["graph_threshold"];
-        $bar_length_left  = $_POST["bar_length_left"];
-        $bar_length_right = $_POST["bar_length_right"];
+        $recovery         = mysql_escape_string($_POST["recovery"]);
+        $threshold        = mysql_escape_string($_POST["threshold"]);
+        $graph_threshold  = mysql_escape_string($_POST["graph_threshold"]);
+        $bar_length_left  = mysql_escape_string($_POST["bar_length_left"]);
+        $bar_length_right = mysql_escape_string($_POST["bar_length_right"]);
 
         require_once 'ossim_db.inc';
         require_once 'classes/Conf.inc';

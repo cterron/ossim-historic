@@ -26,9 +26,9 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name  = $_POST["name"];
-    $nports = $_POST["nports"];
-    $descr = $_POST["descr"];
+    $name  = mysql_escape_string($_POST["name"]);
+    $nports = mysql_escape_string($_POST["nports"]);
+    $descr = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Port_group.inc';
@@ -38,7 +38,7 @@
     for ($i = 1; $i <= $_POST["nports"]; $i++) {
         $mboxname = "mbox" . $i;
         if ($_POST[$mboxname]) {
-            $port_list[] = $_POST[$mboxname];
+            $port_list[] = mysql_escape_string($_POST[$mboxname]);
         }
     }
    

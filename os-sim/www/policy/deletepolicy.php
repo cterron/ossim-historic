@@ -11,7 +11,7 @@
   <h2>Delete policy</h2>
 
 <?php 
-    if (!$id = $_GET["id"]) { 
+    if (!$id = mysql_escape_string($_GET["id"])) { 
 ?>
     <p>Wrong policy id</p>
 <?php 

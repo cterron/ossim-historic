@@ -22,7 +22,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$id = $_GET["id"]) {
+    if (!$id = mysql_escape_string($_GET["id"])) {
         echo "<p>Wrong policy id</p>";
         exit;
     }

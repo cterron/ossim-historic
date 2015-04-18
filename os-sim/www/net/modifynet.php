@@ -27,12 +27,12 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name        = $_POST["name"];
-    $ips         = $_POST["ips"];
-    $priority    = $_POST["priority"];
-    $threshold_c = $_POST["threshold_c"];
-    $threshold_a = $_POST["threshold_a"];
-    $descr       = $_POST["descr"];
+    $name        = mysql_escape_string($_POST["name"]);
+    $ips         = mysql_escape_string($_POST["ips"]);
+    $priority    = mysql_escape_string($_POST["priority"]);
+    $threshold_c = mysql_escape_string($_POST["threshold_c"]);
+    $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';

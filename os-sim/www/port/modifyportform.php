@@ -18,7 +18,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$port_name = $_GET["portname"]) {
+    if (!$port_name = mysql_escape_string($_GET["portname"])) {
         echo "<p>Wrong port name</p>";
         exit;
     }

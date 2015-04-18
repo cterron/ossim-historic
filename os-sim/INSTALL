@@ -21,6 +21,7 @@ satisfying all their dependencies:
 - Acid v0.9.6b20
 - Mrtg 2.9.29
 - Flex
+- P0f 2.0.1
 
 
 Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web
@@ -63,6 +64,7 @@ After that:
 Note: The parser reads its data from a standard text file. For remote
 logging/parsing we use syslog but you can use anything you want that logs in syslog-like format.
 
+Note2: Make sure everything is fine at /etc/ossim.conf...
 
 Please post any suggestions, help requests, etc. to the lists and forums
 provided by sourceforge.

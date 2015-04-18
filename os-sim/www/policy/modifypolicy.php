@@ -11,10 +11,15 @@
 
 <?php
     /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["sourcenips"] || !$_POST["destnips"] ||
-         !$_POST["sourcengrps"] || !$_POST["destngrps"] || !$_POST["nprts"] ||
-         !$_POST["nsens"] || !$_POST["nsigs"] || !$_POST["descr"]))
+    if ((mysql_escape_string($_POST["insert"])) &&
+        (!mysql_escape_string($_POST["sourcenips"]) ||
+        !mysql_escape_string($_POST["destnips"]) ||
+         !mysql_escape_string($_POST["sourcengrps"]) ||
+         !mysql_escape_string($_POST["destngrps"]) ||
+         !mysql_escape_string($_POST["nprts"]) ||
+         !mysql_escape_string($_POST["nsens"]) ||
+         !mysql_escape_string($_POST["nsigs"]) ||
+         !mysql_escape_string($_POST["descr"])))
 {
 ?>
 
@@ -24,64 +29,64 @@
 <?php
 
 /* check OK, insert into DB */
-} elseif($_POST["insert"]) {
+} elseif(mysql_escape_string($_POST["insert"])) {
 
-    $priority = $_POST["priority"];
-    $descr = $_POST["descr"];
+    $priority = mysql_escape_string($_POST["priority"]);
+    $descr = mysql_escape_string($_POST["descr"]);
 
     /* source ips */
-    for ($i = 1; $i <= $_POST["sourcenips"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["sourcenips"]); $i++) {
         $name = "sourcemboxi" . $i;
-        if ($_POST[$name]) {
-            $source_ips[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $source_ips[] = mysql_escape_string($_POST[$name]);
         }
     }
                                                                                 
     /* dest ips */
-    for ($i = 1; $i <= $_POST["destnips"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["destnips"]); $i++) {
         $name = "destmboxi" . $i;
-        if ($_POST[$name]) {
-            $dest_ips[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $dest_ips[] = mysql_escape_string($_POST[$name]);
         }
     }
                                                                                 
     /* source nets */
-    for ($i = 1; $i <= $_POST["sourcengrps"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["sourcengrps"]); $i++) {
         $name = "sourcemboxg" . $i;
-        if ($_POST[$name]) {
-            $source_nets[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $source_nets[] = mysql_escape_string($_POST[$name]);
         }
     }
                                                                                 
     /* dest nets */
-    for ($i = 1; $i <= $_POST["destngrps"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["destngrps"]); $i++) {
         $name = "destmboxg" . $i;
-        if ($_POST[$name]) {
-            $dest_nets[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $dest_nets[] = mysql_escape_string($_POST[$name]);
         }
     }
                                                                                 
     /* ports */
-    for ($i = 1; $i <= $_POST["nprts"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["nprts"]); $i++) {
         $name = "mboxp" . $i;
-        if ($_POST[$name]) {
-            $ports[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $ports[] = mysql_escape_string($_POST[$name]);
         }
     }
 
     /* signatures */
-    for ($i = 1; $i <= $_POST["nsigs"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["nsigs"]); $i++) {
         $name = "mboxsg" . $i;
-        if ($_POST[$name]) {
-            $sigs[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $sigs[] = mysql_escape_string($_POST[$name]);
         }
     }
     
     /* sensors */
-    for ($i = 1; $i <= $_POST["nsens"]; $i++) {
+    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
         $name = "mboxs" . $i;
-        if ($_POST[$name]) {
-            $sensors[] = $_POST[$name];
+        if (mysql_escape_string($_POST[$name])) {
+            $sensors[] = mysql_escape_string($_POST[$name]);
         }
     }
 

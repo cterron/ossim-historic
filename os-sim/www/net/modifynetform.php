@@ -16,7 +16,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$name = $_GET["name"]) {
+    if (!$name = mysql_escape_string($_GET["name"])) {
         echo "<p>Wrong net</p>";
         exit;
     }

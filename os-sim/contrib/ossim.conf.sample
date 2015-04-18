@@ -39,6 +39,7 @@ adodb_path=/usr/share/adodb/
 rrdtool_path=/usr/local/rrdtool-1.1.0/bin/
 rrdtool_lib_path=/usr/local/rrdtool-1.1.0/lib/perl/
 nmap_path=/usr/local/bin/nmap
+p0f_path=/usr/local/bin/p0f
 mrtg_path=/usr/bin/
 
 # look at mrtg.cfg and mrtg-rrd.cfg

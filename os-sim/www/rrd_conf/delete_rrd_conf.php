@@ -19,7 +19,7 @@
     }
 
 
-$ip = $_GET["ip"];
+$ip = mysql_escape_string($_GET["ip"]);
 
 if (!$_GET["confirm"]) {
 ?>

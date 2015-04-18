@@ -26,9 +26,9 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name        = $_POST["name"];
-    $ip          = $_POST["ip"];
-    $descr       = $_POST["descr"];
+    $name        = mysql_escape_string($_POST["name"]);
+    $ip          = mysql_escape_string($_POST["ip"]);
+    $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';

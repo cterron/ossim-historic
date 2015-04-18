@@ -11,7 +11,7 @@
   <h2>Delete port group</h2>
 
 <?php 
-    if (!$port_name = $_GET["portname"]) { 
+    if (!$port_name = mysql_escape_string($_GET["portname"])) { 
 ?>
     <p>Wrong port name</p>
 <?php 

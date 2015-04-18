@@ -18,7 +18,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$sig_name = $_GET["signame"]) {
+    if (!$sig_name = mysql_escape_string($_GET["signame"])) {
         echo "<p>Wrong signature name</p>";
         exit;
     }

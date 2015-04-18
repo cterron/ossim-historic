@@ -11,7 +11,7 @@
   <h2>Delete signature group</h2>
 
 <?php 
-    if (!$sig_name = $_GET["signame"]) { 
+    if (!$sig_name = mysql_escape_string($_GET["signame"])) { 
 ?>
     <p>Wrong signature name</p>
 <?php 

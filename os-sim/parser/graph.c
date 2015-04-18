@@ -89,7 +89,7 @@ move_graph(MYSQL *mysql,
         {
             /* get ips in source and dest graphs */
             while ( (row = mysql_fetch_row(result)) ) {
-                strncpy(ip,15, row[0]);
+                strncpy(ip, row[0], 15);
                 
                 /* don't insert source and dest ip */
                 if (!strcmp(ip, source_ip) && !strcmp(ip, dest_ip)) {

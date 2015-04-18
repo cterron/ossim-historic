@@ -27,13 +27,13 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $id          = $_POST["id"];
-    $hostname    = $_POST["hostname"];
-    $ip          = $_POST["ip"];
-    $asset    = $_POST["asset"];
-    $threshold_c = $_POST["threshold_c"];
-    $threshold_a = $_POST["threshold_a"];
-    $descr       = $_POST["descr"];
+    $id          = mysql_escape_string($_POST["id"]);
+    $hostname    = mysql_escape_string($_POST["hostname"]);
+    $ip          = mysql_escape_string($_POST["ip"]);
+    $asset    = mysql_escape_string($_POST["asset"]);
+    $threshold_c = mysql_escape_string($_POST["threshold_c"]);
+    $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';

@@ -8,7 +8,7 @@ $| = 1;
 
 sub usage {
 
-print "get_value start_time end_time rrd_file ";
+print "$0 start_time end_time rrd_file ";
 print "[compromise|attack|ntop] [MAX|MIN|AVERAGE]\n";
 print "time can be: relative, using N-1H, N-2H, etc...\n";
 print "or using AT style syntax\n";

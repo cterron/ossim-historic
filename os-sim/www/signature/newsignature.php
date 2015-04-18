@@ -25,9 +25,9 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name  = $_POST["name"];
-    $nsigs = $_POST["nsigs"];
-    $descr = $_POST["descr"];
+    $name  = mysql_escape_string($_POST["name"]);
+    $nsigs = mysql_escape_string($_POST["nsigs"]);
+    $descr = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Signature_group.inc';
@@ -37,7 +37,7 @@
     for ($i = 1; $i <= $_POST["nsigs"]; $i++) {
         $mboxname = "mbox" . $i;
         if ($_POST[$mboxname]) {
-            $signature_list[] = $_POST[$mboxname];
+            $signature_list[] = mysql_escape_string($_POST[$mboxname]);
         }
     }
    

@@ -1,5 +1,19 @@
 # ChangeLog for OSSIM
-    
+
+    08 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Fixed a lot of SQL injection. Still more to fix, sure.
+    * Silly parser bug fixed.
+    * P0f integration.
+    * Control panel changes.
+    * P0f integration fixed.
+    * Visual modifications.
+
+    05 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Corrected buffer overflow.
+    * 0-3alpha released.  
+
+* OSSIM-0.3 (05 Sep 2003)
+
     04 Sep 2003 DK <dk@ipsoluciones.com> :
     * Control panel visual cleanup.
     * RRD sort order. Still buggy...

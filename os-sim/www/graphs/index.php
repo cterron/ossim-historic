@@ -31,7 +31,7 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 if ($_GET["graph_id"]) {
-    $id_list[] = $_GET["graph_id"];
+    $id_list[] = mysql_escape_string($_GET["graph_id"]);
 } else {
     $id_list = Graph::get_id_list($conn, $graph_id);
     if (count($id_list) == 0) exit();

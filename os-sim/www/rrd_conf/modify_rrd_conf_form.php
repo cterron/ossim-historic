@@ -19,7 +19,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$ip = $_GET["ip"]) {
+    if (!$ip = mysql_escape_string($_GET["ip"])) {
         echo "<p>Wrong ip</p>";
         exit;
     }

@@ -2,3 +2,4 @@
 
 - Networks. Network modification (adding ips).
 - Riskmeter. Why do some networks disappear ?
+- SQL Injection; validate input.

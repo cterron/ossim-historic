@@ -12,8 +12,8 @@
 <?php
 
     /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["ip"])) 
+    if ((mysql_escape_string($_POST["insert"])) &&
+        (!mysql_escape_string($_POST["ip"]))) 
     {
 ?>
 
@@ -23,80 +23,80 @@
 <?php
 
 /* check OK, insert into BD */
-} elseif($_POST["insert"]) {
+} elseif(mysql_escape_string($_POST["insert"])) {
 
-    $ip = $_POST["ip"];
+    $ip = mysql_escape_string($_POST["ip"]);
 
     $pkt_sent 
-        = implode(",", array($_POST["pkt_sent_threshold"],
-                             $_POST["pkt_sent_priority"],
-                             $_POST["pkt_sent_alpha"],
-                             $_POST["pkt_sent_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["pkt_sent_threshold"]),
+                             mysql_escape_string($_POST["pkt_sent_priority"]),
+                             mysql_escape_string($_POST["pkt_sent_alpha"]),
+                             mysql_escape_string($_POST["pkt_sent_beta"])));
     $pkt_rcvd
-        = implode(",", array($_POST["pkt_rcvd_threshold"],
-                             $_POST["pkt_rcvd_priority"],
-                             $_POST["pkt_rcvd_alpha"],
-                             $_POST["pkt_rcvd_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["pkt_rcvd_threshold"]),
+                             mysql_escape_string($_POST["pkt_rcvd_priority"]),
+                             mysql_escape_string($_POST["pkt_rcvd_alpha"]),
+                             mysql_escape_string($_POST["pkt_rcvd_beta"])));
     $bytes_sent
-        = implode(",", array($_POST["bytes_sent_threshold"],
-                             $_POST["bytes_sent_priority"],
-                             $_POST["bytes_sent_alpha"],
-                             $_POST["bytes_sent_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["bytes_sent_threshold"]),
+                             mysql_escape_string($_POST["bytes_sent_priority"]),
+                             mysql_escape_string($_POST["bytes_sent_alpha"]),
+                             mysql_escape_string($_POST["bytes_sent_beta"])));
     $bytes_rcvd
-        = implode(",", array($_POST["bytes_rcvd_threshold"],
-                             $_POST["bytes_rcvd_priority"],
-                             $_POST["bytes_rcvd_alpha"],
-                             $_POST["bytes_rcvd_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["bytes_rcvd_threshold"]),
+                             mysql_escape_string($_POST["bytes_rcvd_priority"]),
+                             mysql_escape_string($_POST["bytes_rcvd_alpha"]),
+                             mysql_escape_string($_POST["bytes_rcvd_beta"])));
     $tot_contacted_sent_peers
-        = implode(",", array($_POST["tot_contacted_sent_peers_threshold"],
-                             $_POST["tot_contacted_sent_peers_priority"],
-                             $_POST["tot_contacted_sent_peers_alpha"],
-                             $_POST["tot_contacted_sent_peers_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["tot_contacted_sent_peers_threshold"]),
+                             mysql_escape_string($_POST["tot_contacted_sent_peers_priority"]),
+                             mysql_escape_string($_POST["tot_contacted_sent_peers_alpha"]),
+                             mysql_escape_string($_POST["tot_contacted_sent_peers_beta"])));
     $tot_contacted_rcvd_peers
-        = implode(",", array($_POST["tot_contacted_rcvd_peers_threshold"],
-                             $_POST["tot_contacted_rcvd_peers_priority"],
-                             $_POST["tot_contacted_rcvd_peers_alpha"],
-                             $_POST["tot_contacted_rcvd_peers_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["tot_contacted_rcvd_peers_threshold"]),
+                             mysql_escape_string($_POST["tot_contacted_rcvd_peers_priority"]),
+                             mysql_escape_string($_POST["tot_contacted_rcvd_peers_alpha"]),
+                             mysql_escape_string($_POST["tot_contacted_rcvd_peers_beta"])));
     $ip_dns_sent_bytes
-        = implode(",", array($_POST["ip_dns_sent_bytes_threshold"],
-                             $_POST["ip_dns_sent_bytes_priority"],
-                             $_POST["ip_dns_sent_bytes_alpha"],
-                             $_POST["ip_dns_sent_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_dns_sent_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_dns_sent_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_dns_sent_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_dns_sent_bytes_beta"])));
     $ip_dns_rcvd_bytes
-        = implode(",", array($_POST["ip_dns_rcvd_bytes_threshold"],
-                             $_POST["ip_dns_rcvd_bytes_priority"],
-                             $_POST["ip_dns_rcvd_bytes_alpha"],
-                             $_POST["ip_dns_rcvd_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_dns_rcvd_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_dns_rcvd_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_dns_rcvd_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_dns_rcvd_bytes_beta"])));
     $ip_nbios_ip_sent_bytes
-        = implode(",", array($_POST["ip_nbios_ip_sent_bytes_threshold"],
-                             $_POST["ip_nbios_ip_sent_bytes_priority"],
-                             $_POST["ip_nbios_ip_sent_bytes_alpha"],
-                             $_POST["ip_nbios_ip_sent_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_nbios_ip_sent_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_sent_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_sent_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_sent_bytes_beta"])));
     $ip_nbios_ip_rcvd_bytes
-        = implode(",", array($_POST["ip_nbios_ip_rcvd_bytes_threshold"],
-                             $_POST["ip_nbios_ip_rcvd_bytes_priority"],
-                             $_POST["ip_nbios_ip_rcvd_bytes_alpha"],
-                             $_POST["ip_nbios_ip_rcvd_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_nbios_ip_rcvd_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_rcvd_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_rcvd_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_nbios_ip_rcvd_bytes_beta"])));
     $ip_mail_sent_bytes
-        = implode(",", array($_POST["ip_mail_sent_bytes_threshold"],
-                             $_POST["ip_mail_sent_bytes_priority"],
-                             $_POST["ip_mail_sent_bytes_alpha"],
-                             $_POST["ip_mail_sent_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_mail_sent_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_mail_sent_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_mail_sent_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_mail_sent_bytes_beta"])));
     $ip_mail_rcvd_bytes
-        = implode(",", array($_POST["ip_mail_rcvd_bytes_threshold"],
-                             $_POST["ip_mail_rcvd_bytes_priority"],
-                             $_POST["ip_mail_rcvd_bytes_alpha"],
-                             $_POST["ip_mail_rcvd_bytes_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["ip_mail_rcvd_bytes_threshold"]),
+                             mysql_escape_string($_POST["ip_mail_rcvd_bytes_priority"]),
+                             mysql_escape_string($_POST["ip_mail_rcvd_bytes_alpha"]),
+                             mysql_escape_string($_POST["ip_mail_rcvd_bytes_beta"])));
     $mrtg_a
-        = implode(",", array($_POST["mrtg_a_threshold"],
-                             $_POST["mrtg_a_priority"],
-                             $_POST["mrtg_a_alpha"],
-                             $_POST["mrtg_a_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["mrtg_a_threshold"]),
+                             mysql_escape_string($_POST["mrtg_a_priority"]),
+                             mysql_escape_string($_POST["mrtg_a_alpha"]),
+                             mysql_escape_string($_POST["mrtg_a_beta"])));
     $mrtg_c
-        = implode(",", array($_POST["mrtg_c_threshold"],
-                             $_POST["mrtg_c_priority"],
-                             $_POST["mrtg_c_alpha"],
-                             $_POST["mrtg_c_beta"]));
+        = implode(",", array(mysql_escape_string($_POST["mrtg_c_threshold"]),
+                             mysql_escape_string($_POST["mrtg_c_priority"]),
+                             mysql_escape_string($_POST["mrtg_c_alpha"]),
+                             mysql_escape_string($_POST["mrtg_c_beta"])));
 
     require_once 'ossim_db.inc';
     require_once 'classes/RRD_conf.inc';

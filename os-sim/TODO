@@ -41,5 +41,6 @@
 - Ntop keeps dying after ntop modifications. sigh... 4 days without diying, debug.
 + Ips aren't substitued with Hostnames in Control Panel
 - Don't open a mysql connection every time you insert a fw-1 alert.
+- Only get MAX|MIN|AVG rrd values for top 5 control-panel hosts.
 
 - Much much more...
