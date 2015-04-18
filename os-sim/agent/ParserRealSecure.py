@@ -1805,7 +1805,11 @@ class ParserRealSecure(Parser.Parser):
             '(\S+)\s+'
 
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
         priority = 1
             
         # Move to the end of file

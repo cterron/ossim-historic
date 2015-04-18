@@ -170,6 +170,7 @@ sub rrd_anomaly {
     my $devpredict = rrd_fetch_devpredict_by_time ($file, $last_failure - 1, $last_failure);
     my $average = rrd_fetch_average_by_time ($file, $last_failure - 1, $last_failure);
 
+    # If average is by excess
     return 0 unless ($average > ($hwpredict - (2 * $devpredict)));
 
     print OUTPUT "rrd_anomaly: $curr_time $ip $interface $att $priority $last_failure\n";

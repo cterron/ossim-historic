@@ -123,7 +123,7 @@ class Monitor(threading.Thread):
 
                 # ntop
                 if data.__contains__('plugin_id="2005"'):
-                    if self.plugins[2005]["enable"] == 'yes':
+                    if self.plugins['2005']["enable"] == 'yes':
                         from MonitorNtop import MonitorNtop
                         ntop = MonitorNtop(self.agent, data)
                         ntop.start()
@@ -133,7 +133,7 @@ class Monitor(threading.Thread):
                     
                 # C & A levels
                 elif data.__contains__('plugin_id="2001"'):
-                    if self.plugins[2001]["enable"] == 'yes':
+                    if self.plugins['2001']["enable"] == 'yes':
                         from MonitorCA import MonitorCA
                         ca = MonitorCA(self.agent, data)
                         ca.start()

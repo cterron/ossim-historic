@@ -29,7 +29,12 @@ class ParserSnort(Parser.Parser):
         pattern2 = '\[Priority:\s+(\d+)\]'
         
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
+
             
         # Move to the end of file
         fd.seek(0, 2)
@@ -96,7 +101,11 @@ class ParserSnort(Parser.Parser):
         patternl3 = '\[Priority:\s+(\d+)\]'
             
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
 
         # Move to the end of file
         fd.seek(0, 2)

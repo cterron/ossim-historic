@@ -2,6 +2,13 @@
 
 <config>
 
+    <!--
+        NOTE: atribute name of each plugin is the name of the running
+        proccess (needed in order to obtain pid, kill it, etc...)
+        Soon to be changed
+    -->
+
+
     <!-- Ip and port number where the ossim server is listening -->
     <serverip>localhost</serverip>
     <serverport>40001</serverport>
@@ -80,7 +87,7 @@
             <location>/var/log/realsecure.log</location>
         </plugin>
 
-        <!-- RRD threahold detector -->
+        <!-- RRD threshold and anomaly detector -->
         <plugin id="1507" name="rrd_plugin.pl" type="detector" start="yes" enable="yes">
             <startup>/usr/share/ossim/scripts/rrd_plugin.pl &amp;</startup>
             <shutdown>killall rrd_plugin.pl</shutdown>
@@ -90,16 +97,6 @@
             <location>/var/log/rrd_plugin.log</location>
         </plugin>
         
-        <!-- RRD anomaly detector -->
-        <plugin id="1508" name="rrd_plugin.pl" type="detector" start="yes" enable="yes">
-            <startup>/usr/share/ossim/scripts/rrd_plugin.pl &amp;</startup>
-            <shutdown>killall rrd_plugin.pl</shutdown>
-            <source>rrd_plugin</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>/var/log/rrd_plugin.log</location>
-        </plugin>
-
         <!-- C & A detector -->
         <plugin id="1509" name="mysqld" type="detector" start="yes" enable="yes">
             <startup></startup>
@@ -142,7 +139,7 @@
                 /var/log/arpwatch.log
         -->
         <plugin id="1512" name="arpwatch" type="detector" start="yes" enable="yes">
-            <startup>arpwatch -d -i $interface -f /var/log/arp.dat >> /var/log/arpwatch.log &amp;</startup>
+            <startup>arpwatch -d -i eth0 -f /var/log/arp.dat >> /var/log/arpwatch.log &amp;</startup>
             <shutdown>killall arpwatch</shutdown>
             <source>syslog</source>
             <interface>eth0</interface>

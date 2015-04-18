@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.2
+Version:   0.9.3
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -63,7 +63,9 @@ OSSIM Web framework
 touch $RPM_BUILD_ROOT/var/www/ossim-users
 
 %post agent
-rm -f %{_bindir}/agent ; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
+if [ -L %{_bindir}/agent ] || [ ! -e %{_bindir}/agent ] ; then
+  rm -f %{_bindir}/agent ; ln -sf %{_datadir}/ossim/agent/agent %{_bindir}/agent
+fi
 
 %postun agent
 if [ -L %{_bindir}/agent ] ; then
@@ -108,6 +110,9 @@ fi
 
 
 %changelog
+* Wed Mar 24 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.3-1
+- New Release
+
 * Wed Mar 24 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.2-1
 - New Release
 

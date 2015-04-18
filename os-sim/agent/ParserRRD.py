@@ -117,7 +117,11 @@ class ParserRRD(Parser.Parser):
         pattern = '([^:]+): (\S+) (\S+) (\S+) (\S+) (\S+) (\S+)'
             
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
             
         # Move to the end of file
         fd.seek(0, 2)
@@ -145,30 +149,28 @@ class ParserRRD(Parser.Parser):
                 try: 
                     (plugin, time_alert, ip, interface, plugin_sid, \
                      priority, data) = result[0]
-
-                    if self.plugin["id"] == ParserRRD.RRD_ids[plugin]:
                    
-                        if ip == 'GLOBAL': 
-                            ip = '0.0.0.0'
-                            sid = ParserRRD.RRD_sids["global"][plugin_sid]
-                        else:
-                            sid = ParserRRD.RRD_sids["host"][plugin_sid]
+                    if ip == 'GLOBAL': 
+                        ip = '0.0.0.0'
+                        sid = ParserRRD.RRD_sids["global"][plugin_sid]
+                    else:
+                        sid = ParserRRD.RRD_sids["host"][plugin_sid]
 
-                        date = time.strftime('%Y-%m-%d %H:%M:%S', 
-                                             time.localtime(float(time_alert)))
+                    date = time.strftime('%Y-%m-%d %H:%M:%S', 
+                                         time.localtime(float(time_alert)))
 
-                        self.agent.sendMessage(type = 'detector',
-                                         date       = date,
-                                         sensor     = self.plugin["sensor"],
-                                         interface  = interface,
-                                         plugin_id  = self.plugin["id"],
-                                         plugin_sid = sid,
-                                         priority   = priority,
-                                         protocol   = '',
-                                         src_ip     = ip,
-                                         src_port   = '',
-                                         dst_ip     = '',
-                                         dst_port   = '')
+                    self.agent.sendMessage(type = 'detector',
+                                     date       = date,
+                                     sensor     = self.plugin["sensor"],
+                                     interface  = interface,
+                                     plugin_id  = ParserRRD.RRD_ids[plugin],
+                                     plugin_sid = sid,
+                                     priority   = priority,
+                                     protocol   = '',
+                                     src_ip     = ip,
+                                     src_port   = '',
+                                     dst_ip     = '',
+                                     dst_port   = '')
 
                 except IndexError: 
                     pass

@@ -25,7 +25,11 @@ class ParserApache(Parser.Parser):
         pattern = '(\S+) (\S+) (\S+) \[(\d\d)\/(\w\w\w)\/(\d\d\d\d):(\d\d):(\d\d):(\d\d).+"(.+)" (\d+) (\S+)'
             
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit() 
             
         # Move to the end of file
         fd.seek(0, 2)

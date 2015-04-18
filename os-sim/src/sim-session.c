@@ -1134,10 +1134,11 @@ sim_session_has_plugin_id (SimSession     *session,
   g_return_val_if_fail (session != NULL, FALSE);
   g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
   
-  list = session->_priv->plugins;
+  list = session->_priv->plugin_states;
   while (list)
     {
-      SimPlugin *plugin = (SimPlugin *) list->data;
+      SimPluginState  *plugin_state = (SimPluginState *) list->data;
+      SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
 
       if (sim_plugin_get_id (plugin) == plugin_id)
 	{

@@ -31,7 +31,11 @@ class ParserCisco(Parser.Parser):
         pattern = '\S+\s+\S+\s+\S+ (\S+) \S+: (\S+)\s+(\S+)\s+(\d+):(\d+):(\d+):\s*%([^:]*).*?(\d+\.\d+\.\d+\.\d+)?'
             
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
             
         # Move to the end of file
         fd.seek(0, 2)

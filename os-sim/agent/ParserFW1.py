@@ -28,7 +28,11 @@ class ParserFW1(Parser.Parser):
         pattern = '(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+([\w\-\_]+|\d+.\d+.\d+.\d+)\s+logger:.*src:\s(\d+.\d+.\d+.\d+).*s_port:\s(\d+).*dst:\s+(\d+.\d+.\d+.\d+).*service:\s(\w+).*proto:\s+(\w+)'
             
         location = self.plugin["location"]
-        fd = open(location, 'r')
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
             
         # Move to the end of file
         fd.seek(0, 2)

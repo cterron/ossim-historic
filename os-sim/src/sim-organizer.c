@@ -223,13 +223,15 @@ sim_organizer_run (SimOrganizer *organizer)
 
       sim_organizer_snort (organizer, alert);
 
-      query = sim_alert_get_ossim_insert_clause (alert);
-      if (query)
+      if (alert->alarm)
 	{
-	  sim_database_execute_no_query (organizer->_priv->db_ossim, query);
-	  g_free (query);
+	  query = sim_alert_get_ossim_insert_clause (alert);
+	  if (query)
+	    {
+	      sim_database_execute_no_query (organizer->_priv->db_ossim, query);
+	      g_free (query);
+	    }
 	}
-
       g_object_unref (alert);
     }
 }
@@ -639,6 +641,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
   GList           *list;
   GList           *nets;
   gint             threshold = 1;
+  gint             asset_net = 1;
 
   SimPortProtocol *pp;
 
@@ -700,10 +703,25 @@ sim_organizer_calificate (SimOrganizer *organizer,
   if (alert->src_ia)
     {
       /* Source Asset */
-      host = (SimHost *) sim_container_get_host_by_ia (sim_ctn, alert->src_ia);
+      host = sim_container_get_host_by_ia (sim_ctn, alert->src_ia);
+      nets = sim_container_get_nets_has_ia (sim_ctn, alert->src_ia);
+
       if (host)
 	alert->asset_src = sim_host_get_asset (host);
-      
+      else if (nets)
+	{
+	  list = nets;
+	  while (list)
+	    {
+	      net = (SimNet *) list->data;
+	      asset_net = sim_net_get_asset (net);
+	      if (asset_net > alert->asset_src)
+		alert->asset_src = asset_net;
+
+	      list = list->next;
+	    }
+	}
+
       alert->risk_c = ((double) (alert->priority * alert->asset_src * alert->reliability)) / 25;
       if (alert->risk_c < 0)
 	alert->risk_c = 0;
@@ -726,7 +744,6 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	}
       
       /* Update Net Levels C */
-      nets = sim_container_get_nets_has_ia (sim_ctn, alert->src_ia);
       list = nets;
       while (list)
 	{
@@ -744,7 +761,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	      sim_container_append_net_level (sim_ctn, net_level); /* Memory addition */
 	      sim_container_db_insert_net_level (sim_ctn, db_ossim, net_level); /* DB insert */
 	    }
-	  
+
 	  list = list->next;
 	}
       g_list_free (nets);
@@ -755,8 +772,23 @@ sim_organizer_calificate (SimOrganizer *organizer,
 
       /* Destination Asset */
       host = (SimHost *) sim_container_get_host_by_ia (sim_ctn, alert->dst_ia);
+      nets = sim_container_get_nets_has_ia (sim_ctn, alert->dst_ia);
+
       if (host)
 	alert->asset_dst = sim_host_get_asset (host);
+      else if (nets)
+	{
+	  list = nets;
+	  while (list)
+	    {
+	      net = (SimNet *) list->data;
+	      asset_net = sim_net_get_asset (net);
+	      if (asset_net > alert->asset_dst)
+		alert->asset_dst = asset_net;
+
+	      list = list->next;
+	    }
+	}
       
       alert->risk_a = ((double) (alert->priority * alert->asset_dst * alert->reliability)) / 25;
       if (alert->risk_a < 0)
@@ -785,7 +817,6 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	}
       
       /* Update Net Levels A */
-      nets = sim_container_get_nets_has_ia (sim_ctn, alert->dst_ia);
       list = nets;
       while (list)
 	{
