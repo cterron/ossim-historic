@@ -419,7 +419,7 @@
         </td>
       </tr>
       <tr>
-        <td colspan="2">* <i>Leave field blank for password unchanged</i></td>
+        <td colspan="2">* <i>Password unchanged if field left blank.</i></td>
       </tr>
       <tr><th colspan="2">Snort</th></tr>
       <tr>
@@ -458,7 +458,7 @@
         </td>
       </tr>
       <tr>
-        <td colspan="2">** <i>Leave field blank for password unchanged</i></td>
+        <td colspan="2">* <i>Password unchanged if field left blank.</i></td>
       </tr>
       <tr><th colspan="2">Paths</th></tr>
       <tr>

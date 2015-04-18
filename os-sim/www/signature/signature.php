@@ -61,6 +61,9 @@
       <td colspan="4" align="center">
         <a href="newsignatureform.php">Insert new Signature Group</a>
       </td>
+    <tr>
+      <td colspan="4"><a href="../conf/reload.php?what=signatures">Reload</a></td>
+    </tr>
     </td>
 </table>
 

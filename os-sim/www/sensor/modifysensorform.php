@@ -46,6 +46,52 @@
                value="<?php echo $sensor->get_ip(); ?>"></td>
   </tr>
   <tr>
+    <th>Priority</th>
+    <td class="left">
+      <select name="priority">
+        <option
+        <?php if ($sensor->get_priority() == 0) echo " SELECTED "; ?>
+          value="0">0</option>
+        <option
+        <?php if ($sensor->get_priority() == 1) echo " SELECTED "; ?>
+          value="1">1</option>
+        <option
+        <?php if ($sensor->get_priority() == 2) echo " SELECTED "; ?>
+          value="2">2</option>
+        <option
+        <?php if ($sensor->get_priority() == 3) echo " SELECTED "; ?>
+          value="3">3</option>
+        <option
+        <?php if ($sensor->get_priority() == 4) echo " SELECTED "; ?>
+          value="4">4</option>
+        <option
+        <?php if ($sensor->get_priority() == 5) echo " SELECTED "; ?>
+          value="5">5</option>
+        <option
+        <?php if ($sensor->get_priority() == 6) echo " SELECTED "; ?>
+          value="6">6</option>
+        <option
+        <?php if ($sensor->get_priority() == 7) echo " SELECTED "; ?>
+          value="7">7</option>
+        <option
+        <?php if ($sensor->get_priority() == 8) echo " SELECTED "; ?>
+          value="8">8</option>
+        <option
+        <?php if ($sensor->get_priority() == 9) echo " SELECTED "; ?>
+          value="9">9</option>
+        <option
+        <?php if ($sensor->get_priority() == 10) echo " SELECTED "; ?>
+          value="10">10</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th>Port</th>
+    <td class="left">
+        <input type="text" name="port" 
+               value="<?php echo $sensor->get_port(); ?>"></td>
+  </tr>
+  <tr>
     <th>Description</th>
     <td class="left">
       <textarea name="descr" 

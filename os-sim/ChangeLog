@@ -1,5 +1,111 @@
 # ChangeLog for OSSIM
 
+    26 Jan 2004 DK <dk@ossim.net>
+    * Sample snort conf file (spade enabled).
+    * Arpwatch no_ip patch included.
+
+    26 Jan 2004 Fabio Ospitia Trujillo <fot@ossim.net> :
+    * New config File src/config.xml.
+    * New attributes in src/directives.xml
+    * Plugins Database in db/ossim_data.sql
+    * Patch for acid 0.9.6b23 in contrib/acid.patch
+    * Server start up with ./os-sim -c config.xml
+
+    20 Jan 2004 David Gil <dgil@ossim.net>
+    * Iptables detector improvement. Obtain plugin_sid from the action 
+      (accept => 1, reject => 2, drop/deny => 3)
+    * Control panel changes, backlog class and www rewritten.
+    * Agent reconnect (bug fixes)
+
+    19 Jan 2004 David Gil <dgil@ossim.net> :
+    * MonitorNtop.py: Error control if there is not info of a host.
+    * config.xml: static configuration of 'interface' and 'sensor'.
+    * util.py: debug messages (with fancy colors ;)
+
+    16 Jan 2004 David Gil <dgil@ossim.net> :
+    * Iptables plugin revision.
+    * Snort and Spade parser read alerts from fast format.
+
+    15 Jan 2004 David Gil <dgil@ossim.net> :
+    * Only append plugins that are enabled in the config file! (bug fixed)
+
+    14 Jan 2004 David Gil <dgil@ossim.net> :
+    * <frecuency>N</frecuency> for look up every N seconds (Monitors).
+    * self.ip now contains de own agent ip. Visible for every
+      detector/monitor.
+    * homogeneous date format for every alert! (YYYY-MM-DD HH:MM:SS)
+
+    13 Jan 2004 David Gil <dgil@ossim.net> :
+    * Ntop sids and its information related in a python tuple.
+      (1 => pktSent, ...)
+    * Absolute and relative values management.
+    * Sensor ip and interface
+    * Config info stored in a hash instead of an array. 
+    * Minor agent changes.
+
+    12 Jan 2004 David Gil <dgil@ossim.net> :
+    * New framework menu, improved and more structured.
+    * Agent bug fixes
+
+    08 Jan 2004 David Gil <dgil@ossim.net> :
+    * New monitor plugin for agent, Ntop.
+
+    26 Dec 2003 David Gil <dgil@ossim.net> :
+    * New document, how to install ossim in Debian.
+
+    19 Dec 2003 David Gil <dgil@ossim.net> :
+    * 'detector' and 'monitor' functionality in agent
+
+    17 Dec 2003 David Gil <dgil@ossim.net> :
+    * Append plugins (notice to server about plugins managed by the agent)
+    * Added plugin ids support in agent.
+    * Use a sequence number between server and agent on every connection.
+
+    16 Dec 2003 David Gil <dgil@ossim.net> :
+    * Send signals from the framework in order to force the reload of
+      server structures
+
+    15 Dec 2003 David Gil <dgil@ossim.net> :
+    * Directives editor (viewer only)
+
+    12 Dec 2003 David Gil <dgil@ossim.net> :
+    * new fields in Sensor table, 'port' and 'connect'
+
+    11 Dec 2003 David Gil <dgil@ossim.net> :
+    * Multiple sensor management for each host
+    * Sensor priority
+
+    04 Dec 2003 David Gil <dgil@ossim.net> :
+    * Bug fixed at mac.pl
+     (http://sourceforge.net/forum/forum.php?thread_id=980797&forum_id=294471)
+
+    03 Dec 2003 David Gil <dgil@ossim.net> :
+    * Vulnmeter, hosts and nets vulnerability meter.
+      (Remotely audit with Nessus).
+
+    01 Dec 2003 David Gil <dgil@ossim.net> :
+    * Many more info at host inventory
+      - Operative System (p0f)
+      - Active services and aplications names/versions (nmap)
+      - Netbios name and workgroup (nmblookup)
+
+    29 Nov 2003 DK <dk@ossim.net> :
+    * 0.7.1 released
+    * New ntop 2.2.95 patch (rrd aberrant behaviour support).
+    * Use the patch only with very recent rrd-cvs-snapshots
+
+* OSSIM-0.7.1 (29 Nov 2003)
+
+    28 Nov 2003 FOT <fot@ossim.net> :
+    * Container memory blocks
+    * Memory improvements
+    * Focus in stability
+    * Data base connection by thread
+    * Server log in /tmp/ossim.log
+
+    26 Nov 2003 David Gil <dgil@ossim.net> :
+    * Added reconnect functionality to Agent
+
     22 Nov 2003 DK <dk@ossim.net> :
     * 0.7 released
     * Paperwork xD

@@ -12,25 +12,6 @@ CREATE TABLE conf (
 );
 INSERT INTO conf VALUES (1, 300, 300, 300, 200);
 
-/* ======== correlation - event backlog ======== */
-DROP TABLE if EXISTS backlog;
-CREATE TABLE backlog (
-    utime           bigint NOT NULL,
-    id              int NOT NULL,
-    name            varchar(255),
-    time_out        int,
-    matched         tinyint,
-    level           int,
-    rule_name       varchar(255),
-    src_ip          varchar(15),
-    dst_ip          varchar(15),
-    src_port        int,
-    dst_port        int,
-    plugin          int,
-    tplugin         int,
-    PRIMARY KEY (utime, id)
-);
-
 /* ======== hosts & nets ======== */
 DROP TABLE IF EXISTS host;
 CREATE TABLE host (
@@ -147,6 +128,9 @@ DROP TABLE IF EXISTS sensor;
 CREATE TABLE sensor (
     name            varchar(64) NOT NULL,
     ip              varchar(15) NOT NULL,
+    priority        smallint NOT NULL,
+    port            int NOT NULL,
+    connect         smallint NOT NULL,
 /*    sig_group_id    int  NOT NULL, */
     descr           varchar(255) NOT NULL,
     PRIMARY KEY     (name)
@@ -234,6 +218,20 @@ CREATE TABLE net_qualification (
     PRIMARY KEY     (net_name)
 );
 
+DROP TABLE IF EXISTS host_vulnerability;
+CREATE TABLE host_vulnerability (
+    ip              varchar(15) NOT NULL,
+    vulnerability   int NOT NULL DEFAULT 1,
+    PRIMARY KEY     (ip)
+);
+
+DROP TABLE IF EXISTS net_vulnerability;
+CREATE TABLE net_vulnerability (
+    net             varchar(15) NOT NULL,
+    vulnerability   int NOT NULL DEFAULT 1,
+    PRIMARY KEY     (net)
+);
+
 DROP TABLE IF EXISTS graph_qualification;
 CREATE TABLE graph_qualification (
     graph_id        int NOT NULL,
@@ -310,6 +308,21 @@ CREATE TABLE host_os (
   anom                      int NOT NULL,
   os_time                 varchar(100) NOT NULL,
   PRIMARY KEY       (ip)
+);
+DROP TABLE IF EXISTS host_services;
+CREATE TABLE host_services (
+    ip      varchar(15) NOT NULL,
+    service varchar(128) NOT NULL,
+    version varchar(255),
+    PRIMARY KEY (ip, service, version)
+);
+
+DROP TABLE IF EXISTS host_netbios;
+CREATE TABLE host_netbios (
+    ip      varchar(15) NOT NULL,
+    name    varchar(128) NOT NULL,
+    wgroup  varchar(128),
+    PRIMARY KEY (ip)
 );
 DROP TABLE IF EXISTS rrd_conf;
 CREATE TABLE rrd_conf (

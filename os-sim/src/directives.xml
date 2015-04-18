@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<directives>
+
+  <directive id="1" name="Suspicious web access">
+    <rule type="detector" name="1" priority="1" reliability="1" time_out="10" occurrence="3" from="ANY" to="ANY" port_from="ANY" port_to="80,443,8080" plugin_id="1104" plugin_sid="6">
+      <rules>
+        <rule type="detector" name="2a" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="1668">
+          <rules>
+            <rule type="detector" name="3a" priority="1" reliability="1" time_out="0" occurrence="1" from="2:DST_IP" to="2:SRC_IP" port_from="2:DST_PORT" port_to="2:SRC_PORT" plugin_id="1001" plugin_sid="1666"/>
+            <rule type="detector" name="3b" priority="1" reliability="1" time_out="0" occurrence="1" from="2:DST_IP" to="2:SRC_IP" port_from="2:DST_PORT" port_to="2:SRC_PORT" plugin_id="1001" plugin_sid="1292"/>
+          </rules>
+
+        </rule>
+        <rule type="detector" name="2b" priority="1" reliability="1" time_out="10" occurrence="2" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="1125"/>
+      </rules>
+
+    </rule>
+  </directive>
+
+  <directive id="2" name="Successful DCOM exploit">
+    <rule type="detector" name="Strange 135/tcp connection" priority="1" reliability="1" time_out="0" occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="135" plugin_id="1104" plugin_sid="1">
+      <rules>
+        <rule type="detector" name="Dcom-exit-thread default exploit" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="666" plugin_id="1104" plugin_sid="1">
+          <rules>
+            <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="6666"/>
+            <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="2192"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="1" count="10"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="3"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="4"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="6"/>
+          </rules>
+        </rule>
+        <rule type="detector" name="Strange connection after 135/tcp" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY" plugin_id="104" plugin_sid="1">
+          <rules>
+            <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="6666"/>
+            <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="2192"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="1"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="3"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="4"/>
+            <rule type="detector" name="Strange connections (DCOM?)" priority="1" reliability="1" time_out="0" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="6"/>
+          </rules>
+        </rule>
+        <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="6666"/>
+        <rule type="detector" name="Dcom exploit shellcode" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="2192"/>
+      </rules>
+    </rule>
+  </directive>
+
+  <directive id="3" name="Directive Monitor Test">
+    <rule type="detector" name="1" priority="1" reliability="1" time_out="10" occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="1">  <!-- Spade rare dest port ANY:any - ANY:200  -->
+      <rules>
+        <rule type="monitor" name="Rule Monitor Test 1" from="1:DST_IP" to="1:SRC_IP" port_from="100" port_to="1000" plugin_id="2005" plugin_sid="5" absolute="1" condition="ge" value="100" interval="20" />     <!-- Ntop en 1.97 packets sent ge 1 en 20 secs -->
+      </rules>
+    </rule>
+  </directive>
+
+</directives>

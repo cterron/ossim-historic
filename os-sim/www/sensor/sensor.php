@@ -26,6 +26,15 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("inet_aton(ip)", $order);
           ?>">Ip</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("priority", $order);
+          ?>">Priority</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("port", $order);
+          ?>">Port</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("connect", $order);
+          ?>">Active</a></th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -46,6 +55,12 @@
     <tr>
       <td><?php echo $sensor->get_name(); ?></td>
       <td><?php echo $sensor->get_ip(); ?></td>
+      <td><?php echo $sensor->get_priority(); ?></td>
+      <td><?php echo $sensor->get_port(); ?></td>
+      <td><?php 
+        if ($sensor->get_connect() == 1) echo "YES";
+        else echo "NO";
+      ?></td>
       <td><?php echo $sensor->get_descr(); ?></td>
       <td>
         <a href="editsensor.php?ip=<?php echo $ip ?>">Remote edit</a>*
@@ -60,12 +75,15 @@
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="7"><a href="newsensorform.php">Insert new sensor</a></td>
+      <td colspan="10"><a href="newsensorform.php">Insert new sensor</a></td>
+    </tr>
+    <tr>
+      <td colspan="10"><a href="../conf/reload.php?what=sensors">Reload</a></td>
     </tr>
   </table>
 
 <p><i>* You must share dsa keys between hosts in order to use this
-functionality</i><br/><i>(see README.sensors for more details).</i></p>
+functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partially broken. Use with care or fix.</i></p>
 
 </body>
 </html>

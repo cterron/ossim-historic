@@ -166,7 +166,9 @@
         <a href="newpolicyform.php">Insert new policy</a>
     </td>
   </tr>
-
+  <tr>
+    <td colspan="9"><a href="../conf/reload.php?what=policies">Reload</a></td>
+  </tr>
   </table>
     
 </body>

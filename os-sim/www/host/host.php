@@ -80,7 +80,8 @@
             }
 ?>    </td>
       <td><?php echo $host->get_descr(); ?></td>
-      <td><a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>
+      <td><a href="hostinfo.php?ip=<?php echo $ip ?>">More_Info</a>
+          <a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>
           <a href="deletehost.php?ip=<?php echo $ip ?>">Delete</a></td>
     </tr>
 
@@ -92,6 +93,9 @@
 ?>
     <tr>
       <td colspan="11"><a href="newhostform.php">Insert new host</a></td>
+    </tr>
+    <tr>
+      <td colspan="11"><a href="../conf/reload.php?what=hosts">Reload</a></td>
     </tr>
   </table>
 

@@ -1,62 +1,81 @@
 <?xml version="1.0"?>
 
 <config>
+
+    <!-- Ip and port number where the ossim server is listening -->
     <serverip>127.0.0.1</serverip>
     <serverport>40001</serverport>
+
     <plugins>
 
-        <!-- snort and spade plugin (syslog format) -->
-        <plugin name="snort" enable="yes">
+        <!-- 
+             snort & spade detector
+             location must point to a fast format log 
+             enable snort fast loggin adding this line to the snort.conf:
+               output alert_fast: fast.log 
+        -->
+        <plugin id="1001" name="snort" type="detector" enable="yes">
             <path>/usr/bin/snort</path>
-            <logfile>
-                <type>syslog</type>
-                <location>auth.log</location>
-            </logfile>
-        </plugin>
-        
-        <!-- snort and spade plugin (fast format) -->
-        <plugin name="snort" enable="yes">
-            <path>/usr/bin/snort</path>
-            <logfile>
-                <type>fast</type>
-                <location>auth.log</location>
-            </logfile>
-        </plugin>
-        
-        <!-- FireWall-1 plugin -->
-        <plugin name="fw-1" enable="yes">
-            <path></path>
-            <logfile>
-                <type>syslog</type>
-                <location>auth.log</location>
-            </logfile>
-        </plugin>
-        
-        <!-- Apache plugin -->
-        <plugin name="apache" enable="yes">
-            <path></path>
-            <logfile>
-                <type>syslog</type>
-                <location>auth.log</location>
-            </logfile>
+            <source>fast</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/snort/fast.log</location>
         </plugin>
 
-        <!-- IIS plugin -->
-        <plugin name="iis" enable="yes">
+        <!-- FireWall-1 detector -->
+        <plugin id="1504" name="fw-1" type="detector" enable="yes">
             <path></path>
-            <logfile>
-                <type>syslog</type>
-                <location>auth.log</location>
-            </logfile>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+        
+        <!-- 
+             Apache detector 
+             location must point to an apache access log
+             (for example: /var/log/apache/access.log)
+        -->
+        <plugin id="1501" name="apache" type="detector" enable="no">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/apache/access.log</location>
         </plugin>
 
-        <!-- iptables plugin -->
-        <plugin name="iptables" enable="yes">
+        <!-- IIS detector -->
+        <plugin id="1502" name="iis" type="detector" enable="yes">
             <path></path>
-            <logfile>
-                <type>syslog</type>
-                <location>auth.log</location>
-            </logfile>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+
+        <!-- iptables detector -->
+        <plugin id="1503" name="iptables" type="detector" enable="yes">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+
+
+        <!-- 
+             ntop monitor 
+             location must point to the ip and port where ntop is listening
+             (for example: 127.0.0.1:3000)
+             frequency: if server make a request, get ntop info every N seconds
+        -->
+        <plugin id="2005" name="ntop" type="monitor" enable="yes">
+            <path></path>
+            <source>socket</source>
+            <location>127.0.0.1:3000</location>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <frequency>20</frequency>
         </plugin>
 
     </plugins>

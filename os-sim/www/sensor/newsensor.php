@@ -13,7 +13,8 @@
 
     /* check params */
     if (($_POST["insert"]) &&
-        (!$_POST["name"] || !$_POST["ip"] || !$_POST["descr"])) 
+        (!$_POST["name"] || !$_POST["ip"] || !$_POST["port"] || 
+         !$_POST["descr"]))
     {
 ?>
 
@@ -27,6 +28,8 @@
 
     $name        = mysql_escape_string($_POST["name"]);
     $ip          = mysql_escape_string($_POST["ip"]);
+    $priority    = mysql_escape_string($_POST["priority"]);
+    $port        = mysql_escape_string($_POST["port"]);
     $descr       = mysql_escape_string($_POST["descr"]);
 
     require_once 'ossim_db.inc';
@@ -34,7 +37,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
    
-    Sensor::insert ($conn, $name, $ip, $descr);
+    Sensor::insert ($conn, $name, $ip, $priority, $port, $descr);
 
     $db->close($conn);
 }

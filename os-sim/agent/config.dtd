@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+<!ELEMENT config(serverip, serverport, plugins)>
+<!ELEMENT serverip (#PCDATA)>
+<!ELEMENT serverport (#PCDATA)>
+<!ELEMENT plugins (plugin+)>
+<!ELEMENT plugin (path, type, location)>
+<!ATTLIST plugin 
+    name #IMPLIED 
+    enable (yes | no) #REQUIRED>
+<!ELEMENT path (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT location (#PCDATA)>
+

@@ -75,6 +75,9 @@
     <tr>
       <td colspan="9"><a href="newnetform.php">Insert new network</a></td>
     </tr>
+    <tr>
+      <td colspan="9"><a href="../conf/reload.php?what=nets">Reload</a></td>
+    </tr>
   </table>
     
 </body>

@@ -23,6 +23,27 @@
         value="<?php echo $ip;?>"></td>
   </tr>
   <tr>
+    <th>Priority</th>
+    <td class="left">
+      <select name="priority">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option selected value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th>Port</th>
+    <td class="left"><input type="text" name="port"></td>
+  </tr>
+  <tr>
     <th>Description</th>
     <td class="left">
       <textarea name="descr" rows="2" cols="20"></textarea>

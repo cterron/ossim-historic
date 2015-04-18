@@ -55,6 +55,41 @@ class ossim_db {
             return $column;
         }
     }
+
+    /*
+     * Given a host ip, return its sensor ip asociated.
+     * First look at host table. If no match, look at
+     * /etc/ossim.conf
+     */
+    function get_sensor_link($conn, $host_ip)
+    {
+        require_once "ossim_conf.inc";
+        $conf = new ossim_conf();
+
+        $sensor_ip = '';
+
+        $query = "SELECT sensor.ip FROM host_sensor_reference, sensor 
+            WHERE host_sensor_reference.host_ip = '$host_ip' AND 
+            sensor.name = host_sensor_reference.sensor_name 
+            ORDER BY sensor.priority DESC LIMIT 1;";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } 
+        
+        /* read from db */
+        elseif (!$rs->EOF) {
+            list($protocol, $ip, $port)  = split(':', $conf->get_conf("ntop_link"));
+            $sensor_ip = 'http://' . $rs->fields["ip"] . ":$port";
+        } 
+        
+        /* read from /etc/ossim.conf */
+        if ($sensor_ip == '') {
+            $sensor_ip = $conf->get_conf("ntop_link");
+        }
+
+        return $sensor_ip;
+    }
 }
 
 ?>

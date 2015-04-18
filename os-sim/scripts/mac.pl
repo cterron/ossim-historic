@@ -14,6 +14,9 @@ my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_con
     die "Can't connect to DBI\n";
 
 my $arpwatch = $ossim_conf::ossim_data->{"arpwatch_path"};
+my $interface = $ossim_conf::ossim_data->{"ossim_interface"};
+my $my_touch = $ossim_conf::ossim_data->{"touch_path"};
+my $has_ip = $ossim_conf::ossim_data->{"has_ip"};
 
 my $when;
 my $host;
@@ -21,20 +24,25 @@ my $mac;
 my $temp_mac;
 my $temp_previous;
 
-`/bin/rm -f /var/log/arp.dat; /bin/touch /var/log/arp.dat`;
-
-open(ARPWATCH,"$arpwatch -d -f /var/log/arp.dat 2>&1|");
+`/bin/rm -f /var/log/arp.dat; $my_touch /var/log/arp.dat`;
+if($has_ip){
+open(ARPWATCH,"$arpwatch -d -i $interface -f /var/log/arp.dat 2>&1|");
+} else {
+print "No IPv4 Address asigned, make sure you patched arpwatch with included
+arpwatch patch\n";
+open(ARPWATCH,"$arpwatch -w -d -i $interface -f /var/log/arp.dat 2>&1|");
+}
 
 while(<ARPWATCH>){
 my $time = localtime;
     if(/\s+ip\saddress:\s(.*)/){
         $host = $1;
-        if(<ARPWATCH> =~ m/\s+ethernet\saddress:\s(.*)/) {
-            $mac = $1;
+        if(<ARPWATCH> =~ m/\s+(ethernet|mac)\saddress:\s(.*)/) {
+            $mac = $2;
         }
         $mac .= "|";
-        if(<ARPWATCH> =~ m/\s+ethernet\svendor:\s(.*)/) {
-        $mac .= "$1";
+        if(<ARPWATCH> =~ m/\s+(ethernet|mac)\svendor:\s(.*)/) {
+        $mac .= "$2";
         }
         my $query = "SELECT * FROM host_mac WHERE ip = '$host';";
         my $sth = $dbh->prepare($query);

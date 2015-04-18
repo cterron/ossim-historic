@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+ 
+<!--
+  <!DOCTYPE jbosscmp-jdbc PUBLIC
+      "-//Ossim//DTD Ossim Directives 1.0//EN"
+      "http://www.ossim.net/dtd/directives.dtd">
+-->
+
+
+<!ELEMENT directives (directive)>
+
+<!ELEMENT directive (rule, actions?)>
+<!ATTLIST directive
+	id		ID		#IMPLIED
+	name		NMTOKEN		#REQUIRED
+>
+
+<!ELEMENT rule (rules, actions?)>
+<!ATTLIST rule
+	name		ID		#IMPLIED
+        type            NMTOKEN         #REQUIRED
+	priority	NMTOKEN		#REQUIRED
+	reliability	NMTOKEN		#REQUIRED
+        time_out        NMTOKEN         #REQUIRED
+        occurrence      NMTOKEN         #REQUIRED
+ 	from		NMTOKEN		#REQUIRED
+	to		NMTOKEN		#REQUIRED
+	port_from	NMTOKEN		#REQUIRED
+	port_to		NMTOKEN		#REQUIRED
+	plugin		NMTOKEN		#REQUIRED
+	tplugin		NMTOKEN		#REQUIRED
+>
+
+<!ELEMENT rules (rule+)>
+
+<!ELEMENT actions (action+)>
+
+<!ELEMENT action>

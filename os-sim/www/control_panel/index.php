@@ -114,7 +114,8 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         $host_ip = $host->get_host_ip();
 ?>
           <tr>
-            <td><a href="<?php echo "$ntop_link/$host_ip"?>.html" title="<?php
+            <td><a href="<?php echo ossim_db::get_sensor_link($conn, $host_ip) . 
+                "/$host_ip"?>.html" title="<?php
             echo get_caption($host_ip,"host","compromise",$range);?>"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             </td>
@@ -170,7 +171,8 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         $host_ip = $host->get_host_ip();
     ?>
           <tr>
-            <td><a href="<?php echo "$ntop_link/$host_ip"?>.html"title="<?php
+            <td><a href="<?php echo ossim_db::get_sensor_link($conn, $host_ip) . 
+                "/$host_ip"?>.html"title="<?php
             echo get_caption($host_ip,"host","attack",$range);?>"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             </td>
@@ -339,13 +341,14 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         <th>Destination Ip</th>
         <th>Source Port</th>
         <th>Destination Port</th>
-        <th>plugin</th>
-        <th>tplugin</th>
+        <th>Plugin_id</th>
+        <th>Plugin_sid</th>
         <th>Delete</th>
       </tr>
 <?php
     if ($backlog_list = Backlog::get_list($conn)) {
         foreach($backlog_list as $backlog) {
+            if ($backlog->get_matched() == 1) {
 ?>
       <tr>
         <td><?php echo date ("d/m/Y - H:i:s" , 
@@ -359,19 +362,20 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
             echo $backlog->get_name();
         ?></td>
         <td><?php echo $backlog->get_time_out() ?></td>
-        <td><?php echo $backlog->get_level() ?></td>
+        <td><?php echo $backlog->get_rule_level() ?></td>
         <td><?php echo $backlog->get_rule_name() ?></td>
         <td><?php echo $backlog->get_src_ip() ?></td>
         <td><?php echo $backlog->get_dst_ip() ?></td>
         <td><?php echo $backlog->get_src_port() ?></td>
         <td><?php echo $backlog->get_dst_port() ?></td>
-        <td><?php echo $backlog->get_plugin() ?></td>
-        <td><?php echo $backlog->get_tplugin() ?></td>
-        <td><input type="checkbox" 
+        <td><?php echo $backlog->get_plugin_id() ?></td>
+        <td><?php echo $backlog->get_plugin_sid() ?></td>
+        <td><input type="checkbox"
                    name="<?php echo $backlog->get_utime() ?>"/>
         </td>
       </tr>
 <?php
+            } /* if backlog matched */
         } /* foreach backlog_list */
 ?>
       <tr>
@@ -488,7 +492,8 @@ anomaly_time desc")) {
 ?>
 <tr>
 <th>
-<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+    "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A></th><td> <?php echo $rrd_names[$alert->get_what()];?></td>
 <td> <?php echo $alert->get_anomaly_time();?></td>
@@ -541,7 +546,8 @@ if ($host_os_list = Host_os::get_list($conn, "where anom = 1", "")) {
     ?>
 
 <tr><th>
-<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+    "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A>
 </th>
@@ -605,7 +611,8 @@ if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1", "")) {
     ?>
 
 <tr><th>
-<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+<A HREF="<?php echo ossim_db::get_sensor_link($conn, $ip) . 
+    "/$ip.html";?>" target="_blank" title="<?php
 echo $ip;?>">
 <?php echo Host::ip2hostname($conn, $ip);?></A>
 </th>
@@ -663,12 +670,16 @@ $encoded;?>"></input>
       &nbsp;·&nbsp;
       <a href="<?php echo $ntop_link ?>/sortDataIP.html">Service Data</a>
       &nbsp;·&nbsp;
-      <a href="<?php echo $ntop_link ?>/ipTrafficMatrix.html">Time Usage</a>
+      <a href="<?php echo $ntop_link ?>/ipTrafficMatrix.html">Traffic Matrix</a>
+      &nbsp;·&nbsp;
+      <a href="<?php echo $ntop_link ?>/dataHostTraffic.html">Time Matrix</a>
     </td>
   </tr>
 </table>
 
   <!-- static code -->
+
+<!--
 <p>&nbsp;</p>
 <center><h3> Static code. work in progress...</h3></center>
  <table align="center">
@@ -694,13 +705,13 @@ $encoded;?>"></input>
   <tr>
     <td align="center" colspan="2">DMZ</td>
     <td align="center">
-      <a href="<?php echo $ntop_link?>/IpL2R.html"><font color="red">46</font></a></td>
+      <a href="<?php // echo $ntop_link?>/IpL2R.html"><font color="red">46</font></a></td>
     <td align="center">
-      <a href="<?php echo $ntop_link?>/IpL2R.html"><font color="red">400%</font></a></td>
+      <a href="<?php // echo $ntop_link?>/IpL2R.html"><font color="red">400%</font></a></td>
     <td align="center">
-      <a href="<?php echo $ntop_link?>/thptStats.html"><font color="red">9,3</font></a></td>
+      <a href="<?php // echo $ntop_link?>/thptStats.html"><font color="red">9,3</font></a></td>
     <td align="center">
-      <a href="<?php echo $ntop_link?>/thptStats.html"><font color="red">200%</font></a></td>
+      <a href="<?php // echo $ntop_link?>/thptStats.html"><font color="red">200%</font></a></td>
   </tr>
   <tr>
     <td align="center" colspan="2">Internal</td>
@@ -709,7 +720,7 @@ $encoded;?>"></input>
     <td align="center">60</td>
     <td align="center">-10%</td>
   </tr>
- 
+
 
 
  
@@ -731,10 +742,10 @@ $encoded;?>"></input>
     <td align="center">www.ipsoluciones.com</td>
     <td align="center">http</td>
     <td align="center">
-      <a href="<?php echo $stats_link?>/stats/web/www.ipsoluciones.com.html">5,6</a></td>
+      <a href="<?php // echo $stats_link?>/stats/web/www.ipsoluciones.com.html">5,6</a></td>
     <td align="center">2,30%</td>
     <td align="center">
-      <a href="<?php echo $stats_link?>/stats/ping/www.ipsoluciones.com.html">5</a></td>
+      <a href="<?php // echo $stats_link?>/stats/ping/www.ipsoluciones.com.html">5</a></td>
     <td align="center">-20%</td>
   </tr>
   <tr>
@@ -748,8 +759,8 @@ $encoded;?>"></input>
   <tr>
     <td align="center">mail.ipsoluciones.com</td>
     <td align="center">smtp</td>
-    <td align="center"><a href="<?php echo $stats_link?>/stats/smtp/mail.ipsoluciones.com.html">22,3</a></td>
-    <td align="center"><a href="<?php echo $stats_link?>/stats/smtp/mail.ipsoluciones.com.html">89,20%</a></td>
+    <td align="center"><a href="<?php // echo $stats_link?>/stats/smtp/mail.ipsoluciones.com.html">22,3</a></td>
+    <td align="center"><a href="<?php // echo $stats_link?>/stats/smtp/mail.ipsoluciones.com.html">89,20%</a></td>
     <td align="center">3</td>
     <td align="center">8%</td>
   </tr>
@@ -765,7 +776,7 @@ $encoded;?>"></input>
     <td align="center">ftp.ipsoluciones.com</td>
     <td align="center">ftp</td>
     <td align="center">
-      <a href="<?php echo $stats_link?>/stats/ftp/ftp.ipsoluciones.com.html">2,3</a></td>
+      <a href="<?php // echo $stats_link?>/stats/ftp/ftp.ipsoluciones.com.html">2,3</a></td>
     <td align="center">9,20%</td>
     <td align="center">4</td>
     <td align="center">8%</td>
@@ -784,16 +795,19 @@ $encoded;?>"></input>
   </tr>
   <tr>
     <td align="center" colspan="2"><font color="blue">mail</font></td>
-    <td align="center" colspan="2"><font color="red"><A HREF="<?php echo $mailstats_link?>/mailscanner-mrtg/mail/mail.html"><font color="red" >1623</font></A></font></td>
+    <td align="center" colspan="2"><font color="red"><A HREF="<?php // echo $mailstats_link?>/mailscanner-mrtg/mail/mail.html"><font color="red" >1623</font></A></font></td>
     <td align="center" colspan="2"><font color="red">140%</font></td>
   </tr>
   <tr>
     <td align="center" colspan="2"><font color="blue">virus</font></td>
-    <td align="center" colspan="2"><font color="red"><A HREF="<?php echo $mailstats_link?>/mailscanner-mrtg/virus/virus.html"><font color="red">40</font></A></font></td>
+    <td align="center" colspan="2"><font color="red"><A HREF="<?php // echo $mailstats_link?>/mailscanner-mrtg/virus/virus.html"><font color="red">40</font></A></font></td>
     <td align="center" colspan="2"><font color="red">102%</font></td>
   </tr>
 <FORM name="temp" action="">
-<!--  <tr><th colspan="6" bgcolor="silver">Profile anomalies</th></tr>
+
+
+
+  <tr><th colspan="6" bgcolor="silver">Profile anomalies</th></tr>
   <tr>
     <td colspan="3" align="center">Show anomalies</td>
     <td align="center"><A HREF="">Acknowledged</A></td>

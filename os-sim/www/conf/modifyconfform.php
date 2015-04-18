@@ -47,6 +47,12 @@
       </td>
     </tr>
     <tr><th colspan="2"></th></tr>
+    <tr>
+      <td colspan="2">
+        <a href="reload.php">Reload All</a>
+      </td>
+    </tr>
+    <tr><th colspan="2"></th></tr>
     <tr><td colspan="2"><a href="../sensor/editsensor.php">Edit remote sensor</a></td></tr>
     <tr><th colspan="2"></th></tr>
     <tr><th colspan="2">Appearance</th></tr>

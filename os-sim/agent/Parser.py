@@ -1,65 +1,48 @@
-import re
-import string
 import sys
-import time
 import threading
-
 
 class Parser(threading.Thread):
 
-    def __init__(self, conn, plugin):
-        self.conn   = conn
+    def __init__(self, agent, plugin):
+        self.agent  = agent
+
+        # link agent atributes and methods to use them. why???
+        self.conn      = agent.conn
+        self.reconnect = agent.reconnect
+        self.my_ip     = agent.my_ip
+
         self.plugin = plugin
         threading.Thread.__init__(self)
 
     def run(self):
     
-        if self.plugin["name"] == 'snort':
-            from ProcessSnort import ProcessSnort
-            snort = ProcessSnort(self.conn, self.plugin)
+        if self.plugin["id"] == '1001':
+            from ParserSnort import ParserSnort
+            snort = ParserSnort(self.agent, self.plugin)
             snort.process()
             
-        elif self.plugin["name"] == 'fw-1':
-            from ProcessFW1 import ProcessFW1
-            fw1 = ProcessFW1(self.conn, self.plugin)
+        elif self.plugin["id"] == '1504':
+            from ParserFW1 import ParserFW1
+            fw1 = ParserFW1(self.agent, self.plugin)
             fw1.process()
             
-        elif self.plugin["name"] == 'apache':
-            from ProcessApache import ProcessApache
-            apache = ProcessApache(self.conn, self.plugin)
+        elif self.plugin["id"] == '1501':
+            from ParserApache import ParserApache
+            apache = ParserApache(self.agent, self.plugin)
             apache.process()
             
-        elif self.plugin["name"] == 'iis':
-            from ProcessIIS import ProcessIIS
-            iis = ProcessIIS(self.conn, self.plugin)
+        elif self.plugin["id"] == '1502':
+            from ParserIIS import ParserIIS
+            iis = ParserIIS(self.agent, self.plugin)
             iis.process()
             
-        elif self.plugin["name"] == 'iptables':
-            from ProcessIptables import ProcessIptables
-            iptables = ProcessIptables(self.conn, self.plugin)
+        elif self.plugin["id"] == '1503':
+            from ParserIptables import ParserIptables
+            iptables = ParserIptables(self.agent, self.plugin)
             iptables.process()
 
         else:
             print "Plugin " + self.plugin["name"] + " is not implemented..."
             sys.exit()
 
-
-    def sendMessage(self, type, date, sensor, plugin, tplugin, priority,
-                     protocol, src_ip, src_port, dst_ip, dst_port):
-
-        
-        message = 'message [type='      + str(type)      + ']' +\
-                          '[date="'     + str(date)      + '"]' +\
-                          '[sensor='    + str(sensor)    + ']' +\
-                          '[plugin='    + str(plugin)    + ']' +\
-                          '[tplugin='   + str(tplugin)   + ']' +\
-                          '[priority='  + str(priority)  + ']' +\
-                          '[protocol='  + str(protocol)  + ']' +\
-                          '[src_ip='    + str(src_ip)    + ']' +\
-                          '[src_port='  + str(src_port)  + ']' +\
-                          '[dst_ip='    + str(dst_ip)    + ']' +\
-                          '[dst_port='  + str(dst_port)  + ']'
-
-        print message + '\n' # debug
-        self.conn.send(message + '\n')
 

@@ -3,15 +3,14 @@
 from Agent import Agent
 
 if __name__ == '__main__':
-    
+
     # Init agent and read config
     agent = Agent()
     agent.parseConfig()
 
     # connect to server
-    agent.connect()
-
-    # parse
-    agent.parser()
-    
+    if agent.connect():
+        agent.monitor()
+        agent.append_plugins()
+        agent.parser()
 

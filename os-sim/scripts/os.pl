@@ -13,12 +13,14 @@ my $dsn = 'dbi:mysql:'.$ossim_conf::ossim_data->{"ossim_base"}.':'.$ossim_conf::
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) or 
     die "Can't connect to DBI\n";
 my $p0f = $ossim_conf::ossim_data->{"p0f_path"};
+my $interface = $ossim_conf::ossim_data->{"ossim_interface"};
+
 
 my $when;
 my $host;
 my $os;
 
-open(P0F,"$p0f -t -q|");
+open(P0F,"$p0f -i $interface -t -q|");
 
 while(<P0F>){
 my $time = localtime;

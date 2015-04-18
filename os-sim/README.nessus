@@ -1,0 +1,34 @@
+Ossim + Nessus FAQ (2004-01-21)
+-------------------------------
+
+This mini-doc tries to explain the basics of using nessus with ossim.
+
+We pretend to automate nessus execution within ossim but as of today there is
+only a frontend for viewing reports and sort-of-a vulnmeter to show at a
+glance which hosts are more or less vulnerable.
+
+Ossim nessus integration as of now consists of a vulnaribility qualification
+script (very simple) and a web interface.
+
+The script is located at $ossim_home/scripts/vulnerability.pl and expects a
+full nessus scan, text format, on STDIN, inserting the qualified results into DB.
+
+On the other hand, at $ossim_home/www/vulnmeter/ you have the scan viewer. The
+main script expects a daily scan, html_graph format, placed at
+$ossim_home/www/vulnmeter/YYYYMMDD/, readable by the webserver.
+
+I.e:
+
+If you scan a series of hosts or networks today and get results.nbe you would
+have to convert it twice. Once into results.txt and once into results/...
+(html_graph).
+The you would need to feed results.txt to scripts/vulnerability.pl (cat
+results.txt | perl vulnerability.pl) and move the html results/ dir into
+www/vulnmeter/20040121/, making it readable to the webuser with chown or
+chmod.
+
+After that you could point your browser at ossim_home/vulnmeter/ and get a
+report summing network risk, host risk and the likes.
+
+Hope it helps and don't worry, things will get easier to use over time (as
+always xD)

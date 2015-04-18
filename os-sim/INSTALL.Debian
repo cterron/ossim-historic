@@ -1,0 +1,499 @@
+
+                 Installing OSSIM on a Debian GNU/Linux
+                ========================================
+
+                        Updated January 27, 2004
+                              version 0.8
+                        
+                        David Gil <dgil@ossim.net>
+                           http://www.ossim.net
+
+
+  Index:
+    1. Introduction
+    2. Necessary software installation
+      2.1 Apache + PHP + ADOdb
+      2.2 Mysql
+      2.3 Snort
+      2.4 Ntop
+      2.5 rrdtool
+      2.6 Mrtg
+      2.7 Nmap + P0f + arpwatch
+      2.8 Snort with Spade
+    3. OSSIM configuration
+      3.1 Database
+      3.2 Acid
+      3.3 Web
+      3.4 Server
+      3.5 Graphs
+      3.6 Agents
+    4. Start up
+    5. Todo
+
+
+
+  1. Introduction
+  ===========================================================================
+
+  This document tries to show in detail and step by step how to install OSSIM
+  on a Debian GNU/Linux system.
+
+  Almost everything exposed in this document can be applied to any other Linux
+  distribution. Hopefully it will be useful to you.
+
+  If you have problems related to the installation in Debian or want to add
+  or to correct something of this document, please, contact me at
+  <dgil@ossim.net>
+
+  You can also contact all the OSSIM developers at <ossim@ossim.net>
+
+
+  2. Necessary software installation
+  ===========================================================================
+
+  Almost all the software needed by OSSIM is in the distribution. It is
+  recommendable to install the lastest versions, since those are the versions
+  being used in production by OSSIM.
+
+
+  2.1 Apache + PHP + ADOdb
+  ---------------------------------------------------------------------------
+
+  It is necessary to install the Apache Web server with PHP support.
+  
+  ADOdb is a PHP database abstraction layer that is being used by Acid and by
+  the OSSIM PHP code.
+  
+  Install the following packages and their respective dependencies:
+   - apache         (>= 1.3.29)
+   - php4           (>= 4.3.3)
+   - libphp-adodb   (>= 4.05)
+
+  Edit the Apache configuration file at '/etc/apache/http.conf' and make sure
+  that the php module is loaded.
+  Also, you can use 'dpkg-reconfigure apache' and mark the module 'mod_php4'
+  from the configuration list.
+  Re-run Apache.
+
+
+  2.2 Mysql
+  ---------------------------------------------------------------------------
+
+  OSSIM can use any database manager, but by simplicity and efficiency
+  reasons, we are going to install mysql.
+
+  Install the following packages and their respective dependencies:
+   - mysql-server (>= 4.0.16)
+   - mysql-client (>= 4.0.16)
+
+  The initial root password is empty, so anyone can connect as root without a
+  password and be granted all privileges. The first thing you should do is
+  specify a password for the MySQL root user.
+
+    $ mysql -u root mysql
+    mysql> UPDATE user SET Password=password('nuevapass') WHERE user='root';
+
+  Now, you must use the '-p' option whenever you run mysql.
+
+  Networking is disabled by default. Edit the file '/etc/mysql/my.cnf'
+  commenting the line with the 'skip-networking' option. MySQL will be
+  listening on port TCP-3306 after restart.
+  
+
+  2.3 Snort
+  ---------------------------------------------------------------------------
+
+  OSSIM uses Snort as IDS, and Acid to visualize alerts via Web.
+   
+  Install the following packages and their respective dependencies:
+    - snort-mysql   (>= 2.1.0)
+
+  You will be asked for the database configuration. Use these values:
+
+    - hostname = localhost
+    - database = snort
+    - user     = root
+    - password = yourMySQLpass
+
+  If you want to re-configure snort, just type 'dpkg-reconfigure mysql-snort'.
+  
+  You can also edit the configuration files at '/etc/snort/snort.conf'.
+
+  Make sure that the lines 'var HOME_NET' and 'var EXTERNAL_NET' of the snort
+  configuration file have valid values.
+
+  Create the snort tables:
+  
+    $ mysql -u root -p
+    mysql> create database snort;
+    mysql> exit
+    $ zcat /usr/share/doc/snort-mysql/contrib/create_mysql.gz | mysql -u root -p snort
+    
+  Make sure that snort logs alerts to syslog, uncommenting the 
+  'output alert_syslog: LOG_AUTH LOG_ALERT' line from the snort configuration
+  file.
+
+  Add this line to the config file, so snort will log alerts on fast
+  format (needed by agent).
+  
+    "output alert_fast: fast.log"
+
+  You can make a request to the web server *from other machine* in order to
+  verify that snort is installed correctly:
+  
+    $ telnet OSSIM_host 80
+    GET /cmd.exe HTTP/1.1
+
+  Checking the file 'var/log/auth.log' and '/var/log/snort/fast.log' you
+  should see an alert of type 'WEB-IIS cmd.exe access'.
+
+
+  2.4 Ntop
+  ---------------------------------------------------------------------------
+
+  Install the following packages and their respective dependencies:
+    - ntop (>= 2.2c)
+
+  The ntop daemon should listen at port 3000, and 3001 (ssl).
+
+  Go to 'http://yourhost:3000/ to see Ntop in action.
+  
+
+  2.5 rrdtool
+  ---------------------------------------------------------------------------
+  
+  The rrdtool libs used by OSSIM are still in a development status. This is
+  one of the few things which are not in the distro yet, so you have to
+  install them from the sources.
+   
+  Your system must have installed the following packages in order to compile
+  the libraries:
+  
+    - gcc
+    - make
+    - libc6-dev
+    - libtool
+    - automake
+    - autoconf
+  
+  Follow these steps:
+
+    $ cd /tmp
+    $ wget http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/beta/rrdtool-cvs-snap.tar.gz
+    $ tar -xvzf rrdtool-cvs-snap.tar.gz
+    $ cd rrdtool-XXXX-XX-XX
+    $ ./configure --prefix=/usr/local/rrdtool-1.1.0
+    $ make
+    $ make install
+
+  If you have problems compiling rrdtool, you can download this version, that
+  is tested for us.
+
+    http://www.ossim.net/download/rrdtool-cvs-snap-2003-09-10.tar.gz
+
+
+  2.6 Mrtg
+  ---------------------------------------------------------------------------
+    
+  Install Mrtg:
+  
+    - mrtg (>= 2.9.29)
+
+  You have to patch mrtg in order to use the new rrdtool improvements. You
+  will find this patch at '$PATH_TO_OSSIM/contrib/mrtg/mrtg.diff'.
+  
+    $ patch -p0 < $PATH_TO_OSSIM/contrib/mrtg/mrtg.diff
+
+
+  2.7 Nmap + P0f + arpwatch
+  ---------------------------------------------------------------------------
+
+  Install the following packages and their respective dependencies:
+    - nmap      (>= 3.48)
+    - p0f       (>= 2.0.2)
+    - arpwatch  (>= 2.1all)
+  
+  If you get this error executing p0f:
+
+    [-] ERROR: /etc/p0f/p0f.fp: No such file or directory
+
+  make a symbolic link of the configuration file to the correct location:
+
+    $ mkdir /etc/p0f
+    $ ln -s /etc/p0f.fp /etc/p0f/p0f.fp
+
+  Adjust the paths at the Aplications section in ossim configuration file.
+
+
+  2.8 Snort with Spade
+  ---------------------------------------------------------------------------
+
+  If you want anomaly detection integrated with Snort, you can install Spade.
+  You must patch the snort sources and compile them.
+
+  More info:
+    - http://www.silicondefense.com/software/spice/
+    - http://www.silicondefense.com/software/spice/spiceinstallation.shtml
+  
+
+
+  3. OSSIM configuration
+  ===========================================================================
+
+  Download the latest stable version of OSSIM from the download section:
+    http://www.ossim.net/download.php
+
+  Unpack it to '/opt/ossim' (or wherever you want)
+
+  You will see at least the following directories:
+    - /opt/ossim/agent
+    - /opt/ossim/contrib
+    - /opt/ossim/db
+    - /opt/ossim/etc
+    - /opt/ossim/include
+    - /opt/ossim/mrtg
+    - /opt/ossim/pixmpaps
+    - /opt/ossim/scripts
+    - /opt/ossim/src
+    - /opt/ossim/www
+  
+  Copy the sample configuration file from /opt/ossim/etc to /etc directory:
+
+    $ cp /opt/ossim/etc/ossim.conf.sample /etc/ossim.conf
+ 
+  Take a first look to this file and try to tune it as much as you can.
+  
+    
+  3.1 Database
+  ---------------------------------------------------------------------------
+  
+  We are going to create the OSSIM database structure.
+
+  The first thing you have to do is to edit the database configuration at
+  '/etc/ossim.conf'.
+
+    ossim_base=ossim
+    ossim_user=root
+    ossim_pass=password
+    ossim_host=localhost
+    ossim_port=3306
+ 
+  and the snort rules path:
+
+    snort_rules_path=/etc/snort/rules/
+
+  Create a new database for OSSIM and execute the script
+  'db/create_ossim_tables.pl' in order to fill it automatically:
+
+    $ mysql -u root -p
+    mysql> create database ossim;
+    mysql> exit
+    $ cd /opt/ossim/db
+    $ ./create_ossim_tables.pl
+
+  If you get this error message:
+
+    ERROR 1062 at line 340: Duplicate entry '2121-tcp' for key 1
+  
+  don't worry, there are two services at the same port:
+  
+    $ grep 2121 /etc/services
+    iprop           2121/tcp                        # incremental propagation
+    frox            2121/tcp                        # frox: caching ftp proxy
+
+
+  3.2 Acid
+  ---------------------------------------------------------------------------
+
+  Install the following packages and their respective dependencies:
+    - php4-mysql    (>= 4.3.3)
+    - php4-gd       (>= 4.3.3)
+
+  You must load mysql and gd modules into PHP. Edit the
+  '/etc/php/apache/php.ini' file and make sure that the following lines are in
+  the file:
+  
+    extension=gd.so
+    extension=mysql.so
+
+  Download de lastest version of Acid, 0.9.6b23, from
+  http://acidlab.sourceforge.net/ and patch it with the patch that you will
+  find in the OSSIM contrib directory.
+
+    $ cd /var/www/
+    $ wget http://acidlab.sourceforge.net/acid-0.9.6b23.tar.gz
+    $ tar -xvzf acid-0.9.6b23.tar.gz
+    $ patch -p0 < $OSSIM/contrib/acid.patch
+    
+  Check the DB abstraction library variable $DBlib_path in acid_conf.php
+  and set it to "/usr/share/adodb/" and complete de database configuration.
+
+  Go to 'http://yourhost/acid/acid_main.php'. You will get a message that
+  says something about the database not being valid, and will tell you to use
+  the setup page to config and optimise the DB. Click on that link, and then
+  on the next page click on the button that says: 'Create Acid AD'.
+  Now you are done. You can go to the main Acid page to view your alerts, etc.
+
+ 
+  3.3 Web
+  ---------------------------------------------------------------------------
+
+  Add the following alias at the apache configuration file pointing to ossim
+  www directory:
+  
+    "Alias /ossim/ /opt/ossim/www"
+  
+  Make PHP to include the files from the /opt/ossim/include directory. Edit the
+  /etc/php4/apache/php.ini file and search for the include_path value. Add the
+   ossim include directory:
+ 
+    ; UNIX: "/path1:/path2"
+    include_path = ".:/usr/share/pear:/opt/ossim/include"
+
+  Now, include the /opt/ossim/include/ossim_conf.pm in any place where Perl
+  can find it. For example:
+
+    $ ln -s /opt/ossim/include/ossim_conf.pm /usr/lib/perl5/
+
+  Restart apache. At this point you should have the web placed at
+  'http://yourhost/ossim/'
+
+  Take a first look (there are still a lot of things to do!). If you see any
+  broken link, modify it at the ossim configuration file (special atention at
+  the Links section)
+
+
+  3.4 Server
+  ---------------------------------------------------------------------------
+
+  Now, we are going to compile the server. You'll need the following packages
+  and their respective dependencies:
+
+    - libglib2.0-dev    (>= 2.2.3)
+    - libgda2-dev       (>= 1.0.1)
+    - gda2-mysql        (>= 1.0.1)
+    - libgnet2.0-dev    (>= 2.0.3)
+
+  Follow these steps:
+  
+    $ cd /opt/ossim/
+    $ ./autogen.sh
+    $ make
+
+  Edit the '/opt/ossim/src/config.xml' file and adjust the database
+  configuration:
+
+  Run server:
+    $ cd /opt/ossim/src/
+    $ ./os-sim -c config.xml
+  
+
+  3.5 Graphs
+  ---------------------------------------------------------------------------
+  
+  Make the following directories (if they don't exist)
+
+    $ mkdir /opt/ossim/www/mrtg
+    $ cd /opt/ossim/www/mrtg
+    $ mkdir host_qualification net_qualification global_qualification
+    $ mkdir /opt/ossim/www/mrtg-html
+    $ cd /opt/ossim/www/mrtg-html
+    $ mkdir host_qualification net_qualification global_qualification
+    
+  Copy the mrtg config files from the etc ossim directory to /etc:
+
+    $ cp /opt/ossim/etc/mrtg* /etc
+  
+  Run the script named 'launch-mrtg':
+    
+    $ cd /opt/ossim/mrtg
+    $ ./launch-mrtg
+
+  If you see any error, you must tune these config files. To execute this
+  script periodically, the best option is to add an entry to your crontab.
+
+    $ crontab -e
+    0-59/5 * * * * /opt/ossim/mrtg/launch-mrtg
+
+  Finally, copy the script 'draw_graph.pl' to your cgi-bin directory.
+
+    $ cp /opt/ossim/scripts/draw_graph.pl /usr/lib/cgi-bin/
+
+  and take a look at the section links of '/etc/ossim.conf' again ;).
+
+  Ah, obtain arial.ttf and put it somewhere visible to ossim. Adjust
+  /etc/ossim.conf and make sure rrdtool can find its default font.
+
+
+  3.6 Agents
+  ---------------------------------------------------------------------------
+
+  Install the following packages and their respective dependencies:
+   - python (>= 2.3.3)
+  
+  Warning: with python2.2 agents will not work.
+
+  Agents support at this time:
+   
+   Detectors:
+   - snort and spade (fast format)
+   - firewall-1 (syslog)
+   - apache (access log)
+   - iis (syslog)
+   - iptables (syslog)
+
+   Monitors:
+   - ntop
+ 
+  Edit the agent config file at '/opt/ossim/agent/config.xml'
+  
+  In this file you can:
+    - change the address where the server is listening.
+    - activate/deactivate plugins.
+    - configure plugins
+
+  Help: 
+        the snort plugin should read events from '/var/log/snort/fast.log'
+        <location>/var/log/snort/fast.log</location>
+        (See snort installation section for details)
+        
+        the apache plugin should read events from '/var/log/apache/access.log'
+        <location>/var/log/apache/access.log</location>
+        
+        etc.
+
+
+  4. Start up
+  ===========================================================================
+
+  To start ossim server:
+   
+    $ cd /opt/ossim/src
+    $ ./os-sim -c config.xml
+
+  To start agents:
+  
+    $ cd /opt/ossim/agent/
+    $ ./main.py
+ 
+  To start misc scripts:
+  
+    $ cd /opt/ossim/scripts/
+    $ ./control_panel.pl &
+    $ ./os.pl &
+    $ ./mac.pl &
+    $ ./check_rrd.pl >> temp_rrd.log &
+    $ ./check_rrd_global.pl >> temp_rrd.log &
+
+  If you have installed OSSIM in one computer, you can also start OSSIM with
+  this rc file:
+
+    $ /opt/ossim/etc/init.d/ossim start.
+
+
+  5. Todo
+  ===========================================================================
+
+    - Describe Spade integration with Snort
+    - Patch Ntop to use aberrant behaviour funcionality
+

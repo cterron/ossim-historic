@@ -19,7 +19,7 @@ NEWS        : Changelog
 pixmaps     : Images
 README      : short readme
 README.sensors : short readme regarding remote sensor management
-scripts     : parser support scripts
+scripts     : server support scripts
 server      : New parser framework
 TODO        : Things todo during the next few days (No longer used)
 www         : whole web structure

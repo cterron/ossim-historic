@@ -1,5 +1,22 @@
 # ChangeLog for OSSIM
 
+    29 Nov 2003 DK <dk@ossim.net> :
+    * 0.7.1 released
+    * New ntop 2.2.95 patch (rrd aberrant behaviour support).
+    * Use the patch only with very recent rrd-cvs-snapshots
+
+* OSSIM-0.7.1 (29 Nov 2003)
+
+    28 Nov 2003 FOT <fot@ossim.net> :
+    * Container memory blocks
+    * Memory improvements
+    * Focus in stability
+    * Data base connection by thread
+    * Server log in /tmp/ossim.log
+
+    26 Nov 2003 David Gil <dgil@ossim.net> :
+    * Added reconnect functionality to Agent
+
     22 Nov 2003 DK <dk@ossim.net> :
     * 0.7 released
     * Paperwork xD

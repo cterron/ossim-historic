@@ -1,0 +1,134 @@
+diff -c -r arpwatch-2.1a11/arpwatch.8 arpwatch-2.1a11-dk/arpwatch.8
+*** arpwatch-2.1a11/arpwatch.8	Sun Oct  8 22:31:28 2000
+--- arpwatch-2.1a11-dk/arpwatch.8	Mon Jan 12 21:15:29 2004
+***************
+*** 27,33 ****
+  .na
+  .B arpwatch
+  [
+! .B -dN
+  ] [
+  .B -f
+  .I datafile
+--- 27,33 ----
+  .na
+  .B arpwatch
+  [
+! .B -dNw
+  ] [
+  .B -f
+  .I datafile
+***************
+*** 81,86 ****
+--- 81,90 ----
+  The
+  .B -N
+  flag disables reporting any bogons.
++ .LP
++ The
++ .B -w
++ flag is used to specify an interface without a valid IPv4 address.
+  .LP
+  The
+  .B -r
+diff -c -r arpwatch-2.1a11/arpwatch.c arpwatch-2.1a11-dk/arpwatch.c
+*** arpwatch-2.1a11/arpwatch.c	Sat Oct 14 04:07:35 2000
+--- arpwatch-2.1a11-dk/arpwatch.c	Mon Jan 12 21:13:53 2004
+***************
+*** 145,151 ****
+  main(int argc, char **argv)
+  {
+  	register char *cp;
+! 	register int op, pid, snaplen, timeout, linktype, status;
+  #ifdef TIOCNOTTY
+  	register int fd;
+  #endif
+--- 145,151 ----
+  main(int argc, char **argv)
+  {
+  	register char *cp;
+! 	register int op, pid, snaplen, timeout, linktype, status, noip = 0;
+  #ifdef TIOCNOTTY
+  	register int fd;
+  #endif
+***************
+*** 170,176 ****
+  	interface = NULL;
+  	rfilename = NULL;
+  	pd = NULL;
+! 	while ((op = getopt(argc, argv, "df:i:n:Nr:")) != EOF)
+  		switch (op) {
+  
+  		case 'd':
+--- 170,176 ----
+  	interface = NULL;
+  	rfilename = NULL;
+  	pd = NULL;
+! 	while ((op = getopt(argc, argv, "df:i:n:wNr:")) != EOF)
+  		switch (op) {
+  
+  		case 'd':
+***************
+*** 194,199 ****
+--- 194,203 ----
+  				usage();
+  			break;
+  
++ 		case 'w':
++ 			++noip;
++ 			break;
++ 
+  		case 'N':
+  			++nobogons;
+  			break;
+***************
+*** 221,232 ****
+  			exit(1);
+  		}
+  
+  		/* Determine network and netmask */
+! 		if (pcap_lookupnet(interface, &net, &netmask, errbuf) < 0) {
+! 			(void)fprintf(stderr, "%s: bad interface %s: %s\n",
+! 			    prog, interface, errbuf);
+! 			exit(1);
+  		}
+  
+  		/* Drop into the background if not debugging */
+  		if (!debug) {
+--- 225,243 ----
+  			exit(1);
+  		}
+  
++ 		if(noip){
++ 		/* Be able to sniff on interfaces without address */
++ 		net = 0;
++ 		netmask = 0;
++ 		} else {
+  		/* Determine network and netmask */
+! 			if (pcap_lookupnet(interface, &net, &netmask, errbuf) < 0) {
+! 				(void)fprintf(stderr, "%s: bad interface %s: %s\n",
+! 				    prog, interface, errbuf);
+! 				exit(1);
+! 			}
+  		}
++ 		
+  
+  		/* Drop into the background if not debugging */
+  		if (!debug) {
+***************
+*** 750,756 ****
+  	extern char version[];
+  
+  	(void)fprintf(stderr, "Version %s\n", version);
+! 	(void)fprintf(stderr, "usage: %s [-dN] [-f datafile] [-i interface]"
+  	    " [-n net[/width]] [-r file]\n", prog);
+  	exit(1);
+  }
+--- 761,767 ----
+  	extern char version[];
+  
+  	(void)fprintf(stderr, "Version %s\n", version);
+! 	(void)fprintf(stderr, "usage: %s [-dNw] [-f datafile] [-i interface]"
+  	    " [-n net[/width]] [-r file]\n", prog);
+  	exit(1);
+  }

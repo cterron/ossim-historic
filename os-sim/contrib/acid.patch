@@ -1,0 +1,684 @@
+diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
+--- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_cache.inc	2004-01-21 14:43:06.000000000 +0100
+@@ -226,6 +226,12 @@
+   if ( $db->acidGetDBVersion() < 100 )
+      $schema_specific[1] = $schema_specific[1].", signature";
+ 
++  /* OSSIM */
++  $schema_specific[0] = $schema_specific[0].", ossim_type, ossim_priority, ossim_reliability, ossim_asset_src, ossim_asset_dst, ossim_risk_c, ossim_risk_a";
++  $schema_specific[1] = $schema_specific[1].", ossim_event.type, ossim_event.priority, ossim_event.reliability, ossim_event.asset_src, ossim_event.asset_dst, ossim_event.risk_c, ossim_event.risk_a ";
++  $schema_specific[2] = $schema_specific[2]." LEFT JOIN ossim_event ON (event.sid=ossim_event.sid AND event.cid=ossim_event.cid)";
++
++
+   $update_sql = array(4);
+   
+   /* TCP events */
+diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
+--- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
+@@ -94,7 +94,7 @@
+        if ( count($sort_keys) == 2 )
+        {
+           $print_title = "<A HREF=\"".$this->url."&sort_order=".$sort_keys[0]."\">&lt;</A>".
+-                         "&nbsp;".$title["key"]."&nbsp;".
++                         $title["key"].
+                          "<A HREF=\"".$this->url."&sort_order=".$sort_keys[1]."\">&gt;</A>";
+        }
+        else
+@@ -102,7 +102,7 @@
+           $print_title = $title["key"];
+        }
+     
+-       echo '    <TD CLASS="plfieldhdr">&nbsp;'.$print_title.'&nbsp;</TD>'."\n";
++       echo '    <TD CLASS="plfieldhdr">'.$print_title.'</TD>'."\n";
+      }
+ 
+     echo "   </TR>\n";
+diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
+--- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_common.php	2004-01-21 16:44:05.000000000 +0100
+@@ -503,7 +503,10 @@
+   $sig_join_sql = "";
+ 
+   $sql = "SELECT acid_event.sid, acid_event.cid, signature, timestamp, ".
+-         "acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto FROM acid_event";
++         "acid_event.ip_src, acid_event.ip_dst, acid_event.ip_proto, ". 
++         "acid_event.ossim_type, acid_event.ossim_priority, acid_event.ossim_reliability, ".
++         "acid_event.ossim_asset_src, acid_event.ossim_asset_dst, ".
++         "acid_event.ossim_risk_c, acid_event.ossim_risk_a FROM acid_event";
+  
+   $where_sql = " WHERE ";
+   $criteria_sql = " acid_event.sid > 0";
+@@ -542,6 +545,12 @@
+   $data_cnt = $cs->criteria['data']->GetFormItemCnt();
+   $data_encode = $cs->criteria['data']->data_encode;
+ 
++  /* OSSIM */
++  $ossim_priority = $cs->criteria['ossim_priority']->criteria;
++  $ossim_reliability = $cs->criteria['ossim_reliability']->criteria;
++  $ossim_asset_dst = $cs->criteria['ossim_asset_dst']->criteria;
++  $ossim_risk_a = $cs->criteria['ossim_risk_a']->criteria;
++
+   $tmp_meta = "";
+   /* Sensor */
+   if ( $sensor != "" && $sensor != " " )
+@@ -622,6 +631,61 @@
+   if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
+      $cs->criteria['time']->SetFormItemCnt(0);
+ 
++  /*
++   * OSSIM Code
++   */
++  /* OSSIM Priority */
++  if ( $ossim_priority[1] != " " && $ossim_priority[1] != "" && $ossim_priority[1] != "0")
++  {
++     $tmp_meta = $tmp_meta." AND ossim_priority ".$ossim_priority[0]." '".$ossim_priority[1]."'";
++  }
++  else if ($ossim_priority[1] == "0")
++  {
++     $tmp_meta = $tmp_meta." AND (ossim_priority is null OR ossim_priority = '0')";
++  }
++  else
++     $cs->criteria['ossim_priority']->Set("");
++
++  /* OSSIM Reliability */
++  if ( $ossim_reliability[1] != " " && $ossim_reliability[1] != "" && $ossim_reliability[1] != "0")
++  {
++     $tmp_meta = $tmp_meta." AND ossim_reliability ".$ossim_reliability[0]." '".$ossim_reliability[1]."'";
++  }
++  else if ($ossim_reliability[1] == "0")
++  {
++     $tmp_meta = $tmp_meta." AND (ossim_reliability is null OR ossim_reliability = '0')";
++  }
++  else
++     $cs->criteria['ossim_reliability']->Set("");
++
++  /* OSSIM Asset DST */
++  if ( $ossim_asset_dst[1] != " " && $ossim_asset_dst[1] != "" && $ossim_asset_dst[1] != "0")
++  {
++     $tmp_meta = $tmp_meta." AND ossim_asset_dst ".$ossim_asset_dst[0]." '".$ossim_asset_dst[1]."'";
++  }
++  else if ($ossim_asset_dst[1] == "0")
++  {
++     $tmp_meta = $tmp_meta." AND (ossim_asset_dst is null OR ossim_asset_dst = '0')";
++  }
++  else
++     $cs->criteria['ossim_asset_dst']->Set("");
++
++  /* OSSIM Risk A */
++  if ( $ossim_risk_a[1] != " " && $ossim_risk_a[1] != "" && $ossim_risk_a[1] != "0")
++  {
++     $tmp_meta = $tmp_meta." AND ossim_risk_a ".$ossim_risk_a[0]." '".$ossim_risk_a[1]."'";
++  }
++  else if ($ossim_risk_a[1] == "0")
++  {
++     $tmp_meta = $tmp_meta." AND (ossim_risk_a is null OR ossim_risk_a = '0')";
++  }
++  else
++     $cs->criteria['ossim_risk_a']->Set("");
++
++  /* Date/Time */
++  if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
++     $cs->criteria['time']->SetFormItemCnt(0);
++
+   $criteria_sql = $criteria_sql.$tmp_meta;
+ 
+   /* ********************** IP Criteria ********************************************** */ 
+diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
+--- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_form.php	2004-01-22 11:52:32.000000000 +0100
+@@ -67,8 +67,8 @@
+      {
+         echo '<B>Classification: </B>';
+         $cs->criteria['sig_class']->PrintForm();
+-        echo '<B>Priority: </B>';
+-        $cs->criteria['sig_priority']->PrintForm();
++#        echo '<B>Priority: </B>';
++#        $cs->criteria['sig_priority']->PrintForm();
+      }     
+ 
+      echo '</TD></TR>';    
+@@ -78,6 +78,18 @@
+       <TD>';
+       $cs->criteria['time']->PrintForm();    
+       
++echo '<TR>
++      <TD><B>Priority:</B></TD>
++      <TD>';
++      echo '<B>Risk: </B>';
++      $cs->criteria['ossim_risk_a']->PrintForm();    
++      echo '<B>Priority: </B>';
++      $cs->criteria['ossim_priority']->PrintForm();    
++      echo '<BR><B>Asset: </B>';
++      $cs->criteria['ossim_asset_dst']->PrintForm();    
++      echo '<B>Reliability: </B>';
++      $cs->criteria['ossim_reliability']->PrintForm();    
++
+         echo '
+ </TABLE>';
+ 
+diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
+--- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_qry_sqlcalls.php	2004-01-22 11:47:34.000000000 +0100
+@@ -63,10 +63,24 @@
+   $qro->AddTitle("Dest.<BR>Address", 
+                  "dip_a", " ", " ORDER BY ip_dst ASC",
+                  "dip_d", " ", " ORDER BY ip_dst DESC");
++  $qro->AddTitle("Asst",
++                 "oasset_d_a", " ", " ORDER BY ossim_asset_dst ASC",
++                 "oasset_d_d", " ", " ORDER BY ossim_asset_dst DESC");
++  $qro->AddTitle("Prio",
++                 "oprio_a", " ", " ORDER BY ossim_priority ASC",
++                 "oprio_d", " ", " ORDER BY ossim_priority DESC");
++  $qro->AddTitle("Risk",
++                 "oriska_a", " ", " ORDER BY ossim_risk_a ASC",
++                 "oriska_d", " ", " ORDER BY ossim_risk_a DESC");
++  $qro->AddTitle("Rel",
++                 "oreli_a", " ", " ORDER BY ossim_reliability ASC",
++                 "oreli_d", " ", " ORDER BY ossim_reliability DESC");
+   $qro->AddTitle("Layer 4<BR>Proto", 
+                  "proto_a", " ", " ORDER BY ip_proto ASC",
+                  "proto_d", " ", " ORDER BY ip_proto DESC");
+ 
++
++
+   if ( !$printing_ag)
+      $sql = $sql.$join_sql.$where_sql.$criteria_sql;
+ 
+@@ -139,6 +153,14 @@
+       $current_sig_txt = BuildSigByID($myrow[2], $db, 2);
+       $current_sport = $current_dport = "";
+ 
++      $current_otype = $myrow[7];
++      $current_oprio = $myrow[8];
++      $current_oreli = $myrow[9];
++      $current_oasset_s = $myrow[10];
++      $current_oasset_d = $myrow[11];
++      $current_oriskc = $myrow[12];
++      $current_oriska = $myrow[13];
++
+       qroPrintEntryHeader($i);
+ 
+       $tmp_rowid = "#".(($qs->GetCurrentView() * $show_rows)+$i).
+@@ -208,6 +230,11 @@
+        else
+          qroPrintEntry('<A HREF="acid_app_faq.php#1">unknown</A>');    
+ 
++      qroPrintEntry($current_oasset_d);
++      qroPrintEntry($current_oprio);
++      qroPrintEntry($current_oriska);
++      qroPrintEntry($current_oreli);
++
+       qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
+ 
+       qroPrintEntryFooter();
+diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
+--- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_state_citems.inc	2004-01-21 11:50:27.000000000 +0100
+@@ -1459,4 +1459,448 @@
+    }
+ };
+ 
++class OssimPriorityCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_priority[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_priority[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Priority }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_priority from acid_event ORDER BY ossim_priority ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Priority = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Priority '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimPriorityCriteria */
++
++class OssimRiskACriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_risk_a[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_risk_a[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Risk }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_risk_a from acid_event ORDER BY ossim_risk_a ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Risk = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Risk '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimRiskACriteria */
++
++class OssimRiskCCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_risk_c[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_risk_c[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Risk }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_risk_c from acid_event ORDER BY ossim_risk_c ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Risk = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Risk '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimRiskCCriteria */
++
++class OssimReliabilityCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_reliability[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_reliability[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Reliability }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_reliability from acid_event ORDER BY ossim_reliability ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Reliability = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Reliability '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimReliabilityCriteria */
++
++class OssimAssetSrcCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_asset_src[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_asset_src[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Asset }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_asset_src from acid_event ORDER BY ossim_asset_src ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Asset = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Asset '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimAssetSrcCriteria */
++
++class OssimAssetDstCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++
++   function SanitizeElement()
++   {
++      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
++      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++   }
++
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_asset_dst[0]">
++                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
++                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
++                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
++                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
++                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
++                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
++                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
++ 
++        echo '<SELECT NAME="ossim_asset_dst[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Asset }</OPTION>
++ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
++        $temp_sql = "select DISTINCT ossim_asset_dst from acid_event ORDER BY ossim_asset_dst ASC ";
++        $tmp_result = $this->db->acidExecute($temp_sql);
++        if ( $tmp_result )
++        {
++           while ( $myrow = $tmp_result->acidFetchRow() )
++             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
++                   $myrow[0];
++ 
++            $tmp_result->acidFreeRows();
++        }
++        echo '</SELECT>&nbsp;&nbsp';
++      }     
++    }
++ 
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++ 
++    function Description()
++    {
++       $tmp = "";
++ 
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Asset = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Asset '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++ 
++       return $tmp;
++    }
++ };  /* OssimAssetDstCriteria */
++
+ ?>
+diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
+--- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_state_criteria.inc	2004-01-21 12:29:33.000000000 +0100
+@@ -49,6 +49,13 @@
+      $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
+      $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
+ 
++     $this->criteria['ossim_priority'] = new OssimPriorityCriteria(&$db, &$this, "ossim_priority");
++     $this->criteria['ossim_reliability'] = new OssimReliabilityCriteria(&$db, &$this, "ossim_reliability");
++     $this->criteria['ossim_asset_src'] = new OssimAssetSrcCriteria(&$db, &$this, "ossim_asset_src");
++     $this->criteria['ossim_asset_dst'] = new OssimAssetDstCriteria(&$db, &$this, "ossim_asset_dst");
++     $this->criteria['ossim_risk_c'] = new OssimRiskCCriteria(&$db, &$this, "ossim_risk_c");
++     $this->criteria['ossim_risk_a'] = new OssimRiskACriteria(&$db, &$this, "ossim_risk_a");
++
+      /* 
+       * For new criteria, add a call to the appropriate constructor here, and implement
+       * the appropriate class in acid_stat_citems.inc.

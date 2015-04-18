@@ -8,7 +8,17 @@ use strict;
 my $user=`grep ^ossim_user /etc/ossim.conf | cut -d= -f2`; chop $user;
 my $pass=`grep ^ossim_pass /etc/ossim.conf | cut -d= -f2`; chop $pass;
 my $base=`grep ^ossim_base /etc/ossim.conf | cut -d= -f2`; chop $base;
-`mysql -u $user -p$pass  $base < ossim_tables.sql`;
+my $ossim_host=`grep ^ossim_host /etc/ossim.conf | cut -d= -f2`; chop $ossim_host;
+`mysql -u $user -p$pass -h$ossim_host  $base < ossim_tables.sql`;
+
+my $snort_user=`grep ^snort_user /etc/ossim.conf | cut -d= -f2`; chop $snort_user;
+my $snort_pass=`grep ^snort_pass /etc/ossim.conf | cut -d= -f2`; chop $snort_pass;
+my $snort_base=`grep ^snort_base /etc/ossim.conf | cut -d= -f2`; chop $snort_base;
+my $snort_archive_base=`grep ^snort_archive_base /etc/ossim.conf | cut -d= -f2`; chop $snort_archive_base;
+my $snort_host=`grep ^snort_host /etc/ossim.conf | cut -d= -f2`; chop $snort_host;
+`mysql -u $snort_user -p$snort_pass -h$snort_host  $snort_base < ossim_acid_schema_mysql.sql`;
+`mysql -u $snort_user -p$snort_pass -h$snort_host  $snort_archive_base < ossim_acid_schema_mysql.sql`;
+
 
 
 #
@@ -87,7 +97,11 @@ print RULES_SQL "INSERT INTO signature VALUES ('fw1-reject');\n";
 
 close(RULES_SQL);
 
-`mysql -u $user -p$pass  $base < services.sql`;
-`mysql -u $user -p$pass  $base < protocols.sql`;
-`mysql -u $user -p$pass  $base < rules.sql`;
+`mysql -u $user -p$pass -h$ossim_host  $base < services.sql`;
+`mysql -u $user -p$pass -h$ossim_host  $base < protocols.sql`;
+`mysql -u $user -p$pass -h$ossim_host  $base < rules.sql`;
 `rm -f services.sql protocols.sql rules.sql`;
+
+`mysql -u $user -p$pass -h$ossim_host  $base < ossim_schema_mysql.sql`;
+`mysql -u $user -p$pass -h$ossim_host  $base < ossim_data.sql`;
+

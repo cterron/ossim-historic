@@ -20,6 +20,10 @@
     $ntop_link = $conf->get_conf("ntop_link");
     $mrtg_link = $conf->get_conf("mrtg_link");
 
+    require_once "ossim_db.inc";
+    $db = new ossim_db();
+    $conn = $db->connect();
+
 ?>
 
 <p align="center">
@@ -29,12 +33,19 @@
      target="main">Alerts</a> ] 
 [ <a href="<?php echo "$mrtg_link/host_qualification/$ip.html" ?>"
      target="main">History</a> ] 
+[ <a href="<?php echo ossim_db::get_sensor_link($conn, $ip) . "/$ip" ?>.html" 
+     target="main">Monitor</a> ]
+<!--
 [ <a href="<?php echo "$ntop_link/$ip" ?>.html" 
      target="main">Monitor</a> ]
+-->
 [ <a href="resetip.php?ip=<?php echo $ip ?>"
      target="main">Reset</a> ]
 </p>
 
+<?php
+    $db->close($conn);
+?>
 
 </body>
 </html>

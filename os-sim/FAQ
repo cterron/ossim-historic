@@ -9,6 +9,7 @@ A: Make sure font path is working, draw_graph.pl is placed in /cgi-bin/, has exe
 
 Q: RRD anomaly detection doesn't work. Why ?
 A: Patch ntop, enable rrd plugin, enable host rrd drawing (but limit it to what you want). Specify the correct path and wait.
+A2: RRD graph syntax has changed. If you get an error message stating there are too fee arguments to the function call, just add an extra "NULL" as addiotional arg.
 
 Disclaimer: These are just some samples. I'm sure there are hundreds of interesting questions. It depends on the end user to let this file grow and improve so it can help more users to get this up and running. I know ossim is very difficult to setup but please send any questions to os-sim-suppor@lists.sourceforge.net so we can help you and help others. Dk.
 

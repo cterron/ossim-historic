@@ -2,6 +2,7 @@
 
 require_once 'classes/Net_host_reference.inc';
 require_once 'classes/Net_qualification.inc';
+require_once 'classes/Net_vulnerability.inc';
 require_once 'classes/Control_panel_net.inc';
 require_once 'ossim_conf.inc';
 
@@ -92,6 +93,7 @@ class Net {
         
         Net_host_reference::insert($conn, $name, $ip_list);
         Net_qualification::insert($conn, $name, 1, 1);
+        Net_vulnerability::insert($conn, $name, 1);
     }
 
     function update($conn, $name, $ips, $priority, $threshold_c, 
