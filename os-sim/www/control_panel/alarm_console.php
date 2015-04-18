@@ -149,10 +149,10 @@ if (!$sup = $_GET["sup"])
       <tr>
         <td><b>
 <?php
-    $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
-    if ($backlog_id != 0) {
-        $alarm_name = "<a href=\"alerts.php?backlog_id=$backlog_id \">$alarm_name</a>";
-    }
+            $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
+            if ($backlog_id != 0) {
+                $alarm_name = "<a href=\"alerts.php?backlog_id=$backlog_id \">$alarm_name</a>";
+            }
     echo $alarm_name;
 ?>
         </b></td>
@@ -195,13 +195,20 @@ if (!$sup = $_GET["sup"])
         <td nowrap>
         <?php
             $acid_link = get_acid_alerts_link($since, $date, "time_a");
-            echo "<a href=\"$acid_link\">$since</a>";
+            echo "
+            <a href=\"$acid_link\">
+              <font color=\"black\">$since</font>
+            </a>
+            ";
         ?>
         </td>
         <td nowrap>
         <?php
             $acid_link = get_acid_alerts_link($since, $date, "time_d");
-            echo "<a href=\"$acid_link\">$date</a>";
+            echo "
+            <a href=\"$acid_link\">
+              <font color=\"black\">$date</font></a>
+            ";
         ?>
         </td>
         

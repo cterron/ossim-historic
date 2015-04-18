@@ -219,29 +219,30 @@ diff -urNb sessions.c sessions.c
 +
        incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
      }
- 
---- http.c.orig	2004-04-26 17:03:39.000000000 +0200
-+++ http.c	2004-04-27 12:31:22.000000000 +0200
-@@ -521,11 +521,20 @@
- #ifdef HAVE_OPENSSL
-     if(myGlobals.newSock < 0) {
-       rc = SSL_write(getSSLsocket(-myGlobals.newSock), &theString[bytesSent], len);
--    } else
-+    } else if (myGlobals.newSock)
-+#ifdef LINUX
-+      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL);
-+#else
-       rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
-+#endif /* LINUX */
-+#else
-+    if (myGlobals.newSock)
-+#ifdef LINUX
-+      rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, MSG_NOSIGNAL);
+
+--- webInterface.c.orig	2004-06-15 10:08:42.780905104 +0200
++++ webInterface.c	2004-06-15 09:58:26.671567960 +0200
+@@ -8208,6 +8208,9 @@
  #else
-     rc = send(myGlobals.newSock, &theString[bytesSent], (size_t)len, 0);
--#endif
+     addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
+ #endif
++#ifdef LINUX
++    fcntl(myGlobals.newSock, F_SETFL, O_NONBLOCK);
 +#endif /* LINUX */
-+#endif /* HAVE_OPENSSL */
- 
-     if((errno != 0) || (rc < 0)) {
+   }
+   
  #ifdef DEBUG
+--- http.c.orig	2004-06-14 17:54:36.506089424 +0200
++++ http.c	2004-06-15 10:24:07.705295224 +0200
+@@ -532,8 +532,9 @@
+       traceEvent(CONST_TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)", rc, errno);
+ #endif
+       if((errno == EAGAIN /* Resource temporarily unavailable */) && (retries<3)) {
+-	len -= rc;
+-	bytesSent += rc;
++#ifdef LINUX
++	usleep (10);
++#endif /* LINUX */
+ 	retries++;
+ 	goto RESEND;
+       } else if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {

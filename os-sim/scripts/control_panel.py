@@ -4,35 +4,35 @@ import sys, os, string, re, time
 from optparse import OptionParser
 import MySQLdb
 
-RRD_BIN = "/usr/bin/rrdtool"
+RRD_BIN = "/usr/bin/rrdtool" # overriden if there is an entry at ossim.conf
 LOG_DIR = "/var/log/ossim/"
 
 
-def global_update(st, rrd_path):
-    __update(st, "global", rrd_path)
+def global_update(st, rrdtool_bin, rrd_path):
+    __update(st, "global", rrdtool_bin, rrd_path)
     
-def net_update(st, rrd_path):
-    __update(st, "net", rrd_path)
+def net_update(st, rrdtool_bin, rrd_path):
+    __update(st, "net", rrdtool_bin, rrd_path)
 
-def host_update(st, rrd_path):
-    __update(st, "host", rrd_path)
+def host_update(st, rrdtool_bin, rrd_path):
+    __update(st, "host", rrdtool_bin, rrd_path)
 
-def level_update(st, rrd_path):
-    __sec_update(st, rrd_path)
+def level_update(st, rrdtool_bin, rrd_path):
+    __sec_update(st, rrdtool_bin, rrd_path)
     
 
 # update all rrds in rrd_path
-def __update(st, type, rrd_path):
+def __update(st, type, rrdtool_bin, rrd_path):
 
     for rrd_file in os.listdir(rrd_path):
         
         rrd_file = os.path.join(rrd_path, rrd_file)
         rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
         
-        rrd_info_day   = get_rrd_value("N-1D", "N", rrd_file)
-        rrd_info_week  = get_rrd_value("N-7D", "N", rrd_file)
-        rrd_info_month = get_rrd_value("N-1M", "N", rrd_file)
-        rrd_info_year  = get_rrd_value("N-1Y", "N", rrd_file)
+        rrd_info_day   = get_rrd_value("N-1D", "N", rrdtool_bin, rrd_file)
+        rrd_info_week  = get_rrd_value("N-7D", "N", rrdtool_bin, rrd_file)
+        rrd_info_month = get_rrd_value("N-1M", "N", rrdtool_bin, rrd_file)
+        rrd_info_year  = get_rrd_value("N-1Y", "N", rrdtool_bin, rrd_file)
 
         __update_db(st, type, rrd_info_day,   rrd_name, 'day')
         __update_db(st, type, rrd_info_week,  rrd_name, 'week')
@@ -93,7 +93,7 @@ def __get_threshold(st):
     return res[0]
 
 
-def __sec_update(st, rrd_path):
+def __sec_update(st, rrdtool_bin, rrd_path):
 
     rrd_file = os.path.join(rrd_path, "level.rrd")
     rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
@@ -102,7 +102,7 @@ def __sec_update(st, rrd_path):
 
 
     # get last value for day level
-    rrd_info = get_rrd_value("N-15m", "N", rrd_file)
+    rrd_info = get_rrd_value("N-15m", "N", rrdtool_bin, rrd_file)
     
     query = """
         UPDATE control_panel 
@@ -127,7 +127,7 @@ def __sec_update(st, rrd_path):
         }
         
         output = os.popen("%s fetch %s AVERAGE -s %s -e N" % \
-            (RRD_BIN, rrd_file, range2date[range]))
+            (rrdtool_bin, rrd_file, range2date[range]))
         
         pattern = "(\d+):\s+(\S+)\s+(\S+)"
         C_level = A_level = count = 0
@@ -163,13 +163,13 @@ def __sec_update(st, rrd_path):
             
 
 # return a tuple with the date of C and A max values
-def __get_max_date(start, end, rrd_file):
+def __get_max_date(start, end, rrdtool_bin, rrd_file):
     
     max_c = max_a = 0.0
     max_c_date = max_a_date = c_date = a_date = ""
     
     # execute rrdtool fetch and obtain max c & a date
-    cmd = "%s fetch %s MAX -s %s -e %s" % (RRD_BIN, rrd_file, start, end)
+    cmd = "%s fetch %s MAX -s %s -e %s" % (rrdtool_bin, rrd_file, start, end)
     output = os.popen(cmd)
     pattern = "(\d+):\s+(\S+)\s+(\S+)"
     for line in output.readlines():
@@ -198,13 +198,13 @@ def __get_max_date(start, end, rrd_file):
 
 
 # get a rrd C & A value
-def get_rrd_value(start, end, rrd_file):
+def get_rrd_value(start, end, rrdtool_bin, rrd_file):
    
     rrd_info = {}
 
     # C max 
     # (2nd line of rrdtool graph ds0)
-    cmd = "%s graph /dev/null -s %s -e %s -X 2 DEF:obs=%s:ds0:AVERAGE PRINT:obs:MAX:%%lf" % (RRD_BIN, start, end, rrd_file)
+    cmd = "%s graph /dev/null -s %s -e %s -X 2 DEF:obs=%s:ds0:AVERAGE PRINT:obs:MAX:%%lf" % (rrdtool_bin, start, end, rrd_file)
     output = os.popen(cmd)
     output.readline()
     c_max = output.readline()
@@ -218,7 +218,7 @@ def get_rrd_value(start, end, rrd_file):
     
     # A max 
     # (2nd line of rrdtool graph ds1)
-    cmd = "%s graph /dev/null -s %s -e %s -X 2 DEF:obs=%s:ds1:AVERAGE PRINT:obs:MAX:%%lf" % (RRD_BIN, start, end, rrd_file)
+    cmd = "%s graph /dev/null -s %s -e %s -X 2 DEF:obs=%s:ds1:AVERAGE PRINT:obs:MAX:%%lf" % (rrdtool_bin, start, end, rrd_file)
     output = os.popen(cmd)
     output.readline()
     a_max = output.readline()
@@ -231,7 +231,7 @@ def get_rrd_value(start, end, rrd_file):
         rrd_info["max_a"] = 0
 
     (rrd_info["max_c_date"], rrd_info["max_a_date"]) = \
-        __get_max_date(start, end, rrd_file)
+        __get_max_date(start, end, rrdtool_bin, rrd_file)
 
     return rrd_info
 
@@ -249,27 +249,27 @@ def get_conf(config_file = "/etc/ossim/framework/ossim.conf"):
 
     for line in config:
         
-        result = re.findall("ossim_type\s*=\s*(\S+)", line)
+        result = re.findall("^ossim_type\s*=\s*(\S+)", line)
         if result != []:
             conf["OSSIM_TYPE"] = result[0]
-        result = re.findall("ossim_base\s*=\s*(\S+)", line)
+        result = re.findall("^ossim_base\s*=\s*(\S+)", line)
         if result != []:
             conf["OSSIM_BASE"] = result[0]
-        result = re.findall("ossim_user\s*=\s*(\S+)", line)
+        result = re.findall("^ossim_user\s*=\s*(\S+)", line)
         if result != []:
             conf["OSSIM_USER"] = result[0]
-        result = re.findall("ossim_pass\s*=\s*(\S+)", line)
+        result = re.findall("^ossim_pass\s*=\s*(\S+)", line)
         if result != []:
             conf["OSSIM_PASS"] = result[0]
-        result = re.findall("ossim_host\s*=\s*(\S+)", line)
+        result = re.findall("^ossim_host\s*=\s*(\S+)", line)
         if result != []:
             conf["OSSIM_HOST"] = result[0]
         
-        result = re.findall("mrtg_rrd_files_path\s*=\s*(\S+)", line)
+        result = re.findall("^mrtg_rrd_files_path\s*=\s*(\S+)", line)
         if result != []:
             conf["MRTG_RRD_FILES_PATH"] = result[0]
         
-        result = re.findall("rrdtool_path\s*=\s*(\S+)", line)
+        result = re.findall("^rrdtool_path\s*=\s*(\S+)", line)
         if result != []:
             conf["RRDTOOL_PATH"] = result[0]
         
@@ -328,6 +328,9 @@ def main():
     sys.stdout = open(os.path.join(LOG_DIR, 'control_panel.log'), 'w')
     
     # where are the rrd files?
+    rrdtool_bin = RRD_BIN
+    if conf.has_key("RRDTOOL_PATH"):
+        rrdtool_bin = os.path.join(conf["RRDTOOL_PATH"], "rrdtool")
     try:
         global_path = os.path.join(conf["MRTG_RRD_FILES_PATH"], 
                                    'global_qualification')
@@ -348,10 +351,10 @@ def main():
     while 1:
 
         # let's go to party...
-        global_update(st, global_path)
-        level_update(st, level_path)
-        net_update(st, net_path)
-        host_update(st, host_path)
+        global_update(st, rrdtool_bin, global_path)
+        level_update(st, rrdtool_bin, level_path)
+        net_update(st, rrdtool_bin, net_path)
+        host_update(st, rrdtool_bin, host_path)
         
         # sleep to next iteration
         print "\ncontrol panel update finished at %s" % \

@@ -229,7 +229,7 @@ CREATE TABLE net_vulnerability (
 );
 DROP TABLE IF EXISTS control_panel;
 CREATE TABLE control_panel (
-    id              varchar(15) NOT NULL,
+    id              varchar(128) NOT NULL,
     rrd_type        varchar(6) NOT NULL DEFAULT 'host',
     time_range      varchar(5) NOT NULL DEFAULT 'day',
     max_c           int NOT NULL,

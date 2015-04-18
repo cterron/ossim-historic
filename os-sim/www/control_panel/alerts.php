@@ -17,7 +17,7 @@
         $alert_id = $_GET["alert_id"];
     }
 ?>
-  <h1 align="center">Alerts (Backlog ID = <?php echo $backlog_id ?>)</h1>
+  <h1 align="center">Alarms/Alerts</h1>
 
 <?php
 require_once ('ossim_db.inc');

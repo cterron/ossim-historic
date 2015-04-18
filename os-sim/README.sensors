@@ -1,3 +1,6 @@
+Status: Broken, don't use it (2004-06-14 DK)
+--------------------------------------------
+
 In order to enable remote sensor management you have to do the following.
 
 - Make sure OpenSSH is installed and up-2-date on every sensor.

@@ -1,5 +1,20 @@
 # ChangeLog for OSSIM
 
+    15 Jun 2004 DK <dk@ossim.net> :
+    * 0.9.5p1 released
+
+* OSSIM-0.9.5p1 (15 Jun 2004)
+
+    15 Jun 2004 Fabio Ospitia Trujillo <fot@ossim.net> :
+    * New ntop3 patch
+
+    15 Jun 2004 David Gil <dgil@ossim.net> :
+    * control_panel.py fixes
+
+    15 Jun 2004 DK <dk@ossim.net> :
+    * Fixed tables
+    * control_panel.py bugs
+
     14 Jun 2004 DK <dk@ossim.net> :
     * 0.9.5 released
 
