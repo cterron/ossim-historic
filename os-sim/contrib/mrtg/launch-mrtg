@@ -1,6 +1,7 @@
 #!/bin/bash
 
 base_dir=`grep base_dir /etc/ossim.conf | cut -d= -f2`
+mrtg_path=`grep mrtg_path /etc/ossim.conf | cut -d= -f2`
 
 cd $base_dir/mrtg/hosts
 ./create_cfg.pl
@@ -11,6 +12,6 @@ cd $base_dir/mrtg/nets
 cd $base_dir/mrtg/global
 ./create_cfg.pl
 
-/usr/bin/mrtg /etc/mrtg.cfg
-/usr/bin/mrtg /etc/mrtg-rrd.cfg
+$mrtg_path/mrtg /etc/mrtg.cfg
+$mrtg_path/mrtg /etc/mrtg-rrd.cfg
 

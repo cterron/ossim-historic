@@ -36,6 +36,7 @@ adodb_path=/usr/share/adodb/
 rrdtool_path=/usr/local/rrdtool-1.1.0/bin/
 rrdtool_lib_path=/usr/local/rrdtool-1.1.0/lib/perl/
 nmap_path=/usr/local/bin/nmap
+mrtg_path=/usr/bin/
 
 # look at mrtg.cfg and mrtg-rrd.cfg
 mrtg_rrd_files_path=/opt/ossim/www/mrtg/
@@ -47,9 +48,12 @@ mrtg_rrd_files_path=/opt/ossim/www/mrtg/
 
 acid_link=http://localhost/acidlab/
 ntop_link=http://localhost:3000
+ntop_link_ext=http://external_host:3000
 opennms_link=http://localhost:8080/opennms/
 mrtg_link=http://localhost/ossim-beta/mrtg-html/
 graph_link=http://localhost/cgi-bin/draw_graph.pl
+stats_link=http://external_host/
+mailstats_link=http://mailstats_server/
 
 #################################################
 # Misc Paths

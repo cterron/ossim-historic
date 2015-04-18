@@ -16,6 +16,35 @@ class Host_qualification {
     function get_host_ip()           { return $this->host_ip; }
     function get_compromise()        { return $this->compromise; }
     function get_attack()            { return $this->attack; }
+
+    function get_ip_attack($conn, $ip){
+        if (!$rs = &$conn->Execute("SELECT * FROM host_qualification WHERE host_ip = '$ip'")){
+            print $conn->ErrorMsg();
+        } else {
+            if (!$rs->EOF)
+                return $rs->fields["attack"];
+            else {
+                /* there is not attack level of this host */
+                return 0;
+            }
+        }
+    }
+
+    function get_ip_compromise($conn, $ip){
+        if (!$rs = &$conn->Execute("SELECT * FROM host_qualification WHERE host_ip = '$ip'")){
+            print $conn->ErrorMsg();
+        } else {
+            if (!$rs->EOF)
+                return $rs->fields["attack"];
+            else {
+                /* there is not compromise level of this host */
+                return 0;
+            }
+        }
+    }
+
+
+            
     
     function get_list($conn, $where = "", $order = "") 
     {

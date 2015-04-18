@@ -1,5 +1,7 @@
 <?php
 
+require_once ('classes/Conf.inc');
+
 class Host {
 
     var $ip;
@@ -81,14 +83,44 @@ class Host {
 
     function ip2hostname($conn, $ip) {
         $query = "SELECT * FROM host WHERE ip = '$ip';";
-        if ($conn->Execute($query) === false)  {
+        if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
-        if ($rs)
-           return $rs->fields["hostname"]; 
+        if (!$rs->EOF)
+            return $rs->fields["hostname"]; 
         else
             return $ip;
+    }
+
+    function ipthresh_c($conn, $ip) {
+        $query = "SELECT * FROM host WHERE ip = '$ip';";
+        if (!$rs = $conn->Execute($query)) {
+            print 'error: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        } 
+        if (!$rs->EOF)
+            return $rs->fields["threshold_c"]; 
+        else {
+            /* ip is not in db, return default threshold */
+            $conf = Conf::get_conf($conn);
+            return $conf->get_threshold();
+        }
+    }
+
+    function ipthresh_a($conn, $ip) {
+        $query = "SELECT * FROM host WHERE ip = '$ip';";
+        if (!$rs = $conn->Execute($query)) {
+            print 'error: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        } 
+        if (!$rs->EOF)
+            return $rs->fields["threshold_a"]; 
+        else {
+            /* ip is not in db, return default threshold */
+            $conf = Conf::get_conf($conn);
+            return $conf->get_threshold();
+        }
     }
 
 }

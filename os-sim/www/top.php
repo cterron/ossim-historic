@@ -32,6 +32,8 @@
            target="main"><font color="#991e1e">Control Panel</font></a>]
         [<a href="riskmeter/index.php" title="OSSIM riskmeter" 
            target="main"><font color="#991e1e">Riskmeter</font></a>]
+        [<a href="graphs/index.php" title="OSSIM graph viewer" 
+           target="main"><font color="#991e1e">Graphs</font></a>]
         [<a href="<?php echo $conf->get_conf("acid_link"); ?>" 
            title="(SNORT)" 
            target="main"><font color="#991e1e">ACID</font></a>]

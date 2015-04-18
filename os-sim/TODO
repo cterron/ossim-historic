@@ -1,15 +1,16 @@
 - Relink graph functionality
 - Relink graph drawing
+- Integrate graphs in parser
 - Ability to sort almost everything. Reverse order sort
 - Search in hosts/networks
 - Control Panel ntop integration, top three hosts traffic
-- Static control panel functionality
++ Static control panel functionality
 - Rule editor
 - Install script
 - Horizontal / Vertical graph relocation
 - Hard link analisys using ntop's "sessions"
-- Buffer parser input
-- Use time-base policy
++ Buffer parser input
+- Use time-based policy
 - Up and Download rules from sensor, edit/modify/delete rule groups, restart
   sensors.
 - Update snort rules automagically
@@ -28,7 +29,8 @@
   re-read everytime an alert arrives ? why is an mysql connection established
   everytime an alert arrives ? Parser rewrite...
 - Parser doesn't take policy into account.
-- Using "buffer" may suppose loosing alerts (they get cut in two).
++ Add ossim_log to ossim.conf. ossim.init.d...
++ Using "buffer" may suppose loosing alerts (they get cut in two). Use tail blocking instead.
 + Popup host graph when clicking on A or C value in control panel.
 - Control Panel. Draw numbers in red when they get too high (threshold)
 + control_panel.pl relative paths...
@@ -36,6 +38,7 @@
 + When modifying policy, hosts get selected twice (source/dest is not being
   taken into account)
 + Serious vulnerability when calculating networks with nmap. Sanity check !!!!
-- Ntop keeps dying after ntop modifications. sigh...
+- Ntop keeps dying after ntop modifications. sigh... 4 days without diying, debug.
++ Ips aren't substitued with Hostnames in Control Panel
 
 - Much much more...

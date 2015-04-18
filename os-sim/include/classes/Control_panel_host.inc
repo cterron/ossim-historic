@@ -36,22 +36,12 @@ class Control_panel_host {
 
     function get_list($conn, $args, $limit)
     {
-        $count = 0;
-
-        if (!$rs = &$conn->Execute("SELECT * FROM control_panel_host $args;")) 
+        $query = "SELECT * FROM control_panel_host $args LIMIT $limit;";
+        if (!$rs = &$conn->Execute("$query")) 
         {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-
-                // only insert in list if host exists in host_qualification
-                if (!$rs2 = &$conn->Execute("SELECT * FROM host_qualification
-                                             WHERE host_ip = '" .
-                                             $rs->fields["host_ip"] . "';"))
-                {
-                    print $conn->ErrorMsg();
-                }
-                if (($rs2->fields[0]) && ($count < $limit)) {
 
                 $list[] = new Control_panel_host ($rs->fields["host_ip"],
                                                   $rs->fields["time_range"],
@@ -61,8 +51,6 @@ class Control_panel_host {
                                                   $rs->fields["min_a"],
                                                   $rs->fields["avg_c"],
                                                   $rs->fields["avg_a"]);
-                    $count++;
-                }
                 $rs->MoveNext();
             }
         }

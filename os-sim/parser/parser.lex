@@ -177,6 +177,7 @@ MYSQL   mysql;
     
         calculate(&mysql, plugin, tplugin, priority_snort, protocol, 
                   source_ip, dest_ip, ANY_PORT, ANY_PORT);
+        graph(&mysql, source_ip, dest_ip);
                   
         BEGIN(INITIAL);
     } else {
@@ -192,6 +193,7 @@ MYSQL   mysql;
 
     calculate(&mysql, plugin, tplugin, priority_snort, protocol, 
               source_ip, dest_ip, source_port, dest_port);
+    graph(&mysql, source_ip, dest_ip);
 
     BEGIN(INITIAL);
 }
@@ -273,8 +275,11 @@ MYSQL   mysql;
 
 int main (int argc, char **argv)
 {
+   char buf[256];
+
     if (argc > 1) {
-        yyin = fopen(argv[1], "r");
+   	snprintf( buf, 255, "/usr/bin/tail -f %s", argv[1]);
+        yyin = popen(buf, "r");
     } else {
         yyin = stdin;
     }
@@ -298,6 +303,7 @@ int main (int argc, char **argv)
      yylex();
 
     mysql_close(&mysql);
+	pclose(yyin);
 
     return 0;
 }

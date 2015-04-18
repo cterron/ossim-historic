@@ -90,3 +90,6 @@ int insert_fw1_alert(unsigned long int source_ip,
                      char *sensor_fw, 
                      unsigned int rule);
 
+/* graph.c */
+void graph (MYSQL *mysql, char *source_ip, char *dest_ip);
+

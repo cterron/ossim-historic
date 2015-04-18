@@ -89,7 +89,7 @@ DROP TABLE IF EXISTS port_group_reference;
 CREATE TABLE port_group_reference (
     port_group_name varchar(64) NOT NULL,
     port_number     int NOT NULL,
-    protocol_name   varchar(12),
+    protocol_name   varchar(12) NOT NULL,
     PRIMARY KEY     (port_group_name, port_number, protocol_name)
 );
 
@@ -219,5 +219,30 @@ CREATE TABLE control_panel_net (
     avg_c           int NOT NULL,
     avg_a           int NOT NULL,
     PRIMARY KEY     (net_name, time_range)
+);
+
+/* ======== graphs ======== */
+DROP TABLE IF EXISTS graph;
+CREATE TABLE graph (
+  id                int(11) NOT NULL auto_increment,
+  ip                varchar(15) NOT NULL,
+  PRIMARY KEY       (id,ip)
+);
+
+DROP TABLE IF EXISTS link;
+CREATE TABLE link (
+  source            varchar(15) NOT NULL,
+  dest              varchar(15) NOT NULL,
+  occurrences       int(11) NOT NULL,
+  PRIMARY KEY       (source,dest)
+);
+
+DROP TABLE IF EXISTS host_position;
+CREATE TABLE host_position (
+    host_ip         varchar(15) NOT NULL,
+    x               int NOT NULL,
+    y               int NOT NULL,
+    z               int NOT NULL,
+    PRIMARY KEY     (host_ip, x, y, z)
 );
 

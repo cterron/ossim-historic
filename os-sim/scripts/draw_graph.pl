@@ -30,6 +30,7 @@ print $q->header(-type => "image/gif", -expires => "+10s");
 #print $q->header();
 
 my $ip;
+my $query;
 my $hostname="";
 my $threshold;
 my $color1;
@@ -161,6 +162,7 @@ print;
 }
 
 close FILE;
+unlink $tempname;
 
 
 $dbh->disconnect;

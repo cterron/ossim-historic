@@ -1,0 +1,276 @@
++---------------------------+------------------------------------------+
+| Tables_in_ossim           | Description                              |
++---------------------------+------------------------------------------+
+| conf                      | web config                               |
+| control_panel_host        | data about hosts used in control panel   |
+| control_panel_net         | data about nets used in control panel    |
+| graph                     | data used for graph drawing              |
+| graph_qualification       | C & A graph levels                       |
+| host                      | host info                                |
+| host_position             | graphing applet data (x, y, z)           |
+| host_qualification        | C & A host levels                        |
+| link                      | links between hosts                      |
+| net                       | net info                                 |
+| net_host_reference        | hosts in a specific net                  |
+| net_qualification         | C & A net levels                         |
+| policy                    | ossim policy info                        |
+| policy_host_reference     | ossim policy info (hosts)                |
+| policy_net_reference      | ossim policy info (nets)                 |
+| policy_port_reference     | ossim policy info (ports)                |
+| policy_sensor_reference   | ossim policy info (sensors)              |
+| policy_sig_reference      | ossim policy info (signatures)           |
+| port                      | port info                                |
+| port_group                | set of ports descr                       |
+| port_group_reference      | ports in a specific port_group           |
+| protocol                  | internet protocols                       |
+| sensor                    | sensor hosts                             |
+| signature                 | snort signatures                         |
+| signature_group           | set of signatures descr                  |
+| signature_group_reference | signatures in a specific singature_group |
++---------------------------+------------------------------------------+
+
+conf
++------------------+---------+------+-----+---------+-------+
+| Field            | Type    | Null | Key | Default | Extra |
++------------------+---------+------+-----+---------+-------+
+| recovery         | int(11) |      | PRI | 0       |       |
+| threshold        | int(11) |      | PRI | 0       |       |
+| graph_threshold  | int(11) |      | PRI | 0       |       |
+| bar_length_left  | int(11) |      | PRI | 0       |       |
+| bar_length_right | int(11) |      | PRI | 0       |       |
++------------------+---------+------+-----+---------+-------+
+
+control_panel_host
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| host_ip    | varchar(15) |      | PRI |         |       |
+| time_range | varchar(5)  |      | PRI | day     |       |
+| max_c      | int(11)     |      |     | 0       |       |
+| max_a      | int(11)     |      |     | 0       |       |
+| min_c      | int(11)     |      |     | 0       |       |
+| min_a      | int(11)     |      |     | 0       |       |
+| avg_c      | int(11)     |      |     | 0       |       |
+| avg_a      | int(11)     |      |     | 0       |       |
++------------+-------------+------+-----+---------+-------+
+
+control_panel_net
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| net_name   | varchar(15) |      | PRI |         |       |
+| time_range | varchar(5)  |      | PRI | day     |       |
+| max_c      | int(11)     |      |     | 0       |       |
+| max_a      | int(11)     |      |     | 0       |       |
+| min_c      | int(11)     |      |     | 0       |       |
+| min_a      | int(11)     |      |     | 0       |       |
+| avg_c      | int(11)     |      |     | 0       |       |
+| avg_a      | int(11)     |      |     | 0       |       |
++------------+-------------+------+-----+---------+-------+
+
+graph
++-------+-------------+------+-----+---------+----------------+
+| Field | Type        | Null | Key | Default | Extra          |
++-------+-------------+------+-----+---------+----------------+
+| id    | int(11)     |      | PRI | NULL    | auto_increment |
+| ip    | varchar(15) |      | PRI |         |                |
++-------+-------------+------+-----+---------+----------------+
+
+graph_qualification
++------------+---------+------+-----+---------+-------+
+| Field      | Type    | Null | Key | Default | Extra |
++------------+---------+------+-----+---------+-------+
+| graph_id   | int(11) |      | PRI | 0       |       |
+| compromise | int(11) |      |     | 1       |       |
+| attack     | int(11) |      |     | 1       |       |
++------------+---------+------+-----+---------+-------+
+
+host
++-------------+--------------+------+-----+---------+-------+
+| Field       | Type         | Null | Key | Default | Extra |
++-------------+--------------+------+-----+---------+-------+
+| ip          | varchar(15)  |      | PRI |         |       |
+| hostname    | varchar(128) |      |     |         |       |
+| asset       | smallint(6)  |      |     | 0       |       |
+| threshold_c | int(11)      |      |     | 0       |       |
+| threshold_a | int(11)      |      |     | 0       |       |
+| descr       | varchar(255) | YES  |     | NULL    |       |
++-------------+--------------+------+-----+---------+-------+
+
+host_position;
++---------+-------------+------+-----+---------+-------+
+| Field   | Type        | Null | Key | Default | Extra |
++---------+-------------+------+-----+---------+-------+
+| host_ip | varchar(15) |      | PRI |         |       |
+| x       | int(11)     |      | PRI | 0       |       |
+| y       | int(11)     |      | PRI | 0       |       |
+| z       | int(11)     |      | PRI | 0       |       |
++---------+-------------+------+-----+---------+-------+
+
+host_qualification
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| host_ip    | varchar(15) |      | PRI |         |       |
+| compromise | int(11)     |      |     | 1       |       |
+| attack     | int(11)     |      |     | 1       |       |
++------------+-------------+------+-----+---------+-------+
+
+link
++-------------+-------------+------+-----+---------+-------+
+| Field       | Type        | Null | Key | Default | Extra |
++-------------+-------------+------+-----+---------+-------+
+| source      | varchar(15) |      | PRI |         |       |
+| dest        | varchar(15) |      | PRI |         |       |
+| occurrences | int(11)     |      |     | 0       |       |
++-------------+-------------+------+-----+---------+-------+
+
+net
++-------------+--------------+------+-----+---------+-------+
+| Field       | Type         | Null | Key | Default | Extra |
++-------------+--------------+------+-----+---------+-------+
+| name        | varchar(128) |      | PRI |         |       |
+| ips         | varchar(255) |      |     |         |       |
+| priority    | int(11)      |      |     | 0       |       |
+| threshold_c | int(11)      |      |     | 0       |       |
+| threshold_a | int(11)      |      |     | 0       |       |
+| descr       | varchar(255) | YES  |     | NULL    |       |
++-------------+--------------+------+-----+---------+-------+
+
+net_host_reference
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| net_name | varchar(128) |      | PRI |         |       |
+| host_ip  | varchar(15)  |      | PRI |         |       |
++----------+--------------+------+-----+---------+-------+
+
+net_qualification
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| net_name   | varchar(64) |      | PRI |         |       |
+| compromise | int(11)     |      |     | 1       |       |
+| attack     | int(11)     |      |     | 1       |       |
++------------+-------------+------+-----+---------+-------+
+
+policy
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      |      | PRI | NULL    | auto_increment |
+| priority | smallint(6)  |      |     | 0       |                |
+| descr    | varchar(255) | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+
+policy_host_reference
++-----------+-----------------------+------+-----+---------+-------+
+| Field     | Type                  | Null | Key | Default | Extra |
++-----------+-----------------------+------+-----+---------+-------+
+| policy_id | int(11)               |      | PRI | 0       |       |
+| host_ip   | varchar(15)           |      | PRI |         |       |
+| direction | enum('source','dest') |      | PRI | source  |       |
++-----------+-----------------------+------+-----+---------+-------+
+
+policy_net_reference
++-----------+-----------------------+------+-----+---------+-------+
+| Field     | Type                  | Null | Key | Default | Extra |
++-----------+-----------------------+------+-----+---------+-------+
+| policy_id | int(11)               |      | PRI | 0       |       |
+| net_name  | varchar(64)           |      | PRI |         |       |
+| direction | enum('source','dest') |      | PRI | source  |       |
++-----------+-----------------------+------+-----+---------+-------+
+
+policy_port_reference
++-----------------+-------------+------+-----+---------+-------+
+| Field           | Type        | Null | Key | Default | Extra |
++-----------------+-------------+------+-----+---------+-------+
+| policy_id       | int(11)     |      | PRI | 0       |       |
+| port_group_name | varchar(64) |      | PRI |         |       |
++-----------------+-------------+------+-----+---------+-------+
+
+policy_sensor_reference
++-------------+-------------+------+-----+---------+-------+
+| Field       | Type        | Null | Key | Default | Extra |
++-------------+-------------+------+-----+---------+-------+
+| policy_id   | int(11)     |      | PRI | 0       |       |
+| sensor_name | varchar(64) |      | PRI |         |       |
++-------------+-------------+------+-----+---------+-------+
+
+policy_sig_reference;
++----------------+-------------+------+-----+---------+-------+
+| Field          | Type        | Null | Key | Default | Extra |
++----------------+-------------+------+-----+---------+-------+
+| policy_id      | int(11)     |      | PRI | 0       |       |
+| sig_group_name | varchar(64) |      | PRI |         |       |
++----------------+-------------+------+-----+---------+-------+
+
+port
++---------------+--------------+------+-----+---------+-------+
+| Field         | Type         | Null | Key | Default | Extra |
++---------------+--------------+------+-----+---------+-------+
+| port_number   | int(11)      |      | PRI | 0       |       |
+| protocol_name | varchar(12)  |      | PRI |         |       |
+| service       | varchar(64)  | YES  |     | NULL    |       |
+| descr         | varchar(255) | YES  |     | NULL    |       |
++---------------+--------------+------+-----+---------+-------+
+
+port_group
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| name  | varchar(64)  |      | PRI |         |       |
+| descr | varchar(255) | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+
+port_group_reference
++-----------------+-------------+------+-----+---------+-------+
+| Field           | Type        | Null | Key | Default | Extra |
++-----------------+-------------+------+-----+---------+-------+
+| port_group_name | varchar(64) |      | PRI |         |       |
+| port_number     | int(11)     |      | PRI | 0       |       |
+| protocol_name   | varchar(12) |      | PRI |         |       |
++-----------------+-------------+------+-----+---------+-------+
+
+protocol
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| id    | int(11)      |      | PRI | 0       |       |
+| name  | varchar(24)  |      |     |         |       |
+| alias | varchar(24)  | YES  |     | NULL    |       |
+| descr | varchar(255) |      |     |         |       |
++-------+--------------+------+-----+---------+-------+
+
+sensor
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| name  | varchar(64)  |      | PRI |         |       |
+| ip    | varchar(15)  |      |     |         |       |
+| descr | varchar(255) |      |     |         |       |
++-------+--------------+------+-----+---------+-------+
+
+signature
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | varchar(64) |      | PRI |         |       |
++-------+-------------+------+-----+---------+-------+
+
+signature_group
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| name  | varchar(64)  |      | PRI |         |       |
+| descr | varchar(255) | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+
+signature_group_reference;
++----------------+-------------+------+-----+---------+-------+
+| Field          | Type        | Null | Key | Default | Extra |
++----------------+-------------+------+-----+---------+-------+
+| sig_group_name | varchar(64) |      | PRI |         |       |
+| sig_name       | varchar(64) |      | PRI |         |       |
++----------------+-------------+------+-----+---------+-------+
+

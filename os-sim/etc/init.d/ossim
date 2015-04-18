@@ -18,7 +18,7 @@ case "$1" in
 
     # start ossim parser
     cd $OSSIM_PATH/parser
-	tail -f $LOG | buffer | ./parser >> $OUT_LOG &
+	./parser $LOG >> $OUT_LOG &
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
@@ -26,6 +26,7 @@ case "$1" in
     nice -n 15 ./lower_net_levels.pl &
     nice -n 19 ./update_net_levels.pl &
     nice -n 19 ./control_panel.pl &
+    nice -n 19 ./update_graph_levels.pl &
     
 	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
 		echo "OSSIM is up and running!"
@@ -46,6 +47,7 @@ case "$1" in
         killall -KILL lower_net_levels.pl
         killall -KILL update_net_levels.pl
         killall -KILL control_panel.pl
+        killall -KILL update_graph_levels.pl
 
 
 	    # Wait until the timeout

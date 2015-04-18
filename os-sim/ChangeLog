@@ -1,7 +1,26 @@
 # ChangeLog for OSSIM
 
-* OSSIM-0.1 (¿¿22?? Aug 2003)
+* OSSIM-0.2 (29 Aug 2003)
+
+    28 Aug 2003 DK <dk@ipsoluciones.com> :
+    * Code cleanup, modified documentation, graphs almost working.
+
+    27 Aug 2003 David Gil <dgil@ipsoluciones.com> :
+    * Graphs and links between hosts
+      - parser updated (graphs.c)
+      - added graph qualification
+      - added graph html in framework
+
+    25 Aug 2003 DK <dk@ipsoluciones.com> :
+    * Parser cleanup; removed buffer dependency. Pseudo-tail-blocking.
+    * INSTALL & init.d modification.
+
+    22 Aug 2003 Santiago Gonzalez <sgonzalez@ipsoluciones.com> :
+    * Perl scripts traduced to C
     
+    22 Aug 2003 DK <dk@ipsoluciones.com> :
+    * First release, cleanup, Sourceforge cvs setup
+
     21 Aug 2003 DK <dk@ipsoluciones.com> :
     * Cleanup, anomaly detection cleanup, draw_graph additions.
     * Many bugfixes

@@ -6,20 +6,22 @@ code. Install can become quite difficult at this time.
 In order to get os-sim up and working you need (at least) the following,
 satisfying all their dependencies:
 
+- A working experimental rrdtool release (1.1.0)
+- ADOdb 3.72
 - Mysql 4.0.13
 - OpenNMS 1.0.2
     - PostgreSQL 7.3.2
     - Tomcat
 - Ntop 2.2.0 (patched, patch included)
 - A bunch of perl modules
-- A working experimental rrdtool release (1.1.0)
 - Apache 1.3.28, php 4.3.2.
 - Snort 2.0
     - Spade
 - Nmap 3.27
 - Acid v0.9.6b20
 - Mrtg 2.9.29
-- buffer 1.17.1
+- Flex
+
 
 Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web
 server is able to read it.
@@ -33,7 +35,9 @@ After that:
 - edit $ossim_home/parser/Makefile and point snort rules path to your snort
   rules path.
 - compile parser
+- Create the whole database structure (Acid, snort, snort-extra, os-sim)
 - start mysql
+- Add an apache alias pointing to os-sim's www directory
 - put $ossim_home/etc/cron.d/mrtg in roots crontab (will be removed soon)
 - put $ossim_home/contrib/mrtg-ossim.cron in roots crontab
 - put contrib/mrtg.tgz stuff where the crontab entry can find it (launch-mrtg)
@@ -41,6 +45,7 @@ After that:
   an additional config file that uses rrd (with additions from CONFIG) and
   fire it up. ($ossim_home/contrib/mrtg.diff)
 - $ossim_home/etc/init.d/ossim start
+- copy $ossim_home/scripts/draw_graph.pl to your cgi-bin directory.
 - Start apache
 - Start patched ntop
 - Start opennms (not needed as of today)

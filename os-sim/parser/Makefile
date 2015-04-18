@@ -8,17 +8,17 @@ SNORT_RULES_DIR = /etc/snort/rules/
 ATTACK_RESPONSES_FILE = $(SNORT_RULES_DIR)/attack-responses.rules
 #FW1_OBJECTS_FILE = objects.C
 
-parser: parser.o calculate.o base.o fw1.o acid_net.o conf.o common.h
+parser: parser.o calculate.o base.o fw1.o acid_net.o conf.o graph.o common.h
 	cat $(ATTACK_RESPONSES_FILE) | ./gen_attackresponses_sids > attack_responses_sids.dat
 	ls $(SNORT_RULES_DIR)/*.rules | ./readsids > sids.dat
-#	cat objects.C | ./gen_fw1_objects > fw1_objects.dat
-	$(CC) -o $@ parser.o calculate.o base.o fw1.o acid_net.o conf.o $(LIBS)
+	#cat $(FW1_OBJECTS_FILE) | ./gen_fw1_objects > fw1_objects.dat
+	$(CC) -o $@ parser.o calculate.o base.o fw1.o acid_net.o conf.o graph.o $(LIBS)
 
 .c.o:
 	$(CC) $(CCFLAGS) $(INCLUDE) $(DEFINE) -c $<
 
 parser.c: parser.lex
-	flex -oparser.c --fast parser.lex
+	flex -oparser.c parser.lex
 
 clean: 
 	rm -vf *.o *~ parser.c parser.h
