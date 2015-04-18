@@ -38,7 +38,7 @@
         $nmap = $conf->get_conf("nmap_path");
 
         $ip_sane = escapeshellcmd($ip);
-        $services = shell_exec("$nmap -sV $ip");
+        $services = shell_exec("$nmap -sV -P0 $ip");
         $lines = split("[\n\r]", $services);
         Host_services::delete($conn, $ip);
         foreach ($lines as $line) {

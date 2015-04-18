@@ -1,12 +1,11 @@
-import xml.sax
-import socket
-import time
-import sys
-import os
+import xml.sax, socket, time
 
 import Config
 import Parser
-import Monitor
+import Server
+import Scheduler
+import Watchdog
+import MonitorList
 import util
 
 class Agent:
@@ -20,6 +19,7 @@ class Agent:
         self.plugins = {}
         self.conn = None
         self.sequence = 0
+        self.mlist = MonitorList.MonitorList()
 #        self.my_ip = socket.gethostbyname(socket.gethostname())
 
     def parseConfig(self, config_file):
@@ -34,21 +34,21 @@ class Agent:
         configParser.parse(config_file)
 
         # store data
-        self.serverIp = Config.ConfigHandler.serverIp
-        self.listenPort = Config.ConfigHandler.serverPort
-        if Config.ConfigHandler.watchdog_enable in ['yes', 'true']:
+        (self.serverIp, self.listenPort) = configHandler.get_conn()
+        if configHandler.get_watchdog_enable() in ['yes', 'true']:
             self.watchdog_enable = True
         else: 
             self.watchdog_enable = False
-        self.watchdog_interval = Config.ConfigHandler.watchdog_interval
-        self.logdir = Config.ConfigHandler.logdir
-        self.plugins = Config.ConfigHandler.plugins
+        self.watchdog_interval = configHandler.get_watchdog_interval()
+        self.logdir = configHandler.get_logdir()
+        self.plugins = configHandler.get_plugins()
 
 
     def connect(self):
         """Connect to server"""
         
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        data = ""
         try:
             self.conn.connect((self.serverIp, self.listenPort)) 
             self.sequence = 1
@@ -60,8 +60,7 @@ class Agent:
                 'Error connecting to server (' + self.serverIp + \
                 ', ' + str(self.listenPort) + ') ... ' + str(e),
                 '!!', 'RED')
-            os.remove(os.path.join(util.RUN_DIR, 'ossim_agent.pid'))
-            sys.exit()
+            return None
 
         if data == 'ok id="' + str(self.sequence) + '"\n':
             util.debug (__name__, "Server connected\n", '<-', 'GREEN')
@@ -92,6 +91,14 @@ class Agent:
         "Reset the current connection by closing and reopening it"
         self.close()
         while 1:
+            
+            # check if another thread has reconnected...
+            print util.debug(__name__, "Connection: " + str(self.conn), 
+                             'WW', 'YELLOW')
+            if self.conn is not None:
+                return self.conn
+
+            # new connection
             conn = self.connect()
             if conn is not None:
                 self.append_plugins()
@@ -104,10 +111,18 @@ class Agent:
             
         return conn
 
+    def watchdog(self):
+        if self.watchdog_enable:
+            watchdog = Watchdog.Watchdog(self)
+            watchdog.start()
 
-    def monitor(self):
-        monitor = Monitor.Monitor(self)
-        monitor.start()
+    def server(self):
+        server = Server.Server(self)
+        server.start()
+
+    def scheduler(self):
+        scheduler = Scheduler.Scheduler(self)
+        scheduler.start()
 
 
     def parser(self):
@@ -124,26 +139,32 @@ class Agent:
                 parser.start()
 
     def close(self):
-        self.conn.close()
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
 
 
     def sendMessage(self, message) :
-        try:
-            if self.conn:
-                self.conn.send(message + '\n')
-                util.debug (__name__, message + '\n',
-                            '=>', 'CYAN')
+        while 1:
+            if self.conn is not None:
+                
+                try:
+                    self.conn.send(message + '\n')
+                    util.debug (__name__, message + '\n',
+                                '=>', 'CYAN')
+                    break
+                except socket.error, e:
+                    util.debug (__name__, 
+                        'Error sending data: %s, retrying in 10 seconds\n' % \
+                        (e), '!!', 'RED')
+                    time.sleep(10)
+                    self.conn = self.reconnect()
+                
             else:
                 util.debug (__name__, 'Trying to connect in 10 seconds\n',
                             '**', 'YELLOW')
                 time.sleep(10)
                 self.conn = self.reconnect()
-        except socket.error, e:
-            util.debug (__name__, 
-                'Error sending data: %s, retrying in 10 seconds\n' % (e),
-                '!!', 'RED')
-            time.sleep(10)
-            self.conn = self.reconnect()
         
 
     def sendAlert(self, type, date, sensor, interface, 
@@ -181,7 +202,7 @@ class Agent:
 
     def sendOsChange(self, host, os, date, plugin_id, plugin_sid):
         
-        message = 'host-os-change ' +\
+        message = 'host-os-new ' +\
             'host="'        + str(host)         + '" ' +\
             'os="'          + str(os)           + '" ' +\
             'date="'        + str(date)         + '" ' +\
@@ -192,7 +213,7 @@ class Agent:
             
     def sendMacChange(self, host, mac, vendor, date, plugin_id, plugin_sid):
         
-        message = 'host-mac-change ' +\
+        message = 'host-mac-new ' +\
             'host="'        + str(host)         + '" ' +\
             'mac="'         + str(mac)          + '" ' +\
             'vendor="'      + str(vendor)       + '" ' +\

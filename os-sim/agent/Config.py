@@ -1,18 +1,21 @@
 import xml.sax
-import string
 import util
 
 
 class ConfigHandler(xml.sax.handler.ContentHandler):
 
-    serverIp = ''
-    serverPort = ''
-    plugins = {}
-
     def __init__(self):
         self.plugin_id = 0
         self.inContent = 0
         self.theContent = ""
+
+        self._serverIp = ''
+        self._serverPort = ''
+        self._plugins = {}
+        self._watchdog_enable = ''
+        self._watchdog_interval = ''
+        self._logdir = ''
+        
         xml.sax.handler.ContentHandler.__init__(self)
 
     def startElement (self, name, attrs):
@@ -41,12 +44,12 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
             plugin["type"] = util.normalizeWhitespace(attrs.get('type', None))
             plugin["start"] = util.normalizeWhitespace(attrs.get('start', None))
             plugin["enable"] = util.normalizeWhitespace(attrs.get('enable', None))
-            ConfigHandler.plugins[plugin["id"]] = plugin
+            self._plugins[plugin["id"]] = plugin
             
         elif name == 'watchdog':
-            ConfigHandler.watchdog_enable = \
+            self._watchdog_enable = \
                 util.normalizeWhitespace(attrs.get('enable', None))
-            ConfigHandler.watchdog_interval = \
+            self._watchdog_interval = \
                 util.normalizeWhitespace(attrs.get('interval', None))
 
         
@@ -55,31 +58,31 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
         if self.inContent:
             self.theContent = util.normalizeWhitespace(self.theContent)
         if name == 'serverip':
-            ConfigHandler.serverIp = self.theContent.encode("UTF-8")
+            self._serverIp = self.theContent.encode("UTF-8")
         if name == 'serverport':
-            ConfigHandler.serverPort = int(self.theContent.encode("UTF-8"))
+            self._serverPort = int(self.theContent.encode("UTF-8"))
         if name == 'logdir':
-            ConfigHandler.logdir = self.theContent.encode("UTF-8")
+            self._logdir = self.theContent.encode("UTF-8")
         if name == 'startup':
-            ConfigHandler.plugins[self.plugin_id]["startup"] = \
+            self._plugins[self.plugin_id]["startup"] = \
                 self.theContent.encode("UTF-8")
         if name == 'shutdown':
-            ConfigHandler.plugins[self.plugin_id]["shutdown"] = \
+            self._plugins[self.plugin_id]["shutdown"] = \
                 self.theContent.encode("UTF-8")
         if name == 'source':
-            ConfigHandler.plugins[self.plugin_id]["source"] = \
+            self._plugins[self.plugin_id]["source"] = \
                 self.theContent.encode("UTF-8")
         if name == 'location':
-            ConfigHandler.plugins[self.plugin_id]["location"] = \
+            self._plugins[self.plugin_id]["location"] = \
                 self.theContent.encode("UTF-8")
         if name == 'interface':
-            ConfigHandler.plugins[self.plugin_id]["interface"] = \
+            self._plugins[self.plugin_id]["interface"] = \
                 self.theContent.encode("UTF-8")
         if name == 'sensor':
-            ConfigHandler.plugins[self.plugin_id]["sensor"] = \
+            self._plugins[self.plugin_id]["sensor"] = \
                 self.theContent.encode("UTF-8")
         if name == 'frequency':
-            ConfigHandler.plugins[self.plugin_id]["frequency"] = \
+            self._plugins[self.plugin_id]["frequency"] = \
                 self.theContent.encode("UTF-8")
  
     def characters (self, string):
@@ -91,5 +94,22 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
         
         elif self.inContent:
             self.theContent = string
+
+
+
+    def get_conn (self):
+        return (self._serverIp, self._serverPort)
+
+    def get_plugins (self):
+        return self._plugins
+
+    def get_logdir (self):
+        return self._logdir
+
+    def get_watchdog_enable(self):
+        return self._watchdog_enable
+        
+    def get_watchdog_interval(self):
+        return self._watchdog_interval
 
 

@@ -91,10 +91,8 @@ G_LOCK_DEFINE_STATIC (s_mutex_sensors);
 G_LOCK_DEFINE_STATIC (s_mutex_hosts);
 G_LOCK_DEFINE_STATIC (s_mutex_nets);
 G_LOCK_DEFINE_STATIC (s_mutex_policies);
-G_LOCK_DEFINE_STATIC (s_mutex_directives);
 G_LOCK_DEFINE_STATIC (s_mutex_host_levels);
 G_LOCK_DEFINE_STATIC (s_mutex_net_levels);
-G_LOCK_DEFINE_STATIC (s_mutex_backlogs);
 G_LOCK_DEFINE_STATIC (s_mutex_alerts);
 
 GType             sim_container_get_type                        (void);

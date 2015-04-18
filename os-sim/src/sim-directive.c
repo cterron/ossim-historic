@@ -65,7 +65,7 @@ struct _SimDirectivePrivate {
   GNode     *rule_root;
   GNode     *rule_curr;
 
-  GMutex    *mutex;
+  GList		*groups;
 };
 
 static gpointer parent_class = NULL;
@@ -85,13 +85,14 @@ sim_directive_impl_finalize (GObject  *gobject)
   SimDirective *directive = SIM_DIRECTIVE (gobject);
   GList        *list;
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_impl_finalize: Id %lu, Name %s, BacklogId %lu, Match %d", 
+	 directive->_priv->id, directive->_priv->name, directive->_priv->backlog_id, directive->_priv->matched);
+
   if (directive->_priv->name)
     g_free (directive->_priv->name);
 
   sim_directive_node_data_destroy (directive->_priv->rule_root);
   g_node_destroy (directive->_priv->rule_root);
-
-  g_mutex_free (directive->_priv->mutex);
 
   g_free (directive->_priv);
   
@@ -114,6 +115,8 @@ sim_directive_instance_init (SimDirective *directive)
 {
   directive->_priv = g_new0 (SimDirectivePrivate, 1);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_instance_init");
+
   directive->_priv->backlog_id = 0;
 
   directive->_priv->id = 0;
@@ -129,7 +132,7 @@ sim_directive_instance_init (SimDirective *directive)
   directive->_priv->rule_root = NULL;
   directive->_priv->rule_curr = NULL;
 
-  directive->_priv->mutex = g_mutex_new ();
+  directive->_priv->groups = NULL;
 }
 
 /* Public Methods */
@@ -184,51 +187,6 @@ sim_directive_new (void)
  *
  *
  */
-void
-sim_directive_lock (SimDirective     *directive)
-{
-  g_return_if_fail (directive);
-  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
-
-  g_mutex_lock (directive->_priv->mutex);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_directive_unlock (SimDirective     *directive)
-{
-  g_return_if_fail (directive);
-  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
-
-  g_mutex_unlock (directive->_priv->mutex);
-}
-
-/*
- *
- *
- *
- *
- */
-gboolean
-sim_directive_trylock (SimDirective     *directive)
-{
-  g_return_val_if_fail (directive, FALSE);
-  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
-
-  return g_mutex_trylock (directive->_priv->mutex);
-}
-
-/*
- *
- *
- *
- *
- */
 gint
 sim_directive_get_id (SimDirective   *directive)
 {
@@ -252,6 +210,112 @@ void sim_directive_set_id (SimDirective   *directive,
   g_return_if_fail (id > 0);
 
   directive->_priv->id = id;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_append_group (SimDirective	*directive,
+			    SimDirectiveGroup	*group)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+  g_return_if_fail (group);
+  g_return_if_fail (SIM_IS_DIRECTIVE_GROUP (group));
+
+  directive->_priv->groups = g_list_append (directive->_priv->groups, group);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_remove_group (SimDirective	*directive,
+			    SimDirectiveGroup	*group)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+  g_return_if_fail (group);
+  g_return_if_fail (SIM_IS_DIRECTIVE_GROUP (group));
+
+  directive->_priv->groups = g_list_remove (directive->_priv->groups, group);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_directive_free_groups (SimDirective		*directive)
+{
+  GList	*list;
+
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+
+  list = directive->_priv->groups;
+  while (list)
+    {
+      SimDirectiveGroup	*group = (SimDirectiveGroup *) list->data;
+      g_object_unref (group);
+      list = list->next;
+    }
+  g_list_free (directive->_priv->groups);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+GList*
+sim_directive_get_groups (SimDirective		*directive)
+{
+  g_return_if_fail (directive);
+  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+
+  return directive->_priv->groups;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_directive_has_group	(SimDirective		*directive,
+			 SimDirectiveGroup	*group)
+{
+  GList	*list;
+
+  g_return_val_if_fail (directive, FALSE);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
+  g_return_val_if_fail (group, FALSE);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE_GROUP (group), FALSE);
+
+  list = directive->_priv->groups;
+  while (list)
+    {
+      SimDirectiveGroup *cmp = (SimDirectiveGroup *) list->data;
+
+      if (cmp == group)
+	return TRUE;
+
+      list = list->next;
+    }
+
+  return FALSE;
 }
 
 /*

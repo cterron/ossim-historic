@@ -46,27 +46,28 @@ extern "C" {
 #include <sim-server.h>
 
 typedef struct {
-  SimConfig          *config;
+  SimConfig	*config;
 
-  SimContainer       *container;
-  SimOrganizer       *organizer;
-  SimScheduler       *scheduler;
-  SimServer          *server;
+  SimContainer	*container;
+  SimOrganizer	*organizer;
+  SimScheduler	*scheduler;
+  SimServer	*server;
 
-  SimDatabase        *dbossim;
-  SimDatabase        *dbsnort;
+  SimDatabase	*dbossim;
+  SimDatabase	*dbsnort;
+
+  GMutex	*mutex_directives;
+  GMutex	*mutex_backlogs;
 
   struct {
-    gchar            *filename;
-    gint              fd;
-    gint              level;
+    gchar	*filename;
+    gint	fd;
+    gint	level;
   } log;
 
 } SimMain;
 
-extern SimMain        ossim;
-extern SimContainer  *sim_ctn;
-extern SimServer     *sim_svr;
+extern SimMain	ossim;
 
 #ifdef __cplusplus
 }

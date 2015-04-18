@@ -208,7 +208,7 @@ sub rrd_config {
 	my $priority = $row->{priority};
 	my $persistence = $row->{persistence};
 
-	if (ip == 0) {
+	if ($hl == 0) {
 	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/" . $att . ".rrd";
 	    next unless (-e $file);
 

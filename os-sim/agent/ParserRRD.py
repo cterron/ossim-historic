@@ -97,11 +97,9 @@ class ParserRRD(Parser.Parser):
                 'udpRcvdLoc':           '75',
                 'synPktsSent':          '76',
                 'synPktsRcvd':          '77',
-                'totContactedSentPeers':'78',
-                'totContactedRcvdPeers':'79',
-                'web_sessions':         '80',
-                'mail_sessions':        '81',
-                'nb_sessions':          '82',
+                'web_sessions':         '78',
+                'mail_sessions':        '79',
+                'nb_sessions':          '80',
             },
     }
 
@@ -138,7 +136,7 @@ class ParserRRD(Parser.Parser):
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
-                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
                     

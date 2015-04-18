@@ -22,6 +22,7 @@ ossim_server_SOURCES = \
 		sim-policy.c \
 		sim-action.c \
 		sim-rule.c \
+		sim-directive-group.c \
 		sim-directive.c \
 		sim-host-level.c \
 		sim-net-level.c \

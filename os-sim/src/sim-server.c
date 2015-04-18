@@ -35,9 +35,12 @@
 #include <config.h>
 #include <gnet.h>
 
+#include "os-sim.h"
 #include "sim-session.h"
 #include "sim-server.h"
 #include "sim-sensor.h"
+
+extern SimMain    ossim;
 
 enum 
 {
@@ -171,10 +174,12 @@ sim_server_new (SimConfig  *config)
 void
 sim_server_run (SimServer *server)
 {
-  SimSessionData  *session_data;
-  GTcpSocket      *socket;
-  GThread         *thread;
-
+  SimSession		*session;
+  SimSensor		*sensor;
+  SimSessionData	*session_data;
+  GTcpSocket		*socket;
+  GThread		*thread;
+  
   g_return_if_fail (server);
   g_return_if_fail (SIM_IS_SERVER (server));
 
@@ -183,6 +188,16 @@ sim_server_run (SimServer *server)
   server->_priv->socket = gnet_tcp_socket_server_new_with_port (server->_priv->port);
   while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
     {
+      GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+      sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
+      if (sensor)
+	{
+	  session = sim_server_get_session_by_sensor (server, sensor);
+	  if (session)
+	    sim_session_close (session);
+	}
+      gnet_inetaddr_unref (ia);
+
       session_data = g_new0 (SimSessionData, 1);
       session_data->config = server->_priv->config;
       session_data->server = server;

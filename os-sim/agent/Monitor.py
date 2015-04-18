@@ -1,173 +1,130 @@
-import threading
-import re
-import socket
-import time
+import util, time, sys
 
-import util
+class Monitor:
 
-class Monitor(threading.Thread):
-    
-    def __init__(self, agent, data = ''):
-        self.agent  = agent
-
-        # link agent atributes and methods to use them. why???
-        self.sequence  = agent.sequence
-        self.plugins   = agent.plugins
-        self.data      = data
-        self.watchdog_enable = agent.watchdog_enable
-        self.watchdog_interval = agent.watchdog_interval
-
-        threading.Thread.__init__(self)
-
-
-    def split_data(self, data):
+    # MUST be called in child class
+    def __init__(self, agent, data, itime):
         
-        pattern = 'plugin_id="([^"]*)"\s+plugin_sid="([^"]*)"\s+condition="([^"]*)"\s+value="([^"]*)"'
-        patternInterval = 'interval="([^"]*)"'
-        patternFrom = ' from="([^"]*)"'
-        patternTo = ' to="([^"]*)"'
-        patternAbsolute = ' absolute="([^"]*)"'
-        patternPortFrom = ' port_from="([^"]*)"'
-        patternPortTo = ' port_to="([^"]*)"'
+        self.agent  = agent  # agent pointer
+        self.data   = data   # watch rule info
+        self.itime  = itime  # insert time
 
-        result = re.findall(str(pattern), data)
-        resultInterval = re.findall(str(patternInterval), data)
-        resultFrom = re.findall(str(patternFrom), data)
-        resultTo = re.findall(str(patternTo), data)
-        resultAbsolute = re.findall(str(patternAbsolute), data)
-        resultPortFrom = re.findall(str(patternPortFrom), data)
-        resultPortTo = re.findall(str(patternPortTo), data)
+        self.plugins  = agent.plugins
+
+        self.vfirst = None
+        self.vlast  = None
+
+    # MUST be overriden in child class
+    def get_value(self, data):
+        pass
+
+    # object free if needed
+    def close(self):
+        pass
+
+    # MAY be overriden in child class
+    def evaluate(self):
+
+        self.vlast = self.get_value(self.data)
+        if self.vlast is None:
+            util.debug (__name__, "no data for %s" % self.data["from"],
+                        '!!', 'YELLOW')
+            return True
+
+        if self.eval_condition(cond  = self.data["condition"], 
+                               arg1  = self.vfirst,
+                               arg2  = self.vlast,
+                               value = int(self.data["value"])):
+            self.sendAlert()
+            return True
+
+        else:
+            return False
+
+
+    def process(self):
 
         try:
-            (plugin_id, plugin_sid, condition, value) = result[0]
-            info = {"plugin_id" : plugin_id, 
-                    "plugin_sid" : plugin_sid, 
-                    "condition" : condition,
-                    "value" : value, 
-                    "port_from" : '',
-                    "port_to" : '',
-                    "interval" : '',
-                    "from" : '',
-                    "to" : '',
-                    "absolute": ''}
-        except IndexError:
-            return None
+            util.debug(__name__, "Processing watch-rule (id=%s sid=%s)" % \
+                       (self.data["plugin_id"], self.data["plugin_sid"]), 
+                       "<-", "YELLOW")
 
-        try:
-            info["interval"] = resultInterval[0]
-        except IndexError:
-            pass
+            # obtain first value to compare
+            if self.vfirst is None:
+                if self.data["absolute"] in ["yes", "true"]:
+                    self.vfirst = 0
+                else:
+                    try:
+                        self.vfirst = int(self.get_value(self.data))
+                        if self.vfirst is None: self.vfirst = 0
+                    except TypeError:
+                        self.vfirst = 0
+
+            # get actual time
+            atime = int(time.time())
+
+            if self.data["interval"] == '':
+                self.evaluate()
+                return True # finished
+
+            elif (self.itime + int(self.data["interval"]) > atime):
+                util.debug (__name__, 
+                            "Timeout at %d seconds" % \
+                            (self.itime + int(self.data["interval"]) - atime), 
+                            "<-", "YELLOW")
+                return self.evaluate()
+
+            else: 
+                # out of time
+                self.evaluate()
+                return True # finished
+
+        except Exception, e:
+            util.debug (__name__, e, '!!', 'RED')
+            print >> sys.stderr, __name__, ": Unexpected exception:", e
+            return True
+
+
+    def eval_condition(self, cond, arg1, arg2, value):
+
+        if cond == "eq":
+            return (int(arg2) == int(arg1) + int(value))
+        elif cond == "ne":
+            return (int(arg2) != int(arg1) + int(value))
+        elif cond == "gt":
+            return (int(arg2) > int(arg1) + int(value))
+        elif cond == "ge":
+            return (int(arg2) >= int(arg1) + int(value))
+        elif cond == "le":
+            return (int(arg2) <= int(arg1) + int(value))
+        elif cond == "lt":
+            return (int(arg2) < int(arg1) + int(value))
+        else:
+            return False
+
+
+    def sendAlert(self):
+        plugin_id = self.data["plugin_id"]
+
+        sensor = self.plugins[plugin_id]['sensor']
+        interface = self.plugins[plugin_id]['interface']
+        date = time.strftime('%Y-%m-%d %H:%M:%S', 
+                             time.localtime(time.time()))
         
-        try:
-            info["from"] = resultFrom[0]
-        except IndexError:
-            pass
-        
-        try:
-            info["to"] = resultTo[0]
-        except IndexError:
-            pass
+        util.debug(__name__, "watch-rule matched!", "=>", "GREEN")
 
-        try:
-            info["absolute"] = resultAbsolute[0]
-        except IndexError:
-            pass
-            
-        try:
-            info["port_from"] = resultPortFrom[0]
-        except IndexError:
-            pass
-            
-        try:
-            info["port_to"] = resultPortTo[0]
-        except IndexError:
-            pass
-        
-        return info
-
-
-    def recv_line(self, conn):
-        char = data = ''
-        while 1:
-            try:
-                char = conn.recv(1)
-                data += char
-                if char == '\n': break;
-            except socket.error:
-                util.debug (__name__,  'Error receiving from server', 
-                            '!!', 'RED')
-                time.sleep(10)
-                conn = self.agent.reconnect()
-            except AttributeError:
-                util.debug (__name__, 'Error receiving from server',
-                            '!!', 'RED')
-                time.sleep(10)
-                conn = self.agent.reconnect()
-                
-
-        return data
-
-
-    def run(self):
-       
-        # watchdog monitor
-        if self.agent.watchdog_enable:
-            from MonitorWatchdog import MonitorWatchdog
-            watchdog = MonitorWatchdog(self.agent)
-            watchdog.start()
-        
-        while 1:
-            data = self.recv_line(self.agent.conn)
-            if not data: break;
-            
-#            print " * server said: " + str(data) # debug
-#            TODO: CHECK FOR ERROR MESSAGES
-
-            try:
-                if data.__contains__('watch-rule'):
-
-                    # ntop monitor
-                    if data.__contains__('plugin_id="2005"'):
-                        if self.plugins['2005']["enable"] == 'yes':
-                            from MonitorNtop import MonitorNtop
-                            ntop = MonitorNtop(self.agent, data)
-                            ntop.start()
-                        else:
-                            util.debug (__name__, 'plugin NTOP is disabled',
-                                        '**', 'RED');
-                        
-                    # C & A levels monitor
-                    elif data.__contains__('plugin_id="2001"'):
-                        if self.plugins['2001']["enable"] == 'yes':
-                            from MonitorCA import MonitorCA
-                            ca = MonitorCA(self.agent, data)
-                            ca.start()
-                        else:
-                            util.debug (__name__, 'plugin CA is disabled',
-                                        '**', 'RED');
-
-                    # OpenNMS monitor
-                    elif data.__contains__('plugin_id="2004"'):
-                        if self.plugins['2004']["enable"] == 'yes':
-                            from MonitorOpennms import MonitorOpennms
-                            opennms = MonitorOpennms(self.agent, data)
-                            opennms.start()
-                        else:
-                            util.debug (__name__, 'plugin Opennms is disabled',
-                                        '**', 'RED');
-
-
-                elif data.__contains__('plugin-start') or \
-                   data.__contains__('plugin-stop') or \
-                   data.__contains__('plugin-enabled') or \
-                   data.__contains__('plugin-disabled'):
-
-                    # Plugin monitor
-                    from MonitorPlugin import MonitorPlugin
-                    mp = MonitorPlugin(self.agent, data)
-                    mp.start()
-
-            except Exception, e:
-                util.debug (__name__, e, '!!', 'RED')
-
+        self.agent.sendAlert  (type         = 'monitor', 
+                               date         = date, 
+                               sensor       = sensor, 
+                               interface    = interface,
+                               plugin_id    = self.data["plugin_id"], 
+                               plugin_sid   = self.data["plugin_sid"],
+                               priority     = '', 
+                               protocol     = 'tcp', 
+                               src_ip       = self.data["from"],
+                               src_port     = self.data["port_from"], 
+                               dst_ip       = self.data["to"], 
+                               dst_port     = self.data["port_to"],
+                               condition    = self.data["condition"],
+                               value        = self.data["value"])
 

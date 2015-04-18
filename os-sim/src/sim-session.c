@@ -48,8 +48,6 @@
 
 extern SimMain    ossim;
 
-G_LOCK_EXTERN (s_mutex_directives);
-
 enum 
 {
   DESTROY,
@@ -57,22 +55,21 @@ enum
 };
 
 struct _SimSessionPrivate {
-  GTcpSocket    *socket;
+  GTcpSocket	*socket;
 
-  SimServer     *server;
-  SimConfig     *config;
-  SimDatabase   *db_ossim;
+  SimServer	*server;
+  SimConfig	*config;
 
-  SimSensor     *sensor;
-  GList         *plugins;
-  GList         *plugin_states;
+  SimSensor	*sensor;
+  GList		*plugins;
+  GList		*plugin_states;
 
-  GIOChannel    *io;
+  GIOChannel	*io;
 
-  GInetAddr     *ia;
-  gint           seq;
-  gboolean       close;
-  gboolean       connect;
+  GInetAddr	*ia;
+  gint		seq;
+  gboolean	close;
+  gboolean	connect;
 };
 
 static gpointer parent_class = NULL;
@@ -91,13 +88,9 @@ sim_session_impl_finalize (GObject  *gobject)
 {
   SimSession *session = SIM_SESSION (gobject);
 
-  if (session->_priv->io)
-    g_io_channel_unref(session->_priv->io);
-
-  g_object_unref (session->_priv->db_ossim);
-
   if (session->_priv->socket)
     gnet_tcp_socket_delete (session->_priv->socket);
+
   if (session->_priv->ia)
     gnet_inetaddr_unref (session->_priv->ia);
 
@@ -129,7 +122,6 @@ sim_session_instance_init (SimSession *session)
   session->_priv->socket = NULL;
 
   session->_priv->config = NULL;
-  session->_priv->db_ossim = NULL;
   session->_priv->server = NULL;
 
   session->_priv->sensor = NULL;
@@ -189,23 +181,18 @@ sim_session_new (GObject       *object,
 		 GTcpSocket    *socket)
 {
   SimServer    *server = (SimServer *) object;
-  SimSession   *session = NULL;
-  SimConfigDS  *ds;
+  SimSession   *session;
 
-  g_return_val_if_fail (server != NULL, NULL);
+  g_return_val_if_fail (server, NULL);
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
-  g_return_val_if_fail (config != NULL, NULL);
+  g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
-  g_return_val_if_fail (socket != NULL, NULL);
-
-  ds = sim_config_get_ds_by_name (config, SIM_DS_OSSIM);
+  g_return_val_if_fail (socket, NULL);
 
   session = SIM_SESSION (g_object_new (SIM_TYPE_SESSION, NULL));
   session->_priv->config = config;
-  session->_priv->db_ossim = sim_database_new (ds);
   session->_priv->server = server;
   session->_priv->socket = socket;
-  session->_priv->io = gnet_tcp_socket_get_io_channel (socket);
 
   session->_priv->ia = gnet_tcp_socket_get_remote_inetaddr (socket);
   if (gnet_inetaddr_is_loopback (session->_priv->ia))
@@ -214,8 +201,7 @@ sim_session_new (GObject       *object,
       session->_priv->ia = gnet_inetaddr_get_host_addr ();
     }
 
-  g_message ("SESSION: %s", 
-	     gnet_inetaddr_get_canonical_name (session->_priv->ia));
+  g_message ("SESSION: %s", gnet_inetaddr_get_canonical_name (session->_priv->ia));
 
   return session;
 }
@@ -240,17 +226,9 @@ sim_session_cmd_connect (SimSession  *session,
   if (command->data.connect.type)
     {
       sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
-      if (sensor)
-	{
-	  SimSession *sess = sim_server_get_session_by_sensor (session->_priv->server, sensor);
-	  if (sess)
-	    { 
-	      sim_session_close (sess);
-	    }
 
-	  session->_priv->sensor = sensor;
-	  session->type = SIM_SESSION_TYPE_SENSOR;
-	}
+      session->_priv->sensor = sensor;
+      session->type = SIM_SESSION_TYPE_SENSOR;
     }
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -302,7 +280,7 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
       if (plugin->type == SIM_PLUGIN_TYPE_MONITOR)
 	{      
 	  GList *directives = NULL;
-	  G_LOCK (s_mutex_directives);
+	  g_mutex_lock (ossim.mutex_directives);
 	  directives = sim_container_get_directives_ul (ossim.container);
 	  while (directives)
 	    {
@@ -319,7 +297,7 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
 	      directives = directives->next;
 	    }
 	  g_list_free (directives);
-	  G_UNLOCK (s_mutex_directives);
+	  g_mutex_unlock (ossim.mutex_directives);
 	}
     }
   else
@@ -769,7 +747,7 @@ sim_session_cmd_reload_plugins (SimSession  *session,
 
 
   sim_container_free_plugins (ossim.container);
-  sim_container_db_load_plugins (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_plugins (ossim.container, ossim.dbossim);
   
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -796,7 +774,7 @@ sim_session_cmd_reload_sensors (SimSession  *session,
 
 
   sim_container_free_sensors (ossim.container);
-  sim_container_db_load_sensors (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_sensors (ossim.container, ossim.dbossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -824,7 +802,7 @@ sim_session_cmd_reload_hosts (SimSession  *session,
 
   sim_container_free_hosts (ossim.container);
   sim_container_db_load_hosts (ossim.container,
-			       session->_priv->db_ossim);
+			       ossim.dbossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -851,7 +829,7 @@ sim_session_cmd_reload_nets (SimSession  *session,
 
   sim_container_free_nets (ossim.container);
   sim_container_db_load_nets (ossim.container,
-			      session->_priv->db_ossim);
+			      ossim.dbossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -877,7 +855,7 @@ sim_session_cmd_reload_policies (SimSession  *session,
   g_return_if_fail (SIM_IS_COMMAND (command));
 
   sim_container_free_policies (ossim.container);
-  sim_container_db_load_policies (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_policies (ossim.container, ossim.dbossim);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
   cmd->id = command->id;
@@ -902,13 +880,13 @@ sim_session_cmd_reload_directives (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, session->_priv->db_ossim);
-  sim_container_db_delete_backlogs_ul (ossim.container, session->_priv->db_ossim);
+  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
+  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
 
   sim_container_free_backlogs (ossim.container);
   sim_container_free_directives (ossim.container);
   sim_container_load_directives_from_file (ossim.container,
-					   session->_priv->db_ossim,
+					   ossim.dbossim,
 					   SIM_XML_DIRECTIVE_FILE);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -950,22 +928,22 @@ sim_session_cmd_reload_all (SimSession  *session,
   sim_container_free_classifications (ossim.container);
   sim_container_free_categories (ossim.container);
 
-  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, session->_priv->db_ossim);
-  sim_container_db_delete_backlogs_ul (ossim.container, session->_priv->db_ossim);
+  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
+  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
 
-  sim_container_db_load_categories (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_classifications (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_plugins (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_plugin_sids (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_sensors (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_hosts (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_nets (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_policies (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_host_levels (ossim.container, session->_priv->db_ossim);
-  sim_container_db_load_net_levels (ossim.container, session->_priv->db_ossim);
+  sim_container_db_load_categories (ossim.container, ossim.dbossim);
+  sim_container_db_load_classifications (ossim.container, ossim.dbossim);
+  sim_container_db_load_plugins (ossim.container, ossim.dbossim);
+  sim_container_db_load_plugin_sids (ossim.container, ossim.dbossim);
+  sim_container_db_load_sensors (ossim.container, ossim.dbossim);
+  sim_container_db_load_hosts (ossim.container, ossim.dbossim);
+  sim_container_db_load_nets (ossim.container, ossim.dbossim);
+  sim_container_db_load_policies (ossim.container, ossim.dbossim);
+  sim_container_db_load_host_levels (ossim.container, ossim.dbossim);
+  sim_container_db_load_net_levels (ossim.container, ossim.dbossim);
 
   if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
-    sim_container_load_directives_from_file (ossim.container, session->_priv->db_ossim, config->directive.filename);
+    sim_container_load_directives_from_file (ossim.container, ossim.dbossim, config->directive.filename);
 
   sim_server_reload (session->_priv->server);
 
@@ -1004,13 +982,13 @@ sim_session_cmd_host_os_change (SimSession  *session,
 
   ia = gnet_inetaddr_new_nonblock (command->data.host_os_change.host, 0);
   os = sim_container_db_get_host_os_ul (ossim.container,
-				       session->_priv->db_ossim,
+				       ossim.dbossim,
 				       ia);
 
   if (!os)
     {
       sim_container_db_insert_host_os_ul (ossim.container,
-					 session->_priv->db_ossim,
+					 ossim.dbossim,
 					 ia,
 					 command->data.host_os_change.date,
 					 command->data.host_os_change.os);
@@ -1026,7 +1004,7 @@ sim_session_cmd_host_os_change (SimSession  *session,
     }
 
   sim_container_db_update_host_os_ul (ossim.container,
-				     session->_priv->db_ossim,
+				     ossim.dbossim,
 				     ia,
 				     command->data.host_os_change.date,
 				     command->data.host_os_change.os,
@@ -1086,13 +1064,13 @@ sim_session_cmd_host_mac_change (SimSession  *session,
 
   ia = gnet_inetaddr_new_nonblock (command->data.host_mac_change.host, 0);
   mac = sim_container_db_get_host_mac_ul (ossim.container,
-					 session->_priv->db_ossim,
+					 ossim.dbossim,
 					 ia);
 
   if (!mac)
     {
       sim_container_db_insert_host_mac_ul (ossim.container,
-					  session->_priv->db_ossim,
+					  ossim.dbossim,
 					  ia,
 					  command->data.host_mac_change.date,
 					  command->data.host_mac_change.mac,
@@ -1109,11 +1087,11 @@ sim_session_cmd_host_mac_change (SimSession  *session,
     }
 
   vendor = sim_container_db_get_host_mac_vendor_ul (ossim.container,
-						    session->_priv->db_ossim,
+						    ossim.dbossim,
 						    ia);
 
   sim_container_db_update_host_mac_ul (ossim.container,
-				      session->_priv->db_ossim,
+				      ossim.dbossim,
 				      ia,
 				      command->data.host_mac_change.date,
 				      command->data.host_mac_change.mac,
@@ -1196,7 +1174,8 @@ sim_session_read (SimSession  *session)
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (session->_priv->io != NULL);
+
+  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
 
   while (!(session->_priv->close) && 
 	 (error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n > 0))
@@ -1207,17 +1186,24 @@ sim_session_read (SimSession  *session)
 	  break;
 	}
 
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: %s", buffer);
+      if (!buffer)
+	continue;
 
+      if (strlen (buffer) <= 2)
+	continue;
+
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: %s", buffer);
       cmd = sim_command_new_from_buffer (buffer);
 
       if (!cmd)
 	{
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command null");
 	  continue;
 	}
 
       if (cmd->type == SIM_COMMAND_TYPE_NONE)
 	{
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command type none");
 	  g_object_unref (cmd);
 	  continue;
 	}
@@ -1300,6 +1286,7 @@ sim_session_read (SimSession  *session)
 	  sim_session_cmd_error (session, cmd);
 	  break;
 	defalut:
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command unknown type");
 	  res = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
 	  res->id = cmd->id;
 

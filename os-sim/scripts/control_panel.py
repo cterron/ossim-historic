@@ -73,18 +73,20 @@ def __update_db(st, type, info, rrd_name, range):
 
     st.execute(query)
 
-    query = """
-        INSERT INTO control_panel 
-        (id, rrd_type, time_range, max_c, max_a, max_c_date, max_a_date)
-        VALUES ('%s', '%s', '%s', %f, %f, '%s', '%s')
-        """ % (rrd_name, type, range, info["max_c"], info["max_a"],
-               info["max_c_date"], info["max_a_date"])
+    if not (type == 'host' and info["max_c"] == 0 and info["max_a"] == 0):
 
-    st.execute(query)
+        query = """
+            INSERT INTO control_panel 
+            (id, rrd_type, time_range, max_c, max_a, max_c_date, max_a_date)
+            VALUES ('%s', '%s', '%s', %f, %f, '%s', '%s')
+            """ % (rrd_name, type, range, info["max_c"], info["max_a"],
+                   info["max_c_date"], info["max_a_date"])
 
-    print "updating %s (%s):    \tC=%f, A=%f" % \
-        (rrd_name, range, info["max_c"], info["max_a"])
-    sys.stdout.flush()
+        st.execute(query)
+
+        print "updating %s (%s):    \tC=%f, A=%f" % \
+            (rrd_name, range, info["max_c"], info["max_a"])
+        sys.stdout.flush()
 
 
 # get default threshold from db
@@ -294,7 +296,9 @@ def daemonize():
 # Parse command line options
 def parse_options():
     
-    parser = OptionParser (usage = "%prog [-d] [-s delay] [-c config_file]")
+    parser = OptionParser(usage = "%prog [-d] [-v] [-s delay] [-c config_file]")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+                      help="make lots of noise")
     parser.add_option("-d", "--daemon", dest="daemon", action="store_true",
                       help="Run script in daemon mode")
     parser.add_option("-s", "--sleep", dest="sleep", action="store",
@@ -303,6 +307,10 @@ def parse_options():
     parser.add_option("-c", "--config", dest="config_file", action="store",
                        help = "read config from FILE", metavar="FILE")
     (options, args) = parser.parse_args()
+
+    if options.verbose and options.daemon:
+        parser.error("incompatible options -v -d")
+    
     return options
 
 def main():
@@ -324,11 +332,12 @@ def main():
         daemonize()
         sys.stderr = open(os.path.join(LOG_DIR,'control_panel_error.log'),'w')
 
-    # Redirect standard file descriptors
-    if not os.path.isdir(LOG_DIR):
-        os.mkdir(LOG_DIR, 0755)
-    sys.stdin  = open('/dev/null', 'r')
-    sys.stdout = open(os.path.join(LOG_DIR, 'control_panel.log'), 'w')
+    # Redirect standard file descriptors (daemon mode)
+    if not options.verbose:
+        if not os.path.isdir(LOG_DIR):
+            os.mkdir(LOG_DIR, 0755)
+        sys.stdin  = open('/dev/null', 'r')
+        sys.stdout = open(os.path.join(LOG_DIR, 'control_panel.log'), 'w')
     
     # where are the rrd files?
     rrdtool_bin = RRD_BIN

@@ -5234,6 +5234,11 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1508, 73, NULL, NULL, 'rrd_anomaly: ntop host totContactedRcvdPeers', 4, 4);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 74, NULL, NULL, 'rrd_anomaly: ntop host totContactedSentPeers');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 75, NULL, NULL, 'rrd_anomaly: ntop host udpRcvdLoc');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 76, NULL, NULL, 'rrd_anomaly: ntop host synPktsSent');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 77, NULL, NULL, 'rrd_anomaly: ntop host synPktsRcvd');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 78, NULL, NULL, 'rrd_anomaly: ntop host web_sessions');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 79, NULL, NULL, 'rrd_anomaly: ntop host mail_sessions');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1508, 80, NULL, NULL, 'rrd_anomaly: ntop host nb_sessions');
 
 --
 -- Threshold Sids

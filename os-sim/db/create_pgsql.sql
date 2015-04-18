@@ -435,7 +435,8 @@ CREATE TABLE backlog_alert (
 --
 DROP TABLE alarm;
 CREATE TABLE alarm (
-	alert_id	INT8 PRIMARY KEY,
+	backlog_id	INT8,
+	alert_id	INT8,
 	timestamp	TIMESTAMP NOT NULL,
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
@@ -446,7 +447,8 @@ CREATE TABLE alarm (
 	dst_port	INTEGER,
 	risk		INTEGER,
 	snort_sid	INT8,
-	snort_cid	INT8
+	snort_cid	INT8,
+	PRIMARY KEY (backlog_id, alert_id)
 );
 
 --

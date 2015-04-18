@@ -45,7 +45,7 @@ class ParserCisco(Parser.Parser):
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
-                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
                     

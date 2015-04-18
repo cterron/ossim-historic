@@ -42,6 +42,7 @@
 #include "sim-alert.h"
 #include "sim-action.h"
 #include "sim-rule.h"
+#include "sim-directive-group.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,13 +74,19 @@ struct _SimDirectiveClass {
 GType             sim_directive_get_type                        (void);
 SimDirective*     sim_directive_new                             (void);
 
-void              sim_directive_lock                            (SimDirective     *directive);
-void              sim_directive_unlock                          (SimDirective     *directive);
-gboolean          sim_directive_trylock                         (SimDirective     *directive);
-
 gint              sim_directive_get_id                          (SimDirective     *directive);
 void              sim_directive_set_id                          (SimDirective     *directive,
 								 gint              id);
+
+void		sim_directive_append_group			(SimDirective		*directive,
+								 SimDirectiveGroup	*group);
+void		sim_directive_remove_group			(SimDirective		*directive,
+								 SimDirectiveGroup	*group);
+void		sim_directive_free_groups			(SimDirective		*directive);
+GList*		sim_directive_get_groups			(SimDirective		*directive);
+gboolean	sim_directive_has_group				(SimDirective		*directive,
+								 SimDirectiveGroup	*group);
+
 gint              sim_directive_get_backlog_id                  (SimDirective     *directive);
 void              sim_directive_set_backlog_id                  (SimDirective     *directive,
 								 gint              backlog_id);

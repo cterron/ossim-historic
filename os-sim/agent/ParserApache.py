@@ -14,7 +14,7 @@ class ParserApache(Parser.Parser):
             
         else:
             util.debug (__name__,  "log type " + self.plugin["source"] +\
-                        " unknown for Apache...", '!!', 'RED')
+                        " unknown for Apache...", '!!', 'YELLOW')
             sys.exit()
 
 
@@ -39,7 +39,7 @@ class ParserApache(Parser.Parser):
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
-                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
                     

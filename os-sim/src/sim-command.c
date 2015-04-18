@@ -156,8 +156,8 @@ static const struct
   { "reload-policies", SIM_COMMAND_SYMBOL_RELOAD_POLICIES },
   { "reload-directives", SIM_COMMAND_SYMBOL_RELOAD_DIRECTIVES },
   { "reload-all", SIM_COMMAND_SYMBOL_RELOAD_ALL },
-  { "host-os-change", SIM_COMMAND_SYMBOL_HOST_OS_CHANGE },
-  { "host-mac-change", SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE },
+  { "host-os-new", SIM_COMMAND_SYMBOL_HOST_OS_CHANGE },
+  { "host-mac-new", SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE },
   { "ok", SIM_COMMAND_SYMBOL_OK },
   { "error", SIM_COMMAND_SYMBOL_ERROR }
 };
@@ -1066,6 +1066,10 @@ sim_command_scan (SimCommand    *command,
 	  command->type = SIM_COMMAND_TYPE_ERROR;
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_scan: error command unknown");
           break;
         }
     }
@@ -1136,6 +1140,10 @@ sim_command_connect_scan (SimCommand    *command,
 	  command->data.connect.type = g_strdup (scanner->value.v_string);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_connect_scan: error symbol unknown");
           break;
         }
     }
@@ -1231,6 +1239,10 @@ sim_command_session_append_plugin_scan (SimCommand    *command,
 	  break;
 
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_session_append_plugin_scan: error symbol unknown");
           break;
         }
     }
@@ -1326,6 +1338,10 @@ sim_command_session_remove_plugin_scan (SimCommand    *command,
 	  break;
 
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_session_remove_plugin_scan: error symbol unknown");
           break;
         }
     }
@@ -1365,6 +1381,10 @@ sim_command_server_get_sensors_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_get_sensors_scan: error symbol unknown");
           break;
         }
     }
@@ -1403,6 +1423,10 @@ sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_get_sensor_plugins_scan: error symbol unknown");
           break;
         }
     }
@@ -1488,6 +1512,10 @@ sim_command_sensor_plugin_scan (SimCommand    *command,
 
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_scan: error symbol unknown");
           break;
         }
     }
@@ -1544,6 +1572,10 @@ sim_command_sensor_plugin_start_scan (SimCommand    *command,
 	  command->data.sensor_plugin_start.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_start_scan: error symbol unknown");
           break;
         }
     }
@@ -1600,6 +1632,10 @@ sim_command_sensor_plugin_stop_scan (SimCommand    *command,
 	  command->data.sensor_plugin_stop.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_stop_scan: error symbol unknown");
           break;
         }
     }
@@ -1656,6 +1692,10 @@ sim_command_sensor_plugin_enabled_scan (SimCommand    *command,
 	  command->data.sensor_plugin_enabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_enabled_scan: error symbol unknown");
           break;
         }
     }
@@ -1712,6 +1752,10 @@ sim_command_sensor_plugin_disabled_scan (SimCommand    *command,
 	  command->data.sensor_plugin_disabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_disabled_scan: error symbol unknown");
           break;
         }
     }
@@ -1759,6 +1803,10 @@ sim_command_plugin_start_scan (SimCommand    *command,
 	  command->data.plugin_start.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_plugin_start_scan: error symbol unknown");
           break;
         }
     }
@@ -1806,6 +1854,10 @@ sim_command_plugin_stop_scan (SimCommand    *command,
 	  command->data.plugin_stop.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_plugin_stop_scan: error symbol unknown");
           break;
         }
     }
@@ -1853,6 +1905,10 @@ sim_command_plugin_enabled_scan (SimCommand    *command,
 	  command->data.plugin_enabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_plugin_enabled_scan: error symbol unknown");
           break;
         }
     }
@@ -1900,6 +1956,10 @@ sim_command_plugin_disabled_scan (SimCommand    *command,
 	  command->data.plugin_disabled.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_plugin_disabled_scan: error symbol unknown");
           break;
         }
     }
@@ -2172,6 +2232,10 @@ sim_command_alert_scan (SimCommand    *command,
 	  command->data.alert.snort_cid = strtol (scanner->value.v_string, (char **) NULL, 10);
 	  break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_alert_scan: error symbol unknown");
           break;
         }
     }
@@ -2210,6 +2274,7 @@ sim_command_reload_plugins_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_plugins_scan: error symbol unknown");
           break;
         }
     }
@@ -2248,6 +2313,10 @@ sim_command_reload_sensors_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_sensors_scan: error symbol unknown");
           break;
         }
     }
@@ -2286,6 +2355,10 @@ sim_command_reload_hosts_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_host_scan: error symbol unknown");
           break;
         }
     }
@@ -2324,6 +2397,10 @@ sim_command_reload_nets_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_nets_scan: error symbol unknown");
           break;
         }
     }
@@ -2362,6 +2439,10 @@ sim_command_reload_policies_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_policies_scan: error symbol unknown");
           break;
         }
     }
@@ -2400,6 +2481,10 @@ sim_command_reload_directives_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_directives_scan: error symbol unknown");
           break;
         }
     }
@@ -2438,6 +2523,10 @@ sim_command_reload_all_scan (SimCommand    *command,
 	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
           break;
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_reload_all_scan: error symbol unknown");
           break;
         }
     }
@@ -2536,6 +2625,10 @@ sim_command_host_os_change_scan (SimCommand    *command,
           break;
 
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_host_os_change_scan: error symbol unknown");
           break;
         }
     }
@@ -2648,6 +2741,10 @@ sim_command_host_mac_change_scan (SimCommand    *command,
           break;
 
         default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_host_mac_change_scan: error symbol unknown");
           break;
         }
     }
@@ -2726,6 +2823,7 @@ sim_command_get_string (SimCommand    *command)
       break;
 
     default:
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_string: error command unknown");
       break;
     }
 

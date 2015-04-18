@@ -44,7 +44,7 @@ class ParserSnort(Parser.Parser):
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
-                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
                     
@@ -116,7 +116,7 @@ class ParserSnort(Parser.Parser):
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
-                util.debug (__name__, 'plugin disabled', '**', 'RED')
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
                     
@@ -145,7 +145,7 @@ class ParserSnort(Parser.Parser):
                 if result4 != []:
                     (sid, cid) = result4[0]
                 else:
-                    (sid, cid) = ""
+                    sid = cid = ""
                 
                 try:
                     (month, day, date, protocol, 

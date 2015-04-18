@@ -60,6 +60,9 @@ static void
 sim_alert_impl_finalize (GObject  *gobject)
 {
   SimAlert *alert = (SimAlert *) gobject;
+  
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_alert_impl_finalize: Id %lu, Sid %lu, Cid %lu", 
+	 alert->id, alert->snort_sid, alert->snort_cid);
 
   if (alert->sensor)
     g_free (alert->sensor);
@@ -91,6 +94,8 @@ sim_alert_class_init (SimAlertClass * class)
 static void
 sim_alert_instance_init (SimAlert *alert)
 {
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_alert_instance_init");
+
   alert->id = 0;
   alert->snort_sid = 0;
   alert->snort_cid = 0;
@@ -548,7 +553,7 @@ sim_alert_get_alarm_insert_clause (SimAlert   *alert)
 			   (alert->dst_ia) ? sim_inetaddr_ntohl (alert->dst_ia) : -1,
 			   alert->src_port,
 			   alert->dst_port,
-			   a,
+			   (a > c) ? a : c,
 			   alert->snort_sid,
 			   alert->snort_cid);
 
@@ -572,6 +577,11 @@ sim_alert_get_msg (SimAlert   *alert)
   g_return_if_fail (SIM_IS_ALERT (alert));
 
   str = g_string_new ("ALERT\n");
+
+  if (alert->id)
+    g_string_append_printf (str, "ID\t\t= %d\n", alert->id);
+
+  g_string_append_printf (str, "ALARM\t\t= %d\n", alert->alarm);
 
   if (alert->time)
     {
@@ -669,6 +679,9 @@ sim_alert_to_string (SimAlert	*alert)
   g_return_if_fail (SIM_IS_ALERT (alert));
 
   str = g_string_new ("alert ");
+
+  g_string_append_printf (str, "id=\"%lu\" ", alert->id);
+  g_string_append_printf (str, "alarm=\"%d\" ", alert->alarm);
 
   if (alert->time)
     {

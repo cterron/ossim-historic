@@ -9,6 +9,18 @@
 
 use DBI;
 use ossim_conf;
+my $config_file = "/etc/ossim/framework/ossim.conf";
+
+sub check_var($ $) 
+{
+    my $name = shift;
+    my $var  = shift;
+
+    if (!$var) {
+        print "You must set '$name' variable at $config_file\n";
+        exit;
+    }
+}
 
 # Full path for the program 'wget'
 my $wget_cmd = $ossim_conf::ossim_data->{"wget_path"};
@@ -16,16 +28,27 @@ my $wget_cmd = $ossim_conf::ossim_data->{"wget_path"};
 my $acid_user = $ossim_conf::ossim_data->{"acid_user"};
 my $acid_pass = $ossim_conf::ossim_data->{"acid_pass"};
 my $acid_link = $ossim_conf::ossim_data->{"acid_link"};
-my $acid_url = "http://ossim:ossim\@localhost/acid";
-if($acid_link =~ m/(\w+:\/\/)(.*)/){
-    if($acid_user ne ""){ 
-    $acid_url = $1 . $acid_user . ":" . $acid_pass . "@" . $2;
-    } else { 
-    $acid_url = $acid_link;
+
+check_var("wget_path", $wget_cmd);
+check_var("acid_link", $acid_link);
+
+my $acid_url = "";
+if ($acid_link =~ m/(\w+:\/\/)(.*)/) {
+    if ($acid_user eq "") {
+        $acid_url = $acid_link;
+    } else {
+        $acid_url = $1 . $acid_user . ":" . $acid_pass . "@" . $2;
     }
+} else {
+    print "Error reading variable 'acid_link=$acid_link' from '$config_file'. ";
+    print "Variable must be in 'http://...' format!\n";
+    exit;
 }
+
 # ACID install directory
 my $acid_path = $ossim_conf::ossim_data->{"acid_path"};
+check_var("acid_path", $acid_path);
+
 # Sleep for the while loop
 my $acid_sleep = 60;
 #
@@ -40,7 +63,7 @@ sub byebye {
     exit;
 }
 
-#fork and byebye;
+fork and byebye;
 
 sub die_clean {
     unlink $pidfile;
@@ -104,7 +127,6 @@ sub acid_main {
 	if (-e $tmpfile && -s $tmpfile){ 
     acid_replace ($tmpfile, "$acid_path/acid_stat_ports2.html");
     };
-
 	sleep ($acid_sleep)
     }
 }

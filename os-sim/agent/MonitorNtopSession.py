@@ -63,8 +63,9 @@ def get_value(rule, url):
     try:
         fd = urllib2.urlopen(url)
     except urllib2.URLError, e:
-        util.debug (__name__, e, '!!', 'RED');
-        sys.exit()
+        util.debug (__name__, "Error opening url '%s' => %s" % (url, e), 
+                    '!!', 'YELLOW');
+        return None
         
     parse = 0
     session = {}

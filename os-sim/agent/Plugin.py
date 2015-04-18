@@ -1,16 +1,18 @@
-import sys
-import time
-import re
-import os
+import sys, time, re, os, threading
 
-import Monitor
 import util
 
-class MonitorPlugin(Monitor.Monitor):
+class Plugin(threading.Thread):
+
+    def __init__(self, agent, data):
+        self.agent = agent
+        self.plugins = agent.plugins
+        self.data = data
+        threading.Thread.__init__(self)
 
     def run(self):
     
-        util.debug (__name__, "monitor started", '--')
+        util.debug (__name__, "Plugin started", '--')
         util.debug (__name__, "request received... %s" % self.data, 
                     '<=', 'GREEN')
         
@@ -80,7 +82,7 @@ class MonitorPlugin(Monitor.Monitor):
         except IndexError:
             pass
         
-        util.debug (__name__, 'monitor finished', '--')
+        util.debug (__name__, 'Plugin finished', '--')
 
 
 

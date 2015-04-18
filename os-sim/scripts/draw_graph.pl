@@ -65,6 +65,8 @@ if($type eq "host"){
     $rrdpath = $ossim_conf::ossim_data->{rrdpath_net};
 } elsif($type eq "global"){
     $rrdpath = $ossim_conf::ossim_data->{rrdpath_global};
+} elsif($type eq "level"){
+    $rrdpath = $ossim_conf::ossim_data->{rrdpath_level};
 } else {
     close_all($dbh,"Wrong type");
 }
@@ -146,7 +148,8 @@ my ($prints,$xs,$ys)=RRDs::graph $tempname, "-s", $start, "-e", $end,
     "--font", "TITLE:12:$font",
     "--font", "AXIS:7:$font",
     # -X argument == multiple of 3...
-    "HRULE:$threshold#adbada", "--no-minor", "-X", "3", "-l", "0","-r",
+#    "HRULE:$threshold#adbada", "--no-minor", "-X", "3", "-l", "0","-r",
+    "HRULE:$threshold#000000", "-X", "3", "-l", "0","-r",
     "--zoom", "$zoom";
 
 my $ERR=RRDs::error;

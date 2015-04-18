@@ -21,8 +21,11 @@ ossim_agent_DATA    = util.py \
 	MonitorNtopHostinfo.py \
 	MonitorNtopSession.py \
 	MonitorOpennms.py \
-	MonitorPlugin.py \
-	MonitorWatchdog.py
+	MonitorList.py \
+	Server.py \
+	Scheduler.py \
+	Plugin.py \
+	Watchdog.py
 
 EXTRA_DIST   = $(ossim_agent_DATA)
 

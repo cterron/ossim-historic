@@ -30,8 +30,12 @@ if ($id = $_GET["delete"]) {
     Alarm::delete($conn, $id);
 }
 
-if ($id = $_GET["delete_backlog"]) {
-    Alarm::delete_from_backlog($conn, $id);
+if ($list = $_GET["delete_backlog"]) {
+    if (!strcmp($list, "all"))
+        $backlog_id = $list;
+    else
+        list($backlog_id, $id) = split("-", $list);
+    Alarm::delete_from_backlog($conn, $backlog_id, $id);
 }
 
 
@@ -159,15 +163,20 @@ if (!$sup = $_GET["sup"])
  
             /* break alarms of different days */
             $date_slices = split(" ", $date);
+            list ($year, $month, $day) = split("-", $date_slices[0]);
+            $date_formatted = strftime("%A %d-%b-%Y", 
+                                       mktime(0, 0, 0, $month, $day, $year));
             if ($datemark != $date_slices[0]) 
             {
                 echo "
                 <tr>
-                  <td colspan=\"8\">
-                    <hr border=\"0\"/>
-                    <b>$date_slices[0]</b><br/>
-                    <hr border=\"0\"/>
+                  <td></td>
+                  <td colspan=\"6\">
+                    <!--<hr border=\"0\"/>-->
+                    <b>$date_formatted</b><br/>
+                    <!--<hr border=\"0\"/>-->
                   </td>
+                  <td></td>
                 </tr>
                 ";
             }
@@ -278,15 +287,16 @@ if (!$sup = $_GET["sup"])
         
         <td>
 <?php
+        $alert_id = $alarm->get_alert_id();
         if ($backlog_id == 0) {
 ?>
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alarm->get_alert_id() ?>">Ack</a>
+            echo $alert_id ?>">Ack</a>
 <?php
         } else {
 ?>
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
-            echo $backlog_id ?>">Ack</a>
+            echo "$backlog_id-$alert_id" ?>">Ack</a>
 <?php
         }
 ?>

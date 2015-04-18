@@ -124,15 +124,17 @@ class Alarm {
 
         foreach ($alerts as $alert_id) {
         
+            $array_backlog_id = array_shift($backlog_ids);
+            $array_since = array_shift($since);
+        
             $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
-                FROM alarm WHERE alert_id = $alert_id $order";
+                FROM alarm WHERE alert_id = $alert_id 
+                    AND backlog_id = $array_backlog_id $order";
             
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg();
             } else {
-                while (!$rs->EOF) {
-                    $array_backlog_id = array_shift($backlog_ids);
-                    $array_since = array_shift($since);
+//                while (!$rs->EOF) {
                     if (($i++ >= $inf) && ($inf++ < $sup)) {
                     
                         /* check for src & dest ips */
@@ -175,8 +177,8 @@ class Alarm {
                                 );
                         }
                     }
-                    $rs->MoveNext();
-                }
+//                    $rs->MoveNext();
+//                }
             }
         }
 
@@ -259,6 +261,64 @@ class Alarm {
     }
 
 
+    function get_alarm_stats($conn, $backlog_id, $alert_id) 
+    {
+        $expand = false;
+        $count = 0;
+        
+        $data = array();
+        $dst_ips = array();
+        $types = array();
+        $dst_ports = array();
+
+        $query = "
+            SELECT alert.id AS alert_id, 
+                alert.alarm AS alarm,
+                alert.dst_ip AS dst_ip,
+                alert.plugin_id AS plugin_id,
+                alert.plugin_sid AS plugin_sid,
+                alert.dst_port AS dst_port
+            FROM backlog_alert, alert 
+            WHERE backlog_alert.backlog_id = $backlog_id 
+                AND alert.id = backlog_alert.alert_id 
+            ORDER BY alert.id DESC";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                
+                if (($expand) and ($rs->fields["alarm"] == 1)) {
+                    $expand = false;
+                }
+
+                if ($expand) {
+                    array_push($dst_ips, $rs->fields["dst_ip"]);
+                    array_push($types, 
+                      $rs->fields["plugin_id"]."-".$rs->fields["plugin_sid"]);
+                    array_push($dst_ports, $rs->fields["dst_port"]);
+                    $count++;
+                }
+                
+                if ((!$expand) and ($rs->fields["alert_id"] == $alert_id)) {
+                    $expand = true;
+                }
+
+                $rs->MoveNext();
+            }
+        }
+        $data["count"] = $count;
+        $uniq_dst_ips = array_unique($dst_ips);
+        $data["dst_ips"] = count($uniq_dst_ips);
+        $uniq_types = array_unique($types);
+        $data["types"] = count($uniq_types);
+        $uniq_dst_ports = array_unique($dst_ports);
+        $data["dst_ports"] = count($uniq_dst_ports);
+
+        return $data;
+    }
+
+
     function delete($conn, $alert_id)
     {
         $query = "DELETE FROM alarm WHERE alert_id = '$alert_id'";
@@ -272,7 +332,7 @@ class Alarm {
         }
     }
 
-    function delete_from_backlog($conn, $backlog_id)
+    function delete_from_backlog($conn, $backlog_id, $alarm_id)
     {
         /* delete ALL */
         if (!strcmp($backlog_id, "all")) {
@@ -287,43 +347,37 @@ class Alarm {
 
         } else {
 
-            /* alerts depending on alarm */
-            $query = "SELECT alert.id AS alert_id
-                    FROM alert, backlog_alert
-                    WHERE alert.id = backlog_alert.alert_id AND
-                        backlog_alert.backlog_id = '$backlog_id'";
+            $query = "DELETE FROM alarm WHERE alert_id = $alarm_id 
+                AND backlog_id = $backlog_id";
+            if ($conn->Execute($query) === false) {
+                print 'error deleting: '.$conn->ErrorMsg().'<BR>';
+                exit;
+            }
+
+            $query = "SELECT COUNT(alert_id) as count FROM backlog_alert 
+                WHERE alert_id = $alarm_id";
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg().'<BR>';
                 exit;
-            } else {
+            } 
 
-                $alert_id = $rs->fields["alert_id"];
-
-                /* delete alerts */
-                $query = "DELETE FROM alert WHERE id = '$alert_id'";
-                $query2 = "DELETE FROM alarm WHERE backlog_id = '$backlog_id'";
-                if ( ($conn->Execute($query) === false) or
-                     ($conn->Execute($query2) === false) )
-                {
+            if ($rs->fields["count"] == 1) {
+                $query = "DELETE FROM alert WHERE id = $alarm_id";
+                if ($conn->Execute($query) === false) {
                     print 'error deleting: '.$conn->ErrorMsg().'<BR>';
                     exit;
                 }
-                
-                $rs->MoveNext();
             }
 
-
-            /* clean backlog */
-            $query = "DELETE FROM backlog WHERE id = '$backlog_id'";
-            $query2 = "DELETE FROM backlog_alert 
-                    WHERE backlog_id = '$backlog_id';";
+            $query = "DELETE FROM backlog_alert WHERE backlog_id = $backlog_id";
+            $query2 = "DELETE FROM backlog WHERE id = $backlog_id";
+            
             if ( ($conn->Execute($query) === false) or
                  ($conn->Execute($query2) === false) )
             {
                 print 'error deleting: '.$conn->ErrorMsg().'<BR>';
                 exit;
             }
-        
         }
     }
 

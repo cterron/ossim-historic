@@ -148,6 +148,8 @@
     $ make
   
   Patch snort with the OSSIM patch:
+  (Read this post to know what the patch do
+   https://sourceforge.net/forum/message.php?msg_id=2627915)
 
     $ cd snort-X.X.X
     $ patch -p0 < $OSSIM_PATH/contrib/snort-2.1-ossim.patch
@@ -262,6 +264,12 @@
     $ patch -p1 < $OSSIM_PATH/contrib/acid.patch
     $ dpkg-buildpackage -rfakeroot -uc -b
     $ dpkg -i acidlab_XXX.deb acidlab-mysql_XXX.deb acidlab-doc_XXX.deb
+
+  NOTE: An error ocurres when apply the patch.
+  Don't worry about this error if you are using MySQL database, since it
+  only affects pgsql database.
+  You may notice that with official acid sources you'll not see that
+  error.
     
   Check the DB abstraction library variable $DBlib_path in
   /etc/acidlab/acid_conf.php and set it to "/usr/share/adodb/" and complete
@@ -359,6 +367,8 @@
   Build ntop .deb:
   
     $ dpkg-buildpackage -rfakeroot -uc -b
+
+  NOTE: use -d option to solve circular dependency problems (if needed).
     
   Install it:
   
@@ -440,7 +450,7 @@
     mysql> exit
     $ cd $OSSIM_PATH/db
     $ cat create_mysql.sql | mysql -u root ossim -p
-    $ ls *.sql | grep -v create_mysql.sql | xargs cat | mysql -u root ossim -p
+    $ ls *.sql | grep -v ^create | xargs cat | mysql -u root ossim -p
 
  
   3.2 Framework
@@ -482,11 +492,16 @@
   
       In order to auto-update the acid cache, edit '/etc/acidlab/acid_conf.php'
       and set $event_cache_auto_update variable to 0.
+
+      Copy acid_update_db.php in the acidlab directory:
+
+        $ cp $OSIM_PATH/contrib/acid_update_db.php /usr/share/acidlab/
       
       Edit /etc/ossim/framework/ossim.conf and set acid properties:
       
-        acid_link=/acidlab/
-        acid_dir=/usr/share/acidlab/
+        acid_link=http://localhost/acidlab/   # must be in http:// format
+                                              # (needed by wget)
+        acid_path=/usr/share/acidlab/
 
         # acid dir with password (htpasswd)?
         acid_user=ossim

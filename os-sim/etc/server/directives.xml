@@ -93,14 +93,15 @@
         <rules>
             <rule type="detector" name="Too many rare connections (15) against same port" reliability="3" time_out="180" occurrence="15"
             from="1:SRC_IP" to="ANY" port_from="ANY" port_to="1:DST_PORT"
-            plugin_id="1104" plugin_sid="ANY" sticky="true">
+            plugin_id="1104" plugin_sid="ANY" sticky="true"
+            sticky_different="DST_IP">
                 <rules>
                     <rule type="detector" name="Too many rare connections (300) against same port" reliability="5" time_out="1200"
                     occurrence="300" from="1:SRC_IP" to="ANY" port_from="ANY"
                     port_to="1:DST_PORT" plugin_id="1104" plugin_sid="ANY"
-                    sticky="true">
+                    sticky="true" sticky_different="DST_IP">
                         <rules>
-                    <rule type="detector" name="Too many rare connections (2000) against same port" reliability="10" time_out="1800" occurrence="2000" from="1:SRC_IP" to="ANY" port_from="ANY" port_to="1:DST_PORT" plugin_id="1104" plugin_sid="ANY" sticky="true">
+                    <rule type="detector" name="Too many rare connections (2000) against same port" reliability="10" time_out="1800" occurrence="2000" from="1:SRC_IP" to="ANY" port_from="ANY" port_to="1:DST_PORT" plugin_id="1104" plugin_sid="ANY" sticky="true" sticky_different="DST_IP">
                     <rules>
                     <rule type="detector" name="Too many rare connections
                     (20000) against same port" reliability="10"
@@ -3135,5 +3136,11 @@
     </rule>
 </directive>
 
+
+  <groups>
+    <group name="GroupTest1">
+      <append-directive directive_id="1"/>
+    </group>
+  </groups>
 
 </directives>

@@ -48,6 +48,7 @@ enum
 };
 
 struct _SimDatabasePrivate {
+  GMutex	*mutex;
   GdaClient       *client;      /* Connection Pool */
   GdaConnection   *conn;        /* Connection */
 
@@ -82,6 +83,8 @@ sim_database_impl_finalize (GObject  *gobject)
   gda_connection_close (database->_priv->conn);
   g_object_unref (database->_priv->client);
 
+  g_mutex_free (database->_priv->mutex);
+
   g_free (database->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -110,6 +113,8 @@ sim_database_instance_init (SimDatabase *database)
   database->_priv->name = NULL;
   database->_priv->provider = NULL;
   database->_priv->dsn = NULL;
+
+  database->_priv->mutex = g_mutex_new ();
 }
 
 /* Public Methods */
@@ -221,6 +226,8 @@ sim_database_execute_no_query  (SimDatabase  *database,
   g_return_val_if_fail (SIM_IS_DATABASE (database), -1);
   g_return_val_if_fail (buffer != NULL, -1);
 
+  g_mutex_lock (database->_priv->mutex);
+
   command = gda_command_new (buffer, 
 			     GDA_COMMAND_TYPE_SQL, 
 			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
@@ -250,6 +257,8 @@ sim_database_execute_no_query  (SimDatabase  *database,
 
   gda_command_free (command);
 
+  g_mutex_unlock (database->_priv->mutex);
+
   return ret;
 }
 
@@ -269,6 +278,8 @@ sim_database_execute_command (SimDatabase  *database,
   g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
 
+  g_mutex_lock (database->_priv->mutex);
+
   command = gda_command_new (buffer,
 			     GDA_COMMAND_TYPE_SQL,
 			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
@@ -276,6 +287,8 @@ sim_database_execute_command (SimDatabase  *database,
   list = gda_connection_execute_command (database->_priv->conn, command, NULL);
 
   gda_command_free (command);
+
+  g_mutex_unlock (database->_priv->mutex);
 
   return list;
 }
@@ -296,6 +309,8 @@ sim_database_execute_single_command (SimDatabase  *database,
   g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
   g_return_val_if_fail (buffer != NULL, NULL);
 
+  g_mutex_lock (database->_priv->mutex);
+
   command = gda_command_new (buffer,
 			     GDA_COMMAND_TYPE_SQL,
 			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
@@ -312,6 +327,8 @@ sim_database_execute_single_command (SimDatabase  *database,
   model = gda_connection_execute_single_command (database->_priv->conn, command, NULL);
 
   gda_command_free (command);
+
+  g_mutex_unlock (database->_priv->mutex);
 
   return model;
 }

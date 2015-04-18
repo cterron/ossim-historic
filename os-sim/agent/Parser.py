@@ -16,8 +16,11 @@ class Parser(threading.Thread):
         self.plugin = plugin
         threading.Thread.__init__(self)
 
+
+    # must be overriden in child class
     def process(self):
         pass
+
 
     def run(self):
     

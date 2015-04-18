@@ -17,6 +17,7 @@
     $conf = new ossim_conf();
 
     $ip = $_GET["host"];
+    $ip_slashed = str_replace(".", "/", $ip);
 
     $acid_link = $conf->get_conf("acid_link");
     $acid_main_link = $conf->get_conf("acid_link") .
@@ -61,7 +62,7 @@
 &nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $ip) . 
     "/$ip.html" ?>" target="report">Usage</a><br/><br/>
 &nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $ip) . 
-    "/plugins/rrdPlugin?action=list&key=interfaces/$interface/hosts/$ip&title=host%20$ip" ?>" target="report">Anomalies</a><br/><br/>
+    "/plugins/rrdPlugin?action=list&key=interfaces/$interface/hosts/$ip_slashed&title=host%20$ip" ?>" target="report">Anomalies</a><br/><br/>
 
 <?php
     $db->close($conn);

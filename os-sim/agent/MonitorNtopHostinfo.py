@@ -1,9 +1,6 @@
-import urllib2
-import os
-import time
+import urllib2, os, time, sys
 
 import util
-import sys
 
 import mutex
 
@@ -12,22 +9,28 @@ m = mutex.mutex()
 #
 # get host info from ntop dump data
 #
-def get_hostinfo(url):
+# FIXME!
+# something is very bad with urllib :'(
+#
+def get_hostinfo2(url):
 
     try:
-        fd = urllib2.urlopen(url)
         util.debug(__name__, "Reading ntop dump data...", "<-", "YELLOW")
+        fd = urllib2.urlopen(url)
     except urllib2.URLError, e:
         util.debug (__name__, e, '!!', 'RED');
-        sys.exit()
+        return None
 
     fhost = open('ntop_hostinfo.py', 'w')
-    while 1:
-        line = fd.readline()
-        if not line: break
+    for line in fd.readlines():
+        print line
         fhost.write(line)
-        
+
     fhost.close()
+    fd.close()
+
+def get_hostinfo(url):
+    os.system("/usr/bin/wget -O ntop_hostinfo.py %s" % (url))
 
 
 def get_value(rule, url):
@@ -56,16 +59,19 @@ def get_value(rule, url):
         import ntop_hostinfo
 
         if category != '':
-            return ntop_hostinfo.ntopDict[rule["to"]][proto][category][pattern]
+            return ntop_hostinfo.ntopDict[rule["from"]][proto][category][pattern]
         elif proto != '':
-            return ntop_hostinfo.ntopDict[rule["to"]][proto][pattern]
+            return ntop_hostinfo.ntopDict[rule["from"]][proto][pattern]
         else:
-            return ntop_hostinfo.ntopDict[rule["to"]][pattern]
-    except SyntaxError:
-        util.debug(__name__, 
-            "Unexpected error reading dump data (not well-formed)",
-            '!!', 'RED')
-        sys.exit()
+            return ntop_hostinfo.ntopDict[rule["from"]][pattern]
+
+    except SyntaxError, e:
+        util.debug(__name__, e, '!!', 'RED')
+        os.remove('ntop_hostinfo.py')
+        return None
+
+    except KeyError:
+        return None
 
 
 
@@ -569,7 +575,7 @@ def sid2pattern(sid):
         (pattern, category, proto) = ('RCVD_SOURCE_QUENCH', '', 'ICMP')
     else:
         util.debug(__name__, "%d: Bad plugin_sid" % (sid), "**", 'RED')
-        sys.exit()
+        (pattern, category, proto) = ('Unknown', 'Unknown', 'Unknown')
         
     return (pattern, category, proto)
 

@@ -1,29 +1,26 @@
-import sys
-import time
-
-import Monitor
 import util
+import Monitor
 
-from pyPgSQL import PgSQL
+try:
+    from pyPgSQL import PgSQL
+except ImportError:
+    util.debug(__name__, 
+        "You need to install pyPgSQL in order to use OpenNMS Monitor\n" + \
+        "\tLook at: http://pypgsql.sourceforge.net/ ", "!!", "RED")
 
 class MonitorOpennms(Monitor.Monitor):
 
     plugin_id = '2004'
 
-    def run(self):
-    
-        util.debug (__name__, "monitor started", '--')
-        rule = self.split_data(self.data)
-        util.debug (__name__, "request received... (%s)" % str(rule), 
-                    '<=', 'GREEN')
-        
-        if rule is not None:
-            self.__evaluate(rule = rule)
-                
-        util.debug (__name__, 'monitor finished', '--')
+    def __init__(self, agent, data, itime):
+        self.db = None  # Database connection
+        self.st = None  # Database cursor
+        Monitor.Monitor.__init__(self, agent, data, itime)
 
+    def get_value(self, rule):
 
-    def __get_value(self, st, rule):
+        if self.db is None or self.st is None:
+            self.connect()
 
         # get plugin_sid
         plugin_sid = rule['plugin_sid']
@@ -47,21 +44,30 @@ class MonitorOpennms(Monitor.Monitor):
         else:
             util.debug(__name__, "Unknown plugin_sid: %s" % plugin_sid, 
                        "**", "RED")
-            util.debug (__name__, 'monitor finished', '--')
-            sys.exit()
 
             
-        st.execute(query)
-        res = st.fetchone()
+        self.st.execute(query)
+        res = self.st.fetchone()
             
         if res is not None: 
-            return True
+            return 1
         else:
-            return False                
+            return 0
 
 
-    def __evaluate(self, rule):
+    def eval_condition(self, cond, arg1, arg2, value):
+        
+        if cond == "eq":
+            if int(arg2) == value:
+                return True
+            else:
+                return False
+        else:
+            return False
 
+
+    def connect(self):
+        
         # database connect
         #
         # dbconfig[0] => database
@@ -74,83 +80,21 @@ class MonitorOpennms(Monitor.Monitor):
         if dbconfig[0] == 'pgsql':
 
             if dbconfig[4]:
-                db = PgSQL.connect (host     = dbconfig[1],
-                                    database = dbconfig[2],
-                                    user     = dbconfig[3],
-                                    password = dbconfig[4])
+                self.db = PgSQL.connect (host     = dbconfig[1],
+                                         database = dbconfig[2],
+                                         user     = dbconfig[3],
+                                         password = dbconfig[4])
             else:
-                db = PgSQL.connect (host     = dbconfig[1],
-                                    database = dbconfig[2],
-                                    user     = dbconfig[3])
-            st = db.cursor()        
+                self.db = PgSQL.connect (host     = dbconfig[1],
+                                         database = dbconfig[2],
+                                         user     = dbconfig[3])
+            self.st = self.db.cursor()
  
         else:
             util.debug (__name__, 'database %s not supported' % (dbconfig[0]),
                         '--', 'RED');
-            sys.exit()
-
-        pfreq = int(self.plugins[MonitorOpennms.plugin_id]['frequency'])
-        f = 0
-
-        while 1:
-
-            if rule["interval"] != '':
-
-                #  calculate time to sleep
-                if int(rule["interval"]) < pfreq:
-                    util.debug (__name__, 
-                                "waiting %d secs..." % int(rule["interval"]),
-                                '**')
-                    time.sleep(float(rule["interval"]))
-                else:
-                    if int(rule["interval"]) < f + pfreq:
-                        util.debug (__name__,
-                            "waiting %d secs..." % (int(rule["interval"])-f),
-                            '**')
-                        time.sleep(int(rule["interval"]) - f)
-                    else:
-                        util.debug (__name__, "waiting %d secs..." % pfreq,
-                                    '**')
-                        time.sleep(pfreq)
 
 
-            util.debug (__name__, "getting Opennms value...", '<=')
-            value = self.__get_value(st, rule)
-
-            if value:
-
-                sensor = self.plugins[MonitorOpennms.plugin_id]['sensor']
-                interface = self.plugins[MonitorOpennms.plugin_id]['interface']
-                date = time.strftime('%Y-%m-%d %H:%M:%S', 
-                                     time.localtime(time.time()))
-
-                self.agent.sendAlert  (type         = 'monitor', 
-                                       date         = date, 
-                                       sensor       = sensor, 
-                                       interface    = interface,
-                                       plugin_id    = rule["plugin_id"], 
-                                       plugin_sid   = rule["plugin_sid"],
-                                       priority     = '', 
-                                       protocol     = 'tcp', 
-                                       src_ip       = rule["from"],
-                                       src_port     = rule["port_from"],
-                                       dst_ip       = '',
-                                       dst_port     = '',
-                                       condition    = '',
-                                       value        = '')
-                
-                break # alert sent, finished
-                
-            else:
-                util.debug (__name__, 'No alert', '--', 'GREEN')
-                if rule["interval"] == '': # no alert, finished
-                    break
-            
-            if rule["interval"] != '':
-                f += pfreq
-                if f >= int(rule["interval"]):  # finish if interval exceded
-                    break
-                
-        db.close()
-
+    def close(self):
+       self.db.close() 
 

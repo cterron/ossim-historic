@@ -159,7 +159,7 @@ sim_net_new (const gchar   *name,
     {
       if (strchr (net->_priv->ips, ','))
 	{
-	  gchar **values = g_strsplit(net->_priv->ips, ",", 0);
+	  gchar **values = g_strsplit (net->_priv->ips, ",", 0);
 	  for (i = 0; values[i] != NULL; i++)
 	    {
 	      GList *list = sim_get_inets (values[i]);
@@ -170,6 +170,7 @@ sim_net_new (const gchar   *name,
 		  list = list->next;
 		}
 	    }
+	  g_strfreev (values);
 	}
       else
 	{
@@ -217,7 +218,7 @@ sim_net_new_from_dm (GdaDataModel  *dm,
     {
       if (strchr (net->_priv->ips, ','))
 	{
-	  gchar **values = g_strsplit(net->_priv->ips, ",", 0);
+	  gchar **values = g_strsplit (net->_priv->ips, ",", 0);
 	  for (i = 0; values[i] != NULL; i++)
 	    {
 	      GList *list = sim_get_inets (values[i]);
@@ -228,6 +229,7 @@ sim_net_new_from_dm (GdaDataModel  *dm,
 		  list = list->next;
 		}
 	    }
+	  g_strfreev (values);
 	}
       else
 	{

@@ -1,7 +1,6 @@
 <html>
 <head>
   <title> Control Panel </title>
-  <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
@@ -50,6 +49,7 @@ if (!$show_all = $_GET["show_all"]) {
    
        <tr>
         <td></td>
+        <th>#</th>
         <th>Id</th>
         <th>Alarm</th>
         <th>Risk</th>
@@ -63,6 +63,8 @@ if (!$show_all = $_GET["show_all"]) {
 <?php
     if ($alarm_list = Alarm::get_alerts($conn, $backlog_id, $show_all, $alert_id))
     {
+        $count_alerts = 0;
+        $count_alarms = 0;
         foreach ($alarm_list as $alarm) {
 
             $id  = $alarm->get_plugin_id();
@@ -94,7 +96,6 @@ if (!$show_all = $_GET["show_all"]) {
 
         <!-- expand alarms -->
         <td><?php 
-       
             $aid = $alarm->get_alert_id();
             if (($_GET["alert_id"] == $aid)) {
                 $href = $_SERVER["PHP_SELF"] . "?backlog_id=$backlog_id&show_all=0";
@@ -110,6 +111,12 @@ if (!$show_all = $_GET["show_all"]) {
         <!-- end expand alarms -->
 
         <!-- id & name alert -->
+        <td><?php 
+            if ($risk > 1)
+                echo "<b>" . ++$count_alarms . "</b>";
+            else
+                echo ++$count_alerts;
+        ?></td>
         <td><?php echo $aid ?></td>
         <td <?php if ($risk > 1) echo " bgcolor=\"#eeeeee\"" ?>>
         <?php 
@@ -119,6 +126,7 @@ if (!$show_all = $_GET["show_all"]) {
                     "$snort_sid-$snort_cid%29";
                 echo "&nbsp;&nbsp;<a href=\"$href\">$name</a>";
             } else {
+                $href = "";
                 echo "&nbsp;&nbsp;$name"; 
             }
         ?></td>
@@ -134,39 +142,29 @@ if (!$show_all = $_GET["show_all"]) {
         $dst_port = $alarm->get_dst_port();
 
         if ($risk  > 7) {
-            echo "
-            <td bgcolor=\"red\">
-              <b>
-                <a href=\"$href\">
-                  <font color=\"white\">$risk</font>
-                </a>
-              </b>
-            </td>
-            ";
+            echo "<td bgcolor=\"red\"><b>";
+            if ($href) echo "<a href=\"$href\">";
+            echo "<font color=\"white\">$risk</font>";
+            if ($href) echo "</a>";
+            echo "</b></td>";
         } elseif ($risk > 4) {
-            echo "
-            <td bgcolor=\"orange\">
-              <b>
-                <a href=\"$href\">
-                  <font color=\"black\">$risk</font>
-                </a>
-              </b>
-            </td>
-            ";
+            echo "<td bgcolor=\"orange\"><b>";
+            if ($href) echo "<a href=\"$href\">";
+            echo "<font color=\"black\">$risk</font>";
+            if ($href) echo "</a>";
+            echo "</b></td>";
         } elseif ($risk > 2) {
-            echo "
-            <td bgcolor=\"green\">
-              <b>
-                <a href=\"$href\">
-                  <font color=\"white\">$risk</font>
-                </a>
-              </b>
-            </td>
-            ";
+            echo "<td bgcolor=\"green\"><b>";
+            if ($href) echo "<a href=\"$href\">";
+            echo "<font color=\"white\">$risk</font>";
+            if ($href) echo "</a>";
+            echo "</b></td>";
         } else {
-            echo "
-            <td><a href=\"$href\">$risk</a></td>
-            ";
+            echo "<td><b>";
+            if ($href) echo "<a href=\"$href\">";
+            echo "$risk";
+            if ($href) echo "</a>";
+            echo "</b></td>";
         }
 ?>
         <!-- end risk -->
@@ -197,6 +195,58 @@ if (!$show_all = $_GET["show_all"]) {
         <td><a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
             echo $alarm->get_alert_id() ?>">Ack</a></td>
       </tr>
+
+<?php
+    # Alarm summary
+    if ((!$show_all) or ($risk > 1)) {
+        $summary = Alarm::get_alarm_stats($conn, $backlog_id, $aid);
+        $summ_count = $summary["count"];
+        $summ_dst_ips = $summary["dst_ips"];
+        $summ_types = $summary["types"];
+        $summ_dst_ports = $summRy["dst_ports"];
+        echo "
+            <tr>
+            <td colspan=\"3\"></td>
+            <td colspan=\"6\">
+              <b>Alarm Summary</b> [ 
+              Total Alerts: $summ_count &nbsp;-&nbsp; 
+              Unique Dst IPAddr: $summ_dst_ips &nbsp;-&nbsp; 
+              Unique Types: $summ_types &nbsp;-&nbsp; 
+              Unique Dst Ports: $summ_dst_ports
+              ]
+            </td>
+        ";
+/*
+        echo "
+          <tr>
+            <td></td>
+            <td colspan=\"3\" bgcolor=\"#eeeeee\">&nbsp;</td>
+            <td colspan=\"5\">
+              <table width=\"100%\">
+                <tr>
+                  <th colspan=\"8\">Alarm summary</th>
+                </tr>
+                <tr>
+                  <td>Total Alerts: </td>
+                  <td>" . $summary["count"] . "</td>
+                  <td>Unique Dst IPAddr: </td>
+                  <td>" . $summary["dst_ips"] . "</td>
+                  <td>Unique Types: </td>
+                  <td>" . $summary["types"] . "</td>
+                  <td>Unique Dst Ports: </td>
+                  <td>" . $summary["dst_ports"] . "</td>
+                </tr>
+               </table>
+            </td>
+            <td bgcolor=\"#eeeeee\">&nbsp;</td>
+          </tr>
+          <tr><td colspan=\"10\"></td></tr>
+        ";
+*/
+    }
+?>
+
+
 <?php
         } /* foreach alarm_list */
     } /* if alarm_list */

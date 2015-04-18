@@ -34,8 +34,11 @@
 
 #include <config.h>
 
+#include "os-sim.h"
 #include "sim-container.h"
 #include "sim-xml-directive.h"
+
+extern SimMain  ossim;
 
 enum
 {
@@ -179,35 +182,28 @@ sim_container_get_type (void)
 SimContainer*
 sim_container_new (SimConfig  *config)
 {
-  SimDatabase  *database;
   SimContainer *container = NULL;
-  SimConfigDS  *ds;
 
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
 
-  ds = sim_config_get_ds_by_name (config, SIM_DS_OSSIM);
-  database = sim_database_new (ds);
-
   container = SIM_CONTAINER (g_object_new (SIM_TYPE_CONTAINER, NULL));
-  sim_container_db_delete_plugin_sid_directive_ul (container, database);
-  //sim_container_db_delete_backlogs_ul (container, database);
-  sim_container_db_load_categories (container, database);
-  sim_container_db_load_classifications (container, database);
-  sim_container_db_load_plugins (container, database);
-  sim_container_db_load_plugin_sids (container, database);
-  sim_container_db_load_sensors (container, database);
-  sim_container_db_load_hosts (container, database);
-  sim_container_db_load_nets (container, database);
-  sim_container_db_load_policies (container, database);
-  sim_container_db_load_host_levels (container, database);
-  sim_container_db_load_net_levels (container, database);
+  sim_container_db_delete_plugin_sid_directive_ul (container, ossim.dbossim);
+  sim_container_db_delete_backlogs_ul (container, ossim.dbossim);
+  sim_container_db_load_categories (container, ossim.dbossim);
+  sim_container_db_load_classifications (container, ossim.dbossim);
+  sim_container_db_load_plugins (container, ossim.dbossim);
+  sim_container_db_load_plugin_sids (container, ossim.dbossim);
+  sim_container_db_load_sensors (container, ossim.dbossim);
+  sim_container_db_load_hosts (container, ossim.dbossim);
+  sim_container_db_load_nets (container, ossim.dbossim);
+  sim_container_db_load_policies (container, ossim.dbossim);
+  sim_container_db_load_host_levels (container, ossim.dbossim);
+  sim_container_db_load_net_levels (container, ossim.dbossim);
   
   if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
-    sim_container_load_directives_from_file (container, database, config->directive.filename);
+    sim_container_load_directives_from_file (container, ossim.dbossim, config->directive.filename);
   
-  g_object_unref (database);
-
   return container;
 }
 
@@ -538,10 +534,7 @@ sim_container_db_update_alert_ul (SimContainer  *container,
 				  SimDatabase   *database,
 				  SimAlert      *alert)
 {
-  GdaDataModel  *dm;
-  GdaValue      *value;
-  GList         *list = NULL;
-  gchar         *query = NULL;
+  gchar         *query;
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -559,74 +552,192 @@ sim_container_db_update_alert_ul (SimContainer  *container,
  *
  *
  *
+ */
+void
+sim_container_db_delete_backlog_by_id_ul (guint32	backlog_id)
+{
+  GdaDataModel	*dm;
+  GdaDataModel	*dm1;
+  GdaValue	*value;
+  gchar		*query0;
+  gchar		*query1;
+  gchar		*query2;
+  guint32	alert_id;
+  gint		row, count;
+
+  query0 =  g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE backlog_id = %lu",
+			     backlog_id);
+  dm = sim_database_execute_single_command (ossim.dbossim, query0);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  guint32 alert_id = gda_value_get_bigint (value);
+
+	  query1 = g_strdup_printf ("SELECT COUNT(alert_id) FROM backlog_alert WHERE alert_id = %lu",
+				    alert_id);
+	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
+	  if (dm1)
+	    {
+	      value = (GdaValue *) gda_data_model_get_value_at (dm1, 0, 0);
+	      count = gda_value_get_integer (value);
+
+	      if (count == 1)
+		{
+		  query2 = g_strdup_printf ("DELETE FROM alert WHERE id = %lu", alert_id);
+		  sim_database_execute_no_query (ossim.dbossim, query2);
+		  g_free (query2);
+		}
+
+	      g_object_unref(dm1);
+	    }
+	  g_free (query1);
+	}
+       g_object_unref(dm);
+    }
+  g_free (query0);
+
+  query0 = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id = %lu", backlog_id);
+  sim_database_execute_no_query (ossim.dbossim, query0);
+  g_free (query0);
+  
+  query0 = g_strdup_printf ("DELETE FROM backlog WHERE id = %lu", backlog_id);
+  sim_database_execute_no_query (ossim.dbossim, query0);
+  g_free (query0);
+}
+
+/*
+ *
+ *
+ *
  *
  */
 void
 sim_container_db_delete_backlogs_ul (SimContainer  *container,
 				     SimDatabase   *database)
 {
-  GdaDataModel  *dm;
-  GdaDataModel  *dm1;
-  GdaValue      *value;
-  gchar         *query0 = "SELECT id FROM backlog WHERE matched = 0";
-  gchar         *query1 = NULL;
-  gchar         *query2 = NULL;
-  gint           row, row1;
+  GdaDataModel	*dm;
+  GdaDataModel	*dm1;
+  GdaValue	*value;
+  gchar		*query0;
+  gchar		*query1;
+  gchar		*query2;
+  guint32	backlog_id;
+  guint32	alert_id;
+  gint		row;
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database != NULL);
   g_return_if_fail (SIM_IS_DATABASE (database));
 
-  dm = sim_database_execute_single_command (database, query0);
+  /* Search Backlogs lost in backlog table */
+  /*
+  query0 =  g_strdup_printf ("SELECT id FROM backlog");
+  dm = sim_database_execute_single_command (ossim.dbossim, query0);
   if (dm)
     {
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  if (!gda_value_is_null (value))
+	  backlog_id = gda_value_get_bigint (value);
+	  
+	  query1 = g_strdup_printf ("SELECT backlog_id FROM alarm WHERE backlog_id = %lu", backlog_id);
+	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
+	  if (dm1)
 	    {
-	      guint32 id = gda_value_get_bigint (value);
-	      
-	      query1 = g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE backlog_id=%lu", id);
-	      dm1 = sim_database_execute_single_command (database, query1);
-	      if (dm1)
-		{
-		  for (row1 = 0; row1 < gda_data_model_get_n_rows (dm1); row1++)
-		    {
-		      value = (GdaValue *) gda_data_model_get_value_at (dm1, 0, row1);
-		      if (!gda_value_is_null (value))
-			{
-			  guint32 alert_id = gda_value_get_bigint (value);
+	      if (!gda_data_model_get_n_rows (dm1))
+		sim_container_db_delete_backlog_by_id_ul (backlog_id);
 
-			  query2 = g_strdup_printf ("DELETE FROM alert WHERE id=%lu", alert_id);
-			  sim_database_execute_no_query (database, query2);
-			  g_free (query2);
-			}
-		    }
-		}
-	      else
-		{
-		  g_message ("BACKLOG ALERT SELECT DATA MODEL ERROR");
-		}
-	      g_free (query1);
-
-	      query1 = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id=%lu", id);
-	      sim_database_execute_no_query (database, query1);
-	      g_free (query1);
-
-	      query1 = g_strdup_printf ("DELETE FROM backlog WHERE id=%lu", id);
-	      sim_database_execute_no_query (database, query1);
-	      g_free (query1);	      
+	      g_object_unref(dm1);
 	    }
+	  else
+	    {
+	      g_message ("BACKLOG SELECT DATA MODEL ERROR");
+	    }
+	  g_free (query1);
 	}
-
       g_object_unref(dm);
     }
   else
     {
       g_message ("BACKLOG DELETE DATA MODEL ERROR");
     }
+  g_free (query0);
+  */
+  /* Search Backlogs lost in backlog_alert table */
+  /*
+  query0 =  g_strdup_printf ("SELECT DISTINCT backlog_id FROM backlog_alert");
+  dm = sim_database_execute_single_command (ossim.dbossim, query0);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  backlog_id = gda_value_get_bigint (value);
+	  
+	  query1 = g_strdup_printf ("SELECT backlog_id FROM alarm WHERE backlog_id = %lu", backlog_id);
+	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
+	  if (dm1)
+	    {
+	      if (!gda_data_model_get_n_rows (dm1))
+		sim_container_db_delete_backlog_by_id_ul (backlog_id);
+
+	      g_object_unref(dm1);
+	    }
+	  else
+	    {
+	      g_message ("BACKLOG ALERT SELECT DATA MODEL ERROR");
+	    }
+	  g_free (query1);
+	}
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("BACKLOG ALERT DELETE DATA MODEL ERROR");
+    }
+  g_free (query0);
+  */
+  /* Search Alerts lost in alert table */
+  /*
+  query0 =  g_strdup_printf ("SELECT id FROM alert");
+  dm = sim_database_execute_single_command (ossim.dbossim, query0);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  alert_id = gda_value_get_bigint (value);
+	  
+	  query1 = g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE alert_id = %lu", alert_id);
+	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
+	  if (dm1)
+	    {
+	      if (!gda_data_model_get_n_rows (dm1))
+		{
+		  query2 = g_strdup_printf ("DELETE FROM alert WHERE id = %lu", alert_id);
+		  sim_database_execute_no_query (ossim.dbossim, query2);
+		  g_free (query2);
+		}
+
+	      g_object_unref(dm1);
+	    }
+	  else
+	    {
+	      g_message ("ALERT SELECT DATA MODEL ERROR");
+	    }
+	  g_free (query1);
+	}
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("ALERT DATA MODEL ERROR");
+    }
+  g_free (query0);
+  */
 }
 
 /*
@@ -4026,7 +4137,7 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
 	  sim_container_append_plugin_sid (container, plugin_sid);
 	  
 	  query = sim_plugin_sid_get_insert_clause (plugin_sid);
-	  g_message (query);
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", query);
 	  sim_database_execute_no_query (db_ossim, query); 
 	  g_free (query);
 	}
@@ -4087,9 +4198,7 @@ sim_container_get_directives_ul (SimContainer  *container)
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  list = g_list_copy (container->_priv->directives);
-  
-  return list;
+  return container->_priv->directives;
 }
 
 /*
@@ -4150,9 +4259,9 @@ sim_container_load_directives_from_file (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (filename);
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   sim_container_load_directives_from_file_ul (container, db_ossim, filename);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 }
 
 /*
@@ -4170,9 +4279,9 @@ sim_container_append_directive (SimContainer  *container,
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   sim_container_append_directive_ul (container, directive);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 }
 
 /*
@@ -4190,9 +4299,9 @@ sim_container_remove_directive (SimContainer  *container,
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   sim_container_remove_directive_ul (container, directive);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 }
 
 /*
@@ -4209,9 +4318,9 @@ sim_container_get_directives (SimContainer  *container)
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   list = sim_container_get_directives_ul (container);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
   
   return list;
 }
@@ -4230,9 +4339,9 @@ sim_container_set_directives (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (directives);
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   sim_container_set_directives_ul (container, directives);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 }
 
 /*
@@ -4247,9 +4356,9 @@ sim_container_free_directives (SimContainer  *container)
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
 
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   sim_container_free_directives_ul (container);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 }
 
 /*
@@ -5337,7 +5446,6 @@ sim_container_db_insert_backlog_ul (SimContainer  *container,
 {
   GdaDataModel  *dm;
   GdaValue      *value;
-  GList         *list = NULL;
   gchar         *query = NULL;
   guint          backlog_id = 0;
 
@@ -5392,7 +5500,6 @@ sim_container_db_update_backlog_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
   query = sim_directive_backlog_get_update_clause (backlog);
-  g_message (query);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }
@@ -5408,7 +5515,9 @@ sim_container_db_delete_backlog_ul (SimContainer  *container,
 				    SimDatabase   *database,
 				    SimDirective   *backlog)
 {
-  gchar *query;
+  GdaDataModel	*dm;
+  gchar         *query;
+  guint32	backlog_id;
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -5417,8 +5526,20 @@ sim_container_db_delete_backlog_ul (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
-  query = sim_directive_backlog_get_delete_clause (backlog);
-  sim_database_execute_no_query (database, query);
+  backlog_id = sim_directive_get_backlog_id (backlog);
+  query = g_strdup_printf ("SELECT backlog_id FROM alarm WHERE backlog_id = %lu", backlog_id);
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      if (!gda_data_model_get_n_rows (dm))
+	sim_container_db_delete_backlog_by_id_ul (backlog_id);
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("BACKLOG DELETE DATA MODEL ERROR");
+    }
   g_free (query);
 }
 
@@ -5500,9 +5621,7 @@ sim_container_get_backlogs_ul (SimContainer  *container)
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  list = g_list_copy (container->_priv->backlogs);
-  
-  return list;
+  return container->_priv->backlogs;  
 }
 
 /*
@@ -5566,9 +5685,9 @@ sim_container_db_insert_backlog (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_db_insert_backlog_ul (container, database, backlog);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5589,9 +5708,9 @@ sim_container_db_update_backlog (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_db_update_backlog_ul (container, database, backlog);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5612,9 +5731,9 @@ sim_container_db_delete_backlog (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_db_delete_backlog_ul (container, database, backlog);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5638,9 +5757,9 @@ sim_container_db_insert_backlog_alert (SimContainer  *container,
   g_return_if_fail (alert);
   g_return_if_fail (SIM_IS_ALERT (alert));
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_db_insert_backlog_alert_ul (container, database, backlog, alert);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5658,9 +5777,9 @@ sim_container_append_backlog (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
   
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_append_backlog_ul (container, backlog);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5678,9 +5797,9 @@ sim_container_remove_backlog (SimContainer  *container,
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
   
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_remove_backlog_ul (container, backlog);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5697,9 +5816,9 @@ sim_container_get_backlogs (SimContainer  *container)
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   list = sim_container_get_backlogs_ul (container);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
   
   return list;
 }
@@ -5718,9 +5837,9 @@ sim_container_set_backlogs (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (backlogs);
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_set_backlogs_ul (container, backlogs);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*
@@ -5735,9 +5854,9 @@ sim_container_free_backlogs (SimContainer  *container)
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   sim_container_free_backlogs_ul (container);
-  G_UNLOCK (s_mutex_backlogs);
+  g_mutex_unlock (ossim.mutex_backlogs);
 }
 
 /*

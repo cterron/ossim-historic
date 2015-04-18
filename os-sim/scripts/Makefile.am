@@ -11,4 +11,5 @@ scripts_SCRIPTS = rrd_plugin.pl \
 	services.pl \
 	update_nessus_ids.pl \
 	backupdb.pl \
-	acid_cache.pl
+	acid_cache.pl \
+	test-directive.pl

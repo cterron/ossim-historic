@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.5p2
+Version:   0.9.6
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -142,6 +142,7 @@ fi
 %{_datadir}/ossim/scripts/update_nessus_ids.pl
 %{_datadir}/ossim/scripts/backupdb.pl
 %{_datadir}/ossim/scripts/acid_cache.pl
+%{_datadir}/ossim/scripts/test-directive.pl
 /var/lib/ossim/backup
 
 %changelog

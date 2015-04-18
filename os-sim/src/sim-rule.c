@@ -110,6 +110,8 @@ sim_rule_impl_finalize (GObject  *gobject)
   SimRule *rule = SIM_RULE (gobject);
   GList   *list;
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_impl_finalize: Name %s, Level %d", rule->_priv->name, rule->_priv->level);
+
   if (rule->_priv->name)
     g_free (rule->_priv->name);
 
@@ -132,12 +134,6 @@ sim_rule_impl_finalize (GObject  *gobject)
   g_list_free (rule->_priv->vars);
 
   /* Plugin Sids */
-  list = rule->_priv->plugin_sids;
-  while (list)
-    {
-      rule->_priv->plugin_sids = g_list_remove (rule->_priv->plugin_sids, list->data);
-      list = list->next;
-    }
   g_list_free (rule->_priv->plugin_sids);
 
   /* src ips */
@@ -161,39 +157,15 @@ sim_rule_impl_finalize (GObject  *gobject)
   g_list_free (rule->_priv->dst_inets);
 
   /* src ports */
-  list = rule->_priv->src_ports;
-  while (list)
-    {
-      rule->_priv->src_ports = g_list_remove (rule->_priv->src_ports, list->data);
-      list = list->next;
-    }
   g_list_free (rule->_priv->src_ports);
  
   /* dst ports */
-  list = rule->_priv->dst_ports;
-  while (list)
-    {
-      rule->_priv->dst_ports = g_list_remove (rule->_priv->dst_ports, list->data); 
-      list = list->next;
-    }
   g_list_free (rule->_priv->dst_ports);
 
   /* protocols */
-  list = rule->_priv->protocols;
-  while (list)
-    {
-      rule->_priv->protocols = g_list_remove (rule->_priv->protocols, list->data); 
-      list = list->next;
-    }
   g_list_free (rule->_priv->protocols);
 
   /* stickys */
-  list = rule->_priv->stickys;
-  while (list)
-    {
-      rule->_priv->stickys = g_list_remove (rule->_priv->stickys, list->data);
-      list = list->next;
-    }
   g_list_free (rule->_priv->stickys);
 
   g_free (rule->_priv);
@@ -216,6 +188,8 @@ static void
 sim_rule_instance_init (SimRule *rule)
 {
   rule->_priv = g_new0 (SimRulePrivate, 1);
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_instance_init");
 
   rule->type = SIM_RULE_TYPE_NONE;
 
@@ -1694,7 +1668,7 @@ sim_rule_clone (SimRule     *rule)
     }
 
   /* Protocols */
-  list = rule->_priv->dst_ports;
+  list = rule->_priv->protocols;
   while (list)
     {
       SimProtocolType protocol = GPOINTER_TO_INT (list->data);
@@ -1794,10 +1768,10 @@ find_guint32_value (GList      *values,
     {
       guint32 cmp = GPOINTER_TO_INT (list->data);
 
-      if (cmp = val)
+      if (cmp == val)
 	return TRUE;
 
-      list->data;
+      list = list->next;
     }
 
   return FALSE;
@@ -1899,11 +1873,11 @@ sim_rule_match_by_alert (SimRule      *rule,
 	    return FALSE;
 	}
     }
-  
+
   /* Find dst_ia */
   if ((rule->_priv->dst_inets) && (alert->dst_ia))
     {
-      SimInet *inet = sim_inet_new_from_ginetaddr (alert->src_ia);
+      SimInet *inet = sim_inet_new_from_ginetaddr (alert->dst_ia);
       match = FALSE;
       list = rule->_priv->dst_inets;
       while (list)
@@ -1999,7 +1973,7 @@ sim_rule_match_by_alert (SimRule      *rule,
 	{
 	  SimProtocolType cmp_prot = GPOINTER_TO_INT (list->data);
 	  
-	  if ((!cmp_prot) || (cmp_prot == alert->dst_port))
+	  if ((!cmp_prot) || (cmp_prot == alert->protocol))
 	    {
 	      match = TRUE;
 	      break;
@@ -2034,6 +2008,9 @@ sim_rule_match_by_alert (SimRule      *rule,
 	}
     }
 
+  /* If rule is sticky */
+  if (rule->_priv->sticky)
+    alert->sticky = TRUE;
 
   if ((rule->_priv->occurrence > 1) && (rule->_priv->sticky_different))
     {
@@ -2080,10 +2057,6 @@ sim_rule_match_by_alert (SimRule      *rule,
 	  break;
 	}
     }
-
-  /* If rule is sticky */
-  if (rule->_priv->sticky)
-    alert->sticky = TRUE;
 
   /* Match Occurrence */
   if (rule->_priv->occurrence > 1)
@@ -2176,6 +2149,7 @@ sim_rule_set_not_data (SimRule      *rule)
 void
 sim_rule_print (SimRule      *rule)
 {
+  GList *list;
   gchar  *ip;
 
   g_return_if_fail (rule);
@@ -2193,9 +2167,41 @@ sim_rule_print (SimRule      *rule)
   g_print ("plugin_id=%d ", rule->_priv->plugin_id);
   g_print ("plugin_sid=%d ", g_list_length (rule->_priv->plugin_sids));
   g_print ("src_inets=%d ", g_list_length (rule->_priv->src_inets));
+  list = rule->_priv->src_inets;
+  while (list)
+    {
+      SimInet *ia = (SimInet *) list->data;
+      ip = sim_inet_ntop (ia);
+      g_print (" %s ", ip);
+      g_free (ip);
+      list = list->next;
+    }
   g_print ("dst_inets=%d ", g_list_length (rule->_priv->dst_inets));
+  list = rule->_priv->dst_inets;
+  while (list)
+    {
+      SimInet *ia = (SimInet *) list->data;
+      ip = sim_inet_ntop (ia);
+      g_print (" %s ", ip);
+      g_free (ip);
+      list = list->next;
+    }
   g_print ("src_ports=%d ", g_list_length (rule->_priv->src_ports));
+  list = rule->_priv->src_ports;
+  while (list)
+    {
+      gint port = GPOINTER_TO_INT (list->data);
+      g_print (" %d ", port);
+      list = list->next;
+    }
   g_print ("dst_ports=%d ", g_list_length (rule->_priv->dst_ports));
+  list = rule->_priv->dst_ports;
+  while (list)
+    {
+      gint port = GPOINTER_TO_INT (list->data);
+      g_print (" %d ", port);
+      list = list->next;
+    }
   g_print ("vars=%d ", g_list_length (rule->_priv->vars));
   if (rule->_priv->src_ia)
     {
@@ -2238,8 +2244,8 @@ sim_rule_to_string (SimRule      *rule)
   str = g_string_new ("Rule");
   g_string_append_printf (str, " %d [%s]", rule->_priv->level, timestamp);
   g_string_append_printf (str, " [%d:%d]", rule->_priv->plugin_id, rule->_priv->plugin_sid);
+  g_string_append_printf (str, " [Rel:%s%d]", (rule->_priv->rel_abs) ? " " : " +", rule->_priv->reliability);
   g_string_append_printf (str, " %s:%d", src_name, rule->_priv->src_port);
-  g_string_append_printf (str, " Rel: %d", rule->_priv->reliability);
 
   if (rule->_priv->dst_ia)
     g_string_append_printf (str, " -> %s:%d\n", dst_name, rule->_priv->dst_port);

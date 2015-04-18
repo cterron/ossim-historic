@@ -38,15 +38,12 @@
 #include "os-sim.h"
 #include "sim-scheduler.h"
 #include "sim-container.h"
-#include "sim-database.h"
 #include "sim-config.h"
 #include "sim-directive.h"
 #include "sim-command.h"
 #include "sim-server.h"
 
 extern SimMain  ossim;
-
-G_LOCK_EXTERN (s_mutex_backlogs);
 
 enum 
 {
@@ -61,8 +58,6 @@ struct SimSchedulerTask {
 };
 
 struct _SimSchedulerPrivate {
-  SimDatabase    *db_ossim;
-  SimDatabase    *db_snort;
   SimConfig      *config;
 
   gint            timer;
@@ -111,7 +106,6 @@ sim_scheduler_instance_init (SimScheduler *scheduler)
 {
   scheduler->_priv = g_new0 (SimSchedulerPrivate, 1);
 
-  scheduler->_priv->db_ossim = NULL;
   scheduler->_priv->config = NULL;
 
   scheduler->_priv->timer = 30;
@@ -159,19 +153,12 @@ SimScheduler*
 sim_scheduler_new (SimConfig    *config)
 {
   SimScheduler *scheduler = NULL;
-  SimConfigDS  *ds;
 
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
 
   scheduler = SIM_SCHEDULER (g_object_new (SIM_TYPE_SCHEDULER, NULL));
   scheduler->_priv->config = config;
-
-  ds = sim_config_get_ds_by_name (config, SIM_DS_OSSIM);
-  scheduler->_priv->db_ossim = sim_database_new (ds);
-
-  ds = sim_config_get_ds_by_name (config, SIM_DS_SNORT);
-  scheduler->_priv->db_snort = sim_database_new (ds);
 
   return scheduler;
 }
@@ -185,15 +172,13 @@ void
 sim_scheduler_task_calculate (SimScheduler  *scheduler,
 			      gpointer       data)
 {
-  SimDatabase   *db_ossim;
-  SimConfig     *config;
-  gint           recovery;
-  GTimeVal       curr_time;
+  SimConfig	*config;
+  gint		 recovery;
+  GTimeVal	 curr_time;
 
   g_return_if_fail (scheduler != NULL);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
-  db_ossim = scheduler->_priv->db_ossim;
   config = scheduler->_priv->config;
 
   g_get_current_time (&curr_time);
@@ -205,9 +190,9 @@ sim_scheduler_task_calculate (SimScheduler  *scheduler,
 
   timer = config->scheduler.interval;
 
-  recovery = sim_container_db_get_recovery (ossim.container, db_ossim);
-  sim_container_set_host_levels_recovery (ossim.container, db_ossim, recovery);
-  sim_container_set_net_levels_recovery (ossim.container, db_ossim, recovery);
+  recovery = sim_container_db_get_recovery (ossim.container, ossim.dbossim);
+  sim_container_set_host_levels_recovery (ossim.container, ossim.dbossim, recovery);
+  sim_container_set_net_levels_recovery (ossim.container, ossim.dbossim, recovery);
 }
 
 /*
@@ -262,17 +247,17 @@ void
 sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 {
   SimConfig     *config;
-  SimDatabase   *db_ossim;
   GList         *list;
+  GList		*removes = NULL;
 
   g_return_if_fail (scheduler);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
-  db_ossim = scheduler->_priv->db_ossim;
   config = scheduler->_priv->config;
 
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   list = sim_container_get_backlogs_ul (ossim.container);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_backlogs_time_out: backlogs %d", g_list_length (list));
   while (list)
     {
       SimDirective *backlog = (SimDirective *) list->data;
@@ -325,7 +310,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 
 	      sim_container_push_alert (ossim.container, new_alert);
 	      
-	      sim_container_db_update_backlog_ul (ossim.container, db_ossim, backlog);
+	      sim_container_db_update_backlog_ul (ossim.container, ossim.dbossim, backlog);
 	      
 	      /* Children Rules with type MONITOR */
 	      if (!G_NODE_IS_LEAF (rule_node))
@@ -350,26 +335,27 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 		} 
 	      else
 		{
-		  sim_container_remove_backlog_ul (ossim.container, backlog);
-		  if (sim_directive_get_rule_level (backlog) <= 1)
-		    sim_container_db_delete_backlog_ul (ossim.container, db_ossim, backlog);
-
-		  g_object_unref (backlog);
+		  removes = g_list_append (removes, backlog);
 		}
 	      
 	      list = list->next;
 	      continue;
 	    }
-
-	  sim_container_remove_backlog_ul (ossim.container, backlog);
-	  if (sim_directive_get_rule_level (backlog) <= 1)
-	      sim_container_db_delete_backlog_ul (ossim.container, db_ossim, backlog);
-
-	  g_object_unref (backlog);
+	  removes = g_list_append (removes, backlog);
 	}
-
       list = list->next;
     }
-  g_list_free (list);
-  G_UNLOCK (s_mutex_backlogs);
+
+  list = removes;
+  while (list)
+    {
+      SimDirective *backlog = (SimDirective *) list->data;
+      sim_container_remove_backlog_ul (ossim.container, backlog);
+      sim_container_db_delete_backlog_ul (ossim.container, ossim.dbossim, backlog);
+      g_object_unref (backlog);
+      list = list->next;
+    }
+  g_list_free (removes);
+
+  g_mutex_unlock (ossim.mutex_backlogs);
 }

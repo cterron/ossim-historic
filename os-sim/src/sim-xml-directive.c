@@ -42,6 +42,7 @@ struct _SimXmlDirectivePrivate {
   SimContainer  *container;
 
   GList    *directives;
+  GList    *groups;
 };
 
 #define OBJECT_DIRECTIVES       "directives"
@@ -54,8 +55,8 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_ID             "id"
 #define PROPERTY_NAME           "name"
 #define PROPERTY_STICKY         "sticky"
-#define PROPERTY_STICKY_DIFFERENT "sticky_different"
-#define PROPERTY_NOT            "not"
+#define PROPERTY_STICKY_DIFFERENT	"sticky_different"
+#define PROPERTY_NOT			"not"
 #define PROPERTY_TYPE           "type"
 #define PROPERTY_PRIORITY       "priority"
 #define PROPERTY_RELIABILITY    "reliability"
@@ -71,8 +72,14 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_SRC_PORT       "port_from"
 #define PROPERTY_DST_PORT       "port_to"
 #define PROPERTY_PROTOCOL       "protocol"
-#define PROPERTY_PLUGIN_ID      "plugin_id"
-#define PROPERTY_PLUGIN_SID     "plugin_sid"
+#define PROPERTY_PLUGIN_ID		"plugin_id"
+#define PROPERTY_PLUGIN_SID		"plugin_sid"
+
+#define OBJECT_GROUPS			"groups"
+#define OBJECT_GROUP			"group"
+#define OBJECT_APPEND_DIRECTIVE		"append-directive"
+#define PROPERTY_DIRECTIVE_ID		"directive_id"
+
 
 static void sim_xml_directive_class_init (SimXmlDirectiveClass *klass);
 static void sim_xml_directive_init       (SimXmlDirective *xmldirect, SimXmlDirectiveClass *klass);
@@ -89,6 +96,10 @@ enum {
 static gint xmldirect_signals[SIM_XML_DIRECTIVE_LAST_SIGNAL] = { 0, };
 static GObjectClass *parent_class = NULL;
 
+
+void 
+sim_xml_directive_new_groups_from_node (SimXmlDirective	*xmldirect,
+					xmlNodePtr	node);
 /*
  * SimXmlDirective class interface
  */
@@ -121,6 +132,7 @@ sim_xml_directive_init (SimXmlDirective *xmldirect, SimXmlDirectiveClass *klass)
   /* allocate private structure */
   xmldirect->_priv = g_new0 (SimXmlDirectivePrivate, 1);
   xmldirect->_priv->directives = NULL;
+  xmldirect->_priv->groups = NULL;
 }
 
 static void
@@ -158,6 +170,39 @@ sim_xml_directive_get_type (void)
   return type;
 }
 
+/*
+ *
+ *
+ *
+ *
+ */
+SimDirective*
+find_directive (SimXmlDirective	*xmldirect,
+		gint		id)
+{
+  GList *list;
+
+  g_return_val_if_fail (xmldirect, NULL);
+  g_return_val_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect), NULL);
+  
+  if (!id)
+    return NULL;
+
+  list = xmldirect->_priv->directives;
+  while (list)
+    {
+      SimDirective *directive = (SimDirective *) list->data;
+      gint cmp = sim_directive_get_id (directive);
+
+      if (cmp == id)
+	return directive;
+
+      list = list->next;
+    }
+
+  return NULL;
+}
+
 /**
  * sim_xml_directive_new
  *
@@ -186,6 +231,8 @@ sim_xml_directive_new_from_file (SimContainer *container,
   xmlDocPtr doc;
   xmlNodePtr root;
   xmlNodePtr node;
+  GList			*list;
+  GList			*ids;
   
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -224,8 +271,31 @@ sim_xml_directive_new_from_file (SimContainer *container,
     if (!strcmp (node->name, OBJECT_DIRECTIVE))
       sim_xml_directive_new_directive_from_node (xmldirect, node);
 
+    if (!strcmp (node->name, OBJECT_GROUPS))
+      sim_xml_directive_new_groups_from_node (xmldirect, node);
+
     node = node->next;
   }
+
+  list = xmldirect->_priv->groups;
+  while (list)
+    {
+      SimDirectiveGroup *group = (SimDirectiveGroup *) list->data;
+      GList *ids = sim_directive_group_get_ids (group);
+
+      while (ids)
+	{
+	  gint id = GPOINTER_TO_INT (ids->data);
+	  SimDirective *directive= find_directive (xmldirect, id);
+
+	  if (directive)
+	    sim_directive_append_group (directive, group);
+
+	  ids = ids->next;
+	}
+
+      list = list->next;
+    }
 
   return xmldirect;
 }
@@ -237,7 +307,7 @@ sim_xml_directive_new_from_file (SimContainer *container,
  */
 void
 sim_xml_directive_set_container (SimXmlDirective * xmldirect,
-			      SimContainer *container)
+				 SimContainer *container)
 {
   g_return_if_fail (xmldirect != NULL);
   g_return_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect));
@@ -1073,4 +1143,114 @@ sim_xml_directive_get_directives (SimXmlDirective *xmldirect)
   g_return_val_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect), NULL);
 
   return xmldirect->_priv->directives;
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_xml_directive_new_append_directive_from_node (SimXmlDirective	*xmldirect,
+						  xmlNodePtr		node,
+						  SimDirectiveGroup	*group)
+{
+  xmlChar	*value;
+  gint		id;
+
+  if (strcmp (node->name, OBJECT_APPEND_DIRECTIVE))
+    {
+      g_message ("Invalid append directive node %s", node->name);
+    }
+
+  if ((value = xmlGetProp (node, PROPERTY_DIRECTIVE_ID)))
+    {
+      id = strtol(value, (char **) NULL, 10);
+      sim_directive_group_append_id (group, id);
+      xmlFree(value);
+    }
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_xml_directive_new_group_from_node (SimXmlDirective	*xmldirect,
+				       xmlNodePtr	node)
+{
+  SimDirectiveGroup	*group;
+  xmlNodePtr		children;
+  xmlChar		*value;
+
+  if (strcmp (node->name, OBJECT_GROUP))
+    {
+      g_message ("Invalid group node %s", node->name);
+    }
+
+  group = sim_directive_group_new ();
+
+  if ((value = xmlGetProp (node, PROPERTY_NAME)))
+    {
+      gchar *name = g_strdup (value);
+      sim_directive_group_set_name (group, name);
+      xmlFree(value);
+    } 
+
+  if ((value = xmlGetProp (node, PROPERTY_STICKY)))
+    {
+      if (!g_ascii_strcasecmp (value, "true"))
+	sim_directive_group_set_sticky (group, TRUE);
+      else
+	sim_directive_group_set_sticky (group, FALSE);
+
+      xmlFree(value);
+    }
+
+  children = node->xmlChildrenNode;
+  while (children)
+    {
+      if (!strcmp (children->name, OBJECT_APPEND_DIRECTIVE))
+	sim_xml_directive_new_append_directive_from_node (xmldirect, children, group);
+      
+      children = children->next;
+  }
+
+  xmldirect->_priv->groups = g_list_append (xmldirect->_priv->groups, group);
+}
+
+
+/*
+ *
+ *
+ *
+ */
+void 
+sim_xml_directive_new_groups_from_node (SimXmlDirective	*xmldirect,
+					xmlNodePtr	node)
+{
+  xmlNodePtr  children;
+
+  g_return_if_fail (xmldirect);
+  g_return_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect));
+
+  if (strcmp (node->name, OBJECT_GROUPS))
+    {
+      g_message ("Invalid groups node %s", node->name);
+    }
+
+  children = node->xmlChildrenNode;
+  while (children)
+    {
+      if (!strcmp (children->name, OBJECT_GROUP))
+	sim_xml_directive_new_group_from_node (xmldirect, children);
+      
+      children = children->next;
+    }
+
 }

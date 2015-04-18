@@ -43,6 +43,7 @@
 #include "sim-plugin-sid.h"
 #include "sim-policy.h"
 #include "sim-rule.h"
+#include "sim-directive-group.h"
 #include "sim-directive.h"
 #include "sim-host-level.h"
 #include "sim-net-level.h"
@@ -60,8 +61,6 @@ enum
 
 struct _SimOrganizerPrivate {
   SimConfig	*config;
-  SimDatabase	*db_ossim;
-  SimDatabase	*db_snort;
 };
 
 static gpointer parent_class = NULL;
@@ -71,9 +70,8 @@ static gint sim_container_signals[LAST_SIGNAL] = { 0 };
 void
 config_send_notify_email (SimConfig	*config,
 			  SimAlert	*alert);
-
-G_LOCK_EXTERN (s_mutex_directives);
-G_LOCK_EXTERN (s_mutex_backlogs);
+void
+insert_alert_alarm (SimAlert	*alert);
 
 /* GType Functions */
 
@@ -110,8 +108,6 @@ sim_organizer_instance_init (SimOrganizer *organizer)
   organizer->_priv = g_new0 (SimOrganizerPrivate, 1);
 
   organizer->_priv->config = NULL;
-  organizer->_priv->db_ossim = NULL;
-  organizer->_priv->db_snort = NULL;
 }
 
 /* Public Methods */
@@ -131,6 +127,7 @@ sim_organizer_get_type (void)
               NULL,
               NULL,                       /* class data */
               sizeof (SimOrganizer),
+
               0,                          /* number of pre-allocs */
               (GInstanceInitFunc) sim_organizer_instance_init,
               NULL                        /* value table */
@@ -154,19 +151,12 @@ SimOrganizer*
 sim_organizer_new (SimConfig	*config)
 {
   SimOrganizer *organizer = NULL;
-  SimConfigDS  *ds;
 
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
 
   organizer = SIM_ORGANIZER (g_object_new (SIM_TYPE_ORGANIZER, NULL));
   organizer->_priv->config = config;
-
-  ds = sim_config_get_ds_by_name (config, SIM_DS_OSSIM);
-  organizer->_priv->db_ossim = sim_database_new (ds);
-
-  ds = sim_config_get_ds_by_name (config, SIM_DS_SNORT);
-  organizer->_priv->db_snort = sim_database_new (ds);
 
   return organizer;
 }
@@ -210,64 +200,102 @@ sim_organizer_run (SimOrganizer *organizer)
 	  sim_organizer_calificate (organizer, alert);
 	  sim_organizer_snort (organizer, alert);
 	  sim_organizer_rrd (organizer, alert);
-
-	  if (alert->id)
-	    sim_container_db_update_alert_ul (ossim.container,
-					      organizer->_priv->db_ossim,
-					      alert);
-	  else
-	    sim_container_db_insert_alert_ul (ossim.container,
-					      organizer->_priv->db_ossim,
-					      alert);
-
+	  insert_alert_alarm (alert);
 	  sim_organizer_correlation (organizer, alert);
 	  break;
 	case SIM_ALERT_TYPE_MONITOR:
 	  sim_organizer_correlation_plugin (organizer, alert);
 	  sim_organizer_calificate (organizer, alert);
 	  sim_organizer_snort (organizer, alert);
-
-	  if (alert->id)
-	    sim_container_db_update_alert_ul (ossim.container,
-					      organizer->_priv->db_ossim,
-					      alert);
-	  else
-	    sim_container_db_insert_alert_ul (ossim.container,
-					      organizer->_priv->db_ossim,
-					      alert);
-
+	  insert_alert_alarm (alert);
 	  sim_organizer_correlation (organizer, alert);
 	  break;
 	default:
 	  break;
 	}
 
-      if (alert->alarm)
-	{
-	  gchar *query = sim_alert_get_alarm_insert_clause (alert);
-	  if (query)
-	    {
-	      if (alert->backlog_id > 0)
-		{
-		  gchar *query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu",
-						   alert->backlog_id);
-		  sim_database_execute_no_query (organizer->_priv->db_ossim, query1);
-		  g_free (query1);
-		}
-	      sim_database_execute_no_query (organizer->_priv->db_ossim, query);
-	      g_free (query);
-	    }
-	}
-
       config_send_notify_email (organizer->_priv->config, alert);
 
       str = sim_alert_to_string (alert);
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_run: %s\n", str);
+      g_message ("sim_organizer_run: %s", str);
       g_free (str);
 
       g_object_unref (alert);
     }
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+insert_alert_alarm (SimAlert	*alert)
+{
+  GdaDataModel	*dm;
+  GdaValue	*value;
+  guint		backlog_id = 0;
+  gint		row;
+  gchar		*query0;
+  gchar		*query1;
+
+  if (!alert->alarm)
+    return;
+
+  if (!alert->id)
+    sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, alert);
+  else
+    sim_container_db_update_alert_ul (ossim.container, ossim.dbossim, alert);
+
+  query0 = g_strdup_printf ("SELECT backlog_id, MAX(alert_id) from backlog_alert GROUP BY backlog_id HAVING MAX(alert_id) = %d",
+			    alert->id);
+  dm = sim_database_execute_single_command (ossim.dbossim, query0);
+  if (dm)
+    {
+      if (!gda_data_model_get_n_rows (dm))
+	{
+	  if (alert->backlog_id)
+	    {
+	      query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", alert->backlog_id);
+	      sim_database_execute_no_query (ossim.dbossim, query1);
+	      g_free (query1);
+	    }
+
+	  query1 = sim_alert_get_alarm_insert_clause (alert);
+	  sim_database_execute_no_query (ossim.dbossim, query1);
+	  g_free (query1);
+	}
+
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    backlog_id = gda_value_get_bigint (value);
+	 
+	  query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", backlog_id);
+	  sim_database_execute_no_query (ossim.dbossim, query1);
+	  g_free (query1);
+	  
+	  alert->backlog_id = backlog_id;
+	  query1 = sim_alert_get_alarm_insert_clause (alert);
+	  sim_database_execute_no_query (ossim.dbossim, query1);
+	  g_free (query1);
+
+	}
+
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("ORGANIZER ALARM INSERT DATA MODEL ERROR");
+    }
+  g_free (query0);
+
+  query0 = g_strdup_printf ("SELECT COUNT(backlog_id) FROM alarm WHERE backlog_id != 0 GROUP BY alert_id HAVING COUNT(backlog_id) > 2");
+  g_free (query0);
+}
+
 
 /*
  *
@@ -349,7 +377,6 @@ void
 sim_organizer_correlation_plugin (SimOrganizer *organizer, 
 				  SimAlert     *alert)
 {
-  SimDatabase     *db_ossim;
   GList           *list;
 
   g_return_if_fail (organizer);
@@ -359,10 +386,8 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 
   if (!alert->dst_ia) return;
 
-  db_ossim = organizer->_priv->db_ossim;
-
   list = sim_container_db_host_get_plugin_sids_ul (ossim.container,
-						   db_ossim,
+						   ossim.dbossim,
 						   alert->dst_ia,
 						   alert->plugin_id,
 						   alert->plugin_sid);
@@ -400,7 +425,6 @@ void
 sim_organizer_calificate (SimOrganizer *organizer, 
 			  SimAlert     *alert)
 {
-  SimDatabase     *db_ossim;
   SimHost         *host;
   SimNet          *net;
   SimCategory     *category = NULL;
@@ -425,8 +449,6 @@ sim_organizer_calificate (SimOrganizer *organizer,
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
   g_return_if_fail (alert != NULL);
   g_return_if_fail (SIM_IS_ALERT (alert));
-
-  db_ossim = organizer->_priv->db_ossim;
 
   /*
    * get current day and current hour
@@ -503,20 +525,23 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	alert->risk_c = 0;
       else if (alert->risk_c > 10)
 	alert->risk_c = 10;
-
+      
+      if (alert->risk_c >= 2) {
+	alert->alarm = TRUE;
+      }
 
       /* Updates Host Level C */
       host_level = sim_container_get_host_level_by_ia (ossim.container, alert->src_ia);
       if (host_level)
 	{
 	  sim_host_level_plus_c (host_level, (alert->risk_c / 2.5)); /* Memory update */
-	  sim_container_db_update_host_level (ossim.container, db_ossim, host_level); /* DB update */
+	  sim_container_db_update_host_level (ossim.container, ossim.dbossim, host_level); /* DB update */
 	}
       else
 	{
 	  host_level = sim_host_level_new (alert->src_ia, (alert->risk_c / 2.5), 1); /* Create new host_level */
 	  sim_container_append_host_level (ossim.container, host_level); /* Memory addition */
-	  sim_container_db_insert_host_level (ossim.container, db_ossim, host_level); /* DB insert */
+	  sim_container_db_insert_host_level (ossim.container, ossim.dbossim, host_level); /* DB insert */
 	}
       
       /* Update Net Levels C */
@@ -529,13 +554,13 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	  if (net_level)
 	    {
 	      sim_net_level_plus_c (net_level, (alert->risk_c / 2.5)); /* Memory update */
-	      sim_container_db_update_net_level (ossim.container, db_ossim, net_level); /* DB update */
+	      sim_container_db_update_net_level (ossim.container, ossim.dbossim, net_level); /* DB update */
 	    }
 	  else
 	    {
 	      net_level = sim_net_level_new (sim_net_get_name (net), (alert->risk_c / 2.5), 1);
 	      sim_container_append_net_level (ossim.container, net_level); /* Memory addition */
-	      sim_container_db_insert_net_level (ossim.container, db_ossim, net_level); /* DB insert */
+	      sim_container_db_insert_net_level (ossim.container, ossim.dbossim, net_level); /* DB insert */
 	    }
 
 	  list = list->next;
@@ -572,7 +597,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	alert->risk_a = 10;
 
       /* Threshold */
-      threshold = sim_container_db_get_threshold (ossim.container, db_ossim);
+      threshold = sim_container_db_get_threshold (ossim.container, ossim.dbossim);
       if (alert->risk_a >= 2) {
 	alert->alarm = TRUE;
       }
@@ -582,13 +607,13 @@ sim_organizer_calificate (SimOrganizer *organizer,
       if (host_level)
 	{
 	  sim_host_level_plus_a (host_level, (alert->risk_a / 2.5)); /* Memory update */
-	  sim_container_db_update_host_level (ossim.container, db_ossim, host_level); /* DB update */
+	  sim_container_db_update_host_level (ossim.container, ossim.dbossim, host_level); /* DB update */
 	}
       else
 	{
 	  host_level = sim_host_level_new (alert->dst_ia, 1, (alert->risk_a / 2.5)); /* Create new host*/
 	  sim_container_append_host_level (ossim.container, host_level); /* Memory addition */
-	  sim_container_db_insert_host_level (ossim.container, db_ossim, host_level); /* DB insert */
+	  sim_container_db_insert_host_level (ossim.container, ossim.dbossim, host_level); /* DB insert */
 	}
       
       /* Update Net Levels A */
@@ -601,13 +626,13 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	  if (net_level)
 	    {
 	      sim_net_level_plus_a (net_level, (alert->risk_a / 2.5)); /* Memory update */
-	      sim_container_db_update_net_level (ossim.container, db_ossim, net_level); /* DB update */
+	      sim_container_db_update_net_level (ossim.container, ossim.dbossim, net_level); /* DB update */
 	    }
 	  else
 	    {
 	      net_level = sim_net_level_new (sim_net_get_name (net), 1, (alert->risk_a / 2.5));
 	      sim_container_append_net_level (ossim.container, net_level); /* Memory addition */
-	      sim_container_db_insert_net_level (ossim.container, db_ossim, net_level); /* DB insert */
+	      sim_container_db_insert_net_level (ossim.container, ossim.dbossim, net_level); /* DB insert */
 	    }
 	  
 	  list = list->next;
@@ -622,13 +647,13 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	  if (host_level)
 	    {
 	      sim_host_level_plus_c (host_level, (alert->risk_c / 2.5)); /* Memory update */
-	      sim_container_db_update_host_level (ossim.container, db_ossim, host_level); /* DB update */
+	      sim_container_db_update_host_level (ossim.container, ossim.dbossim, host_level); /* DB update */
 	    }
 	  else
 	    {
 	      host_level = sim_host_level_new (alert->dst_ia, (alert->risk_c / 2.5), 1); /* Create new host*/
 	      sim_container_append_host_level (ossim.container, host_level); /* Memory addition */
-	      sim_container_db_insert_host_level (ossim.container, db_ossim, host_level); /* DB insert */
+	      sim_container_db_insert_host_level (ossim.container, ossim.dbossim, host_level); /* DB insert */
 	    }
 	  
 	  /* Update Net Levels C */
@@ -642,13 +667,13 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	      if (net_level)
 		{
 		  sim_net_level_plus_c (net_level, (alert->risk_c / 2.5)); /* Memory update */
-		  sim_container_db_update_net_level (ossim.container, db_ossim, net_level); /* DB update */
+		  sim_container_db_update_net_level (ossim.container, ossim.dbossim, net_level); /* DB update */
 		}
 	      else
 		{
 		  net_level = sim_net_level_new (sim_net_get_name (net), (alert->risk_c / 2.5), 1);
 		  sim_container_append_net_level (ossim.container, net_level); /* Memory addition */
-		  sim_container_db_insert_net_level (ossim.container, db_ossim, net_level); /* DB insert */
+		  sim_container_db_insert_net_level (ossim.container, ossim.dbossim, net_level); /* DB insert */
 		}
 	      
 	      list = list->next;
@@ -668,8 +693,10 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 			   SimAlert      *alert)
 {
   SimConfig     *config;
-  SimDatabase   *db_ossim;
-  GList         *list;
+  GList         *groups = NULL;
+  GList         *lgs = NULL;
+  GList         *list = NULL;
+  GList		*removes = NULL;
   GList         *stickys = NULL;
   GList         *tmp = NULL;
   SimAlert      *new_alert = NULL;
@@ -683,12 +710,12 @@ sim_organizer_correlation (SimOrganizer  *organizer,
   g_return_if_fail (alert);
   g_return_if_fail (SIM_IS_ALERT (alert));
 
-  db_ossim = organizer->_priv->db_ossim;
   config = organizer->_priv->config;
 
   /* Match Backlogs */
-  G_LOCK (s_mutex_backlogs);
+  g_mutex_lock (ossim.mutex_backlogs);
   list = sim_container_get_backlogs_ul (ossim.container);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: backlogs %d", g_list_length (list));
   while (list)
     {
       SimDirective *backlog = (SimDirective *) list->data;
@@ -701,9 +728,6 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	  GNode         *rule_node;
 	  SimRule       *rule_root;
 	  SimRule       *rule_curr;
-
-	  if (sim_directive_get_matched (backlog))
-	    sim_container_remove_backlog_ul (ossim.container, backlog);
 
 	  rule_node = sim_directive_get_curr_node (backlog);
 	  rule_root = sim_directive_get_root_rule (backlog);
@@ -734,25 +758,28 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	  new_alert->alarm = FALSE;
 	  new_alert->level = alert->level;
 
+	  alert->backlog_id = sim_directive_get_backlog_id (backlog);
+	  new_alert->backlog_id = alert->backlog_id;
+
 	  /* Rule reliability */
 	  if (sim_rule_get_rel_abs (rule_curr))
 	    new_alert->reliability = sim_rule_get_reliability (rule_curr);
 	  else
 	    new_alert->reliability = sim_rule_get_reliability_relative (rule_node);
-	  
+
 	  /* Directive Priority */
 	  new_alert->priority = sim_directive_get_priority (backlog);
 
-	  alert->backlog_id = sim_directive_get_backlog_id (backlog);
-	  new_alert->backlog_id = alert->backlog_id;
-	  
-	  sim_container_db_insert_alert_ul (ossim.container, db_ossim, new_alert);
+	  if (!alert->id)
+	    sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, alert);
+
+	  sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, new_alert);
 
 	  sim_container_push_alert (ossim.container, new_alert);
 
-	  sim_container_db_update_backlog_ul (ossim.container, db_ossim, backlog);
-	  sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, alert);
-	  sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, new_alert);
+	  sim_container_db_update_backlog_ul (ossim.container, ossim.dbossim, backlog);
+	  sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, alert);
+	  sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, new_alert);
 
 	  inserted = TRUE;
 
@@ -779,34 +806,69 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	    } 
 	  else
 	    {
-	      g_object_unref (backlog);
+	      removes = g_list_append (removes, backlog);
 	    }
-
 	}
 
       if ((alert->match) && (!inserted))
 	{
+	  if (!alert->id)
+	    sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, alert);
+
 	  alert->backlog_id = sim_directive_get_backlog_id (backlog);
-	  sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, alert);
+	  sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, alert);
 	}
 
       if (alert->sticky)
 	stickys = g_list_append (stickys, GINT_TO_POINTER (id));
 
       alert->matched = FALSE;
+      alert->match = FALSE;
 
       list = list->next;
     }
-  g_list_free (list);
-  G_UNLOCK (s_mutex_backlogs);
+
+  list = removes;
+  while (list)
+    {
+      SimDirective *backlog = (SimDirective *) list->data;
+      sim_container_remove_backlog_ul (ossim.container, backlog);
+      sim_container_db_delete_backlog_ul (ossim.container, ossim.dbossim, backlog);
+      g_object_unref (backlog);
+      list = list->next;
+    }
+  g_list_free (removes);
+  g_mutex_unlock (ossim.mutex_backlogs);
+
 
   /* Match Directives */
-  G_LOCK (s_mutex_directives);
+  g_mutex_lock (ossim.mutex_directives);
   list = sim_container_get_directives_ul (ossim.container);
   while (list)
     {
       SimDirective *directive = (SimDirective *) list->data;
       id = sim_directive_get_id (directive);
+
+      found = FALSE;
+      lgs = groups;
+      while (lgs)
+	{
+	  SimDirectiveGroup *group = (SimDirectiveGroup *) lgs->data;
+
+	  if ((sim_directive_group_get_sticky (group)) && (sim_directive_has_group (directive, group)))
+	    {
+	      found = TRUE;
+	      break;
+	    }
+
+	  lgs = lgs->next;
+	}
+
+      if (found)
+	{
+	  list = list->next;
+	  break;
+	}
 
       found = FALSE;
       tmp = stickys;
@@ -836,6 +898,9 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
 	  GTime          time_last = time (NULL);
 
+	  if (sim_directive_get_groups (directive))
+	    groups = g_list_concat (groups, g_list_copy (sim_directive_get_groups (directive)));
+
 	  /* Create a backlog from directive */
 	  backlog = sim_directive_clone (directive);
 	  /* Gets the root node from backlog */
@@ -847,8 +912,10 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	  /* Set the alert data to the rule_root */
 	  sim_rule_set_alert_data (rule_root, alert);
 	  
-	  alert->backlog_id = sim_directive_get_backlog_id (backlog);
 	  alert->matched = TRUE;
+
+	  if (!alert->id)
+	    sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, alert);
 
 	  if (!G_NODE_IS_LEAF (node_root))
 	    {
@@ -874,8 +941,9 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		}
 
 	      sim_container_append_backlog (ossim.container, backlog);
-	      sim_container_db_insert_backlog_ul (ossim.container, db_ossim, backlog);
-	      sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, alert);
+	      sim_container_db_insert_backlog_ul (ossim.container, ossim.dbossim, backlog);
+	      sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, alert);
+	      alert->backlog_id = sim_directive_get_backlog_id (backlog);
 	    } 
 	  else
 	    {
@@ -911,25 +979,27 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	      /* Directive Priority */
 	      new_alert->priority = sim_directive_get_priority (backlog);
 
-	      sim_container_db_insert_alert_ul (ossim.container, db_ossim, new_alert);
+	      sim_container_db_insert_alert_ul (ossim.container, ossim.dbossim, new_alert);
 
 	      sim_container_push_alert (ossim.container, new_alert);
 
-	      sim_container_db_insert_backlog_ul (ossim.container, db_ossim, backlog);
-	      sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, alert);
-	      sim_container_db_insert_backlog_alert_ul (ossim.container, db_ossim, backlog, new_alert);
+	      sim_container_db_insert_backlog_ul (ossim.container, ossim.dbossim, backlog);
+	      sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, alert);
+	      sim_container_db_insert_backlog_alert_ul (ossim.container, ossim.dbossim, backlog, new_alert);
+	      alert->backlog_id = sim_directive_get_backlog_id (backlog);
 
 	      g_object_unref (backlog);
 	    }
 	}
       alert->matched = FALSE;
+      alert->match = FALSE;
 
       list = list->next;
     }
-  g_list_free (list);
-  G_UNLOCK (s_mutex_directives);
+  g_mutex_unlock (ossim.mutex_directives);
 
   g_list_free (stickys);
+  g_list_free (groups);
 }
 
 /*
@@ -1336,7 +1406,7 @@ sim_organizer_snort (SimOrganizer	*organizer,
 
   if (alert->snort_sid && alert->snort_cid)
     {
-      sim_organizer_snort_ossim_event_insert (organizer->_priv->db_snort,
+      sim_organizer_snort_ossim_event_insert (ossim.dbsnort,
 					      alert,
 					      alert->snort_sid,
 					      alert->snort_cid);
@@ -1349,29 +1419,29 @@ sim_organizer_snort (SimOrganizer	*organizer,
       g_message ("sim_organizer_snort: Error Plugin %d, PlugginSid %d", alert->plugin_id, alert->plugin_sid);
       return;
     }
-  sig_id = sim_organizer_snort_signature_get_id (organizer->_priv->db_snort,
+  sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort,
 						 sim_plugin_sid_get_name (plugin_sid));
 
   /* Alerts SNORT */
   if ((alert->plugin_id >= 1001) && (alert->plugin_id < 1500))
     {
-      sid = sim_organizer_snort_sersor_get_sid (organizer->_priv->db_snort,
+      sid = sim_organizer_snort_sersor_get_sid (ossim.dbsnort,
 						alert->sensor,
 						alert->interface,
 						NULL);
-      sim_organizer_snort_event_get_cid_from_alert (organizer->_priv->db_snort,
+      sim_organizer_snort_event_get_cid_from_alert (ossim.dbsnort,
 						    alert, sid, sig_id);
     }
   else /* Others Alerts */
     {
       plugin = sim_container_get_plugin_by_id (ossim.container, alert->plugin_id);
-      sid = sim_organizer_snort_sersor_get_sid (organizer->_priv->db_snort,
+      sid = sim_organizer_snort_sersor_get_sid (ossim.dbsnort,
 						alert->sensor,
 						alert->interface,
 						sim_plugin_get_name (plugin));
-      cid = sim_organizer_snort_event_get_max_cid (organizer->_priv->db_snort,
+      cid = sim_organizer_snort_event_get_max_cid (ossim.dbsnort,
 						   sid);
-      sim_organizer_snort_event_insert (organizer->_priv->db_snort,
+      sim_organizer_snort_event_insert (ossim.dbsnort,
 					alert, sid, ++cid, sig_id);
     }
 }
@@ -1390,7 +1460,6 @@ sim_organizer_rrd (SimOrganizer  *organizer,
   gchar         *name;
   gchar         *plugin_sid_name;
   gchar timestamp[TIMEBUF_SIZE];
-  SimDatabase   *db_ossim;
 
   g_return_if_fail (organizer);
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
@@ -1409,15 +1478,12 @@ sim_organizer_rrd (SimOrganizer  *organizer,
       return;
     }
 
-    db_ossim = organizer->_priv->db_ossim;
-    strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &alert->time));
-
-    name = gnet_inetaddr_get_canonical_name(alert->src_ia);
-    plugin_sid_name = sim_plugin_sid_get_name(plugin_sid);
-    insert = g_strdup_printf("INSERT INTO rrd_anomalies(ip, what, anomaly_time, range) VALUES ('%s', '%s', '%s', '0')", name, plugin_sid_name, timestamp);
-    sim_database_execute_no_query (db_ossim, insert);
-    g_free(insert);
-    g_free(name);
-
-
+  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &alert->time));
+  
+  name = gnet_inetaddr_get_canonical_name(alert->src_ia);
+  plugin_sid_name = sim_plugin_sid_get_name(plugin_sid);
+  insert = g_strdup_printf("INSERT INTO rrd_anomalies(ip, what, anomaly_time, range) VALUES ('%s', '%s', '%s', '0')", name, plugin_sid_name, timestamp);
+  sim_database_execute_no_query (ossim.dbossim, insert);
+  g_free(insert);
+  g_free(name);
 }

@@ -335,9 +335,10 @@ sim_log_free (void)
 int
 main (int argc, char *argv[])
 {
-  SimXmlConfig   *xmlconfig;
-  GMainLoop      *loop;
-  GThread        *thread;
+  SimXmlConfig	*xmlconfig;
+  GMainLoop	*loop;
+  GThread	*thread;
+  SimConfigDS	*ds;
 
   /* Global variable OSSIM Init */
   ossim.config = NULL;
@@ -354,7 +355,7 @@ main (int argc, char *argv[])
     g_thread_init (NULL);
 
   /* GDA Init */
-  gda_init (NULL, "0.9.5", argc, argv);
+  gda_init (NULL, "0.9.6", argc, argv);
 
   /* Config Init */
   if (simCmdArgs.config)
@@ -376,6 +377,20 @@ main (int argc, char *argv[])
       if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
 	g_error ("Config %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
     }
+
+  /* Database Options */
+  ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSSIM);
+  if (!ds)
+    g_error ("OSSIM DB XML Config");
+  ossim.dbossim = sim_database_new (ds);
+
+  ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_SNORT);
+  if (!ds)
+    g_error ("SNORT DB XML Config");
+  ossim.dbsnort = sim_database_new (ds);
+
+  ossim.mutex_directives = g_mutex_new ();
+  ossim.mutex_backlogs = g_mutex_new ();
 
   /* Log Init */
   sim_log_init ();

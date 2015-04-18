@@ -1,5 +1,36 @@
 # ChangeLog for OSSIM
 
+    01 Jul 2004 DK <dk@ossim.net> :
+    * 0.9.6 released
+    * FOT: Update your own changelog you lazy bas****.
+
+* OSSIM-0.9.6 (01 Jul 2004)
+
+    01 Jul 2004 FOT <fot@ossim.net> :
+    * Many server bugfixes.
+    * Directive groups.
+    * New correlation tag: sticky_different.
+
+    28 Jun 2004 David Gil <dgil@ossim.net> :
+    * A lot of framework bugfixes (thanks to Stéphane Fournier)
+    * Alarm summaries at alarm console.
+
+    24 Jun 2004 DK <dk@ossim.net> :
+    * Many, many bugfixes (:p).
+
+    23 Jun 2004 David Gil <dgil@ossim.net>:
+    * Agent: Monitors reimplemented.
+      New protected list (MonitorList) to store monitor objects instead of
+      creating monitor threads for each watch-rule received.
+
+    21 Jun 2004 David Gil <dgil@ossim.net> :
+    * scripts/control_panel.py: 
+      - suppressed unnecessary insert querys (faster control panel, 
+        smaller tables).
+      - verbose mode (-v --verbose)
+    * agent/Agent.inc: reconnect code bugfixes and improvements.
+    * scripts/acid_cache.pl: better error control.
+
     18 Jun 2004 DK <dk@ossim.net> :
     * 0.9.5p2 released
 

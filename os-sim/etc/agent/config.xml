@@ -24,7 +24,7 @@
                output database: alert, mysql, ... *** logfile=fast.log ***
         -->
         <plugin id="1001" process="snort" type="detector" start="yes" enable="yes">
-            <startup>/etc/init.d/snort restart</startup>
+            <startup>/etc/init.d/snort start</startup>
             <shutdown>/etc/init.d/snort stop</shutdown>
             <source>fast</source>
             <interface>eth0</interface>
@@ -37,6 +37,7 @@
              location must point to an apache access log
              (for example: /var/log/apache/access.log)
         -->
+<!--
         <plugin id="1501" process="apache" type="detector" start="yes" enable="no">
             <startup>/etc/init.d/apache restart</startup>
             <shutdown>/etc/init.d/apache stop</shutdown>
@@ -45,8 +46,10 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/apache/access.log</location>
         </plugin>
+-->
 
         <!-- IIS detector -->
+<!--
         <plugin id="1502" process="iis" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
@@ -55,8 +58,10 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/messages</location>
         </plugin>
+-->
 
         <!-- iptables detector -->
+<!--
         <plugin id="1503" process="iptables" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
@@ -65,11 +70,13 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/messages</location>
         </plugin>
-        
+-->
+
         <!-- 
              FireWall-1 detector 
              source = syslog | opsec
         -->
+<!--
         <plugin id="1504" process="fw-1" type="detector" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
@@ -78,8 +85,10 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/messages</location>
         </plugin>
- 
+-->
+
         <!-- Real Secure detector -->
+<!--
         <plugin id="1506" process="realsecure" type="detector" start="no" enable="no">
             <startup>snmptrapd -o /var/log/realsecure.log -m ISS-MIB</startup>
             <shutdown>killall -9 snmptrapd</shutdown>
@@ -88,6 +97,7 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/realsecure.log</location>
         </plugin>
+-->
 
         <!-- RRD threshold and anomaly detector -->
         <plugin id="1507" process="rrd_plugin.pl" type="detector" start="yes" enable="yes">
@@ -111,6 +121,7 @@
         </plugin>
         
         <!-- Cisco routers detector -->
+<!--
         <plugin id="1510" process="cisco" type="detector" start="no" enable="no">
             <startup>/sbin/syslogd -r -m 0</startup>
             <shutdown>killall -9 syslogd</shutdown>
@@ -119,7 +130,8 @@
             <sensor>127.0.0.1</sensor>
             <location>/var/log/messages</location>
         </plugin>
-        
+-->
+
         <!-- 
              P0f detector - OS changes
              You must run p0f this way:
@@ -183,6 +195,7 @@
             OpenNMS monitor
             location must be: database:host:db:user:pass 
         -->
+<!--
         <plugin id="2004" process="opennms" type="monitor" start="no" enable="no">
             <startup></startup>
             <shutdown></shutdown>
@@ -192,6 +205,7 @@
             <sensor>127.0.0.1</sensor>
             <frequency>20</frequency>
         </plugin>
+-->
 
     </plugins>
 </config>

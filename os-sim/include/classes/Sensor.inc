@@ -101,7 +101,7 @@ class Sensor {
             list($protocol, $ip, $port)  = 
                 split(':', $conf->get_conf("ntop_link"));
             $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
-            return $sensor_ip . "kkk";
+            return $sensor_ip;
         } 
 
 

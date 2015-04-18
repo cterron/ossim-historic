@@ -1,12 +1,14 @@
-import sys
-import time
-import re
-import os
+import sys, time, re, os, threading
 
-import Monitor
 import util
 
-class MonitorWatchdog(Monitor.Monitor):
+class Watchdog(threading.Thread):
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.plugins = agent.plugins
+        self.watchdog_interval = agent.watchdog_interval
+        threading.Thread.__init__(self)
 
     def run(self):
 

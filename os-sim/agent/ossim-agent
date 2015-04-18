@@ -25,24 +25,37 @@ def main():
     agent = Agent()
     agent.parseConfig(options.config_file)
 
-    # daemonize
-    if options.daemon is not None:
-        daemonize()
-        sys.stderr = open(os.path.join(agent.logdir, 'agent_error.log'), 'a+')
-
-    # Redirect standard file descriptors
-    if not os.path.isdir(agent.logdir):
-        os.mkdir(agent.logdir, 0755)
-    sys.stdin  = open('/dev/null', 'r')
-    sys.stdout = open(os.path.join(agent.logdir, 'agent.log'), 'w')
-    util.watchlog = open(os.path.join(agent.logdir, 'agent_watch.log'), 'a+')
-    util.debug_watchlog('Agent startup')
-
     # connect to server
-    if agent.connect():
-        agent.monitor()
+    if agent.connect() is not None:
+        
+        # Redirect standard file descriptors
+        if not os.path.isdir(agent.logdir):
+            os.mkdir(agent.logdir, 0755)
+        sys.stdin  = open('/dev/null', 'r')
+        sys.stdout = open(os.path.join(agent.logdir, 'agent.log'), 'w')
+        util.watchlog = \
+            open(os.path.join(agent.logdir, 'agent_watch.log'), 'w')
+        util.debug_watchlog('Agent startup')
+
+        # daemonize
+        if options.daemon is not None:
+            daemonize()
+            sys.stderr = open(os.path.join(agent.logdir, 'agent_error.log'), 'a+')
+
+        # check services
+        agent.watchdog()
+        
+        # monitors (watch-rules)
+        agent.server()
+        agent.scheduler()
+
+        # detectors
         agent.append_plugins()
         agent.parser()
+
+    else:
+        os.remove(os.path.join(util.RUN_DIR, 'ossim_agent.pid'))
+        sys.exit(1)
 
 
 # Check if there is already a running instance
