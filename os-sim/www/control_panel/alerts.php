@@ -90,7 +90,7 @@ if (!$show_all = $_GET["show_all"]) {
       <tr>
         <?php
             $name = ereg_replace("directive_alert: ", "", $sid_name);
-            if ($risk > 1)
+            if ($alarm->get_alarm())
                 $name = "<b>$name</b>";
         ?>
 
@@ -101,7 +101,7 @@ if (!$show_all = $_GET["show_all"]) {
                 $href = $_SERVER["PHP_SELF"] . "?backlog_id=$backlog_id&show_all=0";
                 $img = "../pixmaps/arrow.gif";
                 echo "&nbsp;<a href=\"$href\"><img src=\"$img\" border=\"0\"/></a>";
-            } elseif (($show_all == 0) or ($risk > 1)) {
+            } elseif (($show_all == 0) or ($alarm->get_alarm())) {
                 $href = $_SERVER["PHP_SELF"] .
                     "?backlog_id=$backlog_id&show_all=1&alert_id=$aid";
                 $img = "../pixmaps/arrow2.gif";
@@ -112,13 +112,13 @@ if (!$show_all = $_GET["show_all"]) {
 
         <!-- id & name alert -->
         <td><?php 
-            if ($risk > 1)
+            if ($alarm->get_alarm())
                 echo "<b>" . ++$count_alarms . "</b>";
             else
                 echo ++$count_alerts;
         ?></td>
         <td><?php echo $aid ?></td>
-        <td <?php if ($risk > 1) echo " bgcolor=\"#eeeeee\"" ?>>
+        <td <?php if ($alarm->get_alarm()) echo " bgcolor=\"#eeeeee\"" ?>>
         <?php 
             if (($snort_sid > 0) and ($snort_cid)) {
                 $href = "$acid_link/" . 

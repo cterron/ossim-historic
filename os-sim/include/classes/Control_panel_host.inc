@@ -1,7 +1,9 @@
 <?php
 
 require_once ('classes/Host.inc');
+require_once ('classes/Net.inc');
 require_once ('classes/Conf.inc');
+require_once ('classes/Session.inc');
 
 class Control_panel_host {
 
@@ -56,7 +58,9 @@ class Control_panel_host {
      * get a list of hosts that exceed his threshold 
      * ordered by compromise or attack 
      */
-    function get_metric_list($conn, $time_range, $type) {
+    function get_metric_list($conn, $time_range, $type) 
+    {
+        $allowed_nets = Session::getValue();
 
         if ($type == 'compromise') {
             $query = "SELECT * FROM control_panel 
@@ -94,12 +98,18 @@ class Control_panel_host {
                     ((!strcmp($type, 'attack')) and 
                         ($rs->fields["max_a"] > $threshold))) 
                 {
-                    $list[] = new Control_panel_host ($rs->fields["id"],
-                                                      $rs->fields["time_range"],
-                                                      $rs->fields["max_c"],
-                                                      $rs->fields["max_a"],
-                                                      $rs->fields["max_c_date"],
-                                                      $rs->fields["max_a_date"]);
+                    if ((Net::isIpInNet($rs->fields["host_ip"],
+                                        $allowed_nets)) or
+                        (!$allowed_nets))
+                    {
+                        $list[] = new Control_panel_host (
+                                                $rs->fields["id"],
+                                                $rs->fields["time_range"],
+                                                $rs->fields["max_c"],
+                                                $rs->fields["max_a"],
+                                                $rs->fields["max_c_date"],
+                                                $rs->fields["max_a_date"]);
+                    }
                 }
                 $rs->MoveNext();
             }

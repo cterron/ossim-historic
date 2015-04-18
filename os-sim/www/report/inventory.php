@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuReports", "ReportsHostReport");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -32,21 +37,30 @@
     $conn = $db->connect();
 
     /* services update */
-    if ($_GET["update"] == 'services') 
+    if ($_GET["origin"] == 'active' && $_GET["update"] == 'services') 
     {
         $conf = new ossim_conf();
         $nmap = $conf->get_conf("nmap_path");
 
-        $ip_sane = escapeshellcmd($ip);
+        $ip = escapeshellcmd($ip);
         $services = shell_exec("$nmap -sV -P0 $ip");
         $lines = split("[\n\r]", $services);
         Host_services::delete($conn, $ip);
         foreach ($lines as $line) {
-            preg_match ('/open\s+([\w\-\_\?]+)(\s+)?(.*)$/', $line, $regs);
+            preg_match ('/(\S+)\s+open\s+([\w\-\_\?]+)(\s+)?(.*)$/', $line, $regs);
             if ($regs[0]) {
-                $service = $regs[1];
-                $version = $regs[3];
-                Host_services::insert($conn, $ip, $service, $version);
+                list($port, $protocol) = explode("/", $regs[1]);
+                $protocol = getprotobyname($protocol);
+                if ($protocol == -1) {
+                $protocol = 0; 
+                } else {
+                }
+                $service = $regs[2];
+                $service_type = $regs[2];
+                $version = $regs[4];
+                $origin = 1;
+                $date_formatted = strftime("%Y-%m-%d %H:%M:%S");
+                Host_services::insert($conn, $ip, $port, $protocol, $service, $service_type, $version, $date_formatted, $origin); // origin = 0 (pads), origin = 1 (nmap)
             }
         }
     }
@@ -153,28 +167,61 @@
 
       <tr><td colspan="2"></td></tr>
       <tr><td colspan="2"></td></tr>
-      <tr><th colspan="2">Active services and aplications names/versions 
+      <tr><th colspan="2">Port / Service information
+      <?php if($_GET["origin"] == 'active'){
+      ?>
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=passive">Active</A>)
       [ <a href="<?php 
         echo $_SERVER["PHP_SELF"]?>?host=<?php 
-        echo $ip ?>&update=services">update</a> ]</th></h2>
+        echo $ip ?>&update=services&origin=active">update</a> ]
+        </th></h2>
+      </tr>
+        <?php } else { ?>
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=active">Passive</A>)
+        </th></h2>
+        <?php } ?>
+      <tr>
+      <td colspan="2">
+      <table>
       <tr>
         <th>Service</th>
         <th>Version</th>
+        <th>Date</th>
       </tr>
-    
 <?php
-
-    if ($services_list = Host_services::get_list($conn, "WHERE ip = '$ip'")) {
+    if($_GET["origin"] == 'active'){
+    if ($services_list = Host_services::get_list($conn, "WHERE ip = inet_aton('$ip') and origin = 1")) {
         foreach ($services_list as $services) {
 ?>
       <tr>
-        <td><?php echo $services->service ?></td>
-        <td><?php echo $services->version ?></td>
+        <td><?php echo $services->get_service() . " (" .
+            $services->get_port(). "/" .
+            getprotobynumber($services->get_protocol()) . ")" ?></td>
+        <td><?php echo $services->get_version() ?></td>
+        <td><?php echo $services->get_date() ?></td>
       </tr>
 <?php
         }
     }
+    } else {
+    if ($services_list = Host_services::get_list($conn, "WHERE ip = inet_aton('$ip') and origin = 0")) {
+        foreach ($services_list as $services) {
 ?>
+      <tr>
+        <td><?php echo $services->get_service() . " (" .
+            $services->get_port(). "/" .
+            getprotobynumber($services->get_protocol()) . ")" ?></td>
+        <td><?php echo $services->get_version() ?></td>
+        <td><?php echo $services->get_date() ?></td>
+      </tr>
+<?php
+        }
+    }
+    }
+?>
+      </table>
+      </td>
+      </tr>
     </table>
 
 <?php

@@ -33,6 +33,7 @@
  */
 
 #include <config.h>
+#include <netdb.h>
 
 #include "os-sim.h"
 #include "sim-container.h"
@@ -332,14 +333,14 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
  */
 gchar*
 sim_container_db_get_host_mac_ul (SimContainer  *container,
-				 SimDatabase   *database,
-				 GInetAddr     *ia)
+				  SimDatabase   *database,
+				  GInetAddr     *ia)
 {
-  GdaDataModel  *dm;
-  GdaValue      *value;
-  gchar         *query;
-  gchar         *mac = NULL;
-  gint           row;
+  GdaDataModel	*dm;
+  GdaValue	*value;
+  gchar		*query;
+  gchar		*mac = NULL;
+  gint		row;
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -376,6 +377,58 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
  *
  */
 gchar*
+sim_container_db_get_host_service_ul (SimContainer  *container,
+				      SimDatabase   *database,
+				      GInetAddr     *ia,
+				      gint           port,
+				      gint           protocol)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gchar         *version = NULL;
+  gint           row;
+  
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+
+  /* origin = 0 (pads). origin = 1 would be nmap. */
+  query = g_strdup_printf ("SELECT version FROM host_services WHERE ip = %lu and port = %u and protocol = %u and origin = 0", 
+			   sim_inetaddr_ntohl (ia), port, protocol);
+
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    version = gda_value_stringify (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("HOST SERVICE DATA MODEL ERROR");
+    }
+  g_free (query);
+
+  return version;
+}
+
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
 sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
 					 SimDatabase   *database,
 					 GInetAddr     *ia)
@@ -386,10 +439,11 @@ sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
   gchar         *vendor = NULL;
   gint           row;
 
-  g_return_if_fail (container != NULL);
+  g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database != NULL);
+  g_return_if_fail (database);
   g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
 
   query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu",
 			   sim_inetaddr_ntohl (ia));
@@ -453,6 +507,57 @@ sim_container_db_insert_host_mac_ul (SimContainer  *container,
  *
  */
 void
+sim_container_db_insert_host_service_ul (SimContainer  *container,
+					 SimDatabase   *database,
+					 GInetAddr     *ia,
+					 gchar         *date,
+					 gint           port,
+					 gint           protocol,
+					 gchar         *service,
+					 gchar         *application)
+{
+  gchar			*query;
+  struct servent	*temp_serv = NULL;
+  struct protoent	*temp_proto = NULL;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (port); /* Needed for ints */
+  g_return_if_fail (protocol);
+  g_return_if_fail (service);
+  g_return_if_fail (application);
+
+
+  if ((sim_container_get_host_by_ia (container, ia) == NULL) && 
+      (sim_container_get_nets_has_ia (container, ia) == NULL))
+    return; /* Update only those hosts that are defined as hosts or networks. */
+
+  temp_proto = getprotobynumber(protocol);
+  if (temp_proto->p_name == NULL)
+    return; /* Since we don't know the proto we wont insert a service without a protocol */
+  
+  temp_serv = getservbyport(port, temp_proto->p_name);
+
+  query = g_strdup_printf ("INSERT INTO host_services (ip, date, port, protocol, service, service_type, version, origin) VALUES (%lu, '%s', %u, %u, '%s', '%s', '%s', 0)", sim_inetaddr_ntohl (ia), date, port, protocol, (temp_serv != NULL) ? temp_serv->s_name : "unknown", service, application);
+  
+  sim_database_execute_no_query (database, query);
+  
+  g_free (query);
+}
+
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
 sim_container_db_update_host_mac_ul (SimContainer  *container,
 				     SimDatabase   *database,
 				     GInetAddr     *ia,
@@ -487,6 +592,45 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
  *
  */
 void
+sim_container_db_update_host_service_ul (SimContainer  *container,
+					 SimDatabase   *database,
+					 GInetAddr     *ia,
+					 gchar         *date,
+					 gint           port,
+					 gint           protocol,
+					 gchar         *service,
+					 gchar         *application)
+{
+  gchar         *query;
+  
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (port);
+  g_return_if_fail (protocol);
+  g_return_if_fail (service);
+  g_return_if_fail (application);
+
+  query = g_strdup_printf ("UPDATE host_services SET date='%s', port=%u, protocol=%u, service_type='%s', version='%s' WHERE ip = %lu AND origin = 0", 
+			   date, port, protocol, service, application, sim_inetaddr_ntohl (ia));
+
+  sim_database_execute_no_query (database, query);
+
+  g_free (query);
+}
+
+
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
 sim_container_db_insert_alert_ul (SimContainer  *container,
 				  SimDatabase   *database,
 				  SimAlert      *alert)
@@ -494,7 +638,7 @@ sim_container_db_insert_alert_ul (SimContainer  *container,
   GdaDataModel  *dm;
   GdaValue      *value;
   gchar         *query = NULL;
-
+  
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database != NULL);
@@ -573,7 +717,7 @@ sim_container_db_delete_backlog_by_id_ul (guint32	backlog_id)
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  guint32 alert_id = gda_value_get_bigint (value);
+	  alert_id = gda_value_get_bigint (value);
 
 	  query1 = g_strdup_printf ("SELECT COUNT(alert_id) FROM backlog_alert WHERE alert_id = %lu",
 				    alert_id);
@@ -4103,12 +4247,15 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
   SimXmlDirective *xml_directive;
   GList           *list = NULL;
   gint             max_sid = 0;
+  gint             previous = 0;
   SimPluginSid    *plugin_sid;
   gchar           *query;
   
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (filename);
+
+  previous = xmlSubstituteEntitiesDefault(1);
 
   xml_directive = sim_xml_directive_new_from_file (container, filename);
   container->_priv->directives = sim_xml_directive_get_directives (xml_directive);
@@ -4144,6 +4291,8 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
 
       list = list->next;
     }
+
+  xmlSubstituteEntitiesDefault(previous);
 
   g_object_unref (xml_directive);
 }
@@ -4584,28 +4733,36 @@ sim_container_get_host_level_by_ia_ul (SimContainer  *container,
   SimHostLevel  *host_level;
   GList         *list;
   gboolean       found = FALSE;
-
+  GInetAddr     *cmp = NULL;
+  
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (ia, NULL);
-
+  
   list = container->_priv->host_levels;
   while (list)
     {
       host_level = (SimHostLevel *) list->data;
+      cmp = sim_host_level_get_ia (host_level);
 
-      if (gnet_inetaddr_noport_equal (sim_host_level_get_ia (host_level), ia))
+      if (!cmp)
+	{
+	  list = list->next;	
+	  continue;
+	}
+
+      if (gnet_inetaddr_noport_equal (cmp, ia))
 	{
 	  found = TRUE;
 	  break;
 	}
-
+      
       list = list->next;
     }
-
+  
   if (!found)
     return NULL;
-
+  
   return host_level;
 }
 

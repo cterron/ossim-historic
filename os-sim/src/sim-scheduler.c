@@ -214,6 +214,84 @@ sim_scheduler_task_correlation (SimScheduler  *scheduler,
  *
  *
  *
+ *
+ *
+ */
+static gpointer
+sim_scheduler_session (gpointer data)
+{
+  SimSession  *session = (SimSession *) data;
+  SimCommand  *command = NULL;
+                             
+  g_return_val_if_fail (session, NULL);
+  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
+
+  g_message ("New session");
+
+  command = sim_command_new ();
+  command->id = 1;
+  command->type = SIM_COMMAND_TYPE_CONNECT;
+  command->data.connect.type = SIM_SESSION_TYPE_SERVER;
+  
+  sim_session_write (session, command);
+
+  sim_session_read (session);
+
+  g_message ("Remove Session");
+  sim_server_remove_session (ossim.server, session);
+
+  g_object_unref (session);
+     
+  return NULL;
+}
+
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_scheduler_task_rservers (SimScheduler  *scheduler,
+			     gpointer       data)
+{
+  GThread  *thread;
+  GList    *list;
+
+  g_return_if_fail (scheduler);
+  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
+
+  list = ossim.config->rservers;
+  while (list)
+    {
+      SimConfigRServer *rserver = (SimConfigRServer*) list->data;
+
+      if (!sim_server_get_session_by_ia (ossim.server, SIM_SESSION_TYPE_RSERVER, rserver->ia))
+	{
+	  GTcpSocket *socket = gnet_tcp_socket_connect (rserver->ip, rserver->port);
+
+	  if (socket)
+	    {
+	      SimSession *session = sim_session_new (G_OBJECT (ossim.server), ossim.config, socket);
+	      session->type = SIM_SESSION_TYPE_RSERVER;
+	      sim_server_append_session (ossim.server, session);
+	      g_message ("sim_scheduler_task_rservers %s\n", rserver->name);
+	      /* Session Thread */
+	      thread = g_thread_create(sim_scheduler_session, session, TRUE, NULL);
+	    }
+	  else
+	    {
+	      g_message ("sim_scheduler_task_rservers NOT CONNECTION %s %s\n", rserver->name, rserver->ip);
+	    }
+	}
+      list = list->next;
+    }
+}
+
+/*
+ *
+ *
+ *
  */
 void
 sim_scheduler_run (SimScheduler *scheduler)
@@ -233,8 +311,8 @@ sim_scheduler_run (SimScheduler *scheduler)
     sleep (1);
     sim_scheduler_task_calculate (scheduler, NULL);
     sim_scheduler_task_correlation (scheduler, NULL);
+    sim_scheduler_task_rservers (scheduler, NULL);
   }
- 
 }
 
 /*

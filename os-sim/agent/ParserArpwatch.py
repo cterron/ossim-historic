@@ -76,12 +76,14 @@ class ParserArpwatch(Parser.Parser):
                     date = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
 
                                      
-                    self.agent.sendMacChange (host   = ip,
+                    self.agent.sendMacChange (
+                         host       = ip,
                          mac        = addr,
                          vendor     = vendor,
                          date       = date,
                          plugin_id  = self.plugin["id"],
-                         plugin_sid = 1)
+                         plugin_sid = 1,
+                         log        = line)
 
                     
                 except IndexError:

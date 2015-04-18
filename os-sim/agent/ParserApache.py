@@ -77,7 +77,8 @@ class ParserApache(Parser.Parser):
                                      src_ip     = source,
                                      src_port   = '',
                                      dst_ip     = '127.0.0.1', # TODO !!
-                                     dst_port   = 80)          # TODO !!
+                                     dst_port   = 80,          # TODO !!
+                                     log        = line)
 
                 except IndexError: 
                     pass

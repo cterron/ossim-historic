@@ -66,6 +66,7 @@ typedef enum {
   SIM_COMMAND_SCOPE_RELOAD_ALL,
   SIM_COMMAND_SCOPE_HOST_OS_CHANGE,
   SIM_COMMAND_SCOPE_HOST_MAC_CHANGE,
+  SIM_COMMAND_SCOPE_HOST_SERVICE_NEW,
   SIM_COMMAND_SCOPE_OK,
   SIM_COMMAND_SCOPE_ERROR
 } SimCommandScopeType;
@@ -97,6 +98,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_OK,
   SIM_COMMAND_SYMBOL_HOST_OS_CHANGE,
   SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE,
+  SIM_COMMAND_SYMBOL_HOST_SERVICE_NEW,
   SIM_COMMAND_SYMBOL_ERROR,
   SIM_COMMAND_SYMBOL_ID,
   SIM_COMMAND_SYMBOL_USERNAME,
@@ -123,10 +125,20 @@ typedef enum {
   SIM_COMMAND_SYMBOL_HOST,
   SIM_COMMAND_SYMBOL_OS,
   SIM_COMMAND_SYMBOL_MAC,
+  SIM_COMMAND_SYMBOL_SERVICE,
   SIM_COMMAND_SYMBOL_VENDOR,
+  SIM_COMMAND_SYMBOL_PORT,
+  SIM_COMMAND_SYMBOL_APPLICATION,
   SIM_COMMAND_SYMBOL_DATA,
+  SIM_COMMAND_SYMBOL_LOG,
   SIM_COMMAND_SYMBOL_SNORT_SID,
-  SIM_COMMAND_SYMBOL_SNORT_CID
+  SIM_COMMAND_SYMBOL_SNORT_CID,
+  SIM_COMMAND_SYMBOL_ASSET_SRC,
+  SIM_COMMAND_SYMBOL_ASSET_DST,
+  SIM_COMMAND_SYMBOL_RISK_A,
+  SIM_COMMAND_SYMBOL_RISK_C,
+  SIM_COMMAND_SYMBOL_ALARM,
+  SIM_COMMAND_SYMBOL_RELIABILITY
 } SimCommandSymbolType;
 
 static const struct
@@ -158,6 +170,7 @@ static const struct
   { "reload-all", SIM_COMMAND_SYMBOL_RELOAD_ALL },
   { "host-os-new", SIM_COMMAND_SYMBOL_HOST_OS_CHANGE },
   { "host-mac-new", SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE },
+  { "host-service-new", SIM_COMMAND_SYMBOL_HOST_SERVICE_NEW },
   { "ok", SIM_COMMAND_SYMBOL_OK },
   { "error", SIM_COMMAND_SYMBOL_ERROR }
 };
@@ -334,8 +347,14 @@ static const struct
   { "value", SIM_COMMAND_SYMBOL_VALUE },
   { "interval", SIM_COMMAND_SYMBOL_INTERVAL },
   { "data", SIM_COMMAND_SYMBOL_DATA },
+  { "log", SIM_COMMAND_SYMBOL_LOG },
   { "snort_sid", SIM_COMMAND_SYMBOL_SNORT_SID },
-  { "snort_cid", SIM_COMMAND_SYMBOL_SNORT_CID }
+  { "snort_cid", SIM_COMMAND_SYMBOL_SNORT_CID },
+  { "asset_src", SIM_COMMAND_SYMBOL_ASSET_SRC },
+  { "asset_dst", SIM_COMMAND_SYMBOL_ASSET_DST },
+  { "risk_a", SIM_COMMAND_SYMBOL_RISK_A },
+  { "risk_c", SIM_COMMAND_SYMBOL_RISK_C },
+  { "reliability", SIM_COMMAND_SYMBOL_RELIABILITY }
 };
 
 static const struct
@@ -419,6 +438,24 @@ static const struct
   { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID }
 };
 
+static const struct
+{
+  gchar *name;
+  guint token;
+} host_service_new_symbols[] = {
+  { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "host", SIM_COMMAND_SYMBOL_HOST },
+  { "port", SIM_COMMAND_SYMBOL_PORT },
+  { "protocol", SIM_COMMAND_SYMBOL_PROTOCOL },
+  { "service", SIM_COMMAND_SYMBOL_SERVICE },
+  { "application", SIM_COMMAND_SYMBOL_APPLICATION },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
+  { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID },
+  { "log", SIM_COMMAND_SYMBOL_LOG }
+};
+
+
+
 enum 
 {
   DESTROY,
@@ -477,6 +514,8 @@ static void sim_command_host_os_change_scan (SimCommand    *command,
 					     GScanner      *scanner);
 static void sim_command_host_mac_change_scan (SimCommand    *command,
 					      GScanner      *scanner);
+static void sim_command_host_service_new_scan (SimCommand    *command,
+					      GScanner      *scanner);
 
 
 static gpointer parent_class = NULL;
@@ -502,8 +541,6 @@ sim_command_impl_finalize (GObject  *gobject)
 	g_free (cmd->data.connect.username);
       if (cmd->data.connect.password)
 	g_free (cmd->data.connect.password);
-      if (cmd->data.connect.type)
-	g_free (cmd->data.connect.type);
       break;
     case SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN:
       if (cmd->data.session_append_plugin.name)
@@ -588,6 +625,19 @@ sim_command_impl_finalize (GObject  *gobject)
 	g_free (cmd->data.host_mac_change.mac);
       if (cmd->data.host_mac_change.vendor)
 	g_free (cmd->data.host_mac_change.vendor);
+      break;
+
+    case SIM_COMMAND_TYPE_HOST_SERVICE_NEW:
+      if (cmd->data.host_service_new.date)
+	g_free (cmd->data.host_service_new.date);
+      if (cmd->data.host_service_new.host)
+	g_free (cmd->data.host_service_new.host);
+      if (cmd->data.host_service_new.service)
+	g_free (cmd->data.host_service_new.service);
+      if (cmd->data.host_service_new.application)
+	g_free (cmd->data.host_service_new.application);
+      if (cmd->data.host_service_new.log)
+	g_free (cmd->data.host_service_new.log);
       break;
 
     default:
@@ -977,6 +1027,12 @@ sim_command_scan (SimCommand    *command,
   for (i = 0; i < G_N_ELEMENTS (host_mac_change_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_HOST_MAC_CHANGE, host_mac_change_symbols[i].name, GINT_TO_POINTER (host_mac_change_symbols[i].token));
 
+  /* Add host service new symbols */
+  for (i = 0; i < G_N_ELEMENTS (host_service_new_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_HOST_SERVICE_NEW, host_service_new_symbols[i].name, GINT_TO_POINTER (host_service_new_symbols[i].token));
+
+
+
   /* Sets input text */
   g_scanner_input_text (scanner, buffer, strlen (buffer));
 
@@ -1059,6 +1115,9 @@ sim_command_scan (SimCommand    *command,
         case SIM_COMMAND_SYMBOL_HOST_MAC_CHANGE:
 	  sim_command_host_mac_change_scan (command, scanner);
           break;
+        case SIM_COMMAND_SYMBOL_HOST_SERVICE_NEW:
+	  sim_command_host_service_new_scan (command, scanner);
+          break;
         case SIM_COMMAND_SYMBOL_OK:
 	  command->type = SIM_COMMAND_TYPE_OK;
           break;
@@ -1094,7 +1153,7 @@ sim_command_connect_scan (SimCommand    *command,
   command->type = SIM_COMMAND_TYPE_CONNECT;
   command->data.connect.username = NULL;
   command->data.connect.password = NULL;
-  command->data.connect.type = NULL;
+  command->data.connect.type = SIM_SESSION_TYPE_NONE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_CONNECT);
   do
@@ -1136,8 +1195,17 @@ sim_command_connect_scan (SimCommand    *command,
 
 	  if (scanner->token != G_TOKEN_STRING)
 	    break;
+	  
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "SERVER")) {
+	    command->data.connect.type = SIM_SESSION_TYPE_SERVER;
+	  } else if (!g_ascii_strcasecmp (scanner->value.v_string, "SENSOR")) {
+	    command->data.connect.type = SIM_SESSION_TYPE_SENSOR;
+	  } else if (!g_ascii_strcasecmp (scanner->value.v_string, "WEB")) {
+	    command->data.connect.type = SIM_SESSION_TYPE_WEB;
+	  } else {
+	    command->data.connect.type = SIM_SESSION_TYPE_WEB;
+	  }
 
-	  command->data.connect.type = g_strdup (scanner->value.v_string);
           break;
         default:
 	  if (scanner->token == G_TOKEN_EOF)
@@ -2006,6 +2074,14 @@ sim_command_alert_scan (SimCommand    *command,
   command->data.alert.snort_sid = 0;
   command->data.alert.snort_cid = 0;
 
+  command->data.alert.reliability = 0;
+  command->data.alert.asset_src = 0;
+  command->data.alert.asset_dst = 0;
+  command->data.alert.risk_a = 0;
+  command->data.alert.risk_c = 0;
+  command->data.alert.alarm = FALSE;
+  command->data.alert.alert = NULL;
+
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_ALERT);
   do
     {
@@ -2206,6 +2282,19 @@ sim_command_alert_scan (SimCommand    *command,
 	  command->data.alert.data = g_strdup (scanner->value.v_string);
 	  break;
 
+        case SIM_COMMAND_SYMBOL_LOG:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.log = g_strdup (scanner->value.v_string);
+	  break;
+
         case SIM_COMMAND_SYMBOL_SNORT_SID:
 	  g_scanner_get_next_token (scanner); /* = */
 	  g_scanner_get_next_token (scanner); /* value */
@@ -2231,6 +2320,84 @@ sim_command_alert_scan (SimCommand    *command,
 
 	  command->data.alert.snort_cid = strtol (scanner->value.v_string, (char **) NULL, 10);
 	  break;
+
+        case SIM_COMMAND_SYMBOL_ASSET_SRC:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.asset_src = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  break;
+        case SIM_COMMAND_SYMBOL_ASSET_DST:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+	  break;
+
+	  command->data.alert.asset_dst = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  break;
+        case SIM_COMMAND_SYMBOL_RISK_A:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.risk_a = strtod (scanner->value.v_string, (char **) NULL);
+	  break;
+        case SIM_COMMAND_SYMBOL_RISK_C:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.risk_c = strtod (scanner->value.v_string, (char **) NULL);
+	  break;
+        case SIM_COMMAND_SYMBOL_RELIABILITY:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.alert.reliability = strtol (scanner->value.v_string, (char **) NULL, 10);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_ALARM:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  if (!g_ascii_strcasecmp (scanner->value.v_string, "TRUE"))
+	    command->data.alert.alarm = TRUE;
+
+	  break;
+
         default:
 	  if (scanner->token == G_TOKEN_EOF)
 	    break;
@@ -2551,7 +2718,7 @@ sim_command_host_os_change_scan (SimCommand    *command,
   command->data.host_os_change.host = NULL;
   command->data.host_os_change.os = NULL;
   command->data.host_os_change.plugin_id = 0;
-  command->data.host_os_change.plugin_id = 0;
+  command->data.host_os_change.plugin_sid = 0;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_HOST_OS_CHANGE);
   do
@@ -2654,7 +2821,7 @@ sim_command_host_mac_change_scan (SimCommand    *command,
   command->data.host_mac_change.mac = NULL;
   command->data.host_mac_change.vendor = NULL;
   command->data.host_mac_change.plugin_id = 0;
-  command->data.host_mac_change.plugin_id = 0;
+  command->data.host_mac_change.plugin_sid = 0;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_HOST_MAC_CHANGE);
   do
@@ -2751,6 +2918,167 @@ sim_command_host_mac_change_scan (SimCommand    *command,
   while(scanner->token != G_TOKEN_EOF);
 }
 
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_host_service_new_scan (SimCommand    *command,
+				  GScanner      *scanner)
+{
+  g_return_if_fail (command);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner);
+
+  command->type = SIM_COMMAND_TYPE_HOST_SERVICE_NEW;
+  command->data.host_service_new.date = NULL;
+  command->data.host_service_new.host = NULL;
+  command->data.host_service_new.port = 0;
+  command->data.host_service_new.protocol = 0;
+  command->data.host_service_new.service = NULL;
+  command->data.host_service_new.application = NULL;
+  command->data.host_service_new.plugin_id = 0;
+  command->data.host_service_new.plugin_sid = 0;
+  command->data.host_service_new.log = NULL;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_HOST_SERVICE_NEW);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_DATE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.date = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_HOST:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.host = g_strdup (scanner->value.v_string);
+	  break;
+
+     case SIM_COMMAND_SYMBOL_PORT:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.port = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+
+     case SIM_COMMAND_SYMBOL_PROTOCOL:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.protocol = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+
+
+
+        case SIM_COMMAND_SYMBOL_SERVICE:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.service = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_APPLICATION:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.application = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_LOG:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.log = g_strdup (scanner->value.v_string);
+	  break;
+
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_SID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+	  
+	  if (scanner->token != G_TOKEN_STRING)
+	    {
+	      command->type = SIM_COMMAND_TYPE_NONE;
+	      break;
+	    }
+
+	  command->data.host_service_new.plugin_sid = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+
+        default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_host_service_new_scan: error symbol unknown");
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+
 
 /*
  *
@@ -2762,6 +3090,7 @@ sim_command_get_string (SimCommand    *command)
 {
   SimRule  *rule;
   gchar    *str = NULL;
+  gchar    *value = NULL;
   gchar    *state;
 
   g_return_val_if_fail (command != NULL, NULL);
@@ -2772,9 +3101,38 @@ sim_command_get_string (SimCommand    *command)
     case SIM_COMMAND_TYPE_OK:
       str = g_strdup_printf ("ok id=\"%d\"\n", command->id);
       break;
+
     case SIM_COMMAND_TYPE_ERROR:
       str = g_strdup_printf ("error id=\"%d\"\n", command->id);
       break;
+
+    case SIM_COMMAND_TYPE_CONNECT:
+      switch (command->data.connect.type)
+	{
+	case SIM_SESSION_TYPE_SERVER:
+	  value = g_strdup ("server");
+	  break;
+	case SIM_SESSION_TYPE_RSERVER:
+	  value = g_strdup ("rserver");
+	  break;
+	case SIM_SESSION_TYPE_SENSOR:
+	  value = g_strdup ("sensor");
+	  break;
+	case SIM_SESSION_TYPE_WEB:
+	  value = g_strdup ("web");
+	  break;
+	default:
+	  value = g_strdup ("web");
+	}
+
+      str = g_strdup_printf ("connect id=\"%d\" type=\"%s\"\n", command->id, value);
+      g_free (value);
+      break;
+
+    case SIM_COMMAND_TYPE_ALERT:
+      str = sim_alert_to_string (command->data.alert.alert);
+      break;
+
     case SIM_COMMAND_TYPE_WATCH_RULE:
       if (!command->data.watch_rule.str)
 	break;
@@ -2890,12 +3248,21 @@ sim_command_get_alert (SimCommand     *command)
 
   if (command->data.alert.data)
     alert->data = g_strdup (command->data.alert.data);
+  if (command->data.alert.log)
+    alert->log = g_strdup (command->data.alert.log);
 
   if (command->data.alert.snort_sid)
     alert->snort_sid = command->data.alert.snort_sid;
 
   if (command->data.alert.snort_cid)
     alert->snort_cid = command->data.alert.snort_cid;
+
+  alert->reliability = command->data.alert.reliability;
+  alert->asset_src = command->data.alert.asset_src;
+  alert->asset_dst = command->data.alert.asset_dst;
+  alert->risk_a = command->data.alert.risk_a;
+  alert->risk_c = command->data.alert.risk_c;
+  alert->alarm = command->data.alert.alarm;
 
   if (command->data.alert.priority)
     {

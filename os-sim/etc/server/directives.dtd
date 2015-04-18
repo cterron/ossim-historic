@@ -31,7 +31,7 @@
 	time_out		NMTOKEN		#REQUIRED
 	occurrence		NMTOKEN		#REQUIRED
 	sticky			NMTOKEN		#REQUIRED
-	sticky_direferent	NMTOKEN		#REQUIRED
+	sticky_different	NMTOKEN		#REQUIRED
 	condition		NMTOKEN		#REQUIRED
 	value			NMTOKEN		#REQUIRED
 	interval		NMTOKEN		#REQUIRED

@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -6,8 +11,8 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
-  <h1>New RRD Config</h1>
+
+  <h1>New RRD Profile</h1>
 
 <h3>Hints</h3>
 <ul>
@@ -27,10 +32,10 @@
 ?>
 
     <form method="post" action="new_rrd_conf.php">
-    
+
     <table align="center">
-      <tr><th>Ip</th></tr>
-      <tr><td><input type="text" name="ip"></td></tr>
+      <tr><th>Enter a profile name</th></tr>
+      <tr><td><input type="text" name="profile"></td></tr>
     </table>
     <br/>
     <table align="center">
@@ -41,11 +46,13 @@
         <th>Alpha</th>
         <th>Beta</th>
         <th>Persistence</th>
+        <th>Enable</th>
       </tr>
-    
+
 <?php
 
-    if ($rrd_global_list = RRD_Config::get_list($conn, "WHERE ip = 0"))
+    if ($rrd_global_list = RRD_Config::get_list($conn,
+                                                "WHERE profile = 'global'"))
     {
         foreach ($rrd_global_list as $global)
         {
@@ -70,6 +77,8 @@
             size="8" value="<?php echo $beta ?>"/></td>
         <td><input type="text" name="<?php echo $attrib ?>#persistence"
             size="2" value="<?php echo $persistence ?>"/></td>
+        <td><input type="checkbox" name="<?php echo $attrib ?>#enable" checked/>
+        </td>
       </tr>
 <?php
         }
@@ -79,7 +88,7 @@
 ?>
 
       <tr>
-        <td colspan="6"><input type="submit" value="Insert"/></td>
+        <td colspan="7"><input type="submit" value="Insert"/></td>
       </tr>
     </table>
     </form>

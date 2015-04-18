@@ -172,6 +172,7 @@ void
 sim_organizer_run (SimOrganizer *organizer)
 {
   SimAlert *alert = NULL;
+  SimCommand *cmd = NULL;
   gchar    *query;
   gchar		*str;
 
@@ -193,32 +194,26 @@ sim_organizer_run (SimOrganizer *organizer)
 	  continue;
 	}
 
-      switch (alert->type)
-	{
-	case SIM_ALERT_TYPE_DETECTOR:
-	  sim_organizer_correlation_plugin (organizer, alert);
-	  sim_organizer_calificate (organizer, alert);
-	  sim_organizer_snort (organizer, alert);
-	  sim_organizer_rrd (organizer, alert);
-	  insert_alert_alarm (alert);
-	  sim_organizer_correlation (organizer, alert);
-	  break;
-	case SIM_ALERT_TYPE_MONITOR:
-	  sim_organizer_correlation_plugin (organizer, alert);
-	  sim_organizer_calificate (organizer, alert);
-	  sim_organizer_snort (organizer, alert);
-	  insert_alert_alarm (alert);
-	  sim_organizer_correlation (organizer, alert);
-	  break;
-	default:
-	  break;
-	}
+      sim_organizer_correlation_plugin (organizer, alert);
+      sim_organizer_calificate (organizer, alert);
+      sim_organizer_snort (organizer, alert);
+      sim_organizer_rrd (organizer, alert);
+      insert_alert_alarm (alert);
+      sim_organizer_correlation (organizer, alert);
 
       config_send_notify_email (organizer->_priv->config, alert);
 
       str = sim_alert_to_string (alert);
       g_message ("sim_organizer_run: %s", str);
       g_free (str);
+
+      if (alert->alarm) {
+	cmd = sim_command_new ();
+	cmd->type = SIM_COMMAND_TYPE_ALERT;
+	cmd->data.alert.alert = alert;
+	sim_server_push_session_command (ossim.server, SIM_SESSION_TYPE_RSERVER, cmd);
+	g_object_unref (cmd);
+      }
 
       g_object_unref (alert);
     }
@@ -385,6 +380,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
   g_return_if_fail (SIM_IS_ALERT (alert));
 
   if (!alert->dst_ia) return;
+  if (alert->rserver) return;
 
   list = sim_container_db_host_get_plugin_sids_ul (ossim.container,
 						   ossim.dbossim,
@@ -398,8 +394,9 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
   while (list)
     {
       SimPluginSid *plugin_sid = (SimPluginSid *) list->data;
+      gint  new_priority = sim_plugin_sid_get_priority (plugin_sid);
 
-      alert->priority += sim_plugin_sid_get_priority (plugin_sid);
+      alert->priority = (new_priority > alert->priority) ? new_priority : alert->priority;
       alert->reliability += sim_plugin_sid_get_reliability (plugin_sid);
 
       list = list->next;
@@ -449,6 +446,8 @@ sim_organizer_calificate (SimOrganizer *organizer,
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
   g_return_if_fail (alert != NULL);
   g_return_if_fail (SIM_IS_ALERT (alert));
+
+  if (alert->rserver) return;
 
   /*
    * get current day and current hour

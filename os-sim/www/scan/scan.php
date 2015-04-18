@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuTools", "ToolsScan");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>

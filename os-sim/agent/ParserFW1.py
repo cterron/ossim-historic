@@ -86,7 +86,8 @@ class ParserFW1(Parser.Parser):
                                      src_ip     = src,
                                      src_port   = s_port,
                                      dst_ip     = dst,
-                                     dst_port   = service)
+                                     dst_port   = service,
+                                     log        = line)
 
                 except IndexError: 
                     pass
@@ -173,7 +174,8 @@ class ParserFW1(Parser.Parser):
                                      src_ip     = src,
                                      src_port   = s_port,
                                      dst_ip     = dst,
-                                     dst_port   = service)
+                                     dst_port   = service,
+                                     log        = line)
 
                 except IndexError: 
                     pass

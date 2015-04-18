@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelAnomalies");
+?>
+
 <html>
 <head>
   <title> Control Panel </title>
@@ -100,7 +105,7 @@ if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "order by anomaly_time desc")) {
     foreach($alert_list_global as $alert) {
     $ip = "Global";
-    if($rrd_list_temp = RRD_config::get_list($conn, "WHERE ip = 0")) {
+    if($rrd_list_temp = RRD_config::get_list($conn, "WHERE profile = \"global\"")) {
     $rrd_temp = $rrd_list_temp[0];
     }
 /*    if(($alert->get_count() / $perl_interval) <
@@ -139,12 +144,13 @@ if ($alert_list = RRD_anomaly::get_list($conn, $where_clause, "order by
 anomaly_time desc")) {
     foreach($alert_list as $alert) {
     $ip = $alert->get_ip();
+
+    /*
     if($rrd_list_temp = RRD_config::get_list($conn, 
                                              "where ip = inet_ntoa('$ip')"))
     {
         $rrd_temp = $rrd_list_temp[0];
     }
-    /*
     if(($alert->get_count() / $perl_interval) < ($rrd_temp->get_col($alert->get_what(), "persistence")) && $_GET["acked"] != -1) {
     continue;
     }

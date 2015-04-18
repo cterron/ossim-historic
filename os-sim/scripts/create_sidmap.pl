@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.1 2004/06/14 14:45:34 dkarg Exp $ #
+# $Id: create_sidmap.pl,v 1.3 2004/08/20 09:01:05 dkarg Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
@@ -269,14 +269,23 @@ sub get_category_id($ $)
     my $query = "SELECT * FROM category WHERE name = '$name'";
     my $stm = $conn->prepare($query);
     $stm->execute();
-  
-    return $stm->fetchrow_hashref->{"id"};
+
+    my $row = $stm->fetchrow_hashref;
+    if(!exists($row->{"id"})){ 
+    return 117; # misc
+    }
+
+    return $row->{"id"};
 }
 
 sub get_class_info($ $)
 {
     (my $conn, my $name) = @_;
 
+    if(!defined($name)){
+    my @info = (102,3);
+    return \@info;
+    } else {
     my $query = "SELECT * FROM classification WHERE name = '$name'";
     my $stm = $conn->prepare($query);
     $stm->execute();
@@ -286,6 +295,7 @@ sub get_class_info($ $)
     my @info = ($row->{"id"}, 
                 $row->{"priority"});
     return \@info;
+    }
 }
 
 sub update_ossim_db()
@@ -332,8 +342,13 @@ sub update_ossim_db()
                 get_class_info ($conn, $sidinfo{$sid}{"classtype"});
             my ($class_id, $priority) = (${$info}[0], ${$info}[1]);
             my $msg = $sidinfo{$sid}{"msg"};
- 
-            print "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, $msg, $priority);\n";
+            if(!defined($msg)){ $msg = "Undefined msg, please check"; }
+
+            my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
+    my $stm = $conn->prepare($query);
+    $stm->execute();
+    print "Inserting $msg: [$plugin_id:$plugin_sid:$priority]\n";
+		 
         }
     }
 

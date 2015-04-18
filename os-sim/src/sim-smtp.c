@@ -59,8 +59,6 @@ struct _SimSmtpPrivate
 static gpointer parent_class = NULL;
 static gint sim_smtp_signals[LAST_SIGNAL] = { 0 };
 
-static gint get_bits (gchar   *numbits);
-
 /* GType Functions */
 
 static void 

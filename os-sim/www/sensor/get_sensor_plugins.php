@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicySensors");
+?>
+
+<?php
 
 function server_get_sensor_plugins() {
 

@@ -3,7 +3,7 @@
 use Switch;
 use IO::Socket;
 
-my $host='192.168.2.103';
+my $host='127.0.0.1';
 my $port='40001';
 my $prot='tcp';
 

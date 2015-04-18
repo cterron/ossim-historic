@@ -23,8 +23,9 @@ class ossim_db {
         $user = $conf->get_conf("ossim_user");
         $pass = $conf->get_conf("ossim_pass");
         $host = $conf->get_conf("ossim_host");
+        $type = $conf->get_conf("ossim_type");
 
-        $conn = &ADONewConnection('mysql');
+        $conn = &ADONewConnection($type);
         $conn->PConnect($host, $user, $pass, $base);
         return $conn;
     }

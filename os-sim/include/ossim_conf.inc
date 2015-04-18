@@ -1,7 +1,7 @@
 <?php
 
-/* 
- * Read config from /etc/ossim.conf 
+/*
+ * Read config from /etc/ossim.conf
  */
 class ossim_conf {
 
@@ -21,11 +21,13 @@ class ossim_conf {
             if (strncmp($line, "#", 1)) {
                 $conf = explode('=', $line);
                 $type = $conf[0];
+                if(isset($conf[1])){
                 $value = $conf[1];
+                }
                 $this->confs["$type"] = trim($value);
             }
         }
-    
+
         fclose($fd);
     }
 

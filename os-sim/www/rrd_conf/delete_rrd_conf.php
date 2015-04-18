@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -11,18 +16,18 @@
 
 <?php 
 
-if (!$_GET["ip"]) { 
-    echo "<p align=\"center\">Wrong ip</p>";
+if (!$_GET["profile"]) { 
+    echo "<p align=\"center\">Wrong profile</p>";
     exit;
 }
 
-$ip = mysql_escape_string($_GET["ip"]);
+$profile = mysql_escape_string($_GET["profile"]);
 
 if (!$_GET["confirm"]) {
 ?>
     <p>Are you sure?</p>
-    <p><a 
-      href="<?php echo $_SERVER["PHP_SELF"]."?ip=$ip&confirm=yes"; ?>">Yes</a>
+    <p><a href="<?php echo $_SERVER["PHP_SELF"].
+        "?profile=$profile&confirm=yes"; ?>">Yes</a>
       &nbsp;&nbsp;&nbsp;<a href="rrd_conf.php">No</a>
     </p>
 <?php
@@ -33,12 +38,12 @@ if (!$_GET["confirm"]) {
     require_once 'classes/RRD_config.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-    RRD_config::delete($conn, $ip);
+    RRD_config::delete($conn, $profile);
     $db->close($conn);
 
 ?>
 
-    <p>RRD_conf deleted</p>
+    <p>RRD profile deleted</p>
     <p><a href="rrd_conf.php">Back</a></p>
     <?php exit(); ?>
 

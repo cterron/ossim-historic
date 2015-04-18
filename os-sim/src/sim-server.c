@@ -184,7 +184,6 @@ sim_server_run (SimServer *server)
   g_return_if_fail (SIM_IS_SERVER (server));
 
   g_message ("Waiting for connections...");
-
   server->_priv->socket = gnet_tcp_socket_server_new_with_port (server->_priv->port);
   while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
     {
@@ -307,7 +306,6 @@ sim_server_get_sessions (SimServer     *server)
  *
  *
  *
- *
  */
 void
 sim_server_push_session_command (SimServer       *server,
@@ -326,10 +324,10 @@ sim_server_push_session_command (SimServer       *server,
     {
       SimSession *session = (SimSession *) list->data;
 
-      if (session_type == SIM_SESSION_TYPE_ALL ||
+      if (session_type == SIM_SESSION_TYPE_ALL || 
 	  session_type == session->type)
 	{
-	  sim_session_write (session, command);
+	    sim_session_write (session, command); 
 	}
 
       list = list->next;
@@ -422,6 +420,43 @@ sim_server_get_session_by_sensor (SimServer   *server,
 
       if (sim_session_get_sensor (session) == sensor)
 	return session;
+
+      list = list->next;
+    }
+
+  return NULL;
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ *
+ */
+SimSession*
+sim_server_get_session_by_ia (SimServer       *server,
+			      SimSessionType   session_type,
+			      GInetAddr       *ia)
+{
+  GList *list;
+
+  g_return_val_if_fail (server, NULL);
+  g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
+
+  list = server->_priv->sessions;
+  while (list)
+    {
+      SimSession *session = (SimSession *) list->data;
+
+      if (session_type == SIM_SESSION_TYPE_ALL ||
+	  session_type == session->type)
+	{
+	  GInetAddr *tmp = sim_session_get_ia (session);
+	  if (gnet_inetaddr_noport_equal (tmp, ia))
+	    return session;
+	}
 
       list = list->next;
     }

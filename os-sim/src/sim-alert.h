@@ -99,6 +99,7 @@ struct _SimAlert {
   gdouble            risk_a;
 
   gchar             *data;
+  gchar             *log;
 
   SimPlugin         *plugin;
   SimPluginSid      *pluginsid;
@@ -110,6 +111,9 @@ struct _SimAlert {
   gint               count;
   gint               level;
   guint32            backlog_id;
+
+  /* replication  server */
+  gboolean           rserver;    
 };
 
 struct _SimAlertClass {

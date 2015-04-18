@@ -69,7 +69,7 @@ struct _SimCommand {
     struct {
       gchar          *username;
       gchar          *password;
-      gchar          *type;
+      SimSessionType  type;
     } connect;
 
     struct {
@@ -169,9 +169,19 @@ struct _SimCommand {
       gint               interval;
 
       gchar             *data;
+      gchar             *log;
 
       guint32            snort_sid;
       guint32            snort_cid;
+
+      gint               reliability;
+      gint               asset_src;
+      gint               asset_dst;
+      gdouble            risk_c;
+      gdouble            risk_a;
+      gboolean		 alarm;
+
+      SimAlert          *alert;
     } alert;
 
     struct {
@@ -198,6 +208,19 @@ struct _SimCommand {
       gint               plugin_sid;
     } host_mac_change;
 
+    struct {
+      gchar             *date;
+      gchar             *host;
+      gint               port;
+      gint               protocol;
+      gchar             *service;
+      gchar             *application;
+
+      gint               plugin_id;
+      gint               plugin_sid;
+
+      gchar             *log;
+    } host_service_new;
 
     struct {
       gint               id;

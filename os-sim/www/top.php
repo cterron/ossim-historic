@@ -110,6 +110,9 @@
     }
 ?>
 
+        &nbsp;&nbsp;[<a href="session/login.php?action=logout"
+           title="Logout" target="main"><font color="black">Logout</font></a>]
+
 
 
 <!--
@@ -117,11 +120,11 @@
 -->
     </th>
   </tr>
-  <tr>
-    <th>
 <?php
     if ($_GET["menu"] == "control_panel") {
 ?>
+  <tr>
+    <th>
         [<a href="control_panel/global_score.php" 
            title="OSSIM Control Panel - Metrics"
            target="main">Metrics</a>]
@@ -137,10 +140,13 @@
         [<a href="control_panel/anomalies.php"
            title="(Anomalies)" 
            target="main">Anomalies</a>]
-
+      </th>
+    </tr>
 <?php
     } elseif ($_GET["menu"] == "policy") {
 ?>
+  <tr>
+    <th>
         [<a href="policy/policy.php" title="policy management" 
            target="main">Policy</a>]
         [<a href="host/host.php" title="host management" 
@@ -155,18 +161,26 @@
            target="main">Priority & reliability</a>]
         [<a href="port/port.php" title="port management" 
            target="main">Ports</a>]
- 
+      </th>
+    </tr>
 <?php
     } elseif ($_GET["menu"] == "report") {
 ?>
+  <tr>
+    <th>
         [<a href="report/report.php" title="host report" 
            target="main">Host Report</a>]
         [<a href="sec_report/index.php" title="security report" 
            target="main">Security Report</a>]
-
+        [<a href="incidents/index.php" title="incidents" 
+           target="main">Incidents</a>]
+      </th>
+    </tr>
 <?php
     } elseif ($_GET["menu"] == "monitors") {
 ?>
+  <tr>
+    <th>
         [<a href="ntop/session.php?sensor=<?php echo $sensor["host"] ?>"
            title="(NTOP - Active TCP Sessions)" 
            target="main">Session</a>]
@@ -179,12 +193,17 @@
            target="main">Availability</a>]
         [<a href="riskmeter/index.php" title="OSSIM riskmeter" 
            target="main">Riskmeter</a>]
-
+      </th>
+    </tr>
 <?php
     } elseif ($_GET["menu"] == "config") {
 ?>
+  <tr>
+    <th>
         [<a href="conf/main.php" title="main configuration" 
            target="main">Main</a>]
+        [<a href="session/users.php" title="users" 
+           target="main">Users</a>]
         [<a href="directives/index.php" title="directive viewer" 
            target="main">Directives</a>]
         [<a href="conf/pluginref.php" title="correlation reference viewer" 
@@ -195,9 +214,13 @@
            target="main">Host Scan</a>]
         [<a href="conf/modifyconfform.php" title="Riskmeter Configuration" 
            target="main">Riskmeter</a>]
+      </th>
+    </tr>
 <?php
     } elseif ($_GET["menu"] == "tools") {
 ?>
+  <tr>
+    <th>
         [<a href="scan/scan.php" title="host scanning" 
            target="main">Scan</a>]
         [<a href="control_panel/backlog.php" 
@@ -205,12 +228,14 @@
            target="main">Backlog</a>]
         [<a href="editor/editor.php" title="rule viewer" 
            target="main">Rule Viewer</a>]
+        [<a href="backup/index.php" title="Backup Manager" 
+           target="main">Backup</a>]
+      </th>
+    </tr>
 <?php
     }
 ?>
 
-      </th>
-    </tr>
   </table>
 
 </body>

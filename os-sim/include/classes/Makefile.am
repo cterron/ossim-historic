@@ -18,6 +18,11 @@ classes_DATA = Alarm.inc \
 	Host_sensor_reference.inc \
 	Host_services.inc \
 	Host_vulnerability.inc \
+	Incident.inc \
+	Incident_alarm.inc \
+	Incident_metric.inc \
+	Incident_ticket.inc \
+	Incident_file.inc \
 	Link.inc \
 	Net_sensor_reference.inc \
 	Net.inc \
@@ -44,6 +49,7 @@ classes_DATA = Alarm.inc \
 	RRD_config.inc \
 	Scan.inc \
 	Sensor.inc \
+	Session.inc \
 	Signature_group.inc \
 	Signature_group_reference.inc \
 	Signature.inc

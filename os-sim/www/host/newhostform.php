@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -13,6 +18,7 @@
     require_once ('ossim_db.inc');
     require_once ('classes/Conf.inc');
     require_once ('classes/Sensor.inc');
+    require_once ('classes/RRD_config.inc');
 
     $db = new ossim_db();
     $conn = $db->connect();
@@ -58,6 +64,27 @@
              name="threshold_a" size="4">
     </td>
   </tr>
+  <tr>
+    <th>RRD Profile<br/>
+        <font size="-2">
+          <a href="../rrd_conf/new_rrd_conf_form.php">Insert new profile?</a>
+        </font>
+    </th>
+    <td class="left">
+      <select name="rrd_profile">
+<?php
+    foreach (RRD_Config::get_profile_list($conn) as $profile)
+    {
+        if (strcmp($profile, "global")) 
+        {
+            echo "<option value=\"$profile\">$profile</option>\n";
+        }
+    }
+?>
+        <option value="" selected>None</option>
+      </select>
+    </td>
+  </tr>
 <!--
   <tr>
     <th>Alert</th>
@@ -86,7 +113,7 @@
     <th>Sensors<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">Insert new sensor?</a>
-        </font><br/>
+        </font>
     </th>
     <td class="left">
 <?php

@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -13,13 +18,13 @@
         
     require_once ('ossim_conf.inc');
     $conf = new ossim_conf();
-    $base_dir = $conf->get_conf("base_dir");
+    $data_dir = $conf->get_conf("data_dir");
 
     function start_shell ($cmd) {
      exec('nohup "'.$cmd.'" > /dev/null &');
     }
     
-    start_shell("$base_dir/scripts/do_nessus.pl");
+    start_shell("$data_dir/scripts/do_nessus.pl");
 
 ?>
 <center> * Nessus scan started, depending on number of hosts to be scanned this may take a while.</center>

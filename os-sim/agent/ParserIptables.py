@@ -89,7 +89,8 @@ class ParserIptables(Parser.Parser):
                                      src_ip     = source,
                                      src_port   = sourceport,
                                      dst_ip     = destination,
-                                     dst_port   = destport)
+                                     dst_port   = destport,
+                                     log        = line)
                     
                 except IndexError: 
                     pass

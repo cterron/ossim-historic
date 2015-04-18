@@ -194,6 +194,8 @@ sim_session_new (GObject       *object,
   session->_priv->server = server;
   session->_priv->socket = socket;
 
+  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
+
   session->_priv->ia = gnet_tcp_socket_get_remote_inetaddr (socket);
   if (gnet_inetaddr_is_loopback (session->_priv->ia))
     {
@@ -201,9 +203,23 @@ sim_session_new (GObject       *object,
       session->_priv->ia = gnet_inetaddr_get_host_addr ();
     }
 
-  g_message ("SESSION: %s", gnet_inetaddr_get_canonical_name (session->_priv->ia));
+  g_message ("sim_session_new: %s", gnet_inetaddr_get_canonical_name (session->_priv->ia));
 
   return session;
+}
+
+/*
+ *
+ *
+ *
+ */
+GInetAddr*
+sim_session_get_ia (SimSession *session)
+{
+  g_return_val_if_fail (session, NULL);
+  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
+
+  return session->_priv->ia;
 }
 
 /*
@@ -223,12 +239,25 @@ sim_session_cmd_connect (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
   
-  if (command->data.connect.type)
+  switch (command->data.connect.type)
     {
+    case SIM_SESSION_TYPE_SERVER:
       sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
-
+      session->_priv->sensor = sensor;
+      session->type = SIM_SESSION_TYPE_SERVER;
+      break;
+    case SIM_SESSION_TYPE_SENSOR:
+      sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
       session->_priv->sensor = sensor;
       session->type = SIM_SESSION_TYPE_SENSOR;
+      break;
+    case SIM_SESSION_TYPE_WEB:
+      sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
+      session->_priv->sensor = sensor;
+      session->type = SIM_SESSION_TYPE_WEB;
+      break;
+    default:
+      break;
     }
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -726,6 +755,14 @@ sim_session_cmd_alert (SimSession  *session,
       alert->reliability = sim_plugin_sid_get_reliability (plugin_sid);
     }
 
+  if (session->type == SIM_SESSION_TYPE_RSERVER)
+    {
+      alert->id = 0;
+      alert->snort_cid = 0;
+      alert->snort_sid = 0;
+      alert->rserver = TRUE;
+    }
+
   sim_container_push_alert (ossim.container, alert);
 }
 
@@ -1131,6 +1168,159 @@ sim_session_cmd_host_mac_change (SimSession  *session,
  *
  */
 static void
+sim_session_cmd_host_service_new (SimSession  *session,
+				  SimCommand  *command)
+{
+  SimConfig	*config;
+  SimAlert	*alert;
+  GInetAddr	*ia;
+  gint		port = 0;
+  gint		protocol = 0;
+  gchar		*mac = NULL;
+  gchar		*vendor = NULL;
+  gchar		*service = NULL;
+  gchar		*application = NULL;
+  struct tm	tm;
+
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.host_service_new.date);
+  g_return_if_fail (command->data.host_service_new.host);
+  g_return_if_fail (command->data.host_service_new.service);
+  g_return_if_fail (command->data.host_service_new.application);
+  g_return_if_fail (command->data.host_service_new.plugin_id > 0);
+  g_return_if_fail (command->data.host_service_new.plugin_sid > 0);
+
+  // We don't use icmp. Maybe useful for a list of active hosts....
+  if (command->data.host_service_new.protocol == 1)
+    return;
+  
+  ia = gnet_inetaddr_new_nonblock (command->data.host_service_new.host, 0);
+  config = session->_priv->config;
+  // We've got a mac address ! here we should call host_mac_change but for
+  // now...
+  if (!g_ascii_strcasecmp (command->data.host_service_new.service, "ARP")){
+    // Insert into host_mac
+    mac = sim_container_db_get_host_mac_ul (ossim.container, ossim.dbossim, ia);
+    if (!mac)
+      {
+	sim_container_db_insert_host_mac_ul (ossim.container,
+					     ossim.dbossim,
+					     ia,
+					     command->data.host_service_new.date,
+					     command->data.host_service_new.application,
+					     "");
+	gnet_inetaddr_unref (ia);
+	return;
+      }
+
+    if (!g_ascii_strcasecmp (mac, command->data.host_service_new.application))
+      {
+	g_free (mac);
+	gnet_inetaddr_unref (ia);
+	return;
+      }
+
+    vendor = sim_container_db_get_host_mac_vendor_ul (ossim.container, ossim.dbossim, ia);
+    
+    sim_container_db_update_host_mac_ul (ossim.container,
+					 ossim.dbossim,
+					 ia,
+					 command->data.host_service_new.date,
+					 command->data.host_service_new.application,
+					 mac,
+					 ""); // We'll have to patch pads in order to get the mac vendor
+    
+    alert = sim_alert_new ();
+    alert->type = SIM_ALERT_TYPE_DETECTOR;
+    alert->alarm = FALSE;
+    
+    if (config->sensor.ip)
+      alert->sensor = g_strdup (config->sensor.ip);
+    if (config->sensor.interface)
+      alert->interface = g_strdup (config->sensor.interface);
+    if (strptime (command->data.host_service_new.date, "%Y-%m-%d %H:%M:%S", &tm))
+      alert->time =  mktime (&tm);
+    else
+      alert->time = time (NULL);
+    
+    alert->plugin_id = command->data.host_service_new.plugin_id;
+    alert->plugin_sid = command->data.host_service_new.plugin_sid;
+    alert->src_ia = ia;
+    
+    alert->data = g_strdup_printf ("%s|%s --> %s|%s", mac, (vendor) ? vendor : "",
+				   command->data.host_service_new.application, "");
+    
+    sim_container_push_alert (ossim.container, alert);
+    
+    g_free (mac);
+    if (vendor) g_free (vendor);
+    
+    return;
+  }
+
+  port = command->data.host_service_new.port;
+  protocol = command->data.host_service_new.protocol;
+  application = sim_container_db_get_host_service_ul (ossim.container, ossim.dbossim, ia, port, protocol);
+  
+  if (!application)
+    {
+      sim_container_db_insert_host_service_ul (ossim.container,
+					       ossim.dbossim,
+					       ia,
+					       command->data.host_service_new.date,
+					       command->data.host_service_new.port,
+					       command->data.host_service_new.protocol,
+					       command->data.host_service_new.service,
+					       command->data.host_service_new.application);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+
+  if (!g_ascii_strcasecmp (application, command->data.host_service_new.application))
+    {
+      g_free (application);
+      gnet_inetaddr_unref (ia);
+      return;
+    }
+  /*
+    In order to use anomalies with services:
+    1. Create sim_container_db_get_host_service_version_ul()
+    2. Update with old version, new version, anom = 1
+  */
+  
+  alert = sim_alert_new ();
+  alert->type = SIM_ALERT_TYPE_DETECTOR;
+  alert->alarm = FALSE;
+  
+  if (config->sensor.ip)
+    alert->sensor = g_strdup (config->sensor.ip);
+  if (config->sensor.interface)
+    alert->interface = g_strdup (config->sensor.interface);
+  if (strptime (command->data.host_service_new.date, "%Y-%m-%d %H:%M:%S", &tm))
+    alert->time =  mktime (&tm);
+  else
+    alert->time = time (NULL);
+  
+  alert->plugin_id = command->data.host_service_new.plugin_id;
+  alert->plugin_sid = command->data.host_service_new.plugin_sid;
+  alert->src_ia = ia;
+  
+  alert->data = g_strdup_printf ("%d/%d - %s|%s", port, protocol, service, application);
+  
+  sim_container_push_alert (ossim.container, alert);
+
+  g_free (application);
+}
+
+/*
+ *
+ *
+ *
+ */
+static void
 sim_session_cmd_ok (SimSession  *session,
 		    SimCommand  *command)
 {
@@ -1175,8 +1365,6 @@ sim_session_read (SimSession  *session)
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
 
-  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
-
   while (!(session->_priv->close) && 
 	 (error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n > 0))
     {
@@ -1193,6 +1381,7 @@ sim_session_read (SimSession  *session)
 	continue;
 
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: %s", buffer);
+
       cmd = sim_command_new_from_buffer (buffer);
 
       if (!cmd)
@@ -1279,6 +1468,9 @@ sim_session_read (SimSession  *session)
 	case SIM_COMMAND_TYPE_HOST_MAC_CHANGE:
 	  sim_session_cmd_host_mac_change (session, cmd);
 	  break;
+	case SIM_COMMAND_TYPE_HOST_SERVICE_NEW:
+	  sim_session_cmd_host_service_new (session, cmd);
+	  break;
 	case SIM_COMMAND_TYPE_OK:
 	  sim_session_cmd_ok (session, cmd);
 	  break;
@@ -1319,6 +1511,8 @@ sim_session_write (SimSession  *session,
   str = sim_command_get_string (command);
   if (!str)
     return 0;
+
+  // cipher
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_write: %s", str);
 

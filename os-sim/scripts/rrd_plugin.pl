@@ -194,61 +194,100 @@ sub rrd_threshold {
     return 1;
 }
 
+sub ip2long {
+    my ($ip) = @_;
+    my @ips = split (/\./, $ip);
+    my $long = ($ips[0]*256*256*256) + ($ips[1]*256*256) + ($ips[2]*256) + $ips[3];
+    return $long;
+}
+
 sub rrd_config {
     my ($interface) = @_;
-
-    my $query = "SELECT INET_NTOA(ip) AS ip, rrd_attrib, threshold, priority, persistence FROM rrd_config;";
+    
+    # GLOBAL RRDs
+    my $query = "SELECT rrd_attrib, threshold, priority, persistence FROM rrd_config WHERE profile = 'GLOBAL' AND enable = 1";
     my $stm = $conn->prepare($query);
     $stm->execute();
-
     while (my $row = $stm->fetchrow_hashref) {
-	my $hl = $row->{ip};
 	my $att = $row->{rrd_attrib};
 	my $threshold = $row->{threshold};
 	my $priority = $row->{priority};
 	my $persistence = $row->{persistence};
 
-	if ($hl == 0) {
-	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/" . $att . ".rrd";
-	    next unless (-e $file);
+	my $file = "$rrd_ntop/interfaces/$interface/$att.rrd";
+	next unless (-e $file);
 
-	    rrd_threshold ("GLOBAL", $interface, $att, $priority, $file, $threshold);
-	    rrd_anomaly ("GLOBAL", $interface, $att, $priority, $file, $persistence);
-	} else {
-	    my $ip = inet_aton ($hl);
+	rrd_threshold ("GLOBAL", $interface, $att, $priority, $file, $threshold);
+	rrd_anomaly ("GLOBAL", $interface, $att, $priority, $file, $persistence);
+    }
+    
+    # HOST RRDs
+    %files = ();
+    @result= `find $rrd_ntop/interfaces/$interface/hosts`;
+    foreach $file (@result) {
+	chop ($file);
 
-	    my $dir = "$ip";
-	    $dir =~ tr/\./\//;
-	    my $file = $rrd_ntop . "/interfaces/" . $interface . "/hosts/". $dir . "/" . $atts . ".rrd";
+	my @tmp = split ("/", $file);
+	
+	my $ip = "$tmp[$#tmp - 4].$tmp[$#tmp - 3].$tmp[$#tmp - 2].$tmp[$#tmp - 1]";
 
-	    next unless (-e $file);
-	    
-	    rrd_threshold ($ip, $interface, $att, $priority, $file, $threshold);
-	    rrd_anomaly ($ip, $interface, $att, $priority, $file, $persistence);
+	if ($ip =~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
+	    $files{$ip} = $ip;
 	}
     }
 
-    if ($rrd_worm == 1) {
-	foreach $att (keys %rrd_worm_atts){
-	    my $threshold = $rrd_worm_atts{$att}[0];
-	    my $priority = $rrd_worm_atts{$att}[1];
-	    my $persistence = $rrd_worm_atts{$att}[2];
+    my $ip;
+    foreach $ip (keys %files) { 
+	my $query = "SELECT rrd_profile FROM host WHERE ip = '$ip'";
+	my $stm = $conn->prepare($query);
+	$stm->execute();
+	my $row = $stm->fetchrow_hashref;
+	my $profile = $row->{rrd_profile};
 
-	    my @result= `find $rrd_ntop/interfaces/$interface | grep $att`;
-	    foreach $file (@result) {
-		my @tmp = split ("/", $file);
-
-		$failure[$#failure];
-
-		my $ip = "$tmp[$#tmp - 4].$tmp[$#tmp - 3].$tmp[$#tmp - 2].$tmp[$#tmp - 1]";
-
-		next if (rrd_worm_has_host ($ip));
-
-		chomp($file);
-
-		rrd_threshold ($ip, $interface, $att, $priority, $file, $threshold);
-		rrd_anomaly ($ip, $interface, $att, $priority, $file, $persistence);
+	if (!$profile) {
+	    my $asset = 0;
+	    $query = "SELECT ips, rrd_profile, priority FROM net";
+	    $stm = $conn->prepare($query);
+	    $stm->execute();
+	    while ($row = $stm->fetchrow_hashref) {
+		my $ips =  $row->{ips};
+		my @list =  split (",", $ips);
+		my $myip;
+		foreach $myip (@list) {
+		    @data = split ("/", $myip);
+		    $mask = $data[1];
+		    $val1 = ip2long($data[0]);
+		    $val2 = ip2long($ip);
+		    
+		    if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask))) {
+			if ($row->{priority} > $asset) {
+			    $profile = $row->{rrd_profile};
+			    $asset = $row->{priority};
+			}
+		    }
+		}
 	    }
+	}
+
+	next unless ($profile);
+
+	$query = "SELECT rrd_attrib, threshold, priority, persistence FROM rrd_config WHERE profile = '$profile' AND enable = 1";
+	$stm = $conn->prepare($query);
+	$stm->execute();
+	while (my $row = $stm->fetchrow_hashref) {
+	    my $att = $row->{rrd_attrib};
+	    my $threshold = $row->{threshold};
+	    my $priority = $row->{priority};
+	    my $persistence = $row->{persistence};
+
+	    my $dir = $ip;
+	    $dir =~ s/\./\//g;
+
+	    my $file = "$rrd_ntop/interfaces/$interface/hosts/$dir/$att.rrd";
+	    next unless (-e $file);
+
+	    rrd_threshold ($ip, $interface, $att, $priority, $file, $threshold);
+	    rrd_anomaly ($ip, $interface, $att, $priority, $file, $persistence);
 	}
     }
 }

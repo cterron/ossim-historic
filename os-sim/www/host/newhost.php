@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -33,16 +38,26 @@
     $asset       = mysql_escape_string($_POST["asset"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
     $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $rrd_profile = mysql_escape_string($_POST["rrd_profile"]);
     $alert       = mysql_escape_string($_POST["alert"]);
     $persistence = mysql_escape_string($_POST["persistence"]);
     $nat         = mysql_escape_string($_POST["nat"]);
     $descr       = mysql_escape_string($_POST["descr"]);
+    $num_sens    = 0;
 
     for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
         $name = "mboxs" . $i;
         if (mysql_escape_string($_POST[$name])) {
+            $num_sens ++;
             $sensors[] = mysql_escape_string($_POST[$name]);
         }
+    }
+    if($num_sens == 0){
+    ?>
+      <p align="center">Please, complete all the fields</p>
+<?php
+exit();
+
     }
 
     require_once 'ossim_db.inc';
@@ -51,10 +66,11 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    Host::insert ($conn, $ip, $hostname, $asset, $threshold_c, 
-                  $threshold_a, $alert, $persistence, $nat, $sensors, $descr);
-    if($_POST["nessus"]){
-    Host_scan::insert ($conn, $ip, 3001, 0);
+    Host::insert ($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
+                  $rrd_profile, $alert, $persistence, $nat, $sensors, $descr);
+
+    if($_POST["nessus"]) {
+        Host_scan::insert ($conn, $ip, 3001, 0);
     }
 
     $db->close($conn);

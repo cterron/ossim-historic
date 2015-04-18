@@ -8,6 +8,7 @@ import Watchdog
 import MonitorList
 import util
 
+
 class Agent:
     
     def __init__(self):
@@ -52,7 +53,8 @@ class Agent:
         try:
             self.conn.connect((self.serverIp, self.listenPort)) 
             self.sequence = 1
-            self.conn.send('connect id="%s" type="sensor"\n' % (self.sequence))
+            msg = 'connect id="%s" type="sensor"\n' % (self.sequence)
+            self.conn.send(msg)
             util.debug (__name__,  "Waiting for server...", '->', 'YELLOW')
             data = self.conn.recv(1024)
         except socket.error, e:
@@ -127,16 +129,61 @@ class Agent:
 
     def parser(self):
 
+        import ParserSnort, \
+            ParserApache, \
+            ParserIIS, \
+            ParserIptables, \
+            ParserFW1, \
+            ParserRealSecure, \
+            ParserRRD, \
+            ParserCA, \
+            ParserCisco, \
+            ParserP0f, \
+            ParserArpwatch, \
+            ParserPrelude, \
+            ParserCiscoPIX, \
+            ParserCiscoIDS, \
+            ParserPads, \
+            ParserNTsyslog, \
+            ParserOsiris, \
+            ParserSyslog
+
+        parsers = {
+            "1001":     ParserSnort.ParserSnort,
+            "1501":     ParserApache.ParserApache,
+            "1502":     ParserIIS.ParserIIS,
+            "1503":     ParserIptables.ParserIptables,
+            "1504":     ParserFW1.ParserFW1,
+            "1506":     ParserRealSecure.ParserRealSecure,
+            "1507":     ParserRRD.ParserRRD,
+            "1508":     ParserRRD.ParserRRD,
+            "1509":     ParserCA.ParserCA,
+            "1510":     ParserCisco.ParserCisco,        # TODO: more db sids
+            "1511":     ParserP0f.ParserP0f,
+            "1512":     ParserArpwatch.ParserArpwatch,
+            "1513":     ParserPrelude.ParserPrelude,
+            "1514":     ParserCiscoPIX.ParserCiscoPIX,  # TODO: more db sids
+            "1515":     ParserCiscoIDS.ParserCiscoIDS,
+            "1516":     ParserPads.ParserPads,
+            "1517":     ParserNTsyslog.ParserNTsyslog,
+            "4001":     ParserOsiris.ParserOsiris,
+            "4002":     ParserSyslog.ParserSyslog,
+        }
+
+        #
+        #  multithreading at this point !!!!
+        #
         for key, plugin in self.plugins.iteritems():
-
-            #
-            #  multithreading at this point !!!!
-            #
-
-#            if plugin["enable"] == 'yes' and plugin["type"] == 'detector':
             if plugin["type"] == 'detector':
-                parser = Parser.Parser(self, plugin)
-                parser.start()
+                try:
+                    parser = parsers[plugin["id"]](self, plugin)
+                    parser.start()
+                except KeyError:
+                    util.debug (__name__, 
+                                "Plugin %s (%s) is not implemented..." % \
+                                (plugin["process"], plugin["id"]),
+                                '!!', 'RED')
+ 
 
     def close(self):
         if self.conn is not None:
@@ -169,7 +216,7 @@ class Agent:
 
     def sendAlert(self, type, date, sensor, interface, 
                   plugin_id, plugin_sid, priority, protocol, 
-                  src_ip, src_port, dst_ip, dst_port, 
+                  src_ip, src_port, dst_ip, dst_port, log = "",
                   snort_cid="", snort_sid="",
                   data="", condition="", value=""):
 
@@ -187,6 +234,8 @@ class Agent:
         if dst_ip:      message +=  'dst_ip="'      + str(dst_ip)       + '" '
         if dst_port:    message +=  'dst_port="'    + str(dst_port)     + '" '
         if data:        message +=  'data="'        + str(data)         + '" '
+        if log:
+            message +=  'log="' + log.rstrip().replace("\"", "\\\"") + '" '
 
         # snort specific
         if snort_cid:   message +=  'snort_cid="'   + str(snort_cid)    + '" '
@@ -200,18 +249,20 @@ class Agent:
             self.sendMessage(message)
 
 
-    def sendOsChange(self, host, os, date, plugin_id, plugin_sid):
+    def sendOsChange(self, host, os, date, plugin_id, plugin_sid, log):
         
         message = 'host-os-new ' +\
             'host="'        + str(host)         + '" ' +\
             'os="'          + str(os)           + '" ' +\
             'date="'        + str(date)         + '" ' +\
             'plugin_id="'   + str(plugin_id)    + '" ' +\
-            'plugin_sid="'  + str(plugin_sid)   + '" '
-            
+            'plugin_sid="'  + str(plugin_sid)   + '" ' +\
+            'log="' + log.rstrip().replace("\"", "\\\"") + '" '
+    
         self.sendMessage(message)
             
-    def sendMacChange(self, host, mac, vendor, date, plugin_id, plugin_sid):
+    def sendMacChange(self, host, mac, vendor, date, 
+                      plugin_id, plugin_sid, log):
         
         message = 'host-mac-new ' +\
             'host="'        + str(host)         + '" ' +\
@@ -219,7 +270,23 @@ class Agent:
             'vendor="'      + str(vendor)       + '" ' +\
             'date="'        + str(date)         + '" ' +\
             'plugin_id="'   + str(plugin_id)    + '" ' +\
-            'plugin_sid="'  + str(plugin_sid)   + '" '
+            'plugin_sid="'  + str(plugin_sid)   + '" ' +\
+            'log="' + log.rstrip().replace("\"", "\\\"") + '" '
             
         self.sendMessage(message)
 
+    def sendService(self, host, port, proto, service, application, date,
+                    plugin_id, plugin_sid, log):
+
+        message = 'host-service-new ' +\
+            'host="'        + str(host)         + '" ' +\
+            'port="'        + str(port)         + '" ' +\
+            'protocol="'    + str(proto)        + '" ' +\
+            'service="'     + str(service)      + '" ' +\
+            'application="' + str(application)  + '" ' +\
+            'date="'        + str(date)         + '" ' +\
+            'plugin_id="'   + str(plugin_id)    + '" ' +\
+            'plugin_sid="'  + str(plugin_sid)   + '" ' +\
+            'log="' + log.rstrip().replace("\"", "\\\"") + '" '
+
+        self.sendMessage(message)

@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuReports", "ReportsSecurityReport");
+?>
+
 <html>
 <head>
   <title> OSSIM </title>

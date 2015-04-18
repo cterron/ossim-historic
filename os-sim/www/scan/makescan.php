@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
+?>
+
+<?php
 
     $DEFAULT_TARGET = "192.168.1.1-254";
 

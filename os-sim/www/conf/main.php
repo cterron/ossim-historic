@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationMain");
+?>
+
 <html>
 <head>
   <title> Riskmeter </title>
@@ -36,6 +41,15 @@
         <a href="reload.php?what=sensors">Reload sensors</a>
       </td>
     </tr>
+    <tr>
+      <td colspan="2">
+        <a href="reload.php?what=directives">Reload directives</a>
+      </td>
+    </tr>
+    <tr><td colspan="2"><hr noshade></td></tr>
+    <tr><th colspan="2"><a href="../setup/ossim_acl.php">Reload ACLS</a></th></tr>
+    <tr><td colspan="2"></td></tr>
+
   </table>
     
   

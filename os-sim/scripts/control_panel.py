@@ -30,7 +30,7 @@ def __update(st, type, rrdtool_bin, rrd_path):
         if rrd_file.rfind(".rrd") != -1:
         
             rrd_file = os.path.join(rrd_path, rrd_file)
-            rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
+            rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
             
             rrd_info_day   = get_rrd_value("N-1D", "N", rrdtool_bin, rrd_file)
             rrd_info_week  = get_rrd_value("N-7D", "N", rrdtool_bin, rrd_file)
@@ -100,72 +100,79 @@ def __get_threshold(st):
 
 def __sec_update(st, rrdtool_bin, rrd_path):
 
-    rrd_file = os.path.join(rrd_path, "level.rrd")
-    rrd_name = os.path.basename(string.rstrip(rrd_file, ".rrd"))
+    for rrd_file in os.listdir(rrd_path):
 
-    threshold = __get_threshold(st)
+        result = re.findall("level_(\w+)\.rrd", rrd_file)
+        if result != []:
+
+            user = result[0]
+
+            rrd_file = os.path.join(rrd_path, rrd_file)
+            rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
+
+            threshold = __get_threshold(st)
 
 
-    # get last value for day level
-    rrd_info = get_rrd_value("N-15m", "N", rrdtool_bin, rrd_file)
-    
-    query = """
-        UPDATE control_panel 
+            # get last value for day level
+            rrd_info = get_rrd_value("N-15m", "N", rrdtool_bin, rrd_file)
+
+            query = """
+        UPDATE control_panel
             SET c_sec_level = %f, a_sec_level = %f
-            WHERE id = 'global' and time_range = 'day'
-    """ % (rrd_info["max_c"], rrd_info["max_a"])
+            WHERE id = 'global_%s' and time_range = 'day'
+        """ % (rrd_info["max_c"], rrd_info["max_a"], user)
 
-    print "updating level (day):  C=%s%%, A=%s%%" % \
-            (rrd_info["max_c"], rrd_info["max_a"])
+            print "updating level (day):  C=%s%%, A=%s%%" % \
+                (rrd_info["max_c"], rrd_info["max_a"])
 
-    st.execute(query)
-    
+            st.execute(query)
 
-    # calculate average for week, month and year levels
-    for range in ["week", "month", "year"]:
-        
-        range2date = {
-            "day"  : "N-1D",
-            "week" : "N-7D",
-            "month": "N-1M",
-            "year" : "N-1Y",
-        }
-        
-        output = os.popen("%s fetch %s AVERAGE -s %s -e N" % \
-            (rrdtool_bin, rrd_file, range2date[range]))
-        
-        pattern = "(\d+):\s+(\S+)\s+(\S+)"
-        C_level = A_level = count = 0
-        for line in output.readlines():
-            result = re.findall(pattern, line)
-            if result != []:
-                (date, compromise, attack) = result[0]
-                if compromise != "nan" and attack != "nan":
-                    C_level += float(compromise)
-                    A_level += float(attack)
-                    count += 1
 
-        output.close
+            # calculate average for week, month and year levels
+            for range in ["week", "month", "year"]:
 
-        if count == 0:
-            query = """
-                UPDATE control_panel 
-                    SET c_sec_level = 0, a_sec_level = 0
-                    WHERE id = 'global' and time_range = '%s'
-            """ % (range)
-            
-        else:
-            query = """
-                UPDATE control_panel 
-                    SET c_sec_level = %f, a_sec_level = %f
-                    WHERE id = 'global' and time_range = '%s'
-            """ % (C_level / count, A_level / count, range)
+                range2date = {
+                    "day"  : "N-1D",
+                    "week" : "N-7D",
+                    "month": "N-1M",
+                    "year" : "N-1Y",
+                }
 
-            print "updating %s (%s):  C=%s%%, A=%s%%" % \
-                (rrd_name, range, C_level / count, A_level / count)
+                output = os.popen("%s fetch %s AVERAGE -s %s -e N" % \
+                    (rrdtool_bin, rrd_file, range2date[range]))
 
-        st.execute(query)
-            
+                pattern = "(\d+):\s+(\S+)\s+(\S+)"
+                C_level = A_level = count = 0
+                for line in output.readlines():
+                    result = re.findall(pattern, line)
+                    if result != []:
+                        (date, compromise, attack) = result[0]
+                        if compromise != "nan" and attack != "nan":
+                            C_level += float(compromise)
+                            A_level += float(attack)
+                            count += 1
+
+                output.close
+
+                if count == 0:
+                    query = """
+                        UPDATE control_panel 
+                            SET c_sec_level = 0, a_sec_level = 0
+                            WHERE id = 'global_%s' and time_range = '%s'
+                    """ % (user, range)
+
+                else:
+                    query = """
+                        UPDATE control_panel 
+                            SET c_sec_level = %f, a_sec_level = %f
+                            WHERE id = 'global_%s' and time_range = '%s'
+                    """ % (C_level / count, A_level / count, user, range)
+
+                    print "updating %s (%s):  C=%s%%, A=%s%%" % \
+                        (rrd_name, range, C_level / count, A_level / count)
+
+                st.execute(query)
+
 
 # return a tuple with the date of C and A max values
 def __get_max_date(start, end, rrdtool_bin, rrd_file):
@@ -362,19 +369,24 @@ def main():
 
     while 1:
 
-        # let's go to party...
-        global_update(st, rrdtool_bin, global_path)
-        level_update(st, rrdtool_bin, level_path)
-        net_update(st, rrdtool_bin, net_path)
-        host_update(st, rrdtool_bin, host_path)
-        
-        # sleep to next iteration
-        print "\ncontrol panel update finished at %s" % \
-            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        print "Next iteration in %d seconds...\n\n" % (int(options.sleep))
-        sys.stdout.flush()
+        try:
 
-        time.sleep(float(options.sleep))
+            # let's go to party...
+            global_update(st, rrdtool_bin, global_path)
+            level_update(st, rrdtool_bin, level_path)
+            net_update(st, rrdtool_bin, net_path)
+            host_update(st, rrdtool_bin, host_path)
+
+            # sleep to next iteration
+            print "\ncontrol panel update finished at %s" % \
+                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+            print "Next iteration in %d seconds...\n\n" % (int(options.sleep))
+            sys.stdout.flush()
+
+            time.sleep(float(options.sleep))
+
+        except Exception, e:
+            print >> sys.stderr, "Unexpected exception:", e
 
     db.close()
 

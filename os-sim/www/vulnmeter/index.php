@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
+?>
+
 <html>
 <head>
   <title> Vulmeter </title>
@@ -69,6 +74,7 @@ if ($net_list) {
         $net = $stat->get_net();
 
         /* calculate proportional bar width */
+        if(!$max_level) $max_level = 1;
         $width = ((($vulnerability = $stat->get_vulnerability()) * 
                    $BAR_LENGTH) / $max_level);
 ?>
@@ -118,6 +124,7 @@ if ($ip_list) {
         $ip_ = ereg_replace("\.","_",$ip);
 
         /* calculate proportional bar width */
+        if(!$max_level) $max_level = 1;
         $width = ((($vulnerability = $stat->get_vulnerability()) * 
                    $BAR_LENGTH) / $max_level);
 ?>

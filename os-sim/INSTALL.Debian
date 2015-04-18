@@ -2,8 +2,8 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                          Updated Jun 17, 2004
-                              version 0.9.5p1
+                          Updated Jul 01, 2004
+                              version 0.9.6
                         
                        David Gil <dgil@ossim.net>
                           http://www.ossim.net
@@ -422,7 +422,7 @@
   it as much as you can.
 
     data_dir=$OSSIM_PATH
-    base_dir=$OSSIM_PATH
+    base_dir=$OSSIM_PATH/www
 
     
   3.1 Database
@@ -715,4 +715,15 @@
 
   Nessus integration.
   Take a look at README.nessus for details.
+
+  Phpgacl
+  README.phpgacl
+
+  New parser => PADS (download, compile, ...)
+
+  New monitor => Tcptrack (patched)
+
+  OSSIM http.conf
+  
+  Oinkmaster  
   

@@ -1,6 +1,6 @@
 diff -Prc oinkmaster-1.0/README.ossim oinkmaster-1.0-ossim/README.ossim
 *** oinkmaster-1.0/README.ossim	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/README.ossim	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/README.ossim	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,85 ----
@@ -91,13 +91,13 @@ diff -Prc oinkmaster-1.0/README.ossim oinkmaster-1.0-ossim/README.ossim
 + 
 diff -Prc oinkmaster-1.0/contrib/create-sidmap-ossim.pl oinkmaster-1.0-ossim/contrib/create-sidmap-ossim.pl
 *** oinkmaster-1.0/contrib/create-sidmap-ossim.pl	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/contrib/create-sidmap-ossim.pl	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/contrib/create-sidmap-ossim.pl	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,338 ----
 + #!/usr/bin/perl -w
 + 
-+ # $Id: oinkmaster-1.0-ossim.diff,v 1.4 2004/06/07 14:05:07 dkarg Exp $ #
++ # $Id: oinkmaster-1.0-ossim.diff,v 1.6 2004/07/28 08:19:33 dkarg Exp $ #
 + 
 + # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 + 
@@ -435,10 +435,10 @@ diff -Prc oinkmaster-1.0/contrib/create-sidmap-ossim.pl oinkmaster-1.0-ossim/con
 + 
 diff -Prc oinkmaster-1.0/contrib/update_rules.pl oinkmaster-1.0-ossim/contrib/update_rules.pl
 *** oinkmaster-1.0/contrib/update_rules.pl	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/contrib/update_rules.pl	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/contrib/update_rules.pl	Mon Jul 26 12:40:21 2004
 ***************
 *** 0 ****
---- 1,27 ----
+--- 1,28 ----
 + #!/usr/bin/perl
 + 
 + use strict;
@@ -464,11 +464,12 @@ diff -Prc oinkmaster-1.0/contrib/update_rules.pl oinkmaster-1.0-ossim/contrib/up
 + $site_rules = $1 . "/rules/";
 + }
 + `$oinkmaster -C $site_conf -C $oink_conf -o $site_rules`;
++ system("cd $site_rules; wget -O bleeding.rules http://www.bleedingsnort.com/bleeding.rules");
 + system("cd $site_base; tar cfz ossim-rules.tar.gz rules/\n");
 + }
 diff -Prc oinkmaster-1.0/httpd-oink.conf oinkmaster-1.0-ossim/httpd-oink.conf
 *** oinkmaster-1.0/httpd-oink.conf	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/httpd-oink.conf	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/httpd-oink.conf	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,26 ----
@@ -500,11 +501,11 @@ diff -Prc oinkmaster-1.0/httpd-oink.conf oinkmaster-1.0-ossim/httpd-oink.conf
 + </Directory>
 diff -Prc oinkmaster-1.0/oinkmaster.conf.master oinkmaster-1.0-ossim/oinkmaster.conf.master
 *** oinkmaster-1.0/oinkmaster.conf.master	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/oinkmaster.conf.master	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/oinkmaster.conf.master	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,329 ----
-+ # $Id: oinkmaster-1.0-ossim.diff,v 1.4 2004/06/07 14:05:07 dkarg Exp $ #
++ # $Id: oinkmaster-1.0-ossim.diff,v 1.6 2004/07/28 08:19:33 dkarg Exp $ #
 + 
 + # This file is pretty big by default, but don't worry. 
 + # The only things required are "path" and "update_files". You must also 
@@ -835,11 +836,11 @@ diff -Prc oinkmaster-1.0/oinkmaster.conf.master oinkmaster-1.0-ossim/oinkmaster.
 + # disablesid 1324    # 20020101: disabled this SID just because I can
 diff -Prc oinkmaster-1.0/oinkmaster.conf.site oinkmaster-1.0-ossim/oinkmaster.conf.site
 *** oinkmaster-1.0/oinkmaster.conf.site	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/oinkmaster.conf.site	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/oinkmaster.conf.site	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,331 ----
-+ # $Id: oinkmaster-1.0-ossim.diff,v 1.4 2004/06/07 14:05:07 dkarg Exp $ #
++ # $Id: oinkmaster-1.0-ossim.diff,v 1.6 2004/07/28 08:19:33 dkarg Exp $ #
 + 
 + # This file is pretty big by default, but don't worry. 
 + # The only things required are "path" and "update_files". You must also 
@@ -1172,7 +1173,7 @@ diff -Prc oinkmaster-1.0/oinkmaster.conf.site oinkmaster-1.0-ossim/oinkmaster.co
 + # disablesid 1324    # 20020101: disabled this SID just because I can
 diff -Prc oinkmaster-1.0/oinkmaster.cron oinkmaster-1.0-ossim/oinkmaster.cron
 *** oinkmaster-1.0/oinkmaster.cron	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/oinkmaster.cron	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/oinkmaster.cron	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,2 ----
@@ -1180,7 +1181,7 @@ diff -Prc oinkmaster-1.0/oinkmaster.cron oinkmaster-1.0-ossim/oinkmaster.cron
 + 0 3 * * * /etc/init.d/snortd restart
 diff -Prc oinkmaster-1.0/oinkmaster.pl oinkmaster-1.0-ossim/oinkmaster.pl
 *** oinkmaster-1.0/oinkmaster.pl	Wed May 12 21:39:35 2004
---- oinkmaster-1.0-ossim/oinkmaster.pl	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/oinkmaster.pl	Mon Jul 26 12:39:56 2004
 ***************
 *** 82,87 ****
 --- 82,89 ----
@@ -1264,7 +1265,7 @@ diff -Prc oinkmaster-1.0/oinkmaster.pl oinkmaster-1.0-ossim/oinkmaster.pl
       my $obfuscated_url = $url;
 diff -Prc oinkmaster-1.0/ossim-oink.conf oinkmaster-1.0-ossim/ossim-oink.conf
 *** oinkmaster-1.0/ossim-oink.conf	Thu Jan  1 01:00:00 1970
---- oinkmaster-1.0-ossim/ossim-oink.conf	Fri Jun  4 14:25:30 2004
+--- oinkmaster-1.0-ossim/ossim-oink.conf	Mon Jul 26 12:39:56 2004
 ***************
 *** 0 ****
 --- 1,4 ----

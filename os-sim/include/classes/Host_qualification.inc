@@ -1,5 +1,8 @@
 <?php
 
+require_once ('classes/Net.inc');
+require_once ('classes/Session.inc');
+
 class Host_qualification {
 
     var $host_ip;
@@ -48,24 +51,24 @@ class Host_qualification {
         if (($type != 'compromise') and ($type != 'attack'))
             return -1;
 
-        $query = "SELECT sum($type) FROM host_qualification;";
-        
+        $allowed_nets = Session::getValue();
+        $global = 0;
+
+        $query = "SELECT $type FROM host_qualification;";
+
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
-            if (!$rs->EOF) {
-
-                if (NULL == ($result = $rs->fields["sum($type)"])) {
-                
-                    /* no hosts -> sum == null */
-                    return 0;
+            while (!$rs->EOF) {
+                if ((Net::isIpInNet($rs->fields["host_ip"], $allowed_nets)) or
+                     (!$allowed_nets))
+                {
+                    $global += $rs->fields["$type"];
                 }
-                return $result;                
-
-            } else {
-                return 0;
+                $rs->MoveNext();
             }
         }
+        return $global;
     }
     
     function get_global_compromise($conn) 
@@ -79,16 +82,25 @@ class Host_qualification {
     }
 
 
-    function get_list($conn, $where = "", $order = "") 
+
+    function get_list($conn, $where = "", $order = "")
     {
+
+        $allowed_nets = Session::getValue();
+
         if (!$rs = &$conn->Execute("SELECT * FROM host_qualification $where
         $order")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new Host_qualification ($rs->fields["host_ip"],
-                                                  $rs->fields["compromise"],
-                                                  $rs->fields["attack"]);
+                if ((Net::isIpInNet($rs->fields["host_ip"], $allowed_nets)) or
+                     (!$allowed_nets))
+                {
+                    $list[] = new Host_qualification (
+                                                $rs->fields["host_ip"],
+                                                $rs->fields["compromise"],
+                                                $rs->fields["attack"]);
+                }
                 $rs->MoveNext();
             }
         }

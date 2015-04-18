@@ -76,11 +76,13 @@ class ParserP0f(Parser.Parser):
                                              time.strptime(datestring, 
                                                            "%Y %b %d %H %M %S"))
 
-                        self.agent.sendOsChange (host = source,
-                             os   = os,
-                             date = date,
-                             plugin_id = self.plugin["id"],
-                             plugin_sid = 1)
+                        self.agent.sendOsChange (
+                             host       = source,
+                             os         = os,
+                             date       = date,
+                             plugin_id  = self.plugin["id"],
+                             plugin_sid = 1,
+                             log        = line)
 
                 except IndexError: 
                     pass

@@ -12,23 +12,30 @@ class Scheduler(threading.Thread):
 
         while 1:
             
-            monitor = None
-            count = 1
-            
-            if len(self.mlist) > 0:
+            try:
 
-                for monitor in self.mlist:
-                    
-                    util.debug(__name__, 
-                               "MonitorList : processing element (%d/%d)..." %\
-                               (count, len(self.mlist)), "**", "PURPLE")
-                    count += 1
-                    
-                    # get monitor from monitor list
-                    # process watch-rule and remove from list
-                    if monitor.process():
-                        self.mlist.removeRule(monitor)
+                monitor = None
+                count = 1
+                
+                if len(self.mlist) > 0:
 
-            # don't overload agent
-            time.sleep(2)
+                    for monitor in self.mlist:
+                        
+                        util.debug(__name__, 
+                            "MonitorList : processing element (%d/%d)..." %\
+                            (count, len(self.mlist)), "**", "PURPLE")
+                        count += 1
+                        
+                        # get monitor from monitor list
+                        # process watch-rule and remove from list
+                        if monitor.process():
+                            self.mlist.removeRule(monitor)
+
+                # don't overload agent
+                time.sleep(2)
+
+            except Exception, e:
+                util.debug (__name__, e, '!!', 'RED')
+                print >> sys.stderr, __name__, ": Unexpected exception:", e
+
 

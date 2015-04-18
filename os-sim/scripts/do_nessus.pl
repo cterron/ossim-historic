@@ -86,11 +86,14 @@ mkdir $today;
 chmod 0755, $today;
 }
 
+# little security check
+#if ($nessus_tmp =~ /vulnmeter/) {`rm -rf $nessus_tmp`};
+
 unless(-e $nessus_tmp && -W $nessus_tmp){
 print "No temp dir, creating\n";
 mkdir $nessus_tmp;
 chmod 0755, $nessus_tmp;
-}
+} 
 
 my $row;
 my $host_ip;
@@ -110,7 +113,7 @@ if($nessus_distributed) {
 	print "No sensors temp dir, creating\n";
 	mkdir $nessus_tmp_sensors;
 	chmod 0755, $nessus_tmp_sensors;
-    }
+    } 
     $scan_networks = "";
     my @sensors;
     my @active_sensors;
@@ -134,6 +137,7 @@ if($nessus_distributed) {
     while($row = $sth->fetchrow_hashref){
 	my $sensor2 = $row->{sensor_ip};
 	my $scan_net = $row->{ips};
+	if($debug){ print ("Adding $scan_net\n")};
 	system("echo $scan_net >> $nessus_tmp_sensors/$sensor2.targets.txt");
 	if($scan_networks ne ""){
 	    $scan_networks = $scan_networks . "," . $scan_net;
@@ -151,6 +155,7 @@ if($nessus_distributed) {
 	    if($debug){ print ("Host defined for nessus scan matching defined network: $host_ip\n")};
 	    print "DUP: $host_ip\n";
 	} else {
+	if($debug){ print ("Adding $host_ip\n")};
 	    system("echo $host_ip >> $nessus_tmp_sensors/$sensor2.targets.txt");
 	}
     }
@@ -193,6 +198,9 @@ if($nessus_distributed) {
 	print "$temp_active_sensor Up and running, starting scan against $num_hosts hosts\n";
 	print "-----------------\n";
 	`rm -f $nessus_tmp/$temp_active_sensor.STATUS`;
+     if($debug){ print ("Going to scan\n")};
+     if($debug){ system("cat $nessus_tmp_sensors/$temp_active_sensor.targets.txt")};
+
 	open (RESULT, "$nessus -x -T nsr -q $temp_active_sensor $nessus_port $nessus_user $nessus_pass $nessus_tmp_sensors/$temp_active_sensor.targets.txt $nessus_tmp/$temp_active_sensor.temp_res.nsr|");
 	close(RESULT);
 	`touch $nessus_tmp/$temp_active_sensor.STATUS`;
@@ -237,6 +245,8 @@ if($nessus_distributed) {
 	} else {
 	    $scan_networks = $scan_net;
 	}
+    if($debug){ print ("Adding $scan_net\n")};
+    $query = "select name,ips from net, net_scan where net.name = net_scan.net_name and net_scan.plugin_id = 3001;";
 	print FILE "$scan_net\n";
     }
     if($debug){ print ("Obtaining hosts\n")};
@@ -248,6 +258,7 @@ if($nessus_distributed) {
 	if(isIpInNet($host_ip, $scan_networks)){
 	    print "DUP: $host_ip. Please check your config.\n";
 	} else {
+    if($debug){ print ("Adding $host_ip\n")};
 	    print FILE "$host_ip\n";
 	}
     }
@@ -256,6 +267,8 @@ if($nessus_distributed) {
     close(FILE);
     
     if($debug){ print ("Starting non-distributed scan\n")};
+    if($debug){ print ("Going to scan:\n")};
+    if($debug){ system("cat $temp_target")};
     open (RESULT, "$nessus -x -T nsr -q $nessus_host $nessus_port $nessus_user $nessus_pass $temp_target $nessus_tmp/temp_res.nsr|");
     close(RESULT);
 } # End distributed

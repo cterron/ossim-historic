@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.6
+Version:   0.9.7rc1
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -14,7 +14,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: glib2-devel > 2.0 libgda-devel >= 1.0 gnet2-devel >= 2.0
 
 %description
-OSSIM pretends to unify network monitoring, security, correlation and 
+OSSIM aims to unify network monitoring, security, correlation and 
 qualification in one single tool. Using Snort, Acid, Mrtg, NTOP, 
 OpenNMS, nmap, nessus and rrdtool we want the user to have full control 
 over every network or security aspect.
@@ -98,6 +98,9 @@ fi
 %doc NEWS README* TODO
 %config %{_sysconfdir}/ossim/server/config.xml
 %config %{_sysconfdir}/ossim/server/directives.xml
+%config %{_sysconfdir}/ossim/server/generic.xml
+%config %{_sysconfdir}/ossim/server/trojans.xml
+%config %{_sysconfdir}/ossim/server/directives.dtd
 %{_bindir}/ossim-server
 %{_datadir}/ossim/db/
 /var/log/ossim
@@ -117,7 +120,6 @@ fi
 
 %files framework
 %defattr(-,root,root,0755)
-%config %{_sysconfdir}/ossim/framework/mrtg.cfg
 %config %{_sysconfdir}/ossim/framework/mrtg-rrd.cfg
 %config %{_sysconfdir}/httpd/conf.d/ossim.conf
 %{_datadir}/ossim/fonts/
@@ -127,14 +129,17 @@ fi
 %{_datadir}/ossim/scripts/control_panel.py
 %{_datadir}/ossim/scripts/draw_graph.pl
 %{_datadir}/ossim/scripts/draw_graph_combined.pl
+%{_datadir}/ossim/scripts/draw_graph_fournier.pl
 %{_datadir}/ossim/scripts/get_date.pl
 %{_datadir}/ossim/scripts/get_rrd_value.pl
 %{_datadir}/ossim/scripts/create_sidmap.pl
+%{_datadir}/ossim/scripts/restoredb.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph.pl
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph_combined.pl
 /var/www/ossim/
 
 %files scripts
+%{_datadir}/ossim/scripts/chkconfig.pl
 %{_datadir}/ossim/scripts/rrd_plugin.pl
 %{_datadir}/ossim/scripts/do_nessus.pl
 %{_datadir}/ossim/scripts/netbios.pl
@@ -146,6 +151,9 @@ fi
 /var/lib/ossim/backup
 
 %changelog
+* Fri Sep 24 2004 Dominique Karg <dk@ossim.net> 0.9.7-1
+- New Release
+
 * Fri May 05 2004 Fabio Ospitia Trujillo <fot@ossim.net> 0.9.4-1
 - New packages: perl and scripts.
 - New Release

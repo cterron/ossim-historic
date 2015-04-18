@@ -1,7 +1,7 @@
 ossim-historic
 ==============
 
-* 0.9.6  version
+* 0.9.7rc1  version
 
-* Clone from http://sourceforge.net/projects/os-sim/files/deprecated__check_readme/os-sim-0.9.6
+* Clone from http://sourceforge.net/projects/os-sim/files/deprecated__check_readme/os-sim-0.9.7rc1
 

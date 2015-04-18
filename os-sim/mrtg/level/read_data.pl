@@ -6,6 +6,14 @@ use DBI;
 use ossim_conf;
 
 
+my $user = "";
+if (!$ARGV[0]) {
+    print("Usage: ./read-data.pl <user>\n");
+    exit 1;
+} else {
+    $user = $ARGV[0];
+}
+
 #
 # database connect
 #
@@ -40,7 +48,7 @@ if ($sth->rows > 0) {
 }
 
 my $C_level = my $A_level = my $count = 0;
-open(INPUT, "$rrdtool fetch $rrdpath/global.rrd AVERAGE -s N-1D -e N|");
+open(INPUT, "$rrdtool fetch $rrdpath/global_$user.rrd AVERAGE -s N-1D -e N|");
 while (<INPUT>)
 {
      if(/(\d+):\s+(\S+)\s+(\S+)/)

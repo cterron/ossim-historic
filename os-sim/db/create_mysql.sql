@@ -7,7 +7,7 @@ CREATE TABLE conf (
     graph_threshold int NOT NULL,
     bar_length_left int NOT NULL,
     bar_length_right int NOT NULL,
-    PRIMARY KEY (recovery, threshold, graph_threshold, 
+    PRIMARY KEY (recovery, threshold, graph_threshold,
                  bar_length_left, bar_length_right)
 );
 
@@ -23,6 +23,7 @@ CREATE TABLE host (
   alert             int NOT NULL,
   persistence       int NOT NULL,
   nat               varchar(15),
+  rrd_profile       varchar(64),
   descr             varchar(255),
   PRIMARY KEY       (ip)
 );
@@ -43,6 +44,7 @@ CREATE TABLE net (
   threshold_a       int NOT NULL,
   alert             int NOT NULL,
   persistence       int NOT NULL,
+  rrd_profile       varchar(64),
   descr             varchar(255),
   PRIMARY KEY       (name)
 );
@@ -273,10 +275,15 @@ CREATE TABLE host_os (
 
 DROP TABLE IF EXISTS host_services;
 CREATE TABLE host_services (
-    ip      varchar(15) NOT NULL,
-    service varchar(128) NOT NULL,
-    version varchar(255) NOT NULL,
-    PRIMARY KEY (ip, service, version)
+	ip		INTEGER UNSIGNED NOT NULL,
+    port    int NOT NULL,
+    protocol int NOT NULL,
+    service varchar(128),
+    service_type varchar(128),
+    version varchar(255) NOT NULL DEFAULT "unknown",
+	date		DATETIME NOT NULL,
+    origin  int NOT NULL DEFAULT 0,
+    PRIMARY KEY (ip, port, protocol, version, date)
 );
 
 DROP TABLE IF EXISTS host_netbios;
@@ -289,15 +296,16 @@ CREATE TABLE host_netbios (
 
 DROP TABLE IF EXISTS rrd_config;
 CREATE TABLE rrd_config (
-    ip          INTEGER UNSIGNED NOT NULL,
+    profile     VARCHAR(64) NOT NULL,
     rrd_attrib  VARCHAR(60) NOT NULL,
     threshold   INTEGER UNSIGNED NOT NULL,
     priority    INTEGER UNSIGNED NOT NULL,
     alpha       FLOAT UNSIGNED  NOT NULL,
     beta        FLOAT UNSIGNED NOT NULL,
     persistence INTEGER UNSIGNED NOT NULL,
-    descripcion TEXT,
-    PRIMARY KEY (ip, rrd_attrib)
+    enable      TINYINT DEFAULT 1,
+    description TEXT,
+    PRIMARY KEY (profile, rrd_attrib)
 );
 
 
@@ -500,3 +508,105 @@ CREATE TABLE net_scan (
 
 
 
+---
+--- Table: Users
+---
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+    login   varchar(64)  NOT NULL,
+    name    varchar(128) NOT NULL,
+    pass    varchar(41)  NOT NULL,
+    allowed_nets    varchar(255) DEFAULT '' NOT NULL,
+    PRIMARY KEY (login)
+);
+
+--
+-- Data: User
+--
+INSERT INTO users (login, name, pass) VALUES ('admin', 'OSSIM admin', '21232f297a57a5a743894a0e4a801fc3');
+
+
+--
+-- Table: incident
+--
+DROP TABLE IF EXISTS incident;
+CREATE TABLE incident (
+    id          INTEGER NOT NULL AUTO_INCREMENT,
+    title       VARCHAR(128) NOT NULL,
+    date        TIMESTAMP NOT NULL,
+    ref         ENUM ('Alarm', 'Metric') NOT NULL DEFAULT 'Alarm',
+    priority    INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+--
+-- Table: incident ticket
+--
+DROP TABLE IF EXISTS incident_ticket;
+CREATE TABLE incident_ticket (
+    id              INTEGER NOT NULL AUTO_INCREMENT,
+    incident_id     INTEGER NOT NULL,
+    date            TIMESTAMP NOT NULL,
+    status          ENUM ('Open', 'Closed') NOT NULL DEFAULT 'Open',
+    priority        INTEGER NOT NULL,
+    users            VARCHAR(64) NOT NULL,
+    description     TEXT,
+    action          TEXT,
+    in_charge       VARCHAR(64),
+    transferred     VARCHAR(64),
+    copy            VARCHAR(64),
+    PRIMARY KEY (id, incident_id)
+);
+
+--
+-- Table: incident alarm
+--
+DROP TABLE IF EXISTS incident_alarm;
+CREATE TABLE incident_alarm (
+    id              INTEGER NOT NULL AUTO_INCREMENT,
+    incident_id     INTEGER NOT NULL,
+    src_ips         VARCHAR(255) NOT NULL,
+    src_ports       VARCHAR(255) NOT NULL,
+    dst_ips         VARCHAR(255) NOT NULL,
+    dst_ports       VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id, incident_id)
+);
+
+--
+-- Table: incident metric
+--
+DROP TABLE IF EXISTS incident_metric;
+CREATE TABLE incident_metric (
+    id              INTEGER NOT NULL AUTO_INCREMENT,
+    incident_id     INTEGER NOT NULL,
+    target          VARCHAR(255) NOT NULL,
+    metric_type     ENUM ('Compromise', 'Attack') NOT NULL DEFAULT 'Compromise',
+    metric_value    INTEGER NOT NULL,
+    PRIMARY KEY (id, incident_id)
+);
+
+DROP TABLE IF EXISTS incident_file;
+CREATE TABLE incident_file (
+    id              INTEGER NOT NULL AUTO_INCREMENT,
+    incident_id     INTEGER NOT NULL,
+    incident_ticket INTEGER NOT NULL,
+    name            VARCHAR(50),
+    type            VARCHAR(50),
+    content         mediumblob, /* 16Mb */
+    PRIMARY KEY (id, incident_id, incident_ticket)
+);
+
+--
+-- Table: restoredb
+--
+DROP TABLE IF EXISTS restoredb_log;
+CREATE TABLE restoredb_log (
+	id		INTEGER NOT NULL AUTO_INCREMENT,
+	date		TIMESTAMP,
+	pid		INTEGER,
+	users		VARCHAR(64),
+	data		TEXT,
+	status		SMALLINT,
+	percent		SMALLINT,
+	PRIMARY KEY (id)
+);

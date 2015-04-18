@@ -23,7 +23,7 @@ class Policy {
         $this->priority    = $priority;
         $this->begin_hour  = $begin_hour;
         $this->end_hour    = $end_hour;
-        $this->descr       = $descr;
+        $this->descr       = htmlentities($descr);
     }
 
     function get_id()              { return $this->id; }
@@ -81,6 +81,7 @@ class Policy {
                     $net_source_list, $net_dest_list, 
                     $port_list, $sig_list, $sensor_list)
     {
+    $descr = htmlentities($descr);
         $priority = intval($priority);
 
         $query = "INSERT INTO policy VALUES 
@@ -116,6 +117,7 @@ class Policy {
                     $net_source_list, $net_dest_list,
                     $port_list, $sig_list, $sensor_list)
     {
+        $descr = htmlentities($descr);
         $id = intval($id);
 
         Policy::delete($conn, $id);

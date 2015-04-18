@@ -7,6 +7,8 @@ ossim_agent_DATA    = util.py \
 	Monitor.py \
 	ParserArpwatch.py \
 	ParserCisco.py \
+	ParserCiscoPIX.py \
+	ParserCiscoIDS.py \
 	ParserSnort.py \
 	ParserApache.py \
 	ParserFW1.py \
@@ -15,12 +17,18 @@ ossim_agent_DATA    = util.py \
 	ParserRealSecure.py \
 	ParserRRD.py \
 	ParserCA.py \
+	ParserOsiris.py \
+	ParserPrelude.py \
+	ParserPads.py \
 	ParserP0f.py \
+	ParserSyslog.py \
+	ParserNTsyslog.py \
 	MonitorCA.py \
 	MonitorNtop.py \
 	MonitorNtopHostinfo.py \
 	MonitorNtopSession.py \
 	MonitorOpennms.py \
+	MonitorTcptrack.py \
 	MonitorList.py \
 	Server.py \
 	Scheduler.py \

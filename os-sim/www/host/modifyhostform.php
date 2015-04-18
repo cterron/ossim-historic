@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -6,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
+
   <h1>Modify host</h1>
 
 <?php
@@ -14,7 +19,8 @@
     require_once 'classes/Host_scan.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
-    
+    require_once 'classes/RRD_config.inc';
+
     $db = new ossim_db();
     $conn = $db->connect();
 
@@ -22,7 +28,7 @@
         echo "<p>Wrong ip</p>";
         exit;
     }
-    
+
     if ($host_list = Host::get_list($conn, "WHERE ip = '$ip'")) {
         $host = $host_list[0];
     }
@@ -40,7 +46,7 @@
   </tr>
   <tr>
     <th>IP</th>
-        <input type="hidden" name="ip" 
+        <input type="hidden" name="ip"
                value="<?php echo $host->get_ip(); ?>">
     <td class="left">
       <b><?php echo $host->get_ip(); ?></b>
@@ -83,6 +89,33 @@
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $host->get_threshold_a(); ?>"></td>
   </tr>
+  <tr>
+    <th>RRD Profile<br/>
+        <font size="-2">
+          <a href="../rrd_conf/new_rrd_conf_form.php">Insert new profile?</a>
+        </font>
+    </th>
+    <td class="left">
+      <select name="rrd_profile">
+<?php
+    foreach (RRD_Config::get_profile_list($conn) as $profile)
+    {
+        $host_profile = $host->get_rrd_profile();
+        if (strcmp($profile, "global")) 
+        {
+            $option = "<option value=\"$profile\"";
+            if (0 == strcmp($host_profile, $profile))
+                $option .= " SELECTED ";
+            $option .= ">$profile</option>\n";
+            echo $option;
+        }
+    }
+?>
+        <option value="" 
+            <?php if (!$host_profile) echo " SELECTED " ?>>None</option>
+      </select>
+    </td>
+  </tr>
 <!--
   <tr>
     <th>Alert</th>
@@ -114,11 +147,11 @@
     <th>Sensors<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">Insert new sensor?</a>
-        </font><br/>
+        </font>
     </th> 
     <td class="left">
 <?php
-                                                                                
+
     /* ===== sensors ==== */
     $i = 1;
     if ($sensor_list = Sensor::get_list($conn)) {
@@ -155,20 +188,20 @@
     <tr>
     <th> Scan options </th>
     <td class="left">
-        <input type="checkbox" 
+        <input type="checkbox"
         <?php
         if(Host_scan::in_host_scan($conn, $host->get_ip(), 3001)){
             echo " CHECKED ";
         }
         ?>
         name="nessus" value="1"> Enable nessus scan </input>
-    </td> 
+    </td>
     </tr>
 <tr>
   <tr>
     <th>Description</th>
     <td class="left">
-      <textarea name="descr" 
+      <textarea name="descr"
         rows="2" cols="20"><?php echo $host->get_descr(); ?></textarea>
     </td>
   </tr>

@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyNetworks");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -15,6 +20,8 @@
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Net_sensor_reference.inc';
+    require_once 'classes/RRD_config.inc';
+
     $db = new ossim_db();
     $conn = $db->connect();
 
@@ -83,6 +90,33 @@
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $net->get_threshold_a(); ?>"></td>
   </tr>
+  <tr>
+    <th>RRD Profile<br/>
+        <font size="-2">
+          <a href="../rrd_conf/new_rrd_conf_form.php">Insert new profile?</a>
+        </font>
+    </th>
+    <td class="left">
+      <select name="rrd_profile">
+<?php
+    foreach (RRD_Config::get_profile_list($conn) as $profile)
+    {
+        $net_profile = $net->get_rrd_profile();
+        if (strcmp($profile, "global")) 
+        {
+            $option = "<option value=\"$profile\"";
+            if (0 == strcmp($net_profile, $profile))
+                $option .= " SELECTED ";
+            $option .= ">$profile</option>\n";
+            echo $option;
+        }
+    }
+?>
+        <option value="" 
+            <?php if (!$net_profile) echo " SELECTED " ?>>None</option>
+      </select>
+    </td>
+  </tr>
 <!--
     <tr>
     <th>Alert</th>
@@ -108,7 +142,7 @@
     <th>Sensors<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">Insert new sensor?</a>
-        </font><br/>
+        </font>
     </th> 
     <td class="left">
 <?php

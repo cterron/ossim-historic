@@ -20,7 +20,8 @@ class Plugin(threading.Thread):
         result = re.findall(pattern, self.data)
         try:
             (command, plugin_id) = result[0]
-            if command == 'plugin-start':
+            if command == 'plugin-start' and \
+                self.plugins[plugin_id]["process"] is not None:
                 
                 # start daemon
                 cmd = self.plugins[plugin_id]["startup"]
@@ -44,7 +45,8 @@ class Plugin(threading.Thread):
                         (self.plugins[plugin_id]["process"]), '!!', 'RED')
 
                 
-            elif command == 'plugin-stop':
+            elif command == 'plugin-stop' and \
+                self.plugins[plugin_id]["process"] is not None:
                 
                 # stop daemon
                 cmd = self.plugins[plugin_id]["shutdown"]

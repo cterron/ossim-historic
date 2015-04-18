@@ -7,11 +7,27 @@ import util
 
 class ParserCisco(Parser.Parser):
 
+    #
+    # example: 
+    # %LINK-5-CHANGED: Interface Serial3/3, ...
+    #       ^
+    # severity-level:
+    # {0 | emergencies} System is unusable
+    # {1 | alerts}Immediate action needed
+    # {2 | critical}Critical conditions
+    # {3 | errors}Error conditions
+    # {4 | warnings}Warning conditions
+    # {5 | notifications}Normal but significant conditions
+    # {6 | informational}Informational messages
+    # {7 | debugging} Debugging messages 
+    #
+
     Cisco_sids = {
         'RCMD-4-RSHPORTATTEMPT': '1',   # Attempted to connect to RSHELL
-        'CLEAR-5-COUNTERS': '2',        # Clear counter on all interfaces
-        'LINEPROTO-5-UPDOWN': '3',      # Line protocol changed state
+        'CLEAR-5-COUNTERS':      '2',   # Clear counter on all interfaces
+        'LINEPROTO-5-UPDOWN':    '3',   # Line protocol changed state
     }
+    
 
     def process(self):
 
@@ -28,8 +44,8 @@ class ParserCisco(Parser.Parser):
         
         util.debug ('ParserCisco', 'plugin started (syslog)...', '--')
         
-        pattern = '\S+\s+\S+\s+\S+ (\S+) \S+: (\S+)\s+(\S+)\s+(\d+):(\d+):(\d+):\s*%([^:]*).*?(\d+\.\d+\.\d+\.\d+)?'
-            
+        pattern = re.compile('(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+(\S+)\s+\S+:[^%]*%(\w+-(\d)-\w+)')
+
         location = self.plugin["location"]
         try:
             fd = open(location, 'r')
@@ -59,36 +75,46 @@ class ParserCisco(Parser.Parser):
                 time.sleep(1)
                 fd.seek(where)
             else:
-                result = re.findall(str(pattern), line)
-                try: 
-                    (sensor, monthmmm, day, hour, minute, second, \
-                     sid, src) = result[0]
-                    
+                result = pattern.search(line)
+                if result is not None:
+
+                    (month, day, datetime, sensor, sid, severity) = \
+                        result.groups()
+        
+                    # date
                     year = time.strftime('%Y', time.localtime(time.time()))
-                    datestring = "%s %s %s %s %s %s" % \
-                        (year, monthmmm, day, hour, minute, second)
-                    
-                    date = time.strftime('%Y-%m-%d %H:%M:%S', 
+                    datestring = "%s %s %s %s" % (year, month, day, datetime)
+                    date = time.strftime('%Y-%m-%d %H:%M:%S',
                                          time.strptime(datestring, 
-                                                       "%Y %b %d %H %M %S"))
+                                                       "%Y %b %d %H:%M:%S"))
+                    # priority
+                    priority = 1
+                    if severity in ("0", "1", "2"):
+                        priority = 3
+                    elif severity in ("3", "4"):
+                        priority = 2
 
-                    self.agent.sendAlert  (type = 'detector',
-                                     date       = date,
-                                     sensor     = self.plugin["sensor"],
-                                     interface  = self.plugin["interface"],
-                                     plugin_id  = self.plugin["id"],
-                                     plugin_sid = ParserCisco.Cisco_sids[sid],
-                                     priority   = 1,
-                                     protocol   = '',
-                                     src_ip     = src,
-                                     src_port   = '',
-                                     dst_ip     = sensor,
-                                     dst_port   = '')
+                    # src_ip and dst_ip
 
-                except IndexError: 
-                    pass
-                except KeyError:
-                    util.debug (__name__, 'Unknown plugin sid (%s)' %
-                                sid, '**', 'RED')
+                    try:
+                        self.agent.sendAlert (
+                            type       = 'detector',
+                            date       = date,
+                            sensor     = self.plugin["sensor"],
+                            interface  = self.plugin["interface"],
+                            plugin_id  = self.plugin["id"],
+                            plugin_sid = ParserCisco.Cisco_sids[sid],
+                            priority   = priority,
+                            protocol   = '',
+                            src_ip     = '',
+                            src_port   = '',
+                            dst_ip     = '',
+                            dst_port   = '',
+                            log        = line)
+                    except KeyError:
+                        util.debug (__name__, 'Unknown plugin sid (%s)' %
+                                    sid, '**', 'YELLOW')
+
+
         fd.close()
 

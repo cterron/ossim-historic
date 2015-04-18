@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuTools", "ToolsBacklog");
+?>
+
 <html>
 <head>
   <title> Control Panel </title>

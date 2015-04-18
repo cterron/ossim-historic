@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -34,6 +39,7 @@
     $asset    = mysql_escape_string($_POST["asset"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
     $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $rrd_profile = mysql_escape_string($_POST["rrd_profile"]);
     $alert       = mysql_escape_string($_POST["alert"]);
     $persistence = mysql_escape_string($_POST["persistence"]);
     $nat         = mysql_escape_string($_POST["nat"]);
@@ -52,11 +58,12 @@
     $db = new ossim_db();
     $conn = $db->connect();
     
-    Host::update ($conn, $ip, $hostname, $asset, $threshold_c, 
-                  $threshold_a, $alert, $persistence, $nat, $sensors, $descr);
+    Host::update ($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
+                  $rrd_profile, $alert, $persistence, $nat, $sensors, $descr);
+                  
     Host_scan::delete ($conn, $ip, 3001);
-    if($_POST["nessus"]){
-    Host_scan::insert ($conn, $ip, 3001);
+    if($_POST["nessus"]) {
+        Host_scan::insert ($conn, $ip, 3001);
     }
 
     $db->close($conn);

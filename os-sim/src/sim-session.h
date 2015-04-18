@@ -79,6 +79,7 @@ SimSession*       sim_session_new                             (GObject       *se
 							       SimConfig     *config,
 							       GTcpSocket    *socket);
 
+GInetAddr*        sim_session_get_ia                          (SimSession *session);
 void              sim_session_read                            (SimSession  *session);
 gint              sim_session_write                           (SimSession  *session,
 							       SimCommand  *command);

@@ -175,7 +175,8 @@ class ParserRRD(Parser.Parser):
                                      src_ip     = ip,
                                      src_port   = '',
                                      dst_ip     = '',
-                                     dst_port   = '')
+                                     dst_port   = '',
+                                     log        = line)
 
                 except IndexError: 
                     pass

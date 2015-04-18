@@ -42,7 +42,7 @@ $err = open(DIREC, "<$directive_file") || die("Can't open $directive_file: $err\
             }
         }
     }
-    return $max+1;
+    return $max;
 }
 
 

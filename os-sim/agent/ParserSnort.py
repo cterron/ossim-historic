@@ -85,7 +85,8 @@ class ParserSnort(Parser.Parser):
                                     src_ip      = src_ip,
                                     src_port    = src_port,
                                     dst_ip      = dst_ip,
-                                    dst_port    = dst_port)
+                                    dst_port    = dst_port,
+                                    log         = line)
  
                 except IndexError: 
                     pass
@@ -96,10 +97,10 @@ class ParserSnort(Parser.Parser):
         
         util.debug (__name__, 'plugin started (fast)...', '--')
  
-        patternl1 = '^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?'
-        patternl2 = '\[(\d+):(\d+):\d+\]'
-        patternl3 = '\[Priority:\s+(\d+)\]'
-        patternl4 = '\[(\d+):(\d+)\]$'
+        patternl1 = re.compile('^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?')
+        patternl2 = re.compile('\[(\d+):(\d+):\d+\]')
+        patternl3 = re.compile('\[Priority:\s+(\d+)\]')
+        patternl4 = re.compile('\[(\d+):(\d+)\]$')
             
         location = self.plugin["location"]
         try:
@@ -131,26 +132,30 @@ class ParserSnort(Parser.Parser):
                 time.sleep(1)
                 fd.seek(where)
             else:
-
-                result1 = re.findall(str(patternl1), line)
-                result2 = re.findall(str(patternl2), line)
-                result3 = re.findall(str(patternl3), line)
-                result4 = re.findall(str(patternl4), line)
                 
-                if result3 != []:
-                    priority = result3[0]
+                result1 = patternl1.search(line)
+                result2 = patternl2.search(line)
+                result3 = patternl3.search(line)
+                result4 = patternl4.search(line)
+
+                if result2 is not None:
+                    (plugin, tplugin) = result2.groups() 
+
+                if result3 is not None:
+                    priority = result3.groups()[0]
                 else:
                     priority = 3
 
-                if result4 != []:
-                    (sid, cid) = result4[0]
+                if result4 is not None:
+                    (sid, cid) = result4.groups()
                 else:
                     sid = cid = ""
                 
-                try:
+                if result1 is not None:
+
                     (month, day, date, protocol, 
-                     src_ip, src_port, dst_ip, dst_port) = result1[0]
-                    (plugin, tplugin) = result2[0]
+                     src_ip, src_port, dst_ip, dst_port) = result1.groups()
+
                     year = time.strftime('%Y', time.localtime(time.time()))
                     date = year + '-' + month + '-' + day + ' ' + date
                     self.agent.sendAlert  (type = 'detector',
@@ -166,10 +171,8 @@ class ParserSnort(Parser.Parser):
                                      dst_ip     = dst_ip,
                                      dst_port   = dst_port,
                                      snort_cid  = cid,
-                                     snort_sid  = sid)
-     
-                except IndexError: 
-                    pass
+                                     snort_sid  = sid,
+                                     log        = line)
 
         fd.close()
 

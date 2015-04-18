@@ -87,14 +87,15 @@ class Server(threading.Thread):
     def run(self):
         
         while 1:
-            data = self.recv_line(self.agent.conn)
-            if not data: break;
             
-#            TODO: CHECK FOR ERROR MESSAGES
 
             try:
+            
+                data = self.recv_line(self.agent.conn)
+#               TODO: CHECK FOR ERROR MESSAGES
 
-                if data.__contains__('watch-rule'):
+                if data.__contains__('watch-rule') and \
+                   len(self.mlist) < self.mlist.MAX_SIZE:
         
                     util.debug(__name__, 
                                "Watch-rule received: [%s]  (bufsize=%d)" % \
@@ -133,6 +134,15 @@ class Server(threading.Thread):
                                            data  = rule_info,
                                            itime = int(time.time())))
 
+                    # tcptrack monitor
+                    if data.__contains__('plugin_id="2006"') and \
+                      self.plugins['2006']["enable"] in ['yes', 'true']:
+
+                        from MonitorTcptrack import MonitorTcptrack
+                        self.mlist.appendRule( \
+                            MonitorTcptrack(agent = self.agent,
+                                            data  = rule_info,
+                                            itime = int(time.time())))
 
                 elif data.__contains__('plugin-start') or \
                    data.__contains__('plugin-stop') or \

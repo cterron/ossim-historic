@@ -201,7 +201,7 @@ sim_database_new (SimConfigDS  *config)
     {
       error = (GdaError *) g_list_nth_data (errors, i);
       
-      g_message ("ERROR %d: %s", gda_error_get_number (error), gda_error_get_description (error));
+      g_message ("ERROR %lu: %s", gda_error_get_number (error), gda_error_get_description (error));
     }
   gda_error_list_free (errors);
 
@@ -250,7 +250,7 @@ sim_database_execute_no_query  (SimDatabase  *database,
 	{
 	  error = (GdaError *) g_list_nth_data (errors, i);
 
-	  g_message ("ERROR %s %d: %s", buffer, gda_error_get_number (error), gda_error_get_description (error));
+	  g_message ("ERROR %s %lu: %s", buffer, gda_error_get_number (error), gda_error_get_description (error));
 	}
       gda_error_list_free (errors);
     }

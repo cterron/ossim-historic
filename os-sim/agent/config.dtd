@@ -1,14 +1,23 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 
-<!ELEMENT config(serverip, serverport, plugins)>
+<!ELEMENT config(serverip, serverport, watchdog, logdir, plugins)>
 <!ELEMENT serverip (#PCDATA)>
 <!ELEMENT serverport (#PCDATA)>
+<!ELEMENT logdir (#PCDATA)>
+<!ATTLIST watchdog
+    enable (yes | no) #REQUIRED
+    interval #REQUIRED>
 <!ELEMENT plugins (plugin+)>
-<!ELEMENT plugin (path, type, location)>
+<!ELEMENT plugin (startup?, shutdown?, interface, sensor, location)>
 <!ATTLIST plugin 
-    name #IMPLIED 
+    id ID #REQUIRED
+    process CDATA #IMPLIED
+    type (detector | monitor) #REQUIRED
+    start (yes | no) #REQUIRED
     enable (yes | no) #REQUIRED>
-<!ELEMENT path (#PCDATA)>
-<!ELEMENT type (#PCDATA)>
+<!ELEMENT startup (#PCDATA)>
+<!ELEMENT shutdown (#PCDATA)>
+<!ELEMENT interface (#PCDATA)>
+<!ELEMENT sensor (#PCDATA)>
 <!ELEMENT location (#PCDATA)>
 

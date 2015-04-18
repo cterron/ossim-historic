@@ -82,7 +82,7 @@ print "$key:$plugin_rel_hash{$key}:$plugin_prio_hash{$key}\n";
 #$plugin_rel_hash{$key} =~ s/'/''/; 
 $plugin_rel_hash{$key} =~ s/'/\\'/gs;
 $plugin_rel_hash{$key} =~ s/"/\\"/gs;
-$query .= "(3001, $key, NULL, NULL, $plugin_prio_hash{$key}, 5, 'nessus: $plugin_rel_hash{$key}'),";
+$query .= "(3001, $key, NULL, NULL, $plugin_prio_hash{$key}, 7, 'nessus: $plugin_rel_hash{$key}'),";
 }
 
 chop($query);

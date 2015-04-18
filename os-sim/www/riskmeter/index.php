@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
+?>
+
 <html>
 <head>
   <title> Riskmeter </title>
@@ -309,7 +314,6 @@ if ($_GET["net"]) {
 
     
 } else {
-
     $ip_stats = Host_qualification::get_list
         ($conn, "", "ORDER BY compromise + attack DESC");
 }

@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -9,11 +14,11 @@
 
   <h1>Delete host</h1>
 
-<?php 
-    if (!$_GET["ip"]) { 
+<?php
+    if (!$_GET["ip"]) {
 ?>
     <p>Wrong ip</p>
-<?php 
+<?php
         exit;
     }
 
@@ -23,7 +28,7 @@ $ip = $_GET["ip"];
 if (!$_GET["confirm"]) {
 ?>
     <p>Are you sure?</p>
-    <p><a 
+    <p><a
       href="<?php echo $_SERVER["PHP_SELF"]."?ip=$ip&confirm=yes"; ?>">Yes</a>
       &nbsp;&nbsp;&nbsp;<a href="host.php">No</a>
     </p>

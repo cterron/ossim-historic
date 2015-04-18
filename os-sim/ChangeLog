@@ -1,5 +1,74 @@
 # ChangeLog for OSSIM
 
+	24 Sep 2004 DK <dk@ossim.net> :
+    * 0.9.7rc1 released.
+    * Ppl, write your own changelog.
+
+* OSSIM-0.9.7rc1 (24 Sep 2004)
+
+	23 Sep 2004 DK <dk@ossim.net> :
+    * Bugfixes.
+    * chkconfig.pl: Check configuration options / installed system.
+    * Pads.
+
+	23 Sep 2004 David Gil <dgil@ossim.net> :
+    * Debian docs.
+    * Become a CS engineer.
+    * Bugfixes.
+
+	23 Sep 2004 Stephane Fournier <gingurz@ossim.net> :
+    * Directives viewer / editor.
+    * Debian docs.
+    * Bugfixes.
+    * Update doc/
+
+	22 Sep 2004 FOT <fot@ossim.net> :
+    * Many server bugfixes.
+
+	14 Sep 2004 David Gil <dgil@ossim.net> :
+	* agent/ossim-agent: --force option (Force startup overriding pidfile)
+	* agent/ParserSyslog.py: Plugin for authentication failures
+	* agent/ParserCiscoPIX.py: Cisco PIX firewall plugin
+	* agent/ParserCiscoIDS.py: Cisco Secure IDS plugin
+	* agent/ParserNTsyslog.py: NTsyslog plugin
+	* agent/MonitorTcptrack.py: new Tcptrack monitor (session monitor).
+	* agent/(Agent,Parser).py: better inheritance approach.
+	* agent/Parser*.py: regex speed up
+	* db/ossim_data.sql.py: a lot of new plugin_sids
+	* www/incidents.php: include attachments to incident manager.
+
+    05 Sep 2004 DK <dk@ossim.net> :
+    * Bugfixes
+    * Passive service detection
+    * Service inventory changes
+    * Pads (Passive Asset Detection System) parser 
+
+	26 Aug 2004 pitufo:
+	* Tcptrack patch: makes tcptrack accept session querys. (We will use it
+	like session monitor at directives)
+
+    18 Aug 2004 DK <dk@ossim.net> :
+    * Bugfixes
+    * Security fixes
+    * PostgreSQL fixes
+    * Notice
+
+    13 Aug 2004 DK <dk@ossim.net> :
+    * Security fixes
+    * Bugfixes
+    * Osiris parser
+
+    05 Aug 2004 David Gil <dgil@ossim.net> :
+    * My pre-vacation changelog entry ;)
+    * Users access control (using phpgacl [http://phpgacl.sf.net])
+    * Incident manager integrated with alarms and metrics
+    * RRD profiles
+    * Agent: added MAXSIZE to list of monitor process
+    * Alarm console: fixes and improvements
+
+    06 Jul 2004 Fabio Ospitia Trujillo <fot@ossim.net>
+    * Bug email notify alert fixed.
+
     01 Jul 2004 DK <dk@ossim.net> :
     * 0.9.6 released
     * FOT: Update your own changelog you lazy bas****.
@@ -18,7 +87,7 @@
     24 Jun 2004 DK <dk@ossim.net> :
     * Many, many bugfixes (:p).
 
-    23 Jun 2004 David Gil <dgil@ossim.net>:
+    23 Jun 2004 David Gil <dgil@ossim.net> :
     * Agent: Monitors reimplemented.
       New protected list (MonitorList) to store monitor objects instead of
       creating monitor threads for each watch-rule received.

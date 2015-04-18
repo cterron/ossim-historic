@@ -6,6 +6,8 @@ import mutex
 
 class MonitorList(list):
 
+    MAX_SIZE = 5000
+
     def __init__(self):
         self.mutex = mutex.mutex()
         list.__init__(self)
@@ -21,7 +23,7 @@ class MonitorList(list):
         self.mutex.unlock()
         item.close()
         del item
-        
+
 
 if __name__ == "__main__":
 

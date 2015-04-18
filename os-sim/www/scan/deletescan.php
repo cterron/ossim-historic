@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
+?>
+
+<?php
     if ($_POST["delete"]) {
 
         require_once('classes/Scan.inc');

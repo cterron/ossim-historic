@@ -1,0 +1,635 @@
+diff -uNBr tcptrack-1.1.3/src/Makefile.am tcptrack-1.1.3-ossim/src/Makefile.am
+--- tcptrack-1.1.3/src/Makefile.am	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/Makefile.am	2004-08-25 10:18:50.000000000 +0200
+@@ -1,6 +1,6 @@
+ bin_PROGRAMS = tcptrack
+ 
+-tcptrack_SOURCES = Collector.cc main.cc TCContainer.cc \
++tcptrack_SOURCES = TCPListener.cc TCPPersist.cc Collector.cc main.cc TCContainer.cc \
+                  TextUI.cc  PacketBuffer.cc \
+                  Sniffer.cc TCPConnection.cc util.cc \
+                  SortedIterator.cc IPv4Packet.cc IPv4Address.cc \
+@@ -9,7 +9,7 @@
+                  TCPTrack.cc SocketPair4.cc \
+                  AppError.cc PcapError.cc GenericError.cc Guesser.cc
+ 
+-noinst_HEADERS = Collector.h PacketBuffer.h TextUI.h \
++noinst_HEADERS = TCPListener.h TCPPersist.h Collector.h PacketBuffer.h TextUI.h \
+ 	defs.h Sniffer.h headers.h \
+ 	SortedIterator.h util.h TCContainer.h \
+ 	TCPConnection.h Guesser.h \
+diff -uNBr tcptrack-1.1.3/src/Makefile.in tcptrack-1.1.3-ossim/src/Makefile.in
+--- tcptrack-1.1.3/src/Makefile.in	2004-08-17 06:53:41.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/Makefile.in	2004-08-25 10:19:04.000000000 +0200
+@@ -51,7 +51,7 @@
+ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
+ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ PROGRAMS = $(bin_PROGRAMS)
+-am_tcptrack_OBJECTS = Collector.$(OBJEXT) main.$(OBJEXT) \
++am_tcptrack_OBJECTS = TCPListener.$(OBJEXT) TCPPersist.$(OBJEXT) Collector.$(OBJEXT) main.$(OBJEXT) \
+ 	TCContainer.$(OBJEXT) TextUI.$(OBJEXT) PacketBuffer.$(OBJEXT) \
+ 	Sniffer.$(OBJEXT) TCPConnection.$(OBJEXT) util.$(OBJEXT) \
+ 	SortedIterator.$(OBJEXT) IPv4Packet.$(OBJEXT) \
+@@ -159,7 +159,7 @@
+ sharedstatedir = @sharedstatedir@
+ sysconfdir = @sysconfdir@
+ target_alias = @target_alias@
+-tcptrack_SOURCES = Collector.cc main.cc TCContainer.cc \
++tcptrack_SOURCES = TCPListener.cc TCPPersist.cc Collector.cc main.cc TCContainer.cc \
+                  TextUI.cc  PacketBuffer.cc \
+                  Sniffer.cc TCPConnection.cc util.cc \
+                  SortedIterator.cc IPv4Packet.cc IPv4Address.cc \
+@@ -168,7 +168,7 @@
+                  TCPTrack.cc SocketPair4.cc \
+                  AppError.cc PcapError.cc GenericError.cc Guesser.cc
+ 
+-noinst_HEADERS = Collector.h PacketBuffer.h TextUI.h \
++noinst_HEADERS = TCPListener.h TCPPersist.h Collector.h PacketBuffer.h TextUI.h \
+ 	defs.h Sniffer.h headers.h \
+ 	SortedIterator.h util.h TCContainer.h \
+ 	TCPConnection.h Guesser.h \
+diff -uNBr tcptrack-1.1.3/src/TCPConnection.cc tcptrack-1.1.3-ossim/src/TCPConnection.cc
+--- tcptrack-1.1.3/src/TCPConnection.cc	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/TCPConnection.cc	2004-08-26 09:14:16.000000000 +0200
+@@ -110,6 +110,8 @@
+ 	all_bytes_last_second = 0;
+ 
+ 	last_pkt_ts = time(NULL);
++	duration = time(NULL);
++	packet_in = packet_out = 0;
+ 	activity_toggle=false;
+ 	
+ 	/*
+@@ -273,6 +275,10 @@
+ 	  || match(p.ipv4().dstAddr(), p.ipv4().srcAddr(), p.ipv4().tcp().dstPort(), p.ipv4().tcp().srcPort()) )
+ 	{
+ 		++packet_count;
++		if (match(p.ipv4().srcAddr(), p.ipv4().dstAddr(), p.ipv4().tcp().srcPort(), p.ipv4().tcp().dstPort()))
++		  packet_in += p.ipv4().payloadLen() - p.ipv4().tcp().headerLen();
++		else
++		  packet_out += p.ipv4().payloadLen() - p.ipv4().tcp().headerLen();
+ 		activity_toggle=true;
+ 
+ 		// recalculate packets/bytes per second counters
+@@ -383,3 +389,18 @@
+ {
+ 	return *endpts;
+ }
++
++int	TCPConnection::getDuration()
++{
++  return ((int)(time(NULL) - this->duration));
++}
++
++unsigned int TCPConnection::getPacketIn()
++{
++  return (this->packet_in);
++}
++
++unsigned int TCPConnection::getPacketOut()
++{
++  return (this->packet_out);
++}
+diff -uNBr tcptrack-1.1.3/src/TCPConnection.h tcptrack-1.1.3-ossim/src/TCPConnection.h
+--- tcptrack-1.1.3/src/TCPConnection.h	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/TCPConnection.h	2004-08-25 13:25:28.000000000 +0200
+@@ -115,6 +115,12 @@
+ 	// a SocketPair4 is two IPv4Addresses and two TCP port numbers.
+ 	// The pair of each represents this connections src/dst addrs & ports.
+ 	SocketPair4 & getEndpoints();
++
++	// duration of the session in secondes
++	int	getDuration();
++
++	unsigned int getPacketOut();
++	unsigned int getPacketIn();
+ private:
+ 	bool fastMode();
+ 	void purgeAvgStack();
+@@ -153,7 +159,9 @@
+ 	unsigned int packets_last_second;
+ 	unsigned int payload_bytes_last_second; // payload only
+ 	unsigned int all_bytes_last_second; // ip hdr + tcp hdr + payload
+-
++	time_t duration;
++	unsigned int packet_in;
++	unsigned int packet_out;
+ };
+ 
+ #endif
+diff -uNBr tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener.cc
+--- tcptrack-1.1.3/src/TCPListener.cc	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.3-ossim/src/TCPListener.cc	2004-08-25 10:09:16.000000000 +0200
+@@ -0,0 +1,124 @@
++#include <sys/types.h>
++#include <sys/wait.h>
++#include <sys/socket.h>
++#include <arpa/inet.h>
++#include <netinet/in.h>
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <fcntl.h>
++
++#include <iostream>
++
++#include "defs.h"
++#include "GenericError.h"
++
++#include "TCContainer.h"
++#include "TCPListener.h"
++#include "TCContainer.h"
++#include "TCPPersist.h"
++
++static void*	client_thread_func(void* arg);
++static void*	server_thread_func(void* arg);
++
++TCPListener::TCPListener(int port, TCContainer* c)
++{
++  struct sockaddr_in	addrServ;
++  int			optval = 1;
++  
++  this->container = c;
++  if ((this->sockServ = socket(AF_INET, SOCK_STREAM, 0)) < 0)
++    {
++      perror("socket() call failure");
++      exit(-1);
++    }
++  if (setsockopt(this->sockServ, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof (optval)) < 0)
++    perror("warning setsockopt");
++  addrServ.sin_family = AF_INET;
++  addrServ.sin_addr.s_addr = INADDR_ANY;
++  addrServ.sin_port = htons(port);
++  if (bind(this->sockServ, (struct sockaddr*)&addrServ, sizeof (addrServ)) < 0)
++    {
++      perror("bind call failure");
++      exit(-1);
++    }
++  if (listen(this->sockServ, LISTEN_MAX) < 0)
++    {
++      perror("listen call failure");
++      exit(-1);
++    }
++}
++
++TCPListener::~TCPListener()
++{
++  if (this->sockServ)
++    if (close(this->sockServ) < 0)
++      {
++	perror("close() call failure");
++	exit(-1);
++      }
++}
++
++// infinite loop accepting connections
++void		TCPListener::waitConnection()
++{
++  for (;;)
++    {
++      if ((this->sockClient = accept(sockServ, NULL, NULL)) < 0)
++	{
++	  perror("accept() call failure");
++	  continue;
++	}
++      this->doClient();
++    }
++}
++
++void		TCPListener::init()
++{
++  pthread_attr_t attr;
++
++  if(pthread_attr_init(&attr) != 0)
++    throw GenericError("pthread_attr_init() failed");
++  pthread_attr_setstacksize(&attr, SS_TCC);
++  if(pthread_create(&maint_thread_tid, &attr, server_thread_func, this) != 0)
++    throw GenericError("pthread_create() failed.");
++}
++
++// sockpair --> IPv4 addra--> struct in_addr.s_addr = unsigned short inet_addr("ipet")
++// 	---> ushort porta
++// 	 --> IPv4 addrb--> struct in_addr.s_addr = unsigned short inet_addr("ipet")
++// 	---> ushort portb
++
++// ---------- private stuff
++
++void		TCPListener::doClient()
++{
++  pthread_attr_t attr;
++
++  if(pthread_attr_init(&attr) != 0)
++    throw GenericError("pthread_attr_init() failed");
++  pthread_attr_setstacksize(&attr, SS_TCC);
++  if(pthread_create(&maint_thread_tid, &attr, client_thread_func, this) != 0)
++    throw GenericError("pthread_create() failed.");
++}
++
++// ---------- thread wrapper
++
++static void*	client_thread_func(void* arg)
++{
++  TCPPersist*	percy;
++  TCPListener*	l;
++
++  l = (TCPListener*)arg;
++  percy = new TCPPersist(l->sockClient, l->container);
++  percy->sledge();
++  delete percy;
++}
++
++static void*	server_thread_func(void* arg)
++{
++  TCPListener*	l;
++
++  l = (TCPListener*) arg;
++  l->waitConnection();
++}
+diff -uNBr tcptrack-1.1.3/src/TCPListener.h tcptrack-1.1.3-ossim/src/TCPListener.h
+--- tcptrack-1.1.3/src/TCPListener.h	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.3-ossim/src/TCPListener.h	2004-08-25 10:09:16.000000000 +0200
+@@ -0,0 +1,31 @@
++#ifndef			TCPLISTENER_H_
++# define		TCPLISTENER_H_
++
++#include <pthread.h>
++
++#include "TCContainer.h"
++
++using namespace std;
++
++#define LISTEN_MAX	42
++
++class TCPListener
++{
++ public:
++  int			sockClient;
++  TCContainer*		container;
++  
++  TCPListener(int port, TCContainer* c);
++  ~TCPListener();
++
++  void			init();
++  void			waitConnection();
++
++ private:
++  int			sockServ;
++  pthread_t		maint_thread_tid;
++
++  void			doClient();
++};
++
++#endif			/* !TCPLISTENER_H_ */
+diff -uNBr tcptrack-1.1.3/src/TCPPersist.cc tcptrack-1.1.3-ossim/src/TCPPersist.cc
+--- tcptrack-1.1.3/src/TCPPersist.cc	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.3-ossim/src/TCPPersist.cc	2004-08-25 14:09:08.000000000 +0200
+@@ -0,0 +1,181 @@
++#include <sys/types.h>
++#include <sys/ioctl.h>
++#include <sys/socket.h>
++#include <arpa/inet.h>
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <regex.h>
++
++#include <iostream>
++
++#include "IPv4TCPCapture.h"
++#include "TCPConnection.h"
++#include "TCPTrack.h"
++#include "TCContainer.h"
++#include "TCPPersist.h"
++
++//#define __REGEX_REQ "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]+ [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]+ [0-9]+"
++#define __REGEX_REQ "[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]+ [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]+"
++//#define	INVALID_REQ_MSG "invalid request\n"
++#define	INVALID_REQ_MSG "-1 -1 -1\r\n"
++
++extern TCPTrack	*app;
++
++//
++TCPPersist::TCPPersist(int s, TCContainer* c)
++{
++  this->sockClient = s;
++  this->container = c;
++  this->srcAddr = 0;
++  this->dstAddr = 0;
++//   this->timeOut = 0;
++}
++
++// limpia salida
++TCPPersist::~TCPPersist()
++{
++  if (this->sockClient)
++    if (close(this->sockClient) < 0)
++      {
++	perror("close() call failure");
++	exit(-1);
++      }
++//   delete this->iter;
++  if (this->srcAddr)
++    free(this->srcAddr);  
++  if (this->dstAddr)
++    free(this->dstAddr);  
++//   if (this->timeOut)
++//     free(this->timeOut);  
++}
++
++//
++void		TCPPersist::sledge()
++{
++  int		sz;
++  char*		buff;
++  char*		tmp;
++
++  if ((buff = (char*)calloc(BUFSIZE, sizeof (char))) == NULL)
++    {
++      perror("calloc() call failure");
++      exit(-1);
++    }
++  tmp = buff;
++  if ((sz = read(this->sockClient, buff, sz)) < 0)
++    {
++      perror("read() call failure");
++      exit(-1);
++    }
++  if (!sz)
++    printf("WTF we read 0 char on %d\n", sockClient);
++  if ((buff[sz] == '\r') || (buff[sz] == '\n'))
++    buff[sz] = 0;
++  if ((buff[sz - 1] == '\r') || (buff[sz - 1] == '\n'))
++    buff[sz - 1] = 0;
++  if (!this->valid(buff))
++    return;
++  this->parse(buff);
++  this->getPers();
++  free(tmp);
++}
++
++// ---------- private stuff
++
++// match the string with the pattern using regex
++// return 0 if it match
++int		TCPPersist::match(char* string, char* pattern)
++{
++  int		result;
++  regex_t	reg;
++
++  if (regcomp(&reg, pattern, REG_EXTENDED | REG_NOSUB) != 0)
++    return (-1);
++  result = regexec(&reg, string, 0, 0, 0);
++  regfree(&reg);
++  return (result);
++}
++
++// Gruiiiik
++void		TCPPersist::parse(char* buff)
++{
++  struct in_addr saddr;
++  struct in_addr daddr;
++  unsigned short sport;
++  unsigned short dport;
++  char*		tmp;
++
++  for (tmp = buff; *tmp != ':'; tmp++);
++  *tmp = 0;
++  this->srcAddr = strdup(buff);
++  saddr.s_addr = inet_addr(buff);
++  tmp++;
++  buff = (char*)tmp;
++  for (tmp = buff; *tmp != ' '; tmp++);
++  *tmp = 0;
++  this->srcPort = atoi(buff);
++  sport = (unsigned short)atoi(buff);
++  tmp++;
++  buff = (char*)tmp;
++  for (tmp = buff; *tmp != ':'; tmp++);
++  *tmp = 0;
++  this->dstAddr = strdup(buff);
++  daddr.s_addr = inet_addr(buff);
++  tmp++;
++  buff = (char*)tmp;
++  for (tmp = buff; *tmp != ' '; tmp++);
++  *tmp = 0;
++  this->dstPort = atoi(buff);
++  dport = (unsigned short)atoi(buff);
++//   tmp++;
++//   buff = (char*)tmp;
++//   timeOut = strdup(buff);
++
++  this->src = new IPv4Address(saddr);
++  this->dst = new IPv4Address(daddr);
++  this->sp = new SocketPair4(*src, sport, *dst, dport);
++}
++
++// validate client's query
++int		TCPPersist::valid(char* buff)
++{
++  if (match(buff, __REGEX_REQ))
++    {
++      write(this->sockClient, INVALID_REQ_MSG, strlen(INVALID_REQ_MSG));
++      return (0);
++    }
++  return (1);
++}
++
++// Find if it exist the connections and
++// send duration and packet transmitted to client
++void		TCPPersist::getPers()
++{
++  TCPConnection	*iterConnections;
++  int		numitems = 0;
++  char*		infos;
++  int		sz;
++
++  this->iter = this->container->getSortedIteratorPtr();
++  this->container->lock();
++
++  this->iter->rewind();
++  while(iterConnections = iter->getNext())
++    {
++      if (strcmp(iterConnections->srcAddr().ptr(), this->srcAddr) || (iterConnections->srcPort() != this->srcPort) ||
++	  strcmp(iterConnections->dstAddr().ptr(), this->dstAddr) || (iterConnections->dstPort() != this->dstPort))
++	continue;
++      if ((sz = asprintf(&infos, "%d %d %d\r\n", iterConnections->getDuration(),
++			 iterConnections->getPacketIn(), iterConnections->getPacketOut())) != -1)
++	{
++	  write(this->sockClient, infos, sz);
++	  free(infos);
++	  numitems = 1;
++	  break;
++	}
++    }
++  if (!numitems)
++    write(this->sockClient, "0 0 0\r\n", 7);
++  this->container->unlock();
++}
+diff -uNBr tcptrack-1.1.3/src/TCPPersist.h tcptrack-1.1.3-ossim/src/TCPPersist.h
+--- tcptrack-1.1.3/src/TCPPersist.h	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.3-ossim/src/TCPPersist.h	2004-08-25 11:49:47.000000000 +0200
+@@ -0,0 +1,40 @@
++#include <string>
++
++#include "SocketPair4.h"
++#include "TCContainer.h"
++
++using namespace std;
++
++#define BUFSIZE	1024
++
++class TCPPersist
++{
++ public:
++  IPv4Address*	src;
++  IPv4Address*	dst;
++  int		sockClient;
++  int		sockServ;
++/*   char*		timeOut; */
++  
++  TCPPersist(int, TCContainer*);
++  ~TCPPersist();
++
++  void		sledge();
++
++ private:
++  SocketPair4*	sp;
++  SortedIterator*iter;
++  TCContainer*	container;
++  char*		dstAddr;
++  char*		srcAddr;
++  int		dstPort;
++  int		srcPort;
++
++  int		match(char*, char*);
++  void		parse(char*);
++  int		valid(char*);
++  void		getPers();
++  void		lock();
++  void		unlock();
++};
++
+diff -uNBr tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
+--- tcptrack-1.1.3/src/TCPTrack.cc	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/TCPTrack.cc	2004-08-26 11:37:22.000000000 +0200
+@@ -1,6 +1,7 @@
+ #include <cassert>
+ #include <pthread.h>
+ #include <iostream>
++#include <unistd.h>
+ #include "TCPTrack.h"
+ #include "AppError.h"
+ #include "PcapError.h"
+@@ -33,7 +34,15 @@
+ 	c = new TCContainer();
+ 	pb = new PacketBuffer();
+ 	s = new Sniffer();
+-	ui = new TextUI(c);
++	listener = new TCPListener(cf.port, c);
++	if (cf.daemon == false)
++	  ui = new TextUI(c);
++	else
++	  if (daemon(0, 0))
++	    {
++	      perror("daemon() call failed");
++	      exit(-42);
++	    }
+ 
+ 	try 
+ 	{
+@@ -42,7 +51,9 @@
+ 		
+ 		// init() on these objects performs constructor-like actions,
+ 		// only they may throw exceptions. Constructors don't.
+-		ui->init();
++		if (cf.daemon == false)
++		  ui->init();
++		listener->init();
+ 		s->init(cf.iface,cf.fexp);
+ 		pb->init();
+ 
+@@ -62,7 +73,8 @@
+ 			throw GenericError(ferr);
+ 	
+ 		// shut everything down cleanly.
+-		ui->stop();
++		if (cf.daemon == false)
++		  ui->stop();
+ 		s->dest();
+ 		pb->dest();
+ 		c->stop();
+@@ -77,7 +89,9 @@
+ 		s->dest();
+ 		pb->dest();
+ 		
+-		delete ui;
++		if (cf.daemon == false)
++		  delete ui;
++		delete listener;
+ 		delete s;
+ 		delete pb;
+ 		delete c;
+@@ -118,7 +132,7 @@
+ 
+ void printusage(int argc,char **argv)
+ {
+-	printf("Usage: %s [-dfhvp] [-r <seconds>] -i <interface> [<filter expression>]\n",argv[0]);
++	printf("Usage: %s [-dfhvpD] [-r <seconds>] [-P <port>] -i <interface> [<filter expression>]\n",argv[0]);
+ }
+ 
+ struct config parseopts(int argc, char **argv)
+@@ -132,9 +146,11 @@
+ 	cf.fastmode=false;
+ 	cf.promisc=true;
+ 	cf.detect=true;
++	cf.port=40003;
++	cf.daemon=false;
+ 	bool got_iface=false;
+ 
+-	while( (o=getopt(argc,argv,"dhvfi:pr:")) > 0 )
++	while( (o=getopt(argc,argv,"dDhvfi:pP:r:")) > 0 )
+ 	{
+ 		if( o=='h' )
+ 		{
+@@ -159,6 +175,10 @@
+ 			cf.detect=false;
+ 		if( o=='p' ) 
+ 			cf.promisc=false;
++		if ( o=='P' )
++		  cf.port = atoi(optarg);
++		if ( o=='D' )
++		  cf.daemon = true;
+ 	}
+ 	
+ 	if( ! got_iface ) {
+diff -uNBr tcptrack-1.1.3/src/TCPTrack.h tcptrack-1.1.3-ossim/src/TCPTrack.h
+--- tcptrack-1.1.3/src/TCPTrack.h	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/TCPTrack.h	2004-08-25 10:36:23.000000000 +0200
+@@ -8,6 +8,7 @@
+ #include "TextUI.h"
+ #include "PacketBuffer.h"
+ #include "TCContainer.h"
++#include "TCPListener.h"
+ 
+ using namespace std;
+ 
+@@ -33,6 +34,7 @@
+ 	TextUI *ui;
+ 	PacketBuffer *pb;
+ 	TCContainer *c;
++	TCPListener* listener;
+ 	
+ 	string ferr; // fatal error message sent from another thread
+ 	pthread_mutex_t ferr_lock;
+diff -uNBr tcptrack-1.1.3/src/util.h tcptrack-1.1.3-ossim/src/util.h
+--- tcptrack-1.1.3/src/util.h	2004-08-13 18:44:17.000000000 +0200
++++ tcptrack-1.1.3-ossim/src/util.h	2004-08-26 11:23:45.000000000 +0200
+@@ -48,6 +48,8 @@
+ 	char *iface; // interface to listen on
+ 	char *fexp;  // filter expression
+ 	unsigned int remto; // timeout to remove closed connections (secs)
++  int port;
++  bool daemon;
+ 	bool fastmode; // faster average recalculation (more than once/sec).
+ 	bool detect; // detect pre-existing connections?
+         bool promisc; // enable promisc mode?	        

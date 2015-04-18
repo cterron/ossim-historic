@@ -42,6 +42,9 @@
 #include <unistd.h>
 #include <sim-util.h>
 #include <gnet.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "sim-inet.h"
 
@@ -68,6 +71,27 @@ sim_protocol_get_type_from_str (const gchar  *str)
     return SIM_PROTOCOL_TYPE_TCP;
 
   return SIM_PROTOCOL_TYPE_NONE;
+}
+
+/*
+ *
+ *
+ *
+ */
+gchar*
+sim_protocol_get_str_from_type (SimProtocolType type)
+{
+  switch (type)
+    {
+    case SIM_PROTOCOL_TYPE_ICMP:
+      return g_strdup ("ICMP");
+    case SIM_PROTOCOL_TYPE_UDP:
+      return g_strdup ("UDP");
+    case SIM_PROTOCOL_TYPE_TCP:
+      return g_strdup ("TCP");
+    default:
+      return NULL;
+    }
 }
 
 /*
@@ -221,16 +245,15 @@ sim_get_alarm_risk_from_char (const gchar *var)
 SimAlarmRiskType
 sim_get_alarm_risk_from_risk (gint risk)
 {
-  if (risk >= 1 || risk <= 4)
+  if ((risk >= 1) && risk <= 4)
     return SIM_ALARM_RISK_TYPE_LOW;
-  else if (risk >= 5 || risk <= 7)
+  else if (risk >= 5 && risk <= 7)
     return SIM_ALARM_RISK_TYPE_MEDIUM;
-  else if (risk >= 8 || risk <= 10)
+  else if (risk >= 8 && risk <= 10)
     return SIM_ALARM_RISK_TYPE_HIGH;
   else
     return SIM_ALARM_RISK_TYPE_NONE;
 }
-
 
 /*
  *

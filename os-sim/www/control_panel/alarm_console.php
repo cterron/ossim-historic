@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
+?>
+
 <html>
 <head>
   <title> Control Panel </title>
@@ -27,6 +32,9 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 if ($id = $_GET["delete"]) {
+    if(Session::is_expert()){
+        Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
+    }
     Alarm::delete($conn, $id);
 }
 
@@ -35,7 +43,14 @@ if ($list = $_GET["delete_backlog"]) {
         $backlog_id = $list;
     else
         list($backlog_id, $id) = split("-", $list);
+    if(Session::is_expert()){
+        Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
+    }
     Alarm::delete_from_backlog($conn, $backlog_id, $id);
+}
+
+if ($date = $_GET["delete_day"]) {
+    Alarm::delete_day($conn, $date);
 }
 
 
@@ -168,12 +183,17 @@ if (!$sup = $_GET["sup"])
                                        mktime(0, 0, 0, $month, $day, $year));
             if ($datemark != $date_slices[0]) 
             {
+                $link_delete = "
+                    <a href=\"" . 
+                        $_SERVER["PHP_SELF"] . "?delete_day=" . 
+                        $alarm->get_timestamp() . "\"> Delete </a>
+                ";
                 echo "
                 <tr>
                   <td></td>
                   <td colspan=\"6\">
                     <!--<hr border=\"0\"/>-->
-                    <b>$date_formatted</b><br/>
+                    <b>$date_formatted</b> [$link_delete]<br/>
                     <!--<hr border=\"0\"/>-->
                   </td>
                   <td></td>
@@ -187,6 +207,7 @@ if (!$sup = $_GET["sup"])
         <td><b>
 <?php
             $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
+            $alarm_name_orig = $alarm_name;
             if ($backlog_id != 0) 
             {
                 $alerts_link = "alerts.php?backlog_id=$backlog_id";
@@ -290,16 +311,24 @@ if (!$sup = $_GET["sup"])
         $alert_id = $alarm->get_alert_id();
         if ($backlog_id == 0) {
 ?>
-        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alert_id ?>">Ack</a>
+        [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
+            echo $alert_id ?>">Ack</a>]
 <?php
         } else {
 ?>
-        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
-            echo "$backlog_id-$alert_id" ?>">Ack</a>
+        [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
+            echo "$backlog_id-$alert_id" ?>">Ack</a>]
 <?php
         }
 ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Alarm&"  .
+            "title=$alarm_name_orig&" .
+            "priority=$risk&" .
+            "src_ips=$src_ip&" .
+            "src_ports=$src_port&" .
+            "dst_ips=$dst_ip&" .
+            "dst_ports=$dst_port"  ?>">i</a>]
         </td>
       </tr>
 <?php

@@ -20,7 +20,7 @@ case "$1" in
         $OSSIM_SERVER -d -c /etc/ossim/server/config.xml
 
         # Start agent
-        sleep 5
+        sleep 8
         $OSSIM_AGENT -d -c /etc/ossim/agent/config.xml
 
         # Start control panel

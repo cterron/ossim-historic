@@ -1,3 +1,9 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
+$user = Session::get_session_user();
+?>
+
 <html>
 <head>
   <title> Control Panel </title>
@@ -27,7 +33,6 @@ require_once ('common.inc');
 
 
 $mrtg_link = $conf->get_conf("mrtg_link");
-
 
 
 function echo_values($val, $max, $ip, $date, $target) {
@@ -93,7 +98,7 @@ $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
 
 /* get global values */
 $query = "SELECT * FROM control_panel 
-    WHERE id = 'global' AND time_range = '$range';";
+    WHERE id = 'global_$user' AND time_range = '$range';";
 if (!$rs_global = &$conn->Execute("$query"))
     print $conn->ErrorMsg();
 
@@ -127,9 +132,9 @@ if (!$rs_global = &$conn->Execute("$query"))
             $start = "N-1Y";
         }
 
-        $image2 = "$graph_link?ip=global&what=attack&start=$start&" . 
+        $image2 = "$graph_link?ip=global_$user&what=attack&start=$start&" . 
             "end=N&type=global&zoom=0.85";
-        $image1 = "$graph_link?ip=global&what=compromise&start=$start&" . 
+        $image1 = "$graph_link?ip=global_$user&what=compromise&start=$start&" . 
             "end=N&type=global&zoom=0.85";
 
 ?>
@@ -138,7 +143,7 @@ if (!$rs_global = &$conn->Execute("$query"))
     </td>
     <td>
       <table align="center">
-        <tr><td colspan="2"></td></tr>
+        <tr><td colspan="3"></td></tr>
         <tr>
           <th>Riskmeter</th>
           <th>Service Level</th>
@@ -148,7 +153,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             <img border="0" src="../pixmaps/riskmeter.png"/></a>
           </td>
             <?php 
-            $image = graph_image_link("level", "level", "attack",
+            $image = graph_image_link("level_$user", "level", "attack",
                               $start, "N", 1, $range);
             $sec_level = ($rs_global->fields["c_sec_level"] + 
                               $rs_global->fields["a_sec_level"]) / 2;
@@ -201,7 +206,7 @@ if (!$rs_global = &$conn->Execute("$query"))
           </tr>
           <tr>
 <?php
-    $image = graph_image_link("global", "global", "compromise",
+    $image = graph_image_link("global_$user", "global", "compromise",
                               $start, "N", 1, $range);
     
 ?>
@@ -209,6 +214,17 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $rs_global->fields["max_c"] / $THRESHOLD;
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: C level exceeded (Global)&" .
+            "priority=$priority&" .
+            "target=Global&" .
+            "metric_type=Compromise&" .
+            "metric_value=" . $rs_global->fields["max_c"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2">
               <?php echo $rs_global->fields["max_c_date"] ?>
@@ -243,6 +259,17 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $rs_global->fields["max_a"] / $THRESHOLD;
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: A level exceeded (Global)&" .
+            "priority=$priority&" .
+            "target=Global&" .
+            "metric_type=Attack&" .
+            "metric_value=" . $rs_global->fields["max_a"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2">
               <?php echo $rs_global->fields["max_a_date"] ?>
@@ -283,18 +310,33 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $net->get_max_c() / 
+                Net::netthresh_c($conn, $net->get_net_name());
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: C level exceeded (Net " .
+                $net->get_net_name() .")&" .
+            "priority=$priority&" .
+            "target=Net " . $net->get_net_name() . "&" .
+            "metric_type=Compromise&" .
+            "metric_value=" . $rs_global->fields["max_c"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2"><?php echo $net->get_max_c_date() ?></font></td>
             <?php 
-                  echocolor($net->get_max_c(), 
+                echocolor($net->get_max_c(), 
                             Net::netthresh_c($conn, $net->get_net_name()),
                             get_acid_date_link($net->get_max_c_date()));
-                  $net_list = Net_qualification::get_list($conn, 
+                if ($net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
-                                        $net->get_net_name() . "'");
-                  echocolor($net_list[0]->get_compromise(), 
+                                        $net->get_net_name() . "'"))
+                {
+                    echocolor($net_list[0]->get_compromise(), 
                             Net::netthresh_c($conn, $net->get_net_name()),
                             $image);
+                }
             ?>
           </tr>
 <?php } ?>
@@ -323,18 +365,33 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $net->get_max_a() / 
+                Net::netthresh_a($conn, $net->get_net_name());
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: A level exceeded (Net " .
+                $net->get_net_name() . ")&" .
+            "priority=$priority&" .
+            "target=Net " . $net->get_net_name() . "&" .
+            "metric_type=Attack&" .
+            "metric_value=" . $rs_global->fields["max_a"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2"><?php echo $net->get_max_a_date() ?></font>
             <?php 
-                  echocolor($net->get_max_a(), 
+                echocolor($net->get_max_a(), 
                             Net::netthresh_a($conn, $net->get_net_name()),
                             get_acid_date_link($net->get_max_c_date()));
-                  $net_list = Net_qualification::get_list($conn, 
+                if ($net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
-                                        $net->get_net_name() . "'");
-                  echocolor($net_list[0]->get_attack(), 
+                                        $net->get_net_name() . "'"))
+                {
+                    echocolor($net_list[0]->get_attack(), 
                             Net::netthresh_a($conn, $net->get_net_name()),
                             $image);
+                }
             ?>
           </tr>
 <?php } ?>
@@ -372,6 +429,18 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $host->get_max_c() / 
+                Host::ipthresh_c($conn, $host->get_host_ip());
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: C level exceeded (Host $host_ip)&" .
+            "priority=$priority&" .
+            "target=Host $host_ip&" .
+            "metric_type=Compromise&" .
+            "metric_value=" . $rs_global->fields["max_c"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2"><?php echo $host->get_max_c_date() ?></font></td>
         <?php
@@ -424,6 +493,18 @@ if (!$rs_global = &$conn->Execute("$query"))
             <td>
               <a href="<?php echo $image ?>"><img
                  src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $host->get_max_a() / 
+                Host::ipthresh_a($conn, $host->get_host_ip());
+            if ($priority > 10) $priority = 10;
+        ?>
+        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: A level exceeded (Host $host_ip)&" .
+            "priority=$priority&" .
+            "target=Host $host_ip&" .
+            "metric_type=Attack&" .
+            "metric_value=" . $rs_global->fields["max_a"] ?>">i</a>]
             </td>
             <td nowrap><font size="-2"><?php echo $host->get_max_a_date(); ?></font></td>
         <?php

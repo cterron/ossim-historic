@@ -70,15 +70,15 @@ AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
 
 AC_OUTPUT([
-Makefile 
+Makefile
 src/Makefile
-agent/Makefile 
+agent/Makefile
 etc/Makefile
 etc/server/Makefile
 etc/agent/Makefile
 etc/framework/Makefile
 db/Makefile
-pixmaps/Makefile 
+pixmaps/Makefile
 include/Makefile
 include/classes/Makefile
 www/Makefile
@@ -87,6 +87,7 @@ www/control_panel/Makefile
 www/directives/Makefile
 www/editor/Makefile
 www/host/Makefile
+www/incidents/Makefile
 www/net/Makefile
 www/ntop/Makefile
 www/pixmaps/Makefile
@@ -100,9 +101,13 @@ www/scan/Makefile
 www/sensor/Makefile
 www/sec_report/Makefile
 www/sec_report/graphs/Makefile
+www/session/Makefile
+www/setup/Makefile
 www/signature/Makefile
 www/style/Makefile
 www/vulnmeter/Makefile
+www/backup/Makefile
+www/java/Makefile
 mrtg/Makefile
 mrtg/level/Makefile
 mrtg/global/Makefile

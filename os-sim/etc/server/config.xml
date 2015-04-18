@@ -2,7 +2,7 @@
 
 <config>
 	<log filename="/var/log/ossim/server.log"/>
-        <sensor name="server" ip="127.0.0.1" interface="eth0"/>
+	<sensor name="server" ip="127.0.0.1" interface="eth0"/>
 	<datasources>
 		<datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=ossim;HOST=localhost"/>
 		<datasource name="snortDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=snort;HOST=localhost"/>
@@ -10,7 +10,12 @@
 	<directive filename="/etc/ossim/server/directives.xml"/>
 	<scheduler interval="15"/>
 	<server port="40001"/>
-    <notifies program="/usr/sbin/sendmail">
-        <notify emails="root@localhost" alarm_risks="all" /> <!-- low,medium,high,all -->
-    </notifies>
+	<notifies program="/usr/sbin/sendmail">
+		<notify emails="root@localhost" alarm_risks="low" /> <!-- low,medium,high,all -->
+	</notifies>
+        <!-- Replication Servers -->
+	<rservers>
+		<rserver name="rserver1" ip="192.168.2.174"/>
+		<rserver name="rserver2" ip="192.168.2.97" resend="true"/>
+	</rservers>
 </config>

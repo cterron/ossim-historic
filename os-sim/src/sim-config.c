@@ -47,9 +47,6 @@ enum
 static gpointer parent_class = NULL;
 static gint sim_config_signals[LAST_SIGNAL] = { 0 };
 
-static void sim_config_scan (SimConfig    *config,
-			     const gchar *filename);
-
 /* GType Functions */
 
 static void 
@@ -111,6 +108,7 @@ sim_config_instance_init (SimConfig *config)
 
   config->datasources = NULL;
   config->notifies = NULL;
+  config->rservers = NULL;
 
   config->notify_prog = NULL;
 
@@ -278,4 +276,44 @@ sim_config_notify_free (SimConfigNotify *notify)
     }
 
   g_free (notify);
+}
+
+/*
+ *
+ *
+ *
+ */
+SimConfigRServer*
+sim_config_rserver_new (void)
+{
+  SimConfigRServer *rserver;
+
+  rserver = g_new0 (SimConfigRServer, 1);
+  rserver->name = NULL;
+  rserver->ip = NULL;
+  rserver->ia = NULL;
+  rserver->port = 0;
+  rserver->resend = FALSE;
+
+  return rserver;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_config_rserver_free (SimConfigRServer *rserver)
+{
+  g_return_if_fail (rserver);
+
+  if (rserver->name)
+    g_free (rserver->name);
+  if (rserver->ip)
+    g_free (rserver->ip);
+  if (rserver->ia)
+    gnet_inetaddr_unref (rserver->ia);
+
+  g_free (rserver);
 }

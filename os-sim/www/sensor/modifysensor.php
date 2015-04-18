@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicySensors");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>

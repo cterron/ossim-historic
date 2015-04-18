@@ -1,6 +1,6 @@
 diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
 --- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_cache.inc	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_cache.inc	2004-07-22 13:53:04.001684032 +0200
 @@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -13,10 +13,45 @@ diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
    $update_sql = array(4);
    
    /* TCP events */
+diff -urNb acid/acid_common.php acid-ossim/acid_common.php
+--- acid/acid_common.php	2003-01-09 02:04:07.000000000 +0100
++++ acid-ossim/acid_common.php	2004-07-22 14:06:04.726995744 +0200
+@@ -11,6 +11,12 @@
+  *
+  */
+ 
++/* OSSIM session */
++if ($use_ossim_session) {
++	require_once ('classes/Session.inc');
++	Session::logcheck($ossim_acid_aco_section, $ossim_acid_aco, $ossim_login_path);
++}
++
+ function GetSensorIDs($db)
+ {
+    $result = $db->acidExecute("SELECT sid FROM sensor;");
 diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
 --- acid/acid_conf.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_conf.php	2004-05-05 11:04:33.000000000 +0200
-@@ -229,8 +229,8 @@
++++ acid-ossim/acid_conf.php	2004-07-22 14:05:23.089325632 +0200
+@@ -63,6 +63,18 @@
+  */
+ $use_referential_integrity = 0;
+ 
++/* Use OSSIM session
++ *   1  : use
++ *   0  : ignore
++ * Ossim framework and acid must be instaled in the same host
++ */
++$use_ossim_session = 1;
++$ossim_login_path = "/ossim/session/login.php";
++$ossim_acid_aco_section = "MenuControlPanel";
++$ossim_acid_aco = "ControlPanelAlerts";
++$ossim_domain_aco_section = "DomainAccess";
++$ossim_domain_aco = "Nets";
++
+ /* Path to the graphing library 
+  *  (Note: DO NOT include a trailing backslash after the directory)
+  */
+@@ -229,8 +241,8 @@
  $external_all_link = "http://www.samspade.org/t/lookat?a=";
  
  /* TCP/UDP port database */
@@ -29,7 +64,7 @@ diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
  $external_sig_link = array("bugtraq"   => array("http://www.securityfocus.com/bid/", ""),
 diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
 --- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_hdr2.html	2004-05-06 10:10:20.000000000 +0200
++++ acid-ossim/acid_hdr2.html	2004-07-22 13:53:04.002683880 +0200
 @@ -1,11 +1,20 @@
  <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
  <TR>
@@ -58,7 +93,7 @@ diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
  </TABLE>
 diff -urNb acid/acid_main.php acid-ossim/acid_main.php
 --- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_main.php	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_main.php	2004-07-22 13:53:04.003683728 +0200
 @@ -143,6 +143,8 @@
  ?>
  
@@ -70,7 +105,7 @@ diff -urNb acid/acid_main.php acid-ossim/acid_main.php
  
 diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
 --- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_output_query.inc	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_output_query.inc	2004-07-22 13:53:04.004683576 +0200
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -91,7 +126,7 @@ diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
      echo "   </TR>\n";
 diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
 --- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_common.php	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_qry_common.php	2004-07-22 13:53:04.006683272 +0200
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -198,7 +233,7 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
    /* ********************** IP Criteria ********************************************** */ 
 diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
 --- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_form.php	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_qry_form.php	2004-07-22 13:53:04.007683120 +0200
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -233,7 +268,7 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
  
 diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
 --- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_sqlcalls.php	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_qry_sqlcalls.php	2004-07-22 13:53:04.008682968 +0200
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -335,8 +370,105 @@ diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
        qroPrintEntryFooter();
 diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
 --- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_citems.inc	2004-05-04 19:25:47.000000000 +0200
-@@ -1459,4 +1459,457 @@
++++ acid-ossim/acid_state_citems.inc	2004-07-22 14:06:04.724996048 +0200
+@@ -822,22 +822,96 @@
+       GLOBAL $HTTP_SESSION_VARS;
+ 
+       parent::Import();      
++		require ('acid_conf.php');
+ 
++		$vals = NULL;
++		$empty = 1;
+       /* expand IP into octets */
+       for ( $i = 0; $i < $this->criteria_cnt; $i++ )
+       {
+         if ( (isset ($this->criteria[$i][3])) &&
+              (ereg("([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)", $this->criteria[$i][3])) )
+         {
++        		if ($use_ossim_session) {
++					require_once('classes/Net.inc');
++           		$domain = Session::getValue();
++           		if ($domain != "") {
++           			$tmp_myip = $this->criteria[$i][3];
++	           		$myip = strtok($tmp_myip, "/");
++	           		if (Net::isIpInNet($myip, $domain)) {
+            $tmp_ip_str = $this->criteria[$i][7] = $this->criteria[$i][3];
++           				$this->criteria[$i][2] = "=";
+            $this->criteria[$i][3] = strtok($tmp_ip_str, ".");
+            $this->criteria[$i][4] = strtok(".");
+            $this->criteria[$i][5] = strtok(".");
+            $this->criteria[$i][6] = strtok("/");
+            $this->criteria[$i][10] = strtok("");
++           				$empty = 0;
++           				$vals[] = $this->criteria[$i];
++	           		}
++           		}
++           	} else {
++           		$tmp_ip_str = $this->criteria[$i][7] = $this->criteria[$i][3];
++           		$this->criteria[$i][3] = strtok($tmp_ip_str, ".");
++           		$this->criteria[$i][4] = strtok(".");
++           		$this->criteria[$i][5] = strtok(".");
++           		$this->criteria[$i][6] = strtok("/");
++           		$this->criteria[$i][10] = strtok("");
++           		$empty = 0;
++	           	$vals[] = $this->criteria[$i];
++           	}
++
++        } elseif (ereg("([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)", $this->criteria[$i][7])) {
++           	$empty = 0;
++        		$vals[] = $this->criteria[$i];
+         }
+       } 
+ 
++		$this->criteria = $vals;
++		$this->criteria_cnt = count($vals);
++
++      if (($use_ossim_session) && ($empty)) {
++			$domain = Session::getValue();
++			if ($domain != "") {
++				$nets = explode(",", $domain);
++				$this->criteria = Array();
++				for ($i = 0; $i < count($nets); $i++) {
++					$tmp_ip_str = $tmp[7] = $nets[$i];
++					$tmp[0] = " ";
++					$tmp[1] = "ip_both";
++					$tmp[2] = "=";
++					
++           		$tmp[3] = strtok($tmp_ip_str, ".");
++           		$tmp[4] = strtok(".");
++           		$tmp[5] = strtok(".");
++           		$tmp[6] = strtok("/");
++           		$tmp[10] = strtok("");
++
++					$tmp[8] = " ";
++					if ($i == (count($nets) - 1))
++						$tmp[9] = " ";
++					else
++						$tmp[9] = "OR";
++					$this->criteria[$this->criteria_cnt] = $tmp;
++					$this->criteria_cnt++;
++				}
++			}
++		}
++
++		$new = ImportHTTPVar("new", VAR_DIGIT);
++		$submit = ImportHTTPVar("submit");
++
++		if ( ($new == 1) && ($submit == "") ) {
++			$this->criteria = NULL;
++			$this->criteria_cnt = 1;
++  		}
++
++		if ($this->criteria_cnt == "") {
++			$this->criteria_cnt = 1;
++		}
++
++     	//print_r ($this->criteria);
++      
+       $HTTP_SESSION_VARS['ip_addr'] = &$this->criteria;
+       $HTTP_SESSION_VARS['ip_addr_cnt'] = &$this->criteria_cnt;
+    }
+@@ -1459,4 +1533,457 @@
     }
  };
  
@@ -796,7 +928,7 @@ diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
  ?>
 diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
 --- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_criteria.inc	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/acid_state_criteria.inc	2004-07-22 14:06:04.725995896 +0200
 @@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
@@ -812,9 +944,17 @@ diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
       /* 
        * For new criteria, add a call to the appropriate constructor here, and implement
        * the appropriate class in acid_stat_citems.inc.
+@@ -129,6 +137,7 @@
+        ErrorMessage("Removing '$name' from criteria");
+   
+        $this->criteria[$name]->Init();     
++       $this->criteria[$name]->Import();     
+     }
+     else
+       ErrorMessage("Invalid criteria element");
 diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
 --- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_mysql.sql	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/create_acid_tbls_mysql.sql	2004-07-22 13:53:04.013682208 +0200
 @@ -81,3 +81,51 @@
  
                              PRIMARY KEY         (ipc_ip),
@@ -869,7 +1009,7 @@ diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
 +
 diff -urNb acid/create_acid_tbls_pgsql.sql acid-ossim/create_acid_tbls_pgsql.sql
 --- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_pgsql.sql	2004-05-04 19:12:25.000000000 +0200
++++ acid-ossim/create_acid_tbls_pgsql.sql	2004-07-22 13:53:04.014682056 +0200
 @@ -57,8 +57,8 @@
  CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
                              ag_name             TEXT,

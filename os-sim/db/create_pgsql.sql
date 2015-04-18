@@ -14,7 +14,7 @@ CREATE TABLE conf (
 --  hosts & nets 
 DROP TABLE host;
 CREATE TABLE host (
-  ip                varchar(15) PRIMARY KEY,
+  ip                varchar(15) UNIQUE NOT NULL, 
   hostname          varchar(128) NOT NULL,
   asset             smallint NOT NULL,
   threshold_c       int NOT NULL,
@@ -22,7 +22,9 @@ CREATE TABLE host (
   alert             int NOT NULL,
   persistence       int NOT NULL,
   nat               varchar(15),
-  descr             varchar(255)
+  rrd_profile       varchar(64),
+  descr             varchar(255),
+  PRIMARY KEY (ip)
 );
 
 DROP TABLE scan;
@@ -41,6 +43,7 @@ CREATE TABLE net (
   threshold_a       int NOT NULL,
   alert             int NOT NULL,
   persistence       int NOT NULL,
+  rrd_profile       varchar(64),
   descr             varchar(255),
   PRIMARY KEY       (name)
 );
@@ -208,7 +211,7 @@ CREATE TABLE host_qualification (
 
 DROP TABLE net_qualification;
 CREATE TABLE net_qualification (
-    net_name        varchar(64) NOT NULL,
+    net_name        varchar(128) NOT NULL,
     compromise      int NOT NULL DEFAULT 1,
     attack          int NOT NULL DEFAULT 1,
     PRIMARY KEY     (net_name)
@@ -223,11 +226,11 @@ CREATE TABLE host_vulnerability (
 
 DROP TABLE net_vulnerability;
 CREATE TABLE net_vulnerability (
-    net             varchar(15) NOT NULL,
+    net             varchar(128) NOT NULL,
     vulnerability   int NOT NULL DEFAULT 1,
     PRIMARY KEY     (net)
 );
-DROP TABLE IF EXISTS control_panel;
+DROP TABLE control_panel;
 CREATE TABLE control_panel (
     id              varchar(128) NOT NULL,
     rrd_type        varchar(6) NOT NULL DEFAULT 'host',
@@ -270,10 +273,15 @@ CREATE TABLE host_os (
 
 DROP TABLE host_services;
 CREATE TABLE host_services (
-    ip      varchar(15) NOT NULL,
-    service varchar(128) NOT NULL,
-    version varchar(255) NOT NULL,
-    PRIMARY KEY (ip, service, version)
+	ip		INT8 NOT NULL,
+    port    int NOT NULL,
+    protocol   int NOT NULL,
+    service varchar(128),
+    service_type varchar(128),
+    version varchar(255) NOT NULL DEFAULT "unknown",
+    date    TIMESTAMP NOT NULL,
+    origin INT8 NOT NULL DEFAULT 0,
+    PRIMARY KEY (ip, port, protocol, version, date)
 );
 
 DROP TABLE host_netbios;
@@ -286,15 +294,16 @@ CREATE TABLE host_netbios (
 
 DROP TABLE rrd_config;
 CREATE TABLE rrd_config (
-    ip          INT8 NOT NULL,
+    profile     VARCHAR(64) NOT NULL,
     rrd_attrib  VARCHAR(60) NOT NULL,
     threshold   INT8 NOT NULL,
     priority    INT8 NOT NULL,
     alpha       FLOAT  NOT NULL,
     beta        FLOAT NOT NULL,
     persistence INT8 NOT NULL,
-    descripcion TEXT,
-    PRIMARY KEY (ip, rrd_attrib)
+    enable  INT8 DEFAULT 1,
+    description TEXT,
+    PRIMARY KEY (profile, rrd_attrib)
 );
 
 DROP TABLE rrd_anomalies;
@@ -383,7 +392,7 @@ CREATE TABLE alert (
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
 	protocol	INTEGER,
-	src_ip		INT9,
+	src_ip		INT8,
 	dst_ip		INT8,
 	src_port	INTEGER,
 	dst_port	INTEGER,
@@ -397,7 +406,7 @@ CREATE TABLE alert (
 	asset_dst	INTEGER DEFAULT 1,
 	risk_a		INTEGER DEFAULT 1,
 	risk_c		INTEGER DEFAULT 1,
-	alarm           BOOLEAN DEFAULT 'f',
+	alarm       INTEGER DEFAULT 1,
 	snort_sid	INT8,
 	snort_cid       INT8
 );
@@ -421,8 +430,8 @@ CREATE TABLE backlog (
 --
 DROP TABLE backlog_alert;
 CREATE TABLE backlog_alert (
-	backlog_id	INT8,
-	alert_id	INT8,
+	backlog_id	BIGINT,
+	alert_id	BIGINT,
 	time_out	INTEGER,
 	occurrence	INTEGER,
 	rule_level	INTEGER,
@@ -435,8 +444,8 @@ CREATE TABLE backlog_alert (
 --
 DROP TABLE alarm;
 CREATE TABLE alarm (
-	backlog_id	INT8,
-	alert_id	INT8,
+	backlog_id	BIGINT,
+	alert_id	BIGINT,
 	timestamp	TIMESTAMP NOT NULL,
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
@@ -494,4 +503,111 @@ CREATE TABLE net_scan (
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
 	PRIMARY KEY (net_name, plugin_id, plugin_sid)
+);
+
+
+---
+--- Table: User
+---
+DROP TABLE users;
+CREATE TABLE users (
+    login   VARCHAR(64)  NOT NULL,
+    name    VARCHAR(128) NOT NULL,
+    pass    VARCHAR(41)  NOT NULL,
+    allowed_nets    varchar(255) NOT NULL,
+    PRIMARY KEY (login)
+);
+
+--
+-- Data: User
+--
+INSERT INTO users (login, name, pass, allowed_nets) VALUES ('admin', 'OSSIM admin', '21232f297a57a5a743894a0e4a801fc3', '');
+
+DROP SEQUENCE incident_id_seq;
+CREATE SEQUENCE incident_id_seq;
+
+--
+-- Table: incident
+--
+DROP TABLE incident;
+CREATE TABLE incident (
+    id          BIGINT DEFAULT nextval('incident_id_seq'),
+    title       VARCHAR(128) NOT NULL,
+    date        TIMESTAMP NOT NULL,
+    ref         VARCHAR(8) NOT NULL DEFAULT 'Alarm',
+    priority    INTEGER NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP SEQUENCE incident_ticket_id_seq;
+CREATE SEQUENCE incident_ticket_id_seq;
+
+--
+-- Table: incident ticket
+--
+DROP TABLE  incident_ticket;
+CREATE TABLE incident_ticket (
+    id              BIGINT DEFAULT nextval('incident_ticket_id_seq'),
+    incident_id     INTEGER NOT NULL,
+    date            TIMESTAMP NOT NULL,
+    status          VARCHAR(8) NOT NULL DEFAULT 'Open',
+    priority        INTEGER NOT NULL,
+    users           VARCHAR(64) NOT NULL,
+    description     VARCHAR(255),
+    action          VARCHAR(255),
+    in_charge       VARCHAR(64),
+    transferred     VARCHAR(64),
+    copy            VARCHAR(64),
+    PRIMARY KEY (id, incident_id)
+);
+
+DROP SEQUENCE incident_alarm_id_seq;
+CREATE SEQUENCE incident_alarm_id_seq;
+
+--
+-- Table: incident alarm
+--
+DROP TABLE incident_alarm;
+CREATE TABLE incident_alarm (
+    id              BIGINT DEFAULT nextval('incident_alarm_id_seq'),
+    incident_id     INTEGER NOT NULL,
+    src_ips         VARCHAR(255) NOT NULL,
+    src_ports       VARCHAR(255) NOT NULL,
+    dst_ips         VARCHAR(255) NOT NULL,
+    dst_ports       VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id, incident_id)
+);
+
+DROP SEQUENCE incident_metric_id_seq;
+CREATE SEQUENCE incident_metric_id_seq;
+
+--
+-- Table: incident metric
+--
+DROP TABLE incident_metric;
+CREATE TABLE incident_metric (
+    id              BIGINT DEFAULT nextval('incident_metric_id_seq'),
+    incident_id     INTEGER NOT NULL,
+    target          VARCHAR(255) NOT NULL,
+    metric_type     VARCHAR(16) NOT NULL DEFAULT 'Compromise',
+    metric_value    INTEGER NOT NULL,
+    PRIMARY KEY (id, incident_id)
+);
+
+DROP SEQUENCE restoredb_log_id_seq;
+CREATE SEQUENCE restoredb_log_id_seq;
+
+--
+-- Table: restoredb
+--
+DROP TABLE restoredb_log;
+CREATE TABLE restoredb_log (
+    id              BIGINT DEFAULT nextval('restoredb_log_id_seq'),
+	date		TIMESTAMP,
+	pid		INTEGER,
+	users		VARCHAR(64),
+	data		TEXT,
+	status		INT8,
+	percent		INT8,
+	PRIMARY KEY (id)
 );

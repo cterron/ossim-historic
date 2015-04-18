@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyHosts");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -6,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
+
   <h1>Hosts</h1>
 
 <?php 
@@ -41,6 +46,9 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("threshold_a", $order);
           ?>">Threshold_A</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("rrd_profile", $order);
+          ?>">RRD Profile</a></th>
 <!--
       <th><a href="<?php // echo $_SERVER["PHP_SELF"]?>?order=<?php
             // echo ossim_db::get_order("alert", $order);
@@ -75,6 +83,14 @@
       <td><?php echo $host->get_asset(); ?></td>
       <td><?php echo $host->get_threshold_c(); ?></td>
       <td><?php echo $host->get_threshold_a(); ?></td>
+      <td>
+        <?php 
+            if (!($rrd_profile = $host->get_rrd_profile()))
+                echo "None";
+            else
+                echo $rrd_profile;
+        ?>
+      </td>
 <!--      <td><?php /* if ($host->get_alert()) echo "Yes"; else echo "No" */?></td> -->
 <!--      <td><?php /* echo $host->get_persistence() . " min."; */ ?></td> -->
       <!-- sensors -->
@@ -118,10 +134,10 @@ echo "None";
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="11"><a href="newhostform.php">Insert new host</a></td>
+      <td colspan="12"><a href="newhostform.php">Insert new host</a></td>
     </tr>
     <tr>
-      <td colspan="11"><a href="../conf/reload.php?what=hosts">Reload</a></td>
+      <td colspan="12"><a href="../conf/reload.php?what=hosts">Reload</a></td>
     </tr>
   </table>
 

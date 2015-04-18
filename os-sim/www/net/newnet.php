@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyNetworks");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -33,6 +38,7 @@
     $priority    = mysql_escape_string($_POST["priority"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
     $threshold_a = mysql_escape_string($_POST["threshold_a"]);
+    $rrd_profile = mysql_escape_string($_POST["rrd_profile"]);
     $alert       = mysql_escape_string($_POST["alert"]);
     $persistence = mysql_escape_string($_POST["persistence"]);
     $descr       = mysql_escape_string($_POST["descr"]);
@@ -50,8 +56,9 @@
     $db = new ossim_db();
     $conn = $db->connect();
    
-    Net::insert ($conn, $net_name, $ips, $priority, $threshold_c, 
-                 $threshold_a, $alert, $persistence, $sensors, $descr);
+    Net::insert ($conn, $net_name, $ips, $priority, $threshold_c, $threshold_a, 
+                 $rrd_profile, $alert, $persistence, $sensors, $descr);
+
     if($_POST["nessus"]){
         Net_scan::insert ($conn, $net_name, 3001, 0);
     }

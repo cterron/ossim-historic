@@ -36,6 +36,7 @@
 #include <time.h>
 
 #include "sim-alert.h"
+#include "sim-util.h"
 
 #include <time.h>
 #include <math.h>
@@ -131,6 +132,7 @@ sim_alert_instance_init (SimAlert *alert)
   alert->risk_a = 1;
 
   alert->data = NULL;
+  alert->log = NULL;
 
   alert->sticky = FALSE;
   alert->match = FALSE;
@@ -138,6 +140,8 @@ sim_alert_instance_init (SimAlert *alert)
   alert->count = 0;
   alert->level = 1;
   alert->backlog_id = 0;
+
+  alert->rserver = FALSE;
 }
 
 /* Public Methods */
@@ -268,6 +272,8 @@ sim_alert_clone (SimAlert       *alert)
   new_alert->asset_dst = alert->asset_dst;
   new_alert->risk_c = alert->risk_c;
   new_alert->risk_a = alert->risk_a;
+
+  new_alert->log = alert->log;
 
   return new_alert;
 }
@@ -722,10 +728,18 @@ sim_alert_to_string (SimAlert	*alert)
     g_string_append_printf (str, "interface=\"%s\" ", alert->interface);
 
   if (alert->protocol)
-    g_string_append_printf (str, "protocol=\"%d\" ", alert->protocol);
+    {
+      gchar *value = sim_protocol_get_str_from_type (alert->protocol);
+      g_string_append_printf (str, "protocol=\"%s\" ", value);
+      g_free (value);
+    }
 
   if (alert->condition)
-    g_string_append_printf (str, "condition=\"%d\" ", alert->condition);
+    {
+      gchar *value = sim_condition_get_str_from_type (alert->condition);
+      g_string_append_printf (str, "condition=\"%s\" ", value);
+      g_free (value);
+    }
   if (alert->value)
     g_string_append_printf (str, "value=\"%s\" ", alert->value);
   if (alert->interval)
@@ -751,6 +765,8 @@ sim_alert_to_string (SimAlert	*alert)
 
   if (alert->data)
     g_string_append_printf (str, "data=\"%s\"", alert->data);
+  if (alert->log)
+    g_string_append_printf (str, "log=\"%s\"", alert->log);
 
   return g_string_free (str, FALSE);
 }

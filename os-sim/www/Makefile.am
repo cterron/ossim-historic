@@ -1,8 +1,11 @@
-SUBDIRS=conf \
+SUBDIRS= backup \
+	conf \
 	control_panel \
 	directives \
 	editor \
 	host \
+	incidents \
+    java \
 	net \
 	ntop \
 	pixmaps \
@@ -14,6 +17,8 @@ SUBDIRS=conf \
 	scan \
 	sec_report \
 	sensor \
+	session \
+	setup \
 	signature \
 	style \
 	vulnmeter
@@ -33,4 +38,5 @@ install-data-hook:
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/host_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/net_qualification
 	mkdir -p $(localstatedir)/www/ossim/mrtg-html/level_qualification
+	mkdir -p $(localstatedir)/www/ossim/tmp
 

@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuTools", "ToolsRuleViewer");
+?>
+
+<?php
 
 function getOptions($option, $line) 
 {
@@ -42,9 +47,9 @@ function isSetOption($option, $line) {
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
+
   <h1>OSSIM Framework</h1>
-                                                                                
+
   <h2>Rule editor</h2>
 
 <?php
@@ -58,7 +63,7 @@ function isSetOption($option, $line) {
     require_once ('ossim_conf.inc');
     require_once ('dir.php');
     require_once ('options.php');
-                                                                                
+
     $ossim_conf = new ossim_conf();
     $snort_rules_path = $ossim_conf->get_conf("snort_rules_path");
 ?>

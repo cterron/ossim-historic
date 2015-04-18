@@ -37,6 +37,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gnet.h>
 
 #include "sim-enums.h"
 
@@ -57,12 +58,14 @@ typedef struct _SimConfig        SimConfig;
 typedef struct _SimConfigClass   SimConfigClass;
 typedef struct _SimConfigDS      SimConfigDS;
 typedef struct _SimConfigNotify  SimConfigNotify;
+typedef struct _SimConfigRServer SimConfigRServer;
 
 struct _SimConfig {
   GObject parent;
 
   GList   *datasources;
   GList   *notifies;
+  GList   *rservers;
 
   gchar   *notify_prog;
 
@@ -110,6 +113,14 @@ struct _SimConfigNotify {
   GList    *alarm_risks;
 };
 
+struct _SimConfigRServer {
+  gchar     *name;
+  gchar     *ip;
+  GInetAddr *ia;
+  gint       port;
+  gboolean   resend;
+};
+
 GType             sim_config_get_type                        (void);
 SimConfig*        sim_config_new                             (void);
 SimConfigDS*      sim_config_ds_new                          (void);
@@ -119,6 +130,9 @@ SimConfigDS*      sim_config_get_ds_by_name                  (SimConfig    *conf
 
 SimConfigNotify*  sim_config_notify_new                      (void);
 void              sim_config_notify_free                     (SimConfigNotify *notify);
+
+SimConfigRServer* sim_config_rserver_new                     (void);
+void              sim_config_rserver_free                    (SimConfigRServer *rserver);
 
 G_END_DECLS
 

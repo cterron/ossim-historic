@@ -51,6 +51,8 @@ gboolean sim_port_protocol_equal (SimPortProtocol  *pp1,
 				  SimPortProtocol  *pp2);
 
 SimProtocolType sim_protocol_get_type_from_str (const gchar  *str);
+gchar*          sim_protocol_get_str_from_type (SimProtocolType type);
+
 SimConditionType sim_condition_get_type_from_str (const gchar  *str);
 gchar*           sim_condition_get_str_from_type (SimConditionType  type);
 

@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuMonitors", "MonitorsSession");
+?>
+
+<?php
 
     /*
      * net argument in nmap format:

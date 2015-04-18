@@ -1,4 +1,9 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicySensors");
+?>
+
+<?php
     require_once ('ossim_conf.inc');
     $ossim_conf = new ossim_conf();
     $base_dir = $ossim_conf->get_conf("base_dir");

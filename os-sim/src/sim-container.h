@@ -142,6 +142,28 @@ void              sim_container_db_update_host_mac_ul           (SimContainer  *
 								 gchar         *prev_mac,
 								 gchar         *vendor);
 
+gchar*		sim_container_db_get_host_service_ul		(SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gint           port,
+								 gint           protocol);
+void		sim_container_db_insert_host_service_ul		(SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gint           port,
+								 gint           protocol,
+								 gchar         *service,
+								 gchar         *application);
+void		sim_container_db_update_host_service_ul		(SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gint           port,
+								 gint           protocol,
+								 gchar         *service,
+								 gchar         *application);
+
 /* Recovery Function */
 
 void              sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,

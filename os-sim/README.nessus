@@ -50,31 +50,9 @@ nessus clients, collect the results and:
 - Update reports.
 - Update correlation tables.
 
-Ossim + Nessus FAQ (2004-03-11) for 0.9.4
------------------------------------------
+In order to enable local security checks:
 
-Important: Run the nessus client against each nessusd at least once before
-using the script. You have to accept the certificate manually.
-
-This mini-doc tries to explain the basics of using Nessus with ossim.
-
-There are two important scripts that do this:
-
-scripts/update_nessus_plugins.pl
-
-This script fetches the active plugin list from your configured nessusd and
-inserts them into DB for further reference.
-
-scripts/do_nessus.pl
-
-This script does the scanning. It searches through the host_scan table and
-adds every host listed in there with plugin_id 3001 to the to_be_scanned list.
-After that it does the scan, places the results where they belong, updates
-vulnmeter and inserts the correspondig plugin_sids for the server to correlate
-them.
-
-You can add hosts to the host_scan table from the main interface,
-Configuration->Host_scan.
-
-Be careful with the Nessus script, it needs more testing and has to be
-partially rewritten.
+Use SSH to perform local security checks[entry]:SSH user name : = root
+Use SSH to perform local security checks[file]:SSH public key to use : = /Users/dk/.ssh/id_dsa.pub
+Use SSH to perform local security checks[file]:SSH private key to use : = /Users/dk/.ssh/id_dsa
+Use SSH to perform local security checks[password]:Passphrase for SSH key : = your_password

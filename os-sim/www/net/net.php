@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyNetworks");
+?>
+
 <html>
 <head>
   <title>OSSIM Framework</title>
@@ -46,6 +51,9 @@
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold_a", $order);
           ?>">Threshold_A</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("rrd_profile", $order);
+          ?>">RRD Profile</a></th>
 <!--
       <th><a href="<?php //echo $_SERVER["PHP_SELF"]?>?order=<?php
             //echo ossim_db::get_order("alert", $order);
@@ -76,6 +84,14 @@
       <td><?php echo $net->get_priority(); ?></td>
       <td><?php echo $net->get_threshold_c(); ?></td>
       <td><?php echo $net->get_threshold_a(); ?></td>
+      <td>
+        <?php 
+            if (!($rrd_profile = $net->get_rrd_profile()))
+                echo "None";
+            else
+                echo $rrd_profile;
+        ?>
+      </td>
 <!--
       <td><?php //if ($net->get_alert()) echo "Yes"; else echo "No" ?></td>
       <td><?php //echo $net->get_persistence() . " min."; ?></td>
@@ -128,10 +144,10 @@
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="10"><a href="newnetform.php">Insert new network</a></td>
+      <td colspan="11"><a href="newnetform.php">Insert new network</a></td>
     </tr>
     <tr>
-      <td colspan="10"><a href="../conf/reload.php?what=nets">Reload</a></td>
+      <td colspan="11"><a href="../conf/reload.php?what=nets">Reload</a></td>
     </tr>
   </table>
     

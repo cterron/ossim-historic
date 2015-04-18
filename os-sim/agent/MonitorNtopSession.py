@@ -125,7 +125,7 @@ def get_value(rule, url):
                         session["server_port"] = \
                             socket.getservbyname(result[0], 'tcp')
                     except socket.error:
-                        session["client_port"] = result[0]
+                        session["server_port"] = result[0]
             
             #
             # search for session data

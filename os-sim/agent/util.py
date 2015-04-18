@@ -1,10 +1,15 @@
-import string, sys, time
+import string, sys, time, os
 
-CONFIG = '/etc/ossim/agent/config.xml'
-VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.9.5'
+VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.9.7'
+CONFIG  = '/etc/ossim/agent/config.xml'
 RUN_DIR = '/var/run'
-
 VERBOSE = False  # redefined with -v, --verbose command line options
+FORCE   = False    # refefined with -f, --force command line options
+
+# windows compatibility
+if os.name == "nt":
+    CONFIG = 'config.xml'
+    RUN_DIR = 'c:\\'
 
 
 def debug(module, message, mark = "", color = ""):
@@ -79,6 +84,9 @@ def pidof(program):
 
     import os
     import re
+
+    if program is None:
+        return None
 
     ps = os.popen('ps axc')
     ps.readline() # skip initial line

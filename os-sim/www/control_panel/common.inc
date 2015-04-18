@@ -5,8 +5,8 @@ require_once ('ossim_conf.inc');
 $conf = new ossim_conf();
 
 
-function timestamp2date($timestamp){
-                                                                                
+function timestamp2date($timestamp)
+{
     # YYYY-MM-DD HH:MM:SS
     return (substr($timestamp, 0, 4)  . '-' .  # YYYY
             substr($timestamp, 4, 2)  . '-' .  # MM

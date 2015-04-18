@@ -76,6 +76,8 @@ class Control_panel_net {
      */
     function get_metric_list($conn, $time_range, $type) {
 
+        $allowed_nets = Session::getValue();
+
         if ($type == 'compromise') {
             $query = "SELECT * FROM control_panel
                 WHERE rrd_type = 'net' AND
@@ -87,13 +89,13 @@ class Control_panel_net {
                     time_range = '$time_range' 
                 ORDER BY max_a_date DESC LIMIT 50";
         }
-        
+
         if (!$rs = &$conn->Execute("$query")) 
         {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-            
+
                 // only insert in list if net exists in net_qualification
                 if (!$rs2 = &$conn->Execute("SELECT * FROM net_qualification
                                              WHERE net_name = '" .
@@ -102,13 +104,22 @@ class Control_panel_net {
                     print $conn->ErrorMsg();
                 }
                 if ($rs2->fields[0]) {
-                
-                    $list[] = new Control_panel_net ($rs->fields["id"],
-                                                     $rs->fields["time_range"],
-                                                     $rs->fields["max_c"],
-                                                     $rs->fields["max_a"],
-                                                     $rs->fields["max_c_date"],
-                                                     $rs->fields["max_a_date"]);
+
+                    $net_list = Net::get_list($conn,
+                        "WHERE name = '" . $rs->fields["id"] . "'");
+                    if ((false !== strpos($allowed_nets,
+                                          $net_list[0]->get_ips()))
+                        or (!$allowed_nets))
+                    {
+
+                        $list[] = new Control_panel_net (
+                                            $rs->fields["id"],
+                                            $rs->fields["time_range"],
+                                            $rs->fields["max_c"],
+                                            $rs->fields["max_a"],
+                                            $rs->fields["max_c_date"],
+                                            $rs->fields["max_a_date"]);
+                    }
                 }
                 $rs->MoveNext();
             }

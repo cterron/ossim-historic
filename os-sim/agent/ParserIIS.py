@@ -78,7 +78,8 @@ class ParserIIS(Parser.Parser):
                                      src_ip     = source,
                                      src_port   = '',
                                      dst_ip     = to,
-                                     dst_port   = port)
+                                     dst_port   = port,
+                                     log        = line)
                     
                 except IndexError: 
                     pass

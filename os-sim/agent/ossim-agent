@@ -15,11 +15,13 @@ def main():
         options.config_file = util.CONFIG
 
     # Check if there is already a running instance
-    check_pid()
+    if options.force is None:
+        check_pid()
 
     # Install a handler for the terminate and hangup signals
     signal.signal(signal.SIGTERM, terminate)
-    signal.signal(signal.SIGHUP, hangup)
+    if os.name != "nt":
+        signal.signal(signal.SIGHUP, hangup)
 
     # Init agent and read config
     agent = Agent()
@@ -31,7 +33,8 @@ def main():
         # Redirect standard file descriptors
         if not os.path.isdir(agent.logdir):
             os.mkdir(agent.logdir, 0755)
-        sys.stdin  = open('/dev/null', 'r')
+        if os.name != "nt":
+            sys.stdin  = open('/dev/null', 'r')
         sys.stdout = open(os.path.join(agent.logdir, 'agent.log'), 'w')
         util.watchlog = \
             open(os.path.join(agent.logdir, 'agent_watch.log'), 'w')
@@ -79,7 +82,7 @@ def check_pid():
 def parse_options():
     """Parse command line options"""
 
-    parser = OptionParser(usage = "%prog [-v] [-q] [-d] [-c config_file]", 
+    parser = OptionParser(usage = "%prog [-v] [-q] [-d] [-f] [-c config_file]", 
                           version = util.VERSION)
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                       help="make lots of noise")
@@ -89,6 +92,8 @@ def parse_options():
                       help="Run agent in daemon mode")
     parser.add_option("-c", "--config", dest="config_file", action="store",
                       help = "read config from FILE", metavar="FILE")
+    parser.add_option("-f", "--force", dest="force", action="store_true",
+                      help = "Force startup overriding pidfile")
     (options, args) = parser.parse_args()
 
     if len(args) > 1:
