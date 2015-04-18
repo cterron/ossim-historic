@@ -19,6 +19,8 @@
          !mysql_escape_string($_POST["nprts"]) ||
          !mysql_escape_string($_POST["nsens"]) ||
          !mysql_escape_string($_POST["nsigs"]) ||
+         !mysql_escape_string($_POST["begin_hour"]) ||
+         !mysql_escape_string($_POST["end_hour"]) ||
          !mysql_escape_string($_POST["descr"])))
 {
 ?>
@@ -95,7 +97,8 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    Policy::update($conn, $id, $priority, $descr,
+    Policy::update($conn, $id, $priority, $begin_hour, $end_hour, 
+                   $begin_day, $end_day, $descr,
                    $source_ips, $dest_ips, $source_nets, $dest_nets,
                    $ports, $sigs, $sensors);
 ?>

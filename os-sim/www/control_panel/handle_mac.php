@@ -11,7 +11,7 @@
 
 <?php
 require_once 'ossim_db.inc';
-require_once 'classes/Host_os.inc';
+require_once 'classes/Host_mac.inc';
 
 ?>
 
@@ -22,31 +22,31 @@ $conn = $db->connect();
 
 while (list($key,$val) = each($_GET)) {
     list($place_holder, $ip) = split (",", $key, 2);
-    $os = base64_decode($val);
-    if(preg_match("/ack/i", $os)){
+    $mac = base64_decode($val);
+    if(preg_match("/ack/i", $mac)){
         $ip = mysql_escape_string($ip);
-        $os = mysql_escape_string($os);
-        $os = ereg_replace("ack","",$os);
-        if(ereg(" or ", $os)){
-            $os = ereg_replace(" or ","|",$os);
+        $mac = mysql_escape_string($mac);
+        $mac = ereg_replace("ack","",$mac);
+        if(ereg(" or ", $mac)){
+            $mac = ereg_replace(" or ","|",$mac);
         }
         $ip = ereg_replace ("_",".",$ip);
-        Host_os::ack($conn,$ip,$os);
-    } elseif (preg_match("/ignore/i", $os)){
+        Host_mac::ack($conn,$ip,$mac);
+    } elseif(preg_match("/ignore/i", $mac)){
         $ip = mysql_escape_string($ip);
-        $os = mysql_escape_string($os);
-        $os = ereg_replace("ignore","",$os);
-        if(ereg(" or ", $os)){
-            $os = ereg_replace(" or ","|",$os);
+        $mac = mysql_escape_string($mac);
+        $mac = ereg_replace("ignore","",$mac);
+        if(ereg(" or ", $mac)){
+            $mac = ereg_replace(" or ","|",$mac);
         }
         $ip = ereg_replace ("_",".",$ip);
-        Host_os::ignore($conn,$ip,$os);
+        Host_mac::ignore($conn,$ip,$mac);
     }
 }
 
     $db->close($conn);
 ?>
-    <p>Successfully Acked/Deleted/Ignored</p>
+    <p>Successfully Acked/Deleted</p>
     <p><a href="index.php">Back</a></p>
 
 </body>

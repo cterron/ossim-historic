@@ -19,6 +19,7 @@
       <th>Port Group</th>
       <th>Sig Group</th>
       <th>Sensors</th>
+      <th>Time Range</th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -107,7 +108,35 @@
 ?>
       </td>
 
-      <!-- descr -->
+      <td>
+<?php
+            $policy_time = $policy->get_time($conn);
+            
+            $begin_day = $policy_time->get_begin_day();
+            if     ($begin_day == 1) $begin_day_char = "Mon";
+            elseif ($begin_day == 2) $begin_day_char = "Tue";
+            elseif ($begin_day == 3) $begin_day_char = "Wed";
+            elseif ($begin_day == 4) $begin_day_char = "Thu";
+            elseif ($begin_day == 5) $begin_day_char = "Fri";
+            elseif ($begin_day == 6) $begin_day_char = "Sat";
+            elseif ($begin_day == 7) $begin_day_char = "Sun";
+            
+            $end_day = $policy_time->get_end_day();
+            if     ($end_day == 1) $end_day_char = "Mon";
+            elseif ($end_day == 2) $end_day_char = "Tue";
+            elseif ($end_day == 3) $end_day_char = "Wed";
+            elseif ($end_day == 4) $end_day_char = "Thu";
+            elseif ($end_day == 5) $end_day_char = "Fri";
+            elseif ($end_day == 6) $end_day_char = "Sat";
+            elseif ($end_day == 7) $end_day_char = "Sun";
+            
+            echo $begin_day_char . " " .
+                 $policy_time->get_begin_hour() . "h - " .
+                 $end_day_char . " " .
+                 $policy_time->get_end_hour() . "h";
+?>
+      </td>
+
       <td><?php echo $policy->get_descr(); ?></td>
 
       <td>
@@ -125,7 +154,7 @@
 ?>
 
   <tr>
-    <td colspan="8">
+    <td colspan="9">
         <a href="newpolicyform.php">Insert new policy</a>
     </td>
   </tr>

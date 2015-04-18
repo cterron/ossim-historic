@@ -25,6 +25,13 @@ CREATE TABLE host (
   PRIMARY KEY       (ip)
 );
 
+DROP TABLE IF EXISTS scan;
+CREATE TABLE scan (
+    ip              varchar(15) UNIQUE NOT NULL,
+    active          int NOT NULL,
+    PRIMARY KEY     (ip)
+);
+
 DROP TABLE IF EXISTS net;
 CREATE TABLE net (
   name              varchar(128) UNIQUE NOT NULL,
@@ -167,6 +174,16 @@ CREATE TABLE policy_sig_reference (
     policy_id       int NOT NULL,
     sig_group_name  varchar(64) NOT NULL,
     PRIMARY KEY     (policy_id, sig_group_name)
+);
+
+DROP TABLE IF EXISTS policy_time;
+CREATE TABLE policy_time (
+    policy_id       int NOT NULL,
+    begin_hour      smallint NOT NULL,
+    end_hour        smallint NOT NULL,
+    begin_day       smallint NOT NULL,
+    end_day         smallint NOT NULL,
+    PRIMARY KEY     (policy_id)
 );
 
 

@@ -283,6 +283,96 @@
   </tr>
 
   <tr>
+    <th>Time Range
+    </th>
+    <td>
+      <table>
+        <tr>
+          <td>Begin</td><td></td><td>End</td>
+        </tr>
+        <tr>
+          <td>
+            <select name="begin_day">
+              <option value="1">Mon</option>
+              <option value="2">Tue</option>
+              <option value="3">Wed</option>
+              <option value="4">Thu</option>
+              <option value="5">Fri</option>
+              <option value="6">Sat</option>
+              <option value="7">Sun</option>
+            </select>
+            <select name="begin_hour">
+              <option value="1">1h</option>
+              <option value="2">2h</option>
+              <option value="3">3h</option>
+              <option value="4">4h</option>
+              <option value="5">5h</option>
+              <option value="6">6h</option>
+              <option value="7">7h</option>
+              <option value="8">8h</option>
+              <option value="9">9h</option>
+              <option value="10">10h</option>
+              <option value="11">11h</option>
+              <option value="12">12h</option>
+              <option value="13">13h</option>
+              <option value="14">14h</option>
+              <option value="15">15h</option>
+              <option value="16">16h</option>
+              <option value="17">17h</option>
+              <option value="18">18h</option>
+              <option value="19">19h</option>
+              <option value="20">20h</option>
+              <option value="21">21h</option>
+              <option value="22">22h</option>
+              <option value="23">23h</option>
+              <option value="0">0h</option>
+            </select>
+          </td>
+          <td>-</td>
+          <td>
+            <select name="end_day">
+              <option value="1">Mon</option>
+              <option value="2">Tue</option>
+              <option value="3">Wed</option>
+              <option value="4">Thu</option>
+              <option value="5">Fri</option>
+              <option value="6">Sat</option>
+              <option value="7">Sun</option>
+            </select>
+            <select name="end_hour">
+              <option value="1">1h</option>
+              <option value="2">2h</option>
+              <option value="3">3h</option>
+              <option value="4">4h</option>
+              <option value="5">5h</option>
+              <option value="6">6h</option>
+              <option value="7">7h</option>
+              <option value="8">8h</option>
+              <option value="9">9h</option>
+              <option value="10">10h</option>
+              <option value="11">11h</option>
+              <option value="12">12h</option>
+              <option value="13">13h</option>
+              <option value="14">14h</option>
+              <option value="15">15h</option>
+              <option value="16">16h</option>
+              <option value="17">17h</option>
+              <option value="18">18h</option>
+              <option value="19">19h</option>
+              <option value="20">20h</option>
+              <option value="21">21h</option>
+              <option value="22">22h</option>
+              <option value="23">23h</option>
+              <option value="0">0h</option>
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+
+  <tr>
     <th>Description</th>
     <td class="left">
         <textarea name="descr" rows="2" cols="20"></textarea>

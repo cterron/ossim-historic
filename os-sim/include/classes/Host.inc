@@ -131,6 +131,13 @@ class Host {
         }
     }
 
+    function in_host($conn, $ip) {
+        if (!$rs = &$conn->Execute("SELECT * FROM host WHERE ip = '$ip'")) {
+            print $conn->ErrorMsg();
+        }
+        return $rs->fields[0];
+    }
+
 }
 
 

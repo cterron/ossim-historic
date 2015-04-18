@@ -42,6 +42,10 @@ char    sensor_fw[16];
 int     rule;
 unsigned int priority_fw1 = FW1_DEFAULT_PRIORITY;
 
+/* rrd specific */
+unsigned int priority_rrd = RRD_DEFAULT_PRIORITY;
+char what[64];
+
 struct servent *serv;
 
 MYSQL   mysql;
@@ -61,14 +65,6 @@ MYSQL   mysql;
 #ifdef VERBOSE
     printf("sensor     %s\n", yytext);
 #endif
-
-/*
-    if (!strcmp(yytext, "RRD_anomaly")) {
-        BEGIN(RRD);
-    } else {
-        BEGIN(PROG);
-    }
-*/
 
 #ifdef FW1
     if (!strcmp(yytext, "logger")) {
@@ -211,14 +207,27 @@ MYSQL   mysql;
     BEGIN(INITIAL);
 }
 
-<RRD>"host: "({D}|\.)+ {
+<RRD>"host: "(({D}|\.)+|{L}+) {
+#ifdef VERBOSE
+    printf("rrd_anomaly => host: %s\n", yytext + strlen("host: "));
+#endif
     snprintf(source_ip, sizeof(source_ip), "%s", yytext + strlen("host: "));
 }
 <RRD>"what: "{L}+ {
-    snprintf(service, sizeof(service), "%s", yytext + strlen("what: "));
-    log_rrd(&mysql, source_ip, service);
+#ifdef VERBOSE
+    printf("rrd_anomaly => what: %s\n", yytext + strlen("what: "));
+#endif
+    snprintf(what, sizeof(what), "%s", yytext + strlen("what: "));
+}
+<RRD>"priority: "{D}+ {
+#ifdef VERBOSE
+    printf("rrd_anomaly => priority: %s\n", yytext + strlen("priority: "));
+#endif
+    priority_rrd = atoi(yytext + strlen("priority: "));
+    log_rrd(&mysql, source_ip, what, priority_rrd);
     BEGIN(INITIAL);
 }
+
 
 <FIREWALL>"src: "({D}|\.)+ {
     snprintf(source_ip, sizeof(source_ip), "%s", yytext + strlen("src: "));

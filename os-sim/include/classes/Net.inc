@@ -62,6 +62,8 @@ class Net {
         settype($threshold_c, "int");
         settype($threshold_a, "int");
 
+	$name = ereg_replace(" ", "_", $name);
+	
         $query = "INSERT INTO net VALUES 
             ('$name', '$ips', $priority, $threshold_c,
              $threshold_a, '$descr');";
@@ -69,8 +71,10 @@ class Net {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+	$conf = new ossim_conf();
+	$nmap = $conf->get_conf("nmap_path");
         $ips_sane = escapeshellcmd($ips);
-        $ip_string = shell_exec("nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \" ");   
+        $ip_string = shell_exec("$nmap -n -sL $ips_sane | grep Host | cut -f 2 -d \" \" ");   
         $ip_list = explode("\n", $ip_string);
         $lala = array_pop($ip_list);
         

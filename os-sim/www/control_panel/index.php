@@ -20,6 +20,7 @@ require_once ('classes/Control_panel_net.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host_os.inc');
+require_once ('classes/Host_mac.inc');
 require_once ('acid_funcs.inc');
 require_once ('common.inc');
 
@@ -51,7 +52,7 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 
 ?>
 
-  <table align="center">
+  <table align="center" width="100%">
     <tr><td colspan="8">
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day">Last Day</a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month">Last Month</a>]
@@ -361,12 +362,17 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
         </table>
       </td>
     </tr>
+    </table>
+    <br/>
+    <table width="100%">
     <tr>
     <td colspan = 8>
     <table align="center" width="100%">
     <tr>
-    <th colspan=4><A NAME="Anomalies" HREF="<?php echo
-    $_SERVER["PHP_SELF"]?>?#Anomalies">Fix</A> RRD anomalies</th>
+    <th colspan=4><u>RRD anomalies</u> <a name="Anomalies" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title="Fix"><img
+        src="../pixmaps/Hammer2.png" width="24" border="0"></a>
+    </th>
     <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=1">Acknowledged</A></th>
     <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=0">Not Acknowledged</A></th>
     <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=-1">All</A></th>
@@ -480,13 +486,19 @@ echo $alert->get_what();?>"></input></td>
     </table>
     </td>
     </tr>
+    </table>
+    <br/>
+    <table width="100%">
     <tr>
     <td colspan="8">
     <table width="100%">
-    <tr><th colspan="6"> <A NAME="OS" HREF="<?php echo
-    $_SERVER["PHP_SELF"]?>?#OS">Fix</A> OS Changes </th></tr>
-    <tr><th> Host </th><th colspan="2"> OS </th><th colspan="1"> Previous OS
-    </th><th> When </th><th> Ack </th></tr>
+    <tr><th colspan="6"><u>OS Changes</u> <a name="OS" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#OS" title="Fix"><img
+        src="../pixmaps/Hammer2.png" width="24" border="0"></a>  
+        &nbsp;&nbsp;[ <a href="os.php" target="_blank"> Get list </a> ]
+    </th></tr>
+    <tr><th> Host </th><th colspan="1"> OS </th><th colspan="1"> Previous OS
+    </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
 <form action="handle_os.php" method="GET">
 <?php
 if ($host_os_list = Host_os::get_list($conn, "where anom = 1", "")) {
@@ -504,12 +516,21 @@ if ($host_os_list = Host_os::get_list($conn, "where anom = 1", "")) {
     
     ?>
 
-<tr><th><font color="blue"> <?php echo $ip; ?></font></th>
-<td colspan="2"><font color="red"><?php echo $os;?></font></td>
+<tr><th>
+<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+echo $ip;?>">
+<?php echo Host::ip2hostname($conn, $ip);?></A>
+</th>
+<td colspan="1"><font color="red"><?php echo $os;?></font></td>
 <td colspan="1"><?php echo $previous;?></td>
 <td colspan="1"><?php echo $os_time;?></td>
 <td>
 <?php $encoded = base64_encode("ack" . $os);?>
+<input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo
+$encoded;?>"></input>
+</td>
+<td>
+<?php $encoded = base64_encode("ignore" . $previous);?>
 <input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo
 $encoded;?>"></input>
 </td>
@@ -527,7 +548,75 @@ $encoded;?>"></input>
     </table>
     </td>
     </tr>
-  </table>
+    </table>
+    <br/>
+
+    <!-- Mac detection -->
+    <table width="100%">
+    <tr>
+    <td colspan="8">
+    <table width="100%">
+    <tr><th colspan="6"><u>Mac Changes</u> <a name="Mac" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#Mac" title="Fix"><img
+        src="../pixmaps/Hammer2.png" width="24" border="0"></a>  
+        &nbsp;&nbsp;[ <a href="mac.php" target="_blank"> Get list </a> ]
+    </th></tr>
+    <tr><th> Host </th><th colspan="1"> Mac </th><th colspan="1"> Previous Mac
+    </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
+<form action="handle_mac.php" method="GET">
+<?php
+if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1", "")) {
+    foreach($host_mac_list as $host_mac) {
+    $ip = $host_mac->get_ip();
+    $mac_time = $host_mac->get_mac_time();
+    $mac = $host_mac->get_mac();
+    if(ereg("\|",$mac)){
+    $mac = ereg_replace("\|", " or ", $mac);
+    }
+    $previous = $host_mac->get_previous();
+    if(ereg("\|",$previous)){
+    $previous = ereg_replace("\|", " or ", $previous);
+    }
+    
+    ?>
+
+<tr><th>
+<A HREF="<?php echo "$ntop_link/$ip.html";?>" target="_blank" title="<?php
+echo $ip;?>">
+<?php echo Host::ip2hostname($conn, $ip);?></A>
+</th>
+<td colspan="1"><font color="red"><?php echo $mac;?></font></td>
+<td colspan="1"><?php echo $previous;?></td>
+<td colspan="1"><?php echo $mac_time;?></td>
+<td>
+<?php $encoded = base64_encode("ack" . $mac);?>
+<input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo
+$encoded;?>"></input>
+</td>
+<td>
+<?php $encoded = base64_encode("ignore" . $previous);?>
+<input type="checkbox" name="ip,<?php echo $ip;?>" value="<?php echo
+$encoded;?>"></input>
+</td>
+
+
+<?php
+}}
+?>
+<tr>
+<td align="center" colspan="6">
+<input type="submit" value="OK">
+<input type="reset" value="reset">
+</td>
+</tr>
+</form>
+    </table>
+    </td>
+    </tr>
+    <!-- end Mac detection -->
+
+
+</table>
 
 <p>&nbsp;</p>
 

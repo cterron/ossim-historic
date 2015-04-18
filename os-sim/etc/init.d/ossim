@@ -31,6 +31,7 @@ case "$1" in
     # Log to be removed soon
     nice -n 19 ./check_rrd.pl >> temp_rrd.log &
     nice -n 19 ./check_rrd_global.pl >> temp_rrd.log &
+    nice -n 19 ./mac.pl &
     
 	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
 		echo "OSSIM is up and running!"
@@ -56,6 +57,8 @@ case "$1" in
         killall -KILL check_rrd.pl
         killall -KILL check_rrd_global.pl
         killall -KILL p0f
+        killall -KILL mac.pl
+        killall -KILL arpwatch
 
 
 	    # Wait until the timeout

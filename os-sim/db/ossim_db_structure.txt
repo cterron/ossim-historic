@@ -7,6 +7,8 @@
 | graph                     | data used for graph drawing              |
 | graph_qualification       | C & A graph levels                       |
 | host                      | host info                                |
+| host_mac                  | mac's hosts info                         |
+| host_os                   | os's hosts info                          |
 | host_position             | graphing applet data (x, y, z)           |
 | host_qualification        | C & A host levels                        |
 | link                      | links between hosts                      |
@@ -19,10 +21,16 @@
 | policy_port_reference     | ossim policy info (ports)                |
 | policy_sensor_reference   | ossim policy info (sensors)              |
 | policy_sig_reference      | ossim policy info (signatures)           |
+| policy_time               | time based policy                        |
 | port                      | port info                                |
 | port_group                | set of ports descr                       |
 | port_group_reference      | ports in a specific port_group           |
 | protocol                  | internet protocols                       |
+| rrd_anomalies             | rrd anomaly detection (host)             |
+| rrd_anomalies_global      | rrd anomaly detection (global)           |
+| rrd_conf                  | ntop rrd info (host)                     |
+| rrd_conf_global           | ntop rrd info (global)                   |
+| scan                      | which hosts are up and which are down    |
 | sensor                    | sensor hosts                             |
 | signature                 | snort signatures                         |
 | signature_group           | set of signatures descr                  |
@@ -97,7 +105,29 @@ host
 | descr       | varchar(255) | YES  |     | NULL    |       |
 +-------------+--------------+------+-----+---------+-------+
 
-host_position;
+host_mac
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| ip       | varchar(15)  |      | PRI |         |       |
+| mac      | varchar(255) |      |     |         |       |
+| previous | varchar(255) |      |     |         |       |
+| anom     | int(11)      |      |     | 0       |       |
+| mac_time | varchar(100) |      |     |         |       |
++----------+--------------+------+-----+---------+-------+
+
+host_os
++----------+--------------+------+-----+---------+-------+
+| Field    | Type         | Null | Key | Default | Extra |
++----------+--------------+------+-----+---------+-------+
+| ip       | varchar(15)  |      | PRI |         |       |
+| os       | varchar(255) |      |     |         |       |
+| previous | varchar(255) |      |     |         |       |
+| anom     | int(11)      |      |     | 0       |       |
+| os_time  | varchar(100) |      |     |         |       |
++----------+--------------+------+-----+---------+-------+
+
+host_position
 +---------+-------------+------+-----+---------+-------+
 | Field   | Type        | Null | Key | Default | Extra |
 +---------+-------------+------+-----+---------+-------+
@@ -155,13 +185,13 @@ net_qualification
 +------------+-------------+------+-----+---------+-------+
 
 policy
-+----------+--------------+------+-----+---------+----------------+
-| Field    | Type         | Null | Key | Default | Extra          |
-+----------+--------------+------+-----+---------+----------------+
-| id       | int(11)      |      | PRI | NULL    | auto_increment |
-| priority | smallint(6)  |      |     | 0       |                |
-| descr    | varchar(255) | YES  |     | NULL    |                |
-+----------+--------------+------+-----+---------+----------------+
++------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int(11)      |      | PRI | NULL    | auto_increment |
+| priority   | smallint(6)  |      |     | 0       |                |
+| descr      | varchar(255) | YES  |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
 
 policy_host_reference
 +-----------+-----------------------+------+-----+---------+-------+
@@ -205,6 +235,17 @@ policy_sig_reference;
 | sig_group_name | varchar(64) |      | PRI |         |       |
 +----------------+-------------+------+-----+---------+-------+
 
+policy_time
++------------+-------------+------+-----+---------+-------+
+| Field      | Type        | Null | Key | Default | Extra |
++------------+-------------+------+-----+---------+-------+
+| policy_id  | int(11)     |      | PRI | 0       |       |
+| begin_hour | smallint(6) |      |     | 0       |       |
+| end_hour   | smallint(6) |      |     | 0       |       |
+| begin_day  | smallint(6) |      |     | 0       |       |
+| end_day    | smallint(6) |      |     | 0       |       |
++------------+-------------+------+-----+---------+-------+
+
 port
 +---------------+--------------+------+-----+---------+-------+
 | Field         | Type         | Null | Key | Default | Extra |
@@ -241,6 +282,103 @@ protocol
 | alias | varchar(24)  | YES  |     | NULL    |       |
 | descr | varchar(255) |      |     |         |       |
 +-------+--------------+------+-----+---------+-------+
+
+rrd_anomalies
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| ip           | varchar(15)  |      |     |         |       |
+| what         | varchar(100) |      |     |         |       |
+| count        | int(11)      |      |     | 0       |       |
+| anomaly_time | varchar(40)  |      |     |         |       |
+| range        | varchar(30)  |      |     |         |       |
+| over         | int(11)      |      |     | 0       |       |
+| acked        | int(11)      | YES  |     | 0       |       |
++--------------+--------------+------+-----+---------+-------+
+
+rrd_anomalies_global
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| what         | varchar(100) |      |     |         |       |
+| count        | int(11)      |      |     | 0       |       |
+| anomaly_time | varchar(40)  |      |     |         |       |
+| range        | varchar(30)  |      |     |         |       |
+| over         | int(11)      |      |     | 0       |       |
+| acked        | int(11)      | YES  |     | 0       |       |
++--------------+--------------+------+-----+---------+-------+
+
+rrd_conf
++--------------------------+-------------+------+-----+---------+-------+
+| Field                    | Type        | Null | Key | Default | Extra |
++--------------------------+-------------+------+-----+---------+-------+
+| ip                       | varchar(15) |      | PRI |         |       |
+| pkt_sent                 | varchar(60) |      |     |         |       |
+| pkt_rcvd                 | varchar(60) |      |     |         |       |
+| bytes_sent               | varchar(60) |      |     |         |       |
+| bytes_rcvd               | varchar(60) |      |     |         |       |
+| tot_contacted_sent_peers | varchar(60) |      |     |         |       |
+| tot_contacted_rcvd_peers | varchar(60) |      |     |         |       |
+| ip_dns_sent_bytes        | varchar(60) |      |     |         |       |
+| ip_dns_rcvd_bytes        | varchar(60) |      |     |         |       |
+| ip_nbios_ip_sent_bytes   | varchar(60) |      |     |         |       |
+| ip_nbios_ip_rcvd_bytes   | varchar(60) |      |     |         |       |
+| ip_mail_sent_bytes       | varchar(60) |      |     |         |       |
+| ip_mail_rcvd_bytes       | varchar(60) |      |     |         |       |
+| mrtg_a                   | varchar(60) |      |     |         |       |
+| mrtg_c                   | varchar(60) |      |     |         |       |
++--------------------------+-------------+------+-----+---------+-------+
+
+rrd_conf_global
++-------------------------+-------------+------+-----+---------+-------+
+| Field                   | Type        | Null | Key | Default | Extra |
++-------------------------+-------------+------+-----+---------+-------+
+| active_host_senders_num | varchar(60) |      |     |         |       |
+| arp_rarp_bytes          | varchar(60) |      |     |         |       |
+| broadcast_pkts          | varchar(60) |      |     |         |       |
+| ethernet_bytes          | varchar(60) |      |     |         |       |
+| ethernet_pkts           | varchar(60) |      |     |         |       |
+| icmp_bytes              | varchar(60) |      |     |         |       |
+| igmp_bytes              | varchar(60) |      |     |         |       |
+| ip_bytes                | varchar(60) |      |     |         |       |
+| ip_dhcp_bootp_bytes     | varchar(60) |      |     |         |       |
+| ip_dns_bytes            | varchar(60) |      |     |         |       |
+| ip_edonkey_bytes        | varchar(60) |      |     |         |       |
+| ip_ftp_bytes            | varchar(60) |      |     |         |       |
+| ip_gnutella_bytes       | varchar(60) |      |     |         |       |
+| ip_http_bytes           | varchar(60) |      |     |         |       |
+| ip_kazaa_bytes          | varchar(60) |      |     |         |       |
+| ip_mail_bytes           | varchar(60) |      |     |         |       |
+| ip_messenger_bytes      | varchar(60) |      |     |         |       |
+| ip_nbios_ip_bytes       | varchar(60) |      |     |         |       |
+| ip_nfs_bytes            | varchar(60) |      |     |         |       |
+| ip_nttp_bytes           | varchar(60) |      |     |         |       |
+| ip_snmp_bytes           | varchar(60) |      |     |         |       |
+| ip_ssh_bytes            | varchar(60) |      |     |         |       |
+| ip_telnet_bytes         | varchar(60) |      |     |         |       |
+| ip_winmx_bytes          | varchar(60) |      |     |         |       |
+| ip_x11_bytes            | varchar(60) |      |     |         |       |
+| ipx_bytes               | varchar(60) |      |     |         |       |
+| known_hosts_num         | varchar(60) |      |     |         |       |
+| multicast_pkts          | varchar(60) |      |     |         |       |
+| ospf_bytes              | varchar(60) |      |     |         |       |
+| other_bytes             | varchar(60) |      |     |         |       |
+| tcp_bytes               | varchar(60) |      |     |         |       |
+| udp_bytes               | varchar(60) |      |     |         |       |
+| up_to_1024_pkts         | varchar(60) |      |     |         |       |
+| up_to_128_pkts          | varchar(60) |      |     |         |       |
+| up_to_1518_pkts         | varchar(60) |      |     |         |       |
+| up_to_512_pkts          | varchar(60) |      |     |         |       |
+| up_to_64_pkts           | varchar(60) |      |     |         |       |
++-------------------------+-------------+------+-----+---------+-------+
+
+scan
++--------+-------------+------+-----+---------+-------+
+| Field  | Type        | Null | Key | Default | Extra |
++--------+-------------+------+-----+---------+-------+
+| ip     | varchar(15) |      | PRI |         |       |
+| active | int(11)     |      |     | 0       |       |
++--------+-------------+------+-----+---------+-------+
 
 sensor
 +-------+--------------+------+-----+---------+-------+

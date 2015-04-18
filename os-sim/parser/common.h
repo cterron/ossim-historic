@@ -41,6 +41,9 @@
 #define FW1_SIG_DROP_NAME     "FireWall-1 drop action"
 #define FW1_SIG_REJECT_NAME   "FireWall-1 reject action"
 
+/* rrd anomaly detection */
+#define RRD_DEFAULT_PRIORITY    5
+#define GENERATOR_RRD_ANOMALY 201
 
 
 /* ===================== */
@@ -94,5 +97,6 @@ int insert_fw1_alert(unsigned long int source_ip,
 void graph (MYSQL *mysql, char *source_ip, char *dest_ip);
 
 /* rrd_anomaly.c */
-void log_rrd(MYSQL *mysql, char source_ip[16], char what[128]);
+void log_rrd(MYSQL *mysql, char source_ip[16], char what[128], 
+             unsigned int priority);
 

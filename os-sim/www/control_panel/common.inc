@@ -13,9 +13,10 @@ function graph_image_link($ip, $type, $what, $start, $end, $zoom) {
 function echocolor ($val, $max)
 {
     if ($val - $max > 0) {
-    echo "<font color=\"#991e1e\">$val</font>";
+        echo "<font color=\"#991e1e\">" . 
+              intval($val * 100 / $max) . "</font>/$val%";
     } else {
-    echo $val;
+        echo "$val/" . intval($val * 100 / $max) . "%";
     }
 }
 

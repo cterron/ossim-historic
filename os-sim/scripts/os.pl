@@ -42,7 +42,7 @@ my $time = localtime;
         if (my $row = $sth->fetchrow_hashref) {
         my $prev_os = $row->{previous};
             if($os ne $prev_os && $row->{anom} == 0){
-                $query = "UPDATE host_os SET anom = 1, os = '$os' WHERE ip = '$host';";
+                $query = "UPDATE host_os SET anom = 1, os = '$os', os_time = '$time' WHERE ip = '$host';";
                 my $sth = $dbh->prepare($query);
                 $sth->execute();
             }

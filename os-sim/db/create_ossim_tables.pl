@@ -11,6 +11,7 @@ my $base=`grep ^ossim_base /etc/ossim.conf | cut -d= -f2`; chop $base;
 `mysql -u $user -p$pass  $base < ossim_tables.sql`;
 `mysql -u $user -p$pass  $base < ossim_extra.sql`;
 `mysql -u $user -p$pass  $base < ossim_os.sql`;
+`mysql -u $user -p$pass  $base < ossim_mac.sql`;
 `mysql -u $user -p$pass  $base < ossim_rrd.sql`;
 `mysql -u $user -p$pass  $base < ossim_rrd_global.sql`;
 

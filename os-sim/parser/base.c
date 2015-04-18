@@ -41,7 +41,7 @@ int get_asset(MYSQL *mysql, char *ip, int *asset) {
     query = (char *) malloc(sizeof(char) * QUERY_MAX_SIZE);
     snprintf(query, QUERY_MAX_SIZE, 
              "SELECT asset FROM host WHERE ip = '%s';", ip);
-    
+
     if (mysql_query(mysql, query)) {
        /* query failed */
        fprintf(stderr, "Failed to make query %s\n%s\n",

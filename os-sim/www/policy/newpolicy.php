@@ -19,6 +19,10 @@
          !mysql_escape_string($_POST["nprts"]) ||
          !mysql_escape_string($_POST["nsens"]) ||
          !mysql_escape_string($_POST["nsigs"]) ||
+         !mysql_escape_string($_POST["begin_hour"]) ||
+         !mysql_escape_string($_POST["end_hour"]) ||
+         !mysql_escape_string($_POST["begin_day"]) ||
+         !mysql_escape_string($_POST["end_day"]) ||
          !mysql_escape_string($_POST["descr"])))
 {
 ?>
@@ -31,8 +35,12 @@
 /* check OK, insert into DB */
 } elseif(mysql_escape_string($_POST["insert"])) {
 
-    $priority = mysql_escape_string($_POST["priority"]);
-    $descr = mysql_escape_string($_POST["descr"]);
+    $priority   = mysql_escape_string($_POST["priority"]);
+    $begin_hour = mysql_escape_string($_POST["begin_hour"]);
+    $end_hour   = mysql_escape_string($_POST["end_hour"]);
+    $begin_day  = mysql_escape_string($_POST["begin_day"]);
+    $end_day    = mysql_escape_string($_POST["end_day"]);
+    $descr      = mysql_escape_string($_POST["descr"]);
 
     /* source ips */
     for ($i = 1; $i <= mysql_escape_string($_POST["sourcenips"]); $i++) {
@@ -95,7 +103,8 @@
     $db = new ossim_db();
     $conn = $db->connect();
 
-    Policy::insert($conn, $priority, $descr,
+    Policy::insert($conn, $priority, 
+                   $begin_hour, $end_hour, $begin_day, $end_day, $descr,
                    $source_ips, $dest_ips, $source_nets, $dest_nets,
                    $ports, $sigs, $sensors);
 ?>

@@ -22,6 +22,7 @@ satisfying all their dependencies:
 - Mrtg 2.9.29
 - Flex
 - P0f 2.0.1
+- Arpwatch 2.1a11
 
 
 Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web

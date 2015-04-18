@@ -179,10 +179,8 @@ if($net_stats)
  */
  
 /*
- * Si se pincha en el nombre de red, sólo mostrar las ips
- * que pertenezcan a esa red.
+ * If click on a net, only show hosts of this net
  */
-/*
 if ($_GET["net"]) {
 
     $net = $_GET["net"];
@@ -191,21 +189,26 @@ if ($_GET["net"]) {
              as $net_host_reference) 
     {
         $ip = $net_host_reference->get_host_ip();
-
-        foreach (Host_qualification::get_list($conn, "WHERE host_ip = '$ip'")
-                 as $host_qualification)
-        {
-            $ip_stats[] = new Host_qualification 
+    
+        $host_list = Host_qualification::get_list
+                                            ($conn, "WHERE host_ip = '$ip'");
+        if ($host_list) {
+            foreach (Host_qualification::get_list
+                                            ($conn, "WHERE host_ip = '$ip'")
+                     as $host_qualification)
+            {
+                $ip_stats[] = new Host_qualification 
                                 ($host_qualification->get_host_ip(),
                                  $host_qualification->get_compromise(),
                                  $host_qualification->get_attack());
+            }
         }
     }
 } else {
-*/
+
     $ip_stats = Host_qualification::get_list
         ($conn, "", "ORDER BY compromise + attack DESC");
-/* } */
+}
 
 #if (count($ip_stats) > 0) {
 $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
@@ -214,8 +217,11 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
 
 
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3"><A NAME="Hosts" HREF="<?php echo
-        $_SERVER["PHP_SELF"]?>?#Hosts">Fix </A>Hosts</th></tr>
+    <tr><th align="center" colspan="3">Hosts
+    <A NAME="Hosts" HREF="<?php echo
+        $_SERVER["PHP_SELF"]?>?#Hosts" title="Fix"><img
+        src="../pixmaps/Hammer2.png" width="24" border="0"/></A>
+    </th></tr>
     <tr><td colspan="3"></td></tr>
 
     <!-- rule for threshold -->
@@ -344,9 +350,11 @@ $graphs_stats = Graph_qualification::get_list($conn);
 ?>
     <!-- graphs -->
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3">
+    <tr><th align="center" colspan="3">Graphs
     <A NAME="Graphs" HREF="<?php echo
-        $_SERVER["PHP_SELF"]?>?#Graphs">Fix </A>Graphs</th></tr>
+        $_SERVER["PHP_SELF"]?>?#Graphs"><img
+        src="../pixmaps/Hammer2.png" width="24" border="0"></A>
+    </th></tr>
 <!--    <tr><td colspan="3"><br/></td></tr> -->
     
     <!-- rule for threshold -->

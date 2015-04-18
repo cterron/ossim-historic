@@ -396,6 +396,222 @@
   </tr>
 
   <tr>
+    <th>Time Range
+    </th>
+    <td>
+      <table>
+        <tr>
+          <td>Begin</td><td></td><td>End</td>
+        </tr>
+        <tr>
+          <td>
+<?php
+    $policy_time = $policy->get_time($conn);
+?>
+            <select name="begin_day">
+              <option 
+              <?php if ($policy_time->get_begin_day() == 1) echo " SELECTED "?>
+                value="1">Mon</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 2) echo " SELECTED "?>
+                value="2">Tue</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 3) echo " SELECTED "?>
+                value="3">Wed</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 4) echo " SELECTED "?>
+                value="4">Thu</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 5) echo " SELECTED "?>
+                value="5">Fri</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 6) echo " SELECTED "?>
+                value="6">Sat</option>
+              <option 
+              <?php if ($policy_time->get_begin_day() == 7) echo " SELECTED "?>
+                value="7">Sun</option>
+            </select>
+            <select name="begin_hour">
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 1) echo " SELECTED "?>
+                value="1">1h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 2) echo " SELECTED "?>
+                value="2">2h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 3) echo " SELECTED "?>
+                value="3">3h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 4) echo " SELECTED "?>
+                value="4">4h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 5) echo " SELECTED "?>
+                value="5">5h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 6) echo " SELECTED "?>
+                value="6">6h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 7) echo " SELECTED "?>
+                value="7">7h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 8) echo " SELECTED "?>
+                value="8">8h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 9) echo " SELECTED "?>
+                value="9">9h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 10) echo " SELECTED "?>
+                value="10">10h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 11) echo " SELECTED "?>
+                value="11">11h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 12) echo " SELECTED "?>
+                value="12">12h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 13) echo " SELECTED "?>
+                value="13">13h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 14) echo " SELECTED "?>
+                value="14">14h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 15) echo " SELECTED "?>
+                value="15">15h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 16) echo " SELECTED "?>
+                value="16">16h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 17) echo " SELECTED "?>
+                value="17">17h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 18) echo " SELECTED "?>
+                value="18">18h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 19) echo " SELECTED "?>
+                value="19">19h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 20) echo " SELECTED "?>
+                value="20">20h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 21) echo " SELECTED "?>
+                value="21">21h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 22) echo " SELECTED "?>
+                value="22">22h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 23) echo " SELECTED "?>
+                value="23">23h</option>
+              <option 
+              <?php if ($policy_time->get_begin_hour() == 0) echo " SELECTED "?>
+                value="0">0h</option>
+            </select>
+          </td>
+          <td>-</td>
+          <td>
+            <select name="end_day">
+              <option 
+              <?php if ($policy_time->get_end_day() == 1) echo " SELECTED "?>
+                value="1">Mon</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 2) echo " SELECTED "?>
+                value="2">Tue</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 3) echo " SELECTED "?>
+                value="3">Wed</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 4) echo " SELECTED "?>
+                value="4">Thu</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 5) echo " SELECTED "?>
+                value="5">Fri</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 6) echo " SELECTED "?>
+                value="6">Sat</option>
+              <option 
+              <?php if ($policy_time->get_end_day() == 7) echo " SELECTED "?>
+                value="7">Sun</option>
+            </select>
+            <select name="end_hour">
+              <option 
+              <?php if ($policy_time->get_end_hour() == 1) echo " SELECTED "; ?>
+                value="1">1h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 2) echo " SELECTED "; ?>
+                value="2">2h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 3) echo " SELECTED "; ?>
+                value="3">3h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 4) echo " SELECTED "; ?>
+                value="4">4h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 5) echo " SELECTED "; ?>
+                value="5">5h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 6) echo " SELECTED "; ?>
+                value="6">6h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 7) echo " SELECTED "; ?>
+                value="7">7h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 8) echo " SELECTED "; ?>
+                value="8">8h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 9) echo " SELECTED "; ?>
+                value="9">9h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 10) echo " SELECTED "; ?>
+                value="10">10h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 11) echo " SELECTED "; ?>
+                value="11">11h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 12) echo " SELECTED "; ?>
+                value="12">12h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 13) echo " SELECTED "; ?>
+                value="13">13h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 14) echo " SELECTED "; ?>
+                value="14">14h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 15) echo " SELECTED "; ?>
+                value="15">15h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 16) echo " SELECTED "; ?>
+                value="16">16h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 17) echo " SELECTED "; ?>
+                value="17">17h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 18) echo " SELECTED "; ?>
+                value="18">18h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 19) echo " SELECTED "; ?>
+                value="19">19h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 20) echo " SELECTED "; ?>
+                value="20">20h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 21) echo " SELECTED "; ?>
+                value="21">21h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 22) echo " SELECTED "; ?>
+                value="22">22h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 23) echo " SELECTED "; ?>
+                value="23">23h</option>
+              <option 
+              <?php if ($policy_time->get_end_hour() == 0) echo " SELECTED "; ?>
+                value="0">0h</option>
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
     <th>Description</th>
     <td class="left">
         <textarea name="descr" rows="2" 

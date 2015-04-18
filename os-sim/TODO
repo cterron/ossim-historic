@@ -10,7 +10,7 @@
 - Horizontal / Vertical graph relocation
 - Hard link analisys using ntop's "sessions"
 + Buffer parser input
-- Use time-based policy
++ Use time-based policy
 - Up and Download rules from sensor, edit/modify/delete rule groups, restart
   sensors.
 - Update snort rules automagically
@@ -43,5 +43,14 @@
 - Don't open a mysql connection every time you insert a fw-1 alert.
 - Only get MAX|MIN|AVG rrd values for top 5 control-panel hosts.
 - Use intval() to escape integers (instead of settype()). Fix SQL injection.
+
+----
+
+- p0f is too specific. Either take some anomalies into account or disable
+  verbose os printing.
+- parser dies after a few days.
+- Rewrite arpwatch so it can use an interface without assigned address.
+- Rewrite ntop so we use rrdtool 1.1.0 again.
+- Specify multiple interfaces within config. Multiple local networks.
 
 - Much much more...

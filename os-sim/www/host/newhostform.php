@@ -19,7 +19,7 @@
   </tr>
   <tr>
     <th>IP</th>
-    <td class="left"><input type="text" name="ip"></td>
+    <td class="left"><input type="text" value="<?php echo $ip ?>" name="ip"></td>
   </tr>
   <tr>
     <th>Asset</th>

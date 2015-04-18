@@ -275,7 +275,7 @@
                              mysql_escape_string($_POST["pkt_sent_priority"]),
                              mysql_escape_string($_POST["pkt_sent_alpha"]),
                              mysql_escape_string($_POST["pkt_sent_beta"]),
-                             mysql_escape_string($_POST["persistence"])));
+                             mysql_escape_string($_POST["pkt_sent_persistence"])));
     $pkt_rcvd
         = implode(",", array(mysql_escape_string($_POST["pkt_rcvd_threshold"]),
                              mysql_escape_string($_POST["pkt_rcvd_priority"]),
@@ -286,8 +286,8 @@
         = implode(",", array(mysql_escape_string($_POST["bytes_sent_threshold"]),
                              mysql_escape_string($_POST["bytes_sent_priority"]),
                              mysql_escape_string($_POST["bytes_sent_alpha"]),
-                             mysql_escape_string($_POST["bytes_sent_persistence"]),
-                             mysql_escape_string($_POST["bytes_sent_beta"])));
+                             mysql_escape_string($_POST["bytes_sent_beta"]),
+                             mysql_escape_string($_POST["bytes_sent_persistence"])));
     $bytes_rcvd
         = implode(",", array(mysql_escape_string($_POST["bytes_rcvd_threshold"]),
                              mysql_escape_string($_POST["bytes_rcvd_priority"]),

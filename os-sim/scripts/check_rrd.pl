@@ -41,7 +41,7 @@ my %rrd_values=
     "mrtg_c" => ["pktSent"]); 
 
 sub is_over_threshold {
-my ($real_ip, $rrd, $real_threshold, $persistence, $start, $end) = @_;
+my ($real_ip, $rrd, $real_threshold, $priority, $persistence, $start, $end) = @_;
 my $type = "ntop";
 my $what = "MAX";
 my $res;
@@ -55,7 +55,6 @@ my $file = $rrdpath . $real_ip . "/" . $real_rrd . ".rrd";
 if(stat($file)) { # at least the file exists
     $res = `$execute $start $end $file $type $what`;
     if($res > $real_threshold){
-    syslog('auth.info','RRD_anomaly: host: %s what: %s ', $real_ip, $rrd);
     print "$real_ip: $rrd exceeds threshold by ",$res - $real_threshold,"\n"; 
     my $query = "SELECT * FROM rrd_anomalies where ip = '$real_ip' and what = '$rrd' and acked = 0;";
     my $sth = $dbh->prepare($query);
@@ -83,6 +82,7 @@ if(stat($file)) { # at least the file exists
                 $sth->execute();
                 } # if count < persistence
                 else {
+                syslog('auth.info','RRD_anomaly: host: %s what: %s priority: %s', $real_ip, $rrd, $priority);
                 $count += 1;
                 $query = "UPDATE rrd_anomalies set count = $count where ip = '$real_ip' and what = '$rrd' and acked = 0;";
                 my $sth = $dbh->prepare($query);
@@ -109,7 +109,7 @@ while(1){
 
        foreach $val (keys %rrd_values){
             if($row->{$val} =~ m/^(.*),(.*),(.*),(.*),(.*)$/){ 
-            is_over_threshold ($ip, $val,$1,$5, "N-1H", "N" );
+            is_over_threshold ($ip, $val,$1,$2,$5, "N-1H", "N" );
             }
         }
     }

@@ -1,7 +1,31 @@
 # ChangeLog for OSSIM
 
+    19 Sep 2003 DK <dk@ipsoluciones.com> :
+    * 0.5 Released
+
+* OSSIM-0.5 (19 Sep 2003)
+
+    18 Sep 2003 DK <dk@ipsoluciones.com> :
+    * Graph drawing changed.
+    * OS & Mac anomaly functionalities added.
+
+    16 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * New features into FrameWork
+      - Snort rule editor (visualization only).
+      - Host scan.
+
+    15 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * Time-based policy.
+
+    12 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * RRD anomaly detection integrated in RiskMeter.
+
     12 Sep 2003 DK <dk@ipsoluciones.com> :
     * Releasing 0.4-alpha.
+    * Mac anomaly detection. Arpwatch.
+    * Misc control panel support scripts.
+
+* OSSIM-0.4 (12 Sep 2003)
 
     11 Sep 2003 DK <dk@ipsoluciones.com> :
     * Lots of installation corrections, hopefully now it is a little bit

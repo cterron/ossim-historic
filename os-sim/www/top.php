@@ -18,6 +18,8 @@
      <th align="center">
         [<a href="host/host.php" title="host management" 
            target="main">Hosts</a>]
+        [<a href="scan/scan.php" title="host scanning" 
+           target="main">Scan</a>]
         [<a href="rrd_conf/rrd_conf.php" title="RRD Conf Management" 
            target="main">RRD Config</a>]
         [<a href="net/net.php" title="port management" 
@@ -28,8 +30,10 @@
            target="main">Sensors</a>]
         [<a href="signature/signature.php" title="sensor management" 
            target="main">Signatures</a>]
+        [<a href="editor/editor.php" title="rule editor" 
+           target="main">Rule Editor</a>]
         [<a href="policy/policy.php" title="policy management" 
-           target="main">Policy</a>]<BR>
+           target="main">Policy</a>]<br/>
         [<a href="control_panel/index.php" title="OSSIM Control Panel" 
            target="main"><font color="#991e1e">Control Panel</font></a>]
         [<a href="riskmeter/index.php" title="OSSIM riskmeter" 
@@ -45,6 +49,8 @@
         [<a href="<?php echo $conf->get_conf("opennms_link"); ?>" 
            title="(OpenNMS)" 
            target="main"><font color="#991e1e">Service availability</font></a>]
+        [<a href="wizard/wizard.php" title="configuration wizard" 
+           target="main"><font color="black">Wizard</a></a>]
         [<a href="conf/modifyconfform.php" title="framework config" 
            target="main"><font color="black">Conf</a></a>]
       </th>

@@ -22,7 +22,7 @@ if ($sth->rows > 0) {
         my $net_name = $row->{net_name};
 
         print CFG <<"EOF";
-Target[$net_name]: `$ossim_conf::ossim_data->{base_dir}/mrtg/nets/read_data.pl $net_name`
+Target[$net_name]: `$ossim_conf::ossim_data->{base_dir}/mrtg/nets/read_data.pl "$net_name"`
 Title[$net_name]: OSSIM Level graphics
 Background[$net_name]: #ffffff
 PageTop[$net_name]: <H1>Level for $net_name</H1>

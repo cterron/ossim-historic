@@ -5,24 +5,31 @@ require_once ('Policy_net_reference.inc');
 require_once ('Policy_sensor_reference.inc');
 require_once ('Policy_port_reference.inc');
 require_once ('Policy_sig_reference.inc');
+require_once ('Policy_time.inc');
 
 class Policy {
 
     var $id;
     var $priority;
+    var $begin_hour;
+    var $end_hour;
     var $port_group_name;
     var $sig_group_name;
     var $descr;
 
-    function Policy ($id, $priority, $descr)
+    function Policy ($id, $priority, $begin_hour, $end_hour, $descr)
     {
-        $this->id               = $id;
-        $this->priority         = $priority;
-        $this->descr            = $descr;
+        $this->id          = $id;
+        $this->priority    = $priority;
+        $this->begin_hour  = $begin_hour;
+        $this->end_hour    = $end_hour;
+        $this->descr       = $descr;
     }
 
     function get_id()              { return $this->id; }
     function get_priority()        { return $this->priority; }
+    function get_begin_hour()      { return $this->begin_hour; }
+    function get_end_hour()        { return $this->end_hour; }
     function get_descr()           { return $this->descr; }
 
 
@@ -46,6 +53,10 @@ class Policy {
         return Policy_sig_reference::get_list($conn, $this->id);
     }
 
+    function get_time($conn) {
+        return Policy_time::get_list($conn, $this->id);
+    }
+
 
     function get_list($conn, $where = "", $order = "") 
     {
@@ -55,6 +66,8 @@ class Policy {
             while (!$rs->EOF) {
                 $list[] = new Policy ($rs->fields["id"],
                                       $rs->fields["priority"],
+                                      $rs->fields["begin_hour"],
+                                      $rs->fields["end_hour"],
                                       $rs->fields["descr"]);
                 $rs->MoveNext();
             }
@@ -63,8 +76,8 @@ class Policy {
     }
 
     function insert($conn, 
-                    $priority, $descr,
-                    $host_source_list, $host_dest_list,
+                    $priority, $begin_hour, $end_hour, $begin_day, $end_day, 
+                    $descr, $host_source_list, $host_dest_list,
                     $net_source_list, $net_dest_list, 
                     $port_list, $sig_list, $sensor_list)
     {
@@ -91,10 +104,14 @@ class Policy {
             Policy_sig_reference::insert($conn, $sig_list);
         if ($sensor_list)
             Policy_sensor_reference::insert($conn, $sensor_list);
+
+        Policy_time::insert($conn, 
+                            $begin_hour, $end_hour, $begin_day, $end_day);
     }
 
     function update($conn, 
-                    $id, $priority, $descr,
+                    $id, $priority, $begin_hour, $end_hour, 
+                    $begin_day, $end_day, $descr,
                     $host_source_list, $host_dest_list,
                     $net_source_list, $net_dest_list,
                     $port_list, $sig_list, $sensor_list)
@@ -103,7 +120,8 @@ class Policy {
 
 
         Policy::delete($conn, $id);
-        Policy::insert($conn, $priority, $descr,
+        Policy::insert($conn, $priority, $begin_hour, $end_hour, 
+                       $begin_day, $end_day, $descr,
                        $host_source_list, $host_dest_list,
                        $net_source_list, $net_dest_list,
                        $port_list, $sig_list, $sensor_list);
@@ -123,6 +141,7 @@ class Policy {
         Policy_port_reference::delete($conn, $id);
         Policy_sig_reference::delete($conn, $id);
         Policy_sensor_reference::delete($conn, $id);
+        Policy_time::delete($conn, $id);
     }
 }
 

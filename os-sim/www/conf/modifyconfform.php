@@ -4,6 +4,7 @@
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
+<body>
 
   <h1>OSSIM Framework</h1>
   <h2>Configuration</h2>
@@ -17,8 +18,6 @@
     $conf = Conf::get_conf($conn);
     
 ?>
-
-<body>
 
   <table align="center">
   <form method="post" action="modifyconf.php">
@@ -78,3 +77,4 @@
     $db->close($conn);
 ?>
 
+</html>

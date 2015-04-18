@@ -2,8 +2,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mysql.h>
+#include <time.h>
 
 #include "common.h"
+
+static unsigned int get_time(char *format) {
+    
+    struct tm *today;
+    int    digits = 2;
+    char   date[digits + 1];
+    time_t ltime;
+
+    time(&ltime);
+    today = localtime(&ltime);
+    strftime(date, digits + 1, format, today);
+
+    return atoi(date);
+}
+
+/* 
+ * Return current hour in 24-hour format (00 - 23) 
+ */
+static unsigned int get_hour() {
+    
+    return get_time("%H");
+}
+
+/* 
+ * Return the  day of the week as a decimal, 
+ * range 1 to 7, Monday being 1 
+ */
+static unsigned int get_day() {
+    
+    return get_time("%u");
+}
 
 static int is_attack_responses (int plugin, int tplugin) {
 
@@ -69,6 +101,18 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
     int     impactC = 0, impactA = 0;
     int     sourceC = 0, destA = 0, destC = 0;
     
+    /*
+     * get current day and current hour
+     * calculate date expresion to be able to compare dates
+     * 
+     * for example, Fri 21h = ((5 - 1) * 7) + 21 = 49
+     *              Sat 14h = ((7 - 1) * 7) + 14 = 56
+     */
+    unsigned int hour = get_hour();
+    unsigned int day  = get_day();
+    unsigned int date_expr = ((day - 1) * 7) + hour;
+    
+    
     /* 
      * is an attack-responses? 
      */
@@ -110,27 +154,31 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
     query_l1 = (char *) malloc(sizeof(char) * QUERY_MAX_SIZE);
     snprintf(query_l1, QUERY_MAX_SIZE, 
             
-"(select distinct p.priority from \ 
+"(select distinct p.priority from \
     policy p, policy_host_reference phs, policy_host_reference phd, \
     policy_port_reference pp, policy_sig_reference ps, \
-    signature_group_reference sg, port_group_reference pg \
+    signature_group_reference sg, port_group_reference pg, \
+    policy_time pt \
  where (phs.host_ip = '%s' and phs.direction = 'source') and \
        (phd.host_ip = '%s' and phd.direction = 'dest') and \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
        (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
+        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
        (p.id = phs.policy_id) and \
        (p.id = phd.policy_id) and \
        (p.id = pp.policy_id) and \
-       (p.id = ps.policy_id) \
+       (p.id = ps.policy_id) and \
+       (p.id = pt.policy_id) \
 ) \
 union \
 (select distinct p.priority from \
     policy p, policy_net_reference pns, policy_net_reference pnd, \
     policy_port_reference pp, policy_sig_reference ps, \
     signature_group_reference sg, port_group_reference pg, \
-    net_host_reference nh \
+    net_host_reference nh, policy_time pt \
  where \
        (pns.net_name = nh.net_name and \
         nh.host_ip = '%s' and pns.direction = 'source') and \
@@ -140,13 +188,18 @@ union \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
        (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
+        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
        (p.id = pns.policy_id) and \
        (p.id = pnd.policy_id) and \
        (p.id = pp.policy_id) and \
-       (p.id = ps.policy_id) \
+       (p.id = ps.policy_id) and \
+       (p.id = pt.policy_id) \
 );",
             source_ip, dest_ip, dest_port, ANY_PORT, protocol, signature,
-            source_ip, dest_ip, dest_port, ANY_PORT, protocol, signature);
+            date_expr, date_expr,
+            source_ip, dest_ip, dest_port, ANY_PORT, protocol, signature,
+            date_expr, date_expr);
 
     /*
      * Level 2
@@ -157,33 +210,39 @@ union \
     snprintf(query_l2, QUERY_MAX_SIZE, 
 "(select distinct p.priority from \
     policy p, policy_host_reference phs, policy_host_reference phd, \
-    policy_port_reference pp, port_group_reference pg \
+    policy_port_reference pp, port_group_reference pg, policy_time pt \
  where \
        (phd.host_ip = '%s' and phd.direction = 'dest') and \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
+        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
        (p.id = phs.policy_id) and \
        (p.id = phd.policy_id) and \
-       (p.id = pp.policy_id) \
+       (p.id = pp.policy_id) and \
+       (p.id = pt.policy_id) \
 ) \
 union \
 (select distinct p.priority from \
     policy p, policy_net_reference pns, policy_net_reference pnd, \
     policy_port_reference pp, port_group_reference pg, \
-    net_host_reference nh \
+    net_host_reference nh, policy_time pt \
  where \
        (pnd.net_name = nh.net_name and \
         nh.host_ip = '%s' and pnd.direction = 'dest') and \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
+        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
        (p.id = pns.policy_id) and \
        (p.id = pnd.policy_id) and \
-       (p.id = pp.policy_id) \
+       (p.id = pp.policy_id) and \
+       (p.id = pt.policy_id) \
 );",
-            dest_ip, dest_port, ANY_PORT, protocol,
-            dest_ip, dest_port, ANY_PORT, protocol);
+            dest_ip, dest_port, ANY_PORT, protocol, date_expr, date_expr,
+            dest_ip, dest_port, ANY_PORT, protocol, date_expr, date_expr);
 
     if (get_priority(mysql, query_l1, &priority)) {
 #ifdef VERBOSE
@@ -216,22 +275,22 @@ union \
 
     /* C level */
     if (get_level(mysql, source_ip, "compromise", &sourceC)) {
-#ifdef VERBOSE
-        printf("compromise of ip %s is %d\n", source_ip, sourceC);
-#endif
         update_level(mysql, source_ip, "compromise", impactC);
         update_nets_level(mysql, source_ip, "compromise", impactC);
+#ifdef VERBOSE
+        printf("compromise of ip %s is %d\n", source_ip, sourceC + impactC);
+#endif
     } else {
         insert_level(mysql, source_ip, sourceC, 1);
     }
 
     /* A level */
     if (get_level(mysql, dest_ip, "attack", &destA)) {
-#ifdef VERBOSE
-        printf("attack of ip %s is %d\n", dest_ip, destA);
-#endif
         update_level(mysql, dest_ip, "attack", impactA);
         update_nets_level(mysql, dest_ip, "attack", impactA);
+#ifdef VERBOSE
+        printf("attack of ip %s is %d\n", dest_ip, destA + impactA);
+#endif
     } else {
         insert_level(mysql, dest_ip, 1, destA);
     }
