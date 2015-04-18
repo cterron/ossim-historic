@@ -1,0 +1,2041 @@
+attack-responses;1292;ATTACK-RESPONSES directory listing
+attack-responses;494;ATTACK-RESPONSES command completed
+attack-responses;495;ATTACK-RESPONSES command error
+attack-responses;497;ATTACK-RESPONSES file copied ok
+attack-responses;1200;ATTACK-RESPONSES Invalid URL
+attack-responses;1666;ATTACK-RESPONSES index of /cgi-bin/ response
+attack-responses;1201;ATTACK-RESPONSES 403 Forbidden
+attack-responses;498;ATTACK-RESPONSES id check returned root
+attack-responses;1882;ATTACK-RESPONSES id check returned userid
+attack-responses;1464;ATTACK-RESPONSES oracle one hour install
+attack-responses;1900;ATTACK-RESPONSES successful kadmind buffer overflow attempt
+attack-responses;1901;ATTACK-RESPONSES successful kadmind buffer overflow attempt
+attack-responses;1810;ATTACK-RESPONSES successful gobbles ssh exploit (GOBBLE)
+attack-responses;1811;ATTACK-RESPONSES successful gobbles ssh exploit (uname)
+attack-responses;2104;ATTACK-RESPONSES rexec username too long response
+attack-responses;2123;ATTACK-RESPONSES Microsoft cmd.exe banner
+backdoor;103;BACKDOOR subseven 22
+backdoor;107;BACKDOOR subseven DEFCON8 2.1 access
+backdoor;109;BACKDOOR netbus active
+backdoor;110;BACKDOOR netbus getinfo
+backdoor;115;BACKDOOR netbus active
+backdoor;1980;BACKDOOR DeepThroat 3.1 Connection attempt
+backdoor;195;BACKDOOR DeepThroat 3.1 Server Response
+backdoor;1981;BACKDOOR DeepThroat 3.1 Connection attempt [3150]
+backdoor;1982;BACKDOOR DeepThroat 3.1 Server Response [3150]
+backdoor;1983;BACKDOOR DeepThroat 3.1 Connection attempt [4120]
+backdoor;1984;BACKDOOR DeepThroat 3.1 Server Response [4120]
+backdoor;119;BACKDOOR Doly 2.0 access
+backdoor;1985;BACKDOOR Doly 1.5 server response
+backdoor;104;BACKDOOR - Dagger_1.4.0_client_connect
+backdoor;105;BACKDOOR - Dagger_1.4.0
+backdoor;106;BACKDOOR ACKcmdC trojan scan
+backdoor;108;BACKDOOR QAZ Worm Client Login access
+backdoor;117;BACKDOOR Infector.1.x
+backdoor;118;BACKDOOR SatansBackdoor.2.0.Beta
+backdoor;120;BACKDOOR Infector 1.6 Server to Client
+backdoor;121;BACKDOOR Infector 1.6 Client to Server Connection Request
+backdoor;141;BACKDOOR HackAttack 1.20 Connect
+backdoor;145;BACKDOOR GirlFriendaccess
+backdoor;146;BACKDOOR NetSphere access
+backdoor;147;BACKDOOR GateCrasher
+backdoor;152;BACKDOOR BackConstruction 2.1 Connection
+backdoor;153;BACKDOOR DonaldDick 1.53 Traffic
+backdoor;155;BACKDOOR NetSphere 1.31.337 access
+backdoor;157;BACKDOOR BackConstruction 2.1 Client FTP Open Request
+backdoor;158;BACKDOOR BackConstruction 2.1 Server FTP Open Reply
+backdoor;159;BACKDOOR NetMetro File List
+backdoor;160;BACKDOOR NetMetro Incoming Traffic
+backdoor;161;BACKDOOR Matrix 2.0 Client connect
+backdoor;162;BACKDOOR Matrix 2.0 Server access
+backdoor;163;BACKDOOR WinCrash 1.0 Server Active 
+backdoor;183;BACKDOOR SIGNATURE - Q ICMP
+backdoor;184;BACKDOOR Q access
+backdoor;185;BACKDOOR CDK
+backdoor;208;BACKDOOR PhaseZero Server Active on Network
+backdoor;209;BACKDOOR w00w00 attempt
+backdoor;210;BACKDOOR attempt
+backdoor;211;BACKDOOR MISC r00t attempt
+backdoor;212;BACKDOOR MISC rewt attempt
+backdoor;213;BACKDOOR MISC Linux rootkit attempt
+backdoor;214;BACKDOOR MISC Linux rootkit attempt lrkr0x
+backdoor;215;BACKDOOR MISC Linux rootkit attempt
+backdoor;216;BACKDOOR MISC Linux rootkit satori attempt
+backdoor;217;BACKDOOR MISC sm4ck attempt
+backdoor;218;BACKDOOR MISC Solaris 2.5 attempt
+backdoor;219;BACKDOOR HidePak backdoor attempt
+backdoor;220;BACKDOOR HideSource backdoor attempt
+backdoor;614;BACKDOOR hack-a-tack attempt
+backdoor;1791;BACKDOOR fragroute trojan connection attempt
+backdoor;1853;BACKDOOR win-trin00 connection attempt
+backdoor;1843;BACKDOOR trinity connection attempt
+backdoor;1929;BACKDOOR TCPDUMP/PCAP trojan traffic
+backdoor;2100;BACKDOOR SubSeven 2.1 Gold server connection response
+backdoor;2124;BACKDOOR Remote PC Access connection attempt
+bad-traffic;524;BAD-TRAFFIC tcp port 0 traffic
+bad-traffic;525;BAD-TRAFFIC udp port 0 traffic
+bad-traffic;526;BAD-TRAFFIC data in TCP SYN packet
+bad-traffic;528;BAD-TRAFFIC loopback traffic
+bad-traffic;527;BAD-TRAFFIC same SRC/DST
+bad-traffic;523;BAD-TRAFFIC ip reserved bit set
+bad-traffic;1321;BAD-TRAFFIC 0 ttl
+bad-traffic;1322;BAD-TRAFFIC bad frag bits
+bad-traffic;1627;BAD-TRAFFIC Unassigned/Reserved IP protocol
+bad-traffic;1431;BAD-TRAFFIC syn to multicast address
+bad-traffic;2186;BAD-TRAFFIC IP Proto 53 (SWIPE)
+bad-traffic;2187;BAD-TRAFFIC IP Proto 55 (IP Mobility)
+bad-traffic;2188;BAD-TRAFFIC IP Proto 77 (Sun ND)
+bad-traffic;2189;BAD-TRAFFIC IP Proto 103 (PIM)
+chat;541;CHAT ICQ access
+chat;1832;CHAT ICQ forced user addition
+chat;540;CHAT MSN message
+chat;1986;CHAT MSN file transfer request
+chat;1988;CHAT MSN file transfer accept
+chat;1989;CHAT MSN file transfer reject
+chat;1990;CHAT MSN user search
+chat;1991;CHAT MSN login attempt
+chat;542;CHAT IRC nick change
+chat;1639;CHAT IRC DCC file transfer request
+chat;1640;CHAT IRC DCC chat request
+chat;1729;CHAT IRC channel join
+chat;1463;CHAT IRC message
+chat;1789;CHAT IRC dns request
+chat;1790;CHAT IRC dns response
+chat;1631;CHAT AIM login
+chat;1632;CHAT AIM send message
+chat;1633;CHAT AIM receive message
+ddos;221;DDOS TFN Probe
+ddos;222;DDOS tfn2k icmp possible communication
+ddos;223;DDOS Trin00\:DaemontoMaster(PONGdetected)
+ddos;228;DDOS TFN client command BE
+ddos;230;DDOS shaft client to handler
+ddos;231;DDOS Trin00\:DaemontoMaster(messagedetected)
+ddos;232;DDOS Trin00\:DaemontoMaster(*HELLO*detected)
+ddos;233;DDOS Trin00\:Attacker to Master default startup password
+ddos;234;DDOS Trin00 Attacker to Master default password
+ddos;235;DDOS Trin00 Attacker to Master default mdie password
+ddos;237;DDOS Trin00\:MastertoDaemon(defaultpassdetected!)
+ddos;238;DDOS TFN server response
+ddos;239;DDOS shaft handler to agent
+ddos;240;DDOS shaft agent to handler
+ddos;241;DDOS shaft synflood
+ddos;243;DDOS mstream agent to handler
+ddos;244;DDOS mstream handler to agent
+ddos;245;DDOS mstream handler ping to agent 
+ddos;246;DDOS mstream agent pong to handler 
+ddos;247;DDOS mstream client to handler
+ddos;248;DDOS mstream handler to client
+ddos;249;DDOS mstream client to handler
+ddos;250;DDOS mstream handler to client
+ddos;251;DDOS - TFN client command LE
+ddos;224;DDOS Stacheldraht server spoof
+ddos;225;DDOS Stacheldraht gag server response
+ddos;226;DDOS Stacheldraht server response
+ddos;227;DDOS Stacheldraht client spoofworks
+ddos;236;DDOS Stacheldraht client check gag
+ddos;229;DDOS Stacheldraht client check skillz
+ddos;1854;DDOS Stacheldraht handler->agent (niggahbitch)
+ddos;1855;DDOS Stacheldraht agent->handler (skillz)
+ddos;1856;DDOS Stacheldraht handler->agent (ficken)
+deleted;325;FINGER probe 0 attempt
+deleted;511;MISC Invalid PCAnywhere Login
+deleted;506;MISC ramen worm incoming
+deleted;558;INFO Outbound GNUTella client request
+deleted;559;P2P Inbound GNUTella client request
+deleted;1121;WEB-MISC O'Reilly args.bat access
+deleted;855;WEB-CGI edit.pl access
+deleted;1619;EXPERIMENTAL WEB-IIS .htr request
+deleted;1114;WEB-MISC prefix-get //
+deleted;1749;EXPERIMENTAL WEB-IIS .NET trace.axd access
+deleted;1049;WEB-MISC iPlanet ../../ DOS attempt
+deleted;496;ATTACK RESPONSES directory listing
+deleted;1768;WEB-IIS header field buffer overflow attempt
+deleted;1673;WEB-IIS header field buffer overflow attempt
+deleted;1698;ORACLE execute_system attempt
+deleted;1227;X11 outbound client connection detected
+deleted;329;FINGER cybercop redirection
+deleted;1477;WEB-CGI swc attempt
+deleted;1246;WEB-FRONTPAGE rad overflow attempt
+deleted;1247;WEB-FRONTPAGE rad overflow attempt
+deleted;1780;IMAP EXPLOIT partial body overflow attempt
+deleted;291;NNTP Cassandra Overflow
+deleted;874;WEB-CGI w3-msql solaris x86  access
+deleted;318;EXPLOIT bootp x86 bsd overfow
+deleted;319;EXPLOIT bootp x86 linux overflow
+deleted;114;BACKDOOR netbus active
+deleted;111;BACKDOOR netbus getinfo
+deleted;112;BACKDOOR BackOrifice access
+deleted;116;BACKDOOR BackOrifice access
+deleted;164;BACKDOOR DeepThroat 3.1 Server Active on Network
+deleted;165;BACKDOOR DeepThroat 3.1 Keylogger on Server ON
+deleted;166;BACKDOOR DeepThroat 3.1 Show Picture Client Request
+deleted;167;BACKDOOR DeepThroat 3.1 Hide/Show Clock Client Request
+deleted;168;BACKDOOR DeepThroat 3.1 Hide/Show Desktop Client Request
+deleted;169;BACKDOOR DeepThroat 3.1 Swap Mouse Buttons Client Request
+deleted;170;BACKDOOR DeepThroat 3.1 Enable/Disable CTRL-ALT-DEL Client Request
+deleted;171;BACKDOOR DeepThroat 3.1 Freeze Mouse Client Request
+deleted;172;BACKDOOR DeepThroat 3.1 Show Dialog Box Client Request
+deleted;173;BACKDOOR DeepThroat 3.1 Show Replyable Dialog Box Client Request
+deleted;174;BACKDOOR DeepThroat 3.1 Hide/Show Start Button Client Request
+deleted;175;BACKDOOR DeepThroat 3.1 Resolution Change Client Request
+deleted;176;BACKDOOR DeepThroat 3.1 Hide/Show Start Button Client Request
+deleted;177;BACKDOOR DeepThroat 3.1 Keylogger on Server OFF
+deleted;179;BACKDOOR DeepThroat 3.1 FTP Server Port Client Request
+deleted;180;BACKDOOR DeepThroat 3.1 Process List Client request
+deleted;181;BACKDOOR DeepThroat 3.1 Close Port Scan Client Request
+deleted;182;BACKDOOR DeepThroat 3.1 Registry Add Client Request
+deleted;122;BACKDOOR DeepThroat 3.1 System Info Client Request
+deleted;124;BACKDOOR DeepThroat 3.1 FTP Status Client Request
+deleted;125;BACKDOOR DeepThroat 3.1 E-Mail Info From Server
+deleted;126;BACKDOOR DeepThroat 3.1 E-Mail Info Client Request
+deleted;127;BACKDOOR DeepThroat 3.1 Server Status From Server
+deleted;128;BACKDOOR DeepThroat 3.1 Server Status Client Request
+deleted;129;BACKDOOR DeepThroat 3.1 Drive Info From Server
+deleted;130;BACKDOOR DeepThroat 3.1 System Info From Server
+deleted;131;BACKDOOR DeepThroat 3.1 Drive Info Client Request
+deleted;132;BACKDOOR DeepThroat 3.1 Server FTP Port Change From Server
+deleted;133;BACKDOOR DeepThroat 3.1 Cached Passwords Client Request
+deleted;134;BACKDOOR DeepThroat 3.1 RAS Passwords Client Request
+deleted;135;BACKDOOR DeepThroat 3.1 Server Password Change Client Request
+deleted;136;BACKDOOR DeepThroat 3.1 Server Password Remove Client Request
+deleted;137;BACKDOOR DeepThroat 3.1 Rehash Client Request
+deleted;138;BACKDOOR DeepThroat 3.1 Server Rehash Client Request
+deleted;140;BACKDOOR DeepThroat 3.1 ICQ Alert OFF Client Request
+deleted;142;BACKDOOR DeepThroat 3.1 ICQ Alert ON Client Request
+deleted;143;BACKDOOR DeepThroat 3.1 Change Wallpaper Client Request
+deleted;149;BACKDOOR DeepThroat 3.1 Client Sending Data to Server on Network
+deleted;150;BACKDOOR DeepThroat 3.1 Server Active on Network
+deleted;151;BACKDOOR DeepThroat 3.1 Client Sending Data to Server on Network
+deleted;154;BACKDOOR DeepThroat 3.1 Wrong Password
+deleted;156;BACKDOOR DeepThroat 3.1 Visible Window List Client Request
+deleted;113;BACKDOOR DeepThroat access
+deleted;186;BACKDOOR DeepThroat 3.1 Monitor on/off Client Request
+deleted;187;BACKDOOR DeepThroat 3.1 Delete File Client Request
+deleted;188;BACKDOOR DeepThroat 3.1 Kill Window Client Request
+deleted;189;BACKDOOR DeepThroat 3.1 Disable Window Client Request
+deleted;190;BACKDOOR DeepThroat 3.1 Enable Window Client Request
+deleted;191;BACKDOOR DeepThroat 3.1 Change Window Title Client Request
+deleted;192;BACKDOOR DeepThroat 3.1 Hide Window Client Request
+deleted;193;BACKDOOR DeepThroat 3.1 Show Window Client Request
+deleted;194;BACKDOOR DeepThroat 3.1 Send Text to Window Client Request
+deleted;196;BACKDOOR DeepThroat 3.1 Hide/Show Systray Client Request
+deleted;197;BACKDOOR DeepThroat 3.1 Create Directory Client Request
+deleted;198;BACKDOOR DeepThroat 3.1 All Window List Client Request
+deleted;199;BACKDOOR DeepThroat 3.1 Play Sound Client Request
+deleted;200;BACKDOOR DeepThroat 3.1 Run Program Normal Client Request
+deleted;201;BACKDOOR DeepThroat 3.1 Run Program Hidden Client Request
+deleted;202;BACKDOOR DeepThroat 3.1 Get NET File Client Request
+deleted;203;BACKDOOR DeepThroat 3.1 Find File Client Request
+deleted;204;BACKDOOR DeepThroat 3.1 Find File Client Request
+deleted;205;BACKDOOR DeepThroat 3.1 HUP Modem Client Request
+deleted;206;BACKDOOR DeepThroat 3.1 CD ROM Open Client Request
+deleted;207;BACKDOOR DeepThroat 3.1 CD ROM Close Client Request
+deleted;252;DNS named iquery attempt
+deleted;148;BACKDOOR DeepThroat 3.1 Keylogger Active on Network
+deleted;338;FTP EXPLOIT format string
+deleted;339;FTP EXPLOIT OpenBSD x86 ftpd
+deleted;340;FTP EXPLOIT overflow
+deleted;341;FTP EXPLOIT overflow
+deleted;342;FTP EXPLOIT wu-ftpd 2.6.0 site exec format string overflow Solaris 2.8
+deleted;343;FTP EXPLOIT wu-ftpd 2.6.0 site exec format string overflow FreeBSD
+deleted;344;FTP EXPLOIT wu-ftpd 2.6.0 site exec format string overflow Linux
+deleted;345;FTP EXPLOIT wu-ftpd 2.6.0 site exec format string overflow generic
+deleted;346;FTP EXPLOIT wu-ftpd 2.6.0 site exec format string check
+deleted;348;FTP EXPLOIT wu-ftpd 2.6.0
+deleted;349;FTP EXPLOIT MKD overflow
+deleted;350;FTP EXPLOIT x86 linux overflow
+deleted;351;FTP EXPLOIT x86 linux overflow
+deleted;352;FTP EXPLOIT x86 linux overflow
+deleted;455;ICMP Traceroute ipopts
+deleted;570;RPC EXPLOIT ttdbserv solaris overflow
+deleted;571;RPC EXPLOIT ttdbserv Solaris overflow
+deleted;1296;RPC portmap request yppasswdd
+deleted;1297;RPC portmap request yppasswdd
+deleted;596;RPC portmap listing
+deleted;597;RPC portmap listing
+deleted;1620;BAD TRAFFIC Non-Standard IP protocol
+deleted;573;RPC AMD Overflow
+deleted;600;RPC EXPLOIT statdx
+deleted;1282;RPC EXPLOIT statdx
+deleted;1094;WEB-CGI webstore directory traversal
+deleted;293;IMAP EXPLOIT overflow
+deleted;295;IMAP EXPLOIT x86 linux overflow
+deleted;296;IMAP EXPLOIT x86 linux overflow
+deleted;297;IMAP EXPLOIT x86 linux overflow
+deleted;298;IMAP EXPLOIT x86 linux overflow
+deleted;299;IMAP EXPLOIT x86 linux overflow
+deleted;617;SCAN ssh-research-scanner
+deleted;592;RPC rstatd query
+deleted;1278;RPC rstatd query
+deleted;1883;ATTACK-RESPONSES id check returned nobody
+deleted;1884;ATTACK-RESPONSES id check returned web
+deleted;1885;ATTACK-RESPONSES id check returned http
+deleted;1886;ATTACK-RESPONSES id check returned apache
+deleted;2102;NETBIOS SMB SMB_COM_TRANSACTION Max Data Count of 0 DOS Attempt
+deleted;1549;NETBIOS SMB SMB_COM_TRANSACTION Max Data Count of 0 DOS Attempt
+deleted;656;SMTP EXPLOIT x86 windows CSMMail overflow
+deleted;527;SMTP EXPLOIT x86 windows CSMMail overflow
+deleted;269;DOS Land attack
+deleted;1138;WEB-MISC Cisco Web DOS attempt
+deleted;666;SMTP sendmail 8.4.1 exploit
+deleted;1298;RPC portmap tooltalk request TCP
+deleted;1299;RPC portmap tooltalk request UDP
+deleted;720;Virus - SnowWhite Trojan Incoming
+deleted;722;Virus - Possible NAVIDAD Worm
+deleted;723;Virus - Possible MyRomeo Worm
+deleted;724;Virus - Possible MyRomeo Worm
+deleted;725;Virus - Possible MyRomeo Worm
+deleted;726;Virus - Possible MyRomeo Worm
+deleted;727;Virus - Possible MyRomeo Worm
+deleted;728;Virus - Possible MyRomeo Worm
+deleted;731;Virus - Possible QAZ Worm
+deleted;733;Virus - Possible QAZ Worm Calling Home
+deleted;734;Virus - Possible Matrix worm
+deleted;735;Virus - Possible MyRomeo Worm
+deleted;736;Virus - Successful eurocalculator execution
+deleted;737;Virus - Possible eurocalculator.exe file
+deleted;738;Virus - Possible Pikachu Pokemon Virus
+deleted;739;Virus - Possible Triplesix Worm
+deleted;740;Virus - Possible Tune.vbs
+deleted;741;Virus - Possible NAIL Worm
+deleted;742;Virus - Possible NAIL Worm
+deleted;743;Virus - Possible NAIL Worm
+deleted;744;Virus - Possible NAIL Worm
+deleted;745;Virus - Possible Papa Worm
+deleted;746;Virus - Possible Freelink Worm
+deleted;747;Virus - Possible Simbiosis Worm
+deleted;748;Virus - Possible BADASS Worm
+deleted;749;Virus - Possible ExploreZip.B Worm
+deleted;751;Virus - Possible wscript.KakWorm
+deleted;752;Virus Possible Suppl Worm
+deleted;753;Virus - Possible NewApt.Worm - theobbq.exe
+deleted;754;Virus - Possible Word Macro - VALE
+deleted;755;Virus - Possible IROK Worm
+deleted;756;Virus - Possible Fix2001 Worm
+deleted;757;Virus - Possible Y2K Zelu Trojan
+deleted;758;Virus - Possible The_Fly Trojan
+deleted;759;Virus - Possible Word Macro - VALE
+deleted;760;Virus - Possible Passion Worm
+deleted;761;Virus - Possible NewApt.Worm - cooler3.exe
+deleted;762;Virus - Possible NewApt.Worm - party.exe
+deleted;763;Virus - Possible NewApt.Worm - hog.exe
+deleted;764;Virus - Possible NewApt.Worm - goal1.exe
+deleted;765;Virus - Possible NewApt.Worm - pirate.exe
+deleted;766;Virus - Possible NewApt.Worm - video.exe
+deleted;767;Virus - Possible NewApt.Worm - baby.exe
+deleted;768;Virus - Possible NewApt.Worm - cooler1.exe
+deleted;769;Virus - Possible NewApt.Worm - boss.exe
+deleted;770;Virus - Possible NewApt.Worm - g-zilla.exe
+deleted;771;Virus - Possible ToadieE-mail Trojan
+deleted;772;Virus - Possible PrettyPark Trojan
+deleted;773;Virus - Possible Happy99 Virus
+deleted;774;Virus - Possible CheckThis Trojan
+deleted;775;Virus - Possible Bubbleboy Worm
+deleted;776;Virus - Possible NewApt.Worm - copier.exe
+deleted;777;Virus - Possible MyPics Worm
+deleted;778;Virus - Possible Babylonia - X-MAS.exe
+deleted;779;Virus - Possible NewApt.Worm - gadget.exe
+deleted;780;Virus - Possible NewApt.Worm - irnglant.exe
+deleted;781;Virus - Possible NewApt.Worm - casper.exe
+deleted;782;Virus - Possible NewApt.Worm - fborfw.exe
+deleted;783;Virus - Possible NewApt.Worm - saddam.exe
+deleted;784;Virus - Possible NewApt.Worm - bboy.exe
+deleted;785;Virus - Possible NewApt.Worm - monica.exe
+deleted;786;Virus - Possible NewApt.Worm - goal.exe
+deleted;787;Virus - Possible NewApt.Worm - panther.exe
+deleted;788;Virus - Possible NewApt.Worm - chestburst.exe
+deleted;790;Virus - Possible Common Sense Worm
+deleted;791;Virus - Possible NewApt.Worm - cupid2.exe
+deleted;792;Virus - Possible Resume Worm
+deleted;794;Virus - Possible Resume Worm
+deleted;795;Virus - Possible Worm -  txt.vbs file
+deleted;796;Virus - Possible Worm - xls.vbs file
+deleted;797;Virus - Possible Worm - jpg.vbs file
+deleted;798;Virus - Possible Worm -  gif.vbs file
+deleted;799;Virus - Possible Timofonica Worm
+deleted;800;Virus - Possible Resume Worm
+deleted;801;Virus - Possible Worm - doc.vbs file
+deleted;789;Virus - Possible NewApt.Worm - farter.exe
+deleted;1800;VIRUS Klez Incoming
+dns;255;DNS zone transfer TCP
+dns;1948;DNS zone transfer UDP
+dns;1435;DNS named authors attempt
+dns;256;DNS named authors attempt
+dns;257;DNS named version attempt
+dns;1616;DNS named version attempt
+dns;253;DNS SPOOF query response PTR with TTL\: 1 min. and no authority
+dns;254;DNS SPOOF query response with ttl\: 1 min. and no authority
+dns;258;DNS EXPLOIT named 8.2->8.2.1
+dns;303;DNS EXPLOIT named tsig overflow attempt
+dns;314;DNS EXPLOIT named tsig overflow attempt
+dns;259;DNS EXPLOIT named overflow (ADM)
+dns;260;DNS EXPLOIT named overflow (ADMROCKS)
+dns;261;DNS EXPLOIT named overflow attempt
+dns;262;DNS EXPLOIT x86 Linux overflow attempt
+dns;264;DNS EXPLOIT x86 Linux overflow attempt
+dns;265;DNS EXPLOIT x86 Linux overflow attempt (ADMv2)
+dns;266;DNS EXPLOIT x86 FreeBSD overflow attempt
+dns;267;DNS EXPLOIT sparc overflow attempt
+dos;268;DOS Jolt attack
+dos;270;DOS Teardrop attack
+dos;271;DOS UDP echo+chargen bomb
+dos;272;DOS IGMP dos attack
+dos;273;DOS IGMP dos attack
+dos;274;DOS ath
+dos;275;DOS NAPTHA
+dos;276;DOS Real Audio Server
+dos;277;DOS Real Server template.html
+dos;278;DOS Real Server template.html
+dos;279;DOS Bay/Nortel Nautica Marlin
+dos;281;DOS Ascend Route
+dos;282;DOS arkiea backup
+dos;1257; DOS Winnuke attack
+dos;1408;DOS MSDTC attempt
+dos;1605;DOS iParty DOS attempt
+dos;1641;DOS DB2 dos attempt
+dos;1545;DOS Cisco attempt
+exploit;1324;EXPLOIT ssh CRC32 overflow /bin/sh
+exploit;1325;EXPLOIT ssh CRC32 overflow filler
+exploit;1326;EXPLOIT ssh CRC32 overflow NOOP
+exploit;1327;EXPLOIT ssh CRC32 overflow
+exploit;283;EXPLOIT Netscape 4.7 client overflow
+exploit;300;EXPLOIT nlps x86 Solaris overflow
+exploit;301;EXPLOIT LPRng overflow
+exploit;302;EXPLOIT Redhat 7.0 lprd overflow
+exploit;304;EXPLOIT SCO calserver overflow
+exploit;305;EXPLOIT delegate proxy overflow
+exploit;306;EXPLOIT VQServer admin
+exploit;308;EXPLOIT NextFTP client overflow
+exploit;309;EXPLOIT sniffit overflow
+exploit;310;EXPLOIT x86 windows MailMax overflow
+exploit;311;EXPLOIT Netscape 4.7 unsucessful overflow
+exploit;312;EXPLOIT ntpdx overflow attempt
+exploit;313;EXPLOIT ntalkd x86 Linux overflow
+exploit;315;EXPLOIT x86 Linux mountd overflow
+exploit;316;EXPLOIT x86 Linux mountd overflow
+exploit;317;EXPLOIT x86 Linux mountd overflow
+exploit;1240;EXPLOIT MDBMS overflow
+exploit;1261;EXPLOIT AIX pdnsd overflow
+exploit;1323;EXPLOIT rwhoisd format string attempt
+exploit;1398;EXPLOIT CDE dtspcd exploit attempt
+exploit;1751;EXPLOIT cachefsd buffer overflow attempt
+exploit;1894;EXPLOIT kadmind buffer overflow attempt
+exploit;1895;EXPLOIT kadmind buffer overflow attempt
+exploit;1896;EXPLOIT kadmind buffer overflow attempt
+exploit;1897;EXPLOIT kadmind buffer overflow attempt
+exploit;1898;EXPLOIT kadmind buffer overflow attempt
+exploit;1899;EXPLOIT kadmind buffer overflow attempt
+exploit;1812;EXPLOIT gobbles SSH exploit attempt
+exploit;1821;EXPLOIT LPD dvips remote command execution attempt
+exploit;1838;EXPLOIT SSH server banner overflow
+exploit;307;EXPLOIT CHAT IRC topic overflow
+exploit;1382;EXPLOIT CHAT IRC Ettercap parse overflow attempt
+exploit;292;EXPLOIT x86 Linux samba overflow
+finger;320;FINGER cmd_rootsh backdoor attempt
+finger;321;FINGER account enumeration attempt
+finger;322;FINGER search query
+finger;323;FINGER root query
+finger;324;FINGER null request
+finger;326;FINGER remote command \
+finger;327;FINGER remote command pipe execution attempt
+finger;328;FINGER bomb attempt
+finger;330;FINGER redirection attempt
+finger;331;FINGER cybercop query
+finger;332;FINGER 0 query
+finger;333;FINGER . query
+finger;1541;FINGER version query
+ftp;337;FTP CEL overflow attempt
+ftp;1919;FTP CWD overflow attempt
+ftp;1621;FTP CMD overflow attempt
+ftp;1379;FTP STAT overflow attempt
+ftp;1562;FTP SITE CHOWN overflow attempt
+ftp;1920;FTP SITE NEWER overflow attempt
+ftp;1888;FTP SITE CPWD overflow attempt
+ftp;1971;FTP SITE EXEC format string attempt
+ftp;1529;FTP SITE overflow attempt
+ftp;1734;FTP USER overflow attempt
+ftp;1972;FTP PASS overflow attempt
+ftp;1942;FTP RMDIR overflow attempt
+ftp;1973;FTP MKD overflow attempt
+ftp;1974;FTP REST overflow attempt
+ftp;1975;FTP DELE overflow attempt
+ftp;1976;FTP RMD overflow attempt
+ftp;1623;FTP invalid MODE
+ftp;1624;FTP large PWD command
+ftp;1625;FTP large SYST command
+ftp;2125;FTP CWD C\:\\
+ftp;1921;FTP SITE ZIPCHK attempt
+ftp;1864;FTP SITE NEWER attempt
+ftp;361;FTP site exec
+ftp;1777;FTP EXPLOIT STAT * dos attempt
+ftp;1778;FTP EXPLOIT STAT ? dos attempt
+ftp;362;FTP tar parameters
+ftp;336;FTP CWD ~root attempt
+ftp;1229;FTP CWD ...
+ftp;1672;FTP CWD ~<NEWLINE> attempt
+ftp;1728;FTP CWD ~<CR><NEWLINE> attempt
+ftp;1779;FTP CWD .... attempt
+ftp;360;FTP serv-u directory transversal
+ftp;1377;FTP wu-ftp bad file completion attempt [
+ftp;1378;FTP wu-ftp bad file completion attempt {
+ftp;1530;FTP format string attempt
+ftp;1622;FTP RNFR ././ attempt
+ftp;1748;FTP command overflow attempt
+ftp;1992;FTP LIST directory traversal attempt
+ftp;334;FTP .forward
+ftp;335;FTP .rhosts
+ftp;1927;FTP authorized_keys
+ftp;356;FTP passwd retrieval attempt
+ftp;1928;FTP shadow retrieval attempt
+ftp;144;FTP ADMw0rm ftp login attempt
+ftp;353;FTP adm scan
+ftp;354;FTP iss scan
+ftp;355;FTP pass wh00t
+ftp;357;FTP piss scan
+ftp;358;FTP saint scan
+ftp;359;FTP satan scan
+icmp-info;363;ICMP IRDP router advertisement
+icmp-info;364;ICMP IRDP router selection
+icmp-info;366;ICMP PING *NIX
+icmp-info;368;ICMP PING BSDtype
+icmp-info;369;ICMP PING BayRS Router
+icmp-info;370;ICMP PING BeOS4.x
+icmp-info;371;ICMP PING Cisco Type.x
+icmp-info;372;ICMP PING Delphi-Piette Windows
+icmp-info;373;ICMP PING Flowpoint2200 or Network Management Software
+icmp-info;374;ICMP PING IP NetMonitor Macintosh
+icmp-info;375;ICMP PING LINUX/*BSD
+icmp-info;376;ICMP PING Microsoft Windows
+icmp-info;377;ICMP PING Network Toolbox 3 Windows
+icmp-info;378;ICMP PING Ping-O-MeterWindows
+icmp-info;379;ICMP PING Pinger Windows
+icmp-info;380;ICMP PING Seer Windows
+icmp-info;381;ICMP PING Sun Solaris
+icmp-info;382;ICMP PING Windows
+icmp-info;385;ICMP traceroute
+icmp-info;384;ICMP PING
+icmp-info;386;ICMP Address Mask Reply
+icmp-info;387;ICMP Address Mask Reply (Undefined Code!)
+icmp-info;388;ICMP Address Mask Request
+icmp-info;389;ICMP Address Mask Request (Undefined Code!)
+icmp-info;390;ICMP Alternate Host Address
+icmp-info;391;ICMP Alternate Host Address (Undefined Code!)
+icmp-info;392;ICMP Datagram Conversion Error
+icmp-info;393;ICMP Datagram Conversion Error (Undefined Code!)
+icmp-info;394;ICMP Destination Unreachable (Destination Host Unknown)
+icmp-info;395;ICMP Destination Unreachable (Destination Network Unknown)
+icmp-info;396;ICMP Destination Unreachable (Fragmentation Needed and DF bit was set)
+icmp-info;397;ICMP Destination Unreachable (Host Precedence Violation)
+icmp-info;398;ICMP Destination Unreachable (Host Unreachable for Type of Service)
+icmp-info;399;ICMP Destination Unreachable (Host Unreachable)
+icmp-info;400;ICMP Destination Unreachable (Network Unreachable for Type of Service)
+icmp-info;401;ICMP Destination Unreachable (Network Unreachable)
+icmp-info;402;ICMP Destination Unreachable (Port Unreachable)
+icmp-info;403;ICMP Destination Unreachable (Precedence Cutoff in effect)
+icmp-info;404;ICMP Destination Unreachable (Protocol Unreachable)
+icmp-info;405;ICMP Destination Unreachable (Source Host Isolated)
+icmp-info;406;ICMP Destination Unreachable (Source Route Failed)
+icmp-info;407;ICMP Destination Unreachable (Undefined Code!)
+icmp-info;408;ICMP Echo Reply
+icmp-info;409;ICMP Echo Reply (Undefined Code!)
+icmp-info;410;ICMP Fragment Reassembly Time Exceeded
+icmp-info;411;ICMP IPV6 I-Am-Here
+icmp-info;412;ICMP IPV6 I-Am-Here (Undefined Code!
+icmp-info;413;ICMP IPV6 Where-Are-You
+icmp-info;414;ICMP IPV6 Where-Are-You (Undefined Code!)
+icmp-info;415;ICMP Information Reply
+icmp-info;416;ICMP Information Reply (Undefined Code!)
+icmp-info;417;ICMP Information Request
+icmp-info;418;ICMP Information Request (Undefined Code!)
+icmp-info;419;ICMP Mobile Host Redirect
+icmp-info;420;ICMP Mobile Host Redirect (Undefined Code!)
+icmp-info;421;ICMP Mobile Registration Reply
+icmp-info;422;ICMP Mobile Registration Reply (Undefined Code!)
+icmp-info;423;ICMP Mobile Registration Request
+icmp-info;424;ICMP Mobile Registration Request (Undefined Code!
+icmp-info;425;ICMP Parameter Problem (Bad Length)
+icmp-info;426;ICMP Parameter Problem (Missing a Required Option)
+icmp-info;427;ICMP Parameter Problem (Unspecified Error)
+icmp-info;428;ICMP Parameter Problem (Undefined Code!)
+icmp-info;429;ICMP Photuris (Reserved)
+icmp-info;430;ICMP Photuris (Unknown Security Parameters Index)
+icmp-info;431;ICMP Photuris (Valid Security Parameters, But Authentication Failed)
+icmp-info;432;ICMP Photuris (Valid Security Parameters, But Decryption Failed)
+icmp-info;433;ICMP Photuris (Undefined Code!)
+icmp-info;436;ICMP Redirect (for TOS and Host)
+icmp-info;437;ICMP Redirect (for TOS and Network)
+icmp-info;438;ICMP Redirect (Undefined Code!)
+icmp-info;439;ICMP Reserved for Security (Type 19)
+icmp-info;440;ICMP Reserved for Security (Type 19) (Undefined Code!)
+icmp-info;441;ICMP Router Advertisement
+icmp-info;443;ICMP Router Selection
+icmp-info;445;ICMP SKIP
+icmp-info;446;ICMP SKIP (Undefined Code!
+icmp-info;448;ICMP Source Quench (Undefined Code!)
+icmp-info;449;ICMP Time-To-Live Exceeded in Transit
+icmp-info;450;ICMP Time-To-Live Exceeded in Transit (Undefined Code!)
+icmp-info;451;ICMP Timestamp Reply
+icmp-info;452;ICMP Timestamp Reply (Undefined Code!)
+icmp-info;453;ICMP Timestamp Request
+icmp-info;454;ICMP Timestamp Request (Undefined Code!)
+icmp-info;456;ICMP Traceroute
+icmp-info;457;ICMP Traceroute (Undefined Code!)
+icmp-info;458;ICMP Unassigned! (Type 1)
+icmp-info;459;ICMP Unassigned! (Type 1) (Undefined Code)
+icmp-info;460;ICMP Unassigned! (Type 2)
+icmp-info;461;ICMP Unassigned! (Type 2) (Undefined Code)
+icmp-info;462;ICMP Unassigned! (Type 7)
+icmp-info;463;ICMP Unassigned! (Type 7) (Undefined Code!)
+icmp-info;365;ICMP PING (Undefined Code!)
+icmp;465;ICMP ISS Pinger
+icmp;466;ICMP L3retriever Ping
+icmp;467;ICMP Nemesis v1.1 Echo
+icmp;469;ICMP PING NMAP
+icmp;471;ICMP icmpenum v1.1.1
+icmp;472;ICMP redirect host
+icmp;473;ICMP redirect net
+icmp;474;ICMP superscan echo
+icmp;475;ICMP traceroute ipopts
+icmp;476;ICMP webtrends scanner
+icmp;477;ICMP Source Quench
+icmp;478;ICMP Broadscan Smurf Scanner
+icmp;480;ICMP PING speedera
+icmp;481;ICMP TJPingPro1.1Build 2 Windows
+icmp;482;ICMP PING WhatsupGold Windows
+icmp;483;ICMP PING CyberKit 2.2 Windows
+icmp;484;ICMP PING Sniffer Pro/NetXRay network scan
+icmp;485;ICMP Destination Unreachable (Communication Administratively Prohibited)
+icmp;486;ICMP Destination Unreachable (Communication with Destination Host is Administratively Prohibited)
+icmp;487;ICMP Destination Unreachable (Communication with Destination Network is Administratively Prohibited)
+icmp;1813;ICMP digital island bandwidth query
+icmp;499;ICMP Large ICMP Packet
+imap;1993;IMAP login literal buffer overflow attempt
+imap;1842;IMAP login buffer overflow attempt
+imap;2105;IMAP authenticate literal overflow attempt
+imap;1844;IMAP authenticate overflow attempt
+imap;1930;IMAP auth overflow attempt
+imap;1902;IMAP lsub literal overflow attempt
+imap;2106;IMAP lsub overflow attempt
+imap;1845;IMAP list literal overflow attempt
+imap;2118;IMAP list overflow attempt
+imap;2119;IMAP rename literal overflow attempt
+imap;1903;IMAP rename overflow attempt
+imap;1904;IMAP find overflow attempt
+imap;1755;IMAP partial body buffer overflow attempt
+imap;2046;IMAP partial body.peek buffer overflow attempt
+imap;2107;IMAP create buffer overflow attempt
+imap;2120;IMAP create literal buffer overflow attempt
+info;488;INFO Connection Closed MSG from Port 80
+info;489;INFO FTP No Password
+info;490;INFO battle-mail traffic
+info;491;INFO FTP Bad login
+info;492;INFO TELNET Bad Login
+info;1251;INFO TELNET Bad Login
+info;493;INFO psyBNC access
+misc;500;MISC source route lssr
+misc;501;MISC source route lssre
+misc;502;MISC source route ssrr
+misc;503;MISC Source Port 20 to <1024
+misc;504;MISC source port 53 to <1024
+misc;505;MISC Insecure TIMBUKTU Password
+misc;507;MISC PCAnywhere Attempted Administrator Login
+misc;508;MISC gopher proxy
+misc;512;MISC PCAnywhere Failed Login
+misc;513;MISC Cisco Catalyst Remote Access
+misc;514;MISC ramen worm
+misc;516;MISC SNMP NT UserList
+misc;517;MISC xdmcp query
+misc;1867;MISC xdmcp info query
+misc;521;MISC Large UDP Packet
+misc;522;MISC Tiny Fragments
+misc;1384;MISC UPnP malformed advertisement
+misc;1388;MISC UPnP Location overflow
+misc;1393;MISC AIM AddGame attempt
+misc;1752;MISC AIM AddExternalApp attempt
+misc;1504;MISC AFS access
+misc;1636;MISC Xtramail Username overflow attempt
+misc;1887;MISC OpenSSL Worm traffic
+misc;1889;MISC slapper worm admin traffic
+misc;1447;MISC MS Terminal server request (RDP)
+misc;1448;MISC MS Terminal server request
+misc;1819;MISC Alcatel PABX 4400 connection attempt
+misc;1939;MISC bootp hardware address length overflow
+misc;1940;MISC bootp invalid hardware type
+misc;2039;MISC bootp hostname format string attempt
+misc;1966;MISC GlobalSunTech Access Point Information Disclosure attempt
+misc;1987;MISC xfs overflow attempt
+misc;2041;MISC xtacacs failed login response
+misc;2043;MISC isakmp login failed
+misc;2047;MISC rsyncd module list access
+misc;2048;MISC rsyncd overflow attempt
+misc;2008;MISC CVS invalid user authentication response
+misc;2009;MISC CVS invalid repository response
+misc;2010;MISC CVS double free exploit attempt response
+misc;2011;MISC CVS invalid directory response
+misc;2012;MISC CVS missing cvsroot response
+misc;2013;MISC CVS invalid module response
+misc;2126;MISC Microsoft PPTP Start Control Request buffer overflow attempt
+misc;2158;MISC BGP invalid length
+misc;2159;MISC BGP invalid type (0)
+multimedia;1436;MULTIMEDIA Quicktime User Agent access
+multimedia;1437;MULTIMEDIA Windows Media audio download
+multimedia;1438;MULTIMEDIA Windows Media Video download
+multimedia;1439;MULTIMEDIA Shoutcast playlist redirection
+multimedia;1440;MULTIMEDIA Icecast playlist redirection
+multimedia;1428;MULTIMEDIA audio galaxy keepalive
+mysql;1775;MYSQL root login attempt
+mysql;1776;MYSQL show databases attempt
+netbios;1293;NETBIOS nimda .eml
+netbios;1294;NETBIOS nimda .nws
+netbios;1295;NETBIOS nimda RICHED20.DLL
+netbios;529;NETBIOS DOS RFPoison
+netbios;530;NETBIOS NT NULL session
+netbios;1239;NETBIOS RFParalyze Attempt
+netbios;532;NETBIOS SMB ADMIN$access
+netbios;533;NETBIOS SMB C$ access
+netbios;534;NETBIOS SMB CD..
+netbios;535;NETBIOS SMB CD...
+netbios;536;NETBIOS SMB D$access
+netbios;537;NETBIOS SMB IPC$ share access
+netbios;538;NETBIOS SMB IPC$ share access (unicode)
+netbios;539;NETBIOS Samba clientaccess
+netbios;2101;NETBIOS SMB SMB_COM_TRANSACTION Max Parameter and Max Count of 0 DOS Attempt
+netbios;2103;NETBIOS SMB trans2open buffer overflow attempt
+netbios;2174;NETBIOS SMB winreg access
+netbios;2175;NETBIOS SMB winreg access (unicode)
+netbios;2176;NETBIOS SMB Startup Folder access attempt
+netbios;2177;NETBIOS SMB Startup Folder access attempt (unicode)
+netbios;2190;NETBIOS DCERPC invalid bind attempt
+netbios;2191;NETBIOS SMB DCERPC invalid bind attempt
+netbios;2192;NETBIOS DCERPC ISystemActivator bind attempt
+netbios;2193;NETBIOS SMB DCERPC ISystemActivator bind attempt
+nntp;1792;NNTP return code buffer overflow attempt
+nntp;1538;NNTP AUTHINFO USER overflow attempt
+oracle;1673;ORACLE EXECUTE_SYSTEM attempt
+oracle;1674;ORACLE connect_data\(command=version\) attempt
+oracle;1675;ORACLE misparsed login response
+oracle;1676;ORACLE select union attempt
+oracle;1677;ORACLE select like '%' attempt
+oracle;1678;ORACLE select like \%\ attempt
+oracle;1679;ORACLE describe attempt
+oracle;1680;ORACLE all_constraints access
+oracle;1681;ORACLE all_views access
+oracle;1682;ORACLE all_source access
+oracle;1683;ORACLE all_tables access
+oracle;1684;ORACLE all_tab_columns access
+oracle;1685;ORACLE all_tab_privs access
+oracle;1686;ORACLE dba_tablespace access
+oracle;1687;ORACLE dba_tables access
+oracle;1688;ORACLE user_tablespace access
+oracle;1689;ORACLE sys.all_users access
+oracle;1690;ORACLE grant attempt
+oracle;1691;ORACLE ALTER USER attempt
+oracle;1692;ORACLE drop table attempt
+oracle;1693;ORACLE create table attempt
+oracle;1694;ORACLE alter table attempt
+oracle;1695;ORACLE truncate table attempt
+oracle;1696;ORACLE create database attempt
+oracle;1697;ORACLE alter database attempt
+other-ids;1760;OTHER-IDS ISS RealSecure 6 event collector connection attempt
+other-ids;1761;OTHER-IDS ISS RealSecure 6 daemon connection attempt
+other-ids;1629;OTHER-IDS SecureNetPro traffic
+p2p;549;P2P napster login
+p2p;550;P2P napster new user login
+p2p;551;P2P napster download attempt
+p2p;552;P2P napster upload request
+p2p;1432;P2P GNUTella GET
+p2p;556;P2P Outbound GNUTella client request
+p2p;557;P2P GNUTella client request
+p2p;561;P2P Napster Client Data
+p2p;562;P2P Napster Client Data
+p2p;563;P2P Napster Client Data
+p2p;564;P2P Napster Client Data
+p2p;565;P2P Napster Server Login
+p2p;1383;P2P Fastrack  (kazaa/morpheus) GET request
+p2p;1699;P2P Fastrack (kazaa/morpheus) traffic
+p2p;2180;P2P BitTorrent announce request
+p2p;2181;P2P BitTorrent transfer
+policy;553;POLICY FTP anonymous login attempt
+policy;1449;POLICY FTP anonymous (ftp) login attempt
+policy;555;POLICY WinGate telnet server response
+policy;560;POLICY VNC server response
+policy;566;POLICY PCAnywhere server response
+policy;567;POLICY SMTP relaying denied
+policy;568;POLICY HP JetDirect LCD modification attempt
+policy;510;POLICY HP JetDirect LCD modification attempt
+policy;1429;POLICY poll.gotomypc.com access
+policy;1846;POLICY vncviewer Java applet download attempt
+policy;1445;POLICY FTP file_id.diz access possible warez site
+policy;543;POLICY FTP 'STOR 1MB' possible warez site
+policy;544;POLICY FTP 'RETR 1MB' possible warez site
+policy;546;POLICY FTP 'CWD  ' possible warez site
+policy;547;POLICY FTP 'MKD  ' possible warez site
+policy;548;POLICY FTP 'MKD .' possible warez site
+policy;545;POLICY FTP 'CWD / ' possible warez site
+policy;554;POLICY FTP 'MKD / ' possible warez site
+policy;2044;POLICY PPTP Start Control Request attempt
+policy;2040;POLICY xtacacs login attempt
+policy;2042;POLICY xtacacs accepted login response
+policy;1771;POLICY IPSec PGPNet connection attempt
+pop2;1934;POP2 FOLD overflow attempt
+pop2;1935;POP2 FOLD arbitrary file attempt
+pop2;284;POP2 x86 Linux overflow
+pop2;285;POP2 x86 Linux overflow
+pop3;2121;POP3 DELE negative arguement attempt
+pop3;2122;POP3 UIDL negative arguement attempt
+pop3;1866;POP3 USER overflow attempt
+pop3;2108;POP3 CAPA overflow attempt
+pop3;2109;POP3 TOP overflow attempt
+pop3;2110;POP3 STAT overflow attempt
+pop3;2111;POP3 DELE overflow attempt
+pop3;2112;POP3 RSET overflow attempt
+pop3;1936;POP3 AUTH overflow attempt
+pop3;1937;POP3 LIST overflow attempt
+pop3;1938;POP3 XTND overflow attempt
+pop3;1634;POP3 PASS overflow attempt
+pop3;1635;POP3 APOP overflow attempt
+pop3;286;POP3 EXPLOIT x86 BSD overflow
+pop3;287;POP3 EXPLOIT x86 BSD overflow
+pop3;288;POP3 EXPLOIT x86 Linux overflow
+pop3;289;POP3 EXPLOIT x86 SCO overflow
+pop3;290;POP3 EXPLOIT qpopper overflow
+porn;1836;PORN alt.binaries.pictures.erotica
+porn;1837;PORN alt.binaries.pictures.tinygirls
+porn;1310;PORN free XXX
+porn;1311;PORN hardcore anal
+porn;1312;PORN nude cheerleader
+porn;1313;PORN up skirt
+porn;1314;PORN young teen
+porn;1315;PORN hot young sex
+porn;1316;PORN fuck fuck fuck
+porn;1317;PORN anal sex
+porn;1318;PORN hardcore rape
+porn;1319;PORN real snuff
+porn;1320;PORN fuck movies
+porn;1781;PORN dildo
+porn;1782;PORN nipple clamp
+porn;1783;PORN oral sex
+porn;1784;PORN nude celeb
+porn;1785;PORN voyeur
+porn;1786;PORN raw sex
+porn;1793;PORN fetish
+porn;1794;PORN masturbation
+porn;1795;PORN ejaculation
+porn;1796;PORN virgin
+porn;1797;PORN BDSM
+porn;1798;PORN erotica
+porn;1799;PORN fisting
+porn;1833;PORN naked lesbians
+rpc;2093;RPC portmap proxy integer overflow attempt TCP
+rpc;2092;RPC portmap proxy integer overflow attempt UDP
+rpc;1922;RPC portmap proxy attempt TCP
+rpc;1923;RPC portmap proxy attempt UDP
+rpc;1280;RPC portmap listing UDP 111
+rpc;598;RPC portmap listing TCP 111
+rpc;1949;RPC portmap SET attempt TCP 111
+rpc;1950;RPC portmap SET attempt UDP 111
+rpc;2014;RPC portmap UNSET attempt TCP 111
+rpc;2015;RPC portmap UNSET attempt UDP 111
+rpc;599;RPC portmap listing TCP 32771
+rpc;1281;RPC portmap listing UDP 32771
+rpc;1746;RPC portmap cachefsd request UDP
+rpc;1747;RPC portmap cachefsd request TCP
+rpc;1732;RPC portmap rwalld request UDP
+rpc;1733;RPC portmap rwalld request TCP
+rpc;575;RPC portmap admind request UDP
+rpc;1262;RPC portmap admind request TCP
+rpc;576;RPC portmap amountd request UDP
+rpc;1263;RPC portmap amountd request TCP
+rpc;577;RPC portmap bootparam request UDP
+rpc;1264;RPC portmap bootparam request TCP
+rpc;580;RPC portmap nisd request UDP
+rpc;1267;RPC portmap nisd request TCP
+rpc;581;RPC portmap pcnfsd request UDP
+rpc;1268;RPC portmap pcnfsd request TCP
+rpc;582;RPC portmap rexd request UDP
+rpc;1269;RPC portmap rexd request TCP
+rpc;584;RPC portmap rusers request UDP
+rpc;1271;RPC portmap rusers request TCP
+rpc;612;RPC rusers query UDP
+rpc;586;RPC portmap selection_svc request UDP
+rpc;1273;RPC portmap selection_svc request TCP
+rpc;587;RPC portmap status request UDP
+rpc;2016;RPC portmap status request TCP
+rpc;593;RPC portmap snmpXdmi request TCP
+rpc;1279;RPC portmap snmpXdmi request UDP
+rpc;569;RPC snmpXdmi overflow attempt TCP
+rpc;2045;RPC snmpXdmi overflow attempt UDP
+rpc;2017;RPC portmap espd request UDP
+rpc;595;RPC portmap espd request TCP
+rpc;1890;RPC status GHBN format string attack
+rpc;1891;RPC status GHBN format string attack
+rpc;579;RPC portmap mountd request UDP
+rpc;1266;RPC portmap mountd request TCP
+rpc;574;RPC mountd TCP export request
+rpc;1924;RPC mountd UDP export request
+rpc;1925;RPC mountd TCP exportall request
+rpc;1926;RPC mountd UDP exportall request
+rpc;1951;RPC mountd TCP mount request
+rpc;1952;RPC mountd UDP mount request
+rpc;2018;RPC mountd TCP dump request
+rpc;2019;RPC mountd UDP dump request
+rpc;2020;RPC mountd TCP unmount request
+rpc;2021;RPC mountd UDP unmount request
+rpc;2022;RPC mountd TCP unmountall request
+rpc;2023;RPC mountd UDP unmountall request
+rpc;1905;RPC AMD UDP amqproc_mount plog overflow attempt
+rpc;1906;RPC AMD TCP amqproc_mount plog overflow attempt
+rpc;1953;RPC AMD TCP pid request
+rpc;1954;RPC AMD UDP pid request
+rpc;1955;RPC AMD TCP version request
+rpc;1956;RPC AMD UDP version request
+rpc;578;RPC portmap cmsd request UDP
+rpc;1265;RPC portmap cmsd request TCP
+rpc;1907;RPC CMSD UDP CMSD_CREATE buffer overflow attempt
+rpc;1908;RPC CMSD TCP CMSD_CREATE buffer overflow attempt
+rpc;2094;RPC CMSD UDP CMSD_CREATE array buffer overflow attempt
+rpc;2095;RPC CMSD TCP CMSD_CREATE array buffer overflow attempt
+rpc;1909;RPC CMSD TCP CMSD_INSERT buffer overflow attempt
+rpc;1910;RPC CMSD udp CMSD_INSERT buffer overflow attempt
+rpc;1272;RPC portmap sadmind request TCP
+rpc;585;RPC portmap sadmind request UDP
+rpc;1911;RPC sadmind UDP NETMGT_PROC_SERVICE CLIENT_DOMAIN overflow attempt
+rpc;1912;RPC sadmind TCP NETMGT_PROC_SERVICE CLIENT_DOMAIN overflow attempt
+rpc;1957;RPC sadmind UDP PING
+rpc;1958;RPC sadmind TCP PING
+rpc;583;RPC portmap rstatd request UDP
+rpc;1270;RPC portmap rstatd request TCP
+rpc;1913;RPC STATD UDP stat mon_name format string exploit attempt
+rpc;1914;RPC STATD TCP stat mon_name format string exploit attempt
+rpc;1915;RPC STATD UDP monitor mon_name format string exploit attempt
+rpc;1916;RPC STATD TCP monitor mon_name format string exploit attempt
+rpc;1277;RPC portmap ypupdated request UDP
+rpc;591;RPC portmap ypupdated request TCP
+rpc;2088;RPC ypupdated arbitrary command attempt UDP
+rpc;2089;RPC ypupdated arbitrary command attempt TCP
+rpc;1959;RPC portmap NFS request UDP
+rpc;1960;RPC portmap NFS request TCP
+rpc;1961;RPC portmap RQUOTA request UDP
+rpc;1962;RPC portmap RQUOTA request TCP
+rpc;1963;RPC RQUOTA getquota overflow attempt UDP
+rpc;2024;RPC RQUOTA getquota overflow attempt TCP
+rpc;588;RPC portmap ttdbserv request UDP
+rpc;1274;RPC portmap ttdbserv request TCP
+rpc;1964;RPC tooltalk UDP overflow attempt
+rpc;1965;RPC tooltalk TCP overflow attempt
+rpc;572;RPC DOS ttdbserv Solaris
+rpc;589;RPC portmap yppasswd request UDP
+rpc;1275;RPC portmap yppasswd request TCP
+rpc;2027;RPC yppasswd old password overflow attempt UDP
+rpc;2028;RPC yppasswd old password overflow attempt TCP
+rpc;2025;RPC yppasswd username overflow attempt UDP
+rpc;2026;RPC yppasswd username overflow attempt TCP
+rpc;2029;RPC yppasswd new password overflow attempt UDP
+rpc;2030;RPC yppasswd new password overflow attempt TCP
+rpc;2031;RPC yppasswd user update UDP
+rpc;2032;RPC yppasswd user update TCP
+rpc;590;RPC portmap ypserv request UDP
+rpc;1276;RPC portmap ypserv request TCP
+rpc;2033;RPC ypserv maplist request UDP
+rpc;2034;RPC ypserv maplist request TCP
+rpc;2035;RPC portmap network-status-monitor request UDP
+rpc;2036;RPC portmap network-status-monitor request TCP
+rpc;2037;RPC network-status-monitor mon-callback request UDP
+rpc;2038;RPC network-status-monitor mon-callback request TCP
+rpc;2079;RPC portmap nlockmgr request UDP
+rpc;2080;RPC portmap nlockmgr request TCP
+rpc;2081;RPC portmap rpc.xfsmd request UDP
+rpc;2082;RPC portmap rpc.xfsmd request TCP
+rpc;2083;RPC rpc.xfsmd xfs_export attempt UDP
+rpc;2084;RPC rpc.xfsmd xfs_export attempt TCP
+rpc;2005;RPC portmap kcms_server request UDP
+rpc;2006;RPC portmap kcms_server request TCP
+rpc;2007;RPC kcms_server directory traversal attempt
+rservices;601;RSERVICES rlogin LinuxNIS
+rservices;602;RSERVICES rlogin bin
+rservices;603;RSERVICES rlogin echo++
+rservices;604;RSERVICES rsh froot
+rservices;611;RSERVICES rlogin login failure
+rservices;605;RSERVICES rlogin login failure
+rservices;606;RSERVICES rlogin root
+rservices;607;RSERVICES rsh bin
+rservices;608;RSERVICES rsh echo + +
+rservices;609;RSERVICES rsh froot
+rservices;610;RSERVICES rsh root
+rservices;2113;RSERVICES rexec username overflow attempt
+rservices;2114;RSERVICES rexec password overflow attempt
+scan;613;SCAN myscan
+scan;616;SCAN ident version request
+scan;619;SCAN cybercop os probe
+scan;618;SCAN Squid Proxy attempt
+scan;615;SCAN SOCKS Proxy attempt
+scan;620;SCAN Proxy \(8080\) attempt
+scan;621;SCAN FIN
+scan;622;SCAN ipEye SYN scan
+scan;623;SCAN NULL
+scan;624;SCAN SYN FIN
+scan;625;SCAN XMAS
+scan;1228;SCAN nmap XMAS
+scan;628;SCAN nmap TCP
+scan;629;SCAN nmap fingerprint attempt
+scan;630;SCAN synscan portscan
+scan;626;SCAN cybercop os PA12 attempt
+scan;627;SCAN cybercop os SFU12 probe
+scan;634;SCAN Amanda client version request
+scan;635;SCAN XTACACS logout
+scan;636;SCAN cybercop udp bomb
+scan;637;SCAN Webtrends Scanner UDP Probe
+scan;1638;SCAN SSH Version map attempt
+scan;1917;SCAN UPnP service discover attempt
+scan;1918;SCAN SolarWinds IP scan attempt
+scan;1133;SCAN cybercop os probe
+shellcode;647;SHELLCODE sparc setuid 0
+shellcode;649;SHELLCODE x86 setgid 0
+shellcode;650;SHELLCODE x86 setuid 0
+shellcode;638;SHELLCODE SGI NOOP
+shellcode;639;SHELLCODE SGI NOOP
+shellcode;640;SHELLCODE AIX NOOP
+shellcode;641;SHELLCODE Digital UNIX NOOP
+shellcode;642;SHELLCODE HP-UX NOOP
+shellcode;643;SHELLCODE HP-UX NOOP
+shellcode;644;SHELLCODE sparc NOOP
+shellcode;645;SHELLCODE sparc NOOP
+shellcode;646;SHELLCODE sparc NOOP
+shellcode;648;SHELLCODE x86 NOOP
+shellcode;651;SHELLCODE x86 stealth NOOP
+shellcode;653;SHELLCODE x86 unicode NOOP
+shellcode;652;SHELLCODE Linux shellcode
+shellcode;1390;SHELLCODE x86 inc ebx NOOP
+shellcode;1394;SHELLCODE x86 NOOP
+shellcode;1424;SHELLCODE x86 EB OC NOOP
+smtp;654;SMTP RCPT TO overflow
+smtp;657;SMTP chameleon overflow
+smtp;655;SMTP sendmail 8.6.9 exploit
+smtp;658;SMTP exchange mime DOS
+smtp;659;SMTP expn decode
+smtp;660;SMTP expn root
+smtp;1450;SMTP expn *@
+smtp;661;SMTP majordomo ifs
+smtp;662;SMTP sendmail 5.5.5 exploit
+smtp;663;SMTP rcpt to sed command attempt
+smtp;664;SMTP RCPT TO decode attempt
+smtp;665;SMTP sendmail 5.6.5 exploit
+smtp;667;SMTP sendmail 8.6.10 exploit
+smtp;668;SMTP sendmail 8.6.10 exploit
+smtp;669;SMTP sendmail 8.6.9 exploit
+smtp;670;SMTP sendmail 8.6.9 exploit
+smtp;671;SMTP sendmail 8.6.9c exploit
+smtp;672;SMTP vrfy decode
+smtp;1446;SMTP vrfy root
+smtp;631;SMTP ehlo cybercop attempt
+smtp;632;SMTP expn cybercop attempt
+smtp;1549;SMTP HELO overflow attempt
+smtp;1550;SMTP ETRN overflow attempt
+smtp;2087;SMTP From comment overflow attempt
+smtp;2183;SMTP Content-Transfer-Encoding overflow attempt
+snmp;1893;SNMP missing community string attempt
+snmp;1892;SNMP null community string attempt
+snmp;1409;SNMP community string buffer overflow attempt
+snmp;1422;SNMP community string buffer overflow attempt (with evasion)
+snmp;1411;SNMP public access udp
+snmp;1412;SNMP public access tcp
+snmp;1413;SNMP private access udp
+snmp;1414;SNMP private access tcp
+snmp;1415;SNMP Broadcast request
+snmp;1416;SNMP broadcast trap
+snmp;1417;SNMP request udp
+snmp;1418;SNMP request tcp
+snmp;1419;SNMP trap udp
+snmp;1420;SNMP trap tcp
+snmp;1421;SNMP AgentX/tcp request
+snmp;1426;SNMP PROTOS test-suite-req-app attempt
+snmp;1427;SNMP PROTOS test-suite-trap-app attempt
+sql;676;MS-SQL/SMB sp_start_job - program execution
+sql;677;MS-SQL/SMB sp_password password change
+sql;678;MS-SQL/SMB sp_delete_alert log file deletion
+sql;679;MS-SQL/SMB sp_adduser database user creation
+sql;708;MS-SQL/SMB xp_enumresultset possible buffer overflow
+sql;1386;MS-SQL/SMB raiserror possible buffer overflow
+sql;702;MS-SQL/SMB xp_displayparamstmt possible buffer overflow
+sql;703;MS-SQL/SMB xp_setsqlsecurity possible buffer overflow
+sql;681;MS-SQL/SMB xp_cmdshell program execution
+sql;689;MS-SQL/SMB xp_reg* registry access
+sql;690;MS-SQL/SMB xp_printstatements possible buffer overflow
+sql;692;MS-SQL/SMB shellcode attempt
+sql;694;MS-SQL/SMB shellcode attempt
+sql;695;MS-SQL/SMB xp_sprintf possible buffer overflow
+sql;696;MS-SQL/SMB xp_showcolv possible buffer overflow
+sql;697;MS-SQL/SMB xp_peekqueue possible buffer overflow
+sql;698;MS-SQL/SMB xp_proxiedmetadata possible buffer overflow
+sql;700;MS-SQL/SMB xp_updatecolvbm possible buffer overflow
+sql;673;MS-SQL sp_start_job - program execution
+sql;674;MS-SQL xp_displayparamstmt possible buffer overflow
+sql;675;MS-SQL xp_setsqlsecurity possible buffer overflow
+sql;682;MS-SQL xp_enumresultset possible buffer overflow
+sql;683;MS-SQL sp_password - password change
+sql;684;MS-SQL sp_delete_alert log file deletion
+sql;685;MS-SQL sp_adduser - database user creation
+sql;686;MS-SQL xp_reg* - registry access
+sql;687;MS-SQL xp_cmdshell - program execution
+sql;691;MS-SQL shellcode attempt
+sql;693;MS-SQL shellcode attempt
+sql;699;MS-SQL xp_printstatements possible buffer overflow
+sql;701;MS-SQL xp_updatecolvbm possible buffer overflow
+sql;704;MS-SQL xp_sprintf possible buffer overflow
+sql;705;MS-SQL xp_showcolv possible buffer overflow
+sql;706;MS-SQL xp_peekqueue possible buffer overflow
+sql;707;MS-SQL xp_proxiedmetadata possible buffer overflow
+sql;1387;MS-SQL raiserror possible buffer overflow
+sql;1759;MS-SQL xp_cmdshell program execution (445)
+sql;688;MS-SQL sa login failed
+sql;680;MS-SQL/SMB sa login failed
+sql;2003;MS-SQL Worm propagation attempt
+sql;2004;MS-SQL Worm propagation attempt OUTBOUND
+sql;2049;MS-SQL ping attempt
+sql;2050;MS-SQL version overflow attempt
+telnet;1430;TELNET Solaris memory mismanagement exploit attempt
+telnet;711;TELNET SGI telnetd format bug
+telnet;712;TELNET ld_library_path
+telnet;713;TELNET livingston DOS
+telnet;714;TELNET resolv_host_conf
+telnet;715;TELNET Attempted SU from wrong group
+telnet;717;TELNET not on console
+telnet;718;TELNET login incorrect
+telnet;719;TELNET root login
+telnet;1252;TELNET bsd telnet exploit response
+telnet;1253;TELNET bsd exploit client finishing
+telnet;709;TELNET 4Dgifts SGI account attempt
+telnet;710;TELNET EZsetup account attempt
+telnet;716;TELNET access
+tftp;1941;TFTP filename overflow attempt
+tftp;1289;TFTP GET Admin.dll
+tftp;1441;TFTP GET nc.exe
+tftp;1442;TFTP GET shadow
+tftp;1443;TFTP GET passwd
+tftp;519;TFTP parent directory
+tftp;520;TFTP root directory
+tftp;518;TFTP Put
+tftp;1444;TFTP Get
+virus;732;Virus - Possible QAZ Worm Infection
+virus;721;VIRUS OUTBOUND .pif file attachment
+virus;730;VIRUS OUTBOUND .shs file attachment
+virus;2160;VIRUS OUTBOUND .exe file attachment
+virus;2161;VIRUS OUTBOUND .doc file attachment
+virus;793;VIRUS OUTBOUND .vbs file attachment
+virus;2162;VIRUS OUTBOUND .hta file attachment
+virus;2163;VIRUS OUTBOUND .chm file attachment
+virus;2164;VIRUS OUTBOUND .reg file attachment
+virus;2165;VIRUS OUTBOUND .ini file attachment
+virus;2166;VIRUS OUTBOUND .bat file attachment
+virus;2167;VIRUS OUTBOUND .diz file attachment
+virus;2168;VIRUS OUTBOUND .cpp file attachment
+virus;2169;VIRUS OUTBOUND .dll file attachment
+virus;2170;VIRUS OUTBOUND .vxd file attachment
+virus;2171;VIRUS OUTBOUND .sys file attachment
+virus;2172;VIRUS OUTBOUND .com file attachment
+virus;729;VIRUS OUTBOUND .scr file attachment
+virus;2173;VIRUS OUTBOUND .hsq file attachment
+web-attacks;1328;WEB-ATTACKS ps command attempt
+web-attacks;1329;WEB-ATTACKS /bin/ps command attempt
+web-attacks;1330;WEB-ATTACKS wget command attempt
+web-attacks;1331;WEB-ATTACKS uname -a command attempt
+web-attacks;1332;WEB-ATTACKS /usr/bin/id command attempt
+web-attacks;1333;WEB-ATTACKS id command attempt
+web-attacks;1334;WEB-ATTACKS echo command attempt
+web-attacks;1335;WEB-ATTACKS kill command attempt
+web-attacks;1336;WEB-ATTACKS chmod command attempt
+web-attacks;1337;WEB-ATTACKS chgrp command attempt
+web-attacks;1338;WEB-ATTACKS chown command attempt
+web-attacks;1339;WEB-ATTACKS chsh command attempt
+web-attacks;1340;WEB-ATTACKS tftp command attempt
+web-attacks;1341;WEB-ATTACKS /usr/bin/gcc command attempt
+web-attacks;1342;WEB-ATTACKS gcc command attempt
+web-attacks;1343;WEB-ATTACKS /usr/bin/cc command attempt
+web-attacks;1344;WEB-ATTACKS cc command attempt
+web-attacks;1345;WEB-ATTACKS /usr/bin/cpp command attempt
+web-attacks;1346;WEB-ATTACKS cpp command attempt
+web-attacks;1347;WEB-ATTACKS /usr/bin/g++ command attempt
+web-attacks;1348;WEB-ATTACKS g++ command attempt
+web-attacks;1349;WEB-ATTACKS bin/python access attempt
+web-attacks;1350;WEB-ATTACKS python access attempt
+web-attacks;1351;WEB-ATTACKS bin/tclsh execution attempt
+web-attacks;1352;WEB-ATTACKS tclsh execution attempt
+web-attacks;1353;WEB-ATTACKS bin/nasm command attempt
+web-attacks;1354;WEB-ATTACKS nasm command attempt
+web-attacks;1355;WEB-ATTACKS /usr/bin/perl execution attempt
+web-attacks;1356;WEB-ATTACKS perl execution attempt
+web-attacks;1357;WEB-ATTACKS nt admin addition attempt
+web-attacks;1358;WEB-ATTACKS traceroute command attempt
+web-attacks;1359;WEB-ATTACKS ping command attempt
+web-attacks;1360;WEB-ATTACKS netcat command attempt
+web-attacks;1361;WEB-ATTACKS nmap command attempt
+web-attacks;1362;WEB-ATTACKS xterm command attempt
+web-attacks;1363;WEB-ATTACKS X application to remote host attempt
+web-attacks;1364;WEB-ATTACKS lsof command attempt
+web-attacks;1365;WEB-ATTACKS rm command attempt
+web-attacks;1366;WEB-ATTACKS mail command attempt
+web-attacks;1367;WEB-ATTACKS mail command attempt
+web-attacks;1368;WEB-ATTACKS /bin/ls| command attempt
+web-attacks;1369;WEB-ATTACKS /bin/ls command attempt
+web-attacks;1370;WEB-ATTACKS /etc/inetd.conf access
+web-attacks;1371;WEB-ATTACKS /etc/motd access
+web-attacks;1372;WEB-ATTACKS /etc/shadow access
+web-attacks;1373;WEB-ATTACKS conf/httpd.conf attempt
+web-attacks;1374;WEB-ATTACKS .htgroup access
+web-cgi;803;WEB-CGI HyperSeek hsx.cgi directory traversal attempt
+web-cgi;1607;WEB-CGI HyperSeek hsx.cgi access
+web-cgi;804;WEB-CGI SWSoft ASPSeek Overflow attempt
+web-cgi;805;WEB-CGI webspeed access
+web-cgi;806;WEB-CGI yabb.cgi directory traversal attempt
+web-cgi;1637;WEB-CGI yabb.cgi access
+web-cgi;807;WEB-CGI /wwwboard/passwd.txt access
+web-cgi;808;WEB-CGI webdriver access
+web-cgi;809;WEB-CGI whois_raw.cgi arbitrary command execution attempt
+web-cgi;810;WEB-CGI whois_raw.cgi access
+web-cgi;811;WEB-CGI websitepro path access
+web-cgi;812;WEB-CGI webplus version access
+web-cgi;813;WEB-CGI webplus directory traversal
+web-cgi;815;WEB-CGI websendmail access
+web-cgi;1571;WEB-CGI dcforum.cgi directory traversal attempt
+web-cgi;818;WEB-CGI dcforum.cgi access
+web-cgi;817;WEB-CGI dcboard.cgi invalid user addition attempt
+web-cgi;1410;WEB-CGI dcboard.cgi access
+web-cgi;819;WEB-CGI mmstdod.cgi access
+web-cgi;820;WEB-CGI anaconda directory transversal attempt
+web-cgi;821;WEB-CGI imagemap.exe overflow attempt
+web-cgi;1700;WEB-CGI imagemap.exe access
+web-cgi;823;WEB-CGI cvsweb.cgi access
+web-cgi;824;WEB-CGI php.cgi access
+web-cgi;825;WEB-CGI glimpse access
+web-cgi;1608;WEB-CGI htmlscript attempt
+web-cgi;826;WEB-CGI htmlscript access
+web-cgi;827;WEB-CGI info2www access
+web-cgi;828;WEB-CGI maillist.pl access
+web-cgi;829;WEB-CGI nph-test-cgi access
+web-cgi;1451;WEB-CGI NPH-publish access
+web-cgi;830;WEB-CGI NPH-publish access
+web-cgi;833;WEB-CGI rguest.exe access
+web-cgi;834;WEB-CGI rwwwshell.pl access
+web-cgi;1644;WEB-CGI test-cgi attempt
+web-cgi;835;WEB-CGI test-cgi access
+web-cgi;1645;WEB-CGI testcgi access
+web-cgi;1646;WEB-CGI test.cgi access
+web-cgi;836;WEB-CGI textcounter.pl access
+web-cgi;837;WEB-CGI uploader.exe access
+web-cgi;838;WEB-CGI webgais access
+web-cgi;839;WEB-CGI finger access
+web-cgi;840;WEB-CGI perlshop.cgi access
+web-cgi;841;WEB-CGI pfdisplay.cgi access
+web-cgi;842;WEB-CGI aglimpse access
+web-cgi;843;WEB-CGI anform2 access
+web-cgi;844;WEB-CGI args.bat access
+web-cgi;1452;WEB-CGI args.cmd access
+web-cgi;845;WEB-CGI AT-admin.cgi access
+web-cgi;1453;WEB-CGI AT-generated.cgi access
+web-cgi;846;WEB-CGI bnbform.cgi access
+web-cgi;847;WEB-CGI campas access
+web-cgi;848;WEB-CGI view-source directory traversal
+web-cgi;849;WEB-CGI view-source access
+web-cgi;850;WEB-CGI wais.pl access
+web-cgi;1454;WEB-CGI wwwwais access
+web-cgi;851;WEB-CGI files.pl access
+web-cgi;852;WEB-CGI wguest.exe access
+web-cgi;853;WEB-CGI wrap access
+web-cgi;854;WEB-CGI classifieds.cgi access
+web-cgi;856;WEB-CGI environ.cgi access
+web-cgi;1647;WEB-CGI faxsurvey attempt (full path)
+web-cgi;1609;WEB-CGI faxsurvey arbitrary file read attempt
+web-cgi;857;WEB-CGI faxsurvey access
+web-cgi;858;WEB-CGI filemail access
+web-cgi;859;WEB-CGI man.sh access
+web-cgi;860;WEB-CGI snork.bat access
+web-cgi;861;WEB-CGI w3-msql access
+web-cgi;863;WEB-CGI day5datacopier.cgi access
+web-cgi;864;WEB-CGI day5datanotifier.cgi access
+web-cgi;866;WEB-CGI post-query access
+web-cgi;867;WEB-CGI visadmin.exe access
+web-cgi;869;WEB-CGI dumpenv.pl access
+web-cgi;1536;WEB-CGI calendar_admin.pl arbitrary command execution attempt
+web-cgi;1537;WEB-CGI calendar_admin.pl access
+web-cgi;1456;WEB-CGI calender_admin.pl access
+web-cgi;1701;WEB-CGI calendar-admin.pl access
+web-cgi;1455;WEB-CGI calender.pl access
+web-cgi;882;WEB-CGI calendar access
+web-cgi;1457;WEB-CGI user_update_admin.pl access
+web-cgi;1458;WEB-CGI user_update_passwd.pl access
+web-cgi;870;WEB-CGI snorkerz.cmd access
+web-cgi;871;WEB-CGI survey.cgi access
+web-cgi;873;WEB-CGI scriptalias access
+web-cgi;875;WEB-CGI win-c-sample.exe access
+web-cgi;878;WEB-CGI w3tvars.pm access
+web-cgi;879;WEB-CGI admin.pl access
+web-cgi;880;WEB-CGI LWGate access
+web-cgi;881;WEB-CGI archie access
+web-cgi;883;WEB-CGI flexform access
+web-cgi;1610;WEB-CGI formmail arbitrary command execution attempt
+web-cgi;884;WEB-CGI formmail access
+web-cgi;1762;WEB-CGI phf arbitrary command execution attempt
+web-cgi;886;WEB-CGI phf access
+web-cgi;887;WEB-CGI www-sql access
+web-cgi;888;WEB-CGI wwwadmin.pl access
+web-cgi;889;WEB-CGI ppdscgi.exe access
+web-cgi;890;WEB-CGI sendform.cgi access
+web-cgi;891;WEB-CGI upload.pl access
+web-cgi;892;WEB-CGI AnyForm2 access
+web-cgi;893;WEB-CGI MachineInfo access
+web-cgi;1531;WEB-CGI bb-hist.sh attempt
+web-cgi;894;WEB-CGI bb-hist.sh access
+web-cgi;1459;WEB-CGI bb-histlog.sh access
+web-cgi;1460;WEB-CGI bb-histsvc.sh access
+web-cgi;1532;WEB-CGI bb-hostscv.sh attempt
+web-cgi;1533;WEB-CGI bb-hostscv.sh access
+web-cgi;1461;WEB-CGI bb-rep.sh access
+web-cgi;1462;WEB-CGI bb-replog.sh access
+web-cgi;895;WEB-CGI redirect access
+web-cgi;1397;WEB-CGI wayboard attempt
+web-cgi;896;WEB-CGI way-board access
+web-cgi;1222;WEB-CGI pals-cgi arbitrary file access attempt
+web-cgi;897;WEB-CGI pals-cgi access
+web-cgi;1572;WEB-CGI commerce.cgi arbitrary file access attempt
+web-cgi;898;WEB-CGI commerce.cgi access
+web-cgi;899;WEB-CGI Amaya templates sendtemp.pl directory traversal attempt
+web-cgi;1702;WEB-CGI Amaya templates sendtemp.pl access
+web-cgi;900;WEB-CGI webspirs.cgi directory traversal attempt
+web-cgi;901;WEB-CGI webspirs.cgi access
+web-cgi;902;WEB-CGI tstisapi.dll access
+web-cgi;1308;WEB-CGI sendmessage.cgi access
+web-cgi;1392;WEB-CGI lastlines.cgi access
+web-cgi;1395;WEB-CGI zml.cgi attempt
+web-cgi;1396;WEB-CGI zml.cgi access
+web-cgi;1405;WEB-CGI AHG search.cgi access
+web-cgi;1534;WEB-CGI agora.cgi attempt
+web-cgi;1406;WEB-CGI agora.cgi access
+web-cgi;877;WEB-CGI rksh access
+web-cgi;885;WEB-CGI bash access
+web-cgi;1648;WEB-CGI perl.exe command attempt
+web-cgi;832;WEB-CGI perl.exe access
+web-cgi;1649;WEB-CGI perl command attempt
+web-cgi;1309;WEB-CGI zsh access
+web-cgi;862;WEB-CGI csh access
+web-cgi;872;WEB-CGI tcsh access
+web-cgi;868;WEB-CGI rsh access
+web-cgi;865;WEB-CGI ksh access
+web-cgi;1703;WEB-CGI auktion.cgi directory traversal attempt
+web-cgi;1465;WEB-CGI auktion.cgi access
+web-cgi;1573;WEB-CGI cgiforum.pl attempt
+web-cgi;1466;WEB-CGI cgiforum.pl access
+web-cgi;1574;WEB-CGI directorypro.cgi attempt
+web-cgi;1467;WEB-CGI directorypro.cgi access
+web-cgi;1468;WEB-CGI Web Shopper shopper.cgi attempt
+web-cgi;1469;WEB-CGI Web Shopper shopper.cgi access
+web-cgi;1470;WEB-CGI listrec.pl access
+web-cgi;1471;WEB-CGI mailnews.cgi access
+web-cgi;1879;WEB-CGI book.cgi arbitrary command execution attempt
+web-cgi;1472;WEB-CGI book.cgi access
+web-cgi;1473;WEB-CGI newsdesk.cgi access
+web-cgi;1704;WEB-CGI cal_make.pl directory traversal attempt
+web-cgi;1474;WEB-CGI cal_make.pl access
+web-cgi;1475;WEB-CGI mailit.pl access
+web-cgi;1476;WEB-CGI sdbsearch.cgi access
+web-cgi;1478;WEB-CGI swc access
+web-cgi;1479;WEB-CGI ttawebtop.cgi arbitrary file attempt
+web-cgi;1480;WEB-CGI ttawebtop.cgi access
+web-cgi;1481;WEB-CGI upload.cgi access
+web-cgi;1482;WEB-CGI view_source access
+web-cgi;1730;WEB-CGI ustorekeeper.pl directory traversal attempt
+web-cgi;1483;WEB-CGI ustorekeeper.pl access
+web-cgi;1606;WEB-CGI icat access
+web-cgi;1617;WEB-CGI Bugzilla doeditvotes.cgi access
+web-cgi;1600;WEB-CGI htsearch arbitrary configuration file attempt
+web-cgi;1601;WEB-CGI htsearch arbitrary file read attempt
+web-cgi;1602;WEB-CGI htsearch access
+web-cgi;1501;WEB-CGI a1stats a1disp3.cgi directory traversal attempt
+web-cgi;1502;WEB-CGI a1stats a1disp3.cgi access
+web-cgi;1731;WEB-CGI a1stats access
+web-cgi;1503;WEB-CGI admentor admin.asp access
+web-cgi;1505;WEB-CGI alchemy http server PRN arbitrary command execution attempt
+web-cgi;1506;WEB-CGI alchemy http server NUL arbitrary command execution attempt
+web-cgi;1507;WEB-CGI alibaba.pl arbitrary command execution attempt
+web-cgi;1508;WEB-CGI alibaba.pl access
+web-cgi;1509;WEB-CGI AltaVista Intranet Search directory traversal attempt
+web-cgi;1510;WEB-CGI test.bat arbitrary command execution attempt
+web-cgi;1511;WEB-CGI test.bat access
+web-cgi;1512;WEB-CGI input.bat arbitrary command execution attempt
+web-cgi;1513;WEB-CGI input.bat access
+web-cgi;1514;WEB-CGI input2.bat arbitrary command execution attempt
+web-cgi;1515;WEB-CGI input2.bat access
+web-cgi;1516;WEB-CGI envout.bat arbitrary command execution attempt
+web-cgi;1517;WEB-CGI envout.bat access
+web-cgi;1705;WEB-CGI echo.bat arbitrary command execution attempt
+web-cgi;1706;WEB-CGI echo.bat access
+web-cgi;1707;WEB-CGI hello.bat arbitrary command execution attempt
+web-cgi;1708;WEB-CGI hello.bat access
+web-cgi;1650;WEB-CGI tst.bat access
+web-cgi;1539;WEB-CGI /cgi-bin/ls access
+web-cgi;1542;WEB-CGI cgimail access
+web-cgi;1543;WEB-CGI cgiwrap access
+web-cgi;1547;WEB-CGI csSearch.cgi arbitrary command execution attempt
+web-cgi;1548;WEB-CGI csSearch.cgi access
+web-cgi;1553;WEB-CGI /cart/cart.cgi access
+web-cgi;1554;WEB-CGI dbman db.cgi access
+web-cgi;1555;WEB-CGI DCShop access
+web-cgi;1556;WEB-CGI DCShop orders.txt access
+web-cgi;1557;WEB-CGI DCShop auth_user_file.txt access
+web-cgi;1565;WEB-CGI eshop.pl arbitrary commane execution attempt
+web-cgi;1566;WEB-CGI eshop.pl access
+web-cgi;1569;WEB-CGI loadpage.cgi directory traversal attempt
+web-cgi;1570;WEB-CGI loadpage.cgi access
+web-cgi;1590;WEB-CGI faqmanager.cgi arbitrary file access attempt
+web-cgi;1591;WEB-CGI faqmanager.cgi access
+web-cgi;1592;WEB-CGI /fcgi-bin/echo.exe access
+web-cgi;1628;WEB-CGI FormHandler.cgi directory traversal attempt attempt
+web-cgi;1593;WEB-CGI FormHandler.cgi external site redirection attempt
+web-cgi;1594;WEB-CGI FormHandler.cgi access
+web-cgi;1597;WEB-CGI guestbook.cgi access
+web-cgi;1598;WEB-CGI Home Free search.cgi directory traversal attempt
+web-cgi;1599;WEB-CGI search.cgi access
+web-cgi;1651;WEB-CGI enivorn.pl access
+web-cgi;1652;WEB-CGI campus attempt
+web-cgi;1653;WEB-CGI campus access
+web-cgi;1654;WEB-CGI cart32.exe access
+web-cgi;1655;WEB-CGI pfdispaly.cgi arbitrary command execution attempt
+web-cgi;1656;WEB-CGI pfdispaly.cgi access
+web-cgi;1657;WEB-CGI pagelog.cgi directory traversal attempt
+web-cgi;1658;WEB-CGI pagelog.cgi access
+web-cgi;1709;WEB-CGI ad.cgi access
+web-cgi;1710;WEB-CGI bbs_forum.cgi access
+web-cgi;1711;WEB-CGI bsguest.cgi access
+web-cgi;1712;WEB-CGI bslist.cgi access
+web-cgi;1713;WEB-CGI cgforum.cgi access
+web-cgi;1714;WEB-CGI newdesk access
+web-cgi;1715;WEB-CGI register.cgi access
+web-cgi;1716;WEB-CGI gbook.cgi access
+web-cgi;1717;WEB-CGI simplestguest.cgi access
+web-cgi;1718;WEB-CGI statusconfig.pl access
+web-cgi;1719;WEB-CGI talkback.cgi directory traversal attempt
+web-cgi;1720;WEB-CGI talkback.cgi access
+web-cgi;1721;WEB-CGI adcycle access
+web-cgi;1722;WEB-CGI MachineInfo access
+web-cgi;1723;WEB-CGI emumail.cgi NULL attempt
+web-cgi;1724;WEB-CGI emumail.cgi access
+web-cgi;1642;WEB-CGI document.d2w access
+web-cgi;1643;WEB-CGI db2www access
+web-cgi;1668;WEB-CGI /cgi-bin/ access
+web-cgi;1669;WEB-CGI /cgi-dos/ access
+web-cgi;1051;WEB-CGI technote main.cgi file directory traversal attempt
+web-cgi;1052;WEB-CGI technote print.cgi directory traversal attempt
+web-cgi;1053;WEB-CGI ads.cgi command execution attempt
+web-cgi;1088;WEB-CGI eXtropia webstore directory traversal
+web-cgi;1611;WEB-CGI eXtropia webstore access
+web-cgi;1089;WEB-CGI shopping cart directory traversal
+web-cgi;1090;WEB-CGI Allaire Pro Web Shell attempt
+web-cgi;1092;WEB-CGI Armada Style Master Index directory traversal
+web-cgi;1093;WEB-CGI cached_feed.cgi moreover shopping cart directory traversal
+web-cgi;2051;WEB-CGI cached_feed.cgi moreover shopping cart access
+web-cgi;1097;WEB-CGI Talentsoft Web+ exploit attempt
+web-cgi;1106;WEB-CGI Poll-it access
+web-cgi;1149;WEB-CGI count.cgi access
+web-cgi;1865;WEB-CGI webdist.cgi arbitrary command attempt
+web-cgi;1163;WEB-CGI webdist.cgi access
+web-cgi;1172;WEB-CGI bigconf.cgi access
+web-cgi;1174;WEB-CGI /cgi-bin/jj access
+web-cgi;1185;WEB-CGI bizdbsearch attempt
+web-cgi;1535;WEB-CGI bizdbsearch access
+web-cgi;1194;WEB-CGI sojourn.cgi File attempt
+web-cgi;1195;WEB-CGI sojourn.cgi access
+web-cgi;1196;WEB-CGI SGI InfoSearch fname attempt
+web-cgi;1727;WEB-CGI SGI InfoSearch fname access
+web-cgi;1204;WEB-CGI ax-admin.cgi access
+web-cgi;1205;WEB-CGI axs.cgi access
+web-cgi;1206;WEB-CGI cachemgr.cgi access
+web-cgi;1208;WEB-CGI responder.cgi access
+web-cgi;1211;WEB-CGI web-map.cgi access
+web-cgi;1215;WEB-CGI ministats admin access
+web-cgi;1219;WEB-CGI dfire.cgi access
+web-cgi;1305;WEB-CGI txt2html.cgi directory traversal attempt
+web-cgi;1304;WEB-CGI txt2html.cgi access
+web-cgi;1306;WEB-CGI store.cgi product directory traversal attempt
+web-cgi;1488;WEB-CGI store.cgi directory traversal attempt
+web-cgi;1307;WEB-CGI store.cgi access
+web-cgi;1494;WEB-CGI SIX webboard generate.cgi attempt
+web-cgi;1495;WEB-CGI SIX webboard generate.cgi access
+web-cgi;1496;WEB-CGI spin_client.cgi access
+web-cgi;1787;WEB-CGI csPassword.cgi access
+web-cgi;1788;WEB-CGI csPassword password.cgi.tmp access
+web-cgi;1763;WEB-CGI Nortel Contivity cgiproc DOS attempt
+web-cgi;1764;WEB-CGI Nortel Contivity cgiproc DOS attempt
+web-cgi;1765;WEB-CGI Nortel Contivity cgiproc access
+web-cgi;1805;WEB-CGI Oracle reports CGI access
+web-cgi;1822;WEB-CGI alienform.cgi directory traversal attempt
+web-cgi;1823;WEB-CGI AlienForm af.cgi directory traversal attempt
+web-cgi;1824;WEB-CGI alienform.cgi access
+web-cgi;1825;WEB-CGI AlienForm af.cgi access
+web-cgi;1868;WEB-CGI story.pl arbitrary file read attempt
+web-cgi;1869;WEB-CGI story.pl access
+web-cgi;1870;WEB-CGI siteUserMod.cgi access
+web-cgi;1875;WEB-CGI cgicso access
+web-cgi;1876;WEB-CGI nph-publish.cgi access
+web-cgi;1877;WEB-CGI printenv access
+web-cgi;1878;WEB-CGI sdbsearch.cgi access
+web-cgi;1931;WEB-CGI rpc-nlog.pl access
+web-cgi;1932;WEB-CGI rpc-smb.pl access
+web-cgi;1933;WEB-CGI cart.cgi access
+web-cgi;1994;WEB-CGI vpasswd.cgi access
+web-cgi;1995;WEB-CGI alya.cgi access
+web-cgi;1996;WEB-CGI viralator.cgi access
+web-cgi;2001;WEB-CGI smartsearch.cgi access
+web-cgi;1862;WEB-CGI mrtg.cgi directory traversal attempt
+web-cgi;2052;WEB-CGI overflow.cgi access
+web-cgi;1850;WEB-CGI way-board.cgi access
+web-cgi;2053;WEB-CGI process_bug.cgi access
+web-cgi;2054;WEB-CGI enter_bug.cgi arbitrary command attempt
+web-cgi;2055;WEB-CGI enter_bug.cgi access
+web-cgi;2085;WEB-CGI parse_xml.cgi access
+web-cgi;2086;WEB-CGI streaming server parse_xml.cgi access
+web-cgi;2115;WEB-CGI album.pl access
+web-cgi;2116;WEB-CGI chipcfg.cgi access
+web-cgi;2127;WEB-CGI ikonboard.cgi access
+web-cgi;2128;WEB-CGI swsrv.cgi access
+web-client;1233;WEB-CLIENT Outlook EML access
+web-client;1735;WEB-CLIENT XMLHttpRequest attempt
+web-client;1284;WEB-CLIENT readme.eml download attempt
+web-client;1290;WEB-CLIENT readme.eml autoload attempt
+web-client;1840;WEB-CLIENT Javascript document.domain attempt
+web-client;1841;WEB-CLIENT Javascript URL host spoofing attempt
+web-coldfusion;903;WEB-COLDFUSION cfcache.map access
+web-coldfusion;904;WEB-COLDFUSION exampleapp application.cfm
+web-coldfusion;905;WEB-COLDFUSION application.cfm access
+web-coldfusion;906;WEB-COLDFUSION getfile.cfm access
+web-coldfusion;907;WEB-COLDFUSION addcontent.cfm access
+web-coldfusion;908;WEB-COLDFUSION administrator access
+web-coldfusion;909;WEB-COLDFUSION datasource username attempt
+web-coldfusion;910;WEB-COLDFUSION fileexists.cfm access
+web-coldfusion;911;WEB-COLDFUSION exprcalc access
+web-coldfusion;912;WEB-COLDFUSION parks access
+web-coldfusion;913;WEB-COLDFUSION cfappman access
+web-coldfusion;914;WEB-COLDFUSION beaninfo access
+web-coldfusion;915;WEB-COLDFUSION evaluate.cfm access
+web-coldfusion;916;WEB-COLDFUSION getodbcdsn access
+web-coldfusion;917;WEB-COLDFUSION db connections flush attempt
+web-coldfusion;918;WEB-COLDFUSION expeval access
+web-coldfusion;919;WEB-COLDFUSION datasource passwordattempt
+web-coldfusion;920;WEB-COLDFUSION datasource attempt
+web-coldfusion;921;WEB-COLDFUSION admin encrypt attempt
+web-coldfusion;922;WEB-COLDFUSION displayfile access
+web-coldfusion;923;WEB-COLDFUSION getodbcin attempt
+web-coldfusion;924;WEB-COLDFUSION admin decrypt attempt
+web-coldfusion;925;WEB-COLDFUSION mainframeset access
+web-coldfusion;926;WEB-COLDFUSION set odbc ini attempt
+web-coldfusion;927;WEB-COLDFUSION settings refresh attempt
+web-coldfusion;928;WEB-COLDFUSION exampleapp access
+web-coldfusion;929;WEB-COLDFUSION CFUSION_VERIFYMAIL access
+web-coldfusion;930;WEB-COLDFUSION snippets attempt
+web-coldfusion;931;WEB-COLDFUSION cfmlsyntaxcheck.cfm access
+web-coldfusion;932;WEB-COLDFUSION application.cfm access
+web-coldfusion;933;WEB-COLDFUSION onrequestend.cfm access
+web-coldfusion;935;WEB-COLDFUSION startstop DOS access
+web-coldfusion;936;WEB-COLDFUSION gettempdirectory.cfm access 
+web-coldfusion;1659;WEB-COLDFUSION sendmail.cfm access
+web-coldfusion;1540;WEB-COLDFUSION ?Mode=debug attempt
+web-frontpage;1248;WEB-FRONTPAGE rad fp30reg.dll access
+web-frontpage;1249;WEB-FRONTPAGE frontpage rad fp4areg.dll access
+web-frontpage;937;WEB-FRONTPAGE _vti_rpc access
+web-frontpage;939;WEB-FRONTPAGE posting
+web-frontpage;940;WEB-FRONTPAGE shtml.dll access
+web-frontpage;941;WEB-FRONTPAGE contents.htm access
+web-frontpage;942;WEB-FRONTPAGE orders.htm access
+web-frontpage;943;WEB-FRONTPAGE fpsrvadm.exe access
+web-frontpage;944;WEB-FRONTPAGE fpremadm.exe access
+web-frontpage;945;WEB-FRONTPAGE fpadmin.htm access
+web-frontpage;946;WEB-FRONTPAGE fpadmcgi.exe access
+web-frontpage;947;WEB-FRONTPAGE orders.txt access
+web-frontpage;948;WEB-FRONTPAGE form_results access
+web-frontpage;949;WEB-FRONTPAGE registrations.htm access
+web-frontpage;950;WEB-FRONTPAGE cfgwiz.exe access
+web-frontpage;951;WEB-FRONTPAGE authors.pwd access
+web-frontpage;952;WEB-FRONTPAGE author.exe access
+web-frontpage;953;WEB-FRONTPAGE administrators.pwd access
+web-frontpage;954;WEB-FRONTPAGE form_results.htm access
+web-frontpage;955;WEB-FRONTPAGE access.cnf access
+web-frontpage;956;WEB-FRONTPAGE register.txt access
+web-frontpage;957;WEB-FRONTPAGE registrations.txt access
+web-frontpage;958;WEB-FRONTPAGE service.cnf access
+web-frontpage;959;WEB-FRONTPAGE service.pwd
+web-frontpage;960;WEB-FRONTPAGE service.stp access
+web-frontpage;961;WEB-FRONTPAGE services.cnf access
+web-frontpage;962;WEB-FRONTPAGE shtml.exe access
+web-frontpage;963;WEB-FRONTPAGE svcacl.cnf access
+web-frontpage;964;WEB-FRONTPAGE users.pwd access
+web-frontpage;965;WEB-FRONTPAGE writeto.cnf access
+web-frontpage;966;WEB-FRONTPAGE fourdots request
+web-frontpage;967;WEB-FRONTPAGE dvwssr.dll access
+web-frontpage;968;WEB-FRONTPAGE register.htm access
+web-frontpage;1288;WEB-FRONTPAGE /_vti_bin/ access
+web-iis;1970;WEB-IIS MDAC Content-Type overflow attempt
+web-iis;1076;WEB-IIS repost.asp access
+web-iis;1806;WEB-IIS .htr Transfer-Encoding\: chunked
+web-iis;1618;WEB-IIS .asp Transfer-Encoding\: chunked
+web-iis;1626;WEB-IIS /StoreCSVS/InstantOrder.asmx request
+web-iis;1750;WEB-IIS users.xml access
+web-iis;1753;WEB-IIS as_web.exe access
+web-iis;1754;WEB-IIS as_web4.exe access
+web-iis;1756;WEB-IIS NewsPro administration authentication attempt
+web-iis;1772;WEB-IIS pbserver access
+web-iis;1660;WEB-IIS trace.axd access
+web-iis;1484;WEB-IIS /isapi/tstisapi.dll access
+web-iis;1485;WEB-IIS mkilog.exe access
+web-iis;1486;WEB-IIS ctss.idc access
+web-iis;1487;WEB-IIS /iisadmpwd/aexp2.htr access
+web-iis;969;WEB-IIS WebDAV file lock attempt
+web-iis;971;WEB-IIS ISAPI .printer access
+web-iis;1243;WEB-IIS ISAPI .ida attempt
+web-iis;1242;WEB-IIS ISAPI .ida access
+web-iis;1244;WEB-IIS ISAPI .idq attempt
+web-iis;1245;WEB-IIS ISAPI .idq access
+web-iis;972;WEB-IIS %2E-asp access
+web-iis;973;WEB-IIS *.idc attempt
+web-iis;974;WEB-IIS ..\.. access
+web-iis;975;WEB-IIS .asp\:\:$DATA access
+web-iis;976;WEB-IIS .bat? access
+web-iis;977;WEB-IIS .cnf access
+web-iis;978;WEB-IIS ASP contents view
+web-iis;979;WEB-IIS ASP contents view
+web-iis;980;WEB-IIS CGImail.exe access
+web-iis;981;WEB-IIS unicode directory traversal attempt
+web-iis;982;WEB-IIS unicode directory traversal attempt
+web-iis;983;WEB-IIS unicode directory traversal attempt
+web-iis;1945;WEB-IIS unicode directory traversal attempt
+web-iis;984;WEB-IIS JET VBA access
+web-iis;985;WEB-IIS JET VBA access
+web-iis;986;WEB-IIS MSProxy access
+web-iis;1725;WEB-IIS +.htr code fragment attempt
+web-iis;987;WEB-IIS .htr access
+web-iis;988;WEB-IIS SAM Attempt
+web-iis;989;WEB-IIS Unicode2.pl script (File permission canonicalization)
+web-iis;990;WEB-IIS _vti_inf access
+web-iis;991;WEB-IIS achg.htr access
+web-iis;992;WEB-IIS adctest.asp access
+web-iis;994;WEB-IIS /scripts/iisadmin/default.htm access
+web-iis;995;WEB-IIS ism.dll access
+web-iis;996;WEB-IIS anot.htr access
+web-iis;997;WEB-IIS asp-dot attempt
+web-iis;998;WEB-IIS asp-srch attempt
+web-iis;999;WEB-IIS bdir access
+web-iis;1000;WEB-IIS bdir.htr access
+web-iis;1661;WEB-IIS cmd32.exe access
+web-iis;1002;WEB-IIS cmd.exe access
+web-iis;1003;WEB-IIS cmd? access
+web-iis;1004;WEB-IIS codebrowser Exair access
+web-iis;1005;WEB-IIS codebrowser SDK access
+web-iis;1007;WEB-IIS cross-site scripting attempt
+web-iis;1380;WEB-IIS cross-site scripting attempt
+web-iis;1008;WEB-IIS del attempt
+web-iis;1009;WEB-IIS directory listing
+web-iis;1010;WEB-IIS encoding access
+web-iis;1011;WEB-IIS exec-src access
+web-iis;1012;WEB-IIS fpcount attempt
+web-iis;1013;WEB-IIS fpcount access
+web-iis;1015;WEB-IIS getdrvs.exe access
+web-iis;1016;WEB-IIS global.asa access
+web-iis;1017;WEB-IIS idc-srch attempt
+web-iis;1018;WEB-IIS iisadmpwd attempt
+web-iis;1019;WEB-IIS index server file source code attempt
+web-iis;1020;WEB-IIS isc$data attempt
+web-iis;1021;WEB-IIS ism.dll attempt
+web-iis;1022;WEB-IIS jet vba access
+web-iis;1023;WEB-IIS msadcs.dll access
+web-iis;1024;WEB-IIS newdsn.exe access
+web-iis;1025;WEB-IIS perl access
+web-iis;1026;WEB-IIS perl-browse0a attempt
+web-iis;1027;WEB-IIS perl-browse20 attempt
+web-iis;1028;WEB-IIS query.asp access
+web-iis;1029;WEB-IIS scripts-browse access
+web-iis;1030;WEB-IIS search97.vts access
+web-iis;1031;WEB-IIS /SiteServer/Publishing/viewcode.asp access
+web-iis;1032;WEB-IIS showcode access
+web-iis;1033;WEB-IIS showcode access
+web-iis;1034;WEB-IIS showcode access
+web-iis;1035;WEB-IIS showcode access
+web-iis;1036;WEB-IIS showcode access
+web-iis;1037;WEB-IIS showcode.asp access
+web-iis;1038;WEB-IIS site server config access
+web-iis;1039;WEB-IIS srch.htm access
+web-iis;1040;WEB-IIS srchadm access
+web-iis;1041;WEB-IIS uploadn.asp access
+web-iis;1042;WEB-IIS view source via translate header
+web-iis;1043;WEB-IIS viewcode.asp access
+web-iis;1044;WEB-IIS webhits access
+web-iis;1726;WEB-IIS doctodep.btr access
+web-iis;1045;WEB-IIS Unauthorized IP Access Attempt
+web-iis;1046;WEB-IIS site/iisamples access
+web-iis;1256;WEB-IIS CodeRed v2 root.exe access
+web-iis;1283;WEB-IIS outlook web dos
+web-iis;1400;WEB-IIS /scripts/samples/ access
+web-iis;1401;WEB-IIS /msadc/samples/ access
+web-iis;1402;WEB-IIS iissamples access
+web-iis;970;WEB-IIS multiple decode attempt
+web-iis;993;WEB-IIS iisadmin access
+web-iis;1285;WEB-IIS msdac access
+web-iis;1286;WEB-IIS _mem_bin access
+web-iis;1287;WEB-IIS scripts access
+web-iis;1595;WEB-IIS htimage.exe access
+web-iis;1817;WEB-IIS MS Site Server default login attempt
+web-iis;1818;WEB-IIS MS Site Server admin attempt
+web-iis;1075;WEB-IIS postinfo.asp access
+web-iis;1567;WEB-IIS /exchange/root.asp attempt
+web-iis;1568;WEB-IIS /exchange/root.asp access
+web-iis;1802;WEB-IIS .asa HTTP header buffer overflow attempt
+web-iis;1803;WEB-IIS .cer HTTP header buffer overflow attempt
+web-iis;1804;WEB-IIS .cdx HTTP header buffer overflow attempt
+web-iis;1801;WEB-IIS .asp HTTP header buffer overflow attempt
+web-iis;2090;WEB-IIS WEBDAV exploit attempt
+web-iis;2091;WEB-IIS WEBDAV nessus safe scan attempt
+web-iis;2117;WEB-IIS Battleaxe Forum login.asp access
+web-iis;2129;WEB-IIS nsiislog.dll access
+web-iis;2130;WEB-IIS IISProtect siteadmin.asp access
+web-iis;2157;WEB-IIS IISProtect globaladmin.asp access
+web-iis;2131;WEB-IIS IISProtect access
+web-iis;2132;WEB-IIS Synchrologic Email Accelerator userid list access attempt
+web-iis;2133;WEB-IIS MS BizTalk server access
+web-iis;2134;WEB-IIS register.asp access
+web-misc;1497;WEB-MISC cross site scripting attempt
+web-misc;1667;WEB-MISC cross site scripting \(img src=javascript\) attempt
+web-misc;1250;WEB-MISC Cisco IOS HTTP configuration attempt
+web-misc;1047;WEB-MISC Netscape Enterprise DOS
+web-misc;1048;WEB-MISC Netscape Enterprise directory listing attempt
+web-misc;1050;WEB-MISC iPlanet GETPROPERTIES attempt
+web-misc;1054;WEB-MISC weblogic view source attempt
+web-misc;1055;WEB-MISC Tomcat directory traversal attempt
+web-misc;1056;WEB-MISC Tomcat view source attempt
+web-misc;1057;WEB-MISC ftp attempt
+web-misc;1058;WEB-MISC xp_enumdsn attempt
+web-misc;1059;WEB-MISC xp_filelist attempt
+web-misc;1060;WEB-MISC xp_availablemedia attempt
+web-misc;1061;WEB-MISC xp_cmdshell attempt
+web-misc;1062;WEB-MISC nc.exe attempt
+web-misc;1064;WEB-MISC wsh attempt
+web-misc;1065;WEB-MISC rcmd attempt
+web-misc;1066;WEB-MISC telnet attempt
+web-misc;1067;WEB-MISC net attempt
+web-misc;1068;WEB-MISC tftp attempt
+web-misc;1069;WEB-MISC xp_regread attempt
+web-misc;1977;WEB-MISC xp_regwrite attempt
+web-misc;1978;WEB-MISC xp_regdeletekey attempt
+web-misc;1070;WEB-MISC WebDAV search access
+web-misc;1071;WEB-MISC .htpasswd access
+web-misc;1072;WEB-MISC Lotus Domino directory traversal
+web-misc;1073;WEB-MISC webhits.exe access
+web-misc;1077;WEB-MISC queryhit.htm access
+web-misc;1078;WEB-MISC counter.exe access
+web-misc;1079;WEB-MISC WebDAV propfind access
+web-misc;1080;WEB-MISC unify eWave ServletExec upload
+web-misc;1081;WEB-MISC Netscape Servers suite DOS
+web-misc;1082;WEB-MISC amazon 1-click cookie theft
+web-misc;1083;WEB-MISC unify eWave ServletExec DOS
+web-misc;1084;WEB-MISC Allaire JRUN DOS attempt
+web-misc;1091;WEB-MISC ICQ Webfront HTTP DOS
+web-misc;1095;WEB-MISC Talentsoft Web+ Source Code view access
+web-misc;1096;WEB-MISC Talentsoft Web+ internal IP Address access
+web-misc;1098;WEB-MISC SmartWin CyberOffice Shopping Cart access
+web-misc;1099;WEB-MISC cybercop scan
+web-misc;1100;WEB-MISC L3retriever HTTP Probe
+web-misc;1101;WEB-MISC Webtrends HTTP probe
+web-misc;1102;WEB-MISC Nessus 404 probe
+web-misc;1103;WEB-MISC Netscape admin passwd
+web-misc;1105;WEB-MISC BigBrother access
+web-misc;1612;WEB-MISC ftp.pl attempt
+web-misc;1107;WEB-MISC ftp.pl access
+web-misc;1108;WEB-MISC Tomcat server snoop access
+web-misc;1109;WEB-MISC ROXEN directory list attempt
+web-misc;1110;WEB-MISC apache source.asp file access
+web-misc;1111;WEB-MISC Tomcat server exploit access
+web-misc;1112;WEB-MISC http directory traversal
+web-misc;1115;WEB-MISC ICQ webserver DOS
+web-misc;1116;WEB-MISC Lotus DelDoc attempt
+web-misc;1117;WEB-MISC Lotus EditDoc attempt
+web-misc;1118;WEB-MISC ls%20-l
+web-misc;1119;WEB-MISC mlog.phtml access
+web-misc;1120;WEB-MISC mylog.phtml access
+web-misc;1122;WEB-MISC /etc/passwd
+web-misc;1123;WEB-MISC ?PageServices access
+web-misc;1124;WEB-MISC Ecommerce check.txt access
+web-misc;1125;WEB-MISC webcart access
+web-misc;1126;WEB-MISC AuthChangeUrl access
+web-misc;1127;WEB-MISC convert.bas access
+web-misc;1128;WEB-MISC cpshost.dll access
+web-misc;1129;WEB-MISC .htaccess access
+web-misc;1130;WEB-MISC .wwwacl access
+web-misc;1131;WEB-MISC .wwwacl access
+web-misc;1136;WEB-MISC cd..
+web-misc;1140;WEB-MISC guestbook.pl access
+web-misc;1613;WEB-MISC handler attempt
+web-misc;1141;WEB-MISC handler access
+web-misc;1142;WEB-MISC /.... access
+web-misc;1143;WEB-MISC ///cgi-bin access
+web-misc;1144;WEB-MISC /cgi-bin/// access
+web-misc;1145;WEB-MISC /~root access
+web-misc;1662;WEB-MISC /~ftp access
+web-misc;1146;WEB-MISC Ecommerce import.txt access
+web-misc;1147;WEB-MISC cat%20 access
+web-misc;1148;WEB-MISC Ecommerce import.txt access
+web-misc;1150;WEB-MISC Domino catalog.nsf access
+web-misc;1151;WEB-MISC Domino domcfg.nsf access
+web-misc;1152;WEB-MISC Domino domlog.nsf access
+web-misc;1153;WEB-MISC Domino log.nsf access
+web-misc;1154;WEB-MISC Domino names.nsf access
+web-misc;1575;WEB-MISC Domino mab.nsf access
+web-misc;1576;WEB-MISC Domino cersvr.nsf access
+web-misc;1577;WEB-MISC Domino setup.nsf access
+web-misc;1578;WEB-MISC Domino statrep.nsf access
+web-misc;1579;WEB-MISC Domino webadmin.nsf access
+web-misc;1580;WEB-MISC Domino events4.nsf access
+web-misc;1581;WEB-MISC Domino ntsync4.nsf access
+web-misc;1582;WEB-MISC Domino collect4.nsf access
+web-misc;1583;WEB-MISC Domino mailw46.nsf access
+web-misc;1584;WEB-MISC Domino bookmark.nsf access
+web-misc;1585;WEB-MISC Domino agentrunner.nsf access
+web-misc;1586;WEB-MISC Domino mail.box access
+web-misc;1155;WEB-MISC Ecommerce checks.txt access
+web-misc;1156;WEB-MISC apache DOS attempt
+web-misc;1157;WEB-MISC Netscape PublishingXpert access
+web-misc;1158;WEB-MISC windmail.exe access
+web-misc;1159;WEB-MISC webplus access
+web-misc;1160;WEB-MISC Netscape dir index wp
+web-misc;1162;WEB-MISC cart 32 AdminPwd access
+web-misc;1164;WEB-MISC shopping cart access
+web-misc;1614;WEB-MISC Novell Groupwise gwweb.exe attempt
+web-misc;1165;WEB-MISC Novell Groupwise gwweb.exe access
+web-misc;1166;WEB-MISC ws_ftp.ini access
+web-misc;1167;WEB-MISC rpm_query access
+web-misc;1168;WEB-MISC mall log order access
+web-misc;1173;WEB-MISC architext_query.pl access
+web-misc;1175;WEB-MISC wwwboard.pl access
+web-misc;1176;WEB-MISC order.log access
+web-misc;1177;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1180;WEB-MISC get32.exe access
+web-misc;1181;WEB-MISC Annex Terminal DOS attempt
+web-misc;1182;WEB-MISC cgitest.exe attempt
+web-misc;1587;WEB-MISC cgitest.exe access
+web-misc;1183;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1184;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1186;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1187;WEB-MISC SalesLogix Eviewer web command attempt
+web-misc;1588;WEB-MISC SalesLogix Eviewer access
+web-misc;1188;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1189;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1190;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1191;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1381;WEB-MISC Trend Micro OfficeScan attempt
+web-misc;1192;WEB-MISC Trend Micro OfficeScan access
+web-misc;1193;WEB-MISC oracle web arbitrary command execution attempt
+web-misc;1880;WEB-MISC oracle web application server access
+web-misc;1198;WEB-MISC Netscape Enterprise Server directory view
+web-misc;1202;WEB-MISC search.vts access
+web-misc;1615;WEB-MISC htgrep attempt
+web-misc;1207;WEB-MISC htgrep access
+web-misc;1209;WEB-MISC .nsconfig access
+web-misc;1212;WEB-MISC Admin_files access
+web-misc;1213;WEB-MISC backup access
+web-misc;1214;WEB-MISC intranet access
+web-misc;1216;WEB-MISC filemail access
+web-misc;1217;WEB-MISC plusmail access
+web-misc;1218;WEB-MISC adminlogin access
+web-misc;1220;WEB-MISC ultraboard access
+web-misc;1589;WEB-MISC musicat empower attempt
+web-misc;1221;WEB-MISC musicat empower access
+web-misc;1224;WEB-MISC ROADS search.pl attempt
+web-misc;1230;WEB-MISC VirusWall FtpSave access
+web-misc;1234;WEB-MISC VirusWall FtpSaveCSP access
+web-misc;1235;WEB-MISC VirusWall FtpSaveCVP access
+web-misc;1236;WEB-MISC Tomcat sourecode view
+web-misc;1237;WEB-MISC Tomcat sourecode view
+web-misc;1238;WEB-MISC Tomcat sourecode view
+web-misc;1241;WEB-MISC SWEditServlet directory traversal attempt
+web-misc;1259;WEB-MISC SWEditServlet access
+web-misc;1139;WEB-MISC whisker HEAD/./
+web-misc;1258;WEB-MISC HP OpenView Manager DOS
+web-misc;1260;WEB-MISC long basic authorization string
+web-misc;1291;WEB-MISC sml3com access
+web-misc;1001;WEB-MISC carbo.dll access
+web-misc;1302;WEB-MISC console.exe access
+web-misc;1303;WEB-MISC cs.exe access
+web-misc;1113;WEB-MISC http directory traversal
+web-misc;1375;WEB-MISC sadmind worm access
+web-misc;1376;WEB-MISC jrun directory browse attempt
+web-misc;1385;WEB-MISC mod-plsql administration access
+web-misc;1389;WEB-MISC viewcode.jse access
+web-misc;1391;WEB-MISC Phorecast remote code execution attempt
+web-misc;1403;WEB-MISC viewcode access
+web-misc;1404;WEB-MISC showcode access
+web-misc;1433;WEB-MISC .history access
+web-misc;1434;WEB-MISC .bash_history access
+web-misc;1489;WEB-MISC /~nobody access
+web-misc;1492;WEB-MISC RBS ISP /newuser  directory traversal attempt
+web-misc;1493;WEB-MISC RBS ISP /newuser access
+web-misc;1663;WEB-MISC *%0a.pl access
+web-misc;1664;WEB-MISC mkplog.exe access
+web-misc;1665;WEB-MISC mkilog.exe access
+web-misc;509;WEB-MISC PCCS mysql database admin tool access
+web-misc;1769;WEB-MISC .DS_Store access
+web-misc;1770;WEB-MISC .FBCIndex access
+web-misc;1500;WEB-MISC ExAir access
+web-misc;1519;WEB-MISC apache ?M=D directory list attempt
+web-misc;1520;WEB-MISC server-info access
+web-misc;1521;WEB-MISC server-status access
+web-misc;1522;WEB-MISC ans.pl attempt
+web-misc;1523;WEB-MISC ans.pl access
+web-misc;1524;WEB-MISC AxisStorpoint CD attempt
+web-misc;1525;WEB-MISC Axis Storpoint CD access
+web-misc;1526;WEB-MISC basilix sendmail.inc access
+web-misc;1527;WEB-MISC basilix mysql.class access
+web-misc;1528;WEB-MISC BBoard access
+web-misc;1544;WEB-MISC Cisco Catalyst command execution attempt
+web-misc;1546;WEB-MISC Cisco /%% DOS attempt
+web-misc;1551;WEB-MISC /CVS/Entries access
+web-misc;1552;WEB-MISC cvsweb version access
+web-misc;1559;WEB-MISC /doc/packages access
+web-misc;1560;WEB-MISC /doc/ access
+web-misc;1561;WEB-MISC ?open access
+web-misc;1563;WEB-MISC login.htm attempt
+web-misc;1564;WEB-MISC login.htm access
+web-misc;1603;WEB-MISC DELETE attempt
+web-misc;1670;WEB-MISC /home/ftp access
+web-misc;1671;WEB-MISC /home/www access
+web-misc;1738;WEB-MISC global.inc access
+web-misc;1744;WEB-MISC SecureSite authentication bypass attempt
+web-misc;1757;WEB-MISC b2 arbitrary command execution attempt
+web-misc;1758;WEB-MISC b2 access
+web-misc;1766;WEB-MISC search.dll directory listing attempt
+web-misc;1767;WEB-MISC search.dll access
+web-misc;1498;WEB-MISC PIX firewall manager directory traversal attempt
+web-misc;1604;WEB-MISC iChat directory traversal attempt
+web-misc;1558;WEB-MISC Delegate whois overflow attempt
+web-misc;1518;WEB-MISC nstelemetry.adp access
+web-misc;1132;WEB-MISC Netscape Unixware overflow
+web-misc;1199;WEB-MISC Compaq Insight directory traversal
+web-misc;1231;WEB-MISC VirusWall catinfo access
+web-misc;1232;WEB-MISC VirusWall catinfo access
+web-misc;1809;WEB-MISC Apache Chunked-Encoding worm attempt
+web-misc;1807;WEB-MISC Transfer-Encoding\: chunked
+web-misc;1814;WEB-MISC CISCO VoIP DOS ATTEMPT
+web-misc;1820;WEB-MISC IBM Net.Commerce orderdspc.d2w access
+web-misc;1826;WEB-MISC WEB-INF access
+web-misc;1827;WEB-MISC Tomcat servlet mapping cross site scripting attempt
+web-misc;1828;WEB-MISC iPlanet Search directory traversal attempt
+web-misc;1829;WEB-MISC Tomcat TroubleShooter servlet access
+web-misc;1830;WEB-MISC Tomcat SnoopServlet servlet access
+web-misc;1831;WEB-MISC jigsaw dos attempt
+web-misc;1835;WEB-MISC Macromedia SiteSpring cross site scripting attempt
+web-misc;1839;WEB-MISC mailman cross site scripting attempt
+web-misc;1847;WEB-MISC webalizer access
+web-misc;1125;WEB-MISC webalizer access
+web-misc;1848;WEB-MISC webcart-lite access
+web-misc;1849;WEB-MISC webfind.exe access
+web-misc;1851;WEB-MISC active.log access
+web-misc;1852;WEB-MISC robots.txt access
+web-misc;1857;WEB-MISC robot.txt access
+web-misc;1858;WEB-MISC CISCO PIX Firewall Manager directory traversal attempt
+web-misc;1859;WEB-MISC Sun JavaServer default password login attempt
+web-misc;1860;WEB-MISC Linksys router default password login attempt \(\:admin\)
+web-misc;1861;WEB-MISC Linksys router default password login attempt \(admin\:admin\)
+web-misc;1871;WEB-MISC Oracle XSQLConfig.xml access
+web-misc;1872;WEB-MISC Oracle Dynamic Monitoring Services (dms) access
+web-misc;1873;WEB-MISC globals.jsa access
+web-misc;1874;WEB-MISC Oracle Java Process Manager access
+web-misc;1881;WEB-MISC bad HTTP/1.1 request, Potentially worm attack
+web-misc;1171;WEB-MISC whisker HEAD with large datagram
+web-misc;1104;WEB-MISC whisker space splice attack
+web-misc;1087;WEB-MISC whisker tab splice attack
+web-misc;1808;WEB-MISC apache chunked encoding memory corruption exploit attempt
+web-misc;1943;WEB-MISC /Carello/add.exe access
+web-misc;1944;WEB-MISC /ecscripts/ecware.exe access
+web-misc;1969;WEB-MISC ion-p access
+web-misc;1499;WEB-MISC SiteScope Service access
+web-misc;1946;WEB-MISC answerbook2 admin attempt
+web-misc;1947;WEB-MISC answerbook2 arbitrary command execution attempt
+web-misc;1979;WEB-MISC perl post attempt
+web-misc;2056;WEB-MISC TRACE attempt
+web-misc;2057;WEB-MISC helpout.exe access
+web-misc;2058;WEB-MISC MsmMask.exe attempt
+web-misc;2059;WEB-MISC MsmMask.exe access
+web-misc;2060;WEB-MISC DB4Web access
+web-misc;2061;WEB-MISC Tomcat null byte directory listing attempt
+web-misc;2062;WEB-MISC iPlanet .perf access
+web-misc;2063;WEB-MISC Demarc SQL injection attempt
+web-misc;2064;WEB-MISC Lotus Notes .csp script source download attempt
+web-misc;2065;WEB-MISC Lotus Notes .csp script source download attempt
+web-misc;2066;WEB-MISC Lotus Notes .pl script source download attempt
+web-misc;2067;WEB-MISC Lotus Notes .exe script source download attempt
+web-misc;2068;WEB-MISC BitKeeper arbitrary command attempt
+web-misc;2069;WEB-MISC chip.ini access
+web-misc;2070;WEB-MISC post32.exe arbitrary command attempt
+web-misc;2071;WEB-MISC post32.exe access
+web-misc;2072;WEB-MISC lyris.pl access
+web-misc;2073;WEB-MISC globals.pl access
+web-misc;2135;WEB-MISC philboard.mdb access
+web-misc;2136;WEB-MISC philboard_admin.asp authentication bypass attempt
+web-misc;2137;WEB-MISC philboard_admin.asp access
+web-misc;2138;WEB-MISC logicworks.ini access
+web-misc;2139;WEB-MISC /*.shtml access
+web-misc;2156;WEB-MISC mod_gzip_status access
+web-php;1774;WEB-PHP bb_smilies.php access
+web-php;1423;WEB-PHP content-disposition memchr overflow
+web-php;1425;WEB-PHP content-disposition
+web-php;1736;WEB-PHP squirrel mail spell-check arbitrary command attempt
+web-php;1737;WEB-PHP squirrel mail theme arbitrary command attempt
+web-php;1739;WEB-PHP DNSTools administrator authentication bypass attempt
+web-php;1740;WEB-PHP DNSTools authentication bypass attempt
+web-php;1741;WEB-PHP DNSTools access
+web-php;1742;WEB-PHP Blahz-DNS dostuff.php modify user attempt
+web-php;1743;WEB-PHP Blahz-DNS dostuff.php access
+web-php;1745;WEB-PHP Messagerie supp_membre.php access
+web-php;1773;WEB-PHP php.exe access
+web-php;1815;WEB-PHP directory.php arbitrary command attempt
+web-php;1816;WEB-PHP directory.php access
+web-php;1834;WEB-PHP PHP-Wiki cross site scripting attempt
+web-php;1967;WEB-PHP phpbb quick-reply.php arbitrary command attempt
+web-php;1968;WEB-PHP phpbb quick-reply.php access
+web-php;1997;WEB-PHP read_body.php access attempt
+web-php;1998;WEB-PHP calendar.php access
+web-php;1999;WEB-PHP edit_image.php access
+web-php;2000;WEB-PHP readmsg.php access
+web-php;2002;WEB-PHP external include path
+web-php;1134;WEB-PHP Phorum admin access
+web-php;1161;WEB-PHP piranha passwd.php3 access
+web-php;1178;WEB-PHP Phorum read access
+web-php;1179;WEB-PHP Phorum violation access
+web-php;1197;WEB-PHP Phorum code access
+web-php;1300;WEB-PHP admin.php file upload attempt
+web-php;1301;WEB-PHP admin.php access
+web-php;1407;WEB-PHP smssend.php access
+web-php;1399;WEB-PHP PHP-Nuke remote file include attempt
+web-php;1490;WEB-PHP Phorum /support/common.php attempt
+web-php;1491;WEB-PHP Phorum /support/common.php access
+web-php;1137;WEB-PHP Phorum authentication access
+web-php;1085;WEB-PHP strings overflow
+web-php;1086;WEB-PHP strings overflow
+web-php;1254;WEB-PHP PHPLIB remote command attempt
+web-php;1255;WEB-PHP PHPLIB remote command attempt
+web-php;2074;WEB-PHP Mambo uploadimage.php upload php file attempt
+web-php;2075;WEB-PHP Mambo upload.php upload php file attempt
+web-php;2076;WEB-PHP Mambo uploadimage.php access
+web-php;2077;WEB-PHP Mambo upload.php access
+web-php;2078;WEB-PHP phpBB privmsg.php access
+web-php;2140;WEB-PHP p-news.php access
+web-php;2141;WEB-PHP shoutbox.php directory traversal attempt
+web-php;2142;WEB-PHP shoutbox.php access
+web-php;2143;WEB-PHP b2 cafelog gm-2-b2.php remote command execution attempt
+web-php;2144;WEB-PHP b2 cafelog gm-2-b2.php access
+web-php;2145;WEB-PHP TextPortal admin.php default password (admin) attempt
+web-php;2146;WEB-PHP TextPortal admin.php default password (12345) attempt
+web-php;2147;WEB-PHP BLNews objects.inc.php4 remote command execution attempt
+web-php;2148;WEB-PHP BLNews objects.inc.php4 access
+web-php;2149;WEB-PHP Turba status.php access
+web-php;2150;WEB-PHP ttCMS header.php remote command execution attempt
+web-php;2151;WEB-PHP ttCMS header.php access
+web-php;2152;WEB-PHP test.php access
+web-php;2153;WEB-PHP autohtml.php directory traversal attempt
+web-php;2154;WEB-PHP autohtml.php access
+web-php;2155;WEB-PHP ttforum remote command execution attempt
+x11;1225;X11 MIT Magic Cookie detected
+x11;1226;X11 xopen

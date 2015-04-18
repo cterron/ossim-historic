@@ -3,17 +3,16 @@
  *
  */
 
-#include "sim-host-asset.h"
-#include "sim-server.h"
-
 #include <sys/types.h>
+#include <netinet/in.h>
 #include <sys/stat.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <config.h>
- 
-#define BUFFER_SIZE 1024
 
+#include "sim-database.h"
+#include "sim-host-asset.h"
+ 
 enum 
 {
   DESTROY,
@@ -21,11 +20,10 @@ enum
 };
 
 struct _SimHostAssetPrivate {
-  SimServer   *server;
+  struct in_addr   ip;
 
-  struct in_addr ip;
-  gint asset;
-  gchar sensors[MAX_SENSORS];
+  gint             asset;
+  gchar           *sensors;
 };
 
 static gpointer parent_class = NULL;
@@ -92,4 +90,127 @@ sim_host_asset_new (void)
   host_asset = SIM_HOST_ASSET (g_object_new (SIM_TYPE_HOST_ASSET, NULL));
 
   return host_asset;
+}
+
+/*
+ *
+ *
+ *
+ */
+GList*
+sim_host_asset_load_from_db(GObject *db)
+{
+  SimHostAsset  *host_asset;
+  GdaDataModel  *dm;
+  GdaDataModel  *dm1;
+  GdaValue      *value;
+  GList         *host_assets = NULL;
+  GList         *list = NULL;
+  GList         *list2 = NULL;
+  GList         *node = NULL; 
+  GList         *node2 = NULL;
+  gchar         *query2;
+  gint           row_id;
+  gint           row_id1;
+
+  gchar *query = "select * from host";
+
+  g_return_if_fail (db != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (db));
+
+  /* List of hosts */
+  list = sim_database_execute_command (SIM_DATABASE (db), query);
+  if (list != NULL)
+    {
+      for (node = g_list_first (list); node != NULL; node = g_list_next (node))
+	{
+	  dm = (GdaDataModel *) node->data;
+	  if (dm == NULL)
+	    {
+	      g_message ("HOSTS DATA MODEL ERROR");
+	    }
+	  else
+	    {
+	      for (row_id = 0; row_id < gda_data_model_get_n_rows (dm); row_id++)
+		{
+		  gchar *str;
+
+		  /* New host */
+		  host_asset  = sim_host_asset_new ();
+
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row_id);
+		  str = gda_value_stringify (value);
+		  inet_aton(str, &host_asset->_priv->ip);
+
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row_id);
+		  host_asset->_priv->asset = gda_value_get_smallint (value);
+
+		  query2 = g_strdup_printf ("select * from port_group_reference where port_group_name = '%s'", str);
+
+		  list2 = sim_database_execute_command (SIM_DATABASE (db), query2);
+		  if (list2 != NULL)
+		    {
+		      for (node2 = g_list_first (list2); node2 != NULL; node2 = g_list_next (node2))
+			{
+			  dm1 = (GdaDataModel *) node2->data;
+			  if (dm1 == NULL)
+			    {
+			      g_message ("POLICIES DATA MODEL ERROR 1");
+			    }
+			  else
+			    {
+			      for (row_id1 = 0; row_id1 < gda_data_model_get_n_rows (dm1); row_id1++)
+				{
+				  /* Set ip */
+				  value = (GdaValue *) gda_data_model_get_value_at (dm1, 1, row_id1);
+				  host_asset->_priv->sensors = gda_value_stringify (value);
+				}
+			      
+			      g_object_unref(dm1);
+			    }
+			}
+		    }
+		  host_assets = g_list_append (host_assets, host_asset);
+
+		  g_free (str);
+		}
+
+	      g_object_unref(dm);
+	    }
+	}
+    }
+  else
+    {
+      g_message ("HOSTS LIST ERROR");
+    }
+
+  return host_assets;
+}
+
+/*
+ *
+ *
+ *
+ */
+struct in_addr
+sim_host_asset_get_ip (SimHostAsset *host_asset)
+{
+  g_return_if_fail (host_asset != NULL);
+  g_return_if_fail (SIM_IS_HOST_ASSET (host_asset));
+
+  return host_asset->_priv->ip;
+}
+
+/*
+ *
+ *
+ *
+ */
+gint
+sim_host_asset_get_asset (SimHostAsset *host_asset)
+{
+  g_return_val_if_fail (host_asset != NULL, 0);
+  g_return_val_if_fail (SIM_IS_HOST_ASSET (host_asset), 0);
+
+  return host_asset->_priv->asset;
 }

@@ -1,11 +1,12 @@
 
 Tasks
 -----
-- Specify sensor-network relation within framework.
-    - Get snort.conf, spade.conf, ntop.conf, ossim.conf from every sensor.
-    - Edit those files and set $HOME_NET to specified value.
-    - Copy files back, restart systems.
-    - Use scp, shared dsa keys.
++ Specify sensor-network relation within framework.
+    + Get snort.conf, spade.conf, ntop.conf, ossim.conf from every sensor.
+    + Edit those files and set $HOME_NET to specified value.
+    + Copy files back
+    - Restart systems.
+    + Use scp, shared dsa keys.
 
 - Ports
     + Be able to insert new ports (not groups) from the web interface.
@@ -15,26 +16,26 @@ Tasks
       over the network in a fast, efficient manner. We could write to a binary
       file, read from this file and send it over to our parser.
 
-- Threads
-    - Rewrite the parser so we can use N simultaneous tasks (we can start
++ Threads
+    + Rewrite the parser so we can use N simultaneous tasks (we can start
       using three):
         - Listen & Parse
         - Compute
         - Insert into DB
-    - Start up parser reading C & A levels from DB, maintain in memory and try
+    + Start up parser reading C & A levels from DB, maintain in memory and try
       to get rid of every single SELECT.
 
-- Nat
++ Nat
     + Include another DB field so we can specify host & network natted
       addresses.
 
 - Alerting 
     - Specify persistence for C & A as for rrds. 
-    - Set an alerting checkbox beneath every host, network, rrd.
-    - Specify alerting email within conf.
+    + Set an alerting checkbox beneath every host, network, rrd.
+    + Specify alerting email within conf.
 
-- Integrate perl scripts into parser
-    - Update levels, lower levels can be done easily from parser.
++ Integrate perl scripts into parser
+    + Update levels, lower levels can be done easily from parser.
 
 - NMS asset info
     - Rewrite nms asset data so it can get the following info from our DB:     
@@ -48,7 +49,7 @@ Tasks
 - Installation scripts
 
 - P0f & arpwatch
-    - Modify scripts so they discard some os changes if they are too similar.
+    + Modify scripts so they discard some os changes if they are too similar.
     - Let p0f watch on multiple interfaces.
     - Let arpwatch watch on multiple interfaces without IP address.
 

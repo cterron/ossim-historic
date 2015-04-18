@@ -8,13 +8,16 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "sim-server.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#define MAX_NET_NAME 256
 
 #define SIM_TYPE_NET                  (sim_net_get_type ())
 #define SIM_NET(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_NET, SimNet))
@@ -40,7 +43,34 @@ struct _SimNetClass {
 };
 
 GType             sim_net_get_type                        (void);
-SimNet*        sim_net_new                             (void);
+SimNet*           sim_net_new                             (gchar           *name,
+							   gint             c,
+							   gint             a);
+
+gchar*            sim_net_get_name                        (SimNet          *net);
+void              sim_net_set_name                        (SimNet          *net,
+							   gchar           *name);
+
+gint              sim_net_get_c                           (SimNet          *net);
+void              sim_net_set_c                           (SimNet          *net,
+							   gint             c);
+
+gint              sim_net_get_a                           (SimNet          *net);
+void              sim_net_set_a                           (SimNet          *net,
+							   gint             a);
+
+void              sim_net_add_host_ip                     (SimNet          *net,
+							   gchar           *ip);
+void              sim_net_add_host                        (SimNet          *net,
+							   GObject         *host);
+void              sim_net_remove_host                     (SimNet          *net,
+							   GObject         *host);
+gboolean          sim_net_has_host                        (SimNet          *net,
+							   GObject         *host);
+GList*            sim_net_get_hosts                       (SimNet          *net);
+
+void              sim_net_set_recovery                    (SimNet          *net,
+							   gint             recovery);
 
 G_END_DECLS
 

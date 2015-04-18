@@ -1,0 +1,17 @@
+In order to enable remote sensor management you have to do the following.
+
+- Make sure OpenSSH is installed and up-2-date on every sensor.
+- Make sure SSH is installed on localhost (where the server resides).
+
+- ssh-keygen the dsa key for the http user. (Make sure you can't get the keys
+  via web...)
+- Create an unprivileged user on each sensor, copy the http user's id_dsa.pub
+  to the unprivileged's $HOME/.ssh/authorized_keys.
+- Make sure you can login without the need to provide a password, accept the
+  RSA key.
+
+One last note. Our intention is to store all the remote configuration files
+withing a single directory, namely /etc/ossim/*, so you'll have to get snort,
+spade, ntop, etc... read their config files from there.
+
+If you don't like this, use manual updates or suggest something else.

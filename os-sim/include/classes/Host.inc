@@ -65,6 +65,32 @@ class Host {
         return $list;
     }
 
+    function get_net_list($conn, $net)
+    {
+        $query = "SELECT * FROM host, net_host_reference 
+            WHERE net_name = '$net' and 
+            net_host_reference.host_ip = host.ip 
+            ORDER BY inet_aton(host.ip)";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                $list[] = new Host ($rs->fields["ip"], 
+                                    $rs->fields["hostname"],
+                                    $rs->fields["asset"],
+                                    $rs->fields["threshold_c"],
+                                    $rs->fields["threshold_a"],
+                                    $rs->fields["alert"],
+                                    $rs->fields["persistence"],
+                                    $rs->fields["nat"],
+                                    $rs->fields["descr"]);
+                $rs->MoveNext();
+            }
+        }
+        return $list;
+    }
+
     function insert($conn, $ip, $hostname, $asset, $threshold_c, 
                     $threshold_a, $alert, $persistence, $nat, $sensors, $descr)
     {

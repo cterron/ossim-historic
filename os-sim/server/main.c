@@ -6,11 +6,19 @@
 int
 main (int argc, char *argv[])
 {
-  SimServer* server = NULL;
+  SimConfig   *config; 
+  SimServer   *server;
 
-  gda_init ("OssimGDA", "0.1", argc, argv);
+  if (!g_thread_supported ()) 
+    {
+      g_thread_init (NULL);
+    }
 
-  server = sim_server_new();
+  gda_init ("Ossim", "0.1", argc, argv);
+
+  config = sim_config_new (SIM_CONFIG_FILE);
+
+  server = sim_server_new(config);
   sim_server_run(server);
 
   return 0;

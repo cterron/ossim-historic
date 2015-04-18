@@ -8,6 +8,9 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <libgda/libgda.h>
+
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +40,13 @@ struct _SimDatabaseClass {
 };
 
 GType           sim_database_get_type                        (void);
-SimDatabase*    sim_database_new                             (void);
+SimDatabase*    sim_database_new                             (gchar *datasource,
+							      gchar *username,
+							      gchar *password);
+gint            sim_database_execute_no_query                (SimDatabase *database,
+							      gchar       *buffer);
+GList*          sim_database_execute_command                 (SimDatabase *database,
+							      gchar       *buffer);
 
 G_END_DECLS
 

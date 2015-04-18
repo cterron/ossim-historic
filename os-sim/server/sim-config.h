@@ -9,6 +9,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +39,10 @@ struct _SimConfigClass {
 };
 
 GType           sim_config_get_type                        (void);
-SimConfig*      sim_config_new                             (void);
+SimConfig*      sim_config_new                             (const gchar    *filename);
+
+gchar*          sim_config_get_property_value              (SimConfig              *config,
+							    SimConfigPropertyType   type);
 
 G_END_DECLS
 

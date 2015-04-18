@@ -10,21 +10,20 @@ OUT_LOG=$OSSIM_PATH/parser/parser.log
 # End of configuration
 
 
-test -x $OSSIM_PATH/parser/parser || exit 0
+# test -x $OSSIM_PATH//parser/parser || exit 0
+test -x $OSSIM_PATH/server/server || exit 0
 
 case "$1" in
      start)
 	echo "Starting Open Source Security Information Management: OSSIM"
 
-    # start ossim parser
-    cd $OSSIM_PATH/parser
-	./parser $LOG >> $OUT_LOG &
+    # start ossim server 
+    cd $OSSIM_PATH/server
+	./server  >> $OUT_LOG &
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
-    nice -n 15 ./delete_hosts.pl &
     nice -n 19 ./control_panel.pl &
-    nice -n 19 ./update_graph_levels.pl &
     nice -n 19 ./os.pl &
     nice -n 19 ./alert.pl &
     # Log to be removed soon
@@ -32,7 +31,7 @@ case "$1" in
     nice -n 19 ./check_rrd_global.pl >> temp_rrd.log &
     nice -n 19 ./mac.pl &
     
-	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+	if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 		echo "OSSIM is up and running!"
 	else
 		exit 0
@@ -42,21 +41,10 @@ case "$1" in
 
      stop)
 	echo "Stoping Open Source Security Information Management: OSSIM"
-	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+	if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 	
-	    kill -TERM `pidof $OSSIM_PATH/parser/parser`
+	    kill -TERM `pidof $OSSIM_PATH/server/server`
 
-        # kill misc scripts (provisional!)
-        killall -KILL delete_hosts.pl
-        killall -KILL control_panel.pl
-        killall -KILL update_graph_levels.pl
-        killall -KILL os.pl
-        killall -KILL alert.pl
-        killall -KILL check_rrd.pl
-        killall -KILL check_rrd_global.pl
-        killall -KILL p0f
-        killall -KILL mac.pl
-        killall -KILL arpwatch
 
 
 	    # Wait until the timeout
@@ -64,7 +52,7 @@ case "$1" in
 	    numdots=0
 	    while ([ $count != 0 ]) do
 		let count=$count-1
-		if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+		if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 		    echo -n .
 		    let numdots=$numdots+1
 		    sleep 1
@@ -75,9 +63,9 @@ case "$1" in
 
 	    # If it's not dead yet, kill it.
 
-	    if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+	    if [ "`pidof $OSSIM_PATH/server/server`" ] ; then
 		echo " TIMEOUT!"
-		kill -KILL `$OSSIM_PATH/parser/parser`
+		kill -KILL `$OSSIM_PATH/server/server`
 	    else
 		case $numdots in
 		  0) echo "." ;;
@@ -85,9 +73,20 @@ case "$1" in
 		  *) echo " done" ;;
 		esac
 	    fi
+
+        
 	else
 	    echo "OSSIM is  not running!";
 	fi
+    # kill misc scripts (provisional!)
+    killall -KILL control_panel.pl
+    killall -KILL os.pl
+    killall -KILL alert.pl
+    killall -KILL check_rrd.pl
+    killall -KILL check_rrd_global.pl
+    killall -KILL p0f
+    killall -KILL mac.pl
+    killall -KILL arpwatch
 	;;
      restart)
 	$0 stop

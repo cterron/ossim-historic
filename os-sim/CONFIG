@@ -4,9 +4,9 @@ General
 =======
 * 'cp $OSSIM_SRC/etc/ossim.conf /etc/ossim.conf'
 
-Parser
+Server
 ======
-* specific parser config in 'common.h'
+* specific parser config in 'sim-enums.h'
 
 Ntop
 ====

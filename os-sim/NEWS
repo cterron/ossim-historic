@@ -1,5 +1,22 @@
 # ChangeLog for OSSIM
 
+* OSSIM-0.6.3 (04 Nov 2003)
+
+    22 Oct 2003 - 03 Nov 2003 FOT <fot@ossim.net> :
+    * Glib threads
+    * Generic DBA (libgda)
+    * Message scanner
+    * Double linked lists and n-ary trees
+    * Scheduler thread & message queue
+
+    21 Oct 2003 David Gil <dgil@ossim.net> :
+    * Remote sensor edit (snort, spade, ossim)
+
+    17 Oct 2003 DK <dk@ossim.net> :
+    * 0.6.2 released
+
+* OSSIM-0.6.2 (17 OCT 2003)
+
     13 Oct 2003 David Gil <dgil@ossim.net> :
     * Related sensors with hosts.
     * Menus order improvements.
@@ -12,10 +29,10 @@
 * OSSIM-0.6 (10 OCT 2003)
 
     09 Oct 2003 DK <dk@ossim.net> :
-    * Parser mods:
-	- Sync hosts<->nets
-	- Lower nets
-	- Implement net & net_assets linked lists
+    * Parser mods
+	  - Sync hosts<->nets
+	  - Lower nets
+	  - Implement net & net_assets linked lists
     * Erased some perl files
 
     03 Oct 2003 DK <dk@ossim.net> :

@@ -1,4 +1,4 @@
-This documentation is intended to get better over time, anyhow, this is alpha
+This documentation is intended to get better over time, anyhow, this is beta 
 code. Install can become quite difficult at this time.
 
 - Read CONFIG
@@ -23,8 +23,7 @@ satisfying all their dependencies:
 - P0f 2.0.3
 - Arpwatch 2.1a11
 
-Parser deps:
-- Flex (soon to be removed)
+Server deps:
 - From ftp.gnome.org/pub/GNOME/sources/:
     - latest glib2
         (note for debian users: install "libglib2.0-dev")
@@ -35,21 +34,19 @@ Parser deps:
 - A quite new auto* version => 2.53
 
 
-Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web
+- Copy the file ossim.conf.sample to /etc/ossim.conf. Adjust permissions so web
 server is able to read it.
 
-Create snort & acid DB's; use db/create_ossim_tables.pl after creating a
-database suitable for ossim (name it "ossim" or what you want, put it in
-/etc/ossim.conf)
+- Update your libgda config file with your DB information. Sample config
+  included.
 
-Notes about patched ntop: init rrd plugin, limit hosts to your LAN since the number of files (and space used) can grow very fast.
+- Notes about patched ntop: init rrd plugin, limit hosts to your LAN since the number of files (and space used) can grow very fast.
 
 After that:
 
-- edit $ossim_home/parser/Makefile and point snort rules path to your snort
-  rules path.
-- compile parser
+- Run $OSSIM_HOME/autogen.sh; make
 - IMPORTANT: make sure any paths you can define at this point in /etc/ossim.conf are correct (snort_rules_path is needed to correctly setup the DB)
+- Create snort, snort-extra & acid DB's; use db/create_ossim_tables.pl after creating a database suitable for ossim (name it "ossim" or what you want, put it in /etc/ossim.conf)
 - Create the whole database structure (Acid, snort, snort-extra, os-sim)
 - start mysql
 - Edit /etc/snort.conf so it logs both to mysql & syslog.
@@ -64,7 +61,7 @@ After that:
   fire it up. (launch-mrtg) ($ossim_home/contrib/mrtg.diff)
 - try to launch launch-mrtg, note and correct any errors
 - put $ossim_home/etc/cron.d/mrtg in roots crontab (will be removed soon)
-- Edit /etc/ossim.conf and point ossim_log to snorts syslog file (/var/log/messages?)
+- Edit /etc/ossim.conf and point ossim_log to snorts syslog file (/var/log/messages?).
 - $ossim_home/etc/init.d/ossim start
 - copy $ossim_home/scripts/draw_graph.pl to your cgi-bin directory.
 - Start apache
@@ -73,13 +70,13 @@ After that:
 - Start opennms (not needed as of today)
 - Point your browser at the web root.
 
-Note: The parser reads its data from a standard text file. For remote
+Note: The server reads its data from a standard text file. For remote
 logging/parsing we use syslog but you can use anything you want that logs in syslog-like format.
 
 Note2: Make sure everything is fine at /etc/ossim.conf...
 
 Please post any suggestions, help requests, etc. to the lists and forums
-provided by sourceforge.
+provided by sourceforge or have a look at http://www.ossim.net.
 
 
 --- Important notes when installing on separate machines --- (incomplete)

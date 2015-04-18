@@ -3,17 +3,15 @@
  *
  */
 
-#include "sim-syslog.h"
-#include "sim-server.h"
-#include "sim-message.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <config.h>
- 
-#define BUFFER_SIZE 1024
 
+#include "sim-syslog.h"
+#include "sim-server.h"
+#include "sim-message.h"
+ 
 enum 
 {
   DESTROY,
@@ -85,11 +83,43 @@ sim_syslog_get_type (void)
  *
  */
 SimSyslog *
-sim_syslog_new (void)
+sim_syslog_new (const gchar *filename)
 {
   SimSyslog *syslog = NULL;
+  GIOChannel  *io;
+  GIOStatus status;
+  GError *error = NULL;
+
+  g_return_val_if_fail (filename != NULL, NULL);
+
+  io = g_io_channel_new_file (filename, "r", &error);
+  if (error)
+    {
+      g_warning("Unable to open file %s: %s", filename, error->message);
+      g_error_free(error);
+      return NULL;
+    }
+
+  g_io_channel_set_buffer_size (io, BUFFER_SIZE);
+                                                                                                                             
+  status = g_io_channel_set_flags (io, G_IO_FLAG_NONBLOCK, &error);
+  if (status == G_IO_STATUS_ERROR)
+    {
+      g_warning("Unable to set flags to the file %s", error->message);
+      g_error_free(error);
+      return  NULL;
+    }
+
+  status = g_io_channel_seek_position (io, 0, G_SEEK_END, &error);
+  if (status == G_IO_STATUS_ERROR)
+    {
+      g_warning("Unable to seek to end %s", error->message);
+      g_error_free(error);
+      return  NULL;
+    }
 
   syslog = SIM_SYSLOG (g_object_new (SIM_TYPE_SYSLOG, NULL));
+  syslog->_priv->io = io;
 
   return syslog;
 }
@@ -119,70 +149,50 @@ sim_syslog_set_server (SimSyslog *syslog,
 void
 sim_syslog_run (SimSyslog *syslog)
 {
+  SimMessage *msg;
   GIOStatus status;
-  gchar *filename = "/tmp/auth.log";
   GString *buffer;
   gsize  lenght;
   gsize pos;
   GError *error = NULL;
-  GTimer *timer;
-  gdouble sec;
-  gulong  micro;
-  SimMessage *msg;
 
   g_return_if_fail (syslog != NULL);
   g_return_if_fail (SIM_IS_SYSLOG (syslog));
   g_return_if_fail (syslog->_priv->server != NULL);
   g_return_if_fail (SIM_IS_SERVER (syslog->_priv->server));
 
-  syslog->_priv->io = g_io_channel_new_file (filename, "r", &error);
-  if (error)
-    {
-      g_warning("Unable to open file %s: %s", filename, error->message);
-      g_error_free(error);
-      return;
-    }
-
-  g_io_channel_set_buffer_size (syslog->_priv->io, BUFFER_SIZE);
-                                                                                                                             
-  status = g_io_channel_set_flags (syslog->_priv->io, G_IO_FLAG_NONBLOCK, &error);
-  if (status == G_IO_STATUS_ERROR)
-    {
-      g_warning(error->message);
-      g_error_free(error);
-      error = NULL;
-    }
-
   buffer = g_string_sized_new (BUFFER_SIZE);
 
-  timer = g_timer_new ();
-  g_timer_start (timer);
   while (TRUE)
   {
     do
-      status = g_io_channel_read_line_string(syslog->_priv->io, buffer, &pos, &error);
+      status = g_io_channel_read_line_string (syslog->_priv->io, buffer, &pos, &error);
     while (status == G_IO_STATUS_AGAIN);
 
     if (error)
       {
-	g_warning("ERROR %s", error->message);
+	g_warning ("Unable to read line %s", error->message);
 	g_error_free(error);
 	error = NULL;
       }
 
     if (status != G_IO_STATUS_NORMAL)
-      break;
+      continue;
 
     msg = sim_message_new (buffer->str);
 
     if (msg == NULL)
-      continue;
+      {
+	continue;
+      }
+    if (msg->type == SIM_MESSAGE_TYPE_INVALID)
+      {
+	g_warning ("Syslog: invalid message");
+	continue;
+      }
 
     sim_server_push_tail_messages (syslog->_priv->server, G_OBJECT (msg));
   }
 
-  g_timer_stop (timer);
-  sec = g_timer_elapsed (timer, &micro);
-  g_message ("SYSLOG: SECUNDS %lf, %d", sec,  sim_server_get_messages_num (syslog->_priv->server));
   g_io_channel_unref(syslog->_priv->io);
 }

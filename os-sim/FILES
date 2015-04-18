@@ -1,5 +1,5 @@
 AUTHORS     : Just that, who is working on this.
-autogen.sh  : New parser framework
+autogen.sh  : New server framework
 backups     : DB backups
 BUGS        : Some new bugs.
 ChangeLog   : Changes done in the last few weeks.
@@ -15,10 +15,10 @@ INSTALL     : Short installation instructions.
 LICENSE     : Licensing for anything written by us
 mrtg        : Mrtg launch script & config data.
 NEWS        : Changelog
-parser      : The main syslog parser
 pixmaps     : Images
 README      : short readme
-scripts     : parser support scripts
+README.sensors : short readme regarding remote sensor management
+scripts     : server support scripts
 server      : New parser framework
 TODO        : Things todo during the next few days
 www         : whole web structure

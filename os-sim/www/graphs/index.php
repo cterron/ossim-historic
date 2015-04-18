@@ -54,24 +54,39 @@ if($id_list)
 </iframe>
 
   <tr><th colspan="2" align="center">Graph <?php echo $id ?></th></tr>
-  <tr><th>Hosts</th><th>Links</th></tr>
   <tr>
+<!--
+  <th>Hosts</th>
+-->
+  <th>Links</th></tr>
+  <tr>
+
+<!--
     <td align="center">
       <table align="center" width="100%">
+-->
 <?php
+/*
     settype($id, "int");    
     $graph_list = Graph::get_list($conn, "WHERE id = $id");
-if($graph_list)
+    if($graph_list)
     foreach ($graph_list as $graph) {
         $ip = $graph->get_ip();
         $hostname = Host::ip2hostname($conn, $ip);       
+*/
 ?>
-      <tr><td align="center"><?php echo $hostname ?></td></tr>
+<!--
+      <tr><td align="center"><?php // echo $hostname ?></td></tr>
+-->
 <?php
+/*
     }
+*/
 ?>
+<!--
       </table>
     </td>
+-->
     <td>
       <table align="center" width="100%">
 <?php

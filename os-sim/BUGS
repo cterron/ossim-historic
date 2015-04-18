@@ -1,2 +1,4 @@
-- SQL Injection; validate input.
-- Parser memory leaks...
+- SQL Injection; validate input. Fixed ?
+- Security fixes.
+- Remote sensor edit. Very alpha.
+- Rebuild graphing functionality 

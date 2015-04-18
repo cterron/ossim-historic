@@ -8,6 +8,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
+
+#include "sim-enums.h"
 #include "sim-server.h"
 
 #ifdef __cplusplus
@@ -38,10 +40,12 @@ struct _SimSyslogClass {
 };
 
 GType             sim_syslog_get_type                        (void);
-SimSyslog*        sim_syslog_new                             (void);
+SimSyslog*        sim_syslog_new                             (const gchar *filename);
+
+void              sim_syslog_run                             (SimSyslog *syslog);
+
 void              sim_syslog_set_server                      (SimSyslog *syslog,
 							      SimServer *server);
-void              sim_syslog_run                             (SimSyslog *syslog);
 
 
 G_END_DECLS

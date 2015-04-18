@@ -53,9 +53,44 @@
     <td class="left">
 <?php
 
+    /* ===== source nets =====*/
+    $j = 1;
+    if ($net_list = Net::get_list($conn, "ORDER BY name")) {
+        foreach ($net_list as $net) {
+            $net_name = $net->get_name();
+            if ($j == 1) {
+?>
+        <input type="hidden" name="<?php echo "sourcengrps"; ?>"
+            value="<?php echo count($net_list); ?>">
+<?php
+            } $name = "sourcemboxg" . $j;
+?>
+        <input type="checkbox" 
+<?php
+            if (Policy_net_reference::in_policy_net_reference
+                                                    ($conn, $id, $net_name,
+                                                    'source'))
+            {
+                echo " CHECKED ";
+            }
+?>
+            name="<?php echo $name;?>"
+            value="<?php echo $net_name; ?>">
+            <?php echo $net_name . "<br>";?>
+        </input>
+<?php
+            $j++;
+        }
+    }
+?>
+
+
+
+<?php
+
     /* ===== source hosts ===== */
     $i = 1;
-    if ($host_list = Host::get_list($conn)) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -98,38 +133,6 @@
            value="any"><b>ANY</b><br></input>
 
 
-<?php
-
-    /* ===== source nets =====*/
-    $j = 1;
-    if ($net_list = Net::get_list($conn)) {
-        foreach ($net_list as $net) {
-            $net_name = $net->get_name();
-            if ($j == 1) {
-?>
-        <input type="hidden" name="<?php echo "sourcengrps"; ?>"
-            value="<?php echo count($net_list); ?>">
-<?php
-            } $name = "sourcemboxg" . $j;
-?>
-        <input type="checkbox" 
-<?php
-            if (Policy_net_reference::in_policy_net_reference
-                                                    ($conn, $id, $net_name,
-                                                    'source'))
-            {
-                echo " CHECKED ";
-            }
-?>
-            name="<?php echo $name;?>"
-            value="<?php echo $net_name; ?>">
-            <?php echo $net_name . "<br>";?>
-        </input>
-<?php
-            $j++;
-        }
-    }
-?>
 
     </td>
   </tr>
@@ -145,9 +148,43 @@
     <td class="left">
 <?php
 
+    /* ===== dest nets =====*/
+    $j = 1;
+    if ($net_list = Net::get_list($conn, "ORDER BY name")) {
+        foreach ($net_list as $net) {
+            $net_name = $net->get_name();
+            if ($j == 1) {
+?>
+        <input type="hidden" name="<?php echo "destngrps"; ?>"
+            value="<?php echo count($net_list); ?>">
+<?php
+            } $name = "destmboxg" . $j;
+?>
+        <input type="checkbox" 
+<?php
+            if (Policy_net_reference::in_policy_net_reference
+                                                    ($conn, $id, $net_name,
+                                                    'dest'))
+            {
+                echo " CHECKED ";
+            }
+?>
+            name="<?php echo $name;?>"
+            value="<?php echo $net_name; ?>">
+            <?php echo $net_name . "<br>";?>
+        </input>
+<?php
+            $j++;
+        }
+    }
+?>
+
+
+<?php
+
     /* ===== dest hosts ===== */
     $i = 1;
-    if ($host_list = Host::get_list($conn)) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -190,38 +227,6 @@
            name="<?php echo $name; ?>"
            value="any"><b>ANY</b><br></input>
 
-<?php
-
-    /* ===== dest nets =====*/
-    $j = 1;
-    if ($net_list = Net::get_list($conn)) {
-        foreach ($net_list as $net) {
-            $net_name = $net->get_name();
-            if ($j == 1) {
-?>
-        <input type="hidden" name="<?php echo "destngrps"; ?>"
-            value="<?php echo count($net_list); ?>">
-<?php
-            } $name = "destmboxg" . $j;
-?>
-        <input type="checkbox" 
-<?php
-            if (Policy_net_reference::in_policy_net_reference
-                                                    ($conn, $id, $net_name,
-                                                    'dest'))
-            {
-                echo " CHECKED ";
-            }
-?>
-            name="<?php echo $name;?>"
-            value="<?php echo $net_name; ?>">
-            <?php echo $net_name . "<br>";?>
-        </input>
-<?php
-            $j++;
-        }
-    }
-?>
 
     </td>
   </tr>
@@ -237,7 +242,7 @@
 
     /* ===== ports ==== */
     $i = 1;
-    if ($port_group_list = Port_group::get_list($conn)) {
+    if ($port_group_list = Port_group::get_list($conn, "ORDER BY name")) {
         foreach($port_group_list as $port_group) {
             $port_group_name = $port_group->get_name();
             if ($i == 1) {
@@ -321,7 +326,7 @@
 
     /* ===== signatures ==== */
     $i = 1;
-    if ($sig_group_list = Signature_group::get_list($conn)) {
+    if ($sig_group_list = Signature_group::get_list($conn, "ORDER BY name")) {
         foreach($sig_group_list as $sig_group) {
             $sig_group_name = $sig_group->get_name();
             if ($i == 1) {
@@ -363,7 +368,7 @@
 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY inet_aton(ip)")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();

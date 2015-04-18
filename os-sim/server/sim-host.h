@@ -8,7 +8,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "sim-server.h"
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +43,23 @@ struct _SimHostClass {
 };
 
 GType             sim_host_get_type                        (void);
-SimHost*        sim_host_new                             (void);
+SimHost*          sim_host_new                             (void);
+GList*            sim_host_load_from_db                    (GObject         *db);
+
+struct in_addr    sim_host_get_ip                          (SimHost         *host);
+void              sim_host_set_ip                          (SimHost         *host,
+							    struct in_addr   ip);
+
+gint              sim_host_get_c                           (SimHost         *host);
+void              sim_host_set_c                           (SimHost         *host,
+							    gint             c);
+
+gint              sim_host_get_a                           (SimHost         *host);
+void              sim_host_set_a                           (SimHost         *host,
+							    gint             a);
+
+void              sim_host_set_recovery                    (SimHost         *host,
+							    gint             recovery);
 
 G_END_DECLS
 

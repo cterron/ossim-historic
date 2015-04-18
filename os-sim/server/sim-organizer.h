@@ -8,6 +8,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
+
+#include "sim-enums.h"
 #include "sim-server.h"
 #include "sim-message.h"
 
@@ -40,11 +42,13 @@ struct _SimOrganizerClass {
 
 GType             sim_organizer_get_type                        (void);
 SimOrganizer*     sim_organizer_new                             (void);
-void              sim_organizer_set_server                      (SimOrganizer *organizer,
-								 SimServer *server);
-void              sim_organizer_run                             (SimOrganizer *organizer);
-void              sim_organizer_calificate                      (SimOrganizer *organizer,
-								 SimMessage *message);
+
+void              sim_organizer_set_server                      (SimOrganizer  *organizer,
+								 SimServer     *server);
+
+void              sim_organizer_run                             (SimOrganizer  *organizer);
+void              sim_organizer_calificate                      (SimOrganizer  *organizer,
+								 SimMessage    *message);
 
 
 G_END_DECLS

@@ -39,6 +39,7 @@
     
     if ($sensor_list = Sensor::get_list($conn, "ORDER BY $order")) {
         foreach($sensor_list as $sensor) {
+            $ip = $sensor->get_ip();
             $name = $sensor->get_name();
 ?>
 
@@ -46,8 +47,10 @@
       <td><?php echo $sensor->get_name(); ?></td>
       <td><?php echo $sensor->get_ip(); ?></td>
       <td><?php echo $sensor->get_descr(); ?></td>
-      <td><a href="modifysensorform.php?name=<?php echo $name ?>">Modify</a>
-          <a href="deletesensor.php?name=<?php echo $name ?>">Delete</a></td>
+      <td>
+        <a href="editsensor.php?ip=<?php echo $ip ?>">Remote edit</a>*
+        <a href="modifysensorform.php?name=<?php echo $name ?>">Modify</a>
+        <a href="deletesensor.php?name=<?php echo $name ?>">Delete</a></td>
     </tr>
 
 <?php
@@ -60,7 +63,10 @@
       <td colspan="7"><a href="newsensorform.php">Insert new sensor</a></td>
     </tr>
   </table>
-    
+
+<p><i>* You must share dsa keys between hosts in order to use this
+functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partially broken. Use with care or fix.</i></p>
+
 </body>
 </html>
 

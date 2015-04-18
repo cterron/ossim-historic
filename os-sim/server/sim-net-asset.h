@@ -8,13 +8,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "sim-server.h"
+
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#define MAX_NET_NAME 256
 
 #define SIM_TYPE_NET_ASSET                  (sim_net_asset_get_type ())
 #define SIM_NET_ASSET(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_NET_ASSET, SimNetAsset))
@@ -40,7 +39,9 @@ struct _SimNetAssetClass {
 };
 
 GType             sim_net_asset_get_type                        (void);
-SimNetAsset*        sim_net_asset_new                             (void);
+SimNetAsset*      sim_net_asset_new                             (void);
+
+GList*            sim_net_asset_load_from_db                    (GObject  *db);
 
 G_END_DECLS
 

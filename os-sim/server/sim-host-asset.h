@@ -8,13 +8,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "sim-server.h"
+
+#include "sim-enums.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#define MAX_SENSORS 256
 
 #define SIM_TYPE_HOST_ASSET                  (sim_host_asset_get_type ())
 #define SIM_HOST_ASSET(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_HOST_ASSET, SimHostAsset))
@@ -40,7 +39,11 @@ struct _SimHostAssetClass {
 };
 
 GType             sim_host_asset_get_type                        (void);
-SimHostAsset*        sim_host_asset_new                             (void);
+SimHostAsset*     sim_host_asset_new                             (void);
+GList*            sim_host_asset_load_from_db                    (GObject      *db);
+
+struct in_addr    sim_host_asset_get_ip                          (SimHostAsset *host_asset);
+gint              sim_host_asset_get_asset                       (SimHostAsset *host_asset);
 
 G_END_DECLS
 
