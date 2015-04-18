@@ -22,9 +22,9 @@ class Port_group {
             ($conn, "WHERE port_group_name = '$port_group_name'");
     }
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM port_group $where $order")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM port_group $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

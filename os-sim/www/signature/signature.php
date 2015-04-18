@@ -10,20 +10,30 @@
   <h1>OSSIM Framework</h1>
   <h2>Signatures</h2>
 
-<table align="center">
-    <tr>
-      <th>Name</th><th>Signatures</th><th>Description</th>
-      <th>Action</th>
-    </tr>
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/Signature_group.inc';
+    
+    if (!$order = $_GET["order"]) $order = "name";
+?>
+
+  <table align="center">
+    <tr>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("name", $order);
+          ?>">Name</a></th>
+      <th>Signatures</th>
+      <th>Description</th>
+      <th>Action</th>
+    </tr>
+<?php
     
     $db = new ossim_db();
     $conn = $db->connect();
     
     if ($signature_list = Signature_group::get_list($conn)) {
-        foreach (Signature_group::get_list($conn) as $sig_group) {
+        foreach (Signature_group::get_list($conn, "ORDER BY $order") 
+                 as $sig_group) {
             $sig_group_name = $sig_group->get_name();
 ?>
     <tr>

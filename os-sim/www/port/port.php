@@ -10,9 +10,20 @@
   <h1>OSSIM Framework</h1>
   <h2>Ports</h2>
 
-<table align="center">
+<?php
+    require_once 'ossim_db.inc';
+    require_once 'classes/Port_group.inc';
+    
+    if (!$order = $_GET["order"]) $order = "name";
+?>
+
+  <table align="center">
     <tr>
-      <th>Name</th><th>Ports</th><th>Description</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("name", $order);
+          ?>">Port group</a></th>
+      <th>Ports</th>
+      <th>Description</th>
       <th>Action</th>
     </tr>
 <?php
@@ -23,7 +34,8 @@
     $conn = $db->connect();
     
     if ($port_list = Port_group::get_list($conn)) {
-        foreach (Port_group::get_list($conn) as $port_group) {
+        foreach (Port_group::get_list($conn, "ORDER BY $order") 
+                 as $port_group) {
             $port_group_name = $port_group->get_name();
 ?>
     <tr>

@@ -1,7 +1,22 @@
 # ChangeLog for OSSIM
 
+    25 Sep 2003 DK <dk@ipsoluciones.com> :
+    * 0.5.1 Released
+
+* OSSIM-0.5.1 (25 Sep 2003)
+
+    24 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * Centralized update intervals of perl-scripts
+
+    22 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * Multiple order menus in framework.
+
+    21 Sep 2003 David Gil <dgil@ipsoluciones.com> :
+    * New web design ( http://os-sim.sourceforge.net )
+
     19 Sep 2003 DK <dk@ipsoluciones.com> :
     * 0.5 Released
+    * Bugfixes
 
 * OSSIM-0.5 (19 Sep 2003)
 
@@ -115,7 +130,7 @@
 
     22 Aug 2003 Santiago Gonzalez <sgonzalez@ipsoluciones.com> :
     * Perl scripts translated to C
-    
+
     22 Aug 2003 DK <dk@ipsoluciones.com> :
     * First release, cleanup, Sourceforge cvs setup
 

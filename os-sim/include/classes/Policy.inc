@@ -58,9 +58,9 @@ class Policy {
     }
 
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM policy $where $order")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM policy $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

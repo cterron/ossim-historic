@@ -77,15 +77,13 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
       <img src="<?php echo "$image1"; ?>">
       <img src="<?php echo "$image2"; ?>">
     </td></tr>
-    <tr><th colspan="8">Compromise and Attack level - Top 5 Hosts</th></tr>
+    <tr><th colspan="6">Compromise and Attack level - Top 5 Hosts</th></tr>
     <tr>
       <th>Host</th>
       <th>Max C</th>
-      <th>Min C</th>
       <th>Avg C</th>
       <th>Host</th>
       <th>Max A</th>
-      <th>Min A</th>
       <th>Avg A</th>
     </tr>
     <tr>
@@ -117,23 +115,6 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
             <td><a href="<?php echo $image ?>">
             <?php echocolor($host->get_max_c(), 
                             Host::ipthresh_c($conn,$host->get_host_ip())); ?></a>
-            </td>
-          </tr>
-<?php } ?>
-        </table>
-      </td>
-      <td>
-        <table width="100%">
-<?php 
-    if ($hosts_order_by_c)
-    foreach ($hosts_order_by_c as $host) { 
-        $image = graph_image_link($host->get_host_ip(), "host", "compromise",
-                                  $start, "N", 1); 
-?>
-          <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_min_c(), 
-                            Host::ipthresh_c($conn, $host->get_host_ip())) ?></a>
             </td>
           </tr>
 <?php } ?>
@@ -199,23 +180,6 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
 ?>
           <tr>
             <td><a href="<?php echo $image ?>">
-            <?php echocolor($host->get_min_a(), 
-                            Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
-            </td>
-          </tr>
-<?php } ?>
-        </table>
-      </td>
-      <td>
-        <table width="100%">
-<?php 
-    if ($hosts_order_by_a)
-    foreach ($hosts_order_by_a as $host) { 
-        $image = graph_image_link($host->get_host_ip(), "host", "attack",
-                                  $start, "N", 1);
-?>
-          <tr>
-            <td><a href="<?php echo $image ?>">
             <?php echocolor($host->get_avg_a(), 
                             Host::ipthresh_a($conn, $host->get_host_ip())) ?></a>
             </td>
@@ -225,15 +189,13 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
       </td>
     </tr>
 
-    <tr><th colspan="8">Compromise and Attack level - Top 5 Networks</th></tr>
+    <tr><th colspan="6">Compromise and Attack level - Top 5 Networks</th></tr>
     <tr>
       <th>Network</th>
       <th>Max C</th>
-      <th>Min C</th>
       <th>Avg C</th>
       <th>Network</th>
       <th>Max A</th>
-      <th>Min A</th>
       <th>Avg A</th>
     </tr>
     <tr>
@@ -259,23 +221,6 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
           <tr>
             <td><a href="<?php echo $image ?>">
             <?php echocolor($net->get_max_c(), 
-                            Net::netthresh_c($conn, $net->get_net_name())) ?></a>
-            </td>
-          </tr>
-<?php } ?>
-        </table>
-      </td>
-      <td>
-        <table width="100%">
-<?php 
-    if ($nets_order_by_c)
-    foreach ($nets_order_by_c as $net) { 
-    $image = graph_image_link($net->get_net_name(), "net", "compromise",
-                              $start, "N", 1);
-?>
-          <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($net->get_min_c(), 
                             Net::netthresh_c($conn, $net->get_net_name())) ?></a>
             </td>
           </tr>
@@ -321,23 +266,6 @@ $nets_order_by_a = Control_panel_net::get_list($conn,
           <tr>
             <td><a href="<?php echo $image ?>">
             <?php echocolor($net->get_max_a(), 
-                            Net::netthresh_a($conn, $net->get_net_name())) ?></a>
-            </td>
-          </tr>
-<?php } ?>
-        </table>
-      </td>
-      <td>
-        <table width="100%">
-<?php 
-    if ($nets_order_by_a)
-    foreach ($nets_order_by_a as $net) { 
-    $image = graph_image_link($net->get_net_name(), "net", "attack",
-                              $start, "N", 1);
-?>
-          <tr>
-            <td><a href="<?php echo $image ?>">
-            <?php echocolor($net->get_min_a(), 
                             Net::netthresh_a($conn, $net->get_net_name())) ?></a>
             </td>
           </tr>
@@ -408,7 +336,7 @@ switch ($_GET["acked"]){
     break;
 }
 
-$perl_interval = 4; // Global perl is being executed every 15 minutes
+$perl_interval = 3600 / ($conf->get_conf("UPDATE_INTERVAL") * 300);
 
 if ($alert_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 "order by anomaly_time desc")) {

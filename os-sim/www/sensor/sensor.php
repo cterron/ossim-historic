@@ -11,10 +11,21 @@
 
   <h2>Sensors</h2>
 
+<?php
+    require_once 'ossim_db.inc';
+    require_once 'classes/Sensor.inc';
+
+    if (!$order = $_GET["order"]) $order = "name";
+?>
+
   <table align="center">
     <tr>
-      <th>Hostname</ith>
-      <th>Ip</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("name", $order);
+          ?>">Hostname</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("ip", $order);
+          ?>">Ip</a></th>
       <th>Description</th>
       <th>Action</th>
     </tr>
@@ -26,7 +37,7 @@
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY $order")) {
         foreach($sensor_list as $sensor) {
             $name = $sensor->get_name();
 ?>

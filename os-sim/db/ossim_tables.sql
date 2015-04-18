@@ -218,8 +218,8 @@ CREATE TABLE control_panel_host (
     time_range      varchar(5) NOT NULL DEFAULT 'day',
     max_c           int NOT NULL,
     max_a           int NOT NULL,
-    min_c           int NOT NULL,
-    min_a           int NOT NULL,
+    /*min_c           int NOT NULL,*/
+    /*min_a           int NOT NULL,*/
     avg_c           int NOT NULL,
     avg_a           int NOT NULL,
     PRIMARY KEY     (host_ip, time_range)
@@ -231,8 +231,8 @@ CREATE TABLE control_panel_net (
     time_range      varchar(5) NOT NULL DEFAULT 'day',
     max_c           int NOT NULL,
     max_a           int NOT NULL,
-    min_c           int NOT NULL,
-    min_a           int NOT NULL,
+    /*min_c           int NOT NULL,*/
+    /*min_a           int NOT NULL,*/
     avg_c           int NOT NULL,
     avg_a           int NOT NULL,
     PRIMARY KEY     (net_name, time_range)

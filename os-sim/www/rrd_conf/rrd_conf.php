@@ -11,21 +11,29 @@
 
   <h2>RRD Config</h2>
 
-  <table align="center">
-    <tr>
-      <th>Ip</th>
-      <th>Action</th>
-    </tr>
-
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/RRD_conf.inc';
     require_once 'classes/RRD_conf_global.inc';
     require_once 'classes/Host.inc';
 
+    if (!$order = $_GET["order"]) $order = "ip";
+?>
+
+  <table align="center">
+    <tr>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("ip", $order);
+          ?>">Ip</a></th>
+      <th>Action</th>
+    </tr>
+
+<?php
+
     $db = new ossim_db();
     $conn = $db->connect();
- if ($rrd_list_global = RRD_conf_global::get_list($conn)) {
+    
+    if ($rrd_list_global = RRD_conf_global::get_list($conn)) {
         foreach($rrd_list_global as $rrd_global) {
 ?>
     <tr>
@@ -38,13 +46,13 @@
     } /* foreach */
 
     
-    if ($rrd_list = RRD_conf::get_list($conn)) {
+    if ($rrd_list = RRD_conf::get_list($conn, "ORDER BY $order")) {
         foreach($rrd_list as $rrd) {
             $ip = $rrd->get_ip();
 ?>
 
     <tr>
-      <td><?php echo Host::ip2hostname($conn, $ip);?></td> 
+      <td><?php echo Host::ip2hostname($conn, $ip) . " ($ip)" ;?></td> 
 
 
       <td><a href="modify_rrd_conf_form.php?ip=<?php echo $ip ?>">Modify</a>

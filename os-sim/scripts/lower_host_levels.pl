@@ -11,7 +11,8 @@ my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
-my $SLEEP = 30;
+my $UPDATE_INTERVAL = $ossim_conf::ossim_data->{"UPDATE_INTERVAL"};
+my $SLEEP = $UPDATE_INTERVAL * 5;
 
 while(1) {
 

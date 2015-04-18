@@ -18,7 +18,7 @@
 - Insert ntop anomalies into control panel
 - Integrate apache abuse with control panel
 
-- Insert nmap into ossim.conf, correct nmap_path where needed.
++ Insert nmap into ossim.conf, correct nmap_path where needed.
 + Add META no cache on dynamic pages
 + Modify != Insert. When modifying networks they get duplicated.
 + Network order in riskmeter ? How are networks drawn ? asort doesn't seem to
@@ -43,6 +43,7 @@
 - Don't open a mysql connection every time you insert a fw-1 alert.
 - Only get MAX|MIN|AVG rrd values for top 5 control-panel hosts.
 - Use intval() to escape integers (instead of settype()). Fix SQL injection.
+- Get last maxC/maxA date, and show it at control_panel.
 
 ----
 

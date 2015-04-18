@@ -6,21 +6,16 @@ class Control_panel_net {
     var $time_range;
     var $max_c;
     var $max_a;
-    var $min_c;
-    var $min_a;
     var $avg_c;
     var $avg_a;
 
     function Control_panel_net ($net_name, $time_range, 
-                                 $max_c, $max_a, $min_c, $min_a, 
-                                 $avg_c, $avg_a)
+                                 $max_c, $max_a, $avg_c, $avg_a)
     {
         $this->net_name    = $net_name;
         $this->time_range = $time_range;
         $this->max_c      = $max_c;
         $this->max_a      = $max_a;
-        $this->min_c      = $min_c;
-        $this->min_a      = $min_a;
         $this->avg_c      = $avg_c;
         $this->avg_a      = $avg_a;
     }
@@ -29,8 +24,6 @@ class Control_panel_net {
     function get_time_range() { return $this->time_range; }
     function get_max_c()      { return $this->max_c; }
     function get_max_a()      { return $this->max_a; }
-    function get_min_c()      { return $this->min_c; }
-    function get_min_a()      { return $this->min_a; }
     function get_avg_c()      { return $this->avg_c; }
     function get_avg_a()      { return $this->avg_a; }
 
@@ -58,8 +51,6 @@ class Control_panel_net {
                                          $rs->fields["time_range"],
                                          $rs->fields["max_c"],
                                          $rs->fields["max_a"],
-                                         $rs->fields["min_c"],
-                                         $rs->fields["min_a"],
                                          $rs->fields["avg_c"],
                                          $rs->fields["avg_a"]);
                     $count++;

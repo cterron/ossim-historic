@@ -106,7 +106,7 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
      * calculate date expresion to be able to compare dates
      * 
      * for example, Fri 21h = ((5 - 1) * 7) + 21 = 49
-     *              Sat 14h = ((7 - 1) * 7) + 14 = 56
+     *              Sat 14h = ((6 - 1) * 7) + 14 = 56
      */
     unsigned int hour = get_hour();
     unsigned int day  = get_day();
@@ -165,8 +165,8 @@ void calculate(MYSQL *mysql, int plugin, int tplugin,
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
        (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
-       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
-        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) <= %d) and \
+        (((pt.end_day - 1) * 7 + pt.end_hour) > %d)) and \
        (p.id = phs.policy_id) and \
        (p.id = phd.policy_id) and \
        (p.id = pp.policy_id) and \
@@ -188,8 +188,8 @@ union \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
        (ps.sig_group_name = sg.sig_group_name and sg.sig_name = '%s') and \
-       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
-        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) <= %d) and \
+        (((pt.end_day - 1) * 7 + pt.end_hour) > %d)) and \
        (p.id = pns.policy_id) and \
        (p.id = pnd.policy_id) and \
        (p.id = pp.policy_id) and \
@@ -216,8 +216,8 @@ union \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
-       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
-        (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) <= %d) and \
+        (((pt.end_day - 1) * 7 + pt.end_hour) > %d)) and \
        (p.id = phs.policy_id) and \
        (p.id = phd.policy_id) and \
        (p.id = pp.policy_id) and \
@@ -234,7 +234,7 @@ union \
        (pp.port_group_name = pg.port_group_name and \
         (pg.port_number = %d or pg.port_number = %d) and \
         (pg.protocol_name = '%s')) and \
-       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) or \
+       ((((pt.begin_day - 1) * 7 + pt.begin_hour) >= %d) and \
         (((pt.end_day - 1) * 7 + pt.end_hour) < %d)) and \
        (p.id = pns.policy_id) and \
        (p.id = pnd.policy_id) and \

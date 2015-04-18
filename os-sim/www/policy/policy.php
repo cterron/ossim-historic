@@ -11,11 +11,21 @@
 
   <h2>Policy</h2>
 
+<?php
+    require_once ('classes/Policy.inc');
+    require_once ('classes/Host.inc');
+    require_once ('ossim_db.inc');
+
+    if (!$order = $_GET["order"]) $order = "priority DESC";
+?>
+
   <table align="center">
     <tr>
       <th>Source</th>
       <th>Dest</th>
-      <th>Priority</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("priority", $order);
+          ?>">Priority</a></th>
       <th>Port Group</th>
       <th>Sig Group</th>
       <th>Sensors</th>
@@ -25,13 +35,11 @@
     </tr>
 
 <?php
-    require_once ('classes/Policy.inc');
-    require_once ('classes/Host.inc');
-    require_once ('ossim_db.inc');
+
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if ($policy_list = Policy::get_list($conn)) {
+    if ($policy_list = Policy::get_list($conn, "ORDER BY $order")) {
         foreach ($policy_list as $policy) {
 ?>
 

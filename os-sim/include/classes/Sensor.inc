@@ -17,9 +17,9 @@ class Sensor {
     function get_ip()           { return $this->ip; }
     function get_descr()        { return $this->descr; }
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM sensor $where $order")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM sensor $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

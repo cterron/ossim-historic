@@ -79,7 +79,8 @@ class RRD_conf {
             return -1;
         }
         
-        list($threshold, $priority, $alpha, $beta, $persistence) = split (",", $col_val, 5);
+        list($threshold, $priority, $alpha, $beta, $persistence) = 
+            split (",", $col_val, 5);
             
         if ($type == "threshold") return $threshold;
         if ($type == "priority")  return $priority;
@@ -105,9 +106,9 @@ class RRD_conf {
         ¿ complete all aliases ? 
     */
 
-    function get_list($conn, $where = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM rrd_conf $where")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM rrd_conf $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

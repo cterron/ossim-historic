@@ -47,6 +47,14 @@ class ossim_db {
             return $rs->fields["max($column)"];
         }
     }
+
+    function get_order($column, $order) {
+        if ($order == $column) {
+            return "$order DESC";
+        } else {
+            return $column;
+        }
+    }
 }
 
 ?>

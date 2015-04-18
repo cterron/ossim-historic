@@ -10,8 +10,8 @@ use ossim_conf;
 $| = 1;
 
 # Define also at www/control_panel/index.php so stats are displayed correctly.
-#my $SLEEP=1800; 
-my $SLEEP=900;  # 1/4 hour
+my $UPDATE_INTERVAL = $ossim_conf::ossim_data->{"UPDATE_INTERVAL"};
+my $SLEEP = $UPDATE_INTERVAL * 300;
 
 my $interface = $ossim_conf::ossim_data->{"ossim_interface"};
 my $rrdpath_ntop = $ossim_conf::ossim_data->{"rrdpath_ntop"};

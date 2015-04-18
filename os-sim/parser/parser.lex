@@ -17,6 +17,7 @@ L   [A-Za-z\-\_]
 
 %{
 #include "common.h"
+#include "string.h"
 #include <netdb.h>
 
 /* globals! */

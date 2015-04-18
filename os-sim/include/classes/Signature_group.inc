@@ -22,9 +22,9 @@ class Signature_group {
             ($conn, "WHERE sig_group_name = '$sig_group_name'");
     }
 
-    function get_list($conn, $where = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM signature_group $where")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM signature_group $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

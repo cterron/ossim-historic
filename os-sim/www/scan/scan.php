@@ -19,23 +19,31 @@
   </table>
   <br/>
   
+<?php
+    require_once 'ossim_db.inc';
+    require_once 'classes/Host.inc';
+    require_once 'classes/Scan.inc';
+
+    if (!$order = $_GET["order"]) $order = "ip";
+?>
+
   <table align="center">
     <tr>
-      <th>Host</th>
-      <th>Active</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("ip", $order);
+          ?>">Host</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("active", $order);
+          ?>">Active</a></th>
       <th>Action</th>
     </tr>
 
 <?php
 
-    require_once 'ossim_db.inc';
-    require_once 'classes/Host.inc';
-    require_once 'classes/Scan.inc';
-
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($scan_list = Scan::get_list($conn)) {
+    if ($scan_list = Scan::get_list($conn, "ORDER BY $order")) {
         foreach($scan_list as $scan) {
             $ip = $scan->get_ip();
             $active = $scan->get_active(); 

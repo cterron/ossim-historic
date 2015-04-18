@@ -32,7 +32,8 @@ class Host {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM host $where $order")) {
+        $query = "SELECT * FROM host $where $order";
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

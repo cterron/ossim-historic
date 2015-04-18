@@ -16,9 +16,9 @@ class Scan {
     function get_ip()           { return $this->ip; }
     function get_active()       { return $this->active; }
 
-    function get_list($conn) 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM scan")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM scan $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

@@ -14,7 +14,7 @@ function echocolor ($val, $max)
 {
     if ($val - $max > 0) {
         echo "<font color=\"#991e1e\">" . 
-              intval($val * 100 / $max) . "</font>/$val%";
+              $val . "</font>/" . intval($val * 100 / $max) ."%";
     } else {
         echo "$val/" . intval($val * 100 / $max) . "%";
     }

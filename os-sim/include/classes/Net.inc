@@ -37,9 +37,9 @@ class Net {
         return Net_host_reference::get_list($conn, "WHERE name = '$net_name'");
     }
 
-    function get_list($conn, $where = "") 
+    function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM net $where")) {
+        if (!$rs = &$conn->Execute("SELECT * FROM net $args")) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

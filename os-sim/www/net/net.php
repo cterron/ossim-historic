@@ -11,25 +11,38 @@
 
   <h2>Networks</h2>
 
+<?php
+    require_once 'ossim_db.inc';
+    require_once 'classes/Net.inc';
+
+    if (!$order = $_GET["order"]) $order = "name";
+?>
+
   <table align="center">
     <tr>
-      <th>Name</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("name", $order);
+          ?>">Net</a></th>
       <th>Ips</th>
-      <th>Asset</th>
-      <th>Threshold C</th>
-      <th>Threshold A</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("priority", $order);
+          ?>">Asset</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("threshold_c", $order);
+          ?>">Threshold_C</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("threshold_a", $order);
+          ?>">Threshold_A</a></th>
       <th>Description</th>
       <th>Action</th>
     </tr>
 
 <?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Net.inc';
 
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($net_list = Net::get_list($conn, "", "ORDER BY name")) {
+    if ($net_list = Net::get_list($conn, "ORDER BY $order")) {
         foreach($net_list as $net) {
             $name = $net->get_name();
 ?>

@@ -11,25 +11,41 @@
 
   <h2>Hosts</h2>
 
+
+<?php 
+    require_once 'ossim_db.inc';
+    require_once 'classes/Host.inc';
+
+    if (!$order = $_GET["order"]) $order = "hostname"; 
+?>
+
   <table align="center">
     <tr>
-      <th>Hostname</th>
-      <th>Ip</th>
-      <th>Asset</th>
-      <th>Threshold C</th>
-      <th>Threshold A</th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
+            echo ossim_db::get_order("hostname", $order);
+          ?>">Hostname</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
+            echo ossim_db::get_order("ip", $order);
+          ?>">Ip</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
+            echo ossim_db::get_order("asset", $order);
+          ?>">Asset</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
+            echo ossim_db::get_order("threshold_c", $order);
+          ?>">Threshold_C</a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
+            echo ossim_db::get_order("threshold_a", $order);
+          ?>">Threshold_A</a></th>
       <th>Description</th>
       <th>Action</th>
     </tr>
 
 <?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Host.inc';
 
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($host_list = Host::get_list($conn, "", "ORDER BY hostname")) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY $order")) {
         foreach($host_list as $host) {
             $ip = $host->get_ip();
 ?>

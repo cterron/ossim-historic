@@ -11,7 +11,8 @@ $| = 1;
 
 # Define also at www/control_panel/index.php so stats are displayed correctly.
 # my $SLEEP=1800;
-my $SLEEP=900;  # 1/4 hour
+my $UPDATE_INTERVAL = $ossim_conf::ossim_data->{"UPDATE_INTERVAL"};
+my $SLEEP = $UPDATE_INTERVAL * 300;
 
 # Some vars
 my $interface = $ossim_conf::ossim_data->{"ossim_interface"};

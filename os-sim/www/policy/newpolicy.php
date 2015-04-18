@@ -42,6 +42,20 @@
     $end_day    = mysql_escape_string($_POST["end_day"]);
     $descr      = mysql_escape_string($_POST["descr"]);
 
+    /*
+     *  Check correct range of dates
+     *
+     *  Fri 21h = ((5 - 1) * 7) + 21 = 49
+     *  Sat 14h = ((6 - 1) * 7) + 14 = 56
+     */
+    $begin_expr = (($begin_day -1) * 7) + $begin_hour;
+    $end_expr = (($end_day -1) * 7) + $end_hour;
+    if ($begin_expr >= $end_expr) {
+?>
+        <p align="center">Error: Incorrect range of dates!</p>
+<?php   exit;
+    }
+
     /* source ips */
     for ($i = 1; $i <= mysql_escape_string($_POST["sourcenips"]); $i++) {
         $name = "sourcemboxi" . $i;
