@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+use strict;
+
+while (<STDIN>) {
+    if (/sid:(\d+);/) {
+        print STDOUT "$1 ";
+    } 
+};
+

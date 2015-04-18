@@ -1,0 +1,57 @@
+Os-sim - (c) 2003 IPSoluciones <ossim@ipsoluciones.com>
+http://sourceforge.net/projects/os-sim/
+
+About Os-sim
+------------
+Our goal es to obtain a working SIM (Security Infrastructure Monitor) able to integrate, qualificate and correlate both high level and low level security and network events which is capable to compete with commercial products recently appearing on the security market.
+Integrate multiple opensource security/network monitoring products to obtain
+three network/host visibility levels:
+
+- Low level log/alert/anomaly information
+- Mid level network risk level information
+- High level decision support information
+
+Components
+----------
+- Spade: network anomaly detection
+- Snort: pattern matching intrusion detection system
+- Acid: log viewer (Event Database)
+- Ntop: network use monitor
+- OpenNMS: Service availability monitoring
+- HotSanic: graphing
+- Mysql & PostgreSQL: data storage
+- rrdtool: Round robin data storage
+- Nessus: vulnerability assesment
+- Nmap: Network discovery
+- More to come....
+
+Development languages
+---------------------
+- C
+- Perl
+- PHP
+- Java
+
+Supported platforms
+-----------------
+- Linux
+- Limited functionality on: *BSD, Solaris, MacosX.
+
+Conclusion
+----------
+Using the above described systems and programming languages our goal is to get
+the most information out of every tool with the following objectives in mind:
+
+- Event correlation
+- Event qualification
+- Network anomaly detection
+- Qualified intrusion detection
+- Network availability information
+
+Authors
+-------
+
+    Dominique Karg <dk@ipsoluciones.com>
+    David Gil <dgil@ipsoluciones.com>
+    Julio Casal <jcasal@ipsoluciones.com>
+    Jesus D. Munoz <jesusd@ipsoluciones.com>

@@ -1,0 +1,41 @@
+- Relink graph functionality
+- Relink graph drawing
+- Ability to sort almost everything. Reverse order sort
+- Search in hosts/networks
+- Control Panel ntop integration, top three hosts traffic
+- Static control panel functionality
+- Rule editor
+- Install script
+- Horizontal / Vertical graph relocation
+- Hard link analisys using ntop's "sessions"
+- Buffer parser input
+- Use time-base policy
+- Up and Download rules from sensor, edit/modify/delete rule groups, restart
+  sensors.
+- Update snort rules automagically
+- Be able to dump & restore host, network and policy
+- Insert ntop anomalies into control panel
+- Integrate apache abuse with control panel
+
+- Insert nmap into ossim.conf, correct nmap_path where needed.
++ Add META no cache on dynamic pages
++ Modify != Insert. When modifying networks they get duplicated.
++ Network order in riskmeter ? How are networks drawn ? asort doesn't seem to
+  work quite well...
++ Control panel network appearance ?
++ Control panel: show only nets that are in table "net" (eq. for hosts)
++ Parser keeps dying... can't open /etc/ossim.conf. Why is configuration
+  re-read everytime an alert arrives ? why is an mysql connection established
+  everytime an alert arrives ? Parser rewrite...
+- Parser doesn't take policy into account.
+- Using "buffer" may suppose loosing alerts (they get cut in two).
++ Popup host graph when clicking on A or C value in control panel.
+- Control Panel. Draw numbers in red when they get too high (threshold)
++ control_panel.pl relative paths...
++ Ntop link doesn't work well with 2 "//" in frameoptions popup..
++ When modifying policy, hosts get selected twice (source/dest is not being
+  taken into account)
++ Serious vulnerability when calculating networks with nmap. Sanity check !!!!
+- Ntop keeps dying after ntop modifications. sigh...
+
+- Much much more...

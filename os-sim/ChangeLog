@@ -1,0 +1,54 @@
+# ChangeLog for OSSIM
+
+* OSSIM-0.1 (¿¿22?? Aug 2003)
+    
+    21 Aug 2003 DK <dk@ipsoluciones.com> :
+    * Cleanup, anomaly detection cleanup, draw_graph additions.
+    * Many bugfixes
+    * Short README & INSTALL
+
+    21 Aug 2003 David Gil <dgil@ipsoluciones.com> :
+    * Control panel operative.
+
+    20 Aug 2003 DK <dk@ipsoluciones.com> :
+    * wrote draw_graph.pl; much prettier graphics than HotSaNIC or 14all.
+
+    19 Aug 2003 David Gil <dgil@ipsoluciones.com> :
+    * Rewritten all perl-scripts to manage qualification levels
+    * ossim_conf module to read /etc/ossim.conf info from all perl-scripts
+
+    19 Aug 2003: DK <dk@ipsoluciones.com> :
+    * Added MRTG .log format too... 14all doesn't work at all.
+    * MRTG - Anomaly graphing scripts
+
+    18 Aug 2003: DK <dk@ipsoluciones.com> :
+    * MRTG rrd logging.
+
+    18 Aug 2003: David Gil <dgil@ipsoluciones> :
+    * Host, net and global graphics automatically generated with MRTG 
+      (instead of HostSanic)
+
+    14 Aug 2003: Jesus D. <jesusd@ipsoluciones.com> :
+    * MRTG installation (threw out HostSanic).
+
+    06 Aug 2003: David Gil <dgil@ipsoluciones.com> :
+    * Riskmeter integrated with the new database structure.
+    * All DB accesses are made from the corresponding PHP classes.
+
+    05 Aug 2003: David Gil <dgil@ipsoluciones.com> :
+    * Parser integrated with the new database structure.
+    * Now the parser reads config from /etc/ossim.conf too.
+
+    04 Aug 2003: David Gil <dgil@ipsoluciones.com> :
+    * PHP Classes to easy access to OSSIM Database.
+    * PHP config moved to /etc/ossim.conf (read with ossim_conf.inc)
+    * Database access is now generic with ADOdb.
+    * New Framework
+      - New look
+      - Many bug fixes
+      - Better use of PHP Classes
+
+    28 Jul 2003: David Gil <dgil@ipsoluciones.com> : 
+    * New database structure.
+    * New script to load the database.
+

@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# set config file & path to ossim
+
+CONFIG=/etc/ossim.conf
+OSSIM_PATH=`grep ^base_dir $CONFIG | cut -d= -f 2`
+LOG=`grep ^ossim_log $CONFIG | cut -d= -f 2`
+OUT_LOG=$OSSIM_PATH/parser/parser.log
+
+# End of configuration
+
+
+test -x $OSSIM_PATH/parser/parser || exit 0
+
+case "$1" in
+     start)
+	echo "Starting Open Source Security Information Management: OSSIM"
+
+    # start ossim parser
+    cd $OSSIM_PATH/parser
+	tail -f $LOG | buffer | ./parser >> $OUT_LOG &
+
+    # start misc scripts (provisional!)
+    cd $OSSIM_PATH/scripts/
+    nice -n 15 ./lower_host_levels.pl &
+    nice -n 15 ./lower_net_levels.pl &
+    nice -n 19 ./update_net_levels.pl &
+    nice -n 19 ./control_panel.pl &
+    
+	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+		echo "OSSIM is up and running!"
+	else
+		exit 0
+	fi
+	echo -n "."
+	;;
+
+     stop)
+	echo "Stoping Open Source Security Information Management: OSSIM"
+	if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+	
+	    kill -TERM `pidof $OSSIM_PATH/parser/parser`
+
+        # kill misc scripts (provisional!)
+        killall -KILL lower_host_levels.pl
+        killall -KILL lower_net_levels.pl
+        killall -KILL update_net_levels.pl
+        killall -KILL control_panel.pl
+
+
+	    # Wait until the timeout
+	    count=120
+	    numdots=0
+	    while ([ $count != 0 ]) do
+		let count=$count-1
+		if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+		    echo -n .
+		    let numdots=$numdots+1
+		    sleep 1
+		else
+		    count=0
+		fi
+	    done
+
+	    # If it's not dead yet, kill it.
+
+	    if [ "`pidof $OSSIM_PATH/parser/parser`" ] ; then
+		echo " TIMEOUT!"
+		kill -KILL `$OSSIM_PATH/parser/parser`
+	    else
+		case $numdots in
+		  0) echo "." ;;
+		  1) echo ;;
+		  *) echo " done" ;;
+		esac
+	    fi
+	else
+	    echo "OSSIM is  not running!";
+	fi
+	;;
+     restart)
+	$0 stop
+	$0 start
+	;;
+     *)
+	echo 'Usage: $0 {start|stop|restart}'
+	exit 1
+	;;
+esac
+exit 0
+;;

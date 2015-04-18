@@ -1,0 +1,84 @@
+body {
+  background: white;
+  color: black;
+  font-family: verdana,arial,helvetica,sans-serif;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  background: transparent;
+  color: #17457c;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  background: transparent;
+  color: #991e1e;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+h1 {
+  background: #f5f5f5;
+  color: black;
+  border-style: solid;
+  border-color: #d0d0d0;
+  border-width: 1px;
+  padding: 5px;
+  margin-bottom: 30px;
+  font-weight: bold;
+  font-size: 110%;
+  text-align: center;
+}
+
+table {
+    color: black;
+    border-style: solid;
+    border-color: #d0d0d0;
+    border-width: 1px;
+    text-align: center;
+}
+
+th {
+    color:black;
+    background: #f1f1f1;
+    border-style: solid;
+    border-color: #d0d0d0;
+    border-width: 1px;
+    font-size: 10pt;
+    text-align: center;
+}
+
+td {
+    color:black;
+    font-size:  10pt;
+    text-align: left;
+}
+
+
+/* Subtitle header. */
+h2 {
+  font-weight: bold;
+  clear: both;
+  font-size: 110%;
+  text-align: center;
+}
+
+/* Another subtitle using another font-size then the subtitle. */
+h3 {
+  font-weight: bold;
+  clear: both;
+  font-size: 105%;
+}
+
+
+p {
+  margin: 1.33em 0px;
+  margin-left: 40px;
+  margin-right: 40px;
+  text-align: center;
+}
+
+

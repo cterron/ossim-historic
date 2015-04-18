@@ -1,0 +1,40 @@
+<html>
+<head>
+  <link rel="stylesheet" href="../style/style.css"/>
+  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+</head>
+
+<body>
+
+<?php
+
+    if (!$_GET["ip"]) {
+        echo "No Ip to show! Wrong params.\n";
+        exit();
+    }
+    $ip = $_GET["ip"];
+
+    require_once "ossim_conf.inc";
+    $conf = new ossim_conf();
+    $acid_link = $conf->get_conf("acid_link");
+    $ntop_link = $conf->get_conf("ntop_link");
+    $mrtg_link = $conf->get_conf("mrtg_link");
+
+?>
+
+<p align="center">
+  <b><?php echo $ip ?></b><br/>
+
+[ <a href="<?php echo "$acid_link/acid_stat_ipaddr.php?ip=$ip&netmask=32"?>"
+     target="main">Alerts</a> ] 
+[ <a href="<?php echo "$mrtg_link/host_qualification/$ip.html" ?>"
+     target="main">History</a> ] 
+[ <a href="<?php echo "$ntop_link/$ip" ?>.html" 
+     target="main">Monitor</a> ]
+[ <a href="resetip.php?ip=<?php echo $ip ?>"
+     target="main">Reset</a> ]
+</p>
+
+
+</body>
+</html>
