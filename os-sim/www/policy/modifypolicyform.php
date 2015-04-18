@@ -295,21 +295,6 @@
         <option
         <?php if ($policy->get_priority() == 5) echo " SELECTED "; ?>
             value="5">5</option>
-        <option
-        <?php if ($policy->get_priority() == 6) echo " SELECTED "; ?>
-            value="6">7</option>
-        <option
-        <?php if ($policy->get_priority() == 7) echo " SELECTED "; ?>
-            value="7">7</option>
-        <option
-        <?php if ($policy->get_priority() == 8) echo " SELECTED "; ?>
-            value="8">8</option>
-        <option
-        <?php if ($policy->get_priority() == 9) echo " SELECTED "; ?>
-            value="9">9</option>
-        <option
-        <?php if ($policy->get_priority() == 10) echo " SELECTED "; ?>
-            value="10">10</option>
       </select>
     </td>
   </tr>

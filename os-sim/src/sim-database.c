@@ -161,6 +161,15 @@ sim_database_new (SimConfigDS  *config)
 							     db->_priv->dsn,
 							     GDA_CONNECTION_OPTIONS_DONT_SHARE);
 
+  if (!gda_connection_is_open (db->_priv->conn))
+    {
+      g_print ("CONNECTION ERROR\n");
+      g_print ("NAME: %s", db->_priv->name);
+      g_print (" PROVIDER: %s", db->_priv->provider);
+      g_print (" DSN: %s", db->_priv->dsn);
+      g_print ("\n");
+    }
+
   return db;
 }
 
@@ -275,4 +284,18 @@ sim_database_execute_single_command (SimDatabase  *database,
   gda_command_free (command);
 
   return model;
+}
+
+/*
+ *
+ *
+ *
+ */
+GdaConnection*
+sim_database_get_conn (SimDatabase  *database)
+{
+  g_return_val_if_fail (database != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+
+  return database->_priv->conn;  
 }

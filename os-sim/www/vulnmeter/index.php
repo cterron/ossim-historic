@@ -7,9 +7,15 @@
 </head>
 
 <body>
+<?php
+    $host = $_GET["host"];
+    if ($host) {
+        echo "<h1 align=\"center\">Vulnmeter - $host</h1>";
+    } else {
+        echo "<h1 align=\"center\">Vulnmeter</h1>";
+    }
+?>
 
-  <h1 align="center">OSSIM Framework</h1>
-  <h2 align="center">Vulnmeter</h2>
 
 <?php
 require_once ('ossim_conf.inc');
@@ -49,7 +55,7 @@ if($mon < 10){ $mon = 0 . $mon; }
 if($mday < 10){ $mday = 0 . $mday; }
 $datedir = $today[year] . $mon . $mday;
 ?> 
-      <td colspan="2"><a href="<?php echo $datedir?>/index.html">Last scan</a></td>
+      <td colspan="2"><a href="last/index.html">Last scan</a></td>
     </tr>
 </table>
 <table align="center">
@@ -68,7 +74,7 @@ if ($net_list) {
 
     <tr>
       <td align="center">
-           <?php echo $net ?></a>
+           <?php echo $net ?>
       </td>
 
       <td>
@@ -119,11 +125,24 @@ if ($ip_list) {
     <tr>
       <td align="center">
         <a href="<?php 
-            echo $datedir . "/" . $ip_ ?>/index.html"><?php echo $ip ?></a>
+            echo "last/" . $ip_ ?>/index.html">
+<?php
+    if (!strcmp($ip,$host))
+        echo "<font color=\"red\">$ip</font>";
+    else
+        echo $ip;
+?>
+        </a>
       </td>
 
       <td>
-        <img src="../pixmaps/solid-blue.jpg" height="8" 
+<?php
+    if (!strcmp($ip,$host))
+        $bar = "../pixmaps/solid-red.jpg";
+    else
+        $bar = "../pixmaps/solid-blue.jpg";
+?>
+        <img src="<?php echo $bar ?>" height="8" 
              width="<?php echo $width ?>"
              title="<?php echo $vulnerability ?>">
 <?php 
@@ -137,32 +156,38 @@ if ($ip_list) {
     
 </table>
 
+<?php 
+    if (!$_GET["noimages"]) {
+?>
+
 <br/>
 <table align="center">
   <tr>
     <td><img
-src="<?php echo $datedir; ?>/chart_dangerous_services.gif"></td>
+src="last/chart_dangerous_services.gif"></td>
   </tr>
 </table>
 <br/>
 <table align="center">
   <tr>
     <td><img
-src="<?php echo $datedir; ?>/chart_services_occurences.gif"></td>
+src="last/chart_services_occurences.gif"></td>
   </tr>
 </table>
 <br/>
 <table align="center">
   <tr>
-    <td><img src="<?php echo $datedir; ?>/pie_risks.gif"></td>
+    <td><img src="last/pie_risks.gif"></td>
   </tr>
 </table>
 <br/>
 <table align="center">
   <tr>
-    <td><img src="<?php echo $datedir; ?>/pie_most.gif"></td>
+    <td><img src="last/pie_most.gif"></td>
   </tr>
 </table>
+
+<? } ?>
 <br/>
 
 </body>

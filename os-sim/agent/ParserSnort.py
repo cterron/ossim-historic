@@ -16,8 +16,8 @@ class ParserSnort(Parser.Parser):
             self.__processFast()
             
         else:
-            print "log type " + self.plugin["source"] +\
-                  " unknown for  snort..."
+            util.debug (__name__, "log type " + self.plugin["source"] +\
+                        " unknown for  snort...", '!!', 'RED')
             sys.exit()
 
 
@@ -47,7 +47,7 @@ class ParserSnort(Parser.Parser):
                 try:
                     priority = result2[0]
                 except IndexError:
-                    priority = 1
+                    priority = 3
 
                 try: 
                     (month, day, datetime, sensor, plugin, tplugin, protocol,
@@ -64,7 +64,7 @@ class ParserSnort(Parser.Parser):
                                     sensor      = sensor,
                                     plugin_id   = int(plugin) + 1000,
                                     plugin_sid  = tplugin,
-                                    priority    = priority,
+                                    priority    = abs(4 - int(priority)),
                                     protocol    = protocol,
                                     src_ip      = src_ip,
                                     src_port    = src_port,
@@ -78,7 +78,7 @@ class ParserSnort(Parser.Parser):
         
     def __processFast(self):
         
-        util.debug (__name__, 'plugin started (syslog)...', '--')
+        util.debug (__name__, 'plugin started (fast)...', '--')
  
         patternl1 = '^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?'
         patternl2 = '\[(\d+):(\d+):\d+\]'
@@ -106,7 +106,7 @@ class ParserSnort(Parser.Parser):
                 try:
                     priority = result3[0]
                 except IndexError:
-                    priority = 1
+                    priority = 3
                 try:
                     (month, day, date, protocol, 
                      src_ip, src_port, dst_ip, dst_port) = result1[0]
@@ -119,7 +119,7 @@ class ParserSnort(Parser.Parser):
                                      interface  = self.plugin["interface"],
                                      plugin_id  = int(plugin) + 1000,
                                      plugin_sid = tplugin,
-                                     priority   = priority,
+                                     priority   = abs(4 - int(priority)),
                                      protocol   = protocol,
                                      src_ip     = src_ip,
                                      src_port   = src_port,

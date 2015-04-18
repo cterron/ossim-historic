@@ -65,8 +65,8 @@ function rule_table_header($directive_id)
         <th>To</th>
         <th>Port_from</th>
         <th>Port_to</th>
-        <th>Plugin</th>
-        <th>TPlugin</th>
+        <th>Plugin ID</th>
+        <th>Plugin SID</th>
       </tr>
 <?php
 }
@@ -126,8 +126,8 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <td><?php echo $rule->get_attribute('to'); ?></td>
         <td><?php echo $rule->get_attribute('port_from'); ?></td>
         <td><?php echo $rule->get_attribute('port_to'); ?></td>
-        <td><?php echo $rule->get_attribute('plugin'); ?></td>
-        <td><?php echo $rule->get_attribute('tplugin'); ?></td>
+        <td><?php echo $rule->get_attribute('plugin_id'); ?></td>
+        <td><?php echo $rule->get_attribute('plugin_sid'); ?></td>
       </tr>
                 
 <?php

@@ -1,10 +1,10 @@
-INCLUDES = -DG_LOG_DOMAIN=\"Os-sim\" \
-	-DOS_SIM_GLOBAL_CONFIG_FILE=\""$(sysconfdir)/os-sim/config.xml"\" \
-	-DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(datadir)/os-sim/directives.xml"\"
+INCLUDES = -DG_LOG_DOMAIN=\"OSSIM\" \
+	-DOS_SIM_GLOBAL_CONFIG_FILE=\""$(sysconfdir)/ossim/server/config.xml"\" \
+	-DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(datadir)/ossim/server/directives.xml"\"
 
-bin_PROGRAMS = os-sim
+bin_PROGRAMS = ossim
 
-os_sim_SOURCES = \
+ossim_SOURCES = \
 		sim-util.c \
 		sim-config.c \
 		sim-database.c \
@@ -32,6 +32,6 @@ os_sim_SOURCES = \
 		sim-server.c \
 		main.c
 
-os_sim_LDADD = $(DEPS_LIBS)
+ossim_LDADD = $(DEPS_LIBS)
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)

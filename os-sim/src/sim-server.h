@@ -86,7 +86,7 @@ void              sim_server_push_session_command          (SimServer       *ser
 							    SimCommand      *command);
 void              sim_server_push_session_plugin_command   (SimServer       *server,
 							    SimSessionType   session_type,
-							    SimSessionType   plugin_type,
+							    gint             plugin_id,
 							    SimCommand      *command);
 
 

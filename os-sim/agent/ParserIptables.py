@@ -13,8 +13,8 @@ class ParserIptables(Parser.Parser):
             self.__processSyslog()
             
         else:
-            print "log type " + self.plugin["source"] +\
-                  " unknown for iptables..."
+            util.debug (__name__, "log type " + self.plugin["source"] +\
+                        " unknown for iptables...", '!!', 'RED')
             sys.exit()
 
 

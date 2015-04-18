@@ -248,6 +248,11 @@ sim_policy_get_priority (SimPolicy* policy)
   g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
+  if (policy->_priv->priority < 0)
+    return 0;
+  if (policy->_priv->priority > 5)
+    return 5;
+
   return policy->_priv->priority;
 }
 
@@ -263,7 +268,11 @@ sim_policy_set_priority (SimPolicy* policy,
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
-  policy->_priv->priority = priority;
+  if (priority < 0)
+    policy->_priv->priority = 0;
+  else if (priority > 5)
+    policy->_priv->priority = 5;
+  else policy->_priv->priority = priority;
 }
 
 /*

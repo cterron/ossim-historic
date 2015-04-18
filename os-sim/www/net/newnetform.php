@@ -13,12 +13,13 @@
 <?php
     require_once ('ossim_db.inc');
     require_once ('classes/Conf.inc');
+    require_once ('classes/Sensor.inc');
+    require_once ('classes/Net_sensor_reference.inc');
                                                                                 
     $db = new ossim_db();
     $conn = $db->connect();
     $conf = Conf::get_conf($conn);
     $threshold = $conf->get_threshold();
-    $db->close($conn);
 ?>
 
 <form method="post" action="newnet.php">
@@ -38,15 +39,10 @@
       <select name="priority">
    <!-- <option value="0">0</option> -->
         <option value="1">1</option>
-        <option value="2">2</option>
+        <option selected value="2">2</option>
         <option value="3">3</option>
         <option value="4">4</option>
-        <option selected value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
+        <option value="5">5</option>
       </select>
     </td>
   </tr>
@@ -64,6 +60,7 @@
              name="threshold_a" size="4">
     </td>
   </tr>
+<!--
   <tr>
     <th>Alert</th>
     <td class="left">
@@ -79,6 +76,45 @@
       <input type="text" name="persistence" value="15" size="3"></input>min.
     </td>
   </tr>
+-->
+
+  <tr>
+    <th>Sensors<br/>
+        <font size="-2">
+          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+        </font><br/>
+    </th>
+    <td class="left">
+<?php
+                                                                                
+    /* ===== sensors ==== */
+    $i = 1;
+    if ($sensor_list = Sensor::get_list($conn)) {
+        foreach($sensor_list as $sensor) {
+            $sensor_name = $sensor->get_name();
+            $sensor_ip =   $sensor->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "nsens"; ?>"
+            value="<?php echo count($sensor_list); ?>">
+<?php
+            }
+            $name = "mboxs" . $i;
+?>
+        <input type="checkbox" name="<?php echo $name;?>"
+            value="<?php echo $sensor_name; ?>">
+            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+?>
+    </td>
+  </tr>
+
+
+
   <tr>
     <th>Description</th>
     <td class="left">
@@ -93,7 +129,9 @@
   </tr>
 </table>
 </form>
-
+<?php
+    $db->close($conn);
+?>
 </body>
 </html>
 

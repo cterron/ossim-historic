@@ -1,5 +1,97 @@
 # ChangeLog for OSSIM
 
+    01 Mar 2004 DK <dk@ossim.net>
+    * 0.9 released
+    * Bugfixes
+
+* OSSIM-0.9.0 (01 Mar 2004)
+
+    01 Mar 2004 Fabio Ospitia Trujillo <fot@ossim.net> :
+    * SPEC file for RPM.
+    * List support for plugin_sid in directives.
+    * Major bugs fixed.
+    * Add reliability and priority columns to plugin_sid table.
+    * New patch for acid.
+    * RPMs for fedora.
+    * rrd_plugin.pl script for RDD Threshold and Anomaly plugin.
+
+    01 Mar 2004 David Gil <dgil@ossim.net> :
+    * Table structure changed at metrics.php 
+      (fixed some browsers align problems)
+    * agent/Monitor.py: src_port and dst_port are not mandatory
+
+    27 Feb 2004 David Gil <dgil@ossim.net> :
+    * agent/ParserCA.py: C & A parser
+    * plugin priority and reliability configuration from web
+
+    26 Feb 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorCA.py: C & A monitor
+
+    25 Feb 2004 David Gil <dgil@ossim.net> :
+    * More intuitive top menu
+    * Riskmeter improvements
+
+    24 Feb 2004 David Gil <dgil@ossim.net> :
+    * Related sensors with nets.
+
+    23 Feb 2004 David Gil <dgil@ossim.net> :
+    * Metrics (control panel) improvements 
+
+    19 Feb 2004 David Gil <dgil@ossim.net> :
+    * Configuration pages changed
+    * Host report:
+      - inventory (OS, Mac, Nets, Services, ...)
+      - metrics (qualification incidents)
+      - alarms (correlation)
+      - alerts (acid)
+      - vulnerabilities (vulnmeter)
+      - usage (ntop host info)
+      - anomalies (nessus report)
+
+    18 Feb 2004 David Gil <dgil@ossim.net> :
+    * Network monitor
+    * asset of hosts, nets, policies in 0..5 range
+    * delete graphs functionality 
+    * delete alert functionality
+    * global riskmeter
+    * riskmeter link from control panel
+
+    17 Feb 2004 David Gil <dgil@ossim.net> :
+    * get global qualification functions
+    * metrics, alarm_console, and anomaly panels at control panel
+    * menu updated
+
+    13 Feb 2004 David Gil <dgil@ossim.net> :
+    * RRD parser for agent
+
+    12 Feb 2004 David Gil <dgil@ossim.net> :
+    * Alarm console
+
+    05 Feb 2004 David Gil <dgil@ossim.net> :
+    * Removed unnecesary mrtg data
+
+    04 Feb 2004 David Gil <dgil@ossim.net> :
+    * agent/ParserRealSecure.py: new real secure parser
+
+    03 Feb 2004 David Gil <dgil@ossim.net> :
+    * agent/agent: catch keyboardInterrupt exception and kill all threads
+
+    02 Feb 2004 David Gil <dgil@ossim.net> :
+    * agent/agent: 
+      - Parse command line options (python optparse)
+    * agent/util.py:
+      - verbose/quiet mode
+      - ossim version
+
+    28 Jan 2004 David Gil <dgil@ossim.net> :
+    * agent/MonitorNtopSession.py: 
+      - Session monitor NTOP: active TCP sessions info
+
+    27 Jan 2004 DK <dk@ossim.net> :
+    * 0.8.0 released
+
+* OSSIM-0.8.0 (27 Jan 2004)
+
     26 Jan 2004 DK <dk@ossim.net>
     * Sample snort conf file (spade enabled).
     * Arpwatch no_ip patch included.

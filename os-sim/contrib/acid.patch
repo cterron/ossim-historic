@@ -1,7 +1,7 @@
-diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
+diff -urNb acid/acid_cache.inc acid/acid_cache.inc
 --- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_cache.inc	2004-01-21 14:43:06.000000000 +0100
-@@ -226,6 +226,12 @@
++++ acid/acid_cache.inc	2004-02-09 14:34:37.000000000 +0100
+@@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
  
@@ -10,13 +10,39 @@ diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
 +  $schema_specific[1] = $schema_specific[1].", ossim_event.type, ossim_event.priority, ossim_event.reliability, ossim_event.asset_src, ossim_event.asset_dst, ossim_event.risk_c, ossim_event.risk_a ";
 +  $schema_specific[2] = $schema_specific[2]." LEFT JOIN ossim_event ON (event.sid=ossim_event.sid AND event.cid=ossim_event.cid)";
 +
-+
    $update_sql = array(4);
    
    /* TCP events */
-diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
+diff -urNb acid/acid_hdr2.html acid/acid_hdr2.html
+--- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
++++ acid/acid_hdr2.html	2004-03-01 16:20:55.000000000 +0100
+@@ -1,7 +1,10 @@
+ <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
+ <TR>
+ <TD><A class="menuitem" href="acid_main.php">Home</A>&nbsp&nbsp</TD>
+-<TD></TD>
++<TD>|&nbsp&nbsp
++    <A class="menuitem" href="acid_stat_uaddr.php?caller=&addr_type=1&sort_order=sig_d">Src</A>
++    &nbsp&nbsp|&nbsp&nbsp
++    <A class="menuitem" href="acid_stat_alerts.php?caller=&sort_order=occur_d">Uniq</A></TD>
+ </TR>
+ <TR>
+ <TD><A class="menuitem" href="acid_qry_main.php?new=1">Search</A>&nbsp&nbsp</TD>
+diff -urNb acid/acid_main.php acid/acid_main.php
+--- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
++++ acid/acid_main.php	2004-03-01 16:32:58.000000000 +0100
+@@ -143,6 +143,8 @@
+ ?>
+ 
+ <P>
++<LI><B><A href="acid_stat_uaddr.php?caller=&addr_type=1&sort_order=sig_d">Src</A></B>
++<LI><B><A href="acid_stat_alerts.php?caller=&sort_order=occur_d">Uniq</A></B>
+ <LI><B><A HREF="acid_qry_main.php?new=1">Search</A></B>
+ <LI><B><A HREF="acid_graph_main.php">Graph Alert data</A></B>&nbsp;
+ 
+diff -urNb acid/acid_output_query.inc acid/acid_output_query.inc
 --- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
++++ acid/acid_output_query.inc	2004-01-21 17:44:18.000000000 +0100
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -35,9 +61,9 @@ diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
       }
  
      echo "   </TR>\n";
-diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
+diff -urNb acid/acid_qry_common.php acid/acid_qry_common.php
 --- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_common.php	2004-01-21 16:44:05.000000000 +0100
++++ acid/acid_qry_common.php	2004-03-01 15:57:15.000000000 +0100
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -50,11 +76,12 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
   
    $where_sql = " WHERE ";
    $criteria_sql = " acid_event.sid > 0";
-@@ -542,6 +545,12 @@
+@@ -542,6 +545,13 @@
    $data_cnt = $cs->criteria['data']->GetFormItemCnt();
    $data_encode = $cs->criteria['data']->data_encode;
  
 +  /* OSSIM */
++  $ossim_type = $cs->criteria['ossim_type']->criteria;
 +  $ossim_priority = $cs->criteria['ossim_priority']->criteria;
 +  $ossim_reliability = $cs->criteria['ossim_reliability']->criteria;
 +  $ossim_asset_dst = $cs->criteria['ossim_asset_dst']->criteria;
@@ -63,17 +90,31 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
    $tmp_meta = "";
    /* Sensor */
    if ( $sensor != "" && $sensor != " " )
-@@ -622,6 +631,61 @@
+@@ -622,6 +632,77 @@
    if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
       $cs->criteria['time']->SetFormItemCnt(0);
  
 +  /*
 +   * OSSIM Code
 +   */
++
++  /* OSSIM Type */
++  if ( $ossim_type[1] != " " && $ossim_type[1] != "" && $ossim_type[1] != "0")
++  {
++     $tmp_meta = $tmp_meta." AND ossim_type = '".$ossim_type[1]."'";
++  }
++  else if ($ossim_type[1] == "0")
++  {
++     $tmp_meta = $tmp_meta." AND (ossim_type is null OR ossim_type = '0')";
++  }
++  else
++     $cs->criteria['ossim_type']->Set("");
++
++
 +  /* OSSIM Priority */
 +  if ( $ossim_priority[1] != " " && $ossim_priority[1] != "" && $ossim_priority[1] != "0")
 +  {
-+     $tmp_meta = $tmp_meta." AND ossim_priority ".$ossim_priority[0]." '".$ossim_priority[1]."'";
++     $tmp_meta = $tmp_meta." AND ossim_priority  ".$ossim_priority[0]." '".$ossim_priority[1]."'";
 +  }
 +  else if ($ossim_priority[1] == "0")
 +  {
@@ -107,13 +148,15 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
 +     $cs->criteria['ossim_asset_dst']->Set("");
 +
 +  /* OSSIM Risk A */
-+  if ( $ossim_risk_a[1] != " " && $ossim_risk_a[1] != "" && $ossim_risk_a[1] != "0")
++  if ( $ossim_risk_a != " " && $ossim_risk_a != "" && $ossim_risk_a != "0")
 +  {
-+     $tmp_meta = $tmp_meta." AND ossim_risk_a ".$ossim_risk_a[0]." '".$ossim_risk_a[1]."'";
-+  }
-+  else if ($ossim_risk_a[1] == "0")
-+  {
-+     $tmp_meta = $tmp_meta." AND (ossim_risk_a is null OR ossim_risk_a = '0')";
++     if ($ossim_risk_a == "low") {
++	$tmp_meta = $tmp_meta." AND ossim_risk_a >= 1 AND ossim_risk_a <= 4 ";
++     } else if ($ossim_risk_a == "medium") {
++	$tmp_meta = $tmp_meta." AND ossim_risk_a >= 5 AND ossim_risk_a <= 7 ";
++     } else if ($ossim_risk_a == "high") {
++	$tmp_meta = $tmp_meta." AND ossim_risk_a >= 8 AND ossim_risk_a <= 10 ";
++     }
 +  }
 +  else
 +     $cs->criteria['ossim_risk_a']->Set("");
@@ -125,9 +168,9 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
    $criteria_sql = $criteria_sql.$tmp_meta;
  
    /* ********************** IP Criteria ********************************************** */ 
-diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
+diff -urNb acid/acid_qry_form.php acid/acid_qry_form.php
 --- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_form.php	2004-01-22 11:52:32.000000000 +0100
++++ acid/acid_qry_form.php	2004-02-06 18:47:32.000000000 +0100
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -139,7 +182,7 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
       }     
  
       echo '</TD></TR>';    
-@@ -78,6 +78,18 @@
+@@ -78,6 +78,20 @@
        <TD>';
        $cs->criteria['time']->PrintForm();    
        
@@ -149,7 +192,9 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
 +      echo '<B>Risk: </B>';
 +      $cs->criteria['ossim_risk_a']->PrintForm();    
 +      echo '<B>Priority: </B>';
-+      $cs->criteria['ossim_priority']->PrintForm();    
++      $cs->criteria['ossim_priority']->PrintForm();
++      echo '<B>Type: </B>';
++      $cs->criteria['ossim_type']->PrintForm();    
 +      echo '<BR><B>Asset: </B>';
 +      $cs->criteria['ossim_asset_dst']->PrintForm();    
 +      echo '<B>Reliability: </B>';
@@ -158,9 +203,9 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
          echo '
  </TABLE>';
  
-diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
+diff -urNb acid/acid_qry_sqlcalls.php acid/acid_qry_sqlcalls.php
 --- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_sqlcalls.php	2004-01-22 11:47:34.000000000 +0100
++++ acid/acid_qry_sqlcalls.php	2004-03-01 15:46:20.000000000 +0100
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -201,22 +246,67 @@ diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
        qroPrintEntryHeader($i);
  
        $tmp_rowid = "#".(($qs->GetCurrentView() * $show_rows)+$i).
-@@ -208,6 +230,11 @@
+@@ -208,6 +230,56 @@
         else
           qroPrintEntry('<A HREF="acid_app_faq.php#1">unknown</A>');    
  
-+      qroPrintEntry($current_oasset_d);
-+      qroPrintEntry($current_oprio);
-+      qroPrintEntry($current_oriska);
-+      qroPrintEntry($current_oreli);
++      if ($current_dip != "255.255.255.255") {
++        if ($current_oasset_d != "")
++           qroPrintEntry($current_oasset_d);
++        else
++           qroPrintEntry("--");
++      } else {
++        if ($current_oasset_s != "")
++           qroPrintEntry($current_oasset_s);
++        else
++           qroPrintEntry("--");
++      }
++
++      if ($current_oprio != "")
++         qroPrintEntry($current_oprio);
++      else
++         qroPrintEntry("--");
++
++      if ($current_otype == 2) {
++         if ($current_oriska == "")
++            qroPrintEntry("--");
++         else if ($current_oriska == 0)
++            qroPrintEntry('<B>'.$current_oriska.'</B>');
++         else if ($current_oriska >= 1 && $current_oriska <= 4)
++            qroPrintEntry('<FONT color="green"><B>'.$current_oriska.'</B></FONT>');
++         else if ($current_oriska >= 5 && $current_oriska <= 7)
++            qroPrintEntry('<FONT color="orange"><B>'.$current_oriska.'</B></FONT>');
++         else if ($current_oriska >= 8 && $current_oriska <= 10)
++            qroPrintEntry('<FONT color="red"><B>'.$current_oriska.'</B></FONT>');
++         else
++            qroPrintEntry("--");
++      } else {
++         if ($current_oriska == "")
++            qroPrintEntry("--");
++         else if ($current_oriska == 0)
++            qroPrintEntry($current_oriska);
++         else if ($current_oriska >= 1 && $current_oriska <= 4)
++            qroPrintEntry('<FONT color="green">'.$current_oriska.'</FONT>');
++         else if ($current_oriska >= 5 && $current_oriska <= 7)
++            qroPrintEntry('<FONT color="orange">'.$current_oriska.'</FONT>');
++         else if ($current_oriska >= 8 && $current_oriska <= 10)
++            qroPrintEntry('<FONT color="red">'.$current_oriska.'</FONT>');
++         else
++            qroPrintEntry("--");
++      }
++
++      if ($current_oreli != "")
++         qroPrintEntry($current_oreli);
++      else
++         qroPrintEntry("--");
 +
        qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
  
        qroPrintEntryFooter();
-diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
+diff -urNb acid/acid_state_citems.inc acid/acid_state_citems.inc
 --- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_citems.inc	2004-01-21 11:50:27.000000000 +0100
-@@ -1459,4 +1459,448 @@
++++ acid/acid_state_citems.inc	2004-03-01 15:53:14.000000000 +0100
+@@ -1459,4 +1459,472 @@
     }
  };
  
@@ -300,71 +390,42 @@ diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
 +   {
 +     $this->criteria = "";
 +   }
-+
++                                                                                                                                                             
 +   function Clear()
 +   {
-+    /* clears the criteria */
++     /* clears the criteria */
 +   }
-+
++                                                                                                                                                             
 +   function SanitizeElement()
 +   {
-+      $this->criteria[0] = CleanVariable($this->criteria[0], "", array("=", "!=", "<", "<=", ">", ">="));
-+      $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array("null"));
++      $this->criteria = CleanVariable($this->criteria, VAR_DIGIT);
 +   }
-+
++                                                                                                                                                             
 +   function PrintForm()
 +   {
-+     if ( $this->db->acidGetDBVersion() >= 103 )
-+     {
-+        echo '<SELECT NAME="ossim_risk_a[0]">
-+                <OPTION VALUE=" " '.chk_select($this->criteria[0],"="). '>__</OPTION>
-+                <OPTION VALUE="=" '.chk_select($this->criteria[0],"=").'>==</OPTION>
-+                <OPTION VALUE="!=" '.chk_select($this->criteria[0],"!=").'>!=</OPTION>
-+                <OPTION VALUE="<"  '.chk_select($this->criteria[0],"<"). '><</OPTION>
-+                <OPTION VALUE=">"  '.chk_select($this->criteria[0],">").'>></OPTION>
-+                <OPTION VALUE="<=" '.chk_select($this->criteria[0],"><="). '><=</OPTION>
-+                <OPTION VALUE=">=" '.chk_select($this->criteria[0],">=").'>>=</SELECT>';
-+ 
-+        echo '<SELECT NAME="ossim_risk_a[1]">
-+                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any Risk }</OPTION>
-+ 	        <OPTION VALUE="null" '.chk_select($this->criteria[1], "null").'>-unclassified-</OPTION>';
-+        $temp_sql = "select DISTINCT ossim_risk_a from acid_event ORDER BY ossim_risk_a ASC ";
-+        $tmp_result = $this->db->acidExecute($temp_sql);
-+        if ( $tmp_result )
-+        {
-+           while ( $myrow = $tmp_result->acidFetchRow() )
-+             echo '<OPTION VALUE="'.$myrow[0].'" '.chk_select($this->criteria[1], $myrow[0]).'>'.
-+                   $myrow[0];
-+ 
-+            $tmp_result->acidFreeRows();
-+        }
-+        echo '</SELECT>&nbsp;&nbsp';
-+      }     
-+    }
-+ 
-+    function ToSQL()
-+    {
-+    /* convert this criteria to SQL */
-+    }
-+ 
-+    function Description()
-+    {
-+       $tmp = "";
-+ 
-+       if ( $this->db->acidGetDBVersion() >= 103 )
-+       {
-+          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
-+          {
-+             if ( $this->criteria[1] == null)
-+                $tmp = $tmp.'Ossim Risk = '.
-+                               '<I>none</I><BR>';
-+             else
-+                $tmp = $tmp.'Ossim Risk '.$this->criteria[0]." ".$this->criteria[1].
-+                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
-+          }
-+       }
-+ 
-+       return $tmp;
++      echo '<SELECT NAME="ossim_risk_a">
++             <OPTION VALUE=" " '.chk_select($this->criteria, " ").'>{ any risk }</OPTION>
++	     <OPTION VALUE="low" '.chk_select($this->criteria, "low"). '>Low</OPTION>
++             <OPTION VALUE="medium" '.chk_select($this->criteria, "medium"). '>Medium</OPTION>
++	     <OPTION VALUE="high" '.chk_select($this->criteria, "high"). '>High</OPTION>';
++
++      echo '</SELECT>&nbsp;&nbsp';
++   }
++                                                                                                                                                             
++   function ToSQL()
++   {
++     /* convert this criteria to SQL */
++   }
++                                                                                                                                                             
++   function Description()
++   {
++     $tmp = "";
++                                                                                                                                                             
++     if ( $this->criteria != " " && $this->criteria != "" )
++        $tmp = $tmp.'Ossim Risk A = ['.$this->criteria.'] '."".
++               $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++                                                                                                                                                             
++      return $tmp;
 +    }
 + };  /* OssimRiskACriteria */
 +
@@ -664,14 +725,68 @@ diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
 +    }
 + };  /* OssimAssetDstCriteria */
 +
++
++class OssimTypeCriteria extends SingleElementCriteria
++{
++   function Init()
++   {
++     $this->criteria = "";
++   }
++                                                                                                                                                             
++   function Clear()
++   {
++    /* clears the criteria */
++   }
++                                                                                                                                                             
++   function SanitizeElement()
++   {
++      $this->criteria = CleanVariable($this->criteria, VAR_DIGIT);
++   }
++                                                                                                                                                             
++   function PrintForm()
++   {
++     if ( $this->db->acidGetDBVersion() >= 103 )
++     {
++        echo '<SELECT NAME="ossim_type[1]">
++                <OPTION VALUE="" '.chk_select($this->criteria[1], " ").'>{ any }</OPTION>
++                <OPTION VALUE="2" '.chk_select($this->criteria[1], "2").'>Alarm</OPTION>';
++        echo '</SELECT>&nbsp;&nbsp';
++      }
++    }
++    function ToSQL()
++    {
++    /* convert this criteria to SQL */
++    }
++                                                                                                                                                             
++    function Description()
++    {
++       $tmp = "";
++                                                                                                                                                             
++       if ( $this->db->acidGetDBVersion() >= 103 )
++       {
++          if ( $this->criteria[1] != " " && $this->criteria[1] != "" )
++          {
++             if ( $this->criteria[1] == null)
++                $tmp = $tmp.'Ossim Type = '.
++                               '<I>none</I><BR>';
++             else
++                $tmp = $tmp.'Ossim Type '.$this->criteria[0]." ".$this->criteria[1].
++                       $this->cs->GetClearCriteriaString($this->export_name).'<BR>';
++          }
++       }
++                                                                                                                                 
++       return $tmp;
++    }
++ };  /* OssimTypeCriteria */
  ?>
-diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
+diff -urNb acid/acid_state_criteria.inc acid/acid_state_criteria.inc
 --- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_criteria.inc	2004-01-21 12:29:33.000000000 +0100
-@@ -49,6 +49,13 @@
++++ acid/acid_state_criteria.inc	2004-02-06 18:48:50.000000000 +0100
+@@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
  
++     $this->criteria['ossim_type'] = new OssimTypeCriteria(&$db, &$this, "ossim_type");
 +     $this->criteria['ossim_priority'] = new OssimPriorityCriteria(&$db, &$this, "ossim_priority");
 +     $this->criteria['ossim_reliability'] = new OssimReliabilityCriteria(&$db, &$this, "ossim_reliability");
 +     $this->criteria['ossim_asset_src'] = new OssimAssetSrcCriteria(&$db, &$this, "ossim_asset_src");
@@ -682,3 +797,139 @@ diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
       /* 
        * For new criteria, add a call to the appropriate constructor here, and implement
        * the appropriate class in acid_stat_citems.inc.
+diff -urNb acid/create_acid_tbls_mysql.sql acid/create_acid_tbls_mysql.sql
+--- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
++++ acid/create_acid_tbls_mysql.sql	2004-02-09 13:48:43.000000000 +0100
+@@ -81,3 +81,51 @@
+ 
+                             PRIMARY KEY         (ipc_ip),
+                             INDEX               (ipc_ip) );
++
++--
++-- OSSIM Patch
++--
++
++--
++-- Table: ossim_event
++--
++DROP TABLE IF EXISTS ossim_event;
++CREATE TABLE ossim_event (
++	sid		INT NOT NULL,
++	cid		INT NOT NULL,
++	type            INT NOT NULL,
++	priority	INT DEFAULT 1,
++	reliability	INT DEFAULT 1,
++	asset_src	INT DEFAULT 1,
++	asset_dst	INT DEFAULT 1,
++	risk_c		INT DEFAULT 1,
++	risk_a		INT DEFAULT 1,
++	PRIMARY KEY (sid, cid),
++	INDEX		(type),
++        INDEX           (priority),
++        INDEX           (reliability),
++        INDEX           (asset_src),
++        INDEX           (asset_dst),
++        INDEX           (risk_c),
++        INDEX           (risk_a)
++);
++
++--
++-- Alter Tables acid_event
++--
++ALTER TABLE acid_event ADD COLUMN ossim_type INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_priority INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_reliability INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_asset_src INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_asset_dst INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_risk_c INT DEFAULT 1;
++ALTER TABLE acid_event ADD COLUMN ossim_risk_a INT DEFAULT 1;
++
++CREATE INDEX acid_event_ossim_type ON acid_event (ossim_type);
++CREATE INDEX acid_event_ossim_priority ON acid_event (ossim_priority);
++CREATE INDEX acid_event_ossim_reliability ON acid_event (ossim_reliability);
++CREATE INDEX acid_event_ossim_asset_src ON acid_event (ossim_asset_src);
++CREATE INDEX acid_event_ossim_asset_dst ON acid_event (ossim_asset_dst);
++CREATE INDEX acid_event_ossim_risk_c ON acid_event (ossim_risk_c);
++CREATE INDEX acid_event_ossim_risk_a ON acid_event (ossim_risk_a);
++
+diff -urNb acid/create_acid_tbls_pgsql.sql acid/create_acid_tbls_pgsql.sql
+--- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
++++ acid/create_acid_tbls_pgsql.sql	2004-02-09 14:03:50.000000000 +0100
+@@ -57,8 +57,8 @@
+ CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
+                             ag_name             TEXT,
+                             ag_desc             TEXT, 
+-                            ag_ctime            DATETIME,
+-                            ag_ltime            DATETIME,
++                            ag_ctime            TIMESTAMP,
++                            ag_ltime            TIMESTAMP,
+ 
+                             PRIMARY KEY         (ag_id) );
+ 
+@@ -73,8 +73,64 @@
+ 
+ CREATE TABLE acid_ip_cache( ipc_ip                  INT8 NOT NULL,
+                             ipc_fqdn                TEXT,
+-                            ipc_dns_timestamp       DATETIME,
++                            ipc_dns_timestamp       TIMESTAMP,
+                             ipc_whois               TEXT,
+-                            ipc_whois_timestamp     DATETIME,
++                            ipc_whois_timestamp     TIMESTAMP,
+ 
+                             PRIMARY KEY         (ipc_ip) );
++
++--
++-- OSSIM Patch
++--
++                                                                                                                                                             
++--
++-- Table: ossim_event
++--
++CREATE TABLE ossim_event (
++        sid             INT8 NOT NULL,
++        cid             INT8 NOT NULL,
++        type            INT8 DEFAULT 1,
++        priority        INT8 DEFAULT 1,
++        reliability     INT8 DEFAULT 1,
++        asset_src       INT8 DEFAULT 1,
++        asset_dst       INT8 DEFAULT 1,
++        risk_c          INT8 DEFAULT 1,
++        risk_a          INT8 DEFAULT 1,
++        PRIMARY KEY (sid, cid)
++);
++
++CREATE INDEX acid_event_type_idx ON ossim_event (type);
++CREATE INDEX acid_event_priority_idx ON ossim_event (priority);
++CREATE INDEX acid_event_reliability_idx ON ossim_event (reliability);
++CREATE INDEX acid_event_asset_src_idx ON ossim_event (asset_src);
++CREATE INDEX acid_event_asset_dst_idx ON ossim_event (asset_dst);
++CREATE INDEX acid_event_risk_c_idx ON ossim_event (risk_c);
++CREATE INDEX acid_event_risk_a_idx ON ossim_event (risk_a);
++
++--
++-- Alter Tables acid_event
++--
++ALTER TABLE acid_event ADD COLUMN ossim_type INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_priority INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_reliability INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_asset_src INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_asset_dst INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_risk_c INT8;
++ALTER TABLE acid_event ADD COLUMN ossim_risk_a INT8;
++                                                                                                                                                             
++ALTER TABLE acid_event ALTER COLUMN ossim_type SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_priority SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_reliability SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_asset_src SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_asset_dst SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_risk_c SET DEFAULT 1;
++ALTER TABLE acid_event ALTER COLUMN ossim_risk_a SET DEFAULT 1;
++
++CREATE INDEX acid_event_ossim_type_idx ON acid_event (ossim_type);
++CREATE INDEX acid_event_ossim_priority_idx ON acid_event (ossim_priority);
++CREATE INDEX acid_event_ossim_reliability_idx ON acid_event (ossim_reliability);
++CREATE INDEX acid_event_ossim_asset_src_idx ON acid_event (ossim_asset_src);
++CREATE INDEX acid_event_ossim_asset_dst_idx ON acid_event (ossim_asset_dst);
++CREATE INDEX acid_event_ossim_risk_c_idx ON acid_event (ossim_risk_c);
++CREATE INDEX acid_event_ossim_risk_a_idx ON acid_event (ossim_risk_a);
++

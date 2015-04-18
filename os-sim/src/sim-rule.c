@@ -36,6 +36,8 @@
 
 #include "sim-rule.h"
 
+#include <time.h>
+
 enum
 {
   DESTROY,
@@ -45,9 +47,12 @@ enum
 struct _SimRulePrivate {
   gint        level;
   gchar      *name;
+  gboolean    not;
+  gboolean    not_invalid;
 
   gint        priority;
   gint        reliability;
+  gboolean    rel_abs;
 
   GTime       time_out;
   GTime       time_last;
@@ -69,6 +74,7 @@ struct _SimRulePrivate {
 
   GList      *actions;
   GList      *vars;
+  GList      *plugin_sids;
   GList      *src_ias;
   GList      *dst_ias;
   GList      *src_ports;
@@ -122,6 +128,15 @@ sim_rule_impl_finalize (GObject  *gobject)
       list = list->next;
     }
   g_list_free (rule->_priv->vars);
+
+  /* Plugin Sids */
+  list = rule->_priv->plugin_sids;
+  while (list)
+    {
+      rule->_priv->plugin_sids = g_list_remove (rule->_priv->plugin_sids, list->data);
+      list = list->next;
+    }
+  g_list_free (rule->_priv->plugin_sids);
 
   /* src ips */
   list = rule->_priv->src_ias;
@@ -186,9 +201,12 @@ sim_rule_instance_init (SimRule *rule)
 
   rule->_priv->level = 0;
   rule->_priv->name = NULL;
+  rule->_priv->not = FALSE;
+  rule->_priv->not_invalid = FALSE;
 
   rule->_priv->priority = 0;
   rule->_priv->reliability = 0;
+  rule->_priv->rel_abs = TRUE;
 
   rule->_priv->condition = SIM_CONDITION_TYPE_NONE;
   rule->_priv->value = NULL;
@@ -199,7 +217,7 @@ sim_rule_instance_init (SimRule *rule)
   rule->_priv->time_last = 0;
   rule->_priv->occurrence = 1;
 
-  rule->_priv->count_occu = 0;
+  rule->_priv->count_occu = 1;
 
   rule->_priv->plugin_id = 0;
   rule->_priv->plugin_sid = 0;
@@ -210,6 +228,7 @@ sim_rule_instance_init (SimRule *rule)
 
   rule->_priv->actions = NULL;
   rule->_priv->vars = NULL;
+  rule->_priv->plugin_sids = NULL;
   rule->_priv->src_ias = NULL;
   rule->_priv->dst_ias = NULL;
   rule->_priv->src_ports = NULL;
@@ -255,7 +274,7 @@ sim_rule_get_type (void)
 SimRule*
 sim_rule_new (void)
 {
-  SimRule *rule = NULL;
+  SimRule *rule;
 
   rule = SIM_RULE (g_object_new (SIM_TYPE_RULE, NULL));
 
@@ -271,7 +290,7 @@ sim_rule_new (void)
 gint
 sim_rule_get_level (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->level;
@@ -287,7 +306,7 @@ void
 sim_rule_set_level (SimRule   *rule,
 		    gint       level)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (level > 0);
 
@@ -300,10 +319,41 @@ sim_rule_set_level (SimRule   *rule,
  *
  *
  */
+gboolean
+sim_rule_get_not (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_not (SimRule   *rule,
+		  gboolean   not)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+
+  rule->_priv->not = not;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
 gchar*
 sim_rule_get_name (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->name;
@@ -319,9 +369,9 @@ void
 sim_rule_set_name (SimRule   *rule,
 		   const gchar *name)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (name != NULL);
+  g_return_if_fail (name);
 
   if (rule->_priv->name)
     g_free (rule->_priv->name);
@@ -338,8 +388,13 @@ sim_rule_set_name (SimRule   *rule,
 gint
 sim_rule_get_priority (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
+
+  if (rule->_priv->priority < 0)
+    return 0;
+  if (rule->_priv->priority > 5)
+    return 5;
 
   return rule->_priv->priority;
 }
@@ -354,11 +409,15 @@ void
 sim_rule_set_priority (SimRule   *rule,
 		       gint       priority)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (priority >= 0);
 
-  rule->_priv->priority = priority;
+  if (priority < 0)
+    rule->_priv->priority = 0;
+  else if (priority > 5)
+    rule->_priv->priority = 5;
+  else 
+    rule->_priv->priority = priority;
 }
 
 /*
@@ -370,8 +429,13 @@ sim_rule_set_priority (SimRule   *rule,
 gint
 sim_rule_get_reliability (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
+
+  if (rule->_priv->reliability < 0)
+    return 0;
+  if (rule->_priv->reliability > 10)
+    return 10;
 
   return rule->_priv->reliability;
 }
@@ -386,11 +450,46 @@ void
 sim_rule_set_reliability (SimRule   *rule,
 			  gint       reliability)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (reliability >= 0);
 
-  rule->_priv->reliability = reliability;
+  if (reliability < 0)
+    rule->_priv->reliability = 0;
+  else if (reliability > 10)
+    rule->_priv->reliability = 10;
+  else 
+    rule->_priv->reliability = reliability;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_get_rel_abs (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+  
+  return rule->_priv->rel_abs;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_rel_abs (SimRule   *rule,
+		      gboolean   rel_abs)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+
+  rule->_priv->rel_abs = rel_abs;
 }
 
 /*
@@ -402,7 +501,7 @@ sim_rule_set_reliability (SimRule   *rule,
 SimConditionType
 sim_rule_get_condition (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, SIM_CONDITION_TYPE_NONE);
+  g_return_val_if_fail (rule, SIM_CONDITION_TYPE_NONE);
   g_return_val_if_fail (SIM_IS_RULE (rule), SIM_CONDITION_TYPE_NONE);
 
   return rule->_priv->condition;
@@ -418,7 +517,7 @@ void
 sim_rule_set_condition (SimRule           *rule,
 			SimConditionType   condition)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
 
   rule->_priv->condition = condition;
@@ -433,7 +532,7 @@ sim_rule_set_condition (SimRule           *rule,
 gchar*
 sim_rule_get_value (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->value;
@@ -449,9 +548,9 @@ void
 sim_rule_set_value (SimRule      *rule,
 		    const gchar  *value)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (value != NULL);
+  g_return_if_fail (value);
 
   if (rule->_priv->value)
     g_free (rule->_priv->value);
@@ -468,7 +567,7 @@ sim_rule_set_value (SimRule      *rule,
 gint
 sim_rule_get_interval (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->interval;
@@ -482,11 +581,11 @@ sim_rule_get_interval (SimRule   *rule)
  */
 void
 sim_rule_set_interval (SimRule   *rule,
-			  gint       interval)
+		       gint       interval)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (interval > 0);
+  g_return_if_fail (interval >= 0);
 
   rule->_priv->interval = interval;
 }
@@ -500,7 +599,7 @@ sim_rule_set_interval (SimRule   *rule,
 gboolean
 sim_rule_get_absolute (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->absolute;
@@ -514,7 +613,7 @@ sim_rule_get_absolute (SimRule   *rule)
  */
 void
 sim_rule_set_absolute (SimRule   *rule,
-		       gboolean  absolute)
+		       gboolean   absolute)
 {
   g_return_if_fail (rule != NULL);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -531,7 +630,7 @@ sim_rule_set_absolute (SimRule   *rule,
 GTime
 sim_rule_get_time_out (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->time_out;
@@ -545,9 +644,9 @@ sim_rule_get_time_out (SimRule   *rule)
  */
 void
 sim_rule_set_time_out (SimRule   *rule,
-		       GTime       time_out)
+		       GTime      time_out)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (time_out >= 0);
 
@@ -560,10 +659,42 @@ sim_rule_set_time_out (SimRule   *rule,
  *
  *
  */
+GTime
+sim_rule_get_time_last (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, 0);
+  g_return_val_if_fail (SIM_IS_RULE (rule), 0);
+
+  return rule->_priv->time_last;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_rule_set_time_last (SimRule   *rule,
+		       GTime      time_last)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (time_last >= 0);
+
+  rule->_priv->time_last = time_last;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
 gint
 sim_rule_get_occurrence (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->occurrence;
@@ -577,9 +708,9 @@ sim_rule_get_occurrence (SimRule   *rule)
  */
 void
 sim_rule_set_occurrence (SimRule   *rule,
-			  gint       occurrence)
+			 gint       occurrence)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (occurrence > 0);
 
@@ -595,7 +726,7 @@ sim_rule_set_occurrence (SimRule   *rule,
 gint
 sim_rule_get_plugin_id (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->plugin_id;
@@ -611,9 +742,9 @@ void
 sim_rule_set_plugin_id (SimRule   *rule,
 			gint       plugin_id)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (plugin_id >= 0);
+  g_return_if_fail (plugin_id > 0);
 
   rule->_priv->plugin_id = plugin_id;
 }
@@ -627,7 +758,7 @@ sim_rule_set_plugin_id (SimRule   *rule,
 gint
 sim_rule_get_plugin_sid (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->plugin_sid;
@@ -643,9 +774,9 @@ void
 sim_rule_set_plugin_sid (SimRule   *rule,
 			 gint       plugin_sid)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (plugin_sid >= 0);
+  g_return_if_fail (plugin_sid > 0);
 
   rule->_priv->plugin_sid = plugin_sid;
 }
@@ -659,7 +790,7 @@ sim_rule_set_plugin_sid (SimRule   *rule,
 GInetAddr*
 sim_rule_get_src_ia (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->src_ia;
@@ -674,9 +805,9 @@ sim_rule_get_src_ia (SimRule   *rule)
 void sim_rule_set_src_ia (SimRule    *rule,
 			  GInetAddr  *src_ia)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (src_ia != NULL);
+  g_return_if_fail (src_ia);
 
   rule->_priv->src_ia = src_ia;
 }
@@ -690,7 +821,7 @@ void sim_rule_set_src_ia (SimRule    *rule,
 GInetAddr*
 sim_rule_get_dst_ia (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->dst_ia;
@@ -705,10 +836,10 @@ sim_rule_get_dst_ia (SimRule   *rule)
 void sim_rule_set_dst_ia (SimRule    *rule,
 			  GInetAddr  *dst_ia)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (dst_ia != NULL);
-
+  g_return_if_fail (dst_ia);
+  
   rule->_priv->dst_ia = dst_ia;
 }
 
@@ -721,7 +852,7 @@ void sim_rule_set_dst_ia (SimRule    *rule,
 gint
 sim_rule_get_src_port (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->src_port;
@@ -736,7 +867,7 @@ sim_rule_get_src_port (SimRule   *rule)
 void sim_rule_set_src_port (SimRule   *rule,
 			    gint       src_port)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (src_port >= 0);
 
@@ -752,7 +883,7 @@ void sim_rule_set_src_port (SimRule   *rule,
 gint
 sim_rule_get_dst_port (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, 0);
+  g_return_val_if_fail (rule, 0);
   g_return_val_if_fail (SIM_IS_RULE (rule), 0);
 
   return rule->_priv->dst_port;
@@ -767,9 +898,9 @@ sim_rule_get_dst_port (SimRule   *rule)
 void sim_rule_set_dst_port (SimRule   *rule,
 			    gint       dst_port)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (dst_port > -1);
+  g_return_if_fail (dst_port >= 0);
 
   rule->_priv->dst_port = dst_port;
 }
@@ -781,15 +912,14 @@ void sim_rule_set_dst_port (SimRule   *rule,
  *
  */
 void
-sim_rule_append_action (SimRule     *rule,
-			SimAction   *action)
+sim_rule_append_plugin_sid (SimRule   *rule,
+			    gint       plugin_sid)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (action != NULL);
-  g_return_if_fail (SIM_IS_ACTION (action));
+  g_return_if_fail (plugin_sid >= 0);
 
-  rule->_priv->actions = g_list_append (rule->_priv->actions, action);
+  rule->_priv->plugin_sids = g_list_append (rule->_priv->plugin_sids, GINT_TO_POINTER (plugin_sid));
 }
 
 /*
@@ -799,15 +929,14 @@ sim_rule_append_action (SimRule     *rule,
  *
  */
 void
-sim_rule_remove_action (SimRule     *rule,
-			SimAction   *action)
+sim_rule_remove_plugin_sid (SimRule   *rule,
+			    gint       plugin_sid)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (action != NULL);
-  g_return_if_fail (SIM_IS_ACTION (action));
+  g_return_if_fail (plugin_sid >= 0);
 
-  rule->_priv->actions = g_list_remove (rule->_priv->actions, action);
+  rule->_priv->plugin_sids = g_list_remove (rule->_priv->plugin_sids, GINT_TO_POINTER (plugin_sid));
 }
 
 /*
@@ -817,12 +946,12 @@ sim_rule_remove_action (SimRule     *rule,
  *
  */
 GList*
-sim_rule_get_actions (SimRule     *rule)
+sim_rule_get_plugin_sids (SimRule   *rule)
 {
   g_return_val_if_fail (rule != NULL, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
-  return rule->_priv->actions;
+  return rule->_priv->plugin_sids;
 }
 
 /*
@@ -835,8 +964,9 @@ void
 sim_rule_append_src_ia (SimRule    *rule,
 			GInetAddr  *src_ia)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (src_ia);
 
   rule->_priv->src_ias = g_list_append (rule->_priv->src_ias, src_ia);
 }
@@ -851,8 +981,9 @@ void
 sim_rule_remove_src_ia (SimRule    *rule,
 			GInetAddr  *src_ia)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (src_ia);
 
   rule->_priv->src_ias = g_list_remove (rule->_priv->src_ias, src_ia);
 }
@@ -866,7 +997,7 @@ sim_rule_remove_src_ia (SimRule    *rule,
 GList*
 sim_rule_get_src_ias (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->src_ias;
@@ -882,8 +1013,9 @@ void
 sim_rule_append_dst_ia (SimRule    *rule,
 			GInetAddr  *dst_ia)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (dst_ia);
 
   rule->_priv->dst_ias = g_list_append (rule->_priv->dst_ias, dst_ia);
 }
@@ -932,6 +1064,7 @@ sim_rule_append_src_port (SimRule   *rule,
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (src_port >= 0);
 
   rule->_priv->src_ports = g_list_append (rule->_priv->src_ports, GINT_TO_POINTER (src_port));
 }
@@ -948,6 +1081,7 @@ sim_rule_remove_src_port (SimRule   *rule,
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (src_port >= 0);
 
   rule->_priv->src_ports = g_list_remove (rule->_priv->src_ports, GINT_TO_POINTER (src_port));
 }
@@ -961,7 +1095,7 @@ sim_rule_remove_src_port (SimRule   *rule,
 GList*
 sim_rule_get_src_ports (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->src_ports;
@@ -977,8 +1111,9 @@ void
 sim_rule_append_dst_port (SimRule   *rule,
 			  gint       dst_port)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (dst_port >= 0);
 
   rule->_priv->dst_ports = g_list_append (rule->_priv->dst_ports, GINT_TO_POINTER (dst_port));
 }
@@ -993,8 +1128,9 @@ void
 sim_rule_remove_dst_port (SimRule   *rule,
 			  gint       dst_port)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (dst_port >= 0);
 
   rule->_priv->dst_ports = g_list_remove (rule->_priv->dst_ports, GINT_TO_POINTER (dst_port));
 }
@@ -1008,7 +1144,7 @@ sim_rule_remove_dst_port (SimRule   *rule,
 GList*
 sim_rule_get_dst_ports (SimRule   *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
 
   return rule->_priv->dst_ports;
@@ -1024,8 +1160,9 @@ void
 sim_rule_append_var (SimRule         *rule,
 		     SimRuleVar      *var)
 {
-  g_return_if_fail (rule != NULL);
+  g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (var);
 
   rule->_priv->vars = g_list_append (rule->_priv->vars, var);  
 }
@@ -1039,9 +1176,9 @@ sim_rule_append_var (SimRule         *rule,
 GList*
 sim_rule_get_vars (SimRule     *rule)
 {
-  g_return_val_if_fail (rule != NULL, NULL);
+  g_return_val_if_fail (rule, NULL);
   g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
-  
+
   return rule->_priv->vars;
 }
 
@@ -1064,35 +1201,26 @@ sim_rule_clone (SimRule     *rule)
   new_rule->type = rule->type;
   new_rule->_priv->level = rule->_priv->level;
   new_rule->_priv->name = g_strdup (rule->_priv->name);
+  new_rule->_priv->not = rule->_priv->not;
 
   new_rule->_priv->priority = rule->_priv->priority;
   new_rule->_priv->reliability = rule->_priv->reliability;
+  new_rule->_priv->rel_abs = rule->_priv->rel_abs;
 
   new_rule->_priv->time_out = rule->_priv->time_out;
   new_rule->_priv->occurrence = rule->_priv->occurrence;
 
   new_rule->_priv->plugin_id = rule->_priv->plugin_id;
   new_rule->_priv->plugin_sid = rule->_priv->plugin_sid;
-  new_rule->_priv->condition = rule->_priv->condition;
-  new_rule->_priv->value = (rule->_priv->value) ? g_strdup (rule->_priv->value) : NULL;
-  new_rule->_priv->interval = rule->_priv->interval;
 
   new_rule->_priv->src_ia = (rule->_priv->src_ia) ? gnet_inetaddr_clone (rule->_priv->src_ia) : NULL;
   new_rule->_priv->dst_ia = (rule->_priv->dst_ia) ? gnet_inetaddr_clone (rule->_priv->dst_ia) : NULL;
   new_rule->_priv->src_port = rule->_priv->src_port;
   new_rule->_priv->dst_port = rule->_priv->dst_port;
 
-  /* Actions */
-  list = rule->_priv->actions;
-  while (list)
-    {
-      SimAction *action = (SimAction *) list->data;
-      SimAction *new_action = sim_action_clone (action);
-
-      new_rule->_priv->actions = g_list_append (new_rule->_priv->actions, new_action);
-
-      list = list->next;
-    }
+  new_rule->_priv->condition = rule->_priv->condition;
+  new_rule->_priv->value = (rule->_priv->value) ? g_strdup (rule->_priv->value) : NULL;
+  new_rule->_priv->interval = rule->_priv->interval;
 
   /* vars */
   list = rule->_priv->vars;
@@ -1106,6 +1234,15 @@ sim_rule_clone (SimRule     *rule)
       new_rule_var->level = rule_var->level;
 
       new_rule->_priv->vars = g_list_append (new_rule->_priv->vars, new_rule_var);
+      list = list->next;
+    }
+
+  /* Plugin Sids */
+  list = rule->_priv->plugin_sids;
+  while (list)
+    {
+      gint plugin_sid = GPOINTER_TO_INT (list->data);
+      new_rule->_priv->plugin_sids = g_list_append (new_rule->_priv->plugin_sids, GINT_TO_POINTER (plugin_sid));
       list = list->next;
     }
 
@@ -1135,7 +1272,7 @@ sim_rule_clone (SimRule     *rule)
       new_rule->_priv->src_ports = g_list_append (new_rule->_priv->src_ports, GINT_TO_POINTER (port));
       list = list->next;
     }
- 
+
   /* dst ports */
   list = rule->_priv->dst_ports;
   while (list)
@@ -1151,61 +1288,138 @@ sim_rule_clone (SimRule     *rule)
 /*
  *
  *
+ */
+gint
+sim_rule_get_reliability_relative (GNode   *rule_node)
+{
+  GNode   *node;
+  SimRule *rule;
+  gint     rel = 0;
+
+  g_return_val_if_fail (rule_node, 0);
+
+  node = rule_node;
+  while (node)
+    {
+      SimRule *rule = (SimRule *) node->data;
+
+      rel += rule->_priv->reliability;
+      node = node->parent;
+    }
+
+  return rel;
+}
+
+/*
+ *
+ *
+ *
+ */
+gboolean
+sim_rule_is_not_invalid (SimRule      *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  return rule->_priv->not_invalid;
+}
+
+/**
+ * sim_rule_is_time_out:
+ * @rule: a #SimRule.
+ *
+ * Look if a #SimRule is time out.
+ *
+ * Return: TRUE if is time out, FALSE otherwise.
+ */
+gboolean 
+sim_rule_is_time_out (SimRule      *rule)
+{
+  g_return_val_if_fail (rule, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+
+  if ((!rule->_priv->time_out) || (!rule->_priv->time_last))
+    return FALSE;
+
+  if (rule->_priv->level == 1)
+    {
+      if ((rule->_priv->occurrence > 1) && 
+	  (time (NULL) > (rule->_priv->time_last + rule->_priv->time_out)))
+	{
+	  rule->_priv->time_last = 0;
+	  rule->_priv->count_occu = 1;
+	  return TRUE;
+	}
+    }
+  else
+    {
+      if (time (NULL) > (rule->_priv->time_last + rule->_priv->time_out))
+	return TRUE;
+    }
+
+  return FALSE;
+}
+
+/*
+ *
+ *
  *
  *
  */
 gboolean
 sim_rule_match_by_alert (SimRule      *rule,
-			 SimAlert   *alert)
-{
-  GTimeVal    curr_time;
+			 SimAlert     *alert)
+{ 
   GList      *list = NULL;
   gboolean    match;
 
   g_return_val_if_fail (rule, FALSE);
   g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
   g_return_val_if_fail (rule->type != SIM_RULE_TYPE_NONE, FALSE);
+  g_return_val_if_fail (rule->_priv->plugin_id > 0, FALSE);
   g_return_val_if_fail (alert, FALSE);
   g_return_val_if_fail (SIM_IS_ALERT (alert), FALSE);
   g_return_val_if_fail (alert->type != SIM_ALERT_TYPE_NONE, FALSE);
+  g_return_val_if_fail (alert->plugin_id > 0, FALSE);
+  g_return_val_if_fail (alert->plugin_sid > 0, FALSE);
+  g_return_val_if_fail (alert->src_ia, FALSE);
+
+  /* Time Out */
+  if ((sim_rule_is_time_out (rule)) && (rule->_priv->level > 1))
+    return FALSE;
 
   /* Match Type */
   if (rule->type != alert->type)
     return FALSE;
 
-  g_get_current_time (&curr_time);
-
-  if (!rule->_priv->time_last)
-      rule->_priv->time_last = curr_time.tv_sec;
-
-  /* Time Out */
-  if ((rule->_priv->time_out) && (curr_time.tv_sec > rule->_priv->time_last + rule->_priv->time_out))
-    {
-      if (rule->_priv->level == 1)
-	{
-	  rule->_priv->time_last = curr_time.tv_sec;
-	  rule->_priv->count_occu = 0;
-	}
-      else
-	return FALSE;
-    }
-
   /* Match Plugin ID */
-  if ((rule->_priv->plugin_id > 0) && (alert->plugin_id > 0))
+  if (rule->_priv->plugin_id != alert->plugin_id)
+    return FALSE;
+
+  /* Match Plugin SIDs */
+  if (rule->_priv->plugin_sids)
     {
-      if (rule->_priv->plugin_id != alert->plugin_id)
+      match = FALSE;
+      list = rule->_priv->plugin_sids;
+      while (list)
+	{
+	  gint plugin_sid = GPOINTER_TO_INT (list->data);
+	  
+	  if ((!plugin_sid) || (plugin_sid == alert->plugin_sid))
+	    {
+	      match = TRUE;
+	      break;
+	    }
+	  
+	  list = list->next;
+	}
+      if (!match)
 	return FALSE;
+
     }
 
-  /* Match Plugin SID */
-  if ((rule->_priv->plugin_sid > 0) && (alert->plugin_sid > 0))
-    {
-      if (rule->_priv->plugin_sid != alert->plugin_sid)
-	return FALSE;
-    }
-
-  /* Find src_ia */
-  if ((rule->_priv->src_ias) && (alert->src_ia))
+  /* Match src_ia */
+  if (rule->_priv->src_ias)
     {
       match = FALSE;
       list = rule->_priv->src_ias;
@@ -1213,7 +1427,8 @@ sim_rule_match_by_alert (SimRule      *rule,
 	{
 	  GInetAddr *cmp_ia = (GInetAddr *) list->data;
 	  
-	  if ((gnet_inetaddr_is_reserved (cmp_ia)) || (gnet_inetaddr_noport_equal (alert->src_ia, cmp_ia)))
+	  if ((gnet_inetaddr_is_reserved (cmp_ia)) || 
+	      (gnet_inetaddr_noport_equal (alert->src_ia, cmp_ia)))
 	    {
 	      match = TRUE;
 	      break;
@@ -1224,7 +1439,7 @@ sim_rule_match_by_alert (SimRule      *rule,
       if (!match)
 	return FALSE;
     }
-
+  
   /* Find dst_ia */
   if ((rule->_priv->dst_ias) && (alert->dst_ia))
     {
@@ -1234,7 +1449,8 @@ sim_rule_match_by_alert (SimRule      *rule,
 	{
 	  GInetAddr *cmp_ia = (GInetAddr *) list->data;
 	  
-	  if ((gnet_inetaddr_is_reserved (cmp_ia)) || (gnet_inetaddr_noport_equal (alert->dst_ia, cmp_ia)))
+	  if ((gnet_inetaddr_is_reserved (cmp_ia)) || 
+	      (gnet_inetaddr_noport_equal (alert->dst_ia, cmp_ia)))
 	    {
 	      match = TRUE;
 	      break;
@@ -1255,7 +1471,7 @@ sim_rule_match_by_alert (SimRule      *rule,
 	{
 	  gint cmp_port = GPOINTER_TO_INT (list->data);
 	  
-	  if ((cmp_port == 0) || (cmp_port == alert->src_port))
+	  if ((!cmp_port) || (cmp_port == alert->src_port))
 	    {
 	      match = TRUE;
 	      break;
@@ -1267,7 +1483,7 @@ sim_rule_match_by_alert (SimRule      *rule,
 	return FALSE;
     }
 
- /* Find dst_port */
+  /* Find dst_port */
   if ((rule->_priv->dst_ports) && (alert->dst_port > 0))
     {
       match = FALSE;
@@ -1276,7 +1492,7 @@ sim_rule_match_by_alert (SimRule      *rule,
 	{
 	  gint cmp_port = GPOINTER_TO_INT (list->data);
 	  
-	  if ((cmp_port == 0) || (cmp_port == alert->dst_port))
+	  if ((!cmp_port) || (cmp_port == alert->dst_port))
 	    {
 	      match = TRUE;
 	      break;
@@ -1288,14 +1504,13 @@ sim_rule_match_by_alert (SimRule      *rule,
 	return FALSE;
     }
 
-
   /* Match Condition */
   if ((rule->_priv->condition != SIM_CONDITION_TYPE_NONE) &&
       (alert->condition != SIM_CONDITION_TYPE_NONE))
     {
       if (rule->_priv->condition != alert->condition)
 	return FALSE;
-      
+
       /* Match Value */
       if ((rule->_priv->value) && (alert->value))
 	{
@@ -1303,14 +1518,28 @@ sim_rule_match_by_alert (SimRule      *rule,
 	    return FALSE;
 	}
     }
-  
-  
-  /* Occurrences */
-  rule->_priv->count_occu++;
-  if (rule->_priv->occurrence != rule->_priv->count_occu)
-    return FALSE;
-  else
-    rule->_priv->count_occu = 0;
+
+  /* Match Occurrence */
+  if (rule->_priv->occurrence > 1)
+    {
+      if ((rule->_priv->time_out) && (!rule->_priv->time_last))
+	rule->_priv->time_last = time (NULL);
+
+      if (rule->_priv->occurrence != rule->_priv->count_occu)
+	{
+	  rule->_priv->count_occu++;
+	  return FALSE;
+	}
+      else
+	rule->_priv->count_occu = 1;
+    }
+
+  /* Not */
+  if (rule->_priv->not)
+    {
+      rule->_priv->not_invalid = TRUE;
+      return FALSE;
+    }
 
   return TRUE;
 }
@@ -1330,6 +1559,7 @@ sim_rule_set_alert_data (SimRule      *rule,
   g_return_if_fail (alert);
   g_return_if_fail (SIM_IS_ALERT (alert));
 
+  rule->_priv->plugin_sid = alert->plugin_sid;
   rule->_priv->src_ia = (alert->src_ia) ? gnet_inetaddr_clone (alert->src_ia) : NULL;
   rule->_priv->dst_ia = (alert->dst_ia) ? gnet_inetaddr_clone (alert->dst_ia) : NULL;
   rule->_priv->src_port = alert->src_port;
@@ -1352,9 +1582,10 @@ sim_rule_print (SimRule      *rule)
   g_return_if_fail (SIM_IS_RULE (rule));
 
   src_name = (rule->_priv->src_ia) ? gnet_inetaddr_get_canonical_name (rule->_priv->src_ia) : NULL;
-  dst_name = (rule->_priv->src_ia) ? gnet_inetaddr_get_canonical_name (rule->_priv->dst_ia) : NULL;
+  dst_name = (rule->_priv->dst_ia) ? gnet_inetaddr_get_canonical_name (rule->_priv->dst_ia) : NULL;
 
   g_print ("Rule: ");
+  g_print ("not=%d ", rule->_priv->not);
   g_print ("name=%s ", rule->_priv->name);
   g_print ("level=%d ", rule->_priv->level);
   g_print ("priority=%d ", rule->_priv->priority);
@@ -1362,12 +1593,12 @@ sim_rule_print (SimRule      *rule)
   g_print ("time_out=%d ", rule->_priv->time_out);
   g_print ("occurrence=%d ", rule->_priv->occurrence);
   g_print ("plugin_id=%d ", rule->_priv->plugin_id);
-  g_print ("plugin_sid=%d ", rule->_priv->plugin_sid);
-  g_print ("vars=%d ", g_list_length (rule->_priv->vars));
+  g_print ("plugin_sid=%d ", g_list_length (rule->_priv->plugin_sids));
   g_print ("src_ias=%d ", g_list_length (rule->_priv->src_ias));
   g_print ("dst_ias=%d ", g_list_length (rule->_priv->dst_ias));
   g_print ("src_ports=%d ", g_list_length (rule->_priv->src_ports));
   g_print ("dst_ports=%d ", g_list_length (rule->_priv->dst_ports));
+  g_print ("vars=%d ", g_list_length (rule->_priv->vars));
   g_print ("src_ia=%s ", src_name);
   g_print ("dst_ia=%s ", dst_name);
   g_print ("src_port=%d ", rule->_priv->src_port);

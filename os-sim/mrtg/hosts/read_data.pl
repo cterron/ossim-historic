@@ -18,17 +18,25 @@ my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::
 my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
     or die "Can't connect to DBI\n";
 
+my $compromise = 1;
+my $attack = 1;
+
 my $query = "SELECT * FROM host_qualification where host_ip = '$ip';";
 my $sth = $dbh->prepare($query);
 $sth->execute();
 if ($sth->rows > 0) {
     my $row = $sth->fetchrow_hashref;
-    my $compromise = $row->{compromise}; 
-    my $attack = $row->{attack};
+    $compromise = $row->{compromise}; 
+    $attack = $row->{attack};
     print "$compromise\n$attack\n0\n";
     print "Stats from $ip\n\n";
 } else {
-    print "0\n0\n0\nNo current stats available\n\n";
+
+if($compromise < 1){ $compromise = 1};
+if($attack < 1){ $attack = 1};
+
+    print "$compromise\n$attack\n0\n";
+    print "Stats from $ip\n\n";
 }
 
 exit 0;

@@ -96,6 +96,8 @@ void              sim_directive_set_curr_node                   (SimDirective   
 SimRule*          sim_directive_get_root_rule                   (SimDirective     *directive);
 SimRule*          sim_directive_get_curr_rule                   (SimDirective     *directive);
 
+gint              sim_directive_get_rule_level                  (SimDirective     *directive);
+
 GTime             sim_directive_get_rule_curr_time_out_max      (SimDirective     *directive);
 
 void              sim_directive_append_action                   (SimDirective     *directive,
@@ -108,9 +110,9 @@ void              sim_directive_free_actions                    (SimDirective   
 
 gint              sim_directive_get_level                       (SimDirective     *directive);
 
-gboolean          sim_directive_match_rule_root_by_alert        (SimDirective     *directive,
+gboolean          sim_directive_match_by_alert                  (SimDirective     *directive,
 								 SimAlert         *alert);
-gboolean          sim_directive_match_rule_by_alert             (SimDirective     *directive,
+gboolean          sim_directive_backlog_match_by_alert          (SimDirective     *directive,
 								 SimAlert         *alert);
 void              sim_directive_set_rule_vars                   (SimDirective     *directive,
 								 GNode            *node);
@@ -119,7 +121,8 @@ GNode*            sim_directive_get_node_branch_by_level        (SimDirective   
 								 GNode            *node,
 								 gint              level);
 
-gboolean          sim_directive_matched                         (SimDirective     *directive);
+gboolean          sim_directive_get_matched                     (SimDirective     *directive);
+gboolean          sim_directive_is_time_out                     (SimDirective     *directive);
 
 GNode*            sim_directive_node_data_clone                 (GNode            *node);
 void              sim_directive_node_data_destroy               (GNode            *node);

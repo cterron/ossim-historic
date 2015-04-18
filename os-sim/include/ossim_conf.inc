@@ -9,7 +9,7 @@ class ossim_conf {
 
     function ossim_conf() {
 
-        if (!$fd = fopen("/etc/ossim.conf", "r")) {
+        if (!$fd = fopen("/etc/ossim/framework/ossim.conf", "r")) {
             echo "Can't open config file\n";
             exit();
         }

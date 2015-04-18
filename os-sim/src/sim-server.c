@@ -314,7 +314,7 @@ sim_server_push_session_command (SimServer       *server,
       if (session_type == SIM_SESSION_TYPE_ALL ||
 	  session_type == session->type)
 	{
-	  sim_session_write (session, command); 
+	  sim_session_write (session, command);
 	}
 
       list = list->next;
@@ -331,7 +331,7 @@ sim_server_push_session_command (SimServer       *server,
 void
 sim_server_push_session_plugin_command (SimServer       *server,
 					SimSessionType   session_type,
-					SimPluginType    plugin_type,
+					gint             plugin_id,
 					SimCommand      *command)
 {
   GList *list;
@@ -349,7 +349,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
       if (session_type == SIM_SESSION_TYPE_ALL ||
 	  session_type == session->type)
 	{
-	  if (sim_session_has_plugin_type (session, plugin_type))
+	  if (sim_session_has_plugin_id (session, plugin_id))
 	    sim_session_write (session, command); 
 	}
 

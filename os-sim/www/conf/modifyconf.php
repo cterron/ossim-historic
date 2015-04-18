@@ -13,7 +13,7 @@
 <?php
 
     /* check params */
-    if ((!$_POST["recovery"]) || (!$_POST["threshold"]) ||
+    if ((!$_POST["threshold"]) ||
         (!$_POST["graph_threshold"]) || (!$_POST["bar_length_left"]) ||
         (!$_POST["bar_length_right"]))
     {

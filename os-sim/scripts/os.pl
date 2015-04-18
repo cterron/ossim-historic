@@ -38,7 +38,7 @@ my $time = localtime;
         if($os =~ /(.*)\s\(or\s(.*)\)/){
         $os = $1 . "|" . $2;
         }
-        if($os =~ /UNKNOWN/){
+        if(($os =~ /UNKNOWN/) || ($os =~ /NMAP/)){
         next;
         }
         my $query = "SELECT * FROM host_os WHERE ip = '$host';";

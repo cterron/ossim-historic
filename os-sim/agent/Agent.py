@@ -17,7 +17,7 @@ class Agent:
         self.sequence = 0
         self.my_ip = socket.gethostbyname(socket.gethostname())
 
-    def parseConfig(self):
+    def parseConfig(self, config_file):
         """parse config file with the SAX API"""
 
         # init parser and set XML Handler
@@ -26,7 +26,7 @@ class Agent:
         configParser.setContentHandler(configHandler)
 
         # let's go parse!
-        configParser.parse('config.xml')
+        configParser.parse(config_file)
 
         # store data
         self.serverIp = Config.ConfigHandler.serverIp
@@ -49,21 +49,20 @@ class Agent:
         
         self.sequence = 1
         self.conn.send('connect id="%s"\n' % (self.sequence))
-        print "Waiting for server..."
+        util.debug (__name__,  "Waiting for server...", '->', 'YELLOW')
         data = self.conn.recv(1024)
         if data == 'ok id="' + str(self.sequence) + '"\n':
-            print "Server connected\n"
+            util.debug (__name__, "Server connected\n", '<-', 'GREEN')
             return self.conn
         else:
-            print "Bad response: " + str(data)
+            util.debug (__name__, "Bad response: " + str(data), '!!', 'RED')
             return None
 
     def append_plugins(self):
         util.debug (__name__, "Apending plugins...", '=>', 'YELLOW')
-
         for key, plugin in self.plugins.iteritems():
-            self.sequence += 1
             if plugin["enable"] == 'yes':
+                self.sequence += 1
                 self.conn.send('session-append-plugin id="%d" plugin-id="%s"\n' %\
                     (self.sequence, plugin["id"]))
 

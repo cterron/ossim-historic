@@ -15,7 +15,9 @@
     if (($_POST["insert"]) &&
         (!$_POST["name"] || !$_POST["ips"] || 
          !$_POST["priority"] || !$_POST["threshold_c"] || 
-         !$_POST["threshold_a"] || !$_POST["persistence"] || !$_POST["descr"])) 
+         !$_POST["threshold_a"] || 
+         // !$_POST["persistence"] || 
+         !$_POST["nsens"] || !$_POST["descr"])) 
     {
 ?>
 
@@ -27,7 +29,7 @@
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name        = mysql_escape_string($_POST["name"]);
+    $net_name        = mysql_escape_string($_POST["name"]);
     $ips         = mysql_escape_string($_POST["ips"]);
     $priority    = mysql_escape_string($_POST["priority"]);
     $threshold_c = mysql_escape_string($_POST["threshold_c"]);
@@ -35,14 +37,21 @@
     $alert       = mysql_escape_string($_POST["alert"]);
     $persistence = mysql_escape_string($_POST["persistence"]);
     $descr       = mysql_escape_string($_POST["descr"]);
+    
+    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
+        $name = "mboxs" . $i;
+        if (mysql_escape_string($_POST[$name])) {
+            $sensors[] = mysql_escape_string($_POST[$name]);
+        }
+    }
 
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
     $db = new ossim_db();
     $conn = $db->connect();
     
-    Net::update ($conn, $name, $ips, $priority, $threshold_c, 
-                 $threshold_a, $alert, $persistence, $descr);
+    Net::update ($conn, $net_name, $ips, $priority, $threshold_c, 
+                 $threshold_a, $alert, $persistence, $sensors, $descr);
 
     $db->close($conn);
 }

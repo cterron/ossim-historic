@@ -1,2 +1,10 @@
 SUBDIRS = src \
-          pixmaps
+	agent \
+	etc \
+	db \
+	pixmaps \
+	include \
+	www \
+	mrtg \
+	scripts \
+	contrib

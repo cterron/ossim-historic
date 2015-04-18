@@ -37,6 +37,8 @@
 
 #include "sim-alert.h"
 
+#include <time.h>
+#include <math.h>
 enum 
 {
   DESTROY,
@@ -87,7 +89,7 @@ sim_alert_instance_init (SimAlert *alert)
 {
   alert->type = SIM_ALERT_TYPE_NONE;
 
-  alert->time = 0;
+  alert->time = time (NULL);
   alert->sensor = NULL;
   alert->interface = NULL;
 
@@ -201,6 +203,50 @@ sim_alert_get_type_from_str (const gchar *str)
  *
  *
  */
+SimAlert*
+sim_alert_clone (SimAlert       *alert)
+{
+  SimAlert *new_alert;
+
+  new_alert = SIM_ALERT (g_object_new (SIM_TYPE_ALERT, NULL));
+  new_alert->type = alert->type;
+
+  new_alert->time = alert->time;
+
+  (alert->sensor) ? new_alert->sensor = g_strdup (alert->sensor) : NULL;
+  (alert->interface) ? new_alert->interface = g_strdup (alert->interface) : NULL;
+
+  new_alert->plugin_id = alert->plugin_id;
+  new_alert->plugin_sid = alert->plugin_sid;
+
+  new_alert->protocol = alert->protocol;
+  (alert->src_ia) ? new_alert->src_ia = gnet_inetaddr_clone (alert->src_ia): NULL;
+  (alert->dst_ia) ? new_alert->dst_ia = gnet_inetaddr_clone (alert->dst_ia): NULL;
+  new_alert->src_port = alert->src_port ;
+  new_alert->dst_port = alert->dst_port;
+
+  new_alert->condition = alert->condition;
+  (alert->value) ? new_alert->value = g_strdup (alert->value) : NULL;
+  new_alert->interval = alert->interval;
+
+  new_alert->alarm = alert->alarm;
+  new_alert->priority = alert->priority;
+  new_alert->reliability = alert->reliability;
+  new_alert->asset_src = alert->asset_src;
+  new_alert->asset_dst = alert->asset_dst;
+  new_alert->risk_c = alert->risk_c;
+  new_alert->risk_a = alert->risk_a;
+
+  return new_alert;
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
 void
 sim_alert_print (SimAlert   *alert)
 {
@@ -229,6 +275,8 @@ sim_alert_print (SimAlert   *alert)
       strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &alert->time));
       g_print (" timestamp=\"%s\"", timestamp);
     }
+
+  g_print (" alarm=\"%s\"", (alert->alarm) ? "true" : "false");
 
   if (alert->sensor)
       g_print (" sensor=\"%s\"", alert->sensor);
@@ -269,7 +317,7 @@ sim_alert_print (SimAlert   *alert)
       g_print (" asset_dst=\"%d\"", alert->asset_dst);
   if (alert->risk_c)
       g_print (" risk_c=\"%d\"", alert->risk_c);
-  if (alert->risk_c)
+  if (alert->risk_a)
       g_print (" risk_a=\"%d\"", alert->risk_a);
 
 
@@ -287,9 +335,14 @@ sim_alert_get_ossim_insert_clause (SimAlert   *alert)
 {
   gchar    timestamp[TIMEBUF_SIZE];
   gchar   *query;
+  gint     c;
+  gint     a;
 
   g_return_val_if_fail (alert, NULL);
   g_return_val_if_fail (SIM_IS_ALERT (alert), NULL);
+
+  c = rint (alert->risk_c);
+  a = rint (alert->risk_a);
 
   strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &alert->time));
 
@@ -297,9 +350,9 @@ sim_alert_get_ossim_insert_clause (SimAlert   *alert)
 			   "(timestamp, sensor, interface, type, plugin_id, plugin_sid, " 
 			   "protocol, src_ip, dst_ip, src_port, dst_port, "
 			   "condition, value, time_interval, "
-			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a) "
+			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm) "
 			   " VALUES  ('%s', '%s', '%s', %d, %d, %d,"
-			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d)",
+			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d)",
 			   timestamp,
 			   (alert->sensor) ? alert->sensor : "",
 			   (alert->interface) ? alert->interface : "",
@@ -307,8 +360,8 @@ sim_alert_get_ossim_insert_clause (SimAlert   *alert)
 			   alert->plugin_id,
 			   alert->plugin_sid,
 			   alert->protocol,
-			   sim_inetaddr_ntohl (alert->src_ia),
-			   sim_inetaddr_ntohl (alert->dst_ia),
+			   (alert->src_ia) ? sim_inetaddr_ntohl (alert->src_ia) : -1,
+			   (alert->dst_ia) ? sim_inetaddr_ntohl (alert->dst_ia) : -1,
 			   alert->src_port,
 			   alert->dst_port,
 			   alert->condition,
@@ -318,8 +371,8 @@ sim_alert_get_ossim_insert_clause (SimAlert   *alert)
 			   alert->reliability,
 			   alert->asset_src,
 			   alert->asset_dst,
-			   alert->risk_c,
-			   alert->risk_a);
+			   c, a,
+			   alert->alarm);
 
   return query;
 }

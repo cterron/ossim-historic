@@ -190,6 +190,7 @@ sim_container_new (SimConfig  *config)
   database = sim_database_new (ds);
 
   container = SIM_CONTAINER (g_object_new (SIM_TYPE_CONTAINER, NULL));
+  sim_container_db_delete_backlogs_ul (container, database);
   sim_container_db_load_categories (container, database);
   sim_container_db_load_classifications (container, database);
   sim_container_db_load_plugins (container, database);
@@ -202,13 +203,33 @@ sim_container_new (SimConfig  *config)
   sim_container_db_load_net_levels (container, database);
 
   if (config->directive.filename)
-    sim_container_load_directives_from_file (container, config->directive.filename);
+    sim_container_load_directives_from_file (container, database, config->directive.filename);
   else
-    sim_container_load_directives_from_file (container, SIM_XML_DIRECTIVE_FILE);
+    sim_container_load_directives_from_file (container, database, SIM_XML_DIRECTIVE_FILE);
 
   g_object_unref (database);
 
   return container;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_delete_backlogs_ul (SimContainer  *container,
+				     SimDatabase   *database)
+{
+  gchar         *query = "DELETE FROM backlog WHERE rule_level <= 1 AND matched = 0";
+
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  
+  sim_database_execute_no_query (database, query);
 }
 
 /*
@@ -227,10 +248,10 @@ sim_container_db_get_recovery_ul (SimContainer  *container,
   gint           row;
   gint           recovery = 1;
 
-  g_return_if_fail (container != NULL);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database != NULL);
-  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
   
   dm = sim_database_execute_single_command (database, query);
   if (dm)
@@ -264,10 +285,10 @@ sim_container_db_get_recovery (SimContainer  *container,
 {
   gint   recovery;
 
-  g_return_if_fail (container != NULL);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database != NULL);
-  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
 
   G_LOCK (s_mutex_config);
   recovery = sim_container_db_get_recovery_ul (container, database);
@@ -275,6 +296,147 @@ sim_container_db_get_recovery (SimContainer  *container,
 
   return recovery;
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_container_db_get_threshold_ul (SimContainer  *container,
+				  SimDatabase   *database)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query = "SELECT threshold FROM conf";
+  gint           row;
+  gint           threshold = 1;
+
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+  
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  /* Threshold */
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  threshold = gda_value_get_integer (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("THRESHOLD DATA MODEL ERROR");
+    }
+
+  return threshold;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_container_db_get_threshold (SimContainer  *container,
+				SimDatabase   *database)
+{
+  gint   threshold;
+
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+
+  G_LOCK (s_mutex_config);
+  threshold = sim_container_db_get_threshold_ul (container, database);
+  G_UNLOCK (s_mutex_config);
+
+  return threshold;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_container_db_get_max_plugin_sid_ul (SimContainer  *container,
+					SimDatabase   *database,
+					gint           plugin_id)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gint           row;
+  gint           max_sid = 0;
+
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+  g_return_val_if_fail (plugin_id > 0, 0);  
+
+  query = g_strdup_printf ("SELECT max(sid) FROM plugin_sid WHERE plugin_id = %d", plugin_id);
+
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+    {
+      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+	{
+	  /* Max Sid */
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  if (!gda_value_is_null (value))
+	    max_sid = gda_value_get_integer (value);
+	}
+      
+      g_object_unref(dm);
+    }
+  else
+    {
+      g_message ("MAX PLUGIN SID DATA MODEL ERROR");
+    }
+
+
+  g_free (query);
+
+  return max_sid;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_container_db_get_max_plugin_sid (SimContainer  *container,
+				     SimDatabase   *database,
+				     gint           plugin_id)
+{
+  gint   max_sid;
+
+  g_return_val_if_fail (container != NULL, 0);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+  g_return_val_if_fail (plugin_id > 0, 0);  
+
+  G_LOCK (s_mutex_plugin_sids);
+  max_sid = sim_container_db_get_max_plugin_sid_ul (container, database, plugin_id);
+  G_UNLOCK (s_mutex_plugin_sids);
+
+  return max_sid;
+}
+
 
 /*
  *
@@ -1351,7 +1513,7 @@ sim_container_db_load_plugin_sids_ul (SimContainer  *container,
   SimPluginSid  *plugin_sid;
   GdaDataModel  *dm;
   gint           row;
-  gchar         *query = "SELECT plugin_id, sid, category_id, class_id, name FROM plugin_sid";
+  gchar         *query = "SELECT plugin_id, sid, category_id, class_id, reliability, priority, name FROM plugin_sid";
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -1406,7 +1568,7 @@ sim_container_remove_plugin_sid_ul (SimContainer  *container,
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (plugin_sid);
-  g_return_if_fail (SIM_IS_PLUGIN (plugin_sid));
+  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
 
   container->_priv->plugin_sids = g_list_remove (container->_priv->plugin_sids, plugin_sid);
 }
@@ -1520,6 +1682,47 @@ sim_container_get_plugin_sid_by_pky_ul (SimContainer  *container,
  *
  *
  */
+SimPluginSid*
+sim_container_get_plugin_sid_by_name_ul (SimContainer  *container,
+					 gint           plugin_id,
+					 const gchar   *name)
+{
+  SimPluginSid   *plugin_sid;
+  GList     *list;
+  gboolean   found = FALSE;
+
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (plugin_id > 0, NULL);
+  g_return_val_if_fail (name, NULL);
+
+  list = container->_priv->plugin_sids;
+  while (list)
+    {
+      plugin_sid = (SimPluginSid *) list->data;
+
+      if ((sim_plugin_sid_get_plugin_id (plugin_sid) == plugin_id) && 
+	  (!strcmp (name, sim_plugin_sid_get_name (plugin_sid))))
+	{
+	  found = TRUE;
+	  break;
+	}
+
+      list = list->next;
+    }
+
+  if (!found)
+    return NULL;
+
+  return plugin_sid;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
 void
 sim_container_db_load_plugin_sids (SimContainer  *container,
 				   SimDatabase   *database)
@@ -1547,7 +1750,7 @@ sim_container_append_plugin_sid (SimContainer  *container,
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (plugin_sid);
-  g_return_if_fail (SIM_IS_PLUGIN (plugin_sid));
+  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
 
   G_LOCK (s_mutex_plugin_sids);
   sim_container_append_plugin_sid_ul (container, plugin_sid);
@@ -1567,7 +1770,7 @@ sim_container_remove_plugin_sid (SimContainer  *container,
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (plugin_sid);
-  g_return_if_fail (SIM_IS_PLUGIN (plugin_sid));
+  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
 
   G_LOCK (s_mutex_plugin_sids);
   sim_container_remove_plugin_sid_ul (container, plugin_sid);
@@ -1651,6 +1854,31 @@ sim_container_get_plugin_sid_by_pky (SimContainer  *container,
 
   G_LOCK (s_mutex_plugin_sids);
   plugin_sid = sim_container_get_plugin_sid_by_pky_ul (container, plugin_id, sid);
+  G_UNLOCK (s_mutex_plugin_sids);
+
+  return plugin_sid;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+SimPluginSid*
+sim_container_get_plugin_sid_by_name (SimContainer  *container,
+				      gint           plugin_id,
+				      const gchar   *name)
+{
+  SimPluginSid   *plugin_sid;
+
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (plugin_id > 0, NULL);
+  g_return_val_if_fail (name, NULL);
+
+  G_LOCK (s_mutex_plugin_sids);
+  plugin_sid = sim_container_get_plugin_sid_by_name_ul (container, plugin_id, name);
   G_UNLOCK (s_mutex_plugin_sids);
 
   return plugin_sid;
@@ -2839,6 +3067,39 @@ sim_container_db_load_policies_ul (SimContainer  *container,
 	    }
 	  g_free (query2);
 
+	  /* Ports */
+	  query2 = g_strdup_printf ("SELECT port_number, protocol_name  FROM policy_port_reference, port_group_reference WHERE policy_port_reference.port_group_name = port_group_reference.port_group_name AND policy_port_reference.policy_id = %d",
+				    sim_policy_get_id (policy));
+	  dm2 = sim_database_execute_single_command (database, query2);
+	  if (dm2)
+	    {
+	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
+		{
+		  SimPortProtocol  *pp;
+		  SimProtocolType   proto_type;
+		  gint              port_num;
+		  gchar            *proto_name;
+
+		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
+		  port_num = gda_value_get_integer (value);
+		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 1, row2);
+		  proto_name = gda_value_stringify (value);
+
+		  proto_type = sim_protocol_get_type_from_str (proto_name);
+
+		  pp = sim_port_protocol_new (port_num, proto_type);
+
+		  sim_policy_append_port (policy, pp);
+		  g_free (proto_name);
+		}
+	      g_object_unref(dm2);
+	    }
+	  else
+	    {
+	      g_message ("POLICY CATEGORY REFERENCES DATA MODEL ERROR");
+	    }
+	  g_free (query2);
+
 	  /* Categories */
 	  query2 = g_strdup_printf ("SELECT sig_name FROM policy_sig_reference, signature_group_reference WHERE policy_sig_reference.sig_group_name = signature_group_reference.sig_group_name AND policy_sig_reference.policy_id = %d",
 				    sim_policy_get_id (policy));
@@ -3168,9 +3429,14 @@ sim_container_get_policy_match (SimContainer     *container,
  */
 void
 sim_container_load_directives_from_file_ul (SimContainer  *container,
+					    SimDatabase   *db_ossim,
 					    const gchar   *filename)
 {
   SimXmlDirective *xml_directive;
+  GList           *list = NULL;
+  gint             max_sid = 0;
+  SimPluginSid    *plugin_sid;
+  gchar           *query;
   
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -3178,6 +3444,40 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
 
   xml_directive = sim_xml_directive_new_from_file (container, filename);
   container->_priv->directives = sim_xml_directive_get_directives (xml_directive);
+
+  max_sid = sim_container_db_get_max_plugin_sid (container, db_ossim,
+						 SIM_PLUGIN_ID_DIRECTIVE);
+
+  list = container->_priv->directives;
+  while (list)
+    {
+      SimDirective *directive = (SimDirective *) list->data;
+
+      plugin_sid = sim_container_get_plugin_sid_by_name (container, 
+							 SIM_PLUGIN_ID_DIRECTIVE,
+							 sim_directive_get_name (directive));
+
+      if (!plugin_sid)
+	{
+	  plugin_sid = sim_plugin_sid_new_from_data (SIM_PLUGIN_ID_DIRECTIVE,
+						     ++max_sid,
+						     0,
+						     0,
+						     1,
+						     1,
+						     sim_directive_get_name (directive));
+	  sim_container_append_plugin_sid (container, plugin_sid);
+	  
+	  query = sim_plugin_sid_get_insert_clause (plugin_sid);
+	  g_message (query);
+	  sim_database_execute_no_query (db_ossim, query); 
+	  
+	  g_free (query);
+	}
+
+      list = list->next;
+    }
+
   g_object_unref (xml_directive);
 }
 
@@ -3287,6 +3587,7 @@ sim_container_free_directives_ul (SimContainer  *container)
  */
 void
 sim_container_load_directives_from_file (SimContainer  *container,
+					 SimDatabase   *db_ossim,
 					 const gchar   *filename)
 {
   g_return_if_fail (container);
@@ -3294,7 +3595,7 @@ sim_container_load_directives_from_file (SimContainer  *container,
   g_return_if_fail (filename);
 
   G_LOCK (s_mutex_directives);
-  sim_container_load_directives_from_file_ul (container, filename);
+  sim_container_load_directives_from_file_ul (container, db_ossim, filename);
   G_UNLOCK (s_mutex_directives);
 }
 
@@ -3660,7 +3961,7 @@ sim_container_set_host_levels_recovery_ul (SimContainer  *container,
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   list = container->_priv->host_levels;
   while (list)
@@ -3922,7 +4223,7 @@ sim_container_set_host_levels_recovery (SimContainer  *container,
 {
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   G_LOCK (s_mutex_host_levels);
   sim_container_set_host_levels_recovery_ul (container, database, recovery);
@@ -4194,7 +4495,7 @@ sim_container_set_net_levels_recovery_ul (SimContainer  *container,
 
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   list = container->_priv->net_levels;
   while (list)
@@ -4459,7 +4760,7 @@ sim_container_set_net_levels_recovery (SimContainer  *container,
 {
   g_return_if_fail (container != NULL);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   G_LOCK (s_mutex_net_levels);
   sim_container_set_net_levels_recovery_ul (container, database, recovery);
@@ -4512,6 +4813,7 @@ sim_container_db_update_backlog_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
 
   query = sim_directive_backlog_get_update_clause (backlog);
+  g_message (query);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }

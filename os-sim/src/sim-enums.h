@@ -83,6 +83,8 @@ extern "C" {
 #define SIM_DS_OSSIM                "ossimDS"
 #define SIM_DS_SNORT                "snortDS"
 
+#define SIM_PLUGIN_ID_DIRECTIVE     1505
+
 typedef enum
 {
   SIM_CONDITION_TYPE_NONE,

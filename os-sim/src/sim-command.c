@@ -436,7 +436,6 @@ sim_command_new_from_rule (SimRule  *rule)
   GString           *str = NULL;
   GList             *list = NULL;
   gint               plugin_id;
-  gint               plugin_sid;
   gint               interval;
   gboolean           absolute;
   SimConditionType   condition;
@@ -459,9 +458,10 @@ sim_command_new_from_rule (SimRule  *rule)
     }
 
   /* Plugin SID */
-  plugin_sid = sim_rule_get_plugin_sid (rule);
-  if (plugin_sid > 0)
+  list = sim_rule_get_plugin_sids (rule);
+  if (list)
     {
+      gint plugin_sid = GPOINTER_TO_INT (list->data);
       g_string_append_printf (str, "plugin_sid=\"%d\" ", plugin_sid);
     }
 
@@ -1479,9 +1479,7 @@ sim_command_get_alert (SimCommand     *command)
     alert->plugin_id = command->data.alert.plugin_id;
   if (command->data.alert.plugin_sid)
     alert->plugin_sid = command->data.alert.plugin_sid;
-  
-  if (command->data.alert.priority)
-    alert->priority = command->data.alert.priority;
+
   if (command->data.alert.protocol)
     alert->protocol = sim_protocol_get_type_from_str (command->data.alert.protocol);
   
@@ -1500,7 +1498,17 @@ sim_command_get_alert (SimCommand     *command)
     alert->value = g_strdup (command->data.alert.value);
   if (command->data.alert.interval)
     alert->interval = command->data.alert.interval;
-  
+
+  if (command->data.alert.priority)
+    {
+      if (command->data.alert.priority < 0)
+	alert->priority = 0;
+      else if (command->data.alert.priority > 5)
+	alert->priority = 5;
+      else
+	alert->priority = command->data.alert.priority;
+    }
+
   return alert;
 }
 

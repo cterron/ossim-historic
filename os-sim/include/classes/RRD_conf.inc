@@ -160,7 +160,7 @@ class RRD_conf {
                       $tot_contacted_sent_peers, $tot_contacted_rcvd_peers, 
                       $ip_dns_sent_bytes, $ip_dns_rcvd_bytes, 
                       $ip_nbios_ip_sent_bytes, $ip_nbios_ip_rcvd_bytes,
-                      $ip_mail_rcvd_bytes, $ip_mail_rcvd_bytes, 
+                      $ip_mail_sent_bytes, $ip_mail_rcvd_bytes, 
                       $mrtg_a, $mrtg_c)
     {
         $query = "UPDATE rrd_conf SET 
@@ -172,7 +172,7 @@ class RRD_conf {
                       ip_dns_rcvd_bytes = '$ip_dns_rcvd_bytes', 
                       ip_nbios_ip_sent_bytes = '$ip_nbios_ip_sent_bytes', 
                       ip_nbios_ip_rcvd_bytes = '$ip_nbios_ip_rcvd_bytes',
-                      ip_mail_rcvd_bytes = '$ip_mail_sent_bytes', 
+                      ip_mail_sent_bytes = '$ip_mail_sent_bytes', 
                       ip_mail_rcvd_bytes = '$ip_mail_rcvd_bytes', 
                       mrtg_a = '$mrtg_a', mrtg_c = '$mrtg_c'  
                   WHERE ip = '$ip';";

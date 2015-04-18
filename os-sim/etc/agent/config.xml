@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+
+<config>
+
+    <!-- Ip and port number where the ossim server is listening -->
+    <serverip>localhost</serverip>
+    <serverport>40001</serverport>
+
+    <plugins>
+
+        <!-- 
+             snort & spade detector
+             location must point to a fast format log 
+             enable snort fast logging adding this line to the snort.conf:
+               output alert_fast: fast.log 
+        -->
+        <plugin id="1001" name="snort" type="detector" enable="yes">
+            <path>/usr/bin/snort</path>
+            <source>fast</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/snort/fast.log</location>
+        </plugin>
+        
+        <!-- 
+             Apache detector 
+             location must point to an apache access log
+             (for example: /var/log/apache/access.log)
+        -->
+        <plugin id="1501" name="apache" type="detector" enable="yes">
+            <path></path>
+            <source>common</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/apache/access.log</location>
+        </plugin>
+
+        <!-- IIS detector -->
+        <plugin id="1502" name="iis" type="detector" enable="yes">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+
+        <!-- iptables detector -->
+        <plugin id="1503" name="iptables" type="detector" enable="yes">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+        
+        <!-- 
+             FireWall-1 detector 
+             source = syslog | opsec
+        -->
+        <plugin id="1504" name="fw-1" type="detector" enable="yes">
+            <path></path>
+            <source>syslog</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/messages</location>
+        </plugin>
+ 
+        <!-- Real Secure detector -->
+        <plugin id="1506" name="realsecure" type="detector" enable="yes">
+            <path></path>
+            <source>snmp</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/realsecure.log</location>
+        </plugin>
+
+        <!-- RRD threahold detector -->
+        <plugin id="1507" name="rrd_threshold" type="detector" enable="yes">
+            <path></path>
+            <source>rrd_plugin</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/rrd_plugin.log</location>
+        </plugin>
+        
+        <!-- RRD anomaly detector -->
+        <plugin id="1508" name="rrd_anomaly" type="detector" enable="yes">
+            <path></path>
+            <source>rrd_plugin</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>/var/log/rrd_plugin.log</location>
+        </plugin>
+
+        <!-- C & A detector -->
+        <plugin id="1509" name="ca" type="detector" enable="yes">
+            <path></path>
+            <source>database</source>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <location>mysql:localhost:ossim:youruser:yourpass</location>
+            <frequency>300</frequency>
+        </plugin>
+
+        <!-- 
+             ntop monitor 
+             location must point to the ip and port where ntop is listening
+             (for example: 127.0.0.1:3000)
+             frequency: if server make a request, get ntop info every N seconds
+        -->
+        <plugin id="2005" name="ntop" type="monitor" enable="yes">
+            <path></path>
+            <source>socket</source>
+            <location>127.0.0.1:3000</location>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <frequency>20</frequency>
+        </plugin>
+        
+        <!--
+            C & A monitor
+            location must be: database:host:db:user:pass 
+        -->
+        <plugin id="2001" name="ca" type="monitor" enable="yes">
+            <path></path>
+            <source>database</source>
+            <location>mysql:host:database:user:password</location>
+            <interface>eth0</interface>
+            <sensor>127.0.0.1</sensor>
+            <frequency>20</frequency>
+        </plugin>
+
+    </plugins>
+</config>
+

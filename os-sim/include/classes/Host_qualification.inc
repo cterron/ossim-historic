@@ -35,12 +35,47 @@ class Host_qualification {
             print $conn->ErrorMsg();
         } else {
             if (!$rs->EOF)
-                return $rs->fields["attack"];
+                return $rs->fields["compromise"];
             else {
                 /* there is no compromise level for this host */
                 return 0;
             }
         }
+    }
+
+    function __get_global($conn, $type)
+    {
+        if (($type != 'compromise') and ($type != 'attack'))
+            return -1;
+
+        $query = "SELECT sum($type) FROM host_qualification;";
+        
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            if (!$rs->EOF) {
+
+                if (NULL == ($result = $rs->fields["sum($type)"])) {
+                
+                    /* no hosts -> sum == null */
+                    return 0;
+                }
+                return $result;                
+
+            } else {
+                return 0;
+            }
+        }
+    }
+    
+    function get_global_compromise($conn) 
+    {
+        return Host_qualification::__get_global($conn, "compromise");
+    }
+
+    function get_global_attack($conn) 
+    {
+        return Host_qualification::__get_global($conn, "attack");
     }
 
 
@@ -60,8 +95,8 @@ class Host_qualification {
         return $list;
     }
 
-    function insert($conn, $host_ip, $compromise, $attack)
-        {
+    function insert($conn, $host_ip, $compromise, $attack) 
+    {
         $compromise = intval($compromise);
         $attack = intval($attack);
 

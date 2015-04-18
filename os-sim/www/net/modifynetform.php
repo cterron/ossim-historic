@@ -13,6 +13,8 @@
 <?php
     require_once 'classes/Net.inc';
     require_once 'ossim_db.inc';
+    require_once 'classes/Sensor.inc';
+    require_once 'classes/Net_sensor_reference.inc';
     $db = new ossim_db();
     $conn = $db->connect();
 
@@ -25,7 +27,6 @@
         $net = $net_list[0];
     }
 
-    $db->close($conn);
 ?>
 
 <form method="post" action="modifynet.php">
@@ -67,21 +68,6 @@
         <option
         <?php if ($net->get_priority() == 5) echo " SELECTED "; ?>
           value="5">5</option>
-        <option
-        <?php if ($net->get_priority() == 6) echo " SELECTED "; ?>
-          value="6">6</option>
-        <option
-        <?php if ($net->get_priority() == 7) echo " SELECTED "; ?>
-          value="7">7</option>
-        <option
-        <?php if ($net->get_priority() == 8) echo " SELECTED "; ?>
-          value="8">8</option>
-        <option
-        <?php if ($net->get_priority() == 9) echo " SELECTED "; ?>
-          value="9">9</option>
-        <option
-        <?php if ($net->get_priority() == 10) echo " SELECTED "; ?>
-          value="10">10</option>
       </select>
     </td>
   </tr>
@@ -97,13 +83,14 @@
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $net->get_threshold_a(); ?>"></td>
   </tr>
+<!--
     <tr>
     <th>Alert</th>
     <td class="left">
       <select name="alert">
-        <option <?php if ($net->get_alert() == 1) echo " SELECTED "; ?>
+        <option <?php //if ($net->get_alert() == 1) echo " SELECTED "; ?>
             value="1">Yes</option>
-        <option <?php if ($net->get_alert() == 0) echo " SELECTED "; ?>
+        <option <?php //if ($net->get_alert() == 0) echo " SELECTED "; ?>
             value="0">No</option>
       </select>
     </td>
@@ -112,9 +99,55 @@
     <th>Persistence</th>
     <td class="left">
       <input type="text" name="persistence" size="3"
-             value="<?php echo $net->get_persistence(); ?>">min.
+             value="<?php //echo $net->get_persistence(); ?>">min.
     </td>
   </tr>
+-->
+
+  <tr>
+    <th>Sensors<br/>
+        <font size="-2">
+          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+        </font><br/>
+    </th> 
+    <td class="left">
+<?php
+                                                                                
+    /* ===== sensors ==== */
+    $i = 1;
+    if ($sensor_list = Sensor::get_list($conn)) {
+        foreach($sensor_list as $sensor) {
+            $sensor_name = $sensor->get_name();
+            $sensor_ip =   $sensor->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "nsens"; ?>"
+            value="<?php echo count($sensor_list); ?>">
+<?php
+            }
+            $name = "mboxs" . $i;
+?>
+        <input type="checkbox"
+<?php
+            if (Net_sensor_reference::in_net_sensor_reference
+                                       ($conn, $net->get_name(), $sensor_name))
+            {
+                echo " CHECKED ";
+            }
+?>
+            name="<?php echo $name;?>"
+            value="<?php echo $sensor_name; ?>">
+            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+?>
+    </td>
+  </tr>
+
+
   <tr>
     <th>Description</th>
     <td class="left">
@@ -130,6 +163,9 @@
   </tr>
 </table>
 </form>
+<?php
+    $db->close($conn);
+?>
 
 </body>
 </html>

@@ -90,8 +90,8 @@ struct _SimAlert {
   gint               reliability;
   gint               asset_src;
   gint               asset_dst;
-  gint               risk_c;
-  gint               risk_a;
+  gdouble            risk_c;
+  gdouble            risk_a;
 };
 
 struct _SimAlertClass {
@@ -101,6 +101,9 @@ struct _SimAlertClass {
 GType             sim_alert_get_type                        (void);
 SimAlert*         sim_alert_new                             (void);
 SimAlert*         sim_alert_new_from_type                   (SimAlertType    type);
+
+SimAlert*         sim_alert_clone                           (SimAlert       *alert);
+
 
 gchar*            sim_alert_get_ossim_insert_clause         (SimAlert       *alert);
 

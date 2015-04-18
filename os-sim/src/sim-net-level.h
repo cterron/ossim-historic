@@ -75,17 +75,17 @@ gchar*            sim_net_level_get_name                        (SimNetLevel   *
 void              sim_net_level_set_name                        (SimNetLevel   *net_level,
 								 const gchar   *name);
 
-gint              sim_net_level_get_c                           (SimNetLevel   *net_level);
+gdouble           sim_net_level_get_c                           (SimNetLevel   *net_level);
 void              sim_net_level_set_c                           (SimNetLevel   *net_level,
-								 gint           c);
+								 gdouble        c);
 void              sim_net_level_plus_c                          (SimNetLevel   *net_level,
-								 gint           c);
+								 gdouble        c);
 
-gint              sim_net_level_get_a                           (SimNetLevel   *net_level);
+gdouble           sim_net_level_get_a                           (SimNetLevel   *net_level);
 void              sim_net_level_set_a                           (SimNetLevel   *net_level,
-								 gint           a);
+								 gdouble        a);
 void              sim_net_level_plus_a                          (SimNetLevel   *net_level,
-								 gint           a);
+								 gdouble        a);
 
 void              sim_net_level_set_recovery                    (SimNetLevel   *net_level,
 								 gint           recovery);

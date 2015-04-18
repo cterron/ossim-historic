@@ -365,7 +365,7 @@
                       $tot_contacted_sent_peers, $tot_contacted_rcvd_peers, 
                       $ip_dns_sent_bytes, $ip_dns_rcvd_bytes, 
                       $ip_nbios_ip_sent_bytes, $ip_nbios_ip_rcvd_bytes,
-                      $ip_mail_rcvd_bytes, $ip_mail_rcvd_bytes, 
+                      $ip_mail_sent_bytes, $ip_mail_rcvd_bytes, 
                       $mrtg_a, $mrtg_c);
     }
 

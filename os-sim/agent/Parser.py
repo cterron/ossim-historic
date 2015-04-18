@@ -1,6 +1,8 @@
 import sys
 import threading
 
+import util
+
 class Parser(threading.Thread):
 
     def __init__(self, agent, plugin):
@@ -21,11 +23,6 @@ class Parser(threading.Thread):
             snort = ParserSnort(self.agent, self.plugin)
             snort.process()
             
-        elif self.plugin["id"] == '1504':
-            from ParserFW1 import ParserFW1
-            fw1 = ParserFW1(self.agent, self.plugin)
-            fw1.process()
-            
         elif self.plugin["id"] == '1501':
             from ParserApache import ParserApache
             apache = ParserApache(self.agent, self.plugin)
@@ -41,8 +38,30 @@ class Parser(threading.Thread):
             iptables = ParserIptables(self.agent, self.plugin)
             iptables.process()
 
+        elif self.plugin["id"] == '1504':
+            from ParserFW1 import ParserFW1
+            fw1 = ParserFW1(self.agent, self.plugin)
+            fw1.process()
+            
+        elif self.plugin["id"] == '1506':
+            from ParserRealSecure import ParserRealSecure
+            realSecure = ParserRealSecure(self.agent, self.plugin)
+            realSecure.process()
+            
+        elif self.plugin["id"] in ('1507', '1508'):
+            from ParserRRD import ParserRRD
+            rrd = ParserRRD(self.agent, self.plugin)
+            rrd.process()
+            
+        elif self.plugin["id"] == '1509':
+            from ParserCA import ParserCA
+            ca = ParserCA(self.agent, self.plugin)
+            ca.process()
+            
         else:
-            print "Plugin " + self.plugin["name"] + " is not implemented..."
+            util.debug (__name__, 
+                        "Plugin " + self.plugin["name"] + " is not implemented..."
+                        '!!', 'RED')
             sys.exit()
 
 

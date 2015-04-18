@@ -1,26 +1,32 @@
 import string
 
-def normalizeWhitespace(text):
-    "Remove redundant whitespace from a string"
-    return string.join(string.split(text), ' ')
-
+CONFIG = '/etc/ossim/agent/config.xml'
+VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.8.1 (2004 Jan 27)'
+VERBOSE = True
 
 def debug(module, message, mark = "", color = ""):
    
-    msg = ""
+    if VERBOSE:
    
-    if color:
-        if color == 'RED':      msg += "\033[01;31m"
-        elif color == 'GREEN':  msg += "\033[01;32m"
-        elif color == 'YELLOW': msg += "\033[01;33m"
-        elif color == 'BLUE':   msg += "\033[01;34m"
-        elif color == 'PURPLE': msg += "\033[01;35m"
-        elif color == 'CYAN':   msg += "\033[01;36m"
+        msg = ""
+       
+        if color:
+            if color == 'RED':      msg += "\033[01;31m"
+            elif color == 'GREEN':  msg += "\033[01;32m"
+            elif color == 'YELLOW': msg += "\033[01;33m"
+            elif color == 'BLUE':   msg += "\033[01;34m"
+            elif color == 'PURPLE': msg += "\033[01;35m"
+            elif color == 'CYAN':   msg += "\033[01;36m"
 
-    if mark:
-        msg += " (%s) \033[00m" % (mark)
+        if mark:
+            msg += " (%s) \033[00m" % (mark)
 
-    # print debug message
-    msg += " %s:\t%s" % (module, message)
-    print msg
+        # print debug message
+        msg += " %s:\t%s" % (module, message)
+        print msg
+
+
+def normalizeWhitespace(text):
+    "Remove redundant whitespace from a string"
+    return string.join(string.split(text), ' ')
 

@@ -9,7 +9,7 @@
                                                                                 
   <h1>OSSIM Framework</h1>
                                                                                 
-  <h2>Rule editor</h2>
+  <h2>Rule viewer</h2>
 
 <?php
     require_once ('ossim_conf.inc');
@@ -23,10 +23,15 @@
 <?php
     $files = getDirFiles($snort_rules_path);
     foreach ($files as $file) {
+
+        /* only show .rules files */
+        $f = split ("\.", $file);
+        if ($f[1] == 'rules') {
 ?>
-    <a href="rule.php?name=<?php echo $file; ?>"><?php echo $file; ?></a>
+    <a href="rule.php?name=<?php echo $file; ?>"><?php echo $f[0]; ?></a>
     <br/>
 <?php
+        }
     }
 ?>
   </p>

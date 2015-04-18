@@ -29,7 +29,7 @@
 +       argv[argc++] = buf3;
 +       snprintf(buf4,sizeof(buf4), "DEF:fail=%s:counter:FAILURES", path);
 +       argv[argc++] = buf4;
-+       argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
++       argv[argc++] = "TICK:fail#ffffa0:1.0:Anomaly";
 +       argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
 +       argv[argc++] = "CDEF:lower=pred,dev,2,*,-";
 +       argv[argc++] = "LINE1:upper#ff0000:Upper";
@@ -67,7 +67,7 @@
       }
 + 
 +     /* Integramos Anomalias */
-+     snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20");
++     snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:%.1f:%.4f:20", 0.1, 0.0035);
 +     argv[argc++] = tempStr;
   
       if (shownCreate == 0) {

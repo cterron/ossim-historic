@@ -31,7 +31,10 @@
 
 [ <a href="<?php echo "$acid_link/acid_stat_ipaddr.php?ip=$ip&netmask=32"?>"
      target="main">Alerts</a> ] 
-[ <a href="<?php echo "$mrtg_link/host_qualification/$ip.html" ?>"
+[ <a href="<?php 
+//        echo "$mrtg_link/host_qualification/$ip.html" 
+        echo "../control_panel/show_image.php?range=day&ip=$ip&what=compromise&start=N-1D&type=host&zoom=1"
+?>"
      target="main">History</a> ] 
 [ <a href="<?php echo ossim_db::get_sensor_link($conn, $ip) . "/$ip" ?>.html" 
      target="main">Monitor</a> ]

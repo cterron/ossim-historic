@@ -51,9 +51,11 @@ struct _SimXmlDirectivePrivate {
 
 #define PROPERTY_ID             "id"
 #define PROPERTY_NAME           "name"
+#define PROPERTY_NOT            "not"
 #define PROPERTY_TYPE           "type"
 #define PROPERTY_PRIORITY       "priority"
 #define PROPERTY_RELIABILITY    "reliability"
+#define PROPERTY_REL_ABS        "rel_abs"
 #define PROPERTY_CONDITION      "condition"
 #define PROPERTY_VALUE          "value"
 #define PROPERTY_INTERVAL       "interval"
@@ -64,8 +66,8 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_DST_IP         "to"
 #define PROPERTY_SRC_PORT       "port_from"
 #define PROPERTY_DST_PORT       "port_to"
-#define PROPERTY_PLUGIN         "plugin_id"
-#define PROPERTY_TPLUGIN        "plugin_sid"
+#define PROPERTY_PLUGIN_ID      "plugin_id"
+#define PROPERTY_PLUGIN_SID     "plugin_sid"
 
 static void sim_xml_directive_class_init (SimXmlDirectiveClass *klass);
 static void sim_xml_directive_init       (SimXmlDirective *xmldirect, SimXmlDirectiveClass *klass);
@@ -355,6 +357,8 @@ sim_xml_directive_new_directive_from_node (SimXmlDirective  *xmldirect,
   xmlNodePtr     children;
   xmlNodePtr     actions;
   gchar         *name;
+  gchar         *value = NULL;
+  gint           priority;
   gint           id;
 
   g_return_val_if_fail (xmldirect != NULL, NULL);
@@ -368,11 +372,18 @@ sim_xml_directive_new_directive_from_node (SimXmlDirective  *xmldirect,
     }
 
   id = atoi (xmlGetProp (node, PROPERTY_ID));
-  name = g_strdup (xmlGetProp (node, PROPERTY_NAME));
+  name = g_strdup_printf ("directive_alert: %s", xmlGetProp (node, PROPERTY_NAME));
+
+  if ((value = xmlGetProp (node, PROPERTY_PRIORITY)))
+    {
+      priority= strtol(value, (char **) NULL, 10);
+      xmlFree(value);
+    } 
 
   directive = sim_directive_new ();
   sim_directive_set_id (directive, id);
   sim_directive_set_name (directive, name);
+  sim_directive_set_priority (directive, priority);
 
   children = node->xmlChildrenNode;
   while (children) {
@@ -382,22 +393,22 @@ sim_xml_directive_new_directive_from_node (SimXmlDirective  *xmldirect,
 	rule_root = sim_xml_directive_new_rule_from_node (xmldirect, children, NULL, 1);
       }
     
-    if (!strcmp (children->name, OBJECT_ACTIONS))
-      {
-	actions = children->children;
-	while (actions)
-	  {
-	    action = sim_xml_directive_new_action_from_node (xmldirect, actions);
-
-	    sim_directive_append_action (directive, action);
-	    
-	    actions = actions->next;;
-	  }
-      }
-
     children = children->next;
   }
 
+  /* The time out of the first rule is set to directive time out 
+   * if the rule have occurence > 1, otherwise is set to 0.
+   */
+  if (rule_root)
+    {
+      SimRule *rule = (SimRule *) rule_root->data;
+      gint time_out = sim_rule_get_time_out (rule);
+      gint occurrence = sim_rule_get_occurrence (rule);
+      if (occurrence > 1)
+	sim_directive_set_time_out (directive, time_out);
+      else
+	sim_directive_set_time_out (directive, 0);
+    }
   sim_directive_set_root_node (directive, rule_root);
   
   xmldirect->_priv->directives = g_list_append (xmldirect->_priv->directives, directive);
@@ -440,14 +451,48 @@ sim_xml_directive_new_action_from_node (SimXmlDirective *xmldirect,
  *
  */
 static void
+sim_xml_directive_set_rule_plugin_sids (SimXmlDirective  *xmldirect,
+					SimRule          *rule,
+					gchar            *value)
+{
+  gchar     **values;
+  gchar     **level;
+  gint        i;
+
+  g_return_if_fail (xmldirect != NULL);
+  g_return_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect));
+  g_return_if_fail (rule != NULL);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (value != NULL);
+
+  values = g_strsplit (value, SIM_DELIMITER_LIST, 0);
+  for (i = 0; values[i] != NULL; i++)
+    {
+      if (!strcmp (values[i], SIM_IN_ADDR_ANY_CONST)) 
+	{
+	  sim_rule_append_plugin_sid (rule, 0);
+	  break;
+	}
+      sim_rule_append_plugin_sid (rule, strtol(values[i], (char **)NULL, 10));
+    }
+  g_strfreev (values);
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+static void
 sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,
 				    SimRule          *rule,
 				    gchar            *value)
 {
   SimContainer  *container;
-  SimNet     *net;
-  gchar     **values;
-  gchar     **level;
+  SimNet        *net;
+  gchar        **values;
+  gchar        **level;
   gint        i;
 
   g_return_if_fail (xmldirect != NULL);
@@ -731,8 +776,10 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   gchar         *par_value = NULL;
   gint           interval = 0;
   gboolean       absolute = FALSE;
+  gboolean       not = FALSE;
   gint           priority = 1;
   gint           reliability = 1;
+  gboolean       rel_abs = TRUE;
   gint           time_out = 0;
   gint           occurrence = 1;
   gint           plugin = 0;
@@ -759,6 +806,12 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 
       xmlFree(value);
     }
+  if ((value = xmlGetProp (node, PROPERTY_NOT)))
+    {
+      if (!g_ascii_strcasecmp (value, "TRUE"))
+	not = TRUE;
+      xmlFree(value);
+    } 
   if ((value = xmlGetProp (node, PROPERTY_NAME)))
     { 
       name = g_strdup (value);
@@ -771,6 +824,8 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
     } 
   if ((value = xmlGetProp (node, PROPERTY_RELIABILITY)))
     {
+      if (value[0] == '+')
+	rel_abs = FALSE;
       reliability = strtol(value, (char **) NULL, 10);
       xmlFree(value);
     }
@@ -791,7 +846,8 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
     }
   if ((value = xmlGetProp (node, PROPERTY_ABSOLUTE)))
     {
-      absolute = TRUE;
+      if (!g_ascii_strcasecmp (value, "TRUE"))
+	absolute = TRUE;
       xmlFree(value);
     } 
   if ((value = xmlGetProp (node, PROPERTY_TIME_OUT)))
@@ -804,23 +860,20 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
       occurrence = strtol(value, (char **) NULL, 10);
       xmlFree(value);
     }
-  if ((value = xmlGetProp (node, PROPERTY_PLUGIN)))
+  if ((value = xmlGetProp (node, PROPERTY_PLUGIN_ID)))
     {
       plugin = strtol(value, (char **) NULL, 10);
-      xmlFree(value);
-    }
-  if ((value = xmlGetProp (node, PROPERTY_TPLUGIN)))
-    {
-      tplugin = strtol(value, (char **) NULL, 10);
       xmlFree(value);
     }
 
   rule = sim_rule_new ();
   rule->type = type;
+  if (not) sim_rule_set_not (rule, not);
   sim_rule_set_level (rule, level);
   sim_rule_set_name (rule, name);
   sim_rule_set_priority (rule, priority);
   sim_rule_set_reliability (rule, reliability);
+  sim_rule_set_rel_abs (rule, rel_abs);
   sim_rule_set_condition (rule, condition);
   if (par_value) sim_rule_set_value (rule, par_value);
   if (interval > 0) sim_rule_set_interval (rule, interval);
@@ -828,8 +881,8 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   sim_rule_set_time_out (rule, time_out);
   sim_rule_set_occurrence (rule, occurrence);
   sim_rule_set_plugin_id (rule, plugin);
-  sim_rule_set_plugin_sid (rule, tplugin);
 
+  sim_xml_directive_set_rule_plugin_sids (xmldirect, rule, xmlGetProp (node, PROPERTY_PLUGIN_SID));
   sim_xml_directive_set_rule_src_ips (xmldirect, rule, xmlGetProp (node, PROPERTY_SRC_IP));
   sim_xml_directive_set_rule_dst_ips (xmldirect, rule, xmlGetProp (node, PROPERTY_DST_IP));
   sim_xml_directive_set_rule_src_ports (xmldirect, rule, xmlGetProp (node, PROPERTY_SRC_PORT));
@@ -856,19 +909,6 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 	    }
 	}
  
-      if (!strcmp (children->name, OBJECT_ACTIONS))
-	{
-	  actions = children->children;
-	  while (actions)
-	    {
-	      action = sim_xml_directive_new_action_from_node (xmldirect, actions);
-	      
-	      sim_rule_append_action (rule, action);
-	      
-	      actions = actions->next;;
-	    }
-	}
-
       children = children->next;
     }
 

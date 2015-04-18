@@ -92,7 +92,7 @@ sim_host_instance_init (SimHost *host)
 
   host->_priv->ia = NULL;
   host->_priv->name = NULL;
-  host->_priv->asset = 5;
+  host->_priv->asset = 1;
 }
 
 /* Public Methods */
@@ -255,6 +255,11 @@ sim_host_get_asset (SimHost  *host)
   g_return_val_if_fail (host, 0);
   g_return_val_if_fail (SIM_IS_HOST (host), 0);
 
+  if (host->_priv->asset < 0)
+    return 0;
+  if (host->_priv->asset > 5)
+    return 5;
+
   return host->_priv->asset;
 }
 
@@ -270,5 +275,9 @@ sim_host_set_asset (SimHost  *host,
   g_return_if_fail (host);
   g_return_if_fail (SIM_IS_HOST (host));
 
-  host->_priv->asset = asset;
+  if (asset < 0)
+    host->_priv->asset = 0;
+  else if (asset > 5)
+    host->_priv->asset = 5;
+  else host->_priv->asset = asset;
 }

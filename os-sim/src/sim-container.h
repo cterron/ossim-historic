@@ -102,10 +102,19 @@ SimContainer*     sim_container_new                             (SimConfig     *
 
 /* Recovery Function */
 
+void              sim_container_db_delete_backlogs_ul           (SimContainer  *container,
+								 SimDatabase   *database);
 gint              sim_container_db_get_recovery_ul              (SimContainer  *container,
 								 SimDatabase   *database);
 gint              sim_container_db_get_recovery                 (SimContainer  *container,
 								 SimDatabase   *database);
+/* Threshold Function */
+
+gint              sim_container_db_get_threshold_ul             (SimContainer  *container,
+								 SimDatabase   *database);
+gint              sim_container_db_get_threshold                (SimContainer  *container,
+								 SimDatabase   *database);
+
 /* Categories Functions */
 
 void              sim_container_db_load_categories_ul           (SimContainer  *container,
@@ -220,6 +229,9 @@ void              sim_container_free_plugin_sids_ul             (SimContainer  *
 SimPluginSid*     sim_container_get_plugin_sid_by_pky_ul        (SimContainer  *container,
 								 gint           plugin_id,
 								 gint           sid);
+SimPluginSid*     sim_container_get_plugin_sid_by_name_ul       (SimContainer  *container,
+								 gint           plugin_id,
+								 const gchar   *name);
 
 void              sim_container_db_load_plugin_sids             (SimContainer  *container,
 								 SimDatabase   *database);
@@ -235,6 +247,9 @@ void              sim_container_free_plugin_sids                (SimContainer  *
 SimPluginSid*     sim_container_get_plugin_sid_by_pky           (SimContainer  *container,
 								 gint           plugin_id,
 								 gint           sid);
+SimPluginSid*     sim_container_get_plugin_sid_by_name          (SimContainer  *container,
+								 gint           plugin_id,
+								 const gchar   *name);
 
 /* Sensors Functions */
 
@@ -370,6 +385,7 @@ SimPolicy*        sim_container_get_policy_match                (SimContainer   
 /* Directives Functions */
 
 void              sim_container_load_directives_from_file_ul    (SimContainer  *container,
+								 SimDatabase   *db_ossim,
 								 const gchar   *filename);
 void              sim_container_append_directive_ul             (SimContainer  *container,
 								 SimDirective  *directive);
@@ -382,6 +398,7 @@ void              sim_container_free_directives_ul              (SimContainer  *
 
 
 void              sim_container_load_directives_from_file       (SimContainer  *container,
+								 SimDatabase   *db_ossim,
 								 const gchar   *filename);
 void              sim_container_append_directive                (SimContainer  *container,
 								 SimDirective  *directive);

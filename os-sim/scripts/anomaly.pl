@@ -5,7 +5,7 @@ use ossim_conf;
 use strict;
 use warnings;
 
-my $rrdtool = "$ossim_conf::ossim_data->{"rrdtool_path"}/rrdtool";
+my $rrdtool = "$ossim_conf::ossim_data->{\"rrdtool_path\"}/rrdtool";
 
 sub usage {
     print("Usage: $0 file range\n");
@@ -25,6 +25,7 @@ print "$file\n";
 open(INPUT,"$rrdtool fetch $file FAILURES -s N-$range -e N|") or die "Can't execute.."; 
 
 while(<INPUT>){
+#print;
 if(/(^\d+):.*1\.0000000000e\+00.*/){
 my $temp = $1;
 $temp += 7200;

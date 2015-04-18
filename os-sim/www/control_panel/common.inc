@@ -3,11 +3,9 @@
 
 require_once ('ossim_conf.inc');
 $conf = new ossim_conf();
-$cgi_link = $conf->get_conf("show_image_link");
-#$date_link = $conf->get_conf("date_path");
 
 function graph_image_link($ip, $type, $what, $start, $end, $zoom, $range) {
-    global $cgi_link;
+    $cgi_link = "show_image.php";
     return "$cgi_link?range=$range&ip=$ip&what=$what&start=$start&end=$end&type=$type&zoom=$zoom";
 }
 
@@ -26,13 +24,16 @@ return date("l dS of F Y h:i:s A",$result);
 }
 
 
-function echocolor ($val, $max)
+function echocolor ($val, $max, $image)
 {
-    if ($val - $max > 0) {
-        echo "<font color=\"#991e1e\">" . 
-              $val . "</font>/" . intval($val * 100 / $max) ."%";
+    if ($val / $max > 5) {
+        echo "<td bgcolor=\"red\"><a href=\"" . $image . "\"><font color=\"white\"><b>" .  $val .  "</b></font></a></td>";
+    } elseif ($val / $max > 3) {
+        echo "<td bgcolor=\"orange\"><a href=\"" . $image . "\"><font color=\"black\"><b>" .  $val .  "</b></font></a></td>";
+    } elseif ($val / $max > 1) {
+        echo "<td bgcolor=\"green\"><a href=\"" . $image . "\"><font color=\"white\"><b>" .  $val .  "</b></font></a></td>";
     } else {
-        echo "$val/" . intval($val * 100 / $max) . "%";
+        echo "<td><a href=\"" . $image . "\"><font color=\"black\"><b>" .  $val . "</b></font></a></td>";
     }
 }
 

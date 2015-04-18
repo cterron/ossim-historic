@@ -20,27 +20,30 @@ class Monitor(threading.Thread):
 
     def split_data(self, data):
         
-        pattern = 'plugin_id="([^"]*)"\s+plugin_sid="([^"]*)"\s+condition="([^"]*)"\s+value="([^"]*)"\s+port_from="([^"]*)"\s+port_to="([^"]*)"'
+        pattern = 'plugin_id="([^"]*)"\s+plugin_sid="([^"]*)"\s+condition="([^"]*)"\s+value="([^"]*)"'
         patternInterval = 'interval="([^"]*)"'
         patternFrom = ' from="([^"]*)"'
         patternTo = ' to="([^"]*)"'
         patternAbsolute = ' absolute="([^"]*)"'
+        patternPortFrom = ' port_from="([^"]*)"'
+        patternPortTo = ' port_to="([^"]*)"'
 
         result = re.findall(str(pattern), data)
         resultInterval = re.findall(str(patternInterval), data)
         resultFrom = re.findall(str(patternFrom), data)
         resultTo = re.findall(str(patternTo), data)
         resultAbsolute = re.findall(str(patternAbsolute), data)
+        resultPortFrom = re.findall(str(patternPortFrom), data)
+        resultPortTo = re.findall(str(patternPortTo), data)
 
         try:
-            (plugin_id, plugin_sid, condition, value, 
-             port_from, port_to) = result[0]
+            (plugin_id, plugin_sid, condition, value) = result[0]
             info = {"plugin_id" : plugin_id, 
                     "plugin_sid" : plugin_sid, 
                     "condition" : condition,
                     "value" : value, 
-                    "port_from" : port_from,
-                    "port_to" : port_to,
+                    "port_from" : '',
+                    "port_to" : '',
                     "interval" : '',
                     "from" : '',
                     "to" : '',
@@ -65,6 +68,16 @@ class Monitor(threading.Thread):
 
         try:
             info["absolute"] = resultAbsolute[0]
+        except IndexError:
+            pass
+            
+        try:
+            info["port_from"] = resultPortFrom[0]
+        except IndexError:
+            pass
+            
+        try:
+            info["port_to"] = resultPortTo[0]
         except IndexError:
             pass
         
@@ -92,6 +105,7 @@ class Monitor(threading.Thread):
 
         return data
 
+
     def run(self):
         while 1:
             data = self.recv_line(self.agent.conn)
@@ -107,4 +121,10 @@ class Monitor(threading.Thread):
                     from MonitorNtop import MonitorNtop
                     ntop = MonitorNtop(self.agent, data)
                     ntop.start()
+                    
+                # C & A levels
+                elif data.__contains__('plugin_id="2001"'):
+                    from MonitorCA import MonitorCA
+                    ca = MonitorCA(self.agent, data)
+                    ca.start()
 

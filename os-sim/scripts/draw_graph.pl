@@ -40,7 +40,7 @@ my $start;
 my $end;
 my $type;
 my $rrdpath;
-my $arial=$ossim_conf::ossim_data->{arial_path};
+my $font=$ossim_conf::ossim_data->{font_path};
 my $ds;
 my $tempname=tmpnam();
 my $zoom=1;
@@ -143,8 +143,8 @@ my ($prints,$xs,$ys)=RRDs::graph $tempname, "-s", $start, "-e", $end,
     "LINE1:upper#$color2:Upper",
 #    "LINE2:lower#$color2:Lower",
     "-t", "$hostname $what level",
-    "--font", "TITLE:12:$arial",
-    "--font", "AXIS:7:$arial",
+    "--font", "TITLE:12:$font",
+    "--font", "AXIS:7:$font",
     # -X argument == multiple of 3...
     "HRULE:$threshold#adbada", "--no-minor", "-X", "3", "-l", "0","-r",
     "--zoom", "$zoom";

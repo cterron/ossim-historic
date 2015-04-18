@@ -68,21 +68,6 @@
         <option
         <?php if ($host->get_asset() == 5) echo " SELECTED "; ?>
           value="5">5</option>
-        <option
-        <?php if ($host->get_asset() == 6) echo " SELECTED "; ?>
-          value="6">6</option>
-        <option
-        <?php if ($host->get_asset() == 7) echo " SELECTED "; ?>
-          value="7">7</option>
-        <option
-        <?php if ($host->get_asset() == 8) echo " SELECTED "; ?>
-          value="8">8</option>
-        <option
-        <?php if ($host->get_asset() == 9) echo " SELECTED "; ?>
-          value="9">9</option>
-        <option
-        <?php if ($host->get_asset() == 10) echo " SELECTED "; ?>
-          value="10">10</option>
       </select>
     </td>
   </tr>
@@ -98,13 +83,14 @@
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $host->get_threshold_a(); ?>"></td>
   </tr>
+<!--
   <tr>
     <th>Alert</th>
     <td class="left">
       <select name="alert">
-        <option <?php if ($host->get_alert() == 1) echo " SELECTED "; ?>
+        <option <?php // if ($host->get_alert() == 1) echo " SELECTED "; ?>
             value="1">Yes</option>
-        <option <?php if ($host->get_alert() == 0) echo " SELECTED "; ?>
+        <option <?php // if ($host->get_alert() == 0) echo " SELECTED "; ?>
             value="0">No</option>
       </select>
     </td>
@@ -113,9 +99,10 @@
     <th>Persistence</th>
     <td class="left">
       <input type="text" name="persistence" size="3"
-             value="<?php echo $host->get_persistence(); ?>">min.
+             value="<?php //echo $host->get_persistence(); ?>">min.
     </td>
   </tr>
+-->
   <tr>
     <th>NAT</th>
     <td class="left">

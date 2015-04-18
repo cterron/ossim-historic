@@ -2,14 +2,14 @@
 
 # set config file & path to ossim
 
-CONFIG=/etc/ossim.conf
+CONFIG=/etc/ossim/framework/ossim.conf
 OSSIM_PATH=`grep ^base_dir $CONFIG | cut -d= -f 2`
 LOG=`grep ^ossim_log $CONFIG | cut -d= -f 2`
 
 # End of configuration
 
 
-test -x $OSSIM_PATH/src/os-sim || exit 0
+test -x $OSSIM_PATH/src/ossim || exit 0
 
 case "$1" in
      start)
@@ -17,21 +17,23 @@ case "$1" in
 
     # start ossim server
     cd $OSSIM_PATH/src
-	./os-sim -c config.xml &
+	./ossim -c /etc/ossim/server/config.xml &
 
     # Start agent
+    sleep 2
     cd $OSSIM_PATH/agent
-    ./main.py &
+    ./agent -c /etc/ossim/agent/config.xml &
 
     # start misc scripts (provisional!)
     cd $OSSIM_PATH/scripts/
     nice -n 19 ./control_panel.pl &
     nice -n 19 ./os.pl &
-#    nice -n 19 ./alert.pl &
+    nice -n 19 ./mac.pl &
+    nice -n 19 ./rrd_plugin.pl &
+    
     # Log to be removed soon
     nice -n 19 ./check_rrd.pl >> temp_rrd.log &
     nice -n 19 ./check_rrd_global.pl >> temp_rrd.log &
-    nice -n 19 ./mac.pl &
 
 #    nice -n 19 ./services.pl &
 #    nice -n 19 ./netbios.pl &
@@ -46,9 +48,9 @@ case "$1" in
 
      stop)
 	echo "Stoping Open Source Security Information Management: OSSIM"
-	if [ "`pidof $OSSIM_PATH/src/os-sim`" ] ; then
+	if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
 	
-	    kill -TERM `pidof $OSSIM_PATH/src/os-sim`
+	    kill -TERM `pidof $OSSIM_PATH/src/ossim`
 
 
 
@@ -57,7 +59,7 @@ case "$1" in
 	    numdots=0
 	    while ([ $count != 0 ]) do
 		let count=$count-1
-		if [ "`pidof $OSSIM_PATH/src/os-sim`" ] ; then
+		if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
 		    echo -n .
 		    let numdots=$numdots+1
 		    sleep 1
@@ -68,9 +70,9 @@ case "$1" in
 
 	    # If it's not dead yet, kill it.
 
-	    if [ "`pidof $OSSIM_PATH/src/os-sim`" ] ; then
+	    if [ "`pidof $OSSIM_PATH/src/ossim`" ] ; then
 		echo " TIMEOUT!"
-		killall -KILL os-sim
+		killall -KILL ossim
 	    else
 		case $numdots in
 		  0) echo "." ;;
@@ -85,15 +87,16 @@ case "$1" in
 	fi
 
     # kill agent
-    killall -KILL main.py
+    killall -KILL agent
     # kill misc scripts (provisional!)
     killall -KILL control_panel.pl
     killall -KILL os.pl
-#    killall -KILL alert.pl
+    killall -KILL mac.pl
+    killall -KILL rrd_plugin.pl
+    
     killall -KILL check_rrd.pl
     killall -KILL check_rrd_global.pl
-#    killall -KILL p0f
-    killall -KILL mac.pl
+    killall -KILL p0f
 #    killall -KILL arpwatch
 #    killall -KILL services.pl
 #    killall -KILL netbios.pl

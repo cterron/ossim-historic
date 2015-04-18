@@ -9,12 +9,12 @@ class ParserApache(Parser.Parser):
 
     def process(self):
 
-        if self.plugin["source"] == 'syslog':
+        if self.plugin["source"] == 'common':
             self.__processSyslog()
             
         else:
-            print "log type " + self.plugin["source"] +\
-                  " unknown for Apache..."
+            util.debug (__name__,  "log type " + self.plugin["source"] +\
+                        " unknown for Apache...", '!!', 'RED')
             sys.exit()
 
 

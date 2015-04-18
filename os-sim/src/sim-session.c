@@ -350,7 +350,6 @@ sim_session_cmd_alert (SimSession  *session,
       return;
     }
 
-  sim_alert_print (alert);
   sim_container_push_alert (sim_ctn, alert);
 }
 
@@ -507,6 +506,7 @@ sim_session_cmd_reload_directives (SimSession  *session,
 
   sim_container_free_directives (sim_ctn);
   sim_container_load_directives_from_file (sim_ctn,
+					   session->_priv->db_ossim,
 					   SIM_XML_DIRECTIVE_FILE);
 
   cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -598,8 +598,8 @@ sim_session_read (SimSession  *session)
 	  g_message ("Recived error %d (closing socket)", error);
 	  break;
 	}
+      g_message ("READ: %s", buffer);
 
-      g_print ("READ: %s", buffer);
 
       cmd = sim_command_new_from_buffer (buffer);
 
@@ -689,7 +689,7 @@ sim_session_write (SimSession  *session,
   if (!str)
     return 0;
 
-  g_print ("WRITE: %s", str);
+  g_message ("WRITE: %s", str);
 
   error = gnet_io_channel_writen (session->_priv->io, str, strlen(str), &n);
 
@@ -722,6 +722,38 @@ sim_session_has_plugin_type (SimSession     *session,
       SimPlugin *plugin = (SimPlugin *) list->data;
 
       if (plugin->type == type)
+	{
+	  found = TRUE;
+	  break;
+	}
+
+      list = list->next;
+    }
+
+  return found;
+}
+
+/*
+ *
+ *
+ *
+ */
+gboolean
+sim_session_has_plugin_id (SimSession     *session,
+			   gint            plugin_id)
+{
+  GList  *list;
+  gboolean  found = FALSE;
+
+  g_return_val_if_fail (session != NULL, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
+  
+  list = session->_priv->plugins;
+  while (list)
+    {
+      SimPlugin *plugin = (SimPlugin *) list->data;
+
+      if (sim_plugin_get_id (plugin) == plugin_id)
 	{
 	  found = TRUE;
 	  break;

@@ -36,6 +36,8 @@
 
 #include "sim-host-level.h"
  
+#include <math.h>
+
 enum 
 {
   DESTROY,
@@ -44,8 +46,8 @@ enum
 
 struct _SimHostLevelPrivate {
   GInetAddr  *ia;
-  gint        a;
-  gint        c;
+  gdouble     a;
+  gdouble     c;
 };
 
 static gpointer parent_class = NULL;
@@ -135,8 +137,9 @@ sim_host_level_new (const GInetAddr     *ia,
   SimHostLevel *host_level = NULL;
 
   g_return_val_if_fail (ia, NULL);
-  g_return_val_if_fail (c > 0, NULL);
-  g_return_val_if_fail (a > 0, NULL);
+
+  if (c < 1) c = 1;
+  if (a < 1) a = 1;
 
   host_level = SIM_HOST_LEVEL (g_object_new (SIM_TYPE_HOST_LEVEL, NULL));
   host_level->_priv->ia = gnet_inetaddr_clone (ia);
@@ -145,7 +148,6 @@ sim_host_level_new (const GInetAddr     *ia,
 
   return host_level;
 }
-
 
 /*
  *
@@ -214,7 +216,7 @@ sim_host_level_set_ia (SimHostLevel  *host_level,
  *
  *
  */
-gint
+gdouble
 sim_host_level_get_c (SimHostLevel  *host_level)
 {
   g_return_val_if_fail (host_level, 0);
@@ -230,11 +232,12 @@ sim_host_level_get_c (SimHostLevel  *host_level)
  */
 void
 sim_host_level_set_c (SimHostLevel  *host_level,
-		      gint           c)
+		      gdouble        c)
 {
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
-  g_return_if_fail (c > 0);
+
+  if (c < 1) c = 1;
 
   host_level->_priv->c = c;
 }
@@ -246,11 +249,10 @@ sim_host_level_set_c (SimHostLevel  *host_level,
  */
 void
 sim_host_level_plus_c (SimHostLevel  *host_level,
-		       gint           c)
+		       gdouble        c)
 {
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
-  g_return_if_fail (c > 0);
 
   host_level->_priv->c += c;
 }
@@ -260,7 +262,7 @@ sim_host_level_plus_c (SimHostLevel  *host_level,
  *
  *
  */
-gint
+gdouble
 sim_host_level_get_a (SimHostLevel  *host_level)
 {
   g_return_val_if_fail (host_level, 0);
@@ -276,10 +278,12 @@ sim_host_level_get_a (SimHostLevel  *host_level)
  */
 void
 sim_host_level_set_a (SimHostLevel  *host_level,
-		      gint           a)
+		      gdouble        a)
 {
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
+
+  if (a < 1) a = 1;
 
   host_level->_priv->a = a;
 }
@@ -291,12 +295,11 @@ sim_host_level_set_a (SimHostLevel  *host_level,
  */
 void
 sim_host_level_plus_a (SimHostLevel  *host_level,
-		       gint           a)
+		       gdouble        a)
 {
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
-  g_return_if_fail (a > 0);
-  
+
   host_level->_priv->a += a;
 }
 
@@ -311,7 +314,7 @@ sim_host_level_set_recovery (SimHostLevel  *host_level,
 {
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   if (host_level->_priv->c > recovery)
     host_level->_priv->c -= recovery;
@@ -334,16 +337,20 @@ sim_host_level_get_insert_clause (SimHostLevel  *host_level)
 {
   gchar *query;
   gchar *name;
+  gint   c = 0;
+  gint   a = 0;
 
   g_return_val_if_fail (host_level, NULL);
   g_return_val_if_fail (SIM_IS_HOST_LEVEL (host_level), NULL);
   g_return_val_if_fail (host_level->_priv->ia, NULL);
 
+  c = rint (host_level->_priv->c);
+  a = rint (host_level->_priv->a);
+
   name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
   query = g_strdup_printf ("INSERT INTO host_qualification VALUES ('%s', %d, %d)",
-			   name,
-			   host_level->_priv->c,
-			   host_level->_priv->a);
+			   name, c, a);
+
   g_free (name);
 
   return query;
@@ -359,16 +366,20 @@ sim_host_level_get_update_clause (SimHostLevel  *host_level)
 {
   gchar *query;
   gchar *name;
+  gint   c = 0;
+  gint   a = 0;
 
   g_return_val_if_fail (host_level, NULL);
   g_return_val_if_fail (SIM_IS_HOST_LEVEL (host_level), NULL);
   g_return_val_if_fail (host_level->_priv->ia, NULL);
 
+  c = rint (host_level->_priv->c);
+  a = rint (host_level->_priv->a);
+
   name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
   query = g_strdup_printf ("UPDATE host_qualification SET compromise = %d, attack = %d WHERE host_ip = '%s'",
-			   host_level->_priv->c,
-			   host_level->_priv->a,
-			   name);
+			   c, a, name);
+
   g_free (name);
 
   return query;

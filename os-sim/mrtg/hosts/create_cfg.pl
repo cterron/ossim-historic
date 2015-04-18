@@ -21,9 +21,9 @@ if ($sth->rows > 0) {
     {
         my $host_ip = $row->{host_ip};
 
-
         print CFG <<"EOF";
-Target[$host_ip]: `$ossim_conf::ossim_data->{base_dir}/mrtg/hosts/read_data.pl "$host_ip"`
+
+Target[$host_ip]: `$ossim_conf::ossim_data->{data_dir}/mrtg/hosts/read_data.pl "$host_ip"`
 Title[$host_ip]: OSSIM Level graphics
 Background[$host_ip]: #ffffff
 PageTop[$host_ip]: <H1>Level for $host_ip</H1>

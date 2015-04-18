@@ -29,6 +29,11 @@ if ($sth->rows > 0) {
     $attack = $row->{"sum(attack)"};
 }
 
+if($compromise < 1){ $compromise = 1};
+if($attack < 1){ $attack = 1};
+
+
+
 print "$compromise\n$attack\n0\n";
 print "Stats from global\n\n";
 

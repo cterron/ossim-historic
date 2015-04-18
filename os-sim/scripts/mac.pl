@@ -69,7 +69,7 @@ my $time = localtime;
      $host = $1;
      my $prev_mac = $2;
      $mac = $3;
-     my $query = "UPDATE host_mac SET anom = 1, mac = '$mac', previous = '$prev_mac', time = '$time' WHERE ip = '$host';";
+     my $query = "UPDATE host_mac SET anom = 1, mac = '$mac', previous = '$prev_mac', mac_time = '$time' WHERE ip = '$host';";
      my $sth = $dbh->prepare($query);
      $sth->execute();
     }

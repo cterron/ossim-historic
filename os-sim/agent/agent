@@ -1,0 +1,67 @@
+#!/usr/bin/python2.3
+
+from optparse import OptionParser
+
+from Agent import Agent
+import util
+import time
+import os
+import signal
+
+def main():
+    
+    # parse command line options
+    options = parse_options()
+    
+    if options.config_file is None:
+        options.config_file = util.CONFIG
+
+    # Init agent and read config
+    agent = Agent()
+    agent.parseConfig(options.config_file)
+
+    # connect to server
+    if agent.connect():
+        agent.monitor()
+        agent.append_plugins()
+        agent.parser()
+
+
+def parse_options():
+    
+    """ parse command line options """
+
+    parser = OptionParser(usage = "usage: %prog [-v] [-q] [-c config_file]", 
+                          version = util.VERSION)
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+                      help="make lots of noise [default]")
+    parser.add_option("-q", "--quiet", dest="quiet", action="store_true",
+                      help="don't show debug messages")
+    parser.add_option("-c", "--config", dest="config_file", action="store",
+                      help = "read config from FILE", metavar="FILE")
+    (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        parser.error("incorrect number of arguments")
+    if options.quiet:
+        util.VERBOSE = False
+    if options.verbose:
+        util.VERBOSE = True
+
+    return options
+
+
+def waitforever():
+    """Wait for a Control-C and kill all threads"""
+
+    while 1:
+        try:
+            time.sleep(1)
+        except KeyboardInterrupt:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGTERM)
+
+if __name__ == '__main__':
+    main()
+    waitforever()
+

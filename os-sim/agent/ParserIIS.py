@@ -13,8 +13,8 @@ class ParserIIS(Parser.Parser):
             self.__processSyslog()
             
         else:
-            print "log type " + self.plugin["source"] +\
-                  " unknown for IIS..."
+            util.debug (__name__, "log type " + self.plugin["source"] +\
+                        " unknown for IIS...", '!!', 'RED')
             sys.exit()
 
 

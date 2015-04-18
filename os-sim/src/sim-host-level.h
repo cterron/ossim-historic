@@ -78,17 +78,17 @@ GInetAddr*        sim_host_level_get_ia                          (SimHostLevel  
 void              sim_host_level_set_ia                          (SimHostLevel     *host_level,
 								  const GInetAddr  *ia);
 
-gint              sim_host_level_get_c                           (SimHostLevel     *host_level);
+gdouble           sim_host_level_get_c                           (SimHostLevel     *host_level);
 void              sim_host_level_set_c                           (SimHostLevel     *host_level,
-								  gint              c);
+								  gdouble           c);
 void              sim_host_level_plus_c                          (SimHostLevel     *host_level,
-								  gint              c);
+								  gdouble           c);
 
-gint              sim_host_level_get_a                           (SimHostLevel     *host_level);
+gdouble           sim_host_level_get_a                           (SimHostLevel     *host_level);
 void              sim_host_level_set_a                           (SimHostLevel     *host_level,
-								  gint              a);
+								  gdouble           a);
 void              sim_host_level_plus_a                          (SimHostLevel     *host_level,
-								  gint              a);
+								  gdouble           a);
 
 void              sim_host_level_set_recovery                    (SimHostLevel     *host_level,
 								  gint              recovery);

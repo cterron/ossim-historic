@@ -83,7 +83,8 @@ gint              sim_session_write                           (SimSession  *sess
 							       SimCommand  *command);
 gboolean          sim_session_has_plugin_type                 (SimSession     *session,
 							       SimPluginType   type);
-
+gboolean          sim_session_has_plugin_id                   (SimSession     *session,
+							       gint            plugin_id);
 G_END_DECLS
 
 #ifdef __cplusplus

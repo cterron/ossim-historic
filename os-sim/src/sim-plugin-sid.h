@@ -74,6 +74,8 @@ SimPluginSid*     sim_plugin_sid_new_from_data                   (gint          
 								  gint           sid,
 								  gint           category_id,
 								  gint           class_id,
+								  gint           reliability,
+								  gint           priority,
 								  const gchar   *name);
 SimPluginSid*     sim_plugin_sid_new_from_dm                     (GdaDataModel  *dm,
 								  gint           row);
@@ -89,9 +91,17 @@ void              sim_plugin_sid_set_category_id                 (SimPluginSid  
 gint              sim_plugin_sid_get_class_id                    (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_class_id                    (SimPluginSid  *plugin_sid,
 								  gint           class_id);
+gint              sim_plugin_sid_get_reliability                 (SimPluginSid  *plugin_sid);
+void              sim_plugin_sid_set_reliability                 (SimPluginSid  *plugin_sid,
+								  gint           reliability);
+gint              sim_plugin_sid_get_priority                    (SimPluginSid  *plugin_sid);
+void              sim_plugin_sid_set_priority                    (SimPluginSid  *plugin_sid,
+								  gint           priority);
 gchar*            sim_plugin_sid_get_name                        (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_name                        (SimPluginSid  *plugin_sid,
 								  gchar         *name);
+
+gchar*            sim_plugin_sid_get_insert_clause               (SimPluginSid  *plugin_sid);
 
 G_END_DECLS
 

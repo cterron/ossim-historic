@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<directives>
+
+  <directive id="1" name="Suspicious web access">
+    <rule type="detector" name="1" priority="1" reliability="1" time_out="10" occurrence="3" from="ANY" to="ANY" port_from="ANY" port_to="80,443,8080" plugin_id="1104" plugin_sid="6">
+      <rules>
+        <rule type="detector" name="2a" priority="1" reliability="1" time_out="0" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="1668">
+          <rules>
+            <rule type="detector" name="3a" priority="1" reliability="1" time_out="0" occurrence="1" from="2:DST_IP" to="2:SRC_IP" port_from="2:DST_PORT" port_to="2:SRC_PORT" plugin_id="1001" plugin_sid="1666"/>
+            <rule type="detector" name="3b" priority="1" reliability="1" time_out="0" occurrence="1" from="2:DST_IP" to="2:SRC_IP" port_from="2:DST_PORT" port_to="2:SRC_PORT" plugin_id="1001" plugin_sid="1292"/>
+          </rules>
+
+        </rule>
+        <rule type="detector" name="2b" priority="1" reliability="1" time_out="10" occurrence="2" from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1001" plugin_sid="1125"/>
+      </rules>
+
+    </rule>
+  </directive>
+
+  <directive id="2" name="Successful DCOM exploit" priority="9">
+    <rule type="detector" name="Dcom exploit shellcode (2192)" priority="1" reliability="5" time_out="60" occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="135,445" plugin_id="1001" plugin_sid="2192">
+      <rules>
+        <rule type="detector" name="Rare dest port after shellcode"
+        priority="1" reliability="5" time_out="60" occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="1">
+          <rules>
+            <rule type="detector" name="Windows cmd.exe attack response"
+            priority="1" reliability="6" time_out="60" occurrence="1"
+            from="1:DST_IP" to="1:SRC_IP" port_from="2:DST_PORT"
+            port_to="2:SRC_PORT" plugin_id="1001" plugin_sid="2123">
+        <rules>
+            <rule type="detector" name="Strange connections (DCOM)"
+            priority="1" reliability="7" time_out="300" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="6"/>
+            <rule type="detector" name="Strange connections (DCOM)"
+            priority="1" reliability="7" time_out="300" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="3"/>
+            <rule type="detector" name="Strange connections (DCOM)"
+            priority="1" reliability="7" time_out="300" occurrence="1" from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY" plugin_id="1104" plugin_sid="1"/>
+          </rules>
+         </rule>
+       </rules>
+        </rule>
+      </rules>
+    </rule>
+  </directive>
+
+
+
+</directives>

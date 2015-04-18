@@ -47,6 +47,8 @@ struct _SimPluginSidPrivate {
   gint     sid;
   gint     category_id;
   gint     class_id;
+  gint     reliability;
+  gint     priority;
   gchar   *name;
 };
 
@@ -94,6 +96,8 @@ sim_plugin_sid_instance_init (SimPluginSid *plugin)
   plugin->_priv->sid = 0;
   plugin->_priv->category_id = 0;
   plugin->_priv->class_id = 0;
+  plugin->_priv->reliability = 1;
+  plugin->_priv->priority = 1;
   plugin->_priv->name = NULL;
 }
 
@@ -154,6 +158,8 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
 			      gint          sid,
 			      gint          category_id,
 			      gint          class_id,
+			      gint          reliability,
+			      gint          priority,
 			      const gchar  *name)
 {
   SimPluginSid *plugin_sid = NULL;
@@ -163,6 +169,8 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
   plugin_sid->_priv->sid = sid;
   plugin_sid->_priv->category_id = category_id;
   plugin_sid->_priv->class_id = class_id;
+  plugin_sid->_priv->reliability = reliability;
+  plugin_sid->_priv->priority = priority;
   plugin_sid->_priv->name = g_strdup (name);  
 
   return plugin_sid;
@@ -198,6 +206,12 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
   plugin_sid->_priv->class_id = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
+  plugin_sid->_priv->reliability = gda_value_get_integer (value);
+  
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 5, row);
+  plugin_sid->_priv->priority = gda_value_get_integer (value);
+  
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 6, row);
   plugin_sid->_priv->name = gda_value_stringify (value);
 
   return plugin_sid;
@@ -337,6 +351,71 @@ sim_plugin_sid_set_class_id (SimPluginSid  *plugin_sid,
  *
  *
  */
+gint
+sim_plugin_sid_get_reliability (SimPluginSid  *plugin_sid)
+{
+  g_return_val_if_fail (plugin_sid, 1);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 1);
+
+  return plugin_sid->_priv->reliability;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_plugin_sid_set_reliability (SimPluginSid  *plugin_sid,
+			      gint           reliability)
+{
+  g_return_if_fail (plugin_sid);
+  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
+  g_return_if_fail (reliability > 0);
+
+  plugin_sid->_priv->reliability = reliability;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gint
+sim_plugin_sid_get_priority (SimPluginSid  *plugin_sid)
+{
+  g_return_val_if_fail (plugin_sid, 1);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 1);
+
+  return plugin_sid->_priv->priority;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_plugin_sid_set_priority (SimPluginSid  *plugin_sid,
+			      gint           priority)
+{
+  g_return_if_fail (plugin_sid);
+  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
+  g_return_if_fail (priority > 0);
+
+  plugin_sid->_priv->priority = priority;
+}
+
+
+/*
+ *
+ *
+ *
+ *
+ */
 gchar*
 sim_plugin_sid_get_name (SimPluginSid  *plugin_sid)
 {
@@ -364,4 +443,65 @@ sim_plugin_sid_set_name (SimPluginSid  *plugin_sid,
     g_free (plugin_sid->_priv->name);
 
   plugin_sid->_priv->name = name;
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
+sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
+{
+  GString  *insert;
+  GString  *values;
+
+  g_return_val_if_fail (plugin_sid, NULL);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), NULL);
+  g_return_val_if_fail (plugin_sid->_priv->plugin_id > 0, NULL);
+  g_return_val_if_fail (plugin_sid->_priv->sid > 0, NULL);
+  g_return_val_if_fail (plugin_sid->_priv->name, NULL);
+
+  insert = g_string_new ("INSERT INTO plugin_sid (");
+  values = g_string_new (" VALUES (");
+
+  g_string_append (insert, "plugin_id");
+  g_string_append_printf (values, "%d", plugin_sid->_priv->plugin_id);
+
+  g_string_append (insert, ", sid");
+  g_string_append_printf (values, ", %d", plugin_sid->_priv->sid);
+
+  if (plugin_sid->_priv->category_id > 0)
+    {
+      g_string_append (insert, ", category_id");
+      g_string_append_printf (values, ", %d", plugin_sid->_priv->category_id);
+    }
+
+  if (plugin_sid->_priv->class_id > 0)
+    {
+      g_string_append (insert, ", class_id");
+      g_string_append_printf (values, ", %d", plugin_sid->_priv->class_id);
+    }
+
+  if (plugin_sid->_priv->reliability > 0)
+    {
+      g_string_append (insert, ", reliability");
+      g_string_append_printf (values, ", %d", plugin_sid->_priv->reliability);
+    }
+
+  if (plugin_sid->_priv->priority > 0)
+    {
+      g_string_append (insert, ", priority");
+      g_string_append_printf (values, ", %d", plugin_sid->_priv->priority);
+    }
+
+  g_string_append (insert, ", name)");
+  g_string_append_printf (values, ", '%s')", plugin_sid->_priv->name);
+
+  g_string_append (insert, values->str);
+
+  g_string_free (values, TRUE);
+
+  return g_string_free (insert, FALSE);
 }

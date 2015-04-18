@@ -82,9 +82,14 @@ struct _SimRuleVar {
 GType             sim_rule_get_type                        (void);
 SimRule*          sim_rule_new                             (void);
 
+
+
 gint              sim_rule_get_level                       (SimRule     *rule);
 void              sim_rule_set_level                       (SimRule     *rule,
 							    gint         level);
+gboolean          sim_rule_get_not                         (SimRule     *rule);
+void              sim_rule_set_not                         (SimRule     *rule,
+							    gboolean     not);
 gchar*            sim_rule_get_name                        (SimRule     *rule);
 void              sim_rule_set_name                        (SimRule     *rule,
 							    const gchar *name);
@@ -95,6 +100,9 @@ void              sim_rule_set_priority                    (SimRule     *rule,
 gint              sim_rule_get_reliability                 (SimRule     *rule);
 void              sim_rule_set_reliability                 (SimRule     *rule,
 							    gint         reliability);
+gboolean          sim_rule_get_rel_abs                     (SimRule     *rule);
+void              sim_rule_set_rel_abs                     (SimRule     *rule,
+							    gboolean     rel_abs);
 GTime             sim_rule_get_time_out                    (SimRule     *rule);
 void              sim_rule_set_time_out                    (SimRule     *rule,
 							    GTime        time_out);
@@ -136,11 +144,11 @@ gint              sim_rule_get_dst_port                    (SimRule     *rule);
 void              sim_rule_set_dst_port                    (SimRule     *rule,
 							    gint         dst_port);
 
-void              sim_rule_append_action                   (SimRule     *rule,
-							    SimAction   *action);
-void              sim_rule_remove_action                   (SimRule     *rule,
-							    SimAction   *action);
-GList*            sim_rule_get_actions                     (SimRule     *rule);
+void              sim_rule_append_plugin_sid               (SimRule     *rule,
+							    gint         plugin_sid);
+void              sim_rule_remove_plugin_sid               (SimRule     *rule,
+							    gint         plugin_sid);
+GList*            sim_rule_get_plugin_sids                 (SimRule     *rule);
 
 void              sim_rule_append_src_ia                   (SimRule     *rule,
 							    GInetAddr   *src_ia);

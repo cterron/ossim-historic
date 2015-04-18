@@ -3,6 +3,7 @@
 require_once 'classes/Net_host_reference.inc';
 require_once 'classes/Net_qualification.inc';
 require_once 'classes/Net_vulnerability.inc';
+require_once 'classes/Net_sensor_reference.inc';
 require_once 'classes/Control_panel_net.inc';
 require_once 'ossim_conf.inc';
 
@@ -44,6 +45,11 @@ class Net {
         return Net_host_reference::get_list($conn, "WHERE name = '$net_name'");
     }
 
+    function get_sensors($conn) {
+        return Net_sensor_reference::get_list($conn, $this->name);
+    }
+
+
     function get_list($conn, $args = "") 
     {
         if (!$rs = &$conn->Execute("SELECT * FROM net $args")) {
@@ -65,7 +71,7 @@ class Net {
     }
 
     function insert($conn, $name, $ips, $priority, $threshold_c, 
-                    $threshold_a, $alert, $persistence, $descr)
+                    $threshold_a, $alert, $persistence, $sensors, $descr)
     {
         settype($priority, "int");
         settype($threshold_c, "int");
@@ -94,15 +100,16 @@ class Net {
         Net_host_reference::insert($conn, $name, $ip_list);
         Net_qualification::insert($conn, $name, 1, 1);
         Net_vulnerability::insert($conn, $name, 1);
+        Net_sensor_reference::insert($conn, $name, $sensors);
     }
 
     function update($conn, $name, $ips, $priority, $threshold_c, 
-                    $threshold_a, $alert, $persistence, $descr)
+                    $threshold_a, $alert, $persistence, $sensors, $descr)
     {
         Net::delete($conn, $name);
         Net::insert($conn, $name, $ips, $priority, 
                     $threshold_c, $threshold_a, 
-                    $alert, $persistence, $descr);
+                    $alert, $persistence, $sensors, $descr);
     }
 
     function delete($conn, $name) {
@@ -114,6 +121,8 @@ class Net {
         Net_host_reference::delete($conn, $name);
         Control_panel_net::delete($conn, $name);
         Net_qualification::delete($conn, $name);
+        Net_vulnerability::delete($conn, $name);
+        Net_sensor_reference::delete($conn, $name);
     }
 
     function netthresh_c($conn, $name) {

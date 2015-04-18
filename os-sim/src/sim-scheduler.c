@@ -242,7 +242,7 @@ sim_scheduler_run (SimScheduler *scheduler)
 
   while (TRUE)
   {
-    usleep (1);
+    sleep (1);
     sim_scheduler_task_calculate (scheduler, NULL);
     sim_scheduler_task_correlation (scheduler, NULL);
   }
@@ -260,45 +260,41 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 {
   SimDatabase   *db_ossim;
   GList         *list;
-  GTime          time_out;
-  GTime          time_last;
-  gint           level;
-  gboolean       matched;
-  GTimeVal       curr_time;
-  gchar         *query;
 
   g_return_if_fail (scheduler);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
-  
-  db_ossim = scheduler->_priv->db_ossim;
 
-  g_get_current_time (&curr_time);
+  db_ossim = scheduler->_priv->db_ossim;
 
   G_LOCK (s_mutex_backlogs);
   list = sim_container_get_backlogs_ul (sim_ctn);
   while (list)
     {
       SimDirective *backlog = (SimDirective *) list->data;
-      
-      time_out = sim_directive_get_time_out (backlog);
-      time_last = sim_directive_get_time_last (backlog);
-      level = sim_directive_get_level (backlog);
-      matched = sim_directive_matched (backlog);
-      
-      if ((matched) || ((time_out) && (curr_time.tv_sec > (time_last + time_out))))
+
+      if (sim_directive_is_time_out (backlog))
 	{
-	  if (level <= 1)
+	  /* Rule NOT */
+	  /*
+	    if ((!matched) && (sim_directive_backlog_match_by_not (backlog)))
+	    {
+	    sim_organizer_backlog_match (db_ossim, backlog, NULL);
+	    sim_container_remove_backlog_ul (sim_ctn, backlog);
+	    g_object_unref (backlog);
+	    list = list->next;
+	    continue;
+	    }
+	  */
+	  if (sim_directive_get_rule_level (backlog) <= 1)
 	    {
 	      sim_container_db_delete_backlog_ul (sim_ctn, db_ossim, backlog);
 	    }
-
 	  sim_container_remove_backlog_ul (sim_ctn, backlog);
 	  g_object_unref (backlog);
 	}
-      
+
       list = list->next;
     }
   g_list_free (list);
-
   G_UNLOCK (s_mutex_backlogs);
 }

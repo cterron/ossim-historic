@@ -52,7 +52,7 @@
   ===========================================================================
 
   Almost all the software needed by OSSIM is in the distribution. It is
-  recommendable to install the lastest versions, since those are the versions
+  recommendable to install the latest versions, since those are the versions
   being used in production by OSSIM.
 
 
@@ -316,7 +316,7 @@
     extension=gd.so
     extension=mysql.so
 
-  Download de lastest version of Acid, 0.9.6b23, from
+  Download de latest version of Acid, 0.9.6b23, from
   http://acidlab.sourceforge.net/ and patch it with the patch that you will
   find in the OSSIM contrib directory.
 

@@ -3,20 +3,14 @@
 use strict;
 use warnings;
 
-use DBI;
 use ossim_conf;
 
 my $OUTPUT_FILE = "global_qualification.cfg";
 open CFG, ">$OUTPUT_FILE" or die "Can't open file: $!";
 
-my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
-my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"})
-    or die "Can't connect to DBI\n";
-
-
 print CFG <<"EOF";
 
-Target[global]: `$ossim_conf::ossim_data->{base_dir}/mrtg/global/read_data.pl`
+Target[global]: `$ossim_conf::ossim_data->{data_dir}/mrtg/global/read_data.pl`
 Title[global]: OSSIM Level graphics
 Background[global]: #ffffff
 PageTop[global]: <H1>Level for global</H1>

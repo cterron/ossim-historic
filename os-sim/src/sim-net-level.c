@@ -36,6 +36,8 @@
 
 #include "sim-net-level.h"
 
+#include <math.h>
+
 enum 
 {
   DESTROY,
@@ -44,8 +46,8 @@ enum
 
 struct _SimNetLevelPrivate {
   gchar     *name;
-  gint       a;
-  gint       c;
+  gdouble    a;
+  gdouble    c;
 };
 
 static gpointer parent_class = NULL;
@@ -137,8 +139,9 @@ sim_net_level_new (const gchar  *name,
   SimNetLevel *net_level = NULL;
 
   g_return_val_if_fail (name, NULL);
-  g_return_val_if_fail (c > 0, NULL);
-  g_return_val_if_fail (a > 0, NULL);
+
+  if (c < 1) c = 1;
+  if (a < 1) a = 1;
 
   net_level = SIM_NET_LEVEL (g_object_new (SIM_TYPE_NET_LEVEL, NULL));
   net_level->_priv->name = g_strdup (name);
@@ -215,7 +218,7 @@ sim_net_level_set_name (SimNetLevel     *net_level,
  *
  *
  */
-gint
+gdouble
 sim_net_level_get_c (SimNetLevel  *net_level)
 {
   g_return_val_if_fail (net_level, 0);
@@ -231,11 +234,12 @@ sim_net_level_get_c (SimNetLevel  *net_level)
  */
 void
 sim_net_level_set_c (SimNetLevel  *net_level,
-		     gint          c)
+		     gdouble       c)
 {
   g_return_if_fail (net_level);
   g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
-  g_return_if_fail (c > 0);
+
+  if (c < 1) c = 1;
 
   net_level->_priv->c = c;
 }
@@ -247,11 +251,10 @@ sim_net_level_set_c (SimNetLevel  *net_level,
  */
 void
 sim_net_level_plus_c (SimNetLevel  *net_level,
-		      gint          c)
+		      gdouble       c)
 {
   g_return_if_fail (net_level);
   g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
-  g_return_if_fail (c > 0);
 
   net_level->_priv->c += c;
 }
@@ -261,7 +264,7 @@ sim_net_level_plus_c (SimNetLevel  *net_level,
  *
  *
  */
-gint
+gdouble
 sim_net_level_get_a (SimNetLevel  *net_level)
 {
   g_return_val_if_fail (net_level, 0);
@@ -277,11 +280,12 @@ sim_net_level_get_a (SimNetLevel  *net_level)
  */
 void
 sim_net_level_set_a (SimNetLevel  *net_level,
-		     gint          a)
+		     gdouble       a)
 {
   g_return_if_fail (net_level);
   g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
-  g_return_if_fail (a > 0);
+
+  if (a < 1) a = 1;
 
   net_level->_priv->a = a;
 }
@@ -293,12 +297,11 @@ sim_net_level_set_a (SimNetLevel  *net_level,
  */
 void
 sim_net_level_plus_a (SimNetLevel  *net_level,
-		      gint          a)
+		      gdouble       a)
 {
   g_return_if_fail (net_level);
   g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
-  g_return_if_fail (a > 0);
-  
+
   net_level->_priv->a += a;
 }
 
@@ -313,7 +316,7 @@ sim_net_level_set_recovery (SimNetLevel  *net_level,
 {
   g_return_if_fail (net_level);
   g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
-  g_return_if_fail (recovery > 0);
+  g_return_if_fail (recovery >= 0);
 
   if (net_level->_priv->c > recovery)
     net_level->_priv->c -= recovery;
@@ -335,15 +338,18 @@ gchar*
 sim_net_level_get_insert_clause (SimNetLevel  *net_level)
 {
   gchar *query;
+  gint   c = 0;
+  gint   a = 0;
 
   g_return_val_if_fail (net_level, NULL);
   g_return_val_if_fail (SIM_IS_NET_LEVEL (net_level), NULL);
   g_return_val_if_fail (net_level->_priv->name, NULL);
 
+  c = rint (net_level->_priv->c);
+  a = rint (net_level->_priv->a);
+
   query = g_strdup_printf ("INSERT INTO net_qualification VALUES ('%s', %d, %d)",
-			   net_level->_priv->name,
-			   net_level->_priv->c,
-			   net_level->_priv->a);
+			   net_level->_priv->name, c, a);
 
   return query;
 }
@@ -357,15 +363,18 @@ gchar*
 sim_net_level_get_update_clause (SimNetLevel  *net_level)
 {
   gchar *query;
+  gint   c = 0;
+  gint   a = 0;
 
   g_return_val_if_fail (net_level, NULL);
   g_return_val_if_fail (SIM_IS_NET_LEVEL (net_level), NULL);
   g_return_val_if_fail (net_level->_priv->name, NULL);
 
+  c = rint (net_level->_priv->c);
+  a = rint (net_level->_priv->a);
+
   query = g_strdup_printf ("UPDATE net_qualification SET compromise = %d, attack = %d WHERE net_name = '%s'",
-			   net_level->_priv->c,
-			   net_level->_priv->a,
-			   net_level->_priv->name);
+			   c, a, net_level->_priv->name);
 
   return query;
 }

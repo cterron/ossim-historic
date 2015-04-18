@@ -7,7 +7,7 @@
 <body>
 
   <h1>OSSIM Framework</h1>
-  <h2>Configuration</h2>
+  <h2>RiskMeter Configuration</h2>
 
 <?php
     require_once 'classes/Conf.inc';
@@ -21,7 +21,6 @@
 
   <table align="center">
   <form method="post" action="modifyconf.php">
-    <tr><th colspan="2">General Options</th></tr>
     <tr>
       <td align="right">Recovery level</td>
       <td align="left">
@@ -47,15 +46,6 @@
       </td>
     </tr>
     <tr><th colspan="2"></th></tr>
-    <tr>
-      <td colspan="2">
-        <a href="reload.php">Reload All</a>
-      </td>
-    </tr>
-    <tr><th colspan="2"></th></tr>
-    <tr><td colspan="2"><a href="../sensor/editsensor.php">Edit remote sensor</a></td></tr>
-    <tr><th colspan="2"></th></tr>
-    <tr><th colspan="2">Appearance</th></tr>
     <tr>
       <td align="right">Left Bar length</td>
       <td align="left">

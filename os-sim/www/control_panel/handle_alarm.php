@@ -27,8 +27,8 @@ while (list($utime) = each($_GET)) {
 $db->close($conn);
 
 ?>
-    <p>Successfully Deleted</p>
-    <p><a href="index.php">Back</a></p>
+    <p>Successfully Acknowledged</p>
+    <p><a href="alarm_console.php">Back</a></p>
 
 </body>
 </html>

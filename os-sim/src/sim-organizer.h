@@ -85,7 +85,10 @@ void              sim_organizer_correlation                     (SimOrganizer  *
 /* Correlate Function */
 void              sim_organizer_snort                           (SimOrganizer  *organizer,
 								 SimAlert      *alert);
-
+/* Util Function */
+void              sim_organizer_backlog_match                   (SimDatabase   *db_ossim,
+								 SimDirective  *backlog,
+								 SimAlert      *alert);
 
 G_END_DECLS
 

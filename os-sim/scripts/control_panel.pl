@@ -2,6 +2,7 @@
 
 use ossim_conf;
 use DBI;
+use POSIX;
 
 use strict;
 use warnings;
@@ -42,6 +43,11 @@ while ((my $rrd_file =
 
     chop($day_max_c); chop($day_avg_c);
     chop($day_max_a); chop($day_avg_a);
+    
+    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1D compromise net`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1D attack net`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     my $query = "SELECT net_name FROM control_panel_net 
         WHERE net_name = '$net_name' AND time_range = 'day'";
@@ -50,12 +56,13 @@ while ((my $rrd_file =
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_net 
                     VALUES ('$net_name', 'day', '$day_max_c', 
-                            '$day_max_a', '$day_avg_c', '$day_avg_a')";
+                            '$day_max_a', '$max_c_date', '$max_a_date', '$day_avg_c', '$day_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($day_max_c > 0) || ($day_max_a > 0)) { 
         $query = "UPDATE control_panel_net 
             SET max_c = '$day_max_c', max_a = '$day_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$day_avg_c', avg_a = '$day_avg_a' 
             WHERE net_name = '$net_name' AND time_range = 'day'";
         $sth = $dbh->prepare($query);
@@ -78,6 +85,11 @@ while ((my $rrd_file =
     chop($month_max_c); chop($month_avg_c);
     chop($month_max_a); chop($month_avg_a);
 
+    $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1M compromise net`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1M attack net`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
+
     $query = "SELECT net_name FROM control_panel_net 
         WHERE net_name = '$net_name' AND time_range = 'month'";
     $sth = $dbh->prepare($query);
@@ -85,12 +97,13 @@ while ((my $rrd_file =
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_net 
                     VALUES ('$net_name', 'month', '$month_max_c', 
-                            '$month_max_a', '$month_avg_c', '$month_avg_a')";
+                            '$month_max_a', '$max_c_date', '$max_a_date', '$month_avg_c', '$month_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($month_max_c > 0) || ($month_max_a > 0)) {
         $query = "UPDATE control_panel_net 
             SET max_c = '$month_max_c', max_a = '$month_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$month_avg_c', avg_a = '$month_avg_a' 
             WHERE net_name = '$net_name' AND time_range = 'month'";
         $sth = $dbh->prepare($query);
@@ -112,6 +125,11 @@ while ((my $rrd_file =
 
     chop($year_max_c); chop($year_avg_c);
     chop($year_max_a); chop($year_avg_a);
+    
+    $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1Y compromise net`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $net_name 1Y attack net`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     # clean up!
     if ($year_max_c == 'nan' || $year_max_a == 'nan') {
@@ -128,12 +146,13 @@ while ((my $rrd_file =
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_net 
                     VALUES ('$net_name', 'year', '$year_max_c', 
-                            '$year_max_a', '$year_avg_c', '$year_avg_a')";
+                            '$year_max_a', '$max_c_date', '$max_a_date', '$year_avg_c', '$year_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($year_max_c > 0) || ($year_max_a > 0)) {
         $query = "UPDATE control_panel_net 
             SET max_c = '$year_max_c', max_a = '$year_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$year_avg_c', avg_a = '$year_avg_a' 
             WHERE net_name = '$net_name' AND time_range = 'year'";
         $sth = $dbh->prepare($query);
@@ -154,6 +173,7 @@ while ((my $rrd_file =
     $host_ip =~ s/\.rrd$//;
     $host_ip =~ s/\/.*\///;
 
+
     my $query;
     my $sth;
     my $stat_time = (stat($rrd_file))[9];
@@ -167,6 +187,11 @@ if($stat_time + $day_seconds >= time()){
     chop($day_max_c); chop($day_avg_c);
     chop($day_max_a); chop($day_avg_a);
 
+    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1D compromise host`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1D attack host`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
+
     my $query = "SELECT host_ip FROM control_panel_host 
         WHERE host_ip = '$host_ip' AND time_range = 'day'";
     my $sth = $dbh->prepare($query);
@@ -174,12 +199,13 @@ if($stat_time + $day_seconds >= time()){
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_host 
                     VALUES ('$host_ip', 'day', '$day_max_c', 
-                            '$day_max_a', '$day_avg_c', '$day_avg_a')";
+                            '$day_max_a', '$max_c_date', '$max_a_date', '$day_avg_c', '$day_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($day_max_c > 0) || ($day_max_a > 0)) { 
         $query = "UPDATE control_panel_host 
             SET max_c = '$day_max_c', max_a = '$day_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$day_avg_c', avg_a = '$day_avg_a' 
             WHERE host_ip = '$host_ip' AND time_range = 'day'";
         $sth = $dbh->prepare($query);
@@ -204,6 +230,10 @@ if($stat_time + $month_seconds >= time()){
     chop($month_max_c); chop($month_avg_c);
     chop($month_max_a); chop($month_avg_a);
 
+    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1M compromise host`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1M attack host`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     $query = "SELECT host_ip FROM control_panel_host 
         WHERE host_ip = '$host_ip' AND time_range = 'month'";
@@ -212,12 +242,13 @@ if($stat_time + $month_seconds >= time()){
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_host 
                     VALUES ('$host_ip', 'month', '$month_max_c', 
-                            '$month_max_a', '$month_avg_c', '$month_avg_a')";
+                            '$month_max_a', '$max_c_date', '$max_a_date', '$month_avg_c', '$month_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($month_max_c > 0) || ($month_max_a > 0)) {
         $query = "UPDATE control_panel_host 
             SET max_c = '$month_max_c', max_a = '$month_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$month_avg_c', avg_a = '$month_avg_a' 
             WHERE host_ip = '$host_ip' AND time_range = 'month'";
         $sth = $dbh->prepare($query);
@@ -240,6 +271,11 @@ if($stat_time + $year_seconds >= time()){
 
     chop($year_max_c); chop($year_avg_c);
     chop($year_max_a); chop($year_avg_a);
+    
+    my $max_c_date= `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1Y compromise host`;
+    $max_c_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_c_date));
+    my $max_a_date = `$ossim_conf::ossim_data->{base_dir}/scripts/get_date.pl $host_ip 1Y attack host`;
+    $max_a_date = POSIX::strftime("%Y-%m-%d %H:%M:%S", localtime($max_a_date));
 
     $query = "SELECT host_ip FROM control_panel_host 
         WHERE host_ip = '$host_ip' AND time_range = 'year'";
@@ -248,12 +284,13 @@ if($stat_time + $year_seconds >= time()){
     if ($sth->rows == 0) {
         $query = "INSERT INTO control_panel_host 
                     VALUES ('$host_ip', 'year', '$year_max_c', 
-                            '$year_max_a', '$year_avg_c', '$year_avg_a')";
+                            '$year_max_a', '$max_c_date', '$max_a_date', '$year_avg_c', '$year_avg_a')";
         $sth = $dbh->prepare($query);
         $sth->execute();
     } elsif (($year_max_c > 0) || ($year_max_a > 0)) {
         $query = "UPDATE control_panel_host 
             SET max_c = '$year_max_c', max_a = '$year_max_a',
+                max_c_date = '$max_c_date', max_a_date = '$max_a_date',
                 avg_c = '$year_avg_c', avg_a = '$year_avg_a' 
             WHERE host_ip = '$host_ip' AND time_range = 'year'";
         $sth = $dbh->prepare($query);
