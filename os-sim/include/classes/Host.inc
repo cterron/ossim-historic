@@ -48,8 +48,8 @@ class Host {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        mysql_escape_string($where);
-        mysql_escape_string($order);
+        mysql_real_escape_string($where);
+        mysql_real_escape_string($order);
 
         $query = "SELECT * FROM host $where $order";
         if (!$rs = &$conn->Execute($query)) {
@@ -132,7 +132,7 @@ class Host {
     }
 
     function delete($conn, $ip) {
-        $ip = mysql_escape_string($ip);
+        $ip = mysql_real_escape_string($ip);
         $query = "DELETE FROM host WHERE ip = '$ip';";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
@@ -143,7 +143,7 @@ class Host {
     }
 
     function ip2hostname($conn, $ip) {
-        $ip = mysql_escape_string($ip);
+        $ip = mysql_real_escape_string($ip);
         $query = "SELECT * FROM host WHERE ip = '$ip';";
         if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
@@ -161,7 +161,7 @@ class Host {
     }
 
     function ipthresh_c($conn, $ip) {
-        $ip = mysql_escape_string($ip);
+        $ip = mysql_real_escape_string($ip);
         $query = "SELECT * FROM host WHERE ip = '$ip';";
         if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
@@ -177,7 +177,7 @@ class Host {
     }
 
     function ipthresh_a($conn, $ip) {
-        $ip = mysql_escape_string($ip);
+        $ip = mysql_real_escape_string($ip);
         $query = "SELECT * FROM host WHERE ip = '$ip';";
         if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
@@ -193,7 +193,7 @@ class Host {
     }
 
     function in_host($conn, $ip) {
-        $ip = mysql_escape_string($ip);
+        $ip = mysql_real_escape_string($ip);
         if (!$rs = &$conn->Execute("SELECT * FROM host WHERE ip = '$ip'")) {
             print $conn->ErrorMsg();
         }

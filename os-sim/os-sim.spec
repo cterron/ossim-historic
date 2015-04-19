@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.7rc1
+Version:   0.9.7rc2
 Release:   1
 License:   BSD
 Group:     Applications/Security

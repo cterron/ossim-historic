@@ -2477,6 +2477,54 @@ INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, p
 INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, persistence) VALUES ("global", 'mail_sessions', 1, 5, 0.1, 0.0035, 4);
 INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, persistence) VALUES ("global", 'nb_sessions', 1, 5, 0.1, 0.0035, 4);
 
+INSERT INTO rrd_config VALUES ('Default','activeHostSendersNum',500,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','arpRarpBytes',50,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','broadcastPkts',500,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','ethernetBytes',300000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','ethernetPkts',1000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','fragmentedIpBytes',100,1,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','icmpBytes',5000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','igmpBytes',100,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','ipBytes',1000000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','ipv6Bytes',500,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','ipxBytes',100,1,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_DHCP-BOOTPBytes',1,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_DNSBytes',10000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_eDonkeyBytes',1000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_FTPBytes',1000000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_GnutellaBytes',1000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_HTTPBytes',100000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_KazaaBytes',1000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_MailBytes',2500,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_MessengerBytes',1000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_NBios-IPBytes',200000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_NFSBytes',100,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_NNTPBytes',100,1,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_SNMPBytes',20,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_SSHBytes',10000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_TelnetBytes',500,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_WinMXBytes',1000,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','IP_X11Bytes',1000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','knownHostsNum',600,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','mail_sessions',1,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','multicastPkts',10,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','nb_sessions',1,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','otherBytes',10000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','otherIpBytes',10000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','stpBytes',500,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','synPktsRcvd',3,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','synPktsSent',4,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','tcpBytes',800000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','totContactedRcvdPeers',1,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','totContactedSentPeers',1,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','udpBytes',200000,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo1024Pkts',40,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo128Pkts',500,1,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo1518Pkts',40,5,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo256Pkts',80,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo512Pkts',80,3,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','upTo64Pkts',500,1,0.1,0.0035,4,1,'');
+INSERT INTO rrd_config VALUES ('Default','web_sessions',5,5,0.1,0.0035,4,1,'');
 
 --
 -- Data: Category
@@ -7943,46 +7991,46 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, r
 --
 
 -- Alert Messages, Severity 1
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101001, NULL, NULL, 'CiscoPIX: Failover cable OK', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101002, NULL, NULL, 'CiscoPIX: Bad failover cable', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101003, NULL, NULL, 'CiscoPIX: Failover cable not connected (this unit)', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101004, NULL, NULL, 'CiscoPIX: Failover cable not connected (other unit)', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101005, NULL, NULL, 'CiscoPIX: Error reading failover cable status', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 102001, NULL, NULL, 'CiscoPIX: Power failure/System reload other side', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103001, NULL, NULL, 'CiscoPIX: No response from other firewall', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103002, NULL, NULL, 'CiscoPIX: Other firewall network interface OK', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103003, NULL, NULL, 'CiscoPIX: Other firewall network interface failed', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103004, NULL, NULL, 'CiscoPIX: Other firewall reports this firewall failed', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103005, NULL, NULL, 'CiscoPIX: Other firewall reporting failure', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104001, NULL, NULL, 'CiscoPIX: Switching to ACTIVE', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104002, NULL, NULL, 'CiscoPIX: Switching to STNDBY', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104003, NULL, NULL, 'CiscoPIX: Switching to FAILED', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104004, NULL, NULL, 'CiscoPIX: Switching to OK', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105001, NULL, NULL, 'CiscoPIX: Disabling failover', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105002, NULL, NULL, 'CiscoPIX: Enabling failover', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105003, NULL, NULL, 'CiscoPIX: Monitoring waiting', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105004, NULL, NULL, 'CiscoPIX: Monitoring normal', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105005, NULL, NULL, 'CiscoPIX: Lost Failover communications with mate', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105006, NULL, NULL, 'CiscoPIX: Link status UP', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105007, NULL, NULL, 'CiscoPIX: Link status DOWN', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105008, NULL, NULL, 'CiscoPIX: Testing interface', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105009, NULL, NULL, 'CiscoPIX: Testing on interface', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105011, NULL, NULL, 'CiscoPIX: Failover cable communication failure', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105020, NULL, NULL, 'CiscoPIX: Incomplete/slow config replication', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105031, NULL, NULL, 'CiscoPIX: Failover LAN interface is up', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105032, NULL, NULL, 'CiscoPIX: LAN Failover interface is down', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105034, NULL, NULL, 'CiscoPIX: Receive a LAN_FAILOVER_UP message from peer', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105035, NULL, NULL, 'CiscoPIX: Receive a LAN failover interface down msg from peer', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105036, NULL, NULL, 'CiscoPIX: PIX dropped a LAN Failover command message', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105037, NULL, NULL, 'CiscoPIX: The primary and standby units are switching back and forth as the active unit', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106021, NULL, NULL, 'CiscoPIX: Deny protocol reverse path check', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106022, NULL, NULL, 'CiscoPIX: Deny protocol connection spoof', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 107001, NULL, NULL, 'CiscoPIX: RIP auth failed', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 107002, NULL, NULL, 'CiscoPIX: RIP pkt failed', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709003, NULL, NULL, 'CiscoPIX: Beginning configuration replication: Receiving from mate', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709004, NULL, NULL, 'CiscoPIX: End Configuration Replication (ACT)', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709005, NULL, NULL, 'CiscoPIX: Beginning configuration replication: Receiving from mate', 3)
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709006, NULL, NULL, 'CiscoPIX: End Configuration Replication (STB)', 3)
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101001, NULL, NULL, 'CiscoPIX: Failover cable OK', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101002, NULL, NULL, 'CiscoPIX: Bad failover cable', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101003, NULL, NULL, 'CiscoPIX: Failover cable not connected (this unit)', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101004, NULL, NULL, 'CiscoPIX: Failover cable not connected (other unit)', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 101005, NULL, NULL, 'CiscoPIX: Error reading failover cable status', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 102001, NULL, NULL, 'CiscoPIX: Power failure/System reload other side', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103001, NULL, NULL, 'CiscoPIX: No response from other firewall', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103002, NULL, NULL, 'CiscoPIX: Other firewall network interface OK', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103003, NULL, NULL, 'CiscoPIX: Other firewall network interface failed', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103004, NULL, NULL, 'CiscoPIX: Other firewall reports this firewall failed', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 103005, NULL, NULL, 'CiscoPIX: Other firewall reporting failure', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104001, NULL, NULL, 'CiscoPIX: Switching to ACTIVE', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104002, NULL, NULL, 'CiscoPIX: Switching to STNDBY', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104003, NULL, NULL, 'CiscoPIX: Switching to FAILED', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 104004, NULL, NULL, 'CiscoPIX: Switching to OK', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105001, NULL, NULL, 'CiscoPIX: Disabling failover', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105002, NULL, NULL, 'CiscoPIX: Enabling failover', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105003, NULL, NULL, 'CiscoPIX: Monitoring waiting', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105004, NULL, NULL, 'CiscoPIX: Monitoring normal', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105005, NULL, NULL, 'CiscoPIX: Lost Failover communications with mate', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105006, NULL, NULL, 'CiscoPIX: Link status UP', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105007, NULL, NULL, 'CiscoPIX: Link status DOWN', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105008, NULL, NULL, 'CiscoPIX: Testing interface', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105009, NULL, NULL, 'CiscoPIX: Testing on interface', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105011, NULL, NULL, 'CiscoPIX: Failover cable communication failure', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105020, NULL, NULL, 'CiscoPIX: Incomplete/slow config replication', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105031, NULL, NULL, 'CiscoPIX: Failover LAN interface is up', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105032, NULL, NULL, 'CiscoPIX: LAN Failover interface is down', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105034, NULL, NULL, 'CiscoPIX: Receive a LAN_FAILOVER_UP message from peer', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105035, NULL, NULL, 'CiscoPIX: Receive a LAN failover interface down msg from peer', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105036, NULL, NULL, 'CiscoPIX: PIX dropped a LAN Failover command message', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105037, NULL, NULL, 'CiscoPIX: The primary and standby units are switching back and forth as the active unit', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106021, NULL, NULL, 'CiscoPIX: Deny protocol reverse path check', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106022, NULL, NULL, 'CiscoPIX: Deny protocol connection spoof', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 107001, NULL, NULL, 'CiscoPIX: RIP auth failed', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 107002, NULL, NULL, 'CiscoPIX: RIP pkt failed', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709003, NULL, NULL, 'CiscoPIX: Beginning configuration replication: Receiving from mate', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709004, NULL, NULL, 'CiscoPIX: End Configuration Replication (ACT)', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709005, NULL, NULL, 'CiscoPIX: Beginning configuration replication: Receiving from mate', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709006, NULL, NULL, 'CiscoPIX: End Configuration Replication (STB)', 3);
 
 -- Critical Messages, Severity 2
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106001, NULL, NULL, 'CiscoPIX: Inbound TCP connection denied', 2);

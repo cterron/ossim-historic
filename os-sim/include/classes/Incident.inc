@@ -142,8 +142,15 @@ class Incident {
 
     function get_list ($conn, $args = "")
     {
-        $args = mysql_escape_string($args);
-        $query = "SELECT * FROM incident $args";
+        $query = "SELECT DISTINCT incident.id as id,
+                incident.title as title,
+                incident.date as date,
+                incident.ref as ref,
+                incident.priority as priority
+            FROM incident LEFT JOIN incident_ticket 
+                ON incident.id = incident_ticket.incident_id 
+                LEFT JOIN incident_file 
+                    ON incident.id = incident_file.incident_id $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {

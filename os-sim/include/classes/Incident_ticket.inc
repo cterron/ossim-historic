@@ -68,7 +68,6 @@ class Incident_ticket {
 
     function get_list ($conn, $args)
     {
-        $args = mysql_escape_string($args);
         $query = "SELECT * FROM incident_ticket $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -96,14 +95,15 @@ class Incident_ticket {
                      $user, $description, $action, 
                      $in_charge, $transferred, $copy, $attachment)
     {
-        $incident_id = intval($incident_id);
-        $status = htmlentities($status);
-        $priority = intval($priority);
-        $user = htmlentities($user);
-        $description = htmlentities($description);
-        $action = htmlentities($action);
-        $in_charge = htmlentities($in_charge);
-        $transferred = htmlentities($transferred);
+    
+        $incident_id    = intval($incident_id);
+        $priority       = intval($priority);
+        $description    = ereg_replace("<[^>]*>", "", $description);
+        $status         = ereg_replace("<[^>]*>", "", $status);
+        $user           = ereg_replace("<[^>]*>", "", $user);
+        $action         = ereg_replace("<[^>]*>", "", $action);
+        $in_charge      = ereg_replace("<[^>]*>", "", $in_charge);
+        $transferred    = ereg_replace("<[^>]*>", "", $transferred);
 
         $query = "INSERT into incident_ticket (
             incident_id, status, priority, users, description, action, 

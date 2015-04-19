@@ -122,7 +122,8 @@ Session::logcheck("MenuReports", "ReportsIncidents");
         exit;
     }
 
-    $incident_list = Incident::get_list($conn, "WHERE id = $incident_id");
+    $incident_list = Incident::get_list($conn, 
+                                        "WHERE incident.id = $incident_id");
     $incident = $incident_list[0];
 
     /* insert new ticket */
@@ -335,7 +336,8 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                                      $_POST["target"]);
 
         /* re-read from db */
-        $incident_list = Incident::get_list($conn, "WHERE id = $incident_id");
+        $incident_list = Incident::get_list($conn, 
+                                            "WHERE incident.id = $incident_id");
         $incident = $incident_list[0];
     }
 

@@ -30,7 +30,6 @@ class Incident_file {
 
     function get_list ($conn, $args)
     {
-        $args = mysql_escape_string($args);
         $query = "SELECT * FROM incident_file $args";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();

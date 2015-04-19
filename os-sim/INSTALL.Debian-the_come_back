@@ -42,6 +42,10 @@
       5.1 Snort
       5.2 Ntop
       5.3 Nessus server
+      5.4 TcpTrack
+      5.5 Pads
+      5.6 P0f
+      5.7 Arpwatch
     6. Tools
 
 
@@ -69,7 +73,7 @@
   
   Ossim structure can be divided into 4 components, each can be installed
   on different hosts :
-    - Databases: ossim, acid and phpgacl.
+    - Databases: ossim, snort/acid and phpgacl.
     - Server: it runs the correlation engine.
     - Framework: the web interface where you'll interact with Ossim
     - Agents: they run plugins that sends the results of various tools such
@@ -165,7 +169,8 @@
      mysql> exit
      # cd $OSSIM_PATH/db
      # cat create_mysql.sql | mysql -u root ossim -p
-     # ls *.sql | grep -v ^create | xargs cat | mysql -u root ossim -p
+     # cat ossim_data.sql snort_nessus.sql realsecure.sql | \
+       mysql -u root ossim -p
 
   For complete description of Ossim database structure check :
   $OSSIM_PATH/doc/ossim_db_structure.txt
@@ -179,14 +184,24 @@
   as Ossim uses it to store alerts from others plugin.
 
   First you have to get create_mysql.gz from snort-mysql install and 
-  create_acid_tbls_mysql.sql from Acid patched for ossim. For snort tables, if
-  you have snort install on the same host :
+  create_acid_tbls_mysql.sql from Acid patched for ossim. 
+  
+  You can get these .sql files via apt-get source:
+
+    # apt-get source snort-mysql acidlab
+    # cd acidlab-0.9.6b20/
+    # patch -p1 < $OSSIM_PATH/contrib/acid.patch
+
+  Snort tables:
+    # cat $SNORT_SOURCE/contrib/create_mysql | mysql -u root -p snort
+
+  Acid tables:
+    # cat $ACID_SOURCE/create_acid_tbls_mysql.sql | mysql -u root snort -p
+
+  If you are going to install snort and acid on the same host, just type
+  (after installing snort/acid, see sections 5.1 and 4.5):
 
     # zcat /usr/share/doc/snort-mysql/contrib/create_mysql.gz | mysql -u root -p snort
-    
-  If you install the framework on the same host, just type (after
-  installing Acid, see below) :
-
     # cat /usr/share/acidlab/create_acid_tbls_mysql.sql | mysql -u root snort -p
 
   2.3 Updating from Ossim 0.9.6
@@ -492,7 +507,7 @@
 
     $ cp $OSSIM_PATH/scripts/draw_graph.pl /usr/lib/cgi-bin/
 
-  NOTE: there is three versions of draw_graph (normal, combined and fournier).
+  NOTE: there are three versions of draw_graph (normal, combined and fournier).
   Choose the one you prefer.
 
   Take a look at the section links of '/etc/ossim/framework/ossim.conf'
@@ -915,6 +930,65 @@
     DN                :
     Rules             :
 
+  
+  5.4 tcptrack
+  ------------
+
+  It's quite easy, you install the source package, patch it, recompile it
+  and install it :
+
+    # apt-get source tcptrack
+    # cd tcptrack-x.x.x
+    # patch -p1 < $OSSIM_PATH/tcptrack-1.1.3-ossim.patch
+    # dpkg-buildpackage -rfakeroot -uc -b
+    # cd ..
+    # dpkg -i tcptrack_1.1.3-1_i386.deb
+
+  A good way to run tcptrack is:
+
+    # tcptrack -i $your_interface -P 4003 -D 2> /var/log/tcptrack.log
+
+  5.5 Pads
+  --------
+  
+  Passive Asset Detection System (http://passive.sourceforge.net/)
+
+  There is no pads package for Debian. You have to download/compile yourself.
+  Follow the steps described at http://passive.sourceforge.net/download.php.
+
+  A good way to run pads is:
+
+    # /usr/local/bin/pads -i $your_interface -D -w /var/log/assets.csv
+
+  
+  5.6 p0f
+  -------
+
+  It's very simple:
+
+    # apt-get install p0f
+
+  A good way to run p0f is:
+
+    # p0f -i $your_interface -lNtd -o /var/log/p0f.log
+
+
+  5.7 arpwatch
+  ------------
+  
+  It's very simple:
+  
+    # apt-get install arpwatch
+
+  A good way to run arpwatch is:
+
+    # arpwatch -d -i $your_interface -f /var/lib/arpwatch/arp.dat >> \
+        /var/log/arpwatch.log &
+
+  Take a look at /etc/arpwatch.conf for the Debian-specific way to watch
+  multiple interfaces. For other distributions you will need the patch
+  provided by Ossim sources.
+
 
   6. Tools
   ==========================================================================
@@ -932,6 +1006,30 @@
   You can also use option stop and restart (self-explaining options).
 
 
+  Experimental
+  ============
+
+  Actually the script draw_fournier.pl has some functions in test in
+  order to draw and tune rrd files of NTop. In the header of the script
+  there's a description of the different paramaters that you can pass to
+  it.
+  For example to see a rrd, use a link like this :
+
+    http://ossim_server/cgi-bin/draw_fournier.pl?what=anomaly&ip=xxx.xxx.xxx.xxx&start=now-12h&end=now&&file=pktSent
+
+  Take care to allow apache user to read the rrd file (you can set this in ntop
+  rrd_plugin configuration page).
+
+  To tune a Holt-Winter parameter try something like this :
+
+     http://ossim_server/cgi-bin/draw_fournier.pl?what=tune&hwparam=alpha&ip=xxx.xxx.xxx.xxx&start=now-12h&end=now&&file=pktSent
+
+  Now you have to grant write access to rrd file to the Apache user.
+  The Holt-Winter parameters are : alpha, beta, gamma, gamma-deviation,
+  deltapos, deltaneg, threshold and window_length.
+
+  You can also try http://ossim_server/report/anomalies.php
+  
 
 
   TODO

@@ -1,8 +1,24 @@
 # ChangeLog for OSSIM
 
+	01 Oct 2004 DK <dk@ossim.net> :
+	* 0.9.7rc2 released.
+
+* OSSIM-0.9.7rc2 (01 Oct 2004)
+
+	1 Oct 2004 David Gil <dgil@ossim.net> :
+	* www/incidents/(index|incident).php: 
+	  Incident manager improvements and bugfixes.
+	* www/pixmaps/incident.png: 
+	  New icon at control panel and alarm console for inserting new incidents.
+	* db/ossim_data.sql: 
+	  Many lines without ";" at the end of line. Fixed, thanks to bswrchrd.
+
+	30 Sep 2004 pitufo :
+	* tcptrack patch bug fixes
+
 	24 Sep 2004 DK <dk@ossim.net> :
-    * 0.9.7rc1 released.
-    * Ppl, write your own changelog.
+	* 0.9.7rc1 released.
+	* Ppl, write your own changelog.
 
 * OSSIM-0.9.7rc1 (24 Sep 2004)
 

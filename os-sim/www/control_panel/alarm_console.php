@@ -306,7 +306,7 @@ if (!$sup = $_GET["sup"])
             <?php echo "<a href=\"$dst_link\">$dst_name</a>:$dst_port $dst_img"; ?></td>
         <!-- end src & dst hosts -->
         
-        <td>
+        <td nowrap>
 <?php
         $alert_id = $alarm->get_alert_id();
         if ($backlog_id == 0) {
@@ -321,14 +321,16 @@ if (!$sup = $_GET["sup"])
 <?php
         }
 ?>
-        [<a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/incident.php?insert=1&" .
             "ref=Alarm&"  .
             "title=$alarm_name_orig&" .
             "priority=$risk&" .
             "src_ips=$src_ip&" .
             "src_ports=$src_port&" .
             "dst_ips=$dst_ip&" .
-            "dst_ports=$dst_port"  ?>">i</a>]
+            "dst_ports=$dst_port"  ?>">
+            <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
+            </a>
         </td>
       </tr>
 <?php

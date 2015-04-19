@@ -110,7 +110,7 @@ class Net {
     }
 
     function delete($conn, $name) {
-        $name = mysql_escape_string($name);
+        $name = mysql_real_escape_string($name);
         $query = "DELETE FROM net WHERE name = '$name';";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
@@ -123,7 +123,7 @@ class Net {
     }
 
     function netthresh_c($conn, $name) {
-        $name = mysql_escape_string($name);
+        $name = mysql_real_escape_string($name);
         $query = "SELECT * FROM net WHERE name = '$name';";
         if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
@@ -139,7 +139,7 @@ class Net {
     }
 
     function netthresh_a($conn, $name) {
-        $name = mysql_escape_string($name);
+        $name = mysql_real_escape_string($name);
         $query = "SELECT * FROM net WHERE name = '$name';";
         if (!$rs = $conn->Execute($query)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
@@ -179,7 +179,7 @@ class Net {
 
     function enable_nessus($conn, $net_name)
     {
-        $name = mysql_escape_string($name);
+        $name = mysql_real_escape_string($name);
         $query = "INSERT INTO net_scan (net_name, plugin_id, plugin_sid) 
             VALUES ('$net_name', 3001, 0)";
         if ($conn->Execute($query) === false) {
@@ -189,7 +189,7 @@ class Net {
     }
     function disable_nessus($conn, $net_name)
     {
-        $name = mysql_escape_string($name);
+        $name = mysql_real_escape_string($name);
         $query = "DELETE FROM net_scan 
             WHERE net_name = '$net_name' AND plugin_id = 3001";
         if ($conn->Execute($query) === false) {
