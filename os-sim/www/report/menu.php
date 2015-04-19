@@ -29,8 +29,9 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     $ip_slashed = str_replace(".", "/", $ip);
 
     $acid_link = $conf->get_conf("acid_link");
-    $acid_main_link = $conf->get_conf("acid_link") .
-        "acid_stat_ipaddr.php?ip=$ip&netmask=32";
+    $acid_prefix = $conf->get_conf("alert_viewer");
+    $acid_main_link = $conf->get_conf("acid_link") . "/" . $acid_prefix .
+        "_stat_ipaddr.php?ip=$ip&netmask=32";
     $interface = $conf->get_conf("ossim_interface");
 ?>
 
@@ -61,10 +62,10 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo $acid_main_link ?>"
     target="report">
     <?php echo gettext("Main"); ?> </a><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo "$acid_link/acid_stat_alerts.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$_GET["host"]."&ip_addr_cnt=1&sort_order=time_d" ?>"
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo "$acid_link/".$acid_prefix."_stat_alerts.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=".$_GET["host"]."&ip_addr_cnt=1&sort_order=time_d" ?>"
     target="report">
     <?php echo gettext("Src Unique alerts"); ?> </a><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo "$acid_link/acid_stat_alerts.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr[0][1]=ip_dst&ip_addr[0][2]==&ip_addr[0][3]=".$_GET["host"]."&ip_addr_cnt=1&sort_order=time_d" ?>"
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo "$acid_link/".$acid_prefix."_stat_alerts.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr[0][1]=ip_dst&ip_addr[0][2]==&ip_addr[0][3]=".$_GET["host"]."&ip_addr_cnt=1&sort_order=time_d" ?>"
     target="report">
     <?php echo gettext("Dst Unique alerts"); ?> </a><br/><br/>
 

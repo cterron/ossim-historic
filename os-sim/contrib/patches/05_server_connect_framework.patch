@@ -1,0 +1,319 @@
+diff -auNr os-sim/src/Makefile.am ossim.new/src/Makefile.am
+--- os-sim/src/Makefile.am	2004-06-22 19:06:06.000000000 +0200
++++ ossim.new/src/Makefile.am	2005-05-18 14:41:02.000000000 +0200
+@@ -34,6 +34,7 @@
+ 		sim-session.c \
+ 		sim-scheduler.c \
+ 		sim-organizer.c \
++		sim-connect.c \
+ 		sim-server.c \
+ 		main.c
+ 
+diff -auNr os-sim/src/sim-config.c ossim.new/src/sim-config.c
+--- os-sim/src/sim-config.c	2004-09-22 22:23:48.000000000 +0200
++++ ossim.new/src/sim-config.c	2005-05-18 14:41:05.000000000 +0200
+@@ -120,6 +120,10 @@
+ 
+   config->smtp.host = NULL;
+   config->smtp.port = 0;
++
++  config->framework.name = NULL;
++  config->framework.host = NULL;
++  config->framework.port = 0;
+ }
+ 
+ /* Public Methods */
+diff -auNr os-sim/src/sim-config.h ossim.new/src/sim-config.h
+--- os-sim/src/sim-config.h	2004-08-14 20:35:15.000000000 +0200
++++ ossim.new/src/sim-config.h	2005-05-18 14:41:08.000000000 +0200
+@@ -96,6 +96,12 @@
+     gint      port;
+   } smtp;
+ 
++  struct {
++    gchar    *name;
++    gchar    *host;
++    gint     *port;
++  } framework;
++
+ };
+ 
+ struct _SimConfigClass {
+diff -auNr os-sim/src/sim-connect.c ossim.new/src/sim-connect.c
+--- os-sim/src/sim-connect.c	1970-01-01 01:00:00.000000000 +0100
++++ ossim.new/src/sim-connect.c	2005-05-18 14:41:05.000000000 +0200
+@@ -0,0 +1,117 @@
++/* Copyright (c) 2003 ossim.net
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission
++ *    from the author.
++ *
++ * 4. Products derived from this software may not be called "Os-sim" nor
++ *    may "Os-sim" appear in their names without specific prior written
++ *    permission from the author.
++ *
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
++ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
++ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <config.h>
++#include <glib.h>
++#include "sim-util.h"
++#include "sim-connect.h"
++
++int
++sim_send_alert(SimConfig *config,SimAlert *alert) {
++{
++  GInetAddr* addr;
++  GTcpSocket* socket;
++  GIOChannel* iochannel;
++  GIOError error = G_IO_ERROR_NONE;
++  gchar *buffer = NULL;
++  gchar *hostname = NULL;
++  guint n;
++  GList	*notifies;
++  gint	risk,port;
++  gnet_init ();
++ 
++
++  hostname = g_strdup(config->framework.host);
++
++  if (!hostname)
++    {
++   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Hostname error"); 	
++    return 1;
++    }
++   
++  port = GPOINTER_TO_INT(config->framework.port);
++    
++ 
++  addr = gnet_inetaddr_new (hostname, port);
++  if (!addr)
++   {
++  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating the address");   
++    return 1;
++    }
++
++
++  socket = gnet_tcp_socket_new (addr);
++  gnet_inetaddr_delete (addr);
++  if (!socket)
++    {
++      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating socket");
++      return 1;
++     }
++
++/*La cadena que se envia*/  
++buffer=g_strdup(("prueba alert_id = %d ....... prueba backlog_id %d" ,alert->id,alert->backlog_id));
++
++if (!buffer)
++  { 
++	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message error");
++	return 1;
++   }
++	
++iochannel = gnet_tcp_socket_get_io_channel (socket);
++
++g_assert (iochannel != NULL);
++
++n = strlen(buffer);
++
++error = gnet_io_channel_writen (iochannel, buffer, n, &n);
++error = gnet_io_channel_readn (iochannel, buffer, n, &n);
++
++fwrite(buffer, n, 1, stdout);
++
++
++if (error != G_IO_ERROR_NONE)
++   { 
++    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message could not be sent"); 
++    free(buffer);
++    free (hostname);
++    return 1;
++   }
++
++gnet_tcp_socket_delete (socket);
++free(buffer);
++free(hostname);
++g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message sent succesfully");
++return 0;
++}
++}
+diff -auNr os-sim/src/sim-connect.h ossim.new/src/sim-connect.h
+--- os-sim/src/sim-connect.h	1970-01-01 01:00:00.000000000 +0100
++++ ossim.new/src/sim-connect.h	2005-05-18 14:41:08.000000000 +0200
+@@ -0,0 +1,55 @@
++/* Copyright (c) 2003 ossim.net
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission
++ *    from the author.
++ *
++ * 4. Products derived from this software may not be called "Os-sim" nor
++ *    may "Os-sim" appear in their names without specific prior written
++ *    permission from the author.
++ *
++ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
++ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
++ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef __SIM_CONNECT_H__
++#define __SIM_CONNECT_H__ 1
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <glib.h>
++#include <gnet.h>
++#include <glib-object.h>
++
++#include "sim-alert.h"
++#include "sim-config.h"
++
++G_BEGIN_DECLS
++
++int
++sim_send_alert	(SimConfig *config, SimAlert *alert); 
++
++G_END_DECLS
++
++#endif /* __SIM_CONNECT_H__ */
+diff -auNr os-sim/src/sim-organizer.c ossim.new/src/sim-organizer.c
+--- os-sim/src/sim-organizer.c	2005-04-07 16:20:17.000000000 +0200
++++ ossim.new/src/sim-organizer.c	2005-05-18 14:41:05.000000000 +0200
+@@ -47,7 +47,7 @@
+ #include "sim-directive.h"
+ #include "sim-host-level.h"
+ #include "sim-net-level.h"
+-
++#include "sim-connect.h"
+ #include <math.h>
+ #include <time.h>
+ 
+@@ -201,8 +201,10 @@
+       insert_alert_alarm (alert);
+       sim_organizer_correlation (organizer, alert);
+ 
+-      config_send_notify_email (organizer->_priv->config, alert);
+-
++      //config_send_notify_email (organizer->_priv->config, alert);
++     
++      sim_send_alert(organizer->_priv->config,alert);
++      
+       str = sim_alert_to_string (alert);
+       g_message ("sim_organizer_run: %s", str);
+       g_free (str);
+diff -auNr os-sim/src/sim-xml-config.c ossim.new/src/sim-xml-config.c
+--- os-sim/src/sim-xml-config.c	2004-08-14 20:35:15.000000000 +0200
++++ ossim.new/src/sim-xml-config.c	2005-05-18 14:41:05.000000000 +0200
+@@ -52,6 +52,7 @@
+ #define OBJECT_NOTIFIES         "notifies"
+ #define OBJECT_NOTIFY           "notify"
+ #define OBJECT_SMTP             "smtp"
++#define OBJECT_FRAMEWORK	"framework"
+ 
+ #define PROPERTY_NAME           "name"
+ #define PROPERTY_IP             "ip"
+@@ -387,6 +388,49 @@
+  *
+  */
+ void
++sim_xml_config_set_config_framework (SimXmlConfig  *xmlconfig,
++				  SimConfig     *config,
++				  xmlNodePtr     node)
++{
++  gchar  *value;
++  
++  g_return_if_fail (xmlconfig);
++  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
++  g_return_if_fail (config);
++  g_return_if_fail (SIM_IS_CONFIG (config));
++  g_return_if_fail (node);
++
++  if (strcmp (node->name, OBJECT_FRAMEWORK))
++    {
++      g_message ("Invalid sensor log node %s", node->name);
++      return;
++    }
++
++  if ((value = xmlGetProp (node, PROPERTY_NAME)))
++    {
++      config->framework.name = g_strdup (value);
++      xmlFree(value);      
++    }
++  if ((value = xmlGetProp (node, PROPERTY_IP)))
++    {
++      config->framework.host = g_strdup (value);
++      xmlFree(value);      
++    }
++  if ((value = xmlGetProp (node, PROPERTY_PORT)))
++    {
++      config->framework.port = g_strdup (value);
++      xmlFree(value);      
++    }
++}
++
++
++/*
++ *
++ *
++ *
++ *
++ */
++void
+ sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
+ 				      SimConfig     *config,
+ 				      xmlNodePtr     node)
+@@ -860,7 +904,10 @@
+       {
+ 	sim_xml_config_set_config_rservers (xmlconfig, config, children);
+       }
+-
++    if (!strcmp (children->name, OBJECT_FRAMEWORK))
++      {
++	sim_xml_config_set_config_framework (xmlconfig, config, children);
++      }
+     children = children->next;
+   }
+ 

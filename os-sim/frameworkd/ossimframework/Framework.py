@@ -21,7 +21,9 @@ class Framework:
                           help = "delay between iterations (seconds)", 
                           metavar="delay")
         parser.add_option("-c", "--config", dest="config_file", action="store",
-                           help = "read config from FILE", metavar="FILE")
+                          help="read config from FILE", metavar="FILE")
+        parser.add_option("-p", "--port", dest="listener_port", action="store",
+                          help="use PORT as listener port", metavar="PORT")
         (options, args) = parser.parse_args()
 
         if options.verbose and options.daemon:
@@ -61,6 +63,9 @@ class Framework:
 
         if options.sleep is not None:
             Const.SLEEP = options.sleep
+        
+        if options.listener_port is not None:
+            Const.LISTENER_PORT = options.listener_port
 
         # log directory
         if not os.path.isdir(Const.LOG_DIR):
@@ -80,6 +85,7 @@ class Framework:
 
 
     def main(self):
+
         for c in self.__classes :
             exec "from %s import %s" % (c, c)
             exec "t = %s()" % (c)

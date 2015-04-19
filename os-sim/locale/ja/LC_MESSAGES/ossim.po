@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: OSSIM 0.9.8\n"
 "POT-Creation-Date: 2005-03-18 11:40+0100\n"
 "PO-Revision-Date: 2005-01-18 16:39+0100\n"
-"Last-Translator: Stephane Fournier <gingurz@ossim.net>\n"
+"Last-Translator: Kazuki Nakajima <nkjm@ossim.net>\n"
 "Language-Team: Japanese <ja@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,55 +15,55 @@ msgstr ""
 
 #: conf/main.php:8 conf/main.php:301
 msgid "Main Configuration"
-msgstr ""
+msgstr "メイン設定"
 
 #: conf/main.php:22
 msgid "Language"
-msgstr "ê"
+msgstr "言語"
 
 #: conf/main.php:23
 msgid "Configure Internationalization"
-msgstr ""
+msgstr "国際化設定"
 
 #: conf/main.php:28
 msgid "German"
-msgstr "hCc"
+msgstr "ドイツ語"
 
 #: conf/main.php:29
 msgid "English"
-msgstr "p"
+msgstr "英語"
 
 #: conf/main.php:30
 msgid "Spanish"
-msgstr "XyC"
+msgstr "スペイン語"
 
 #: conf/main.php:31
 msgid "French"
-msgstr "tX"
+msgstr "フランス語"
 
 #: conf/main.php:32
 msgid "Japanese"
-msgstr ""
+msgstr "日本語"
 
 #: conf/main.php:33
 msgid "Brazilian Portuguese"
-msgstr ""
+msgstr "ブラジル・ポルトガル語"
 
 #: conf/main.php:34
 msgid "Simplified Chinese"
-msgstr ""
+msgstr "略式中国語"
 
 #: conf/main.php:35
 msgid "Traditional Chinese"
-msgstr ""
+msgstr "中国語"
 
 #: conf/main.php:43
 msgid "Server"
-msgstr ""
+msgstr "サーバ"
 
 #: conf/main.php:44
 msgid "Configure where the server's listening address"
-msgstr ""
+msgstr "サーバがListenするアドレスを設定して下さい"
 
 #: conf/main.php:54
 msgid "Snort"
@@ -71,7 +71,7 @@ msgstr ""
 
 #: conf/main.php:55
 msgid "Snort database and path configuration"
-msgstr ""
+msgstr "Snortデータベースとパスの設定"
 
 #: conf/main.php:71 control_panel/global_score.php:17 report/menu.php:46
 #: report/pdfreportform.php:113 top.php:39
@@ -80,7 +80,7 @@ msgstr ""
 
 #: conf/main.php:72
 msgid "Configure metric settings"
-msgstr ""
+msgstr "metricを設定して下さい"
 
 #: conf/main.php:82
 msgid "phpGACL"
@@ -88,7 +88,7 @@ msgstr ""
 
 #: conf/main.php:83
 msgid "Access control list database configuration"
-msgstr ""
+msgstr "アクセス制御リストのデータベース設定"
 
 #: conf/main.php:97
 msgid "PHP"
@@ -96,15 +96,15 @@ msgstr ""
 
 #: conf/main.php:98
 msgid "PHP Configuration (graphs, acls, database api)"
-msgstr ""
+msgstr "PHP設定"
 
 #: conf/main.php:106
 msgid "Images (php jpgraph)"
-msgstr ""
+msgstr "イメージ"
 
 #: conf/main.php:107
 msgid "Applets (jfreechart)"
-msgstr ""
+msgstr "アプレット"
 
 #: conf/main.php:111 conf/main.php:116 conf/main.php:186 conf/main.php:220
 #: conf/main.php:286 host/deletehost.php:35 net/deletenet.php:35
@@ -114,11 +114,11 @@ msgstr ""
 #: sensor/interfaces.php:126 sensor/interfaces.php:149
 #: session/deleteuser.php:37 signature/deletesignature.php:30
 msgid "No"
-msgstr "¢¢Š"
+msgstr "いいえ"
 
 #: conf/main.php:112
 msgid "Yes (Need SVG plugin)"
-msgstr ""
+msgstr "はい(SVGプラグインが必要です)"
 
 #: conf/main.php:117 conf/main.php:187 conf/main.php:221 conf/main.php:285
 #: host/deletehost.php:33 net/deletenet.php:33 net/deletenetgroup.php:32
@@ -128,7 +128,7 @@ msgstr ""
 #: sensor/interfaces.php:127 sensor/interfaces.php:148
 #: session/deleteuser.php:36 signature/deletesignature.php:29
 msgid "Yes"
-msgstr "Í¢"
+msgstr "はい"
 
 #: conf/main.php:124
 msgid "RRD"
@@ -136,23 +136,23 @@ msgstr ""
 
 #: conf/main.php:125
 msgid "RRD Configuration (graphing)"
-msgstr ""
+msgstr "RRD設定"
 
 #: conf/main.php:144 sensor/editsensor.php:518
 msgid "Links"
-msgstr ""
+msgstr "リンク"
 
 #: conf/main.php:145
 msgid "Links to other applications"
-msgstr ""
+msgstr "他のアプリケーションへのリンク"
 
 #: conf/main.php:157 top.php:76
 msgid "Backup"
-msgstr ""
+msgstr "バックアップ"
 
 #: conf/main.php:158
 msgid "Backup configuration: backup database, directory, interval"
-msgstr ""
+msgstr "バックアップ設定; データベース、ディレクトリ、間隔"
 
 #: conf/main.php:174
 msgid "Nessus"
@@ -160,7 +160,7 @@ msgstr ""
 
 #: conf/main.php:175
 msgid "Nessus client configuration"
-msgstr ""
+msgstr "Nessusクライアント設定"
 
 #: conf/main.php:194
 msgid "ACID"
@@ -168,19 +168,19 @@ msgstr ""
 
 #: conf/main.php:195
 msgid "Acid cache configuration"
-msgstr ""
+msgstr "Acidキャッシュ設定"
 
 #: conf/main.php:208
 msgid "External applications"
-msgstr ""
+msgstr "外部アプリケーション"
 
 #: conf/main.php:209
 msgid "Path to other applications"
-msgstr ""
+msgstr "他のアプリケーションのパス"
 
 #: conf/main.php:283
 msgid "Are you sure ?"
-msgstr ""
+msgstr "よろしいですか"
 
 #: conf/plugin.php:8 conf/pluginref.php:8 conf/pluginsid.php:8
 #: conf/pluginupdate.php:3 control_panel/global_score.php:178
@@ -190,7 +190,7 @@ msgstr ""
 
 #: conf/plugin.php:14 conf/pluginsid.php:14
 msgid "Priority and Reliability configuration"
-msgstr ""
+msgstr "優先度と信頼度の設定"
 
 #: conf/plugin.php:29 control_panel/alerts.php:58
 msgid "Id"
@@ -204,11 +204,11 @@ msgstr ""
 #: signature/modifysignatureform.php:39 signature/newsignatureform.php:21
 #: signature/signature.php:28
 msgid "Name"
-msgstr ""
+msgstr "名前"
 
 #: conf/plugin.php:35 incidents/index.php:98
 msgid "Type"
-msgstr ""
+msgstr "タイプ"
 
 #: conf/plugin.php:38 host/host.php:62 host/modifyhostform.php:279
 #: host/newhostform.php:236 incidents/incident.php:602
@@ -222,17 +222,17 @@ msgstr ""
 #: sensor/sensor.php:49 signature/modifysignatureform.php:82
 #: signature/newsignatureform.php:56 signature/signature.php:30
 msgid "Description"
-msgstr ""
+msgstr "説明"
 
 #: conf/pluginref.php:14
 msgid "Plugin reference"
-msgstr ""
+msgstr "プラグイン参照"
 
 #: conf/pluginref.php:53 control_panel/alarm_console.php:109
 #: control_panel/backlog.php:72
 #, c-format
 msgid "Prev %d"
-msgstr ""
+msgstr "前へ %d"
 
 #: conf/pluginref.php:55 control_panel/alarm_console.php:112
 #: control_panel/alarm_console.php:115 control_panel/backlog.php:74
@@ -244,27 +244,27 @@ msgstr ""
 #: control_panel/backlog.php:76
 #, c-format
 msgid "Next %d"
-msgstr ""
+msgstr "次へ %d"
 
 #: conf/pluginref.php:66 scan/hostscan.php:40
 msgid "Plugin id"
-msgstr ""
+msgstr "プラグイン id"
 
 #: conf/pluginref.php:71 scan/hostscan.php:44
 msgid "Plugin sid"
-msgstr ""
+msgstr "プラグイン sid"
 
 #: conf/pluginref.php:76
 msgid "Reference id"
-msgstr ""
+msgstr "参照 id"
 
 #: conf/pluginref.php:81
 msgid "Reference sid"
-msgstr ""
+msgstr "参照 sid"
 
 #: conf/pluginsid.php:42 sensor/sensor_plugins.php:117
 msgid "Plugin"
-msgstr ""
+msgstr "プラグイン"
 
 #: conf/pluginsid.php:46
 msgid "Sid"
@@ -272,11 +272,11 @@ msgstr ""
 
 #: conf/pluginsid.php:50 directives/directive.php:246
 msgid "Category"
-msgstr ""
+msgstr "カテゴリ"
 
 #: conf/pluginsid.php:54
 msgid "Class"
-msgstr ""
+msgstr "クラス"
 
 #: conf/pluginsid.php:62 directives/directive.php:74
 #: incidents/incident.php:495 incidents/incident.php:579
@@ -286,12 +286,12 @@ msgstr ""
 #: rrd_conf/modify_rrd_conf_form.php:95 sensor/modifysensorform.php:53
 #: sensor/newsensorform.php:34 sensor/sensor.php:40
 msgid "Priority"
-msgstr ""
+msgstr "優先度"
 
 #: conf/pluginsid.php:66 directives/directive.php:75
 #: directives/directive.php:286
 msgid "Reliability"
-msgstr ""
+msgstr "信頼度"
 
 #: conf/pluginsid.php:67 control_panel/alarm_console.php:151
 #: control_panel/alerts.php:65 editor/rule.php:78 host/host.php:63
@@ -304,11 +304,11 @@ msgstr ""
 #: sensor/sensor_plugins.php:119 sensor/sensor_plugins.php:121
 #: signature/signature.php:31
 msgid "Action"
-msgstr ""
+msgstr "アクション"
 
 #: conf/pluginupdate.php:11
 msgid "Unknown plugin id - sid"
-msgstr ""
+msgstr "不明なプラグイン id - sid"
 
 #: conf/pluginupdate.php:12 conf/pluginupdate.php:19 conf/pluginupdate.php:25
 #: conf/pluginupdate.php:30 conf/pluginupdate.php:46
@@ -328,165 +328,165 @@ msgstr ""
 #: signature/deletesignature.php:46 signature/modifysignature.php:55
 #: signature/newsignature.php:55 vulnmeter/do_nessus.php:32
 msgid "Back"
-msgstr ""
+msgstr "戻る"
 
 #: conf/pluginupdate.php:18
 msgid "No values for priority or reliability"
-msgstr ""
+msgstr "優先度または確度が設定されていません"
 
 #: conf/pluginupdate.php:24
 msgid "Priority must be between 0 and 10"
-msgstr ""
+msgstr "優先度は0から10です"
 
 #: conf/pluginupdate.php:29
 msgid "Reliability must be between 0 and 5"
-msgstr ""
+msgstr "信頼度は0から5です"
 
 #: conf/reload.php:16
 #, c-format
 msgid "socket_create() failed: reason: %s\n"
-msgstr ""
+msgstr "socket_create() 失敗: 原因: %s\n"
 
 #: conf/reload.php:22
 #, c-format
 msgid "socket_connect() failed: reason: %s %s\n"
-msgstr ""
+msgstr "socket_connect() 失敗: 原因:\n"
 
 #: conf/reload.php:30
 msgid "Error connecting to server"
-msgstr ""
+msgstr "サーバへの接続に失敗しました"
 
 #: conf/reload.php:39
 msgid "Bad response from server"
-msgstr ""
+msgstr "サーバから異常な応答がありました"
 
 #: conf/reload.php:51
 msgid "Reload completed successfully"
-msgstr ""
+msgstr "リロードが正常に完了しました"
 
 #: control_panel/alarm_console.php:137
 msgid "Sensor"
-msgstr "ZT["
+msgstr ""
 
 #: control_panel/alarm_console.php:138
 msgid "Since"
-msgstr ""
+msgstr "最初"
 
 #: control_panel/alarm_console.php:142
 msgid "Last"
-msgstr ""
+msgstr "最後"
 
 #: control_panel/alarm_console.php:377
 msgid "Delete ALL alarms"
-msgstr ""
+msgstr "全てのアラームを削除"
 
 #: control_panel/alarm_console.php:379
 msgid "Purge orphaned alerts"
-msgstr ""
+msgstr "残りのアラートを削除"
 
 #: control_panel/alerts.php:7 control_panel/anomalies.php:8
 #: control_panel/backlog.php:8 control_panel/global_score.php:9
 #: control_panel/visualize.php:6 top.php:30
 msgid "Control Panel"
-msgstr "Rg[pl"
+msgstr "コントロールパネル"
 
 #: control_panel/alerts.php:16 control_panel/visualize.php:15
 msgid "Backlog ID required"
-msgstr ""
+msgstr "Backlog IDが必要です"
 
 #: control_panel/alerts.php:23
 msgid "Alarms/Alerts"
-msgstr "xñ/xñ"
+msgstr "アラーム/アラート"
 
 #: control_panel/alerts.php:52
 msgid "Back to main"
-msgstr ""
+msgstr "メインに戻る"
 
 #: control_panel/alerts.php:59 incidents/index.php:128 incidents/index.php:329
 msgid "Alarm"
-msgstr "xñ"
+msgstr "アラーム"
 
 #: control_panel/alerts.php:60
 msgid "Risk"
-msgstr ""
+msgstr "リスク"
 
 #: control_panel/alerts.php:61 incidents/incident.php:577
 #: incidents/index.php:244 report/inventory.php:192
 msgid "Date"
-msgstr "út"
+msgstr "日付"
 
 #: control_panel/alerts.php:62 incidents/incident.php:374
 #: policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
 msgid "Source"
-msgstr "¹"
+msgstr "送信元"
 
 #: control_panel/alerts.php:63 incidents/incident.php:381 report/menu.php:58
 msgid "Destination"
-msgstr "sæ"
+msgstr "宛先"
 
 #: control_panel/alerts.php:64
 msgid "Correlation Level"
-msgstr ""
+msgstr "相関レベル"
 
 #: control_panel/alerts.php:245
 #, c-format
 msgid "Total Alerts: %d"
-msgstr ""
+msgstr "合計アラート: %d"
 
 #: control_panel/alerts.php:246
 #, c-format
 msgid "Unique Dst IPAddr: %d"
-msgstr ""
+msgstr "ユニークな宛先IPAddr: %d"
 
 #: control_panel/alerts.php:247
 #, c-format
 msgid "Unique Types: %d"
-msgstr ""
+msgstr "ユニークなタイプ: %d"
 
 #: control_panel/alerts.php:248
 #, c-format
 msgid "Unique Dst Ports: %d"
-msgstr ""
+msgstr "ユニークな宛先ポート: %d"
 
 #: control_panel/alerts.php:252
 msgid "Visualize alarm"
-msgstr ""
+msgstr "ビジュアルアラーム"
 
 #: control_panel/anomalies.php:16 report/menu.php:95 top.php:47
 msgid "Anomalies"
-msgstr "Ï¥"
+msgstr "アノマリ"
 
 #: control_panel/anomalies.php:62
 msgid "RRD anomalies"
-msgstr "RRD Ï¥"
+msgstr "RRD アノマリ"
 
 #: control_panel/anomalies.php:66
 msgid "Acknowledged"
-msgstr "Fßçêé"
+msgstr "確認済"
 
 #: control_panel/anomalies.php:67
 msgid "Not Acknowledged"
-msgstr "FßçêÈ¢"
+msgstr "未確認"
 
 #: control_panel/anomalies.php:68
 msgid "All"
-msgstr "·×Ä"
+msgstr "すべて"
 
 #: control_panel/anomalies.php:71 control_panel/anomalies.php:132
 #: control_panel/anomalies.php:194 control_panel/anomalies.php:259
 #: control_panel/global_score.php:597 control_panel/global_score.php:664
 #: report/sec_report.php:148 scan/hostscan.php:36 scan/scan.php:38
 msgid "Host"
-msgstr ""
+msgstr "ホスト"
 
 #: control_panel/anomalies.php:71 control_panel/anomalies.php:132
 msgid "What"
-msgstr "œ"
+msgstr ""
 
 #: control_panel/anomalies.php:71 control_panel/anomalies.php:132
 #: control_panel/anomalies.php:195 control_panel/anomalies.php:260
 msgid "When"
-msgstr ""
+msgstr ""
 
 #: control_panel/anomalies.php:72 control_panel/anomalies.php:133
 msgid "Not acked count (hours)"
@@ -507,36 +507,36 @@ msgstr ""
 #: rrd_conf/rrd_conf.php:53 scan/hostscan.php:71 sensor/sensor.php:102
 #: session/users.php:65 signature/signature.php:60
 msgid "Delete"
-msgstr ""
+msgstr "削除"
 
 #: control_panel/anomalies.php:189
 msgid "OS Changes"
-msgstr ""
+msgstr "OSの変更"
 
 #: control_panel/anomalies.php:192 control_panel/anomalies.php:257
 msgid "Get list"
-msgstr ""
+msgstr "リスト表示"
 
 #: control_panel/anomalies.php:194
 msgid "Previous OS"
-msgstr ""
+msgstr "以前のOS"
 
 #: control_panel/anomalies.php:195 control_panel/anomalies.php:260
 msgid "Ignore"
-msgstr ""
+msgstr "無視"
 
 #: control_panel/anomalies.php:254
 msgid "Mac Changes"
-msgstr ""
+msgstr "Macアドレス変更"
 
 #: control_panel/anomalies.php:259 host/modifyhostform.php:245
 #: host/newhostform.php:204 host/newhostform.php:215
 msgid "Mac"
-msgstr ""
+msgstr "Macアドレス"
 
 #: control_panel/anomalies.php:259
 msgid "Previous Mac"
-msgstr ""
+msgstr "以前のMacアドレス"
 
 #: control_panel/backlog.php:16 top.php:66
 msgid "Backlog"
@@ -544,37 +544,37 @@ msgstr ""
 
 #: control_panel/backlog.php:126
 msgid "NO"
-msgstr "¢¢Š"
+msgstr "いいえ"
 
 #: control_panel/backlog.php:128 sensor/sensor.php:139
 msgid "YES"
-msgstr "Í¢"
+msgstr "はい"
 
 #: control_panel/global_score.php:141
 msgid "Last Day"
-msgstr "ÅãÌú"
+msgstr "過去１日"
 
 #: control_panel/global_score.php:144
 msgid "Last Week"
-msgstr ""
+msgstr "過去１週間"
 
 #: control_panel/global_score.php:147
 msgid "Last Month"
-msgstr ""
+msgstr "過去１ヶ月"
 
 #: control_panel/global_score.php:150
 msgid "Last Year"
-msgstr ""
+msgstr "過去１年"
 
 #: control_panel/global_score.php:179
 msgid "Service Level"
-msgstr ""
+msgstr "サービスレベル"
 
 #: control_panel/global_score.php:237 control_panel/global_score.php:243
 #: control_panel/global_score.php:290 ntop/menu.php:120
 #: riskmeter/index.php:116
 msgid "Global"
-msgstr ""
+msgstr "グローバル"
 
 #: control_panel/global_score.php:244 control_panel/global_score.php:345
 #: control_panel/global_score.php:473 control_panel/global_score.php:598
@@ -612,27 +612,27 @@ msgstr ""
 
 #: control_panel/global_score.php:337 riskmeter/index.php:206
 msgid "Groups"
-msgstr ""
+msgstr "グループ"
 
 #: control_panel/global_score.php:344 control_panel/global_score.php:407
 msgid "Group"
-msgstr ""
+msgstr "グループ"
 
 #: control_panel/global_score.php:466 net/modifynetgroupform.php:53
 #: net/net.php:15 net/netgroup.php:44 net/newnetgroupform.php:40
 #: riskmeter/index.php:326 top.php:58
 msgid "Networks"
-msgstr ""
+msgstr "ネットワーク"
 
 #: control_panel/global_score.php:472 control_panel/global_score.php:533
 #: top.php:52
 msgid "Network"
-msgstr "lbg[N"
+msgstr "ネットワーク"
 
 #: control_panel/global_score.php:590 host/host.php:15 riskmeter/index.php:515
 #: top.php:57
 msgid "Hosts"
-msgstr ""
+msgstr "ホスト"
 
 #: control_panel/handle_anomaly.php:8 control_panel/handle_anomaly.php:15
 #: control_panel/handle_mac.php:8 control_panel/handle_mac.php:15
@@ -670,7 +670,7 @@ msgstr ""
 #: signature/newsignatureform.php:8 signature/signature.php:8
 #: vulnmeter/do_nessus.php:8
 msgid "OSSIM Framework"
-msgstr "OSSIM t[[N"
+msgstr "OSSIM フレームワーク"
 
 #: control_panel/handle_anomaly.php:60 control_panel/handle_mac.php:54
 msgid "Successfully Acked/Deleted"
@@ -682,71 +682,71 @@ msgstr ""
 
 #: control_panel/mac.php:15
 msgid "OSSIM Framework - Mac list"
-msgstr ""
+msgstr "OSSIM フレームワーク - Macアドレスリスト"
 
 #: control_panel/mac.php:30
 msgid "Show 10"
-msgstr ""
+msgstr "10 表示"
 
 # msgstr "\Š10"
 #: control_panel/mac.php:31
 msgid "Show 50"
-msgstr ""
+msgstr "50 表示"
 
 # msgstr "\ŠTO"
 #: control_panel/mac.php:32
 msgid "Show 100"
-msgstr ""
+msgstr "100 表示"
 
 # msgstr "\ŠPOO"
 #: control_panel/mac.php:49
 msgid "Vendor"
-msgstr "èè"
+msgstr "ベンダー"
 
 #: control_panel/mac.php:54
 msgid "Previous Vendor"
-msgstr "OÌèè"
+msgstr "以前のベンダー"
 
 #: control_panel/mac.php:73 host/modifyhostform.php:225
 #: host/newhostform.php:196
 msgid "Unknown"
-msgstr "¢m"
+msgstr "不明"
 
 #: control_panel/os.php:15
 msgid "OSSIM Framework - OS list"
-msgstr ""
+msgstr "OSSIM フレームワーク - OSリスト"
 
 #: control_panel/show_image.php:34
 msgid "Compromise"
-msgstr ""
+msgstr "感染"
 
 #: control_panel/show_image.php:37
 msgid "Attack"
-msgstr ""
+msgstr "アタック"
 
 #: control_panel/visualize.php:34
 msgid "Alarm viewer"
-msgstr ""
+msgstr "アラームビューワ"
 
 #: directives/directive.php:12 directives/directive.php:35
 msgid "Directive Editor"
-msgstr ""
+msgstr "設定エディタ"
 
 #: directives/directive.php:69
 msgid "Rules"
-msgstr ""
+msgstr "ルール"
 
 #: directives/directive.php:70
 msgid "Directive"
-msgstr ""
+msgstr "設定"
 
 #: directives/directive.php:76
 msgid "Time_out"
-msgstr ""
+msgstr "タイムアウト"
 
 #: directives/directive.php:77
 msgid "Occurrence"
-msgstr ""
+msgstr "発生"
 
 #: directives/directive.php:78
 msgid "From"
@@ -766,15 +766,15 @@ msgstr ""
 
 #: directives/directive.php:82
 msgid "Plugin ID"
-msgstr ""
+msgstr "プラグインID"
 
 #: directives/directive.php:83
 msgid "Plugin SID"
-msgstr ""
+msgstr "プラグインSID"
 
 #: directives/directive.php:166
 msgid "Expand / Collapse"
-msgstr ""
+msgstr "展開 / 折り畳み"
 
 #: directives/directive.php:174 policy/modifypolicyform.php:137
 #: policy/modifypolicyform.php:232
@@ -783,11 +783,11 @@ msgstr ""
 
 #: directives/directive.php:240
 msgid "Click on the left side to view a directive"
-msgstr ""
+msgstr "設定を確認するには左側をクリックしてください"
 
 #: directives/directive.php:241
 msgid "Click on the categories of directives to expand or collapse them"
-msgstr ""
+msgstr "アイテムを展開 / 折り畳むには設定カテゴリをクリックしてください"
 
 #: directives/directive.php:247
 msgid "Numbers"
@@ -795,19 +795,19 @@ msgstr ""
 
 #: directives/directive.php:248
 msgid "Generic ossim"
-msgstr ""
+msgstr "ossim一般"
 
 #: directives/directive.php:249
 msgid "Attack correlation"
-msgstr ""
+msgstr "アタック相関分析"
 
 #: directives/directive.php:250
 msgid "Virus and Worms"
-msgstr ""
+msgstr "ウィルスとワーム"
 
 #: directives/directive.php:251
 msgid "Web attack correlation"
-msgstr ""
+msgstr "Webアタック相関分析"
 
 #: directives/directive.php:252
 msgid "DoS"
@@ -815,31 +815,31 @@ msgstr ""
 
 #: directives/directive.php:253
 msgid "Portscan/scan"
-msgstr ""
+msgstr "ポートスキャン/ネットワークスキャン"
 
 #: directives/directive.php:254
 msgid "Behaviour anomalies"
-msgstr ""
+msgstr "異常な動作"
 
 #: directives/directive.php:255
 msgid "Network abuse and error"
-msgstr ""
+msgstr "ネットワーク"
 
 #: directives/directive.php:256
 msgid "Trojans"
-msgstr ""
+msgstr "トロイの木馬"
 
 #: directives/directive.php:257
 msgid "Miscellaneous"
-msgstr ""
+msgstr "その他"
 
 #: directives/directive.php:258
 msgid "User contributed"
-msgstr ""
+msgstr "ユーザ定義"
 
 #: directives/directive.php:264
 msgid "What type of rule is this. There are two possible types as of today"
-msgstr ""
+msgstr "どちらのルールタイプですか? ２つのタイプが適用可能です"
 
 #: directives/directive.php:266
 msgid "Detector"
@@ -850,6 +850,8 @@ msgid ""
 "Detector rules are those received automatically from the agent as they are "
 "recorded. This includes snort, spade, apache, etc"
 msgstr ""
+"Detectorルールは自動受信するエージェントからのログに適用されます"
+"エージェントにはsnort, spade, apache等が含まれます"
 
 #: directives/directive.php:268 riskmeter/options.php:41
 msgid "Monitor"
@@ -857,16 +859,17 @@ msgstr ""
 
 #: directives/directive.php:269
 msgid "Monitor rules must be queried by the server ntop data and ntop sessions"
-msgstr ""
+msgstr "Monitorルールはntopのデータまたはセッションから問い合わせられなければなりません"
 
 #: directives/directive.php:272
 msgid ""
 "The  rule name shown within the event database when the level is matched"
 msgstr ""
+"レベルがマッチしたときにイベントデータベースにルール名が表示されます"
 
 #: directives/directive.php:273
 msgid "Accepts: UTF-8 compliant string"
-msgstr ""
+msgstr "Accepts: UTF-8準拠の文字列"
 
 #: directives/directive.php:275
 msgid ""
@@ -874,18 +877,20 @@ msgid ""
 "of the isolated attack. It has nothing to do with your equipment or "
 "environment, it only measures the relative importance of the attack"
 msgstr ""
+"プライオリティはアタック単体でみたときの脅威の大きさをあらわします。" 
+"固有の環境に左右されないもので、他のアタックとの相対的な脅威の大きさの指数となります"
 
 #: directives/directive.php:276
 msgid "This will become clear using a couple of examples"
-msgstr ""
+msgstr "いくつかの例をみてみるとわかりやすいでしょう"
 
 #: directives/directive.php:278
 msgid "Your unix server running samba gets attacked by the sasser worm"
-msgstr ""
+msgstr "sambaを稼動させているサーバがsasserワームにアタックされました"
 
 #: directives/directive.php:279
 msgid "The attack"
-msgstr ""
+msgstr "そのアタック自体は"
 
 #: directives/directive.php:280
 msgid "per se"
@@ -897,6 +902,9 @@ msgid ""
 "accomplish. But. does it really matter to you? Surely not, but it's a big "
 "security hole so it'll have a high priority"
 msgstr ""
+"は危険です。 何千ものホストをいとも簡単に感染させました。"
+"しかし、それはあなたの環境に影響するのでしょうか? そんなことはありません、しかし"
+"大きなセキュリティホールであることには間違いないのでhigh priorityが与えられます"
 
 #: directives/directive.php:282
 msgid ""
@@ -904,6 +912,10 @@ msgid ""
 "by your friends and has only access to the outside. Some new exploit tested "
 "by one of your friends hits it"
 msgstr ""
+"あなたは閉じられたネットワークでCVSサーバを運用しており、そのサーバは"
+"あなたの友人達からのみアクセス可能で、外側へは限定されたアクセスしか"
+"できないようになっています。あなたの友人の一人がいくつかの新しい"
+"エクスプロイトをそのサーバに試行しました。"
 
 #: directives/directive.php:283
 msgid ""
@@ -911,14 +923,16 @@ msgid ""
 "your host is patched against that particular attack and you don't mind being "
 "a test-platform for one of your friends"
 msgstr ""
+"繰りかえしますが、アタック自体は危険なものですが、あなたのシステムがその"
+"特定のアタックに関連するパッチをあてていれば心配する必要なないのです。"
 
 #: directives/directive.php:285 directives/directive.php:295
 msgid "Default value"
-msgstr ""
+msgstr "デフォルト値"
 
 #: directives/directive.php:287
 msgid "When talking about classic risk-assessment this would be"
-msgstr ""
+msgstr "古典的なリスク評価の観点からみるとこれは"
 
 #: directives/directive.php:288
 msgid ") . ; ?> &quot;"
@@ -926,7 +940,7 @@ msgstr ""
 
 #: directives/directive.php:289
 msgid "probability"
-msgstr ""
+msgstr "おそらく"
 
 #: directives/directive.php:289 directives/directive.php:297
 msgid " "
@@ -938,6 +952,9 @@ msgid ""
 "attacked by some sort of vulnerability, we'll transform this term into "
 "something more IDS related: reliability"
 msgstr ""
+"いくつかの脆弱性に関連するアタックについて私達のネットワーク環境がどれほど影響を"
+"受け得るか判断するのは非常に難しいので、私達はこれを次のようなIDS的な指数で"
+"表わします: 確度"
 
 #: directives/directive.php:291
 msgid ""
@@ -947,6 +964,10 @@ msgid ""
 "although good implemented needs some heavy tweaking in order to be reliable "
 "or you'll get thousands of false positives a day"
 msgstr ""
+"多くの方々はどのNIDSにも搭載されている精度の低いシグネチャをみたことがあるでしょう。"
+"UPしていない宛先へpingを打ちつづけるホストは一日に膨大なspadeイベントを発生させます。"
+"例えば最近のsnortのhttp-inspect機能は適切なチューニングをしなければ一日に"
+"何千もの誤検知を発生させます。"
 
 #: directives/directive.php:292
 msgid ""
@@ -957,18 +978,27 @@ msgid ""
 "less than an hour? That's strange and the attack is getting more and more "
 "reliable"
 msgstr ""
+"ワームの例に戻りましょう。 あるホストが同一サブネット内でポート445を用いて"
+"5つのホストにコネクションを張ったとします、それはおそらく正常な動作でしょう。"
+"それでは１５のホストに対してではどうでしょう? 私達はその挙動について疑いはじめます。"
+"さらに一時間と経たない内に５００のホストに対してアクセスすればどうでしょうか?"
+"それは明らかに疑わしい挙動であり、そのアタックはより確度の高いものとなります。"
 
 #: directives/directive.php:293
 msgid ""
 "Each rule has it's own reliability, determining how reliable this particular "
 "rule is within the whole attack chain"
 msgstr ""
+"それぞれのルールは自身の確度をもっており、一連のアタックにおいてそのルールが"
+"どれほど信頼性があるかを判断する指標となります。"
 
 #: directives/directive.php:294
 msgid ""
 "Accepts: 0-10. Can be specified as absolute value (i.e. 7) or relative (i.e. "
 "+2 means two more than the previous level)"
 msgstr ""
+"Accepts: 0-10. 「7」のような絶対値での指定か、「+2」のような相対的な指定が"
+"できます。"
 
 #: directives/directive.php:296
 msgid "text-align: left;"
@@ -976,15 +1006,15 @@ msgstr ""
 
 #: directives/directive.php:296
 msgid "Ocurrence"
-msgstr ""
+msgstr "発生"
 
 #: directives/directive.php:297
 msgid "How many times we have to match a unique"
-msgstr ""
+msgstr "私達は何回ユニークマッチングを行なわなければならないのでしょうか"
 
 #: directives/directive.php:298
 msgid "in order to advance one correlation level"
-msgstr ""
+msgstr "相関レベルをひとつ進めるために"
 
 #: directives/directive.php:300
 msgid ""
@@ -994,7 +1024,7 @@ msgstr ""
 
 #: directives/directive.php:302
 msgid "Source IP. There are various possible values for this field"
-msgstr ""
+msgstr "送信元IPアドレス このフィールドの値にはいくつかの指定方法があります"
 
 #: directives/directive.php:305 directives/directive.php:326
 msgid "Just that, any ip address would match"
@@ -1010,62 +1040,65 @@ msgstr ""
 
 #: directives/directive.php:308 directives/directive.php:329
 msgid "Comma separated Ipv4 addresses without netmask"
-msgstr ""
+msgstr "コンマ区切りのIpv4アドレス(ネットマスクなし)"
 
 #: directives/directive.php:309 directives/directive.php:330
 msgid "You can use any number of ip addresses separated by commas"
-msgstr ""
+msgstr "コンマ区切りのIPアドレスを使用できます"
 
 #: directives/directive.php:310 directives/directive.php:331
 msgid "Using a network name"
-msgstr ""
+msgstr "ネットワーク名の使用"
 
 #: directives/directive.php:311 directives/directive.php:332
 msgid "You can use any network name defined via web"
-msgstr ""
+msgstr "Web経由で定義されたネットワーク名を使用できます"
 
 #: directives/directive.php:312 directives/directive.php:333
 msgid "Relative"
-msgstr ""
+msgstr "相対的"
 
 #: directives/directive.php:313 directives/directive.php:334
 msgid ""
 "This is used to reference ip addresses from previous levels. This should be "
 "easier to understand using examples"
 msgstr ""
+"これは前のレベルからのIPアドレスを参照するのに使用します。"
+"例をもちいるとわかりやすいでしょう。"
 
 #: directives/directive.php:314 directives/directive.php:335
 msgid "means use the source ip referenced within the previous rule"
-msgstr ""
+msgstr "前のルールで参照された送信元IPアドレスを使用することを意味します"
 
 #: directives/directive.php:315 directives/directive.php:336
 msgid ""
 "means use the destination ip referenced two rules below as source address"
 msgstr ""
+"以下の二つのルールで参照された宛先IPアドレスを送信元アドレスとして使用することを意味します"
 
 #: directives/directive.php:316 directives/directive.php:337
 msgid "Negated"
-msgstr ""
+msgstr "除外"
 
 #: directives/directive.php:317 directives/directive.php:338
 msgid "You can also use negated elements. I.e."
-msgstr ""
+msgstr "除外要素を使用することもできます。 例"
 
 #: directives/directive.php:319
 msgid "If "
-msgstr ""
+msgstr "もし"
 
 #: directives/directive.php:320 directives/directive.php:341
 msgid "this would match the whole class C except"
-msgstr ""
+msgstr "宛先IPアドレス以外のクラスCアドレス空間にマッチさせたとすると"
 
 #: directives/directive.php:323
 msgid "Destination IP. There are various possible values for this field"
-msgstr ""
+msgstr "このフィールドには多くの値が適合することになります"
 
 #: directives/directive.php:340
 msgid "If"
-msgstr ""
+msgstr "もし"
 
 #: directives/directive.php:343
 msgid "The"
@@ -1083,11 +1116,11 @@ msgstr ""
 #: editor/editor.php:31
 #, c-format
 msgid "Sorry, can't locate snort rules at <b>%s</b>"
-msgstr ""
+msgstr "<b>%s</b>にsnortルールを保存できません"
 
 #: editor/rule.php:53
 msgid "Rule editor"
-msgstr ""
+msgstr "ルールエディタ"
 
 #: editor/rule.php:80 port/newsingleportform.php:25
 msgid "Protocol"
@@ -1095,11 +1128,11 @@ msgstr ""
 
 #: editor/rule.php:82
 msgid "SRC IP"
-msgstr ""
+msgstr "送信元IPアドレス"
 
 #: editor/rule.php:84
 msgid "SRC Ports"
-msgstr ""
+msgstr "送信元ポート"
 
 #: editor/rule.php:86
 msgid "Dir"
@@ -1107,38 +1140,38 @@ msgstr ""
 
 #: editor/rule.php:88
 msgid "DEST IP"
-msgstr ""
+msgstr "宛先IPアドレス"
 
 #: editor/rule.php:90
 msgid "DEST Ports"
-msgstr ""
+msgstr "宛先ポート"
 
 #: editor/rule.php:92
 msgid "Content"
-msgstr ""
+msgstr "内容"
 
 #: editor/rule.php:94
 msgid "Options"
-msgstr ""
+msgstr "オプション"
 
 #: host/deletehost.php:15
 msgid "Delete host"
-msgstr ""
+msgstr "ホストを削除"
 
 #: host/deletehost.php:20
 msgid "Wrong ip"
-msgstr ""
+msgstr "IPが正しくありません"
 
 #: host/deletehost.php:30 net/deletenet.php:30 net/deletenetgroup.php:29
 #: policy/deletepolicy.php:27 port/deleteport.php:27
 #: scan/deletehostscan.php:29 session/deleteuser.php:32
 #: signature/deletesignature.php:27
 msgid "Are you sure"
-msgstr ""
+msgstr "よろしいですか"
 
 #: host/deletehost.php:52
 msgid "Host deleted"
-msgstr ""
+msgstr "ホストが削除されました"
 
 #: host/host.php:39 host/modifyhostform.php:157 host/newhostform.php:140
 msgid "NAT"
@@ -1149,42 +1182,42 @@ msgstr ""
 #: policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
 #: sensor/sensor_plugins.php:15 top.php:54 top.php:60
 msgid "Sensors"
-msgstr "ZT["
+msgstr ""
 
 #: host/host.php:61
 msgid "Scantype"
-msgstr "XL^Cv"
+msgstr "スキャンタイプ"
 
 #: host/host.php:118 host/modifyhostform.php:132 host/newhostform.php:117
 #: net/modifynetform.php:117 net/modifynetgroupform.php:131
 #: net/newnetform.php:90 net/newnetgroupform.php:107
 msgid "None"
-msgstr "Çêà"
+msgstr ""
 
 #: host/host.php:125 net/net.php:136 net/netgroup.php:111
 #: policy/policy.php:157 port/port.php:61 rrd_conf/rrd_conf.php:47
 #: sensor/sensor.php:100 signature/signature.php:57
 msgid "Modify"
-msgstr "ÏXµÈ³¢"
+msgstr "修正する"
 
 #: host/host.php:138 host/newhostform.php:21 policy/modifypolicyform.php:51
 #: policy/modifypolicyform.php:146
 msgid "Insert new host"
-msgstr ""
+msgstr "新しいホストを追加する"
 
 #: host/host.php:142 net/net.php:150 ntop/menu_session.php:79
 #: ntop/menu_session.php:89 policy/policy.php:176 sensor/sensor.php:153
 #: signature/signature.php:71
 msgid "Reload"
-msgstr ""
+msgstr "リロード"
 
 #: host/host.php:150
 msgid "Search"
-msgstr ""
+msgstr "検索"
 
 #: host/modifyhost.php:15
 msgid "Update host"
-msgstr ""
+msgstr "ホスト更新"
 
 #: host/modifyhost.php:29 host/newhost.php:29 net/modifynet.php:29
 #: net/modifynetgroup.php:27 net/newnet.php:29 net/newnetgroup.php:28
@@ -1193,21 +1226,21 @@ msgstr ""
 #: sensor/modifysensor.php:26 sensor/newsensor.php:26
 #: signature/newsignature.php:25
 msgid "Please, complete all the fields"
-msgstr ""
+msgstr "すべてのフィールドを入力してください"
 
 #: host/modifyhost.php:64 host/newhost.php:62
 msgid "Sorry, no sensor selected"
-msgstr ""
+msgstr "Sensorが選択されていません"
 
 #: host/modifyhostform.php:15
 msgid "Modify host"
-msgstr ""
+msgstr "ホスト修正"
 
 #: host/modifyhostform.php:51 host/newhostform.php:53 report/report.php:30
 #: sensor/modifysensorform.php:39 sensor/newsensorform.php:25
 #: sensor/sensor.php:36
 msgid "Hostname"
-msgstr ""
+msgstr "ホスト名"
 
 #: host/modifyhostform.php:57 host/newhostform.php:57 net/modifynetform.php:51
 #: sensor/modifysensorform.php:47 sensor/newsensorform.php:29
@@ -1216,7 +1249,7 @@ msgstr ""
 
 #: host/modifyhostform.php:65 host/newhostform.php:66 report/report.php:38
 msgid "Asset"
-msgstr ""
+msgstr "資産"
 
 #: host/modifyhostform.php:71 host/newhostform.php:70
 msgid "0"
@@ -1251,43 +1284,43 @@ msgstr ""
 #: net/modifynetgroupform.php:96 net/newnetform.php:58
 #: net/newnetgroupform.php:75
 msgid "Threshold C"
-msgstr ""
+msgstr "閾値C"
 
 #: host/modifyhostform.php:102 host/newhostform.php:92
 #: net/modifynetform.php:88 net/modifynetgroupform.php:102
 #: net/newnetform.php:65 net/newnetgroupform.php:82
 msgid "Threshold A"
-msgstr ""
+msgstr "閾値A"
 
 #: host/modifyhostform.php:108 host/newhostform.php:99
 #: net/modifynetform.php:94 net/modifynetgroupform.php:108
 #: net/newnetform.php:72 net/newnetgroupform.php:89
 msgid "RRD Profile"
-msgstr ""
+msgstr "RRDプロファイル"
 
 #: host/modifyhostform.php:111 host/newhostform.php:102
 #: net/modifynetform.php:96 net/modifynetgroupform.php:110
 #: net/newnetform.php:75 net/newnetgroupform.php:92
 msgid "Insert new profile"
-msgstr ""
+msgstr "新しいプロファイルの追加"
 
 #: host/modifyhostform.php:167 host/newhostform.php:149
 #: net/modifynetform.php:145 net/newnetform.php:116
 #: policy/modifypolicyform.php:354 sensor/newsensorform.php:15
 #: sensor/sensor.php:150
 msgid "Insert new sensor"
-msgstr ""
+msgstr "新しいSensorの追加"
 
 #: host/modifyhostform.php:207 host/newhostform.php:181
 #: net/modifynetform.php:185 net/modifynetgroupform.php:138
 #: net/newnetform.php:148 net/newnetgroupform.php:112
 msgid "Scan options"
-msgstr ""
+msgstr "スキャンオプション"
 
 #: host/modifyhostform.php:216 host/newhostform.php:184 net/newnetform.php:151
 #: net/newnetgroupform.php:115
 msgid "Enable nessus scan"
-msgstr ""
+msgstr "nessusスキャンを有効にする"
 
 #: host/modifyhostform.php:220 host/newhostform.php:191 report/report.php:39
 msgid "OS"
@@ -1315,103 +1348,103 @@ msgstr ""
 
 #: host/modifyhostform.php:259 host/newhostform.php:210
 msgid "Other"
-msgstr ""
+msgstr "その他"
 
 #: host/modifyhostform.php:265
 msgid "Mac Address"
-msgstr ""
+msgstr "Macアドレス"
 
 # msgstr "\ŠPOO"
 #: host/modifyhostform.php:272 host/newhostform.php:219
 msgid "Mac Vendor"
-msgstr ""
+msgstr "Macベンダー"
 
 #: host/newhost.php:15
 msgid "New Host"
-msgstr ""
+msgstr "新しいホスト"
 
 #: host/newhost.php:89
 msgid "Host succesfully inserted"
-msgstr ""
+msgstr "ホストが正常に追加されました"
 
 #: host/newhostform.php:16
 msgid "Insert new scan"
-msgstr ""
+msgstr "新しいスキャンの追加"
 
 #: host/newhostform.php:18
 msgid "Please, fill these global properties about the hosts you've scaned"
-msgstr ""
+msgstr "スキャンしたホストのグローバル設定を入力してください"
 
 #: incidents/incident.php:172
 msgid "Error trying to insert new alarm ticket (argument missing)"
-msgstr ""
+msgstr "新しいアラームチケットの追加に失敗しました(属性が不足しています)"
 
 #: incidents/incident.php:207
 msgid "Error trying to insert new hardware ticket (argument missing)"
-msgstr ""
+msgstr "新しいハードウェアチケットの追加に失敗しました(属性が不足しています)"
 
 #: incidents/incident.php:219
 msgid "Error trying to insert new install ticket (argument missing)"
-msgstr ""
+msgstr "新しいインストールチケットの追加に失敗しました(属性が不足しています)"
 
 #: incidents/incident.php:388
 msgid "Src Ports"
-msgstr ""
+msgstr "送信元ポート"
 
 #: incidents/incident.php:395
 msgid "Dst Ports"
-msgstr ""
+msgstr "宛先ポート"
 
 #: incidents/incident.php:410
 msgid "Target"
-msgstr ""
+msgstr "ターゲット"
 
 #: incidents/incident.php:417
 msgid "Metric Type"
-msgstr ""
+msgstr "Metricタイプ"
 
 #: incidents/incident.php:424
 msgid "Metric Value"
-msgstr ""
+msgstr "Metric値"
 
 #: incidents/incident.php:490 incidents/index.php:240
 msgid "Ticket"
-msgstr ""
+msgstr "チケット"
 
 #: incidents/incident.php:492
 msgid "Incident"
-msgstr ""
+msgstr "インシデント"
 
 #: incidents/incident.php:493 incidents/incident.php:581
 #: incidents/index.php:250
 msgid "In Charge"
-msgstr ""
+msgstr "対応中"
 
 #: incidents/incident.php:494 incidents/incident.php:580
 #: incidents/index.php:101 incidents/index.php:251
 #: sensor/sensor_plugins.php:118
 msgid "Status"
-msgstr ""
+msgstr "ステータス"
 
 #: incidents/incident.php:578
 msgid "User / Description / Action"
-msgstr ""
+msgstr "ユーザ / 説明 / アクション"
 
 #: incidents/incident.php:582
 msgid "Transferred"
-msgstr ""
+msgstr "移管済"
 
 #: incidents/incident.php:583
 msgid "Copy"
-msgstr ""
+msgstr "コピー"
 
 #: incidents/incident.php:600 session/login.php:136
 msgid "User"
-msgstr ""
+msgstr "ユーザ"
 
 #: incidents/incident.php:703
 msgid "Attachment"
-msgstr ""
+msgstr "添附"
 
 #: incidents/incident.php:726
 msgid "6"
@@ -1435,35 +1468,35 @@ msgstr ""
 
 #: incidents/incident.php:740
 msgid "status"
-msgstr ""
+msgstr "ステータス"
 
 #: incidents/incident.php:744 incidents/index.php:161
 msgid "Open"
-msgstr ""
+msgstr "オープン"
 
 #: incidents/incident.php:747 incidents/index.php:164
 msgid "Closed"
-msgstr ""
+msgstr "クローズ"
 
 #: incidents/incident.php:751 incidents/index.php:100
 msgid "In charge"
-msgstr ""
+msgstr "対応中"
 
 #: incidents/incident.php:765
 msgid "Transfer"
-msgstr ""
+msgstr "移管"
 
 #: incidents/incident.php:767
 msgid "Copy (e-mail)"
-msgstr ""
+msgstr "コピー"
 
 #: incidents/index.php:15 top.php:48
 msgid "Incidents"
-msgstr ""
+msgstr "インシデント"
 
 #: incidents/index.php:81
 msgid "Filter"
-msgstr ""
+msgstr "フィルター"
 
 #: incidents/index.php:97
 msgid "Family"
@@ -1471,11 +1504,11 @@ msgstr ""
 
 #: incidents/index.php:99 incidents/index.php:249
 msgid "Title"
-msgstr ""
+msgstr "タイトル"
 
 #: incidents/index.php:122 incidents/index.php:158 incidents/index.php:170
 msgid "ALL"
-msgstr ""
+msgstr "すべて"
 
 #: incidents/index.php:133 incidents/index.php:331
 msgid "Metric"
@@ -1483,11 +1516,11 @@ msgstr ""
 
 #: incidents/index.php:139
 msgid "Hardware"
-msgstr ""
+msgstr "ハードウェア"
 
 #: incidents/index.php:145
 msgid "Install"
-msgstr ""
+msgstr "インストール"
 
 #: incidents/index.php:173
 msgid "High"
@@ -1523,15 +1556,15 @@ msgstr ""
 
 #: incidents/index.php:245
 msgid "Last Modification"
-msgstr ""
+msgstr "最終修正"
 
 #: incidents/index.php:338
 msgid "Install new hardware incident"
-msgstr ""
+msgstr "新しいハードウェアインシデントの追加"
 
 #: incidents/index.php:345
 msgid "Insert new installation incident"
-msgstr ""
+msgstr "新しいインストールインシデントの追加"
 
 #: index.php:6 ntop/index.php:8 ntop/session.php:8
 msgid "OSSIM"
@@ -1539,188 +1572,192 @@ msgstr ""
 
 #: net/deletenet.php:15
 msgid "Delete net"
-msgstr ""
+msgstr "ネットワークの削除"
 
 #: net/deletenet.php:20 net/deletenetgroup.php:20
 msgid "Wrong name"
-msgstr ""
+msgstr "名前が正しくありません"
 
 #: net/deletenet.php:53
 msgid "Net deleted"
-msgstr ""
+msgstr "ネットワークが削除されました"
 
 #: net/deletenetgroup.php:15
 msgid "Delete network group"
-msgstr ""
+msgstr "ネットワークグループの削除"
 
 #: net/deletenetgroup.php:52
 msgid "Network group deleted"
-msgstr ""
+msgstr "ネットワークグループが削除されました"
 
 #: net/modifynet.php:15
 msgid "Update net"
-msgstr ""
+msgstr "ネットワークの更新"
 
 #: net/modifynet.php:71
 msgid "Net succesfully updated"
-msgstr ""
+msgstr "ネットワークが正常に更新されました"
 
 #: net/modifynetform.php:15
 msgid "Modify network"
-msgstr ""
+msgstr "ネットワークの修正"
 
 #: net/modifynetform.php:43
 msgid "Netname"
-msgstr ""
+msgstr "ネットワーク名"
 
 #: net/modifynetgroup.php:15
 msgid "Update network group"
-msgstr ""
+msgstr "ネットワークグループの更新"
 
 #: net/modifynetgroup.php:64
 msgid "Network group succesfully updated"
-msgstr ""
+msgstr "ネットワークグループが正常に更新されました"
 
 #: net/modifynetgroupform.php:15
 msgid "Modify network group"
-msgstr ""
+msgstr "ネットワークグループの修正"
 
 #: net/modifynetgroupform.php:45
 msgid "Group Name"
-msgstr ""
+msgstr "グループ名"
 
 #: net/modifynetgroupform.php:55 net/net.php:147 net/newnetform.php:15
 #: net/newnetgroupform.php:43
 msgid "Insert new network"
-msgstr ""
+msgstr "新しいネットワークの追加"
 
 #: net/net.php:44 net/newnetform.php:38
 msgid "Ips"
-msgstr ""
+msgstr "IPアドレス"
 
 #: net/net.php:66 net/netgroup.php:54
 msgid "Nessus Scan"
-msgstr ""
+msgstr "Nessusスキャン"
 
 #: net/netgroup.php:15 top.php:59
 msgid "Network groups"
-msgstr ""
+msgstr "ネットワークグループ"
 
 #: net/netgroup.php:122 net/newnetgroupform.php:15
 msgid "Insert new network group"
-msgstr ""
+msgstr "新しいネットワークグループの追加"
 
 #: net/newnet.php:15
 msgid "New network"
-msgstr ""
+msgstr "新しいネットワーク"
 
 #: net/newnet.php:70
 msgid "Network succesfully inserted"
-msgstr ""
+msgstr "ネットワークが正常に追加されました"
 
 #: net/newnetform.php:40
 msgid "example"
-msgstr ""
+msgstr "例"
 
 #: net/newnetgroup.php:15
 msgid "New network group"
-msgstr ""
+msgstr "新しいネットワークグループ"
 
 #: net/newnetgroup.php:65
 msgid "Network group succesfully inserted"
-msgstr ""
+msgstr "ネットワークグループが正常に追加されました"
 
 #: netscan/do_scan.php:20
 msgid "Missing net argument.."
-msgstr ""
+msgstr "ネットワーク属性が不足しています"
 
 #: netscan/index.php:42 top.php:74
 msgid "Net Scan"
-msgstr ""
+msgstr "ネットワークスキャン"
 
 #: netscan/index.php:50
 msgid "Please, select the network you want to scan:"
-msgstr ""
+msgstr "スキャンしたいネットワークを選択してください:"
 
 #: netscan/index.php:91
 msgid ""
 "NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, "
 "you need root privileges."
 msgstr ""
+"NOTE: このツールはnmapのフロントエンドです。nmapの全機能を使用するには"
+"root権限が必要です。"
 
 #: netscan/index.php:93
 msgid ""
 "For this purpose you can use suphp, or set suid to nmap binary (chmod 4755 /"
 "usr/bin/nmap)"
 msgstr ""
+"そのためにはsuphpを使用するか、あるいはnmap実行ファイルにsuidをセットします"
+"(chmod 4755 /usr/bin/nmap)"
 
 #: netscan/scan_db.php:25
 msgid "Return to host's policy"
-msgstr ""
+msgstr "ホストのポリシーに戻る"
 
 #: netscan/scan_db.php:57
 msgid "Updating "
-msgstr ""
+msgstr "更新中"
 
 #: netscan/scan_db.php:82
 msgid "Inserting "
-msgstr ""
+msgstr "追加中"
 
 #: ntop/menu.php:123
 msgid "Protocols"
-msgstr ""
+msgstr "プロトコル"
 
 #: ntop/menu.php:125
 msgid "Services"
-msgstr ""
+msgstr "サービス"
 
 #: ntop/menu.php:129 ntop/menu.php:153
 msgid "By host: Total"
-msgstr ""
+msgstr "ホスト: 合計"
 
 #: ntop/menu.php:133 ntop/menu.php:157
 msgid "By host: Sent"
-msgstr ""
+msgstr "ホスト: 送信"
 
 #: ntop/menu.php:137 ntop/menu.php:161
 msgid "By host: Recv"
-msgstr ""
+msgstr "ホスト: 受信"
 
 #: ntop/menu.php:142
 msgid "Service statistic"
-msgstr ""
+msgstr "サービス統計"
 
 #: ntop/menu.php:147
 msgid "By client-server"
-msgstr ""
+msgstr "クライアント - サーバ"
 
 #: ntop/menu.php:149
 msgid "Throughput"
-msgstr ""
+msgstr "スループット"
 
 #: ntop/menu.php:165
 msgid "Total (Graph)"
-msgstr ""
+msgstr "合計(グラフ)"
 
 #: ntop/menu.php:167
 msgid "Matrix"
-msgstr ""
+msgstr "マトリックス"
 
 #: ntop/menu.php:171
 msgid "Data Matrix"
-msgstr ""
+msgstr "データマトリックス"
 
 #: ntop/menu.php:175
 msgid "Time Matrix"
-msgstr ""
+msgstr "時間マトリックス"
 
 #: ntop/menu.php:177
 msgid "Gateways, VLANs"
-msgstr ""
+msgstr "ゲートウェイ、VLANs"
 
 #: ntop/menu.php:181
 msgid "Gateways"
-msgstr ""
+msgstr "ゲートウェイ"
 
 #: ntop/menu.php:185
 msgid "VLANs"
@@ -1728,147 +1765,147 @@ msgstr ""
 
 #: ntop/menu.php:189
 msgid "OS and Users"
-msgstr ""
+msgstr "OSとユーザ"
 
 #: ntop/menu.php:193
 msgid "Domains"
-msgstr ""
+msgstr "ドメイン"
 
 #: ntop/net_session.php:83
 msgid "Active TCP Sessions"
-msgstr ""
+msgstr "アクティブなTCPセッション"
 
 #: ntop/session.php:21
 msgid "Please select a sensor"
-msgstr ""
+msgstr "Sensorを選択してください"
 
 #: policy/deletepolicy.php:15
 msgid "Delete policy"
-msgstr ""
+msgstr "ポリシーを削除"
 
 #: policy/deletepolicy.php:20
 msgid "Wrong policy id"
-msgstr ""
+msgstr "ポリシーidが正しくありません"
 
 #: policy/deletepolicy.php:45
 msgid "Policy deleted"
-msgstr ""
+msgstr "ポリシーが削除されました"
 
 #: policy/modifypolicy.php:15
 msgid "Update Policy"
-msgstr ""
+msgstr "ポリシーを更新"
 
 #: policy/modifypolicy.php:64 policy/newpolicy.php:58
 msgid "Error: Incorrect range of dates"
-msgstr ""
+msgstr "エラー: 日付の範囲が正しくありません"
 
 #: policy/modifypolicy.php:136
 msgid "Policy succesfully updated"
-msgstr ""
+msgstr "ポリシーは正常に更新されました"
 
 #: policy/modifypolicyform.php:15
 msgid "Update policy"
-msgstr ""
+msgstr "ポリシーを更新"
 
 #: policy/modifypolicyform.php:54 policy/modifypolicyform.php:149
 msgid "Insert new net"
-msgstr ""
+msgstr "新しいネットワークの追加"
 
 #: policy/modifypolicyform.php:144 policy/policy.php:28
 msgid "Dest"
-msgstr ""
+msgstr "宛先"
 
 #: policy/modifypolicyform.php:239 port/modifyportform.php:47
 #: port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:62
 msgid "Ports"
-msgstr ""
+msgstr "ポート"
 
 #: policy/modifypolicyform.php:241 port/newportform.php:15
 #: port/newsingleportform.php:15
 msgid "Insert new port group"
-msgstr ""
+msgstr "新しいポートグループの追加"
 
 #: policy/modifypolicyform.php:307 signature/modifysignatureform.php:47
 #: signature/newsignatureform.php:25 signature/signature.php:15
 #: signature/signature.php:29 top.php:61
 msgid "Signatures"
-msgstr ""
+msgstr "シグネチャ"
 
 #: policy/modifypolicyform.php:310 signature/newsignatureform.php:15
 msgid "Insert new signature group"
-msgstr ""
+msgstr "新しいシグネチャグループの追加"
 
 #: policy/modifypolicyform.php:395 policy/policy.php:36
 msgid "Time Range"
-msgstr ""
+msgstr "時間範囲"
 
 #: policy/modifypolicyform.php:400
 msgid "Begin"
-msgstr ""
+msgstr "始まり"
 
 #: policy/modifypolicyform.php:400
 msgid "End"
-msgstr ""
+msgstr "終わり"
 
 #: policy/newpolicy.php:15
 msgid "New policy"
-msgstr ""
+msgstr "新しいポリシー"
 
 #: policy/newpolicy.php:128
 msgid "Policy succesfully inserted"
-msgstr ""
+msgstr "ポリシーが正常に追加されました"
 
 #: policy/policy.php:15 top.php:33 top.php:56
 msgid "Policy"
-msgstr ""
+msgstr "ポリシー"
 
 #: policy/policy.php:33
 msgid "Port Group"
-msgstr ""
+msgstr "ポートグループ"
 
 #: policy/policy.php:34
 msgid "Sig Group"
-msgstr ""
+msgstr "シグネチャグループ"
 
 #: policy/policy.php:172
 msgid "Insert new policy"
-msgstr ""
+msgstr "新しいポリシーを追加"
 
 #: port/deleteport.php:15
 msgid "Delete port group"
-msgstr ""
+msgstr "ポートグループを削除"
 
 #: port/deleteport.php:20
 msgid "Wrong port name"
-msgstr ""
+msgstr "ポートグループ名が正しくありません"
 
 #: port/deleteport.php:45
 msgid "Port group deleted"
-msgstr ""
+msgstr "ポートグループが削除されました"
 
 #: port/modifyport.php:15
 msgid "Modify Port group"
-msgstr ""
+msgstr "ポートグループを修正"
 
 #: port/modifyport.php:54
 msgid "Port succesfully updated"
-msgstr ""
+msgstr "ポートが正常に更新されました"
 
 #: port/modifyportform.php:15
 msgid "Modify port group"
-msgstr ""
+msgstr "ポートグループを修正"
 
 #: port/newport.php:15 port/newsingleport.php:15
 msgid "New port"
-msgstr ""
+msgstr "新しいポート"
 
 #: port/newport.php:54 port/newsingleport.php:49
 msgid "Port succesfully inserted"
-msgstr ""
+msgstr "ポートが正常に追加されました"
 
 #: port/newsingleportform.php:21
 msgid "Port number"
-msgstr ""
+msgstr "ポート番号"
 
 #: port/newsingleportform.php:29
 msgid "UDP"
@@ -1881,238 +1918,240 @@ msgstr ""
 #: port/newsingleportform.php:36 report/inventory.php:190
 #: report/sec_report.php:407
 msgid "Service"
-msgstr ""
+msgstr "サービス"
 
 #: port/port.php:29
 msgid "Port group"
-msgstr ""
+msgstr "ポートグループ"
 
 #: port/port.php:72
 msgid "Insert new Port Group"
-msgstr ""
+msgstr "新しいポートグループを追加"
 
 #: port/port.php:73
 msgid "Insert new Port"
-msgstr ""
+msgstr "新しいポートの追加"
 
 #: report/anomalies.php:81
 msgid "year"
-msgstr ""
+msgstr "年"
 
 #: report/anomalies.php:82
 msgid "month"
-msgstr ""
+msgstr "月"
 
 #: report/anomalies.php:83
 msgid "week"
-msgstr ""
+msgstr "週"
 
 #: report/anomalies.php:84
 msgid "day"
-msgstr ""
+msgstr "日"
 
 #: report/anomalies.php:85
 msgid "last 12h"
-msgstr ""
+msgstr "過去１２時間"
 
 #: report/anomalies.php:86
 msgid "last 6h"
-msgstr ""
+msgstr "過去６時間"
 
 #: report/anomalies.php:87
 msgid "last hour"
-msgstr ""
+msgstr "過去１時間"
 
 #: report/anomalies.php:105
 msgid ""
 "NOTE: total and average values are NOT absolute but calculated on the "
 "specified time interval"
 msgstr ""
+"NOTE: 合計値と平均値は絶対的なものではなく"
+"特定の期間内に計算された値です"
 
 #: report/inventory.php:70
 msgid "Host Info"
-msgstr ""
+msgstr "ホスト情報"
 
 #: report/inventory.php:95
 msgid "Operating System"
-msgstr ""
+msgstr "オペレーティングシステム"
 
 #: report/inventory.php:126
 msgid "Netbios Name"
-msgstr ""
+msgstr "Netbios名"
 
 #: report/inventory.php:130
 msgid "Netbios Work Group"
-msgstr ""
+msgstr "Netbiosワークグループ"
 
 #: report/inventory.php:170
 msgid "Port / Service information"
-msgstr ""
+msgstr "ポート / サービス情報"
 
 #: report/inventory.php:174 scan/scan.php:42 sensor/sensor.php:48
 msgid "Active"
-msgstr ""
+msgstr "アクティブ"
 
 #: report/inventory.php:178
 msgid "update"
-msgstr ""
+msgstr "更新"
 
 #: report/inventory.php:183
 msgid "Passive"
-msgstr ""
+msgstr "パッシブ"
 
 #: report/inventory.php:191 session/login.php:129
 msgid "Version"
-msgstr ""
+msgstr "バージョン"
 
 #: report/menu.php:42
 msgid "Inventory"
-msgstr ""
+msgstr "目録"
 
 #: report/menu.php:48 report/pdfreportform.php:118 top.php:40
 msgid "Alarms"
-msgstr "xñ"
+msgstr "アラーム"
 
 #: report/menu.php:52
 msgid "Source or Dest"
-msgstr ""
+msgstr "送信元または宛先"
 
 #: report/menu.php:60 riskmeter/options.php:34 top.php:41
 msgid "Alerts"
-msgstr ""
+msgstr "アラート"
 
 #: report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
 #: top.php:68
 msgid "Main"
-msgstr ""
+msgstr "メイン"
 
 #: report/menu.php:66
 msgid "Src Unique alerts"
-msgstr ""
+msgstr "送信元別アラート"
 
 #: report/menu.php:69
 msgid "Dst Unique alerts"
-msgstr ""
+msgstr "宛先別アラート"
 
 #: report/menu.php:78 vulnmeter/index.php:8
 msgid "Vulnmeter"
-msgstr ""
+msgstr "脆弱性メーター"
 
 #: report/menu.php:82
 msgid "Security Problems"
-msgstr ""
+msgstr "セキュリティ問題"
 
 #: report/menu.php:87
 msgid "Usage"
-msgstr ""
+msgstr "使い方"
 
 #: report/metrics.php:114
 msgid "Current C Level"
-msgstr ""
+msgstr "現在のＣレベル"
 
 #: report/metrics.php:120
 msgid "Current A Level"
-msgstr ""
+msgstr "現在のＡレベル"
 
 #: report/metrics.php:131
 msgid "Max C Level (last day)"
-msgstr ""
+msgstr "Ｃレベルの最大値（過去１日）"
 
 #: report/metrics.php:143
 msgid "Max A Level (last day)"
-msgstr ""
+msgstr "Ａレベルの最大値（過去１日）"
 
 #: report/metrics.php:155
 msgid "Max C Level (last month)"
-msgstr ""
+msgstr "Ｃレベルの最大値（過去１ヵ月）"
 
 #: report/metrics.php:166
 msgid "Max A Level (last month)"
-msgstr ""
+msgstr "Ａレベルの最大値（過去１ヵ月）"
 
 #: report/metrics.php:178
 msgid "Max C Level (last year)"
-msgstr ""
+msgstr "Ｃレベルの最大値（過去１年）"
 
 #: report/metrics.php:189
 msgid "Max A Level (last year)"
-msgstr ""
+msgstr "Ａレベルの最大値（過去１年）"
 
 #: report/metrics.php:201
 msgid "Last day"
-msgstr ""
+msgstr "過去１日"
 
 #: report/metrics.php:204
 msgid "Last week"
-msgstr ""
+msgstr "過去１週間"
 
 #: report/metrics.php:207
 msgid "Last month"
-msgstr ""
+msgstr "過去１ヵ月"
 
 #: report/metrics.php:210
 msgid "Last year"
-msgstr ""
+msgstr "過去１年"
 
 #: report/pdfreportform.php:14
 msgid "PDF reports"
-msgstr ""
+msgstr "PDFレポート"
 
 #: report/pdfreportform.php:19 top.php:45
 msgid "Security Report"
-msgstr ""
+msgstr "セキュリティレポート"
 
 #: report/pdfreportform.php:20
 msgid "Metrics Report"
-msgstr ""
+msgstr "Metricsレポート"
 
 #: report/pdfreportform.php:21
 msgid "Incident Report"
-msgstr ""
+msgstr "インシデントレポート"
 
 #: report/pdfreportform.php:34
 msgid "Top Attacked Hosts"
-msgstr ""
+msgstr "最もアタックを受けたホスト"
 
 #: report/pdfreportform.php:41
 msgid "Top AttackerHosts"
-msgstr ""
+msgstr "最もアタックを放ったホスト"
 
 #: report/pdfreportform.php:48
 msgid "Top Destination Ports"
-msgstr ""
+msgstr "最も多く観測された宛先ポート"
 
 #: report/pdfreportform.php:55
 msgid "Top Alerts by Host"
-msgstr ""
+msgstr "最も多く観測されたアラート（ホスト毎）"
 
 #: report/pdfreportform.php:62
 msgid "Top Alerts by Risk"
-msgstr ""
+msgstr "最も多く観測されたアラート（リスク毎）"
 
 #: report/pdfreportform.php:68
 msgid "Number of hosts per table"
-msgstr ""
+msgstr "テープル毎のホスト数"
 
 #: report/pdfreportform.php:82
 msgid "Day"
-msgstr ""
+msgstr "日"
 
 #: report/pdfreportform.php:88
 msgid "Week"
-msgstr ""
+msgstr "週"
 
 #: report/pdfreportform.php:94
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 #: report/pdfreportform.php:100
 msgid "Year"
-msgstr ""
+msgstr "年"
 
 #: report/report.php:15
 msgid "Host report"
-msgstr ""
+msgstr "ホストレポート"
 
 #: report/report.php:34 sensor/sensor.php:32
 msgid "Ip"
@@ -2120,51 +2159,51 @@ msgstr ""
 
 #: report/sec_report.php:15
 msgid "Security report"
-msgstr ""
+msgstr "セキュリティレポート"
 
 #: report/sec_report.php:149 report/sec_report.php:219
 msgid "Occurrences"
-msgstr ""
+msgstr "発生"
 
 #: report/sec_report.php:218
 msgid "Alert"
-msgstr ""
+msgstr "アラート"
 
 #: report/sec_report.php:408
 msgid "Ocurrences"
-msgstr ""
+msgstr "発生"
 
 #: riskmeter/index.php:81
 msgid "Page Refresh"
-msgstr ""
+msgstr "ページ更新"
 
 #: riskmeter/options.php:39
 msgid "History"
-msgstr ""
+msgstr "履歴"
 
 #: riskmeter/resetip.php:11
 msgid "Reset completed"
-msgstr ""
+msgstr "リセットが完了しました"
 
 #: rrd_conf/delete_rrd_conf.php:15
 msgid "Delete RRD Conf"
-msgstr ""
+msgstr "RRD設定を削除"
 
 #: rrd_conf/delete_rrd_conf.php:48
 msgid "RRD profile deleted"
-msgstr ""
+msgstr "RRDプロファイルを削除"
 
 #: rrd_conf/modify_rrd_conf_form.php:15
 msgid "Modify RRD Config"
-msgstr ""
+msgstr "RRD設定を修正"
 
 #: rrd_conf/modify_rrd_conf_form.php:17
 msgid "Hints"
-msgstr ""
+msgstr "ヒント"
 
 #: rrd_conf/modify_rrd_conf_form.php:19
 msgid "Threshold: Absolute value above which is being alerted"
-msgstr ""
+msgstr "閾値: "
 
 #: rrd_conf/modify_rrd_conf_form.php:20
 msgid "Priority: Resulting impact if threshold is being exceeded"
@@ -2184,19 +2223,19 @@ msgstr ""
 
 #: rrd_conf/modify_rrd_conf_form.php:87
 msgid "Attribute"
-msgstr ""
+msgstr "属性"
 
 #: rrd_conf/modify_rrd_conf_form.php:91
 msgid "Threshold"
-msgstr ""
+msgstr "閾値"
 
 #: rrd_conf/modify_rrd_conf_form.php:99
 msgid "Alpha"
-msgstr ""
+msgstr "アルファ"
 
 #: rrd_conf/modify_rrd_conf_form.php:103
 msgid "Beta"
-msgstr ""
+msgstr "ベータ"
 
 #: rrd_conf/modify_rrd_conf_form.php:107
 msgid "Persistence"
@@ -2204,195 +2243,197 @@ msgstr ""
 
 #: rrd_conf/modify_rrd_conf_form.php:111
 msgid "Enable"
-msgstr ""
+msgstr "有効"
 
 #: rrd_conf/new_rrd_conf.php:15
 msgid "New RRD Profile"
-msgstr ""
+msgstr "新しいRRDプロファイル"
 
 #: rrd_conf/new_rrd_conf.php:61
 msgid "RRD Config succesfully inserted"
-msgstr ""
+msgstr "RRD設定が正常に追加されました"
 
 #: rrd_conf/rrd_conf.php:15 top.php:71
 msgid "RRD Config"
-msgstr ""
+msgstr "RRD設定"
 
 #: rrd_conf/rrd_conf.php:30
 msgid "Profile"
-msgstr ""
+msgstr "プロファイル"
 
 #: rrd_conf/rrd_conf.php:68
 msgid "Insert new RRD profile"
-msgstr ""
+msgstr "新しいRRDプロファイルの追加"
 
 #: scan/deletehostscan.php:15
 msgid "Delete host scan configuration"
-msgstr ""
+msgstr "ホストスキャン設定の削除"
 
 #: scan/deletehostscan.php:44
 msgid "Host scan configuration deleted"
-msgstr ""
+msgstr "ホストスキャン設定が削除されました"
 
 #: scan/hostscan.php:15
 msgid "Host scan configuration"
-msgstr ""
+msgstr "ホストスキャン設定"
 
 #: scan/hostscan.php:28
 msgid ""
 "Use policy->hosts or networks to define nessus scans or else you'll get "
 "unexpected results"
 msgstr ""
+"policy->hostsまたはnetworksでnessusスキャンを定義してください"
+"そうしなければ予期しない結果となります"
 
 #: scan/hostscan.php:80
 msgid "New"
-msgstr ""
+msgstr "新規"
 
 #: scan/newhostscan.php:15
 msgid "New host scan configuration"
-msgstr ""
+msgstr "新しいホストスキャン設定"
 
 #: scan/newhostscan.php:41
 msgid "Host scan configuration succesfully inserted"
-msgstr ""
+msgstr "ホストスキャン設定が正常に追加されました"
 
 #: scan/newhostscanform.php:15
 msgid "Insert new host scan configuration"
-msgstr ""
+msgstr "新しいホストスキャン設定を追加"
 
 #: sensor/deletesensor.php:15
 msgid "Delete sensor"
-msgstr ""
+msgstr "Sensorを削除"
 
 #: sensor/deletesensor.php:20
 msgid "Wrong sensor"
-msgstr ""
+msgstr "Sensorが正しくありません"
 
 #: sensor/deletesensor.php:30
 msgid "Are you sure?"
-msgstr ""
+msgstr "よろしいですか？"
 
 #: sensor/deletesensor.php:56
 msgid "Sensor deleted"
-msgstr ""
+msgstr "Sensorが削除されました"
 
 #: sensor/editsensor.php:32
 msgid "Edit sensor"
-msgstr ""
+msgstr "Sensorを編集"
 
 #: sensor/editsensor.php:33
 msgid "properties"
-msgstr ""
+msgstr "プロパティー"
 
 #: sensor/editsensor.php:51
 msgid "What sensor do you want to edit"
-msgstr ""
+msgstr "どのSensorを編集しますか"
 
 #: sensor/editsensor.php:105 sensor/editsensor.php:279
 #: sensor/editsensor.php:690
 msgid "Error opening"
-msgstr ""
+msgstr "開けません"
 
 #: sensor/editsensor.php:105 sensor/editsensor.php:279
 #: sensor/editsensor.php:690
 msgid "file"
-msgstr ""
+msgstr "ファイル"
 
 #: sensor/editsensor.php:150
 msgid "Load default values for snort config file"
-msgstr ""
+msgstr "snortの設定ファイルにデフォルト値をロード"
 
 #: sensor/editsensor.php:151 sensor/editsensor.php:370
 #: sensor/editsensor.php:721
 msgid "use this option only if you are sure"
-msgstr ""
+msgstr "このオプションの使用には注意してください"
 
 #: sensor/editsensor.php:168
 msgid "Snort configuration"
-msgstr ""
+msgstr "Snort設定"
 
 #: sensor/editsensor.php:205 sensor/editsensor.php:427
 #: sensor/editsensor.php:466
 msgid "Password unchanged if field left blank"
-msgstr ""
+msgstr "フィールドが空だとパスワードを変更されません"
 
 #: sensor/editsensor.php:258 sensor/editsensor.php:669
 #: sensor/editsensor.php:791
 msgid "Error opening file"
-msgstr ""
+msgstr "ファイルを開けません"
 
 #: sensor/editsensor.php:262 sensor/editsensor.php:674
 #: sensor/editsensor.php:796
 msgid "Sensor edit completed"
-msgstr ""
+msgstr "Sensorの編集が完了しました"
 
 #: sensor/editsensor.php:369
 msgid "Load default values for ossim config file"
-msgstr ""
+msgstr "ossim設定ファイルにデフォルト値をロード"
 
 #: sensor/editsensor.php:386
 msgid "OSSIM configuration"
-msgstr ""
+msgstr "OSSIM設定"
 
 #: sensor/editsensor.php:388
 msgid "Base configuration"
-msgstr ""
+msgstr "Base設定"
 
 #: sensor/editsensor.php:390
 msgid "Base directory"
-msgstr ""
+msgstr "Baseディレクトリ"
 
 #: sensor/editsensor.php:396
 msgid "Log file"
-msgstr ""
+msgstr "ログファイル"
 
 #: sensor/editsensor.php:401
 msgid "Database"
-msgstr ""
+msgstr "データベース"
 
 #: sensor/editsensor.php:403
 msgid "hostname of the mysql database server"
-msgstr ""
+msgstr "mysqlサーバのホスト名"
 
 #: sensor/editsensor.php:409
 msgid "name of the database"
-msgstr ""
+msgstr "データベース名"
 
 #: sensor/editsensor.php:415
 msgid "name of the database user"
-msgstr ""
+msgstr "データベースのユーザ名"
 
 #: sensor/editsensor.php:421
 msgid "password for the database connection"
-msgstr ""
+msgstr "データベース接続用パスワード"
 
 #: sensor/editsensor.php:431
 msgid "path to snort"
-msgstr ""
+msgstr "snortのパス"
 
 #: sensor/editsensor.php:437
 msgid "path to snort rules directory"
-msgstr ""
+msgstr "snortのルール格納ディレクトリのパス"
 
 #: sensor/editsensor.php:442
 msgid "hostname of the snort database server"
-msgstr ""
+msgstr "snortデータベースサーバのホスト名"
 
 #: sensor/editsensor.php:448
 msgid "name of the snort database"
-msgstr ""
+msgstr "snortデータベース名"
 
 #: sensor/editsensor.php:454
 msgid "name of the snort database user"
-msgstr ""
+msgstr "snortデータベースのユーザ名"
 
 #: sensor/editsensor.php:460
 msgid "password for the snort database connection"
-msgstr ""
+msgstr "snortデータベース接続用パスワード"
 
 #: sensor/editsensor.php:468
 msgid "Paths"
-msgstr ""
+msgstr "パス"
 
 #: sensor/editsensor.php:470
 msgid "adodb"
@@ -2416,7 +2457,7 @@ msgstr ""
 
 #: sensor/editsensor.php:499
 msgid "Applications"
-msgstr ""
+msgstr "アプリケーション"
 
 #: sensor/editsensor.php:501
 msgid "nmap"
@@ -2444,19 +2485,19 @@ msgstr ""
 
 #: sensor/editsensor.php:544
 msgid "graph"
-msgstr ""
+msgstr "グラフ"
 
 #: sensor/editsensor.php:681 sensor/editsensor.php:804
 msgid "Default values loaded"
-msgstr ""
+msgstr "デフォルト値がロードされました"
 
 #: sensor/editsensor.php:720
 msgid "Load default values for spade config file"
-msgstr ""
+msgstr "spade設定ファイルにデフォルト値をロード"
 
 #: sensor/editsensor.php:737
 msgid "Spade configuration"
-msgstr ""
+msgstr "Spade設定"
 
 #: sensor/editsensor.php:739
 msgid "SPADEDIR"
@@ -2464,11 +2505,11 @@ msgstr ""
 
 #: sensor/editsensor.php:744
 msgid "dest"
-msgstr ""
+msgstr "宛先"
 
 #: sensor/editsensor.php:749
 msgid "logfile"
-msgstr ""
+msgstr "ログファイル"
 
 #: sensor/editsensor.php:754
 msgid "statefile"
@@ -2484,15 +2525,15 @@ msgstr ""
 
 #: sensor/interfaces.php:45
 msgid "updated"
-msgstr ""
+msgstr "更新されました"
 
 #: sensor/interfaces.php:49
 msgid "deleted"
-msgstr ""
+msgstr "削除されました"
 
 #: sensor/interfaces.php:56
 msgid "Interface succesfully"
-msgstr ""
+msgstr "インターフェースは正常に"
 
 #: sensor/interfaces.php:82
 msgid "Update interfaces for"
@@ -2500,281 +2541,283 @@ msgstr ""
 
 #: sensor/interfaces.php:85 sensor/interfaces.php:140
 msgid "Interface"
-msgstr ""
+msgstr "インターフェース"
 
 #: sensor/modifysensor.php:15
 msgid "Update sensor"
-msgstr ""
+msgstr "Sensorを更新"
 
 #: sensor/modifysensor.php:50
 msgid "Sensor succesfully updated"
-msgstr ""
+msgstr "Sensorは正常に更新されました"
 
 #: sensor/modifysensorform.php:15
 msgid "Modify sensor"
-msgstr ""
+msgstr "Sensorを修正"
 
 #: sensor/modifysensorform.php:93 sensor/newsensorform.php:51
 #: sensor/sensor.php:44
 msgid "Port"
-msgstr ""
+msgstr "ポート"
 
 #: sensor/newsensor.php:15
 msgid "New sensor"
-msgstr ""
+msgstr "新しいSensor"
 
 #: sensor/newsensor.php:50
 msgid "Sensor succesfully inserted"
-msgstr ""
+msgstr "Sensorが正常に追加されました"
 
 #: sensor/sensor.php:104
 msgid "Interfaces"
-msgstr ""
+msgstr "インターフェース"
 
 #: sensor/sensor.php:126
 msgid "Warning"
-msgstr ""
+msgstr "警告"
 
 #: sensor/sensor.php:127
 msgid ""
 "the following sensor(s) are being reported as enabled by the server but "
 "aren't configured"
 msgstr ""
+"以下のSensorはサーバ上で有効になりましたが"
+"設定されていません"
 
 #: sensor/sensor.php:142
 msgid "Insert"
-msgstr ""
+msgstr "追加"
 
 #: sensor/sensor_plugins.php:46
 msgid "There aren't any sensors connected to OSSIM server"
-msgstr ""
+msgstr "OSSIMサーバに接続しているSensorはありません"
 
 #: sensor/sensor_plugins.php:120
 msgid "Enabled"
-msgstr ""
+msgstr "有効"
 
 #: sensor/sensor_plugins.php:144
 msgid "UP"
-msgstr ""
+msgstr "稼動中"
 
 #: sensor/sensor_plugins.php:147
 msgid "stop"
-msgstr ""
+msgstr "停止"
 
 #: sensor/sensor_plugins.php:151
 msgid "DOWN"
-msgstr ""
+msgstr "停止中"
 
 #: sensor/sensor_plugins.php:154
 msgid "start"
-msgstr ""
+msgstr "開始"
 
 #: sensor/sensor_plugins.php:166
 msgid "ENABLED"
-msgstr ""
+msgstr "有効"
 
 #: sensor/sensor_plugins.php:169
 msgid "disable"
-msgstr ""
+msgstr "無効"
 
 #: sensor/sensor_plugins.php:173
 msgid "DISABLED"
-msgstr ""
+msgstr "無効"
 
 #: sensor/sensor_plugins.php:176
 msgid "enable"
-msgstr ""
+msgstr "有効化"
 
 #: session/changepass.php:10 session/changepassform.php:10
 msgid "Change password"
-msgstr ""
+msgstr "パスワードを変更"
 
 #: session/changepass.php:49 session/modifyuser.php:72
 msgid "User succesfully updated"
-msgstr ""
+msgstr "ユーザは正常に更新されました"
 
 #: session/changepassform.php:26 session/modifyuserform.php:64
 msgid "User name"
-msgstr ""
+msgstr "ユーザ名"
 
 #: session/changepassform.php:30
 msgid "Current password"
-msgstr ""
+msgstr "現在のパスワード"
 
 #: session/changepassform.php:34
 msgid "Enter new password"
-msgstr ""
+msgstr "新しいパスワードを入力してください"
 
 #: session/changepassform.php:38
 msgid "Retype new password"
-msgstr ""
+msgstr "新しいパスワードの確認入力"
 
 #: session/deleteuser.php:20
 msgid "Delete user"
-msgstr ""
+msgstr "ユーザを削除"
 
 #: session/deleteuser.php:59
 msgid "User deleted"
-msgstr ""
+msgstr "ユーザが削除されました"
 
 #: session/login.php:92
 msgid "OSSIM Framework Login"
-msgstr ""
+msgstr "OSSIM フレームワーク ログイン"
 
 #: session/login.php:102
 msgid "OSSIM Login"
-msgstr ""
+msgstr "OSSIM ログイン"
 
 #: session/login.php:140 session/users.php:37
 msgid "Password"
-msgstr ""
+msgstr "パスワード"
 
 #: session/login.php:150
 msgid "NOTE: Default user is admin-admin"
-msgstr ""
+msgstr "NOTE: デフォルトのユーザはadmin-adminです"
 
 #: session/login.php:151
 msgid "For security reasons you should change it at Configuration->Users"
-msgstr ""
+msgstr "セキュリティ上の理由から設定->ユーザで変更してください"
 
 #: session/modifyuser.php:15 session/newuser.php:15
 msgid "New User"
-msgstr ""
+msgstr "新しいユーザ"
 
 #: session/modifyuserform.php:19
 msgid "Modify user"
-msgstr ""
+msgstr "ユーザを修正"
 
 #: session/modifyuserform.php:60 session/newuserform.php:28
 msgid "User login"
-msgstr ""
+msgstr "ユーザログイン"
 
 #: session/modifyuserform.php:69 session/newuserform.php:44
 msgid "Allowed nets"
-msgstr ""
+msgstr "許可されたネットワーク"
 
 #: session/modifyuserform.php:98 session/newuserform.php:74
 msgid "Permissions"
-msgstr ""
+msgstr "パーミッション"
 
 #: session/newuser.php:80
 msgid "User succesfully inserted"
-msgstr ""
+msgstr "ユーザが正常に追加されました"
 
 #: session/newuserform.php:21 session/users.php:79
 msgid "Insert new user"
-msgstr ""
+msgstr "新しいユーザを追加"
 
 #: session/newuserform.php:32
 msgid "User full name"
-msgstr ""
+msgstr "ユーザのフルネーム"
 
 #: session/newuserform.php:36
 msgid "Enter password"
-msgstr ""
+msgstr "パスワードを入力してください"
 
 #: session/newuserform.php:40
 msgid "Re-enter password"
-msgstr ""
+msgstr "パスワードの確認入力"
 
 #: session/users.php:15 top.php:69
 msgid "Users"
-msgstr ""
+msgstr "ユーザ"
 
 #: session/users.php:32
 msgid "Login"
-msgstr ""
+msgstr "ログイン"
 
 #: session/users.php:38
 msgid "Actions"
-msgstr ""
+msgstr "アクション"
 
 #: session/users.php:58
 msgid "Change Password"
-msgstr ""
+msgstr "パスワードを変更"
 
 #: session/users.php:63
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 #: session/users.php:82
 msgid "Reload ACLS"
-msgstr ""
+msgstr "ACLのリロード"
 
 #: signature/deletesignature.php:15
 msgid "Delete signature group"
-msgstr ""
+msgstr "シグネチャグループを削除"
 
 #: signature/deletesignature.php:20
 msgid "Wrong signature name"
-msgstr ""
+msgstr "シグニチャ名が正しくありません"
 
 #: signature/deletesignature.php:45
 msgid "Signature group deleted"
-msgstr ""
+msgstr "シグニチャグループが削除されました"
 
 #: signature/modifysignature.php:15 signature/modifysignatureform.php:15
 msgid "Modify signature group"
-msgstr ""
+msgstr "シグニチャグループを修正"
 
 #: signature/newsignature.php:15
 msgid "New signature"
-msgstr ""
+msgstr "新しいシグニチャ"
 
 #: signature/signature.php:68
 msgid "Insert new Signature Group"
-msgstr ""
+msgstr "新しいシグニチャグループを追加"
 
 #: top.php:31
 msgid "Reports"
-msgstr "|[g"
+msgstr "レポート"
 
 #: top.php:32
 msgid "Monitors"
-msgstr "j^["
+msgstr "モニター"
 
 #: top.php:34
 msgid "Correlation"
-msgstr ""
+msgstr "相関分析"
 
 # msgstr "ÖÖW"
 #
 #: top.php:35
 msgid "Configuration"
-msgstr ""
+msgstr "設定"
 
 # msgstr "\¬"
 #: top.php:36
 msgid "Tools"
-msgstr "pï"
+msgstr "ツール"
 
 #: top.php:37
 msgid "Logout"
-msgstr "OAEg"
+msgstr "ログアウト"
 
 #: top.php:42
 msgid "Vulnerabilities"
-msgstr "Æã«"
+msgstr "脆弱性"
 
 #: top.php:44
 msgid "Host Report"
-msgstr ""
+msgstr "ホストレポート"
 
 #: top.php:46
 msgid "PDF Report"
-msgstr ""
+msgstr "PDFレポート"
 
 #: top.php:51
 msgid "Session"
-msgstr ""
+msgstr "セッション"
 
 #: top.php:53
 msgid "Availability"
-msgstr ""
+msgstr "可用性"
 
 #: top.php:64
 msgid "Directives"
-msgstr ""
+msgstr "設定"
 
 #: top.php:65
 msgid "Cross Correlation"
@@ -2782,43 +2825,46 @@ msgstr ""
 
 #: top.php:70
 msgid "Plugins"
-msgstr "·®"
+msgstr "プラグイン"
 
 #: top.php:72
 msgid "Host Scan"
-msgstr ""
+msgstr "ホストスキャン"
 
 #: top.php:75
 msgid "Rule Viewer"
-msgstr "K¥Ì®Ò"
+msgstr "ルールビューワ"
 
 #: vulnmeter/do_nessus.php:15
 msgid "Update Scan"
-msgstr "XLðXVµÈ³¢"
+msgstr "スキャンを更新"
 
 #: vulnmeter/do_nessus.php:30
 msgid ""
 "Nessus scan started, depending on number of hosts to be scanned this may "
 "take a while"
 msgstr ""
+"Nessusスキャンが開始されました、対象ホスト数によっては"
+"しばらく時間がかかります"
 
 #: vulnmeter/do_nessus.php:31
 msgid ""
 "Notice: httpd user needs write permission to the vulnmeter dir and subdirs"
 msgstr ""
+"Notice: httpd userは脆弱性メータのディレクトリ以下に書き込み権限が必要です"
 
 #: vulnmeter/index.php:62
 msgid "Last scan"
-msgstr ""
+msgstr "最後のスキャン"
 
 #: vulnmeter/index.php:63
 msgid "Update scan"
-msgstr ""
+msgstr "スキャンを更新する"
 
 #: vulnmeter/index.php:73
 msgid "Nets"
-msgstr "lbg[N"
+msgstr "ネットワーク"
 
 #: vulnmeter/index.php:219
 msgid "No scan have been done yet"
-msgstr ""
+msgstr "スキャンはまだ行われていません"

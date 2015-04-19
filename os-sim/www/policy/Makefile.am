@@ -1,4 +1,4 @@
-policydir = $(localstatedir)/www/ossim/policy
+policydir = $(datadir)/ossim/www/policy
 policy_DATA = deletepolicy.php \
 	modifypolicyform.php \
 	modifypolicy.php \

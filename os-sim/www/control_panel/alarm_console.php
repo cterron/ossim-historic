@@ -40,14 +40,20 @@ if ($id = $_GET["delete"]) {
     Alarm::delete($conn, $id);
 }
 
+if ($id = $_GET["close"]) {
+    Alarm::close($conn, $id);
+}
+
 if ($list = $_GET["delete_backlog"]) {
     if (!strcmp($list, "all"))
         $backlog_id = $list;
     else
         list($backlog_id, $id) = split("-", $list);
+    /*
     if(Session::is_expert()){
         Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
     }
+    */
     Alarm::delete_from_backlog($conn, $backlog_id, $id);
 }
 
@@ -79,6 +85,19 @@ if (!$sup = $_GET["sup"])
     $sup = $ROWS;
 
 ?>
+
+    <?php
+        $hide_closed = $_REQUEST["hide_closed"] == 1? 1 : 0;
+        $not_hide_closed = !$hide_closed;
+    ?>
+    <input type="checkbox" 
+        onClick="document.location='<?php echo 
+            $_SERVER["PHP_SELF"] .
+            "?order=$order&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip" .
+            "&hide_closed=$not_hide_closed" ?>'"
+        <?php if ($hide_closed) echo " checked " ?> 
+    />Hide closed alarms<br/>
+
     <table width="100%">
       <tr>
         <td colspan="8">
@@ -90,11 +109,13 @@ if (!$sup = $_GET["sup"])
     $inf_link = $_SERVER["PHP_SELF"] . 
             "?order=$order" . 
             "&sup=" . ($sup - $ROWS) .
-            "&inf=" . ($inf - $ROWS);
+            "&inf=" . ($inf - $ROWS) .
+            "&hide_closed=$hide_closed";
     $sup_link = $_SERVER["PHP_SELF"] . 
         "?order=$order" . 
         "&sup=" . ($sup + $ROWS) .
-        "&inf=" . ($inf + $ROWS);
+        "&inf=" . ($inf + $ROWS) .
+        "&hide_closed=$hide_closed";
     if ($src_ip) {
         $inf_link .= "&src_ip=$src_ip";
         $sup_link .= "&src_ip=$src_ip";
@@ -103,7 +124,7 @@ if (!$sup = $_GET["sup"])
         $inf_link .= "&dst_ip=$dst_ip";
         $sup_link .= "&dst_ip=$dst_ip";
     }
-    $count = Alarm::get_count($conn, $src_ip, $dst_ip);
+    $count = Alarm::get_count($conn, $src_ip, $dst_ip, $hide_closed);
     
     if ($inf >= $ROWS) {
         echo "<a href=\"$inf_link\">&lt;-"; printf(gettext("Prev %d"),$ROWS); echo "</a>";
@@ -148,18 +169,27 @@ if (!$sup = $_GET["sup"])
                 echo ossim_db::get_order("dst_ip", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
             ?>"> <?php echo gettext("Destination"); ?> </a></th>
+        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+                echo ossim_db::get_order("status", $order) .
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+            ?>"> <?php echo gettext("Status"); ?> </a></th>
         <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php
     $time_start = time();
-    if ($alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip,
+    if ($alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
                                       "ORDER by $order", 
                                       $inf, $sup))
     {
         $datemark = "";
 
         foreach ($alarm_list as $alarm) {
+
+            /* hide closed alarmas */
+            if (($alarm->get_status() == "closed") and
+                ($_REQUEST["hide_closed"] == 1))
+                continue;
 
             $id  = $alarm->get_plugin_id();
             $sid = $alarm->get_plugin_sid();
@@ -199,12 +229,12 @@ if (!$sup = $_GET["sup"])
                 $link_delete = "
                     <a href=\"" . 
                         $_SERVER["PHP_SELF"] . "?delete_day=" . 
-                        $alarm->get_timestamp() . "\"> Delete </a>
+                        $alarm->get_timestamp() . "&hide_closed=$hided_closed\"> Delete </a>
                 ";
                 echo "
                 <tr>
                   <td></td>
-                  <td colspan=\"7\">
+                  <td colspan=\"8\">
                     <!--<hr border=\"0\"/>-->
                     <b>$date_formatted</b> [$link_delete]<br/>
                     <!--<hr border=\"0\"/>-->
@@ -232,6 +262,8 @@ if (!$sup = $_GET["sup"])
                 ";
             } else {
                 $alerts_link = $_SERVER["PHP_SELF"];
+                $alarm_link = get_acid_pair_link($date, $alarm->get_src_ip(), $alarm->get_dst_ip());
+                $alarm_name = "<a href=\"" . $alarm_link .  "\">$alarm_name</a>";
             }
             echo $alarm_name;
 ?>
@@ -339,19 +371,36 @@ if (!$sup = $_GET["sup"])
             <?php echo "<a href=\"$dst_link\">$dst_name</a>:$dst_port $dst_img"; ?></td>
         <!-- end src & dst hosts -->
         
+        <td nowrap>
+<?php
+
+    $alert_id = $alarm->get_alert_id();
+
+    if ( ($status = $alarm->get_status()) == "open") {
+        echo "<a title='Click here to close alarm #$alert_id' " .
+             "href=\"" . $_SERVER['PHP_SELF'] . "?close=$alert_id" . 
+             "&hide_closed=$hide_closed\"" .
+             ">$status</a>";
+    } else {
+        echo $status;
+    }
+?>
+        </td>
 
         <td nowrap>
 <?php
-        $alert_id = $alarm->get_alert_id();
         if ($backlog_id == 0) {
 ?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alert_id ?>"> <?php echo gettext("Ack"); ?> </a>]
+        [<a href="<?php echo $_SERVER["PHP_SELF"] . 
+            "?delete=$alert_id&hide_closed=$hide_closed"?>">
+            <?php echo gettext("Delete"); ?> </a>]
 <?php
         } else {
 ?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
-            echo "$backlog_id-$alert_id" ?>"> <?php echo gettext("Ack"); ?> </a>]
+        [<a href="<?php echo $_SERVER["PHP_SELF"] . 
+            "?delete_backlog=" . "$backlog_id-$alert_id" . 
+            "&hide_closed=$hide_closed"; ?>">
+            <?php echo gettext("Delete"); ?> </a>]
 <?php
         }
 ?>
@@ -372,7 +421,7 @@ if (!$sup = $_GET["sup"])
 ?>
       <tr>
         <td></td>
-        <td colspan="7">
+        <td colspan="8">
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"><?php
             echo gettext("Delete ALL alarms"); ?></a> &nbsp;|&nbsp;
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?purge=1"><?php
@@ -381,13 +430,13 @@ if (!$sup = $_GET["sup"])
       </tr>
 <?php
     } /* if alarm_list */
-    $time_load = time() - $time_start;
-    print "[ Page loaded in $time_load seconds ]";
 ?>
     </table>
 
 
 <?php
+$time_load = time() - $time_start;
+print "[ Page loaded in $time_load seconds ]";
 $db->close($conn);
 ?>
 

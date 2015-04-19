@@ -9,6 +9,7 @@ INSERT INTO config (conf, value) VALUES ('phpgacl_user', 'root');
 INSERT INTO config (conf, value) VALUES ('phpgacl_pass', 'ossim'); 
 INSERT INTO config (conf, value) VALUES ('locale_dir', '/usr/share/locale');
 INSERT INTO config (conf, value) VALUES ('language', 'en_GB');
+INSERT INTO config (conf, value) VALUES ("alert_viewer", "acid");
 
 UPDATE config SET value = 'admin' WHERE conf = 'acid_user';
 UPDATE config SET value = 'admin' WHERE conf = 'acid_pass';
@@ -236,3 +237,4 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, r
 -- new net scan, table scan no longer needed
 DROP TABLE IF EXISTS scan;
 
+ALTER TABLE alarm ADD column status ENUM ('open', 'closed') NOT NULL DEFAULT 'open' after timestamp;

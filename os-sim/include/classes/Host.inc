@@ -137,11 +137,15 @@ class Host {
         }
 
         /* insert os info, don't check error messages.. */
+        $query = "DELETE FROM host_os WHERE ip = inet_aton('$ip');";
+        $conn->Execute($query);
         $query = "INSERT INTO host_os (ip, os, previous, date, anom) 
           VALUES (inet_aton('$ip'), '$os', '$os', curdate(), 0);";
         $conn->Execute($query);
 
         /* insert mac info, don't check error messages.. */
+        $query = "DELETE FROM host_mac WHERE ip = inet_aton('$ip');";
+        $conn->Execute($query);
         $query = "INSERT INTO host_mac (ip, mac, previous, date, vendor, anom)
           VALUES (inet_aton('$ip'), '$mac', '$mac', curdate(), '$mac_vendor', 0);";
         $conn->Execute($query);

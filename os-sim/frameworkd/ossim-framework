@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
+import sys
+sys.path.append('/usr/share/ossim-framework/')
+
 from ossimframework.Framework import Framework
+
 
 if __name__ == '__main__':
 

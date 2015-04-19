@@ -1,4 +1,4 @@
-topdir = $(localstatedir)/www/ossim/pixmaps/top
+topdir = $(datadir)/ossim/www/pixmaps/top
 
 top_DATA = abajo.gif \
 	azul.gif	\

@@ -1,5 +1,6 @@
-incidentsdir = $(localstatedir)/www/ossim/incidents
+incidentsdir = $(datadir)/ossim/www/incidents
 incidents_DATA = incident.php \
+	check.php \
 	index.php \
 	attachment.php
 

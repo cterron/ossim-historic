@@ -19,6 +19,6 @@ cd $BUILD_DIR
 rm -rf os-sim
 `$CHECKOUT`
 cd os-sim/
-dpkg-buildpackage -uc -b
+dpkg-buildpackage
 cd -
 

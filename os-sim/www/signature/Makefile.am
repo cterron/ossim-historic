@@ -1,4 +1,4 @@
-signaturedir = $(localstatedir)/www/ossim/signature
+signaturedir = $(datadir)/ossim/www/signature
 signature_DATA = modifysignature.php \
 	newsignature.php \
 	deletesignature.php \

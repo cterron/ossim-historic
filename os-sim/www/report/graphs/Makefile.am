@@ -1,4 +1,4 @@
-graphsdir = $(localstatedir)/www/ossim/report/graphs
+graphsdir = $(datadir)/ossim/www/report/graphs
 
 graphs_DATA = alerts_received_graph.php \
 	attack_graph.php \

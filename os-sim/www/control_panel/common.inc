@@ -15,6 +15,7 @@ function get_acid_date_link($date, $ip = "", $target = "")
     require_once ('ossim_conf.inc');
     $conf = new ossim_conf();
     $acid_link = $conf->get_conf("acid_link");
+    $acid_prefix = $conf->get_conf("alert_viewer");
     
     $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+)/";
     
@@ -39,8 +40,8 @@ function get_acid_date_link($date, $ip = "", $target = "")
         }
     }
 
-    $link = "$acid_link" . 
-        "/acid_qry_main.php?new=1&time[0][1]=>=&time[0][2]=" . $regs[2] .
+    $link = "$acid_link" . "/" . $acid_prefix .
+        "_qry_main.php?new=1&time[0][1]=>=&time[0][2]=" . $regs[2] .
         "&time[0][3]=" . $regs[3] .
         "&time[0][4]=" . $regs[1] .
         "&time[0][5]=" . $regs[4] .
@@ -56,6 +57,55 @@ function get_acid_date_link($date, $ip = "", $target = "")
     return $link;
 }
 
+/*
+ *  PRE: $date must be in format YYYY-MM-DD HH-MM
+ *       
+ */
+function get_acid_pair_link($date, $ip = "", $ip2 = "")
+{
+
+    require_once ('ossim_conf.inc');
+    $conf = new ossim_conf();
+    $acid_link = $conf->get_conf("acid_link");
+    $acid_prefix = $conf->get_conf("alert_viewer");
+
+    $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+)/";
+
+    /*
+     * regs[1] => year
+     * regs[2] => month
+     * regs[3] => day
+     * regs[4] => hour
+     * regs[5] => minute
+     */
+    preg_match($pattern, $date, $regs);
+
+    /* 10 minutes before */
+    if ($regs[5] >= 10) {            // 3:45 -> 3:35
+        $regs[5] -= 10;
+    } else {
+        $regs[5] = 60 - (10 - $regs[5]);
+        if ($regs[4] > 0) {         // 3:06 -> 2:56
+            $regs[4] -= 1;
+        } else {                    // 0:07 -> 23:57
+            $regs[4] = 23;
+        }
+    }
+    $link = "$acid_link" . "/" . $acid_prefix .
+        "_qry_main.php?new=1&time[0][1]=>=&time[0][2]=" . $regs[2] .
+        "&time[0][3]=" . $regs[3] .
+        "&time[0][4]=" . $regs[1] .
+        "&time[0][5]=" . $regs[4] .
+        "&time[0][6]=" . $regs[5];
+
+    $link .= "&ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=$ip&ip_addr[0][9]=AND";
+    $link .= "&ip_addr[1][1]=ip_dst&ip_addr[1][2]==&ip_addr[1][3]=$ip2";
+
+    $link .= "&sort_order=time_a&".
+             "submit=Query+DB&num_result_rows=-1&time_cnt=1&ip_addr_cnt=2";
+
+    return $link;
+}
 
 /*
  *  PRE: 
@@ -68,6 +118,7 @@ function get_acid_alerts_link($since, $last, $order = "time_d")
     require_once ('ossim_conf.inc');
     $conf = new ossim_conf();
     $acid_link = $conf->get_conf("acid_link");
+    $acid_prefix = $conf->get_conf("alert_viewer");
     
     $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/";
     
@@ -82,8 +133,8 @@ function get_acid_alerts_link($since, $last, $order = "time_d")
     preg_match($pattern, $since, $regs_since);
     preg_match($pattern, $last, $regs_last);
 
-    $link = "$acid_link" . 
-        "/acid_qry_main.php?new=1" . 
+    $link = "$acid_link" . "/" . $acid_prefix .
+        "_qry_main.php?new=1" . 
         "&time[0][0]=(" .
         "&time[0][1]=>=" . 
         "&time[0][2]=" . $regs_since[2] .

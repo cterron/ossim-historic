@@ -22,7 +22,7 @@ class Net_qualification {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
 
         if (!$rs = &$conn->Execute("SELECT * FROM net_qualification $where
         $order")) {

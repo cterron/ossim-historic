@@ -1,6 +1,6 @@
 SUBDIRS=classes
 
-phpdir   = $(datadir)/ossim/php
+phpdir   = $(datadir)/ossim/include
 php_DATA = ossim_conf.inc \
 	 ossim_db.inc \
 	 ossim_acl.inc

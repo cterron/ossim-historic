@@ -1,0 +1,142 @@
+diff -a -u -r1.30 Host.inc
+--- include/classes/Host.inc	18 Feb 2005 09:38:20 -0000	1.30
++++ include/classes/Host.inc	11 Apr 2005 08:19:29 -0000
+@@ -4,6 +4,8 @@
+ require_once ('classes/Host_sensor_reference.inc');
+ require_once ('classes/Host_os.inc');
+ require_once ('classes/Host_mac.inc');
++require_once ('classes/Net.inc');
++require_once ('classes/Session.inc');
+ 
+ class Host {
+ 
+@@ -83,21 +85,28 @@
+         mysql_real_escape_string($where);
+         mysql_real_escape_string($order);
+ 
++        $allowed_nets = Session::allowedNets();
++
+         $query = "SELECT * FROM host $where $order";
+         if (!$rs = &$conn->Execute($query)) {
+             print $conn->ErrorMsg();
+         } else {
+             while (!$rs->EOF) {
+-                $list[] = new Host ($rs->fields["ip"],
+-                                    $rs->fields["hostname"],
+-                                    $rs->fields["asset"],
+-                                    $rs->fields["threshold_c"],
+-                                    $rs->fields["threshold_a"],
+-                                    $rs->fields["rrd_profile"],
+-                                    $rs->fields["alert"],
+-                                    $rs->fields["persistence"],
+-                                    $rs->fields["nat"],
+-                                    $rs->fields["descr"]);
++
++                if ((Net::isIpInNet($rs->fields["ip"], $allowed_nets)) or
++                     (!$allowed_nets))
++                {
++                    $list[] = new Host ($rs->fields["ip"],
++                                        $rs->fields["hostname"],
++                                        $rs->fields["asset"],
++                                        $rs->fields["threshold_c"],
++                                        $rs->fields["threshold_a"],
++                                        $rs->fields["rrd_profile"],
++                                        $rs->fields["alert"],
++                                        $rs->fields["persistence"],
++                                        $rs->fields["nat"],
++                                        $rs->fields["descr"]);
++                }
+                 $rs->MoveNext();
+             }
+         }
+diff -a -u -r1.31 Net.inc
+--- include/classes/Net.inc	18 Feb 2005 11:28:22 -0000	1.31
++++ include/classes/Net.inc	11 Apr 2005 08:19:29 -0000
+@@ -5,6 +5,7 @@
+ require_once 'classes/Net_sensor_reference.inc';
+ require_once 'classes/Net_group.inc';
+ require_once 'classes/Control_panel_net.inc';
++require_once 'classes/Session.inc';
+ require_once 'ossim_conf.inc';
+ 
+ 
+@@ -52,19 +53,27 @@
+ 
+     function get_list($conn, $args = "") 
+     {
++
++        $allowed_nets = Session::allowedNets();
++        $allowed_nets_array = split(',', $allowed_nets);
++        
+         if (!$rs = &$conn->Execute("SELECT * FROM net $args")) {
+             print $conn->ErrorMsg();
+         } else {
+             while (!$rs->EOF) {
+-                $list[] = new Net  ($rs->fields["name"],
+-                                    $rs->fields["ips"],
+-                                    $rs->fields["priority"],
+-                                    $rs->fields["threshold_c"],
+-                                    $rs->fields["threshold_a"],
+-                                    $rs->fields["rrd_profile"],
+-                                    $rs->fields["alert"],
+-                                    $rs->fields["persistence"],
+-                                    $rs->fields["descr"]);
++                if (in_array($rs->fields["ips"], $allowed_nets_array)
++                        or !$allowed_nets)
++                {
++                    $list[] = new Net  ($rs->fields["name"],
++                                        $rs->fields["ips"],
++                                        $rs->fields["priority"],
++                                        $rs->fields["threshold_c"],
++                                        $rs->fields["threshold_a"],
++                                        $rs->fields["rrd_profile"],
++                                        $rs->fields["alert"],
++                                        $rs->fields["persistence"],
++                                        $rs->fields["descr"]);
++                }
+                 $rs->MoveNext();
+             }
+         }
+diff -a -u -r1.8 Sensor.inc
+--- include/classes/Sensor.inc	8 Feb 2005 14:58:33 -0000	1.8
++++ include/classes/Sensor.inc	11 Apr 2005 08:19:29 -0000
+@@ -2,6 +2,8 @@
+ 
+ require_once 'classes/Net_sensor_reference.inc';
+ require_once 'classes/Host_sensor_reference.inc';
++require_once 'classes/Sensor.inc';
++require_once 'classes/Net.inc';
+ 
+ class Sensor {
+ 
+@@ -31,16 +33,24 @@
+ 
+     function get_list($conn, $args = "") 
+     {
++
++        $allowed_nets = Session::allowedNets();
++        
+         if (!$rs = &$conn->Execute("SELECT * FROM sensor $args")) {
+             print $conn->ErrorMsg();
+         } else {
+             while (!$rs->EOF) {
+-                $list[] = new Sensor ($rs->fields["name"],
+-                                      $rs->fields["ip"],
+-                                      $rs->fields["priority"],
+-                                      $rs->fields["port"],
+-                                      $rs->fields["connect"],
+-                                      $rs->fields["descr"]);
++
++                if ((Net::isIpInNet($rs->fields["ip"], $allowed_nets)) or
++                     (!$allowed_nets))
++                {
++                    $list[] = new Sensor ($rs->fields["name"],
++                                          $rs->fields["ip"],
++                                          $rs->fields["priority"],
++                                          $rs->fields["port"],
++                                          $rs->fields["connect"],
++                                          $rs->fields["descr"]);
++                }
+                 $rs->MoveNext();
+             }
+         }

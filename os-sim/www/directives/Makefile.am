@@ -1,4 +1,4 @@
-directivesdir = $(localstatedir)/www/ossim/directives
+directivesdir = $(datadir)/ossim/www/directives
 directives_DATA = directivemenu.xsl \
 	directive.php \
 	directiveslist.php \

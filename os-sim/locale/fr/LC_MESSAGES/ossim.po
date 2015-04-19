@@ -123,7 +123,7 @@ msgstr ""
 # conf/main.php:252
 #: conf/main.php:107
 msgid "Applets (jfreechart)"
-msgstr ""
+msgstr "Appliquette (jfreechart)"
 
 # conf/main.php:241 host/deletehost.php:35 net/deletenet.php:35
 # policy/deletepolicy.php:30 port/deleteport.php:30
@@ -143,7 +143,7 @@ msgstr "Non"
 
 #: conf/main.php:112
 msgid "Yes (Need SVG plugin)"
-msgstr "Oui (Plugin SVG nécessaire)"
+msgstr "Oui (Module SVG requis)"
 
 # conf/main.php:243 host/deletehost.php:33 net/deletenet.php:33
 # policy/deletepolicy.php:29 port/deleteport.php:29
@@ -292,7 +292,7 @@ msgstr "Description"
 # conf/pluginref.php:14
 #: conf/pluginref.php:14
 msgid "Plugin reference"
-msgstr ""
+msgstr "Référence plugin"
 
 # conf/pluginref.php:53 control_panel/alarm_console.php:103
 # control_panel/backlog.php:71
@@ -321,12 +321,12 @@ msgstr "%d Suivantes"
 # conf/pluginref.php:66 scan/hostscan.php:40
 #: conf/pluginref.php:66 scan/hostscan.php:40
 msgid "Plugin id"
-msgstr ""
+msgstr "Id Plugin"
 
 # conf/pluginref.php:71 scan/hostscan.php:44
 #: conf/pluginref.php:71 scan/hostscan.php:44
 msgid "Plugin sid"
-msgstr ""
+msgstr "Sid Plugin"
 
 # conf/pluginref.php:76
 #: conf/pluginref.php:76
@@ -1600,7 +1600,7 @@ msgstr "SVP, complétez tous les champs"
 # sensor/deletesensor.php:56
 #: host/modifyhost.php:64 host/newhost.php:62
 msgid "Sorry, no sensor selected"
-msgstr ""
+msgstr "Désolé, aucune sonde sélectionnée"
 
 # host/modifyhostform.php:15
 #: host/modifyhostform.php:15

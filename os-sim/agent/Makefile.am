@@ -10,6 +10,4 @@ ossim_agent_DATA    = AUTHORS \
 
 EXTRA_DIST   = $(ossim_agent_DATA)
 
-install-data-hook:
-	ln -sf $(datadir)/ossim/agent/ossim-agent $(bindir)/ossim-agent
 

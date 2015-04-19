@@ -1,4 +1,4 @@
-controlpaneldir = $(localstatedir)/www/ossim/control_panel
+controlpaneldir = $(datadir)/ossim/www/control_panel
 controlpanel_DATA = acid_funcs.inc \
 	backlog.php \
 	handle_anomaly.php \

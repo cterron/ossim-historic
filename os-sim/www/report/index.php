@@ -31,7 +31,8 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         $ip = $_GET["host"];
 
         $acid_link = $conf->get_conf("acid_link");
-        $acid_main_link = $conf->get_conf("acid_link") .  "acid_stat_ipaddr.php?ip=$ip&netmask=32";
+        $acid_prefix = $conf->get_conf("alert_viewer");
+        $acid_main_link = $conf->get_conf("acid_link") . $acid_prefix . "_stat_ipaddr.php?ip=$ip&netmask=32";
 
         echo "<frame src=\"". $acid_main_link . "\" name=\"report\">";
     }

@@ -1440,6 +1440,18 @@ sim_organizer_snort (SimOrganizer	*organizer,
 						sim_plugin_get_name (plugin));
       cid = sim_organizer_snort_event_get_max_cid (ossim.dbsnort,
 						   sid);
+
+			/*g_message ("XXXXX: -%d -%s -\n ", alert->plugin_id,alert->log);
+
+			if(alert->plugin_id == 1502) {
+         alert->data = g_strdup(alert->log);
+       }*/
+			 
+			if (alert->plugin_id == 1518)
+			{
+				alert->data = g_strdup(alert->log);
+			}
+							 
       sim_organizer_snort_event_insert (ossim.dbsnort,
 					alert, sid, ++cid, sig_id);
     }

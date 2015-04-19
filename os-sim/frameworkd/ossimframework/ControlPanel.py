@@ -86,7 +86,7 @@ class ControlPanel (threading.Thread) :
             result = re.findall(pattern, line)
             if result != []:
                 (date, compromise, attack) = result[0]
-                if compromise != "nan" and attack != "nan":
+                if compromise not in ("nan", "") and attack not in ("nan", ""):
                     if float(compromise) >= max_c:
                         c_date = date
                         max_c = float(compromise)
@@ -121,7 +121,7 @@ class ControlPanel (threading.Thread) :
         output.close()
        
         # ignore 'nan' values
-        if c_max != "nan\n":
+        if c_max not in ("nan\n", ""):
             rrd_info["max_c"] = float(c_max)
         else:
             rrd_info["max_c"] = 0
@@ -135,7 +135,7 @@ class ControlPanel (threading.Thread) :
         output.close()
 
         # ignore 'nan' values
-        if a_max != "nan\n":
+        if a_max not in ("nan\n", ""):
             rrd_info["max_a"] = float(a_max)
         else:
             rrd_info["max_a"] = 0
@@ -195,7 +195,8 @@ class ControlPanel (threading.Thread) :
                         result = re.findall(pattern, line)
                         if result != []:
                             (date, compromise, attack) = result[0]
-                            if compromise != "nan" and attack != "nan":
+                            if compromise not in ("nan", "") \
+                              and attack not in ("nan", ""):
                                 C_level += float(compromise)
                                 A_level += float(attack)
                                 count += 1
@@ -237,10 +238,22 @@ class ControlPanel (threading.Thread) :
                 rrd_info_month = self.__get_rrd_value("N-1M", "N", rrd_file)
                 rrd_info_year  = self.__get_rrd_value("N-1Y", "N", rrd_file)
 
-                self.__update_db(type, rrd_info_day,   rrd_name, 'day')
-                self.__update_db(type, rrd_info_week,  rrd_name, 'week')
-                self.__update_db(type, rrd_info_month, rrd_name, 'month')
-                self.__update_db(type, rrd_info_year,  rrd_name, 'year')
+                if rrd_info_day["max_c"] == rrd_info_day["max_a"] == \
+                    rrd_info_week["max_c"] == rrd_info_week["max_a"] == \
+                    rrd_info_month["max_c"] == rrd_info_month["max_a"] == \
+                    rrd_info_year["max_c"] == rrd_info_year["max_a"] == 0:
+
+                    print "Removing unused rrd file (%s).." % (rrd_file)
+                    try:
+                        os.remove(rrd_file)
+                    except OSError, e:
+                        print e
+
+                else:
+                    self.__update_db(type, rrd_info_day,   rrd_name, 'day')
+                    self.__update_db(type, rrd_info_week,  rrd_name, 'week')
+                    self.__update_db(type, rrd_info_month, rrd_name, 'month')
+                    self.__update_db(type, rrd_info_year,  rrd_name, 'year')
 
 
     def run (self) :

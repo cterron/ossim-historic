@@ -1,0 +1,10 @@
+This directory contains patches that need to be tested.
+Use them at your own risk.
+
+Apply the patchs in the order specified:
+
+ cd $ossim_source_directory
+ for patch in contrib/patches/* ; do
+    patch -p0 < $patch
+ done
+

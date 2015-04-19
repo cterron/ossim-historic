@@ -204,7 +204,7 @@ $vmeter_dir = $conf->get_conf("base_dir") . "/vulnmeter/last/";
 
 if ($handle = @opendir('last')) {
     while (false !== ($file = readdir($handle))) {
-   if (($file != ".") && ($file != "..") && (filesize($vmeter_dir.$file) > 0)){
+   if (($file != ".") && ($file != "..") && (@filesize($vmeter_dir.$file) > 0)){
             if (eregi("(.gif)$",$file)){
                 echo "</br><table align=\"center\">";
                 echo "  <tr>";

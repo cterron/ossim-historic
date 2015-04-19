@@ -1,5 +1,5 @@
-SUBDIRS=graphs
-reportdir = $(localstatedir)/www/ossim/report
+SUBDIRS=graphs jgraphs
+reportdir = $(datadir)/ossim/www/report
 report_DATA = index.php \
 	anomalies.php \
 	inventory.php \

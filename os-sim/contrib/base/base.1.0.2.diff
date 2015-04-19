@@ -1,6 +1,6 @@
 diff -urNb base-1.0.2/base_common.php base-1.0.2-ossim/base_common.php
 --- base-1.0.2/base_common.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_common.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_common.php	Wed Mar 23 12:47:20 2005
 @@ -18,6 +18,12 @@
  ********************************************************************************
  */
@@ -16,7 +16,7 @@ diff -urNb base-1.0.2/base_common.php base-1.0.2-ossim/base_common.php
     $result = $db->baseExecute("SELECT sid FROM sensor;");
 diff -urNb base-1.0.2/base_conf.php.dist base-1.0.2-ossim/base_conf.php.dist
 --- base-1.0.2/base_conf.php.dist	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_conf.php.dist	Mon Feb 21 17:58:18 2005
++++ base-1.0.2-ossim/base_conf.php.dist	Wed Mar 23 12:47:20 2005
 @@ -100,6 +100,19 @@
   */
  $use_referential_integrity = 0;
@@ -26,7 +26,7 @@ diff -urNb base-1.0.2/base_conf.php.dist base-1.0.2-ossim/base_conf.php.dist
 + *   0  : ignore
 + * Ossim framework and acid must be instaled in the same host
 + */
-+$use_ossim_session = 1;
++$use_ossim_session = 0;
 +$ossim_login_path = "/ossim/session/login.php";
 +$ossim_acid_aco_section = "MenuControlPanel";
 +$ossim_acid_aco = "ControlPanelAlerts";
@@ -39,23 +39,23 @@ diff -urNb base-1.0.2/base_conf.php.dist base-1.0.2-ossim/base_conf.php.dist
   */
 diff -urNb base-1.0.2/base_hdr2.php base-1.0.2-ossim/base_hdr2.php
 --- base-1.0.2/base_hdr2.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_hdr2.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_hdr2.php	Wed Mar 23 12:47:20 2005
 @@ -11,4 +11,12 @@
              } ?>
          </td>
      </tr>
 +    <tr>
 +    <TD class="menuitem"><FONT color="FFFF66"><B>Cached:&nbsp&nbsp</B></FONT>
-+        <A class="menuitem" href="acid_stat_alerts.html">Uniq</A> &nbsp&nbsp|&nbsp&nbsp
-+        <A class="menuitem" href="acid_stat_uaddr1.html">Src</A> &nbsp&nbsp|&nbsp&nbsp
-+        <A class="menuitem" href="acid_stat_uaddr2.html">Dst</A> &nbsp&nbsp|&nbsp&nbsp
-+        <A class="menuitem" href="acid_stat_ports2.html">Dst Port</A>
++        <A class="menuitem" href="base_stat_alerts.html">Uniq</A> &nbsp&nbsp|&nbsp&nbsp
++        <A class="menuitem" href="base_stat_uaddr1.html">Src</A> &nbsp&nbsp|&nbsp&nbsp
++        <A class="menuitem" href="base_stat_uaddr2.html">Dst</A> &nbsp&nbsp|&nbsp&nbsp
++        <A class="menuitem" href="base_stat_ports2.html">Dst Port</A>
 +    </td>
 +    </tr>
  </table></div>
 diff -urNb base-1.0.2/base_qry_common.php base-1.0.2-ossim/base_qry_common.php
 --- base-1.0.2/base_qry_common.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_qry_common.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_qry_common.php	Wed Mar 23 12:47:20 2005
 @@ -499,7 +499,10 @@
    $sig_join_sql = "";
  
@@ -164,7 +164,7 @@ diff -urNb base-1.0.2/base_qry_common.php base-1.0.2-ossim/base_qry_common.php
  
 diff -urNb base-1.0.2/base_qry_form.php base-1.0.2-ossim/base_qry_form.php
 --- base-1.0.2/base_qry_form.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_qry_form.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_qry_form.php	Wed Mar 23 12:47:20 2005
 @@ -80,6 +80,20 @@
        <TD><B>Alert Time:</B></TD>
        <TD>';
@@ -188,7 +188,7 @@ diff -urNb base-1.0.2/base_qry_form.php base-1.0.2-ossim/base_qry_form.php
  </TABLE>';
 diff -urNb base-1.0.2/base_qry_sqlcalls.php base-1.0.2-ossim/base_qry_sqlcalls.php
 --- base-1.0.2/base_qry_sqlcalls.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/base_qry_sqlcalls.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_qry_sqlcalls.php	Wed Mar 23 12:47:20 2005
 @@ -70,6 +70,18 @@
    $qro->AddTitle(_NBDESTADDR, 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -281,9 +281,41 @@ diff -urNb base-1.0.2/base_qry_sqlcalls.php base-1.0.2-ossim/base_qry_sqlcalls.p
  
        qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
  
+diff -urNb base-1.0.2/base_stat_ipaddr.php base-1.0.2-ossim/base_stat_ipaddr.php
+--- base-1.0.2/base_stat_ipaddr.php	Sun Feb 13 23:44:22 2005
++++ base-1.0.2-ossim/base_stat_ipaddr.php	Wed Mar 23 12:47:20 2005
+@@ -27,6 +27,9 @@
+   $start = time();
+ 
+   include("base_conf.php");
++  require_once ('ossim_conf.inc');
++  require_once ('ossim_db.inc');
++  require_once('classes/Sensor.inc');
+   include("$BASE_path/includes/base_constants.inc.php");
+   include("$BASE_path/includes/base_include.inc.php");
+   include_once("$BASE_path/base_db_common.php");
+@@ -253,7 +256,17 @@
+            </TABLE>';
+ 
+   /* Print the Statistics the IP address */
+-  echo '<CENTER><B>'.$ip.'</B><BR>FQDN: <B>';
++
++  $db_object = new ossim_db();
++  $conn_object = $db_object->connect();
++  echo '<CENTER><B>'.$ip.'</B> ( '
++  ?> 
++  <a href="<?php echo Sensor::get_sensor_link($conn_object, $ip) .  "/$ip.html" ?>">See host Detail</a>
++  <?php
++  $db_object->close($conn_object);
++  echo ') <BR>FQDN: <B>';
++
++  
+   
+   if ( $resolve_IP == 0 )
+      echo '  ('._PSNODNS.')';
 diff -urNb base-1.0.2/base_update_db.php base-1.0.2-ossim/base_update_db.php
 --- base-1.0.2/base_update_db.php	Thu Jan  1 01:00:00 1970
-+++ base-1.0.2-ossim/base_update_db.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/base_update_db.php	Wed Mar 23 12:47:20 2005
 @@ -0,0 +1,70 @@
 +<?php
 +/*
@@ -357,7 +389,7 @@ diff -urNb base-1.0.2/base_update_db.php base-1.0.2-ossim/base_update_db.php
 +?>
 diff -urNb base-1.0.2/includes/base_cache.inc.php base-1.0.2-ossim/includes/base_cache.inc.php
 --- base-1.0.2/includes/base_cache.inc.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/includes/base_cache.inc.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/includes/base_cache.inc.php	Wed Mar 23 12:47:20 2005
 @@ -220,6 +220,11 @@
    if ( $db->baseGetDBversion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -372,7 +404,7 @@ diff -urNb base-1.0.2/includes/base_cache.inc.php base-1.0.2-ossim/includes/base
    /* IP events only */
 diff -urNb base-1.0.2/includes/base_output_query.inc.php base-1.0.2-ossim/includes/base_output_query.inc.php
 --- base-1.0.2/includes/base_output_query.inc.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/includes/base_output_query.inc.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/includes/base_output_query.inc.php	Wed Mar 23 12:47:20 2005
 @@ -100,7 +100,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -393,7 +425,7 @@ diff -urNb base-1.0.2/includes/base_output_query.inc.php base-1.0.2-ossim/includ
      echo "   </TR>\n";
 diff -urNb base-1.0.2/includes/base_state_citems.inc.php base-1.0.2-ossim/includes/base_state_citems.inc.php
 --- base-1.0.2/includes/base_state_citems.inc.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/includes/base_state_citems.inc.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/includes/base_state_citems.inc.php	Wed Mar 23 12:47:20 2005
 @@ -825,21 +825,96 @@
     function Import()
     {
@@ -408,9 +440,9 @@ diff -urNb base-1.0.2/includes/base_state_citems.inc.php base-1.0.2-ossim/includ
          if ( (isset ($this->criteria[$i][3])) &&
               (ereg("([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)", $this->criteria[$i][3])) )
          {
-+                if ($use_ossim_session) {
++                if (($use_ossim_session) && (Session::allowedNets())) {
 +                    require_once('classes/Net.inc');
-+                $domain = Session::getValue();
++                $domain = Session::allowedNets();
 +                if ($domain != "") {
 +                    $tmp_myip = $this->criteria[$i][3];
 +                    $myip = strtok($tmp_myip, "/");
@@ -446,7 +478,7 @@ diff -urNb base-1.0.2/includes/base_state_citems.inc.php base-1.0.2-ossim/includ
 +        $this->criteria_cnt = count($vals);
 +
 +      if (($use_ossim_session) && ($empty)) {
-+            $domain = Session::getValue();
++            $domain = Session::allowedNets();
 +            if ($domain != "") {
 +                $nets = explode(",", $domain);
 +                $this->criteria = Array();
@@ -951,7 +983,7 @@ diff -urNb base-1.0.2/includes/base_state_citems.inc.php base-1.0.2-ossim/includ
  ?>
 diff -urNb base-1.0.2/includes/base_state_criteria.inc.php base-1.0.2-ossim/includes/base_state_criteria.inc.php
 --- base-1.0.2/includes/base_state_criteria.inc.php	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/includes/base_state_criteria.inc.php	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/includes/base_state_criteria.inc.php	Wed Mar 23 12:47:20 2005
 @@ -59,6 +59,13 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['rawip_field'] = new TCPFieldCriteria(&$db, &$this, "rawip_field", PROTO_CFCNT);
@@ -976,7 +1008,7 @@ diff -urNb base-1.0.2/includes/base_state_criteria.inc.php base-1.0.2-ossim/incl
        ErrorMessage(_ERRCRITELEM);
 diff -urNb base-1.0.2/sql/create_base_tbls_mysql.sql base-1.0.2-ossim/sql/create_base_tbls_mysql.sql
 --- base-1.0.2/sql/create_base_tbls_mysql.sql	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/sql/create_base_tbls_mysql.sql	Mon Feb 21 17:56:49 2005
++++ base-1.0.2-ossim/sql/create_base_tbls_mysql.sql	Wed Mar 23 12:47:20 2005
 @@ -89,6 +89,55 @@
                              PRIMARY KEY         (ipc_ip),
                              INDEX               (ipc_ip) );
@@ -1035,7 +1067,7 @@ diff -urNb base-1.0.2/sql/create_base_tbls_mysql.sql base-1.0.2-ossim/sql/create
                              `role_desc`         varchar(75)     NOT NULL,
 diff -urNb base-1.0.2/sql/create_base_tbls_pgsql.sql base-1.0.2-ossim/sql/create_base_tbls_pgsql.sql
 --- base-1.0.2/sql/create_base_tbls_pgsql.sql	Sun Feb 13 23:44:22 2005
-+++ base-1.0.2-ossim/sql/create_base_tbls_pgsql.sql	Mon Feb 21 17:59:51 2005
++++ base-1.0.2-ossim/sql/create_base_tbls_pgsql.sql	Wed Mar 23 12:47:20 2005
 @@ -100,4 +100,69 @@
  INSERT INTO base_roles (role_id, role_name, role_desc) VALUES (1, 'Admin', 'Administrator');
  INSERT INTO base_roles (role_id, role_name, role_desc) VALUES (10, 'user', 'Authenticated User');

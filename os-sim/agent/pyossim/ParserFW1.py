@@ -10,10 +10,10 @@ class ParserFW1(Parser.Parser):
     def process(self):
         
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
             
         elif self.plugin["source"] == 'opsec':
-            self.__processOpsec()
+            while 1: self.__processOpsec()
 
         else:
             util.debug (__name__, "log type " + self.plugin["source"] +\
@@ -24,6 +24,8 @@ class ParserFW1(Parser.Parser):
     def __processSyslog(self):
         
         util.debug (__name__, 'plugin started (syslog)...', '--')
+
+        start_time = time.time()
         
         pattern = '(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+([\w\-\_]+|\d+.\d+.\d+.\d+)\s+logger:.*src:\s(\d+.\d+.\d+.\d+).*s_port:\s(\d+).*dst:\s+(\d+.\d+.\d+.\d+).*service:\s(\w+).*proto:\s+(\w+)'
             
@@ -55,6 +57,18 @@ class ParserFW1(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 try: 
@@ -96,8 +110,10 @@ class ParserFW1(Parser.Parser):
     def __processOpsec(self):
         
         util.debug (__name__, 'plugin started (opsec)...', '--')
+
+        start_time = time.time()
         
-        pattern = "loc=.*" +\
+        pattern = "loc=.*?" +\
             "time=\s*(\d{1,2})(\w+)(\d{4})\s+(\d\d):(\d\d):(\d\d)\|" +\
             "action=([^\|]*)\|orig=([^\|]*)\|"
         patternIface = "\|i/f_name=([^\|]*)\|"
@@ -118,6 +134,18 @@ class ParserFW1(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 resultIface = re.findall(str(patternIface), line)

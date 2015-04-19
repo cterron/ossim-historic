@@ -17,6 +17,7 @@
     require_once "ossim_conf.inc";
     $conf = new ossim_conf();
     $acid_link = $conf->get_conf("acid_link");
+    $acid_prefix = $conf->get_conf("alert_viewer");
     $ntop_link = $conf->get_conf("ntop_link");
     $mrtg_link = $conf->get_conf("mrtg_link");
 
@@ -30,7 +31,7 @@
 <p align="center">
   <b><?php echo $ip ?></b><br/>
 
-[ <a href="<?php echo "$acid_link/acid_stat_ipaddr.php?ip=$ip&netmask=32"?>"
+[ <a href="<?php echo "$acid_link/".$acid_prefix."_stat_ipaddr.php?ip=$ip&netmask=32"?>"
      target="main"> <?php echo gettext("Alerts"); ?> </a> ] 
 [ <a href="<?php 
 //        echo "$mrtg_link/host_qualification/$ip.html" 

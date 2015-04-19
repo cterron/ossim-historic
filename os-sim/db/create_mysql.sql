@@ -472,6 +472,7 @@ CREATE TABLE alarm (
         backlog_id      BIGINT NOT NULL,
         alert_id        BIGINT NOT NULL,
         timestamp       TIMESTAMP NOT NULL,
+        status          ENUM ("open", "closed") DEFAULT "open",
         plugin_id       INTEGER NOT NULL,
         plugin_sid      INTEGER NOT NULL,
         protocol        INTEGER,

@@ -1,4 +1,4 @@
-rrd_confdir = $(localstatedir)/www/ossim/rrd_conf
+rrd_confdir = $(datadir)/ossim/www/rrd_conf
 rrd_conf_DATA = new_rrd_conf.php \
 	delete_rrd_conf.php \
 	modify_rrd_conf_form.php \

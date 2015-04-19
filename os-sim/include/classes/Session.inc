@@ -72,15 +72,49 @@ class Session {
         unset($_SESSION["_user"]);
     }
 
+    function menu_perms($menu, $submenu)
+    {
+        # session_start();
+        if ( ! isset($_SESSION["_user"]) )
+            return True;
+
+        $conf = new ossim_conf();
+        $phpgacl = $conf->get_conf("phpgacl_path");
+        require_once ("$phpgacl" . "gacl.class.php");
+        require_once ("$phpgacl" . "gacl_api.class.php");
+
+        $gacl = new gacl();
+     
+        if (! $gacl->acl_check($menu,
+                               $submenu,
+                               ACL_DEFAULT_USER_SECTION,
+                               $_SESSION["_user"]))
+        {
+
+            if (! $gacl->acl_check(ACL_DEFAULT_DOMAIN_SECTION,
+                                   ACL_DEFAULT_DOMAIN_ALL,
+                                   ACL_DEFAULT_USER_SECTION,
+                                   $_SESSION["_user"]))
+            {
+                return False;
+            }
+        }
+        
+        return True;
+    }
+
     function logcheck($menu, $submenu, $login_location = "../session/login.php")
     {
-    	  $user = $_POST["user"];
-    	  $pass = $_POST["pass"];
+        if (array_key_exists('user', $_POST))
+            $user = $_POST["user"];
+        
+        if (array_key_exists('pass', $_POST))
+    	    $pass = $_POST["pass"];
 
-		  if ($user && $pass) {
-		  		$sess = new Session($user, $pass, "");
-		  		$sess->login();
-		  }
+		if (isset($user) && isset($pass)) {
+		    $sess = new Session($user, $pass, "");
+		  	$sess->login();
+		}
     
         session_start();
 
@@ -165,9 +199,18 @@ class Session {
     }
 
 
+    /* 
+     * Backwards compatibility with allowedNets function 
+     * (acid patches, old ossim-framework code, etc)
+     */
+    function getValue($user = "")
+    {
+        return Session::allowedNets($user);
+    }
+
 
     /* Wraps the acl_return_value() function */
-    function getValue($user = "")
+    function allowedNets($user = "")
     {
         $conf = new ossim_conf();
         $phpgacl = $conf->get_conf("phpgacl_path");

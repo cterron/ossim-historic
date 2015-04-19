@@ -11,7 +11,7 @@ class ParserP0f(Parser.Parser):
     def process(self):
 
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
             
         else:
             util.debug (__name__,  "log type " + self.plugin["source"] +\
@@ -21,6 +21,8 @@ class ParserP0f(Parser.Parser):
     def __processSyslog(self):
         
         util.debug ('ParserP0f', 'plugin started (syslog)...', '--')
+
+        start_time = time.time()
 
         os_hash = {}
 
@@ -60,6 +62,18 @@ class ParserP0f(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 try: 

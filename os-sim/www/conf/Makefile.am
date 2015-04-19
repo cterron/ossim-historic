@@ -1,4 +1,4 @@
-confdir = $(localstatedir)/www/ossim/conf
+confdir = $(datadir)/ossim/www/conf
 conf_DATA = main.php \
 	reload.php \
 	plugin.php \

@@ -27,12 +27,12 @@
   <script>
     // enable text input when manual option is selected
     function check_change() {
-        net_form = document.forms['net_form'];
-        if (net_form.net.value != '')
-            net_form.net_input.disabled = true;
+        form = document.forms['net_form'];
+        if (form.net.value != '')
+            form.net_input.disabled = true;
         else
-            net_form.net_input.disabled = false;
-        net_form.net_input.value = net_form.net.value;
+            form.net_input.disabled = false;
+        form.net_input.value = form.net.value;
     }
   </script>
   

@@ -1,13 +1,10 @@
 --  config 
-DROP TABLE conf;
-CREATE TABLE conf (
-    recovery        int NOT NULL,
-    threshold       int NOT NULL,
-    graph_threshold int NOT NULL,
-    bar_length_left int NOT NULL,
-    bar_length_right int NOT NULL,
-    PRIMARY KEY (recovery, threshold, graph_threshold, 
-                 bar_length_left, bar_length_right)
+
+DROP TABLE IF EXISTS config;
+CREATE TABLE config (
+    conf    varchar(255) NOT NULL,
+    value   varchar(255),
+    PRIMARY KEY (conf)
 );
 
 
@@ -287,7 +284,7 @@ CREATE TABLE host_services (
     protocol   int NOT NULL,
     service varchar(128),
     service_type varchar(128),
-    version varchar(255) NOT NULL DEFAULT "unknown",
+    version varchar(255) NOT NULL DEFAULT 'unknown',
     date    TIMESTAMP NOT NULL,
     origin INT8 NOT NULL DEFAULT 0,
     PRIMARY KEY (ip, port, protocol, version, date)
@@ -381,7 +378,7 @@ CREATE TABLE plugin_sid (
 	class_id	INTEGER,
 	reliability	INTEGER DEFAULT 1,
 	priority	INTEGER DEFAULT 1,
-	name		VARCHAR (255) NOT NULL,
+	name		VARCHAR (1500) NOT NULL,
 	PRIMARY KEY (plugin_id, sid)
 );
 
@@ -623,7 +620,7 @@ CREATE TABLE restoredb_log (
 
 DROP TABLE host_ids;
 CREATE TABLE host_ids(
-ip              INTEGER UNSIGNED NOT NULL,
+ip              INTEGER NOT NULL CONSTRAINT ip_not_negative_constraint CHECK (ip >= 0),
 date            TIMESTAMP,
 hostname        VARCHAR(255) NOT NULL,
 sensor          VARCHAR(255) NOT NULL,

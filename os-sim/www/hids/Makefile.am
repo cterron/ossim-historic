@@ -1,4 +1,4 @@
-hidsdir = $(localstatedir)/www/ossim/hids
+hidsdir = $(datadir)/ossim/www/hids
 hids_DATA = index.php \
         host_detail.php
 

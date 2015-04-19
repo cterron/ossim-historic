@@ -28,13 +28,14 @@ require_once ('classes/Sensor.inc');
 function echo_values($val, $max, $ip, $image) {
 
     global $acid_link;
+    global $acid_prefix;
 
     if ($val - $max > 0) {
-        echo "<a href=\"". get_acid_info($ip, $acid_link) . 
+        echo "<a href=\"". get_acid_info($ip, $acid_link, $acid_prefix) . 
             "\"><font color=\"#991e1e\">$val</font></a>/" . 
             "<a href=\"$image\">" . intval($val * 100 / $max) ."</a>%";
     } else {
-        echo "<a href=\"". get_acid_info($ip, $acid_link) .
+        echo "<a href=\"". get_acid_info($ip, $acid_link, $acid_prefix) .
              "\">$val</a>/" . 
             "<a href=\"$image\">" . intval($val * 100 / $max) ."</a>%";
     } 
@@ -44,6 +45,7 @@ function echo_values($val, $max, $ip, $image) {
 $conf = new ossim_conf();
 $graph_link = $conf->get_conf("graph_link");
 $acid_link = $conf->get_conf("acid_link");
+$acid_prefix = $conf->get_conf("alert_viewer");
 $ntop_link = $conf->get_conf("ntop_link");
 $opennms_link = $conf->get_conf("opennms_link");
 

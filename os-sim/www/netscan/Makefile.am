@@ -1,4 +1,4 @@
-netscandir = $(localstatedir)/www/ossim/netscan
+netscandir = $(datadir)/ossim/www/netscan
 netscan_DATA = do_scan.php \
 	index.php \
 	scan_db.php \

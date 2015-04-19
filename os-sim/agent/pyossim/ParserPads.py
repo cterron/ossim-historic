@@ -11,7 +11,7 @@ class ParserPads(Parser.Parser):
     def process(self):
 
         if self.plugin["source"] == 'csv':
-            self.__processCSV()
+            while 1: self.__processCSV()
 
         else:
             util.debug (__name__,  "log type " + self.plugin["source"] +\
@@ -21,6 +21,8 @@ class ParserPads(Parser.Parser):
     def __processCSV(self):
         
         util.debug ('ParserPads', 'plugin started (csv)...', '--')
+
+        start_time = time.time()
 
         pattern = '^([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),(\d+)$'
             
@@ -58,6 +60,18 @@ class ParserPads(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 try: 

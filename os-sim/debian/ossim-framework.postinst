@@ -8,7 +8,9 @@ fi
 
 # Acid does not configure apache2 packages :(
 if [ "`grep '^Package: apache2-common$' /var/lib/dpkg/status`" ] ; then
-    cp /etc/acidlab/apache.conf /etc/apache2/conf.d/acidlab.conf
+    if [ -f "/etc/acidlab/apache.conf" ]; then
+        cp /etc/acidlab/apache.conf /etc/apache2/conf.d/acidlab.conf
+    fi
 fi
 
 # set apache perms to tmp
@@ -28,8 +30,5 @@ fi
 
 update-rc.d ossim-framework defaults 40 2&> /dev/null
 #/etc/init.d/ossim-framework restart
-
-update-rc.d -f ossimframework remove > /dev/null
-rm -f /etc/init.d/ossimframework
 
 

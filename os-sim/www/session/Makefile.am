@@ -1,4 +1,4 @@
-sessiondir = $(localstatedir)/www/ossim/session
+sessiondir = $(datadir)/ossim/www/session
 session_DATA = changepass.php \
 	changepassform.php \
 	deleteuser.php \

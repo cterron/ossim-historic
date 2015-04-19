@@ -1,4 +1,4 @@
-jgraphsdir = $(localstatedir)/www/ossim/report/jgraphs
+jgraphsdir = $(datadir)/ossim/www/report/jgraphs
 
 jgraphs_DATA = jgraphs.php
 

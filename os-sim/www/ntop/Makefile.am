@@ -1,4 +1,4 @@
-ntopdir = $(localstatedir)/www/ossim/ntop
+ntopdir = $(datadir)/ossim/www/ntop
 ntop_DATA = index.php \
 	menu.php \
 	menu_session.php \

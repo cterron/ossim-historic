@@ -9,6 +9,104 @@ Session::logcheck("MenuReports", "ReportsIncidents");
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+<style>
+div.hidden{
+  display: none;
+}
+div.error{
+  display: inline;
+  color: black;
+  background-color: pink;
+}
+</style>
+<script>
+<?php
+$proto = "http";
+if ($_SERVER[HTTPS] == "on")
+    $proto = "https";
+require_once("ossim_conf.inc");
+$ossim_conf = new ossim_conf();
+$ossim_link = $ossim_conf->get_conf("ossim_link");
+$url_check = "'$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$ossim_link/incidents/check.php?q='";
+
+?>
+
+
+function checkName(input, response)
+{
+    if(input != ''){
+    url  = <?php echo $url_check; ?> + input;
+    loadXMLDoc(url);
+    }
+}
+
+function rellena(valor)
+{
+      formulario = document.getElementById(11);
+      formulario.value = valor;
+}
+
+function processReqChange() 
+{
+    // only if req shows "complete"
+    if (req.readyState == 4) {
+        // only if "OK"
+        if (req.status == 200) {
+            // ...processing statements go here...
+
+      response  = req.responseXML.documentElement;
+
+      method    = response.getElementsByTagName('method')[0].firstChild.data;
+
+      message   = document.getElementById(10);
+      formulario = document.getElementById(11);
+      cadena = formulario.value;
+
+      if(method != 0){
+        message.className = 'error';
+        message.innerHTML = '<h3><ul>';
+        for(var i=0; i < method; i++){
+        result    = response.getElementsByTagName('result')[i].firstChild.data;
+        comienzo = result.indexOf(cadena) - 10;
+        final2 = comienzo + cadena.length + 10;
+        if(comienzo < 0) {
+        message.innerHTML += '<li><a href="javascript:rellena(\'' + result + '\')"><b>' + result + '</b> ...</a>';
+        } else {
+        message.innerHTML += '<li><a href="javascript:rellena(\'' + result + '\')">... <b>' + result + '</b> ...</a>';
+        }
+        }
+        message.innerHTML += '</ul>';
+      } else {
+        message.className = 'hidden';
+      }
+
+        } else {
+            alert("There was a problem retrieving the XML data:\n" + req.statusText);
+        }
+    }
+}
+
+var req;
+
+function loadXMLDoc(url) 
+{
+    // branch for native XMLHttpRequest object
+    if (window.XMLHttpRequest) {
+        req = new XMLHttpRequest();
+        req.onreadystatechange = processReqChange;
+        req.open("GET", url, true);
+        req.send(null);
+    // branch for IE/Windows ActiveX version
+    } else if (window.ActiveXObject) {
+        req = new ActiveXObject("Microsoft.XMLHTTP");
+        if (req) {
+            req.onreadystatechange = processReqChange;
+            req.open("GET", url, true);
+            req.send();
+        }
+    }
+}
+</script>
 </head>
 <body>
 
@@ -609,7 +707,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     <td><?php echo strftime("%A %d-%b-%Y", time()) ?></td>
     <td>
        <?php echo gettext("Description"); ?> <br/>
-      <textarea name="description" rows="6" cols="40"></textarea><br/>
+      <textarea id="11" name="description" rows="6" autocomplete="off" onKeyUp="checkName(this.value,'')" cols="40"></textarea><br/>
        <?php echo gettext("Action"); ?> <br/>
       <textarea name="action" rows="6" cols="40"></textarea><br/>
        <?php echo gettext("Attachment"); ?> <br/>
@@ -684,6 +782,8 @@ Session::logcheck("MenuReports", "ReportsIncidents");
   </form>
 </table>
 <!-- end list of incidents -->
+<div id="10">
+</div>
 
 <?php
     } /* if incident */

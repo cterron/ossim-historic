@@ -1,4 +1,4 @@
-sensordir = $(localstatedir)/www/ossim/sensor
+sensordir = $(datadir)/ossim/www/sensor
 sensor_DATA = editsensor.php \
 	modifysensorform.php \
 	newsensorform.php \

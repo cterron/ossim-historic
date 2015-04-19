@@ -76,7 +76,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
             $input = "
       <input type=\"checkbox\" name=\"net$i\" value=\"" .
         $net_name ."\"";
-            if (false !== strpos(Session::getValue($user->get_login()),
+            if (false !== strpos(Session::allowedNets($user->get_login()),
                                  $net->get_ips()))
             {
                 $input .= " checked ";
@@ -89,6 +89,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 ?>
 
     <input type="hidden" name="nnets" value="<?php echo $i ?>" />
+    <i>NOTE: No selection allows ALL nets</i>
   </tr>
 </table>
 

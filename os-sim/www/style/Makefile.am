@@ -1,4 +1,4 @@
-styledir = $(localstatedir)/www/ossim/style
+styledir = $(datadir)/ossim/www/style
 style_DATA = directives.css \
 	style.css \
 	top.css

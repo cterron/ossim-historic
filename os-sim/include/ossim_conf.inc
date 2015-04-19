@@ -18,12 +18,13 @@ class ossim_conf {
 
         while (!feof($fd)) {
             $line = fgets($fd, 2048);
+            $line = trim($line);
             if (strncmp($line, "#", 1)) {
                 $conf = explode('=', $line);
-                $type = $conf[0];
+                $type = trim($conf[0]);
                 if (isset($conf[1])) {
-                    $value = $conf[1];
-                    $this->confs["$type"] = trim($value);
+                    $value = trim($conf[1]);
+                    $this->confs["$type"] = $value;
                 }
             }
         }

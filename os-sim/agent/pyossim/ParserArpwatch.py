@@ -11,7 +11,7 @@ class ParserArpwatch(Parser.Parser):
     def process(self):
         
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
             
         else:
             util.debug (__name__, "log type " + self.plugin["source"] +\
@@ -22,6 +22,8 @@ class ParserArpwatch(Parser.Parser):
     def __processSyslog(self):
         
         util.debug (__name__, 'plugin started (syslog)...', '--')
+
+        start_time = time.time()
 
         location = self.plugin["location"]
 
@@ -38,16 +40,18 @@ class ParserArpwatch(Parser.Parser):
 
         # Move to the end of file
         fd.seek(0, 2)
-            
+
+        ip = addr = vendor = timestamp = ""
+
         while 1:
-            
+
             if self.plugin["enable"] == 'no':
 
                 # plugin disabled, wait for enabled
                 util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
                 while self.plugin["enable"] == 'no':
                     time.sleep(1)
-                    
+
                 # lets parse again
                 util.debug (__name__, 'plugin enabled', '**', 'GREEN')
                 fd.seek(0, 2)
@@ -57,36 +61,45 @@ class ParserArpwatch(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
-                try:
-                    # ip address
-                    result = re.findall('ip address: (\S+)', line)
-                    ip = result[0]
+
+                result_ip = re.findall('ip address: (\S+)', line)
+                result_addr = re.findall('ethernet address: (.*)', line)
+                result_vendor = re.findall('ethernet vendor: (.*)', line)
+                result_timestamp = re.findall('timestamp: ([^\+|\-]*)', line)
+
+                if result_ip != []:
+                    ip = addr = vendor = timestamp = ""
+                    ip = result_ip[0]
                     lines = line
-                    
-                    # ethernet address
-                    line = fd.readline()
-                    result = re.findall('ethernet address: (.*)', line)
-                    addr = result[0]
+                elif result_addr != []:
+                    addr = result_addr[0]
                     lines += line
-                    
-                    # ethernet vendor
-                    line = fd.readline()
-                    result = re.findall('ethernet vendor: (.*)', line)
-                    vendor = result[0]
+                elif result_vendor != []:
+                    vendor = result_vendor[0]
                     lines += line
-                    
+                elif result_timestamp != []:
                     # timestamp
                     # Monday, March 15, 2004 15:39:19 +0000
-                    line = fd.readline()
-                    result = re.findall('timestamp: ([^\+|\-]*)', line)
                     timestamp = \
-                        time.strptime(util.normalizeWhitespace(result[0]), 
-                                      "%A, %B %d, %Y %H:%M:%S")
+                        time.strptime(util.normalizeWhitespace(result_timestamp[0]), 
+                                  "%A, %B %d, %Y %H:%M:%S")
                     date = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
+
                     lines += line
 
-                                     
                     self.agent.sendMacChange (
                          host       = ip,
                          mac        = addr,
@@ -95,10 +108,6 @@ class ParserArpwatch(Parser.Parser):
                          plugin_id  = self.plugin["id"],
                          plugin_sid = 1,
                          log        = lines)
-
-                    
-                except IndexError:
-                    pass
 
         fd.close()
 

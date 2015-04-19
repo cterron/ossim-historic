@@ -16,6 +16,8 @@ class Agent:
         self.listenPort = 0
         self.watchdog_enable = True
         self.watchdog_interval = 60
+        self.plugin_restart_enable = True
+        self.plugin_restart_interval = 600
         self.logdir = ''
         self.plugins = {}
         self.conn = None
@@ -41,6 +43,12 @@ class Agent:
         else: 
             self.watchdog_enable = False
         self.watchdog_interval = configHandler.get_watchdog_interval()
+        if configHandler.get_plugin_restart_enable() in ['yes', 'true']:
+            self.plugin_restart_enable = True
+        else:
+            self.plugin_restart_enable = False
+        self.plugin_restart_interval = \
+            configHandler.get_plugin_restart_interval()
         self.logdir = configHandler.get_logdir()
         self.plugins = configHandler.get_plugins()
 

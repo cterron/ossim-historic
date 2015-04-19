@@ -63,8 +63,10 @@ class Net_group {
         foreach($networks as $network){
             $name = $network->get_net_name();
             $net_list = Net_qualification::get_list($conn, "WHERE net_name = '$name'");
+            if(is_array($net_list)){
             foreach($net_list as $net){
                 $compromise += $net->get_compromise();
+            }
             }
         }
 
@@ -80,8 +82,10 @@ class Net_group {
         foreach($networks as $network){
             $name = $network->get_net_name();
             $net_list = Net_qualification::get_list($conn, "WHERE net_name = '$name'");
+            if(is_array($net_list)){
             foreach($net_list as $net){
                 $attack += $net->get_attack();
+            }
             }
         }
 

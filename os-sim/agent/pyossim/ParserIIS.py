@@ -10,10 +10,10 @@ class ParserIIS(Parser.Parser):
     def process(self):
         
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
 
         elif self.plugin["source"] == 'W3C':
-            self.__processW3C()
+            while 1: self.__processW3C()
 
         else:
             util.debug (__name__, "log type " + self.plugin["source"] +\
@@ -25,6 +25,8 @@ class ParserIIS(Parser.Parser):
         
         util.debug (__name__, 'plugin started (syslog)...', '--')
         
+        start_time = time.time()
+
         pattern = '(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\S+ (\S+) (\S+) (\S+) (\d+) (\w+) (\S+) \S+ (\d+)'
             
         location = self.plugin["location"]
@@ -55,6 +57,18 @@ class ParserIIS(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 try: 
@@ -94,6 +108,8 @@ class ParserIIS(Parser.Parser):
 
         util.debug ('ParserIIS', 'plugin started (W3C)...', '--')
 
+        start_time = time.time()
+
         pattern = re.compile(
                 "(\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}) "  +\
                 "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) "     +\
@@ -130,6 +146,18 @@ class ParserIIS(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = pattern.search(line)
                 if result is not None:

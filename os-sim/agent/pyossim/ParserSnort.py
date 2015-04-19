@@ -10,10 +10,10 @@ class ParserSnort(Parser.Parser):
     def process(self):
         
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
         
         elif self.plugin["source"] == 'fast':
-            self.__processFast()
+            while 1: self.__processFast()
             
         else:
             util.debug (__name__, "log type " + self.plugin["source"] +\
@@ -24,6 +24,8 @@ class ParserSnort(Parser.Parser):
     def __processSyslog(self):
         
         util.debug (__name__, 'plugin started (syslog)...', '--')
+        
+        start_time = time.time()
 
         pattern = '(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+([\w\-\_]+|\d+.\d+.\d+.\d+)\s+snort:\s+\[(\d+):(\d+):\d+\].*?{(\w+)}\s+([\d\.]+):?(\d+)?\s+.*\s+([\d\.]+):?(\d+)?'
         pattern2 = '\[Priority:\s+(\d+)\]'
@@ -57,6 +59,18 @@ class ParserSnort(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+                
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 result2 = re.findall(str(pattern2), line)
@@ -96,6 +110,8 @@ class ParserSnort(Parser.Parser):
     def __processFast(self):
         
         util.debug (__name__, 'plugin started (fast)...', '--')
+        
+        start_time = time.time()
  
         patternl1 = re.compile('^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?')
         patternl2 = re.compile('\[(\d+):(\d+):\d+\]')
@@ -131,6 +147,18 @@ class ParserSnort(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 
                 result1 = patternl1.search(line)

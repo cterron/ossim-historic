@@ -1,5 +1,91 @@
 # ChangeLog for OSSIM
 
+	18 May 2005 DK <dk@ossim.net> :
+	* 0.9.8 released.
+
+* OSSIM-0.9.8 (18 May 2005)
+
+	05 May 2005 David Gil <dgil@ossim.net> :
+	* Agent: restart plugins every X seconds, 
+	  configurable via /etc/ossim/agent/config.xml plugin-restart.
+
+    04 May 2005 David Gil <dgil@ossim.net> :
+	* Close alarms at alarm console
+
+	29 Apr 2005 David Gil <dgil@ossim.net> :
+	* contrib/patches/06_close_alarms_on_alarm_console.patch
+	* Fixed some php notices on login startup
+
+	25 Apr 2005 David Gil <dgil@ossim.net> :
+	* www/host/newhost.php: inserting new host, update host info when host
+	  exists in database.
+
+	20 Apr 2005 David Gil <dgil@ossim.net> :
+	* etc/logrotate.d/ossim-agent, etc/logrotate.d/ossim-framework:
+	  Ossim framework and agent logrotate configuration files.
+	* contrib/snort/snort_debian_config.patch, etc/agent/plugins/snort.xml:
+	  Move /var/log/snort/fast.log references to /var/log/snort/alert.
+
+	18 Apr 2005 David Gil <dgil@ossim.net> :
+	* include/ossim_conf.inc: better use of trim reading config lines from
+	  framework/ossim.conf.
+	  (Thanks João)
+	* contrib/patches/05_parser_ntsyslog_regexp_fix.patch
+	  (Thanks Sébastien Contreras)
+	* etc/logrotate.d/ossim-server: Ossim server logrotate configuration file
+
+	14 Apr 2005 David Gil <dgil@ossim.net> :
+	* agent/pyossim/ParserSnareWindows.py: snare for windows support improved.
+	* www/netscan/index.php: fixed error with javascript and IExplorer.
+	* www/editor/rule.php: fixed error in snort rule viewer with 
+	  snort_rules_dir without trailing slash.
+	* www/vulnmeter/index.php: removed ugly warnings in Vulnmeter.
+	* contrib/patches/05_restart_parserSnort_to_avoid_logrotate_fd_changes.patch
+
+	13 Apr 2005 David Gil <dgil@ossim.net> :
+	* Ossim and Base Debian packages fixes, thanks to bswrchrd and jlfaria
+	  sourceforge users.
+
+	12 Apr 2005 David Gil <dgil@ossim.net> :
+	* Show only menus that user is allowed to.
+	* frameworkd/ossimframework/ControlPanel.py: check for empty strings in
+	  rrdtool outputs. This solves strange erros with some rrds.
+	* contrib/patches/05_average_service_level_day.patch
+
+	11 Apr 2005 David Gil <dgil@ossim.net> :
+	* Merge etc/ and debian/ config files
+	* contrib directory cleanup
+	* contrib/patches/05_more_net_perms_by_user.patch
+
+	07 Apr 2005 David Gil <dgil@ossim.net> :
+	* Acid Cache: there was a problem fetching acid pages with GET attributes.
+	  Replace & with %26 html entity solved the problem.
+
+	06 Apr 2005 David Gil <dgil@ossim.net> :
+	* include/classes/Session.inc: rename getValue() method to allowedNets() 
+	  (why did we called getValue?).
+	* contrib/acid|base/*.patch: use new allowedNets() method.
+	* www/*: use new allowedNets() method.
+
+	05 Apr 2005 David Gil <dgil@ossim.net> :
+	* contrib/snort/snort_debian_config.patch: automatic debian configuration
+	  for snort packages
+
+	30 Mar 2005 David Gil <dgil@ossim.net> :
+	* debian/INSTALL.html: Debian install guide rewritten in html+css
+
+	28 Mar 2005 David Gil <dgil@ossim.net> :
+	* Base (Acid replacement) integration:
+	  Be careful with the following framework options:
+	   - alert_viewer (NEW)
+	   - acid_link
+	   - acid_path
+	* agent/pyossim/ParserArpwatch:
+	  Arpwatch fixes (thanks to ossim-help forum folks).
+	* frameworkd/ossimframework/ControlPanel.py:
+	  Clean up rrd directory deleting unused rrd files. This will minimize the
+	  execution time of frameworkd iterations.
+
 	18 Mar 2005 DK <dk@ossim.net> :
 	* 0.9.8rc2 released.
 

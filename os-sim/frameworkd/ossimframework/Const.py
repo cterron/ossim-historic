@@ -24,3 +24,7 @@ RRD_BIN = "/usr/bin/rrdtool"
 # overriden with -v option
 VERBOSE = 0
 
+# default listener port
+# overriden with -p option
+LISTENER_PORT = 40003
+

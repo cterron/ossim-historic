@@ -133,6 +133,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("alert_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
         
         if (!strcmp($target, "ip_src"))
@@ -158,7 +159,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
                     $security_report->ossim_conn, $ip);
                 $os_pixmap = Host_os::get_os_pixmap(
                     $security_report->ossim_conn, $ip);
-                $link = "$acid_link/acid_stat_alerts.php?&" . 
+                $link = "$acid_link/".$acid_prefix."_stat_alerts.php?&" . 
                     "num_result_rows=-1&" .
                     "submit=Query+DB&" . 
                     "current_view=-1&" .
@@ -210,6 +211,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("alert_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
 ?>
         <h2>Top <?php echo "$NUM_HOSTS Alerts" ?></h2>
@@ -228,7 +230,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 ?>
           <tr>
              <?php
-               $link = "$acid_link/acid_qry_main.php?new=1&" . 
+               $link = "$acid_link/".$acid_prefix."_qry_main.php?new=1&" . 
                     "sig[0]==&" . 
                     "sig[1]=$alert&" . 
                     "sig[2]==&" . 
@@ -306,6 +308,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("alert_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
         
 ?>
@@ -331,7 +334,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
           <tr>
             <td>
               <?php 
-                $link = "$acid_link/acid_stat_uaddr.php?" . 
+                $link = "$acid_link/".$acid_prefix."_stat_uaddr.php?" . 
                     "tcp_port[0][0]=+&" . 
                     "tcp_port[0][1]=layer4_dport&" . 
                     "tcp_port[0][2]==&" . 
@@ -381,10 +384,6 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     {
         global $NUM_HOSTS;
     
-        /* ossim framework conf */
-        $conf = new ossim_conf();
-        $acid_link = $conf->get_conf("acid_link");
-
         /* opennms db connect */
         $opennms_db = new ossim_db();
         $opennms_conn = $opennms_db->opennms_connect();

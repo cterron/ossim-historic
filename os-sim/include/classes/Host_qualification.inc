@@ -51,7 +51,7 @@ class Host_qualification {
         if (($type != 'compromise') and ($type != 'attack'))
             return -1;
 
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
         $global = 0;
 
         $query = "SELECT $type FROM host_qualification;";
@@ -86,7 +86,7 @@ class Host_qualification {
     function get_list($conn, $where = "", $order = "")
     {
 
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
 
         if (!$rs = &$conn->Execute("SELECT * FROM host_qualification $where
         $order")) {

@@ -2018,7 +2018,7 @@ sim_rule_match_by_alert (SimRule      *rule,
       switch (rule->_priv->sticky_different)
 	{
 	case SIM_RULE_VAR_PLUGIN_SID:
-	  val = (guint32) alert->plugin_id;
+	  val = (guint32) alert->plugin_sid;
 	  if (find_guint32_value (rule->_priv->stickys, val))
 	    return FALSE;
 	  rule->_priv->stickys = g_list_append (rule->_priv->stickys, GINT_TO_POINTER (val));

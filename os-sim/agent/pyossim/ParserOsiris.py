@@ -10,7 +10,7 @@ class ParserOsiris(Parser.Parser):
     def process(self):
 
         if self.plugin["source"] == 'syslog':
-            self.__processSyslog()
+            while 1: self.__processSyslog()
             
         else:
             util.debug (__name__,  "log type " + self.plugin["source"] + " unknown for Osiris...", '!!', 'RED')
@@ -19,6 +19,7 @@ class ParserOsiris(Parser.Parser):
     def __processOsirisLog(self, line, date, sensor, sid, target, location, count):
         util.debug ('ParserOsiris', 'examining ' + target + ' (' + count + ' events)...', '--')
 
+        start_time = time.time()
 
         # [213][gestalt][cmp][/sw/bin/gtk-config][ctime][Tue Apr 20 19:20:41 2004,Sun Jul 25 02:59:00 2004]
         event_pattern = '^\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]'
@@ -193,6 +194,18 @@ class ParserOsiris(Parser.Parser):
             if not line: # EOF reached
                 time.sleep(1)
                 fd.seek(where)
+
+                # restart plugin every hour
+                if self.agent.plugin_restart_enable:
+                    current_time = time.time()
+                    if start_time + \
+                       self.agent.plugin_restart_interval < current_time:
+                        util.debug(__name__, 
+                                   "Restarting plugin..", '->', 'YELLOW')
+                        fd.close()
+                        start_time = current_time
+                        return None
+
             else:
                 result = re.findall(str(pattern), line)
                 try: 

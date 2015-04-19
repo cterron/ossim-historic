@@ -1,3 +1,73 @@
+ossim (1:0.9.8-1) ossim; urgency=low
+
+  * New upstream release.
+
+ -- David Gil <dgil@ossim.net>  Wed, 18 May 2005 11:40:57 +0200
+
+ossim (0.9.8rc2-cvs20050506-1) ossim; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Fri, 06 May 2005 11:32:27 +0200
+
+ossim (0.9.8rc2-cvs20050429-2) ossim; urgency=low
+
+  * Build against libgda2-3, libgda2-1 is out of sarge.
+
+ -- David Gil <dgil@ossim.net>  Fri, 29 Apr 2005 18:31:52 +0200
+
+ossim (0.9.8rc2-cvs20050429-1) ossim; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Fri, 29 Apr 2005 14:18:03 +0200
+
+ossim (0.9.8rc2-cvs20050420-1) ossim; urgency=low
+
+  * New CVS Release.
+  * Install logrotate files.
+
+ -- David Gil <dgil@ossim.net>  Wed, 20 Apr 2005 18:12:53 +0200
+
+ossim (0.9.8rc2-cvs20050418-1) ossim; urgency=low
+
+  * New CVS Release.
+  * Added libgda2-3 to depends.
+
+ -- David Gil <dgil@ossim.net>  Mon, 18 Apr 2005 10:36:18 +0200
+
+ossim (0.9.8rc2-cvs20050414-1) ossim; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Thu, 14 Apr 2005 16:39:29 +0200
+
+ossim (0.9.8rc2-cvs20050413-1) ossim; urgency=low
+
+  * New CVS Release.
+  * Base fixes.
+  * /usr/share/doc/ossim*/INSTALL.pdf
+
+ -- David Gil <dgil@ossim.net>  Wed, 13 Apr 2005 17:04:57 +0200
+
+ossim (0.9.8rc2-cvs20050412-1) ossim; urgency=low
+
+  * New CVS Release.
+  * ossim-mysql depends on mysql4.0, mysql4.1 integration needs work.
+  * ossim package depends on ossim-contrib.
+  * Debian install guide rewritten in html+css
+  * Add base to ossim-framework depends
+    (acid is still the default alert viewer)
+  * cron.d and cron.daily scripts update.
+
+ -- David Gil <dgil@ossim.net>  Tue, 12 Apr 2005 15:51:22 +0200
+
+ossim (0.9.8rc2+cvs20050328-1) ossim; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Mon, 28 Mar 2005 17:37:54 +0200
+
 ossim (0.9.8rc2) unstable; urgency=low
 
   * New Release.

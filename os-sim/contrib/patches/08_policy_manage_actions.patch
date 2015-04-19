@@ -1,0 +1,640 @@
+diff -auNr ossim.old/db/create_mysql.sql ossim-cvs/db/create_mysql.sql
+--- ossim.old/db/create_mysql.sql	2005-05-04 15:18:21.000000000 +0200
++++ ossim-cvs/db/create_mysql.sql	2005-05-18 13:11:14.978744872 +0200
+@@ -224,6 +224,66 @@
+     PRIMARY KEY     (policy_id)
+ );
+ 
++DROP TABLE IF EXISTS policy_plugin_reference;
++CREATE TABLE policy_plugin_reference (
++    policy_id       int NOT NULL,
++	plugin_id		INTEGER NOT NULL,
++    PRIMARY KEY     (policy_id, plugin_id)
++);
++
++DROP TABLE IF EXISTS policy_plugin_sid_reference;
++CREATE TABLE policy_plugin_sid_reference (
++    policy_id       int NOT NULL,
++    plugin_sid      INTEGER NOT NULL,
++    PRIMARY KEY     (policy_id, plugin_sid)
++);
++
++DROP TABLE IF EXISTS policy_action_reference;
++CREATE TABLE policy_action_reference (
++    policy_id       int NOT NULL,
++    action_id       int NOT NULL,
++    PRIMARY KEY     (policy_id, action_id)
++);
++
++
++/* ======== actions ======== */
++DROP TABLE IF EXISTS action;
++CREATE TABLE action (
++    id              int NOT NULL auto_increment,
++    action_type     varchar(100),
++    descr           varchar(255),
++    PRIMARY KEY     (id)
++);
++
++DROP TABLE IF EXISTS action_type;
++CREATE TABLE action_type (
++    _type            varchar (100),
++    descr           varchar (255),
++    PRIMARY KEY     (_type)
++);
++
++INSERT INTO action_type (_type, descr) VALUES ("email", "send an email message");
++INSERT INTO action_type (_type, descr) VALUES ("exec", "execute an external program");
++
++
++DROP TABLE IF EXISTS action_email;
++CREATE TABLE action_email (
++    action_id       int NOT NULL,
++    _from           varchar(100),
++    _to             varchar(100),
++    subject         varchar(255),
++    message         varchar(255),
++    PRIMARY KEY     (action_id)
++);
++
++
++DROP TABLE IF EXISTS action_exec;
++CREATE TABLE action_exec (
++    action_id       int NOT NULL,
++    command         varchar(255),
++    PRIMARY KEY     (action_id)
++);
++
+ 
+ /* ======== qualification ======== */
+ DROP TABLE IF EXISTS host_qualification;
+diff -auNr ossim.old/include/classes/Action_email.inc ossim-cvs/include/classes/Action_email.inc
+--- ossim.old/include/classes/Action_email.inc	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/include/classes/Action_email.inc	2005-05-18 13:33:45.949366120 +0200
+@@ -0,0 +1,58 @@
++<?php
++
++class Action_email {
++
++    var $action_id;
++    var $from;
++    var $to;
++    var $subject;
++    var $message;
++
++    function Action_email ($type, $descr)
++    {
++        $this->action_id    = $action_id;
++        $this->from         = mysql_escape_string($from);
++        $this->to           = mysql_escape_string($to);
++        $this->subject      = mysql_escape_string($subject);
++        $this->message      = mysql_escape_string($message);
++    }
++
++    function get_action_id()    { return $this->action_id; }
++    function get_from()         { return $this->from; }
++    function get_to()           { return $this->to; }
++    function get_subject()      { return $this->subject; }
++    function get_message()      { return $this->message; }
++
++
++
++    function get_list($conn, $args = "") 
++    {
++        if (!$rs = &$conn->Execute("SELECT * FROM action_email $args")) {
++            print $conn->ErrorMsg();
++        } else {
++            while (!$rs->EOF) {
++                $list[] = new Action_email ($rs->fields["action_id"],
++                                            $rs->fields["from"],
++                                            $rs->fields["to"],
++                                            $rs->fields["subject"],
++                                            $rs->fields["message"]);
++                $rs->MoveNext();
++            }
++        }
++        return $list;
++    }
++
++    function insert($conn, $from, $to, $subject, $message)
++    {
++        $query = "INSERT INTO action_email 
++            (action_id, _from, _to, subject, message) VALUES 
++            (LAST_INSERT_ID(), '$from', '$to', '$subject', '$message')";
++        if ($conn->Execute($query) === false) {
++            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
++            exit;
++        }
++    }
++}
++
++?>
++
+diff -auNr ossim.old/include/classes/Action_exec.inc ossim-cvs/include/classes/Action_exec.inc
+--- ossim.old/include/classes/Action_exec.inc	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/include/classes/Action_exec.inc	2005-05-18 13:18:40.758975976 +0200
+@@ -0,0 +1,44 @@
++<?php
++
++class Action_exec {
++
++    var $action_id;
++    var $command;
++
++    function Action_exec ($action_id, $command)
++    {
++        $this->action_id    = $action_id;
++        $this->command      = mysql_escape_string($command);
++    }
++
++    function get_action_id()    { return $this->action_id; }
++    function get_command()      { return $this->command; }
++
++
++    function get_list($conn, $args = "") 
++    {
++        if (!$rs = &$conn->Execute("SELECT * FROM action_exec $args")) {
++            print $conn->ErrorMsg();
++        } else {
++            while (!$rs->EOF) {
++                $list[] = new Action_exec ($rs->fields["action_id"],
++                                           $rs->fields["command"]);
++                $rs->MoveNext();
++            }
++        }
++        return $list;
++    }
++
++    function insert($conn, $command)
++    {
++        $query = "INSERT INTO action_exec 
++            (action_id, command) VALUES (LAST_INSERT_ID(), '$command')";
++        if ($conn->Execute($query) === false) {
++            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
++            exit;
++        }
++    }
++}
++
++?>
++
+diff -auNr ossim.old/include/classes/Action.inc ossim-cvs/include/classes/Action.inc
+--- ossim.old/include/classes/Action.inc	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/include/classes/Action.inc	2005-05-18 13:13:36.682202672 +0200
+@@ -0,0 +1,88 @@
++<?php
++
++require_once ('classes/Action_email.inc');
++require_once ('classes/Action_exec.inc');
++
++class Action {
++
++    var $id;
++    var $descr;
++
++    function Action ($id, $descr)
++    {
++        $this->id          = $id;
++        $this->descr       = htmlentities($descr);
++    }
++
++    function get_id()              { return $this->id; }
++    function get_descr()           { return $this->descr; }
++
++
++    function get_list($conn, $args = "") 
++    {
++        if (!$rs = &$conn->Execute("SELECT * FROM action $args")) {
++            print $conn->ErrorMsg();
++        } else {
++            while (!$rs->EOF) {
++                $list[] = new Action ($rs->fields["id"],
++                                      $rs->fields["descr"]);
++                $rs->MoveNext();
++            }
++        }
++        return $list;
++    }
++
++    function insert($conn, $action_type, $descr)
++    {
++        $query = "INSERT INTO action (id, action_type, descr) VALUES 
++            (NULL, '$action_type', '$descr');";
++        if ($conn->Execute($query) === false) {
++            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
++            exit;
++        }
++    }
++
++    function insertEmail($conn, $action_type, $descr,
++                         $from, $to, $subject, $message)
++    {
++        Action::insert($conn, $action_type, $descr);
++        Action_email::insert($conn, $from, $to, $subject, $message);
++    }
++
++    function insertExec($conn, $action_type, $descr, $command)
++    {
++        Action::insert($conn, $action_type, $descr);
++        Action_exec::insert($conn, $command);
++    }
++
++    function delete($conn, $id)
++    {
++        /* get action type */
++        $query = "SELECT action_type FROM action WHERE id = $id;";
++        $action_type = "";
++        if (!$rs = &$conn->Execute($query)) {
++            print $conn->ErrorMsg();
++        } else {
++            if (!$rs->EOF) {
++                $action_type = $rs->fields["action_type"];
++            }
++        }
++
++        $query  = "DELETE FROM action WHERE id = $id";
++        if ($conn->Execute($query) === false) {
++            print "error deleting ($query): ".$conn->ErrorMsg().'<BR>';
++            exit;
++        }
++
++        if ($action_type != "") {
++            $query = "DELETE FROM action_$action_type WHERE action_id = $id";
++            if ($conn->Execute($query) === false) {
++                echo "error deleting ($query): ".$conn->ErrorMsg().'<BR>';
++                exit;
++            }
++        }
++    }
++}
++
++?>
++
+diff -auNr ossim.old/include/classes/Action_type.inc ossim-cvs/include/classes/Action_type.inc
+--- ossim.old/include/classes/Action_type.inc	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/include/classes/Action_type.inc	2005-05-18 10:57:09.274877776 +0200
+@@ -0,0 +1,34 @@
++<?php
++
++class Action_type {
++
++    var $type;
++    var $descr;
++
++    function Action_type ($type, $descr)
++    {
++        $this->type     = $type;
++        $this->descr    = htmlentities($descr);
++    }
++
++    function get_type()         { return $this->type; }
++    function get_descr()        { return $this->descr; }
++
++
++    function get_list($conn, $args = "") 
++    {
++        if (!$rs = &$conn->Execute("SELECT * FROM action_type $args")) {
++            print $conn->ErrorMsg();
++        } else {
++            while (!$rs->EOF) {
++                $list[] = new Action_type ($rs->fields["_type"],
++                                           $rs->fields["descr"]);
++                $rs->MoveNext();
++            }
++        }
++        return $list;
++    }
++}
++
++?>
++
+diff -auNr ossim.old/include/ossim_acl.inc ossim-cvs/include/ossim_acl.inc
+--- ossim.old/include/ossim_acl.inc	2005-01-24 15:46:41.000000000 +0100
++++ ossim-cvs/include/ossim_acl.inc	2005-05-18 14:13:45.647556544 +0200
+@@ -76,6 +76,11 @@
+                 (
+                     "name"          => "Policy -> Ports",
+                     "default_perm"  => False
++                ),
++            "PolicyActions" => array
++                (
++                    "name"          => "Policy -> Actions",
++                    "default_perm"  => False
+                 )
+         ),
+     "MenuReports"       => array
+diff -auNr ossim.old/www/action/action.php ossim-cvs/www/action/action.php
+--- ossim.old/www/action/action.php	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/www/action/action.php	2005-05-18 13:48:13.931412792 +0200
+@@ -0,0 +1,66 @@
++<?php
++require_once ('classes/Session.inc');
++Session::logcheck("MenuPolicy", "PolicyActions");
++?>
++
++<html>
++<head>
++  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
++  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
++  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
++  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
++</head>
++<body>
++                                                                                
++  <h1> <?php echo gettext("Actions"); ?> </h1>
++
++<?php
++
++    require_once ('ossim_db.inc');
++    require_once ('classes/Action.inc');
++
++    $db = new ossim_db();
++    $conn = $db->connect();
++    if (is_array($action_list = Action::get_list($conn))) {
++?>
++    <table align="center">
++      <tr>
++        <th>Id</th>
++        <th>Description</th>
++        <th>Action</th>
++      </tr>
++<?php
++        foreach ($action_list as $action) {
++?>
++      <tr>
++        <td><?php echo ($id = $action->get_id()); ?></td>
++        <td><?php echo ($action = $action->get_descr()); ?></td>
++        <td><a href="deleteaction.php?id=<?php echo $id ?>">Delete</a></td>
++      </tr>
++<?php
++        }
++?>
++      <tr>
++        <td colspan="3">
++        <a href="newactionform.php"><?php echo gettext("Add new action") ?></a>
++        </td>
++      </tr>
++    </table>
++<?php
++    } else {
++?>
++        <p align=\"center\">
++        <?php echo gettext("There are no actions defined") ?>
++        <br/>
++        <a href="newactionform.php"><?php echo gettext("Add new action") ?></a>
++        </p>
++<?php
++    }
++    $db->close($conn);
++
++?>
++
++
++</body>
++</html>
++
+diff -auNr ossim.old/www/action/deleteaction.php ossim-cvs/www/action/deleteaction.php
+--- ossim.old/www/action/deleteaction.php	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/www/action/deleteaction.php	2005-05-18 10:57:09.276877472 +0200
+@@ -0,0 +1,38 @@
++<html>
++<head>
++  <title>OSSIM Framework</title>
++  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
++  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
++  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
++</head>
++<body>
++
++<?php
++
++
++    if ( !($action_id = $_GET["id"]) ) {
++        echo gettext("action_id is required");
++        exit;
++    }
++
++    require_once ("ossim_db.inc");
++    require_once ("classes/Action.inc");
++
++    $db = new ossim_db();
++    $conn = $db->connect();
++
++    Action::delete($conn, $action_id);
++
++    $db->close($conn);
++
++    echo '<p align="center">';
++    echo gettext("Action deleted");
++    echo '<br/><a href="action.php">';
++    echo gettext("Back");
++    echo '</a></p>'
++
++?>
++
++</body>
++</html>
++
+diff -auNr ossim.old/www/action/newactionform.php ossim-cvs/www/action/newactionform.php
+--- ossim.old/www/action/newactionform.php	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/www/action/newactionform.php	2005-05-18 13:37:54.513578616 +0200
+@@ -0,0 +1,183 @@
++<?php
++require_once ('classes/Session.inc');
++Session::logcheck("MenuPolicy", "PolicyActions");
++
++require_once ('classes/Action.inc');
++require_once ('classes/Action_type.inc');
++require_once ('ossim_db.inc');
++
++$db = new ossim_db();
++$conn = $db->connect();
++
++if ($_REQUEST["insert_action"]) {
++
++    global $conn;
++
++    if ($_REQUEST["action_type"] == "email") {
++
++        if ( ($_REQUEST["descr"]) and
++             ($_REQUEST["email_from"]) and
++             ($_REQUEST["email_to"]) and
++             ($_REQUEST["email_subject"]) and
++             ($_REQUEST["email_message"]) )
++        {
++            Action::insertEmail($conn,
++                                $_REQUEST["action_type"],
++                                $_REQUEST["descr"],
++                                $_REQUEST["email_from"],
++                                $_REQUEST["email_to"],
++                                $_REQUEST["email_subject"],
++                                $_REQUEST["email_message"]);
++            message_ok();
++            exit;
++        } else {
++            message_error();
++            exit;
++        }
++
++    } elseif ($_REQUEST["action_type"] == "exec") {
++
++        if ( ($_REQUEST["descr"]) and
++             ($_REQUEST["exec_command"]) )
++        {
++            Action::insertExec($conn,
++                               $_REQUEST["action_type"],
++                               $_REQUEST["descr"],
++                               $_REQUEST["exec_command"]);
++            message_ok();
++            exit();
++        } else {
++            message_error();
++            exit();
++        }
++    }
++}
++
++function message_ok() {
++    echo '<p align="center">';
++    echo gettext ("Action inserted successfully");
++    echo '<br/><a href="action.php">';
++    echo gettext("Back");
++    echo '</a></p>';
++}
++
++function message_error() {
++    echo '<p align="center"><font color="red">';
++    echo gettext("Please, fill all the fields");
++    echo '</font></p>';
++}
++
++
++function email_form()
++{
++?>
++    <tr><td colspan="2">&nbsp;</td></tr>
++    <tr>
++      <td>From: </td>
++      <td><input name="email_from" type="text" /></td>
++    </tr>
++    <tr>
++      <td>To: </td>
++      <td><input name="email_to" type="text" /></td>
++    </tr>
++    <tr>
++      <td>Subject: </td>
++      <td><input name="email_subject" type="text" /></td>
++    </tr>
++    <tr>
++      <td>Message: </td>
++      <td><textarea name="email_message" type="text"></textarea></td>
++    </tr>
++<?php
++}
++
++
++function exec_form()
++{
++?>
++    <tr><td colspan="2">&nbsp;</td></tr>
++    <tr>
++      <td>Command: </td>
++      <td><input name="exec_command" type="text" /></td>
++    </tr>
++<?php
++}
++
++
++function submit()
++{
++?>
++    <tr><td colspan="2">
++      <input type="submit" name="insert_action" value="OK"></td>
++    </tr>
++<?php
++}
++
++?>
++
++<html>
++<head>
++  <title>OSSIM Framework</title>
++  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
++  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
++  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
++</head>
++<body>
++
++<h2>Add new Action</h2>
++
++<table align="center">
++<form name="new_action" method="POST">
++  <tr>
++    <th>Description</th>
++    <td>
++      <textarea name="descr"><?php echo $_REQUEST["descr"] ?></textarea>
++    </td>
++  </tr>
++  <tr>
++    <th>Type</th>
++    <td>
++      <select name="action_type"
++        onChange="document.forms['new_action'].submit()">
++        <option value=""> -- Select an action type -- </option>
++<?php
++    if (is_array($action_type_list = Action_type::get_list($conn))) {
++        foreach ($action_type_list as $action_type) {
++?>
++        <option
++            value="<?php echo $action_type->get_type() ?>"
++            <?php
++                if ($_REQUEST["action_type"] == $action_type->get_type()) 
++                    echo " SELECTED ";
++            ?>>
++            <?php echo $action_type->get_descr(); ?>
++        </option>
++<?php
++        }
++    }
++?>
++      </select>
++    </td>
++  </tr>
++
++<?php
++    /* type of action */
++    if ($_REQUEST["action_type"] == "email") {
++        email_form();
++        submit();
++    } elseif ($_REQUEST["action_type"] == "exec") {
++        exec_form();
++        submit();
++    }
++?>
++
++  </form>
++</table>
++
++<?php
++$db->close($conn);
++?>
++
++</body>
++</html>
++
+diff -auNr ossim.old/www/top.php ossim-cvs/www/top.php
+--- ossim.old/www/top.php	2005-05-04 15:18:23.000000000 +0200
++++ ossim-cvs/www/top.php	2005-05-18 10:57:09.277877320 +0200
+@@ -169,6 +169,12 @@
+       "url" => "port/port.php"
+     );
+ 
++  if (Session::menu_perms("MenuPolicy", "PolicyActions"))
++    $menu["Policy"][] = array (
++      "name" => gettext("Actions"),
++      "url" => "action/action.php"
++    );
++
+   /* Correlation */
+   if (Session::menu_perms("MenuCorrelation", "CorrelationDirectives"))
+     $menu["Correlation"][] = array(

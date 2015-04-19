@@ -25,6 +25,17 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 ?>
 
   <table align="center">
+  <tr>
+  <th><?php echo gettext("Active Sensors");?></th>
+  <th><?php echo gettext("Total Sensors");?></th>
+  </tr><tr>
+  <td><div id="active">0</div></td>
+  <td><b><div id="total">0</div></b></td>
+  </tr>
+  </table>
+  <br/>
+
+  <table align="center">
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("inet_aton(ip)", $order);
@@ -68,11 +79,15 @@ Session::logcheck("MenuPolicy", "PolicySensors");
             }
         }
     }
+
+    $active_sensors = 0;
+    $total_sensors = 0;
     
     if ($sensor_list = Sensor::get_list($conn, "ORDER BY $order")) {
         foreach($sensor_list as $sensor) {
             $ip = $sensor->get_ip();
             $name = $sensor->get_name();
+            $total_sensors++;
 
 ?>
 
@@ -84,6 +99,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       <td><?php 
         if (in_array($sensor->get_ip(),$sensor_stack)){
             echo "<font color=\"green\"><b>YES</b></font>";
+            $active_sensors++;
             array_push($sensor_configured_stack,$sensor->get_ip());
         } else {
             echo "<font color=\"red\"><b>NO</b></font>";
@@ -154,6 +170,23 @@ functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partia
     </tr>
 </table>
 
+<script language="javascript">
+active_sensors_div = document.getElementById("active");
+total_sensors_div = document.getElementById("total");
+
+<?php
+if($active_sensors == 0){
+?>
+active_sensors_div.innerHTML = "<font color=\"red\">" + <?php echo $active_sensors; ?> + "</font>"; 
+<?php
+} else {
+?>
+active_sensors_div.innerHTML = "<font color=\"green\">" + <?php echo $active_sensors; ?> + "</font>"; 
+<?php
+}
+?>
+total_sensors_div.innerHTML = <?php echo $total_sensors; ?>;
+</script>
 
 </body>
 </html>

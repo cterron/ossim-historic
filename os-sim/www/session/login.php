@@ -58,12 +58,16 @@
 
     require_once ("classes/Session.inc");
 
-    if ($_REQUEST["action"] == "logout") {
+    $action = "";
+    if (array_key_exists('action', $_REQUEST))
+        $action = $_REQUEST["action"];
+
+    if ($action == "logout") {
         Session::logout();
         header ("Location: ../index.php");
     }
 
-    if ($_REQUEST["user"]) {
+    if (array_key_exists('user', $_REQUEST)) {
 
         $session = new Session($_REQUEST["user"], $_REQUEST["pass"], "");
         if ($session->login()) {
@@ -160,7 +164,7 @@ if (location.href != top.location.href) top.location.href = location.href;
 <p>
   <?php
 
-    if ($bad_pass)
+    if (isset($bad_pass))
         echo "<p><font color=\"red\">Wrong User & Password</font></p>";
   ?>
 </p>

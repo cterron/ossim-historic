@@ -146,7 +146,6 @@ $CONFIG = array (
         "conf"  => array 
         (
             "ossim_link"    => "text",
-            "acid_link"     => "text",
             "ntop_link"     => "text",
             "opennms_link"  => "text"
         )
@@ -192,12 +191,18 @@ $CONFIG = array (
     "acid" => array
     (
         "title" => gettext("ACID"),
-        "desc"  => gettext("Acid cache configuration"),
+        "desc"  => gettext("Acid configuration"),
         "conf"  => array 
         (
+            "alert_viewer" => array
+                (
+                    "acid" => gettext("Acid"),
+                    "base" => gettext("Base")
+                ),
+            "acid_link"         => "text",
+            "acid_path"         => "text",
             "acid_user"         => "text",
             "acid_pass"         => "password",
-            "acid_path"         => "text",
             "ossim_web_user"    => "text",
             "ossim_web_pass"    => "password"
         )

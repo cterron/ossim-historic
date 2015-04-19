@@ -57,7 +57,7 @@ fclose($fd);
 Sensor:&nbsp;
 <select name="sensor" onChange="submit()">
 <?php
-if ($sensor_list = Sensor::get_list($conn)) {
+if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
     foreach ($sensor_list as $s) {
 ?>
   <option 

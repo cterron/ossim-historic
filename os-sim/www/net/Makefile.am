@@ -1,4 +1,4 @@
-netdir = $(localstatedir)/www/ossim/net
+netdir = $(datadir)/ossim/www/net
 net_DATA = deletenet.php \
 	deletenetgroup.php \
 	modifynetgroupform.php \

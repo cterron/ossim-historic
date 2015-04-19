@@ -1,4 +1,4 @@
-osdir = $(localstatedir)/www/ossim/pixmaps/os
+osdir = $(datadir)/ossim/www/pixmaps/os
 os_DATA = bsd.png \
 	linux.png \
 	mac.png \

@@ -421,7 +421,7 @@ diff -urNb base/includes/base_state_citems.inc.php base-ossim/includes/base_stat
          {
 +                if ($use_ossim_session) {
 +                    require_once('classes/Net.inc');
-+                $domain = Session::getValue();
++                $domain = Session::allowedNets();
 +                if ($domain != "") {
 +                    $tmp_myip = $this->criteria[$i][3];
 +                    $myip = strtok($tmp_myip, "/");
@@ -457,7 +457,7 @@ diff -urNb base/includes/base_state_citems.inc.php base-ossim/includes/base_stat
 +        $this->criteria_cnt = count($vals);
 +
 +      if (($use_ossim_session) && ($empty)) {
-+            $domain = Session::getValue();
++            $domain = Session::allowedNets();
 +            if ($domain != "") {
 +                $nets = explode(",", $domain);
 +                $this->criteria = Array();

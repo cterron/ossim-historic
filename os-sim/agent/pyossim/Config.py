@@ -12,8 +12,10 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
         self._serverIp = ''
         self._serverPort = ''
         self._plugins = {}
-        self._watchdog_enable = ''
-        self._watchdog_interval = ''
+        self._watchdog_enable = True
+        self._watchdog_interval = 60
+        self._plugin_restart_enable = True
+        self._plugin_restart_interval = 600
         self._logdir = ''
         
         xml.sax.handler.ContentHandler.__init__(self)
@@ -50,9 +52,15 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
             
         elif name == 'watchdog':
             self._watchdog_enable = \
-                util.normalizeWhitespace(attrs.get('enable', None))
+                util.normalizeWhitespace(attrs.get('enable', True))
             self._watchdog_interval = \
-                util.normalizeWhitespace(attrs.get('interval', None))
+                util.normalizeWhitespace(attrs.get('interval', 60))
+
+        elif name == 'plugin-restart':
+            self._plugin_restart_enable = \
+                util.normalizeWhitespace(attrs.get('enable', True))
+            self._plugin_restart_interval = \
+                util.normalizeWhitespace(attrs.get('interval', 600))
 
         
     def endElement (self, name):
@@ -109,4 +117,8 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
     def get_watchdog_interval(self):
         return self._watchdog_interval
 
+    def get_plugin_restart_enable(self):
+        return self._plugin_restart_enable
 
+    def get_plugin_restart_interval(self):
+        return int(self._plugin_restart_interval)

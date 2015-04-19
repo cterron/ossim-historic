@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
+import sys
+
+sys.path.append('/usr/share/ossim-agent/')
 import pyossim.agent
+
 
 if __name__ == '__main__':
     pyossim.agent.main()

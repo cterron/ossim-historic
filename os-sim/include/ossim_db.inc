@@ -49,8 +49,9 @@ class ossim_db {
         $user = $this->conf->get_conf("snort_user");
         $pass = $this->conf->get_conf("snort_pass");
         $host = $this->conf->get_conf("snort_host");
+        $type = $this->conf->get_conf("snort_type");
 
-        $this->conn = &ADONewConnection('mysql');
+        $this->conn = &ADONewConnection($type);
         $this->conn->NConnect($host, $user, $pass, $base);
         return $this->conn;
     }
@@ -61,8 +62,9 @@ class ossim_db {
         $user = $this->conf->get_conf("opennms_user");
         $pass = $this->conf->get_conf("opennms_pass");
         $host = $this->conf->get_conf("opennms_host");
+        $type = $this->conf->get_conf("opennms_type");
 
-        $this->conn = &ADONewConnection('pgsql');
+        $this->conn = &ADONewConnection($type);
         $this->conn->NConnect($host, $user, $pass, $base);
         return $this->conn;
     }
@@ -73,8 +75,9 @@ class ossim_db {
         $user = $this->conf->get_conf("phpgacl_user");
         $pass = $this->conf->get_conf("phpgacl_pass");
         $host = $this->conf->get_conf("phpgacl_host");
+        $type = $this->conf->get_conf("phpgacl_type");
 
-        $this->conn = &ADONewConnection('mysql');
+        $this->conn = &ADONewConnection($type);
         if ($this->conn->NConnect($host, $user, $pass, $base))
             return $this->conn;
         else

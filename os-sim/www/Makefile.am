@@ -24,20 +24,16 @@ SUBDIRS= backup \
 	vulnmeter \
 	netscan
 	
-wwwdir = $(localstatedir)/www/ossim
+wwwdir = $(datadir)/ossim/www
 www_DATA = index.php \
 	top.php
 
 EXTRA_DIST   = $(www_DATA)
 
 install-data-hook:
-	mkdir -p $(localstatedir)/www/ossim/mrtg/global_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg/host_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg/net_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg/level_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg-html/global_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg-html/host_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg-html/net_qualification
-	mkdir -p $(localstatedir)/www/ossim/mrtg-html/level_qualification
-	mkdir -p $(localstatedir)/www/ossim/tmp
+	mkdir -p $(localstatedir)/lib/ossim/rrd/host_qualification
+	mkdir -p $(localstatedir)/lib/ossim/rrd/net_qualification
+	mkdir -p $(localstatedir)/lib/ossim/rrd/global_qualification
+	mkdir -p $(localstatedir)/lib/ossim/rrd/level_qualification
+	   
 

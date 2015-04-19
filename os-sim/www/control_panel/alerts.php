@@ -36,6 +36,7 @@ require_once ('classes/Util.inc');
 
 $conf = new ossim_conf();
 $acid_link = $conf->get_conf("acid_link");
+$acid_prefix = $conf->get_conf("alert_viewer");
 
 /* connect to db */
 $db = new ossim_db();
@@ -147,8 +148,8 @@ if (!$show_all = $_GET["show_all"]) {
         <td <?php if ($alarm->get_alarm()) echo " bgcolor=\"#eeeeee\"" ?>>
         <?php 
             if (($snort_sid > 0) and ($snort_cid)) {
-                $href = "$acid_link/" . 
-                    "acid_qry_alert.php?submit=%230-%28" . 
+                $href = "$acid_link/" . $acid_prefix . 
+                    "_qry_alert.php?submit=%230-%28" . 
                     "$snort_sid-$snort_cid%29";
                 echo "&nbsp;&nbsp;<a href=\"$href\">$name</a>";
             } else {

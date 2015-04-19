@@ -60,8 +60,12 @@
     <!-- Ip and port number where the ossim server is listening -->
     <serverip>&serverip;</serverip>
     <serverport>40001</serverport>
+
     <watchdog enable="yes" interval="30"/>
     <logdir>&logdir;</logdir>
+
+    <!-- restart plugins every hour -->
+    <plugin-restart enable="yes" interval="600"/>
 
     <plugins>
     

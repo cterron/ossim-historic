@@ -76,18 +76,18 @@ class Control_panel_net {
      */
     function get_metric_list($conn, $time_range, $type) {
 
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
 
         if ($type == 'compromise') {
             $query = "SELECT * FROM control_panel
                 WHERE rrd_type = 'net' AND
                     time_range = '$time_range' 
-                ORDER BY max_c_date DESC LIMIT 50";
+                ORDER BY max_c_date DESC";
         } elseif($type == 'attack') {
             $query = "SELECT * FROM control_panel
                 WHERE rrd_type = 'net' AND
                     time_range = '$time_range' 
-                ORDER BY max_a_date DESC LIMIT 50";
+                ORDER BY max_a_date DESC";
         }
 
         if (!$rs = &$conn->Execute("$query")) 
@@ -105,20 +105,22 @@ class Control_panel_net {
                 }
                 if ($rs2->fields[0]) {
 
-                    $net_list = Net::get_list($conn,
-                        "WHERE name = '" . $rs->fields["id"] . "'");
-                    if ((false !== strpos($allowed_nets,
-                                          $net_list[0]->get_ips()))
-                        or (!$allowed_nets))
+                    if ($net_list = Net::get_list($conn,
+                        "WHERE name = '" . $rs->fields["id"] . "'"))
                     {
+                        if ((false !== strpos($allowed_nets,
+                                              $net_list[0]->get_ips()))
+                            or (!$allowed_nets))
+                        {
 
-                        $list[] = new Control_panel_net (
-                                            $rs->fields["id"],
-                                            $rs->fields["time_range"],
-                                            $rs->fields["max_c"],
-                                            $rs->fields["max_a"],
-                                            $rs->fields["max_c_date"],
-                                            $rs->fields["max_a_date"]);
+                            $list[] = new Control_panel_net (
+                                                $rs->fields["id"],
+                                                $rs->fields["time_range"],
+                                                $rs->fields["max_c"],
+                                                $rs->fields["max_a"],
+                                                $rs->fields["max_c_date"],
+                                                $rs->fields["max_a_date"]);
+                        }
                     }
                 }
                 $rs->MoveNext();

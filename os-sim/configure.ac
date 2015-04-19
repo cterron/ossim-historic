@@ -81,6 +81,10 @@ etc/server/Makefile
 etc/agent/Makefile
 etc/agent/plugins/Makefile
 etc/framework/Makefile
+etc/cron.d/Makefile
+etc/cron.daily/Makefile
+etc/init.d/Makefile
+etc/logrotate.d/Makefile
 db/Makefile
 pixmaps/Makefile
 include/Makefile
@@ -127,6 +131,7 @@ contrib/fonts/Makefile
 contrib/ntop/Makefile
 contrib/mrtg/Makefile
 contrib/arpwatch/Makefile
+contrib/acid/Makefile
 contrib/base/Makefile
 contrib/debian/Makefile
 contrib/debian/agent/Makefile
@@ -135,4 +140,6 @@ contrib/debian/httpd/Makefile
 contrib/debian/init.d/Makefile
 contrib/oinkmaster/Makefile
 contrib/spade/Makefile
+contrib/snort/Makefile
+contrib/patches/Makefile
 ])

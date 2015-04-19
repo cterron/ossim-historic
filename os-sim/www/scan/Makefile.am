@@ -1,4 +1,4 @@
-scandir = $(localstatedir)/www/ossim/scan
+scandir = $(datadir)/ossim/www/scan
 scan_DATA = deletescan.php \
 	makescan.php \
 	scan.php \

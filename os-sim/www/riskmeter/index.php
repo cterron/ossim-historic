@@ -117,7 +117,7 @@ function ordenar($a, $b){
       <td align="center">
         <a href="<?php 
             echo "../control_panel/show_image.php?range=day" . 
-                "&ip=global&what=compromise&start=N-1D&type=global&zoom=1" ?>"
+                "&ip=global_" . $_SESSION["_user"] ."&what=compromise&start=N-1D&type=global&zoom=1" ?>"
            target="new">&nbsp;<img src="../pixmaps/graph.gif" 
                                    border="0"/>&nbsp;</a>
       </td>

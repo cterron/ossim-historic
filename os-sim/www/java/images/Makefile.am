@@ -1,4 +1,4 @@
-imagesdir = $(localstatedir)/www/ossim/java/images
+imagesdir = $(datadir)/ossim/www/java/images
 images_DATA = blank.jpg \
 	cone.jpg \
 	host0.jpg \

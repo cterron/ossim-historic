@@ -8,7 +8,7 @@
     to use it like a monitor.
 -->
 <plugin id="2006" process="tcptrack" type="monitor" start="yes" enable="yes">
-    <startup>tcptrack -i &interface; -P 40003 -D</startup>
+    <startup>tcptrack -i &interface; -P 40010 -D</startup>
     <shutdown>killall -9 tcptrack</shutdown>
     <source>socket</source>
     <location>&sensor;:40003</location>

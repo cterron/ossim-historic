@@ -1,4 +1,4 @@
-editordir = $(localstatedir)/www/ossim/editor
+editordir = $(datadir)/ossim/www/editor
 editor_DATA = dir.php \
 	editor.php \
 	options.php \

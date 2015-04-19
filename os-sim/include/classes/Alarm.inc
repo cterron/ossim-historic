@@ -8,6 +8,7 @@ class Alarm {
     var $alert_id;
     var $backlog_id;
     var $timestamp;
+    var $status;
     var $since;
     var $plugin_id;
     var $plugin_sid;
@@ -23,14 +24,15 @@ class Alarm {
     var $rule_level;
     var $alarm;
 
-    function Alarm ($alert_id, $backlog_id, $timestamp, $since, $plugin_id, 
-                    $plugin_sid, $protocol, $src_ip, $dst_ip, $src_port, 
-                    $dst_port, $risk, $sensors, $snort_sid, $snort_cid, 
-                    $rule_level = "", $alarm = 1)
+    function Alarm ($alert_id, $backlog_id, $timestamp, $status, $since,
+                    $plugin_id, $plugin_sid, $protocol, $src_ip, $dst_ip, 
+                    $src_port, $dst_port, $risk, $sensors, 
+                    $snort_sid, $snort_cid, $rule_level = "", $alarm = 1)
     {
         $this->alert_id     = intval($alert_id);
         $this->backlog_id   = intval($backlog_id);
         $this->timestamp    = $timestamp;
+        $this->status       = $status;
         $this->since        = $since;
         $this->plugin_id    = intval($plugin_id);
         $this->plugin_sid   = intval($plugin_sid);
@@ -54,6 +56,7 @@ class Alarm {
     function get_alert_id()         { return $this->alert_id;       }
     function get_backlog_id()       { return $this->backlog_id;     }
     function get_timestamp()        { return $this->timestamp;      }
+    function get_status()           { return $this->status;         }
     function get_since()            { return $this->since;          }
     function get_plugin_id()        { return $this->plugin_id;      }
     function get_plugin_sid()       { return $this->plugin_sid;     }
@@ -71,22 +74,31 @@ class Alarm {
     function get_snort_cid()        { return $this->snort_cid;      }
     function get_alarm()            { return $this->alarm;          }
 
-    function get_count($conn, $src_ip = "", $dst_ip = "")
+    function get_count($conn, $src_ip = "", $dst_ip = "", $hide_closed = 1)
     {
         $count = 0;
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
 
         $query = "SELECT alert_id, src_ip, dst_ip FROM alarm ";
 
         if ($src_ip && $dst_ip)
-            $query .= " WHERE (alarm.src_ip = inet_aton('$src_ip') OR
+            $where = " WHERE (alarm.src_ip = inet_aton('$src_ip') OR
                              alarm.dst_ip = inet_aton('$dst_ip'))";
         elseif ($src_ip)
-            $query .= " WHERE alarm.src_ip = inet_aton('$src_ip') ";
+            $where = " WHERE alarm.src_ip = inet_aton('$src_ip') ";
         elseif ($dst_ip)
-            $query .= " WHERE alarm.dst_ip = inet_aton('$dst_ip') ";
+            $where = " WHERE alarm.dst_ip = inet_aton('$dst_ip') ";
         else
-            $query .= "";
+            $where = "";
+        
+        if ($hide_closed == 1) {
+            if ($where == "")
+                $where = " WHERE alarm.status = 'open' ";
+            else
+                $where = " AND (alarm.status = 'open') ";
+        }
+        
+        $query = $query . $where;
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -190,19 +202,27 @@ class Alarm {
         return $since;
     }
 
-    function get_list($conn, $src_ip, $dst_ip, $order, $inf = 0, $sup = 25)
+    function get_list($conn, $src_ip, $dst_ip, $hide_closed = 1,
+                      $order, $inf = 0, $sup = 25)
     {
 
         /* ip filter */
         if ($src_ip and $dst_ip) {
-            $where .= " WHERE inet_aton('$src_ip') = src_ip OR
-                inet_aton('$dst_ip') = dst_ip ";
+            $where .= " WHERE (inet_aton('$src_ip') = src_ip OR
+                inet_aton('$dst_ip') = dst_ip) ";
         } elseif ($src_ip) {
-            $where .= " WHERE inet_aton('$src_ip') = src_ip ";
+            $where .= " WHERE (inet_aton('$src_ip') = src_ip) ";
         } elseif ($dst_ip) {
-            $where .= " WHERE inet_aton('$dst_ip') = dst_ip ";
+            $where .= " WHERE (inet_aton('$dst_ip') = dst_ip) ";
         } else {
             $where = "";
+        }
+        
+        if ($hide_closed == 1) {
+            if ($where == "")
+                $where = " WHERE alarm.status = 'open' ";
+            else
+                $where = " AND (alarm.status = 'open') ";
         }
 
         /* number of alerts per page */
@@ -216,7 +236,7 @@ class Alarm {
             return array();
         }
 
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
         while (!$rs->EOF) 
         {
             if ((Net::isIpInNet($rs->fields["src_ip"], $allowed_nets) or
@@ -227,6 +247,7 @@ class Alarm {
                     $rs->fields["alert_id"],
                     $rs->fields["backlog_id"],
                     $rs->fields["timestamp"],
+                    $rs->fields["status"],
                     Alarm::__get_since($conn, 
                                        $rs->fields["alert_id"],
                                        $rs->fields["backlog_id"]),
@@ -299,7 +320,7 @@ class Alarm {
 
         foreach ($alerts as $alert_id) {
 
-            $allowed_nets = Session::getValue();
+            $allowed_nets = Session::allowedNets();
 
             $array_backlog_id = $array_since = $array_sensor = NULL;
             if (is_array($backlog_ids))
@@ -391,6 +412,28 @@ class Alarm {
         $expand = false;
     
         $query = "SELECT backlog_alert.alert_id AS alert_id, 
+                         backlog_alert.backlog_id AS backlog_id, 
+                         alert.timestamp AS backlog_time,
+                         alert.timestamp AS timestamp,
+                         alert.plugin_id AS plugin_id,
+                         alert.plugin_sid AS plugin_sid,
+                         alert.protocol AS protocol,
+                         inet_ntoa(alert.src_ip) AS src_ip, 
+                         inet_ntoa(alert.dst_ip) AS dst_ip, 
+                         alert.src_port AS src_port,
+                         alert.dst_port AS dst_port,
+                         alert.risk_a AS risk,
+                         alert.sensor AS sensor,
+                         alert.snort_sid AS snort_sid,
+                         alert.snort_cid AS snort_cid,
+                         alert.alarm AS alarm,
+                         backlog_alert.rule_level AS rule_level
+            FROM backlog_alert, alert
+            WHERE backlog_alert.alert_id = alert.id AND
+                backlog_alert.backlog_id = $backlog_id ";
+/*
+//    Doesn't work:
+        $query = "SELECT backlog_alert.alert_id AS alert_id, 
                          backlog.id AS backlog_id, 
                          backlog.timestamp AS backlog_time,
                          alert.timestamp AS timestamp,
@@ -411,6 +454,8 @@ class Alarm {
             WHERE backlog_alert.alert_id = alert.id AND
                 backlog.id = backlog_alert.backlog_id AND
                 backlog.id = $backlog_id ";
+                */
+ 
                 
         if (!$show_all) {
             $query .= " AND alert.alarm = 1 ";
@@ -435,6 +480,7 @@ class Alarm {
                             $rs->fields["alert_id"],
                             $rs->fields["backlog_id"],
                             $rs->fields["timestamp"],
+                            "", /* status */
                             $rs->fields["backlog_time"],
                             $rs->fields["plugin_id"],
                             $rs->fields["plugin_sid"],
@@ -535,6 +581,17 @@ class Alarm {
                 $rs->MoveNext();
             }
         }
+    }
+
+    function close($conn, $alert_id)
+    {
+        $query = "UPDATE alarm SET status = 'closed', timestamp = timestamp 
+            WHERE alert_id = '$alert_id'";
+        if ($conn->Execute($query) === false) {
+            print 'error closing alarm: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        }
+
     }
 
     function delete($conn, $alert_id)

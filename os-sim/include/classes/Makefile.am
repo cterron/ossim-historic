@@ -1,5 +1,6 @@
-classesdir   = $(datadir)/ossim/php/classes
-classes_DATA = Alarm.inc \
+classesdir   = $(datadir)/ossim/include/classes
+classes_DATA = About.inc \
+    Alarm.inc \
 	Alert.inc \
 	Backlog.inc \
 	Backlog_alert.inc \

@@ -80,6 +80,11 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         if($_POST["nessus"]) {
             Host_scan::insert ($conn, $ip, 3001, 0);
         }
+    } else {
+        Host::update ($conn, $ip, $hostname, $asset,
+                      $threshold_c, $threshold_a, $rrd_profile, $alert,
+                      $persistence, $nat, $sensors, $descr,
+                      $os, $mac, $mac_vendor);
     }
 
 

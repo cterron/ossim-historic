@@ -1,4 +1,4 @@
-portdir = $(localstatedir)/www/ossim/port
+portdir = $(datadir)/ossim/www/port
 port_DATA = modifyport.php \
 	newport.php \
 	newsingleport.php \

@@ -60,7 +60,7 @@ class Control_panel_host {
      */
     function get_metric_list($conn, $time_range, $type) 
     {
-        $allowed_nets = Session::getValue();
+        $allowed_nets = Session::allowedNets();
 
         if ($type == 'compromise') {
             $query = "SELECT * FROM control_panel 
@@ -98,7 +98,7 @@ class Control_panel_host {
                     ((!strcmp($type, 'attack')) and 
                         ($rs->fields["max_a"] > $threshold))) 
                 {
-                    if ((Net::isIpInNet($rs->fields["host_ip"],
+                    if ((Net::isIpInNet($rs->fields["id"],
                                         $allowed_nets)) or
                         (!$allowed_nets))
                     {

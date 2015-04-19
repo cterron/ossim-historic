@@ -80,7 +80,12 @@ $graph_link = $framework_conf->get_conf("graph_link");
 $acid_link = $framework_conf->get_conf("acid_link");
 $use_svg_graphics = $framework_conf->get_conf("use_svg_graphics");
 
-if (!$range = mysql_escape_string($_GET["range"]))  $range = 'day';
+/* range select (day, week, month or year) */
+if (array_key_exists('range', $_GET))
+    $range = mysql_escape_string($_GET["range"]);
+else
+    $range = 'day';
+
 
 /* connect to db */
 $db = new ossim_db();

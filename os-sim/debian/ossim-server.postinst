@@ -53,8 +53,3 @@ update-rc.d ossim-server defaults 40 2&> /dev/null
 #/etc/init.d/ossim-server restart
 
 
-# temporal
-update-rc.d -f ossimserver remove > /dev/null
-rm -f /etc/init.d/ossimserver
-
-

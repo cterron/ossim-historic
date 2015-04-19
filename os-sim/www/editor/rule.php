@@ -95,7 +95,7 @@ function isSetOption($option, $line) {
   </tr>
 
 <?php
-if (!$fd = fopen ($snort_rules_path . $rule_name, "r")) {
+if (!$fd = fopen ("$snort_rules_path/$rule_name", "r")) {
     echo "Error opening file\n";
     exit;
 }

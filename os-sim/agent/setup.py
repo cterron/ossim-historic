@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
+import glob, os
 from distutils.core import setup
 
 man  = [ ('share/man/man8', ['doc/ossim-agent.8.gz']) ]
 doc  = [ ('share/doc/ossim-agent', ['doc/config.dtd', 'doc/config.xml.sample', 'INSTALL', 'COPYING', 'AUTHORS'] ) ]
-data = man + doc
+lib  = [ ('share/ossim-agent/pyossim/', 
+    glob.glob(os.path.join('pyossim', '*.py'))) ]
+data = man + doc + lib
 
 from pyossim.__init__ import VERSION
 
@@ -15,7 +18,7 @@ setup (
     author          = "OSSIM Development Team",
     author_email    = "ossim@ossim.net",
     url             = "http://www.ossim.net",
-    packages        = [ 'pyossim' ],
+#    packages        = [ 'pyossim' ],
     scripts         = [ 'ossim-agent' ],
     data_files      = data
 )

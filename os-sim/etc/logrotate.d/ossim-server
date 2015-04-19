@@ -1,0 +1,10 @@
+/var/log/ossim/server.log {
+    rotate 5
+    compress
+    missingok
+    notifempty
+    size=1G
+    postrotate
+        /etc/init.d/ossim-server restart > /dev/null 2>&1
+    endscript
+}

@@ -1,6 +1,6 @@
-SUBDIRS = os
+SUBDIRS = os top
 
-pixmapsdir = $(localstatedir)/www/ossim/pixmaps
+pixmapsdir = $(datadir)/ossim/www/pixmaps
 pixmaps_DATA = arrow.gif \
 	arrow2.gif \
 	gauge-green.jpg \

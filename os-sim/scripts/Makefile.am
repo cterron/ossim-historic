@@ -1,7 +1,6 @@
 scriptsdir   = $(datadir)/ossim/scripts
 scripts_SCRIPTS = rrd_plugin.pl \
     chkconfig.pl \
-	control_panel.py \
 	create_sidmap.pl \
 	do_nessus.pl \
 	draw_graph.pl \
@@ -12,7 +11,6 @@ scripts_SCRIPTS = rrd_plugin.pl \
 	netbios.pl \
 	services.pl \
 	update_nessus_ids.pl \
-	backupdb.pl \
 	acid_cache.pl \
 	test-directive.pl \
 	restoredb.pl
