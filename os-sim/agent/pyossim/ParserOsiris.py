@@ -21,8 +21,8 @@ class ParserOsiris(Parser.Parser):
 
 
         # [213][gestalt][cmp][/sw/bin/gtk-config][ctime][Tue Apr 20 19:20:41 2004,Sun Jul 25 02:59:00 2004]
-        event_pattern = '\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]'
-        event_pattern_ext = '\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\](.*)'
+        event_pattern = '^\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]'
+        event_pattern_ext = '^\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\]\[([^\]]*)\](.*)'
 
         file_pattern = '(.*)logs/\d+'
         host_pattern = 'host\s+=\s+(\d+.\d+.\d+.\d+)'
@@ -116,27 +116,43 @@ class ParserOsiris(Parser.Parser):
             else:
                 result = re.findall(str(event_pattern), line)
                 try: 
-                    (sid, src_name, type, what) = result[0]
+                    (sid, src_name, type, target, what) = result[0]
+                    data = ""
                     if type == "cmp" or type == "missing":
                         result = re.findall(str(event_pattern_ext), line)
                         try:
-                            (sid, src_name, type, what, data) = result[0]
+                            (sid, src_name, type, target, what, data) = result[0]
                         except IndexError:
                             pass
 
-                    self.agent.sendAlert  (type = 'detector',
-                                     date       = date,
-                                     sensor     = self.plugin["sensor"],
-                                     interface  = self.plugin["interface"],
-                                     plugin_id  = self.plugin["id"],
-                                     plugin_sid = sid,
-                                     priority   = 1,
-                                     protocol   = '',
-                                     src_ip     = src,
-                                     src_port   = '',
-                                     dst_ip     = '',
-                                     dst_port   = '',
-                                     log = line)
+#                    self.agent.sendHidsEvent (host = src,
+#                                    hostname = src_name,
+#                                    event_type = type,
+#                                    target = what,
+#                                    extra_data = data,
+#                                    sensor = self.plugin["sensor"],
+#                                    date = date,
+#                                    plugin_id = self.plugin["id"],
+#                                    plugin_sid = sid,
+#                                    log = line)
+
+                    self.agent.sendHidsEvent (src, src_name, type, target, what, data, self.plugin["sensor"], date, self.plugin["id"], sid, line)
+
+
+
+#                    self.agent.sendAlert  (type = 'detector',
+#                                     date       = date,
+#                                     sensor     = self.plugin["sensor"],
+#                                     interface  = self.plugin["interface"],
+#                                     plugin_id  = self.plugin["id"],
+#                                     plugin_sid = sid,
+#                                     priority   = 1,
+#                                     protocol   = '',
+#                                     src_ip     = src,
+#                                     src_port   = '',
+#                                     dst_ip     = '',
+#                                     dst_port   = '',
+#                                     log = line)
                 except IndexError: 
                     pass
 
@@ -181,6 +197,7 @@ class ParserOsiris(Parser.Parser):
                 result = re.findall(str(pattern), line)
                 try: 
                     (monthmm, day, hour, minute, second, sensor, sid, target, src, count) = result[0]
+
                     
                     year = time.strftime('%Y', time.localtime(time.time()))
                     datestring = "%s %s %s %s %s %s" % \

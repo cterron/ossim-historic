@@ -5,13 +5,13 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
 
 <html>
 <head>
-  <title> Riskmeter </title>
+  <title> <?php echo gettext("Riskmeter"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Priority and Reliability configuration</h1>
+  <h1> <?php echo gettext("Priority and Reliability configuration"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -25,13 +25,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
     <table align="center">
       <tr>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("id", $order); ?>">Id</a></th>
+                echo ossim_db::get_order("id", $order); ?>"> 
+		<?php echo gettext("Id"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("name", $order); ?>">Name</a></th>
+                echo ossim_db::get_order("name", $order); ?>"> 
+		<?php echo gettext("Name"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("type", $order); ?>">Type</a></th>
+                echo ossim_db::get_order("type", $order); ?>"> 
+		<?php echo gettext("Type"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("type", $order); ?>">Description</a></th>
+                echo ossim_db::get_order("type", $order); ?>"> 
+		<?php echo gettext("Description"); ?> </a></th>
       </tr>
 
 <?php

@@ -12,6 +12,14 @@ define ("ACL_DEFAULT_DOMAIN_NETS",      "Nets");
 
 
 $ACL_MAIN_MENU = array (
+    "MainMenu" => array 
+        (
+            "Index" => array
+                (
+                    "name"          => "Main Menu & Top frame",
+                    "default_perm"  => True
+                )
+        ),
 
     "MenuControlPanel"  => array
         (

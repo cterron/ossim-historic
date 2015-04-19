@@ -1,0 +1,194 @@
+ossim (0.9.8rc1-1) unstable; urgency=low
+
+  * New CVS version. 0.9.8 is incoming..
+
+ -- David Gil <dgil@ossim.net>  Mon, 31 Jan 2005 17:25:22 +0100
+
+ossim (0.9.7+cvs20050127-1) unstable; urgency=low
+
+  * New CVS version. Locale and language fixes.
+
+ -- David Gil <dgil@ossim.net>  Thu, 27 Jan 2005 17:54:27 +0100
+
+ossim (0.9.7+cvs20050126-1) unstable; urgency=low
+
+  * New CVS version.
+
+ -- David Gil <dgil@ossim.net>  Wed, 26 Jan 2005 19:07:08 +0100
+
+ossim (0.9.7+cvs20050117-1) unstable; urgency=low
+
+  * New CVS version.
+
+ -- David Gil <dgil@ossim.net>  Wed, 19 Jan 2005 02:04:56 +0100
+
+ossim (0.9.7+cvs20050114-1) unstable; urgency=low
+
+  * New CVS version. Expected a lot of changes during the next weeks.
+
+ -- David Gil <dgil@ossim.net>  Fri, 14 Jan 2005 15:21:06 +0100
+
+ossim (0.9.7+cvs20041223-7) unstable; urgency=low
+
+  * ossim-framework.cron.d fixes
+
+ -- David Gil <dgil@ossim.net>  Tue, 11 Jan 2005 23:12:44 +0100
+
+ossim (0.9.7+cvs20041223-6) unstable; urgency=low
+
+  * debian/rules: dh_installdebconf, dh_installcron (ossim-framework.cron.d)
+
+ -- David Gil <dgil@ossim.net>  Mon, 10 Jan 2005 13:12:37 +0100
+
+ossim (0.9.7+cvs20041223-5) unstable; urgency=low
+
+  * Fixed bug that fixed server bug related to active sensors
+
+ -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 18:12:36 +0100
+
+ossim (0.9.7+cvs20041223-4) unstable; urgency=low
+
+  * Fixed server bug related with active sensors
+
+ -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 11:49:09 +0100
+
+ossim (0.9.7+cvs20041223-3) unstable; urgency=low
+
+  * debian/control: added mysql-4.1 to ossim-mysql dependencies (mysql-4.0 is
+    installed by default)
+
+ -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 10:12:32 +0100
+
+ossim (0.9.7+cvs20041223-2) unstable; urgency=low
+
+  * debian/ossim-framework.postinst: Impossible to upgrade due to a postinst
+    error, fixed using another way to check if apache or apache-ssl are
+    installed
+  * debian/framework/ossim.cron.d: run backupdb script as root user
+  * debian/INSTALL: added ossim-contrib and TODO section
+
+ -- David Gil <dgil@ossim.net>  Mon, 03 Jan 2005 15:12:14 +0100
+
+ossim (0.9.7+cvs20041223-1) unstable; urgency=low
+
+  * The Happy Christmas CVS release.
+
+ -- David Gil <dgil@ossim.net>  Thu, 23 Dec 2004 13:09:29 +0100
+
+ossim (0.9.7+cvs20041201-1) unstable; urgency=low
+
+  * New CVS version.
+
+ -- David Gil <dgil@ossim.net>  Wed, 01 Dec 2004 18:43:40 +0100
+
+ossim (0.9.7+cvs20041119-2) unstable; urgency=low
+
+  * Impossible to upgrade due to a ossim-framework.postinst error.
+
+ -- David Gil <dgil@ossim.net>  Fri, 19 Nov 2004 19:45:32 +0100
+
+ossim (0.9.7+cvs20041119-1) unstable; urgency=low
+
+  * New CVS version.
+  * debian/ossim-framework.postinst: apache and/or apache-ssl restart after
+    ossim-framework update.
+
+ -- David Gil <dgil@ossim.net>  Fri, 19 Nov 2004 13:46:55 +0100
+
+ossim (0.9.7+cvs20041115-2) unstable; urgency=low
+
+  * New ossim-contrib package with a lot of patches and sample files.
+
+ -- David Gil <dgil@ossim.net>  Mon, 15 Nov 2004 18:20:02 +0100
+
+ossim (0.9.7+cvs20041115-1) unstable; urgency=low
+
+  * New CVS version.
+  * New ossim-server templates.
+
+ -- David Gil <dgil@ossim.net>  Mon, 15 Nov 2004 12:59:40 +0100
+
+ossim (0.9.7+cvs20041112-1) unstable; urgency=low
+
+  * New CVS version.
+  * New ossim-agent template, plugins.
+  * Multiselect template type depends on debconf (>= 0.2.26)
+
+ -- David Gil <dgil@ossim.net>  Fri, 12 Nov 2004 13:09:57 +0100
+
+ossim (0.9.7+cvs20041105-3) unstable; urgency=low
+
+  * New ossim-agent and ossim-utils debconf templates.
+
+ -- David Gil <dgil@ossim.net>  Thu, 11 Nov 2004 18:07:14 +0100
+
+ossim (0.9.7+cvs20041105-2) unstable; urgency=low
+
+  * Manage directories with .dirs files.
+  * Added debconf message in ossim-mysql package (Learning debconf templates)
+  * Less restrictive dependencies (Trying to compile ossim on a Ubuntu system)
+  * Added ttf-bitstream-vera to ossim-framework dependencies (rrd fonts)
+
+ -- David Gil <dgil@ossim.net>  Mon, 08 Nov 2004 13:17:30 +0100
+
+ossim (0.9.7+cvs20041105-1) unstable; urgency=low
+
+  * New CVS version.
+  * Install OSSIM ChangeLog into /usr/share/ossim-*/changelog.gz
+  * Install an specific debian INSTALL file into /usr/share/ossim-*
+
+ -- David Gil <dgil@ossim.net>  Fri, 05 Nov 2004 13:35:56 +0100
+
+ossim (0.9.7+cvs20041102-6) unstable; urgency=low
+
+  * Added libdbi-perl and libdbd-mysql-perl to ossim-utils depends
+  * Moved /etc/ossim/framework/ossim.conf config file to ossim-utils package
+
+ -- David Gil <dgil@ossim.net>  Thu, 04 Nov 2004 17:44:46 +0100
+
+ossim (0.9.7+cvs20041102-5) unstable; urgency=low
+
+  * Install ossim-agent using python distutils
+  * Added python-dev and automake to build-depends
+  * Added ossim-utils to ossim-agent suggestes, since it include rrd_plugin
+  * /etc/init.d/ossim cleanup
+  * Updated phpgacl apache configuration
+
+ -- David Gil <dgil@ossim.net>  Thu, 04 Nov 2004 11:04:29 +0100
+
+ossim (0.9.7+cvs20041102-4) unstable; urgency=low
+
+  * Moved /usr/share/ossim-framework and /usr/share/ossim-utils
+    to /usr/share/ossim
+  * Moved /usr/lib/ossim/backup to /var/lib/ossim/backup
+
+ -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 16:23:04 +0100
+
+ossim (0.9.7+cvs20041102-3) unstable; urgency=low
+
+  * debian/db/ossim_config.sql: specific debian configuration
+  * debian/ossim.postrm: added update-rc.d -f ossim remove
+  * debian/control: added (apache | apache-ssl) to dependencies
+
+ -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 14:30:05 +0100
+
+oossim (0.9.7+cvs20041102-2) unstable; urgency=low
+
+  * debian/rules: perms update
+  * debian/control: depends update
+
+ -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 10:48:51 +0100
+
+ossim (0.9.7+cvs20041102-1) unstable; urgency=low
+
+  * Agent bugfixes
+  * Jfreechart applets
+
+ -- David Gil <dgil@ossim.net>  Tue, 02 Nov 2004 12:31:40 +0100
+
+ossim (0.9.7-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- David Gil <dgil@ossim.net>  Sat, 30 Oct 2004 15:35:19 +0000
+

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!-- iptables detector -->
+<plugin id="1503" process="" type="detector" start="no" enable="yes">
+    <startup></startup>
+    <shutdown></shutdown>
+    <source>syslog</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <!-- debian users should point location to /var/log/syslog -->
+    <location>/var/log/messages</location>
+</plugin>
+

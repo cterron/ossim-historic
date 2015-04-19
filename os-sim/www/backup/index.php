@@ -17,12 +17,13 @@ function str2timestamp($str) {
 
 function array2str ($arr) {
 	$str = "";
+    if(is_array($arr)){
 	while (list($key, $value) = each ($arr)) {
 		if ($str == "")
    		$str = $value;
    	else
    		$str .= "," . $value;
-   }
+   }}
    return $str;
 }
 

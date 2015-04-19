@@ -1,6 +1,10 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
+?>
 <html>
 <head>
-  <title> Control Panel </title>
+  <title> <?php echo gettext("Control Panel"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
@@ -9,14 +13,14 @@
 
 <?php
     if (!$backlog_id = $_GET["backlog_id"]) {
-        echo "Backlog ID required";
+        echo gettext("Backlog ID required"); 
         exit();
     }
     if ($_GET["alert_id"]) {
         $alert_id = $_GET["alert_id"];
     }
 ?>
-  <h1 align="center">Alarms/Alerts</h1>
+  <h1 align="center"> <?php echo gettext("Alarms/Alerts"); ?> </h1>
 
 <?php
 require_once ('ossim_db.inc');
@@ -44,23 +48,38 @@ if (!$show_all = $_GET["show_all"]) {
     <table width="100%">
    
        <tr>
-         <td colspan="9"><a href="alarm_console.php">Back to main</a></td>
+         <td colspan="9"><a href="alarm_console.php"> <?php echo gettext("Back to main"); ?> </a></td>
        </tr>
    
        <tr>
         <td></td>
         <th>#</th>
-        <th>Id</th>
-        <th>Alarm</th>
-        <th>Risk</th>
-        <th>Date</th>
-        <th>Source</th>
-        <th>Destination</th>
-        <th>Correlation Level</th>
-        <th>Action</th>
+        <th> <?php echo gettext("Id"); ?> </th>
+        <th> <?php echo gettext("Alarm"); ?> </th>
+        <th> <?php echo gettext("Risk"); ?> </th>
+        <th> <?php echo gettext("Date"); ?> </th>
+        <th> <?php echo gettext("Source"); ?> </th>
+        <th> <?php echo gettext("Destination"); ?> </th>
+        <th> <?php echo gettext("Correlation Level"); ?> </th>
+        <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php
+    $have_scanmap = $conf->get_conf("have_scanmap3d");
+    if($have_scanmap = 0 && $show_all){
+       // Generate scanmap datafile
+       $base_dir = $conf->get_conf("base_dir");
+
+       if(!file_exists("$base_dir/tmp/$backlog_id.txt")){
+            $backlog_file = fopen("$base_dir/tmp/$backlog_id.txt","w");
+            if(!$backlog_file) $have_scanmap = 0;
+       } else {
+       $have_scanmap = 0;
+       }
+    } else {
+    $have_scanmap = 0;
+    }
+
     if ($alarm_list = Alarm::get_alerts($conn, $backlog_id, $show_all, $alert_id))
     {
         $count_alerts = 0;
@@ -75,8 +94,13 @@ if (!$show_all = $_GET["show_all"]) {
             $snort_cid = $alarm->get_snort_cid();
 
             /* get plugin_id and plugin_sid names */
+
+            /*
+             * never used?
+             *
             $plugin_id_list = Plugin::get_list($conn, "WHERE id = $id");
             $id_name = $plugin_id_list[0]->get_name();
+             */
 
             $sid_name = "";
             if ($plugin_sid_list = Plugin_sid::get_list
@@ -134,12 +158,17 @@ if (!$show_all = $_GET["show_all"]) {
         
         <!-- risk -->
 <?php 
-        $date = timestamp2date($alarm->get_timestamp());
+        $orig_date = $alarm->get_timestamp();
+        $date = timestamp2date($orig_date);
 
         $src_ip   = $alarm->get_src_ip();
         $dst_ip   = $alarm->get_dst_ip();
         $src_port = $alarm->get_src_port();
         $dst_port = $alarm->get_dst_port();
+
+        if($have_scanmap){
+        fwrite($backlog_file,"$orig_date,$src_ip,$src_port,$dst_ip,$dst_port\n");
+        }
 
         if ($risk  > 7) {
             echo "<td bgcolor=\"red\"><b>";
@@ -208,12 +237,19 @@ if (!$show_all = $_GET["show_all"]) {
             <tr>
             <td colspan=\"3\"></td>
             <td colspan=\"6\">
-              <b>Alarm Summary</b> [ 
-              Total Alerts: $summ_count &nbsp;-&nbsp; 
-              Unique Dst IPAddr: $summ_dst_ips &nbsp;-&nbsp; 
-              Unique Types: $summ_types &nbsp;-&nbsp; 
-              Unique Dst Ports: $summ_dst_ports
-              ]
+              <b>" . gettext("Alarm Summary") ."</b> [ ";
+               printf(gettext("Total Alerts: %d"), $summ_count); echo "&nbsp;-&nbsp;";
+               printf(gettext("Unique Dst IPAddr: %d"), $summ_dst_ips); echo "&nbsp;-&nbsp;";  
+               printf(gettext("Unique Types: %d"), $summ_types); echo "&nbsp;-&nbsp;";  
+               printf(gettext("Unique Dst Ports: %d"), $summ_dst_ports); echo " ] ";
+              if($conf->get_conf("have_scanmap3d")){
+              echo
+              "
+              - [ <a href=\"visualize.php?backlog_id=$backlog_id\"> " . gettext("Visualize alarm") . " </a> ]
+              ";
+              }
+              echo
+              "
             </td>
         ";
 /*
@@ -255,6 +291,7 @@ if (!$show_all = $_GET["show_all"]) {
 
 
 <?php
+if($have_scanmap) fclose($backlog_file);
 $db->close($conn);
 ?>
 

@@ -125,6 +125,16 @@ CREATE TABLE sensor (
     PRIMARY KEY     (name)
 );
 
+DROP TABLE IF EXISTS sensor_interfaces;
+CREATE TABLE sensor_interfaces (
+    sensor  varchar(64) NOT NULL,
+    interface varchar(64) NOT NULL,
+    name    varchar(255) NOT NULL,
+    main    int NOT NULL,
+    PRIMARY KEY (sensor, interface)
+);
+
+
 DROP TABLE IF EXISTS host_sensor_reference;
 CREATE TABLE host_sensor_reference (
     host_ip         varchar(15) NOT NULL,
@@ -394,7 +404,7 @@ CREATE TABLE alert (
         dst_ip          INTEGER UNSIGNED,
         src_port        INTEGER,
         dst_port        INTEGER,
-        condition       INTEGER,
+        alert_condition       INTEGER,
         value           TEXT,
         time_interval   INTEGER,
         absolute        TINYINT,
@@ -605,4 +615,22 @@ CREATE TABLE restoredb_log (
 	status		SMALLINT,
 	percent		SMALLINT,
 	PRIMARY KEY (id)
+);
+
+--
+-- HIDS (Osiris) Support
+--
+
+DROP TABLE IF EXISTS host_ids;
+CREATE TABLE host_ids(
+ip              INTEGER UNSIGNED NOT NULL,
+date            DATETIME NOT NULL,
+hostname        VARCHAR(255) NOT NULL,
+sensor          VARCHAR(255) NOT NULL,
+sid             INTEGER UNSIGNED NOT NULL,
+event_type            VARCHAR(255) NOT NULL,
+what            VARCHAR(255) NOT NULL,
+target          VARCHAR(255) NOT NULL,
+extra_data      VARCHAR(255) NOT NULL,
+PRIMARY KEY     (ip,target,sid,date)
 );

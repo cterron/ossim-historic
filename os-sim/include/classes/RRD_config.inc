@@ -76,12 +76,26 @@ class RRD_config {
                      $threshold, $priority, $alpha, $beta,
                      $persistence, $enable, $description = "")
     {
+        $profile = htmlentities($profile);
+        $profile = mysql_escape_string($profile);
+        $rrd_attrib = htmlentities($rrd_attrib);
+        $rrd_attrib = mysql_escape_string($rrd_attrib);
+        $description = htmlentities($description);
+        $description = mysql_escape_string($description);
+        $enable = htmlentities($enable);
+        $threshold = intval($threshold);
+        $priority = intval($priority);
+        $alpha = intval($alpha);
+        $beta = intval($beta);
+        $persistence = intval($persistence);
+
         $query = "INSERT INTO rrd_config (
             profile, rrd_attrib, threshold, priority,
             alpha, beta, persistence, enable, description) VALUES
                 ('$profile', '$rrd_attrib', '$threshold', '$priority',
                 '$alpha', '$beta', '$persistence', '$enable', '$description');";
         if ($conn->Execute($query) === false) {
+            print "AAAAAAAAAAA<BR>";
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

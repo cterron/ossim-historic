@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Sensors</h1>
+  <h1> <?php echo gettext("Sensors"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -28,21 +28,26 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">Ip</a></th>
+          ?>">
+	  <?php echo gettext("Ip"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("name", $order);
-          ?>">Hostname</a></th>
+          ?>">
+	  <?php echo gettext("Hostname"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("priority", $order);
-          ?>">Priority</a></th>
+          ?>">
+	  <?php echo gettext("Priority"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("port", $order);
-          ?>">Port</a></th>
+          ?>">
+	  <?php echo gettext("Port"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("connect", $order);
-          ?>">Active</a></th>
-      <th>Description</th>
-      <th>Action</th>
+          ?>">
+	  <?php echo gettext("Active"); ?> </a></th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php
@@ -91,8 +96,12 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       <td><?php echo $sensor->get_descr(); ?></td>
       <td>
 <!--        <a href="editsensor.php?ip=<?php //echo $ip ?>">Remote edit</a>* -->
-        <a href="modifysensorform.php?name=<?php echo $name ?>">Modify</a>
-        <a href="deletesensor.php?name=<?php echo $name ?>">Delete</a></td>
+        [ <a href="modifysensorform.php?name=<?php echo $name ?>">
+	<?php echo gettext("Modify"); ?> </a> |
+        <a href="deletesensor.php?name=<?php echo $name ?>">
+	<?php echo gettext("Delete"); ?> </a> |
+        <a href="interfaces.php?sensor=<?php echo $name ?>">
+	<?php echo gettext("Interfaces"); ?> </a> ]</td>
     </tr>
 
 <?php
@@ -114,9 +123,8 @@ functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partia
 ?>
     <tr><td colspan="7"></td></tr>
     <tr>
-      <td colspan="7"><font color="red"><b>Warning</b></font>:
-        the following sensor(s) are being reported as enabled by 
-        the server but aren't configured.
+      <td colspan="7"><font color="red"><b> <?php echo gettext("Warning"); ?> </b></font>:
+        <?php echo gettext("the following sensor(s) are being reported as enabled by the server but aren't configured"); ?> .
       </td>
     </tr>
 <?php
@@ -128,9 +136,10 @@ functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partia
       <td>-</td>
       <td>-</td>
       <td>-</td>
-      <td><font color="green"><b>YES</b></font></td>
+      <td><font color="green"><b> <?php echo gettext("YES"); ?> </b></font></td>
       <td>-</td>
-      <td><a href="newsensorform.php?ip=<?php echo $ip_diff ?>">Insert</a></td>
+      <td><a href="newsensorform.php?ip=<?php echo $ip_diff ?>"> 
+      <?php echo gettext("Insert"); ?> </a></td>
     </tr>
     <tr><td colspan="7"></td></tr>
 <?php
@@ -138,10 +147,10 @@ functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partia
     }
 ?>
     <tr>
-      <td colspan="10"><a href="newsensorform.php">Insert new sensor</a></td>
+      <td colspan="10"><a href="newsensorform.php"> <?php echo gettext("Insert new sensor"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="10"><a href="../conf/reload.php?what=sensors">Reload</a></td>
+      <td colspan="10"><a href="../conf/reload.php?what=sensors"> <?php echo gettext("Reload"); ?> </a></td>
     </tr>
 </table>
 

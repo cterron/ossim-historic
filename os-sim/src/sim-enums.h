@@ -43,8 +43,11 @@ extern "C" {
 
 #define SIM_DELIMITER_LIST          ","
 #define SIM_DELIMITER_LEVEL         ":"
+#define SIM_DELIMITER_RANGE         "-"
 #define SIM_IN_ADDR_ANY_CONST       "ANY"
 #define SIM_IN_ADDR_ANY_IP_STR      "0.0.0.0"
+
+#define SIM_HOME_NET_CONST          "HOME_NET"
 
 #define SIM_SRC_IP_CONST            "SRC_IP"
 #define SIM_DST_IP_CONST            "DST_IP"
@@ -208,6 +211,7 @@ typedef enum {
   SIM_COMMAND_TYPE_HOST_OS_CHANGE,
   SIM_COMMAND_TYPE_HOST_MAC_CHANGE,
   SIM_COMMAND_TYPE_HOST_SERVICE_NEW,
+  SIM_COMMAND_TYPE_HOST_IDS_EVENT,
   SIM_COMMAND_TYPE_OK,
   SIM_COMMAND_TYPE_ERROR
 } SimCommandType;

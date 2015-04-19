@@ -23,6 +23,7 @@ pyossim/ParserCiscoPIX.py
 pyossim/ParserFW1.py
 pyossim/ParserIIS.py
 pyossim/ParserIptables.py
+pyossim/ParserNetgear.py
 pyossim/ParserNTsyslog.py
 pyossim/ParserOsiris.py
 pyossim/ParserP0f.py
@@ -30,6 +31,7 @@ pyossim/ParserPads.py
 pyossim/ParserPrelude.py
 pyossim/ParserRRD.py
 pyossim/ParserRealSecure.py
+pyossim/ParserSkel.py
 pyossim/ParserSnort.py
 pyossim/ParserSyslog.py
 pyossim/Plugin.py

@@ -3,6 +3,7 @@ SUBDIRS= backup \
 	control_panel \
 	directives \
 	editor \
+    hids \
 	host \
 	incidents \
     java \
@@ -15,7 +16,6 @@ SUBDIRS= backup \
 	riskmeter \
 	rrd_conf \
 	scan \
-	sec_report \
 	sensor \
 	session \
 	setup \
@@ -24,7 +24,7 @@ SUBDIRS= backup \
 	vulnmeter
 
 wwwdir = $(localstatedir)/www/ossim
-www_DATA = index.html \
+www_DATA = index.php \
 	top.php
 
 EXTRA_DIST   = $(www_DATA)

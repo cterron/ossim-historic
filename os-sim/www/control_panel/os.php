@@ -5,14 +5,14 @@ Session::logcheck("MenuReports", "ReportsAnomalies");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>OSSIM Framework - OS list</h1>
+  <h1> <?php echo gettext("OSSIM Framework - OS list"); ?> </h1>
 
 <?php
 require_once 'ossim_db.inc';
@@ -28,11 +28,11 @@ $args = "ORDER by $order LIMIT $offset,$count ";
 
 <ul>
 <li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
-intval($offset); ?>&count=10&order=<?php echo $order ?>"> Show 10 </a> 
+intval($offset); ?>&count=10&order=<?php echo $order ?>"> <?php echo gettext("Show 10"); ?> </a> 
 <li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
-intval($offset); ?>&count=50&order=<?php echo $order ?>"> Show 50 </a> 
+intval($offset); ?>&count=50&order=<?php echo $order ?>"> <?php echo gettext("Show 50"); ?> </a> 
 <li> <a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
-intval($offset); ?>&count=100&order=<?php echo $order ?>"> Show 100 </a> 
+intval($offset); ?>&count=100&order=<?php echo $order ?>"> <?php echo gettext("Show 100"); ?> </a> 
 </ul>
 <?php
 
@@ -43,19 +43,19 @@ $conn = $db->connect();
 <tr>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo intval($offset); ?>&count=<?php echo $count ?>&order=<?php
             echo ossim_db::get_order("ip", $order);
-          ?>">Host</a></th>
+          ?>"> <?php echo gettext("Host"); ?> </a></th>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
 intval($offset); ?>&count=<?php echo $count ?>&order=<?php
             echo ossim_db::get_order("os", $order);
-          ?>">OS</a></th>
+          ?>"> <?php echo gettext("OS"); ?> </a></th>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
 intval($offset); ?>&count=<?php echo $count ?>&order=<?php
             echo ossim_db::get_order("previous", $order);
-          ?>">Previous OS</a></th>
+          ?>"> <?php echo gettext("Previous OS"); ?> </a></th>
 <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?offset=<?php echo
 intval($offset); ?>&count=<?php echo $count ?>&order=<?php
             echo ossim_db::get_order("date", $order);
-          ?>">When</a></th>
+          ?>"> <?php echo gettext("When"); ?> </a></th>
 </tr>
 
 
@@ -103,16 +103,16 @@ if($offset == 0){
 ?>
 <td colspan=4><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
 intval($offset+$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
-?>"> Next <?php echo $count ?> </a></td> 
+?>"> <?php echo gettext("Next"); ?> <?php echo $count ?> </a></td> 
 <?php
 } else {
 ?>
 <td colspan=2><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
 intval($offset-$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
-?>"> Previous <?php echo $count ?> </a></td> 
+?>"> <?php echo gettext("Previous"); ?> <?php echo $count ?> </a></td> 
 <td colspan=2><a href="<?php echo $_SERVER["PHP_SELF"] ?>?offset=<?php echo
 intval($offset+$count); ?>&count=<?php echo $count;?>&order=<?php echo $order
-?>"> Next <?php echo $count ?> </a></td> 
+?>"> <?php echo gettext("Next"); ?> <?php echo $count ?> </a></td> 
 <?php
 }
 ?>

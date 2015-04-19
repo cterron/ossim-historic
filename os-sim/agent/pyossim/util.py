@@ -27,7 +27,10 @@ def debug(module, message, mark = "", color = ""):
     if mark:
         msg += " (%s) \033[00m" % (mark)
         
-    msg += " %s:\t%s" % (module, message)
+    msg += " %s (%s):\t%s" % \
+        (module, 
+        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), 
+        message)
         
     print msg
     sys.stdout.flush()

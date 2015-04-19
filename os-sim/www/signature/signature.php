@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Signatures</h1>
+  <h1> <?php echo gettext("Signatures"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -24,11 +24,11 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
   <table align="center">
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("name", $order);
-          ?>">Name</a></th>
-      <th>Signatures</th>
-      <th>Description</th>
-      <th>Action</th>
+            echo ossim_db::get_order("name", $order); ?>"> 
+	    <?php echo gettext("Name"); ?> </a></th>
+      <th> <?php echo gettext("Signatures"); ?> </th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 <?php
     
@@ -53,9 +53,11 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
       <td><?php echo $sig_group->get_descr(); ?></td>
       <td>
         <a href="modifysignatureform.php?signame=<?php 
-            echo $sig_group->get_name()?>">Modify</a>
+            echo $sig_group->get_name()?>"> 
+	    <?php echo gettext("Modify"); ?> </a>
         <a href="deletesignature.php?signame=<?php
-            echo $sig_group->get_name()?>">Delete</a></td>
+            echo $sig_group->get_name()?>"> 
+	    <?php echo gettext("Delete"); ?> </a></td>
     </tr>
 <?php
         }
@@ -63,10 +65,10 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 ?>
     <tr>
       <td colspan="4" align="center">
-        <a href="newsignatureform.php">Insert new Signature Group</a>
+        <a href="newsignatureform.php"> <?php echo gettext("Insert new Signature Group"); ?> </a>
       </td>
     <tr>
-      <td colspan="4"><a href="../conf/reload.php?what=signatures">Reload</a></td>
+      <td colspan="4"><a href="../conf/reload.php?what=signatures"> <?php echo gettext("Reload"); ?> </a></td>
     </tr>
     </td>
 </table>

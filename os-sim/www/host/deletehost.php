@@ -5,19 +5,19 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Delete host</h1>
+  <h1> <?php echo gettext("Delete host"); ?> </h1>
 
 <?php
     if (!$_GET["ip"]) {
 ?>
-    <p>Wrong ip</p>
+    <p> <?php echo gettext("Wrong ip"); ?> </p>
 <?php
         exit;
     }
@@ -27,10 +27,12 @@ $ip = $_GET["ip"];
 
 if (!$_GET["confirm"]) {
 ?>
-    <p>Are you sure?</p>
+    <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a
-      href="<?php echo $_SERVER["PHP_SELF"]."?ip=$ip&confirm=yes"; ?>">Yes</a>
-      &nbsp;&nbsp;&nbsp;<a href="host.php">No</a>
+      href="<?php echo $_SERVER["PHP_SELF"]."?ip=$ip&confirm=yes"; ?>">
+      <?php echo gettext("Yes"); ?> </a>
+      &nbsp;&nbsp;&nbsp;<a href="host.php">
+      <?php echo gettext("No"); ?> </a>
     </p>
 <?php
     exit();
@@ -47,8 +49,9 @@ if (!$_GET["confirm"]) {
 
 ?>
 
-    <p>Host deleted</p>
-    <p><a href="host.php">Back</a></p>
+    <p> <?php echo gettext("Host deleted"); ?> </p>
+    <p><a href="host.php">
+    <?php echo gettext("Back"); ?> </a></p>
     <?php exit(); ?>
 
 </body>

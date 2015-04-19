@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -75,7 +75,8 @@ $conf = new ossim_conf();
 if (preg_match('/\d+\.\d+\.\d+\.\d+/', $sensor)) {
 ?>
 <a href="<?php echo "$proto://$sensor:$port"?>/NetNetstat.html"
-       target="ntop">Reload</a>
+       target="ntop">
+       <?php echo gettext("Reload"); ?> </a>
 <?php
 } else {
 
@@ -84,7 +85,8 @@ if (preg_match('/\d+\.\d+\.\d+\.\d+/', $sensor)) {
     }
 ?>
 <a href="<?php echo "net_session.php?net=$net_ips" ?>"
-       target="ntop">Reload</a>
+       target="ntop">
+       <?php echo gettext("Reload"); ?> </a>
 <?php
 }
 ?>

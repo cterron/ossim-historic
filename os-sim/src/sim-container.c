@@ -549,6 +549,49 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
   g_free (query);
 }
 
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
+					 SimDatabase   *database,
+					 GInetAddr     *ia,
+					 gchar         *date,
+					 gchar         *hostname,
+					 gchar         *event_type,
+					 gchar         *target,
+					 gchar         *what,
+					 gchar         *extra_data,
+					 gchar         *sensor,
+					 gint           sid)
+{
+  gchar			*query;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (ia);
+  g_return_if_fail (date);
+  g_return_if_fail (hostname);
+  g_return_if_fail (event_type);
+  g_return_if_fail (target);
+  g_return_if_fail (what);
+  g_return_if_fail (extra_data);
+  g_return_if_fail (sid);
+  g_return_if_fail (sensor);
+
+  query = g_strdup_printf ("INSERT INTO host_ids (ip, date, hostname, sensor, sid, event_type, what, target, extra_data) VALUES (%lu, '%s', '%s', '%s', %u, '%s', '%s', '%s', '%s')",
+  sim_inetaddr_ntohl (ia), date, hostname, sensor, sid, event_type, what, target, extra_data);
+
+  sim_database_execute_no_query (database, query);
+  
+  g_free (query);
+}
+
 
 
 /*

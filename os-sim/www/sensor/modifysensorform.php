@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Modify sensor</h1>
+  <h1> <?php echo gettext("Modify sensor"); ?> </h1>
 
 <?php
     require_once 'classes/Sensor.inc';
@@ -36,7 +36,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Hostname</th>
+    <th> <?php echo gettext("Hostname"); ?> </th>
       <input type="hidden" name="name"
              value="<?php echo $sensor->get_name(); ?>">
     <td class="left">
@@ -44,13 +44,13 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     </td>
   </tr>
   <tr>
-    <th>IP</th>
+    <th> <?php echo gettext("IP"); ?> </th>
     <td class="left">
         <input type="text" name="ip" 
                value="<?php echo $sensor->get_ip(); ?>"></td>
   </tr>
   <tr>
-    <th>Priority</th>
+    <th> <?php echo gettext("Priority"); ?> </th>
     <td class="left">
       <select name="priority">
         <option
@@ -90,13 +90,13 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     </td>
   </tr>
   <tr>
-    <th>Port</th>
+    <th> <?php echo gettext("Port"); ?> </th>
     <td class="left">
         <input type="text" name="port" 
                value="<?php echo $sensor->get_port(); ?>"></td>
   </tr>
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr" 
         rows="2" cols="20"><?php echo $sensor->get_descr(); ?></textarea>

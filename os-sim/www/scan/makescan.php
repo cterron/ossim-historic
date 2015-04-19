@@ -5,7 +5,8 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
 <?php
 
-    $DEFAULT_TARGET = "192.168.1.1-254";
+    /* TODO: define internal net */
+    $DEFAULT_TARGET = "192.168.0.0/24";
 
     if ($_POST["scan"]) {
 
@@ -16,7 +17,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
         $db = new ossim_db();
         $conn = $db->connect();
 
-       $conf = new ossim_conf();
+        $conf = new ossim_conf();
     
         $target = $_POST["target"];
         $target = escapeshellcmd($target);
@@ -25,7 +26,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
         $ip_list = explode("\n", $ips);
 ?>
 
-        <a href="scan.php">Back</a><br><br>
+        <a href="scan.php"> <?php echo gettext("Back"); ?> </a><br><br>
 
 <?php
         
@@ -66,10 +67,32 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
     }
 ?>
 
+    <table>
     <form method="post" action="<?php echo $_SERVER["PHP_SELF"]?>">
-      <input type="hidden" name="scan" value="scan">
-      Range: 
-      <input type="text" name="target" value="<?php echo $DEFAULT_TARGET ?>">
-      <br/><input type="submit" value="Scan">
+      <tr>
+        <td>
+          Range: 
+          <input type="text" name="target" 
+            value="<?php echo $DEFAULT_TARGET ?>">
+        </td>
+        <td>
+            <input type="submit" name="scan" value="Ping Scan">
+        </td>
+      </tr>
     </form>
+
+    <!-- use host insert form -->
+    <form method="post" action="../host/newhostform.php">
+      <tr>
+        <td>
+          Range: 
+          <input type="text" name="target" 
+            value="<?php echo $DEFAULT_TARGET ?>">
+        </td>
+        <td>
+            <input type="submit" name="scan" value="Scan & Update DB">
+        </td>
+      </tr>
+    </form>
+    </table>
 

@@ -5,24 +5,24 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Insert new signature group</h1>
+  <h1> <?php echo gettext("Insert new signature group"); ?> </h1>
 
 <form method="post" action="newsignature.php">
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Name</th>
+    <th> <?php echo gettext("Name"); ?> </th>
     <td class="left"><input type="text" name="name"></td>
   </tr>
   <tr>
-    <th>Signatures</th>
+    <th> <?php echo gettext("Signatures"); ?> </th>
     <td class="left">
 <?php
     require_once 'classes/Signature.inc';
@@ -53,7 +53,7 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
     </td>
   </tr>
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr" rows="2" cols="20"></textarea>
     </td>

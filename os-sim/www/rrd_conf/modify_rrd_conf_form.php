@@ -5,22 +5,22 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Modify RRD Config</h1>
+  <h1> <?php echo gettext("Modify RRD Config"); ?> </h1>
 
-  <h3>Hints</h3>
+  <h3> <?php echo gettext("Hints"); ?> </h3>
   <ul>
-  <li> Threshold: Absolute value above which is being alerted.
-  <li> Priority: Resulting impact if threshold is being exceeded.
-  <li> Alpha: Intercept adaption parameter.
-  <li> Beta: Slope adaption parameter.
-  <li> Persistence: How long has this event to last before we alert. (20 mins)
+  <li> <?php echo gettext("Threshold: Absolute value above which is being alerted"); ?> .
+  <li> <?php echo gettext("Priority: Resulting impact if threshold is being exceeded"); ?> .
+  <li> <?php echo gettext("Alpha: Intercept adaption parameter"); ?> .
+  <li> <?php echo gettext("Beta: Slope adaption parameter"); ?> .
+  <li> <?php echo gettext("Persistence: How long has this event to last before we alert. (20 mins)"); ?> 
   </ul>
 
 
@@ -83,25 +83,32 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("rrd_attrib", $order); ?>&profile=<?php
-                echo $profile ?>">Attribute</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Attribute"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold", $order); ?>&profile=<?php
-                echo $profile ?>">Threshold</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Threshold"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("priority", $order); ?>&profile=<?php
-                echo $profile ?>">Priority</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Priority"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("alpha", $order); ?>&profile=<?php
-                echo $profile ?>">Alpha</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Alpha"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("beta", $order); ?>&profile=<?php
-                echo $profile ?>">Beta</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Beta"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("persistence", $order); ?>&profile=<?php
-                echo $profile ?>">Persistence</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Persistence"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("enable", $order); ?>&profile=<?php
-                echo $profile ?>">Enable</a></th>
+                echo $profile ?>">
+		<?php echo gettext("Enable"); ?> </a></th>
       <td></td>
     </tr>
       <form method="post" action="<?php echo $_SERVER["PHP_SELF"]?>">

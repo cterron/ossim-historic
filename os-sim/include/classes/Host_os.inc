@@ -62,7 +62,7 @@ class Host_os {
     }
 
     function delete($conn, $host) {
-        $query = "DELETE FROM host_os WHERE ip = inet_aton('$host)';";
+        $query = "DELETE FROM host_os WHERE ip = inet_aton('$host');";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;

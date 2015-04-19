@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>RRD Config</h1>
+  <h1> <?php echo gettext("RRD Config"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -26,8 +26,9 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("profile", $order);
-          ?>">Profile</a></th>
-      <th>Action</th>
+          ?>">
+	  <?php echo gettext("Profile"); ?> </a></th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php
@@ -42,12 +43,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
       <td><?php echo $profile ?></td>
       <td>
         <a href="modify_rrd_conf_form.php?profile=<?php
-            echo $profile  ?>">Modify</a>
+            echo $profile  ?>">
+	    <?php echo gettext("Modify"); ?> </a>
 <?php
             if (strcmp($profile, 'global')) {
 ?>
         &nbsp;<a href="delete_rrd_conf.php?profile=<?php
-            echo $profile ?>">Delete</a>
+            echo $profile ?>">
+	    <?php echo gettext("Delete"); ?> </a>
 <?php
             }
 ?>
@@ -62,7 +65,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 ?>
     <tr>
       <td colspan="2">
-        <a href="new_rrd_conf_form.php">Insert new RRD profile</a>
+        <a href="new_rrd_conf_form.php"> <?php echo gettext("Insert new RRD profile"); ?> </a>
       </td>
     </tr>
   </table>

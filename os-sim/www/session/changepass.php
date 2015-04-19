@@ -1,13 +1,13 @@
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Change password</h1>
+  <h1> <?php echo gettext("Change password"); ?> </h1>
 
 <?php
 
@@ -46,8 +46,8 @@
         Session::changepass ($conn, $_POST["user"], $_POST["pass1"]);
 
 ?>
-    <p>User succesfully updated</p>
-    <p><a href="users.php">Back</a></p>
+    <p> <?php echo gettext("User succesfully updated"); ?> </p>
+    <p><a href="users.php"> <?php echo gettext("Back"); ?> </a></p>
 <?php
     }
     $db->close($conn);

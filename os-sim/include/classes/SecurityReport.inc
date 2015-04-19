@@ -112,7 +112,26 @@ class SecurityReport
             }
         }
         return $list;
-   }
+    }
+
+
+    function Truncate ($str, $length=10, $trailing='...')
+	{
+        // take off chars for the trailing
+        $length-=strlen($trailing);
+        if (strlen($str) > $length)
+        {
+            // string exceeded length, truncate and add trailing dots
+            return substr($str,0,$length).$trailing;
+        } 
+        else 
+        {
+            // string was already short enough, return the string
+            $res = $str;
+        }
+        return $res;
+    }
+
 }
 
 ?>

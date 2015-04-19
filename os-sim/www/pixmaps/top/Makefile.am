@@ -1,0 +1,13 @@
+topdir = $(localstatedir)/www/ossim/pixmaps/top
+
+top_DATA = abajo.gif \
+	azul.gif	\
+	dcha.gif	\
+	fondo.jpg	\
+	ld.gif		\
+	li.gif		\
+	naranja.gif	\
+	sep.gif
+
+EXTRA_DIST   = $(top_DATA)
+

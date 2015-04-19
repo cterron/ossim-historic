@@ -5,7 +5,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -111,13 +111,13 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
 
     <table align="center">
       <tr>
-        <th>Current C Level&nbsp;</th>
+        <th> <?php echo gettext("Current C Level"); ?> &nbsp;</th>
         <td bgcolor="<?php echo bgcolor($current_c, $threshold_c) ?>">
           <font color="<?php echo fontcolor($current_c, $threshold_c) ?>">
             <b><?php echo $current_c ?></b></font></td>
       </tr>
       <tr>
-        <th>Current A Level&nbsp;</th>
+        <th> <?php echo gettext("Current A Level"); ?> &nbsp;</th>
         <td bgcolor="<?php echo bgcolor($current_a, $threshold_a) ?>">
           <font color="<?php echo fontcolor($current_a, $threshold_a) ?>">
             <b><?php echo $current_a ?></b></font></td>
@@ -128,7 +128,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     if ($max_c["day"]) { 
 ?>
       <tr>
-        <th>Max C Level (last day)</th>
+        <th> <?php echo gettext("Max C Level (last day)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_c["day"], $threshold_c) ?>">
           <font color="<?php echo fontcolor($max_c["day"], $threshold_c) ?>">
             <b><?php echo $max_c["day"] ?></b></font></td>
@@ -140,7 +140,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
 ?>
     
       <tr>
-        <th>Max A Level (last day)</th>
+        <th> <?php echo gettext("Max A Level (last day)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_a["day"], $threshold_a) ?>">
           <font color="<?php echo fontcolor($max_a["day"], $threshold_a) ?>">
             <b><?php echo $max_a["day"] ?></b></font></td>
@@ -152,7 +152,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     if ($max_c["month"]) {
 ?>
       <tr>
-        <th>Max C Level (last month)</th>
+        <th> <?php echo gettext("Max C Level (last month)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_c["month"], $threshold_c) ?>">
           <font color="<?php echo fontcolor($max_c["month"], $threshold_c) ?>">
             <b><?php echo $max_c["month"] ?></b></font></td>
@@ -163,7 +163,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     if ($max_a["month"]) {
 ?>
       <tr>
-        <th>Max A Level (last month)</th>
+        <th> <?php echo gettext("Max A Level (last month)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_a["month"], $threshold_a) ?>">
           <font color="<?php echo fontcolor($max_a["month"], $threshold_a) ?>">
             <b><?php echo $max_a["month"] ?></b></font></td>
@@ -175,7 +175,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     if ($max_c["year"]) {
 ?>
       <tr>
-        <th>Max C Level (last year)</th>
+        <th> <?php echo gettext("Max C Level (last year)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_c["year"], $threshold_c) ?>">
           <font color="<?php echo fontcolor($max_c["year"], $threshold_c) ?>">
             <b><?php echo $max_c["year"] ?></b></font></td>
@@ -186,7 +186,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     if ($max_a["year"]) {
 ?>
       <tr>
-        <th>Max A Level (last year)</th>
+        <th> <?php echo gettext("Max A Level (last year)"); ?> </th>
         <td bgcolor="<?php echo bgcolor($max_a["year"], $threshold_a) ?>">
           <font color="<?php echo fontcolor($max_a["year"], $threshold_a) ?>">
             <b><?php echo $max_a["year"] ?></b></font></td>
@@ -198,16 +198,16 @@ $current_a = Host_qualification::get_ip_attack($conn, $ip);
     </table>
 
     <p align="center">
-      <b>Last day</b><br/>
+      <b> <?php echo gettext("Last day"); ?> </b><br/>
       <img src="<?php echo $image1 ?>"/><br/><br/>
       
-      <b>Last week</b><br/>
+      <b> <?php echo gettext("Last week"); ?> </b><br/>
       <img src="<?php echo $image2 ?>"/><br/><br/>
       
-      <b>Last month</b><br/>
+      <b> <?php echo gettext("Last month"); ?> </b><br/>
       <img src="<?php echo $image3 ?>"/><br/><br/>
       
-      <b>Last year</b><br/>
+      <b> <?php echo gettext("Last year"); ?> </b><br/>
       <img src="<?php echo $image4 ?>"/><br/><br/>
     </p>
 

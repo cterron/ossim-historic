@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Users</h1>
+  <h1> <?php echo gettext("Users"); ?> </h1>
 
 <?php
 
@@ -28,12 +28,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("login", $order);
-          ?>">Login</a></th>
+          ?>">
+	  <?php echo gettext("Login"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("name", $order);
-          ?>">Name</a></th>
-      <th>Password</th>
-      <th>Actions</th>
+          ?>"> 
+	  <?php echo gettext("Name"); ?> </a></th>
+      <th> <?php echo gettext("Password"); ?> </th>
+      <th> <?php echo gettext("Actions"); ?> </th>
     </tr>
 
 <?php
@@ -52,12 +54,15 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
       <td><?php echo $name; ?></td>
       <td><?php echo $pass; ?></td>
       <td>
-      [<a href="changepassform.php?user=<?php echo $login ?>">Change Password</a>]
+      [<a href="changepassform.php?user=<?php echo $login ?>">
+      <?php echo gettext("Change Password"); ?> </a>]
 <?php
     if ($login != ACL_DEFAULT_OSSIM_ADMIN) {
 ?>
-      [<a href="modifyuserform.php?user=<?php echo $login ?>">Update</a>]
-      [<a href="deleteuser.php?user=<?php echo $login ?>">Delete</a>]
+      [<a href="modifyuserform.php?user=<?php echo $login ?>"> 
+      <?php echo gettext("Update"); ?> </a>]
+      [<a href="deleteuser.php?user=<?php echo $login ?>"> 
+      <?php echo gettext("Delete"); ?> </a>]
 <?php
     }
 ?>
@@ -71,10 +76,10 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 ?>
     <tr>
-      <td colspan="4"><a href="newuserform.php">Insert new user</a></td>
+      <td colspan="4"><a href="newuserform.php"> <?php echo gettext("Insert new user"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="4"><a href="../setup/ossim_acl.php">Reload ACLS</a></td>
+      <td colspan="4"><a href="../setup/ossim_acl.php"> <?php echo gettext("Reload ACLS"); ?> </a></td>
     </tr>
   </table>
 

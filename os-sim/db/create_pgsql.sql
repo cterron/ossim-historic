@@ -128,6 +128,15 @@ CREATE TABLE sensor (
     PRIMARY KEY     (name)
 );
 
+DROP TABLE sensor_interfaces;
+CREATE TABLE sensor_interfaces (
+    sensor  varchar(64) NOT NULL,
+    interface varchar(64) NOT NULL,
+    name    varchar(255) NOT NULL,
+    main    BOOLEAN NOT NULL,
+    PRIMARY KEY (sensor, interface)
+);
+
 DROP TABLE host_sensor_reference;
 CREATE TABLE host_sensor_reference (
     host_ip         varchar(15) NOT NULL,
@@ -610,4 +619,18 @@ CREATE TABLE restoredb_log (
 	status		INT8,
 	percent		INT8,
 	PRIMARY KEY (id)
+);
+
+DROP TABLE host_ids;
+CREATE TABLE host_ids(
+ip              INTEGER UNSIGNED NOT NULL,
+date            TIMESTAMP,
+hostname        VARCHAR(255) NOT NULL,
+sensor          VARCHAR(255) NOT NULL,
+sid             INT8 NOT NULL,
+event_type      VARCHAR(255) NOT NULL,
+what            VARCHAR(255) NOT NULL,
+target          VARCHAR(255) NOT NULL,
+extra_data      VARCHAR(255) NOT NULL,
+PRIMARY KEY     (ip,target,sid,date)
 );

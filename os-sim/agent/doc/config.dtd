@@ -6,7 +6,7 @@
 <!ELEMENT logdir (#PCDATA)>
 <!ATTLIST watchdog
     enable (yes | no) #REQUIRED
-    interval #REQUIRED>
+    interval CDATA #REQUIRED>
 <!ELEMENT plugins (plugin+)>
 <!ELEMENT plugin (startup?, shutdown?, interface, sensor, location)>
 <!ATTLIST plugin 

@@ -20,6 +20,8 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
 
     def startElement (self, name, attrs):
 
+        self.theContent = ""
+
         if name in ['serverip', 'serverport', 'source', 'location', \
                     'interface', 'sensor', 'startup', 'shutdown', 'logdir'] :
             self.inContent = 1
@@ -86,14 +88,9 @@ class ConfigHandler(xml.sax.handler.ContentHandler):
                 self.theContent.encode("UTF-8")
  
     def characters (self, string):
-        
-        # why sax parser break lines when an entity appears?
-        # is it a python bug?
-        if string == '&':
+       
+        if self.inContent:
             self.theContent += string
-        
-        elif self.inContent:
-            self.theContent = string
 
 
 

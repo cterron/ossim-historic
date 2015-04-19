@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.3 2004/08/20 09:01:05 dkarg Exp $ #
+# $Id: create_sidmap.pl,v 1.5 2004/11/25 15:43:20 dvgil Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
@@ -271,8 +271,8 @@ sub get_category_id($ $)
     $stm->execute();
 
     my $row = $stm->fetchrow_hashref;
-    if(!exists($row->{"id"})){ 
-    return 117; # misc
+    if(!exists($row->{"id"})) {
+        return 117; # misc
     }
 
     return $row->{"id"};
@@ -283,18 +283,18 @@ sub get_class_info($ $)
     (my $conn, my $name) = @_;
 
     if(!defined($name)){
-    my @info = (102,3);
-    return \@info;
+        my @info = (102,3);
+        return \@info;
     } else {
-    my $query = "SELECT * FROM classification WHERE name = '$name'";
-    my $stm = $conn->prepare($query);
-    $stm->execute();
+        my $query = "SELECT * FROM classification WHERE name = '$name'";
+        my $stm = $conn->prepare($query);
+        $stm->execute();
 
-    my $row = $stm->fetchrow_hashref;
+        my $row = $stm->fetchrow_hashref;
 
-    my @info = ($row->{"id"}, 
-                $row->{"priority"});
-    return \@info;
+        my @info = ($row->{"id"}, 
+                    $row->{"priority"});
+        return \@info;
     }
 }
 
@@ -344,10 +344,11 @@ sub update_ossim_db()
             my $msg = $sidinfo{$sid}{"msg"};
             if(!defined($msg)){ $msg = "Undefined msg, please check"; }
 
-            my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
-    my $stm = $conn->prepare($query);
-    $stm->execute();
-    print "Inserting $msg: [$plugin_id:$plugin_sid:$priority]\n";
+            print "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);\n";
+            # my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
+            # my $stm = $conn->prepare($query);
+            # $stm->execute();
+            # print "Inserting $msg: [$plugin_id:$plugin_sid:$priority]\n";
 		 
         }
     }

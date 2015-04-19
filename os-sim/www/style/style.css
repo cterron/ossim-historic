@@ -1,7 +1,7 @@
 body {
   background: white;
   color: black;
-  font-family: verdana,arial,helvetica,sans-serif;
+  font-family: tahoma,arial,verdana,helvetica,sans-serif;
   font-size:  8pt;
   margin: 1px;
   padding: 1px;
@@ -15,26 +15,25 @@ a {
   background: transparent;
   color: #17457c;
   text-decoration: none;
-  font-weight: bold;
 }
 
 a:hover {
   background: transparent;
-  color: #991e1e;
+  color: #e7700c;
   text-decoration: underline;
-  font-weight: bold;
 }
 
 a.selected {
-  color: #991e1e;
+    color: #e7700c;
+    text-decoration: underline;
 }
 
 
 h1 {
-  background: #f5f5f5;
-  color: black;
+  background: #7f7f7f;
+  color: white;
   border-style: solid;
-  border-color: #d0d0d0;
+  border-color: black;
   border-width: 1px;
   padding: 5px;
   margin-bottom: 30px;
@@ -46,39 +45,34 @@ h1 {
 table {
     color: black;
     border-style: solid;
-    border-color: #d0d0d0;
+    border-color: #7f7f7f;
     border-width: 1px;
     text-align: center;
 }
 
 th {
-    color:black;
-    background: #f1f1f1;
-    border-style: solid;
-    border-color: #d0d0d0;
+    color: #11334f;
+/*    background: #cbcbcb;*/
+    background: #abb7c7;
+    border-color: #7f7f7f;
     border-width: 1px;
-    font-size: 10pt;
+    font-size: 8pt;
     text-align: center;
 }
 
 td {
     color:black;
-    border-style: solid;
-    border-color: #e0e0e0;
+    border-bottom-style: solid;
+    border-color: #7f7f7f;
+    border-color: #cbcbcb;
     border-width: 1px;
     font-size:  8pt;
     text-align: center;
 }
 
 td.left {
-    color:black;
-    border-style: solid;
-    border-color: #d0d0d0;
-    border-width: 1px;
-    font-size:  8pt;
     text-align: left;
 }
-
 
 /* Subtitle header. */
 h2 {

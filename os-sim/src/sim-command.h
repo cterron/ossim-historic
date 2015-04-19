@@ -196,6 +196,8 @@ struct _SimCommand {
 
       gint               plugin_id;
       gint               plugin_sid;
+
+      gchar             *log;
     } host_os_change;
 
     struct {
@@ -206,6 +208,8 @@ struct _SimCommand {
 
       gint               plugin_id;
       gint               plugin_sid;
+
+      gchar             *log;
     } host_mac_change;
 
     struct {
@@ -221,6 +225,22 @@ struct _SimCommand {
 
       gchar             *log;
     } host_service_new;
+
+    struct {
+      gchar             *host;
+      gchar             *hostname;
+      gchar             *event_type;
+      gchar             *target;
+      gchar             *what;
+      gchar             *extra_data;
+      gchar             *sensor;
+      gchar             *date;
+
+      gint               plugin_id;
+      gint               plugin_sid;
+
+      gchar             *log;
+    } host_ids_event;
 
     struct {
       gint               id;

@@ -32,14 +32,17 @@ class Net_qualification {
 
                 $net_list = Net::get_list($conn,
                     "WHERE name = '" . $rs->fields["net_name"] . "'");
-                if ((false !== strpos($allowed_nets, $net_list[0]->get_ips()))
-                    or (!$allowed_nets))
-                {
+                if ($net_list) {
+                    if ((false !== strpos($allowed_nets, 
+                                          $net_list[0]->get_ips()))
+                        or (!$allowed_nets))
+                    {
 
-                    $list[] = new Net_qualification (
+                        $list[] = new Net_qualification (
                                             $rs->fields["net_name"],
                                             $rs->fields["compromise"],
                                             $rs->fields["attack"]);
+                    }
                 }
                 $rs->MoveNext();
             }

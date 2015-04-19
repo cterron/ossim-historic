@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Networks</h1>
+  <h1> <?php echo gettext("Networks"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -40,20 +40,20 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("name", $order);
-          ?>">Net</a></th>
-      <th>Ips</th>
+          ?>"> <?php echo gettext("Net"); ?> </a></th>
+      <th> <?php echo gettext("Ips"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("priority", $order);
-          ?>">Asset</a></th>
+          ?>"> <?php echo gettext("Asset"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold_c", $order);
-          ?>">Threshold_C</a></th>
+          ?>"> <?php echo gettext("Threshold_C"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold_a", $order);
-          ?>">Threshold_A</a></th>
+          ?>"> <?php echo gettext("Threshold_A"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("rrd_profile", $order);
-          ?>">RRD Profile</a></th>
+          ?>"> <?php echo gettext("RRD Profile"); ?> </a></th>
 <!--
       <th><a href="<?php //echo $_SERVER["PHP_SELF"]?>?order=<?php
             //echo ossim_db::get_order("alert", $order);
@@ -62,10 +62,10 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
             //echo ossim_db::get_order("persistence", $order);
           ?>">Persistence</a></th>
 -->
-      <th>Sensors</th>
-      <th>Nessus Scan</th>
-      <th>Description</th>
-      <th>Action</th>
+      <th> <?php echo gettext("Sensors"); ?> </th>
+      <th> <?php echo gettext("Nessus Scan"); ?> </th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php
@@ -133,8 +133,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 </td>
 
       <td><?php echo $net->get_descr(); ?></td>
-      <td><a href="modifynetform.php?name=<?php echo $name ?>">Modify</a>
-          <a href="deletenet.php?name=<?php echo $name ?>">Delete</a></td>
+      <td><a href="modifynetform.php?name=<?php echo $name ?>"> <?php echo gettext("Modify"); ?> </a>
+          <a href="deletenet.php?name=<?php echo $name ?>"> <?php echo gettext("Delete"); ?> </a></td>
     </tr>
 
 <?php
@@ -144,10 +144,10 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="11"><a href="newnetform.php">Insert new network</a></td>
+      <td colspan="11"><a href="newnetform.php"> <?php echo gettext("Insert new network"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="11"><a href="../conf/reload.php?what=nets">Reload</a></td>
+      <td colspan="11"><a href="../conf/reload.php?what=nets"> <?php echo gettext("Reload"); ?> </a></td>
     </tr>
   </table>
     

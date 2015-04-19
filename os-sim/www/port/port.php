@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Ports</h1>
+  <h1> <?php echo gettext("Ports"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -25,10 +25,11 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("name", $order);
-          ?>">Port group</a></th>
-      <th>Ports</th>
-      <th>Description</th>
-      <th>Action</th>
+          ?>">
+	  <?php echo gettext("Port group"); ?> </a></th>
+      <th> <?php echo gettext("Ports"); ?> </th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 <?php
     require_once 'ossim_db.inc';
@@ -56,9 +57,11 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
       <td><?php echo $port_group->get_descr(); ?></td>
       <td>
         <a href="modifyportform.php?portname=<?php 
-            echo $port_group->get_name()?>">Modify</a>
+            echo $port_group->get_name()?>">
+	    <?php echo gettext("Modify"); ?> </a>
         <a href="deleteport.php?portname=<?php
-            echo $port_group->get_name()?>">Delete</a></td>
+            echo $port_group->get_name()?>">
+	    <?php echo gettext("Delete"); ?> </a></td>
     </tr>
 <?php
         }
@@ -66,8 +69,8 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 ?>
     <tr>
       <td colspan="4" align="center">
-        <a href="newportform.php">Insert new Port Group</a><br/>
-        <a href="newsingleportform.php">Insert new Port</a>
+        <a href="newportform.php"> <?php echo gettext("Insert new Port Group"); ?> </a><br/>
+        <a href="newsingleportform.php"> <?php echo gettext("Insert new Port"); ?> </a>
       </td>
     </td>
 </table>

@@ -1,6 +1,7 @@
 import re
 import sys
 import time
+import os
 
 import Parser
 import util
@@ -23,6 +24,12 @@ class ParserArpwatch(Parser.Parser):
         util.debug (__name__, 'plugin started (syslog)...', '--')
 
         location = self.plugin["location"]
+
+        # first check if file exists
+        if not os.path.exists(location):
+            fd = open(location, "w")
+            fd.close()
+
         try:
             fd = open(location, 'r')
         except IOError, e:
@@ -55,16 +62,19 @@ class ParserArpwatch(Parser.Parser):
                     # ip address
                     result = re.findall('ip address: (\S+)', line)
                     ip = result[0]
+                    lines = line
                     
                     # ethernet address
                     line = fd.readline()
                     result = re.findall('ethernet address: (.*)', line)
                     addr = result[0]
+                    lines += line
                     
                     # ethernet vendor
                     line = fd.readline()
                     result = re.findall('ethernet vendor: (.*)', line)
                     vendor = result[0]
+                    lines += line
                     
                     # timestamp
                     # Monday, March 15, 2004 15:39:19 +0000
@@ -74,6 +84,7 @@ class ParserArpwatch(Parser.Parser):
                         time.strptime(util.normalizeWhitespace(result[0]), 
                                       "%A, %B %d, %Y %H:%M:%S")
                     date = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
+                    lines += line
 
                                      
                     self.agent.sendMacChange (
@@ -83,7 +94,7 @@ class ParserArpwatch(Parser.Parser):
                          date       = date,
                          plugin_id  = self.plugin["id"],
                          plugin_sid = 1,
-                         log        = line)
+                         log        = lines)
 
                     
                 except IndexError:

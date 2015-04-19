@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>New RRD Profile</h1>
+  <h1> <?php echo gettext("New RRD Profile"); ?> </h1>
 
 <?php
 
@@ -58,8 +58,8 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     $db->close($conn);
 
 ?>
-    <p>RRD Config succesfully inserted</p>
-    <p><a href="rrd_conf.php">Back</a></p>
+    <p> <?php echo gettext("RRD Config succesfully inserted"); ?> </p>
+    <p><a href="rrd_conf.php"> <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

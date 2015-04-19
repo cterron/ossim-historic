@@ -6,16 +6,16 @@ $user = Session::get_session_user();
 
 <html>
 <head>
-  <title> Control Panel </title>
+  <title> <?php echo gettext("Control Panel"); ?> </title>
   <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
 
 <body>
-
-  <h1 align="center">Metrics</h1>
-
+<!--
+  <h1 align="center"> <?php echo gettext("Metrics"); ?> </h1>
+  -->
 <?php
 
 require_once ('ossim_conf.inc');
@@ -102,16 +102,16 @@ if (!$rs_global = &$conn->Execute("$query"))
     <tr><td colspan="2">
       [<a
       <?php if ($range == 'day') echo "class=\"selected\"" ?>
-      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day">Last Day</a>]
+      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day"> <?php echo gettext("Last Day"); ?> </a>]
       [<a 
       <?php if ($range == 'week') echo "class=\"selected\"" ?>
-      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week">Last Week</a>]
+      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week"> <?php echo gettext("Last Week"); ?> </a>]
       [<a 
       <?php if ($range == 'month') echo "class=\"selected\"" ?>
-      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month">Last Month</a>]
+      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month"> <?php echo gettext("Last Month"); ?> </a>]
       [<a 
       <?php if ($range == 'year') echo "class=\"selected\"" ?>
-      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year">Last Year</a>]
+      href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year"> <?php echo gettext("Last Year"); ?> </a>]
     </td></tr>
     <tr><td>
 <?php
@@ -139,8 +139,8 @@ if (!$rs_global = &$conn->Execute("$query"))
       <table align="center">
         <tr><td colspan="3"></td></tr>
         <tr>
-          <th>Riskmeter</th>
-          <th>Service Level</th>
+          <th> <?php echo gettext("Riskmeter"); ?> </th>
+          <th> <?php echo gettext("Service Level"); ?> </th>
         </tr>
         <tr>
           <td><a href="../riskmeter/index.php">
@@ -187,16 +187,16 @@ if (!$rs_global = &$conn->Execute("$query"))
     </td>
     </tr>
 
-    <tr><th colspan="6">Global</th></tr>
+    <tr><th colspan="6"> <?php echo gettext("Global"); ?> </th></tr>
     <tr>
       <!-- Global C levels -->
       <td valign="top">
         <table width="100%">
           <tr>
-            <th colspan="2">Global</th>
-            <th>Max C date</th>
-            <th>Max C</th>
-            <th>Current C</th>
+            <th colspan="2"> <?php echo gettext("Global"); ?> </th>
+            <th> <?php echo gettext("Max C date"); ?> </th>
+            <th> <?php echo gettext("Max C"); ?> </th>
+            <th> <?php echo gettext("Current C"); ?> </th>
           </tr>
           <tr>
 <?php
@@ -204,8 +204,8 @@ if (!$rs_global = &$conn->Execute("$query"))
                               $start, "N", 1, $range);
     
 ?>
-            <td nowrap><b>GLOBAL SCORE</b></td>
-            <td>
+            <td nowrap><b> <?php echo gettext("GLOBAL SCORE"); ?> </b></td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 
@@ -240,19 +240,19 @@ if (!$rs_global = &$conn->Execute("$query"))
       <td valign="top">
         <table width="100%">
           <tr>
-            <th colspan="2">Global</th>
-            <th>Max A date</th>
-            <th>Max A</th>
-            <th>Current A</th>
+            <th colspan="2"> <?php echo gettext("Global"); ?> </th>
+            <th> <?php echo gettext("Max A date"); ?> </th>
+            <th> <?php echo gettext("Max A"); ?> </th>
+            <th> <?php echo gettext("Current A"); ?> </th>
           </tr>
           <tr>
 <?php
-    $image = graph_image_link("global", "global", "attack",
+    $image = graph_image_link("global_$user", "global", "attack",
                               $start, "N", 1, $range);
     
 ?>
-            <td nowrap><b>GLOBAL SCORE</b></td>
-            <td>
+            <td nowrap><b> <?php echo gettext("GLOBAL SCORE"); ?> </b></td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 
@@ -285,17 +285,17 @@ if (!$rs_global = &$conn->Execute("$query"))
 
     </tr>
     
-    <tr><th colspan="6">Networks</th></tr>
+    <tr><th colspan="6"> <?php echo gettext("Networks"); ?> </th></tr>
     <tr>
 
       <!-- Net C levels -->
       <td valign="top">
         <table width="100%">
           <tr>
-            <th colspan="2">Network</th>
-            <th>Max C date</th>
-            <th>Max C</th>
-            <th>Current C</th>
+            <th colspan="2"> <?php echo gettext("Network"); ?> </th>
+            <th> <?php echo gettext("Max C date"); ?> </th>
+            <th> <?php echo gettext("Max C"); ?> </th>
+            <th> <?php echo gettext("Current C"); ?> </th>
           </tr>
 <?php 
     if ($nets_order_by_c)
@@ -305,7 +305,7 @@ if (!$rs_global = &$conn->Execute("$query"))
 ?>
           <tr>
             <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
-            <td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 
@@ -349,10 +349,10 @@ if (!$rs_global = &$conn->Execute("$query"))
       <td valign="top">
         <table width="100%">
           <tr>
-            <th colspan="2">Network</th>
-            <th>Max A date</th>
-            <th>Max A</th>
-            <th>Current A</th>
+            <th colspan="2"> <?php echo gettext("Network"); ?> </th>
+            <th> <?php echo gettext("Max A date"); ?> </th>
+            <th> <?php echo gettext("Max A"); ?> </th>
+            <th> <?php echo gettext("Current A"); ?> </th>
           </tr>
 <?php 
     if ($nets_order_by_a)
@@ -362,7 +362,7 @@ if (!$rs_global = &$conn->Execute("$query"))
 ?>
           <tr>
             <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
-            <td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 
@@ -402,17 +402,17 @@ if (!$rs_global = &$conn->Execute("$query"))
     </tr>
     <!-- end net A levels -->
 
-    <tr><th colspan="6">Hosts</th></tr>
+    <tr><th colspan="6"> <?php echo gettext("Hosts"); ?> </th></tr>
     <tr>
       
       <!-- host C levels -->
       <td valign="top">
         <table width="100%">
           <tr>
-            <th colspan="2">Host</th>
-            <th>Max C date</th>
-            <th>Max C</th>
-            <th>Current C</th>
+            <th colspan="2"> <?php echo gettext("Host"); ?> </th>
+            <th> <?php echo gettext("Max C date"); ?> </th>
+            <th> <?php echo gettext("Max C"); ?> </th>
+            <th> <?php echo gettext("Current C"); ?> </th>
           </tr>
           
 <?php 
@@ -428,7 +428,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
             </td>
-            <td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 
@@ -476,10 +476,10 @@ if (!$rs_global = &$conn->Execute("$query"))
       <td valign="top">
         <table width="100%">
         <tr>
-          <th colspan="2">Host</th>
-          <th>Max A date</th>
-          <th>Max A</th>
-          <th>Current A</th>
+          <th colspan="2"> <?php echo gettext("Host"); ?> </th>
+          <th> <?php echo gettext("Max A date"); ?> </th>
+          <th> <?php echo gettext("Max A"); ?> </th>
+          <th> <?php echo gettext("Current A"); ?> </th>
         </tr>
 <?php 
     if ($hosts_order_by_a)
@@ -494,7 +494,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
             </td>
-            <td>
+            <td nowrap>
               <a href="<?php echo $image ?>"><img
                  src="../pixmaps/graph.gif" border="0"/></a>
         <?php 

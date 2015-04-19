@@ -22,19 +22,19 @@ $conf = new ossim_conf();
 <table align="center" width="100%">
     <tr><td align="center">
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day&ip=<?php echo
-      "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>">Last Day</a>]
+      "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Day"); ?> </a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week&ip=<?php echo
-      "$ip&what=$what&start=N-7D&type=$type&zoom=$zoom"?>">Last Week</a>]
+      "$ip&what=$what&start=N-7D&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Week"); ?> </a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month&ip=<?php echo
-      "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>">Last Month</a>]
+      "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Month"); ?> </a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year&ip=<?php echo
-      "$ip&what=$what&start=N-1Y&type=$type&zoom=$zoom"?>">Last Year</a>]
+      "$ip&what=$what&start=N-1Y&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Year"); ?> </a>]
     </td><td>Show [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
     "?range=$range&ip=$ip&what=compromise&start=$start&type=$type&zoom=$zoom"?>">
-    Compromise</a>]<BR>
+    <?php echo gettext("Compromise"); ?> </a>]<BR>
     Show [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
     "?range=$range&ip=$ip&what=attack&start=$start&type=$type&zoom=$zoom"?>">
-    Attack</a>]</td></tr>
+    <?php echo gettext("Attack"); ?> </a>]</td></tr>
     <tr><td colspan="2"><HR noshade></td></tr>
     <tr><td colspan="2" align="center">
       <img src="<?php echo "$graph_link?ip=$ip&what=$what&start=$start&end=N&type=$type"; ?>">

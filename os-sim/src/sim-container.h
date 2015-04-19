@@ -164,6 +164,19 @@ void		sim_container_db_update_host_service_ul		(SimContainer  *container,
 								 gchar         *service,
 								 gchar         *application);
 
+void		sim_container_db_insert_host_ids_event_ul		(SimContainer  *container,
+								 SimDatabase   *database,
+								 GInetAddr     *ia,
+								 gchar         *date,
+								 gchar         *hostname,
+								 gchar         *event_type,
+								 gchar         *target,
+								 gchar         *what,
+								 gchar         *extra_data,
+								 gchar         *sensor,
+								 gint           sid);
+
+
 /* Recovery Function */
 
 void              sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,

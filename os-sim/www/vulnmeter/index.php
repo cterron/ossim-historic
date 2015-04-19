@@ -5,10 +5,10 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 
 <html>
 <head>
-  <title> Vulnmeter </title>
+  <title> <?php echo gettext("Vulnmeter"); ?> </title>
 <!--  <meta http-equiv="refresh" content="3"> -->
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-  <link rel="stylesheet" href="../style/riskmeter.css"/>
+  <link rel="stylesheet" href="../style/style.css"/>
 </head>
 
 <body>
@@ -27,6 +27,7 @@ require_once ('ossim_conf.inc');
 require_once ('ossim_db.inc');
 require_once ('classes/Host_vulnerability.inc');
 require_once ('classes/Net_vulnerability.inc');
+require_once ('classes/Net.inc');
 require_once ('classes/Host.inc');
 
 $db = new ossim_db();
@@ -58,8 +59,8 @@ if($mon < 10){ $mon = 0 . $mon; }
 if($mday < 10){ $mday = 0 . $mday; }
 $datedir = $today[year] . $mon . $mday;
 ?> 
-<td><a href="last/index.html">Last scan</a></td>
-<td> / <a href="do_nessus.php">Update scan</a></td>
+<td><a href="last/index.html"> <?php echo gettext("Last scan"); ?> </a></td>
+<td> / <a href="do_nessus.php"> <?php echo gettext("Update scan"); ?> </a></td>
 </tr>
 </table>
 
@@ -69,7 +70,7 @@ $datedir = $today[year] . $mon . $mday;
 <?php
 if ($net_list) {
 ?>
-<tr><th colspan="2">Nets</th></tr>
+<tr><th colspan="2"> <?php echo gettext("Nets"); ?> </th></tr>
 <?php
     foreach ($net_list as $stat) {
 
@@ -82,7 +83,8 @@ if ($net_list) {
 ?>
     <tr>
       <td align="center">
-           <?php echo $net ?>
+           <a href="<?php echo $_SERVER["PHP_SELF"] .  "?net=$net" ?>"><?php echo $net ?></a>
+           <?php // echo $net ?>
       </td>
 
       <td>
@@ -106,19 +108,44 @@ if ($net_list) {
 /* 
  * Hosts
  */
+if ($_GET["net"]) {
 
-$ip_list = Host_vulnerability::get_list
-        ($conn, "", "ORDER BY vulnerability DESC");
+    $net_name = $_GET["net"];
+    
+    if ($net_list = Net::get_list($conn, "WHERE name = '$net_name'"))
+    {
+        $ips = $net_list[0]->get_ips();
+        print "<h1>$ips</h1>";
+
+
+        if ($ip_list = Host_vulnerability::get_list($conn))
+        {
+            foreach ($ip_list as $host_vuln)
+            {
+                if (Net::isIpInNet($host_vuln->get_ip(), $ips))
+                {
+                    $ip_stats[] = new Host_vulnerability
+                                    ($host_vuln->get_ip(),
+                                     $host_vuln->get_vulnerability());
+                }
+            }
+        }
+    }
+
+    
+} else {
+    $ip_stats = Host_vulnerability::get_list ($conn, "", "ORDER BY vulnerability DESC");
+}
 
 $max_level = ossim_db::max_val($conn, "vulnerability", "host_vulnerability");
 
-if ($ip_list) {
+if ($ip_stats) {
 ?>
 
 <tr><th colspan="2">Hosts</th></tr>
 
 <?php
-    foreach ($ip_list as $stat) {
+    foreach ($ip_stats as $stat) {
     
         $ip = $stat->get_ip();
 
@@ -181,7 +208,7 @@ if ($handle = opendir('last')) {
             if (eregi("(.gif)$",$file)){
                 echo "</br><table align=\"center\">";
                 echo "  <tr>";
-                echo "    <td><img echo \"src=\"last/$file\"></td>";
+                echo "    <td><img src=\"last/$file\"></td>";
                 echo "  </tr>";
                 echo "</table>";
             }

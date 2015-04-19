@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Insert new host scan configuration</h1>
+  <h1> <?php echo gettext("Insert new host scan configuration"); ?> </h1>
 
 <?php
     require_once ('ossim_db.inc');

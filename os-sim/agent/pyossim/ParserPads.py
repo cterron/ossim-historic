@@ -1,6 +1,7 @@
 import re
 import sys
 import time
+import os
 
 import Parser
 import util
@@ -24,6 +25,12 @@ class ParserPads(Parser.Parser):
         pattern = '^([^,]*),([^,]*),([^,]*),([^,]*),([^,]*),(\d+)$'
             
         location = self.plugin["location"]
+
+        # first check if file exists
+        if not os.path.exists(location):
+            fd = open(location, "w")
+            fd.close()
+
         try:
             fd = open(location, 'r')
         except IOError, e:

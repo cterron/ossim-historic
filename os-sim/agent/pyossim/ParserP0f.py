@@ -1,6 +1,7 @@
 import re
 import sys
 import time
+import os
 
 import Parser
 import util
@@ -26,6 +27,12 @@ class ParserP0f(Parser.Parser):
         pattern = '<\S+\s+(\S+)\s+(\S+)\s+(\d+):(\d+):(\d+)\s+(\S+)>\s+(\d+\.\d+\.\d+\.\d+):\d+\s+-\s+([^\(]*)'
             
         location = self.plugin["location"]
+
+        # first check if file exists
+        if not os.path.exists(location):
+            fd = open(location, "w")
+            fd.close()
+
         try:
             fd = open(location, 'r')
         except IOError, e:
@@ -57,17 +64,17 @@ class ParserP0f(Parser.Parser):
                 result = re.findall(str(pattern), line)
                 try: 
                     (monthmmm, day, hour,
-                     minute, second, year, source, os) = result[0]
+                     minute, second, year, source, ops) = result[0]
 
-                    os = util.normalizeWhitespace(os)
+                    ops = util.normalizeWhitespace(ops)
                     prev = os_hash.get(source, '')
 
                     # os change !
-                    if os != prev and \
-                       (not os.__contains__('UNKNOWN')) and \
-                       (not os.__contains__('NMAP')):
+                    if ops != prev and \
+                       (not ops.__contains__('UNKNOWN')) and \
+                       (not ops.__contains__('NMAP')):
 
-                        os_hash[source] = os
+                        os_hash[source] = ops
 
                         datestring = "%s %s %s %s %s %s" % \
                             (year, monthmmm, day, hour, minute, second)
@@ -78,7 +85,7 @@ class ParserP0f(Parser.Parser):
 
                         self.agent.sendOsChange (
                              host       = source,
-                             os         = os,
+                             os         = ops,
                              date       = date,
                              plugin_id  = self.plugin["id"],
                              plugin_sid = 1,

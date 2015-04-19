@@ -5,19 +5,19 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Delete net</h1>
+  <h1> <?php echo gettext("Delete net"); ?> </h1>
 
 <?php 
     if (!$_GET["name"]) { 
 ?>
-    <p>Wrong name</p>
+    <p> <?php echo gettext("Wrong name"); ?> </p>
 <?php 
         exit;
     }
@@ -27,10 +27,12 @@ $name = mysql_escape_string($_GET["name"]);
 
 if (!$_GET["confirm"]) {
 ?>
-    <p>Are you sure?</p>
+    <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a 
-      href="<?php echo $_SERVER["PHP_SELF"]."?name=$name&confirm=yes"; ?>">Yes</a>
-      &nbsp;&nbsp;&nbsp;<a href="net.php">No</a>
+      href="<?php echo $_SERVER["PHP_SELF"]."?name=$name&confirm=yes"; ?>">
+      <?php echo gettext("Yes"); ?> </a>
+      &nbsp;&nbsp;&nbsp;<a href="net.php">
+      <?php echo gettext("No"); ?> </a>
     </p>
 <?php
     exit();
@@ -48,8 +50,9 @@ if (!$_GET["confirm"]) {
 
 ?>
 
-    <p>Net deleted</p>
-    <p><a href="net.php">Back</a></p>
+    <p> <?php echo gettext("Net deleted"); ?> </p>
+    <p><a href="net.php">
+    <?php echo gettext("Back"); ?> </a></p>
     <?php exit(); ?>
 
 </body>

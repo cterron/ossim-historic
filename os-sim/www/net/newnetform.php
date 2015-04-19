@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Insert new network</h1>
+  <h1> <?php echo gettext("Insert new network"); ?> </h1>
 
 <?php
     require_once ('ossim_db.inc');
@@ -31,18 +31,18 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Name</th>
+    <th> <?php echo gettext("Name"); ?> </th>
     <td class="left"><input type="text" name="name" size="30"></td>
   </tr>
   <tr>
-    <th>Ips</th>
+    <th> <?php echo gettext("Ips"); ?> </th>
     <td class="left">
-       <i>example: 192.168.0.0/24,192.168.1.0/24</i><br/>
+       <i> <?php echo gettext("example");?>: 192.168.0.0/24,192.168.1.0/24 </i><br/>
       <input type="text" name="ips" size="30">
     </td>
   </tr>
   <tr>
-    <th>Priority</th>
+    <th> <?php echo gettext("Priority"); ?> </th>
     <td class="left">
       <select name="priority">
    <!-- <option value="0">0</option> -->
@@ -55,23 +55,24 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     </td>
   </tr>
   <tr>
-    <th>Threshold C</th>
+    <th> <?php echo gettext("Threshold C"); ?> </th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_c" size="4">
     </td>
   </tr>
   <tr>
-    <th>Threshold A</th>
+    <th> <?php echo gettext("Threshold A"); ?> </th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_a" size="4">
     </td>
   </tr>
   <tr>
-    <th>RRD Profile<br/>
+    <th> <?php echo gettext("RRD Profile"); ?> <br/>
         <font size="-2">
-          <a href="../rrd_conf/new_rrd_conf_form.php">Insert new profile?</a>
+          <a href="../rrd_conf/new_rrd_conf_form.php">
+	  <?php echo gettext("Insert new profile"); ?> ?</a>
         </font>
     </th>
     <td class="left">
@@ -85,7 +86,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
         }
     }
 ?>
-        <option value="" selected>None</option>
+        <option value="" selected>
+	<?php echo gettext("None"); ?> </option>
       </select>
     </td>
   </tr>
@@ -108,9 +110,10 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 -->
 
   <tr>
-    <th>Sensors<br/>
+    <th> <?php echo gettext("Sensors"); ?> <br/>
         <font size="-2">
-          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+          <a href="../sensor/newsensorform.php">
+	  <?php echo gettext("Insert new sensor"); ?> ?</a>
         </font>
     </th>
     <td class="left">
@@ -142,15 +145,16 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     </td>
   </tr>
     <tr>
-    <th> Scan options </th>
+    <th> <?php echo gettext("Scan options"); ?> </th>
     <td class="left">
-        <input type="checkbox" name="nessus" value="1"> Enable nessus scan </input>
+        <input type="checkbox" name="nessus" value="1">
+	<?php echo gettext("Enable nessus scan"); ?> </input>
     </td> 
   </tr>
 
 
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr" rows="2" cols="30"></textarea>
     </td>

@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>New policy</h1>
+  <h1> <?php echo gettext("New policy"); ?> </h1>
 
 <?php
     /* check params */
@@ -30,7 +30,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 {
 ?>
 
-  <p align="center">Please, complete all the fields</p>
+  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
   <?php exit();?>
 
 <?php
@@ -55,7 +55,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     $end_expr = (($end_day -1) * 7) + $end_hour;
     if ($begin_expr >= $end_expr) {
 ?>
-        <p align="center">Error: Incorrect range of dates!</p>
+        <p align="center"> <?php echo gettext("Error: Incorrect range of dates"); ?> !</p>
 <?php   exit;
     }
 
@@ -125,8 +125,9 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
                    $source_ips, $dest_ips, $source_nets, $dest_nets,
                    $ports, $sigs, $sensors);
 ?>
-    <p>Policy succesfully inserted</p>
-    <p><a href="policy.php">Back</a></p>
+    <p> <?php echo gettext("Policy succesfully inserted"); ?> </p>
+    <p><a href="policy.php">
+    <?php echo gettext("Back"); ?> </a></p>
 <?php
     $db->close($conn);
 }

@@ -1,0 +1,55 @@
+Source: ossim
+Section: net
+Priority: optional
+Maintainer: David Gil <dgil@ossim.net>
+Build-Depends: debhelper (>= 4.0.0), gcc (>= 3.3.4), libglib2.0-dev (>= 2.4.6), libgda2-dev (>= 1.0.4), libgnet-dev (>= 2.0.4), automake1.4 | automake1.6, python-dev (>= 2.3), gettext
+Standards-Version: 3.6.1
+
+Package: ossim
+Architecture: any
+Depends: ossim-agent (= ${Source-Version}), ossim-framework (= ${Source-Version}), ossim-server (= ${Source-Version}), ossim-mysql (= ${Source-Version})
+Suggests: ossim-contrib
+Description: Open Source Security Information Management (Meta-package)
+
+Package: ossim-mysql
+Architecture: any
+Depends: debconf (>= 0.2.17), mysql-server (>= 4.0.21) | mysql-server-4.1, mysql-client (>= 4.0.21) | mysql-client-4.1
+Suggests: ossim-contrib
+Description: Open Source Security Information Management (MySQL)
+ OSSIM MySQL tables
+
+Package: ossim-server
+Architecture: any
+Depends: ${shlibs:Depends}, debconf (>= 0.2.17), libglib2.0-0 (>= 2.4), libgda2-1 (>= 1.0), libgnet2.0-0 (>= 2.0), gda2-mysql (>= 1.0)
+Suggests: ossim-contrib
+Description: Open Source Security Information Management (Server)
+ Correlation engine for OSSIM
+ 
+Package: ossim-framework
+Architecture: any
+Depends: apache (>= 1.3.31) | apache-ssl (>= 1.3.31), php4 (>= 4.3.4), libphp-adodb (>= 4.21), php4-mysql (>= 4.3.4), php4-gd (>= 4.3.4), libphp-phplot (>= 4.4.6), php4-domxml (>= 4.3.4), php4-xslt (>= 4.3.4), rrdtool (>= 1.1.0), librrd0 (>= 1.1.0), librrdp-perl (>= 1.1.0), librrds-perl (>= 1.1.0), mrtg (>= 2.10.13), python (>= 2.3), python-mysqldb, nmap, php-fpdf (>= 1.52), libphp-jpgraph (>= 1.5.2), acidlab (>= 0.9.6b20), acidlab-mysql (>= 0.9.6b20), phpgacl (>= 3.3.3), ttf-bitstream-vera, ossim-utils (= ${Source-Version})
+Suggests: ossim-contrib, nessus, nessus-plugins
+Description: Open Source Security Information Management (Framework)
+ OSSIM Framework
+
+Package: ossim-agent
+Architecture: any
+Depends: debconf (>= 0.2.26), python (>= 2.3)
+Suggests: ossim-utils, ossim-contrib, python-mysqldb, snort, apache, p0f, arpwatch, ntop, tcptrack, pads, nessusd
+Description: Open Source Security Information Management (Agent)
+ OSSIM Sensor Manager
+ .
+ An agent in OSSIM is set of python script that gathers and sends the
+ output of the different plugin or tool to the correlation engine for
+ further process.
+
+Package: ossim-utils
+Architecture: any
+Depends: debconf (>= 0.2.17), perl (>= 5.8.4), libcompress-zlib-perl, libdbi-perl, libdbd-mysql-perl
+Suggests: ossim-contrib
+Description: Open Source Security Information Management (Utils)
+
+Package: ossim-contrib
+Architecture: any
+Description: Open Source Security Information Management (Contrib)
+

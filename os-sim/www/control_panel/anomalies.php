@@ -5,7 +5,7 @@ Session::logcheck("MenuReports", "ReportsAnomalies");
 
 <html>
 <head>
-  <title> Control Panel </title>
+  <title> <?php echo gettext("Control Panel"); ?> </title>
   <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
@@ -13,7 +13,7 @@ Session::logcheck("MenuReports", "ReportsAnomalies");
 
 <body>
 
-  <h1 align="center">Anomalies</h1>
+  <h1 align="center"> <?php echo gettext("Anomalies"); ?> </h1>
 
 <?php
 
@@ -42,13 +42,10 @@ function echo_values($val, $max, $ip, $image) {
 
 /* get conf */
 $conf = new ossim_conf();
-$mrtg_link = $conf->get_conf("mrtg_link");
 $graph_link = $conf->get_conf("graph_link");
 $acid_link = $conf->get_conf("acid_link");
 $ntop_link = $conf->get_conf("ntop_link");
 $opennms_link = $conf->get_conf("opennms_link");
-$stats_link = $conf->get_conf("stats_link");
-$mailstats_link = $conf->get_conf("mailstats_link");
 
 /* connect to db */
 $db = new ossim_db();
@@ -62,19 +59,19 @@ $conn = $db->connect();
     <td colspan = 8>
     <table align="center" width="100%">
     <tr>
-    <th colspan=4><u>RRD anomalies</u> <a name="Anomalies" 
-        href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title="Fix"><img
+    <th colspan=4><u> <?php echo gettext("RRD anomalies"); ?> </u> <a name="Anomalies" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title=" <?php echo gettext("Fix"); ?> "><img
         src="../pixmaps/Hammer2.png" width="24" border="0"></a>
     </th>
-    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=1">Acknowledged</A></th>
-    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=0">Not Acknowledged</A></th>
-    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=-1">All</A></th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=1"> <?php echo gettext("Acknowledged"); ?> </A></th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=0"> <?php echo gettext("Not Acknowledged"); ?> </A></th>
+    <th align="center"><A HREF="<?php echo $_SERVER["PHP_SELF"] ?>?acked=-1"> <?php echo gettext("All"); ?> </A></th>
     </tr>
     <tr>
-    <th> Host </th><th> What </th><th> When </th>
-    <th> Not acked count (hours)</th><th> Over threshold (absolute)</th>
-    <th align="center">Ack</th>
-    <th align="center">Delete</th>
+    <th> <?php echo gettext("Host"); ?> </th><th> <?php echo gettext("What"); ?> </th><th> <?php echo gettext("When"); ?> </th>
+    <th> <?php echo gettext("Not acked count (hours)"); ?> </th><th> <?php echo gettext("Over threshold (absolute)"); ?> </th>
+    <th align="center"> <?php echo gettext("Ack"); ?> </th>
+    <th align="center"> <?php echo gettext("Delete"); ?> </th>
     </tr>
 
 <form action="handle_anomaly.php" method="GET">
@@ -132,10 +129,10 @@ echo $alert->get_what();?>"></input></td>
 ?>
 <tr><th colspan="8"><hr noshade></th></tr>
 <tr>
-<th> Host </th><th> What </th><th> When </th>
-<th> Not acked count (hours)</th><th> Over threshold (absolute)</th>
-<th align="center">Ack</th>
-<th align="center">Delete</th>
+<th> <?php echo gettext("Host"); ?> </th><th> <?php echo gettext("What"); ?> </th><th> <?php echo gettext("When"); ?> </th>
+<th> <?php echo gettext("Not acked count (hours)"); ?> </th><th> <?php echo gettext("Over threshold (absolute)"); ?> </th>
+<th align="center"> <?php echo gettext("Ack"); ?> </th>
+<th align="center"> <?php echo gettext("Delete"); ?> </th>
 </tr>
 <?php
 
@@ -175,8 +172,8 @@ echo $alert->get_what();?>"></input></td>
 <?php }}?>
 <tr>
 <td align="center" colspan="7">
-<input type="submit" value="OK">
-<input type="reset" value="reset">
+<input type="submit" value=" <?php echo gettext("OK"); ?> ">
+<input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
 </form>
@@ -189,13 +186,13 @@ echo $alert->get_what();?>"></input></td>
     <tr>
     <td colspan="8">
     <table width="100%">
-    <tr><th colspan="6"><u>OS Changes</u> <a name="OS" 
-        href="<?php echo $_SERVER["PHP_SELF"]?>?#OS" title="Fix"><img
+    <tr><th colspan="6"><u> <?php echo gettext("OS Changes"); ?> </u> <a name="OS" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#OS" title=" <?php echo gettext("Fix"); ?> "><img
         src="../pixmaps/Hammer2.png" width="24" border="0"></a>  
-        &nbsp;&nbsp;[ <a href="os.php" target="_blank"> Get list </a> ]
+        &nbsp;&nbsp;[ <a href="os.php" target="_blank"> <?php echo gettext("Get list"); ?> </a> ]
     </th></tr>
-    <tr><th> Host </th><th colspan="1"> OS </th><th colspan="1"> Previous OS
-    </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
+    <tr><th> <?php echo gettext("Host"); ?> </th><th colspan="1"> OS </th><th colspan="1"> <?php echo gettext("Previous OS"); ?> 
+    </th><th> <?php echo gettext("When"); ?> </th><th> <?php echo gettext("Ack"); ?> </th><th> <?php echo gettext("Ignore"); ?> </th></tr>
 <form action="handle_os.php" method="GET">
 <?php
 if ($host_os_list = Host_os::get_list($conn, "where anom = 1 and os != previous", "")) {
@@ -238,8 +235,8 @@ $encoded;?>"></input>
 ?>
 <tr>
 <td align="center" colspan="6">
-<input type="submit" value="OK">
-<input type="reset" value="reset">
+<input type="submit" value=" <?php echo gettext("OK"); ?> ">
+<input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
 </form>
@@ -254,13 +251,13 @@ $encoded;?>"></input>
     <tr>
     <td colspan="8">
     <table width="100%">
-    <tr><th colspan="6"><u>Mac Changes</u> <a name="Mac" 
-        href="<?php echo $_SERVER["PHP_SELF"]?>?#Mac" title="Fix"><img
+    <tr><th colspan="6"><u> <?php echo gettext("Mac Changes"); ?> </u> <a name="Mac" 
+        href="<?php echo $_SERVER["PHP_SELF"]?>?#Mac" title=" <?php echo gettext("Fix"); ?> "><img
         src="../pixmaps/Hammer2.png" width="24" border="0"></a>  
-        &nbsp;&nbsp;[ <a href="mac.php" target="_blank"> Get list </a> ]
+        &nbsp;&nbsp;[ <a href="mac.php" target="_blank"> <?php echo gettext("Get list"); ?> </a> ]
     </th></tr>
-    <tr><th> Host </th><th colspan="1"> Mac </th><th colspan="1"> Previous Mac
-    </th><th> When </th><th> Ack </th><th> Ignore </th></tr>
+    <tr><th> <?php echo gettext("Host"); ?> </th><th colspan="1"> <?php echo gettext("Mac"); ?> </th><th colspan="1"> <?php echo gettext("Previous Mac"); ?> 
+    </th><th> <?php echo gettext("When"); ?> </th><th> <?php echo gettext("Ack"); ?> </th><th> <?php echo gettext("Ignore"); ?> </th></tr>
 <form action="handle_mac.php" method="GET">
 <?php
 if ($host_mac_list = Host_mac::get_list($conn, "where anom = 1 and mac != previous", "")) {
@@ -304,8 +301,8 @@ $encoded;?>"></input>
 ?>
 <tr>
 <td align="center" colspan="6">
-<input type="submit" value="OK">
-<input type="reset" value="reset">
+<input type="submit" value=" <?php echo gettext("OK"); ?> ">
+<input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
 </form>

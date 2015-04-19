@@ -9,14 +9,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Modify user</h1>
+  <h1> <?php echo gettext("Modify user"); ?> </h1>
 
 <?php
     /* check user arg */
@@ -57,16 +57,16 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
   <input type="hidden" name="insert" value="insert" />
   <input type="hidden" name="user" value="<?php echo $user->get_login() ?>" />
   <tr>
-    <th>User login</th>
+    <th> <?php echo gettext("User login"); ?> </th>
     <th class="left"><?php echo $user->get_login(); ?></th>
   </tr>
   <tr>
-    <th>User name</th>
+    <th> <?php echo gettext("User name"); ?> </th>
     <td class="left"><input type="text" name="name"
         value="<?php echo $user->get_name(); ?>" /></td>
   </tr>
   <tr>
-    <th>Allowed nets</th>
+    <th> <?php echo gettext("Allowed nets"); ?> </th>
     <td class="left">
 <?php
     $i = 0;
@@ -95,7 +95,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 <br/>
 <table align="center">
   <tr>
-    <th colspan="2">Permissions</th>
+    <th colspan="2"> <?php echo gettext("Permissions"); ?> </th>
   </tr>
   <tr>
     <td colspan="2" class="left">

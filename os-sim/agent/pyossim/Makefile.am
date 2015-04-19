@@ -22,6 +22,7 @@ ossim_pyossim_DATA    = __init__.py \
 	ParserPrelude.py \
 	ParserPads.py \
 	ParserP0f.py \
+	ParserSkel.py \
 	ParserSyslog.py \
 	ParserNTsyslog.py \
 	MonitorCA.py \

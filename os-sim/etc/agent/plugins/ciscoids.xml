@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!--
+    Cisco Secure IDS
+-->
+<plugin id="1515" process="" type="detector" start="no" enable="yes">
+    <startup></startup>
+    <shutdown></shutdown>
+    <source>common</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>/tmp/cisco.log</location>
+</plugin>
+

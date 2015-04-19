@@ -78,7 +78,7 @@ class Net {
         settype($threshold_a, "int");
         settype($alert, "int");
         settype($persistence, "int");
-        $name = htmlentities($name);
+        $name = mysql_escape_string($name);
         $rrd_profile = htmlentities($rrd_profile);
         $persistence = htmlentities($descr);
 
@@ -197,6 +197,25 @@ class Net {
             exit;
         }
     }
+    function isIpInAnyNet($conn, $ip)
+    {
+
+        $net_list = Net::get_list($conn);
+        foreach ($net_list as $n) 
+        {
+            list($net, $mask) = split("/", $n);
+            
+            $val1 = ip2long($ip);
+            $val2 = ip2long($net);
+
+            if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask)))
+                return True;
+        }
+
+        return False;
+    }
+
+
 
 }
 

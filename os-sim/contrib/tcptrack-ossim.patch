@@ -581,7 +581,7 @@ diff -Naur tcptrack-1.1.4/src/TCPTrack.cc tcptrack-1.1.4-ossim/src/TCPTrack.cc
  	cf.fastmode=false;
  	cf.promisc=true;
  	cf.detect=true;
-+	cf.port=4003;
++	cf.port=40003;
 +	cf.maxFork = 255;
 +	cf.daemon=false;
  	bool got_iface=false;

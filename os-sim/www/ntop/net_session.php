@@ -78,7 +78,11 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
                     echo <<<EOF
 <HTML>
   <HEAD>
-    <TITLE>Active TCP Sessions</TITLE>
+    <TITLE> 
+EOF;    
+    <?php echo gettext("Active TCP Sessions"); ?> 
+echo <<<EOF
+    </TITLE>
     <LINK REL=stylesheet HREF="$ntop_link/style.css" type="text/css">
   </HEAD>
   <BODY BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>

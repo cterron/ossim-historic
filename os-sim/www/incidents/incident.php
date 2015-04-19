@@ -5,7 +5,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -80,11 +80,9 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                 !isset($_GET["src_ips"]) or !isset($_GET["src_ports"]) or
                 !isset($_GET["dst_ips"]) or !isset($_GET["dst_ports"]))
             {
-                echo "
-                <p align=\"center\">
-                  Error trying to insert new alarm ticket (argument missing)
-                </p>
-                ";
+                echo "<p align=\"center\">";
+                printf(gettext("Error trying to insert new alarm ticket (argument missing)"));
+                echo "</p>";
                 exit;
             } else {
                 $incident_id = Incident::insert_alarm (
@@ -176,7 +174,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
         } else {
             echo "
             <p align=\"center\"><font color=\"red\">
-              Description and Action fields are required
+              " . gettext("Description and Action fields are required") . "
             </font></p>
             ";
         }
@@ -249,7 +247,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
               action="<?php echo $_SERVER["PHP_SELF"] . "?id=$incident_id" ?>">
         <table align="center">
           <tr>
-            <th>Name</th>
+            <th> <?php echo gettext("Name"); ?> </th>
             <td><input type="text" size="50" name="title"
                        value="<?php echo $incident->get_title(); ?>" />
             </td>
@@ -261,28 +259,28 @@ Session::logcheck("MenuReports", "ReportsIncidents");
             $alarms = $alarms_list[0];
 ?>
           <tr>
-            <th>Source</th>
+            <th> <?php echo gettext("Source"); ?> </th>
             <td>
               <input type="" size="50" name="src_ips"
                      value="<?php echo $alarms->get_src_ips() ?>" />
             </td>
           </tr>
           <tr>
-            <th>Destination</th>
+            <th> <?php echo gettext("Destination"); ?> </th>
             <td>
               <input type="" size="50" name="dst_ips"
                      value="<?php echo $alarms->get_dst_ips() ?>" />
             </td>
           </tr>
           <tr>
-            <th>Src Ports</th>
+            <th> <?php echo gettext("Src Ports"); ?> </th>
             <td>
               <input type="" size="50" name="src_ports"
                      value="<?php echo $alarms->get_src_ports() ?>" />
             </td>
           </tr>
           <tr>
-            <th>Dst Ports</th>
+            <th> <?php echo gettext("Dst Ports"); ?> </th>
             <td>
               <input type="" size="50" name="dst_ports"
                      value="<?php echo $alarms->get_dst_ports() ?>" />
@@ -297,21 +295,21 @@ Session::logcheck("MenuReports", "ReportsIncidents");
             $metrics = $metrics_list[0];
 ?>
           <tr>
-            <th>Target</th>
+            <th> <?php echo gettext("Target"); ?> </th>
             <td>
               <input type="text" size="50" name="target"
                      value="<?php echo $metrics->get_target() ?>" />
             </td>
           </tr>
           <tr>
-            <th>Metric Type</th>
+            <th> <?php echo gettext("Metric Type"); ?> </th>
             <td>
               <input type="text" size="50" name="metric_type"
                      value="<?php echo $metrics->get_metric_type() ?>" />
             </td>
           </tr>
           <tr>
-            <th>Metric Value</th>
+            <th> <?php echo gettext("Metric Value"); ?> </th>
             <td>
               <input type="text" size="50" name="metric_value"
                      value="<?php echo $metrics->get_metric_value() ?>" />
@@ -366,12 +364,13 @@ Session::logcheck("MenuReports", "ReportsIncidents");
       "?id=" . $incident->get_id(); ?>">
 <table align="center" width="100%">
   <tr>
-    <th>Ticket</th>
-    <th width="550px">Incident</th>
-    <th>In Charge</th>
-    <th>Status</th>
-    <th>Priority</th>
-    <th>Action</th>
+    <th> <?php echo gettext("Ticket"); ?> </th>
+    <th width="550px">
+    <?php echo gettext("Incident"); ?> </th>
+    <th> <?php echo gettext("In Charge"); ?> </th>
+    <th> <?php echo gettext("Status"); ?> </th>
+    <th> <?php echo gettext("Priority"); ?> </th>
+    <th> <?php echo gettext("Action"); ?> </th>
   </tr>
   <tr>
     <td><b><?php echo $incident->get_ticket() ?></b></td>
@@ -452,14 +451,14 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 <br/><br/>
 <table align="center" width="100%">
   <tr>
-    <th>Date</th>
-    <th>User / Description / Action</th>
-    <th>Priority</th>
-    <th>Status</th>
-    <th>In Charge</th>
-    <th>Transferred</th>
-    <th>Copy</th>
-    <th>Action</th>
+    <th> <?php echo gettext("Date"); ?> </th>
+    <th> <?php echo gettext("User / Description / Action"); ?> </th>
+    <th> <?php echo gettext("Priority"); ?> </th>
+    <th> <?php echo gettext("Status"); ?> </th>
+    <th> <?php echo gettext("In Charge"); ?> </th>
+    <th> <?php echo gettext("Transferred"); ?> </th>
+    <th> <?php echo gettext("Copy"); ?> </th>
+    <th> <?php echo gettext("Action"); ?> </th>
   </tr>
 
 <?php
@@ -475,11 +474,11 @@ Session::logcheck("MenuReports", "ReportsIncidents");
            value="<?php echo $incident_ticket->get_id(); ?>" />
     <td><?php echo $incident_ticket->get_date(); ?></td>
     <td class="left">
-      <b>User</b>:
+      <b> <?php echo gettext("User"); ?> </b>:
       <?php echo $incident_ticket->get_user(); ?><br/><hr/>
-      <b>Description</b>:
+      <b> <?php echo gettext("Description"); ?> </b>:
       <?php echo $incident_ticket->get_description(); ?><br/><hr/>
-      <b>Action</b>:
+      <b> <?php echo gettext("Action"); ?> </b>:
       <?php echo $incident_ticket->get_action(); ?>
 
 <?php
@@ -574,47 +573,59 @@ Session::logcheck("MenuReports", "ReportsIncidents");
   <tr>
     <td><?php echo strftime("%A %d-%b-%Y", time()) ?></td>
     <td>
-       Description<br/>
+       <?php echo gettext("Description"); ?> <br/>
       <textarea name="description" rows="2" cols="30"></textarea><br/>
-       Action<br/>
+       <?php echo gettext("Action"); ?> <br/>
       <textarea name="action" rows="2" cols="30"></textarea><br/>
-       Attachment<br/>
+       <?php echo gettext("Attachment"); ?> <br/>
       <input type="file" name="file" />
     </td>
     <td colspan="2">
-      Priority<br/>
+      <?php echo gettext("Priority"); ?> <br/>
       <select name="priority">
         <option value="1" 
-            <?php if ($priority == 1) echo "SELECTED" ?>>1</option>
+            <?php if ($priority == 1) echo "SELECTED" ?>>
+	    <?php echo gettext("1"); ?> </option>
         <option value="2"
-            <?php if ($priority == 2) echo "SELECTED" ?>>2</option>
+            <?php if ($priority == 2) echo "SELECTED" ?>>
+	    <?php echo gettext("2"); ?> </option>
         <option value="3"
-            <?php if ($priority == 3) echo "SELECTED" ?>>3</option>
+            <?php if ($priority == 3) echo "SELECTED" ?>>
+	    <?php echo gettext("3"); ?> </option>
         <option value="4"
-            <?php if ($priority == 4) echo "SELECTED" ?>>4</option>
+            <?php if ($priority == 4) echo "SELECTED" ?>>
+	    <?php echo gettext("4"); ?> </option>
         <option value="5"
-            <?php if ($priority == 5) echo "SELECTED" ?>>5</option>
+            <?php if ($priority == 5) echo "SELECTED" ?>>
+	    <?php echo gettext("5"); ?> </option>
         <option value="6"
-            <?php if ($priority == 6) echo "SELECTED" ?>>6</option>
+            <?php if ($priority == 6) echo "SELECTED" ?>>
+	    <?php echo gettext("6"); ?> </option>
         <option value="7"
-            <?php if ($priority == 7) echo "SELECTED" ?>>7</option>
+            <?php if ($priority == 7) echo "SELECTED" ?>>
+	    <?php echo gettext("7"); ?> </option>
         <option value="8"
-            <?php if ($priority == 8) echo "SELECTED" ?>>8</option>
+            <?php if ($priority == 8) echo "SELECTED" ?>>
+	    <?php echo gettext("8"); ?> </option>
         <option value="9"
-            <?php if ($priority == 9) echo "SELECTED" ?>>9</option>
+            <?php if ($priority == 9) echo "SELECTED" ?>>
+	    <?php echo gettext("9"); ?> </option>
         <option value="10"
-            <?php if ($priority == 10) echo "SELECTED" ?>>10</option>
+            <?php if ($priority == 10) echo "SELECTED" ?>>
+	    <?php echo gettext("10"); ?> </option>
       </select><br/><br/>
-      status<br/>
+      <?php echo gettext("status"); ?> <br/>
       <select name="status">
         <option value="Open"
-            <?php if ($status == 'Open') echo "SELECTED" ?>>Open</option>
+            <?php if ($status == 'Open') echo "SELECTED" ?>>
+	    <?php echo gettext("Open"); ?> </option>
         <option value="Closed"
-            <?php if ($status == 'Closed') echo "SELECTED" ?>>Closed</option>
+            <?php if ($status == 'Closed') echo "SELECTED" ?>>
+	    <?php echo gettext("Closed"); ?> </option>
       </select>
     </td>
     <td colspan="3">
-      In charge:<br/>
+      <?php echo gettext("In charge"); ?> :<br/>
       <b>
         <?php
             if ($transferred) 
@@ -628,9 +639,9 @@ Session::logcheck("MenuReports", "ReportsIncidents");
       <br/><br/>
       <input type="hidden" name="in_charge" 
              value="<?php echo $in_charge ?>" />
-      Transfer<br/>
+      <?php echo gettext("Transfer"); ?> <br/>
       <input type="text" name="transferred" /><br/>
-      Copy (e-mail)<br/>
+      <?php echo gettext("Copy (e-mail)"); ?> <br/>
       <input type="text" name="copy" />
     </td>
     <td><input type="submit" name="insert_ticket" value="Add" /></td>

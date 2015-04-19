@@ -38,24 +38,45 @@ class MonitorTcptrack(Monitor.Monitor):
 
             # connect to tcptrack and send query
             #
-            conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            conn.connect((tcptrack_ip, int(tcptrack_port)))
+            try:
+                conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                conn.connect((tcptrack_ip, int(tcptrack_port)))
+            except socket.error:
+                util.debug(__name__, "Connection refused (%s:%s)" %\
+                    (tcptrack_ip, tcptrack_port), "**", "RED")
+                return None
             conn.send(query + "\n")
 
             # get session data
             #
             data = conn.recv(1024)
+            conn.shutdown(2)
+            conn.close()
             util.debug (__name__, data, "=>", "CYAN")
+
+            # obtain tcptrack sid from array index
+            # 1: Data Sent
+            # 2: Data Recv
+            # 3: Session Duration
+            #
             sid = int(rule["plugin_sid"]) - 1
-            return data.split()[sid]
+            value = data.split()[sid]
+            if int(value) >= 0:
+                return value
+            else:
+                return None # Error
 
         except socket.error, e:
             util.debug(__name__, "Socket Error (" + str(e) + ")",
                        "!!", "RED")
+            conn.shutdown(2)
+            conn.close()
             return None
 
         except Exception, e:
             util.debug (__name__, e, '!!', 'RED')
+            conn.shutdown(2)
+            conn.close()
             print >> sys.stderr, __name__, ": Unexpected exception:", e
             return None
 

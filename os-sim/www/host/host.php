@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Hosts</h1>
+  <h1> <?php echo gettext("Hosts"); ?> </h1>
 
 <?php 
     require_once 'ossim_db.inc';
@@ -32,23 +32,23 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("hostname", $order);
-          ?>">Hostname</a></th>
+          ?>"> <?php echo gettext("Hostname"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">Ip</a></th>
-      <th>NAT</th>
+          ?>"> <?php echo gettext("Ip"); ?> </a></th>
+      <th> <?php echo gettext("NAT"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("asset", $order);
-          ?>">Asset</a></th>
+          ?>"> <?php echo gettext("Asset"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("threshold_c", $order);
-          ?>">Threshold_C</a></th>
+          ?>"> <?php echo gettext("Threshold_C"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("threshold_a", $order);
-          ?>">Threshold_A</a></th>
+          ?>"> <?php echo gettext("Threshold_A"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("rrd_profile", $order);
-          ?>">RRD Profile</a></th>
+          ?>"> <?php echo gettext("RRD Profile"); ?> </a></th>
 <!--
       <th><a href="<?php // echo $_SERVER["PHP_SELF"]?>?order=<?php
             // echo ossim_db::get_order("alert", $order);
@@ -57,10 +57,10 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
             // echo ossim_db::get_order("persistence", $order);
           ?>">Persistence</a></th>
 -->
-      <th>Sensors</th>
-      <th>Scantype</th>
-      <th>Description</th>
-      <th>Action</th>
+      <th> <?php echo gettext("Sensors"); ?> </th>
+      <th> <?php echo gettext("Scantype"); ?> </th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php
@@ -115,15 +115,15 @@ if($scan_list = Host_scan::get_list($conn, "WHERE host_ip = inet_aton('$ip')")){
     }
 }
 } else {
-echo "None";
+echo gettext("None");
 }
 
 ?>
     </td>
       <td><?php echo $host->get_descr(); ?></td>
       <td>
-          <a href="modifyhostform.php?ip=<?php echo $ip ?>">Modify</a>
-          <a href="deletehost.php?ip=<?php echo $ip ?>">Delete</a>
+          <a href="modifyhostform.php?ip=<?php echo $ip ?>"> <?php echo gettext("Modify"); ?> </a>
+          <a href="deletehost.php?ip=<?php echo $ip ?>"> <?php echo gettext("Delete"); ?> </a>
       </td>
     </tr>
 
@@ -134,10 +134,12 @@ echo "None";
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="12"><a href="newhostform.php">Insert new host</a></td>
+      <td colspan="12"><a href="newhostform.php">
+      <?php echo gettext("Insert new host"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="12"><a href="../conf/reload.php?what=hosts">Reload</a></td>
+      <td colspan="12"><a href="../conf/reload.php?what=hosts">
+      <?php echo gettext("Reload"); ?> </a></td>
     </tr>
   </table>
 
@@ -145,7 +147,7 @@ echo "None";
   <table align="center">
   <form action="<?php echo $_SERVER["PHP_SELF"]?>" method="post">
     <tr>
-      <th>Search</th>
+      <th> <?php echo gettext("Search"); ?> </th>
       <td><input type="text" name="search"></td>
     </tr>
     <tr><td colspan="2"><input type="submit" value="OK"></td></tr>

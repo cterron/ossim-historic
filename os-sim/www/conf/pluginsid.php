@@ -5,13 +5,13 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
 
 <html>
 <head>
-  <title> Riskmeter </title>
+  <title> <?php echo gettext("Riskmeter"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Priority and Reliability configuration</h1>
+  <h1> <?php echo gettext("Priority and Reliability configuration"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -38,26 +38,33 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
       <tr>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("plugin_id", $order); ?>&id=<?php 
-            echo $id ?>">Plugin</a></th>
+            echo $id ?>">
+	    <?php echo gettext("Plugin"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("sid", $order); ?>&id=<?php 
-            echo $id ?>">Sid</a></th>
+            echo $id ?>"> 
+	    <?php echo gettext("Sid"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("category_id", $order); ?>&id=<?php 
-            echo $id ?>">Category</a></th>
+            echo $id ?>">
+	    <?php echo gettext("Category"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("class_id", $order); ?>&id=<?php
-            echo $id ?>">Class</a></th>
+            echo $id ?>">
+	    <?php echo gettext("Class"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("name", $order); ?>&id=<?php 
-            echo $id ?>">Name</a></th>
+            echo $id ?>">
+	    <?php echo gettext("Name"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("priority", $order); ?>&id=<?php 
-            echo $id ?>">Priority</a></th>
+            echo $id ?>">
+	    <?php echo gettext("Priority"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("reliability", $order); ?>&id=<?php 
-            echo $id ?>">Reliability</a></th>
-        <th>Action</th>
+            echo $id ?>">
+	    <?php echo gettext("Reliability"); ?> </a></th>
+        <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php

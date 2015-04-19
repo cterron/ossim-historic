@@ -23,7 +23,7 @@ class ParserIptables(Parser.Parser):
         util.debug (__name__, 'plugin started (syslog)...', '--')
         
         pattern1 = '(\S+)\s+(\d+)\s+(\d\d):(\d\d):(\d\d)\s+(\S*) (\S*):'
-        pattern2 = '(\S+)\s+IN=(\S*) OUT=(\S*) \S+ SRC=(\S+) DST=(\S+) LEN=(\d+) \S+ \S+ TTL=(\d+) .* PROTO=(\S*) SPT=(\d*) DPT=(\d*)'
+        pattern2 = '(\S+)\s+IN=(\S*) OUT=(\S*) \S+ SRC=(\S+) DST=(\S+) LEN=(\d+) \S+ \S+ TTL=(\d+) .*? PROTO=(\S*) SPT=(\d*) DPT=(\d*)'
 
         location = self.plugin["location"]
         try:
@@ -77,6 +77,12 @@ class ParserIptables(Parser.Parser):
                         plugin_sid = 2
                     elif action == 'DROP' or action == 'DENY':
                         plugin_sid = 3
+                    elif action == 'Inbound':
+                        plugin_sid = 4
+                    elif action == 'Outbound':
+                        plugin_sid = 5
+                    else:
+                        plugin_sid = 1 # ??
 
                     self.agent.sendAlert  (type = 'detector',
                                      date       = date,

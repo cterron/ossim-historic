@@ -5,13 +5,13 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
 
 <html>
 <head>
-  <title> Riskmeter </title>
+  <title> <?php echo gettext("Riskmeter"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Plugin reference</h1>
+  <h1> <?php echo gettext("Plugin reference"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -50,11 +50,11 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
     $count = Plugin_reference::get_count($conn);
     
     if ($inf >= 25) {
-        echo "<a href=\"$inf_link\">&lt;- Prev 25</a>";
+        echo "<a href=\"$inf_link\">&lt;- "; printf(gettext("Prev %d"), 25); echo "</a>";
     }
-    echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
+    echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
     if ($sup < $count) {
-        echo "<a href=\"$sup_link\">Next 25 -&gt;</a>";
+        echo "<a href=\"$sup_link\"> "; printf(gettext("Next %d"), 25); echo " -&gt;</a>";
     }
 ?>
         </td>
@@ -62,19 +62,23 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
       <tr>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("plugin_id", $order) . 
-            "&inf=$inf&sup=$sup" ?>">Plugin id</a>
+            "&inf=$inf&sup=$sup" ?>"> 
+	    <?php echo gettext("Plugin id"); ?> </a>
         </th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("plugin_sid", $order) .
-            "&inf=$inf&sup=$sup" ?>">Plugin sid</a>
+            "&inf=$inf&sup=$sup" ?>">
+	    <?php echo gettext("Plugin sid"); ?> </a>
         </th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("reference_id", $order) .
-            "&inf=$inf&sup=$sup" ?>">Reference id</a>
+            "&inf=$inf&sup=$sup" ?>">
+	    <?php echo gettext("Reference id"); ?> </a>
         </th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("reference_sid", $order) .
-            "&inf=$inf&sup=$sup"?>">Reference sid</a>
+            "&inf=$inf&sup=$sup"?>">
+	    <?php echo gettext("Reference sid"); ?> </a>
         </th>
       </tr>
 

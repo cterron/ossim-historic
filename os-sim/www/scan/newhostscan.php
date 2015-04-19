@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>New host scan configuration</h1>
+  <h1> <?php echo gettext("New host scan configuration"); ?> </h1>
 
 <?php
     /* check params */
@@ -38,8 +38,8 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
     $db->close($conn);
 ?>
-    <p>Host scan configuration succesfully inserted</p>
-    <p><a href="hostscan.php">Back</a></p>
+    <p> <?php echo gettext("Host scan configuration succesfully inserted"); ?> </p>
+    <p><a href="hostscan.php"> <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

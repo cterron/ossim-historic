@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Modify signature group</h1>
+  <h1> <?php echo gettext("Modify signature group"); ?> </h1>
 
 <?php
     require_once 'classes/Signature_group.inc';
@@ -36,7 +36,7 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Name</th>
+    <th> <?php echo gettext("Name"); ?> </th>
         <input type="hidden" name="name"
                value="<?php echo $sig_group->get_name(); ?>">
     <td class="left">
@@ -44,7 +44,7 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
     </td>
   </tr>
   <tr>
-    <th>Signatures</th>
+    <th> <?php echo gettext("Signatures"); ?> </th>
     <td class="left">
 <?php
 
@@ -79,7 +79,7 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
     </td>
   </tr>
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr" rows="2" 
         cols="20"><?php echo $sig_group->get_descr();?></textarea>

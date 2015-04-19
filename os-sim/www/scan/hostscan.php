@@ -5,14 +5,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Host scan configuration</h1>
+  <h1> <?php echo gettext("Host scan configuration"); ?> </h1>
 
 <?php
      if (!$order = $_GET["order"]) 
@@ -25,21 +25,24 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 ?>
 
 <p align="center">
-* Use policy->hosts or networks to define nessus scans or else you'll get unexpected results.
+* <?php echo gettext("Use policy->hosts or networks to define nessus scans or else you'll get unexpected results"); ?> .
 </p>
 
   <table align="center">
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
         echo ossim_db::get_order("host_ip", $order);
-        ?>">Host</a></th>
+        ?>">
+	<?php echo gettext("Host"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
         echo ossim_db::get_order("plugin_id", $order);
-        ?>">Plugin id</a></th>
+        ?>">
+	<?php echo gettext("Plugin id"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
         echo ossim_db::get_order("plugin_sid", $order);
-        ?>">Plugin sid</a></th>
-      <th>Action</th>
+        ?>">
+	<?php echo gettext("Plugin sid"); ?> </a></th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
     
 <?php
@@ -64,7 +67,8 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
       </td>
       <td>
           <a href="deletehostscan.php?host_ip=<?php echo $ip
-          ?>&plugin_id=<?php echo $id ?>">Delete</a>
+          ?>&plugin_id=<?php echo $id ?>">
+	  <?php echo gettext("Delete"); ?> </a>
       </td>
     </tr>
 <?php
@@ -73,7 +77,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="4"><a href="newhostscanform.php">New</a></td>
+      <td colspan="4"><a href="newhostscanform.php"> <?php echo gettext("New"); ?> </a></td>
     </tr>
   </table>
   

@@ -1,0 +1,4 @@
+#!/bin/bash
+update-rc.d ossim defaults 40 2&> /dev/null
+/etc/init.d/ossim restart
+

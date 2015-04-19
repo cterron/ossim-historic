@@ -1,0 +1,20 @@
+Template: ossim-utils/base
+Type: string
+Default: ossim
+Description: Please enter the name of the database to use
+
+Template: ossim-utils/host
+Type: string
+Default: localhost
+Description: Please enter the hostname of the mysql database server to use
+
+Template: ossim-utils/user
+Type: string
+Default: root
+Description: Please enter the name of the database user you want to use
+
+Template: ossim-utils/pass
+Type: password
+Default: 
+Description: Please enter the password for the database connection
+

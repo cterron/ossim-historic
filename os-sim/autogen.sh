@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# $Id: autogen.sh,v 1.2 2003/10/17 08:29:14 fot Exp $
+# $Id: autogen.sh,v 1.3 2004/11/02 12:10:32 dvgil Exp $
 #
 # Copyright (c) 2002  Daniel Elstner  <daniel.elstner@gmx.net>,
 #               2003  Murray Cumming  <murrayc@usa.net>
@@ -59,7 +59,7 @@ echo "- autoconf."		&& \
 echo "- automake."		&& \
   automake --add-missing --gnu	&& \
 echo				&& \
-  ./configure "$@"		&& exit 0
+  ./configure --sysconfdir=/etc --localstatedir=/var "$@"		&& exit 0
 
 exit 1
 

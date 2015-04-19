@@ -1,5 +1,87 @@
 # ChangeLog for OSSIM
 
+	31 Jan 2005 DK <dk@ossim.net> :
+	* 0.9.8rc1 released.
+
+* OSSIM-0.9.8rc1 (31 Jan 2005)
+
+	20 Jan 2005 DK <dk@ossim.net>:
+	* Internazionalization support.
+	* Fixed severe server bug.
+	* Minor fixes.
+	* Internazionalization: English, Spanish, French, German.
+
+	14 Jan 2005 David Gil <dgil@ossim.net>:
+	* Framework, new appearance.
+
+	12 Jan 2005 DK <dk@ossim.net> :
+	* Sensor / interface selection completed
+
+	04 Jan 2005 DK <dk@ossim.net> :
+	* Fixed server bug related to active sensors
+
+	23 Dec 2004 David Gil <dgil@ossim.net> :
+	* contrib/tcptrack-dgil.patch: new tcptrack patch.
+	Hopefully this means we have a working session monitor.
+	* agent/pyossim/util.py: insert date into debug messages.
+	* db/ossim_data.sql: new Cisco PIX sids.
+
+	19 Dec 2004 DK <dk@ossim.net> :
+	* Bugfixes
+    * Security fixes
+    * Sensor / interface selection
+    * Tighter osiris / hids integration
+
+	01 Dec 2004 David Gil <dgil@ossim.net> :
+	* New agent plugin, Snare Agent for Windows
+	  Snare collects, filters and forwards windows event log data
+
+	25 Nov 2004 David Gil <dgil@ossim.net> :
+	* Improved scan tool.
+
+	19 Nov 2004 David Gil <dgil@ossim.net> :
+	* Check for phpGACL installation before login
+
+	12 Nov 2004 David Gil <dgil@ossim.net> :
+	* Agent configuration splitted into individual files within the plugins
+	  directory.
+
+	10 Nov 2004 David Gil <dgil@ossim.net> :
+	* scripts/rrd_plugin.pl: -i and -d command line arguments for interface
+	  and database connection.
+
+	05 Nov 2004 DK <dk@ossim.net> :
+    * Visualize alarms using scanmap3d
+
+	05 Nov 2004 Manolin <jmgrozas@gmail.com> :
+    * Scanmap3d applet
+
+	04 Nov 2004 David Gil <dgil@ossim.net> :
+	* OSSIM Debian packages
+	* etc/init.d/ossim: cleanup
+	* agent/pyossim/Parser[Arpwatch|P0f|Pads]: check if log file exists,
+	  otherwise create it.
+	* agent/pyossim/ParserCA.py: catched a possible exception at database
+	  connection.
+
+	28 Oct 2004 David Gil <dgil@ossim.net> :
+	* agent/pyossim/agent.py: a few connection attemps on agent startup
+	* agent/pyossim/Config.py: Bug fixed in SAX XML parser (error reading
+	  entities).
+
+	28 Oct 2004 DK <dk@ossim.net> :
+	* agent/pyossim/MonitorTcptrack.py: Bug fixed. Close connection with
+	  conn.shutdown(2). Otherwise tcptrack monitor generates tcptrack zombie
+	  process.
+
+	28 Oct 2004 Stef <gingurz@ossim.net> :
+	* etc/agent/config.xml: Added entities to default agent configuration file
+
+	27 Oct 2004 David Gil <dgil@ossim.net> :
+	* Added Jfreechart applets to security report
+	* Added report_graph_type to configuration
+	* Added Jpgraphs images into PDF security report
+
 	25 Oct 2004 DK <dk@ossim.net> :
 	* 0.9.7 released.
 

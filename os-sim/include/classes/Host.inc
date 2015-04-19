@@ -2,6 +2,8 @@
 
 require_once ('ossim_conf.inc');
 require_once ('classes/Host_sensor_reference.inc');
+require_once ('classes/Host_os.inc');
+require_once ('classes/Host_mac.inc');
 
 class Host {
 
@@ -72,8 +74,9 @@ class Host {
         return $list;
     }
 
-    function insert($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
-                    $rrd_profile, $alert, $persistence, $nat, $sensors, $descr)
+    function insert($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a,
+                    $rrd_profile, $alert, $persistence, $nat, $sensors,
+                    $descr, $os = "unknown", $mac = "unkown")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -86,6 +89,8 @@ class Host {
         $alert = htmlentities($alert);
         $nat = htmlentities($nat);
         $descr = htmlentities($descr);
+        $os = htmlentities($os);
+        $mac = htmlentities($mac);
 
         $query = "INSERT INTO host (
             ip, hostname, asset, threshold_c, threshold_a, rrd_profile, 
@@ -98,6 +103,13 @@ class Host {
             exit;
         } else {
             Host_sensor_reference::insert($conn, $ip, $sensors);
+        }
+
+        $query = "INSERT INTO host_os (ip, os, previous, date, anom) 
+            VALUES (inet_aton('$ip'), '$os', '$os', curdate(), 0);";
+        if ($conn->Execute($query) === false) {
+            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
+            exit;
         }
     }
 
@@ -139,6 +151,8 @@ class Host {
             exit;
         } else {
             Host_sensor_reference::delete($conn, $ip);
+            Host_os::delete($conn, $ip);
+            Host_mac::delete($conn, $ip);
         }
     }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!-- RRD threshold and anomaly detector -->
+<plugin id="1507" process="rrd_plugin.pl" type="detector" start="yes" enable="yes">
+    <startup>/usr/share/ossim/scripts/rrd_plugin.pl -i &interface; -d &ossim_db;</startup>
+    <shutdown>killall rrd_plugin.pl</shutdown>
+    <source>rrd_plugin</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>&logdir;/rrd_plugin.log</location>
+</plugin>
+

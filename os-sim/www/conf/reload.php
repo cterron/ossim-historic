@@ -13,15 +13,13 @@
     /* create socket */
     $socket = socket_create (AF_INET, SOCK_STREAM, 0);
     if ($socket < 0) {
-        echo "socket_create() failed: reason: " . 
-            socket_strerror ($socket) . "\n";
+        printf(gettext("socket_create() failed: reason: %s\n"), socket_strerror($socket)); 
     }
 
     /* connect */
     $result = socket_connect ($socket, $address, $port);
     if ($result < 0) {
-        echo "socket_connect() failed.\nReason: ($result) " .
-            socket_strerror($result) . "\n";
+        printf(gettext("socket_connect() failed: reason: %s %s\n"), $result, socket_strerror($result));
     } 
 
     $in = 'connect id="1"' . "\n";
@@ -29,7 +27,7 @@
     socket_write ($socket, $in, strlen ($in));
     $out = socket_read ($socket, 2048);
     if (strncmp($out, 'ok id="1"', 9) != 0) {
-        echo "Error connecting to server...\n";
+        echo gettext("Error connecting to server") . " ...\n";
         exit;
     }
     
@@ -38,7 +36,7 @@
     socket_write ($socket, $in, strlen ($in));
     $out = socket_read ($socket, 2048);
     if (strncmp($out, 'ok id="2"', 9) != 0) {
-        echo "Bad response from server...\n";
+        echo gettext("Bad response from server") . " ...\n";
         exit;
     }
 
@@ -50,7 +48,7 @@
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-  <p>Reload completed successfully</p>
+  <p> <?php echo gettext("Reload completed successfully"); ?> </p>
 </body>
 </html>
 

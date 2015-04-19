@@ -3,8 +3,8 @@
 # set config file & path to ossim
 
 OSSIM_SERVER=/usr/bin/ossim-server
-OSSIM_AGENT=/usr/share/ossim/agent/ossim-agent
-OSSIM_PANEL=/usr/share/ossim/scripts/control_panel.py
+OSSIM_AGENT=/usr/bin/ossim-agent
+OSSIM_PANEL=/usr/bin/ossim-controlpanel
 
 # End of configuration
 
@@ -15,31 +15,59 @@ case "$1" in
     start)
 
         echo "Starting Open Source Security Information Management: OSSIM"
-
+        count=0
+        
         # Start ossim server
-        $OSSIM_SERVER -d -c /etc/ossim/server/config.xml
+        echo -n "  * Starting OSSIM Server.."
+        $OSSIM_SERVER -d -c /etc/ossim/server/config.xml 2&> /dev/null
+        sleep 5
+        if [ "`pidof $OSSIM_SERVER`" ] ; then
+           echo -e "           [  \33[32mOK\33[0m  ]"
+        else
+           echo -e "           [\33[31mFAILED\33[0m]"
+           let count=$count+1
+        fi
 
         # Start agent
-        sleep 8
-        $OSSIM_AGENT -d -c /etc/ossim/agent/config.xml
+        echo -n "  * Starting OSSIM Agent.."
+        $OSSIM_AGENT -d -c /etc/ossim/agent/config.xml 2&> /dev/null
+        if [ "`pidof -x $OSSIM_AGENT`" ] ; then
+           echo -e "            [  \33[32mOK\33[0m  ]"
+        else
+           echo -e "            [\33[31mFAILED\33[0m]"
+           let count=$count+2
+        fi
 
         # Start control panel
-        nice -n 19 $OSSIM_PANEL -d -s 600
-    
-        if [ "`pidof $OSSIM_SERVER`" ] ; then
-            echo "OSSIM is up and running!"
+        echo -n "  * Starting OSSIM Control Panel.."
+        nice -n 19 $OSSIM_PANEL -d -s 600 2&> /dev/null
+        if [ "`pidof -x $OSSIM_PANEL`" ] ; then
+           echo -e "    [  \33[32mOK\33[0m  ]"
         else
-            exit 0
+           echo -e "    [\33[31mFAILED\33[0m]"
+           let count=$count+4
         fi
+
+        case $count in
+          0) echo "OSSIM is up and running" ;;
+          1) echo "Hmm, server didn't start, but agent yes, do you the server ?" ;;
+          2) echo "Agent didn't start, server is up, try to change the sleep value" ;;
+          3) echo "Server and agent didn't start, check the server first" ;;
+          4) echo "Control_panel is not working try to run it manually" ;;
+          5) echo "Hmm, server didn't start, but agent yes, do you the server ?" ;;
+          6) echo "Maybe a problem with python ?" ;;
+          7) echo "Arrrgh, everything wrong, have the permissions to run OSSIM ?" ;;
+        esac
+        
         echo -n "."
         ;;
 
     stop)
     
-    	echo "Stoping Open Source Security Information Management: OSSIM"
-    	if [ "`pidof $OSSIM_SERVER`" ] ; then
-	
-            kill -TERM `pidof $OSSIM_SERVER`
+        echo "Stopping Open Source Security Information Management: OSSIM"
+        if [ "`pidof $OSSIM_SERVER`" ] ; then
+        
+            kill -TERM `pidof $OSSIM_SERVER` 2&> /dev/null
 
 
             # Wait until the timeout
@@ -60,7 +88,7 @@ case "$1" in
             # If it's not dead yet, kill it.
             if [ "`pidof $OSSIM_SERVER`" ] ; then
                 echo " TIMEOUT!"
-                kill -9 `pidof $OSSIM_SERVER`
+                kill -9 `pidof $OSSIM_SERVER` 2&> /dev/null
             else
                 case $numdots in
                   0) echo "." ;;
@@ -75,17 +103,18 @@ case "$1" in
         fi
 
         # kill agent
-        killall `basename $OSSIM_AGENT`
+        killall `basename $OSSIM_AGENT` 2&> /dev/null
         
         # kill control panel
-        killall `basename $OSSIM_PANEL`
+        killall `basename $OSSIM_PANEL` 2&> /dev/null
         ;;
     
     restart)
 
-	    $0 stop
-    	$0 start
-	    ;;
+            $0 stop
+        sleep 1
+        $0 start
+            ;;
 
     *)
         echo 'Usage: $0 {start|stop|restart}'
@@ -95,3 +124,4 @@ esac
 exit 0
 ;;
 
+# vim:ts=4 sw=4 sts=4 expandtab:

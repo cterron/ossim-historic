@@ -44,15 +44,12 @@ class Config {
     
     function update($key, $value)
     {
-        $query = "UPDATE config SET value = '$value' WHERE conf = '$key';";
-
+        $query = "DELETE FROM config WHERE conf = '$key'";
         if ($this->conn->Execute($query) === false) {
             print 'error updating: '. $this->conn->ErrorMsg().'<BR>';
             exit;
         }
-        if ($this->conn->Affected_Rows() == 0) {
-            Config::insert($key, $value);
-        }
+        Config::insert($key, $value);
     }
 
 
@@ -100,14 +97,16 @@ class Config {
         /* PHP: PHP Configuration (graphs, acls, database api) */
         Config::insert('phpgacl_path', '/var/www/phpgacl/');
         Config::insert('fpdf_path', '/usr/share/fpdf/');
+        Config::insert('report_graph_type', 'images');
         Config::insert('use_resolv', '0');
 
         /* RRD: RRD Configuration (graphing) */
-        Config::insert('graph_link', '/cgi-bin/draw_graph_combined.pl');
+        Config::insert('graph_link', '/cgi-bin/draw_graph.pl');
         Config::insert('rrdtool_lib_path', '/usr/lib/perl5/');
         
         /* Links: Links to other applications */
         Config::insert('ntop_link','http://localhost:3000');
+        Config::insert('ossim_link','/ossim/');
 
         /* Backup: Backup configuration: backup database, directory, interval */
         Config::insert('backup_type','mysql');
@@ -124,6 +123,7 @@ class Config {
         Config::insert('nessus_pass','ossim');
         Config::insert('nessus_host','localhost');
         Config::insert('nessus_port','1241');
+        Config::insert('nessus_distributed','0');
  
         /* ACID: Acid cache configuration */
         Config::insert('acid_user','ossim');
@@ -138,6 +138,11 @@ class Config {
         Config::insert('mail_path', '/usr/bin/mail');
         Config::insert('touch_path', '/bin/tail');
         Config::insert('wget_path', '/usr/bin/wget');
+        Config::insert('have_scanmap3d', '0');
+
+        /* Language */
+        Config::insert('language', 'en_GB');
+        Config::insert('locale_dir', '/usr/share/locale');
     } 
     
     /* Debian specific values */
@@ -150,24 +155,29 @@ class Config {
         /* RRD: RRD Configuration (graphing) */
         Config::insert('rrdtool_path', '/usr/bin/');
         Config::insert('mrtg_path', '/usr/bin/');
-        Config::insert('mrtg_rrd_files_path','/opt/ossim/www/mrtg/');
-        Config::insert('rrdpath_host','/opt/ossim/www/mrtg/host_qualification/');
-        Config::insert('rrdpath_net','/opt/ossim/www/mrtg/net_qualification/');
-        Config::insert('rrdpath_global','/opt/ossim/www/mrtg/global_qualification/');
-        Config::insert('rrdpath_level','/opt/ossim/www/mrtg/level_qualification/');
-        Config::insert('rrdpath_ntop','/var/lib/ntop/rrd');
-        Config::insert('font_path','/opt/ossim/contrib/fonts/Vera.ttf');
+        Config::insert('mrtg_rrd_files_path', '/var/lib/ossim/rrd/');
+        Config::insert('rrdpath_host', '/var/lib/ossim/rrd/host_qualification/');
+        Config::insert('rrdpath_net', '/var/lib/ossim/rrd/net_qualification/');
+        Config::insert('rrdpath_global', '/var/lib/ossim/rrd/global_qualification/');
+        Config::insert('rrdpath_level', '/var/lib/ossim/rrd/level_qualification/');
+        Config::insert('rrdpath_ntop', '/var/lib/ntop/rrd');
+        Config::insert('font_path', '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf');
 
         /* Links: Links to other applications */
         Config::insert('opennms_link','http://localhost:8180/opennms/');
 
         /* Nessus: Nessus client configuration */
         Config::insert('nessus_path','/usr/bin/nessus');
-        Config::insert('nessus_rpt_path','/opt/ossim/www/vulnmeter/');
+        Config::insert('nessus_rpt_path','/usr/share/ossim/www/vulnmeter/');
 
         /* ACID: Acid cache configuration */
         Config::insert('acid_link','/acidlab/');
         Config::insert('acid_path','/usr/share/acidlab/');
+
+        /* Generic configuration */
+        Config::insert('have_scanmap3d', '0');
+        Config::insert('language', 'en');
+
     }
 
     /* fedora/redhat specific values */
@@ -191,12 +201,16 @@ class Config {
         Config::insert('opennms_link','http://localhost:8080/opennms/');
 
         /* Nessus: Nessus client configuration */
-        Config::insert('nessus_path','/usr/local/bin/nessus/');
+        Config::insert('nessus_path','/usr/local/bin/nessus');
         Config::insert('nessus_rpt_path','/var/www/ossim/vulnmeter/');
 
         /* ACID: Acid cache configuration */
         Config::insert('acid_link','/acid/');
         Config::insert('acid_path','/var/www/acid/');
+
+    /* Generic configuration */
+        Config::insert('have_scanmap3d', '0');
+        Config::insert('language', 'en');
     }
 
     /* default values */

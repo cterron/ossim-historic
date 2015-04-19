@@ -8,6 +8,7 @@
 use DBI;
 use ossim_conf;
 use Socket;
+use Getopt::Std;
 
 sub byebye {
     print "$0: forking into background...\n";
@@ -27,16 +28,34 @@ open(PID, ">$pidfile") or die "Unable to open $pidfile\n";
 print PID $$;
 close(PID);
 
+
+# command line arguments
+# -i interface
+# -d database connection (type:host:name:user:pass)
+# 
+my %options=();
+getopts("i:d:",\%options);
+
 # Data Source 
-my $ds_type = "mysql";
-my $ds_name = $ossim_conf::ossim_data->{"ossim_base"};
-my $ds_host = $ossim_conf::ossim_data->{"ossim_host"};
-my $ds_port = $ossim_conf::ossim_data->{"ossim_port"};
-my $ds_user = $ossim_conf::ossim_data->{"ossim_user"};
-my $ds_pass = $ossim_conf::ossim_data->{"ossim_pass"};
+my $ds_type, $ds_name, $ds_host, $ds_port, $ds_user, $ds_pass;
+if (defined $options{d}) {
+    ($ds_type, $ds_host, $ds_name, $ds_user, $ds_pass) =
+        split (/:/, $options{d});
+} else {
+    $ds_type = "mysql";
+    $ds_name = $ossim_conf::ossim_data->{"ossim_base"};
+    $ds_host = $ossim_conf::ossim_data->{"ossim_host"};
+    $ds_port = $ossim_conf::ossim_data->{"ossim_port"};
+    $ds_user = $ossim_conf::ossim_data->{"ossim_user"};
+    $ds_pass = $ossim_conf::ossim_data->{"ossim_pass"};
+}
 
 # Interfaces (comma separated)
-my $main_interface = $ossim_conf::ossim_data->{"ossim_interface"};
+my $main_interface;
+if (defined $options{i}) 
+    {$main_interface = $options{i}}
+else 
+    {$main_interface = $ossim_conf::ossim_data->{"ossim_interface"}}
 my $interfaces = "$main_interface";
 
 # Anomaly

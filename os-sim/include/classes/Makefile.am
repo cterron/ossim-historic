@@ -24,6 +24,7 @@ classes_DATA = Alarm.inc \
 	Incident_ticket.inc \
 	Incident_file.inc \
 	Link.inc \
+	Locale.inc \
 	Net_sensor_reference.inc \
 	Net.inc \
 	Net_qualification.inc \

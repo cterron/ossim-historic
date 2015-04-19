@@ -1,6 +1,6 @@
 diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
 --- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_cache.inc	2004-07-22 13:53:04.001684032 +0200
++++ acid-ossim/acid_cache.inc	2004-11-15 18:24:04.000000000 +0100
 @@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -15,7 +15,7 @@ diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
    /* TCP events */
 diff -urNb acid/acid_common.php acid-ossim/acid_common.php
 --- acid/acid_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_common.php	2004-07-22 14:06:04.726995744 +0200
++++ acid-ossim/acid_common.php	2004-11-15 18:24:04.000000000 +0100
 @@ -11,6 +11,12 @@
   *
   */
@@ -31,7 +31,7 @@ diff -urNb acid/acid_common.php acid-ossim/acid_common.php
     $result = $db->acidExecute("SELECT sid FROM sensor;");
 diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
 --- acid/acid_conf.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_conf.php	2004-07-22 14:05:23.089325632 +0200
++++ acid-ossim/acid_conf.php	2004-11-15 18:24:04.000000000 +0100
 @@ -63,6 +63,18 @@
   */
  $use_referential_integrity = 0;
@@ -64,7 +64,7 @@ diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
  $external_sig_link = array("bugtraq"   => array("http://www.securityfocus.com/bid/", ""),
 diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
 --- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_hdr2.html	2004-07-22 13:53:04.002683880 +0200
++++ acid-ossim/acid_hdr2.html	2004-11-15 18:24:04.000000000 +0100
 @@ -1,11 +1,20 @@
  <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
  <TR>
@@ -93,7 +93,7 @@ diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
  </TABLE>
 diff -urNb acid/acid_main.php acid-ossim/acid_main.php
 --- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_main.php	2004-07-22 13:53:04.003683728 +0200
++++ acid-ossim/acid_main.php	2004-11-15 18:24:04.000000000 +0100
 @@ -143,6 +143,8 @@
  ?>
  
@@ -105,7 +105,7 @@ diff -urNb acid/acid_main.php acid-ossim/acid_main.php
  
 diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
 --- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_output_query.inc	2004-07-22 13:53:04.004683576 +0200
++++ acid-ossim/acid_output_query.inc	2004-11-15 18:24:04.000000000 +0100
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -126,7 +126,7 @@ diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
      echo "   </TR>\n";
 diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
 --- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_common.php	2004-07-22 13:53:04.006683272 +0200
++++ acid-ossim/acid_qry_common.php	2004-11-15 18:24:04.000000000 +0100
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -233,7 +233,7 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
    /* ********************** IP Criteria ********************************************** */ 
 diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
 --- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_form.php	2004-07-22 13:53:04.007683120 +0200
++++ acid-ossim/acid_qry_form.php	2004-11-15 18:24:04.000000000 +0100
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -268,7 +268,7 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
  
 diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
 --- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_sqlcalls.php	2004-07-22 13:53:04.008682968 +0200
++++ acid-ossim/acid_qry_sqlcalls.php	2004-11-15 18:24:04.000000000 +0100
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -370,7 +370,7 @@ diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
        qroPrintEntryFooter();
 diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
 --- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_citems.inc	2004-07-22 14:06:04.724996048 +0200
++++ acid-ossim/acid_state_citems.inc	2004-11-15 18:24:04.000000000 +0100
 @@ -822,22 +822,96 @@
        GLOBAL $HTTP_SESSION_VARS;
  
@@ -928,7 +928,7 @@ diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
  ?>
 diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
 --- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_criteria.inc	2004-07-22 14:06:04.725995896 +0200
++++ acid-ossim/acid_state_criteria.inc	2004-11-15 18:24:04.000000000 +0100
 @@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
@@ -952,9 +952,84 @@ diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
      }
      else
        ErrorMessage("Invalid criteria element");
+diff -urNb acid/acid_update_db.php acid-ossim/acid_update_db.php
+--- acid/acid_update_db.php	1970-01-01 01:00:00.000000000 +0100
++++ acid-ossim/acid_update_db.php	2004-11-15 18:24:25.000000000 +0100
+@@ -0,0 +1,71 @@
++<?php
++/*
++** Copyright (C) 2000 Carnegie Mellon University
++**
++** Author: Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
++**
++** This program is free software; you can redistribute it and/or modify
++** it under the terms of the GNU General Public License as published by
++** the Free Software Foundation; either version 2 of the License, or
++** (at your option) any later version.
++**
++** This program is distributed in the hope that it will be useful,
++** but WITHOUT ANY WARRANTY; without even the implied warranty of
++** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++** GNU General Public License for more details.
++**
++** You should have received a copy of the GNU General Public License
++** along with this program; if not, write to the Free Software
++** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++*/
++
++/*  
++ * Analysis Console for Incident Databases (ACID) by Roman Danyliw
++ *
++ * This application was developed at the CERT Coordination Center as a part 
++ * of the AIRCERT project.
++ *
++ * See http://www.cert.org/kb/acid for the most up to date 
++ * information and documentation about this application.
++ *
++ * Purpose:
++ *
++ *   ACID is an PHP-based analysis engine to search and process 
++ *   a database of security incidents generated by the NIDS Snort.
++ *
++ * Configuration:
++ *
++ *   See the 'README' file, and 'acid.conf'
++ *
++ */
++?>
++<?php
++  include("acid_conf.php");
++  include("acid_include.inc");
++  include_once("acid_common.php");
++  include_once("acid_stat_common.php");
++  include_once("acid_db_common.php");
++
++  /* Check that PHP was built correctly */
++  $tmp_str = verify_php_build($DBtype);
++  if ( $tmp_str != "")
++  {
++     echo $tmp_str;
++     die();
++  }
++
++  /* Connect to the Alert database */
++  $db = NewACIDDBConnection($DBlib_path, $DBtype);
++  $db->acidDBConnect($db_connect_method,
++                     $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password);
++
++  /* Check that the DB schema is recent */
++  $tmp_str = verify_db($db, $alert_dbname, $alert_host);
++  if ( $tmp_str != "")
++  {
++     echo $tmp_str;
++     die();
++  }
++
++  UpdateAlertCache($db);
++?>
 diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
 --- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_mysql.sql	2004-07-22 13:53:04.013682208 +0200
++++ acid-ossim/create_acid_tbls_mysql.sql	2004-11-15 18:24:04.000000000 +0100
 @@ -81,3 +81,51 @@
  
                              PRIMARY KEY         (ipc_ip),
@@ -1009,7 +1084,7 @@ diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
 +
 diff -urNb acid/create_acid_tbls_pgsql.sql acid-ossim/create_acid_tbls_pgsql.sql
 --- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_pgsql.sql	2004-07-22 13:53:04.014682056 +0200
++++ acid-ossim/create_acid_tbls_pgsql.sql	2004-11-15 18:24:04.000000000 +0100
 @@ -57,8 +57,8 @@
  CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
                              ag_name             TEXT,

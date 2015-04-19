@@ -41,6 +41,7 @@ my $zoom=1;
 my $color1;
 my $color2;
 my $font=$ossim_conf::ossim_data->{font_path};
+my $notfoundpng =$ossim_conf::ossim_data->{base_dir} . "/pixmaps/rrdnotfound.png";
 my $tempname=tmpnam();
 my $rrdpath;
 my @rrdargs;
@@ -70,6 +71,17 @@ sub msg_err {
    print $msg;
    exit 0;
 }
+
+sub notfound {
+   open (NFPNG, "<$notfoundpng") or die "Can't open $notfoundpng\n";
+   binmode(NFPNG); binmode(NFPNG);
+   while(<NFPNG>){
+      print;
+   }
+   close NFPNG;
+   exit 0;
+}
+
 
 #########################     Retrieve parameters      #########################
 #
@@ -131,18 +143,19 @@ sub param_attack_compromise {
 
    my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
    my $dbh = DBI->connect($dsn, $ossim_conf::ossim_data->{"ossim_user"}, $ossim_conf::ossim_data->{"ossim_pass"}) or die "Can't connect to DBI\n";
-   my $query;
+   
+   my ($query, $sth, $row);
 
    if($hostname ne ""){
          $query = "SELECT threshold_c FROM host WHERE ip = '$ip'";
-         my $sth = $dbh->prepare($query);
+         $sth = $dbh->prepare($query);
          $sth->execute();
-         my $row = $sth->fetchrow_hashref;
+         $row = $sth->fetchrow_hashref;
          $threshold_c = $row->{threshold_c};
          $query = "SELECT threshold_a FROM host WHERE ip = '$ip'";
-         my $sth = $dbh->prepare($query);
+         $sth = $dbh->prepare($query);
          $sth->execute();
-         my $row = $sth->fetchrow_hashref;
+         $row = $sth->fetchrow_hashref;
          $threshold_a = $row->{threshold_a};
    } else {
       $threshold_c = $threshold_a = $ossim_conf::ossim_data->{"threshold"};
@@ -151,14 +164,14 @@ sub param_attack_compromise {
 
    if($type eq "net"){ # Networks are supposed to have their own threshold
          $query = "SELECT threshold_c FROM net WHERE name = '$ip'";
-         my $sth = $dbh->prepare($query);
+         $sth = $dbh->prepare($query);
          $sth->execute();
-         my $row = $sth->fetchrow_hashref;
+         $row = $sth->fetchrow_hashref;
          $threshold_c = $row->{threshold_c};
          $query = "SELECT threshold_a FROM net WHERE name = '$ip'";
-         my $sth = $dbh->prepare($query);
+         $sth = $dbh->prepare($query);
          $sth->execute();
-         my $row = $sth->fetchrow_hashref;
+         $row = $sth->fetchrow_hashref;
          $threshold_a = $row->{threshold_a};
       $hostname = $ip;
    }
@@ -198,6 +211,8 @@ sub main {
 
 ### draw the graph
    print $q->header(-type => "image/png", -expires => "+10s");
+
+   if (! -e "$rrdpath/$ip.rrd"){ notfound();}
 
    if ($what eq 'attack' || $what eq 'compromise') {
       push @rrdargs, "DEF:obs=$rrdpath/$ip.rrd:ds0:AVERAGE";

@@ -625,6 +625,27 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,
 	  sim_rule_append_src_inet (rule, sim_inet_new (ip));
 	  g_free (ip);
 	}
+
+      else if (!strcmp (values[i], SIM_HOME_NET_CONST))
+    {
+        /* load all nets as source
+           Todo: load only those flagged as "internal". 
+        */
+        GList *nets = sim_container_get_nets(container);
+        while(nets)
+        {
+        SimNet *net = (SimNet *) nets->data;
+        GList *inets = sim_net_get_inets (net);
+            while(inets){
+            SimInet *inet = (SimInet *) inets->data;
+            sim_rule_append_src_inet (rule, inet);
+            inets = inets->next;
+            }
+            g_list_free(inets);
+        nets = nets->next;
+        }
+        g_list_free(nets);
+    }
       else
 	{
 	  net = (SimNet *) sim_container_get_net_by_name (container, values[i]);
@@ -712,6 +733,26 @@ sim_xml_directive_set_rule_dst_ips (SimXmlDirective  *xmldirect,
 	  sim_rule_append_dst_inet (rule, sim_inet_new (ip));
 	  g_free (ip);
 	}
+      else if (!strcmp (values[i], SIM_HOME_NET_CONST))
+    {
+        /* load all nets as destination
+           Todo: load only those flagged as "internal". 
+        */
+        GList *nets = sim_container_get_nets(container);
+        while(nets)
+        {
+        SimNet *net = (SimNet *) nets->data;
+        GList *inets = sim_net_get_inets (net);
+            while(inets){
+            SimInet *inet = (SimInet *) inets->data;
+            sim_rule_append_dst_inet (rule, inet);
+            inets = inets->next;
+            }
+            g_list_free(inets);
+        nets = nets->next;
+        }
+        g_list_free(nets);
+    }
       else
 	{
 	  net = (SimNet *) sim_container_get_net_by_name (container, values[i]);
@@ -761,6 +802,7 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
   GList      *hosts;
   gchar     **values;
   gchar     **level;
+  gchar     **range;
   gchar      *host;
   gint        i;
 
@@ -799,6 +841,20 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
 	{
 	  sim_rule_append_src_port (rule, 0);
 	}
+      else if (strstr (values[i], SIM_DELIMITER_RANGE))
+    {
+      gint start, end, j = 0;
+
+      range = g_strsplit (values[i], SIM_DELIMITER_RANGE, 0);
+      start = atoi(range[0]);
+      end   = atoi(range[1]);
+
+      for(j=start;j<=end;j++){
+	  sim_rule_append_src_port (rule, j);
+      }
+
+      g_strfreev (range); 
+    }
       else
 	{
 	  sim_rule_append_src_port (rule, atoi (values[i]));
@@ -823,6 +879,7 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
   GList      *hosts;
   gchar     **values;
   gchar     **level;
+  gchar     **range;
   gchar      *host;
   gint        i;
 
@@ -861,6 +918,20 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
 	{
 	  sim_rule_append_dst_port (rule, 0);
 	}
+      else if (strstr (values[i], SIM_DELIMITER_RANGE))
+    {
+      gint start, end, j = 0;
+
+      range = g_strsplit (values[i], SIM_DELIMITER_RANGE, 0);
+      start = atoi(range[0]);
+      end   = atoi(range[1]);
+
+      for(j=start;j<=end;j++){
+	  sim_rule_append_dst_port (rule, j);
+      }
+
+      g_strfreev (range); 
+    }
       else
 	{
 	  sim_rule_append_dst_port (rule, atoi (values[i]));

@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>New network</h1>
+  <h1> <?php echo gettext("New network"); ?> </h1>
 
 <?php
 
@@ -25,7 +25,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     {
 ?>
 
-  <p align="center">Please, complete all the fields</p>
+  <p align="center">
+  <?php echo gettext("Please, complete all the fields"); ?> </p>
   <?php exit();?>
 
 <?php
@@ -66,8 +67,9 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     $db->close($conn);
 }
 ?>
-    <p>Network succesfully inserted</p>
-    <p><a href="net.php">Back</a></p>
+    <p> <?php echo gettext("Network succesfully inserted"); ?> </p>
+    <p><a href="net.php">
+    <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

@@ -358,6 +358,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
   while (list)
     {
       SimSession *session = (SimSession *) list->data;
+      if(session == NULL || !SIM_IS_SESSION(session)) continue;
 
       if (session_type == SIM_SESSION_TYPE_ALL ||
 	  session_type == session->type)

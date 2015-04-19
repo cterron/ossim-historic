@@ -31,7 +31,7 @@ class ossim_conf {
         fclose($fd);
     }
 
-    function get_conf($type) {
+    function get_conf($type, $debug = TRUE) {
 
         if (isset($this->confs["$type"])) {
             return $this->confs["$type"];
@@ -47,7 +47,14 @@ class ossim_conf {
                 return $value;
         }
 
-        print "<b>Warning</b>: Error reading configuration: <b>$type</b> is not set<br/>\n";
+       /* 
+        * $debug == FALSE
+        * don't start output, session cache limiter problem 
+        */ 
+        if ($debug) {
+            print "<b>Warning</b>: Error reading configuration: ";
+            print "<b>$type</b> is not set<br/>\n";
+        }
         return null;
     }
 

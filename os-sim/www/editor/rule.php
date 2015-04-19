@@ -41,16 +41,16 @@ function isSetOption($option, $line) {
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>OSSIM Framework</h1>
+  <h1> <?php echo gettext("OSSIM Framework"); ?> </h1>
 
-  <h2>Rule editor</h2>
+  <h2> <?php echo gettext("Rule editor"); ?> </h2>
 
 <?php
     if (!$_GET["name"]) {
@@ -70,18 +70,28 @@ function isSetOption($option, $line) {
 
 <h2><u><?php echo $rule_name; ?></u></h2>
 
-<table border="1" align="center" width="100%">
+<table align="center" width="100%">
   <tr>
-    <th><font size="-2">Name</font></th>
-    <th><font size="-2">Action</font></th>
-    <th><font size="-2">Protocol</font></th>
-    <th><font size="-2">SRC IP</font></th>
-    <th><font size="-2">SRC Ports</font></th>
-    <th><font size="-2">Dir</font></th>
-    <th><font size="-2">DEST IP</font></th>
-    <th><font size="-2">DEST Ports</font></th>
-    <th><font size="-2">Content</font></th>
-    <th><font size="-2">Options</font></th>
+    <th><font size="-2">
+    <?php echo gettext("Name"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("Action"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("Protocol"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("SRC IP"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("SRC Ports"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("Dir"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("DEST IP"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("DEST Ports"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("Content"); ?> </font></th>
+    <th><font size="-2">
+    <?php echo gettext("Options"); ?> </font></th>
   </tr>
 
 <?php

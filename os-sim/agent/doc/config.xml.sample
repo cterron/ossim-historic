@@ -1,4 +1,23 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding='UTF-8' standalone="yes" ?>
+
+<!DOCTYPE  config [
+
+    <!-- Replace 127.0.0.1 with your sensor Ip -->
+    <!ENTITY   sensor     "127.0.0.1" > 
+
+    <!-- Default network interface -->
+    <!ENTITY   interface  "eth0" >
+
+    <!-- Default OSSIM database connection (db:host:dbname:user:pass) -->
+    <!ENTITY   ossim_db   "mysql:localhost:ossim:root:yourossimdbpass" >
+
+    <!-- Replace localhost with your server Ip -->
+    <!ENTITY   serverip   "localhost" > 
+
+    <!-- Log directory -->
+    <!ENTITY   logdir     "/var/log/ossim" > 
+]>
+
 
 <config>
 
@@ -9,23 +28,14 @@
         process (needed in order to obtain pid, kill it, etc...)
         and it's needed if you want to start/stop the process asociated 
         with the plugin.
-
-        Replace all ocurrences of 127.0.0.1 in your plugins configuration 
-        with your sensor ip.
-
-        Replace 
-          <serverip>localhost</serverip>
-        with 
-          <serverip>server_ip_address</serverip>
-
     -->
 
 
     <!-- Ip and port number where the ossim server is listening -->
-    <serverip>localhost</serverip>
+    <serverip>&serverip;</serverip>
     <serverport>40001</serverport>
     <watchdog enable="yes" interval="30"/>
-    <logdir>/var/log/ossim</logdir>
+    <logdir>&logdir;</logdir>
 
     <plugins>
     
@@ -42,8 +52,8 @@
             <startup>/etc/init.d/snort start</startup>
             <shutdown>/etc/init.d/snort stop</shutdown>
             <source>fast</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/snort/fast.log</location>
         </plugin>
         
@@ -57,8 +67,8 @@
             <startup>/etc/init.d/apache restart</startup>
             <shutdown>/etc/init.d/apache stop</shutdown>
             <source>common</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/apache/access.log</location>
         </plugin>
 -->
@@ -69,8 +79,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/messages</location>
         </plugin>
 -->
@@ -81,8 +91,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/messages</location>
         </plugin>
 -->
@@ -96,8 +106,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/messages</location>
         </plugin>
 -->
@@ -108,20 +118,20 @@
             <startup>snmptrapd -o /var/log/realsecure.log -m ISS-MIB</startup>
             <shutdown>killall -9 snmptrapd</shutdown>
             <source>snmp</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/realsecure.log</location>
         </plugin>
 -->
 
         <!-- RRD threshold and anomaly detector -->
         <plugin id="1507" process="rrd_plugin.pl" type="detector" start="yes" enable="yes">
-            <startup>/usr/share/ossim/scripts/rrd_plugin.pl</startup>
+            <startup>/usr/share/ossim/scripts/rrd_plugin.pl -i &interface; -d &ossim_db;</startup>
             <shutdown>killall rrd_plugin.pl</shutdown>
             <source>rrd_plugin</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>/var/log/ossim/rrd_plugin.log</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>&logdir;/rrd_plugin.log</location>
         </plugin>
         
         <!-- C & A detector -->
@@ -129,9 +139,9 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>database</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>mysql:localhost:ossim:root:yourpassword</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>&ossim_db;</location>
             <frequency>300</frequency>
         </plugin>
         
@@ -141,8 +151,8 @@
             <startup>/sbin/syslogd -r -m 0</startup>
             <shutdown>killall -9 syslogd</shutdown>
             <source>common</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/messages</location>
         </plugin>
 -->
@@ -153,12 +163,12 @@
              p0f -i $interface -lNtd -o /var/log/p0f.log
         -->
         <plugin id="1511" process="p0f" type="detector" start="yes" enable="yes">
-            <startup>p0f -i eth0 -lUNtd -o /var/log/p0f.log</startup>
+            <startup>p0f -i &interface; -lUNtd -o &logdir;/p0f.log</startup>
             <shutdown>killall -9 p0f</shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>/var/log/p0f.log</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>&logdir;/p0f.log</location>
         </plugin>
 
         <!-- 
@@ -168,12 +178,12 @@
                 /var/log/arpwatch.log
         -->
         <plugin id="1512" process="arpwatch" type="detector" start="yes" enable="yes">
-            <startup>arpwatch -d -i eth0 -f /var/lib/arpwatch/arp.dat >> /var/log/arpwatch.log &amp;</startup>
+            <startup>arpwatch -d -i &interface; -f /var/lib/arpwatch/arp.dat >> &logdir;/arpwatch.log &amp;</startup>
             <shutdown>killall arpwatch</shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>/var/log/arpwatch.log</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>&logdir;/arpwatch.log</location>
         </plugin>
 
         <!--
@@ -184,8 +194,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/tmp/prelude.log</location>
         </plugin>
 -->
@@ -198,8 +208,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>common</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/tmp/ciscopix.log</location>
         </plugin>
 -->
@@ -212,8 +222,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>common</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/tmp/cisco.log</location>
         </plugin>
 -->
@@ -230,8 +240,8 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/system.log</location>
         </plugin>
 -->
@@ -244,9 +254,9 @@
             <startup>/etc/init.d/syslog start</startup>
             <shutdown>/etc/init.d/syslog stop</shutdown>
             <source>common</source>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/auth.log</location>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
         </plugin>
 
         <!-- 
@@ -254,12 +264,12 @@
              http://passive.sourceforge.net/
         -->
         <plugin id="1516" process="pads" type="detector" start="yes" enable="yes">
-            <startup>pads -i eth0 -D -w /var/log/assets.csv</startup>
+            <startup>pads -i &interface; -D -w &logdir;/pads.csv</startup>
             <shutdown>killall -9 pads</shutdown>
             <source>csv</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
-            <location>/var/log/assets.csv</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>&logdir;/pads.csv</location>
         </plugin>
 
         <!-- 
@@ -271,11 +281,25 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>syslog</source>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <location>/var/log/syslog</location>
         </plugin>
 -->
+
+        <!--
+             Snare Agent for Windows
+             http://www.intersectalliance.com/projects/SnareWindows/
+             http://sourceforge.net/projects/snare/
+        -->
+        <plugin id="1518" process="" type="detector" start="no" enable="yes">
+            <startup></startup>
+            <shutdown></shutdown>
+            <source>syslog</source>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
+            <location>/var/log/syslog</location>
+        </plugin>
 
         <!-- End DETECTORS -->
 
@@ -285,16 +309,16 @@
         <!-- 
              ntop monitor 
              location must point to the ip and port where ntop is listening
-             (for example: 127.0.0.1:3000)
+             (for example: &sensor;:3000)
              frequency: if server make a request, get ntop info every N seconds
         -->
         <plugin id="2005" process="ntop" type="monitor" start="yes" enable="yes">
             <startup>/etc/init.d/ntop restart</startup>
             <shutdown>/etc/init.d/ntop stop</shutdown>
             <source>socket</source>
-            <location>127.0.0.1:3000</location>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <location>&sensor;:3000</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <frequency>20</frequency>
         </plugin>
         
@@ -306,9 +330,9 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>database</source>
-            <location>mysql:localhost:ossim:root:yourpassword</location>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <location>&ossim_db;</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <frequency>20</frequency>
         </plugin>
         
@@ -321,9 +345,9 @@
             <startup></startup>
             <shutdown></shutdown>
             <source>database</source>
-            <location>pgsql:127.0.0.1:opennms:postgres:</location>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <location>pgsql:&sensor;:opennms:postgres:</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
             <frequency>20</frequency>
         </plugin>
 -->
@@ -336,12 +360,12 @@
             to use it like a monitor.
         -->
         <plugin id="2006" process="tcptrack" type="monitor" start="yes" enable="yes">
-            <startup>tcptrack -i eth0 -P 4003 -F 10 -D</startup>
+            <startup>tcptrack -i &interface; -P 40003 -F 10 -D</startup>
             <shutdown>killall -9 tcptrack</shutdown>
             <source>socket</source>
-            <location>127.0.0.1:4003</location>
-            <interface>eth0</interface>
-            <sensor>127.0.0.1</sensor>
+            <location>&sensor;:40003</location>
+            <interface>&interface;</interface>
+            <sensor>&sensor;</sensor>
         </plugin>
 
         <!-- End MONITORS -->

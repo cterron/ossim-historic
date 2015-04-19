@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+# add ossim_path into acid include_path
+if [ -f "/etc/acidlab/apache.conf" ] ; then
+	mv /etc/acidlab/apache.conf /etc/acidlab/apache.conf.orig
+	cat /etc/acidlab/apache.conf.orig | sed -e 's/php_value include_path .$/php_value include_path \.:\/usr\/share\/ossim\/include/g' > /etc/acidlab/apache.conf
+fi
+
+# set apache perms to tmp
+chown www-data:www-data /usr/share/ossim/www/tmp/
+
+if [ -f "/var/run/apache.pid" ]; then
+    /etc/init.d/apache restart 2&> /dev/null
+fi
+
+if [ -f "/var/run/apache-ssl.pid" ]; then
+    /etc/init.d/apache-ssl restart 2&> /dev/null
+fi
+

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!-- IIS detector -->
+<plugin id="1502" process="" type="detector" start="no" enable="yes">
+    <startup></startup>
+    <shutdown></shutdown>
+    
+    <!-- syslog | W3C -->
+    <source>syslog</source>
+
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>/var/log/messages</location>
+</plugin>
+

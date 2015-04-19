@@ -72,12 +72,16 @@ my $nessus_rpt_path = $ossim_conf::ossim_data->{"nessus_rpt_path"};
 my $nessus_distributed = $ossim_conf::ossim_data->{"nessus_distributed"};
 my $nessus_tmp = $nessus_rpt_path . "/tmp/";
 
+# generate fake nessusrc. Use your own if you wish.
+my $nessusrc = "$nessus_tmp/.nessusrc";
+`touch $nessusrc`;
+
 my $today_date =  strftime "%Y%m%d", gmtime;
-my $today = $nessus_rpt_path .  strftime "%Y%m%d", gmtime;
+my $today = $nessus_rpt_path . "/" .  strftime "%Y%m%d", gmtime;
 $today .= "/";
 
 unless(-d $nessus_rpt_path && -W $nessus_rpt_path){
-die "Need write permission to $nessus_rpt_path and almost all of it's ubdirs\n";
+die "Need write permission to $nessus_rpt_path and almost all of it's subdirs\n";
 }
 
 unless(-e $today && -W $today){
@@ -167,7 +171,7 @@ if($nessus_distributed) {
 	if(/(.*).target.*/){
 	    my $temp_sensor = $1;
 	    my $running = 0;
-	    open (SANITY_CHECK, "$nessus -x -s -q $temp_sensor $nessus_port $nessus_user $nessus_pass|");
+	    open (SANITY_CHECK, "$nessus -c $nessusrc -x -s -q $temp_sensor $nessus_port $nessus_user $nessus_pass|");
 	    while(<SANITY_CHECK>){
 		if(/Session ID(.*)Targets/){
 		    $running = 1;
@@ -201,7 +205,7 @@ if($nessus_distributed) {
      if($debug){ print ("Going to scan\n")};
      if($debug){ system("cat $nessus_tmp_sensors/$temp_active_sensor.targets.txt")};
 
-	open (RESULT, "$nessus -x -T nsr -q $temp_active_sensor $nessus_port $nessus_user $nessus_pass $nessus_tmp_sensors/$temp_active_sensor.targets.txt $nessus_tmp/$temp_active_sensor.temp_res.nsr|");
+	open (RESULT, "$nessus -c $nessusrc -x -T nsr -q $temp_active_sensor $nessus_port $nessus_user $nessus_pass $nessus_tmp_sensors/$temp_active_sensor.targets.txt $nessus_tmp/$temp_active_sensor.temp_res.nsr|");
 	close(RESULT);
 	`touch $nessus_tmp/$temp_active_sensor.STATUS`;
 `cat $nessus_tmp/$temp_active_sensor.temp_res.nsr >> $nessus_tmp/temp_res.nsr`;
@@ -269,7 +273,7 @@ if($nessus_distributed) {
     if($debug){ print ("Starting non-distributed scan\n")};
     if($debug){ print ("Going to scan:\n")};
     if($debug){ system("cat $temp_target")};
-    open (RESULT, "$nessus -x -T nsr -q $nessus_host $nessus_port $nessus_user $nessus_pass $temp_target $nessus_tmp/temp_res.nsr|");
+    open (RESULT, "$nessus -c $nessusrc -x -T nsr -q $nessus_host $nessus_port $nessus_user $nessus_pass $temp_target $nessus_tmp/temp_res.nsr|");
     close(RESULT);
 } # End distributed
 
@@ -290,7 +294,7 @@ my $net;
 my $rv;
 my $key;
 
-`$nessus -T text -i $nessus_tmp/temp_res.nsr -o $nessus_tmp/temp_res.txt`;
+`$nessus -c $nessusrc -T text -i $nessus_tmp/temp_res.nsr -o $nessus_tmp/temp_res.txt`;
 
 open (VULNS, "/bin/cat $nessus_tmp/temp_res.txt |");
 
@@ -373,7 +377,7 @@ if(-e $today && -W $today){
     print "Deleting todays scan result dir\n";
     `rm -rf $today`;
 }
-`$nessus -T html_graph -i $nessus_tmp/temp_res.nsr -o $today`;
+`$nessus -c $nessusrc -T html_graph -i $nessus_tmp/temp_res.nsr -o $today`;
 
 chmod 0755, $today;
 

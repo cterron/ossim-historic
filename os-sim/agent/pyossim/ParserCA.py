@@ -4,7 +4,10 @@ import time
 import Parser
 import util
 
-import MySQLdb
+try:
+    import MySQLdb
+except ImportError, e:
+    util.debug (__name__, "Import error: %s" % (e), "**", "RED")
 
 class ParserCA(Parser.Parser):
 
@@ -33,11 +36,15 @@ class ParserCA(Parser.Parser):
 
         if dbconfig[0] == 'mysql':
             
-            db = MySQLdb.connect(host   = dbconfig[1],
-                                 db     = dbconfig[2],
-                                 user   = dbconfig[3],
-                                 passwd = dbconfig[4])
-            st = db.cursor()
+            try:
+                db = MySQLdb.connect(host   = dbconfig[1],
+                                     db     = dbconfig[2],
+                                     user   = dbconfig[3],
+                                     passwd = dbconfig[4])
+                st = db.cursor()
+            except Exception, e:
+                util.debug (__name__, e, "**", "RED")
+                sys.exit()
  
         else:
             util.debug (__name__, 'database %s not supported' % (dbconfig[0]),

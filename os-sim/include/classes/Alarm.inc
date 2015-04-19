@@ -17,6 +17,7 @@ class Alarm {
     var $src_port;
     var $dst_port;
     var $risk;
+    var $sensor;
     var $snort_sid;
     var $snort_cid;
     var $rule_level;
@@ -24,7 +25,7 @@ class Alarm {
 
     function Alarm ($alert_id, $backlog_id, $timestamp, $since, $plugin_id, 
                     $plugin_sid, $protocol, $src_ip, $dst_ip, $src_port, 
-                    $dst_port, $risk, $snort_sid, $snort_cid, 
+                    $dst_port, $risk, $sensor, $snort_sid, $snort_cid, 
                     $rule_level = "", $alarm = 1)
     {
         $this->alert_id     = intval($alert_id);
@@ -39,6 +40,7 @@ class Alarm {
         $this->src_port     = intval($src_port);
         $this->dst_port     = intval($dst_port);
         $this->risk         = intval($risk);
+        $this->sensor       = $sensor;
         $this->snort_sid    = intval($snort_sid);
         $this->snort_cid    = intval($snort_cid);
         $this->rule_level   = intval($rule_level);
@@ -60,6 +62,7 @@ class Alarm {
     function get_asset_src()        { return $this->asset_src;      }
     function get_asset_dst()        { return $this->asset_dst;      }
     function get_rule_level()       { return $this->rule_level;     }
+    function get_sensor()           { return $this->sensor;      }
     function get_snort_sid()        { return $this->snort_sid;      }
     function get_snort_cid()        { return $this->snort_cid;      }
     function get_alarm()            { return $this->alarm;          }
@@ -123,10 +126,11 @@ class Alarm {
         /* get alerts id with minimal rule_level */
         foreach ($backlog_ids as $backlog_id) {
             $query = "SELECT min(alert.id) AS alert_id,
-                    alert.timestamp AS timestamp 
-                FROM backlog_alert, alert 
-                WHERE backlog_alert.alert_id = alert.id 
-                    AND backlog_alert.backlog_id = $backlog_id
+                    alert.timestamp AS timestamp,
+                    alert.sensor AS sensor
+                FROM alert LEFT JOIN backlog_alert
+                ON backlog_alert.backlog_id = $backlog_id
+                    AND backlog_alert.alert_id = alert.id 
                 GROUP BY backlog_alert.backlog_id";
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg();
@@ -137,6 +141,7 @@ class Alarm {
                 while (!$rs->EOF) {
                     $min_alerts[] = $rs->fields["alert_id"];
                     $since[] = $rs->fields["timestamp"];
+                    $sensor[] = $rs->fields["sensor"];
                     $rs->MoveNext();
                 }
             }
@@ -146,8 +151,13 @@ class Alarm {
 
             $allowed_nets = Session::getValue();
 
-            $array_backlog_id = array_shift($backlog_ids);
-            $array_since = array_shift($since);
+            $array_backlog_id = $array_since = $array_sensor = NULL;
+            if (is_array($backlog_ids))
+                $array_backlog_id = array_shift($backlog_ids);
+            if (is_array($since))
+                $array_since = array_shift($since);
+            if (is_array($sensor))
+                $array_sensor = array_shift($sensor);
 
             $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
                 FROM alarm WHERE alert_id = $alert_id 
@@ -203,6 +213,7 @@ class Alarm {
                                     $rs->fields["src_port"],
                                     $rs->fields["dst_port"],
                                     $rs->fields["risk"],
+                                    $array_sensor,
                                     $rs->fields["snort_sid"],
                                     $rs->fields["snort_cid"],
                                     "",
@@ -241,6 +252,7 @@ class Alarm {
                          alert.src_port AS src_port,
                          alert.dst_port AS dst_port,
                          alert.risk_a AS risk,
+                         alert.sensor AS sensor,
                          alert.snort_sid AS snort_sid,
                          alert.snort_cid AS snort_cid,
                          alert.alarm AS alarm,
@@ -282,6 +294,7 @@ class Alarm {
                             $rs->fields["src_port"],
                             $rs->fields["dst_port"],
                             $rs->fields["risk"],
+                            $rs->fields["sensor"],
                             $rs->fields["snort_sid"],
                             $rs->fields["snort_cid"],
                             $rs->fields["rule_level"],

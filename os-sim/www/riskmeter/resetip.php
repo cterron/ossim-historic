@@ -8,7 +8,7 @@
 
     Host_qualification::delete($conn, $ip);
 ?>    
-    <p align="center">Reset completed</p>
+    <p align="center"> <?php echo gettext("Reset completed"); ?> </p>
 
 <?php
     $db->close($conn);

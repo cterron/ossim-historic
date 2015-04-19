@@ -21,7 +21,7 @@ function server_get_sensors() {
     /* connect */
     $result = @socket_connect ($socket, $address, $port);
     if (!$result) {
-        echo "<p><b>socket error</b>: Is OSSIM server running at $address:$port?</p>";
+        echo "<p><b>socket error</b>: " . gettext("Is OSSIM server running at") . " $address:$port?</p>";
         return $list;
     } 
 

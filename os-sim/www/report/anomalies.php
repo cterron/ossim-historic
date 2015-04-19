@@ -5,7 +5,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <html>
 <head>
-<title>OSSIM Framework</title>
+<title> <?php echo gettext("OSSIM Framework"); ?> </title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 <meta http-equiv=REFRESH content=300>
 <meta http-equiv=Pragma content=no-cache>
@@ -74,17 +74,17 @@ Session::logcheck("MenuReports", "ReportsHostReport");
   padding: 3px;
   margin-top: 0px;
   font-family: sans-serif, arial, helvetica;
-  margin-bottom: 10px;"><center>Info about host <?php echo $ip;?></center></div><br/>
+  margin-bottom: 10px;"><center> <?php echo gettext("Info about host"); ?> <?php echo $ip;?></center></div><br/>
 
 
 <center>
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1y">year</A> ]
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1m">month</A> ]
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1w">week</A> ]
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1d">day</A> ]
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-12h">last 12h</A> ]
-[ <A HREF="anomalies.php?host=$ip$end=now&start=now-6h">last 6h</A> ]
-[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1h">last hour</A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1y"> <?php echo gettext("year"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1m"> <?php echo gettext("month"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1w"> <?php echo gettext("week"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1d"> <?php echo gettext("day"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-12h"> <?php echo gettext("last 12h"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip$end=now&start=now-6h"> <?php echo gettext("last 6h"); ?> </A> ]
+[ <A HREF="anomalies.php?host=$ip&end=now&start=now-1h"> <?php echo gettext("last hour"); ?> </A> ]
 <br/><br/>
 
 
@@ -102,7 +102,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 </center>
 
 <br/>
-<br><b>NOTE: total and average values are NOT absolute but calculated on the specified time interval.</b>
+<br><b> <?php echo gettext("NOTE: total and average values are NOT absolute but calculated on the specified time interval"); ?> .</b>
 
 </BODY>
 </HTML>

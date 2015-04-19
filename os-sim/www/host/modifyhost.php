@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Update host</h1>
+  <h1> <?php echo gettext("Update host"); ?> </h1>
 
 <?php
 
@@ -25,7 +25,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     {
 ?>
 
-  <p align="center">Please, complete all the fields</p>
+  <p align="center">
+  <?php echo gettext("Please, complete all the fields"); ?> </p>
   <?php exit();?>
 
 <?php
@@ -70,7 +71,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 }
 ?>
     <p>Host succesfully updated</p>
-    <p><a href="host.php">Back</a></p>
+    <p><a href="host.php">
+    <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

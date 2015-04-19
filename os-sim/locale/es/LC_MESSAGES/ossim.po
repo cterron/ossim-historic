@@ -1,0 +1,2611 @@
+# OSSIM localization file.
+# Copyright (C) 2005 ossim.net
+# Dominique Karg <dk@ossim.net>, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: OSSIM 0.9.8\n"
+"POT-Creation-Date: 2005-01-26 12:34+0100\n"
+"PO-Revision-Date: 2005-01-18 16:39+0100\n"
+"Last-Translator: David Gil <dgil@ossim.net>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: conf/main.php:12
+msgid "Language"
+msgstr "Idioma"
+
+#: conf/main.php:13
+msgid "Configure Internationalization"
+msgstr ""
+
+#: conf/main.php:23
+msgid "Server"
+msgstr "Servidor"
+
+#: conf/main.php:24
+msgid "Configure where the server's listening address"
+msgstr "Configurar la dirección donde escucha el servidor"
+
+#: conf/main.php:34
+msgid "Snort"
+msgstr ""
+
+#: conf/main.php:35
+msgid "Snort database and path configuration"
+msgstr "Configuración de rutas y conexión a base de datos de Snort"
+
+#: conf/main.php:51 control_panel/global_score.php:17 report/menu.php:46
+#: report/pdfreportform.php:113 top.php:39
+msgid "Metrics"
+msgstr "Métricas"
+
+#: conf/main.php:52
+msgid "Configure metric settings"
+msgstr "Configurar valores de métricas"
+
+#: conf/main.php:62
+msgid "PHP"
+msgstr ""
+
+#: conf/main.php:63
+msgid "PHP Configuration (graphs, acls, database api)"
+msgstr "Configuración PHP (gráficos, acsl, api de base de datos)"
+
+#: conf/main.php:77
+msgid "RRD"
+msgstr ""
+
+#: conf/main.php:78
+msgid "RRD Configuration (graphing)"
+msgstr "Configuración RRD (gráficos)"
+
+#: conf/main.php:97 sensor/editsensor.php:518
+msgid "Links"
+msgstr "Enlaces"
+
+#: conf/main.php:98
+msgid "Links to other applications"
+msgstr "Enlaces a otras aplicaciones"
+
+#: conf/main.php:109 top.php:75
+msgid "Backup"
+msgstr "Backup"
+
+#: conf/main.php:110
+msgid "Backup configuration: backup database, directory, interval"
+msgstr "Configuración de backup: base de datos de backup, directorio, intervalo"
+
+#: conf/main.php:126
+msgid "Nessus"
+msgstr ""
+
+#: conf/main.php:127
+msgid "Nessus client configuration"
+msgstr "Configuración cliente Nessus"
+
+#: conf/main.php:142
+msgid "ACID"
+msgstr ""
+
+#: conf/main.php:143
+msgid "Acid cache configuration"
+msgstr "Configuración de caché Acid"
+
+#: conf/main.php:157
+msgid "External applications"
+msgstr "Aplicaciones externas"
+
+#: conf/main.php:158
+msgid "Path to other applications"
+msgstr "Ruta para otras aplicaciones"
+
+#: conf/main.php:210 conf/main.php:216
+msgid "Main Configuration"
+msgstr "Configuración principal"
+
+#: conf/main.php:241 host/deletehost.php:35 net/deletenet.php:35
+#: policy/deletepolicy.php:30 port/deleteport.php:30
+#: rrd_conf/delete_rrd_conf.php:33 sensor/deletesensor.php:35
+#: sensor/interfaces.php:103 sensor/interfaces.php:107
+#: sensor/interfaces.php:126 sensor/interfaces.php:149
+#: session/deleteuser.php:37 signature/deletesignature.php:30
+msgid "No"
+msgstr ""
+
+#: conf/main.php:243 host/deletehost.php:33 net/deletenet.php:33
+#: policy/deletepolicy.php:29 port/deleteport.php:29
+#: rrd_conf/delete_rrd_conf.php:31 sensor/deletesensor.php:33
+#: sensor/interfaces.php:102 sensor/interfaces.php:108
+#: sensor/interfaces.php:127 sensor/interfaces.php:148
+#: session/deleteuser.php:36 signature/deletesignature.php:29
+msgid "Yes"
+msgstr "Sí"
+
+#: conf/main.php:250
+msgid "Images (php jpgraph)"
+msgstr "Imágenes (php jpgraph)"
+
+#: conf/main.php:252
+msgid "Applets (jfreechart)"
+msgstr ""
+
+#: conf/main.php:260
+msgid "English"
+msgstr "Inglés"
+
+#: conf/main.php:262
+msgid "Spanish"
+msgstr "Español"
+
+#: conf/main.php:264
+msgid "German"
+msgstr "Alemán"
+
+#: conf/main.php:266
+msgid "French"
+msgstr "Francés"
+
+#: conf/main.php:282 sensor/sensor_plugins.php:167
+msgid "DISABLED"
+msgstr "DESHABILITADO"
+
+#: conf/plugin.php:8 conf/pluginref.php:8 conf/pluginsid.php:8
+#: conf/pluginupdate.php:3 control_panel/global_score.php:142
+#: riskmeter/index.php:8 riskmeter/index.php:16 top.php:54
+msgid "Riskmeter"
+msgstr ""
+
+#: conf/plugin.php:14 conf/pluginsid.php:14
+msgid "Priority and Reliability configuration"
+msgstr "Configuración de Prioridad y Fiabilidad"
+
+#: conf/plugin.php:29 control_panel/alerts.php:57
+msgid "Id"
+msgstr ""
+
+#: conf/plugin.php:32 conf/pluginsid.php:58 directives/directive.php:73
+#: editor/rule.php:76 incidents/incident.php:252 net/newnetform.php:34
+#: port/modifyportform.php:39 port/newportform.php:21 report/inventory.php:79
+#: sensor/interfaces.php:86 sensor/interfaces.php:141 session/users.php:36
+#: signature/modifysignatureform.php:39 signature/newsignatureform.php:21
+#: signature/signature.php:28
+msgid "Name"
+msgstr "Nombre"
+
+#: conf/plugin.php:35 incidents/index.php:92
+msgid "Type"
+msgstr "Tipo"
+
+#: conf/plugin.php:38 host/host.php:62 host/modifyhostform.php:212
+#: host/newhostform.php:214 incidents/incident.php:481
+#: incidents/incident.php:578 net/modifynetform.php:198 net/net.php:67
+#: net/newnetform.php:157 policy/modifypolicyform.php:611 policy/policy.php:37
+#: port/modifyportform.php:86 port/newportform.php:58
+#: port/newsingleportform.php:40 port/port.php:31
+#: sensor/modifysensorform.php:99 sensor/newsensorform.php:55
+#: sensor/sensor.php:49 signature/modifysignatureform.php:82
+#: signature/newsignatureform.php:56 signature/signature.php:30
+msgid "Description"
+msgstr "Descripción"
+
+#: conf/pluginref.php:14
+msgid "Plugin reference"
+msgstr "Relación entre plugins"
+
+#: conf/pluginref.php:53 control_panel/alarm_console.php:103
+#: control_panel/backlog.php:71
+msgid "Prev %d"
+msgstr ""
+
+#: conf/pluginref.php:55 control_panel/alarm_console.php:106
+#: control_panel/alarm_console.php:109 control_panel/backlog.php:73
+#, c-format
+msgid "%d-%d of %d"
+msgstr "%d-%d de %d"
+
+#: conf/pluginref.php:57 control_panel/alarm_console.php:107
+#: control_panel/backlog.php:75
+msgid "Next %d"
+msgstr "Siguiente %d"
+
+#: conf/pluginref.php:66 scan/hostscan.php:40
+msgid "Plugin id"
+msgstr ""
+
+#: conf/pluginref.php:71 scan/hostscan.php:44
+msgid "Plugin sid"
+msgstr ""
+
+#: conf/pluginref.php:76
+msgid "Reference id"
+msgstr "Referencia id"
+
+#: conf/pluginref.php:81
+msgid "Reference sid"
+msgstr "Referencia sid"
+
+#: conf/pluginsid.php:42 sensor/sensor_plugins.php:117
+msgid "Plugin"
+msgstr ""
+
+#: conf/pluginsid.php:46
+msgid "Sid"
+msgstr ""
+
+#: conf/pluginsid.php:50 directives/directive.php:246
+msgid "Category"
+msgstr "Categoría"
+
+#: conf/pluginsid.php:54
+msgid "Class"
+msgstr "Clase"
+
+#: conf/pluginsid.php:62 directives/directive.php:74
+#: incidents/incident.php:374 incidents/incident.php:458
+#: incidents/incident.php:586 incidents/index.php:96 incidents/index.php:216
+#: net/modifynetform.php:57 net/newnetform.php:45
+#: policy/modifypolicyform.php:281 policy/policy.php:32
+#: rrd_conf/modify_rrd_conf_form.php:95 sensor/modifysensorform.php:53
+#: sensor/newsensorform.php:34 sensor/sensor.php:40
+msgid "Priority"
+msgstr "Prioridad"
+
+#: conf/pluginsid.php:66 directives/directive.php:75
+#: directives/directive.php:286
+msgid "Reliability"
+msgstr "Fiabilidad"
+
+#: conf/pluginsid.php:67 control_panel/alarm_console.php:145
+#: control_panel/alerts.php:64 editor/rule.php:78 host/host.php:63
+#: incidents/incident.php:375 incidents/incident.php:463
+#: incidents/incident.php:483 incidents/incident.php:580
+#: incidents/index.php:97 net/net.php:68 policy/policy.php:38 port/port.php:32
+#: rrd_conf/rrd_conf.php:31 scan/hostscan.php:45 scan/scan.php:43
+#: sensor/interfaces.php:88 sensor/interfaces.php:143 sensor/sensor.php:50
+#: sensor/sensor_plugins.php:119 sensor/sensor_plugins.php:121
+#: signature/signature.php:31
+msgid "Action"
+msgstr "Acción"
+
+#: conf/pluginupdate.php:11
+msgid "Unknown plugin id - sid"
+msgstr "Pugin id - sid desconodidos"
+
+#: conf/pluginupdate.php:12 conf/pluginupdate.php:19 conf/pluginupdate.php:25
+#: conf/pluginupdate.php:30 conf/pluginupdate.php:46
+#: control_panel/handle_anomaly.php:61 control_panel/handle_mac.php:55
+#: control_panel/handle_os.php:55 host/deletehost.php:54
+#: host/modifyhost.php:75 host/newhost.php:120 net/deletenet.php:55
+#: net/modifynet.php:73 net/newnet.php:72 policy/deletepolicy.php:47
+#: policy/modifypolicy.php:138 policy/newpolicy.php:130 port/deleteport.php:47
+#: port/modifyport.php:56 port/newport.php:56 port/newsingleport.php:51
+#: rrd_conf/delete_rrd_conf.php:49 rrd_conf/new_rrd_conf.php:62
+#: scan/deletehostscan.php:45 scan/makescan.php:29 scan/newhostscan.php:42
+#: sensor/deletesensor.php:58 sensor/interfaces.php:57
+#: sensor/interfaces.php:159 sensor/modifysensor.php:51
+#: sensor/newsensor.php:51 session/changepass.php:50 session/deleteuser.php:60
+#: session/modifyuser.php:73 session/newuser.php:81
+#: signature/deletesignature.php:46 signature/modifysignature.php:55
+#: signature/newsignature.php:55 vulnmeter/do_nessus.php:32
+msgid "Back"
+msgstr "Volver"
+
+#: conf/pluginupdate.php:18
+msgid "No values for priority or reliability"
+msgstr "No hay valores para prioridad o fiabilidad"
+
+#: conf/pluginupdate.php:24
+msgid "Priority must be between 0 and 10"
+msgstr "La prioridad debe estar entre 0 y 10"
+
+#: conf/pluginupdate.php:29
+msgid "Reliability must be between 0 and 5"
+msgstr "El valor de fiabilidad debe estar comprendido entre 0 y 5"
+
+#: conf/reload.php:16
+#, c-format
+msgid "socket_create() failed: reason: %s\n"
+msgstr ""
+
+#: conf/reload.php:22
+#, c-format
+msgid "socket_connect() failed: reason: %s %s\n"
+msgstr ""
+
+#: conf/reload.php:30
+msgid "Error connecting to server"
+msgstr "Error conectando con el servidor"
+
+#: conf/reload.php:39
+msgid "Bad response from server"
+msgstr "Respuesta errónea del servidor"
+
+#: conf/reload.php:51
+msgid "Reload completed successfully"
+msgstr "Actualización finalizada con éxito"
+
+#: control_panel/alarm_console.php:16 report/menu.php:48
+#: report/pdfreportform.php:118 top.php:40
+msgid "Alarms"
+msgstr "Alarmas"
+
+#: control_panel/alarm_console.php:131
+msgid "Sensor"
+msgstr "Sensor"
+
+#: control_panel/alarm_console.php:132
+msgid "Since"
+msgstr "Desde"
+
+#: control_panel/alarm_console.php:136
+msgid "Last"
+msgstr "Último"
+
+#: control_panel/alerts.php:7 control_panel/anomalies.php:8
+#: control_panel/backlog.php:8 control_panel/global_score.php:9
+#: control_panel/visualize.php:6 top.php:30
+msgid "Control Panel"
+msgstr "Panel de control"
+
+#: control_panel/alerts.php:16 control_panel/visualize.php:15
+msgid "Backlog ID required"
+msgstr "Backlog ID requerido"
+
+#: control_panel/alerts.php:23
+msgid "Alarms/Alerts"
+msgstr "Alarmas/Alertas"
+
+#: control_panel/alerts.php:51
+msgid "Back to main"
+msgstr "Volver a la página principal"
+
+#: control_panel/alerts.php:58 incidents/index.php:106 incidents/index.php:287
+msgid "Alarm"
+msgstr "Alarma"
+
+#: control_panel/alerts.php:59
+msgid "Risk"
+msgstr "Riesgo"
+
+#: control_panel/alerts.php:60 incidents/incident.php:456
+#: incidents/index.php:205 report/inventory.php:192
+msgid "Date"
+msgstr "Fecha"
+
+#: control_panel/alerts.php:61 incidents/incident.php:264
+#: policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
+msgid "Source"
+msgstr "Origen"
+
+#: control_panel/alerts.php:62 incidents/incident.php:271 report/menu.php:58
+msgid "Destination"
+msgstr "Destino"
+
+#: control_panel/alerts.php:63
+msgid "Correlation Level"
+msgstr "Nivel de Correlación"
+
+#: control_panel/alerts.php:236
+#, c-format
+msgid "Total Alerts: %d"
+msgstr "Total de Alertas: %d"
+
+#: control_panel/alerts.php:237
+#, c-format
+msgid "Unique Dst IPAddr: %d"
+msgstr "Dst IPAddr únicas: %d"
+
+#: control_panel/alerts.php:238
+#, c-format
+msgid "Unique Types: %d"
+msgstr "Tipos únicos: %d"
+
+#: control_panel/alerts.php:239
+#, c-format
+msgid "Unique Dst Ports: %d"
+msgstr "Dst Puertos únicos: %d"
+
+#: control_panel/alerts.php:243
+msgid "Visualize alarm"
+msgstr "Ver alarma"
+
+#: control_panel/anomalies.php:16 report/menu.php:95 top.php:47
+msgid "Anomalies"
+msgstr "Anomalías"
+
+#: control_panel/anomalies.php:62
+msgid "RRD anomalies"
+msgstr "Anomalías RDD"
+
+#: control_panel/anomalies.php:66
+msgid "Acknowledged"
+msgstr "Aceptado"
+
+#: control_panel/anomalies.php:67
+msgid "Not Acknowledged"
+msgstr "No aceptado"
+
+#: control_panel/anomalies.php:68
+msgid "All"
+msgstr "Todo"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+#: control_panel/anomalies.php:194 control_panel/anomalies.php:259
+#: control_panel/global_score.php:412 control_panel/global_score.php:479
+#: report/sec_report.php:148 scan/hostscan.php:36 scan/scan.php:38
+msgid "Host"
+msgstr "Máquina"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+msgid "What"
+msgstr "Qué"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "When"
+msgstr "Cuándo"
+
+#: control_panel/anomalies.php:72 control_panel/anomalies.php:133
+msgid "Not acked count (hours)"
+msgstr "No aceptado (horas)"
+
+#: control_panel/anomalies.php:72 control_panel/anomalies.php:133
+msgid "Over threshold (absolute)"
+msgstr "Superado el umbral (absoluto)"
+
+#: control_panel/anomalies.php:73 control_panel/anomalies.php:134
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "Ack"
+msgstr "Aceptar"
+
+#: control_panel/anomalies.php:74 control_panel/anomalies.php:135
+#: control_panel/backlog.php:98 host/host.php:126 net/net.php:137
+#: policy/policy.php:160 port/port.php:64 rrd_conf/rrd_conf.php:53
+#: scan/hostscan.php:71 sensor/sensor.php:102 session/users.php:65
+#: signature/signature.php:60
+msgid "Delete"
+msgstr "Borrar"
+
+#: control_panel/anomalies.php:189
+msgid "OS Changes"
+msgstr "Cambios de SO"
+
+#: control_panel/anomalies.php:192 control_panel/anomalies.php:257
+msgid "Get list"
+msgstr "Obtener lista"
+
+#: control_panel/anomalies.php:194
+msgid "Previous OS"
+msgstr "SO anterior"
+
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "Ignore"
+msgstr "Ignorar"
+
+#: control_panel/anomalies.php:254
+msgid "Mac Changes"
+msgstr "Cambios de Mac"
+
+#: control_panel/anomalies.php:259 host/newhostform.php:196
+#: host/newhostform.php:207
+msgid "Mac"
+msgstr ""
+
+#: control_panel/anomalies.php:259
+msgid "Previous Mac"
+msgstr "Mac anterior"
+
+#: control_panel/backlog.php:16 top.php:65
+msgid "Backlog"
+msgstr ""
+
+#: control_panel/backlog.php:125
+msgid "NO"
+msgstr ""
+
+#: control_panel/backlog.php:127 sensor/sensor.php:139
+msgid "YES"
+msgstr "SÍ"
+
+#: control_panel/global_score.php:105
+msgid "Last Day"
+msgstr "Último Dia"
+
+#: control_panel/global_score.php:108
+msgid "Last Week"
+msgstr "Última Semana"
+
+#: control_panel/global_score.php:111
+msgid "Last Month"
+msgstr "Último Mes"
+
+#: control_panel/global_score.php:114
+msgid "Last Year"
+msgstr "Último Año"
+
+#: control_panel/global_score.php:143
+msgid "Service Level"
+msgstr "Nivel de Servicio"
+
+#: control_panel/global_score.php:190 control_panel/global_score.php:196
+#: control_panel/global_score.php:243 ntop/menu.php:120 riskmeter/index.php:66
+msgid "Global"
+msgstr ""
+
+#: control_panel/global_score.php:197 control_panel/global_score.php:296
+#: control_panel/global_score.php:413
+msgid "Max C date"
+msgstr "Fecha C Max"
+
+#: control_panel/global_score.php:198 control_panel/global_score.php:297
+#: control_panel/global_score.php:414
+msgid "Max C"
+msgstr "C Max"
+
+#: control_panel/global_score.php:199 control_panel/global_score.php:298
+#: control_panel/global_score.php:415
+msgid "Current C"
+msgstr "C Actual"
+
+#: control_panel/global_score.php:207 control_panel/global_score.php:254
+msgid "GLOBAL SCORE"
+msgstr ""
+
+#: control_panel/global_score.php:244 control_panel/global_score.php:353
+#: control_panel/global_score.php:480
+msgid "Max A date"
+msgstr "Fecha A Max"
+
+#: control_panel/global_score.php:245 control_panel/global_score.php:354
+#: control_panel/global_score.php:481
+msgid "Max A"
+msgstr "A Max"
+
+#: control_panel/global_score.php:246 control_panel/global_score.php:355
+#: control_panel/global_score.php:482
+msgid "Current A"
+msgstr "A Actual"
+
+#: control_panel/global_score.php:288 net/net.php:15 riskmeter/index.php:151
+#: top.php:58
+msgid "Networks"
+msgstr "Redes"
+
+#: control_panel/global_score.php:295 control_panel/global_score.php:352
+#: top.php:51
+msgid "Network"
+msgstr "Red"
+
+#: control_panel/global_score.php:405 host/host.php:15 top.php:57
+msgid "Hosts"
+msgstr "Hosts"
+
+#: control_panel/handle_anomaly.php:8 control_panel/handle_anomaly.php:15
+#: control_panel/handle_mac.php:8 control_panel/handle_mac.php:15
+#: control_panel/handle_os.php:8 control_panel/handle_os.php:15
+#: control_panel/mac.php:8 control_panel/os.php:8 editor/rule.php:44
+#: editor/rule.php:51 host/deletehost.php:8 host/host.php:8
+#: host/modifyhost.php:8 host/modifyhostform.php:8 host/newhost.php:8
+#: host/newhostform.php:8 incidents/incident.php:8 incidents/index.php:8
+#: net/deletenet.php:8 net/modifynet.php:8 net/modifynetform.php:8
+#: net/net.php:8 net/newnet.php:8 net/newnetform.php:8 ntop/menu.php:3
+#: ntop/menu_session.php:3 policy/deletepolicy.php:8 policy/modifypolicy.php:8
+#: policy/modifypolicyform.php:8 policy/newpolicy.php:8 policy/policy.php:8
+#: port/deleteport.php:8 port/modifyport.php:8 port/modifyportform.php:8
+#: port/newport.php:8 port/newportform.php:8 port/newsingleport.php:8
+#: port/newsingleportform.php:8 port/port.php:8 report/anomalies.php:8
+#: report/inventory.php:8 report/menu.php:8 report/metrics.php:8
+#: report/pdfreportform.php:8 report/report.php:8 report/sec_report.php:8
+#: rrd_conf/delete_rrd_conf.php:8 rrd_conf/modify_rrd_conf_form.php:8
+#: rrd_conf/new_rrd_conf.php:8 rrd_conf/rrd_conf.php:8
+#: scan/deletehostscan.php:8 scan/hostscan.php:8 scan/newhostscan.php:8
+#: scan/newhostscanform.php:8 scan/scan.php:8 sensor/deletesensor.php:8
+#: sensor/interfaces.php:8 sensor/modifysensor.php:8
+#: sensor/modifysensorform.php:8 sensor/newsensor.php:8
+#: sensor/newsensorform.php:8 sensor/sensor.php:8 sensor/sensor_plugins.php:8
+#: session/changepass.php:3 session/changepassform.php:3
+#: session/deleteuser.php:13 session/modifyuser.php:8
+#: session/modifyuserform.php:12 session/newuser.php:8
+#: session/newuserform.php:14 session/users.php:8
+#: signature/deletesignature.php:8 signature/modifysignature.php:8
+#: signature/modifysignatureform.php:8 signature/newsignature.php:8
+#: signature/newsignatureform.php:8 signature/signature.php:8
+#: vulnmeter/do_nessus.php:8
+msgid "OSSIM Framework"
+msgstr "OSSIM Framework"
+
+#: control_panel/handle_anomaly.php:60 control_panel/handle_mac.php:54
+msgid "Successfully Acked/Deleted"
+msgstr "Aceptado/Borrado con éxito"
+
+#: control_panel/handle_os.php:54
+msgid "Successfully Acked/Deleted/Ignored"
+msgstr "Aceptado/Borrado/Ignorado con éxito"
+
+#: control_panel/mac.php:15
+msgid "OSSIM Framework - Mac list"
+msgstr "OSSIM Framework - Lista de Macs"
+
+#: control_panel/mac.php:30
+msgid "Show 10"
+msgstr "Mostrar 10"
+
+#: control_panel/mac.php:31
+msgid "Show 50"
+msgstr "Mostrar 50"
+
+#: control_panel/mac.php:32
+msgid "Show 100"
+msgstr "Mostrar 100"
+
+#: control_panel/mac.php:49
+msgid "Vendor"
+msgstr "Fabricante"
+
+#: control_panel/mac.php:54
+msgid "Previous Vendor"
+msgstr "Fabricante anterior"
+
+#: control_panel/mac.php:73 host/newhostform.php:188
+msgid "Unknown"
+msgstr "Desconocido"
+
+#: control_panel/os.php:15
+msgid "OSSIM Framework - OS list"
+msgstr "OSSIM Framework - Lista de SO"
+
+#: control_panel/show_image.php:34
+msgid "Compromise"
+msgstr "Compromiso"
+
+#: control_panel/show_image.php:37
+msgid "Attack"
+msgstr "Ataque"
+
+#: control_panel/visualize.php:33
+msgid "Alarm viewer"
+msgstr "Visor de alarmas"
+
+#: directives/directive.php:12 directives/directive.php:35
+msgid "Directive Editor"
+msgstr "Editor de directivas"
+
+#: directives/directive.php:69
+msgid "Rules"
+msgstr "Reglas"
+
+#: directives/directive.php:70
+msgid "Directive"
+msgstr "Directiva"
+
+#: directives/directive.php:76
+msgid "Time_out"
+msgstr "Tiempo límite"
+
+#: directives/directive.php:77
+msgid "Occurrence"
+msgstr "Ocurrencias"
+
+#: directives/directive.php:78
+msgid "From"
+msgstr "Desde"
+
+#: directives/directive.php:79
+msgid "To"
+msgstr "A"
+
+#: directives/directive.php:80
+msgid "Port_from"
+msgstr "Puerto_orig"
+
+#: directives/directive.php:81
+msgid "Port_to"
+msgstr "Puerto_dest"
+
+#: directives/directive.php:82
+msgid "Plugin ID"
+msgstr ""
+
+#: directives/directive.php:83
+msgid "Plugin SID"
+msgstr ""
+
+#: directives/directive.php:166
+msgid "Expand / Collapse"
+msgstr "Expandir / Contraer"
+
+#: directives/directive.php:174 policy/modifypolicyform.php:137
+#: policy/modifypolicyform.php:232
+msgid "ANY"
+msgstr ""
+
+#: directives/directive.php:240
+msgid "Click on the left side to view a directive"
+msgstr "Pulse en el panel izquierdo para ver una directiva"
+
+#: directives/directive.php:241
+msgid "Click on the categories of directives to expand or collapse them"
+msgstr "Pulse en las categorías de las directivas para expandirlas/contrarerlas"
+
+#: directives/directive.php:247
+msgid "Numbers"
+msgstr "Números"
+
+#: directives/directive.php:248
+msgid "Generic ossim"
+msgstr "Ossim genérico"
+
+#: directives/directive.php:249
+msgid "Attack correlation"
+msgstr "Correlación de ataques"
+
+#: directives/directive.php:250
+msgid "Virus and Worms"
+msgstr "Virus y gusanos"
+
+#: directives/directive.php:251
+msgid "Web attack correlation"
+msgstr "Correlación de ataques Web"
+
+#: directives/directive.php:252
+msgid "DoS"
+msgstr ""
+
+#: directives/directive.php:253
+msgid "Portscan/scan"
+msgstr "Escaneo de puertos/Escaneo"
+
+#: directives/directive.php:254
+msgid "Behaviour anomalies"
+msgstr "Comportamientos anómalos"
+
+#: directives/directive.php:255
+msgid "Network abuse and error"
+msgstr "Abusos de red y errores"
+
+#: directives/directive.php:256
+msgid "Trojans"
+msgstr "Troyanos"
+
+#: directives/directive.php:257
+msgid "Miscellaneous"
+msgstr "Miscelánea"
+
+#: directives/directive.php:258
+msgid "User contributed"
+msgstr "Aportadas por usuarios"
+
+#: directives/directive.php:264
+msgid "What type of rule is this. There are two possible types as of today"
+msgstr "¿Qué tipo de regla es ésta? Hay dos tipos posibles por ahora"
+
+#: directives/directive.php:266
+msgid "Detector"
+msgstr "Detector"
+
+#: directives/directive.php:267
+msgid ""
+"Detector rules are those received automatically from the agent as they are "
+"recorded. This includes snort, spade, apache, etc"
+msgstr "Las reglas del detector son recibidas automáticamente desde el agente según son registradas. Esto ingluye snort, spade, apache, etc"
+
+#: directives/directive.php:268 riskmeter/options.php:41
+msgid "Monitor"
+msgstr ""
+
+#: directives/directive.php:269
+msgid "Monitor rules must be queried by the server ntop data and ntop sessions"
+msgstr ""
+
+#: directives/directive.php:272
+msgid ""
+"The  rule name shown within the event database when the level is matched"
+msgstr "El nombre de la regla mostrada dentro del evento de la base de datos cuando el nivel es alcanzado"
+
+#: directives/directive.php:273
+msgid "Accepts: UTF-8 compliant string"
+msgstr "Acepta: cadenas compatibles UTF-8"
+
+#: directives/directive.php:275
+msgid ""
+"When we talk about priority we're talking about threat. It's the importance "
+"of the isolated attack. It has nothing to do with your equipment or "
+"environment, it only measures the relative importance of the attack"
+msgstr "Cuando hablamos de prioridad estamos hablando de amenaza. Es la importancia de un ataque aislado. No tiene relación con su equipo o entorno. Sólo mide la importancia relativa del ataque"
+
+#: directives/directive.php:276
+msgid "This will become clear using a couple of examples"
+msgstr "Esto se entenderá mejor utilizando un par de ejemplos"
+
+#: directives/directive.php:278
+msgid "Your unix server running samba gets attacked by the sasser worm"
+msgstr "Su servidor Unix con Samba es atacado por el gusano Sasser"
+
+#: directives/directive.php:279
+msgid "The attack"
+msgstr "El ataque"
+
+#: directives/directive.php:280
+msgid "per se"
+msgstr "de por sí"
+
+#: directives/directive.php:281
+msgid ""
+"is dangerous, it has compromised thousands of hosts and is very easy to "
+"accomplish. But. does it really matter to you? Surely not, but it's a big "
+"security hole so it'll have a high priority"
+msgstr "es peligroso, pero ha comprometido miles de equipos y es muy fácil de llevar a cabo. Pero, ¿a usted le afecta? Seguramente no, pero is un importante agujero de seguridad así que tendrá una alta prioridad"
+
+#: directives/directive.php:282
+msgid ""
+"You're running a CVS server on an isolated network that is only accessible "
+"by your friends and has only access to the outside. Some new exploit tested "
+"by one of your friends hits it"
+msgstr "Está utilizando un servidor CVS en una red aislada sólo accesible por sus amigos y tiene sólo acceso saliente. Algún nuevo exploit probado por uno de sus amigos lo ha atacado"
+
+#: directives/directive.php:283
+msgid ""
+"Again, the attack is dangerous, it could compromise your machine but surely "
+"your host is patched against that particular attack and you don't mind being "
+"a test-platform for one of your friends"
+msgstr "De nuevo, el ataque es peligroso. Puede comprometer su máquina, pero seguramente su equipo está parcheado contra ese ataque en particular y no le importa ser una plataforma de pruebas para uno de sus amigos"
+
+#: directives/directive.php:285 directives/directive.php:295
+msgid "Default Value"
+msgstr "Valor por defecto"
+
+#: directives/directive.php:287
+msgid "When talking about classic risk-assessment this would be"
+msgstr "La clásica valoración de riesgos suele consistir en"
+
+#: directives/directive.php:288
+msgid ") . ; ?> &quot;"
+msgstr ""
+
+#: directives/directive.php:289
+msgid "probability"
+msgstr "probabilidad"
+
+#: directives/directive.php:289 directives/directive.php:297
+msgid " "
+msgstr ""
+
+#: directives/directive.php:290
+msgid ""
+"Since it's quite difficult to determine how probable it is our network being "
+"attacked by some sort of vulnerability, we'll transform this term into "
+"something more IDS related: reliability"
+msgstr "Como es complicado determinar la probabilidad de que nuestra red sea atacada por algún tipo de vulnerabilidad, adaptamos este término a la terminología IDS: fiabilidad"
+
+#: directives/directive.php:291
+msgid ""
+"Surely many of you have seen unreliable signatures on every available NIDS. "
+"A host pinging a non-live destination is able to rise hundreds of thousands "
+"spade events a day. Snort's recent http-inspect functionality for example, "
+"although good implemented needs some heavy tweaking in order to be reliable "
+"or you'll get thousands of false positives a day"
+msgstr "Seguramenta habrá observado firmas/patrones no fiables en muchos NIDS. Un equipo enviando PINGs a destinos no existentes es capaz de generar diariamente cientos de miles de eventos de Spade. El preprocesador http-inspect de Snort por ejemplo, aunque bien implementada, necesita importantes ajustes para ser fiable o recibirá miles de falsos positivos"
+
+#: directives/directive.php:292
+msgid ""
+"Coming back to our worm example. If a hosts connects to 5 different hosts on "
+"their own subnet using port 445, that could be a normal behaviour. "
+"Unreliable for IDS purposes. What happens if they connect to 15 hosts? We're "
+"starting to get suspicious. And what if they contact 500 different hosts in "
+"less than an hour? That's strange and the attack is getting more and more "
+"reliable"
+msgstr "Volviendo a nuesto ejemplo del gusano. Un equipo que se conecta a 5 máquinas distintas de su propia subred al puerto 445, puede representar un comportamiento normal. No es fiable para un IDS ¿Qué ocurre si se conecta contra 15 máquinas? Empieza a ser sospechoso ¿Y si se comunica con 500 máquinas en menos de una hora? Es extraño y el ataque comiena a ser más y más fiable."
+
+#: directives/directive.php:293
+msgid ""
+"Each rule has it's own reliability, determining how reliable this particular "
+"rule is within the whole attack chain"
+msgstr "Cada regla tiene su propia fiabilidad, determinando la fiabilidad de esa regla en particular dentro de la cadena del ataque completa"
+
+#: directives/directive.php:294
+msgid ""
+"Accepts: 0-10. Can be specified as absolute value (i.e. 7) or relative (i.e. "
+"+2 means two more than the previous level)"
+msgstr "Acepta: 0-10. Puede ser especificada como valor absoluto (p.ej. 7) o relativo (p.ej. +2 significa dos más el nivel anterior)"
+
+#: directives/directive.php:296
+msgid "text-align: left;"
+msgstr "alineación-texto: izquierda;"
+
+#: directives/directive.php:296
+msgid "Ocurrence"
+msgstr "Ocurrencias"
+
+#: directives/directive.php:297
+msgid "How many times we have to match a unique"
+msgstr "Cuántas veces debemos encontrar una coincidencia"
+
+#: directives/directive.php:298
+msgid "in order to advance one correlation level"
+msgstr "para avanzar un nivel de correlación"
+
+#: directives/directive.php:300
+msgid ""
+"We wait a fixed amount of seconds until a rule expires and the directives "
+"lifetime is over"
+msgstr "Esperamos un tiempo determinado de segundos hasta que una regla expira y el tiempo de vida de las directivas se agota"
+
+#: directives/directive.php:302
+msgid "Source IP. There are various possible values for this field"
+msgstr "IP origen. Hay varios valores posibles para este campo"
+
+#: directives/directive.php:305 directives/directive.php:326
+msgid "Just that, any ip address would match"
+msgstr "Justo eso, cualquier dirección IP coincidirá"
+
+#: directives/directive.php:306 directives/directive.php:327
+msgid "Dotted numerical Ipv4"
+msgstr "IPv4 numérica con puntos"
+
+#: directives/directive.php:307 directives/directive.php:328
+msgid "Self explaining"
+msgstr "Auto explicativo"
+
+#: directives/directive.php:308 directives/directive.php:329
+msgid "Comma separated Ipv4 addresses without netmask"
+msgstr "Direcciones IPv4 sin máscara separadas por comas"
+
+#: directives/directive.php:309 directives/directive.php:330
+msgid "You can use any number of ip addresses separated by commas"
+msgstr "Puede utilizar cualquier número de direcciones IP separadas por comas"
+
+#: directives/directive.php:310 directives/directive.php:331
+msgid "Using a network name"
+msgstr "Utilizando un nombre de red"
+
+#: directives/directive.php:311 directives/directive.php:332
+msgid "You can use any network name defined via web"
+msgstr "Puede utilizar cualquier nombre de red definido vía Web"
+
+#: directives/directive.php:312 directives/directive.php:333
+msgid "Relative"
+msgstr "Relativo"
+
+#: directives/directive.php:313 directives/directive.php:334
+msgid ""
+"This is used to reference ip addresses from previous levels. This should be "
+"easier to understand using examples"
+msgstr "Se utiliza para referenciar direcciones IP de niveles anteriores. Debería ser más fácil de comprender con ejemplos"
+
+#: directives/directive.php:314 directives/directive.php:335
+msgid "means use the source ip referenced within the previous rule"
+msgstr "significa utilizar la dirección IP origen referenciada dentro de la regla anterior"
+
+#: directives/directive.php:315 directives/directive.php:336
+msgid ""
+"means use the destination ip referenced two rules below as source address"
+msgstr "significa utilizar la dirección IP destino referenciada dos reglas debajo como dirección origen"
+
+#: directives/directive.php:316 directives/directive.php:337
+msgid "Negated"
+msgstr "Negado"
+
+#: directives/directive.php:317 directives/directive.php:338
+msgid "You can also use negated elements. I.e."
+msgstr "También puede utilizar elementos negados. P.ej."
+
+#: directives/directive.php:319
+msgid "If "
+msgstr "Si "
+
+#: directives/directive.php:320 directives/directive.php:341
+msgid "this would match the whole class C except"
+msgstr "haría coincidir la clase C entera excepto"
+
+#: directives/directive.php:323
+msgid "Destination IP. There are various possible values for this field"
+msgstr "IP de destino. Hay varios valores posibles para este campo"
+
+#: directives/directive.php:340
+msgid "If"
+msgstr "Si"
+
+#: directives/directive.php:343
+msgid "The"
+msgstr "El"
+
+#: directives/directive.php:343
+msgid ""
+"field is the field used when referencing monitor data that has no source"
+msgstr "campo es el campo utilizado cuando se referencia datos de monitor que no tienen origen"
+
+#: directives/directive.php:344
+msgid "Both"
+msgstr "Ambos"
+
+#: editor/rule.php:53
+msgid "Rule editor"
+msgstr "Editor de reglas"
+
+#: editor/rule.php:80 port/newsingleportform.php:25
+msgid "Protocol"
+msgstr "Protocolo"
+
+#: editor/rule.php:82
+msgid "SRC IP"
+msgstr ""
+
+#: editor/rule.php:84
+msgid "SRC Ports"
+msgstr "Puertos ORIG"
+
+#: editor/rule.php:86
+msgid "Dir"
+msgstr ""
+
+#: editor/rule.php:88
+msgid "DEST IP"
+msgstr ""
+
+#: editor/rule.php:90
+msgid "DEST Ports"
+msgstr "Puertos DEST"
+
+#: editor/rule.php:92
+msgid "Content"
+msgstr "Contenido"
+
+#: editor/rule.php:94
+msgid "Options"
+msgstr "Opciones"
+
+#: host/deletehost.php:15
+msgid "Delete host"
+msgstr "Borrar host"
+
+#: host/deletehost.php:20
+msgid "Wrong IP"
+msgstr "IP errónea"
+
+#: host/deletehost.php:30 net/deletenet.php:30 policy/deletepolicy.php:27
+#: port/deleteport.php:27 scan/deletehostscan.php:29 session/deleteuser.php:32
+#: signature/deletesignature.php:27
+msgid "Are you sure"
+msgstr "¿Está seguro?"
+
+#: host/deletehost.php:52
+msgid "Host deleted"
+msgstr "Host eliminado"
+
+#: host/host.php:39 host/modifyhostform.php:148 host/newhostform.php:132
+msgid "NAT"
+msgstr "NAT"
+
+#: host/host.php:60 host/modifyhostform.php:155 host/newhostform.php:138
+#: net/modifynetform.php:143 net/net.php:65 net/newnetform.php:113
+#: policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
+#: sensor/sensor_plugins.php:15 top.php:53 top.php:59
+msgid "Sensors"
+msgstr "Sensores"
+
+#: host/host.php:61
+msgid "Scantype"
+msgstr "Tipo de scaneo"
+
+#: host/host.php:118 host/modifyhostform.php:123 host/newhostform.php:109
+#: net/modifynetform.php:117 net/newnetform.php:90
+msgid "None"
+msgstr "Ninguno"
+
+#: host/host.php:125 net/net.php:136 policy/policy.php:157 port/port.php:61
+#: rrd_conf/rrd_conf.php:47 sensor/sensor.php:100 signature/signature.php:57
+msgid "Modify"
+msgstr "Modificar"
+
+#: host/host.php:138 host/newhostform.php:15 policy/modifypolicyform.php:51
+#: policy/modifypolicyform.php:146
+msgid "Insert new host"
+msgstr "Insertar una nueva máquina"
+
+#: host/host.php:142 net/net.php:150 ntop/menu_session.php:79
+#: ntop/menu_session.php:89 policy/policy.php:176 sensor/sensor.php:153
+#: signature/signature.php:71
+msgid "Reload"
+msgstr "Recargar"
+
+#: host/host.php:150
+msgid "Search"
+msgstr "Buscar"
+
+#: host/modifyhost.php:15
+msgid "Update host"
+msgstr "Actualizar máquina"
+
+#: host/modifyhost.php:29 host/newhost.php:29 host/newhost.php:61
+#: net/modifynet.php:29 net/newnet.php:29 policy/modifypolicy.php:39
+#: policy/newpolicy.php:33 port/modifyport.php:25 port/newport.php:25
+#: port/newsingleport.php:26 sensor/interfaces.php:23
+#: sensor/modifysensor.php:26 sensor/newsensor.php:26
+#: signature/newsignature.php:25
+msgid "Please, complete all the fields"
+msgstr "Por favor, complete todos los campos"
+
+#: host/modifyhostform.php:15
+msgid "Modify host"
+msgstr "Modificar máquina"
+
+#: host/modifyhostform.php:42 host/newhostform.php:43 report/report.php:30
+#: sensor/modifysensorform.php:39 sensor/newsensorform.php:25
+#: sensor/sensor.php:36
+msgid "Hostname"
+msgstr "Nombre de máquina"
+
+#: host/modifyhostform.php:48 host/newhostform.php:54 net/modifynetform.php:51
+#: sensor/modifysensorform.php:47 sensor/newsensorform.php:29
+msgid "IP"
+msgstr ""
+
+#: host/modifyhostform.php:56 host/newhostform.php:58 report/report.php:38
+msgid "Asset"
+msgstr "Activo"
+
+#: host/modifyhostform.php:62 host/newhostform.php:62
+msgid "0"
+msgstr ""
+
+#: host/modifyhostform.php:66 host/newhostform.php:64
+#: incidents/incident.php:590
+msgid "1"
+msgstr ""
+
+#: host/modifyhostform.php:70 host/newhostform.php:66
+#: incidents/incident.php:593
+msgid "2"
+msgstr ""
+
+#: host/modifyhostform.php:74 host/newhostform.php:68
+#: incidents/incident.php:596
+msgid "3"
+msgstr ""
+
+#: host/modifyhostform.php:78 host/newhostform.php:70
+#: incidents/incident.php:599
+msgid "4"
+msgstr ""
+
+#: host/modifyhostform.php:82 host/newhostform.php:72
+#: incidents/incident.php:602
+msgid "5"
+msgstr ""
+
+#: host/modifyhostform.php:87 host/newhostform.php:77 net/modifynetform.php:82
+#: net/newnetform.php:58
+msgid "Threshold C"
+msgstr "Umbral C"
+
+#: host/modifyhostform.php:93 host/newhostform.php:84 net/modifynetform.php:88
+#: net/newnetform.php:65
+msgid "Threshold A"
+msgstr "Umbral A"
+
+#: host/modifyhostform.php:99 host/newhostform.php:91 net/modifynetform.php:94
+#: net/newnetform.php:72
+msgid "RRD Profile"
+msgstr "Perfil RRD"
+
+#: host/modifyhostform.php:102 host/newhostform.php:94
+#: net/modifynetform.php:96 net/newnetform.php:75
+msgid "Insert new profile"
+msgstr "Insertar nuevo perfil"
+
+#: host/modifyhostform.php:158 host/newhostform.php:141
+#: net/modifynetform.php:145 net/newnetform.php:116
+#: policy/modifypolicyform.php:354 sensor/newsensorform.php:15
+#: sensor/sensor.php:150
+msgid "Insert new sensor"
+msgstr "Insertar nuevo sensor"
+
+#: host/modifyhostform.php:198 host/newhostform.php:173
+#: net/modifynetform.php:185 net/newnetform.php:148
+msgid "Scan options"
+msgstr "Opciones de escaneo"
+
+#: host/modifyhostform.php:207 host/newhostform.php:176 net/newnetform.php:151
+msgid "Enable nessus scan"
+msgstr "Habilitar escaneo de Nessus"
+
+#: host/newhost.php:15
+msgid "New Host"
+msgstr "Nueva máquina"
+
+#: host/newhost.php:118
+msgid "Host succesfully inserted"
+msgstr "Máquina insertada con éxito"
+
+#: host/newhostform.php:183 report/report.php:39
+msgid "OS"
+msgstr ""
+
+#: host/newhostform.php:190
+msgid "Windows"
+msgstr ""
+
+#: host/newhostform.php:192
+msgid "Linux"
+msgstr ""
+
+#: host/newhostform.php:194
+msgid "BSD"
+msgstr ""
+
+#: host/newhostform.php:198
+msgid "Sun"
+msgstr ""
+
+#: host/newhostform.php:200
+msgid "Plan9"
+msgstr ""
+
+#: host/newhostform.php:202
+msgid "Other"
+msgstr "Otro"
+
+#: incidents/incident.php:85
+msgid "Error trying to insert new alarm ticket (argument missing)"
+msgstr "Error intentando insertar nuevo ticket de alarma (falta argumento)"
+
+#: incidents/incident.php:179
+msgid "Description and Action fields are required"
+msgstr "Campos Descripción y Acción requeridos"
+
+#: incidents/incident.php:278
+msgid "Src Ports"
+msgstr "Puertos Origen"
+
+#: incidents/incident.php:285
+msgid "Dst Ports"
+msgstr "Puertos Destino"
+
+#: incidents/incident.php:300
+msgid "Target"
+msgstr "Objetivo"
+
+#: incidents/incident.php:307
+msgid "Metric Type"
+msgstr "Tipo de métrica"
+
+#: incidents/incident.php:314
+msgid "Metric Value"
+msgstr "Valor de métrica"
+
+#: incidents/incident.php:369 incidents/index.php:201
+msgid "Ticket"
+msgstr ""
+
+#: incidents/incident.php:371
+msgid "Incident"
+msgstr "Incidente"
+
+#: incidents/incident.php:372 incidents/incident.php:460
+#: incidents/index.php:211
+msgid "In Charge"
+msgstr "Encargado"
+
+#: incidents/incident.php:373 incidents/incident.php:459
+#: incidents/index.php:95 incidents/index.php:212
+#: sensor/sensor_plugins.php:118
+msgid "Status"
+msgstr "Estado"
+
+#: incidents/incident.php:457
+msgid "User / Description / Action"
+msgstr "Usuario / Descripción / Acción"
+
+#: incidents/incident.php:461
+msgid "Transferred"
+msgstr "Transferido"
+
+#: incidents/incident.php:462
+msgid "Copy"
+msgstr "Copiar"
+
+#: incidents/incident.php:479 session/login.php:94
+msgid "User"
+msgstr "Usuario"
+
+#: incidents/incident.php:582
+msgid "Attachment"
+msgstr "Adjunto"
+
+#: incidents/incident.php:605
+msgid "6"
+msgstr ""
+
+#: incidents/incident.php:608
+msgid "7"
+msgstr ""
+
+#: incidents/incident.php:611
+msgid "8"
+msgstr ""
+
+#: incidents/incident.php:614
+msgid "9"
+msgstr ""
+
+#: incidents/incident.php:617
+msgid "10"
+msgstr ""
+
+#: incidents/incident.php:619
+msgid "status"
+msgstr "estado"
+
+#: incidents/incident.php:623 incidents/index.php:122
+msgid "Open"
+msgstr "Abierto"
+
+#: incidents/incident.php:626 incidents/index.php:125
+msgid "Closed"
+msgstr "Cerrado"
+
+#: incidents/incident.php:630 incidents/index.php:94
+msgid "In charge"
+msgstr "Encargado"
+
+#: incidents/incident.php:644
+msgid "Transfer"
+msgstr "Transferido"
+
+#: incidents/incident.php:646
+msgid "Copy (e-mail)"
+msgstr "Copia (e-mail)"
+
+#: incidents/index.php:15 top.php:48
+msgid "Incidents"
+msgstr "Incidencias"
+
+#: incidents/index.php:76
+msgid "Filter"
+msgstr "Filtro"
+
+#: incidents/index.php:93 incidents/index.php:210
+msgid "Title"
+msgstr "Título"
+
+#: incidents/index.php:103 incidents/index.php:119 incidents/index.php:131
+msgid "ALL"
+msgstr "TODOS"
+
+#: incidents/index.php:109 incidents/index.php:289
+msgid "Metric"
+msgstr "Métrica"
+
+#: incidents/index.php:134
+msgid "High"
+msgstr "Alta"
+
+#: incidents/index.php:137
+msgid "Medium"
+msgstr "Media"
+
+#: incidents/index.php:140
+msgid "Low"
+msgstr "Baja"
+
+#: incidents/index.php:151
+msgid "with User"
+msgstr "con usuario"
+
+#: incidents/index.php:152
+msgid "with Description"
+msgstr "con descripción"
+
+#: incidents/index.php:153
+msgid "with Action"
+msgstr "con acción"
+
+#: incidents/index.php:154
+msgid "with Attachment"
+msgstr "con adjunto"
+
+#: incidents/index.php:155
+msgid "with Copy to"
+msgstr "con copia a"
+
+#: incidents/index.php:206
+msgid "Last Modification"
+msgstr "Última modificación"
+
+#: index.php:6 ntop/index.php:8 ntop/session.php:8
+msgid "OSSIM"
+msgstr ""
+
+#: net/deletenet.php:15
+msgid "Delete net"
+msgstr "Borrar red"
+
+#: net/deletenet.php:20
+msgid "Wrong name"
+msgstr "Nombre erróneo"
+
+#: net/deletenet.php:53
+msgid "Net deleted"
+msgstr "Red borrada"
+
+#: net/modifynet.php:15
+msgid "Update net"
+msgstr "Actualizar red"
+
+#: net/modifynet.php:71
+msgid "Net succesfully updated"
+msgstr "Red actualizada con éxito"
+
+#: net/modifynetform.php:15
+msgid "Modify network"
+msgstr "Modificar red"
+
+#: net/modifynetform.php:43
+msgid "Netname"
+msgstr "Nombre de red"
+
+#: net/net.php:44 net/newnetform.php:38
+msgid "IPs"
+msgstr "IPs"
+
+#: net/net.php:66
+msgid "Nessus Scan"
+msgstr "Scan de Nessus"
+
+#: net/net.php:147 net/newnetform.php:15
+msgid "Insert new network"
+msgstr "Insertar nueva red"
+
+#: net/newnet.php:15
+msgid "New network"
+msgstr "Nueva red"
+
+#: net/newnet.php:70
+msgid "Network succesfully inserted"
+msgstr "Red insertada con éxito"
+
+#: net/newnetform.php:40
+msgid "example"
+msgstr "ejemplo"
+
+#: ntop/menu.php:123
+msgid "Protocols"
+msgstr "Protocoloes"
+
+#: ntop/menu.php:125
+msgid "Services"
+msgstr "Servicios"
+
+#: ntop/menu.php:129 ntop/menu.php:153
+msgid "By host: Total"
+msgstr "Por host: Total"
+
+#: ntop/menu.php:133 ntop/menu.php:157
+msgid "By host: Sent"
+msgstr "Por host: Enviado"
+
+#: ntop/menu.php:137 ntop/menu.php:161
+msgid "By host: Recv"
+msgstr "Por host: Recibido"
+
+#: ntop/menu.php:142
+msgid "Service statistic"
+msgstr "Stadísticas servicio"
+
+#: ntop/menu.php:147
+msgid "By client-server"
+msgstr "Por cliente-servidor"
+
+#: ntop/menu.php:149
+msgid "Throughput"
+msgstr "Rendimiento"
+
+#: ntop/menu.php:165
+msgid "Total (Graph)"
+msgstr "Total (Gráfico)"
+
+#: ntop/menu.php:167
+msgid "Matrix"
+msgstr "Matriz"
+
+#: ntop/menu.php:171
+msgid "Data Matrix"
+msgstr "Matriz de datos"
+
+#: ntop/menu.php:175
+msgid "Time Matrix"
+msgstr "Matriz de tiempo"
+
+#: ntop/menu.php:177
+msgid "Gateways, VLANs"
+msgstr "Puertas de enlace, VLANs"
+
+#: ntop/menu.php:181
+msgid "Gateways"
+msgstr "Puertas de enlace"
+
+#: ntop/menu.php:185
+msgid "VLANs"
+msgstr "VLANs"
+
+#: ntop/menu.php:189
+msgid "OS and Users"
+msgstr "SO y usuarios"
+
+#: ntop/menu.php:193
+msgid "Domains"
+msgstr "Dominios"
+
+#: ntop/net_session.php:83
+msgid "Active TCP Sessions"
+msgstr "Sesiones TCP activas"
+
+#: ntop/session.php:21
+msgid "Please select a sensor"
+msgstr "Por favor, seleccione un sensor"
+
+#: policy/deletepolicy.php:15
+msgid "Delete policy"
+msgstr "Borrar política"
+
+#: policy/deletepolicy.php:20
+msgid "Wrong policy id"
+msgstr "Id de política erróneo"
+
+#: policy/deletepolicy.php:45
+msgid "Policy deleted"
+msgstr "Política borrada"
+
+#: policy/modifypolicy.php:15
+msgid "Update Policy"
+msgstr "Actualizar política"
+
+#: policy/modifypolicy.php:64 policy/newpolicy.php:58
+msgid "Error: Incorrect range of dates"
+msgstr "Error: rango de fechas incorrecto"
+
+#: policy/modifypolicy.php:136
+msgid "Policy succesfully updated"
+msgstr "Política actualizada con éxito"
+
+#: policy/modifypolicyform.php:15
+msgid "Update policy"
+msgstr "Actualizar política"
+
+#: policy/modifypolicyform.php:54 policy/modifypolicyform.php:149
+msgid "Insert new net"
+msgstr "Insertar nueva red"
+
+#: policy/modifypolicyform.php:144 policy/policy.php:28
+msgid "Dest"
+msgstr "Dest"
+
+#: policy/modifypolicyform.php:239 port/modifyportform.php:47
+#: port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:61
+msgid "Ports"
+msgstr "Puertos"
+
+#: policy/modifypolicyform.php:241 port/newportform.php:15
+#: port/newsingleportform.php:15
+msgid "Insert new port group"
+msgstr "Insertar nuevo grupo de puertos"
+
+#: policy/modifypolicyform.php:307 signature/modifysignatureform.php:47
+#: signature/newsignatureform.php:25 signature/signature.php:15
+#: signature/signature.php:29 top.php:60
+msgid "Signatures"
+msgstr "Firmas"
+
+#: policy/modifypolicyform.php:310 signature/newsignatureform.php:15
+msgid "Insert new signature group"
+msgstr "Insertar nuevo grupo de firmas"
+
+#: policy/modifypolicyform.php:395 policy/policy.php:36
+msgid "Time Range"
+msgstr "Rango de tiempo"
+
+#: policy/modifypolicyform.php:400
+msgid "Begin"
+msgstr "Comienzo"
+
+#: policy/modifypolicyform.php:400
+msgid "End"
+msgstr "Final"
+
+#: policy/newpolicy.php:15
+msgid "New policy"
+msgstr "Nueva política"
+
+#: policy/newpolicy.php:128
+msgid "Policy succesfully inserted"
+msgstr "Política insertada con éxito"
+
+#: policy/policy.php:15 top.php:33 top.php:56
+msgid "Policy"
+msgstr "Política"
+
+#: policy/policy.php:33
+msgid "Port Group"
+msgstr "Grupo de puertos"
+
+#: policy/policy.php:34
+msgid "Sig Group"
+msgstr "Grupo firmas"
+
+#: policy/policy.php:172
+msgid "Insert new policy"
+msgstr "Insertar nueva política"
+
+#: port/deleteport.php:15
+msgid "Delete port group"
+msgstr "Borrar grupo de puertos"
+
+#: port/deleteport.php:20
+msgid "Wrong port name"
+msgstr "Nombre de puerto erróneo"
+
+#: port/deleteport.php:45
+msgid "Port group deleted"
+msgstr "Grupo de puertos eliminado"
+
+#: port/modifyport.php:15
+msgid "Modify Port group"
+msgstr "Modificar grupo de puertos"
+
+#: port/modifyport.php:54
+msgid "Port succesfully updated"
+msgstr "Puerto actualizado con éxito"
+
+#: port/modifyportform.php:15
+msgid "Modify port group"
+msgstr "Modificar grupo de puertos"
+
+#: port/newport.php:15 port/newsingleport.php:15
+msgid "New port"
+msgstr "Nuevo puerto"
+
+#: port/newport.php:54 port/newsingleport.php:49
+msgid "Port succesfully inserted"
+msgstr "Puerto insertado con éxito"
+
+#: port/newsingleportform.php:21
+msgid "Port number"
+msgstr "Número de puerto"
+
+#: port/newsingleportform.php:29
+msgid "UDP"
+msgstr ""
+
+#: port/newsingleportform.php:31
+msgid "TCP"
+msgstr ""
+
+#: port/newsingleportform.php:36 report/inventory.php:190
+#: report/sec_report.php:407
+msgid "Service"
+msgstr "Servicio"
+
+#: port/port.php:29
+msgid "Port group"
+msgstr "Grupo de puertos"
+
+#: port/port.php:72
+msgid "Insert new Port Group"
+msgstr "Insertar nuevo grupo de puertos"
+
+#: port/port.php:73
+msgid "Insert new Port"
+msgstr "Insertar nuevo puerto"
+
+#: report/anomalies.php:81
+msgid "year"
+msgstr "año"
+
+#: report/anomalies.php:82
+msgid "month"
+msgstr "mes"
+
+#: report/anomalies.php:83
+msgid "week"
+msgstr "semana"
+
+#: report/anomalies.php:84
+msgid "day"
+msgstr "día"
+
+#: report/anomalies.php:85
+msgid "last 12h"
+msgstr "últimas 12h"
+
+#: report/anomalies.php:86
+msgid "last 6h"
+msgstr "últimas 6h"
+
+#: report/anomalies.php:87
+msgid "last hour"
+msgstr "última hora"
+
+#: report/anomalies.php:105
+msgid ""
+"NOTE: total and average values are NOT absolute but calculated on the "
+"specified time interval"
+msgstr "NOTA: los valores total y average NO son absolutos sino calculados sobre el intervalo de tiempo especificado"
+
+#: report/inventory.php:70
+msgid "Host Info"
+msgstr "Información de la máquina"
+
+#: report/inventory.php:95
+msgid "Operating System"
+msgstr "Sistema operativo"
+
+#: report/inventory.php:126
+msgid "Netbios Name"
+msgstr "Nombre Netbios"
+
+#: report/inventory.php:130
+msgid "Netbios Work Group"
+msgstr "Grupo de trabajo Netbios"
+
+#: report/inventory.php:170
+msgid "Port / Service information"
+msgstr "Puerto / Informacion servicio"
+
+#: report/inventory.php:174 scan/scan.php:42 sensor/sensor.php:48
+msgid "Active"
+msgstr "Activo"
+
+#: report/inventory.php:178
+msgid "update"
+msgstr "actualizar"
+
+#: report/inventory.php:183
+msgid "Passive"
+msgstr "Pasivo"
+
+#: report/inventory.php:191
+msgid "Version"
+msgstr "Versión"
+
+#: report/menu.php:42
+msgid "Inventory"
+msgstr "Inventario"
+
+#: report/menu.php:52
+msgid "Source or Dest"
+msgstr "Origen o Destino"
+
+#: report/menu.php:60 riskmeter/options.php:34 top.php:41
+msgid "Alerts"
+msgstr "Alertas"
+
+#: report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
+#: top.php:67
+msgid "Main"
+msgstr "Principal"
+
+#: report/menu.php:66
+msgid "Src Unique alerts"
+msgstr "Alertas únicas origen"
+
+#: report/menu.php:69
+msgid "Dst Unique alerts"
+msgstr "Alertas únicas destino"
+
+#: report/menu.php:78 vulnmeter/index.php:8
+msgid "Vulnmeter"
+msgstr ""
+
+#: report/menu.php:82
+msgid "Security Problems"
+msgstr "Problemas de seguridad"
+
+#: report/menu.php:87
+msgid "Usage"
+msgstr "Uso"
+
+#: report/metrics.php:114
+msgid "Current C Level"
+msgstr "Nivel C actual"
+
+#: report/metrics.php:120
+msgid "Current A Level"
+msgstr "Nivel A actual"
+
+#: report/metrics.php:131
+msgid "Max C Level (last day)"
+msgstr "Nivel C máx (último día)"
+
+#: report/metrics.php:143
+msgid "Max A Level (last day)"
+msgstr "Nivel A más (último día)"
+
+#: report/metrics.php:155
+msgid "Max C Level (last month)"
+msgstr "Nivel C máx (último mes)"
+
+#: report/metrics.php:166
+msgid "Max A Level (last month)"
+msgstr "Nivel A máx (último mes)"
+
+#: report/metrics.php:178
+msgid "Max C Level (last year)"
+msgstr "Nivel C más (último año)"
+
+#: report/metrics.php:189
+msgid "Max A Level (last year)"
+msgstr "Nivel A más (último año)"
+
+#: report/metrics.php:201
+msgid "Last day"
+msgstr "Último día"
+
+#: report/metrics.php:204
+msgid "Last week"
+msgstr "Última semana"
+
+#: report/metrics.php:207
+msgid "Last month"
+msgstr "Último mes"
+
+#: report/metrics.php:210
+msgid "Last year"
+msgstr "Último año"
+
+#: report/pdfreportform.php:14
+msgid "PDF Reports"
+msgstr "Informes PDF"
+
+#: report/pdfreportform.php:19 top.php:45
+msgid "Security Report"
+msgstr "Informe de seguridad"
+
+#: report/pdfreportform.php:20
+msgid "Metrics Report"
+msgstr "Informe métricas"
+
+#: report/pdfreportform.php:21
+msgid "Incident Report"
+msgstr "Informe incidencias"
+
+#: report/pdfreportform.php:34
+msgid "Top Attacked Hosts"
+msgstr "Top máquinas atacadas"
+
+#: report/pdfreportform.php:41
+msgid "Top Attacker Hosts"
+msgstr "Top hosts atacantes"
+
+#: report/pdfreportform.php:48
+msgid "Top Destination Ports"
+msgstr "Top puertos destino"
+
+#: report/pdfreportform.php:55
+msgid "Top Alerts by Host"
+msgstr "Top alertas por máquina"
+
+#: report/pdfreportform.php:62
+msgid "Top Alerts by Risk"
+msgstr "Top alertas por riesgo"
+
+#: report/pdfreportform.php:68
+msgid "Number of hosts per table"
+msgstr "Número de máquina por tabla"
+
+#: report/pdfreportform.php:82
+msgid "Day"
+msgstr "Día"
+
+#: report/pdfreportform.php:88
+msgid "Week"
+msgstr "Semana"
+
+#: report/pdfreportform.php:94
+msgid "Month"
+msgstr "Mes"
+
+#: report/pdfreportform.php:100
+msgid "Year"
+msgstr "Año"
+
+#: report/report.php:15
+msgid "Host report"
+msgstr "Informe máquinas"
+
+#: report/sec_report.php:15
+msgid "Security report"
+msgstr "Informe seguridad"
+
+#: report/sec_report.php:149 report/sec_report.php:219
+msgid "Occurrences"
+msgstr "Ocurrencias"
+
+#: report/sec_report.php:218
+msgid "Alert"
+msgstr "Alerta"
+
+#: report/sec_report.php:408
+msgid "Ocurrences"
+msgstr "Ocurrencias"
+
+#: riskmeter/options.php:39
+msgid "History"
+msgstr "Historial"
+
+#: riskmeter/resetip.php:11
+msgid "Reset completed"
+msgstr "Reseteo completado"
+
+#: rrd_conf/delete_rrd_conf.php:15
+msgid "Delete RRD Conf"
+msgstr "Eliminar configuración RRD"
+
+#: rrd_conf/delete_rrd_conf.php:48
+msgid "RRD profile deleted"
+msgstr "Perfil RRD eliminado"
+
+#: rrd_conf/modify_rrd_conf_form.php:15
+msgid "Modify RRD Config"
+msgstr "Modificar configiguración RRD"
+
+#: rrd_conf/modify_rrd_conf_form.php:17
+msgid "Hints"
+msgstr "Consejos"
+
+#: rrd_conf/modify_rrd_conf_form.php:19
+msgid "Threshold: Absolute value above which is being alerted"
+msgstr "Umbral: Valor por encima del cual se alerta"
+
+#: rrd_conf/modify_rrd_conf_form.php:20
+msgid "Priority: Resulting impact if threshold is being exceeded"
+msgstr "Prioridad: Impacto resultante si el umbral es superado"
+
+#: rrd_conf/modify_rrd_conf_form.php:21
+msgid "Alpha: Intercept adaption parameter"
+msgstr "Alpha: Parámetro de adaptación de interceptación"
+
+#: rrd_conf/modify_rrd_conf_form.php:22
+msgid "Beta: Slope adaption parameter"
+msgstr "Beta: Parámetro de adaptación de pendiente"
+
+#: rrd_conf/modify_rrd_conf_form.php:23
+msgid "Persistence: How long has this event to last before we alert. (20 mins)"
+msgstr "Persistencia: Cuánto debe durar este evento antes de generar una alerta. (20 mins)"
+
+#: rrd_conf/modify_rrd_conf_form.php:87
+msgid "Attribute"
+msgstr "Atributo"
+
+#: rrd_conf/modify_rrd_conf_form.php:91
+msgid "Threshold"
+msgstr "Umbral"
+
+#: rrd_conf/modify_rrd_conf_form.php:99
+msgid "Alpha"
+msgstr "Alpha"
+
+#: rrd_conf/modify_rrd_conf_form.php:103
+msgid "Beta"
+msgstr ""
+
+#: rrd_conf/modify_rrd_conf_form.php:107
+msgid "Persistence"
+msgstr ""
+
+#: rrd_conf/modify_rrd_conf_form.php:111
+msgid "Enable"
+msgstr ""
+
+#: rrd_conf/new_rrd_conf.php:15
+msgid "New RRD Profile"
+msgstr "Nuevo perfil RRD"
+
+#: rrd_conf/new_rrd_conf.php:61
+msgid "RRD Config succesfully inserted"
+msgstr ""
+
+#: rrd_conf/rrd_conf.php:15 top.php:70
+msgid "RRD Config"
+msgstr "Configuracion de RRD"
+
+#: rrd_conf/rrd_conf.php:30
+msgid "Profile"
+msgstr "Perfil"
+
+#: rrd_conf/rrd_conf.php:68
+msgid "Insert new RRD profile"
+msgstr ""
+
+#: scan/deletehostscan.php:15
+msgid "Delete host scan configuration"
+msgstr ""
+
+#: scan/deletehostscan.php:44
+msgid "Host scan configuration deleted"
+msgstr ""
+
+#: scan/hostscan.php:15
+msgid "Host scan configuration"
+msgstr ""
+
+#: scan/hostscan.php:28
+msgid ""
+"Use policy->hosts or networks to define nessus scans or else you'll get "
+"unexpected results"
+msgstr ""
+
+#: scan/hostscan.php:80
+msgid "New"
+msgstr ""
+
+#: scan/newhostscan.php:15
+msgid "New host scan configuration"
+msgstr ""
+
+#: scan/newhostscan.php:41
+msgid "Host scan configuration succesfully inserted"
+msgstr ""
+
+#: scan/newhostscanform.php:15
+msgid "Insert new host scan configuration"
+msgstr ""
+
+#: sensor/deletesensor.php:15
+msgid "Delete sensor"
+msgstr "Eliminar sensor"
+
+#: sensor/deletesensor.php:20
+msgid "Wrong sensor"
+msgstr "Sensor erroneo"
+
+#: sensor/deletesensor.php:30
+msgid "Are you sure?"
+msgstr "¿Estás seguro?"
+
+#: sensor/deletesensor.php:56
+msgid "Sensor deleted"
+msgstr "Sensor eliminado"
+
+#: sensor/editsensor.php:32
+msgid "Edit sensor"
+msgstr "Editar sensor"
+
+#: sensor/editsensor.php:33
+msgid "properties"
+msgstr "propiedades"
+
+#: sensor/editsensor.php:51
+msgid "What sensor do you want to edit"
+msgstr "Qué sensor quieres modificar"
+
+#: sensor/editsensor.php:105 sensor/editsensor.php:279
+#: sensor/editsensor.php:690
+msgid "Error opening"
+msgstr "Error abriendo"
+
+#: sensor/editsensor.php:105 sensor/editsensor.php:279
+#: sensor/editsensor.php:690
+msgid "file"
+msgstr "fichero"
+
+#: sensor/editsensor.php:150
+msgid "Load default values for snort config file"
+msgstr "Cargar valores por defecto para el fichero de configuración de snort"
+
+#: sensor/editsensor.php:151 sensor/editsensor.php:370
+#: sensor/editsensor.php:721
+msgid "use this option only if you are sure"
+msgstr "Utiliza está opción sólo si estás seguro"
+
+#: sensor/editsensor.php:168
+msgid "Snort configuration"
+msgstr "Configuración de snort"
+
+#: sensor/editsensor.php:205 sensor/editsensor.php:427
+#: sensor/editsensor.php:466
+msgid "Password unchanged if field left blank"
+msgstr "Contraseña sin cambios si el campo está en blanco"
+
+#: sensor/editsensor.php:258 sensor/editsensor.php:669
+#: sensor/editsensor.php:791
+msgid "Error opening file"
+msgstr "Error abriendo el fichero"
+
+#: sensor/editsensor.php:262 sensor/editsensor.php:674
+#: sensor/editsensor.php:796
+msgid "Sensor edit completed"
+msgstr "Actualización del sensor completada"
+
+#: sensor/editsensor.php:369
+msgid "Load default values for ossim config file"
+msgstr "Cargar valores por defecto para el fichero de configuración de ossim"
+
+#: sensor/editsensor.php:386
+msgid "OSSIM configuration"
+msgstr "Configuración de OSSIM"
+
+#: sensor/editsensor.php:388
+msgid "Base configuration"
+msgstr "Configuración base"
+
+#: sensor/editsensor.php:390
+msgid "Base directory"
+msgstr "Directorio base"
+
+#: sensor/editsensor.php:396
+msgid "Log file"
+msgstr "Fichero de log"
+
+#: sensor/editsensor.php:401
+msgid "Database"
+msgstr "Base de datos"
+
+#: sensor/editsensor.php:403
+msgid "hostname of the mysql database server"
+msgstr "máquina donde se encuentra el servidor mysql"
+
+#: sensor/editsensor.php:409
+msgid "name of the database"
+msgstr "nombre de la base de datos"
+
+#: sensor/editsensor.php:415
+msgid "name of the database user"
+msgstr "nombre del usuario de la base de datos"
+
+#: sensor/editsensor.php:421
+msgid "password for the database connection"
+msgstr "contraseña para la conexión de base de datos"
+
+#: sensor/editsensor.php:431
+msgid "path to snort"
+msgstr ""
+
+#: sensor/editsensor.php:437
+msgid "path to snort rules directory"
+msgstr "camino hacia el directorio de reglas de snort"
+
+#: sensor/editsensor.php:442
+msgid "hostname of the snort database server"
+msgstr "Máquina donde se encuentra la base de datos snort"
+
+#: sensor/editsensor.php:448
+msgid "name of the snort database"
+msgstr "nombre de la base de datos snort"
+
+#: sensor/editsensor.php:454
+msgid "name of the snort database user"
+msgstr "nombre del usuario de la base de datos de snort"
+
+#: sensor/editsensor.php:460
+msgid "password for the snort database connection"
+msgstr "contraseña para la conexión a la base de datos de nort"
+
+#: sensor/editsensor.php:468
+msgid "Paths"
+msgstr ""
+
+#: sensor/editsensor.php:470
+msgid "adodb"
+msgstr ""
+
+#: sensor/editsensor.php:476
+msgid "rrdtool"
+msgstr ""
+
+#: sensor/editsensor.php:482
+msgid "rrdtool lib directory"
+msgstr "directorio con librerías de rrdtool"
+
+#: sensor/editsensor.php:488 sensor/editsensor.php:538
+msgid "mrtg"
+msgstr ""
+
+#: sensor/editsensor.php:494
+msgid "mrtg rrd files"
+msgstr "ficheros rrd de mrtg"
+
+#: sensor/editsensor.php:499
+msgid "Applications"
+msgstr "Aplicaciones"
+
+#: sensor/editsensor.php:501
+msgid "nmap"
+msgstr ""
+
+#: sensor/editsensor.php:507
+msgid "p0f"
+msgstr ""
+
+#: sensor/editsensor.php:513
+msgid "arpwatch"
+msgstr ""
+
+#: sensor/editsensor.php:520
+msgid "acid"
+msgstr ""
+
+#: sensor/editsensor.php:526
+msgid "ntop"
+msgstr ""
+
+#: sensor/editsensor.php:532
+msgid "opennms"
+msgstr ""
+
+#: sensor/editsensor.php:544
+msgid "graph"
+msgstr "gráfico"
+
+#: sensor/editsensor.php:681 sensor/editsensor.php:804
+msgid "Default values loaded"
+msgstr "Valores por defecto cargados"
+
+#: sensor/editsensor.php:720
+msgid "Load default values for spade config file"
+msgstr "Cargar valores por defecto para el fichero de configuración de spade"
+
+#: sensor/editsensor.php:737
+msgid "Spade configuration"
+msgstr "Configuración de Spade"
+
+#: sensor/editsensor.php:739
+msgid "SPADEDIR"
+msgstr ""
+
+#: sensor/editsensor.php:744
+msgid "dest"
+msgstr ""
+
+#: sensor/editsensor.php:749
+msgid "logfile"
+msgstr ""
+
+#: sensor/editsensor.php:754
+msgid "statefile"
+msgstr ""
+
+#: sensor/editsensor.php:759
+msgid "homenet"
+msgstr ""
+
+#: sensor/get_sensor_plugins.php:29 sensor/get_sensors.php:24
+msgid "Is OSSIM server running at"
+msgstr "Está el servidor OSSIM corriendo en"
+
+#: sensor/interfaces.php:45
+msgid "updated"
+msgstr "actualizado"
+
+#: sensor/interfaces.php:49
+msgid "deleted"
+msgstr "eliminado"
+
+#: sensor/interfaces.php:56
+msgid "Interface succesfully"
+msgstr ""
+
+#: sensor/interfaces.php:82
+msgid "Update interfaces for"
+msgstr "Actualizar interfaces para"
+
+#: sensor/interfaces.php:85 sensor/interfaces.php:140
+msgid "Interface"
+msgstr "Interfaz"
+
+#: sensor/modifysensor.php:15
+msgid "Update sensor"
+msgstr "Actualizar sensor"
+
+#: sensor/modifysensor.php:50
+msgid "Sensor succesfully updated"
+msgstr "Sensor actualizado correctamente"
+
+#: sensor/modifysensorform.php:15
+msgid "Modify sensor"
+msgstr "Modificar sensor"
+
+#: sensor/modifysensorform.php:93 sensor/newsensorform.php:51
+#: sensor/sensor.php:44
+msgid "Port"
+msgstr "Puerto"
+
+#: sensor/newsensor.php:15
+msgid "New sensor"
+msgstr "Nuevo sensor"
+
+#: sensor/newsensor.php:50
+msgid "Sensor succesfully inserted"
+msgstr "Sensor añadido correctamente"
+
+#: sensor/sensor.php:104
+msgid "Interfaces"
+msgstr ""
+
+#: sensor/sensor.php:126
+msgid "Warning"
+msgstr "Aviso"
+
+#: sensor/sensor.php:127
+msgid ""
+"the following sensor(s) are being reported as enabled by the server but "
+"aren't configured"
+msgstr "Los siguientes sensores parecen estar conectados al servidor pero no están configurados"
+
+#: sensor/sensor.php:142
+msgid "Insert"
+msgstr "Insertar"
+
+#: sensor/sensor_plugins.php:46
+msgid "There aren't any sensors connected to OSSIM server"
+msgstr "No hay ningún sensor conectado al servidor OSSIM"
+
+#: sensor/sensor_plugins.php:120
+msgid "Enabled"
+msgstr "Activado"
+
+#: sensor/sensor_plugins.php:144
+msgid "UP"
+msgstr ""
+
+#: sensor/sensor_plugins.php:147
+msgid "stop"
+msgstr "detener"
+
+#: sensor/sensor_plugins.php:151
+msgid "DOWN"
+msgstr ""
+
+#: sensor/sensor_plugins.php:154
+msgid "start"
+msgstr "arrancar"
+
+#: sensor/sensor_plugins.php:160
+msgid "ENABLED"
+msgstr "ACTIVADO"
+
+#: sensor/sensor_plugins.php:163
+msgid "disable"
+msgstr "desactivado"
+
+#: sensor/sensor_plugins.php:170
+msgid "enable"
+msgstr "activado"
+
+#: session/changepass.php:10 session/changepassform.php:10
+msgid "Change password"
+msgstr "Cambia contraseña"
+
+#: session/changepass.php:49 session/modifyuser.php:72
+msgid "User succesfully updated"
+msgstr "Usuario actualizado correctamente"
+
+#: session/changepassform.php:26 session/modifyuserform.php:64
+msgid "User name"
+msgstr "Nombre de usuario"
+
+#: session/changepassform.php:30
+msgid "Current password"
+msgstr "Contraseña actual"
+
+#: session/changepassform.php:34
+msgid "Enter new password"
+msgstr "Inserta nueva contraseña"
+
+#: session/changepassform.php:38
+msgid "Retype new password"
+msgstr "Vuelve a insertar nueva contraseña"
+
+#: session/deleteuser.php:20
+msgid "Delete user"
+msgstr "Elimitar usuario"
+
+#: session/deleteuser.php:59
+msgid "User deleted"
+msgstr "Usuario eliminado"
+
+#: session/login.php:78
+msgid "OSSIM Framework Login"
+msgstr ""
+
+#: session/login.php:88
+msgid "OSSIM Login"
+msgstr ""
+
+#: session/login.php:98 session/users.php:37
+msgid "Password"
+msgstr "Contraseña"
+
+#: session/login.php:107
+msgid "NOTE: Default user is admin-admin"
+msgstr "NOTA: El usuario por defecto es admin-admin"
+
+#: session/login.php:108
+msgid "For security reasons you should change it at Configuration->Users"
+msgstr "Por seguridad, deberías cambiar la contraseña en Configuración->Usuarios"
+
+#: session/modifyuser.php:15 session/newuser.php:15
+msgid "New User"
+msgstr "Nuevo usuario"
+
+#: session/modifyuserform.php:19
+msgid "Modify user"
+msgstr "Modificar usuario"
+
+#: session/modifyuserform.php:60 session/newuserform.php:28
+msgid "User login"
+msgstr ""
+
+#: session/modifyuserform.php:69 session/newuserform.php:44
+msgid "Allowed nets"
+msgstr "Redes permitidas"
+
+#: session/modifyuserform.php:98 session/newuserform.php:74
+msgid "Permissions"
+msgstr "Permisos"
+
+#: session/newuser.php:80
+msgid "User succesfully inserted"
+msgstr "Usuario añadido con éxito"
+
+#: session/newuserform.php:21 session/users.php:79
+msgid "Insert new user"
+msgstr "Inserta nuevo usuario"
+
+#: session/newuserform.php:32
+msgid "User full name"
+msgstr "Nombre completo"
+
+#: session/newuserform.php:36
+msgid "Enter password"
+msgstr "Inserta contraseña"
+
+#: session/newuserform.php:40
+msgid "Re-enter password"
+msgstr "Vuelve a insertar contraseña"
+
+#: session/users.php:15 top.php:68
+msgid "Users"
+msgstr "Usuarios"
+
+#: session/users.php:32
+msgid "Login"
+msgstr ""
+
+#: session/users.php:38
+msgid "Actions"
+msgstr "Acciones"
+
+#: session/users.php:58
+msgid "Change Password"
+msgstr "Cambiar contraseña"
+
+#: session/users.php:63
+msgid "Update"
+msgstr "Actualizar"
+
+#: session/users.php:82
+msgid "Reload ACLS"
+msgstr "Recargar ACLs"
+
+#: signature/deletesignature.php:15
+msgid "Delete signature group"
+msgstr "Borrar grupo de firmas"
+
+#: signature/deletesignature.php:20
+msgid "Wrong signature name"
+msgstr "Nombre de firma erroneo"
+
+#: signature/deletesignature.php:45
+msgid "Signature group deleted"
+msgstr "Grupo de firmas borrado"
+
+#: signature/modifysignature.php:15 signature/modifysignatureform.php:15
+msgid "Modify signature group"
+msgstr "Modificar grupo de firmas"
+
+#: signature/newsignature.php:15
+msgid "New signature"
+msgstr "Nueva firma"
+
+#: signature/signature.php:68
+msgid "Insert new Signature Group"
+msgstr "Insertar nuevo grupo de firmas"
+
+#: top.php:31
+msgid "Reports"
+msgstr "Reportes"
+
+#: top.php:32
+msgid "Monitors"
+msgstr "Monitores"
+
+#: top.php:34
+msgid "Correlation"
+msgstr "Correlación"
+
+#: top.php:35
+msgid "Configuration"
+msgstr "Configuración"
+
+#: top.php:36
+msgid "Tools"
+msgstr "Herramientas"
+
+#: top.php:37
+msgid "Logout"
+msgstr "Logout"
+
+#: top.php:42
+msgid "Vulnerabilities"
+msgstr "Vulnerabilidades"
+
+#: top.php:44
+msgid "Host Report"
+msgstr "Informes de host"
+
+#: top.php:46
+msgid "PDF Report"
+msgstr "Informes en PDF"
+
+#: top.php:50
+msgid "Session"
+msgstr "Sesión"
+
+#: top.php:52
+msgid "Availability"
+msgstr "Disponibilidad"
+
+#: top.php:63
+msgid "Directives"
+msgstr "Directivas"
+
+#: top.php:64
+msgid "Cross Correlation"
+msgstr "Correlacion cruzada"
+
+#: top.php:69
+msgid "Plugins"
+msgstr "Plugins"
+
+#: top.php:71
+msgid "Host Scan"
+msgstr "Scan de host"
+
+#: top.php:73
+msgid "Scan"
+msgstr "Scan"
+
+#: top.php:74
+msgid "Rule Viewer"
+msgstr "Visor de reglas"
+
+#: vulnmeter/do_nessus.php:15
+msgid "Update Scan"
+msgstr "Actualizar escaneo"
+
+#: vulnmeter/do_nessus.php:30
+msgid ""
+"Nessus scan started, depending on number of hosts to be scanned this may "
+"take a while"
+msgstr "Escaneo de Nessus iniciado, dependiendo del numero de máquinas a
+escanear esto puede llevar cierto tiempo"
+
+#: vulnmeter/do_nessus.php:31
+msgid ""
+"Notice: httpd user needs write permission to the vulnmeter dir and subdirs"
+msgstr "Nota: el usuario httpd necesita permisos de escritura en los directorios y subdirectorios del vulnmeter"
+
+#: vulnmeter/index.php:62
+msgid "Last scan"
+msgstr "Último escaneo"
+
+#: vulnmeter/index.php:63
+msgid "Update scan"
+msgstr "Actualizar escaneo"
+
+#: vulnmeter/index.php:73
+msgid "Nets"
+msgstr "Redes"

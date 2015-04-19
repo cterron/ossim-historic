@@ -142,7 +142,73 @@ class Sensor {
 
         return $sensor_ip;
     }
+
+    /*
+     * Given a host ip, return its main sensor's interface.
+     *
+     * Look at:
+     *  1st) host table
+     *  2nd) net table
+     *  3rd) /etc/ossim.conf
+     */
+    function get_sensor_interface($conn, $host_ip)
+    {
+        require_once "classes/Net.inc";
+        require_once "ossim_conf.inc";
+        $conf = new ossim_conf();
+
+        $sensor_interface_name = '';
+
+        /* read from host table */
+        $query = "SELECT sensor_interfaces.interface FROM
+        host_sensor_reference, sensor, sensor_interfaces
+            WHERE host_sensor_reference.host_ip = '$host_ip' AND 
+            sensor.name = host_sensor_reference.sensor_name AND
+            sensor_interfaces.main = 1 ORDER BY sensor.priority DESC LIMIT 1;";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } elseif (!$rs->EOF) {
+            $sensor_interface_name = $rs->fields["interface"];
+            return $sensor_interface_name;
+        } 
+
+        /* read from network table */
+        if ($net_list = Net::get_list($conn))
+        {
+            foreach ($net_list as $net)
+            {
+                $net_name = $net->get_name();
+                $ips = $net->get_ips();
+    
+                if (Net::isIpInNet($host_ip, $ips)) 
+                {
+                    $query = "SELECT sensor_interfaces.interface FROM sensor,
+                    net_sensor_reference, sensor_interfaces WHERE sensor_interfaces.name = sensor.name AND net_name = '$net_name' AND sensor_interfaces.main = 1";
+
+                    if (!$rs = &$conn->Execute($query)) {
+                        print $conn->ErrorMsg();
+                    } 
+                    
+                    elseif (!$rs->EOF) 
+                    {
+                        $sensor_interface_name = $rs->fields["interface"];
+                        return $sensor_interface_name;
+                    }
+                }
+            }
+        }
+
+        /* read from /etc/ossim.conf */
+        if ($sensor_interface_name == '') {
+            $sensor_interface_name = $conf->get_conf("ossim_interface");
+        }
+
+        return $sensor_interface_name;
+    }
  
+
+
 
 }
 

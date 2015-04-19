@@ -19,7 +19,7 @@
 <!-- Body -->
 <refsynopsisdiv>
 <cmdsynopsis>
-<command>ossim-server</command>
+<command>ossim-agent</command>
  <arg>--version</arg>
  <arg>-h</arg>
  <arg>-v</arg>

@@ -191,58 +191,92 @@ HREF="#AEN404"
 ><DL
 ><DT
 >5.1. <A
-HREF="#AEN443"
+HREF="#AEN445"
 >Plugins</A
 ></DT
 ><DD
 ><DL
 ><DT
 >5.1.1. <A
-HREF="#AEN445"
+HREF="#AEN447"
 >Snort</A
 ></DT
 ><DT
 >5.1.2. <A
-HREF="#AEN482"
+HREF="#AEN484"
 >Ntop</A
 ></DT
 ><DT
 >5.1.3. <A
-HREF="#AEN486"
+HREF="#AEN488"
 >tcptrack</A
 ></DT
 ><DT
 >5.1.4. <A
-HREF="#AEN492"
+HREF="#AEN494"
 >Pads</A
 ></DT
 ><DT
 >5.1.5. <A
-HREF="#AEN500"
+HREF="#AEN502"
 >p0f</A
 ></DT
 ><DT
 >5.1.6. <A
-HREF="#AEN506"
+HREF="#AEN508"
 >arpwatch</A
 ></DT
 ></DL
 ></DD
 ><DT
 >5.2. <A
-HREF="#AEN513"
+HREF="#AEN515"
 >Nessus server</A
 ></DT
+><DT
+>5.3. <A
+HREF="#AEN526"
+>OpenNMS</A
+></DT
+><DD
+><DL
+><DT
+>5.3.1. <A
+HREF="#AEN529"
+>Java SDK</A
+></DT
+><DT
+>5.3.2. <A
+HREF="#AEN539"
+>Tomcat</A
+></DT
+><DT
+>5.3.3. <A
+HREF="#AEN545"
+>RRDTool, Postgresql and perl</A
+></DT
+><DT
+>5.3.4. <A
+HREF="#AEN549"
+>OpenNMS installation</A
+></DT
+><DT
+>5.3.5. <A
+HREF="#AEN563"
+>Configuration</A
+></DT
+></DL
+></DD
 ></DL
 ></DD
 ><DT
 >6. <A
-HREF="#AEN524"
+HREF="#AEN576"
 >Tools</A
 ></DT
 ><DT
 >7. <A
-HREF="#AEN532"
+HREF="#AEN584"
 >TODO</A
 ></DT
 ></DL
@@ -290,8 +324,8 @@ HREF="mailto:gingurz at ossim.net"
 <CODE
 CLASS="email"
 >&#60;<A
-HREF="mailto:ossim at ossim.net"
->ossim at ossim.net</A
+HREF="mailto:devel at ossim.net"
+>devel at ossim.net</A
 >&#62;</CODE
 ></P
 ></DIV
@@ -1505,7 +1539,7 @@ look at README.nessus</P
 sensors or you can have only a central nessus to scan all the hosts.</P
 ><P
 >Any way you choose you need to have a nessus client on the framework.
-See 5.3 to install nessus server first.</P
+See 5.2 to install nessus server first.</P
 ><P
 >So you'll need the following package for the client :</P
 ><P
@@ -1534,7 +1568,7 @@ CLASS="programlisting"
 ><PRE
 CLASS="programlisting"
 >&#13;  nessus_user=ossim
-  nessus_pass=your_password (see 5.3 for creating users)
+  nessus_pass=your_password (see 5.2 for creating users)
   nessus_host=yourhost
   nessus_port=1241
   nessus_path=/usr/bin/nessus
@@ -1545,7 +1579,7 @@ CLASS="programlisting"
 against each nessus server :</P
 ><PRE
 CLASS="programlisting"
->&#13;  # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim motdepasse
+>&#13;  # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim your_nessus_pass
 </PRE
 ><P
 >Where xxx.xxx.xxx.xxx.xxx is the adress of nessus server.</P
@@ -1558,7 +1592,7 @@ database with them try :</P
 ><PRE
 CLASS="programlisting"
 >&#13;  # nessus-update-plugins
-  # /opt/ossim/scripts/update_nessus_ids.pl
+  # perl $OSSIM_PATH/scripts/update_nessus_ids.pl
 </PRE
 ><P
 >It's a good idea to update plugins before each scan. To start a scan run the
@@ -1634,10 +1668,16 @@ CLASS="programlisting"
 >&#13;python : An interactive high-level object-oriented language (&#62;= 2.3.4)
    </PRE
 ></LI
+><LI
+><PRE
+CLASS="programlisting"
+>&#13;python-dev: Header files and a static library for Python    (&#62;= 2.3.4)
+   </PRE
+></LI
 ></UL
 ><PRE
 CLASS="programlisting"
->&#13;  # apt-get install python
+>&#13;  # apt-get install python python-dev
 </PRE
 ><P
 >You need install python-mysqldb and/or python-pgsql depending of the
@@ -1700,10 +1740,11 @@ COMPACT="COMPACT"
 ></LI
 ></UL
 ><P
->Make ossim-agent executable:</P
+>Install OS-SIM Agent:</P
 ><PRE
 CLASS="programlisting"
->&#13;  # ln -sf $OSSIM_PATH/agent/ossim-agent /usr/local/bin/ossim-agent
+>&#13;  # cd $OSSIM_PATH/agent 
+  # python setup.py install 
 </PRE
 ><P
 >Run agent this way:</P
@@ -1739,7 +1780,7 @@ CLASS="sect1"
 ><HR><H2
 CLASS="sect1"
 ><A
-NAME="AEN443"
+NAME="AEN445"
 >5.1. Plugins</A
 ></H2
 ><DIV
@@ -1747,7 +1788,7 @@ CLASS="sect2"
 ><H3
 CLASS="sect2"
 ><A
-NAME="AEN445"
+NAME="AEN447"
 >5.1.1. Snort</A
 ></H3
 ><P
@@ -1896,7 +1937,7 @@ CLASS="sect2"
 ><HR><H3
 CLASS="sect2"
 ><A
-NAME="AEN482"
+NAME="AEN484"
 >5.1.2. Ntop</A
 ></H3
 ><P
@@ -1909,7 +1950,7 @@ CLASS="sect2"
 ><HR><H3
 CLASS="sect2"
 ><A
-NAME="AEN486"
+NAME="AEN488"
 >5.1.3. tcptrack</A
 ></H3
 ><P
@@ -1936,7 +1977,7 @@ CLASS="sect2"
 ><HR><H3
 CLASS="sect2"
 ><A
-NAME="AEN492"
+NAME="AEN494"
 >5.1.4. Pads</A
 ></H3
 ><P
@@ -1967,7 +2008,7 @@ CLASS="sect2"
 ><HR><H3
 CLASS="sect2"
 ><A
-NAME="AEN500"
+NAME="AEN502"
 >5.1.5. p0f</A
 ></H3
 ><P
@@ -1988,7 +2029,7 @@ CLASS="sect2"
 ><HR><H3
 CLASS="sect2"
 ><A
-NAME="AEN506"
+NAME="AEN508"
 >5.1.6. arpwatch</A
 ></H3
 ><P
@@ -2015,7 +2056,7 @@ CLASS="sect1"
 ><HR><H2
 CLASS="sect1"
 ><A
-NAME="AEN513"
+NAME="AEN515"
 >5.2. Nessus server</A
 ></H2
 ><P
@@ -2053,12 +2094,210 @@ CLASS="programlisting"
   Rules             :
 </PRE
 ></DIV
+><DIV
+CLASS="sect1"
+><HR><H2
+CLASS="sect1"
+><A
+NAME="AEN526"
+>5.3. OpenNMS</A
+></H2
+><P
+>Installing OpenNMS on Debian Sarge should look tricky at first glance.
+Here's a small workaround to succeed it.</P
+><DIV
+CLASS="sect2"
+><HR><H3
+CLASS="sect2"
+><A
+NAME="AEN529"
+>5.3.1. Java SDK</A
+></H3
+><P
+>OpenNMS is programmed in Java, so the first task is to install the Java
+SDK. You can follow the instruction given by the
+<A
+HREF="http://www.debian.org/doc/manuals/debian-java-faq/ch11.html#s11.2"
+TARGET="_top"
+>Debian
+FAQ</A
+></P
+><PRE
+CLASS="programlisting"
+>&#13;  # mkdir /usr/local/src/java/1.4.2 &#38;&#38; cd /usr/local/src/java/1.4.2
+</PRE
+><P
+>Then download the j2sdk-1_4_2_05-linux-i586.bin from
+<A
+HREF="http://java.sun.com"
+TARGET="_top"
+>Java web site</A
+>. You have to go to the
+web site and accept the policy of sun in order to get an url to download the
+file. When download is completed :</P
+><PRE
+CLASS="programlisting"
+>&#13;  # chmod u+x j2sdk-1_4_2_05-linux-i586.bin
+  # ./j2sdk-1_4_2_05-linux-i586.bin
+  # mv j2sdk1.4.2_05/ /usr/local/lib/
+  # ln -s /usr/local/lib/j2sdk1.4.2_05/ /usr/local/lib/j2sdk
+  # apt-get install java-common equivs
+  # mkdir -p /usr/local/source/java/pkg
+  # cd /usr/local/source/java/pkg
+  # equivs-build java-compiler-dummy.control
+  # equivs-build java-virtual-machine-dummy.control
+  # equivs-build java1-runtime-dummy.control
+  # equivs-build java2-compiler-dummy.control
+  # equivs-build java2-runtime-dummy.control
+  # dpkg -i java-compiler-dummy_1.0_all.deb \
+    java-virtual-machine-dummy_1.0_all.deb \
+    java2-compiler-dummy_1.0_all.deb \
+    java2-runtime-dummy_1.0_all.deb
+  # update-alternatives --verbose --install /usr/bin/java java \
+    /usr/local/lib/j2sdk/jre/bin/java 500 --slave /usr/share/man/man1/java.1 \
+    java.1 /usr/local/lib/j2sdk/man/man1/java.1
+</PRE
+><P
+>To check if java is correctly installed, type :</P
+><PRE
+CLASS="programlisting"
+>&#13;  # java -version
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><HR><H3
+CLASS="sect2"
+><A
+NAME="AEN539"
+>5.3.2. Tomcat</A
+></H3
+><P
+>OpenNMS needs at least Tomcat 4. This package is still in the unstable
+branch of Debian. So you need to add it to /etc/apt/sources.list file, for
+example :</P
+><PRE
+CLASS="programlisting"
+>&#13;  deb ftp://ftp.debian.org/debian unstable contrib
+  deb ftp://ftp.debian.org/debian unstable main
+</PRE
+><P
+>Then update tree and install tomcat package.</P
+><PRE
+CLASS="programlisting"
+>&#13;  apt-get update
+  apt-get install -t unstable tomcat4
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><HR><H3
+CLASS="sect2"
+><A
+NAME="AEN545"
+>5.3.3. RRDTool, Postgresql and perl</A
+></H3
+><P
+>Make sure to have at least PostgresSQL 7.1, RRDTool 1.0.28, and pgsql 
+module for perl :</P
+><PRE
+CLASS="programlisting"
+>&#13;  # apt-get install postgresql rrdtool libdbd-pg-perl
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><HR><H3
+CLASS="sect2"
+><A
+NAME="AEN549"
+>5.3.4. OpenNMS installation</A
+></H3
+><P
+>You have to get the debian package from OpenNMS server, so add the
+following line to your /etc/apt/sources.list :</P
+><PRE
+CLASS="programlisting"
+>&#13;  deb http://debian.opennms.org/ debian/opennms unstable
+</PRE
+><P
+>The simply get the packages :</P
+><PRE
+CLASS="programlisting"
+>&#13;  # apt-get install opennms
+</PRE
+><P
+>Note that the installation fix the following</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Postgresql user : opennms</P
+></LI
+><LI
+><P
+>Postgresql password : opennms</P
+></LI
+><LI
+><P
+>Database name : opennms</P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="sect2"
+><HR><H3
+CLASS="sect2"
+><A
+NAME="AEN563"
+>5.3.5. Configuration</A
+></H3
+><P
+>Change this lines in /etc/default/tomcat4 :</P
+><PRE
+CLASS="programlisting"
+>&#13;  JAVA_HOME=/usr/local/lib/j2sdk
+  TOMCAT4_USER=tomcat4
+</PRE
+><P
+>In /etc/postgresql/pg_hba.conf change</P
+><PRE
+CLASS="programlisting"
+>&#13;  host opennms opennms 127.0.0.1 255.0.0.0 password
+</PRE
+><P
+>by</P
+><PRE
+CLASS="programlisting"
+>&#13;  host opennms opennms 127.0.0.1 255.0.0.0 trust
+</PRE
+><P
+>Finally in /etc/default/opennms :</P
+><PRE
+CLASS="programlisting"
+>&#13;  JAVA_HOME=/usr/local/lib/j2sdk
+</PRE
+><P
+>Now you can start opennms and tomcat</P
+><PRE
+CLASS="programlisting"
+>&#13;  # /etc/init.d/opennms start
+  # /etc/init.d/tomcat4 start
+</PRE
+><P
+>You can see OpenNMS in action at http://your_host:8180/opennms/
+Note that it uses port 8180 on Debian instead of the classical 8080. The default 
+user and password are admin / admin.</P
+></DIV
+></DIV
 ></DIV
 ><DIV
 CLASS="chapter"
 ><HR><H1
 ><A
-NAME="AEN524"
+NAME="AEN576"
 ></A
 >Chapter 6. Tools</H1
 ><P
@@ -2085,7 +2324,7 @@ CLASS="programlisting"
 CLASS="chapter"
 ><HR><H1
 ><A
-NAME="AEN532"
+NAME="AEN584"
 ></A
 >Chapter 7. TODO</H1
 ><PRE

@@ -1,64 +1,4 @@
 --
--- Data: Config
---
-INSERT INTO config (conf, value) VALUES ('snort_path', '/etc/snort/');
-INSERT INTO config (conf, value) VALUES ('snort_rules_path', '/etc/snort/rules/');
-INSERT INTO config (conf, value) VALUES ('snort_type', 'mysql');
-INSERT INTO config (conf, value) VALUES ('snort_base', 'snort');
-INSERT INTO config (conf, value) VALUES ('snort_user', 'root');
-INSERT INTO config (conf, value) VALUES ('snort_pass', 'ossim');
-INSERT INTO config (conf, value) VALUES ('snort_host', 'localhost');
-INSERT INTO config (conf, value) VALUES ('snort_port', '3306');
-INSERT INTO config (conf, value) VALUES ('server_address', 'localhost');
-INSERT INTO config (conf, value) VALUES ('server_port', '40001');
-INSERT INTO config (conf, value) VALUES ('phpgacl_path', '/var/www/phpgacl/');
-INSERT INTO config (conf, value) VALUES ('graph_link', '/cgi-bin/draw_graph_combined.pl');
-INSERT INTO config (conf, value) VALUES ('rrdtool_lib_path', '/usr/lib/perl5/');
-INSERT INTO config (conf, value) VALUES ('ntop_link', 'http://localhost:3000');
-INSERT INTO config (conf, value) VALUES ('backup_type', 'mysql');
-INSERT INTO config (conf, value) VALUES ('backup_base', 'snort_archive');
-INSERT INTO config (conf, value) VALUES ('backup_user', 'root');
-INSERT INTO config (conf, value) VALUES ('backup_pass', 'ossim');
-INSERT INTO config (conf, value) VALUES ('backup_host', 'localhost');
-INSERT INTO config (conf, value) VALUES ('backup_port', '3306');
-INSERT INTO config (conf, value) VALUES ('backup_dir', '/var/lib/ossim/backup');
-INSERT INTO config (conf, value) VALUES ('backup_day', '5');
-INSERT INTO config (conf, value) VALUES ('nessus_user', 'ossim');
-INSERT INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
-INSERT INTO config (conf, value) VALUES ('nessus_host', 'localhost');
-INSERT INTO config (conf, value) VALUES ('nessus_port', '1241');
-INSERT INTO config (conf, value) VALUES ('acid_user', 'ossim');
-INSERT INTO config (conf, value) VALUES ('acid_pass', 'ossim');
-INSERT INTO config (conf, value) VALUES ('ossim_web_user', 'admin');
-INSERT INTO config (conf, value) VALUES ('ossim_web_pass', 'admin');
-INSERT INTO config (conf, value) VALUES ('jpgraph_path', '/usr/share/jpgraph/');
-INSERT INTO config (conf, value) VALUES ('fpdf_path', '/usr/share/fpdf/');
-INSERT INTO config (conf, value) VALUES ('adodb_path', '/var/www/adodb-411/');
-INSERT INTO config (conf, value) VALUES ('rrdtool_path', '/usr/bin/');
-INSERT INTO config (conf, value) VALUES ('mrtg_path', '/usr/bin/');
-INSERT INTO config (conf, value) VALUES ('mrtg_rrd_files_path', '/var/www/ossim/mrtg/');
-INSERT INTO config (conf, value) VALUES ('rrdpath_host', '/var/www/ossim/mrtg/host_qualification/');
-INSERT INTO config (conf, value) VALUES ('rrdpath_net', '/var/www/ossim/mrtg/net_qualification/');
-INSERT INTO config (conf, value) VALUES ('rrdpath_global', '/var/www/ossim/mrtg/global_qualification/');
-INSERT INTO config (conf, value) VALUES ('rrdpath_level', '/var/www/ossim/mrtg/level_qualification/');
-INSERT INTO config (conf, value) VALUES ('rrdpath_ntop', '/usr/share/ntop/rrd/');
-INSERT INTO config (conf, value) VALUES ('font_path', '/usr/share/ossim/fonts/Vera.ttf');
-INSERT INTO config (conf, value) VALUES ('opennms_link', 'http://localhost:8080/opennms/');
-INSERT INTO config (conf, value) VALUES ('nessus_path', '/usr/local/bin/nessus/');
-INSERT INTO config (conf, value) VALUES ('nessus_rpt_path', '/var/www/ossim/vulnmeter/');
-INSERT INTO config (conf, value) VALUES ('acid_link', '/acid/');
-INSERT INTO config (conf, value) VALUES ('acid_path', '/var/www/acid/');
-INSERT INTO config (conf, value) VALUES ('nmap_path', '/usr/bin/nmap');
-INSERT INTO config (conf, value) VALUES ('p0f_path', '/usr/sbin/p0f');
-INSERT INTO config (conf, value) VALUES ('arpwatch_path', '/usr/sbin/arpwatch');
-INSERT INTO config (conf, value) VALUES ('mail_path', '/usr/bin/mail');
-INSERT INTO config (conf, value) VALUES ('touch_path', '/bin/tail');
-INSERT INTO config (conf, value) VALUES ('wget_path', '/usr/bin/wget');
-INSERT INTO config (conf, value) VALUES ('use_resolv', '0');
-INSERT INTO config (conf, value) VALUES ('recovery', '1');
-INSERT INTO config (conf, value) VALUES ('threshold', '300');
-
---
 -- Data: Port
 --
 DELETE FROM port;
@@ -2722,6 +2662,7 @@ INSERT INTO plugin (id, type, name, description) VALUES (1514, 1, 'ciscopix', 'C
 INSERT INTO plugin (id, type, name, description) VALUES (1515, 1, 'ciscoids', 'Cisco Secure IDS');
 INSERT INTO plugin (id, type, name, description) VALUES (1516, 1, 'pads', 'Passive Asset Detection System');
 INSERT INTO plugin (id, type, name, description) VALUES (1517, 1, 'ntsyslog', 'Windows NT/2000/XP syslog service');
+INSERT INTO plugin (id, type, name, description) VALUES (1518, 1, 'snarewindows', 'Snare Agent for Windows');
 
 INSERT INTO plugin (id, type, name, description) VALUES (2001, 2, 'ossim', 'OS-SIM');
 INSERT INTO plugin (id, type, name, description) VALUES (2002, 2, 'arp_watch', 'Arpwatch');
@@ -5165,20 +5106,64 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1501, 505, NULL, NULL, 'apache: HTTP Version Not Supported');
 
 --
+-- IIS Sids
+--
+
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1502, 200, NULL, NULL, 'IIS: OK', 0, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 201, NULL, NULL, 'IIS: Created');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 202, NULL, NULL, 'IIS: Accepted');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 203, NULL, NULL, 'IIS: Non-Authorative Information');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 204, NULL, NULL, 'IIS: No Content');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 205, NULL, NULL, 'IIS: Reset Content');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 206, NULL, NULL, 'IIS: Partial Content');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 300, NULL, NULL, 'IIS: Multiple Choices');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 301, NULL, NULL, 'IIS: Moved Permanently');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 302, NULL, NULL, 'IIS: Moved Temporarily');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 303, NULL, NULL, 'IIS: See Other');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 304, NULL, NULL, 'IIS: Not Modified');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 305, NULL, NULL, 'IIS: Use Proxy');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 400, NULL, NULL, 'IIS: Bad Request');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1502, 401, NULL, NULL, 'IIS: Authorization Required', 3, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 402, NULL, NULL, 'IIS: Payment Required');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1502, 403, NULL, NULL, 'IIS: Forbidden', 3, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 404, NULL, NULL, 'IIS: Not Found');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 405, NULL, NULL, 'IIS: Method Not Allowed');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 406, NULL, NULL, 'IIS: Not Acceptable (encoding)');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 407, NULL, NULL, 'IIS: Proxy Authentication Required');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 408, NULL, NULL, 'IIS: Request Timed Out');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 409, NULL, NULL, 'IIS: Conflicting Request');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 410, NULL, NULL, 'IIS: Gone');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 411, NULL, NULL, 'IIS: Content Length Required');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 412, NULL, NULL, 'IIS: Precondition Failed');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 413, NULL, NULL, 'IIS: Request Entity Too Long');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 414, NULL, NULL, 'IIS: Request URI Too Long');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 415, NULL, NULL, 'IIS: Unsupported Media Type');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 500, NULL, NULL, 'IIS: Internal Server Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 501, NULL, NULL, 'IIS: Not implemented');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 502, NULL, NULL, 'IIS: Bad Gateway');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 503, NULL, NULL, 'IIS: Service Unavailable');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 504, NULL, NULL, 'IIS: Gateway Timeout');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1502, 505, NULL, NULL, 'IIS: HTTP Version Not Supported');
+
+
+--
 -- IPTables Sids
 --
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1503, 1, 202, NULL, 'iptables: Accept', 0, 1);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 2, 203, NULL, 'iptables: Reject');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 3, 204, NULL, 'iptables: Drop');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 4, NULL, NULL, 'iptables: traffic inbound');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 5, NULL, NULL, 'iptables: traffic outbound');
+
 
 --
 -- Firewall Sids
 --
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1504, 1, 202, NULL, 'fw1: Accept', 0, 1);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1504, 2, 203, NULL, 'fw1: Reject');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1504, 3, 204, NULL, 'fw1: Drop');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1504, 2, 204, NULL, 'fw1: Reject');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1504, 3, 203, NULL, 'fw1: Drop');
 
 --
 -- RRD THRESHOLD SIds
@@ -7664,6 +7649,139 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (151
 
 
 --
+-- Snare for Windows Sids
+--
+
+-- Audit Privilege Use
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 576, NULL, NULL, "Snare Agent for Windows: Special privileges assigned to new loggon");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 577, NULL, NULL, "Snare Agent for Windows: Privileged Service Called");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 578, NULL, NULL, "Snare Agent for Windows: Privileged object operation");
+
+-- Audit Process Tracking
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 592, NULL, NULL, "Snare Agent for Windows: A new process has been created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 593, NULL, NULL, "Snare Agent for Windows: A process has exited");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 594, NULL, NULL, "Snare Agent for Windows: A handle to an object has been duplicated");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 595, NULL, NULL, "Snare Agent for Windows: Indirect access to an object has been obtained");
+
+-- Audit System Events
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 512, NULL, NULL, "Snare Agent for Windows: Windows NT is starting up");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 513, NULL, NULL, "Snare Agent for Windows: Windows NT is shutting down");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 514, NULL, NULL, "Snare Agent for Windows: An authentication package has been loaded");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 515, NULL, NULL, "Snare Agent for Windows: A trusted logon process has registered");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 516, NULL, NULL, "Snare Agent for Windows: Loss of some audits");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 517, NULL, NULL, "Snare Agent for Windows: The audit log was cleared");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 518, NULL, NULL, "Snare Agent for Windows: A notification package has been loaded");
+
+-- Audit Logon Events
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 528, NULL, NULL, "Snare Agent for Windows: A user successfully logged on to a computer");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 529, NULL, NULL, "Snare Agent for Windows: The logon attempt was made with an unknown user name or bad password");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 530, NULL, NULL, "Snare Agent for Windows: The user account tried to log on outside of the allowed time");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 531, NULL, NULL, "Snare Agent for Windows: A logon attempt was made using a disabled account");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 532, NULL, NULL, "Snare Agent for Windows: A logon attempt was made using an expired account");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 533, NULL, NULL, "Snare Agent for Windows: The user is not allowed to log on at this computer");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 534, NULL, NULL, "Snare Agent for Windows: The user attempted to log on with a logon type that is not allowed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 535, NULL, NULL, "Snare Agent for Windows: The password for the specified account has expired");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 536, NULL, NULL, "Snare Agent for Windows: The Net Logon service is not active");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 537, NULL, NULL, "Snare Agent for Windows: The logon attempt failed for other reasons");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 538, NULL, NULL, "Snare Agent for Windows: A user logged off");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 539, NULL, NULL, "Snare Agent for Windows: The account was locked out at the time the logon attempt was made");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 540, NULL, NULL, "Snare Agent for Windows: Successful Network Logon");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 541, NULL, NULL, "Snare Agent for Windows: IPSec security association established");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 542, NULL, NULL, "Snare Agent for Windows: IPSec security association ended");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 543, NULL, NULL, "Snare Agent for Windows: IPSec security association ended");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 544, NULL, NULL, "Snare Agent for Windows: IPSec security association establishment failed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 545, NULL, NULL, "Snare Agent for Windows: IPSec peer authentication failed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 546, NULL, NULL, "Snare Agent for Windows: IPSec security association establishment failed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 547, NULL, NULL, "Snare Agent for Windows: IPSec security association negotiation failed");
+
+-- Audit Account Logon Events
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 672, NULL, NULL, "Snare Agent for Windows: An authentication service (AS) ticket was successfully issued and validated");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 673, NULL, NULL, "Snare Agent for Windows: A ticket granting service (TGS) ticket was granted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 674, NULL, NULL, "Snare Agent for Windows: A security principal renewed an AS ticket or TGS ticket");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 675, NULL, NULL, "Snare Agent for Windows: Pre-authentication failed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 676, NULL, NULL, "Snare Agent for Windows: Authentication Ticket Request Failed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 677, NULL, NULL, "Snare Agent for Windows: A TGS ticket was not granted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 678, NULL, NULL, "Snare Agent for Windows: An account was successfully mapped to a domain account");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 680, NULL, NULL, "Snare Agent for Windows: Identifies the account used for the successful logon attempt");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 681, NULL, NULL, "Snare Agent for Windows: A domain account log on was attempted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 682, NULL, NULL, "Snare Agent for Windows: A user has reconnected to a disconnected Terminal Services session");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 683, NULL, NULL, "Snare Agent for Windows: A user disconnected a Terminal Services session without logging off");
+
+-- Audit Account Management Events
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 624, NULL, NULL, "Snare Agent for Windows: User Account Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 625, NULL, NULL, "Snare Agent for Windows: User Account Type Change");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 626, NULL, NULL, "Snare Agent for Windows: User Account Enabled");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 627, NULL, NULL, "Snare Agent for Windows: Password Change Attempted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 628, NULL, NULL, "Snare Agent for Windows: User Account Password Set");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 629, NULL, NULL, "Snare Agent for Windows: User Account Disabled");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 630, NULL, NULL, "Snare Agent for Windows: User Account Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 631, NULL, NULL, "Snare Agent for Windows: Security Enabled Global Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 632, NULL, NULL, "Snare Agent for Windows: Security Enabled Global Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 633, NULL, NULL, "Snare Agent for Windows: Security Enabled Global Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 634, NULL, NULL, "Snare Agent for Windows: Security Enabled Global Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 635, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 636, NULL, NULL, "Snare Agent for Windows: Security Enabled Local Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 637, NULL, NULL, "Snare Agent for Windows: Security Enabled Local Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 638, NULL, NULL, "Snare Agent for Windows: Security Enabled Local Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 639, NULL, NULL, "Snare Agent for Windows: Security Enabled Local Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 640, NULL, NULL, "Snare Agent for Windows: General Account Database Change");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 641, NULL, NULL, "Snare Agent for Windows: Security Enabled Global Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 642, NULL, NULL, "Snare Agent for Windows: User Account Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 643, NULL, NULL, "Snare Agent for Windows: Domain Policy Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 644, NULL, NULL, "Snare Agent for Windows: User Account Locked Out");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 645, NULL, NULL, "Snare Agent for Windows: Computer object added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 646, NULL, NULL, "Snare Agent for Windows: Computer object changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 647, NULL, NULL, "Snare Agent for Windows: Computer object deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 648, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 649, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 650, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 651, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 652, NULL, NULL, "Snare Agent for Windows: Security Disabled Local Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 653, NULL, NULL, "Snare Agent for Windows: Security Disabled Global Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 654, NULL, NULL, "Snare Agent for Windows: Security Disabled Global Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 655, NULL, NULL, "Snare Agent for Windows: Security Disabled Global Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 656, NULL, NULL, "Snare Agent for Windows: Security Disabled Global Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 657, NULL, NULL, "Snare Agent for Windows: Security Disabled Global Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 658, NULL, NULL, "Snare Agent for Windows: Security Enabled Universal Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 659, NULL, NULL, "Snare Agent for Windows: Security Enabled Universal Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 660, NULL, NULL, "Snare Agent for Windows: Security Enabled Universal Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 661, NULL, NULL, "Snare Agent for Windows: Security Enabled Universal Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 662, NULL, NULL, "Snare Agent for Windows: Security Enabled Universal Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 663, NULL, NULL, "Snare Agent for Windows: Security Disabled Universal Group Created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 664, NULL, NULL, "Snare Agent for Windows: Security Disabled Universal Group Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 665, NULL, NULL, "Snare Agent for Windows: Security Disabled Universal Group Member Added");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 666, NULL, NULL, "Snare Agent for Windows: Security Disabled Universal Group Member Removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 667, NULL, NULL, "Snare Agent for Windows: Security Disabled Universal Group Deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 668, NULL, NULL, "Snare Agent for Windows: Group Type Changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 669, NULL, NULL, "Snare Agent for Windows: Add SID History (Success)");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 670, NULL, NULL, "Snare Agent for Windows: Add SID History (Failure)");
+
+-- Audit Object Access
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 560, NULL, NULL, "Snare Agent for Windows: Access was granted to an already existing object");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 561, NULL, NULL, "Snare Agent for Windows: A handle to an object was allocated");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 562, NULL, NULL, "Snare Agent for Windows: A handle to an object was closed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 563, NULL, NULL, "Snare Agent for Windows: An attempt was made to open an object with the intent to delete it");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 564, NULL, NULL, "Snare Agent for Windows: A protected object was deleted");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 565, NULL, NULL, "Snare Agent for Windows: Access was granted to an already existing object type");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 566, NULL, NULL, "Snare Agent for Windows: Object Operation");
+
+-- Audit Policy Change
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 608, NULL, NULL, "Snare Agent for Windows: A user right was assigned");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 609, NULL, NULL, "Snare Agent for Windows: A user right was removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 610, NULL, NULL, "Snare Agent for Windows: A trust relationship with another domain was created");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 611, NULL, NULL, "Snare Agent for Windows: A trust relationship with another domain was removed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 612, NULL, NULL, "Snare Agent for Windows: An audit policy was changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 613, NULL, NULL, "Snare Agent for Windows: IPSec policy agent started");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 614, NULL, NULL, "Snare Agent for Windows: IPSec policy agent disabled");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 615, NULL, NULL, "Snare Agent for Windows: IPSec policy changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 616, NULL, NULL, "Snare Agent for Windows: IPSec policy agent encountered a potentially serious failure");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 617, NULL, NULL, "Snare Agent for Windows: Kerberos policy changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 618, NULL, NULL, "Snare Agent for Windows: Encrypted data recovery policy changed");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 620, NULL, NULL, "Snare Agent for Windows: Trusted domain information modified");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 768, NULL, NULL, "Snare Agent for Windows: A collision was detected between a namespace element in two forests");
+
+
+--
 -- Monitors Sids
 --
 
@@ -8087,25 +8205,241 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) V
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709006, NULL, NULL, 'CiscoPIX: End Configuration Replication (STB)', 3);
 
 -- Critical Messages, Severity 2
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106001, NULL, NULL, 'CiscoPIX: Inbound TCP connection denied', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106002, NULL, NULL, 'CiscoPIX: protocol Connection denied', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106006, NULL, NULL, 'CiscoPIX: Deny inbound UDP', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106007, NULL, NULL, 'CiscoPIX: Deny inbound UDP due to DNS flag', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106012, NULL, NULL, 'CiscoPIX: Deny', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106013, NULL, NULL, 'CiscoPIX: Dropping echo request', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106016, NULL, NULL, 'CiscoPIX: Deny IP spoof', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106017, NULL, NULL, 'CiscoPIX: Deny IP due to Land Attack', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106018, NULL, NULL, 'CiscoPIX: ICMP packet denied', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106020, NULL, NULL, 'CiscoPIX: Deny IP teardrop fragment', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 108002, NULL, NULL, 'CiscoPIX: SMTP replaced chars', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109011, NULL, NULL, 'CiscoPIX: Authen Session Start', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 112001, NULL, NULL, 'CiscoPIX: PIX Clear complete', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201003, NULL, NULL, 'CiscoPIX: Embryonic limit exceeded neconns/elimit', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 214001, NULL, NULL, 'CiscoPIX: Terminating manager session. Reason: incoming encrypted data (number bytes) longer than upper_limit_number bytes', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304007, NULL, NULL, 'CiscoPIX: URL Server IP_addr not responding, ENTERING ALLOW mode', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304008, NULL, NULL, 'CiscoPIX: LEAVING ALLOW mode, URL Server is up', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304009, NULL, NULL, 'CiscoPIX: Ran out of buffer blocks specified by url-block command', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 316001, NULL, NULL, 'CiscoPIX: Denied new tunnel to peer_IP. VPN peer limit (platform_vpn_peer_limit) exceeded', 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709007, NULL, NULL, 'CiscoPIX: Configuration replication failed for command command_name', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106001, NULL, NULL, 'CiscoPIX: Inbound TCP connection denied', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106002, NULL, NULL, 'CiscoPIX: protocol Connection denied', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106006, NULL, NULL, 'CiscoPIX: Deny inbound UDP', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106007, NULL, NULL, 'CiscoPIX: Deny inbound UDP due to DNS flag', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106012, NULL, NULL, 'CiscoPIX: Deny', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106013, NULL, NULL, 'CiscoPIX: Dropping echo request', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106016, NULL, NULL, 'CiscoPIX: Deny IP spoof', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106017, NULL, NULL, 'CiscoPIX: Deny IP due to Land Attack', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106018, NULL, NULL, 'CiscoPIX: ICMP packet denied', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106020, NULL, NULL, 'CiscoPIX: Deny IP teardrop fragment', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 108002, NULL, NULL, 'CiscoPIX: SMTP replaced chars', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109011, NULL, NULL, 'CiscoPIX: Authen Session Start', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 112001, NULL, NULL, 'CiscoPIX: PIX Clear complete', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201003, NULL, NULL, 'CiscoPIX: Embryonic limit exceeded neconns/elimit', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 214001, NULL, NULL, 'CiscoPIX: Terminating manager session. Reason: incoming encrypted data (number bytes) longer than upper_limit_number bytes', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304007, NULL, NULL, 'CiscoPIX: URL Server IP_addr not responding, ENTERING ALLOW mode', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304008, NULL, NULL, 'CiscoPIX: LEAVING ALLOW mode, URL Server is up', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304009, NULL, NULL, 'CiscoPIX: Ran out of buffer blocks specified by url-block command', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 316001, NULL, NULL, 'CiscoPIX: Denied new tunnel to peer_IP. VPN peer limit (platform_vpn_peer_limit) exceeded', 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709007, NULL, NULL, 'CiscoPIX: Configuration replication failed for command command_name', 3);
+
+-- Error Messages, Severity 3
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 105010, NULL, NULL, 'CiscoPIX: Failover message block alloc failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106010, NULL, NULL, 'CiscoPIX: Deny inbound protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106014, NULL, NULL, 'CiscoPIX: Deny inbound icmp', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109010, NULL, NULL, 'CiscoPIX: Auth failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109013, NULL, NULL, 'CiscoPIX: User must authenticate before using this service', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109016, NULL, NULL, 'CiscoPIX: Can\'t find authorization ACL', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109018, NULL, NULL, 'CiscoPIX: Downloaded ACL is empty', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109019, NULL, NULL, 'CiscoPIX: Downloaded ACL has parsing error', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109020, NULL, NULL, 'CiscoPIX: Downloaded ACL has config error', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201002, NULL, NULL, 'CiscoPIX: Too many connections on gaddr!', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201005, NULL, NULL, 'CiscoPIX: FTP data connection failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201006, NULL, NULL, 'CiscoPIX: RCMD backconnection failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201008, NULL, NULL, 'CiscoPIX: The PIX is disallowing new connections', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 201009, NULL, NULL, 'CiscoPIX: TCP connection limit exceeded', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 202001, NULL, NULL, 'CiscoPIX: Out of address translation slots!', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 202005, NULL, NULL, 'CiscoPIX: Non-embryonic in embryonic list', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 208005, NULL, NULL, 'CiscoPIX: pix clear', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210001, NULL, NULL, 'CiscoPIX: LU SW_Module error', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210002, NULL, NULL, 'CiscoPIX: LU allocate block failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210003, NULL, NULL, 'CiscoPIX: Unknown LU Object ID', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210005, NULL, NULL, 'CiscoPIX: LU allocate connection failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210006, NULL, NULL, 'CiscoPIX: LU look NAT failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210007, NULL, NULL, 'CiscoPIX: LU allocate xlate failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210008, NULL, NULL, 'CiscoPIX: LU no xlate', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210010, NULL, NULL, 'CiscoPIX: LU make UDP connection', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210020, NULL, NULL, 'CiscoPIX: LU PAT port reserve failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210021, NULL, NULL, 'CiscoPIX: LU create static xlate failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 211001, NULL, NULL, 'CiscoPIX: Memory allocation Error', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 211003, NULL, NULL, 'CiscoPIX: CPU utilization for time seconds', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 212001, NULL, NULL, 'CiscoPIX: Unable to open SNMP channel', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 212002, NULL, NULL, 'CiscoPIX: Unable to open SNMP trap channel', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 212003, NULL, NULL, 'CiscoPIX: Unable to receive an SNMP request', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 212004, NULL, NULL, 'CiscoPIX: Unable to send an SNMP response', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 212005, NULL, NULL, 'CiscoPIX: incoming SNMP request exceeds data buffer size, discarding this SNMP request', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 213001, NULL, NULL, 'CiscoPIX: PPTP control daemon socket io string', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 213002, NULL, NULL, 'CiscoPIX: PPTP tunnel hashtable insert failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 213003, NULL, NULL, 'CiscoPIX: PPP virtual interface number isn\'t opened', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 213004, NULL, NULL, 'CiscoPIX: PPP virtual interface number client ip allocation failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302302, NULL, NULL, 'CiscoPIX: ACL = deny; no sa created', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304003, NULL, NULL, 'CiscoPIX: Server timed out', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304006, NULL, NULL, 'CiscoPIX: Server not respondig', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305005, NULL, NULL, 'CiscoPIX: No traslation group found for protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305006, NULL, NULL, 'CiscoPIX: Regular traslation creation failed for protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305008, NULL, NULL, 'CiscoPIX: Free unallocated global IP address', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 313001, NULL, NULL, 'CiscoPIX: Denied ICMP', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 313003, NULL, NULL, 'CiscoPIX: Invalid destination for ICMP error', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 315004, NULL, NULL, 'CiscoPIX: Fail to establish SSH session because PIX RSA host key retrieval failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403501, NULL, NULL, 'CiscoPIX: PPPoE - Bad host-unique in PADO - packet dropped', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403502, NULL, NULL, 'CiscoPIX: PPPoE - Bad host-unique in PADS - dropping packet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403503, NULL, NULL, 'CiscoPIX: PPPoE:PPP link down', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403504, NULL, NULL, 'CiscoPIX: PPPoE: No \'vpdn group\' for PPPoE is created', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403505, NULL, NULL, 'CiscoPIX: PPPoE:PPP - Unable to set default route to address', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403506, NULL, NULL, 'CiscoPIX: PPPoE:failed to assign PP address netmask', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 407002, NULL, NULL, 'CiscoPIX: Embryonic limit for through connections', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 610001, NULL, NULL, 'CiscoPIX: NTP daemon: Packet denied', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 610002, NULL, NULL, 'CiscoPIX: NTP daemon: Authentication failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 702302, NULL, NULL, 'CiscoPIX: replay rollover detected...', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710003, NULL, NULL, 'CiscoPIX: access denied by ACL', 2);
+
+-- Warning Messages, Severity 4
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106023, NULL, NULL, 'CiscoPIX: Deny protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109017, NULL, NULL, 'CiscoPIX: User exceeded auth proxy connection limit', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 209003, NULL, NULL, 'CiscoPIX: Fragment database limit of counts exceeded', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 209004, NULL, NULL, 'CiscoPIX: Invalid IP fragment', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 209005, NULL, NULL, 'CiscoPIX: Discard IP fragment', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 308002, NULL, NULL, 'CiscoPIX: static gaddr1/laddr1 overlapped with gaddr2/laddr2', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 400000, NULL, NULL, 'CiscoPIX: sig_num sig_msg from IP_addr to IP_addr on interface', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 401001, NULL, NULL, 'CiscoPIX: Shuns cleared', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 401002, NULL, NULL, 'CiscoPIX: Shun added', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 401003, NULL, NULL, 'CiscoPIX: Shun add deleted', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 401004, NULL, NULL, 'CiscoPIX: Shunned packet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 401005, NULL, NULL, 'CiscoPIX: Shun add failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 402101, NULL, NULL, 'CiscoPIX: decaps:rec\'d IPSEC packet has invalid spi for destaddr', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 402102, NULL, NULL, 'CiscoPIX: decapsulate: packet missing', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 402103, NULL, NULL, 'CiscoPIX: identity doesn\'t match negociated identity', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 402106, NULL, NULL, 'CiscoPIX: Rec\'d packet not an IPSEC packet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403101, NULL, NULL, 'CiscoPIX: PPTP session state not stablished, but received an XGRE packet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403102, NULL, NULL, 'CiscoPIX: PPP virtual interface rcvd pkt with invalid protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403103, NULL, NULL, 'CiscoPIX: PPP virtual interface max connections reached', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403104, NULL, NULL, 'CiscoPIX: PPP virtual interface requires mschap for MPPE', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403106, NULL, NULL, 'CiscoPIX: PPP virtual interface requires RADIUS for MPPE', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403107, NULL, NULL, 'CiscoPIX: PPP virtual interface missing server group info', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403108, NULL, NULL, 'CiscoPIX: PPP virtual interface missing client ip address', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403109, NULL, NULL, 'CiscoPIX: Rec\'d packet not an PPTP packet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403110, NULL, NULL, 'CiscoPIX: PPP virtual interface', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 404101, NULL, NULL, 'CiscoPIX: ISAKMP:Failed to allocate address for client from pool', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 405101, NULL, NULL, 'CiscoPIX: Unable to Pre-allocate H225 Call Signalling Connection', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 405102, NULL, NULL, 'CiscoPIX: Unable to Pre-allocate H245 Connection', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 405103, NULL, NULL, 'CiscoPIX: H225 message contains bad protocol discriminator', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 406001, NULL, NULL, 'CiscoPIX: FTP low port', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 406002, NULL, NULL, 'CiscoPIX: FTP different address', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 407001, NULL, NULL, 'CiscoPIX: Deny traffic for local-host interface', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 500004, NULL, NULL, 'CiscoPIX: Invalid transport field for protocol', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 612002, NULL, NULL, 'CiscoPIX: Auto Update failed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 612003, NULL, NULL, 'CiscoPIX: Auto Update failed to contact', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710004, NULL, NULL, 'CiscoPIX: TCP connection limit exceeded', 2);
+
+-- Notification Messages, Severity 5
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109012, NULL, NULL, 'CiscoPIX: Authen Session End', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111001, NULL, NULL, 'CiscoPIX: Begin configuration: IP_addr writing to device', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111003, NULL, NULL, 'CiscoPIX: Erase configuration', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111004, NULL, NULL, 'CiscoPIX: end configuration: FAILED|OK', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111005, NULL, NULL, 'CiscoPIX: end configuration: OK', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111007, NULL, NULL, 'CiscoPIX: Begin configuration', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111008, NULL, NULL, 'CiscoPIX: User executed the command', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 199001, NULL, NULL, 'CiscoPIX: PIX reload command executed from telnet', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304001, NULL, NULL, 'CiscoPIX: user Accessed JAVA URL', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304002, NULL, NULL, 'CiscoPIX: Access denied URL', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 500001, NULL, NULL, 'CiscoPIX: ActiveX content', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 500002, NULL, NULL, 'CiscoPIX: Java content', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 500003, NULL, NULL, 'CiscoPIX: Bad TCP', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 501101, NULL, NULL, 'CiscoPIX: User transitioning priv level', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 502101, NULL, NULL, 'CiscoPIX: New user added to local dbase', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 502102, NULL, NULL, 'CiscoPIX: User deleted from local dbase', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 502103, NULL, NULL, 'CiscoPIX: User priv level changed', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611103, NULL, NULL, 'CiscoPIX: User logged out', 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 612001, NULL, NULL, 'CiscoPIX: Auto Update suceeded', 2);
+
+-- Informational Messages, Severity 6
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106015, NULL, NULL, 'CiscoPIX: Deny TCP (no connection)', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109001, NULL, NULL, 'CiscoPIX: Auth start', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109002, NULL, NULL, 'CiscoPIX: Auth failed (server failed)', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109003, NULL, NULL, 'CiscoPIX: Auth failed (all servers failed)', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109005, NULL, NULL, 'CiscoPIX: Authentication succeeded', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109006, NULL, NULL, 'CiscoPIX: Authentication failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109007, NULL, NULL, 'CiscoPIX: Authorization permitted', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109008, NULL, NULL, 'CiscoPIX: Authorization denied for user', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109009, NULL, NULL, 'CiscoPIX: Authorization denied', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109015, NULL, NULL, 'CiscoPIX: Authorization denied(acl) for user', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 110001, NULL, NULL, 'CiscoPIX: No route', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 199002, NULL, NULL, 'CiscoPIX: PIX startud completed. Beginning operation', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 199005, NULL, NULL, 'CiscoPIX: PIX Startup begin', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 210022, NULL, NULL, 'CiscoPIX: LU missed number updates', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302003, NULL, NULL, 'CiscoPIX: Built H245 connection', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302004, NULL, NULL, 'CiscoPIX: Pre-allocate H323 UDP backconnection', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302009, NULL, NULL, 'CiscoPIX: Rebuilt TCP connection', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302010, NULL, NULL, 'CiscoPIX: conns in use, conns most used', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302013, NULL, NULL, 'CiscoPIX: Built TCP connection for interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302014, NULL, NULL, 'CiscoPIX: Teardown TCP connection for interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302015, NULL, NULL, 'CiscoPIX: Built UDP connection for interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 302016, NULL, NULL, 'CiscoPIX: Teardown UDp connection for interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 303002, NULL, NULL, 'CiscoPIX: src_addr Stored|Retrieved', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304004, NULL, NULL, 'CiscoPIX: URL server request failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305007, NULL, NULL, 'CiscoPIX: addrpool_fre(): Orphan IP', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305009, NULL, NULL, 'CiscoPIX: Built translation from interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305010, NULL, NULL, 'CiscoPIX: Teardown translation from interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305011, NULL, NULL, 'CiscoPIX: Built TCP|UDP|ICMP translation from interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 305012, NULL, NULL, 'CiscoPIX: Built TCP|UDP|ICMP translation, duration ', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 308001, NULL, NULL, 'CiscoPIX: PIX console enable password incorrect for num tries', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 309002, NULL, NULL, 'CiscoPIX: Permitted manager connection', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 311001, NULL, NULL, 'CiscoPIX: LU loading standby start', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 311002, NULL, NULL, 'CiscoPIX: LU loading standby end', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 311003, NULL, NULL, 'CiscoPIX: LU recv thread up', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 311004, NULL, NULL, 'CiscoPIX: LU xmit thread up', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 312001, NULL, NULL, 'CiscoPIX: RIP hdr failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 314001, NULL, NULL, 'CiscoPIX: Pre-allocate RTSP UDP backconnection', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 315011, NULL, NULL, 'CiscoPIX: SSH session disconnected by SSH server', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 403500, NULL, NULL, 'CiscoPIX: PPPoE - Service name not received in PADO', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 602101, NULL, NULL, 'CiscoPIX: PMTU-D packet greater than effective mtu', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 602102, NULL, NULL, 'CiscoPIX: Adjusting IPSec tunnel mtu', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 602301, NULL, NULL, 'CiscoPIX: sa created...', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 602302, NULL, NULL, 'CiscoPIX: deleting sa', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603101, NULL, NULL, 'CiscoPIX: PPTP received out of seq or duplicate pkt', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603102, NULL, NULL, 'CiscoPIX: PPP virtual interface: authentication started', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603103, NULL, NULL, 'CiscoPIX: PPP virtual interface: authentucation status', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603104, NULL, NULL, 'CiscoPIX: PPTP Tunnel created', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603105, NULL, NULL, 'CiscoPIX: PPTP Tunnel deleted', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603106, NULL, NULL, 'CiscoPIX: L2TP Tunnel created', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603107, NULL, NULL, 'CiscoPIX: L2TP Tunnel deleted', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603108, NULL, NULL, 'CiscoPIX: Built PPTP Tunnel at interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 603109, NULL, NULL, 'CiscoPIX: Teardown PPPOE Tunnel at interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 604101, NULL, NULL, 'CiscoPIX: DHCP client interface: Allocated ip', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 604102, NULL, NULL, 'CiscoPIX: DHCP client interface: address released', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 604103, NULL, NULL, 'CiscoPIX: DHCP daemon interface: address granted', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 604104, NULL, NULL, 'CiscoPIX: DHCP daemon interface: address released', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 605004, NULL, NULL, 'CiscoPIX: Login denied for user', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 605005, NULL, NULL, 'CiscoPIX: Login permitted for user', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 606001, NULL, NULL, 'CiscoPIX: PDM session started', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 606002, NULL, NULL, 'CiscoPIX: PDM session ended', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 607001, NULL, NULL, 'CiscoPIX: Pre-allocate SIP secondary channel for outside-interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 608001, NULL, NULL, 'CiscoPIX: Pre-allocate Skinny secondary channel for outside-interface', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 609001, NULL, NULL, 'CiscoPIX: Built local-host', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 609002, NULL, NULL, 'CiscoPIX: Teardown local-host', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 610101, NULL, NULL, 'CiscoPIX: Authorization failed: Cmd', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611101, NULL, NULL, 'CiscoPIX: User authentication succeeded', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611102, NULL, NULL, 'CiscoPIX: User authentication failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611301, NULL, NULL, 'CiscoPIX: VPNClient: NAT configured for Client Mode with no split tunneling', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611302, NULL, NULL, 'CiscoPIX: VPNClient: NAT exemption configured for Network Extension Mode with no split tunneling', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611303, NULL, NULL, 'CiscoPIX: VPNClient: NAT configured for CLient Mode with split tunneling', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611304, NULL, NULL, 'CiscoPIX: VPNClient: NAT exemption configured for Network Extension with split tunneling', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611305, NULL, NULL, 'CiscoPIX: VPNClient: DHCP Policy installed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611306, NULL, NULL, 'CiscoPIX: VPNClient: Perfect Forward Secrecy Policy installed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611307, NULL, NULL, 'CiscoPIX: VPNClient: Head end', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611308, NULL, NULL, 'CiscoPIX: VPNClient: Split DNS Policy installed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611309, NULL, NULL, 'CiscoPIX: VPNClient: Disconnecting from head end and uninstalling previously downloaded policy: Head End', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611310, NULL, NULL, 'CiscoPIX: VNPClient: XAUTH Suceeded', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 611311, NULL, NULL, 'CiscoPIX: VNPClient: XAUTH Failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 614001, NULL, NULL, 'CiscoPIX: Split DNS: request patched from server', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 614002, NULL, NULL, 'CiscoPIX: Split DNS: reply from server', 1);
+
+-- Debugging Messages, Severity 7
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 106011, NULL, NULL, 'CiscoPIX: Deny inbound (No xlate) chars', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 109014, NULL, NULL, 'CiscoPIX: uauth_lookup_net fail for uauth_in()', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 111009, NULL, NULL, 'CiscoPIX: User executed cmd', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 304005, NULL, NULL, 'CiscoPIX: URL server request pending URL chars', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 701001, NULL, NULL, 'CiscoPIX: alloc_user() out of Tcp_user objects', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 702301, NULL, NULL, 'CiscoPIX: lifetime expiring...', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 702303, NULL, NULL, 'CiscoPIX: sa_request...', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709001, NULL, NULL, 'CiscoPIX: FO replication failed', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 709002, NULL, NULL, 'CiscoPIX: FO unreplicable', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710001, NULL, NULL, 'CiscoPIX: TCP access requested', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710002, NULL, NULL, 'CiscoPIX: TCP|UDP access permitted', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710005, NULL, NULL, 'CiscoPIX: TCP|UDP request discarded', 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1514, 710006, NULL, NULL, 'CiscoPIX: protocol request discarded', 1);
 
 

@@ -1,6 +1,4 @@
 import urllib2
-import HTMLParser
-import sys
 import socket
 import re
 
@@ -156,15 +154,19 @@ def get_value(rule, url):
                      str(rule["port_to"]))):
 
                     if int(rule["plugin_sid"]) == 246:
+                        fd.close()
                         return int(session["data_sent"])
                     elif int(rule["plugin_sid"]) == 247:
+                        fd.close()
                         return int(session["data_recv"])
                     elif int(rule["plugin_sid"]) == 248:
+                        fd.close()
                         return int(session["duration"])
 
                 # no alert, check next iteration
                 session = {}
    
     # no session opened
+    fd.close()
     return None
 

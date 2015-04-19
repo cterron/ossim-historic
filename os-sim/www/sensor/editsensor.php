@@ -29,7 +29,8 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 </head>
 <body>
                                                                                 
-  <h1>Edit sensor <?php echo $_REQUEST["ip"] ?> properties</h1>
+  <h1> <?php echo gettext("Edit sensor"); ?> <?php echo $_REQUEST["ip"] ?> 
+  <?php echo gettext("properties"); ?> </h1>
 
 <?php
 
@@ -47,7 +48,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
         if (!$ip = $_REQUEST["ip"]) {
         
         
-            echo "<p>What sensor do you want to edit?</p>\n";
+            echo "<p> " . gettext("What sensor do you want to edit") . " ?</p>\n";
                                                                                 
             if ($sensor_list = Sensor::get_list($conn, "")) {
                 foreach($sensor_list as $sensor) {
@@ -101,7 +102,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     if ($_REQUEST["snort"]) {
 
         if (!$fd = @fopen($SNORT_FILE, 'r+')) {
-            echo "Error opening $SNORT_FILE file\n";
+            echo gettext("Error opening") . " $SNORT_FILE " . gettext("file") . " \n";
             exit;
         }
         while (!feof($fd))
@@ -146,8 +147,8 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       <input type="hidden" name="snortload" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
       <tr>
-        <td>Load default values for snort config file <br>
-          <i>(use this option only if you are sure)</i></td>
+        <td> <?php echo gettext("Load default values for snort config file"); ?> <br>
+          <i>( <?php echo gettext("use this option only if you are sure"); ?>)</i></td>
       </tr>
       <tr>
         <td align="center" colspan="2">
@@ -164,7 +165,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     <form action="editsensor.php" method="post">
       <input type="hidden" name="snortwrite" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
-      <tr><th colspan="2">Snort configuration</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Snort configuration"); ?> </th></tr>
       <tr>
         <th>HOME_NET</th>
         <td><input type="text" name="home_net" 
@@ -201,7 +202,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
                    value="<?php //echo $snort_password; ?>"></td>
       </tr>
       <tr>
-        <td colspan="2">* <i>Password unchanged if field left blank.</i></td>
+        <td colspan="2">* <i> <?php echo gettext("Password unchanged if field left blank"); ?> .</i></td>
       </tr>
       <tr>
         <td align="center" colspan="2">
@@ -254,11 +255,11 @@ Session::logcheck("MenuPolicy", "PolicySensors");
                                 $buff);
 
 
-        if (!$fd = fopen ($location, "w")) echo "Error opening file\n";
+        if (!$fd = fopen ($location, "w")) echo gettext("Error opening file") . " \n";
         fwrite ($fd, $buff);
         fclose ($fd);
 
-        echo "<p>Sensor edit completed</p>\n";
+        echo "<p> " . gettext("Sensor edit completed") . " </p>\n";
         system("scp $SNORT_FILE root@$ip:$REMOTE_PATH/snort.conf");
     }
 
@@ -275,7 +276,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     elseif($_REQUEST["ossim"]) {
     
         if (!$fd = fopen($OSSIM_FILE, 'r+')) {
-            echo "Error opening $OSSIM_FILE file\n";
+            echo gettext("Error opening") . " $OSSIM_FILE " . gettext("file") . " \n";
             exit;
         }
         
@@ -365,8 +366,8 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       <input type="hidden" name="ossimload" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
       <tr>
-        <td>Load default values for ossim config file <br>
-          <i>(use this option only if you are sure)</i></td>
+        <td> <?php echo gettext("Load default values for ossim config file"); ?> <br>
+          <i>( <?php echo gettext("use this option only if you are sure"); ?>)</i></td>
       </tr>
       <tr>
         <td align="center" colspan="2">
@@ -382,165 +383,165 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     <form action="editsensor.php" method="post">
       <input type="hidden" name="ossimwrite" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
-      <tr><th colspan="2">OSSIM configuration</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("OSSIM configuration"); ?> </th></tr>
       <tr><th colspan="2"></th></tr>
-      <tr><th colspan="2">Base configuration</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Base configuration"); ?> </th></tr>
       <tr>
-        <td>Base directory</td>
+        <td> <?php echo gettext("Base directory"); ?> </td>
         <td><input type="text" name="base_dir" 
                    value="<?php echo $base_dir; ?>">
         </td>
       </tr>
       <tr>
-        <td>Log file</td>
+        <td> <?php echo gettext("Log file"); ?> </td>
         <td><input type="text" name="ossim_log" 
                    value="<?php echo $ossim_log; ?>">
         </td>
       </tr>
-      <tr><th colspan="2">Database</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Database"); ?> </th></tr>
       <tr>
-        <td>hostname of the mysql database server</td>
+        <td> <?php echo gettext("hostname of the mysql database server"); ?> </td>
         <td><input type="text" name="ossim_host" 
                    value="<?php echo $ossim_host; ?>">
         </td>
       </tr>
       <tr>
-        <td>name of the database</td>
+        <td> <?php echo gettext("name of the database"); ?> </td>
         <td><input type="text" name="ossim_base" 
                    value="<?php echo $ossim_base; ?>">
         </td>
       </tr>
       <tr>
-        <td>name of the database user</td>
+        <td> <?php echo gettext("name of the database user"); ?> </td>
         <td><input type="text" name="ossim_user" 
                    value="<?php echo $ossim_user; ?>">
         </td>
       </tr>
       <tr>
-        <td>password for the database connection *</td>
+        <td> <?php echo gettext("password for the database connection"); ?> *</td>
         <td><input type="text" name="ossim_pass" 
                    value="<?php //echo $ossim_pass; ?>">
         </td>
       </tr>
       <tr>
-        <td colspan="2">* <i>Password unchanged if field left blank.</i></td>
+        <td colspan="2">* <i> <?php echo gettext("Password unchanged if field left blank"); ?> .</i></td>
       </tr>
       <tr><th colspan="2">Snort</th></tr>
       <tr>
-        <td>path to snort</td>
+        <td> <?php echo gettext("path to snort"); ?> </td>
         <td><input type="text" name="snort_path" 
                    value="<?php echo $snort_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>path to snort rules directory</td>
+        <td> <?php echo gettext("path to snort rules directory"); ?> </td>
         <td><input type="text" name="snort_rules_path" 
                    value="<?php echo $snort_rules_path; ?>">
         </td>
       </tr>
-        <td>hostname of the snort database server</td>
+        <td> <?php echo gettext("hostname of the snort database server"); ?> </td>
         <td><input type="text" name="snort_host" 
                    value="<?php echo $snort_host; ?>">
         </td>
       </tr>
       <tr>
-        <td>name of the snort database</td>
+        <td> <?php echo gettext("name of the snort database"); ?> </td>
         <td><input type="text" name="snort_base" 
                    value="<?php echo $snort_base; ?>">
         </td>
       </tr>
       <tr>
-        <td>name of the snort database user</td>
+        <td> <?php echo gettext("name of the snort database user"); ?> </td>
         <td><input type="text" name="snort_user" 
                    value="<?php echo $snort_user; ?>">
         </td>
       </tr>
       <tr>
-        <td>password for the snort database connection **</td>
+        <td> <?php echo gettext("password for the snort database connection"); ?> **</td>
         <td><input type="text" name="snort_pass" 
                    value="<?php echo $snort_pass; ?>">
         </td>
       </tr>
       <tr>
-        <td colspan="2">* <i>Password unchanged if field left blank.</i></td>
+        <td colspan="2">* <i> <?php echo gettext("Password unchanged if field left blank"); ?> .</i></td>
       </tr>
-      <tr><th colspan="2">Paths</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Paths"); ?> </th></tr>
       <tr>
-        <td>adodb</td>
+        <td> <?php echo gettext("adodb"); ?> </td>
         <td><input type="text" name="adodb_path" 
                    value="<?php echo $adodb_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>rrdtool</td>
+        <td> <?php echo gettext("rrdtool"); ?> </td>
         <td><input type="text" name="rrdtool_path" 
                    value="<?php echo $rrdtool_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>rrdtool lib directory</td>
+        <td> <?php echo gettext("rrdtool lib directory"); ?> </td>
         <td><input type="text" name="rrdtool_lib_path" 
                    value="<?php echo $rrdtool_lib_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>mrtg</td>
+        <td> <?php echo gettext("mrtg"); ?> </td>
         <td><input type="text" name="mrtg_path" 
                    value="<?php echo $mrtg_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>mrtg rrd files</td>
+        <td> <?php echo gettext("mrtg rrd files"); ?> </td>
         <td><input type="text" name="mrtg_rrd_files_path" 
                    value="<?php echo $mrtg_rrd_files_path; ?>">
         </td>
       </tr>
-      <tr><th colspan="2">Applications</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Applications"); ?> </th></tr>
       <tr>
-        <td>nmap</td>
+        <td> <?php echo gettext("nmap"); ?> </td>
         <td><input type="text" name="nmap_path" 
                    value="<?php echo $nmap_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>p0f</td>
+        <td> <?php echo gettext("p0f"); ?> </td>
         <td><input type="text" name="p0f_path" 
                    value="<?php echo $p0f_path; ?>">
         </td>
       </tr>
       <tr>
-        <td>arpwatch</td>
+        <td> <?php echo gettext("arpwatch"); ?> </td>
         <td><input type="text" name="arpwatch_path" 
                    value="<?php echo $arpwatch_path; ?>">
         </td>
       </tr>
-      <tr><th colspan="2">Links</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Links"); ?> </th></tr>
       <tr>
-        <td>acid</td>
+        <td> <?php echo gettext("acid"); ?> </td>
         <td><input type="text" name="acid_link" 
                    value="<?php echo $acid_link; ?>">
         </td>
       </tr>
       <tr>
-        <td>ntop</td>
+        <td> <?php echo gettext("ntop"); ?> </td>
         <td><input type="text" name="ntop_link" 
                    value="<?php echo $ntop_link; ?>">
         </td>
       </tr>
       <tr>
-        <td>opennms</td>
+        <td> <?php echo gettext("opennms"); ?> </td>
         <td><input type="text" name="opennms_link" 
                    value="<?php echo $opennms_link; ?>">
         </td>
       </tr>
       <tr>
-        <td>mrtg</td>
+        <td> <?php echo gettext("mrtg"); ?> </td>
         <td><input type="text" name="mrtg_link" 
                    value="<?php echo $mrtg_link; ?>">
         </td>
       </tr>
       <tr>
-        <td>graph</td>
+        <td> <?php echo gettext("graph"); ?> </td>
         <td><input type="text" name="graph_link" 
                    value="<?php echo $graph_link; ?>">
         </td>
@@ -665,19 +666,19 @@ Session::logcheck("MenuPolicy", "PolicySensors");
                              $buff);
 
         
-        if (!$fd = fopen ($location, "w")) echo "Error opening file\n";
+        if (!$fd = fopen ($location, "w")) echo gettext("Error opening file") . " \n";
         fwrite ($fd, $buff);
         fclose ($fd);
                                                                                                                                                 
         system("scp $OSSIM_FILE root@$ip:$REMOTE_PATH/ossim.conf");
-        echo "<p>Sensor edit completed</p>\n";        
+        echo "<p> " . gettext("Sensor edit completed") . " </p>\n";        
     }
 
 
     elseif($_POST["ossimload"]) {
         system("scp $OSSIM_FILE_DEFAULT root@$ip:$REMOTE_PATH/ossim.conf");
         system("cp $OSSIM_FILE_DEFAULT $OSSIM_FILE");
-        echo "<p>Default values loaded</p>\n";
+        echo "<p> " . gettext("Default values loaded") . " </p>\n";
     }
     
     /*
@@ -686,7 +687,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     elseif($_REQUEST["spade"]) {
     
         if (!$fd = fopen($SPADE_FILE, 'r+')) {
-            echo "Error opening $SPADE_FILE file\n";
+            echo gettext("Error opening") . " $SPADE_FILE " . gettext("file") . " \n";
             exit;
         }
         while (!feof($fd)) {
@@ -716,8 +717,8 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       <input type="hidden" name="spadeload" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
       <tr>
-        <td>Load default values for spade config file <br>
-          <i>(use this option only if you are sure)</i></td>
+        <td> <?php echo gettext("Load default values for spade config file"); ?> <br>
+          <i>( <?php echo gettext("use this option only if you are sure"); ?>)</i></td>
       </tr>
       <tr>
         <td align="center" colspan="2">
@@ -733,29 +734,29 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     <form action="editsensor.php" method="post">
       <input type="hidden" name="spadewrite" value="1">
       <input type="hidden" name="ip" value="<?php echo $ip ?>">
-      <tr><th colspan="2">Spade configuration</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Spade configuration"); ?> </th></tr>
       <tr>
-        <th>SPADEDIR</th>
+        <th> <?php echo gettext("SPADEDIR"); ?> </th>
         <td><input type="text" name="spadedir"
                    value="<?php echo $spadedir; ?>"></td>
       </tr>
       <tr>
-        <th>dest</th>
+        <th> <?php echo gettext("dest"); ?> </th>
         <td><input type="text" name="spade_dest"
                    value="<?php echo $spade_dest; ?>"></td>
       </tr>
       <tr>
-        <th>logfile</th>
+        <th> <?php echo gettext("logfile"); ?> </th>
         <td><input type="text" name="spade_logfile"
                    value="<?php echo $spade_logfile; ?>"></td>
       </tr>
       <tr>
-        <th>statefile</th>
+        <th> <?php echo gettext("statefile"); ?> </th>
         <td><input type="text" name="spade_statefile"
                    value="<?php echo $spade_statefile; ?>"></td>
       </tr>
       <tr>
-        <th>homenet</th>
+        <th> <?php echo gettext("homenet"); ?> </th>
         <td><input type="text" name="spade_homenet"
                    value="<?php echo $spade_homenet; ?>"></td>
       </tr>
@@ -787,12 +788,12 @@ Session::logcheck("MenuPolicy", "PolicySensors");
                              "\npreprocessor spade-homenet: $spade_homenet",
                              $buff);
 
-        if (!$fd = fopen ($location, "w")) echo "Error opening file\n";
+        if (!$fd = fopen ($location, "w")) echo gettext("Error opening file") . " \n";
         fwrite ($fd, $buff);
         fclose ($fd);
                                                                                 
                                                                                 
-        echo "<p>Sensor edit completed</p>\n";
+        echo "<p> " . gettext("Sensor edit completed") . " </p>\n";
         system("scp $SPADE_FILE root@$ip:$REMOTE_PATH/spade.conf");
 
     }
@@ -800,7 +801,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     elseif($_POST["spadeload"]) {
         system("scp $SPADE_FILE_DEFAULT root@$ip:$REMOTE_PATH/spade.conf");
         system("cp $SPADE_FILE_DEFAULT $SPADE_FILE");
-        echo "<p>Default values loaded</p>\n";
+        echo "<p> " . gettext("Default values loaded") . " </p>\n";
     }
 ?>
 

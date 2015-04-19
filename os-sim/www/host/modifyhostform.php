@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Modify host</h1>
+  <h1> <?php echo gettext("Modify host"); ?> </h1>
 
 <?php
     require_once 'classes/Host.inc';
@@ -39,13 +39,13 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Hostname</th>
+    <th> <?php echo gettext("Hostname"); ?> </th>
     <td class="left">
       <input type="text" name="hostname"
              value="<?php echo $host->get_hostname(); ?>"></td>
   </tr>
   <tr>
-    <th>IP</th>
+    <th> <?php echo gettext("IP"); ?> </th>
         <input type="hidden" name="ip"
                value="<?php echo $host->get_ip(); ?>">
     <td class="left">
@@ -53,46 +53,53 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th>Asset</th>
+    <th> <?php echo gettext("Asset"); ?> </th>
     <td class="left">
       <select name="asset">
         <option
         <?php if ($host->get_asset() == 0) echo " SELECTED "; ?>
-          value="0">0</option>
+          value="0">
+	  <?php echo gettext("0"); ?> </option>
         <option
         <?php if ($host->get_asset() == 1) echo " SELECTED "; ?>
-          value="1">1</option>
+          value="1">
+	  <?php echo gettext("1"); ?> </option>
         <option
         <?php if ($host->get_asset() == 2) echo " SELECTED "; ?>
-          value="2">2</option>
+          value="2">
+	  <?php echo gettext("2"); ?> </option>
         <option
         <?php if ($host->get_asset() == 3) echo " SELECTED "; ?>
-          value="3">3</option>
+          value="3">
+	  <?php echo gettext("3"); ?> </option>
         <option
         <?php if ($host->get_asset() == 4) echo " SELECTED "; ?>
-          value="4">4</option>
+          value="4">
+	  <?php echo gettext("4"); ?> </option>
         <option
         <?php if ($host->get_asset() == 5) echo " SELECTED "; ?>
-          value="5">5</option>
+          value="5">
+	  <?php echo gettext("5"); ?> </option>
       </select>
     </td>
   </tr>
   <tr>
-    <th>Threshold C</th>
+    <th> <?php echo gettext("Threshold C"); ?> </th>
     <td class="left">
       <input type="text" name="threshold_c" size="4"
              value="<?php echo $host->get_threshold_c(); ?>"></td>
   </tr>
   <tr>
-    <th>Threshold A</th>
+    <th> <?php echo gettext("Threshold A"); ?> </th>
     <td class="left">
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $host->get_threshold_a(); ?>"></td>
   </tr>
   <tr>
-    <th>RRD Profile<br/>
+    <th> <?php echo gettext("RRD Profile"); ?> <br/>
         <font size="-2">
-          <a href="../rrd_conf/new_rrd_conf_form.php">Insert new profile?</a>
+          <a href="../rrd_conf/new_rrd_conf_form.php">
+	  <?php echo gettext("Insert new profile"); ?> ?</a>
         </font>
     </th>
     <td class="left">
@@ -112,7 +119,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     }
 ?>
         <option value="" 
-            <?php if (!$host_profile) echo " SELECTED " ?>>None</option>
+            <?php if (!$host_profile) echo " SELECTED " ?>>
+	    <?php echo gettext("None"); ?> </option>
       </select>
     </td>
   </tr>
@@ -137,16 +145,17 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   </tr>
 -->
   <tr>
-    <th>NAT</th>
+    <th> <?php echo gettext("NAT"); ?> </th>
     <td class="left">
         <input type="text" name="nat"
                value="<?php echo $host->get_nat(); ?>">
     </td>
   </tr>
   <tr>
-    <th>Sensors<br/>
+    <th> <?php echo gettext("Sensors"); ?> <br/>
         <font size="-2">
-          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+          <a href="../sensor/newsensorform.php">
+	  <?php echo gettext("Insert new sensor"); ?> ?</a>
         </font>
     </th> 
     <td class="left">
@@ -186,7 +195,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
     <tr>
-    <th> Scan options </th>
+    <th> <?php echo gettext("Scan options"); ?> </th>
     <td class="left">
         <input type="checkbox"
         <?php
@@ -194,12 +203,13 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
             echo " CHECKED ";
         }
         ?>
-        name="nessus" value="1"> Enable nessus scan </input>
+        name="nessus" value="1">
+	<?php echo gettext("Enable nessus scan"); ?> </input>
     </td>
     </tr>
 <tr>
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr"
         rows="2" cols="20"><?php echo $host->get_descr(); ?></textarea>

@@ -89,6 +89,7 @@ gboolean          sim_session_has_plugin_id                   (SimSession     *s
 							       gint            plugin_id);
 
 SimSensor*        sim_session_get_sensor                      (SimSession *session);
+gboolean          sim_session_is_sensor                       (SimSession *session);
 void              sim_session_close                           (SimSession *session);
 
 G_END_DECLS

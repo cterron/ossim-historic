@@ -5,14 +5,14 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Host report</h1>
+  <h1> <?php echo gettext("Host report"); ?> </h1>
 
 <?php 
     require_once 'ossim_db.inc';
@@ -26,14 +26,17 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("hostname", $order);
-          ?>">Hostname</a></th>
+          ?>">
+	  <?php echo gettext("Hostname"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">Ip</a></th>
+          ?>">
+	  <?php echo gettext("Ip"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php 
             echo ossim_db::get_order("asset", $order);
-          ?>">Asset</a></th>
-      <th>OS</th>
+          ?>">
+	  <?php echo gettext("Asset"); ?> </a></th>
+      <th> <?php echo gettext("OS"); ?> </th>
     </tr>
 
 <?php

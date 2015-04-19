@@ -5,7 +5,7 @@ Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 
 <html>
 <head>
-  <title> Control Panel </title>
+  <title> <?php echo gettext("Control Panel"); ?> </title>
   <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
@@ -13,7 +13,7 @@ Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 
 <body>
 
-  <h1 align="center">Backlog</h1>
+  <h1 align="center"> <?php echo gettext("Backlog"); ?> </h1>
 
 <?php
 require_once ('ossim_db.inc');
@@ -68,11 +68,11 @@ if (!$sup = $_GET["sup"])
     $count = Backlog::get_count($conn);
     
     if ($inf >= 25) {
-        echo "<a href=\"$inf_link\">&lt;- Prev 25</a>";
+        echo "<a href=\"$inf_link\">&lt;- "; printf(gettext("Prev %d"), 25); echo "</a>";
     }
-    echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
+    echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
     if ($sup < $count) {
-        echo "<a href=\"$sup_link\">Next 25 -&gt;</a>";
+        echo "<a href=\"$sup_link\"> "; printf(gettext("Next %d"), 25); echo " -&gt;</a>";
     }
 ?>
         </td>
@@ -82,20 +82,20 @@ if (!$sup = $_GET["sup"])
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("id", $order) .
             "&inf=$inf&sup=$sup"
-            ?>">Id</a></th>
+            ?>"> <?php echo gettext("Id"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("timestamp", $order) .
             "&inf=$inf&sup=$sup"
-            ?>">Date</a></th>
+            ?>"> <?php echo gettext("Date"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("directive_id", $order) .
             "&inf=$inf&sup=$sup"
-            ?>">Directive</a></th>
+            ?>"> <?php echo gettext("Directive"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("matched", $order) . 
             "&inf=$inf&sup=$sup"
-            ?>">Matched</a></th>
-        <th>Delete</th>
+            ?>"> <?php echo gettext("Matched"); ?> </a></th>
+        <th> <?php echo gettext("Delete"); ?> </th>
       </tr>
 <?php
     if ($backlog_list = Backlog::get_list($conn, 
@@ -122,20 +122,20 @@ if (!$sup = $_GET["sup"])
                 " (" . $backlog->get_directive_id() . ") "; ?></td>
       <td><?php 
         if ($backlog->get_matched() == 0) {
-            echo "NO";
+            echo gettext("NO");
         } else {
-            echo "<b>YES</b>";
+            echo "<b> " . gettext("YES") . " </b>";
         }
       ?></td>
       <td><a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $backlog->get_id() ?>">Delete</a></td>
+            echo $backlog->get_id() ?>"> <?php echo gettext("Delete"); ?> </a></td>
       </tr>
 <?php
         } /* foreach backlog_list */
 ?>
       <tr>
         <td colspan="5"><a href="<?php 
-            echo $_SERVER["PHP_SELF"] ?>?delete=all">Delete ALL</a>
+            echo $_SERVER["PHP_SELF"] ?>?delete=all"> <?php echo gettext("Delete ALL"); ?> </a>
         </td>
       </tr>
 <?php

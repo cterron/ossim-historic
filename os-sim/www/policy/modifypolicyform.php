@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Update policy</h1>
+  <h1> <?php echo gettext("Update policy"); ?> </h1>
 
 <?php
     
@@ -46,12 +46,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <input type="hidden" name="insert" value="insert">
   <input type="hidden" name="id" value="<?php echo $id ?>">
   <tr>
-    <th>Source<br/>
+    <th> <?php echo gettext("Source"); ?> <br/>
         <font size="-2">
-          <a href="../host/newhostform.php">Insert new host?</a>
+          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php">Insert new net?</a>
+          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -134,19 +134,19 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
             }
 ?>
            name="<?php echo $name; ?>"
-           value="any"><b>ANY</b><br></input>
+           value="any"><b> <?php echo gettext("ANY"); ?> </b><br></input>
 
 
 
     </td>
   </tr>
   <tr>
-    <th>Dest<br/>
+    <th> <?php echo gettext("Dest"); ?> <br/>
         <font size="-2">
-          <a href="../host/newhostform.php">Insert new host?</a>
+          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php">Insert new net?</a>
+          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -229,16 +229,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
             }
 ?>
            name="<?php echo $name; ?>"
-           value="any"><b>ANY</b><br></input>
+           value="any"><b> <?php echo gettext("ANY"); ?> </b><br></input>
 
 
     </td>
   </tr>
 
   <tr>
-    <th>Ports<br/>
+    <th> <?php echo gettext("Ports"); ?> <br/>
         <font size="-2">
-          <a href="../port/newportform.php">Insert new port group?</a>
+          <a href="../port/newportform.php"> <?php echo gettext("Insert new port group"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -278,7 +278,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Priority</th>
+    <th> <?php echo gettext("Priority"); ?> </th>
     <td class="left">
       <select name="priority">
         <option
@@ -304,10 +304,11 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Signatures<br/>
+    <th> <?php echo gettext("Signatures"); ?> <br/>
         <font size="-2">
-          <a href="../signature/newsignatureform.php">Insert new signature
-          group?</a>
+          <a href="../signature/newsignatureform.php">
+	  <?php echo gettext("Insert new signature group"); ?>
+	  ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -347,9 +348,10 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Sensors<br/>
+    <th> <?php echo gettext("Sensors"); ?> <br/>
         <font size="-2">
-          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+          <a href="../sensor/newsensorform.php">
+	  <?php echo gettext("Insert new sensor"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -390,12 +392,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Time Range
+    <th> <?php echo gettext("Time Range"); ?> 
     </th>
     <td>
       <table>
         <tr>
-          <td>Begin</td><td></td><td>End</td>
+          <td> <?php echo gettext("Begin"); ?> </td><td></td><td> <?php echo gettext("End"); ?> </td>
         </tr>
         <tr>
           <td>
@@ -606,7 +608,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Description</th>
+    <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
         <textarea name="descr" rows="2" 
             cols="20"><?php echo $policy->get_descr(); ?></textarea>

@@ -60,11 +60,18 @@ class PDF extends FPDF
         $this->Cell(0, 10, 'Page '.$this->PageNo().'/{nb}', 0, 0, 'R');
     }
 
-    function __WriteBold($text)
+    function __WriteBold($text, $color = "")
     {
         $this->SetFont('Arial', 'B', 12);
+        if ($color == "red")
+            $this->SetTextColor(130,15,15);
+        elseif ($color == "orange")
+            $this->SetTextColor(200, 80, 15);
+        elseif ($color == "green")
+            $this->SetTextColor(4, 100, 4);
         $this->Write(DEFAULT_LINE_HEIGTH, $text);
         $this->SetFont('Arial', '', 12);
+        $this->SetTextColor(0);
     }
 
     function __WriteTitle($title, $color = "blue") 
@@ -74,6 +81,8 @@ class PDF extends FPDF
             $this->SetTextColor(102,102,153);
         elseif ($color == "red")
             $this->SetTextColor(130,15,15);
+        elseif ($color == "orange")
+            $this->SetTextColor(200, 80, 15);
         $this->MultiCell(125,6,$title);
         $this->SetTextColor(0);
         $this->SetFont('','',10);
@@ -113,6 +122,8 @@ class PDF extends FPDF
             $this->SetFillColor(102,102,153);
         elseif ($color == "red")
             $this->SetFillColor(130,15,15);
+        elseif ($color == "orange")
+            $this->SetFillColor(200, 80, 15);
         $this->SetTextColor(255);
         $this->SetFont('','B',11);
 
@@ -151,6 +162,8 @@ class PDF extends FPDF
                 $this->SetFillColor(195,195,215);
             elseif ($color == "red")
                 $this->SetFillColor(255,235,215);
+            elseif ($color == "orange")
+                $this->SetFillColor(255,236,168);
             $this->SetTextColor(0);
             $this->SetFont('','',9);
 
@@ -160,7 +173,7 @@ class PDF extends FPDF
         $this->Ln(5);
     }
 
-    function __AttackHosts($title, $ip_target, $limit = 10)
+    function __AttackHosts($title, $ip_target, $limit = 10, $color = "blue")
     {
         require_once ('classes/Host.inc');
     
@@ -176,17 +189,17 @@ class PDF extends FPDF
 
         $content = array_merge($content, $attack);
 
-        $this->__WriteTable($title, $length, $content, 1);
+        $this->__WriteTable($title, $length, $content, 1, $color);
     }
 
     function AttackedHosts($limit = 10)
     {
-        $this->__AttackHosts("Top 10 Attacked Hosts", "ip_dst", $limit);
+        $this->__AttackHosts("Top $limit Attacked Hosts", "ip_dst", $limit, "red");
     }
 
     function AttackerHosts($limit = 10)
     {
-        $this->__AttackHosts("Top 10 Attacker Hosts", "ip_src", $limit);
+        $this->__AttackHosts("Top $limit Attacker Hosts", "ip_src", $limit, "blue");
     }
 
     function Alerts($limit = 10)
@@ -196,7 +209,7 @@ class PDF extends FPDF
         $content = array_merge(
             $content, $this->security_report->Alerts($limit));
 
-        $this->__WriteTable("Top 10 Alerts", $length, $content, 1);
+        $this->__WriteTable("Top $limit Alerts", $length, $content, 1);
     }
 
     function Ports($limit = 10)
@@ -206,7 +219,7 @@ class PDF extends FPDF
         $content = array_merge(
             $content, $this->security_report->Ports($limit));
 
-        $this->__WriteTable("Top 10 Destination Ports", $length, $content, 1);
+        $this->__WriteTable("Top $limit Destination Ports", $length, $content, 1, "orange");
     }
 
     function AlertsByRisk($limit = 10)
@@ -216,7 +229,7 @@ class PDF extends FPDF
         $content = array_merge(
             $content, $this->security_report->AlertsByRisk($limit));
 
-        $this->__WriteTable("Top 10 Alerts by risk", $length, $content, 1);
+        $this->__WriteTable("Top $limit Alerts by risk", $length, $content, 1);
     }
 
 
@@ -229,10 +242,12 @@ class PDF extends FPDF
         $ids = array();
 
         /* Generic Data */
+        /*
         $this->__WriteTitle("Generic Data");
         $this->__WriteBold("Date: ");
         $this->Write(DEFAULT_LINE_HEIGTH, strftime("%d %B %Y", time()));
         $this->Ln(15);
+        */
         
         /* last N incidents */
         $this->__WriteTitle("Last $limit incidents summary");
@@ -245,10 +260,25 @@ class PDF extends FPDF
                 if ( ($incident->get_ref() == "Metric" and $show_metrics) or
                      ($incident->get_ref() == "Alarm" and $show_alarms) )
                 {
-                    $this->__WriteBold("[" . $incident->get_date() . "] ");
+                    $priority = $incident->get_priority($this->ossim_conn);
+                    $color = $incident->get_priority_bgcolor($priority);
+
+                    /* date */
+                    $this->Write(DEFAULT_LINE_HEIGTH,
+                                 $incident->get_date() . "  ");
+
+                    /* title */
+                    $this->__WriteBold($incident->get_title(), $color);
                     $this->Ln();
-                    $this->Write(DEFAULT_LINE_HEIGTH, $incident->get_title());
+
+
+                    /* priority */
+                    /*
+                    $this->Write(DEFAULT_LINE_HEIGTH, "Priority: ");
+                    $this->__WriteBold($priority, $color);
                     $this->Ln();
+                    */
+
                     $ids[] = $incident->get_id();
                 }
             }
@@ -307,19 +337,26 @@ class PDF extends FPDF
             }
         }
 
-        /* status */
+        /* in charge */
         $this->Ln();
         $this->__WriteBold("In charge: ");
         $this->Write(DEFAULT_LINE_HEIGTH,
                      $incident->get_in_charge($this->ossim_conn));
         $this->Ln();
+
+        /* status */
         $this->__WriteBold("Status: ");
-        $this->Write(DEFAULT_LINE_HEIGTH, 
-                     $incident->get_status($this->ossim_conn));
+        $status = $incident->get_status($this->ossim_conn);
+        $color = "";
+        if ($status == "Open") $color = "red";
+        $this->__WriteBold($status, $color);
         $this->Ln();
+
+        /* priority */
         $this->__WriteBold("Priority: ");
-        $this->Write(DEFAULT_LINE_HEIGTH,
-                     $incident->get_priority($this->ossim_conn));
+        $priority = $incident->get_priority($this->ossim_conn);
+        $color = $incident->get_priority_bgcolor($priority);
+        $this->__WriteBold($priority, $color);
         $this->Ln(DEFAULT_LINE_HEIGTH * 2);
 
         /* tickets */
@@ -340,10 +377,15 @@ class PDF extends FPDF
                     $this->Ln();
                 }
                 $this->__WriteBold("Priority: ");
-                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_priority());
+                $priority = $ticket->get_priority();
+                $color = $incident->get_priority_bgcolor($priority);
+                $this->__WriteBold($priority, $color);
                 $this->Ln();
                 $this->__WriteBold("Status: ");
-                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_status());
+                $status = $incident->get_status($this->ossim_conn);
+                $color = "";
+                if ($status == "Open") $color = "red";
+                $this->__WriteBold($status, $color);
                 $this->Ln();
                 $this->__WriteBold("In charge: ");
                 $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_in_charge());

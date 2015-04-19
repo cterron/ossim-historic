@@ -1,268 +1,147 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MainMenu", "Index", "session/login.php");
+?>
 <html>
 <head>
-  <title>OSSIM</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
-  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-  <link rel="stylesheet" href="style/style.css"/>
+<title>OSSIM (Open Source Security Information Management)</title>
+<link rel="stylesheet" type="TEXT/CSS" href="style/top.css">
 </head>
-<body>
 
+<body marginwidth=0 marginweight=0 topmargin=0 leftmargin=0 bgcolor=white>
 
-<?php
-    require_once ('ossim_conf.inc');
-    $conf = new ossim_conf();
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+<tr><td>
+  <table border=0 cellpadding=0 cellspacing=0 width="100%"><tr>
+  <td width=227><img src="pixmaps/top/fondo1.jpg" width=227 height=61 border=0></td>
+  <td background="pixmaps/top/ry.gif">&nbsp;</td>
+  <td width=493 align=right><img src="pixmaps/top/fondo2.jpg" width=493 height=61 border=0></td>
+  </tr></table>
+</td></tr>
+
+<?
+  require_once ('ossim_conf.inc');
+  $conf = new ossim_conf();
+
+  $ntop_link = $conf->get_conf("ntop_link");
+  $sensor = parse_url($ntop_link);
+
+  $menu = array();
+  $placeholder = gettext("Control Panel");
+  $placeholder = gettext("Reports");
+  $placeholder = gettext("Monitors");
+  $placeholder = gettext("Policy");
+  $placeholder = gettext("Correlation");
+  $placeholder = gettext("Configuration");
+  $placeholder = gettext("Tools");
+  $placeholder = gettext("Logout");
+
+  $menu["Control Panel"][] = array("name" => gettext("Metrics") , "url" => "control_panel/global_score.php");
+  $menu["Control Panel"][] = array("name" => gettext("Alarms") , "url" => "control_panel/alarm_console.php");
+  $menu["Control Panel"][] = array("name" => gettext("Alerts") , "url" => $conf->get_conf("acid_link") . "/acid_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d");
+  $menu["Control Panel"][] = array("name" => gettext("Vulnerabilities") , "url" => "vulnmeter/index.php");
+  //
+  $menu["Reports"][] = array("name" => gettext("Host Report") , "url" => "report/report.php");
+  $menu["Reports"][] = array("name" => gettext("Security Report") , "url" => "report/sec_report.php?section=all");
+  $menu["Reports"][] = array("name" => gettext("PDF Report") , "url" => "report/pdfreportform.php");
+  $menu["Reports"][] = array("name" => gettext("Anomalies") , "url" => "control_panel/anomalies.php");
+  $menu["Reports"][] = array("name" => gettext("Incidents") , "url" => "incidents/index.php");
+  //
+  $menu["Monitors"][] = array("name" => gettext("Session") , "url" => "ntop/session.php?sensor=" . $sensor["host"]);
+  $menu["Monitors"][] = array("name" => gettext("Network") , "url" => "ntop/index.php?sensor=" . $sensor["host"]);
+  $menu["Monitors"][] = array("name" => gettext("Availability") , "url" => $conf->get_conf("opennms_link"));
+  $menu["Monitors"][] = array("name" => gettext("Sensors") , "url" => "sensor/sensor_plugins.php");
+  $menu["Monitors"][] = array("name" => gettext("Riskmeter") , "url" => "riskmeter/index.php");
+  //
+  $menu["Policy"][] = array("name" => gettext("Policy") , "url" => "policy/policy.php");
+  $menu["Policy"][] = array("name" => gettext("Hosts") , "url" => "host/host.php");
+  $menu["Policy"][] = array("name" => gettext("Networks") , "url" => "net/net.php");
+  $menu["Policy"][] = array("name" => gettext("Sensors") , "url" => "sensor/sensor.php");
+  $menu["Policy"][] = array("name" => gettext("Signatures") , "url" => "signature/signature.php");
+  $menu["Policy"][] = array("name" => gettext("Ports") , "url" => "port/port.php");
+  //
+  $menu["Correlation"][] = array("name" => gettext("Directives") , "url" => "directives/index.php");
+  $menu["Correlation"][] = array("name" => gettext("Cross Correlation") , "url" => "conf/pluginref.php");
+  $menu["Correlation"][] = array("name" => gettext("Backlog") , "url" => "control_panel/backlog.php");
+  //
+  $menu["Configuration"][] = array("name" => gettext("Main") , "url" => "conf/main.php");
+  $menu["Configuration"][] = array("name" => gettext("Users") , "url" => "session/users.php");
+  $menu["Configuration"][] = array("name" => gettext("Plugins") , "url" => "conf/plugin.php");
+  $menu["Configuration"][] = array("name" => gettext("RRD Config") , "url" => "rrd_conf/rrd_conf.php");
+  $menu["Configuration"][] = array("name" => gettext("Host Scan") , "url" => "scan/hostscan.php");
+  //
+  $menu["Tools"][] = array("name" => gettext("Scan") , "url" => "scan/scan.php");
+  $menu["Tools"][] = array("name" => gettext("Rule Viewer") , "url" => "editor/editor.php");
+  $menu["Tools"][] = array("name" => gettext("Backup") , "url" => "backup/index.php");
+  //
+  $menu["Logout"] = "session/login.php?action=logout"; // Plain url if no array entry
+
+  $option=0;
+  $soption=0;
+  $url = "";
+  if (isset($_GET["option"])) $option=$_GET["option"];
+  if (isset($_GET["soption"])) $soption=$_GET["soption"];
+  if (isset($_GET["url"])) $url=$_GET["url"];
+  $keys=array_keys($menu);
 ?>
 
-  <table align="center" border="0">
-    <tr>
-      <th align="center">
+<!-- MENU -->
+<tr><td height=23 background="pixmaps/top/naranja.gif" style="padding-left:35px; padding-top:1px">
 
-<?php
-    if ($_GET["menu"] == "control_panel") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=control_panel" 
-           title="Control Panel"><font color="#991e1e">Control
-           Panel</font>&nbsp;<img border="0" src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=control_panel" 
-           title="Control Panel">Control Panel&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-    
-<?php
-    } 
+  <table border=0 cellpadding=0 cellspacing=0><tr>
+<? $i=0; foreach ($menu as $name => $opc) { ?>
+  <td style="padding-right:12px">
+     <table border=0 cellpadding=0 cellspacing=0><tr>
+       <? if ($option==$i) { ?>
+       <td style="padding-right:5px"><img src="pixmaps/top/abajo.gif" border=0></td>
+       <td class=blue><? echo strtoupper(gettext($name)) ?></td>
+       <? } else { ?>
+       <td style="padding-right:5px"><img src="pixmaps/top/dcha.gif" border=0></td>
+       <td class=white><a class=white href="top.php?option=<? echo $i ?>">
+<?  echo strtoupper(gettext($name)) ?></a></td>
+       <? } ?>
+     </tr></table>
+   </td>
+<? $i++; } ?>
+  </tr></table>
 
-    if ($_GET["menu"] == "report") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=report" 
-           title="Report"><font color="#991e1e">Reports</font>&nbsp;<img
-           border="0" src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=report" 
-           title="Report">Reports&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-<?php
+</td></tr>
+
+<!-- SUBMENU -->
+<tr><td height=23 background="pixmaps/top/azul.gif" valign=bottom style="padding-left:35px">
+
+  <table border=0 cellpadding=0 cellspacing=0><tr>
+<? if (!is_array($menu[$keys[$option]])) { 
+    // jump to url if not array
+    $url = $menu[$keys[$option]];
     }
-    
-    if ($_GET["menu"] == "monitors") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=monitors" 
-           title="Monitors"><font color="#991e1e">Monitors</font>&nbsp;<img
-           border="0" src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=monitors" 
-           title="Monitors">Monitors&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-<?php
-    }
+  else {     
+    foreach ($menu[$keys[$option]] as $i => $op) { 
+      if ($soption==$i && !isset($_GET["soption"])) $url = $op["url"];
+    ?>
+    <td>
+      <table border=0 cellpadding=0 cellspacing=0><tr>
+        <? if ($soption==$i) { ?>
+        <td><img src="pixmaps/top/li.gif" border=0></td>
+        <td class=blue bgcolor=white style="padding-left:10px;padding-right:10px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
+        <td><img src="pixmaps/top/ld.gif" border=0></td>
+        <? } else { ?>
+        <td class=blue style="padding-left:10px;padding-right:10px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
+        <? } ?>
+      </tr></table>
+    </td>
+    <? if ($i+1!=$soption) { ?> <td><img src="pixmaps/top/sep.gif" border=0></td> <? } ?>
+<?  } 
+   } 
+?> </tr></table>
 
-    if ($_GET["menu"] == "policy") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=policy" 
-           title="Policy"><font color="#991e1e">Policy</font>&nbsp;<img
-           border="0" src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=policy" 
-           title="Policy">Policy&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-<?php
-    }
-    
-    if ($_GET["menu"] == "correlation") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=correlation" 
-           title="Correlation"><font
-           color="#991e1e">Correlation</font>&nbsp;<img border="0"
-           src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=correlation" 
-           title="Correlation">Correlation&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-<?php
-    }
+</td></tr>
+</table>
 
-    if ($_GET["menu"] == "config") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=config" 
-           title="Configuration"><font
-           color="#991e1e">Configuration</font>&nbsp;<img border="0"
-           src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=config" 
-           title="Configuration">Configuration&nbsp;<img border="0"
-           src="pixmaps/arrow2.gif"/></a>]
-<?php
-    }
-?>
-
-
-<?php
-    if ($_GET["menu"] == "tools") {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=tools" 
-           title="Tools"><font color="#991e1e">Tools</font>&nbsp;<img
-           border="0" src="pixmaps/arrow.gif"/></a>]
-<?php
-    } else {
-?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"]?>?menu=tools" 
-           title="Tools">Tools&nbsp;<img border="0" src="pixmaps/arrow2.gif"/></a>]
-<?php
-    }
-?>
-
-        &nbsp;&nbsp;[<a href="session/login.php?action=logout"
-           title="Logout" target="main"><font color="black">Logout</font></a>]
-
-
-
-<!--
-    submenu 
--->
-    </th>
-  </tr>
-<?php
-    if ($_GET["menu"] == "control_panel") {
-?>
-  <tr>
-    <th>
-        [<a href="control_panel/global_score.php" 
-           title="OSSIM Control Panel - Metrics"
-           target="main">Metrics</a>]
-        [<a href="control_panel/alarm_console.php" 
-           title="OSSIM Control Panel - Alarm Console"
-           target="main">Alarms</a>]
-        [<a href="<?php 
-           echo $conf->get_conf("acid_link") . "/acid_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"; ?>" 
-           title="(ACID)" 
-           target="main">Alerts</a>]
-        [<a href="vulnmeter/index.php" title="OSSIM vulnmeter" 
-           target="main">Vulnerabilities</a>]
-      </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "policy") {
-?>
-  <tr>
-    <th>
-        [<a href="policy/policy.php" title="policy management" 
-           target="main">Policy</a>]
-        [<a href="host/host.php" title="host management" 
-           target="main">Hosts</a>]
-        [<a href="net/net.php" title="network management" 
-           target="main">Networks</a>]
-        [<a href="sensor/sensor.php" title="sensor management" 
-           target="main">Sensors</a>]
-        [<a href="signature/signature.php" title="sensor management" 
-           target="main">Signatures</a>]
-        [<a href="port/port.php" title="port management" 
-           target="main">Ports</a>]
-      </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "report") {
-?>
-  <tr>
-    <th>
-        [<a href="report/report.php" title="host report" 
-           target="main">Host Report</a>]
-        [<a href="sec_report/sec_report.php?section=all" 
-           title="security report" 
-           target="main">Security Report</a>]
-        [<a href="report/pdfreportform.php" title="PDF report" 
-           target="main">PDF Report</a>]
-        [<a href="control_panel/anomalies.php"
-           title="(Anomalies)" 
-           target="main">Anomalies</a>]
-        [<a href="incidents/index.php" title="incidents" 
-           target="main">Incidents</a>]
-      </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "monitors") {
-
-        $ntop_link = $conf->get_conf("ntop_link");
-        $sensor = parse_url($ntop_link);
- 
-?>
-  <tr>
-    <th>
-        [<a href="ntop/session.php?sensor=<?php echo $sensor["host"] ?>"
-           title="(NTOP - Active TCP Sessions)" 
-           target="main">Session</a>]
-        [<a href="ntop/index.php?sensor=<?php echo $sensor["host"] ?>" 
-           title="(NTOP)" 
-           target="main">Network</a>]
-        [<a href="<?php 
-           echo $conf->get_conf("opennms_link"); ?>"
-           title="(OpenNMS)" 
-           target="main">Availability</a>]
-        [<a href="sensor/sensor_plugins.php" title="OSSIM status" 
-           target="main">Sensors</a>]
-        [<a href="riskmeter/index.php" title="OSSIM riskmeter" 
-           target="main">Riskmeter</a>]
-      </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "correlation") {
-?>
-  <tr>
-    <th>
-        [<a href="directives/index.php" title="directive viewer" 
-           target="main">Directives</a>]
-        [<a href="conf/pluginref.php" title="correlation reference viewer" 
-           target="main">Cross Correlation</a>]
-        [<a href="control_panel/backlog.php" 
-           title="OSSIM Control Panel - Backlog"
-           target="main">Backlog</a>]
-    </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "config") {
-?>
-  <tr>
-    <th>
-        [<a href="conf/main.php" title="main configuration" 
-           target="main">Main</a>]
-        [<a href="session/users.php" title="users" 
-           target="main">Users</a>]
-        [<a href="conf/plugin.php" title="Plugin Config" 
-           target="main">Plugins</a>]
-        [<a href="rrd_conf/rrd_conf.php" title="RRD Conf Management" 
-           target="main">RRD Config</a>]
-        [<a href="scan/hostscan.php" title="Host Scan configuration" 
-           target="main">Host Scan</a>]
-      </th>
-    </tr>
-<?php
-    } elseif ($_GET["menu"] == "tools") {
-?>
-  <tr>
-    <th>
-        [<a href="scan/scan.php" title="host scanning" 
-           target="main">Scan</a>]
-        [<a href="editor/editor.php" title="rule viewer" 
-           target="main">Rule Viewer</a>]
-        [<a href="backup/index.php" title="Backup Manager" 
-           target="main">Backup</a>]
-      </th>
-    </tr>
-<?php
-    }
-?>
-
-  </table>
-
+<? if ($url!="") { ?>
+<script> parent.frames["main"].document.location.href = '<? echo $url ?>' </script>
+<? } ?>
 </body>
 </html>
+
+

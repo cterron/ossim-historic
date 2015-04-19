@@ -197,6 +197,7 @@ sim_session_new (GObject       *object,
   session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
 
   session->_priv->ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+
   if (gnet_inetaddr_is_loopback (session->_priv->ia))
     {
       gnet_inetaddr_unref (session->_priv->ia);
@@ -394,9 +395,9 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
   while (sessions)
     {
       SimSession *sess = (SimSession *) sessions->data;
-      SimSensor *sensor = sim_session_get_sensor (sess);
+      gboolean is_sensor = sim_session_is_sensor (sess);
 
-      if (!sensor)
+      if (!is_sensor)
 	{
 	  sessions = sessions->next;
 	  continue;
@@ -1317,6 +1318,79 @@ sim_session_cmd_host_service_new (SimSession  *session,
 
 /*
  *
+ * HIDS
+ *
+ */
+static void
+sim_session_cmd_host_ids_event (SimSession  *session,
+				  SimCommand  *command)
+{
+  SimConfig	*config;
+  SimAlert	*alert;
+  GInetAddr	*ia;
+  struct tm	tm;
+
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.host_ids_event.date);
+  g_return_if_fail (command->data.host_ids_event.host);
+  g_return_if_fail (command->data.host_ids_event.hostname);
+  g_return_if_fail (command->data.host_ids_event.event_type);
+  g_return_if_fail (command->data.host_ids_event.target);
+  g_return_if_fail (command->data.host_ids_event.what);
+  g_return_if_fail (command->data.host_ids_event.extra_data);
+  g_return_if_fail (command->data.host_ids_event.sensor);
+  g_return_if_fail (command->data.host_ids_event.plugin_id > 0);
+  g_return_if_fail (command->data.host_ids_event.plugin_sid > 0);
+  g_return_if_fail (command->data.host_ids_event.log);
+
+  ia = gnet_inetaddr_new_nonblock (command->data.host_ids_event.host, 0);
+  config = session->_priv->config;
+
+  sim_container_db_insert_host_ids_event_ul (ossim.container,
+					       ossim.dbossim,
+					       ia,
+					       command->data.host_ids_event.date,
+					       command->data.host_ids_event.hostname,
+					       command->data.host_ids_event.event_type,
+					       command->data.host_ids_event.target,
+					       command->data.host_ids_event.what,
+					       command->data.host_ids_event.extra_data,
+					       command->data.host_ids_event.sensor,
+					       command->data.host_ids_event.plugin_sid);
+/* 
+  alert = sim_alert_new ();
+  alert->type = SIM_ALERT_TYPE_DETECTOR;
+  alert->alarm = FALSE;
+  
+  if (config->sensor.ip)
+    alert->sensor = g_strdup (config->sensor.ip);
+  if (config->sensor.interface)
+    alert->interface = g_strdup (config->sensor.interface);
+  if (strptime (command->data.host_ids_event.date, "%Y-%m-%d %H:%M:%S", &tm))
+    alert->time =  mktime (&tm);
+  else
+    alert->time = time (NULL);
+  
+  alert->plugin_id = command->data.host_ids_event.plugin_id;
+  alert->plugin_sid = command->data.host_ids_event.plugin_sid;
+  alert->src_ia = ia;
+
+  gnet_inetaddr_unref (ia);
+  
+  alert->data = g_strdup(command->data.host_ids_event.log);
+  
+  sim_container_push_alert (ossim.container, alert);
+  */
+  gnet_inetaddr_unref (ia);
+}
+
+
+
+/*
+ *
  *
  *
  */
@@ -1471,6 +1545,9 @@ sim_session_read (SimSession  *session)
 	case SIM_COMMAND_TYPE_HOST_SERVICE_NEW:
 	  sim_session_cmd_host_service_new (session, cmd);
 	  break;
+	case SIM_COMMAND_TYPE_HOST_IDS_EVENT:
+	  sim_session_cmd_host_ids_event (session, cmd);
+	  break;
 	case SIM_COMMAND_TYPE_OK:
 	  sim_session_cmd_ok (session, cmd);
 	  break;
@@ -1521,7 +1598,10 @@ sim_session_write (SimSession  *session,
   g_free (str);
 
   if  (error != G_IO_ERROR_NONE)
-    return 0;
+    {
+      session->_priv->close = TRUE;
+      return 0;
+    }
 
   return n;
 }
@@ -1628,6 +1708,22 @@ sim_session_get_sensor (SimSession *session)
 
   return session->_priv->sensor;
 }
+
+/*
+Is the session from a sensor ?
+*/
+
+gboolean
+sim_session_is_sensor (SimSession *session)
+{
+  g_return_val_if_fail (session, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
+
+  if(session->type == SIM_SESSION_TYPE_SENSOR) return TRUE;
+
+  return FALSE;
+}
+
 
 /*
  *

@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Modify port group</h1>
+  <h1> <?php echo gettext("Modify port group"); ?> </h1>
 
 <?php
     require_once 'classes/Port_group.inc';
@@ -36,7 +36,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Name</th>
+    <th> <?php echo gettext("Name"); ?> </th>
       <input type="hidden" name="name"
              value="<?php echo $port_group->get_name(); ?>">
     <td class="left">
@@ -44,7 +44,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     </td>
   </tr>
   <tr>
-    <th>Ports</th>
+    <th> <?php echo gettext("Ports"); ?> </th>
     <td class="left">
 <?php
 
@@ -83,7 +83,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     </td>
   </tr>
   <tr>
-    <th>Description:&nbsp;</th>
+    <th> <?php echo gettext("Description"); ?> :&nbsp;</th>
     <td class="left">
       <textarea name="descr" rows="2" 
         cols="20"><?php echo $port_group->get_descr();?></textarea>

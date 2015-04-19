@@ -11,7 +11,10 @@ class ParserIIS(Parser.Parser):
         
         if self.plugin["source"] == 'syslog':
             self.__processSyslog()
-            
+
+        elif self.plugin["source"] == 'W3C':
+            self.__processW3C()
+
         else:
             util.debug (__name__, "log type " + self.plugin["source"] +\
                         " unknown for IIS...", '!!', 'RED')
@@ -83,5 +86,69 @@ class ParserIIS(Parser.Parser):
                     
                 except IndexError: 
                     pass
+        fd.close()
+
+
+    def __processW3C(self):
+
+        util.debug ('ParserIIS', 'plugin started (W3C)...', '--')
+
+        pattern = re.compile(
+                "(\d{4}\-\d{2}\-\d{2} \d{2}:\d{2}:\d{2}) "  +\
+                "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) "     +\
+                "\S+ \S+ \- (\d+) \- "                      +\
+                "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) "     +\
+                ".*? (\d+) \d+ \d+$"
+            )
+
+        location = self.plugin["location"]
+        try:
+            fd = open(location, 'r')
+        except IOError, e:
+            util.debug(__name__, e, '!!', 'RED')
+            sys.exit()
+
+        # Move to the end of file
+        fd.seek(0, 2)
+
+        while 1:
+
+            if self.plugin["enable"] == 'no':
+
+                # plugin disabled, wait for enabled
+                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
+                while self.plugin["enable"] == 'no':
+                    time.sleep(1)
+
+                # lets parse again
+                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
+                fd.seek(0, 2)
+
+            where = fd.tell()
+            line = fd.readline()
+            if not line: # EOF reached
+                time.sleep(1)
+                fd.seek(where)
+            else:
+                result = pattern.search(line)
+                if result is not None:
+
+                    (date, src, dport, dst, sid) = result.groups()
+
+                    self.agent.sendAlert (
+                            type       = 'detector',
+                            date       = date,
+                            sensor     = self.plugin["sensor"],
+                            interface  = self.plugin["interface"],
+                            plugin_id  = self.plugin["id"],
+                            plugin_sid = sid,
+                            priority   = 1,
+                            protocol   = 'TCP',
+                            src_ip     = src,
+                            src_port   = '',
+                            dst_ip     = dst,
+                            dst_port   = dport,
+                            log        = line)
+
         fd.close()
 

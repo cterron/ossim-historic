@@ -5,7 +5,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -67,7 +67,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 ?>
     <table align="center">
       <tr><td colspan="2"></td></tr>
-      <tr><th colspan="2">Host Info</th></tr>
+      <tr><th colspan="2"> <?php echo gettext("Host Info"); ?> </th></tr>
 <?php
 
     if ($host_list = Host::get_list($conn, "WHERE ip = '$ip'")) {
@@ -76,7 +76,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         $sensor_list = $host->get_sensors($conn);
 ?>
       <tr>
-        <th>Name</th>
+        <th> <?php echo gettext("Name"); ?> </th>
         <td><?php echo $host->hostname ?></td>
       </tr>
 
@@ -92,7 +92,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         $os = $os_list[0];
 ?>
       <tr>
-        <th>Operating System</th>
+        <th> <?php echo gettext("Operating System"); ?> </th>
         <td>
 <?php 
             echo $os->os . " ";
@@ -123,11 +123,11 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         $netbios = $netbios_list[0];
 ?>
       <tr>
-        <th>Netbios Name</th>
+        <th> <?php echo gettext("Netbios Name"); ?> </th>
         <td><?php echo $netbios->name ?></td>
       </tr>
       <tr>
-        <th>Netbios Work Group</th>
+        <th> <?php echo gettext("Netbios Work Group"); ?> </th>
         <td><?php echo $netbios->wgroup ?></td>
       </tr>
 <?php
@@ -167,26 +167,29 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
       <tr><td colspan="2"></td></tr>
       <tr><td colspan="2"></td></tr>
-      <tr><th colspan="2">Port / Service information
+      <tr><th colspan="2"> <?php echo gettext("Port / Service information"); ?> 
       <?php if($_GET["origin"] == 'active'){
       ?>
-      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=passive">Active</A>)
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=passive">
+      <?php echo gettext("Active"); ?> </A>)
       [ <a href="<?php 
         echo $_SERVER["PHP_SELF"]?>?host=<?php 
-        echo $ip ?>&update=services&origin=active">update</a> ]
+        echo $ip ?>&update=services&origin=active">
+	<?php echo gettext("update"); ?> </a> ]
         </th></h2>
       </tr>
         <?php } else { ?>
-      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=active">Passive</A>)
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=active">
+      <?php echo gettext("Passive"); ?> </A>)
         </th></h2>
         <?php } ?>
       <tr>
       <td colspan="2">
       <table>
       <tr>
-        <th>Service</th>
-        <th>Version</th>
-        <th>Date</th>
+        <th> <?php echo gettext("Service"); ?> </th>
+        <th> <?php echo gettext("Version"); ?> </th>
+        <th> <?php echo gettext("Date"); ?> </th>
       </tr>
 <?php
     if($_GET["origin"] == 'active'){

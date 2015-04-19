@@ -4,6 +4,11 @@ require('classes/PDF.inc');
 
 session_cache_limiter('private'); 
 
+$pathtographs = dirname($_SERVER[REQUEST_URI]);
+$proto = "http";
+if ($_SERVER[HTTPS] == "on") $proto = "https";
+$datapath = "$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]$pathtographs/graphs";
+
 if ($_POST["submit_security"]) {
 
     $pdf = new PDF("OSSIM Security Report");
@@ -15,21 +20,29 @@ if ($_POST["submit_security"]) {
 
     if ($_POST["attacked"] == "on") {
         $pdf->AttackedHosts($limit);
+        $pdf->Image( "$datapath/attack_graph.php?hosts=$limit&target=ip_dst", 
+                     $pdf->GetX(), $pdf->GetY(), "110", "70", "PNG");
         $newpage = True;
     }
     if ($_POST["attacker"] == "on") {
         if ($newpage) $pdf->AddPage();
         $pdf->AttackerHosts($limit);
+        $pdf->Image( "$datapath/attack_graph.php?hosts=$limit&target=ip_src", 
+                     $pdf->GetX(), $pdf->GetY(), "110", "70", "PNG");
         $newpage = True;
     }
     if ($_POST["ports"] == "on") {
         if ($newpage) $pdf->AddPage();
         $pdf->Ports($limit);
+        $pdf->Image( "$datapath/ports_graph.php?hosts=$limit", 
+                     $pdf->GetX(), $pdf->GetY(), "110", "70", "PNG");
         $newpage = True;
     }
     if ($_POST["alertsbyhost"] == "on") {
         if ($newpage) $pdf->AddPage();
         $pdf->Alerts($limit);
+        $pdf->Image( "$datapath/alerts_received_graph.php?hosts=$limit", 
+                     $pdf->GetX(), $pdf->GetY(), "120", "60", "PNG");
         $newpage = True;
     }
     if ($_POST["alertsbyrisk"] == "on") {

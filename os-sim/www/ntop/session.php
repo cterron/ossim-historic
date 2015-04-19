@@ -5,7 +5,7 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
 
 <html>
 <head>
-  <title>OSSIM</title>
+  <title> <?php echo gettext("OSSIM"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -18,7 +18,7 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
 
     if (!$sensor = $_GET["sensor"]) 
     {
-        echo "<p align=\"center\">Please select a sensor</p>";
+        echo "<p align=\"center\"> " . gettext("Please select a sensor") . " </p>";
         exit;
     }
        

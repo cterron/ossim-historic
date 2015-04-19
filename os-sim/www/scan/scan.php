@@ -5,7 +5,7 @@ Session::logcheck("MenuTools", "ToolsScan");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -34,11 +34,13 @@ Session::logcheck("MenuTools", "ToolsScan");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">Host</a></th>
+          ?>">
+	  <?php echo gettext("Host"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("active", $order);
-          ?>">Active</a></th>
-      <th>Action</th>
+          ?>">
+	  <?php echo gettext("Active"); ?> </a></th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php

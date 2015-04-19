@@ -5,14 +5,14 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Incidents</h1>
+  <h1> <?php echo gettext("Incidents"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -72,7 +72,8 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     <?php } ?>
   <table align="center">
     <tr>
-      <th colspan="6">Filter
+      <th colspan="6">
+      <?php echo gettext("Filter"); ?> 
 <?php
 
         if (isset($_GET["advanced_search"])) {
@@ -88,21 +89,24 @@ Session::logcheck("MenuReports", "ReportsIncidents");
       </th>
     </tr>
     <tr>
-      <td>Type</td>
-      <td>Title</td>
-      <td>In charge</td>
-      <td>Status</td>
-      <td>Priority</td>
-      <td>Action</td>
+      <td> <?php echo gettext("Type"); ?> </td>
+      <td> <?php echo gettext("Title"); ?> </td>
+      <td> <?php echo gettext("In charge"); ?> </td>
+      <td> <?php echo gettext("Status"); ?> </td>
+      <td> <?php echo gettext("Priority"); ?> </td>
+      <td> <?php echo gettext("Action"); ?> </td>
     </tr>
     <tr>
       <td>
         <select name="type">
-          <option value="">ALL</option>
+          <option value="">
+	  <?php echo gettext("ALL"); ?> </option>
           <option <?php if ($_GET["type"] == "Alarm") echo " selected " ?>
-            value="Alarm">Alarm</option>
+            value="Alarm">
+	    <?php echo gettext("Alarm"); ?> </option>
           <option <?php if ($_GET["type"] == "Metric") echo " selected " ?>
-            value="Metric">Metric</option>
+            value="Metric">
+	    <?php echo gettext("Metric"); ?> </option>
         </select>
       </td>
       <td><input type="text" name="title" 
@@ -111,22 +115,29 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                  value="<?php echo $_GET["in_charge"] ?>" /></td>
       <td>
         <select name="status">
-          <option value="">ALL</option>
+          <option value="">
+	  <?php echo gettext("ALL"); ?> </option>
           <option <?php if ($_GET["status"] == "Open") echo " selected " ?>
-            value="Open">Open</option>
+            value="Open">
+	    <?php echo gettext("Open"); ?> </option>
           <option <?php if ($_GET["status"] == "Closed") echo " selected " ?>
-            value="Closed">Closed</option>
+            value="Closed">
+	    <?php echo gettext("Closed"); ?> </option>
         </select>
       </td>
       <td>
         <select name="priority">
-          <option value="">ALL</option>
+          <option value="">
+	  <?php echo gettext("ALL"); ?> </option>
           <option <?php if ($_GET["priority"] == "High") echo " selected " ?>
-            value="High">High</option>
+            value="High">
+	    <?php echo gettext("High"); ?> </option>
           <option <?php if ($_GET["priority"] == "Medium") echo " selected " ?>
-            value="Medium">Medium</option>
+            value="Medium">
+	    <?php echo gettext("Medium"); ?> </option>
           <option <?php if ($_GET["priority"] == "Low") echo " selected " ?>
-            value="Low">Low</option>
+            value="Low">
+	    <?php echo gettext("Low"); ?> </option>
         </select>
       </td>
       <td nowrap>
@@ -137,11 +148,11 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     if (isset($_GET["advanced_search"])) {
 ?>
     <tr>
-      <td>with User</td>
-      <td>with Description</td>
-      <td>with Action</td>
-      <td>with Attachment</td>
-      <td>with Copy to</td>
+      <td> <?php echo gettext("with User"); ?> </td>
+      <td> <?php echo gettext("with Description"); ?> </td>
+      <td> <?php echo gettext("with Action"); ?> </td>
+      <td> <?php echo gettext("with Attachment"); ?> </td>
+      <td> <?php echo gettext("with Copy to"); ?> </td>
       <td></td>
     </tr>
     <tr>
@@ -186,19 +197,23 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     <tr>
       <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
             "?order=" . ossim_db::get_order("id", $order) . "$filter" ?>"
-          >Ticket</a></th>
+          >
+	  <?php echo gettext("Ticket"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
             "?order=" . ossim_db::get_order("date", $order) ."$filter" ?>"
-          >Date</a></th>
-      <th>Last Modification</th>
+          >
+	  <?php echo gettext("Date"); ?> </a></th>
+      <th> <?php echo gettext("Last Modification"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
             "?order=" . ossim_db::get_order("title", $order) . "$filter" ?>"
-          >Title</a></th>
-      <th>In Charge</th>
-      <th>Status</th>
+          >
+	  <?php echo gettext("Title"); ?> </a></th>
+      <th> <?php echo gettext("In Charge"); ?> </th>
+      <th> <?php echo gettext("Status"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
             "?order=" . ossim_db::get_order("priority", $order) . "$filter" ?>"
-          >Priority</a></th>
+          >
+	  <?php echo gettext("Priority"); ?> </a></th>
     </tr>
 
 <?php
@@ -268,8 +283,10 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     <tr>
       <td colspan="7" align="center">
         Insert new Incident (
-        <a href="incident.php?insert=1&ref=Alarm&title=new_incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">Alarm</a> | 
-        <a href="incident.php?insert=1&ref=Metric&title=Metric threshold&priority=1&target=&metric_type=&metric_value=">Metric</a>
+        <a href="incident.php?insert=1&ref=Alarm&title=new_incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
+	<?php echo gettext("Alarm"); ?> </a> | 
+        <a href="incident.php?insert=1&ref=Metric&title=Metric threshold&priority=1&target=&metric_type=&metric_value=">
+	<?php echo gettext("Metric"); ?> </a>
         )
       </td>
     </tr>

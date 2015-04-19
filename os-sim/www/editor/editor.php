@@ -22,21 +22,30 @@ Session::logcheck("MenuTools", "ToolsRuleViewer");
     $snort_rules_path = $ossim_conf->get_conf("snort_rules_path");
 ?>
 
-  <p align="center">
+  <table align="center">
 <?php
     $files = getDirFiles($snort_rules_path);
+
+    /* local snort rule directory */
+    if ($files == NULL) {
+        printf(gettext("Sorry, can't locate snort rules at <b>%s</b>"), 
+               $snort_rules_path);
+        exit;
+    }
+
     foreach ($files as $file) {
 
         /* only show .rules files */
         $f = split ("\.", $file);
         if ($f[1] == 'rules') {
 ?>
+    <tr><td>
     <a href="rule.php?name=<?php echo $file; ?>"><?php echo $f[0]; ?></a>
-    <br/>
+    </td></tr>
 <?php
         }
     }
 ?>
-  </p>
+  </table>
 </body>
 </html>

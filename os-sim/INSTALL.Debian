@@ -2,8 +2,8 @@
                  Installing OSSIM on a Debian GNU/Linux
                 ========================================
 
-                          Updated Oct 01, 2004
-                            version 0.9.7rc2
+                          Updated Oct 27, 2004
+                            version 0.9.7
 
                                David Gil
                           <dgil at ossim.net>
@@ -760,7 +760,7 @@
   We need to approve the nessus server certificate, to do it just run
   against each nessus server :
 
-    # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim motdepasse
+    # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim your_nessus_pass
 
   Where xxx.xxx.xxx.xxx.xxx is the adress of nessus server.
 
@@ -771,7 +771,7 @@
   ossim database with them try :
 
     # nessus-update-plugins
-    # /opt/ossim/scripts/update_nessus_ids.pl
+    # perl $OSSIM_PATH/scripts/update_nessus_ids.pl
 
   It's a good idea to update plugins before each scan. To start a
   scan run the script :

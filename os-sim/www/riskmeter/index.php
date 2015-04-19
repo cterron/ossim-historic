@@ -5,15 +5,15 @@ Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
 
 <html>
 <head>
-  <title> Riskmeter </title>
-  <meta http-equiv="refresh" content="3">
+  <title> <?php echo gettext("Riskmeter"); ?> </title>
+  <meta http-equiv="refresh" content="5">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-  <link rel="stylesheet" href="../style/riskmeter.css"/>
+  <link rel="stylesheet" href="../style/style.css"/>
 </head>
 
 <body>
 
-  <h1 align="center">Riskmeter</h1>
+  <h1 align="center"> <?php echo gettext("Riskmeter"); ?> </h1>
 
 <?php
 require_once ('ossim_conf.inc');
@@ -52,17 +52,18 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="6" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>
     <!-- end rule for threshold -->
     
     <tr>
-      <td><a href="<?php echo $_SERVER["PHP_SELF"]?>">Global</a></td>
+      <td><a href="<?php echo $_SERVER["PHP_SELF"]?>">
+      <?php echo gettext("Global"); ?> </a></td>
       <td align="center">
         <a href="<?php 
             echo "../control_panel/show_image.php?range=day" . 
@@ -70,7 +71,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
            target="new">&nbsp;<img src="../pixmaps/graph.gif" 
                                    border="0"/>&nbsp;</a>
       </td>
-      <td>
+      <td class="left">
 <?php
         $compromise = Host_qualification::get_global_compromise($conn);
         $attack     = Host_qualification::get_global_attack($conn);
@@ -81,7 +82,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
         
     if ($compromise <= $THRESHOLD_DEFAULT) {
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8"
+        <img src="../pixmaps/solid-blue.jpg" height="12"
              width="<?php echo $width_c?>" title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
 <?php
@@ -93,10 +94,10 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
             $icon = "../pixmaps/major-yellow.gif";
         }
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" height="12" 
              width="<?php echo $BAR_LENGTH_LEFT?>" 
              title="<?php echo $compromise ?>">
-        <img src="../pixmaps/solid-blue.jpg" border="0" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" border="0" height="12" 
              width="<?php echo $width_c - $BAR_LENGTH_LEFT?>"
              title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
@@ -106,7 +107,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
     
     if ($attack <= $THRESHOLD_DEFAULT) {
 ?>
-        <br/><img src="../pixmaps/solid-red.jpg" height="8"
+        <br/><img src="../pixmaps/solid-red.jpg" height="12"
              width="<?php echo $width_a?>" title="<?php echo $attack ?>">
         A=<?php echo $attack;; ?>
 <?php
@@ -119,10 +120,10 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
         }
 ?>
         <br/>
-        <img src="../pixmaps/solid-red.jpg" height="8" 
+        <img src="../pixmaps/solid-red.jpg" height="12" 
              width="<?php echo $BAR_LENGTH_LEFT?>" 
              title="<?php echo $attack ?>">
-        <img src="../pixmaps/solid-red.jpg" border="0" height="8" 
+        <img src="../pixmaps/solid-red.jpg" border="0" height="12" 
              width="<?php echo $width_a - $BAR_LENGTH_LEFT?>"
              title="<?php echo $attack ?>">
         A=<?php echo $attack; ?>
@@ -136,10 +137,10 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>
@@ -147,17 +148,17 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
 
 
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3">Networks</th></tr>
+    <tr><th align="center" colspan="3"> <?php echo gettext("Networks"); ?> </th></tr>
     <tr><td colspan="3"></td></tr>
 
 
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>
@@ -200,11 +201,11 @@ if($net_stats)
                                    border="0"/>&nbsp;</a>
       </td>
 
-      <td>
+      <td class="left">
 <?php
     if ($compromise <= $threshold_c) {
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8"
+        <img src="../pixmaps/solid-blue.jpg" height="12"
              width="<?php echo $width_c?>" title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
 <?php
@@ -216,11 +217,11 @@ if($net_stats)
             $icon = "../pixmaps/major-yellow.gif";
         }
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" height="12" 
              width="<?php echo $BAR_LENGTH_LEFT?>" 
              title="<?php echo $compromise ?>">
         <!-- <img src="../pixmaps/solid-blue.jpg" height="10" width="5"> -->
-        <img src="../pixmaps/solid-blue.jpg" border="0" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" border="0" height="12" 
              width="<?php echo $width_c - $BAR_LENGTH_LEFT?>"
              title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
@@ -230,7 +231,7 @@ if($net_stats)
     if ($attack <= $threshold_a) {
 ?>
         <br/>
-        <img src="../pixmaps/solid-red.jpg" height="8" 
+        <img src="../pixmaps/solid-red.jpg" height="12" 
              width="<?php echo $width_a?>" title="<?php echo $attack ?>">
         A=<?php echo $attack; ?>
 <?php
@@ -242,10 +243,10 @@ if($net_stats)
             $icon = "../pixmaps/major-yellow.gif";
         }
 ?>
-        <br/><img src="../pixmaps/solid-red.jpg" height="8" 
+        <br/><img src="../pixmaps/solid-red.jpg" height="12" 
                   width="<?php echo $BAR_LENGTH_LEFT?>" 
                   title="<?php echo $attack ?>">
-        <img src="../pixmaps/solid-red.jpg" height="8" 
+        <img src="../pixmaps/solid-red.jpg" height="12" 
              width="<?php echo $width_a - $BAR_LENGTH_LEFT?>"
              title="<?php echo $attack ?>">
         A=<?php echo $attack; ?>
@@ -264,10 +265,10 @@ if($net_stats)
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>
@@ -329,10 +330,10 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>
@@ -376,11 +377,11 @@ if ($ip_stats) {
         &nbsp;<img src="../pixmaps/graph.gif" border="0"/>&nbsp;</a>
       </td>
 
-      <td>
+      <td class="left">
 <?php
     if ($compromise <= $threshold_c) {
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" height="12" 
              width="<?php echo $width_c ?>" title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
 <?php
@@ -392,11 +393,11 @@ if ($ip_stats) {
             $icon = "../pixmaps/major-yellow.gif";
         }
 ?>
-        <img src="../pixmaps/solid-blue.jpg" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" height="12" 
              width="<?php echo $BAR_LENGTH_LEFT?>"
              title="<?php echo $compromise?>">
         <!-- <img src="../pixmaps/solid-blue.jpg" height="10" width="5"> -->
-        <img src="../pixmaps/solid-blue.jpg" border="0" height="8" 
+        <img src="../pixmaps/solid-blue.jpg" border="0" height="12" 
              width="<?php echo $width_c - $BAR_LENGTH_LEFT?>"
              title="<?php echo $compromise ?>">
         C=<?php echo $compromise; ?>
@@ -405,7 +406,7 @@ if ($ip_stats) {
     }
     if ($attack <= $threshold_a) {
 ?>
-        <br/><img src="../pixmaps/solid-red.jpg" height="8" 
+        <br/><img src="../pixmaps/solid-red.jpg" height="12" 
                   width="<?php echo $width_a?>" 
                   title="<?php echo $attack ?>">
         A=<?php echo $attack; ?>
@@ -418,10 +419,10 @@ if ($ip_stats) {
             $icon = "../pixmaps/major-yellow.gif";
         }
 ?>
-        <br/><img src="../pixmaps/solid-red.jpg" height="8" 
+        <br/><img src="../pixmaps/solid-red.jpg" height="12" 
                   width="<?php echo $BAR_LENGTH_LEFT?>"
              title="<?php echo $attack ?>">
-        <img src="../pixmaps/solid-red.jpg" height="8" 
+        <img src="../pixmaps/solid-red.jpg" height="12" 
              width="<?php echo $width_a - $BAR_LENGTH_LEFT?>" 
              title="<?php echo $attack ?>">
         A=<?php echo $attack; ?>
@@ -440,10 +441,10 @@ if ($ip_stats) {
     <!-- rule for threshold -->
     <tr>
       <td></td><td></td>
-      <td>
-        <img src="../pixmaps/gauge-blue.jpg" height="4" 
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_LEFT; ?>">
-        <img src="../pixmaps/gauge-red.jpg" height="4" 
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
              width="<?php echo $BAR_LENGTH_RIGHT; ?>">
       </td>
     </tr>

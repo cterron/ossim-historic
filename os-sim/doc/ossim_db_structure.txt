@@ -23,6 +23,7 @@
 | config                      | ossim config                             |
 | control_panel               | C & A metrics used in control panel      |
 | host                        | host info                                |
+| host_ids                    | HIDS info                                |
 | host_mac                    | hosts-mac info                           |
 | host_os                     | host-os info                             |
 | host_plugin_sid             | snort-nessus correlation                 |
@@ -194,6 +195,21 @@ host
 | descr       | varchar(255) | YES  |     | NULL    |       |
 | rrd_profile | varchar(64)  | YES  |     | NULL    |       |
 +-------------+--------------+------+-----+---------+-------+
+
+host_ids
++------------+------------------+------+-----+---------------------+-------+
+| Field      | Type             | Null | Key | Default             | Extra |
++------------+------------------+------+-----+---------------------+-------+
+| ip         | int(10) unsigned |      | PRI | 0                   |       |
+| date       | datetime         |      | PRI | 0000-00-00 00:00:00 |       |
+| hostname   | varchar(255)     |      |     |                     |       |
+| sensor     | varchar(255)     |      |     |                     |       |
+| sid        | int(10) unsigned |      | PRI | 0                   |       |
+| event_type | varchar(255)     |      |     |                     |       |
+| what       | varchar(255)     |      |     |                     |       |
+| target     | varchar(255)     |      | PRI |                     |       |
+| extra_data | varchar(255)     |      |     |                     |       |
++------------+------------------+------+-----+---------------------+-------+
 
 host_mac
 +----------+------------------+------+-----+---------------------+-------+

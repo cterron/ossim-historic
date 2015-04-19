@@ -1,5 +1,7 @@
 <?php
 
+include ('classes/Locale.inc');
+
 require_once ('ossim_db.inc');
 require_once ('ossim_conf.inc');
 require_once ('ossim_acl.inc');
@@ -107,7 +109,9 @@ class Session {
             {
                 echo "<p align=\"center\">
                     <b>You don't have permission to see this page</b></p>";
-                echo "<p align=\"center\">[ User: " . $_SESSION["_user"] . "]";
+                echo "<p align=\"center\">[ User: " . $_SESSION["_user"] . "]</p>";
+                echo "<p align=\"center\">[ <a href=\"session/login.php?action=logout\"
+                      title=\"Logout\"><font color=\"black\">Logout</font></a> ]</p>";
                 exit;
             }
         }

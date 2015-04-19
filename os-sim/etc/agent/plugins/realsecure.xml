@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!-- Real Secure detector -->
+<plugin id="1506" process="" type="detector" start="no" enable="no">
+    <startup>snmptrapd -o /var/log/realsecure.log -m ISS-MIB</startup>
+    <shutdown>killall -9 snmptrapd</shutdown>
+    <source>snmp</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>/var/log/realsecure.log</location>
+</plugin>
+

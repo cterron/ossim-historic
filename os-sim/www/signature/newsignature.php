@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>New signature</h1>
+  <h1> <?php echo gettext("New signature"); ?> </h1>
 
 <?php
 
@@ -22,7 +22,7 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
     {
 ?>
 
-  <p align="center">Please, complete all the fields</p>
+  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
   <?php exit();?>
 
 <?php
@@ -48,11 +48,11 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
    
     Signature_group::insert ($conn, $name, $signature_list, $descr);
 
-    $db->close($conn);
+    $db->close ($conn);
 }
 ?>
     <p>Signature succesfully inserted</p>
-    <p><a href="signature.php">Back</a></p>
+    <p><a href="signature.php"> <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

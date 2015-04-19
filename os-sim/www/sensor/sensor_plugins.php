@@ -5,14 +5,14 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Sensors</h1>
+  <h1> <?php echo gettext("Sensors"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
@@ -31,6 +31,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
     if (is_array($tmp_list)) {
         foreach ($tmp_list as $tmp) {
             $db_sensor_list[] = $tmp->get_ip();
+            $db_sensor_rel[$tmp->get_ip()] = $tmp->get_name();
         }
     }
 
@@ -42,11 +43,12 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 
 
     if (!$sensor_list && !$ip_get)
-        echo "<p>There aren't any sensors connected to OSSIM server</p>";
+        echo "<p> " . gettext("There aren't any sensors connected to OSSIM server") . " </p>";
 
     foreach ($sensor_list as $sensor)
     {
         $ip = $sensor["sensor"];
+        $name = $db_sensor_rel[$ip];
         $state = $sensor["state"];
 
         if ((isset($ip_get)) && ($ip_get != $ip))
@@ -94,16 +96,17 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
             sleep(5);
         }
 
-        echo "<h2 align=\"center\">$ip</h2>";
-        if (!in_array($ip, $db_sensor_list)) {
-            echo "<p><b>Warning</b></font>:
-            The sensor is being reported as enabled by
-            the server but isn't configured.<br/>
-            Click <a href=\"newsensorform.php?ip=$ip\">here</a>
-            to configure the sensor.</p>";
-            
+        echo "<h2 align=\"center\">$ip [ $name ]</h2>";
+        if (is_array($db_sensor_list)) {
+            if (!in_array($ip, $db_sensor_list)) {
+                echo "<p><b>Warning</b></font>:
+                The sensor is being reported as enabled by
+                the server but isn't configured.<br/>
+                Click <a href=\"newsensorform.php?ip=$ip\">here</a>
+                to configure the sensor.</p>";
+                
+            }
         }
-
 
         /* get plugin list for each sensor */
         $sensor_plugins_list = server_get_sensor_plugins();
@@ -111,11 +114,11 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 ?>
   <table align="center">
     <tr>
-      <th>Plugin</th>
-      <th>Status</th>
-      <th>Action</th>
-      <th>Enabled</th>
-      <th>Action</th>
+      <th> <?php echo gettext("Plugin"); ?> </th>
+      <th> <?php echo gettext("Status"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
+      <th> <?php echo gettext("Enabled"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 <?php
         if ($sensor_plugins_list) {
@@ -138,29 +141,33 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 <?php
                     if ($state == 'start') {
 ?>
-      <td><font color="GREEN"><b>UP</b></font></td>
+      <td><font color="GREEN"><b> <?php echo gettext("UP"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=stop&id=$id" ?>">stop</a></td>
+            "?sensor=$ip&ip=$ip&cmd=stop&id=$id" ?>">
+	    <?php echo gettext("stop"); ?> </a></td>
 <?php
                     } else {
 ?>
-      <td><font color="RED"><b>DOWN</b></font></td>
+      <td><font color="RED"><b> <?php echo gettext("DOWN"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=start&id=$id" ?>">start</a></td>
+            "?sensor=$ip&ip=$ip&cmd=start&id=$id" ?>">
+	    <?php echo gettext("start"); ?> </a></td>
       
 <?php
                     }
                     if ($enabled == 'true') {
 ?>
-      <td><font color="GREEN"><b>ENABLED</b></font></td>
+      <td><font color="GREEN"><b> <?php echo gettext("ENABLED"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=disabled&id=$id" ?>">disable</a></td>
+            "?sensor=$ip&ip=$ip&cmd=disabled&id=$id" ?>">
+	    <?php echo gettext("disable"); ?> </a></td>
 <?php
                     } else {
 ?>
-      <td><font color="RED"><b>DISABLED</b></font></td>
+      <td><font color="RED"><b> <?php echo gettext("DISABLED"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=enabled&id=$id" ?>">enable</a></td>
+            "?sensor=$ip&ip=$ip&cmd=enabled&id=$id" ?>">
+	    <?php echo gettext("enable"); ?> </a></td>
 <?php
                     }
 ?>

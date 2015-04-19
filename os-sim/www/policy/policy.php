@@ -5,14 +5,14 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
                                                                                 
-  <h1>Policy</h1>
+  <h1> <?php echo gettext("Policy"); ?> </h1>
 
 <?php
     require_once ('classes/Policy.inc');
@@ -24,17 +24,18 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
   <table align="center">
     <tr>
-      <th>Source</th>
-      <th>Dest</th>
+      <th> <?php echo gettext("Source"); ?> </th>
+      <th> <?php echo gettext("Dest"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("priority", $order);
-          ?>">Priority</a></th>
-      <th>Port Group</th>
-      <th>Sig Group</th>
-      <th>Sensors</th>
-      <th>Time Range</th>
-      <th>Description</th>
-      <th>Action</th>
+          ?>">
+	  <?php echo gettext("Priority"); ?> </a></th>
+      <th> <?php echo gettext("Port Group"); ?> </th>
+      <th> <?php echo gettext("Sig Group"); ?> </th>
+      <th> <?php echo gettext("Sensors"); ?> </th>
+      <th> <?php echo gettext("Time Range"); ?> </th>
+      <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
 <?php
@@ -152,9 +153,11 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
       <td>
         <a href="modifypolicyform.php?id=<?php
-            echo $policy->get_id()?>">Modify</a>
+            echo $policy->get_id()?>">
+	    <?php echo gettext("Modify"); ?> </a>
         <a href="deletepolicy.php?id=<?php
-            echo $policy->get_id()?>">Delete</a></td>
+            echo $policy->get_id()?>">
+	    <?php echo gettext("Delete"); ?> </a></td>
       
     </tr>
 <?php
@@ -166,11 +169,11 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
   <tr>
     <td colspan="9">
-        <a href="newpolicyform.php">Insert new policy</a>
+        <a href="newpolicyform.php"> <?php echo gettext("Insert new policy"); ?> </a>
     </td>
   </tr>
   <tr>
-    <td colspan="9"><a href="../conf/reload.php?what=policies">Reload</a></td>
+    <td colspan="9"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
   </tr>
   </table>
     

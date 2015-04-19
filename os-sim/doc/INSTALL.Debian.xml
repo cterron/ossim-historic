@@ -46,7 +46,7 @@ to add or correct something in this document, please, feel free to contact us
 at <email>dgil at ossim.net</email> and <email>gingurz at ossim.net</email>
 </para>
 <para>You can also contact all the OSSIM developers at 
-<email>ossim at ossim.net</email></para>
+<email>devel at ossim.net</email></para>
 </sect1>
 
 <sect1><title>Structure considerations</title>
@@ -242,7 +242,7 @@ libgnet-dev : Developer files for GNet network library                   (>= 2.0
     </programlisting></listitem>
 </itemizedlist>
 <programlisting>
-  # apt-get install autoconf automake libglib2.0-dev libgda2-dev gda2-mysql libgnet2.0-dev
+  # apt-get install autoconf automake gcc libglib2.0-dev libgda2-dev gda2-mysql libgnet2.0-dev
 </programlisting>
 <para>Follow these steps:</para>
 <programlisting>
@@ -788,7 +788,7 @@ nessus-plugins : Nessus plugins                              (>= 2.0.12)
 <para>We need to approve the nessus server certificate, to do it just run
 against each nessus server :</para>
 <programlisting>
-  # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim motdepasse
+  # nessus -s -q xxx.xxx.xxx.xxx 1241 ossim your_nessus_pass
 </programlisting>
 <para>Where xxx.xxx.xxx.xxx.xxx is the adress of nessus server.</para>
 <para>Follow the on-screen instructions. Personally I set the paranoïa to
@@ -797,7 +797,7 @@ against each nessus server :</para>
 database with them try :</para>
 <programlisting>
   # nessus-update-plugins
-  # /opt/ossim/scripts/update_nessus_ids.pl
+  # perl $OSSIM_PATH/scripts/update_nessus_ids.pl
 </programlisting>
 <para>It's a good idea to update plugins before each scan. To start a scan run the
 script :</para>

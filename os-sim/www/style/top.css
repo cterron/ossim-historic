@@ -1,0 +1,7 @@
+A:LINK     { text-decoration:none; }
+A:ACTIVE   { text-decoration:none; }
+A:VISITED  { text-decoration:none; }
+A:HOVER    { text-decoration:underline; }
+
+.blue    { font-family:verdana; font-size:11px; color:#0E3C70; text-decoration:none; font-weight:bold }
+.white  { font-family:verdana; font-size:11px; color:#FFFFFF; text-decoration:none; font-weight:bold }

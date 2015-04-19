@@ -13,7 +13,7 @@ Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
 
 <body>
 
-  <h1 align="center">Alarms</h1>
+  <h1 align="center"> <?php echo gettext("Alarms"); ?> </h1>
 
 <?php
 require_once ('ossim_db.inc');
@@ -100,13 +100,13 @@ if (!$sup = $_GET["sup"])
     $count = Alarm::get_count($conn, $src_ip, $dst_ip);
     
     if ($inf >= $ROWS) {
-        echo "<a href=\"$inf_link\">&lt;- Prev $ROWS</a>";
+        echo "<a href=\"$inf_link\">&lt;-"; printf(gettext("Prev %d"),$ROWS); echo "</a>";
     }
     if ($sup < $count) {
-        echo "&nbsp;&nbsp;($inf-$sup of $count)&nbsp;&nbsp;";
-        echo "<a href=\"$sup_link\">Next $ROWS -&gt;</a>";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $ROWS); echo " -&gt;</a>";
     } else {
-        echo "&nbsp;&nbsp;($inf-$count of $count)&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
     }
 ?>
         </td>
@@ -123,25 +123,26 @@ if (!$sup = $_GET["sup"])
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("plugin_sid", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
-            ?>">Alarm</a></th>
+            ?>"> <?php echo gettext("Alarm"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("risk", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
-            ?>">Risk</a></th>
-        <th>Since</th>
+            ?>"> <?php echo gettext("Risk"); ?> </a></th>
+        <th> <?php echo gettext("Sensor"); ?> </th>
+        <th> <?php echo gettext("Since"); ?> </th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("timestamp", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
-            ?>">Last</a></th>
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip" ?>"> 
+            <?php echo gettext("Last"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("src_ip", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
-            ?>">Source</a></th>
+            ?>"> <?php echo gettext("Source"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("dst_ip", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
-            ?>">Destination</a></th>
-        <th>Action</th>
+            ?>"> <?php echo gettext("Destination"); ?> </a></th>
+        <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php
@@ -158,8 +159,13 @@ if (!$sup = $_GET["sup"])
             $backlog_id = $alarm->get_backlog_id();
 
             /* get plugin_id and plugin_sid names */
+            
+            /*
+             * never used ?
+             *
             $plugin_id_list = Plugin::get_list($conn, "WHERE id = $id");
             $id_name = $plugin_id_list[0]->get_name();
+             */
 
             $sid_name = "";
             if ($plugin_sid_list = Plugin_sid::get_list
@@ -176,7 +182,7 @@ if (!$sup = $_GET["sup"])
                 $since = $date;
             }
  
-            /* break alarms of different days */
+            /* show alarms by days */
             $date_slices = split(" ", $date);
             list ($year, $month, $day) = split("-", $date_slices[0]);
             $date_formatted = strftime("%A %d-%b-%Y", 
@@ -230,6 +236,7 @@ if (!$sup = $_GET["sup"])
         $dst_ip   = $alarm->get_dst_ip();
         $src_port = $alarm->get_src_port();
         $dst_port = $alarm->get_dst_port();
+        $sensor   = $alarm->get_sensor();
 
         $risk = $alarm->get_risk();
         if ($risk  > 7) {
@@ -269,7 +276,17 @@ if (!$sup = $_GET["sup"])
         }
 ?>
         <!-- end risk -->
-        
+
+
+        <!-- sensor -->
+        <td nowrap>
+          <a href="../sensor/sensor_plugins.php?sensor=<?php echo $sensor ?>">
+            <?php echo Host::ip2hostname($conn, $alarm->get_sensor()) ?>
+          </a>
+        </td>
+        <!-- end sensor -->
+
+
         <td nowrap>
         <?php
             $acid_link = get_acid_alerts_link($since, $date, "time_a");
@@ -306,18 +323,19 @@ if (!$sup = $_GET["sup"])
             <?php echo "<a href=\"$dst_link\">$dst_name</a>:$dst_port $dst_img"; ?></td>
         <!-- end src & dst hosts -->
         
+
         <td nowrap>
 <?php
         $alert_id = $alarm->get_alert_id();
         if ($backlog_id == 0) {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alert_id ?>">Ack</a>]
+            echo $alert_id ?>"> <?php echo gettext("Ack"); ?> </a>]
 <?php
         } else {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=<?php 
-            echo "$backlog_id-$alert_id" ?>">Ack</a>]
+            echo "$backlog_id-$alert_id" ?>"> <?php echo gettext("Ack"); ?> </a>]
 <?php
         }
 ?>
@@ -338,7 +356,7 @@ if (!$sup = $_GET["sup"])
 ?>
       <tr>
         <td colspan="8"><a href="<?php 
-            echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all">Delete ALL</a>
+            echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"> <?php echo gettext("Delete ALL"); ?> </a>
         </td>
       </tr>
 <?php

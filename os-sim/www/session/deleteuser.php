@@ -10,14 +10,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 <html>
 <head>
-  <title>OSSIM Framework</title>
+  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1>Delete user</h1>
+  <h1> <?php echo gettext("Delete user"); ?> </h1>
 
 <?php
     if (!$_GET["user"]) {
@@ -29,11 +29,12 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 if (!$_GET["confirm"]) {
 ?>
-    <p>Are you sure?</p>
+    <p> <?php echo gettext("Are you sure"); ?> </p>
     <p><a
       href="<?php echo $_SERVER["PHP_SELF"].
-        "?user=$user&confirm=yes"; ?>">Yes</a>
-        &nbsp;&nbsp;&nbsp;<a href="host.php">No</a>
+        "?user=$user&confirm=yes"; ?>"> 
+	<?php echo gettext("Yes"); ?> </a>
+        &nbsp;&nbsp;&nbsp;<a href="host.php"> <?php echo gettext("No"); ?> </a>
     </p>
 <?php
     exit();
@@ -55,8 +56,8 @@ if (!$_GET["confirm"]) {
 
 ?>
 
-    <p>User deleted</p>
-    <p><a href="users.php">Back</a></p>
+    <p> <?php echo gettext("User deleted"); ?> </p>
+    <p><a href="users.php"> <?php echo gettext("Back"); ?> </a></p>
     <?php exit(); ?>
 
 </body>
