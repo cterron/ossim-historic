@@ -11,3 +11,11 @@ Description: OSSIM needs a configured database to log to.
  .
  After you created the database structure, press 'ok' to continue.
 
+Template: ossim-mysql/structure_changed
+Type: text
+Description: Database structure has changed. If you are upgrading from an older OSSIM version, you need to rebuild some tables
+ .
+ These files may be helpfull:
+  - /usr/share/doc/ossim-mysql/contrib/097-to-098.sql.gz
+  - /usr/share/doc/ossim-mysql/contrib/create_mysql.sql.gz
+

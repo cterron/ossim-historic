@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: OSSIM 0.9.8\n"
-"POT-Creation-Date: 2005-01-26 12:30+0100\n"
+"POT-Creation-Date: 2005-03-18 11:40+0100\n"
 "PO-Revision-Date: 2005-01-18 16:39+0100\n"
 "Last-Translator: Dominique Karg <dk@ossim.net>\n"
 "Language-Team: English <en@li.org>\n"
@@ -13,101 +13,102 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: conf/main.php:12
+#: conf/main.php:8 conf/main.php:301
+msgid "Main Configuration"
+msgstr ""
+
+#: conf/main.php:22
 msgid "Language"
 msgstr ""
 
-#: conf/main.php:13
+#: conf/main.php:23
 msgid "Configure Internationalization"
 msgstr ""
 
-#: conf/main.php:23
-msgid "Server"
+#: conf/main.php:28
+msgid "German"
 msgstr ""
 
-#: conf/main.php:24
-msgid "Configure where the server's listening address"
+#: conf/main.php:29
+msgid "English"
+msgstr ""
+
+#: conf/main.php:30
+msgid "Spanish"
+msgstr ""
+
+#: conf/main.php:31
+msgid "French"
+msgstr ""
+
+#: conf/main.php:32
+msgid "Japanese"
+msgstr ""
+
+#: conf/main.php:33
+msgid "Brazilian Portuguese"
 msgstr ""
 
 #: conf/main.php:34
-msgid "Snort"
+msgid "Simplified Chinese"
 msgstr ""
 
 #: conf/main.php:35
+msgid "Traditional Chinese"
+msgstr ""
+
+#: conf/main.php:43
+msgid "Server"
+msgstr ""
+
+#: conf/main.php:44
+msgid "Configure where the server's listening address"
+msgstr ""
+
+#: conf/main.php:54
+msgid "Snort"
+msgstr ""
+
+#: conf/main.php:55
 msgid "Snort database and path configuration"
 msgstr ""
 
-#: conf/main.php:51 control_panel/global_score.php:17 report/menu.php:46
+#: conf/main.php:71 control_panel/global_score.php:17 report/menu.php:46
 #: report/pdfreportform.php:113 top.php:39
 msgid "Metrics"
 msgstr ""
 
-#: conf/main.php:52
+#: conf/main.php:72
 msgid "Configure metric settings"
 msgstr ""
 
-#: conf/main.php:62
+#: conf/main.php:82
+msgid "phpGACL"
+msgstr ""
+
+#: conf/main.php:83
+msgid "Access control list database configuration"
+msgstr ""
+
+#: conf/main.php:97
 msgid "PHP"
 msgstr ""
 
-#: conf/main.php:63
+#: conf/main.php:98
 msgid "PHP Configuration (graphs, acls, database api)"
 msgstr ""
 
-#: conf/main.php:77
-msgid "RRD"
+#: conf/main.php:106
+msgid "Images (php jpgraph)"
 msgstr ""
 
-#: conf/main.php:78
-msgid "RRD Configuration (graphing)"
+#: conf/main.php:107
+msgid "Applets (jfreechart)"
 msgstr ""
 
-#: conf/main.php:97 sensor/editsensor.php:518
-msgid "Links"
-msgstr ""
-
-#: conf/main.php:98
-msgid "Links to other applications"
-msgstr ""
-
-#: conf/main.php:109 top.php:75
-msgid "Backup"
-msgstr ""
-
-#: conf/main.php:110
-msgid "Backup configuration: backup database, directory, interval"
-msgstr ""
-
-#: conf/main.php:126
-msgid "Nessus"
-msgstr ""
-
-#: conf/main.php:127
-msgid "Nessus client configuration"
-msgstr ""
-
-#: conf/main.php:142
-msgid "ACID"
-msgstr ""
-
-#: conf/main.php:143
-msgid "Acid cache configuration"
-msgstr ""
-
-#: conf/main.php:157
-msgid "External applications"
-msgstr ""
-
-#: conf/main.php:158
-msgid "Path to other applications"
-msgstr ""
-
-#: conf/main.php:210 conf/main.php:216
-msgid "Main Configuration"
-msgstr ""
-
-#: conf/main.php:241 host/deletehost.php:35 net/deletenet.php:35
-#: policy/deletepolicy.php:30 port/deleteport.php:30
+#: conf/main.php:111 conf/main.php:116 conf/main.php:186 conf/main.php:220
+#: conf/main.php:286 host/deletehost.php:35 net/deletenet.php:35
+#: net/deletenetgroup.php:34 policy/deletepolicy.php:30 port/deleteport.php:30
 #: rrd_conf/delete_rrd_conf.php:33 sensor/deletesensor.php:35
 #: sensor/interfaces.php:103 sensor/interfaces.php:107
 #: sensor/interfaces.php:126 sensor/interfaces.php:149
@@ -115,7 +116,12 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: conf/main.php:243 host/deletehost.php:33 net/deletenet.php:33
+#: conf/main.php:112
+msgid "Yes (Need SVG plugin)"
+msgstr ""
+
+#: conf/main.php:117 conf/main.php:187 conf/main.php:221 conf/main.php:285
+#: host/deletehost.php:33 net/deletenet.php:33 net/deletenetgroup.php:32
 #: policy/deletepolicy.php:29 port/deleteport.php:29
 #: rrd_conf/delete_rrd_conf.php:31 sensor/deletesensor.php:33
 #: sensor/interfaces.php:102 sensor/interfaces.php:108
@@ -124,37 +130,61 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
-#: conf/main.php:250
-msgid "Images (php jpgraph)"
+#: conf/main.php:124
+msgid "RRD"
 msgstr ""
 
-#: conf/main.php:252
-msgid "Applets (jfreechart)"
+#: conf/main.php:125
+msgid "RRD Configuration (graphing)"
 msgstr ""
 
-#: conf/main.php:260
-msgid "English"
+#: conf/main.php:144 sensor/editsensor.php:518
+msgid "Links"
 msgstr ""
 
-#: conf/main.php:262
-msgid "Spanish"
+#: conf/main.php:145
+msgid "Links to other applications"
 msgstr ""
 
-#: conf/main.php:264
-msgid "German"
+#: conf/main.php:157 top.php:76
+msgid "Backup"
 msgstr ""
 
-#: conf/main.php:266
-msgid "French"
+#: conf/main.php:158
+msgid "Backup configuration: backup database, directory, interval"
 msgstr ""
 
-#: conf/main.php:282 sensor/sensor_plugins.php:167
-msgid "DISABLED"
+#: conf/main.php:174
+msgid "Nessus"
+msgstr ""
+
+#: conf/main.php:175
+msgid "Nessus client configuration"
+msgstr ""
+
+#: conf/main.php:194
+msgid "ACID"
+msgstr ""
+
+#: conf/main.php:195
+msgid "Acid cache configuration"
+msgstr ""
+
+#: conf/main.php:208
+msgid "External applications"
+msgstr ""
+
+#: conf/main.php:209
+msgid "Path to other applications"
+msgstr ""
+
+#: conf/main.php:283
+msgid "Are you sure ?"
 msgstr ""
 
 #: conf/plugin.php:8 conf/pluginref.php:8 conf/pluginsid.php:8
-#: conf/pluginupdate.php:3 control_panel/global_score.php:142
-#: riskmeter/index.php:8 riskmeter/index.php:16 top.php:54
+#: conf/pluginupdate.php:3 control_panel/global_score.php:178
+#: riskmeter/index.php:13 top.php:50
 msgid "Riskmeter"
 msgstr ""
 
@@ -162,27 +192,30 @@ msgstr ""
 msgid "Priority and Reliability configuration"
 msgstr ""
 
-#: conf/plugin.php:29 control_panel/alerts.php:57
+#: conf/plugin.php:29 control_panel/alerts.php:58
 msgid "Id"
 msgstr ""
 
 #: conf/plugin.php:32 conf/pluginsid.php:58 directives/directive.php:73
-#: editor/rule.php:76 incidents/incident.php:252 net/newnetform.php:34
-#: port/modifyportform.php:39 port/newportform.php:21 report/inventory.php:79
-#: sensor/interfaces.php:86 sensor/interfaces.php:141 session/users.php:36
+#: editor/rule.php:76 incidents/incident.php:362 net/newnetform.php:34
+#: net/newnetgroupform.php:35 port/modifyportform.php:39
+#: port/newportform.php:21 report/inventory.php:79 sensor/interfaces.php:86
+#: sensor/interfaces.php:141 session/users.php:36
 #: signature/modifysignatureform.php:39 signature/newsignatureform.php:21
 #: signature/signature.php:28
 msgid "Name"
 msgstr ""
 
-#: conf/plugin.php:35 incidents/index.php:92
+#: conf/plugin.php:35 incidents/index.php:98
 msgid "Type"
 msgstr ""
 
-#: conf/plugin.php:38 host/host.php:62 host/modifyhostform.php:212
-#: host/newhostform.php:214 incidents/incident.php:481
-#: incidents/incident.php:578 net/modifynetform.php:198 net/net.php:67
-#: net/newnetform.php:157 policy/modifypolicyform.php:611 policy/policy.php:37
+#: conf/plugin.php:38 host/host.php:62 host/modifyhostform.php:279
+#: host/newhostform.php:236 incidents/incident.php:602
+#: incidents/incident.php:699 net/modifynetform.php:198
+#: net/modifynetgroupform.php:152 net/net.php:67 net/netgroup.php:55
+#: net/newnetform.php:157 net/newnetgroupform.php:121
+#: policy/modifypolicyform.php:611 policy/policy.php:37
 #: port/modifyportform.php:86 port/newportform.php:58
 #: port/newsingleportform.php:40 port/port.php:31
 #: sensor/modifysensorform.php:99 sensor/newsensorform.php:55
@@ -195,20 +228,20 @@ msgstr ""
 msgid "Plugin reference"
 msgstr ""
 
-#: conf/pluginref.php:53 control_panel/alarm_console.php:103
-#: control_panel/backlog.php:71
+#: conf/pluginref.php:53 control_panel/alarm_console.php:109
+#: control_panel/backlog.php:72
 #, c-format
 msgid "Prev %d"
 msgstr ""
 
-#: conf/pluginref.php:55 control_panel/alarm_console.php:106
-#: control_panel/alarm_console.php:109 control_panel/backlog.php:73
+#: conf/pluginref.php:55 control_panel/alarm_console.php:112
+#: control_panel/alarm_console.php:115 control_panel/backlog.php:74
 #, c-format
 msgid "%d-%d of %d"
 msgstr ""
 
-#: conf/pluginref.php:57 control_panel/alarm_console.php:107
-#: control_panel/backlog.php:75
+#: conf/pluginref.php:57 control_panel/alarm_console.php:113
+#: control_panel/backlog.php:76
 #, c-format
 msgid "Next %d"
 msgstr ""
@@ -246,8 +279,8 @@ msgid "Class"
 msgstr ""
 
 #: conf/pluginsid.php:62 directives/directive.php:74
-#: incidents/incident.php:374 incidents/incident.php:458
-#: incidents/incident.php:586 incidents/index.php:96 incidents/index.php:216
+#: incidents/incident.php:495 incidents/incident.php:579
+#: incidents/incident.php:707 incidents/index.php:102 incidents/index.php:255
 #: net/modifynetform.php:57 net/newnetform.php:45
 #: policy/modifypolicyform.php:281 policy/policy.php:32
 #: rrd_conf/modify_rrd_conf_form.php:95 sensor/modifysensorform.php:53
@@ -260,13 +293,14 @@ msgstr ""
 msgid "Reliability"
 msgstr ""
 
-#: conf/pluginsid.php:67 control_panel/alarm_console.php:145
-#: control_panel/alerts.php:64 editor/rule.php:78 host/host.php:63
-#: incidents/incident.php:375 incidents/incident.php:463
-#: incidents/incident.php:483 incidents/incident.php:580
-#: incidents/index.php:97 net/net.php:68 policy/policy.php:38 port/port.php:32
-#: rrd_conf/rrd_conf.php:31 scan/hostscan.php:45 scan/scan.php:43
-#: sensor/interfaces.php:88 sensor/interfaces.php:143 sensor/sensor.php:50
+#: conf/pluginsid.php:67 control_panel/alarm_console.php:151
+#: control_panel/alerts.php:65 editor/rule.php:78 host/host.php:63
+#: incidents/incident.php:496 incidents/incident.php:584
+#: incidents/incident.php:604 incidents/incident.php:701
+#: incidents/index.php:103 net/net.php:68 net/netgroup.php:56
+#: policy/policy.php:38 port/port.php:32 rrd_conf/rrd_conf.php:31
+#: scan/hostscan.php:45 scan/scan.php:43 sensor/interfaces.php:88
+#: sensor/interfaces.php:143 sensor/sensor.php:50
 #: sensor/sensor_plugins.php:119 sensor/sensor_plugins.php:121
 #: signature/signature.php:31
 msgid "Action"
@@ -280,8 +314,9 @@ msgstr ""
 #: conf/pluginupdate.php:30 conf/pluginupdate.php:46
 #: control_panel/handle_anomaly.php:61 control_panel/handle_mac.php:55
 #: control_panel/handle_os.php:55 host/deletehost.php:54
-#: host/modifyhost.php:75 host/newhost.php:120 net/deletenet.php:55
-#: net/modifynet.php:73 net/newnet.php:72 policy/deletepolicy.php:47
+#: host/modifyhost.php:89 host/newhost.php:91 net/deletenet.php:55
+#: net/deletenetgroup.php:54 net/modifynet.php:73 net/modifynetgroup.php:66
+#: net/newnet.php:72 net/newnetgroup.php:67 policy/deletepolicy.php:47
 #: policy/modifypolicy.php:138 policy/newpolicy.php:130 port/deleteport.php:47
 #: port/modifyport.php:56 port/newport.php:56 port/newsingleport.php:51
 #: rrd_conf/delete_rrd_conf.php:49 rrd_conf/new_rrd_conf.php:62
@@ -329,21 +364,24 @@ msgstr ""
 msgid "Reload completed successfully"
 msgstr ""
 
-#: control_panel/alarm_console.php:16 report/menu.php:48
-#: report/pdfreportform.php:118 top.php:40
-msgid "Alarms"
-msgstr ""
-
-#: control_panel/alarm_console.php:131
+#: control_panel/alarm_console.php:137
 msgid "Sensor"
 msgstr ""
 
-#: control_panel/alarm_console.php:132
+#: control_panel/alarm_console.php:138
 msgid "Since"
 msgstr ""
 
-#: control_panel/alarm_console.php:136
+#: control_panel/alarm_console.php:142
 msgid "Last"
+msgstr ""
+
+#: control_panel/alarm_console.php:377
+msgid "Delete ALL alarms"
+msgstr ""
+
+#: control_panel/alarm_console.php:379
+msgid "Purge orphaned alerts"
 msgstr ""
 
 #: control_panel/alerts.php:7 control_panel/anomalies.php:8
@@ -360,57 +398,57 @@ msgstr ""
 msgid "Alarms/Alerts"
 msgstr ""
 
-#: control_panel/alerts.php:51
+#: control_panel/alerts.php:52
 msgid "Back to main"
 msgstr ""
 
-#: control_panel/alerts.php:58 incidents/index.php:106 incidents/index.php:287
+#: control_panel/alerts.php:59 incidents/index.php:128 incidents/index.php:329
 msgid "Alarm"
 msgstr ""
 
-#: control_panel/alerts.php:59
+#: control_panel/alerts.php:60
 msgid "Risk"
 msgstr ""
 
-#: control_panel/alerts.php:60 incidents/incident.php:456
-#: incidents/index.php:205 report/inventory.php:192
+#: control_panel/alerts.php:61 incidents/incident.php:577
+#: incidents/index.php:244 report/inventory.php:192
 msgid "Date"
 msgstr ""
 
-#: control_panel/alerts.php:61 incidents/incident.php:264
+#: control_panel/alerts.php:62 incidents/incident.php:374
 #: policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
 msgid "Source"
 msgstr ""
 
-#: control_panel/alerts.php:62 incidents/incident.php:271 report/menu.php:58
+#: control_panel/alerts.php:63 incidents/incident.php:381 report/menu.php:58
 msgid "Destination"
 msgstr ""
 
-#: control_panel/alerts.php:63
+#: control_panel/alerts.php:64
 msgid "Correlation Level"
 msgstr ""
 
-#: control_panel/alerts.php:236
+#: control_panel/alerts.php:245
 #, c-format
 msgid "Total Alerts: %d"
 msgstr ""
 
-#: control_panel/alerts.php:237
+#: control_panel/alerts.php:246
 #, c-format
 msgid "Unique Dst IPAddr: %d"
 msgstr ""
 
-#: control_panel/alerts.php:238
+#: control_panel/alerts.php:247
 #, c-format
 msgid "Unique Types: %d"
 msgstr ""
 
-#: control_panel/alerts.php:239
+#: control_panel/alerts.php:248
 #, c-format
 msgid "Unique Dst Ports: %d"
 msgstr ""
 
-#: control_panel/alerts.php:243
+#: control_panel/alerts.php:252
 msgid "Visualize alarm"
 msgstr ""
 
@@ -436,7 +474,7 @@ msgstr ""
 
 #: control_panel/anomalies.php:71 control_panel/anomalies.php:132
 #: control_panel/anomalies.php:194 control_panel/anomalies.php:259
-#: control_panel/global_score.php:412 control_panel/global_score.php:479
+#: control_panel/global_score.php:597 control_panel/global_score.php:664
 #: report/sec_report.php:148 scan/hostscan.php:36 scan/scan.php:38
 msgid "Host"
 msgstr ""
@@ -464,10 +502,10 @@ msgid "Ack"
 msgstr ""
 
 #: control_panel/anomalies.php:74 control_panel/anomalies.php:135
-#: control_panel/backlog.php:98 host/host.php:126 net/net.php:137
-#: policy/policy.php:160 port/port.php:64 rrd_conf/rrd_conf.php:53
-#: scan/hostscan.php:71 sensor/sensor.php:102 session/users.php:65
-#: signature/signature.php:60
+#: control_panel/backlog.php:99 host/host.php:126 net/net.php:137
+#: net/netgroup.php:112 policy/policy.php:160 port/port.php:64
+#: rrd_conf/rrd_conf.php:53 scan/hostscan.php:71 sensor/sensor.php:102
+#: session/users.php:65 signature/signature.php:60
 msgid "Delete"
 msgstr ""
 
@@ -491,8 +529,8 @@ msgstr ""
 msgid "Mac Changes"
 msgstr ""
 
-#: control_panel/anomalies.php:259 host/newhostform.php:196
-#: host/newhostform.php:207
+#: control_panel/anomalies.php:259 host/modifyhostform.php:245
+#: host/newhostform.php:204 host/newhostform.php:215
 msgid "Mac"
 msgstr ""
 
@@ -500,88 +538,99 @@ msgstr ""
 msgid "Previous Mac"
 msgstr ""
 
-#: control_panel/backlog.php:16 top.php:65
+#: control_panel/backlog.php:16 top.php:66
 msgid "Backlog"
 msgstr ""
 
-#: control_panel/backlog.php:125
+#: control_panel/backlog.php:126
 msgid "NO"
 msgstr ""
 
-#: control_panel/backlog.php:127 sensor/sensor.php:139
+#: control_panel/backlog.php:128 sensor/sensor.php:139
 msgid "YES"
 msgstr ""
 
-#: control_panel/global_score.php:105
+#: control_panel/global_score.php:141
 msgid "Last Day"
 msgstr ""
 
-#: control_panel/global_score.php:108
+#: control_panel/global_score.php:144
 msgid "Last Week"
 msgstr ""
 
-#: control_panel/global_score.php:111
+#: control_panel/global_score.php:147
 msgid "Last Month"
 msgstr ""
 
-#: control_panel/global_score.php:114
+#: control_panel/global_score.php:150
 msgid "Last Year"
 msgstr ""
 
-#: control_panel/global_score.php:143
+#: control_panel/global_score.php:179
 msgid "Service Level"
 msgstr ""
 
-#: control_panel/global_score.php:190 control_panel/global_score.php:196
-#: control_panel/global_score.php:243 ntop/menu.php:120 riskmeter/index.php:66
+#: control_panel/global_score.php:237 control_panel/global_score.php:243
+#: control_panel/global_score.php:290 ntop/menu.php:120
+#: riskmeter/index.php:116
 msgid "Global"
 msgstr ""
 
-#: control_panel/global_score.php:197 control_panel/global_score.php:296
-#: control_panel/global_score.php:413
+#: control_panel/global_score.php:244 control_panel/global_score.php:345
+#: control_panel/global_score.php:473 control_panel/global_score.php:598
 msgid "Max C date"
 msgstr ""
 
-#: control_panel/global_score.php:198 control_panel/global_score.php:297
-#: control_panel/global_score.php:414
+#: control_panel/global_score.php:245 control_panel/global_score.php:346
+#: control_panel/global_score.php:474 control_panel/global_score.php:599
 msgid "Max C"
 msgstr ""
 
-#: control_panel/global_score.php:199 control_panel/global_score.php:298
-#: control_panel/global_score.php:415
+#: control_panel/global_score.php:246 control_panel/global_score.php:347
+#: control_panel/global_score.php:475 control_panel/global_score.php:600
 msgid "Current C"
 msgstr ""
 
-#: control_panel/global_score.php:207 control_panel/global_score.php:254
+#: control_panel/global_score.php:254 control_panel/global_score.php:301
 msgid "GLOBAL SCORE"
 msgstr ""
 
-#: control_panel/global_score.php:244 control_panel/global_score.php:353
-#: control_panel/global_score.php:480
+#: control_panel/global_score.php:291 control_panel/global_score.php:408
+#: control_panel/global_score.php:534 control_panel/global_score.php:665
 msgid "Max A date"
 msgstr ""
 
-#: control_panel/global_score.php:245 control_panel/global_score.php:354
-#: control_panel/global_score.php:481
+#: control_panel/global_score.php:292 control_panel/global_score.php:409
+#: control_panel/global_score.php:535 control_panel/global_score.php:666
 msgid "Max A"
 msgstr ""
 
-#: control_panel/global_score.php:246 control_panel/global_score.php:355
-#: control_panel/global_score.php:482
+#: control_panel/global_score.php:293 control_panel/global_score.php:410
+#: control_panel/global_score.php:536 control_panel/global_score.php:667
 msgid "Current A"
 msgstr ""
 
-#: control_panel/global_score.php:288 net/net.php:15 riskmeter/index.php:151
-#: top.php:58
+#: control_panel/global_score.php:337 riskmeter/index.php:206
+msgid "Groups"
+msgstr ""
+
+#: control_panel/global_score.php:344 control_panel/global_score.php:407
+msgid "Group"
+msgstr ""
+
+#: control_panel/global_score.php:466 net/modifynetgroupform.php:53
+#: net/net.php:15 net/netgroup.php:44 net/newnetgroupform.php:40
+#: riskmeter/index.php:326 top.php:58
 msgid "Networks"
 msgstr ""
 
-#: control_panel/global_score.php:295 control_panel/global_score.php:352
-#: top.php:51
+#: control_panel/global_score.php:472 control_panel/global_score.php:533
+#: top.php:52
 msgid "Network"
 msgstr ""
 
-#: control_panel/global_score.php:405 host/host.php:15 top.php:57
+#: control_panel/global_score.php:590 host/host.php:15 riskmeter/index.php:515
+#: top.php:57
 msgid "Hosts"
 msgstr ""
 
@@ -592,9 +641,13 @@ msgstr ""
 #: editor/rule.php:51 host/deletehost.php:8 host/host.php:8
 #: host/modifyhost.php:8 host/modifyhostform.php:8 host/newhost.php:8
 #: host/newhostform.php:8 incidents/incident.php:8 incidents/index.php:8
-#: net/deletenet.php:8 net/modifynet.php:8 net/modifynetform.php:8
-#: net/net.php:8 net/newnet.php:8 net/newnetform.php:8 ntop/menu.php:3
-#: ntop/menu_session.php:3 policy/deletepolicy.php:8 policy/modifypolicy.php:8
+#: net/deletenet.php:8 net/deletenetgroup.php:8 net/modifynet.php:8
+#: net/modifynetform.php:8 net/modifynetgroup.php:8
+#: net/modifynetgroupform.php:8 net/net.php:8 net/netgroup.php:8
+#: net/newnet.php:8 net/newnetform.php:8 net/newnetgroup.php:8
+#: net/newnetgroupform.php:8 netscan/do_scan.php:9 netscan/index.php:22
+#: netscan/scan_db.php:8 ntop/menu.php:3 ntop/menu_session.php:3
+#: policy/deletepolicy.php:8 policy/modifypolicy.php:8
 #: policy/modifypolicyform.php:8 policy/newpolicy.php:8 policy/policy.php:8
 #: port/deleteport.php:8 port/modifyport.php:8 port/modifyportform.php:8
 #: port/newport.php:8 port/newportform.php:8 port/newsingleport.php:8
@@ -651,7 +704,8 @@ msgstr ""
 msgid "Previous Vendor"
 msgstr ""
 
-#: control_panel/mac.php:73 host/newhostform.php:188
+#: control_panel/mac.php:73 host/modifyhostform.php:225
+#: host/newhostform.php:196
 msgid "Unknown"
 msgstr ""
 
@@ -667,7 +721,7 @@ msgstr ""
 msgid "Attack"
 msgstr ""
 
-#: control_panel/visualize.php:33
+#: control_panel/visualize.php:34
 msgid "Alarm viewer"
 msgstr ""
 
@@ -1072,8 +1126,9 @@ msgstr ""
 msgid "Wrong ip"
 msgstr ""
 
-#: host/deletehost.php:30 net/deletenet.php:30 policy/deletepolicy.php:27
-#: port/deleteport.php:27 scan/deletehostscan.php:29 session/deleteuser.php:32
+#: host/deletehost.php:30 net/deletenet.php:30 net/deletenetgroup.php:29
+#: policy/deletepolicy.php:27 port/deleteport.php:27
+#: scan/deletehostscan.php:29 session/deleteuser.php:32
 #: signature/deletesignature.php:27
 msgid "Are you sure"
 msgstr ""
@@ -1082,14 +1137,14 @@ msgstr ""
 msgid "Host deleted"
 msgstr ""
 
-#: host/host.php:39 host/modifyhostform.php:148 host/newhostform.php:132
+#: host/host.php:39 host/modifyhostform.php:157 host/newhostform.php:140
 msgid "NAT"
 msgstr ""
 
-#: host/host.php:60 host/modifyhostform.php:155 host/newhostform.php:138
+#: host/host.php:60 host/modifyhostform.php:164 host/newhostform.php:146
 #: net/modifynetform.php:143 net/net.php:65 net/newnetform.php:113
 #: policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
-#: sensor/sensor_plugins.php:15 top.php:53 top.php:59
+#: sensor/sensor_plugins.php:15 top.php:54 top.php:60
 msgid "Sensors"
 msgstr ""
 
@@ -1097,17 +1152,19 @@ msgstr ""
 msgid "Scantype"
 msgstr ""
 
-#: host/host.php:118 host/modifyhostform.php:123 host/newhostform.php:109
-#: net/modifynetform.php:117 net/newnetform.php:90
+#: host/host.php:118 host/modifyhostform.php:132 host/newhostform.php:117
+#: net/modifynetform.php:117 net/modifynetgroupform.php:131
+#: net/newnetform.php:90 net/newnetgroupform.php:107
 msgid "None"
 msgstr ""
 
-#: host/host.php:125 net/net.php:136 policy/policy.php:157 port/port.php:61
-#: rrd_conf/rrd_conf.php:47 sensor/sensor.php:100 signature/signature.php:57
+#: host/host.php:125 net/net.php:136 net/netgroup.php:111
+#: policy/policy.php:157 port/port.php:61 rrd_conf/rrd_conf.php:47
+#: sensor/sensor.php:100 signature/signature.php:57
 msgid "Modify"
 msgstr ""
 
-#: host/host.php:138 host/newhostform.php:15 policy/modifypolicyform.php:51
+#: host/host.php:138 host/newhostform.php:21 policy/modifypolicyform.php:51
 #: policy/modifypolicyform.php:146
 msgid "Insert new host"
 msgstr ""
@@ -1126,235 +1183,273 @@ msgstr ""
 msgid "Update host"
 msgstr ""
 
-#: host/modifyhost.php:29 host/newhost.php:29 host/newhost.php:61
-#: net/modifynet.php:29 net/newnet.php:29 policy/modifypolicy.php:39
-#: policy/newpolicy.php:33 port/modifyport.php:25 port/newport.php:25
-#: port/newsingleport.php:26 sensor/interfaces.php:23
+#: host/modifyhost.php:29 host/newhost.php:29 net/modifynet.php:29
+#: net/modifynetgroup.php:27 net/newnet.php:29 net/newnetgroup.php:28
+#: policy/modifypolicy.php:39 policy/newpolicy.php:33 port/modifyport.php:25
+#: port/newport.php:25 port/newsingleport.php:26 sensor/interfaces.php:23
 #: sensor/modifysensor.php:26 sensor/newsensor.php:26
 #: signature/newsignature.php:25
 msgid "Please, complete all the fields"
+msgstr ""
+
+#: host/modifyhost.php:64 host/newhost.php:62
+msgid "Sorry, no sensor selected"
 msgstr ""
 
 #: host/modifyhostform.php:15
 msgid "Modify host"
 msgstr ""
 
-#: host/modifyhostform.php:42 host/newhostform.php:43 report/report.php:30
+#: host/modifyhostform.php:51 host/newhostform.php:53 report/report.php:30
 #: sensor/modifysensorform.php:39 sensor/newsensorform.php:25
 #: sensor/sensor.php:36
 msgid "Hostname"
 msgstr ""
 
-#: host/modifyhostform.php:48 host/newhostform.php:54 net/modifynetform.php:51
+#: host/modifyhostform.php:57 host/newhostform.php:57 net/modifynetform.php:51
 #: sensor/modifysensorform.php:47 sensor/newsensorform.php:29
 msgid "IP"
 msgstr ""
 
-#: host/modifyhostform.php:56 host/newhostform.php:58 report/report.php:38
+#: host/modifyhostform.php:65 host/newhostform.php:66 report/report.php:38
 msgid "Asset"
 msgstr ""
 
-#: host/modifyhostform.php:62 host/newhostform.php:62
+#: host/modifyhostform.php:71 host/newhostform.php:70
 msgid "0"
 msgstr ""
 
-#: host/modifyhostform.php:66 host/newhostform.php:64
-#: incidents/incident.php:590
+#: host/modifyhostform.php:75 host/newhostform.php:72
+#: incidents/incident.php:711
 msgid "1"
 msgstr ""
 
-#: host/modifyhostform.php:70 host/newhostform.php:66
-#: incidents/incident.php:593
+#: host/modifyhostform.php:79 host/newhostform.php:74
+#: incidents/incident.php:714
 msgid "2"
 msgstr ""
 
-#: host/modifyhostform.php:74 host/newhostform.php:68
-#: incidents/incident.php:596
+#: host/modifyhostform.php:83 host/newhostform.php:76
+#: incidents/incident.php:717
 msgid "3"
 msgstr ""
 
-#: host/modifyhostform.php:78 host/newhostform.php:70
-#: incidents/incident.php:599
+#: host/modifyhostform.php:87 host/newhostform.php:78
+#: incidents/incident.php:720
 msgid "4"
 msgstr ""
 
-#: host/modifyhostform.php:82 host/newhostform.php:72
-#: incidents/incident.php:602
+#: host/modifyhostform.php:91 host/newhostform.php:80
+#: incidents/incident.php:723
 msgid "5"
 msgstr ""
 
-#: host/modifyhostform.php:87 host/newhostform.php:77 net/modifynetform.php:82
-#: net/newnetform.php:58
+#: host/modifyhostform.php:96 host/newhostform.php:85 net/modifynetform.php:82
+#: net/modifynetgroupform.php:96 net/newnetform.php:58
+#: net/newnetgroupform.php:75
 msgid "Threshold C"
 msgstr ""
 
-#: host/modifyhostform.php:93 host/newhostform.php:84 net/modifynetform.php:88
-#: net/newnetform.php:65
+#: host/modifyhostform.php:102 host/newhostform.php:92
+#: net/modifynetform.php:88 net/modifynetgroupform.php:102
+#: net/newnetform.php:65 net/newnetgroupform.php:82
 msgid "Threshold A"
 msgstr ""
 
-#: host/modifyhostform.php:99 host/newhostform.php:91 net/modifynetform.php:94
-#: net/newnetform.php:72
+#: host/modifyhostform.php:108 host/newhostform.php:99
+#: net/modifynetform.php:94 net/modifynetgroupform.php:108
+#: net/newnetform.php:72 net/newnetgroupform.php:89
 msgid "RRD Profile"
 msgstr ""
 
-#: host/modifyhostform.php:102 host/newhostform.php:94
-#: net/modifynetform.php:96 net/newnetform.php:75
+#: host/modifyhostform.php:111 host/newhostform.php:102
+#: net/modifynetform.php:96 net/modifynetgroupform.php:110
+#: net/newnetform.php:75 net/newnetgroupform.php:92
 msgid "Insert new profile"
 msgstr ""
 
-#: host/modifyhostform.php:158 host/newhostform.php:141
+#: host/modifyhostform.php:167 host/newhostform.php:149
 #: net/modifynetform.php:145 net/newnetform.php:116
 #: policy/modifypolicyform.php:354 sensor/newsensorform.php:15
 #: sensor/sensor.php:150
 msgid "Insert new sensor"
 msgstr ""
 
-#: host/modifyhostform.php:198 host/newhostform.php:173
-#: net/modifynetform.php:185 net/newnetform.php:148
+#: host/modifyhostform.php:207 host/newhostform.php:181
+#: net/modifynetform.php:185 net/modifynetgroupform.php:138
+#: net/newnetform.php:148 net/newnetgroupform.php:112
 msgid "Scan options"
 msgstr ""
 
-#: host/modifyhostform.php:207 host/newhostform.php:176 net/newnetform.php:151
+#: host/modifyhostform.php:216 host/newhostform.php:184 net/newnetform.php:151
+#: net/newnetgroupform.php:115
 msgid "Enable nessus scan"
+msgstr ""
+
+#: host/modifyhostform.php:220 host/newhostform.php:191 report/report.php:39
+msgid "OS"
+msgstr ""
+
+#: host/modifyhostform.php:230 host/newhostform.php:198
+msgid "Windows"
+msgstr ""
+
+#: host/modifyhostform.php:235 host/newhostform.php:200
+msgid "Linux"
+msgstr ""
+
+#: host/modifyhostform.php:240 host/newhostform.php:202
+msgid "BSD"
+msgstr ""
+
+#: host/modifyhostform.php:250 host/newhostform.php:206
+msgid "Sun"
+msgstr ""
+
+#: host/modifyhostform.php:255 host/newhostform.php:208
+msgid "Plan9"
+msgstr ""
+
+#: host/modifyhostform.php:259 host/newhostform.php:210
+msgid "Other"
+msgstr ""
+
+#: host/modifyhostform.php:265
+msgid "Mac Address"
+msgstr ""
+
+#: host/modifyhostform.php:272 host/newhostform.php:219
+msgid "Mac Vendor"
 msgstr ""
 
 #: host/newhost.php:15
 msgid "New Host"
 msgstr ""
 
-#: host/newhost.php:118
+#: host/newhost.php:89
 msgid "Host succesfully inserted"
 msgstr ""
 
-#: host/newhostform.php:183 report/report.php:39
-msgid "OS"
+#: host/newhostform.php:16
+msgid "Insert new scan"
 msgstr ""
 
-#: host/newhostform.php:190
-msgid "Windows"
+#: host/newhostform.php:18
+msgid "Please, fill these global properties about the hosts you've scaned"
 msgstr ""
 
-#: host/newhostform.php:192
-msgid "Linux"
+#: incidents/incident.php:172
+msgid "Error trying to insert new alarm ticket (argument missing)"
 msgstr ""
 
-#: host/newhostform.php:194
-msgid "BSD"
+#: incidents/incident.php:207
+msgid "Error trying to insert new hardware ticket (argument missing)"
 msgstr ""
 
-#: host/newhostform.php:198
-msgid "Sun"
+#: incidents/incident.php:219
+msgid "Error trying to insert new install ticket (argument missing)"
 msgstr ""
 
-#: host/newhostform.php:200
-msgid "Plan9"
-msgstr ""
-
-#: host/newhostform.php:202
-msgid "Other"
-msgstr ""
-
-#: incidents/incident.php:278
+#: incidents/incident.php:388
 msgid "Src Ports"
 msgstr ""
 
-#: incidents/incident.php:285
+#: incidents/incident.php:395
 msgid "Dst Ports"
 msgstr ""
 
-#: incidents/incident.php:300
+#: incidents/incident.php:410
 msgid "Target"
 msgstr ""
 
-#: incidents/incident.php:307
+#: incidents/incident.php:417
 msgid "Metric Type"
 msgstr ""
 
-#: incidents/incident.php:314
+#: incidents/incident.php:424
 msgid "Metric Value"
 msgstr ""
 
-#: incidents/incident.php:369 incidents/index.php:201
+#: incidents/incident.php:490 incidents/index.php:240
 msgid "Ticket"
 msgstr ""
 
-#: incidents/incident.php:371
+#: incidents/incident.php:492
 msgid "Incident"
 msgstr ""
 
-#: incidents/incident.php:372 incidents/incident.php:460
-#: incidents/index.php:211
+#: incidents/incident.php:493 incidents/incident.php:581
+#: incidents/index.php:250
 msgid "In Charge"
 msgstr ""
 
-#: incidents/incident.php:373 incidents/incident.php:459
-#: incidents/index.php:95 incidents/index.php:212
+#: incidents/incident.php:494 incidents/incident.php:580
+#: incidents/index.php:101 incidents/index.php:251
 #: sensor/sensor_plugins.php:118
 msgid "Status"
 msgstr ""
 
-#: incidents/incident.php:457
+#: incidents/incident.php:578
 msgid "User / Description / Action"
 msgstr ""
 
-#: incidents/incident.php:461
+#: incidents/incident.php:582
 msgid "Transferred"
 msgstr ""
 
-#: incidents/incident.php:462
+#: incidents/incident.php:583
 msgid "Copy"
 msgstr ""
 
-#: incidents/incident.php:479 session/login.php:94
+#: incidents/incident.php:600 session/login.php:136
 msgid "User"
 msgstr ""
 
-#: incidents/incident.php:582
+#: incidents/incident.php:703
 msgid "Attachment"
 msgstr ""
 
-#: incidents/incident.php:605
+#: incidents/incident.php:726
 msgid "6"
 msgstr ""
 
-#: incidents/incident.php:608
+#: incidents/incident.php:729
 msgid "7"
 msgstr ""
 
-#: incidents/incident.php:611
+#: incidents/incident.php:732
 msgid "8"
 msgstr ""
 
-#: incidents/incident.php:614
+#: incidents/incident.php:735
 msgid "9"
 msgstr ""
 
-#: incidents/incident.php:617
+#: incidents/incident.php:738
 msgid "10"
 msgstr ""
 
-#: incidents/incident.php:619
+#: incidents/incident.php:740
 msgid "status"
 msgstr ""
 
-#: incidents/incident.php:623 incidents/index.php:122
+#: incidents/incident.php:744 incidents/index.php:161
 msgid "Open"
 msgstr ""
 
-#: incidents/incident.php:626 incidents/index.php:125
+#: incidents/incident.php:747 incidents/index.php:164
 msgid "Closed"
 msgstr ""
 
-#: incidents/incident.php:630 incidents/index.php:94
+#: incidents/incident.php:751 incidents/index.php:100
 msgid "In charge"
 msgstr ""
 
-#: incidents/incident.php:644
+#: incidents/incident.php:765
 msgid "Transfer"
 msgstr ""
 
-#: incidents/incident.php:646
+#: incidents/incident.php:767
 msgid "Copy (e-mail)"
 msgstr ""
 
@@ -1362,56 +1457,76 @@ msgstr ""
 msgid "Incidents"
 msgstr ""
 
-#: incidents/index.php:76
+#: incidents/index.php:81
 msgid "Filter"
 msgstr ""
 
-#: incidents/index.php:93 incidents/index.php:210
+#: incidents/index.php:97
+msgid "Family"
+msgstr ""
+
+#: incidents/index.php:99 incidents/index.php:249
 msgid "Title"
 msgstr ""
 
-#: incidents/index.php:103 incidents/index.php:119 incidents/index.php:131
+#: incidents/index.php:122 incidents/index.php:158 incidents/index.php:170
 msgid "ALL"
 msgstr ""
 
-#: incidents/index.php:109 incidents/index.php:289
+#: incidents/index.php:133 incidents/index.php:331
 msgid "Metric"
 msgstr ""
 
-#: incidents/index.php:134
+#: incidents/index.php:139
+msgid "Hardware"
+msgstr ""
+
+#: incidents/index.php:145
+msgid "Install"
+msgstr ""
+
+#: incidents/index.php:173
 msgid "High"
 msgstr ""
 
-#: incidents/index.php:137
+#: incidents/index.php:176
 msgid "Medium"
 msgstr ""
 
-#: incidents/index.php:140
+#: incidents/index.php:179
 msgid "Low"
 msgstr ""
 
-#: incidents/index.php:151
+#: incidents/index.php:190
 msgid "with User"
 msgstr ""
 
-#: incidents/index.php:152
+#: incidents/index.php:191
 msgid "with Description"
 msgstr ""
 
-#: incidents/index.php:153
+#: incidents/index.php:192
 msgid "with Action"
 msgstr ""
 
-#: incidents/index.php:154
+#: incidents/index.php:193
 msgid "with Attachment"
 msgstr ""
 
-#: incidents/index.php:155
+#: incidents/index.php:194
 msgid "with Copy to"
 msgstr ""
 
-#: incidents/index.php:206
+#: incidents/index.php:245
 msgid "Last Modification"
+msgstr ""
+
+#: incidents/index.php:338
+msgid "Install new hardware incident"
+msgstr ""
+
+#: incidents/index.php:345
+msgid "Insert new installation incident"
 msgstr ""
 
 #: index.php:6 ntop/index.php:8 ntop/session.php:8
@@ -1422,12 +1537,20 @@ msgstr ""
 msgid "Delete net"
 msgstr ""
 
-#: net/deletenet.php:20
+#: net/deletenet.php:20 net/deletenetgroup.php:20
 msgid "Wrong name"
 msgstr ""
 
 #: net/deletenet.php:53
 msgid "Net deleted"
+msgstr ""
+
+#: net/deletenetgroup.php:15
+msgid "Delete network group"
+msgstr ""
+
+#: net/deletenetgroup.php:52
+msgid "Network group deleted"
 msgstr ""
 
 #: net/modifynet.php:15
@@ -1446,16 +1569,41 @@ msgstr ""
 msgid "Netname"
 msgstr ""
 
+#: net/modifynetgroup.php:15
+msgid "Update network group"
+msgstr ""
+
+#: net/modifynetgroup.php:64
+msgid "Network group succesfully updated"
+msgstr ""
+
+#: net/modifynetgroupform.php:15
+msgid "Modify network group"
+msgstr ""
+
+#: net/modifynetgroupform.php:45
+msgid "Group Name"
+msgstr ""
+
+#: net/modifynetgroupform.php:55 net/net.php:147 net/newnetform.php:15
+#: net/newnetgroupform.php:43
+msgid "Insert new network"
+msgstr ""
+
 #: net/net.php:44 net/newnetform.php:38
 msgid "Ips"
 msgstr ""
 
-#: net/net.php:66
+#: net/net.php:66 net/netgroup.php:54
 msgid "Nessus Scan"
 msgstr ""
 
-#: net/net.php:147 net/newnetform.php:15
-msgid "Insert new network"
+#: net/netgroup.php:15 top.php:59
+msgid "Network groups"
+msgstr ""
+
+#: net/netgroup.php:122 net/newnetgroupform.php:15
+msgid "Insert new network group"
 msgstr ""
 
 #: net/newnet.php:15
@@ -1468,6 +1616,50 @@ msgstr ""
 
 #: net/newnetform.php:40
 msgid "example"
+msgstr ""
+
+#: net/newnetgroup.php:15
+msgid "New network group"
+msgstr ""
+
+#: net/newnetgroup.php:65
+msgid "Network group succesfully inserted"
+msgstr ""
+
+#: netscan/do_scan.php:20
+msgid "Missing net argument.."
+msgstr ""
+
+#: netscan/index.php:42 top.php:74
+msgid "Net Scan"
+msgstr ""
+
+#: netscan/index.php:50
+msgid "Please, select the network you want to scan:"
+msgstr ""
+
+#: netscan/index.php:91
+msgid ""
+"NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, "
+"you need root privileges."
+msgstr ""
+
+#: netscan/index.php:93
+msgid ""
+"For this purpose you can use suphp, or set suid to nmap binary (chmod 4755 /"
+"usr/bin/nmap)"
+msgstr ""
+
+#: netscan/scan_db.php:25
+msgid "Return to host's policy"
+msgstr ""
+
+#: netscan/scan_db.php:57
+msgid "Updating "
+msgstr ""
+
+#: netscan/scan_db.php:82
+msgid "Inserting "
 msgstr ""
 
 #: ntop/menu.php:123
@@ -1583,7 +1775,7 @@ msgid "Dest"
 msgstr ""
 
 #: policy/modifypolicyform.php:239 port/modifyportform.php:47
-#: port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:61
+#: port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:62
 msgid "Ports"
 msgstr ""
 
@@ -1594,7 +1786,7 @@ msgstr ""
 
 #: policy/modifypolicyform.php:307 signature/modifysignatureform.php:47
 #: signature/newsignatureform.php:25 signature/signature.php:15
-#: signature/signature.php:29 top.php:60
+#: signature/signature.php:29 top.php:61
 msgid "Signatures"
 msgstr ""
 
@@ -1765,12 +1957,16 @@ msgstr ""
 msgid "Passive"
 msgstr ""
 
-#: report/inventory.php:191
+#: report/inventory.php:191 session/login.php:129
 msgid "Version"
 msgstr ""
 
 #: report/menu.php:42
 msgid "Inventory"
+msgstr ""
+
+#: report/menu.php:48 report/pdfreportform.php:118 top.php:40
+msgid "Alarms"
 msgstr ""
 
 #: report/menu.php:52
@@ -1782,7 +1978,7 @@ msgid "Alerts"
 msgstr ""
 
 #: report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
-#: top.php:67
+#: top.php:68
 msgid "Main"
 msgstr ""
 
@@ -1934,6 +2130,10 @@ msgstr ""
 msgid "Ocurrences"
 msgstr ""
 
+#: riskmeter/index.php:81
+msgid "Page Refresh"
+msgstr ""
+
 #: riskmeter/options.php:39
 msgid "History"
 msgstr ""
@@ -2010,7 +2210,7 @@ msgstr ""
 msgid "RRD Config succesfully inserted"
 msgstr ""
 
-#: rrd_conf/rrd_conf.php:15 top.php:70
+#: rrd_conf/rrd_conf.php:15 top.php:71
 msgid "RRD Config"
 msgstr ""
 
@@ -2365,15 +2565,19 @@ msgstr ""
 msgid "start"
 msgstr ""
 
-#: sensor/sensor_plugins.php:160
+#: sensor/sensor_plugins.php:166
 msgid "ENABLED"
 msgstr ""
 
-#: sensor/sensor_plugins.php:163
+#: sensor/sensor_plugins.php:169
 msgid "disable"
 msgstr ""
 
-#: sensor/sensor_plugins.php:170
+#: sensor/sensor_plugins.php:173
+msgid "DISABLED"
+msgstr ""
+
+#: sensor/sensor_plugins.php:176
 msgid "enable"
 msgstr ""
 
@@ -2409,23 +2613,23 @@ msgstr ""
 msgid "User deleted"
 msgstr ""
 
-#: session/login.php:78
+#: session/login.php:92
 msgid "OSSIM Framework Login"
 msgstr ""
 
-#: session/login.php:88
+#: session/login.php:102
 msgid "OSSIM Login"
 msgstr ""
 
-#: session/login.php:98 session/users.php:37
+#: session/login.php:140 session/users.php:37
 msgid "Password"
 msgstr ""
 
-#: session/login.php:107
+#: session/login.php:150
 msgid "NOTE: Default user is admin-admin"
 msgstr ""
 
-#: session/login.php:108
+#: session/login.php:151
 msgid "For security reasons you should change it at Configuration->Users"
 msgstr ""
 
@@ -2469,7 +2673,7 @@ msgstr ""
 msgid "Re-enter password"
 msgstr ""
 
-#: session/users.php:15 top.php:68
+#: session/users.php:15 top.php:69
 msgid "Users"
 msgstr ""
 
@@ -2553,35 +2757,31 @@ msgstr ""
 msgid "PDF Report"
 msgstr ""
 
-#: top.php:50
+#: top.php:51
 msgid "Session"
 msgstr ""
 
-#: top.php:52
+#: top.php:53
 msgid "Availability"
 msgstr ""
 
-#: top.php:63
+#: top.php:64
 msgid "Directives"
 msgstr ""
 
-#: top.php:64
+#: top.php:65
 msgid "Cross Correlation"
 msgstr ""
 
-#: top.php:69
+#: top.php:70
 msgid "Plugins"
 msgstr ""
 
-#: top.php:71
+#: top.php:72
 msgid "Host Scan"
 msgstr ""
 
-#: top.php:73
-msgid "Scan"
-msgstr ""
-
-#: top.php:74
+#: top.php:75
 msgid "Rule Viewer"
 msgstr ""
 
@@ -2610,4 +2810,8 @@ msgstr ""
 
 #: vulnmeter/index.php:73
 msgid "Nets"
+msgstr ""
+
+#: vulnmeter/index.php:219
+msgid "No scan have been done yet"
 msgstr ""

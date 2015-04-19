@@ -31,7 +31,8 @@ require_once ('classes/Host_os.inc');
 require_once ('classes/Alarm.inc');
 require_once ('classes/Plugin.inc');
 require_once ('classes/Plugin_sid.inc');
-
+require_once ('classes/Port.inc');
+require_once ('classes/Util.inc');
 
 $conf = new ossim_conf();
 $acid_link = $conf->get_conf("acid_link");
@@ -66,7 +67,7 @@ if (!$show_all = $_GET["show_all"]) {
 
 <?php
     $have_scanmap = $conf->get_conf("have_scanmap3d");
-    if($have_scanmap = 0 && $show_all){
+    if($have_scanmap == 1 && $show_all){
        // Generate scanmap datafile
        $base_dir = $conf->get_conf("base_dir");
 
@@ -115,6 +116,7 @@ if (!$show_all = $_GET["show_all"]) {
         <?php
             $name = ereg_replace("directive_alert: ", "", $sid_name);
             if ($alarm->get_alarm())
+						    $name = Util::translate_alarm($conn, $name, $alarm);
                 $name = "<b>$name</b>";
         ?>
 
@@ -159,16 +161,18 @@ if (!$show_all = $_GET["show_all"]) {
         <!-- risk -->
 <?php 
         $orig_date = $alarm->get_timestamp();
-        $date = timestamp2date($orig_date);
+        $date = Util::timestamp2date($orig_date);
 
         $src_ip   = $alarm->get_src_ip();
         $dst_ip   = $alarm->get_dst_ip();
         $src_port = $alarm->get_src_port();
         $dst_port = $alarm->get_dst_port();
-
         if($have_scanmap){
         fwrite($backlog_file,"$orig_date,$src_ip,$src_port,$dst_ip,$dst_port\n");
         }
+        $src_port = Port::port2service($conn, $src_port);
+        $dst_port = Port::port2service($conn, $dst_port);
+
 
         if ($risk  > 7) {
             echo "<td bgcolor=\"red\"><b>";
@@ -232,7 +236,7 @@ if (!$show_all = $_GET["show_all"]) {
         $summ_count = $summary["count"];
         $summ_dst_ips = $summary["dst_ips"];
         $summ_types = $summary["types"];
-        $summ_dst_ports = $summRy["dst_ports"];
+        $summ_dst_ports = $summary["dst_ports"];
         echo "
             <tr>
             <td colspan=\"3\"></td>

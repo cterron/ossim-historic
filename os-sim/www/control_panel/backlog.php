@@ -21,6 +21,7 @@ require_once ('common.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Backlog.inc');
 require_once ('classes/Plugin_sid.inc');
+require_once ('classes/Util.inc');
 
 
 /* connect to db */
@@ -117,7 +118,7 @@ if (!$sup = $_GET["sup"])
 ?>
       <tr>
       <td bgcolor="#eeeeee"><?php echo $backlog->get_id(); ?></td>
-      <td nowrap><?php echo timestamp2date ($backlog->get_timestamp()) ?></td>
+      <td nowrap><?php echo Util::timestamp2date ($backlog->get_timestamp()) ?></td>
       <td><?php echo ereg_replace("directive_alert: ", "", $sid_name) . 
                 " (" . $backlog->get_directive_id() . ") "; ?></td>
       <td><?php 

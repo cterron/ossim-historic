@@ -71,6 +71,37 @@ class Port {
             exit;
         }
     }
+
+    function port2service($conn, $port, $protocol = "tcp")
+    {
+        if (($protocol != "tcp") and ($protocol != "udp"))
+            return $port;
+
+        /* first look at ossim.port table */
+        $query = "SELECT service FROM port WHERE port_number = $port 
+            AND protocol_name = '$protocol'";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            if (!$rs->EOF)
+                return $rs->fields["service"];
+        }
+
+        /* there is no info about $port-$protocol in ossim.port table */
+        if ($service = getservbyport($port, $protocol)) {
+            $query = "INSERT INTO port 
+                (port_number, protocol_name, service, descr) VALUES
+                ($port, '$protocol', '$service', '');";
+            if ($conn->Execute($query) === false) {
+                print 'error inserting port info: '.$conn->ErrorMsg().'<BR>';
+            }
+            return $service;
+        }
+
+        /* getservbyport failed */
+        return $port;
+
+    }
 }
 
 ?>

@@ -11,6 +11,7 @@
 use DBI;
 use ossim_conf;
 my $config_file = "/etc/ossim/framework/ossim.conf";
+my $scheme = "http://";
 
 # Full path for the program 'wget'
 my $wget_cmd = $ossim_conf::ossim_data->{"wget_path"};
@@ -38,26 +39,26 @@ $ossim_link = $2;
 $ossim_ip = "127.0.0.1";
 }
 
-if($ossim_link == ""){ $ossim_link = "/ossim/";}
-if($ossim_web_user == ""){ $ossim_web_user = "admin";}
-if($ossim_web_pass == ""){ $ossim_web_pass = "admin";}
-if($acid_link == ""){ $acid_link = "/acid/";}
+if($ossim_link eq ""){ $ossim_link = "/ossim/";}
+if($ossim_web_user eq ""){ $ossim_web_user = "admin";}
+if($ossim_web_pass eq ""){ $ossim_web_pass = "admin";}
+if($acid_link eq ""){ $acid_link = "/acid/";}
 
 # We benefit from two facts: You can pass multiple "?" as arguments and it
 # doesn't matter if you pass and user and the server doesn't need one.
 
 if ($acid_user eq "") {
-        $acid_url1 = "http://$ossim_ip" . $ossim_link .  "/session/login.php?dest=" . $acid_link . "/acid_update_db.php&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url2 = "http://$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_alerts.php?sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url3 = "http://$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_uaddr.php?addr_type=1&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url4 = "http://$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_uaddr.php?addr_type=2&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url5 = "http://$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_ports.php?port_type=2&proto=-1&sort_order=dip_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url1 = "$scheme$ossim_ip" . $ossim_link .  "/session/login.php?dest=" . $acid_link . "/acid_update_db.php&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url2 = "$scheme$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_alerts.php?sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url3 = "$scheme$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_uaddr.php?addr_type=1&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url4 = "$scheme$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_uaddr.php?addr_type=2&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url5 = "$scheme$ossim_ip" . $ossim_link .  "/session/login.php?dest=" .  $acid_link .  "/acid_stat_ports.php?port_type=2&proto=-1&sort_order=dip_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
 } else {
-        $acid_url1 = "http://". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link . "/acid_update_db.php&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url2 = "http://". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_alerts.php?sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url3 = "http://". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_uaddr.php?addr_type=1&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url4 = "http://". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_uaddr.php?addr_type=2&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
-        $acid_url5 = "http://". $acid_user . ":" . $acid_pass . "@" .  $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_ports.php?port_type=2&proto=-1&sort_order=dip_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url1 = "$scheme". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link . "/acid_update_db.php&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url2 = "$scheme". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_alerts.php?sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url3 = "$scheme". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_uaddr.php?addr_type=1&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url4 = "$scheme". $acid_user . ":" . $acid_pass . "@" . $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_uaddr.php?addr_type=2&sort_order=occur_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
+        $acid_url5 = "$scheme". $acid_user . ":" . $acid_pass . "@" .  $ossim_ip . $ossim_link .  "/session/login.php?dest=" . $acid_link .  "/acid_stat_ports.php?port_type=2&proto=-1&sort_order=dip_d&user=" . $ossim_web_user .  "&pass=" . $ossim_web_pass;
 }
 
 # ACID install directory

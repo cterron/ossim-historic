@@ -53,10 +53,10 @@ class Host_sensor_reference {
         }
     }
 */
-    function delete($conn, $host_ip) 
+    function delete($conn, $host_ip, $sensor_name = "%") 
     {
         $query = "DELETE FROM host_sensor_reference 
-                    WHERE host_ip = '$host_ip'";
+                    WHERE host_ip = '$host_ip' AND sensor_name LIKE '$sensor_name'";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -68,11 +68,23 @@ class Host_sensor_reference {
                                                                                 
         $query = "SELECT * FROM host_sensor_reference
                     WHERE host_ip = '$ip' AND sensor_name='$sensor_name';";
-        echo $query;
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
+    }
+    function check_orphan($conn)
+    {
+        $query =  "SELECT * FROM host_sensor_reference LEFT JOIN sensor ON sensor.name = host_sensor_reference.sensor_name WHERE descr IS NULL";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                Host_sensor_reference::delete($conn, $rs->fields["host_ip"], $rs->fields["sensor_name"]);
+                $rs->MoveNext();
+            }
+        }
     }
 }
 

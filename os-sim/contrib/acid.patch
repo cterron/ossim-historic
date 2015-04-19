@@ -1,6 +1,6 @@
 diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
---- acid/acid_cache.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_cache.inc	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_cache.inc	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_cache.inc	Tue Mar 15 15:54:10 2005
 @@ -226,6 +226,11 @@
    if ( $db->acidGetDBVersion() < 100 )
       $schema_specific[1] = $schema_specific[1].", signature";
@@ -14,8 +14,8 @@ diff -urNb acid/acid_cache.inc acid-ossim/acid_cache.inc
    
    /* TCP events */
 diff -urNb acid/acid_common.php acid-ossim/acid_common.php
---- acid/acid_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_common.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_common.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_common.php	Tue Mar 15 15:54:10 2005
 @@ -11,6 +11,12 @@
   *
   */
@@ -30,8 +30,8 @@ diff -urNb acid/acid_common.php acid-ossim/acid_common.php
  {
     $result = $db->acidExecute("SELECT sid FROM sensor;");
 diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
---- acid/acid_conf.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_conf.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_conf.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_conf.php	Tue Mar 15 15:55:13 2005
 @@ -63,6 +63,18 @@
   */
  $use_referential_integrity = 0;
@@ -41,7 +41,7 @@ diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
 + *   0  : ignore
 + * Ossim framework and acid must be instaled in the same host
 + */
-+$use_ossim_session = 1;
++$use_ossim_session = 0;
 +$ossim_login_path = "/ossim/session/login.php";
 +$ossim_acid_aco_section = "MenuControlPanel";
 +$ossim_acid_aco = "ControlPanelAlerts";
@@ -51,20 +51,25 @@ diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
  /* Path to the graphing library 
   *  (Note: DO NOT include a trailing backslash after the directory)
   */
-@@ -229,8 +241,8 @@
+@@ -229,12 +241,12 @@
  $external_all_link = "http://www.samspade.org/t/lookat?a=";
  
  /* TCP/UDP port database */
 -$external_port_link = "http://www.snort.org/ports.html?port=";
 -//$external_port_link = "http://www.portsdb.org/bin/portsdb.cgi?portnumber=";
 +//$external_port_link = "http://www.snort.org/ports.html?port=";
-+$external_port_link = "http://www.portsdb.org/bin/portsdb.cgi?portnumber=";
++$external_port_link = "http://issans.org/port_details.php?port=";
  
  /* Signature references */
  $external_sig_link = array("bugtraq"   => array("http://www.securityfocus.com/bid/", ""),
+-                           "snort"     => array("http://www.snort.org/snort-db/sid.html?sid=", ""),
++                           "snort"     => array("http://www.snort.org/pub-bin/sigs.cgi?sid=", ""),
+                            "cve"       => array("http://cve.mitre.org/cgi-bin/cvename.cgi?name=", ""),
+                            "arachnids" => array("http://www.whitehats.com/info/ids", ""),
+                            "mcafee"    => array("http://vil.nai.com/vil/content/v_", ".htm"),
 diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
---- acid/acid_hdr2.html	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_hdr2.html	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_hdr2.html	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_hdr2.html	Tue Mar 15 15:54:10 2005
 @@ -1,11 +1,20 @@
  <TABLE COLSPACING=0 BORDER=0 CELLPADDING=0>
  <TR>
@@ -92,8 +97,8 @@ diff -urNb acid/acid_hdr2.html acid-ossim/acid_hdr2.html
  </TR>
  </TABLE>
 diff -urNb acid/acid_main.php acid-ossim/acid_main.php
---- acid/acid_main.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_main.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_main.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_main.php	Tue Mar 15 15:54:10 2005
 @@ -143,6 +143,8 @@
  ?>
  
@@ -104,8 +109,8 @@ diff -urNb acid/acid_main.php acid-ossim/acid_main.php
  <LI><B><A HREF="acid_graph_main.php">Graph Alert data</A></B>&nbsp;
  
 diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
---- acid/acid_output_query.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_output_query.inc	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_output_query.inc	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_output_query.inc	Tue Mar 15 15:54:10 2005
 @@ -94,7 +94,7 @@
         if ( count($sort_keys) == 2 )
         {
@@ -125,8 +130,8 @@ diff -urNb acid/acid_output_query.inc acid-ossim/acid_output_query.inc
  
      echo "   </TR>\n";
 diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
---- acid/acid_qry_common.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_common.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_qry_common.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_qry_common.php	Tue Mar 15 15:54:10 2005
 @@ -503,7 +503,10 @@
    $sig_join_sql = "";
  
@@ -153,10 +158,15 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
    $tmp_meta = "";
    /* Sensor */
    if ( $sensor != "" && $sensor != " " )
-@@ -622,6 +632,77 @@
-   if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
-      $cs->criteria['time']->SetFormItemCnt(0);
- 
+@@ -617,6 +627,77 @@
+   }
+   else
+      $cs->criteria['sig_priority']->Set("");
++
++  /* Date/Time */
++  if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
++     $cs->criteria['time']->SetFormItemCnt(0);
++
 +  /*
 +   * OSSIM Code
 +   */
@@ -223,17 +233,12 @@ diff -urNb acid/acid_qry_common.php acid-ossim/acid_qry_common.php
 +  }
 +  else
 +     $cs->criteria['ossim_risk_a']->Set("");
-+
-+  /* Date/Time */
-+  if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
-+     $cs->criteria['time']->SetFormItemCnt(0);
-+
-   $criteria_sql = $criteria_sql.$tmp_meta;
  
-   /* ********************** IP Criteria ********************************************** */ 
+   /* Date/Time */
+   if ( DateTimeRows2sql($time, $time_cnt, $tmp_meta) == 0 )
 diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
---- acid/acid_qry_form.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_form.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_qry_form.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_qry_form.php	Tue Mar 15 15:54:10 2005
 @@ -67,8 +67,8 @@
       {
          echo '<B>Classification: </B>';
@@ -267,8 +272,8 @@ diff -urNb acid/acid_qry_form.php acid-ossim/acid_qry_form.php
  </TABLE>';
  
 diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
---- acid/acid_qry_sqlcalls.php	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_qry_sqlcalls.php	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_qry_sqlcalls.php	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_qry_sqlcalls.php	Tue Mar 15 15:54:10 2005
 @@ -63,10 +63,24 @@
    $qro->AddTitle("Dest.<BR>Address", 
                   "dip_a", " ", " ORDER BY ip_dst ASC",
@@ -309,10 +314,11 @@ diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
        qroPrintEntryHeader($i);
  
        $tmp_rowid = "#".(($qs->GetCurrentView() * $show_rows)+$i).
-@@ -208,6 +230,58 @@
+@@ -207,6 +229,58 @@
+                        '</A><FONT SIZE="-1">'.$current_dport.'</FONT>');
         else
           qroPrintEntry('<A HREF="acid_app_faq.php#1">unknown</A>');    
- 
++
 +      if ($current_dip != "255.255.255.255") {
 +        if ($current_oasset_d != "")
 +           qroPrintEntry($current_oasset_d);
@@ -364,13 +370,12 @@ diff -urNb acid/acid_qry_sqlcalls.php acid-ossim/acid_qry_sqlcalls.php
 +         qroPrintEntry($current_oreli);
 +      else
 +         qroPrintEntry("--");
-+
+ 
        qroPrintEntry('<FONT>'.IPProto2str($current_proto).'</FONT>');
  
-       qroPrintEntryFooter();
 diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
---- acid/acid_state_citems.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_citems.inc	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_state_citems.inc	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_state_citems.inc	Tue Mar 15 15:54:10 2005
 @@ -822,22 +822,96 @@
        GLOBAL $HTTP_SESSION_VARS;
  
@@ -927,8 +932,8 @@ diff -urNb acid/acid_state_citems.inc acid-ossim/acid_state_citems.inc
 + };  /* OssimTypeCriteria */
  ?>
 diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
---- acid/acid_state_criteria.inc	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/acid_state_criteria.inc	2004-11-15 18:24:04.000000000 +0100
+--- acid/acid_state_criteria.inc	Tue Mar 15 15:53:43 2005
++++ acid-ossim/acid_state_criteria.inc	Tue Mar 15 15:54:10 2005
 @@ -49,6 +49,14 @@
       $this->criteria['icmp_field'] = new ICMPFieldCriteria(&$db, &$this, "icmp_field", PROTO_CFCNT);
       $this->criteria['data'] = new DataCriteria(&$db, &$this, "data", PAYLOAD_CFCNT);
@@ -953,8 +958,8 @@ diff -urNb acid/acid_state_criteria.inc acid-ossim/acid_state_criteria.inc
      else
        ErrorMessage("Invalid criteria element");
 diff -urNb acid/acid_update_db.php acid-ossim/acid_update_db.php
---- acid/acid_update_db.php	1970-01-01 01:00:00.000000000 +0100
-+++ acid-ossim/acid_update_db.php	2004-11-15 18:24:25.000000000 +0100
+--- acid/acid_update_db.php	Thu Jan  1 01:00:00 1970
++++ acid-ossim/acid_update_db.php	Tue Mar 15 15:54:10 2005
 @@ -0,0 +1,71 @@
 +<?php
 +/*
@@ -1028,8 +1033,8 @@ diff -urNb acid/acid_update_db.php acid-ossim/acid_update_db.php
 +  UpdateAlertCache($db);
 +?>
 diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
---- acid/create_acid_tbls_mysql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_mysql.sql	2004-11-15 18:24:04.000000000 +0100
+--- acid/create_acid_tbls_mysql.sql	Tue Mar 15 15:53:43 2005
++++ acid-ossim/create_acid_tbls_mysql.sql	Tue Mar 15 15:54:10 2005
 @@ -81,3 +81,51 @@
  
                              PRIMARY KEY         (ipc_ip),
@@ -1083,8 +1088,8 @@ diff -urNb acid/create_acid_tbls_mysql.sql acid-ossim/create_acid_tbls_mysql.sql
 +CREATE INDEX acid_event_ossim_risk_a ON acid_event (ossim_risk_a);
 +
 diff -urNb acid/create_acid_tbls_pgsql.sql acid-ossim/create_acid_tbls_pgsql.sql
---- acid/create_acid_tbls_pgsql.sql	2003-01-09 02:04:07.000000000 +0100
-+++ acid-ossim/create_acid_tbls_pgsql.sql	2004-11-15 18:24:04.000000000 +0100
+--- acid/create_acid_tbls_pgsql.sql	Tue Mar 15 15:53:43 2005
++++ acid-ossim/create_acid_tbls_pgsql.sql	Tue Mar 15 15:54:10 2005
 @@ -57,8 +57,8 @@
  CREATE TABLE acid_ag      ( ag_id               SERIAL NOT NULL,
                              ag_name             TEXT,

@@ -1,17 +1,17 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.7
+Version:   0.9.8
 Release:   1
 License:   BSD
 Group:     Applications/Security
 URL:       http://www.ossim.net
-Requires:  glib2 > 2.0
-Requires:  libgda >= 1.0
-Requires:  gnet2 >= 2.0
+Requires:  glib2 >= 2.4.6
+Requires:  libgda >= 1.0.4
+Requires:  gnet2 >= 2.0.4
 Source0:   %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
-BuildRequires: glib2-devel > 2.0 libgda-devel >= 1.0 gnet2-devel >= 2.0
+BuildRequires: glib2-devel >= 2.4.6 libgda-devel >= 1.0.4 gnet2-devel >= 2.0.4 python >= 2.3 gettext
 
 %description
 OSSIM aims to unify network monitoring, security, correlation and 
@@ -22,32 +22,45 @@ over every network or security aspect.
 %package agent
 Summary:   OSSIM Agent
 Group:     Applications/Security
+Requires: python >= 2.3
 
 %description agent
 OSSIM Agent
+An agent in OSSIM is set of python script that gathers and sends the
+output of the different plugin or tool to the correlation engine for
+further process.
 
-%package perl
-Summary:   OSSIM Perl Module
+%package utils
+Summary:   OSSIM Utils
 Group:     Applications/Security
+Requires: perl perl-Compress-Zlib
 
-%description perl
-OSSIM Perl Module
+%description utils
+OSSIM Utils
 
 %package framework
 Summary:   OSSIM Web framework
 Group:     Applications/Security
-Requires:  php >= 4.0 php-domxml >= 4.0 os-sim-perl >= %{version}
+Requires:  php >= 4.3.4 php-domxml >= 4.3.4 apache >= 1.3.31 php-adodb php-mysql >= 4.3.4  php-gd >= 4.3.4  php-xslt >= 4.3.4 rrdtool mrtg >= 2.10.13 python MySQL-python nmap php-jpgraph
 
 %description framework
 OSSIM Web framework
 
-%package scripts
-Summary:   OSSIM Scripts
-Group:     Applications/Security
-Requires:  os-sim-perl >= %{version}
 
-%description scripts
-OSSIM Scripts
+%package contrib
+Summary: OSSIM contrib
+Group:   Applications/Security
+
+%description contrib
+Open Source Security Information Management (Contrib)
+
+
+%package mysql
+Summary: OSSIM Mysql
+Group:   Applications/Security
+
+%description mysql
+Open Source Security Information Management (mysql)
 
 %prep
 %setup -q
@@ -102,12 +115,12 @@ fi
 %config %{_sysconfdir}/ossim/server/trojans.xml
 %config %{_sysconfdir}/ossim/server/directives.dtd
 %{_bindir}/ossim-server
-%{_datadir}/ossim/db/
 /var/log/ossim
 
 %files agent
 %defattr(-,root,root,0755)
 %config %{_sysconfdir}/ossim/agent/config.xml
+%config %{_sysconfdir}/ossim/agent/plugins
 %{_datadir}/ossim/agent/
 %{_datadir}/ossim/agent/doc/
 %{_datadir}/ossim/agent/pyossim/
@@ -115,11 +128,21 @@ fi
 %attr(0755,root,root) %{_datadir}/ossim/agent/ossim-agent
 /var/log/ossim
 
-%files perl
+%files utils
 %defattr(-,root,root,0755)
 %config %{_sysconfdir}/ossim/framework/ossim.conf
 %{perl_sitearch}
 %{_datadir}/ossim/perl/
+%{_datadir}/ossim/scripts/chkconfig.pl
+%{_datadir}/ossim/scripts/rrd_plugin.pl
+%{_datadir}/ossim/scripts/do_nessus.pl
+%{_datadir}/ossim/scripts/netbios.pl
+%{_datadir}/ossim/scripts/services.pl
+%{_datadir}/ossim/scripts/update_nessus_ids.pl
+%{_datadir}/ossim/scripts/backupdb.pl
+%{_datadir}/ossim/scripts/acid_cache.pl
+%{_datadir}/ossim/scripts/test-directive.pl
+/var/lib/ossim/backup
 
 %files framework
 %defattr(-,root,root,0755)
@@ -141,17 +164,14 @@ fi
 %attr(0755,root,root) /var/www/cgi-bin/draw_graph_combined.pl
 /var/www/ossim/
 
-%files scripts
-%{_datadir}/ossim/scripts/chkconfig.pl
-%{_datadir}/ossim/scripts/rrd_plugin.pl
-%{_datadir}/ossim/scripts/do_nessus.pl
-%{_datadir}/ossim/scripts/netbios.pl
-%{_datadir}/ossim/scripts/services.pl
-%{_datadir}/ossim/scripts/update_nessus_ids.pl
-%{_datadir}/ossim/scripts/backupdb.pl
-%{_datadir}/ossim/scripts/acid_cache.pl
-%{_datadir}/ossim/scripts/test-directive.pl
-/var/lib/ossim/backup
+%files contrib
+%defattr(-,root,root,0755)
+%{_datadir}/ossim/contrib/
+
+%files mysql
+%defattr(-,root,root,0755)
+%{_datadir}/ossim/db/
+
 
 %changelog
 * Fri Sep 24 2004 Dominique Karg <dk@ossim.net> 0.9.7-1

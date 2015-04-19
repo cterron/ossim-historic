@@ -1,5 +1,5 @@
 hidsdir = $(localstatedir)/www/ossim/hids
-hids_DATA = index.php
+hids_DATA = index.php \
+        host_detail.php
 
 EXTRA_DIST   = $(hids_DATA)
-

@@ -13,8 +13,6 @@ Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
 
 <body>
 
-  <h1 align="center"> <?php echo gettext("Alarms"); ?> </h1>
-
 <?php
 require_once ('ossim_db.inc');
 require_once ('common.inc');
@@ -23,6 +21,8 @@ require_once ('classes/Host_os.inc');
 require_once ('classes/Alarm.inc');
 require_once ('classes/Plugin.inc');
 require_once ('classes/Plugin_sid.inc');
+require_once ('classes/Port.inc');
+require_once ('classes/Util.inc');
 
 /* number of alerts by page */
 $ROWS = 50;
@@ -32,9 +32,11 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 if ($id = $_GET["delete"]) {
+    /*
     if(Session::is_expert()){
         Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
     }
+    */
     Alarm::delete($conn, $id);
 }
 
@@ -51,6 +53,10 @@ if ($list = $_GET["delete_backlog"]) {
 
 if ($date = $_GET["delete_day"]) {
     Alarm::delete_day($conn, $date);
+}
+
+if ($_GET["purge"]) {
+    Alarm::purge($conn);
 }
 
 
@@ -146,6 +152,7 @@ if (!$sup = $_GET["sup"])
       </tr>
 
 <?php
+    $time_start = time();
     if ($alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip,
                                       "ORDER by $order", 
                                       $inf, $sup))
@@ -175,9 +182,9 @@ if (!$sup = $_GET["sup"])
                 $sid_name = "Unknown (id=$id sid=$sid)";
             }
 
-            $date = timestamp2date($alarm->get_timestamp());
+            $date = Util::timestamp2date($alarm->get_timestamp());
             if ($backlog_id != 0) {
-                $since = timestamp2date($alarm->get_since());
+                $since = Util::timestamp2date($alarm->get_since());
             } else {
                 $since = $date;
             }
@@ -197,7 +204,7 @@ if (!$sup = $_GET["sup"])
                 echo "
                 <tr>
                   <td></td>
-                  <td colspan=\"6\">
+                  <td colspan=\"7\">
                     <!--<hr border=\"0\"/>-->
                     <b>$date_formatted</b> [$link_delete]<br/>
                     <!--<hr border=\"0\"/>-->
@@ -213,6 +220,7 @@ if (!$sup = $_GET["sup"])
         <td><b>
 <?php
             $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
+            $alarm_name = Util::translate_alarm($conn, $alarm_name, $alarm);
             $alarm_name_orig = $alarm_name;
             if ($backlog_id != 0) 
             {
@@ -231,12 +239,11 @@ if (!$sup = $_GET["sup"])
         
         <!-- risk -->
 <?php 
-        
         $src_ip   = $alarm->get_src_ip();
         $dst_ip   = $alarm->get_dst_ip();
-        $src_port = $alarm->get_src_port();
-        $dst_port = $alarm->get_dst_port();
-        $sensor   = $alarm->get_sensor();
+        $src_port = Port::port2service($conn, $alarm->get_src_port());
+        $dst_port = Port::port2service($conn, $alarm->get_dst_port());
+        $sensors  = $alarm->get_sensors();
 
         $risk = $alarm->get_risk();
         if ($risk  > 7) {
@@ -279,10 +286,19 @@ if (!$sup = $_GET["sup"])
 
 
         <!-- sensor -->
-        <td nowrap>
-          <a href="../sensor/sensor_plugins.php?sensor=<?php echo $sensor ?>">
-            <?php echo Host::ip2hostname($conn, $alarm->get_sensor()) ?>
-          </a>
+        <td>
+<?php
+    foreach ($sensors as $sensor) { 
+        if ($sensor == "") {
+            echo "-";
+        } else {
+?>
+          <a href="../sensor/sensor_plugins.php?sensor=<?php echo $sensor ?>"
+            ><?php echo Host::ip2hostname($conn, $sensor) ?></a>  
+<?php 
+        }
+    }
+?>
         </td>
         <!-- end sensor -->
 
@@ -355,12 +371,18 @@ if (!$sup = $_GET["sup"])
         } /* foreach alarm_list */
 ?>
       <tr>
-        <td colspan="8"><a href="<?php 
-            echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"> <?php echo gettext("Delete ALL"); ?> </a>
+        <td></td>
+        <td colspan="7">
+        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"><?php
+            echo gettext("Delete ALL alarms"); ?></a> &nbsp;|&nbsp;
+        <a href="<?php echo $_SERVER["PHP_SELF"] ?>?purge=1"><?php
+            echo gettext("Purge orphaned alerts"); ?></a>
         </td>
       </tr>
 <?php
     } /* if alarm_list */
+    $time_load = time() - $time_start;
+    print "[ Page loaded in $time_load seconds ]";
 ?>
     </table>
 

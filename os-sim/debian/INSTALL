@@ -5,7 +5,7 @@
               Open Source Information Management (OSSIM)
                        http://www.ossim.net
 
-           Document updated: Tue, 11 Jan 2005 12:34:57 +0100
+           Document updated: Tue, 01 Feb 2005 14:46:38 +0100
      CHECK FOR AN UP-TO-DATE DOCUMENT AT /usr/share/doc/ossim*/INSTALL.gz
 
               David Gil           <dgil at ossim.net>
@@ -38,6 +38,10 @@
     deb http://security.debian.org/ sarge/updates main
     deb http://ftp.debian.org/debian/ sarge main
     deb http://www.ossim.net/download/ debian/
+
+ - Update your dpkg info with:
+
+   # apt-get update
 
  - Create a /etc/apt/preferences file like this:
 
@@ -72,8 +76,20 @@
         interrupt_unmask = on
         read_ahead_sect = 64
     }
+ 
+ Clean up your system
+ --------------------
+ 
+ - Install deborphan in order to remove orphaned libraries:
 
+   # apt-get install deborphan
+   # apt-get remove --purge `deborphan`
 
+ - Configure your runlevel scripts. You may run on startup only the services
+   you really want. Install a runlevel configuration tool like rcconf or
+   sysv-rc-conf.
+
+   
  1. Install ossim-mysql
  =======================
 
@@ -83,7 +99,7 @@
  - Set a root password for your database:
     # mysqladmin -u root password tu_password_super_secreto
 
- - Edit /etc/mysql/my.cnf and comment the line skip-networking so MySQL
+ - Edit /etc/mysql/my.cnf and modify the "bind-address" entry if you want MySQL
    will listen on port TCP-3306 after restart.
 
  - Then load the tables in the database:
@@ -132,31 +148,23 @@
  4. Install OSSIM Framework
  ===========================
 
+ - Install phpgacl package:
+   # apt-get install phpgacl
+
+   Create the database that will store de acl information (ossim_acl)
+   # mysqladmin create ossim_acl -p
+
  - Install ossim-framework and all its dependencies:
     # apt-get install ossim-framework
 
- - You will be prompt for your database configuration. Use "dpkg-reconfigure
-   ossim-utils" and "dpkg-reconfigure ossim-framework" if you want to update
-   the framework configuration (don't edit /etc/ossim/framework/ossim.conf by
-   hand)
-
- - Configure phpGACL:
-    - Edit the files
-        /etc/phpgacl/gacl_admin.inc.php and
-        /etc/phpgacl/gacl.class.php
-      With the following configuration:
-        db_type='mysql'
-        db_host='yourhost'
-        db_user='root'
-        db_pass='your_top_secret_password'
-        db_name='ossim'     # IMPORTANT!!
-        db_table_prefix=''  # IMPORTANT!!
-    - Go to http://yourhost/phpgacl/setup.php to insert the tables in the
-      database.
-    
-  - Access the framework [ http://yourhost/ossim/ ] and go to configuration
-    menu Configuration->Main (you should only change some passwords, if not,
-    let us know as we'll try make a more fully automated installation).
+ - You will be prompt for your database configuration (ossim & ossim_acl
+   databases). Use "dpkg-reconfigure ossim-utils" and "dpkg-reconfigure
+   ossim-framework" if you want to update the framework configuration (don't
+   edit /etc/ossim/framework/ossim.conf by hand)
+ 
+ - Access the framework [ http://yourhost/ossim/ ] and go to configuration
+   menu Configuration->Main (you should only change some passwords, if not,
+   let us know as we'll try make a more fully automated installation).
 
 
  5. Install OSSIM utils
@@ -228,6 +236,11 @@
     # cd /etc/snort/rules/
     # wget http://www.bleedingsnort.com/bleeding-all.rules
     # echo "include \$RULE_PATH/bleeding-all.rules" >> /etc/snort/snort.conf
+
+ - Update OSSIM database with the rules of your system:
+
+   # /usr/share/ossim/scripts/create_sidmap.pl /etc/snort/rules | \
+        mysql -u root ossim -p
 
 
  A.2 Ntop

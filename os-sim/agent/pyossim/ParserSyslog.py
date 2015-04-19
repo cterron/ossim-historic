@@ -9,33 +9,50 @@ class ParserSyslog(Parser.Parser):
         {
             "sid":      1,
             "name":     "pam_unix: authentication failure",
-            "pattern":  "(\S+) (\d+) (\d\d):(\d\d):(\d\d) \S+ " + \
-                        "\S+\[(\d+)\]: " + \
-                        "\(pam_unix\) authentication failure; " + \
-                        "logname=\S*\s+uid=\d*\s+euid=\d*\s+tty=\S*\s+" + \
-                        "ruser=\S*\s+rhost=(\S*)\s+user=(\S*)"
+
+            # Feb  7 15:31:41 golgotha login[3867]: (pam_unix) authentication
+            # failure; logname=LOGIN uid=0 euid=0 tty=tty1 ruser= rhost=
+            # user=dgil
+            "pattern": re.compile (
+                    "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
+                    "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
+                    ".*?\(pam_unix\) authentication failure" +\
+                    ".*?rhost=(?P<src>\S*)" +\
+                    ".*?user=(?P<user>\S*)" +\
+                    "(?P<sport>)(?P<dport>)",
+                    re.IGNORECASE
+                ),
         },
         {
             "sid":      2,
-            "name":     "SSHd: Failed password",
-            "pattern":  "(\S+) (\d+) (\d\d):(\d\d):(\d\d) \S+ " + \
-                        "sshd\[(\d+)\]: Failed password \S+ " + \
-                        "(\S+) \S+ \S+:(\d+.\d+.\d+.\d+) \S+ (\d+) \S+"
+            "name":     "pam_unix: 2 more authentication failures",
+            # Feb  8 10:51:34 golgotha sshd[29755]: (pam_unix) 2 more 
+            # authentication failures; logname= uid=0 euid=0 tty=ssh ruser= 
+            # rhost=192.168.6.69  user=dgil
+            "pattern": re.compile (
+                    "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
+                    "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
+                    ".*?\(pam_unix\) 2 more authentication failures" +\
+                    ".*?rhost=(?P<src>\S*)" +\
+                    ".*?user=(?P<user>\S*)" +\
+                    "(?P<sport>)(?P<dport>)",
+                    re.IGNORECASE
+                ),
         },
         {
             "sid":      3,
-            "name":     "Telnetd: Authentication failure",
-            "pattern":  "(\S+) (\d+) (\d\d):(\d\d):(\d\d) \S+ " + \
-                        "login\[(\d+)\]: FAILED LOGIN \(\d+\) \S+ " + \
-                        "\Wpts\S+ \S+ \W(\S+)\W \S+ \W(\w+)\S+"
-        },
-        {
-            "sid":      4,
-            "name":     "Proftp: Login failed",
-            "pattern":  "(\S+) (\d+) (\d\d):(\d\d):(\d\d) \S+ " + \
-                        "proftpd\[(\d+)\]: " + \
-                        "\S+ \(\S+\[(\d+.\d+.\d+.\d+)\]\) - USER (\S+) " + \
-                        "\(Login failed\): Incorrect password\."
+            "name":     "SSHd: Failed password",
+
+            # Feb  8 10:09:06 golgotha sshd[24472]: Failed password for dgil
+            # from ::ffff:192.168.6.69 port 33992 ssh2
+            "pattern": re.compile (
+                    "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
+                    "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
+                    ".*?ssh.*?Failed password for (?P<user>\S+)\s+" + \
+                    ".*?(?P<src>\d+.\d+.\d+.\d+)" +\
+                    ".*?port\s+(?P<sport>\d+)\s+(?P<dport>\S+)",
+                    re.IGNORECASE
+                ),
         },
     ]
 
@@ -85,41 +102,39 @@ class ParserSyslog(Parser.Parser):
 
             else:
 
-                month = day = hour = minute = second = ""
-                user = source_ip = source_port = dst_ip = dst_port = ""
-
                 for sid in ParserSyslog.sids:
-                    
-                    result = re.findall(str(sid["pattern"]), line)
-                    if result != []:
-                        
-                        # ssh
-                        if sid["sid"] == 2:
-                            (month, day, hour, minute, second, process,
-                             user, source_ip, source_port) = result[0]
-                            dst_port = 22
-                        
-                        elif sid["sid"] in (1, 3, 4):
-                            (month, day, hour, minute, second, process, 
-                             host_name, user) = result[0]
+                
+                    date = src = user = sport = dport = ""
+                
+                    result = sid["pattern"].search(line)
+                    if result is not None:
 
-                            if host_name:
-                                try:
-                                    source_ip = socket.gethostbyname(host_name)
-                                except socket.error:
-                                    source_ip = host_name
-                        
-                        else:
-                            continue
+                        hash = result.groupdict()
 
+                        # get date
                         year = time.strftime('%Y', time.localtime(time.time()))
-                    
                         datestring = "%s %s %s %s %s %s" % \
-                            (year, month, day, hour, minute, second)
-                    
-                        date = time.strftime('%Y-%m-%d %H:%M:%S', 
-                                         time.strptime(datestring, 
-                                                       "%Y %b %d %H %M %S"))
+                            (year, hash["month"], hash["day"], hash["hour"], 
+                             hash["minute"], hash["second"])
+                        date = time.strftime('%Y-%m-%d %H:%M:%S',
+                            time.strptime(datestring,
+                                "%Y %b %d %H %M %S"))
+
+                        # get src ip
+                        try:
+                            if hash.has_key("src"):
+                                src = socket.gethostbyname(hash["src"])
+                        except socket.error:
+                            src = hash["src"]
+
+                        # get user
+                        if hash.has_key("user"):    user  = hash["user"]
+                        
+                        # get source and dest ports
+                        if hash.has_key("sport"):   sport = hash["sport"]
+                        if hash.has_key("dport"):   dport = hash["dport"]
+                        if sid["sid"] == 3:  dport = 22 # ssh
+                            
 
                         self.agent.sendAlert (
                                     type = 'detector',
@@ -130,11 +145,11 @@ class ParserSyslog(Parser.Parser):
                                     plugin_sid = sid["sid"],
                                     priority   = '1',
                                     protocol   = '',
-                                    src_ip     = source_ip,
-                                    src_port   = source_port,
-                                    data       = user, 
+                                    src_ip     = src,
+                                    src_port   = sport,
+                                    data       = user,
                                     dst_ip     = self.plugin["sensor"],
-                                    dst_port   = dst_port,
+                                    dst_port   = dport,
                                     log        = line)
 
                         # alert sent

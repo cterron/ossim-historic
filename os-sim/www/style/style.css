@@ -50,6 +50,10 @@ table {
     text-align: center;
 }
 
+table.noborder {
+    border-width: 0px;
+}
+
 th {
     color: #11334f;
 /*    background: #cbcbcb;*/
@@ -71,6 +75,7 @@ td {
 }
 
 td.left {
+    padding-left: 5px;
     text-align: left;
 }
 

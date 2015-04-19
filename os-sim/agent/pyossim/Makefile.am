@@ -25,6 +25,10 @@ ossim_pyossim_DATA    = __init__.py \
 	ParserSkel.py \
 	ParserSyslog.py \
 	ParserNTsyslog.py \
+	ParserFortiGate.py \
+	ParserNetgear.py \
+	ParserSnareWindows.py \
+	ParserSnort.py \
 	MonitorCA.py \
 	MonitorNtop.py \
 	MonitorNtopHostinfo.py \

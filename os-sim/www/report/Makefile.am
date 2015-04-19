@@ -1,6 +1,7 @@
 SUBDIRS=graphs
 reportdir = $(localstatedir)/www/ossim/report
 report_DATA = index.php \
+	anomalies.php \
 	inventory.php \
 	menu.php \
 	metrics.php \

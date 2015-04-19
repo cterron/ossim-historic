@@ -1,5 +1,11 @@
 netdir = $(localstatedir)/www/ossim/net
 net_DATA = deletenet.php \
+	deletenetgroup.php \
+	modifynetgroupform.php \
+	modifynetgroup.php \
+	netgroup.php\
+	newnetgroup.php \
+	newnetgroupform.php \
 	modifynetform.php \
 	modifynet.php \
 	net.php \

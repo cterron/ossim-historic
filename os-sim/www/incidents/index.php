@@ -33,9 +33,14 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     $action      = mysql_real_escape_string($_GET["action"]);
     $attachment  = mysql_real_escape_string($_GET["attachment"]);
     $copyto      = mysql_real_escape_string($_GET["copyto"]);
-    
-    if ($_GET["type"])
+   
+    if (!$family = $_GET["family"]) $family = "OSSIM";
+    $where .= "incident.family = '$family' ";
+ 
+    if ($_GET["type"]) {
+        if ($where) $where .= "AND ";
         $where .= "incident.ref = '$type' ";
+    }
     if ($_GET["title"]) {
         if ($where) $where .= "AND ";
         $where .= "incident.title LIKE '%$title%'";
@@ -65,14 +70,14 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 ?>
 
   <!-- filter -->
-  <form method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
+  <form name="filter" method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
     <?php if (isset($_GET["advanced_search"])) { ?>
     <input type="hidden" name="advanced_search" 
            value="<?php echo $_GET["advanced_search"] ?>">
     <?php } ?>
   <table align="center">
     <tr>
-      <th colspan="6">
+      <th colspan="7">
       <?php echo gettext("Filter"); ?> 
 <?php
 
@@ -89,6 +94,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
       </th>
     </tr>
     <tr>
+      <td> <?php echo gettext("Family") ?> </td>
       <td> <?php echo gettext("Type"); ?> </td>
       <td> <?php echo gettext("Title"); ?> </td>
       <td> <?php echo gettext("In charge"); ?> </td>
@@ -98,15 +104,48 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     </tr>
     <tr>
       <td>
-        <select name="type">
+        <select name="family" onChange="document.forms['filter'].submit()">
+          <option 
+            <?php if ($family == "OSSIM") echo " selected " ?>
+            value="OSSIM">OSSIM</option>
+          <option 
+            <?php if ($family == "Hardware") echo " selected " ?>
+            value="Hardware">Hardware</option>
+          <option 
+            <?php if ($family == "Install") echo " selected " ?>
+            value="Install">Install</option>
+        </select>
+      </td>
+      <td>
+        <select name="type" onChange="document.forms['filter'].submit()">
           <option value="">
-	  <?php echo gettext("ALL"); ?> </option>
+        <?php echo gettext("ALL"); ?> </option>
+
+<?php if ($family == 'OSSIM') { ?>
+
           <option <?php if ($_GET["type"] == "Alarm") echo " selected " ?>
             value="Alarm">
 	    <?php echo gettext("Alarm"); ?> </option>
+
+
           <option <?php if ($_GET["type"] == "Metric") echo " selected " ?>
             value="Metric">
 	    <?php echo gettext("Metric"); ?> </option>
+
+<?php } elseif ($family == 'Hardware') { ?>
+
+          <option <?php if ($_GET["type"] == "Hardware") echo " selected " ?>
+            value="Hardware">
+	    <?php echo gettext("Hardware"); ?> </option>
+
+<?php } elseif ($family == 'Install') { ?>
+
+          <option <?php if ($_GET["type"] == "Install") echo " selected " ?>
+            value="Hardware">
+	    <?php echo gettext("Install"); ?> </option>
+
+<?php } ?>
+
         </select>
       </td>
       <td><input type="text" name="title" 
@@ -114,7 +153,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
       <td><input type="text" name="in_charge" 
                  value="<?php echo $_GET["in_charge"] ?>" /></td>
       <td>
-        <select name="status">
+        <select name="status" onChange="document.forms['filter'].submit()">
           <option value="">
 	  <?php echo gettext("ALL"); ?> </option>
           <option <?php if ($_GET["status"] == "Open") echo " selected " ?>
@@ -126,7 +165,7 @@ Session::logcheck("MenuReports", "ReportsIncidents");
         </select>
       </td>
       <td>
-        <select name="priority">
+        <select name="priority" onChange="document.forms['filter'].submit()">
           <option value="">
 	  <?php echo gettext("ALL"); ?> </option>
           <option <?php if ($_GET["priority"] == "High") echo " selected " ?>
@@ -282,12 +321,31 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 ?>
     <tr>
       <td colspan="7" align="center">
+<?php
+    if ($family == "OSSIM") {
+?>
         Insert new Incident (
-        <a href="incident.php?insert=1&ref=Alarm&title=new_incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
+        <a href="incident.php?insert=1&ref=Alarm&title=New Alarm incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Alarm"); ?> </a> | 
-        <a href="incident.php?insert=1&ref=Metric&title=Metric threshold&priority=1&target=&metric_type=&metric_value=">
-	<?php echo gettext("Metric"); ?> </a>
-        )
+        <a href="incident.php?insert=1&ref=Metric&title=New Metric incident&priority=1&target=&metric_type=&metric_value=">
+	<?php echo gettext("Metric"); ?> </a> )
+    
+
+<?php   } elseif ($family == "Hardware") {  ?>
+
+
+        <a href="incident.php?insert=1&ref=Hardware&title=New Hardware incident&priority=1">
+	<?php echo gettext("Install new hardware incident"); ?> </a>
+
+
+<?php   } elseif ($family == "Install") {   ?>
+
+
+        <a href="incident.php?insert=1&ref=Install&title=New Installation incident&priority=1">
+	<?php echo gettext("Insert new installation incident"); ?> </a>
+
+<?php   }   ?>
+
       </td>
     </tr>
   </table>

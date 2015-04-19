@@ -1,6 +1,8 @@
 directivesdir = $(localstatedir)/www/ossim/directives
-directives_DATA = index.php \
-                  directive.php \
-		  directiveslist.php
-EXTRA_DIST   = $(directives_DATA)
+directives_DATA = directivemenu.xsl \
+	directive.php \
+	directiveslist.php \
+	index.php \
+	xslt-php4-to-php5.php
 
+EXTRA_DIST   = $(directives_DATA)

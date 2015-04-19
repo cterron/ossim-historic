@@ -21,7 +21,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         (!$_POST["hostname"] || !$_POST["ip"] || !$_POST["threshold_c"] || 
          !$_POST["threshold_a"] || 
          // !$_POST["persistence"] || 
-         !$_POST["nsens"] || !$_POST["descr"])) 
+         !$_POST["nsens"])) 
     {
 ?>
 
@@ -45,12 +45,25 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     $persistence = mysql_escape_string($_POST["persistence"]);
     $nat         = mysql_escape_string($_POST["nat"]);
     $descr       = mysql_escape_string($_POST["descr"]);
+    $os          = mysql_escape_string($_POST["os"]);
+    $mac         = mysql_escape_string($_POST["mac"]);
+    $mac_vendor  = mysql_escape_string($_POST["mac_vendor"]);
+    $num_sens    = 0;
 
     for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
         $name = "mboxs" . $i;
         if (mysql_escape_string($_POST[$name])) {
+            $num_sens ++;
             $sensors[] = mysql_escape_string($_POST[$name]);
         }
+    }
+
+    if ($num_sens == 0) {
+?>
+      <p align="center">
+      <?php echo gettext("Sorry, no sensor selected"); ?> </p>
+<?php
+        exit();
     }
 
     require_once 'ossim_db.inc';
@@ -60,7 +73,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     $conn = $db->connect();
     
     Host::update ($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
-                  $rrd_profile, $alert, $persistence, $nat, $sensors, $descr);
+                  $rrd_profile, $alert, $persistence, $nat, $sensors, $descr,
+                  $os, $mac, $mac_vendor);
                   
     Host_scan::delete ($conn, $ip, 3001);
     if($_POST["nessus"]) {

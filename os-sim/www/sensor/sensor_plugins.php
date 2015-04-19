@@ -146,7 +146,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
             "?sensor=$ip&ip=$ip&cmd=stop&id=$id" ?>">
 	    <?php echo gettext("stop"); ?> </a></td>
 <?php
-                    } else {
+                    } elseif ($state == 'stop') {
 ?>
       <td><font color="RED"><b> <?php echo gettext("DOWN"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
@@ -154,7 +154,13 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 	    <?php echo gettext("start"); ?> </a></td>
       
 <?php
+                    } else {
+                        echo "
+                          <td>Unknown</td>
+                          <td>-</td>
+                        ";
                     }
+                    
                     if ($enabled == 'true') {
 ?>
       <td><font color="GREEN"><b> <?php echo gettext("ENABLED"); ?> </b></font></td>

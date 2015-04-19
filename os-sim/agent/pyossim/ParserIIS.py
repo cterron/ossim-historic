@@ -82,6 +82,7 @@ class ParserIIS(Parser.Parser):
                                      src_port   = '',
                                      dst_ip     = to,
                                      dst_port   = port,
+                                     data       = line,
                                      log        = line)
                     
                 except IndexError: 
@@ -98,7 +99,7 @@ class ParserIIS(Parser.Parser):
                 "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) "     +\
                 "\S+ \S+ \- (\d+) \- "                      +\
                 "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) "     +\
-                ".*? (\d+) \d+ \d+$"
+                ".*? (\d+) \d+ \d+"
             )
 
         location = self.plugin["location"]

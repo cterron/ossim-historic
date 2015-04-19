@@ -1,3 +1,105 @@
+ossim (0.9.8rc2) unstable; urgency=low
+
+  * New Release.
+
+ -- David Gil <dgil@ossim.net>  Fri, 18 Mar 2005 10:26:25 +0100
+
+ossim (0.9.8rc1+cvs20050316-2) unstable; urgency=low
+
+  * Main Acid page caching (forgotten in last version).
+
+ -- David Gil <dgil@ossim.net>  Thu, 17 Mar 2005 14:45:44 +0100
+
+ossim (0.9.8rc1+cvs20050316-1) unstable; urgency=low
+
+  * New CVS Release.
+  * AcidCache fixes
+
+ -- David Gil <dgil@ossim.net>  Wed, 16 Mar 2005 17:04:15 +0100
+
+ossim (0.9.8rc1+cvs20050315-1) unstable; urgency=low
+
+  * New CVS Release.
+  * init scripts improvements.
+
+ -- David Gil <dgil@ossim.net>  Tue, 15 Mar 2005 17:56:53 +0100
+
+ossim (0.9.8rc1+cvs20050311-1) unstable; urgency=low
+
+  * New CVS Release.
+  * Fixed 10_mysql_conffiles.dpatch
+
+ -- David Gil <dgil@ossim.net>  Fri, 11 Mar 2005 14:38:09 +0100
+
+ossim (0.9.8rc1+cvs20050309-1) unstable; urgency=low
+
+  * New CVS Release.
+  * Agent, Framework and Server init scripts
+
+ -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 18:55:44 +0100
+
+ossim (0.9.8rc1+cvs20050302-2) unstable; urgency=low
+
+  * Frameworkd fixes.
+
+ -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 18:55:44 +0100
+
+ossim (0.9.8rc1+cvs20050302-1) unstable; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 16:18:27 +0100
+
+ossim (0.9.8rc1+cvs20050224-1) unstable; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Thu, 24 Feb 2005 17:55:30 +0100
+
+ossim (0.9.8rc1+cvs20050222-1) unstable; urgency=low
+
+  * New CVS Release.
+  * Alarm console speedup !
+
+ -- David Gil <dgil@ossim.net>  Tue, 22 Feb 2005 17:20:07 +0100
+
+ossim (0.9.8rc1+cvs20050221-1) unstable; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Mon, 21 Feb 2005 08:57:55 +0100
+
+ossim (0.9.8rc1+cvs20050209-2) unstable; urgency=low
+
+  * Fixed server high CPU load.
+
+ -- David Gil <dgil@ossim.net>  Wed, 09 Feb 2005 14:36:24 +0100
+
+ossim (0.9.8rc1+cvs20050209-1) unstable; urgency=low
+
+  * New CVS Release.
+  * Debian Patch System
+
+ -- David Gil <dgil@ossim.net>  Wed, 09 Feb 2005 10:23:51 +0100
+
+ossim (0.9.8rc1+cvs20050207-1) unstable; urgency=low
+
+  * New CVS Release.
+
+ -- David Gil <dgil@ossim.net>  Mon, 07 Feb 2005 11:15:22 +0100
+
+ossim (0.9.8rc1-3) unstable; urgency=low
+
+  * Apache2 support.
+
+ -- David Gil <dgil@ossim.net>  Wed, 02 Feb 2005 12:33:54 +0100
+
+ossim (0.9.8rc1-2) unstable; urgency=low
+
+  * phpGACL update.
+
+ -- David Gil <dgil@ossim.net>  Tue, 01 Feb 2005 13:05:29 +0100
+
 ossim (0.9.8rc1-1) unstable; urgency=low
 
   * New CVS version. 0.9.8 is incoming..

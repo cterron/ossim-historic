@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+from ossimframework.Framework import Framework
+
+if __name__ == '__main__':
+
+    f = Framework()
+    f.startup()
+    f.main()
+    f.waitforever()
+

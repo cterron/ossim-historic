@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 OS_SIM_MAJOR_VERSION=0
 OS_SIM_MINOR_VERSION=9
-OS_SIM_MICRO_VERSION=7
+OS_SIM_MICRO_VERSION=8
 OS_SIM_VERSION=$OS_SIM_MAJOR_VERSION.$OS_SIM_MINOR_VERSION.$OS_SIM_MICRO_VERSION
 
 AC_SUBST(OS_SIM_MAJOR_VERSION)
@@ -79,6 +79,7 @@ agent/pyossim/Makefile
 etc/Makefile
 etc/server/Makefile
 etc/agent/Makefile
+etc/agent/plugins/Makefile
 etc/framework/Makefile
 db/Makefile
 pixmaps/Makefile
@@ -113,6 +114,8 @@ www/style/Makefile
 www/vulnmeter/Makefile
 www/backup/Makefile
 www/java/Makefile
+www/java/images/Makefile
+www/netscan/Makefile
 mrtg/Makefile
 mrtg/level/Makefile
 mrtg/global/Makefile
@@ -121,4 +124,15 @@ mrtg/nets/Makefile
 scripts/Makefile
 contrib/Makefile
 contrib/fonts/Makefile
+contrib/ntop/Makefile
+contrib/mrtg/Makefile
+contrib/arpwatch/Makefile
+contrib/base/Makefile
+contrib/debian/Makefile
+contrib/debian/agent/Makefile
+contrib/debian/framework/Makefile
+contrib/debian/httpd/Makefile
+contrib/debian/init.d/Makefile
+contrib/oinkmaster/Makefile
+contrib/spade/Makefile
 ])

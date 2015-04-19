@@ -70,6 +70,8 @@ struct _SimSessionPrivate {
   gint		seq;
   gboolean	close;
   gboolean	connect;
+
+  gint          watch;
 };
 
 static gpointer parent_class = NULL;
@@ -173,6 +175,42 @@ sim_session_get_type (void)
  *
  *
  *
+ */
+gboolean
+async_client_iofunc (GIOChannel* iochannel, GIOCondition condition,
+                     gpointer data)
+{
+  SimSession *session = (SimSession *) data;
+
+  if (condition & (G_IO_ERR | G_IO_HUP | G_IO_NVAL))
+    {
+      g_message ("async_client_iofunc ERROR");
+      g_source_remove (session->_priv->watch);
+      session->_priv->close = TRUE;
+      return FALSE;
+    }
+  if (condition & G_IO_IN)
+    {
+      if (!sim_session_read(session))
+	{
+	  g_message ("Read failed, closing socket.");
+	  g_source_remove (session->_priv->watch);
+	  session->_priv->close = TRUE;
+	  return FALSE;
+	}
+    }
+  if (condition & G_IO_OUT)
+    {
+      g_message ("async_client_iofunc G_IO_OUT");
+    }
+
+  return TRUE;  
+}
+
+/*
+ *
+ *
+ *
  *
  */
 SimSession*
@@ -194,8 +232,6 @@ sim_session_new (GObject       *object,
   session->_priv->server = server;
   session->_priv->socket = socket;
 
-  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
-
   session->_priv->ia = gnet_tcp_socket_get_remote_inetaddr (socket);
 
   if (gnet_inetaddr_is_loopback (session->_priv->ia))
@@ -203,6 +239,10 @@ sim_session_new (GObject       *object,
       gnet_inetaddr_unref (session->_priv->ia);
       session->_priv->ia = gnet_inetaddr_get_host_addr ();
     }
+
+  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
+  session->_priv->watch = g_io_add_watch (session->_priv->io, G_IO_IN | G_IO_ERR | G_IO_HUP | G_IO_NVAL,
+					  async_client_iofunc, session);
 
   g_message ("sim_session_new: %s", gnet_inetaddr_get_canonical_name (session->_priv->ia));
 
@@ -623,6 +663,35 @@ sim_session_cmd_plugin_start (SimSession  *session,
     }
 }
 
+static void
+sim_session_cmd_plugin_unknown (SimSession  *session,
+			      SimCommand  *command)
+{
+  SimCommand  *cmd;
+  GList       *sessions;
+  GList       *list;
+  
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+
+  list = session->_priv->plugin_states;
+  while (list)
+    {
+      SimPluginState  *plugin_state = (SimPluginState *) list->data;
+      SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
+      gint id = sim_plugin_get_id (plugin);
+
+      if (id == command->data.plugin_unknown.plugin_id)
+	sim_plugin_state_set_state (plugin_state, 3);
+
+      list = list->next;
+    }
+}
+
+
+
 /*
  *
  *
@@ -752,8 +821,14 @@ sim_session_cmd_alert (SimSession  *session,
       plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container,
 						       alert->plugin_id,
 						       alert->plugin_sid);
-      alert->priority = sim_plugin_sid_get_priority (plugin_sid);
-      alert->reliability = sim_plugin_sid_get_reliability (plugin_sid);
+      if(!(alert->priority = sim_plugin_sid_get_priority(plugin_sid))){
+      g_message("Unable to fetch priority for plugin id %d, plugin sid %d.", alert->plugin_id, alert->plugin_sid);
+      alert->priority = 1;
+      }
+      if(!(alert->reliability = sim_plugin_sid_get_reliability(plugin_sid))){
+      g_message("Unable to fetch reliability for plugin id %d, plugin sid %d.", alert->plugin_id, alert->plugin_sid);
+      alert->reliability = 1;
+      }
     }
 
   if (session->type == SIM_SESSION_TYPE_RSERVER)
@@ -1423,11 +1498,10 @@ sim_session_cmd_error (SimSession  *session,
 
 /*
  *
-
  *
  *
  */
-void
+gboolean
 sim_session_read (SimSession  *session)
 {
   SimCommand  *cmd;
@@ -1436,23 +1510,31 @@ sim_session_read (SimSession  *session)
   gchar        buffer[BUFFER_SIZE];
   guint        n;
 
-  g_return_if_fail (session != NULL);
-  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_val_if_fail (session != NULL, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
 
-  while (!(session->_priv->close) && 
-	 (error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n > 0))
+  if (!session->_priv->close)
     {
+      error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n);
+      
       if (error != G_IO_ERROR_NONE)
 	{
-	  g_message ("Recived error %d (closing socket)", error);
-	  break;
+	  g_message ("Received error, closing socket: %d: %s", error, g_strerror(error));
+	  return FALSE;
+	}
+      
+      if (n == 0)
+	{
+//	  g_message ("Received error, bytes read == 0 (closing socket)");
+	  g_message ("0 bytes read (closing socket)");
+	  return FALSE;
 	}
 
       if (!buffer)
-	continue;
+	return TRUE;
 
       if (strlen (buffer) <= 2)
-	continue;
+	return TRUE;
 
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: %s", buffer);
 
@@ -1461,14 +1543,14 @@ sim_session_read (SimSession  *session)
       if (!cmd)
 	{
 	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command null");
-	  continue;
+	  return TRUE;
 	}
 
       if (cmd->type == SIM_COMMAND_TYPE_NONE)
 	{
 	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command type none");
 	  g_object_unref (cmd);
-	  continue;
+	  return TRUE;
 	}
 
       switch (cmd->type)
@@ -1502,6 +1584,9 @@ sim_session_read (SimSession  *session)
 	  break;
 	case SIM_COMMAND_TYPE_PLUGIN_START:
 	  sim_session_cmd_plugin_start (session, cmd);
+	  break;
+	case SIM_COMMAND_TYPE_PLUGIN_UNKNOWN:
+	  sim_session_cmd_plugin_unknown (session, cmd);
 	  break;
 	case SIM_COMMAND_TYPE_PLUGIN_STOP:
 	  sim_session_cmd_plugin_stop (session, cmd);
@@ -1566,6 +1651,7 @@ sim_session_read (SimSession  *session)
 
       g_object_unref (cmd);
     }
+  return TRUE;
 }
 
 /*
@@ -1751,4 +1837,18 @@ sim_session_close (SimSession *session)
   g_return_if_fail (SIM_IS_SESSION (session));
   
   session->_priv->close = TRUE;
+}
+
+/*
+ *
+ *
+ *
+ */
+gboolean
+sim_session_is_close (SimSession *session)
+{
+  g_return_if_fail (session);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  
+  return session->_priv->close;
 }

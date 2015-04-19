@@ -69,3 +69,12 @@ done
 
 mv -f $TEMPFILE $CONFIG
 
+
+update-rc.d ossim-agent defaults 41 2&> /dev/null
+#/etc/init.d/ossim-agent restart
+
+# temporal
+update-rc.d -f ossimagent remove > /dev/null
+rm -f /etc/init.d/ossimagent
+
+

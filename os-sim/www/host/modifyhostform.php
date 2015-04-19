@@ -33,19 +33,28 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         $host = $host_list[0];
     }
 
+
+    /* print SELECTED for html-select when os is matched */
+    function match_os($pattern, $os)
+    {
+        $pattern = "/$pattern/i";
+        if (preg_match($pattern, $os))
+            echo " SELECTED ";
+    }
+
 ?>
 
 <form method="post" action="modifyhost.php">
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th> <?php echo gettext("Hostname"); ?> </th>
+    <th> <?php echo gettext("Hostname"); ?> (*)</th>
     <td class="left">
       <input type="text" name="hostname"
              value="<?php echo $host->get_hostname(); ?>"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("IP"); ?> </th>
+    <th> <?php echo gettext("IP"); ?> (*)</th>
         <input type="hidden" name="ip"
                value="<?php echo $host->get_ip(); ?>">
     <td class="left">
@@ -53,7 +62,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Asset"); ?> </th>
+    <th> <?php echo gettext("Asset"); ?> (*)</th>
     <td class="left">
       <select name="asset">
         <option
@@ -84,19 +93,19 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold C"); ?> </th>
+    <th> <?php echo gettext("Threshold C"); ?> (*)</th>
     <td class="left">
       <input type="text" name="threshold_c" size="4"
              value="<?php echo $host->get_threshold_c(); ?>"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold A"); ?> </th>
+    <th> <?php echo gettext("Threshold A"); ?> (*)</th>
     <td class="left">
       <input type="text" name="threshold_a" size="4"
              value="<?php echo $host->get_threshold_a(); ?>"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("RRD Profile"); ?> <br/>
+    <th> <?php echo gettext("RRD Profile"); ?> (*)<br/>
         <font size="-2">
           <a href="../rrd_conf/new_rrd_conf_form.php">
 	  <?php echo gettext("Insert new profile"); ?> ?</a>
@@ -152,7 +161,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Sensors"); ?> <br/>
+    <th> <?php echo gettext("Sensors"); ?> (*)<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">
 	  <?php echo gettext("Insert new sensor"); ?> ?</a>
@@ -207,7 +216,65 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 	<?php echo gettext("Enable nessus scan"); ?> </input>
     </td>
     </tr>
-<tr>
+  <tr>
+    <th> <?php echo gettext("OS"); ?> </th>
+    <td class="left">
+      <select name="os"
+      >
+        <option value="unknown">
+	<?php echo gettext("Unknown"); ?> </option>
+
+        <option 
+            <?php match_os("win", $host->get_os($conn)) ?> 
+            value="windows">
+	<?php echo gettext("Windows"); ?> </option>
+
+        <option 
+            <?php match_os("linux", $host->get_os($conn)) ?> 
+            value="linux">
+	        <?php echo gettext("Linux"); ?> </option>
+
+        <option 
+            <?php match_os("bsd", $host->get_os($conn)) ?> 
+            value="bsd">
+	        <?php echo gettext("BSD"); ?> </option>
+
+        <option 
+            <?php match_os("mac", $host->get_os($conn)) ?> 
+            value="mac">
+	        <?php echo gettext("Mac"); ?> </option>
+
+        <option 
+            <?php match_os("sun", $host->get_os($conn)) ?> 
+            value="sun">
+	        <?php echo gettext("Sun"); ?> </option>
+
+        <option 
+            <?php match_os("plan9", $host->get_os($conn)) ?> 
+            value="plan9">
+	        <?php echo gettext("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
+
+        <option 
+            value="unknown">
+	        <?php echo gettext("Other"); ?> </option>
+
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("Mac Address"); ?> </th>
+    <td class="left">
+      <input type="text" name="mac" 
+        value="<?php echo $host->get_mac_address($conn); ?>" />
+    </td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("Mac Vendor"); ?> </th>
+    <td class="left">
+      <input type="text" name="mac_vendor" 
+        value="<?php echo $host->get_mac_vendor($conn); ?>" />
+    </td>
+  </tr>
   <tr>
     <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
@@ -223,6 +290,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   </tr>
 </table>
 </form>
+
+<p align="center"><i>Values marked with (*) are mandatory</b></i></p>
 
 </body>
 </html>

@@ -21,8 +21,9 @@ SUBDIRS= backup \
 	setup \
 	signature \
 	style \
-	vulnmeter
-
+	vulnmeter \
+	netscan
+	
 wwwdir = $(localstatedir)/www/ossim
 www_DATA = index.php \
 	top.php

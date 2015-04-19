@@ -9,8 +9,11 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+include /usr/share/dpatch/dpatch.make
+
 TMP=`pwd`/debian
-LANGUAGES=`ls locale | grep -v CVS`
+#LANGUAGES=`ls locale | grep -v CVS`
+LANGUAGES=de en es fr ja
 
 configure: configure-stamp
 configure-stamp:
@@ -22,7 +25,7 @@ configure-stamp:
 
 build: build-stamp
 
-build-stamp: configure-stamp 
+build-stamp: patch configure-stamp 
 	dh_testdir
 
 	# Add here commands to compile the package.
@@ -35,7 +38,7 @@ build-stamp: configure-stamp
 	
 	touch build-stamp
 
-clean:
+clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
@@ -77,9 +80,14 @@ install: build
 	find $(TMP)/ossim-framework/usr/share/ossim/ | grep Makefile | xargs rm -rf
 	rm -rf $(TMP)/ossim-framework/usr/share/ossim/www/mrtg
 	cp $(TMP)/framework/httpd-ssl.conf $(TMP)/ossim-framework/etc/apache-ssl/conf.d/ossim.conf
-	cp $(TMP)/framework/httpd.conf $(TMP)/ossim-framework/etc/apache/conf.d/ossim.conf
-	install -m751 scripts/control_panel.py $(TMP)/ossim-framework/usr/bin/ossim-controlpanel
+	cp $(TMP)/framework/httpd.conf $(TMP)/ossim-framework/etc/apache/conf.d/ossim.conf 
+	cp $(TMP)/framework/httpd.conf $(TMP)/ossim-framework/etc/apache2/conf.d/ossim.conf
 	install -m755 scripts/draw_graph_fournier.pl $(TMP)/ossim-framework/usr/lib/cgi-bin/draw_graph.pl
+	cp etc/cron.daily/ossim-backup.sh debian/ossim-framework.cron.daily
+
+	cd frameworkd ; \
+	python setup.py install --prefix=$(CURDIR)/debian/ossim-framework/usr/ ; \
+	cd -
 
 	for lang in $(LANGUAGES); do \
 		install -d $(TMP)/ossim-framework/usr/share/locale/$$lang/LC_MESSAGES/ ; \
@@ -89,13 +97,10 @@ install: build
 	# ossim-utils
 	install -m755 include/ossim_conf.pm $(TMP)/ossim-utils/usr/lib/perl5/
 	install -m755 scripts/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/
-	install -m644 $(TMP)/framework/ossim.conf $(TMP)/ossim-utils/etc/ossim/framework/
+	install -m644 etc/framework/ossim.conf $(TMP)/ossim-utils/etc/ossim/framework/
 
 	# ossim-contrib
 	cp -r contrib $(TMP)/ossim-contrib/usr/share/doc/ossim-contrib/
-
-	# ossim
-	install -m755 etc/init.d/ossim $(TMP)/tmp/etc/init.d/
 
 
 # Build architecture-independent files here.
@@ -127,7 +132,7 @@ binary-arch: build install
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
-#	dh_installinit
+	dh_installinit --no-restart-on-upgrade
 	dh_installcron
 #	dh_installinfo
 	dh_installman

@@ -1,0 +1,2833 @@
+# OSSIM localization file.
+# Copyright (C) 2005 Dominique Karg
+# Dominique Karg <dk@ossim.net>, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: OSSIM 0.9.8\n"
+"POT-Creation-Date: 2005-03-18 11:40+0100\n"
+"PO-Revision-Date: 2005-01-18 16:39+0100\n"
+"Last-Translator: Han Zhengping <hanzhping@hotmail.com>\n"
+"Language-Team: Chinese <cn@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=GB2312\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: conf/main.php:8 conf/main.php:301
+msgid "Main Configuration"
+msgstr "系统配置"
+
+#: conf/main.php:22
+msgid "Language"
+msgstr "语言"
+
+#: conf/main.php:23
+msgid "Configure Internationalization"
+msgstr "国际化支持配置"
+
+#: conf/main.php:28
+msgid "German"
+msgstr ""
+
+#: conf/main.php:29
+msgid "English"
+msgstr ""
+
+#: conf/main.php:30
+msgid "Spanish"
+msgstr ""
+
+#: conf/main.php:31
+msgid "French"
+msgstr ""
+
+#: conf/main.php:32
+msgid "Japanese"
+msgstr ""
+
+#: conf/main.php:33
+msgid "Brazilian Portuguese"
+msgstr ""
+
+#: conf/main.php:34
+msgid "Simplified Chinese"
+msgstr ""
+
+#: conf/main.php:35
+msgid "Traditional Chinese"
+msgstr ""
+
+#: conf/main.php:43
+msgid "Server"
+msgstr "服务器"
+
+#: conf/main.php:44
+msgid "Configure where the server's listening address"
+msgstr "服务器地址与监听端口配置"
+
+#: conf/main.php:54
+msgid "Snort"
+msgstr ""
+
+#: conf/main.php:55
+msgid "Snort database and path configuration"
+msgstr "Snort数据库与地址配置"
+
+#: conf/main.php:71 control_panel/global_score.php:17 report/menu.php:46
+#: report/pdfreportform.php:113 top.php:39
+msgid "Metrics"
+msgstr "安全态势"
+
+#: conf/main.php:72
+msgid "Configure metric settings"
+msgstr "风险设定配置"
+
+#: conf/main.php:82
+msgid "phpGACL"
+msgstr ""
+
+#: conf/main.php:83
+msgid "Access control list database configuration"
+msgstr ""
+
+#: conf/main.php:97
+msgid "PHP"
+msgstr ""
+
+#: conf/main.php:98
+msgid "PHP Configuration (graphs, acls, database api)"
+msgstr "PHP配置(图形、访问控制、数据库应用)"
+
+#: conf/main.php:106
+msgid "Images (php jpgraph)"
+msgstr "图象(php jpgraph)"
+
+#: conf/main.php:107
+msgid "Applets (jfreechart)"
+msgstr "小程序(jfreechart)"
+
+#: conf/main.php:111 conf/main.php:116 conf/main.php:186 conf/main.php:220
+#: conf/main.php:286 host/deletehost.php:35 net/deletenet.php:35
+#: net/deletenetgroup.php:34 policy/deletepolicy.php:30 port/deleteport.php:30
+#: rrd_conf/delete_rrd_conf.php:33 sensor/deletesensor.php:35
+#: sensor/interfaces.php:103 sensor/interfaces.php:107
+#: sensor/interfaces.php:126 sensor/interfaces.php:149
+#: session/deleteuser.php:37 signature/deletesignature.php:30
+msgid "No"
+msgstr "否"
+
+#: conf/main.php:112
+msgid "Yes (Need SVG plugin)"
+msgstr ""
+
+#: conf/main.php:117 conf/main.php:187 conf/main.php:221 conf/main.php:285
+#: host/deletehost.php:33 net/deletenet.php:33 net/deletenetgroup.php:32
+#: policy/deletepolicy.php:29 port/deleteport.php:29
+#: rrd_conf/delete_rrd_conf.php:31 sensor/deletesensor.php:33
+#: sensor/interfaces.php:102 sensor/interfaces.php:108
+#: sensor/interfaces.php:127 sensor/interfaces.php:148
+#: session/deleteuser.php:36 signature/deletesignature.php:29
+msgid "Yes"
+msgstr "是"
+
+#: conf/main.php:124
+msgid "RRD"
+msgstr ""
+
+#: conf/main.php:125
+msgid "RRD Configuration (graphing)"
+msgstr "RRD配置(图形)"
+
+#: conf/main.php:144 sensor/editsensor.php:518
+msgid "Links"
+msgstr "链接"
+
+#: conf/main.php:145
+msgid "Links to other applications"
+msgstr "链接到其他应用"
+
+#: conf/main.php:157 top.php:76
+msgid "Backup"
+msgstr "备份"
+
+#: conf/main.php:158
+msgid "Backup configuration: backup database, directory, interval"
+msgstr "备份配置(定时备份数据库、目录)"
+
+#: conf/main.php:174
+msgid "Nessus"
+msgstr ""
+
+#: conf/main.php:175
+msgid "Nessus client configuration"
+msgstr "Nessus客户端配置"
+
+#: conf/main.php:194
+msgid "ACID"
+msgstr ""
+
+#: conf/main.php:195
+msgid "Acid cache configuration"
+msgstr "ACID缓存配置"
+
+#: conf/main.php:208
+msgid "External applications"
+msgstr "外部应用"
+
+#: conf/main.php:209
+msgid "Path to other applications"
+msgstr "其他应用路径"
+
+#: conf/main.php:283
+msgid "Are you sure ?"
+msgstr ""
+
+#: conf/plugin.php:8 conf/pluginref.php:8 conf/pluginsid.php:8
+#: conf/pluginupdate.php:3 control_panel/global_score.php:178
+#: riskmeter/index.php:13 top.php:50
+msgid "Riskmeter"
+msgstr ""
+
+#: conf/plugin.php:14 conf/pluginsid.php:14
+msgid "Priority and Reliability configuration"
+msgstr "优先级和可信度配置"
+
+#: conf/plugin.php:29 control_panel/alerts.php:58
+msgid "Id"
+msgstr ""
+
+#: conf/plugin.php:32 conf/pluginsid.php:58 directives/directive.php:73
+#: editor/rule.php:76 incidents/incident.php:362 net/newnetform.php:34
+#: net/newnetgroupform.php:35 port/modifyportform.php:39
+#: port/newportform.php:21 report/inventory.php:79 sensor/interfaces.php:86
+#: sensor/interfaces.php:141 session/users.php:36
+#: signature/modifysignatureform.php:39 signature/newsignatureform.php:21
+#: signature/signature.php:28
+msgid "Name"
+msgstr "名称"
+
+#: conf/plugin.php:35 incidents/index.php:98
+msgid "Type"
+msgstr "类型"
+
+#: conf/plugin.php:38 host/host.php:62 host/modifyhostform.php:279
+#: host/newhostform.php:236 incidents/incident.php:602
+#: incidents/incident.php:699 net/modifynetform.php:198
+#: net/modifynetgroupform.php:152 net/net.php:67 net/netgroup.php:55
+#: net/newnetform.php:157 net/newnetgroupform.php:121
+#: policy/modifypolicyform.php:611 policy/policy.php:37
+#: port/modifyportform.php:86 port/newportform.php:58
+#: port/newsingleportform.php:40 port/port.php:31
+#: sensor/modifysensorform.php:99 sensor/newsensorform.php:55
+#: sensor/sensor.php:49 signature/modifysignatureform.php:82
+#: signature/newsignatureform.php:56 signature/signature.php:30
+msgid "Description"
+msgstr "描述"
+
+#: conf/pluginref.php:14
+msgid "Plugin reference"
+msgstr "插件索引"
+
+#: conf/pluginref.php:53 control_panel/alarm_console.php:109
+#: control_panel/backlog.php:72
+#, c-format
+msgid "Prev %d"
+msgstr ""
+
+#: conf/pluginref.php:55 control_panel/alarm_console.php:112
+#: control_panel/alarm_console.php:115 control_panel/backlog.php:74
+#, c-format
+msgid "%d-%d of %d"
+msgstr ""
+
+#: conf/pluginref.php:57 control_panel/alarm_console.php:113
+#: control_panel/backlog.php:76
+#, c-format
+msgid "Next %d"
+msgstr ""
+
+#: conf/pluginref.php:66 scan/hostscan.php:40
+msgid "Plugin id"
+msgstr "插件id"
+
+#: conf/pluginref.php:71 scan/hostscan.php:44
+msgid "Plugin sid"
+msgstr "插件sid"
+
+#: conf/pluginref.php:76
+msgid "Reference id"
+msgstr "索引id"
+
+#: conf/pluginref.php:81
+msgid "Reference sid"
+msgstr "索引sid"
+
+#: conf/pluginsid.php:42 sensor/sensor_plugins.php:117
+msgid "Plugin"
+msgstr "插件"
+
+#: conf/pluginsid.php:46
+msgid "Sid"
+msgstr ""
+
+#: conf/pluginsid.php:50 directives/directive.php:246
+msgid "Category"
+msgstr "目录"
+
+#: conf/pluginsid.php:54
+msgid "Class"
+msgstr "类"
+
+#: conf/pluginsid.php:62 directives/directive.php:74
+#: incidents/incident.php:495 incidents/incident.php:579
+#: incidents/incident.php:707 incidents/index.php:102 incidents/index.php:255
+#: net/modifynetform.php:57 net/newnetform.php:45
+#: policy/modifypolicyform.php:281 policy/policy.php:32
+#: rrd_conf/modify_rrd_conf_form.php:95 sensor/modifysensorform.php:53
+#: sensor/newsensorform.php:34 sensor/sensor.php:40
+msgid "Priority"
+msgstr "优先级"
+
+#: conf/pluginsid.php:66 directives/directive.php:75
+#: directives/directive.php:286
+msgid "Reliability"
+msgstr "可信度"
+
+#: conf/pluginsid.php:67 control_panel/alarm_console.php:151
+#: control_panel/alerts.php:65 editor/rule.php:78 host/host.php:63
+#: incidents/incident.php:496 incidents/incident.php:584
+#: incidents/incident.php:604 incidents/incident.php:701
+#: incidents/index.php:103 net/net.php:68 net/netgroup.php:56
+#: policy/policy.php:38 port/port.php:32 rrd_conf/rrd_conf.php:31
+#: scan/hostscan.php:45 scan/scan.php:43 sensor/interfaces.php:88
+#: sensor/interfaces.php:143 sensor/sensor.php:50
+#: sensor/sensor_plugins.php:119 sensor/sensor_plugins.php:121
+#: signature/signature.php:31
+msgid "Action"
+msgstr "动作"
+
+#: conf/pluginupdate.php:11
+msgid "Unknown plugin id - sid"
+msgstr "未知插件id - sid"
+
+#: conf/pluginupdate.php:12 conf/pluginupdate.php:19 conf/pluginupdate.php:25
+#: conf/pluginupdate.php:30 conf/pluginupdate.php:46
+#: control_panel/handle_anomaly.php:61 control_panel/handle_mac.php:55
+#: control_panel/handle_os.php:55 host/deletehost.php:54
+#: host/modifyhost.php:89 host/newhost.php:91 net/deletenet.php:55
+#: net/deletenetgroup.php:54 net/modifynet.php:73 net/modifynetgroup.php:66
+#: net/newnet.php:72 net/newnetgroup.php:67 policy/deletepolicy.php:47
+#: policy/modifypolicy.php:138 policy/newpolicy.php:130 port/deleteport.php:47
+#: port/modifyport.php:56 port/newport.php:56 port/newsingleport.php:51
+#: rrd_conf/delete_rrd_conf.php:49 rrd_conf/new_rrd_conf.php:62
+#: scan/deletehostscan.php:45 scan/makescan.php:29 scan/newhostscan.php:42
+#: sensor/deletesensor.php:58 sensor/interfaces.php:57
+#: sensor/interfaces.php:159 sensor/modifysensor.php:51
+#: sensor/newsensor.php:51 session/changepass.php:50 session/deleteuser.php:60
+#: session/modifyuser.php:73 session/newuser.php:81
+#: signature/deletesignature.php:46 signature/modifysignature.php:55
+#: signature/newsignature.php:55 vulnmeter/do_nessus.php:32
+msgid "Back"
+msgstr ""
+
+#: conf/pluginupdate.php:18
+msgid "No values for priority or reliability"
+msgstr "优先级或可信度值未设置"
+
+#: conf/pluginupdate.php:24
+msgid "Priority must be between 0 and 10"
+msgstr "优先级值必须在0-10之间"
+
+#: conf/pluginupdate.php:29
+msgid "Reliability must be between 0 and 5"
+msgstr "可信度值必须在0-5之间"
+
+#: conf/reload.php:16
+#, c-format
+msgid "socket_create() failed: reason: %s\n"
+msgstr "socket_create()失败，原因: %s\n"
+
+#: conf/reload.php:22
+#, c-format
+msgid "socket_connect() failed: reason: %s %s\n"
+msgstr "socket_connect()失败，原因: %s %s\n"
+
+#: conf/reload.php:30
+msgid "Error connecting to server"
+msgstr "连接服务器错误"
+
+#: conf/reload.php:39
+msgid "Bad response from server"
+msgstr "服务器响应错误"
+
+#: conf/reload.php:51
+msgid "Reload completed successfully"
+msgstr "重载成功完成"
+
+#: control_panel/alarm_console.php:137
+msgid "Sensor"
+msgstr "探测器"
+
+#: control_panel/alarm_console.php:138
+msgid "Since"
+msgstr "开始时间"
+
+#: control_panel/alarm_console.php:142
+msgid "Last"
+msgstr "结束时间"
+
+#: control_panel/alarm_console.php:377
+msgid "Delete ALL alarms"
+msgstr ""
+
+#: control_panel/alarm_console.php:379
+msgid "Purge orphaned alerts"
+msgstr ""
+
+#: control_panel/alerts.php:7 control_panel/anomalies.php:8
+#: control_panel/backlog.php:8 control_panel/global_score.php:9
+#: control_panel/visualize.php:6 top.php:30
+msgid "Control Panel"
+msgstr "控制平台"
+
+#: control_panel/alerts.php:16 control_panel/visualize.php:15
+msgid "Backlog ID required"
+msgstr "需要备份日志ID"
+
+#: control_panel/alerts.php:23
+msgid "Alarms/Alerts"
+msgstr "关联报警/入侵警告"
+
+#: control_panel/alerts.php:52
+msgid "Back to main"
+msgstr "回到主页面"
+
+#: control_panel/alerts.php:59 incidents/index.php:128 incidents/index.php:329
+msgid "Alarm"
+msgstr "关联报警"
+
+#: control_panel/alerts.php:60
+msgid "Risk"
+msgstr "风险"
+
+#: control_panel/alerts.php:61 incidents/incident.php:577
+#: incidents/index.php:244 report/inventory.php:192
+msgid "Date"
+msgstr "日期"
+
+#: control_panel/alerts.php:62 incidents/incident.php:374
+#: policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
+msgid "Source"
+msgstr "源地址"
+
+#: control_panel/alerts.php:63 incidents/incident.php:381 report/menu.php:58
+msgid "Destination"
+msgstr "目的地址"
+
+#: control_panel/alerts.php:64
+msgid "Correlation Level"
+msgstr "关联级别"
+
+#: control_panel/alerts.php:245
+#, c-format
+msgid "Total Alerts: %d"
+msgstr "所有警告: %d"
+
+#: control_panel/alerts.php:246
+#, c-format
+msgid "Unique Dst IPAddr: %d"
+msgstr "相同目标地址: %d"
+
+#: control_panel/alerts.php:247
+#, c-format
+msgid "Unique Types: %d"
+msgstr "相同类型: %d"
+
+#: control_panel/alerts.php:248
+#, c-format
+msgid "Unique Dst Ports: %d"
+msgstr "相同目标端口: %d"
+
+#: control_panel/alerts.php:252
+msgid "Visualize alarm"
+msgstr ""
+
+#: control_panel/anomalies.php:16 report/menu.php:95 top.php:47
+msgid "Anomalies"
+msgstr "异常"
+
+#: control_panel/anomalies.php:62
+msgid "RRD anomalies"
+msgstr "RRD异常"
+
+#: control_panel/anomalies.php:66
+msgid "Acknowledged"
+msgstr "确认"
+
+#: control_panel/anomalies.php:67
+msgid "Not Acknowledged"
+msgstr "未确认"
+
+#: control_panel/anomalies.php:68
+msgid "All"
+msgstr "所有"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+#: control_panel/anomalies.php:194 control_panel/anomalies.php:259
+#: control_panel/global_score.php:597 control_panel/global_score.php:664
+#: report/sec_report.php:148 scan/hostscan.php:36 scan/scan.php:38
+msgid "Host"
+msgstr "主机"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+msgid "What"
+msgstr "名称"
+
+#: control_panel/anomalies.php:71 control_panel/anomalies.php:132
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "When"
+msgstr "时间"
+
+#: control_panel/anomalies.php:72 control_panel/anomalies.php:133
+msgid "Not acked count (hours)"
+msgstr "未确认小时数"
+
+#: control_panel/anomalies.php:72 control_panel/anomalies.php:133
+msgid "Over threshold (absolute)"
+msgstr "超过极值"
+
+#: control_panel/anomalies.php:73 control_panel/anomalies.php:134
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "Ack"
+msgstr "确认"
+
+#: control_panel/anomalies.php:74 control_panel/anomalies.php:135
+#: control_panel/backlog.php:99 host/host.php:126 net/net.php:137
+#: net/netgroup.php:112 policy/policy.php:160 port/port.php:64
+#: rrd_conf/rrd_conf.php:53 scan/hostscan.php:71 sensor/sensor.php:102
+#: session/users.php:65 signature/signature.php:60
+msgid "Delete"
+msgstr "删除"
+
+#: control_panel/anomalies.php:189
+msgid "OS Changes"
+msgstr "操作系统变化"
+
+#: control_panel/anomalies.php:192 control_panel/anomalies.php:257
+msgid "Get list"
+msgstr "获取列表"
+
+#: control_panel/anomalies.php:194
+msgid "Previous OS"
+msgstr "先前操作系统"
+
+#: control_panel/anomalies.php:195 control_panel/anomalies.php:260
+msgid "Ignore"
+msgstr "忽略"
+
+#: control_panel/anomalies.php:254
+msgid "Mac Changes"
+msgstr "MAC变化"
+
+#: control_panel/anomalies.php:259 host/modifyhostform.php:245
+#: host/newhostform.php:204 host/newhostform.php:215
+msgid "Mac"
+msgstr ""
+
+#: control_panel/anomalies.php:259
+msgid "Previous Mac"
+msgstr "先前MAC"
+
+#: control_panel/backlog.php:16 top.php:66
+msgid "Backlog"
+msgstr "备份日志"
+
+#: control_panel/backlog.php:126
+msgid "NO"
+msgstr "否"
+
+#: control_panel/backlog.php:128 sensor/sensor.php:139
+msgid "YES"
+msgstr "是"
+
+#: control_panel/global_score.php:141
+msgid "Last Day"
+msgstr "本日"
+
+#: control_panel/global_score.php:144
+msgid "Last Week"
+msgstr "本周"
+
+#: control_panel/global_score.php:147
+msgid "Last Month"
+msgstr "本月"
+
+#: control_panel/global_score.php:150
+msgid "Last Year"
+msgstr "本年"
+
+#: control_panel/global_score.php:179
+msgid "Service Level"
+msgstr ""
+
+#: control_panel/global_score.php:237 control_panel/global_score.php:243
+#: control_panel/global_score.php:290 ntop/menu.php:120
+#: riskmeter/index.php:116
+msgid "Global"
+msgstr "全局"
+
+#: control_panel/global_score.php:244 control_panel/global_score.php:345
+#: control_panel/global_score.php:473 control_panel/global_score.php:598
+msgid "Max C date"
+msgstr ""
+
+#: control_panel/global_score.php:245 control_panel/global_score.php:346
+#: control_panel/global_score.php:474 control_panel/global_score.php:599
+msgid "Max C"
+msgstr ""
+
+#: control_panel/global_score.php:246 control_panel/global_score.php:347
+#: control_panel/global_score.php:475 control_panel/global_score.php:600
+msgid "Current C"
+msgstr ""
+
+#: control_panel/global_score.php:254 control_panel/global_score.php:301
+msgid "GLOBAL SCORE"
+msgstr ""
+
+#: control_panel/global_score.php:291 control_panel/global_score.php:408
+#: control_panel/global_score.php:534 control_panel/global_score.php:665
+msgid "Max A date"
+msgstr ""
+
+#: control_panel/global_score.php:292 control_panel/global_score.php:409
+#: control_panel/global_score.php:535 control_panel/global_score.php:666
+msgid "Max A"
+msgstr ""
+
+#: control_panel/global_score.php:293 control_panel/global_score.php:410
+#: control_panel/global_score.php:536 control_panel/global_score.php:667
+msgid "Current A"
+msgstr ""
+
+#: control_panel/global_score.php:337 riskmeter/index.php:206
+msgid "Groups"
+msgstr ""
+
+#: control_panel/global_score.php:344 control_panel/global_score.php:407
+msgid "Group"
+msgstr ""
+
+#: control_panel/global_score.php:466 net/modifynetgroupform.php:53
+#: net/net.php:15 net/netgroup.php:44 net/newnetgroupform.php:40
+#: riskmeter/index.php:326 top.php:58
+msgid "Networks"
+msgstr "网络"
+
+#: control_panel/global_score.php:472 control_panel/global_score.php:533
+#: top.php:52
+msgid "Network"
+msgstr "网络"
+
+#: control_panel/global_score.php:590 host/host.php:15 riskmeter/index.php:515
+#: top.php:57
+msgid "Hosts"
+msgstr "主机"
+
+#: control_panel/handle_anomaly.php:8 control_panel/handle_anomaly.php:15
+#: control_panel/handle_mac.php:8 control_panel/handle_mac.php:15
+#: control_panel/handle_os.php:8 control_panel/handle_os.php:15
+#: control_panel/mac.php:8 control_panel/os.php:8 editor/rule.php:44
+#: editor/rule.php:51 host/deletehost.php:8 host/host.php:8
+#: host/modifyhost.php:8 host/modifyhostform.php:8 host/newhost.php:8
+#: host/newhostform.php:8 incidents/incident.php:8 incidents/index.php:8
+#: net/deletenet.php:8 net/deletenetgroup.php:8 net/modifynet.php:8
+#: net/modifynetform.php:8 net/modifynetgroup.php:8
+#: net/modifynetgroupform.php:8 net/net.php:8 net/netgroup.php:8
+#: net/newnet.php:8 net/newnetform.php:8 net/newnetgroup.php:8
+#: net/newnetgroupform.php:8 netscan/do_scan.php:9 netscan/index.php:22
+#: netscan/scan_db.php:8 ntop/menu.php:3 ntop/menu_session.php:3
+#: policy/deletepolicy.php:8 policy/modifypolicy.php:8
+#: policy/modifypolicyform.php:8 policy/newpolicy.php:8 policy/policy.php:8
+#: port/deleteport.php:8 port/modifyport.php:8 port/modifyportform.php:8
+#: port/newport.php:8 port/newportform.php:8 port/newsingleport.php:8
+#: port/newsingleportform.php:8 port/port.php:8 report/anomalies.php:8
+#: report/inventory.php:8 report/menu.php:8 report/metrics.php:8
+#: report/pdfreportform.php:8 report/report.php:8 report/sec_report.php:8
+#: rrd_conf/delete_rrd_conf.php:8 rrd_conf/modify_rrd_conf_form.php:8
+#: rrd_conf/new_rrd_conf.php:8 rrd_conf/rrd_conf.php:8
+#: scan/deletehostscan.php:8 scan/hostscan.php:8 scan/newhostscan.php:8
+#: scan/newhostscanform.php:8 scan/scan.php:8 sensor/deletesensor.php:8
+#: sensor/interfaces.php:8 sensor/modifysensor.php:8
+#: sensor/modifysensorform.php:8 sensor/newsensor.php:8
+#: sensor/newsensorform.php:8 sensor/sensor.php:8 sensor/sensor_plugins.php:8
+#: session/changepass.php:3 session/changepassform.php:3
+#: session/deleteuser.php:13 session/modifyuser.php:8
+#: session/modifyuserform.php:12 session/newuser.php:8
+#: session/newuserform.php:14 session/users.php:8
+#: signature/deletesignature.php:8 signature/modifysignature.php:8
+#: signature/modifysignatureform.php:8 signature/newsignature.php:8
+#: signature/newsignatureform.php:8 signature/signature.php:8
+#: vulnmeter/do_nessus.php:8
+msgid "OSSIM Framework"
+msgstr "OSSIM框架"
+
+#: control_panel/handle_anomaly.php:60 control_panel/handle_mac.php:54
+msgid "Successfully Acked/Deleted"
+msgstr "确认/删除/成功"
+
+#: control_panel/handle_os.php:54
+msgid "Successfully Acked/Deleted/Ignored"
+msgstr "确认/删除/忽略成功"
+
+#: control_panel/mac.php:15
+msgid "OSSIM Framework - Mac list"
+msgstr "OSSIM框架-MAC列表"
+
+#: control_panel/mac.php:30
+msgid "Show 10"
+msgstr "显示10条"
+
+#: control_panel/mac.php:31
+msgid "Show 50"
+msgstr "显示50条"
+
+#: control_panel/mac.php:32
+msgid "Show 100"
+msgstr "显示100条"
+
+#: control_panel/mac.php:49
+msgid "Vendor"
+msgstr "厂商"
+
+#: control_panel/mac.php:54
+msgid "Previous Vendor"
+msgstr "先前厂商"
+
+#: control_panel/mac.php:73 host/modifyhostform.php:225
+#: host/newhostform.php:196
+msgid "Unknown"
+msgstr "未知"
+
+#: control_panel/os.php:15
+msgid "OSSIM Framework - OS list"
+msgstr "OSSIM框架-操作系统列表"
+
+#: control_panel/show_image.php:34
+msgid "Compromise"
+msgstr ""
+
+#: control_panel/show_image.php:37
+msgid "Attack"
+msgstr ""
+
+#: control_panel/visualize.php:34
+msgid "Alarm viewer"
+msgstr ""
+
+#: directives/directive.php:12 directives/directive.php:35
+msgid "Directive Editor"
+msgstr "关联模式编辑"
+
+#: directives/directive.php:69
+msgid "Rules"
+msgstr "规则"
+
+#: directives/directive.php:70
+msgid "Directive"
+msgstr "关联模式"
+
+#: directives/directive.php:76
+msgid "Time_out"
+msgstr "超时"
+
+#: directives/directive.php:77
+msgid "Occurrence"
+msgstr "发生次数"
+
+#: directives/directive.php:78
+msgid "From"
+msgstr "源地址"
+
+#: directives/directive.php:79
+msgid "To"
+msgstr "目的地址"
+
+#: directives/directive.php:80
+msgid "Port_from"
+msgstr "源端口"
+
+#: directives/directive.php:81
+msgid "Port_to"
+msgstr "目的端口"
+
+#: directives/directive.php:82
+msgid "Plugin ID"
+msgstr "插件id"
+
+#: directives/directive.php:83
+msgid "Plugin SID"
+msgstr "插件sid"
+
+#: directives/directive.php:166
+msgid "Expand / Collapse"
+msgstr "展开/折叠"
+
+#: directives/directive.php:174 policy/modifypolicyform.php:137
+#: policy/modifypolicyform.php:232
+msgid "ANY"
+msgstr "任意"
+
+#: directives/directive.php:240
+msgid "Click on the left side to view a directive"
+msgstr "点击左侧列表查看关联模式"
+
+#: directives/directive.php:241
+msgid "Click on the categories of directives to expand or collapse them"
+msgstr "点击左侧目录展开或折叠关联模式"
+
+#: directives/directive.php:247
+msgid "Numbers"
+msgstr "序号"
+
+#: directives/directive.php:248
+msgid "Generic ossim"
+msgstr "通用关联模式"
+
+#: directives/directive.php:249
+msgid "Attack correlation"
+msgstr "攻击关联"
+
+#: directives/directive.php:250
+msgid "Virus and Worms"
+msgstr "病毒和蠕虫"
+
+#: directives/directive.php:251
+msgid "Web attack correlation"
+msgstr "Web攻击关联"
+
+#: directives/directive.php:252
+msgid "DoS"
+msgstr "拒绝服务"
+
+#: directives/directive.php:253
+msgid "Portscan/scan"
+msgstr "扫描"
+
+#: directives/directive.php:254
+msgid "Behaviour anomalies"
+msgstr "行为异常"
+
+#: directives/directive.php:255
+msgid "Network abuse and error"
+msgstr "网络滥用"
+
+#: directives/directive.php:256
+msgid "Trojans"
+msgstr "木马"
+
+#: directives/directive.php:257
+msgid "Miscellaneous"
+msgstr "杂项"
+
+#: directives/directive.php:258
+msgid "User contributed"
+msgstr "用户自定义"
+
+#: directives/directive.php:264
+msgid "What type of rule is this. There are two possible types as of today"
+msgstr "目前有两种"
+
+#: directives/directive.php:266
+msgid "Detector"
+msgstr "检测器"
+
+#: directives/directive.php:267
+msgid ""
+"Detector rules are those received automatically from the agent as they are "
+"recorded. This includes snort, spade, apache, etc"
+msgstr "检测器信息在产生后由代理自动向服务器发送，包括snort、spade、apache等"
+
+#: directives/directive.php:268 riskmeter/options.php:41
+msgid "Monitor"
+msgstr "监视器"
+
+#: directives/directive.php:269
+msgid "Monitor rules must be queried by the server ntop data and ntop sessions"
+msgstr "监视器信息必须由服务器主动查询"
+
+#: directives/directive.php:272
+msgid ""
+"The  rule name shown within the event database when the level is matched"
+msgstr "规则被匹配后，规则名称将在事件数据库中保存"
+
+#: directives/directive.php:273
+msgid "Accepts: UTF-8 compliant string"
+msgstr "接受兼容UTF-8的字符串"
+
+#: directives/directive.php:275
+msgid ""
+"When we talk about priority we're talking about threat. It's the importance "
+"of the isolated attack. It has nothing to do with your equipment or "
+"environment, it only measures the relative importance of the attack"
+msgstr ""
+"优先级与攻击的威胁级别相对应，与网络环境和主机无关，只衡量攻击的相对严重程度"
+
+#: directives/directive.php:276
+msgid "This will become clear using a couple of examples"
+msgstr "下面将通过两个例子进行说明"
+
+#: directives/directive.php:278
+msgid "Your unix server running samba gets attacked by the sasser worm"
+msgstr "运行samba服务的unix服务器被冲击波蠕虫攻击"
+
+#: directives/directive.php:279
+msgid "The attack"
+msgstr "这个攻击"
+
+#: directives/directive.php:280
+msgid "per se"
+msgstr "本身"
+
+#: directives/directive.php:281
+msgid ""
+"is dangerous, it has compromised thousands of hosts and is very easy to "
+"accomplish. But. does it really matter to you? Surely not, but it's a big "
+"security hole so it'll have a high priority"
+msgstr ""
+"是危险的。它曾危害成千上万台主机并易于传播，但是它并不对这台服务器造成威胁。"
+"由于它利用了一个较严重的安全漏洞，因此具有较高的优先级"
+
+#: directives/directive.php:282
+msgid ""
+"You're running a CVS server on an isolated network that is only accessible "
+"by your friends and has only access to the outside. Some new exploit tested "
+"by one of your friends hits it"
+msgstr ""
+"公司内部独立网络运行一台CVS服务器，只有内部员工可以访问。安全管理员在这台机器"
+"上测试新漏洞"
+
+#: directives/directive.php:283
+msgid ""
+"Again, the attack is dangerous, it could compromise your machine but surely "
+"your host is patched against that particular attack and you don't mind being "
+"a test-platform for one of your friends"
+msgstr ""
+"这个攻击虽然危险，可以危害服务器的安全。但是安全管理员进行过安全测试后，会进"
+"行漏洞修补，不会影响网络安全"
+
+#: directives/directive.php:285 directives/directive.php:295
+msgid "Default value"
+msgstr "缺省值"
+
+#: directives/directive.php:287
+msgid "When talking about classic risk-assessment this would be"
+msgstr ""
+
+#: directives/directive.php:288
+msgid ") . ; ?> &quot;"
+msgstr ""
+
+#: directives/directive.php:289
+msgid "probability"
+msgstr "概率"
+
+#: directives/directive.php:289 directives/directive.php:297
+msgid " "
+msgstr ""
+
+#: directives/directive.php:290
+msgid ""
+"Since it's quite difficult to determine how probable it is our network being "
+"attacked by some sort of vulnerability, we'll transform this term into "
+"something more IDS related: reliability"
+msgstr ""
+"由于难以确定网络被利用特定漏洞攻击的概率，因此采用一个跟IDS更为相关的因素来计"
+"算：可信度"
+
+#: directives/directive.php:291
+msgid ""
+"A host pinging a non-live destination is able to rise hundreds of thousands "
+"spade events a day. Snort's recent http-inspect functionality for example, "
+"although good implemented needs some heavy tweaking in order to be reliable "
+"or you'll get thousands of false positives a day"
+msgstr ""
+"每一种可用的NIDS都有不可信的特征码。对一个不存在的目的主机的ping操作可以引起"
+"每天上千条spade警告事件。Snort的近期版本采用了应用层检查技术，目的就是使警告"
+"信息更加可信，避免大量误报警信息出现"
+
+#: directives/directive.php:292
+msgid ""
+"their own subnet using port 445, that could be a normal behaviour. "
+"Unreliable for IDS purposes. What happens if they connect to 15 hosts? We're "
+"starting to get suspicious. And what if they contact 500 different hosts in "
+"less than an hour? That's strange and the attack is getting more and more "
+"reliable"
+msgstr ""
+"以蠕虫为例，如果一个主机连接本子网中的5个不同主机的445端口，这可能是一个正常"
+"行为。如果连接的主机数为15，则倾向于认为主机行为可疑。如果它在1小时内连接超过"
+"500台不同主机，则该主机具有越来越高的攻击可信度"
+
+#: directives/directive.php:293
+msgid ""
+"Each rule has it's own reliability, determining how reliable this particular "
+"rule is within the whole attack chain"
+msgstr "每条规则都具有可信度，用以确定其在整个攻击链中的作用"
+
+#: directives/directive.php:294
+msgid ""
+"Accepts: 0-10. Can be specified as absolute value (i.e. 7) or relative (i.e. "
+"+2 means two more than the previous level)"
+msgstr "范围：0-10。可为绝对值(如7)或相对值(如+2表示比前一条规则增加2)"
+
+#: directives/directive.php:296
+msgid "text-align: left;"
+msgstr ""
+
+#: directives/directive.php:296
+msgid "Ocurrence"
+msgstr "发生次数"
+
+#: directives/directive.php:297
+msgid "How many times we have to match a unique"
+msgstr "计算具有相同的"
+
+#: directives/directive.php:298
+msgid "in order to advance one correlation level"
+msgstr "发生次数，用以进行到关联模式中的下一规则"
+
+#: directives/directive.php:300
+msgid ""
+"We wait a fixed amount of seconds until a rule expires and the directives "
+"lifetime is over"
+msgstr "等待一定时间以匹配规则，时间超出则匹配失败，关联模式生命周期结束"
+
+#: directives/directive.php:302
+msgid "Source IP. There are various possible values for this field"
+msgstr "源地址具有以下几种形式"
+
+#: directives/directive.php:305 directives/directive.php:326
+msgid "Just that, any ip address would match"
+msgstr "任意IP地址都可以匹配"
+
+#: directives/directive.php:306 directives/directive.php:327
+msgid "Dotted numerical Ipv4"
+msgstr "小数点和数字的IPv4形式"
+
+#: directives/directive.php:307 directives/directive.php:328
+msgid "Self explaining"
+msgstr "最常用的IP地址形式"
+
+#: directives/directive.php:308 directives/directive.php:329
+msgid "Comma separated Ipv4 addresses without netmask"
+msgstr "以逗号隔开的IPv4地址，不带掩码"
+
+#: directives/directive.php:309 directives/directive.php:330
+msgid "You can use any number of ip addresses separated by commas"
+msgstr "可以使用任意数目的IP地址，中间用逗号隔开"
+
+#: directives/directive.php:310 directives/directive.php:331
+msgid "Using a network name"
+msgstr "网络名称"
+
+#: directives/directive.php:311 directives/directive.php:332
+msgid "You can use any network name defined via web"
+msgstr "可以使用网络中事先定义好的网络名称"
+
+#: directives/directive.php:312 directives/directive.php:333
+msgid "Relative"
+msgstr "相对值"
+
+#: directives/directive.php:313 directives/directive.php:334
+msgid ""
+"This is used to reference ip addresses from previous levels. This should be "
+"easier to understand using examples"
+msgstr "可以引用上条规则中的IP地址，例子如下:"
+
+#: directives/directive.php:314 directives/directive.php:335
+msgid "means use the source ip referenced within the previous rule"
+msgstr "表示引用前一条规则的源地址"
+
+#: directives/directive.php:315 directives/directive.php:336
+msgid ""
+"means use the destination ip referenced two rules below as source address"
+msgstr "表示引用前第二条的目的地址作为源地址"
+
+#: directives/directive.php:316 directives/directive.php:337
+msgid "Negated"
+msgstr "否定形式"
+
+#: directives/directive.php:317 directives/directive.php:338
+msgid "You can also use negated elements. I.e."
+msgstr "可以使用地址的否定形式如"
+
+#: directives/directive.php:319
+msgid "If "
+msgstr "如果"
+
+#: directives/directive.php:320 directives/directive.php:341
+msgid "this would match the whole class C except"
+msgstr "则将匹配整个C类地址除了"
+
+#: directives/directive.php:323
+msgid "Destination IP. There are various possible values for this field"
+msgstr "目的地址具有以下几种形式"
+
+#: directives/directive.php:340
+msgid "If"
+msgstr "如果"
+
+#: directives/directive.php:343
+msgid "The"
+msgstr "这个"
+
+#: directives/directive.php:343
+msgid ""
+"field is the field used when referencing monitor data that has no source"
+msgstr "变量在引用没有源地址的监视器数据时可以使用"
+
+#: directives/directive.php:344
+msgid "Both"
+msgstr "所有"
+
+#: editor/editor.php:31
+#, c-format
+msgid "Sorry, can't locate snort rules at <b>%s</b>"
+msgstr "对不起，无法找到Snort规则于路径"
+
+#: editor/rule.php:53
+msgid "Rule editor"
+msgstr "规则编辑"
+
+#: editor/rule.php:80 port/newsingleportform.php:25
+msgid "Protocol"
+msgstr "协议"
+
+#: editor/rule.php:82
+msgid "SRC IP"
+msgstr "源地址"
+
+#: editor/rule.php:84
+msgid "SRC Ports"
+msgstr "源端口"
+
+#: editor/rule.php:86
+msgid "Dir"
+msgstr "目录"
+
+#: editor/rule.php:88
+msgid "DEST IP"
+msgstr "目的地址"
+
+#: editor/rule.php:90
+msgid "DEST Ports"
+msgstr "目的端口"
+
+#: editor/rule.php:92
+msgid "Content"
+msgstr "内容"
+
+#: editor/rule.php:94
+msgid "Options"
+msgstr "选项"
+
+#: host/deletehost.php:15
+msgid "Delete host"
+msgstr "删除主机"
+
+#: host/deletehost.php:20
+msgid "Wrong ip"
+msgstr "错误IP"
+
+#: host/deletehost.php:30 net/deletenet.php:30 net/deletenetgroup.php:29
+#: policy/deletepolicy.php:27 port/deleteport.php:27
+#: scan/deletehostscan.php:29 session/deleteuser.php:32
+#: signature/deletesignature.php:27
+msgid "Are you sure"
+msgstr "是否确定"
+
+#: host/deletehost.php:52
+msgid "Host deleted"
+msgstr "主机已删除"
+
+#: host/host.php:39 host/modifyhostform.php:157 host/newhostform.php:140
+msgid "NAT"
+msgstr ""
+
+#: host/host.php:60 host/modifyhostform.php:164 host/newhostform.php:146
+#: net/modifynetform.php:143 net/net.php:65 net/newnetform.php:113
+#: policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
+#: sensor/sensor_plugins.php:15 top.php:54 top.php:60
+msgid "Sensors"
+msgstr "探测器"
+
+#: host/host.php:61
+msgid "Scantype"
+msgstr "扫描类型"
+
+#: host/host.php:118 host/modifyhostform.php:132 host/newhostform.php:117
+#: net/modifynetform.php:117 net/modifynetgroupform.php:131
+#: net/newnetform.php:90 net/newnetgroupform.php:107
+msgid "None"
+msgstr "无"
+
+#: host/host.php:125 net/net.php:136 net/netgroup.php:111
+#: policy/policy.php:157 port/port.php:61 rrd_conf/rrd_conf.php:47
+#: sensor/sensor.php:100 signature/signature.php:57
+msgid "Modify"
+msgstr "修改"
+
+#: host/host.php:138 host/newhostform.php:21 policy/modifypolicyform.php:51
+#: policy/modifypolicyform.php:146
+msgid "Insert new host"
+msgstr "添加新主机"
+
+#: host/host.php:142 net/net.php:150 ntop/menu_session.php:79
+#: ntop/menu_session.php:89 policy/policy.php:176 sensor/sensor.php:153
+#: signature/signature.php:71
+msgid "Reload"
+msgstr "重新加载"
+
+#: host/host.php:150
+msgid "Search"
+msgstr "搜索"
+
+#: host/modifyhost.php:15
+msgid "Update host"
+msgstr "更新主机"
+
+#: host/modifyhost.php:29 host/newhost.php:29 net/modifynet.php:29
+#: net/modifynetgroup.php:27 net/newnet.php:29 net/newnetgroup.php:28
+#: policy/modifypolicy.php:39 policy/newpolicy.php:33 port/modifyport.php:25
+#: port/newport.php:25 port/newsingleport.php:26 sensor/interfaces.php:23
+#: sensor/modifysensor.php:26 sensor/newsensor.php:26
+#: signature/newsignature.php:25
+msgid "Please, complete all the fields"
+msgstr "请填写所有域"
+
+#: host/modifyhost.php:64 host/newhost.php:62
+msgid "Sorry, no sensor selected"
+msgstr ""
+
+#: host/modifyhostform.php:15
+msgid "Modify host"
+msgstr "修改主机"
+
+#: host/modifyhostform.php:51 host/newhostform.php:53 report/report.php:30
+#: sensor/modifysensorform.php:39 sensor/newsensorform.php:25
+#: sensor/sensor.php:36
+msgid "Hostname"
+msgstr "主机名"
+
+#: host/modifyhostform.php:57 host/newhostform.php:57 net/modifynetform.php:51
+#: sensor/modifysensorform.php:47 sensor/newsensorform.php:29
+msgid "IP"
+msgstr ""
+
+#: host/modifyhostform.php:65 host/newhostform.php:66 report/report.php:38
+msgid "Asset"
+msgstr "资产"
+
+#: host/modifyhostform.php:71 host/newhostform.php:70
+msgid "0"
+msgstr ""
+
+#: host/modifyhostform.php:75 host/newhostform.php:72
+#: incidents/incident.php:711
+msgid "1"
+msgstr ""
+
+#: host/modifyhostform.php:79 host/newhostform.php:74
+#: incidents/incident.php:714
+msgid "2"
+msgstr ""
+
+#: host/modifyhostform.php:83 host/newhostform.php:76
+#: incidents/incident.php:717
+msgid "3"
+msgstr ""
+
+#: host/modifyhostform.php:87 host/newhostform.php:78
+#: incidents/incident.php:720
+msgid "4"
+msgstr ""
+
+#: host/modifyhostform.php:91 host/newhostform.php:80
+#: incidents/incident.php:723
+msgid "5"
+msgstr ""
+
+#: host/modifyhostform.php:96 host/newhostform.php:85 net/modifynetform.php:82
+#: net/modifynetgroupform.php:96 net/newnetform.php:58
+#: net/newnetgroupform.php:75
+msgid "Threshold C"
+msgstr ""
+
+#: host/modifyhostform.php:102 host/newhostform.php:92
+#: net/modifynetform.php:88 net/modifynetgroupform.php:102
+#: net/newnetform.php:65 net/newnetgroupform.php:82
+msgid "Threshold A"
+msgstr ""
+
+#: host/modifyhostform.php:108 host/newhostform.php:99
+#: net/modifynetform.php:94 net/modifynetgroupform.php:108
+#: net/newnetform.php:72 net/newnetgroupform.php:89
+msgid "RRD Profile"
+msgstr "RRD描述"
+
+#: host/modifyhostform.php:111 host/newhostform.php:102
+#: net/modifynetform.php:96 net/modifynetgroupform.php:110
+#: net/newnetform.php:75 net/newnetgroupform.php:92
+msgid "Insert new profile"
+msgstr "添加RRD描述"
+
+#: host/modifyhostform.php:167 host/newhostform.php:149
+#: net/modifynetform.php:145 net/newnetform.php:116
+#: policy/modifypolicyform.php:354 sensor/newsensorform.php:15
+#: sensor/sensor.php:150
+msgid "Insert new sensor"
+msgstr "添加新探测器"
+
+#: host/modifyhostform.php:207 host/newhostform.php:181
+#: net/modifynetform.php:185 net/modifynetgroupform.php:138
+#: net/newnetform.php:148 net/newnetgroupform.php:112
+msgid "Scan options"
+msgstr "扫描选项"
+
+#: host/modifyhostform.php:216 host/newhostform.php:184 net/newnetform.php:151
+#: net/newnetgroupform.php:115
+msgid "Enable nessus scan"
+msgstr "允许Nessus扫描"
+
+#: host/modifyhostform.php:220 host/newhostform.php:191 report/report.php:39
+msgid "OS"
+msgstr "操作系统"
+
+#: host/modifyhostform.php:230 host/newhostform.php:198
+msgid "Windows"
+msgstr ""
+
+#: host/modifyhostform.php:235 host/newhostform.php:200
+msgid "Linux"
+msgstr ""
+
+#: host/modifyhostform.php:240 host/newhostform.php:202
+msgid "BSD"
+msgstr ""
+
+#: host/modifyhostform.php:250 host/newhostform.php:206
+msgid "Sun"
+msgstr ""
+
+#: host/modifyhostform.php:255 host/newhostform.php:208
+msgid "Plan9"
+msgstr ""
+
+#: host/modifyhostform.php:259 host/newhostform.php:210
+msgid "Other"
+msgstr ""
+
+#: host/modifyhostform.php:265
+msgid "Mac Address"
+msgstr ""
+
+#: host/modifyhostform.php:272 host/newhostform.php:219
+msgid "Mac Vendor"
+msgstr ""
+
+#: host/newhost.php:15
+msgid "New Host"
+msgstr "新主机"
+
+#: host/newhost.php:89
+msgid "Host succesfully inserted"
+msgstr "主机添加成功"
+
+#: host/newhostform.php:16
+msgid "Insert new scan"
+msgstr ""
+
+#: host/newhostform.php:18
+msgid "Please, fill these global properties about the hosts you've scaned"
+msgstr ""
+
+#: incidents/incident.php:172
+msgid "Error trying to insert new alarm ticket (argument missing)"
+msgstr ""
+
+#: incidents/incident.php:207
+msgid "Error trying to insert new hardware ticket (argument missing)"
+msgstr ""
+
+#: incidents/incident.php:219
+msgid "Error trying to insert new install ticket (argument missing)"
+msgstr ""
+
+#: incidents/incident.php:388
+msgid "Src Ports"
+msgstr "源端口"
+
+#: incidents/incident.php:395
+msgid "Dst Ports"
+msgstr "目的端口"
+
+#: incidents/incident.php:410
+msgid "Target"
+msgstr ""
+
+#: incidents/incident.php:417
+msgid "Metric Type"
+msgstr ""
+
+#: incidents/incident.php:424
+msgid "Metric Value"
+msgstr ""
+
+#: incidents/incident.php:490 incidents/index.php:240
+msgid "Ticket"
+msgstr "标签"
+
+#: incidents/incident.php:492
+msgid "Incident"
+msgstr "事件"
+
+#: incidents/incident.php:493 incidents/incident.php:581
+#: incidents/index.php:250
+msgid "In Charge"
+msgstr "负责人"
+
+#: incidents/incident.php:494 incidents/incident.php:580
+#: incidents/index.php:101 incidents/index.php:251
+#: sensor/sensor_plugins.php:118
+msgid "Status"
+msgstr "状态"
+
+#: incidents/incident.php:578
+msgid "User / Description / Action"
+msgstr "用户/描述/动作"
+
+#: incidents/incident.php:582
+msgid "Transferred"
+msgstr "转移"
+
+#: incidents/incident.php:583
+msgid "Copy"
+msgstr "复制"
+
+#: incidents/incident.php:600 session/login.php:136
+msgid "User"
+msgstr "用户"
+
+#: incidents/incident.php:703
+msgid "Attachment"
+msgstr "附件"
+
+#: incidents/incident.php:726
+msgid "6"
+msgstr ""
+
+#: incidents/incident.php:729
+msgid "7"
+msgstr ""
+
+#: incidents/incident.php:732
+msgid "8"
+msgstr ""
+
+#: incidents/incident.php:735
+msgid "9"
+msgstr ""
+
+#: incidents/incident.php:738
+msgid "10"
+msgstr ""
+
+#: incidents/incident.php:740
+msgid "status"
+msgstr "状态"
+
+#: incidents/incident.php:744 incidents/index.php:161
+msgid "Open"
+msgstr "打开"
+
+#: incidents/incident.php:747 incidents/index.php:164
+msgid "Closed"
+msgstr "关闭"
+
+#: incidents/incident.php:751 incidents/index.php:100
+msgid "In charge"
+msgstr "负责人"
+
+#: incidents/incident.php:765
+msgid "Transfer"
+msgstr "转移"
+
+#: incidents/incident.php:767
+msgid "Copy (e-mail)"
+msgstr "复制(e-mail)"
+
+#: incidents/index.php:15 top.php:48
+msgid "Incidents"
+msgstr "事件"
+
+#: incidents/index.php:81
+msgid "Filter"
+msgstr "过滤"
+
+#: incidents/index.php:97
+msgid "Family"
+msgstr ""
+
+#: incidents/index.php:99 incidents/index.php:249
+msgid "Title"
+msgstr "标题"
+
+#: incidents/index.php:122 incidents/index.php:158 incidents/index.php:170
+msgid "ALL"
+msgstr "所有"
+
+#: incidents/index.php:133 incidents/index.php:331
+msgid "Metric"
+msgstr ""
+
+#: incidents/index.php:139
+msgid "Hardware"
+msgstr ""
+
+#: incidents/index.php:145
+msgid "Install"
+msgstr ""
+
+#: incidents/index.php:173
+msgid "High"
+msgstr "高"
+
+#: incidents/index.php:176
+msgid "Medium"
+msgstr "中"
+
+#: incidents/index.php:179
+msgid "Low"
+msgstr "低"
+
+#: incidents/index.php:190
+msgid "with User"
+msgstr ""
+
+#: incidents/index.php:191
+msgid "with Description"
+msgstr ""
+
+#: incidents/index.php:192
+msgid "with Action"
+msgstr ""
+
+#: incidents/index.php:193
+msgid "with Attachment"
+msgstr ""
+
+#: incidents/index.php:194
+msgid "with Copy to"
+msgstr ""
+
+#: incidents/index.php:245
+msgid "Last Modification"
+msgstr "最近修改时间"
+
+#: incidents/index.php:338
+msgid "Install new hardware incident"
+msgstr ""
+
+#: incidents/index.php:345
+msgid "Insert new installation incident"
+msgstr ""
+
+#: index.php:6 ntop/index.php:8 ntop/session.php:8
+msgid "OSSIM"
+msgstr ""
+
+#: net/deletenet.php:15
+msgid "Delete net"
+msgstr "删除网络"
+
+#: net/deletenet.php:20 net/deletenetgroup.php:20
+msgid "Wrong name"
+msgstr "错误名称"
+
+#: net/deletenet.php:53
+msgid "Net deleted"
+msgstr "网络已删除"
+
+#: net/deletenetgroup.php:15
+msgid "Delete network group"
+msgstr ""
+
+#: net/deletenetgroup.php:52
+msgid "Network group deleted"
+msgstr ""
+
+#: net/modifynet.php:15
+msgid "Update net"
+msgstr "更新网络"
+
+#: net/modifynet.php:71
+msgid "Net succesfully updated"
+msgstr "网络成功更新"
+
+#: net/modifynetform.php:15
+msgid "Modify network"
+msgstr "修改网络"
+
+#: net/modifynetform.php:43
+msgid "Netname"
+msgstr "网络名称"
+
+#: net/modifynetgroup.php:15
+msgid "Update network group"
+msgstr ""
+
+#: net/modifynetgroup.php:64
+msgid "Network group succesfully updated"
+msgstr ""
+
+#: net/modifynetgroupform.php:15
+msgid "Modify network group"
+msgstr ""
+
+#: net/modifynetgroupform.php:45
+msgid "Group Name"
+msgstr ""
+
+#: net/modifynetgroupform.php:55 net/net.php:147 net/newnetform.php:15
+#: net/newnetgroupform.php:43
+msgid "Insert new network"
+msgstr "添加新网络"
+
+#: net/net.php:44 net/newnetform.php:38
+msgid "Ips"
+msgstr ""
+
+#: net/net.php:66 net/netgroup.php:54
+msgid "Nessus Scan"
+msgstr "Nessus扫描"
+
+#: net/netgroup.php:15 top.php:59
+msgid "Network groups"
+msgstr ""
+
+#: net/netgroup.php:122 net/newnetgroupform.php:15
+msgid "Insert new network group"
+msgstr ""
+
+#: net/newnet.php:15
+msgid "New network"
+msgstr "新网络"
+
+#: net/newnet.php:70
+msgid "Network succesfully inserted"
+msgstr "网络添加成功"
+
+#: net/newnetform.php:40
+msgid "example"
+msgstr "示例"
+
+#: net/newnetgroup.php:15
+msgid "New network group"
+msgstr ""
+
+#: net/newnetgroup.php:65
+msgid "Network group succesfully inserted"
+msgstr ""
+
+#: netscan/do_scan.php:20
+msgid "Missing net argument.."
+msgstr ""
+
+#: netscan/index.php:42 top.php:74
+msgid "Net Scan"
+msgstr ""
+
+#: netscan/index.php:50
+msgid "Please, select the network you want to scan:"
+msgstr ""
+
+#: netscan/index.php:91
+msgid ""
+"NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, "
+"you need root privileges."
+msgstr ""
+
+#: netscan/index.php:93
+msgid ""
+"For this purpose you can use suphp, or set suid to nmap binary (chmod 4755 /"
+"usr/bin/nmap)"
+msgstr ""
+
+#: netscan/scan_db.php:25
+msgid "Return to host's policy"
+msgstr ""
+
+#: netscan/scan_db.php:57
+msgid "Updating "
+msgstr ""
+
+#: netscan/scan_db.php:82
+msgid "Inserting "
+msgstr ""
+
+#: ntop/menu.php:123
+msgid "Protocols"
+msgstr "协议"
+
+#: ntop/menu.php:125
+msgid "Services"
+msgstr "服务"
+
+#: ntop/menu.php:129 ntop/menu.php:153
+msgid "By host: Total"
+msgstr "主机：所有"
+
+#: ntop/menu.php:133 ntop/menu.php:157
+msgid "By host: Sent"
+msgstr "主机：发送"
+
+#: ntop/menu.php:137 ntop/menu.php:161
+msgid "By host: Recv"
+msgstr "主机：接收"
+
+#: ntop/menu.php:142
+msgid "Service statistic"
+msgstr "服务统计"
+
+#: ntop/menu.php:147
+msgid "By client-server"
+msgstr "客户/服务器"
+
+#: ntop/menu.php:149
+msgid "Throughput"
+msgstr "吞吐量"
+
+#: ntop/menu.php:165
+msgid "Total (Graph)"
+msgstr "所有(图形)"
+
+#: ntop/menu.php:167
+msgid "Matrix"
+msgstr "矩阵"
+
+#: ntop/menu.php:171
+msgid "Data Matrix"
+msgstr "数据矩阵"
+
+#: ntop/menu.php:175
+msgid "Time Matrix"
+msgstr "时间矩阵"
+
+#: ntop/menu.php:177
+msgid "Gateways, VLANs"
+msgstr "网关/VLAN"
+
+#: ntop/menu.php:181
+msgid "Gateways"
+msgstr "网关"
+
+#: ntop/menu.php:185
+msgid "VLANs"
+msgstr "VLAN"
+
+#: ntop/menu.php:189
+msgid "OS and Users"
+msgstr "操作系统及用户"
+
+#: ntop/menu.php:193
+msgid "Domains"
+msgstr "域"
+
+#: ntop/net_session.php:83
+msgid "Active TCP Sessions"
+msgstr "活动TCP会话"
+
+#: ntop/session.php:21
+msgid "Please select a sensor"
+msgstr "请选择一个探测器"
+
+#: policy/deletepolicy.php:15
+msgid "Delete policy"
+msgstr "删除策略"
+
+#: policy/deletepolicy.php:20
+msgid "Wrong policy id"
+msgstr "错误策略"
+
+#: policy/deletepolicy.php:45
+msgid "Policy deleted"
+msgstr "策略已删除"
+
+#: policy/modifypolicy.php:15
+msgid "Update Policy"
+msgstr "更新策略"
+
+#: policy/modifypolicy.php:64 policy/newpolicy.php:58
+msgid "Error: Incorrect range of dates"
+msgstr "错误的日期范围"
+
+#: policy/modifypolicy.php:136
+msgid "Policy succesfully updated"
+msgstr "策略更新成功"
+
+#: policy/modifypolicyform.php:15
+msgid "Update policy"
+msgstr "更新策略"
+
+#: policy/modifypolicyform.php:54 policy/modifypolicyform.php:149
+msgid "Insert new net"
+msgstr "添加新网络"
+
+#: policy/modifypolicyform.php:144 policy/policy.php:28
+msgid "Dest"
+msgstr "目标地址"
+
+#: policy/modifypolicyform.php:239 port/modifyportform.php:47
+#: port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:62
+msgid "Ports"
+msgstr "端口"
+
+#: policy/modifypolicyform.php:241 port/newportform.php:15
+#: port/newsingleportform.php:15
+msgid "Insert new port group"
+msgstr "添加新端口组"
+
+#: policy/modifypolicyform.php:307 signature/modifysignatureform.php:47
+#: signature/newsignatureform.php:25 signature/signature.php:15
+#: signature/signature.php:29 top.php:61
+msgid "Signatures"
+msgstr "特征码"
+
+#: policy/modifypolicyform.php:310 signature/newsignatureform.php:15
+msgid "Insert new signature group"
+msgstr "添加新特征码组"
+
+#: policy/modifypolicyform.php:395 policy/policy.php:36
+msgid "Time Range"
+msgstr "时间范围"
+
+#: policy/modifypolicyform.php:400
+msgid "Begin"
+msgstr "开始时间"
+
+#: policy/modifypolicyform.php:400
+msgid "End"
+msgstr "结束时间"
+
+#: policy/newpolicy.php:15
+msgid "New policy"
+msgstr "新策略"
+
+#: policy/newpolicy.php:128
+msgid "Policy succesfully inserted"
+msgstr "策略添加成功"
+
+#: policy/policy.php:15 top.php:33 top.php:56
+msgid "Policy"
+msgstr "策略"
+
+#: policy/policy.php:33
+msgid "Port Group"
+msgstr "端口组"
+
+#: policy/policy.php:34
+msgid "Sig Group"
+msgstr "特征码组"
+
+#: policy/policy.php:172
+msgid "Insert new policy"
+msgstr "添加新策略"
+
+#: port/deleteport.php:15
+msgid "Delete port group"
+msgstr "删除端口组"
+
+#: port/deleteport.php:20
+msgid "Wrong port name"
+msgstr "错误端口名称"
+
+#: port/deleteport.php:45
+msgid "Port group deleted"
+msgstr "端口组已删除"
+
+#: port/modifyport.php:15
+msgid "Modify Port group"
+msgstr "修改端口组"
+
+#: port/modifyport.php:54
+msgid "Port succesfully updated"
+msgstr "端口组更新成功"
+
+#: port/modifyportform.php:15
+msgid "Modify port group"
+msgstr "修改端口组"
+
+#: port/newport.php:15 port/newsingleport.php:15
+msgid "New port"
+msgstr "新端口"
+
+#: port/newport.php:54 port/newsingleport.php:49
+msgid "Port succesfully inserted"
+msgstr "端口添加成功"
+
+#: port/newsingleportform.php:21
+msgid "Port number"
+msgstr "端口号"
+
+#: port/newsingleportform.php:29
+msgid "UDP"
+msgstr ""
+
+#: port/newsingleportform.php:31
+msgid "TCP"
+msgstr ""
+
+#: port/newsingleportform.php:36 report/inventory.php:190
+#: report/sec_report.php:407
+msgid "Service"
+msgstr "服务"
+
+#: port/port.php:29
+msgid "Port group"
+msgstr "端口组"
+
+#: port/port.php:72
+msgid "Insert new Port Group"
+msgstr "添加新端口组"
+
+#: port/port.php:73
+msgid "Insert new Port"
+msgstr "添加新端口"
+
+#: report/anomalies.php:81
+msgid "year"
+msgstr "年"
+
+#: report/anomalies.php:82
+msgid "month"
+msgstr "月"
+
+#: report/anomalies.php:83
+msgid "week"
+msgstr "周"
+
+#: report/anomalies.php:84
+msgid "day"
+msgstr "日"
+
+#: report/anomalies.php:85
+msgid "last 12h"
+msgstr "最近12小时"
+
+#: report/anomalies.php:86
+msgid "last 6h"
+msgstr "最近6小时"
+
+#: report/anomalies.php:87
+msgid "last hour"
+msgstr "最近1小时"
+
+#: report/anomalies.php:105
+msgid ""
+"NOTE: total and average values are NOT absolute but calculated on the "
+"specified time interval"
+msgstr "全局值和平均值并非固定，而是根据指定时间间隔计算得到"
+
+#: report/inventory.php:70
+msgid "Host Info"
+msgstr "主机信息"
+
+#: report/inventory.php:95
+msgid "Operating System"
+msgstr "操作系统"
+
+#: report/inventory.php:126
+msgid "Netbios Name"
+msgstr "Netbios名称"
+
+#: report/inventory.php:130
+msgid "Netbios Work Group"
+msgstr "Netbios工作组"
+
+#: report/inventory.php:170
+msgid "Port / Service information"
+msgstr "端口/服务信息"
+
+#: report/inventory.php:174 scan/scan.php:42 sensor/sensor.php:48
+msgid "Active"
+msgstr "活动"
+
+#: report/inventory.php:178
+msgid "update"
+msgstr "更新"
+
+#: report/inventory.php:183
+msgid "Passive"
+msgstr "被动"
+
+#: report/inventory.php:191 session/login.php:129
+msgid "Version"
+msgstr "版本"
+
+#: report/menu.php:42
+msgid "Inventory"
+msgstr "清单"
+
+#: report/menu.php:48 report/pdfreportform.php:118 top.php:40
+msgid "Alarms"
+msgstr "关联报警"
+
+#: report/menu.php:52
+msgid "Source or Dest"
+msgstr "源或目的地址"
+
+#: report/menu.php:60 riskmeter/options.php:34 top.php:41
+msgid "Alerts"
+msgstr "警告"
+
+#: report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
+#: top.php:68
+msgid "Main"
+msgstr ""
+
+#: report/menu.php:66
+msgid "Src Unique alerts"
+msgstr "相同的源地址警告"
+
+#: report/menu.php:69
+msgid "Dst Unique alerts"
+msgstr "相同的目的地址警告"
+
+#: report/menu.php:78 vulnmeter/index.php:8
+msgid "Vulnmeter"
+msgstr ""
+
+#: report/menu.php:82
+msgid "Security Problems"
+msgstr "安全问题"
+
+#: report/menu.php:87
+msgid "Usage"
+msgstr "使用情况"
+
+#: report/metrics.php:114
+msgid "Current C Level"
+msgstr ""
+
+#: report/metrics.php:120
+msgid "Current A Level"
+msgstr ""
+
+#: report/metrics.php:131
+msgid "Max C Level (last day)"
+msgstr ""
+
+#: report/metrics.php:143
+msgid "Max A Level (last day)"
+msgstr ""
+
+#: report/metrics.php:155
+msgid "Max C Level (last month)"
+msgstr ""
+
+#: report/metrics.php:166
+msgid "Max A Level (last month)"
+msgstr ""
+
+#: report/metrics.php:178
+msgid "Max C Level (last year)"
+msgstr ""
+
+#: report/metrics.php:189
+msgid "Max A Level (last year)"
+msgstr ""
+
+#: report/metrics.php:201
+msgid "Last day"
+msgstr "本日"
+
+#: report/metrics.php:204
+msgid "Last week"
+msgstr "本周"
+
+#: report/metrics.php:207
+msgid "Last month"
+msgstr "本月"
+
+#: report/metrics.php:210
+msgid "Last year"
+msgstr "本年"
+
+#: report/pdfreportform.php:14
+msgid "PDF reports"
+msgstr "PDF报告"
+
+#: report/pdfreportform.php:19 top.php:45
+msgid "Security Report"
+msgstr "安全报告"
+
+#: report/pdfreportform.php:20
+msgid "Metrics Report"
+msgstr "安全态势报告"
+
+#: report/pdfreportform.php:21
+msgid "Incident Report"
+msgstr "事件报告"
+
+#: report/pdfreportform.php:34
+msgid "Top Attacked Hosts"
+msgstr "受攻击最多的主机"
+
+#: report/pdfreportform.php:41
+msgid "Top AttackerHosts"
+msgstr "发动攻击最多的主机"
+
+#: report/pdfreportform.php:48
+msgid "Top Destination Ports"
+msgstr "受攻击最多的端口"
+
+#: report/pdfreportform.php:55
+msgid "Top Alerts by Host"
+msgstr "最多的主机警告"
+
+#: report/pdfreportform.php:62
+msgid "Top Alerts by Risk"
+msgstr "最多的风险警告"
+
+#: report/pdfreportform.php:68
+msgid "Number of hosts per table"
+msgstr "每张表中的主机数"
+
+#: report/pdfreportform.php:82
+msgid "Day"
+msgstr "日"
+
+#: report/pdfreportform.php:88
+msgid "Week"
+msgstr "周"
+
+#: report/pdfreportform.php:94
+msgid "Month"
+msgstr "月"
+
+#: report/pdfreportform.php:100
+msgid "Year"
+msgstr "年"
+
+#: report/report.php:15
+msgid "Host report"
+msgstr "主机报告"
+
+#: report/report.php:34 sensor/sensor.php:32
+msgid "Ip"
+msgstr ""
+
+#: report/sec_report.php:15
+msgid "Security report"
+msgstr "安全报告"
+
+#: report/sec_report.php:149 report/sec_report.php:219
+msgid "Occurrences"
+msgstr "发生次数"
+
+#: report/sec_report.php:218
+msgid "Alert"
+msgstr "警告"
+
+#: report/sec_report.php:408
+msgid "Ocurrences"
+msgstr "发生次数"
+
+#: riskmeter/index.php:81
+msgid "Page Refresh"
+msgstr ""
+
+#: riskmeter/options.php:39
+msgid "History"
+msgstr "历史"
+
+#: riskmeter/resetip.php:11
+msgid "Reset completed"
+msgstr "重置完成"
+
+#: rrd_conf/delete_rrd_conf.php:15
+msgid "Delete RRD Conf"
+msgstr "删除RRD配置"
+
+#: rrd_conf/delete_rrd_conf.php:48
+msgid "RRD profile deleted"
+msgstr "RRD profile已删除"
+
+#: rrd_conf/modify_rrd_conf_form.php:15
+msgid "Modify RRD Config"
+msgstr "修改RRD配置"
+
+#: rrd_conf/modify_rrd_conf_form.php:17
+msgid "Hints"
+msgstr "提示"
+
+#: rrd_conf/modify_rrd_conf_form.php:19
+msgid "Threshold: Absolute value above which is being alerted"
+msgstr "极值：超过就会发出警告的绝对值"
+
+#: rrd_conf/modify_rrd_conf_form.php:20
+msgid "Priority: Resulting impact if threshold is being exceeded"
+msgstr "优先级：超过极值后发生的影响"
+
+#: rrd_conf/modify_rrd_conf_form.php:21
+msgid "Alpha: Intercept adaption parameter"
+msgstr "Alpha:截距适应参数"
+
+#: rrd_conf/modify_rrd_conf_form.php:22
+msgid "Beta: Slope adaption parameter"
+msgstr "Beta:平滑适应参数"
+
+#: rrd_conf/modify_rrd_conf_form.php:23
+msgid "Persistence: How long has this event to last before we alert. (20 mins)"
+msgstr "持续时间:事件发生到发出警告的时间"
+
+#: rrd_conf/modify_rrd_conf_form.php:87
+msgid "Attribute"
+msgstr "属性"
+
+#: rrd_conf/modify_rrd_conf_form.php:91
+msgid "Threshold"
+msgstr "极值"
+
+#: rrd_conf/modify_rrd_conf_form.php:99
+msgid "Alpha"
+msgstr ""
+
+#: rrd_conf/modify_rrd_conf_form.php:103
+msgid "Beta"
+msgstr ""
+
+#: rrd_conf/modify_rrd_conf_form.php:107
+msgid "Persistence"
+msgstr "持续时间"
+
+#: rrd_conf/modify_rrd_conf_form.php:111
+msgid "Enable"
+msgstr "允许"
+
+#: rrd_conf/new_rrd_conf.php:15
+msgid "New RRD Profile"
+msgstr "新RRD描述"
+
+#: rrd_conf/new_rrd_conf.php:61
+msgid "RRD Config succesfully inserted"
+msgstr "RRD配置添加成功"
+
+#: rrd_conf/rrd_conf.php:15 top.php:71
+msgid "RRD Config"
+msgstr "RRD配置"
+
+#: rrd_conf/rrd_conf.php:30
+msgid "Profile"
+msgstr "描述"
+
+#: rrd_conf/rrd_conf.php:68
+msgid "Insert new RRD profile"
+msgstr "添加RRD描述"
+
+#: scan/deletehostscan.php:15
+msgid "Delete host scan configuration"
+msgstr "删除主机扫描配置"
+
+#: scan/deletehostscan.php:44
+msgid "Host scan configuration deleted"
+msgstr "主机扫描配置已删除"
+
+#: scan/hostscan.php:15
+msgid "Host scan configuration"
+msgstr "主机扫描配置"
+
+#: scan/hostscan.php:28
+msgid ""
+"Use policy->hosts or networks to define nessus scans or else you'll get "
+"unexpected results"
+msgstr "通过策略->主机或网络来定义Nessus扫描，否则将得不到期望的结果"
+
+#: scan/hostscan.php:80
+msgid "New"
+msgstr "添加"
+
+#: scan/newhostscan.php:15
+msgid "New host scan configuration"
+msgstr "添加主机扫描配置"
+
+#: scan/newhostscan.php:41
+msgid "Host scan configuration succesfully inserted"
+msgstr "主机扫描配置添加成功"
+
+#: scan/newhostscanform.php:15
+msgid "Insert new host scan configuration"
+msgstr "添加主机扫描配置"
+
+#: sensor/deletesensor.php:15
+msgid "Delete sensor"
+msgstr "删除探测器"
+
+#: sensor/deletesensor.php:20
+msgid "Wrong sensor"
+msgstr "错误探测器"
+
+#: sensor/deletesensor.php:30
+msgid "Are you sure?"
+msgstr "是否确定"
+
+#: sensor/deletesensor.php:56
+msgid "Sensor deleted"
+msgstr "探测器已删除"
+
+#: sensor/editsensor.php:32
+msgid "Edit sensor"
+msgstr "编辑探测器"
+
+#: sensor/editsensor.php:33
+msgid "properties"
+msgstr "属性"
+
+#: sensor/editsensor.php:51
+msgid "What sensor do you want to edit"
+msgstr "需要编辑哪个探测器"
+
+#: sensor/editsensor.php:105 sensor/editsensor.php:279
+#: sensor/editsensor.php:690
+msgid "Error opening"
+msgstr "打开错误"
+
+#: sensor/editsensor.php:105 sensor/editsensor.php:279
+#: sensor/editsensor.php:690
+msgid "file"
+msgstr "文件"
+
+#: sensor/editsensor.php:150
+msgid "Load default values for snort config file"
+msgstr "加载Snort配置文件缺省值"
+
+#: sensor/editsensor.php:151 sensor/editsensor.php:370
+#: sensor/editsensor.php:721
+msgid "use this option only if you are sure"
+msgstr "确定使用此选项"
+
+#: sensor/editsensor.php:168
+msgid "Snort configuration"
+msgstr "Snort配置"
+
+#: sensor/editsensor.php:205 sensor/editsensor.php:427
+#: sensor/editsensor.php:466
+msgid "Password unchanged if field left blank"
+msgstr "密码域如为空则不更改密码"
+
+#: sensor/editsensor.php:258 sensor/editsensor.php:669
+#: sensor/editsensor.php:791
+msgid "Error opening file"
+msgstr "打开文件错误"
+
+#: sensor/editsensor.php:262 sensor/editsensor.php:674
+#: sensor/editsensor.php:796
+msgid "Sensor edit completed"
+msgstr "探测器编辑完成"
+
+#: sensor/editsensor.php:369
+msgid "Load default values for ossim config file"
+msgstr "加载OSSIM缺省配置文件"
+
+#: sensor/editsensor.php:386
+msgid "OSSIM configuration"
+msgstr "OSSIM配置"
+
+#: sensor/editsensor.php:388
+msgid "Base configuration"
+msgstr "基本配置"
+
+#: sensor/editsensor.php:390
+msgid "Base directory"
+msgstr "基本目录"
+
+#: sensor/editsensor.php:396
+msgid "Log file"
+msgstr "日志文件"
+
+#: sensor/editsensor.php:401
+msgid "Database"
+msgstr "数据库"
+
+#: sensor/editsensor.php:403
+msgid "hostname of the mysql database server"
+msgstr "Mysql数据库服务器主机名"
+
+#: sensor/editsensor.php:409
+msgid "name of the database"
+msgstr "数据库名称"
+
+#: sensor/editsensor.php:415
+msgid "name of the database user"
+msgstr "数据库用户名称"
+
+#: sensor/editsensor.php:421
+msgid "password for the database connection"
+msgstr "数据库连接口令"
+
+#: sensor/editsensor.php:431
+msgid "path to snort"
+msgstr "Snort路径"
+
+#: sensor/editsensor.php:437
+msgid "path to snort rules directory"
+msgstr "Snort规则目录路径"
+
+#: sensor/editsensor.php:442
+msgid "hostname of the snort database server"
+msgstr "Snort数据库服务器主机名"
+
+#: sensor/editsensor.php:448
+msgid "name of the snort database"
+msgstr "Snort数据库名称"
+
+#: sensor/editsensor.php:454
+msgid "name of the snort database user"
+msgstr "Snort数据库用户名称"
+
+#: sensor/editsensor.php:460
+msgid "password for the snort database connection"
+msgstr "Snort数据库连接口令"
+
+#: sensor/editsensor.php:468
+msgid "Paths"
+msgstr "路径"
+
+#: sensor/editsensor.php:470
+msgid "adodb"
+msgstr ""
+
+#: sensor/editsensor.php:476
+msgid "rrdtool"
+msgstr ""
+
+#: sensor/editsensor.php:482
+msgid "rrdtool lib directory"
+msgstr "rrdtool库目录"
+
+#: sensor/editsensor.php:488 sensor/editsensor.php:538
+msgid "mrtg"
+msgstr ""
+
+#: sensor/editsensor.php:494
+msgid "mrtg rrd files"
+msgstr "mrtg rrd文件"
+
+#: sensor/editsensor.php:499
+msgid "Applications"
+msgstr "应用"
+
+#: sensor/editsensor.php:501
+msgid "nmap"
+msgstr ""
+
+#: sensor/editsensor.php:507
+msgid "p0f"
+msgstr ""
+
+#: sensor/editsensor.php:513
+msgid "arpwatch"
+msgstr ""
+
+#: sensor/editsensor.php:520
+msgid "acid"
+msgstr ""
+
+#: sensor/editsensor.php:526
+msgid "ntop"
+msgstr ""
+
+#: sensor/editsensor.php:532
+msgid "opennms"
+msgstr ""
+
+#: sensor/editsensor.php:544
+msgid "graph"
+msgstr ""
+
+#: sensor/editsensor.php:681 sensor/editsensor.php:804
+msgid "Default values loaded"
+msgstr "加载缺省值"
+
+#: sensor/editsensor.php:720
+msgid "Load default values for spade config file"
+msgstr "加载spade配置文件缺省值"
+
+#: sensor/editsensor.php:737
+msgid "Spade configuration"
+msgstr "spade配置"
+
+#: sensor/editsensor.php:739
+msgid "SPADEDIR"
+msgstr ""
+
+#: sensor/editsensor.php:744
+msgid "dest"
+msgstr ""
+
+#: sensor/editsensor.php:749
+msgid "logfile"
+msgstr "日志文件"
+
+#: sensor/editsensor.php:754
+msgid "statefile"
+msgstr "状态文件"
+
+#: sensor/editsensor.php:759
+msgid "homenet"
+msgstr ""
+
+#: sensor/get_sensor_plugins.php:29 sensor/get_sensors.php:24
+msgid "Is OSSIM server running at"
+msgstr "OSSIM服务器是否运行在"
+
+#: sensor/interfaces.php:45
+msgid "updated"
+msgstr "更新"
+
+#: sensor/interfaces.php:49
+msgid "deleted"
+msgstr "已删除"
+
+#: sensor/interfaces.php:56
+msgid "Interface succesfully"
+msgstr "接口成功"
+
+#: sensor/interfaces.php:82
+msgid "Update interfaces for"
+msgstr "更新接口"
+
+#: sensor/interfaces.php:85 sensor/interfaces.php:140
+msgid "Interface"
+msgstr "接口"
+
+#: sensor/modifysensor.php:15
+msgid "Update sensor"
+msgstr "更新探测器"
+
+#: sensor/modifysensor.php:50
+msgid "Sensor succesfully updated"
+msgstr "探测器更新成功"
+
+#: sensor/modifysensorform.php:15
+msgid "Modify sensor"
+msgstr "修改探测器"
+
+#: sensor/modifysensorform.php:93 sensor/newsensorform.php:51
+#: sensor/sensor.php:44
+msgid "Port"
+msgstr "端口"
+
+#: sensor/newsensor.php:15
+msgid "New sensor"
+msgstr "添加探测器"
+
+#: sensor/newsensor.php:50
+msgid "Sensor succesfully inserted"
+msgstr "探测器添加成功"
+
+#: sensor/sensor.php:104
+msgid "Interfaces"
+msgstr "接口"
+
+#: sensor/sensor.php:126
+msgid "Warning"
+msgstr "警告"
+
+#: sensor/sensor.php:127
+msgid ""
+"the following sensor(s) are being reported as enabled by the server but "
+"aren't configured"
+msgstr "以下探测器由服务器报告连接成功但并未进行配置"
+
+#: sensor/sensor.php:142
+msgid "Insert"
+msgstr "添加"
+
+#: sensor/sensor_plugins.php:46
+msgid "There aren't any sensors connected to OSSIM server"
+msgstr "没有任何探测器与OSSIM服务器连接"
+
+#: sensor/sensor_plugins.php:120
+msgid "Enabled"
+msgstr "允许"
+
+#: sensor/sensor_plugins.php:144
+msgid "UP"
+msgstr "运行"
+
+#: sensor/sensor_plugins.php:147
+msgid "stop"
+msgstr "停止"
+
+#: sensor/sensor_plugins.php:151
+msgid "DOWN"
+msgstr "终止"
+
+#: sensor/sensor_plugins.php:154
+msgid "start"
+msgstr "开始"
+
+#: sensor/sensor_plugins.php:166
+msgid "ENABLED"
+msgstr "允许"
+
+#: sensor/sensor_plugins.php:169
+msgid "disable"
+msgstr "禁止"
+
+#: sensor/sensor_plugins.php:173
+msgid "DISABLED"
+msgstr "禁止"
+
+#: sensor/sensor_plugins.php:176
+msgid "enable"
+msgstr "允许"
+
+#: session/changepass.php:10 session/changepassform.php:10
+msgid "Change password"
+msgstr "更改口令"
+
+#: session/changepass.php:49 session/modifyuser.php:72
+msgid "User succesfully updated"
+msgstr "用户更新成功"
+
+#: session/changepassform.php:26 session/modifyuserform.php:64
+msgid "User name"
+msgstr "用户名"
+
+#: session/changepassform.php:30
+msgid "Current password"
+msgstr "当前口令"
+
+#: session/changepassform.php:34
+msgid "Enter new password"
+msgstr "输入新口令"
+
+#: session/changepassform.php:38
+msgid "Retype new password"
+msgstr "重输新口令"
+
+#: session/deleteuser.php:20
+msgid "Delete user"
+msgstr "删除用户"
+
+#: session/deleteuser.php:59
+msgid "User deleted"
+msgstr "用户已删除"
+
+#: session/login.php:92
+msgid "OSSIM Framework Login"
+msgstr "OSSIM框架登录"
+
+#: session/login.php:102
+msgid "OSSIM Login"
+msgstr "OSSIM登录"
+
+#: session/login.php:140 session/users.php:37
+msgid "Password"
+msgstr "口令"
+
+#: session/login.php:150
+msgid "NOTE: Default user is admin-admin"
+msgstr "注意:缺省用户为admin-admin"
+
+#: session/login.php:151
+msgid "For security reasons you should change it at Configuration->Users"
+msgstr "基于安全考虑应该通过配置->用户更改缺省值"
+
+#: session/modifyuser.php:15 session/newuser.php:15
+msgid "New User"
+msgstr "添加用户"
+
+#: session/modifyuserform.php:19
+msgid "Modify user"
+msgstr "更改用户"
+
+#: session/modifyuserform.php:60 session/newuserform.php:28
+msgid "User login"
+msgstr "用户登录"
+
+#: session/modifyuserform.php:69 session/newuserform.php:44
+msgid "Allowed nets"
+msgstr "允许访问网络"
+
+#: session/modifyuserform.php:98 session/newuserform.php:74
+msgid "Permissions"
+msgstr "权限"
+
+#: session/newuser.php:80
+msgid "User succesfully inserted"
+msgstr "用户添加成功"
+
+#: session/newuserform.php:21 session/users.php:79
+msgid "Insert new user"
+msgstr "添加新用户"
+
+#: session/newuserform.php:32
+msgid "User full name"
+msgstr "用户全名"
+
+#: session/newuserform.php:36
+msgid "Enter password"
+msgstr "输入口令"
+
+#: session/newuserform.php:40
+msgid "Re-enter password"
+msgstr "重输口令"
+
+#: session/users.php:15 top.php:69
+msgid "Users"
+msgstr "用户"
+
+#: session/users.php:32
+msgid "Login"
+msgstr "登录"
+
+#: session/users.php:38
+msgid "Actions"
+msgstr "动作"
+
+#: session/users.php:58
+msgid "Change Password"
+msgstr "更改口令"
+
+#: session/users.php:63
+msgid "Update"
+msgstr "更新"
+
+#: session/users.php:82
+msgid "Reload ACLS"
+msgstr "重载访问控制列表"
+
+#: signature/deletesignature.php:15
+msgid "Delete signature group"
+msgstr "删除特征码组"
+
+#: signature/deletesignature.php:20
+msgid "Wrong signature name"
+msgstr "错误特征码名称"
+
+#: signature/deletesignature.php:45
+msgid "Signature group deleted"
+msgstr "特征码组已删除"
+
+#: signature/modifysignature.php:15 signature/modifysignatureform.php:15
+msgid "Modify signature group"
+msgstr "更改特征码组"
+
+#: signature/newsignature.php:15
+msgid "New signature"
+msgstr "添加特征码"
+
+#: signature/signature.php:68
+msgid "Insert new Signature Group"
+msgstr "添加特征码组"
+
+#: top.php:31
+msgid "Reports"
+msgstr "报告"
+
+#: top.php:32
+msgid "Monitors"
+msgstr "监视器"
+
+#: top.php:34
+msgid "Correlation"
+msgstr "关联分析"
+
+#: top.php:35
+msgid "Configuration"
+msgstr "配置"
+
+#: top.php:36
+msgid "Tools"
+msgstr "工具"
+
+#: top.php:37
+msgid "Logout"
+msgstr "注销"
+
+#: top.php:42
+msgid "Vulnerabilities"
+msgstr "漏洞"
+
+#: top.php:44
+msgid "Host Report"
+msgstr "主机报告"
+
+#: top.php:46
+msgid "PDF Report"
+msgstr "PDF报告"
+
+#: top.php:51
+msgid "Session"
+msgstr "会话"
+
+#: top.php:53
+msgid "Availability"
+msgstr "可用性"
+
+#: top.php:64
+msgid "Directives"
+msgstr "关联模式"
+
+#: top.php:65
+msgid "Cross Correlation"
+msgstr "漏洞关联"
+
+#: top.php:70
+msgid "Plugins"
+msgstr "插件"
+
+#: top.php:72
+msgid "Host Scan"
+msgstr "主机扫描"
+
+#: top.php:75
+msgid "Rule Viewer"
+msgstr "规则查看"
+
+#: vulnmeter/do_nessus.php:15
+msgid "Update Scan"
+msgstr "更新扫描"
+
+#: vulnmeter/do_nessus.php:30
+msgid ""
+"Nessus scan started, depending on number of hosts to be scanned this may "
+"take a while"
+msgstr "Nessus扫描已开始，根据主机数目扫描将持续一段时间"
+
+#: vulnmeter/do_nessus.php:31
+msgid ""
+"Notice: httpd user needs write permission to the vulnmeter dir and subdirs"
+msgstr "注意:HTTP用户需要vulnmeter目录及其子目录的写权限"
+
+#: vulnmeter/index.php:62
+msgid "Last scan"
+msgstr "最近扫描"
+
+#: vulnmeter/index.php:63
+msgid "Update scan"
+msgstr "更新扫描"
+
+#: vulnmeter/index.php:73
+msgid "Nets"
+msgstr "网络"
+
+#: vulnmeter/index.php:219
+msgid "No scan have been done yet"
+msgstr ""
+
+#~ msgid "Scan"
+#~ msgstr "扫描"

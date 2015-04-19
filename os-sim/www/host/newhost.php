@@ -46,6 +46,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     $descr       = mysql_escape_string($_POST["descr"]);
     $os          = mysql_escape_string($_POST["os"]);
     $mac         = mysql_escape_string($_POST["mac"]);
+    $mac_vendor  = mysql_escape_string($_POST["mac_vendor"]);
     $num_sens    = 0;
 
     for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
@@ -55,13 +56,12 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
             $sensors[] = mysql_escape_string($_POST[$name]);
         }
     }
-    if($num_sens == 0){
-    ?>
+    if ($num_sens == 0) {
+?>
       <p align="center">
-      <?php echo gettext("Please, complete all the fields"); ?> </p>
+      <?php echo gettext("Sorry, no sensor selected"); ?> </p>
 <?php
-exit();
-
+        exit();
     }
 
     require_once 'ossim_db.inc';
@@ -72,42 +72,13 @@ exit();
     $conn = $db->connect();
     $conf = new ossim_conf();
 
-    if ($hostname == "__scan") {
-
-        $nmap = $conf->get_conf("nmap_path");
-        $ips = shell_exec("$nmap -sP -v -n $ip");
-        $ip_list = explode("\n", $ips);
-        
-        foreach ($ip_list as $line) {
-        
-            $pattern = "/Host ([^\s]+)/";
-            if (preg_match_all($pattern, $line, $regs)) {
-                $ip = $regs[1][0];
-            }
-
-            if (! Host::in_host($conn, $ip)) {
-            
-                $pattern = "/appears to be up/";
-                if (preg_match_all($pattern, $line, $regs)) {
-                    
-                    Host::insert ($conn, $ip, gethostbyaddr($ip), 
-                                  $asset, $threshold_c, $threshold_a, 
-                                  $rrd_profile, $alert, $persistence, $nat, 
-                                  $sensors, $descr);
-                    if($_POST["nessus"]) {
-                        Host_scan::insert ($conn, $ip, 3001, 0);
-                    }
-                }
-            }
-        }
-    } else {
-        if (! Host::in_host($conn, $ip)) {
-            Host::insert ($conn, $ip, $hostname, $asset, 
-                          $threshold_c, $threshold_a, $rrd_profile, $alert, 
-                          $persistence, $nat, $sensors, $descr, $os, $mac);
-            if($_POST["nessus"]) {
-                Host_scan::insert ($conn, $ip, 3001, 0);
-            }
+    if (! Host::in_host($conn, $ip)) {
+        Host::insert ($conn, $ip, $hostname, $asset, 
+                      $threshold_c, $threshold_a, $rrd_profile, $alert, 
+                      $persistence, $nat, $sensors, $descr, 
+                      $os, $mac, $mac_vendor);
+        if($_POST["nessus"]) {
+            Host_scan::insert ($conn, $ip, 3001, 0);
         }
     }
 

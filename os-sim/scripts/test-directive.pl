@@ -348,6 +348,80 @@ sub directive10 {
     }
 }
 
+sub directive11 {
+    my $i;
+
+    $src_ip = '192.168.1.10';
+    $dst_ip = '192.168.1.11';
+    $src_port = '1765';
+    $dst_port = '1';
+
+
+    my $alert_path_1 = 'alert type="detector" date="2004-06-30 10:35:49" plugin_id="1104" plugin_sid="1" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$dst_port.'"';
+
+    print $sock $alert_path_1 . "\n";
+
+    my $alert_path_1_1;
+    for ($i = 2; $i <= 16; $i++) {
+	$alert_path_1_1 = 'alert type="detector" date="2004-06-30 10:35:49" plugin_id="1104" plugin_sid="1" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$i.'"';
+
+	print $sock $alert_path_1_1 . "\n";
+    }
+
+    sleep (5);
+
+    my $alert_path_1_1_1;
+    for ($i = 17; $i <= 400; $i++) {
+
+	$alert_path_1_1_1 = 'alert type="detector" date="2004-06-30 10:35:49" plugin_id="1104" plugin_sid="1" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$i.'"';
+
+	print $sock $alert_path_1_1_1 . "\n";
+    }
+
+    sleep (5);
+
+    my $alert_path_1_1_1_1;
+    for ($i = 401; $i <= 2000; $i++) {
+
+	$alert_path_1_1_1_1 = 'alert type="detector" date="2004-06-30 10:35:49" plugin_id="1104" plugin_sid="1" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$i.'"';
+
+	print $sock $alert_path_1_1_1_1 . "\n";
+    }
+
+    sleep (5);
+
+    my $alert_path_1_1_1_1_1;
+    for ($i = 2001; $i <= 20000; $i++) {
+
+	$alert_path_1_1_1_1_1 = 'alert type="detector" date="2004-06-30 10:35:49" plugin_id="1104" plugin_sid="1" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$i.'"';
+
+	print $sock $alert_path_1_1_1_1_1 . "\n";
+    }
+}
+
+
+
+sub directive12() {
+
+    my $i, $j;
+
+    $src_ip = '192.168.1.10';
+    $dst_ip = '192.168.1.11';
+    $src_port = '';
+    $dst_port = '22';
+
+    for ($j = 0; $j < 10; $j++) {
+
+        for ($i = 1; $i <= 3; $i++) {
+
+            my $alert_path = 'alert type="detector" date="2005-02-11 10:35:49" plugin_id="4002" plugin_sid="'.$i.'" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$dst_port.'"';
+
+            print $sock "$alert_path\n";
+        }
+    }
+}
+
+
 sub main {
     switch ($num) {
 	case 1 {
@@ -380,6 +454,12 @@ sub main {
 	case 10  {
 	    directive10();
 	}
+	case 11  {
+	    directive11();
+	}
+    case 12 {
+        directive12();
+    }
     }
     
     close($sock);

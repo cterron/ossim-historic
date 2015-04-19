@@ -11,6 +11,8 @@ controlpanel_DATA = acid_funcs.inc \
 	alarm_console.php \
 	alerts.php \
 	anomalies.php \
+	visualize.php \
+    svg_level.php \
 	show_image.php
 
 EXTRA_DIST   = $(controlpanel_DATA)

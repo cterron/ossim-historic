@@ -53,6 +53,7 @@ typedef enum {
   SIM_COMMAND_SCOPE_SENSOR_PLUGIN_ENABLED,
   SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLED,
   SIM_COMMAND_SCOPE_PLUGIN_START,
+  SIM_COMMAND_SCOPE_PLUGIN_UNKNOWN,
   SIM_COMMAND_SCOPE_PLUGIN_STOP,
   SIM_COMMAND_SCOPE_PLUGIN_ENABLED,
   SIM_COMMAND_SCOPE_PLUGIN_DISABLED,
@@ -85,6 +86,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLED,
   SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLED,
   SIM_COMMAND_SYMBOL_PLUGIN_START,
+  SIM_COMMAND_SYMBOL_PLUGIN_UNKNOWN,
   SIM_COMMAND_SYMBOL_PLUGIN_STOP,
   SIM_COMMAND_SYMBOL_PLUGIN_ENABLED,
   SIM_COMMAND_SYMBOL_PLUGIN_DISABLED,
@@ -164,6 +166,7 @@ static const struct
   { "sensor-plugin-enabled", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLED },
   { "sensor-plugin-disabled", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLED },
   { "plugin-start", SIM_COMMAND_SYMBOL_PLUGIN_START },
+  { "plugin-unknown", SIM_COMMAND_SYMBOL_PLUGIN_UNKNOWN},
   { "plugin-stop", SIM_COMMAND_SYMBOL_PLUGIN_STOP },
   { "plugin-enabled", SIM_COMMAND_SYMBOL_PLUGIN_ENABLED },
   { "plugin-disabled", SIM_COMMAND_SYMBOL_PLUGIN_DISABLED },
@@ -268,6 +271,7 @@ static const struct
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
 };
 
+
 static const struct
 {
   gchar *name;
@@ -306,6 +310,17 @@ static const struct
   { "id", SIM_COMMAND_SYMBOL_ID },
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
 };
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} plugin_unknown_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
+};
+
+
 
 static const struct
 {
@@ -516,6 +531,8 @@ static void sim_command_sensor_plugin_enabled_scan (SimCommand    *command,
 static void sim_command_sensor_plugin_disabled_scan (SimCommand    *command,
 						     GScanner      *scanner);
 static void sim_command_plugin_start_scan (SimCommand    *command,
+					   GScanner      *scanner);
+static void sim_command_plugin_unknown_scan (SimCommand    *command,
 					   GScanner      *scanner);
 static void sim_command_plugin_stop_scan (SimCommand    *command,
 					  GScanner      *scanner);
@@ -1029,6 +1046,10 @@ sim_command_scan (SimCommand    *command,
   for (i = 0; i < G_N_ELEMENTS (plugin_start_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_START, plugin_start_symbols[i].name, GINT_TO_POINTER (plugin_start_symbols[i].token));
 
+  /* Added plugin unknown symbols */
+  for (i = 0; i < G_N_ELEMENTS (plugin_unknown_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_UNKNOWN, plugin_unknown_symbols[i].name, GINT_TO_POINTER (plugin_unknown_symbols[i].token));
+
   /* Added plugin stop symbols */
   for (i = 0; i < G_N_ELEMENTS (plugin_stop_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_STOP, plugin_stop_symbols[i].name, GINT_TO_POINTER (plugin_stop_symbols[i].token));
@@ -1132,6 +1153,9 @@ sim_command_scan (SimCommand    *command,
           break;
         case SIM_COMMAND_SYMBOL_PLUGIN_START:
 	  sim_command_plugin_start_scan (command, scanner);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_UNKNOWN:
+	  sim_command_plugin_unknown_scan (command, scanner);
           break;
         case SIM_COMMAND_SYMBOL_PLUGIN_STOP:
 	  sim_command_plugin_stop_scan (command, scanner);
@@ -1578,7 +1602,7 @@ sim_command_sensor_plugin_scan (SimCommand    *command,
   command->data.sensor_plugin.sensor = NULL;
   command->data.sensor_plugin.plugin_id = 0;
   command->data.sensor_plugin.state = 0;
-  command->data.sensor_plugin.state = FALSE;
+  command->data.sensor_plugin.enabled = FALSE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN);
   do
@@ -1625,6 +1649,8 @@ sim_command_sensor_plugin_scan (SimCommand    *command,
 	    command->data.sensor_plugin.state = 1;
 	  else if (g_ascii_strcasecmp (scanner->value.v_string, "stop"))
 	    command->data.sensor_plugin.state = 2;
+	  else if (g_ascii_strcasecmp (scanner->value.v_string, "unknown"))
+	    command->data.sensor_plugin.state = 3;
           break;
         case SIM_COMMAND_SYMBOL_ENABLED:
 	  g_scanner_get_next_token (scanner); /* = */
@@ -1940,6 +1966,59 @@ sim_command_plugin_start_scan (SimCommand    *command,
     }
   while(scanner->token != G_TOKEN_EOF);
 }
+
+/*
+ *
+ *
+ *
+ */
+static void
+sim_command_plugin_unknown_scan (SimCommand    *command,
+			       GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_PLUGIN_UNKNOWN;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_PLUGIN_UNKNOWN);
+  do
+    {
+      g_scanner_get_next_token (scanner);
+ 
+      switch (scanner->token)
+        {
+        case SIM_COMMAND_SYMBOL_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        case SIM_COMMAND_SYMBOL_PLUGIN_ID:
+	  g_scanner_get_next_token (scanner); /* = */
+	  g_scanner_get_next_token (scanner); /* value */
+
+	  if (scanner->token != G_TOKEN_STRING)
+	    break;
+
+	  command->data.plugin_unknown.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
+          break;
+        default:
+	  if (scanner->token == G_TOKEN_EOF)
+	    break;
+
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_plugin_unknown_scan: error symbol unknown");
+          break;
+        }
+    }
+  while(scanner->token != G_TOKEN_EOF);
+}
+
+
 
 /*
  *
@@ -3433,8 +3512,11 @@ sim_command_get_string (SimCommand    *command)
 	case 2:
 	  state = g_strdup ("stop");
 	  break;
+	case 3:
+	  state = g_strdup ("unknown");
+	  break;
 	default:
-	  state = g_strdup ("unknow");
+	  state = g_strdup ("unknown");
 	}
 
       str = g_strdup_printf ("sensor-plugin sensor=\"%s\" plugin_id=\"%d\" state=\"%s\" enabled=\"%s\"\n",
@@ -3447,6 +3529,9 @@ sim_command_get_string (SimCommand    *command)
       break;
     case SIM_COMMAND_TYPE_PLUGIN_START:
       str = g_strdup_printf ("plugin-start plugin_id=\"%d\"\n", command->data.plugin_start.plugin_id);
+      break;
+    case SIM_COMMAND_TYPE_PLUGIN_UNKNOWN:
+      str = g_strdup_printf ("plugin-unknown plugin_id=\"%d\"\n", command->data.plugin_unknown.plugin_id);
       break;
     case SIM_COMMAND_TYPE_PLUGIN_STOP:
       str = g_strdup_printf ("plugin-stop plugin_id=\"%d\"\n", command->data.plugin_stop.plugin_id);

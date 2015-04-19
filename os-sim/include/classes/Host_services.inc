@@ -64,7 +64,9 @@ class Host_services {
 
     function insert($conn, $ip, $port, $protocol, $service, $service_type, $version, $date, $origin)
     {
-        $query = "INSERT INTO host_services (ip, port, protocol, service, service_type, version, date, origin) VALUES (inet_aton('$ip'), $port, $protocol, '$service', '$service_type', '$version', '$date', $origin)";
+        $query = "INSERT INTO host_services (ip, port, protocol, service,
+        service_type, version, date, origin) VALUES (inet_aton('$ip'), $port,
+        '$protocol', '$service', '$service_type', '$version', '$date', $origin)";
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         }

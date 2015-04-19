@@ -1,94 +1,147 @@
 <?php
 
+define ('NMAP_PING_SCAN_COMMAND',   
+    "%s -sP -n %s");
+
+define ('NMAP_ROOT_SCAN_COMMAND',
+    "%s -sS -O -sV -n %s");
+
+define ('NMAP_PING_SCAN_REGEXP', 
+    "/^Host (\d+\.\d+\.\d+\.\d+) appears to be up/i");
+
+define ('NMAP_MAC_ADDRESS_REGEXP',
+    "/^MAC Address: (\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}) (\(.*\))?$/i");
+
+define ('NMAP_OS_REGEXP', 
+    "/^Running: (.*)$/i");
+
+define ('NMAP_SERVICE_REGEXP',
+    "/^(\d+)\/(\w+)\s+(open|filtered|unfiltered)\s+(\w+)\s+(.*)$/i");
+
+
+require_once ('ossim_conf.inc');
+
 class Scan {
 
-    var $ip;
-    var $active;
+    var $network;
+    var $scan;
+    var $nmap;
 
-    function Scan ($ip, $active)
+    function Scan ($network, $scan = NULL)
     {
-        $this->ip          = $ip;
-        $this->active          = $active;
+        /* network to scan */
+        $this->network = $network;
+
+        /* store scan result */
+        if (is_array($scan))
+            $this->scan = $scan;
+        else
+            $this->scan = array ();
+
+        /* nmap */
+        $conf = new ossim_conf();
+        $this->nmap = $conf->get_conf("nmap_path");
     }
 
-    function get_ip()           { return $this->ip; }
-    function get_active()       { return $this->active; }
-
-    function get_list($conn, $args = "") 
+    function do_scan ()
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM scan $args")) {
-            print $conn->ErrorMsg();
-        } else {
-            while (!$rs->EOF) {
-                $list[] = new Scan ($rs->fields["ip"], 
-                                    $rs->fields["active"]);
-                $rs->MoveNext();
+        $this->ping_scan();
+
+        foreach ($this->scan as $host) {
+            $ip = $host["ip"];
+            
+            echo " * $ip.. <br/>";
+            flush();
+
+            $this->root_scan($ip);
+        }
+    }
+
+    function ping_scan()
+    {
+        $command = sprintf(NMAP_PING_SCAN_COMMAND, $this->nmap, $this->network);
+        $this->__ping_scan_process_output
+            ($this->__get_command_output($command));
+    }
+
+    function __ping_scan_process_output($output)
+    {
+        foreach ($output as $line) 
+        {
+            if (preg_match(NMAP_PING_SCAN_REGEXP, $line, $regs)) 
+            {
+                $this->scan[$regs[1]] = array ("ip"        => $regs[1],
+                                               "mac"       => "",
+                                               "os"        => "",
+                                               "services"  => array ());
             }
         }
-        return $list;
     }
 
-    function insert($conn, $ip, $active)
+
+    function root_scan($ip)
     {
-        $active = intval($active);
-
-        $query = "INSERT INTO scan VALUES  ('$ip', '$active');";
-        if ($conn->Execute($query) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
+        $command = sprintf(NMAP_ROOT_SCAN_COMMAND, $this->nmap, $ip);
+        $this->__root_scan_process_output
+            ($this->__get_command_output($command), $ip);
     }
 
-    function active($conn, $ip)
+    function __root_scan_process_output($output, $ip)
     {
-        $query = "UPDATE scan SET active = 1 WHERE ip = '$ip';";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-
-    function disactive($conn, $ip)
-    {
-        $query = "UPDATE scan SET active = 0 WHERE ip = '$ip';";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-
-    function in_scan($conn, $ip) {
-        if (!$rs = &$conn->Execute("SELECT * FROM scan WHERE ip = '$ip'")) {
-            print $conn->ErrorMsg();
-        }
-        return $rs->fields[0];
-    }
-
-    function is_active($conn, $ip) {
-        if (!$rs = &$conn->Execute("SELECT active FROM scan WHERE ip = '$ip'"))
+        foreach ($output as $line)
         {
-            print $conn->ErrorMsg();
-        }
-        return $rs->fields[0];
-    }
-    
-    function delete($conn, $ip) {
-        $query = "delete from scan where ip = '$ip';";
-        if ($conn->execute($query) === false) {
-            print 'error deleting: '.$conn->errormsg().'<br>';
-            exit;
+            /* mac */
+            if (preg_match(NMAP_MAC_ADDRESS_REGEXP, $line, $regs)) {
+                $this->scan[$ip]["mac"] = $regs[1];
+                $this->scan[$ip]["mac_vendor"] = $regs[2];
+                next;
+            }
+            
+            /* os */
+            if (preg_match(NMAP_OS_REGEXP, $line, $regs)) {
+                $this->scan[$ip]["os"] = $regs[1];
+                next;
+            }
+            
+            /* services */
+            if (preg_match(NMAP_SERVICE_REGEXP, $line, $regs)) {
+                $this->scan[$ip]["services"][$regs[1]."/".$regs[2]] = array (
+                    "port"      => $regs[1],
+                    "proto"     => $regs[2],
+                    "state"     => $regs[3],
+                    "service"   => $regs[4],
+                    "version"   => $regs[5]);
+                next;
+            }
         }
     }
 
-    function delete_all($conn) {
-        $query = "delete from scan;";
-        if ($conn->execute($query) === false) {
-            print 'error deleting: '.$conn->errormsg().'<br>';
-            exit;
-        }
+    function __get_command_output($cmd)
+    {
+        $output = shell_exec($cmd);
+        return split("\n", $output);
+    }
+
+    function debug()
+    {
+        // Show scan result
+        print "<pre>";
+        print_r($this->scan);
+        print "</pre>";
+    }
+
+    function save_scan()
+    {
+        session_start();
+        $_SESSION["_scan"] = $this->scan;
+    }
+
+    function get_scan()
+    {
+        session_start();
+        return $_SESSION["_scan"];
     }
 
 }
-
 
 ?>

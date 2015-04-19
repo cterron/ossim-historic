@@ -67,6 +67,20 @@ class ossim_db {
         return $this->conn;
     }
 
+    function phpgacl_connect() {
+
+        $base = $this->conf->get_conf("phpgacl_base");
+        $user = $this->conf->get_conf("phpgacl_user");
+        $pass = $this->conf->get_conf("phpgacl_pass");
+        $host = $this->conf->get_conf("phpgacl_host");
+
+        $this->conn = &ADONewConnection('mysql');
+        if ($this->conn->NConnect($host, $user, $pass, $base))
+            return $this->conn;
+        else
+            return NULL;
+    }
+
     function close($conn) {
         $conn->Close();
     }

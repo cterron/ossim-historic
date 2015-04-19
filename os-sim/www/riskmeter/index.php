@@ -1,19 +1,22 @@
 <?php
 require_once ('classes/Session.inc');
 Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
+
+/* get refresh page value */
+$REFRESH_INTERVAL = 5;
+if (!$refresh = $_GET["refresh"]) 
+    $refresh = 10;
 ?>
 
 <html>
 <head>
   <title> <?php echo gettext("Riskmeter"); ?> </title>
-  <meta http-equiv="refresh" content="5">
+  <meta http-equiv="refresh" content="<?php echo $refresh ?>">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
 </head>
 
 <body>
-
-  <h1 align="center"> <?php echo gettext("Riskmeter"); ?> </h1>
 
 <?php
 require_once ('ossim_conf.inc');
@@ -21,8 +24,11 @@ require_once ('ossim_db.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
 require_once ('classes/Net.inc');
+require_once ('classes/Net_group.inc');
+require_once ('classes/Net_group_reference.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Host_os.inc');
+require_once ('classes/Util.inc');
 
 $db = new ossim_db();
 $conn = $db->connect();
@@ -43,8 +49,52 @@ $net_stats = Net_qualification::get_list($conn, "",
 $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
                  ossim_db::max_val($conn, "attack", "net_qualification"));
 
+$net_groups = Net_group::get_list($conn);
+
+if (is_array($net_stats)) {
+foreach($net_stats as $temp_net){
+    $net_name = $temp_net->get_net_name();
+    if($net_groups){
+    foreach($net_groups as $net_group){
+        $ng_name = $net_group->get_name();
+        $net_group_array[$ng_name]["name"] = $ng_name;
+        $net_group_array[$ng_name]["threshold_c"] = Net_group::netthresh_c($conn, $ng_name);
+        $net_group_array[$ng_name]["threshold_a"] = Net_group::netthresh_a($conn, $ng_name);
+        if(Net_group::isNetInGroup($conn, $ng_name, $net_name)){
+            $net_group_array[$ng_name]["compromise"] += $temp_net->get_compromise();
+            $net_group_array[$ng_name]["attack"] += $temp_net->get_attack();
+        }
+    }
+    }
+}
+}
+
+function ordenar($a, $b){
+     return (($a["max_c"] + $a["max_a"]) < ($b["max_c"] + $b["max_a"])) ? True : False;
+}
+
 ?>
   <table align="center">
+
+    <!-- configure refresh -->
+    <tr>
+      <td colspan="2"><?php echo gettext("Page Refresh");?>: 
+
+        <!-- decrease refresh -->
+        <a href="?refresh=<?php
+            if ($refresh > $REFRESH_INTERVAL) echo $refresh-$REFRESH_INTERVAL;
+            else echo $refresh;     ?>"><b>-</b></a>
+        <!-- end decrease refresh -->
+
+        <?php echo $refresh ?>s
+
+        <!-- increase refresh -->
+        <a href="?refresh=<?php echo $refresh+$REFRESH_INTERVAL ?>"><b>+</b></a>
+        <!-- end increase refresh -->
+
+      </td>
+      <td></td></tr>
+    <!-- end configure refresh -->
 
     <tr><td colspan="3"></td></tr>
     <tr><th align="center" colspan="3">Global</th></tr>
@@ -146,6 +196,131 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
     </tr>
     <!-- end rule for threshold -->
 
+<?php
+// Start group code
+if (is_array($net_group_array)){
+usort($net_group_array,"ordenar");
+?>
+
+    <tr><td colspan="3"><br/></td></tr>
+    <tr><th align="center" colspan="3"> <?php echo gettext("Groups"); ?> </th></tr>
+    <tr><td colspan="3"></td></tr>
+
+
+    <!-- rule for threshold -->
+    <tr>
+      <td></td><td></td>
+      <td class="left">
+        <img src="../pixmaps/gauge-blue.jpg" height="5" 
+             width="<?php echo $BAR_LENGTH_LEFT; ?>">
+        <img src="../pixmaps/gauge-red.jpg" height="5" 
+             width="<?php echo $BAR_LENGTH_RIGHT; ?>">
+      </td>
+    </tr>
+    <!-- end rule for threshold -->
+<?php
+// Do real stuff
+    $temporary = current($net_group_array); 
+    while($temporary){
+
+        $group_name = $temporary["name"];
+
+        /* calculate proportional bar width */
+        $width_c = ((($compromise = $temporary["compromise"]) / 
+                    $threshold_c = $temporary["threshold_c"]) * $BAR_LENGTH_LEFT);
+        $width_a = ((($attack = $temporary["attack"]) / 
+                    $threshold_a = $temporary["threshold_a"]) * $BAR_LENGTH_LEFT);
+?>
+    <!-- C & A levels for each group -->
+    <tr>
+      <td align="center">
+            <?php if($_GET["expand"] && $_GET["expand"] == $group_name){ ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>"><?php echo
+            Util::beautify($group_name); ?></a>
+            <?php } else { ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>?expand=<?php echo
+            $group_name;?>"><?php echo Util::beautify($group_name);?></a>
+            <?php } ?>
+      </td>
+      <td align="center">
+        <a href="<?php 
+        echo "../control_panel/show_image.php?range=day&ip=" .
+        strtolower($group_name) . "&what=compromise&start=N-1D&type=net&zoom=1"
+        ?>" 
+           target="new">&nbsp;<img src="../pixmaps/graph.gif" 
+                                   border="0"/>&nbsp;</a>
+      </td>
+
+      <td class="left">
+<?php
+    if ($compromise <= $threshold_c) {
+?>
+        <img src="../pixmaps/solid-blue.jpg" height="12"
+             width="<?php echo $width_c?>" title="<?php echo $compromise ?>">
+        C=<?php echo $compromise; ?>
+<?php
+    } else {
+        if ($width_c >= ($BAR_LENGTH)) { 
+            $width_c = $BAR_LENGTH; 
+            $icon = "../pixmaps/major-red.gif";
+        }else{
+            $icon = "../pixmaps/major-yellow.gif";
+        }
+?>
+        <img src="../pixmaps/solid-blue.jpg" height="12" 
+             width="<?php echo $BAR_LENGTH_LEFT?>" 
+             title="<?php echo $compromise ?>">
+        <!-- <img src="../pixmaps/solid-blue.jpg" height="10" width="5"> -->
+        <img src="../pixmaps/solid-blue.jpg" border="0" height="12" 
+             width="<?php echo $width_c - $BAR_LENGTH_LEFT?>"
+             title="<?php echo $compromise ?>">
+        C=<?php echo $compromise; ?>
+        <img src="<?php echo $icon ?>">
+<?php
+    }
+    if ($attack <= $threshold_a) {
+?>
+        <br/>
+        <img src="../pixmaps/solid-red.jpg" height="12" 
+             width="<?php echo $width_a?>" title="<?php echo $attack ?>">
+        A=<?php echo $attack; ?>
+<?php
+    } else {
+        if ($width_a >= ($BAR_LENGTH)) { 
+            $width_a = ($BAR_LENGTH); 
+            $icon = "../pixmaps/major-red.gif";
+        }else{
+            $icon = "../pixmaps/major-yellow.gif";
+        }
+?>
+        <br/><img src="../pixmaps/solid-red.jpg" height="12" 
+                  width="<?php echo $BAR_LENGTH_LEFT?>" 
+                  title="<?php echo $attack ?>">
+        <img src="../pixmaps/solid-red.jpg" height="12" 
+             width="<?php echo $width_a - $BAR_LENGTH_LEFT?>"
+             title="<?php echo $attack ?>">
+        A=<?php echo $attack; ?>
+        <img src="<?php echo $icon ?>">
+<?php 
+    }
+?>
+      </td>
+    </tr>
+    <!-- end C & A levels for each net -->
+
+<?php
+    $temporary = next($net_group_array);
+    }
+
+
+
+?>
+
+
+<?php
+}
+// End group code
+?>
 
     <tr><td colspan="3"><br/></td></tr>
     <tr><th align="center" colspan="3"> <?php echo gettext("Networks"); ?> </th></tr>
@@ -164,12 +339,18 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
     </tr>
     <!-- end rule for threshold -->
 
+
 <?php
 
 if($net_stats)
     foreach ($net_stats as $stat) {
 
         $net = $stat->get_net_name();
+
+        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net))
+        if (($stat->get_compromise() < Net::netthresh_c($conn, $net))
+        && ($stat->get_attack() < Net::netthresh_a($conn, $net))
+        && (Net_group::isNetInAnyGroup($conn, $net))){continue;}
 
         /* get net threshold */
         if ($net_list = Net::get_list($conn, "WHERE name = '$net'")) {
@@ -189,8 +370,16 @@ if($net_stats)
     <!-- C & A levels for each net -->
     <tr>
       <td align="center">
+      <?php if($_GET["expand"]){ ?>
+
         <a href="<?php echo $_SERVER["PHP_SELF"] . 
-                       "?net=$net" ?>"><?php echo $net ?></a>
+                       "?expand=" . $_GET["expand"] .
+                       "&net=$net" ?>"><?php echo Util::beautify($net) ?></a>
+     <?php } else { ?>
+        <a href="<?php echo $_SERVER["PHP_SELF"] . 
+                       "?net=$net" ?>"><?php echo Util::beautify($net) ?></a>
+
+     <?php } ?>
       </td>
       <td align="center">
         <a href="<?php 
@@ -320,10 +509,10 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
 
 
     <tr><td colspan="3"><br/></td></tr>
-    <tr><th align="center" colspan="3">Hosts
+    <tr><th align="center" colspan="3">
     <A NAME="Hosts" HREF="<?php echo
-        $_SERVER["PHP_SELF"]?>?#Hosts" title="Fix"><img
-        src="../pixmaps/Hammer2.png" width="24" border="0"/></A>
+        $_SERVER["PHP_SELF"]?>?#Hosts" 
+        title="Fix"><?php echo gettext("Hosts") ?></A>
     </th></tr>
     <tr><td colspan="3"></td></tr>
 

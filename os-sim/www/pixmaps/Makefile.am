@@ -13,6 +13,7 @@ pixmaps_DATA = arrow.gif \
 	gradient2.jpg \
 	Hammer2.png \
 	major-red.gif \
+	rrdnotfound.png \
 	solid-blue.jpg \
 	gauge-blue.jpg \
 	gauge-yellow.jpg \

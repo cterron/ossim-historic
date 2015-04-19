@@ -361,8 +361,8 @@ sim_plugin_sid_set_class_id (SimPluginSid  *plugin_sid,
 gint
 sim_plugin_sid_get_reliability (SimPluginSid  *plugin_sid)
 {
-  g_return_val_if_fail (plugin_sid, 1);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 1);
+  g_return_val_if_fail (plugin_sid, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
 
   return plugin_sid->_priv->reliability;
 }
@@ -393,8 +393,8 @@ sim_plugin_sid_set_reliability (SimPluginSid  *plugin_sid,
 gint
 sim_plugin_sid_get_priority (SimPluginSid  *plugin_sid)
 {
-  g_return_val_if_fail (plugin_sid, 1);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 1);
+  g_return_val_if_fail (plugin_sid, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
 
   return plugin_sid->_priv->priority;
 }

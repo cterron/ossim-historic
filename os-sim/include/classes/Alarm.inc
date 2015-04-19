@@ -17,7 +17,7 @@ class Alarm {
     var $src_port;
     var $dst_port;
     var $risk;
-    var $sensor;
+    var $sensors = array();
     var $snort_sid;
     var $snort_cid;
     var $rule_level;
@@ -25,7 +25,7 @@ class Alarm {
 
     function Alarm ($alert_id, $backlog_id, $timestamp, $since, $plugin_id, 
                     $plugin_sid, $protocol, $src_ip, $dst_ip, $src_port, 
-                    $dst_port, $risk, $sensor, $snort_sid, $snort_cid, 
+                    $dst_port, $risk, $sensors, $snort_sid, $snort_cid, 
                     $rule_level = "", $alarm = 1)
     {
         $this->alert_id     = intval($alert_id);
@@ -40,11 +40,15 @@ class Alarm {
         $this->src_port     = intval($src_port);
         $this->dst_port     = intval($dst_port);
         $this->risk         = intval($risk);
-        $this->sensor       = $sensor;
         $this->snort_sid    = intval($snort_sid);
         $this->snort_cid    = intval($snort_cid);
         $this->rule_level   = intval($rule_level);
         $this->alarm        = $alarm;
+        
+        if (is_array($sensors))
+            $this->sensors  = $sensors;
+        else
+            $this->sensors  = array($sensors);
     }
 
     function get_alert_id()         { return $this->alert_id;       }
@@ -62,7 +66,7 @@ class Alarm {
     function get_asset_src()        { return $this->asset_src;      }
     function get_asset_dst()        { return $this->asset_dst;      }
     function get_rule_level()       { return $this->rule_level;     }
-    function get_sensor()           { return $this->sensor;      }
+    function get_sensors()          { return $this->sensors;        }
     function get_snort_sid()        { return $this->snort_sid;      }
     function get_snort_cid()        { return $this->snort_cid;      }
     function get_alarm()            { return $this->alarm;          }
@@ -102,7 +106,153 @@ class Alarm {
         }
     }
 
-    function get_list($conn, $src_ip, $dst_ip, $order,
+    /* function used in get_list to get the sensor asociated with the alarm */
+    function __get_max_sensor($conn, $backlog_id)
+    {
+        $sensor = "-";
+        
+        $query = "SELECT count(*) AS count, alert.sensor AS sensor 
+            FROM alert, backlog_alert 
+            WHERE backlog_alert.backlog_id = $backlog_id AND
+                backlog_alert.alert_id = alert.id 
+            GROUP BY alert.sensor ORDER by count DESC LIMIT 1;";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } elseif (!$rs->EOF) {
+            $sensor = $rs->fields["sensor"];
+        }
+        return $sensor;
+    }
+
+    function __get_sensors($conn, $alert_id, $backlog_id)
+    {
+        $sensor = array();
+        
+        if ($backlog_id != 0) {
+        
+            $query = "SELECT distinct alert.sensor AS sensor 
+                FROM alert, backlog_alert 
+                WHERE backlog_alert.backlog_id = $backlog_id AND
+                    backlog_alert.alert_id = alert.id";
+            if (!$rs = &$conn->Execute($query)) {
+                print $conn->ErrorMsg();
+                return $sensor;
+            }
+
+            while (!$rs->EOF) {
+                $sensor[] = $rs->fields["sensor"];
+                $rs->MoveNext();
+            }
+
+        } else {
+
+            $query = "SELECT sensor FROM alert WHERE id = $alert_id";
+            if (!$rs = &$conn->Execute($query)) {
+                print $conn->ErrorMsg();
+                return $sensor;
+            } elseif (!$rs->EOF) {
+                $sensor[] = $rs->fields["sensor"];
+            }
+        
+        }
+
+        return $sensor;
+    }
+
+    /* function used in get_list to get the date when alarm began */
+    function __get_since($conn, $alert_id, $backlog_id)
+    {
+        $since = "-";
+
+        if ($backlog_id != 0) {
+
+            $query = "SELECT min(alert.id) AS alert_id, alert.timestamp as since
+                FROM alert ,backlog_alert 
+                WHERE backlog_alert.backlog_id = $backlog_id AND
+                    backlog_alert.alert_id = alert.id
+                GROUP BY backlog_alert.backlog_id";
+            if (!$rs = &$conn->Execute($query)) {
+                print $conn->ErrorMsg();
+            } elseif (!$rs->EOF) {
+                $since = $rs->fields["since"];
+            }
+
+        } else {
+            
+            $query = "SELECT timestamp FROM alert WHERE id = $alert_id";
+            if (!$rs = &$conn->Execute($query)) {
+                print $conn->ErrorMsg();
+            } elseif (!$rs->EOF) {
+                $since = $rs->fields["timestamp"];
+            }
+        }
+
+        return $since;
+    }
+
+    function get_list($conn, $src_ip, $dst_ip, $order, $inf = 0, $sup = 25)
+    {
+
+        /* ip filter */
+        if ($src_ip and $dst_ip) {
+            $where .= " WHERE inet_aton('$src_ip') = src_ip OR
+                inet_aton('$dst_ip') = dst_ip ";
+        } elseif ($src_ip) {
+            $where .= " WHERE inet_aton('$src_ip') = src_ip ";
+        } elseif ($dst_ip) {
+            $where .= " WHERE inet_aton('$dst_ip') = dst_ip ";
+        } else {
+            $where = "";
+        }
+
+        /* number of alerts per page */
+        $nalerts = $sup - $inf;
+
+        $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
+            FROM alarm $where $order LIMIT $inf,$nalerts";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+            return array();
+        }
+
+        $allowed_nets = Session::getValue();
+        while (!$rs->EOF) 
+        {
+            if ((Net::isIpInNet($rs->fields["src_ip"], $allowed_nets) or
+                 Net::isIpInNet($rs->fields["dst_ip"], $allowed_nets) or
+                 (!$allowed_nets)))
+            {
+                $list[] = new Alarm (
+                    $rs->fields["alert_id"],
+                    $rs->fields["backlog_id"],
+                    $rs->fields["timestamp"],
+                    Alarm::__get_since($conn, 
+                                       $rs->fields["alert_id"],
+                                       $rs->fields["backlog_id"]),
+                    $rs->fields["plugin_id"],
+                    $rs->fields["plugin_sid"],
+                    $rs->fields["protocol"],
+                    $rs->fields["inet_ntoa(src_ip)"],
+                    $rs->fields["inet_ntoa(dst_ip)"],
+                    $rs->fields["src_port"],
+                    $rs->fields["dst_port"],
+                    $rs->fields["risk"],
+                    Alarm::__get_sensors($conn,
+                                         $rs->fields["alert_id"],
+                                         $rs->fields["backlog_id"]),
+                    $rs->fields["snort_sid"],
+                    $rs->fields["snort_cid"],
+                    "",
+                    1
+                );
+            }
+            $rs->MoveNext();
+        }
+        return $list;
+    }
+
+    function get_list2($conn, $src_ip, $dst_ip, $order,
                       $inf = 0, $sup = 25)
     {
         $i = 0;
@@ -415,36 +565,47 @@ class Alarm {
 
         } else {
 
-            $query = "DELETE FROM alarm WHERE alert_id = $alarm_id 
-                AND backlog_id = $backlog_id";
-            if ($conn->Execute($query) === false) {
-                print 'error deleting: '.$conn->ErrorMsg().'<BR>';
-                exit;
-            }
 
-            $query = "SELECT COUNT(alert_id) as count FROM backlog_alert 
-                WHERE alert_id = $alarm_id";
+            /* Delete all alerts related with $backlog_id */
+            $query = "SELECT alert.id AS id FROM alert, backlog_alert
+                WHERE backlog_alert.backlog_id = $backlog_id
+                    AND backlog_alert.alert_id = alert.id";
             if (!$rs = &$conn->Execute($query)) {
-                print $conn->ErrorMsg().'<BR>';
-                exit;
-            } 
-
-            if ($rs->fields["count"] == 1) {
-                $query = "DELETE FROM alert WHERE id = $alarm_id";
-                if ($conn->Execute($query) === false) {
-                    print 'error deleting: '.$conn->ErrorMsg().'<BR>';
-                    exit;
+                print $conn->ErrorMsg();
+            } else {
+                while (!$rs->EOF) {
+                    Alarm::delete($conn, $rs->fields["id"]);
+                    $rs->MoveNext();
                 }
             }
 
             $query = "DELETE FROM backlog_alert WHERE backlog_id = $backlog_id";
             $query2 = "DELETE FROM backlog WHERE id = $backlog_id";
+            $query3 = "DELETE FROM alarm WHERE alert_id = $alarm_id 
+                AND backlog_id = $backlog_id";
             
             if ( ($conn->Execute($query) === false) or
-                 ($conn->Execute($query2) === false) )
+                 ($conn->Execute($query2) === false) or
+                 ($conn->Execute($query3) === false) )
             {
                 print 'error deleting: '.$conn->ErrorMsg().'<BR>';
                 exit;
+            }
+        }
+    }
+
+    function purge($conn) 
+    {
+        /* TODO: very heavy query!! */
+        $query = "SELECT alert.id AS alert_id, backlog_alert.backlog_id AS
+            backlog_id FROM alert LEFT JOIN backlog_alert ON
+            backlog_alert.alert_id = alert.id WHERE backlog_id IS NULL";
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                Alarm::delete($conn, $rs->fields["alert_id"]);
+                $rs->MoveNext();
             }
         }
     }

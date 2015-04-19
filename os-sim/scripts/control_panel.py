@@ -391,6 +391,9 @@ def main():
 
             time.sleep(float(options.sleep))
 
+        except KeyboardInterrupt:
+            sys.exit()
+
         except Exception, e:
             print >> sys.stderr, "Unexpected exception:", e
 

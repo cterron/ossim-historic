@@ -5,18 +5,6 @@ require_once ('ossim_conf.inc');
 $conf = new ossim_conf();
 
 
-function timestamp2date($timestamp)
-{
-    # YYYY-MM-DD HH:MM:SS
-    return (substr($timestamp, 0, 4)  . '-' .  # YYYY
-            substr($timestamp, 4, 2)  . '-' .  # MM
-            substr($timestamp, 6, 2)  . ' ' .  # DD
-            substr($timestamp, 8, 2)  . ':' .  # HH
-            substr($timestamp, 10, 2) . ':' .  # MM
-            substr($timestamp, 12, 2));        # SS
-}
-
-
 /*
  *  PRE: $date must be in format YYYY-MM-DD HH-MM
  *       $target must be ip_src or ip_dst
@@ -137,8 +125,9 @@ if($range == "day"){$range = "1D";}
 if($range == "month"){$range = "1M";}
 if($range == "year"){$range = "1Y";}
 $result = "";
+$data_dir = $conf->get_conf("data_dir");
 
-$result = shell_exec("/home/dgil/os-sim/scripts/get_date.pl $ip $range $what $type");
+$result = shell_exec("$data_dir/scripts/get_date.pl $ip $range $what $type");
 return date("l dS of F Y h:i:s A",$result);
 }
 

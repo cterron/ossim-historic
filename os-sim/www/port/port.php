@@ -72,6 +72,6 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
         <a href="newportform.php"> <?php echo gettext("Insert new Port Group"); ?> </a><br/>
         <a href="newsingleportform.php"> <?php echo gettext("Insert new Port"); ?> </a>
       </td>
-    </td>
+    </tr>
 </table>
 

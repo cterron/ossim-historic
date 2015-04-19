@@ -1,0 +1,53 @@
+#! /bin/sh -e
+## 08_framework_conffiles.dpatch by David Gil <dgil@ossim.net>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+[ -f debian/patches/00patch-opts ] && . debian/patches/00patch-opts
+patch_opts="${patch_opts:--f --no-backup-if-mismatch ${2:+-d $2}}"
+
+if [ $# -lt 1 ]; then
+    echo >&2 "`basename $0`: script expects -patch|-unpatch as argument"
+    exit 1
+fi
+case "$1" in
+       -patch) patch $patch_opts -p1 < $0;;
+       -unpatch) patch $patch_opts -p1 -R < $0;;
+	*)
+		echo >&2 "`basename $0`: script expects -patch|-unpatch as argument"
+		exit 1;;
+esac
+
+exit 0
+@DPATCH@
+diff -ruN os-sim.old/etc/framework/ossim.conf os-sim/etc/framework/ossim.conf
+--- os-sim.old/etc/framework/ossim.conf 2005-02-15 08:44:33.000000000 +0100
++++ os-sim/etc/framework/ossim.conf     2005-02-15 08:46:29.000000000 +0100
+@@ -3,7 +3,7 @@
+ #################################################
+
+ data_dir=/usr/share/ossim
+-base_dir=/var/www/ossim
++base_dir=/usr/share/ossim/www
+ ossim_interface=eth0
+ ossim_link=/ossim/
+ adodb_path=/usr/share/adodb/
+@@ -11,6 +11,7 @@
+ #################################################
+ # OSSIM db configuration
+ #################################################
++
+ ossim_type=mysql
+ ossim_base=ossim
+ ossim_user=root
+@@ -21,7 +22,7 @@
+ ##################################################
+ # OSSIM control access list configuration (phpGACL)
+ ##################################################
+-phpgacl_path=/var/www/phpgacl/
++phpgacl_path=/usr/share/phpgacl/
+ phpgacl_type=mysql
+ phpgacl_host=localhost
+ phpgacl_base=ossim_acl
+

@@ -5,6 +5,7 @@ CONFIG=/etc/ossim/framework/ossim.conf
 
 [ -f $CONFIG ] || exit
 
+
 db_get ossim-utils/base || true
 BASE=$RET
 if [ "$BASE" != "" ]
@@ -36,4 +37,37 @@ then
     cat $CONFIG | sed -e "s/^ossim_pass.*$/ossim_pass=$PASS/" > $CONFIG.bak
     mv $CONFIG.bak $CONFIG
 fi
+
+db_get ossim-utils/phpgacl_base || true
+BASE=$RET
+if [ "$BASE" != "" ]
+then
+    cat $CONFIG | sed -e "s/^phpgacl_base=.*$/phpgacl_base=$BASE/" > $CONFIG.bak
+    mv $CONFIG.bak $CONFIG
+fi
+
+db_get ossim-utils/phpgacl_host || true
+HOST=$RET
+if [ "$HOST" != "" ]
+then
+    cat $CONFIG | sed -e "s/^phpgacl_host.*$/phpgacl_host=$HOST/" > $CONFIG.bak
+    mv $CONFIG.bak $CONFIG
+fi
+
+db_get ossim-utils/phpgacl_user || true
+USER=$RET
+if [ "$USER" != "" ]
+then
+    cat $CONFIG | sed -e "s/^phpgacl_user.*$/phpgacl_user=$USER/" > $CONFIG.bak
+    mv $CONFIG.bak $CONFIG
+fi
+
+db_get ossim-utils/phpgacl_pass || true
+PASS=$RET
+if [ "$PASS" != "" ]
+then
+    cat $CONFIG | sed -e "s/^phpgacl_pass.*$/phpgacl_pass=$PASS/" > $CONFIG.bak
+    mv $CONFIG.bak $CONFIG
+fi
+
 

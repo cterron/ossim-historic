@@ -1,5 +1,8 @@
 <?php
 
+require_once 'classes/Net_sensor_reference.inc';
+require_once 'classes/Host_sensor_reference.inc';
+
 class Sensor {
 
     var $name;
@@ -71,6 +74,8 @@ class Sensor {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+        Net_sensor_reference::check_orphan($conn);
+        Host_sensor_reference::check_orphan($conn);
     }
 
     /*

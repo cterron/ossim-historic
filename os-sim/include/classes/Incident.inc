@@ -6,20 +6,23 @@ class Incident {
     var $title;
     var $date;
     var $ref;
+    var $family;
     var $priority;
 
-    function Incident ($id, $title, $date, $ref, $priority)
+    function Incident ($id, $title, $date, $ref, $family, $priority)
     {
         $this->id       = intval($id);
         $this->title    = htmlentities($title);
         $this->date     = htmlentities($date);
         $this->ref      = htmlentities($ref);
+        $this->family   = htmlentities($family);
         $this->priority = intval($priority);
     }
 
-    function get_id()       { return intval($this->id);         }
+    function get_id()       { return intval($this->id); }
     function get_title()    { return $this->title;      }
     function get_ref()      { return $this->ref;        }
+    function get_family()   { return $this->family;     }
 
     function get_priority($conn)
     {
@@ -146,6 +149,7 @@ class Incident {
                 incident.title as title,
                 incident.date as date,
                 incident.ref as ref,
+                incident.family as family,
                 incident.priority as priority
             FROM incident LEFT JOIN incident_ticket 
                 ON incident.id = incident_ticket.incident_id 
@@ -159,6 +163,7 @@ class Incident {
                                         $rs->fields["title"],
                                         $rs->fields["date"],
                                         $rs->fields["ref"],
+                                        $rs->fields["family"],
                                         $rs->fields["priority"]);
                 $rs->MoveNext();
             }
@@ -212,17 +217,16 @@ class Incident {
         echo $priority_td;
     }
 
-    function insert_alarm($conn, $title, $priority, 
-                          $src_ips, $dst_ips, $src_ports, $dst_ports)
+    function __insert($conn, $title, $priority, $ref, $family)
     {
         $title = htmlentities($title);
         $priority = intval($priority);
+
         require_once ('classes/Session.inc');
         $user = Session::get_session_user();
 
-        /* insert incident */
-        $query = "INSERT INTO incident (title, ref, priority)
-            VALUES ('$title', 'Alarm', $priority)";
+        $query = "INSERT INTO incident (title, ref, family, priority)
+            VALUES ('$title', '$ref', '$family', $priority);";
         if ($conn->Execute($query) === false)
         {
             print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
@@ -240,13 +244,28 @@ class Incident {
         $query2 = "INSERT INTO incident_ticket 
             (incident_id, priority, users, description, action, in_charge)
             VALUES ($last_id, $priority, '$user', '$title', '', '$user')";
-        $query3 = "INSERT INTO incident_alarm
+
+        if ($conn->Execute($query2) === false)
+        {
+            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        }
+
+        return $last_id;
+    }
+
+    function insert_alarm($conn, $title, $priority, 
+                          $src_ips, $dst_ips, $src_ports, $dst_ports)
+    {
+        
+        $last_id = Incident::__insert($conn, $title, $priority, 
+                                      "Alarm", "OSSIM");
+        
+        $query = "INSERT INTO incident_alarm
             (incident_id, src_ips, dst_ips, src_ports, dst_ports)
             VALUES ($last_id, '$src_ips', '$dst_ips', '$src_ports', '$dst_ports');";
 
-        if ( ($conn->Execute($query2) === false) or
-             ($conn->Execute($query3) === false) )
-        {
+        if ($conn->Execute($query) === false) {
             print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -257,47 +276,42 @@ class Incident {
     function insert_metric($conn, $title, $priority, 
                            $target, $metric_type, $metric_value)
     {
-        $title = htmlentities($title);
-        $target = htmlentities($target);
-        $priority = intval($priority);
-        $metric_type = htmlentities($metric_type);
-        $metric_value = intval($metric_value);
-        require_once ('classes/Session.inc');
-        $user = Session::get_session_user();
+        $last_id = Incident::__insert($conn, $title, $priority, 
+                                      "Metric", "OSSIM");
 
-        /* insert incident */
-        $query = "INSERT INTO incident (title, ref, priority)
-            VALUES ('$title', 'Metric', $priority)";
-        if ($conn->Execute($query) === false)
-        {
-            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-        
-        /* get last inserted id */
-        $query = "SELECT LAST_INSERT_ID() as id FROM incident";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-            exit;
-        }
-        $last_id =  $rs->fields["id"];
-
-        /* insert references with last id*/
-        $query2 = "INSERT INTO incident_ticket 
-            (incident_id, priority, users, description, action, in_charge)
-            VALUES ($last_id, $priority, '$user', '$title', '', '$user')";
-        $query3 = "INSERT INTO incident_metric
+        $query = "INSERT INTO incident_metric
             (incident_id, target, metric_type, metric_value)
             VALUES ($last_id, '$target', '$metric_type', '$metric_value');";
 
-        if ( ($conn->Execute($query2) === false) or
-             ($conn->Execute($query3) === false) )
-        {
+        if ($conn->Execute($query) === false) {
             print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
 
         return $last_id;
+    }
+
+    function insert_hardware($conn, $title, $priority)
+    {
+        return Incident::__insert($conn, $title, $priority, 
+                                  "Hardware", "Hardware");
+    }
+    
+    function insert_install($conn, $title, $priority)
+    {
+        return Incident::__insert($conn, $title, $priority, 
+                                  "Install", "Install");
+    }
+
+
+    function __update($conn, $incident_id, $title)
+    {
+        $query = "UPDATE incident SET title = '$title' 
+            WHERE id = $incident_id";
+        if ($conn->Execute($query) === false) {
+            print 'error updating incident: '.$conn->ErrorMsg().'<BR>';
+            exit;
+        }
     }
 
     function update_alarm ($conn, $incident_id, $title,
@@ -306,17 +320,15 @@ class Incident {
         $incident_id = intval($incident_id);
         $title = htmlentities($title);
 
-        $query1 = "UPDATE incident SET title = '$title' 
-            WHERE id = $incident_id";
-        $query2 = "UPDATE incident_alarm 
+        Incident::__update($conn, $incident_id, $title);
+
+        $query = "UPDATE incident_alarm 
             SET src_ips = '$src_ips', dst_ips = '$dst_ips',
                 src_ports = '$src_ports', dst_ports = '$dst_ports'
             WHERE incident_id = $incident_id";
 
-        if ( ($conn->Execute($query1) === false) or
-             ($conn->Execute($query2) === false) )
-        {
-            print 'error updating incident: '.$conn->ErrorMsg().'<BR>';
+        if ($conn->Execute($query) === false) {
+            print 'error updating incident (alarm): '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
@@ -330,20 +342,32 @@ class Incident {
         $metric_type = htmlentities($metric_type);
         $metric_value = htmlentities($metric_value);
 
-        $query1 = "UPDATE incident SET title = '$title' 
-            WHERE id = $incident_id";
-        $query2 = "UPDATE incident_metric 
+        Incident::__update($conn, $incident_id, $title);
+
+        $query = "UPDATE incident_metric 
             SET target = '$target',
                 metric_type = '$metric_type',
                 metric_value = '$metric_value'
             WHERE incident_id = $incident_id";
 
-        if ( ($conn->Execute($query1) === false) or
-             ($conn->Execute($query2) === false) )
-        {
-            print 'error updating incident: '.$conn->ErrorMsg().'<BR>';
+        if ($conn->Execute($query) === false) {
+            print 'error updating incident (metric): '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+    }
+
+    function update_hardware($conn, $incident_id, $title)
+    {
+        $incident_id = intval($incident_id);
+        $title = htmlentities($title);
+        Incident::__update($conn, $incident_id, $title);
+    }
+
+    function update_install($conn, $incident_id, $title)
+    {
+        $incident_id = intval($incident_id);
+        $title = htmlentities($title);
+        Incident::__update($conn, $incident_id, $title);
     }
 
     function delete ($conn, $id)

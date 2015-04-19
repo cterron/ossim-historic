@@ -8,6 +8,7 @@
 /usr/share/ossim/www/tmp/
 /etc/apache-ssl/conf.d/
 /etc/apache/conf.d/
+/etc/apache2/conf.d/
 /usr/bin/
 /etc/cron.d/
 /usr/lib/cgi-bin/

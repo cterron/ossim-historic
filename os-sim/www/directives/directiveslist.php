@@ -1,11 +1,12 @@
 <?php
-require_once ('classes/Session.inc');
-Session::logcheck("MenuCorrelation", "CorrelationDirectives");
-?>
+    require_once ('classes/Session.inc');
+    Session::logcheck("MenuCorrelation", "CorrelationDirectives");
 
-<?php
+    require_once ('ossim_conf.inc');
+    $conf = new ossim_conf();
+
     $XML_FILE = '/etc/ossim/server/directives.xml';
-    $XSL_FILE = 'directivemenu.xsl';
+    $XSL_FILE = $conf->get_conf("base_dir") . '/directives/directivemenu.xsl';
     
     if (version_compare(PHP_VERSION,'5','>=')&&extension_loaded('xsl'))
         require_once('xslt-php4-to-php5.php');

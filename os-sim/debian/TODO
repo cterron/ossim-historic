@@ -25,20 +25,13 @@
    at ossim-frameowork postinst
 
 ==
-
- *  Add debconf configuration to phpgacl package
-    database connection templates (hostname, database, user, pass, ...)
-
-==
  
  * Add a new agent template in order to configure ossim_db entitiy
 
 ==
 
- Alberto:
- * /etc/init.d/ossim-agent
- * /etc/init.d/ossim-server
- * /etc/init.d/ossim-framework
-
+ * manage ossim confiles as patches instead of copy and modify.
+   - mysql/ossim_config.sql
+   - agent/config.xml
 ==
 

@@ -14,7 +14,14 @@
         require_once ("ossim_db.inc");
 
         $db = new ossim_db();
-        $conn = $db->connect();
+        if (!$conn = $db->phpgacl_connect()) {
+            echo "<p align=\"center\">
+                <b>Can't connect to OSSIM acl database (phpgacl)</b><br/>
+                Check for phpgacl values at framework configuration
+                </p>";
+            exit;
+        }
+        
         $query = "SELECT * FROM acl";
         if (!$rs = &$conn->Execute($query)) {
             echo "
@@ -60,9 +67,16 @@
 
         $session = new Session($_REQUEST["user"], $_REQUEST["pass"], "");
         if ($session->login()) {
-            if ($_REQUEST["dest"]) {
-                header ("Location: " . $_REQUEST["dest"]);
-                exit;
+            if ( $_REQUEST["dest"] )
+            {
+                if (preg_match("/top\.php$/", $_REQUEST["dest"])) {
+                    header ("Location: ../index.php");
+                    exit;
+                } else {
+                    header ("Location: " . $_REQUEST["dest"]);
+                    exit;
+                }
+
             } else {
                 header ("Location: ../control_panel/global_score.php");
             }
@@ -87,9 +101,37 @@ if (location.href != top.location.href) top.location.href = location.href;
 
   <h1> <?php echo gettext("OSSIM Login"); ?> </h1>
 
+<?php
+    require_once ('classes/About.inc');
+    $about = new About();
+?>
+
 <form method="POST" action="<?php $_SERVER["PHP_SELF"] ?>">
 <table align="center">
+  <tr>
+    <td>
+      <table align="center">
+        <tr>
+          <td>
+            <?php $logo_src = $about->get_logo(); ?>
+            <img src="<?php echo $logo_src ?>" width="280" alt="OSSIM logo" />
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td>
+<table align="center" class="noborder">
   <input type="hidden" name="dest" value="<?php echo $_GET["dest"] ?>">
+  <tr>
+    <td colspan="2">
+      <b>OSSIM (Open Source Security Information Management)</b><br/>
+<?php 
+        echo gettext("Version") . ": " . $about->get_version();
+        echo " (" . $about->get_date() . ")";
+?>
+      <br/><br/><br/>
+    </td>
+  </tr>
   <tr>
     <td> <?php echo gettext("User"); ?> </td>
     <td><input type="text" name="user" /></td>
@@ -101,17 +143,23 @@ if (location.href != top.location.href) top.location.href = location.href;
   <tr>
     <td colspan="2"><input type="submit" value="Login"></td>
   </tr>
+  <tr><td colspan="2"></td></tr>
+  <tr>
+    <td colspan="2">
+    <br/><br/>
+    <i><?php echo gettext("NOTE: Default user is admin-admin"); ?> .<br/>
+    <?php echo gettext("For security reasons you should change it at Configuration->Users"); ?></i>
+    </td>
+  </tr>
+</table>
+    </td>
+  </tr>
 </table>
 </form>
-
-<p><i> <?php echo gettext("NOTE: Default user is admin-admin"); ?> .<br/>
-<?php echo gettext("For security reasons you should change it at Configuration->Users"); ?> </i></p>
 
 <p>
   <?php
 
-    
-  
     if ($bad_pass)
         echo "<p><font color=\"red\">Wrong User & Password</font></p>";
   ?>

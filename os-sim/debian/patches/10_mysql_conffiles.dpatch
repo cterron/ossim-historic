@@ -1,0 +1,85 @@
+#! /bin/sh -e
+## 10_mysql_conffiles.dpatch by David Gil <dgil@ossim.net>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+[ -f debian/patches/00patch-opts ] && . debian/patches/00patch-opts
+patch_opts="${patch_opts:--f --no-backup-if-mismatch ${2:+-d $2}}"
+
+if [ $# -lt 1 ]; then
+    echo >&2 "`basename $0`: script expects -patch|-unpatch as argument"
+    exit 1
+fi
+case "$1" in
+       -patch) patch $patch_opts -p1 < $0;;
+       -unpatch) patch $patch_opts -p1 -R < $0;;
+	*)
+		echo >&2 "`basename $0`: script expects -patch|-unpatch as argument"
+		exit 1;;
+esac
+
+exit 0
+@DPATCH@
+diff -ruN os-sim.old/db/ossim_config.sql os-sim/db/ossim_config.sql
+--- os-sim.old/db/ossim_config.sql	2005-02-15 10:04:05.000000000 +0100
++++ os-sim/db/ossim_config.sql	2005-02-15 10:04:17.000000000 +0100
+@@ -13,13 +13,13 @@
+ INSERT INTO config (conf, value) VALUES ('language', 'en_GB');
+ INSERT INTO config (conf, value) VALUES ('server_address', 'localhost');
+ INSERT INTO config (conf, value) VALUES ('server_port', '40001');
+-INSERT INTO config (conf, value) VALUES ('phpgacl_path', '/var/www/phpgacl/');
++INSERT INTO config (conf, value) VALUES ('phpgacl_path', '/usr/share/phpgacl/');
+ INSERT INTO config (conf, value) VALUES ('phpgacl_type', 'mysql');
+ INSERT INTO config (conf, value) VALUES ('phpgacl_host', 'localhost');
+ INSERT INTO config (conf, value) VALUES ('phpgacl_base', 'ossim_acl');
+ INSERT INTO config (conf, value) VALUES ('phpgacl_user', 'root');
+ INSERT INTO config (conf, value) VALUES ('phpgacl_pass', 'ossim');
+-INSERT INTO config (conf, value) VALUES ('graph_link', '/cgi-bin/draw_graph_combined.pl');
++INSERT INTO config (conf, value) VALUES ('graph_link', '/cgi-bin/draw_graph.pl');
+ INSERT INTO config (conf, value) VALUES ('rrdtool_lib_path', '/usr/lib/perl5/');
+ INSERT INTO config (conf, value) VALUES ('ntop_link', 'http://localhost:3000');
+ INSERT INTO config (conf, value) VALUES ('ossim_link', '/ossim/');
+@@ -35,28 +35,28 @@
+ INSERT INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
+ INSERT INTO config (conf, value) VALUES ('nessus_host', 'localhost');
+ INSERT INTO config (conf, value) VALUES ('nessus_port', '1241');
+-INSERT INTO config (conf, value) VALUES ('nessus_path', '/usr/local/bin/nessus');
+-INSERT INTO config (conf, value) VALUES ('nessus_rpt_path', '/var/www/ossim/vulnmeter/');
++INSERT INTO config (conf, value) VALUES ('nessus_path', '/usr/bin/nessus');
++INSERT INTO config (conf, value) VALUES ('nessus_rpt_path', '/usr/share/ossim/www/vulnmeter/');
+ INSERT INTO config (conf, value) VALUES ('nessus_distributed', '0');
+ INSERT INTO config (conf, value) VALUES ('acid_user', 'admin');
+ INSERT INTO config (conf, value) VALUES ('acid_pass', 'admin');
+-INSERT INTO config (conf, value) VALUES ('ossim_web_user', 'admin');
+-INSERT INTO config (conf, value) VALUES ('ossim_web_pass', 'admin');
++INSERT INTO config (conf, value) VALUES ('ossim_web_user', '');
++INSERT INTO config (conf, value) VALUES ('ossim_web_pass', '');
+ INSERT INTO config (conf, value) VALUES ('jpgraph_path', '/usr/share/jpgraph/');
+ INSERT INTO config (conf, value) VALUES ('fpdf_path', '/usr/share/fpdf/');
+-INSERT INTO config (conf, value) VALUES ('adodb_path', '/var/www/adodb-411/');
++INSERT INTO config (conf, value) VALUES ('adodb_path', '/usr/share/adodb/');
+ INSERT INTO config (conf, value) VALUES ('rrdtool_path', '/usr/bin/');
+ INSERT INTO config (conf, value) VALUES ('mrtg_path', '/usr/bin/');
+-INSERT INTO config (conf, value) VALUES ('mrtg_rrd_files_path', '/var/www/ossim/mrtg/');
+-INSERT INTO config (conf, value) VALUES ('rrdpath_host', '/var/www/ossim/mrtg/host_qualification/');
+-INSERT INTO config (conf, value) VALUES ('rrdpath_net', '/var/www/ossim/mrtg/net_qualification/');
+-INSERT INTO config (conf, value) VALUES ('rrdpath_global', '/var/www/ossim/mrtg/global_qualification/');
+-INSERT INTO config (conf, value) VALUES ('rrdpath_level', '/var/www/ossim/mrtg/level_qualification/');
+-INSERT INTO config (conf, value) VALUES ('rrdpath_ntop', '/usr/share/ntop/rrd/');
+-INSERT INTO config (conf, value) VALUES ('font_path', '/usr/share/ossim/fonts/Vera.ttf');
++INSERT INTO config (conf, value) VALUES ('mrtg_rrd_files_path', '/var/lib/ossim/rrd');
++INSERT INTO config (conf, value) VALUES ('rrdpath_host', '/var/lib/ossim/rrd/host_qualification/');
++INSERT INTO config (conf, value) VALUES ('rrdpath_net', '/var/lib/ossim/rrd/net_qualification/');
++INSERT INTO config (conf, value) VALUES ('rrdpath_global', '/var/lib/ossim/rrd/global_qualification/');
++INSERT INTO config (conf, value) VALUES ('rrdpath_level', '/var/lib/ossim/rrd/level_qualification/');
++INSERT INTO config (conf, value) VALUES ('rrdpath_ntop', '/var/lib/ntop/rrd/');
++INSERT INTO config (conf, value) VALUES ('font_path', '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf');
+ INSERT INTO config (conf, value) VALUES ('opennms_link', 'http://localhost:8080/opennms/');
+-INSERT INTO config (conf, value) VALUES ('acid_link', 'http://localhost/acid/');
+-INSERT INTO config (conf, value) VALUES ('acid_path', '/var/www/acid/');
++INSERT INTO config (conf, value) VALUES ('acid_link', 'http://localhost/acidlab/');
++INSERT INTO config (conf, value) VALUES ('acid_path', '/usr/share/acidlab/');
+ INSERT INTO config (conf, value) VALUES ('nmap_path', '/usr/bin/nmap');
+ INSERT INTO config (conf, value) VALUES ('p0f_path', '/usr/sbin/p0f');
+ INSERT INTO config (conf, value) VALUES ('arpwatch_path', '/usr/sbin/arpwatch');

@@ -98,6 +98,7 @@ class Config {
         Config::insert('phpgacl_path', '/var/www/phpgacl/');
         Config::insert('fpdf_path', '/usr/share/fpdf/');
         Config::insert('report_graph_type', 'images');
+        Config::insert('use_svg_graphics', '0');
         Config::insert('use_resolv', '0');
 
         /* RRD: RRD Configuration (graphing) */
@@ -126,8 +127,8 @@ class Config {
         Config::insert('nessus_distributed','0');
  
         /* ACID: Acid cache configuration */
-        Config::insert('acid_user','ossim');
-        Config::insert('acid_pass','ossim');
+        Config::insert('acid_user','admin');
+        Config::insert('acid_pass','admin');
         Config::insert('ossim_web_user','admin');
         Config::insert('ossim_web_pass','admin');
 
@@ -171,13 +172,8 @@ class Config {
         Config::insert('nessus_rpt_path','/usr/share/ossim/www/vulnmeter/');
 
         /* ACID: Acid cache configuration */
-        Config::insert('acid_link','/acidlab/');
+        Config::insert('acid_link','http://localhost/acidlab/');
         Config::insert('acid_path','/usr/share/acidlab/');
-
-        /* Generic configuration */
-        Config::insert('have_scanmap3d', '0');
-        Config::insert('language', 'en');
-
     }
 
     /* fedora/redhat specific values */
@@ -205,12 +201,8 @@ class Config {
         Config::insert('nessus_rpt_path','/var/www/ossim/vulnmeter/');
 
         /* ACID: Acid cache configuration */
-        Config::insert('acid_link','/acid/');
+        Config::insert('acid_link','http://localhost/acid/');
         Config::insert('acid_path','/var/www/acid/');
-
-    /* Generic configuration */
-        Config::insert('have_scanmap3d', '0');
-        Config::insert('language', 'en');
     }
 
     /* default values */

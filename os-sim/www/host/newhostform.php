@@ -11,8 +11,16 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                
-  <h1> <?php echo gettext("Insert new host"); ?> </h1>
+                                                                                <?php 
+    if ($_REQUEST["scan"]) {
+        echo "<h1>" . gettext("Insert new scan") . "</h1>";
+        echo "<p>";
+        echo gettext("Please, fill these global properties about the hosts you've scaned");
+        echo ":</p>";
+    } else {
+        echo "<h1>" . gettext("Insert new host") . "</h1>";
+    }
+?>
 
 <?php
     require_once ('ossim_db.inc');
@@ -25,37 +33,37 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     $conf = new ossim_conf();
     $threshold = $conf->get_conf("threshold");
 
+    $action = "newhost.php";
     if ($_REQUEST["ip"]) {
         $ip = $_REQUEST["ip"];
     } elseif ($_REQUEST["scan"]) {
         $ip = $_REQUEST["target"];
+        $action = "../netscan/scan_db.php";
     }
 ?>
 
-    <form method="post" action="newhost.php">
+    <form method="post" action="<?php echo $action ?>">
     <table align="center">
       <input type="hidden" name="insert" value="insert">
 
 <?php
     if (!$_REQUEST["scan"]) {
 ?>
-      <tr>
-        <th> <?php echo gettext("Hostname"); ?> </th>
-        <td class="left"><input type="text" name="hostname"></td>
-      </tr>
-<?php
-    } else {
-?>
-      <input type="hidden" name="hostname" value="__scan">
+  <tr>
+    <th> <?php echo gettext("Hostname"); ?> (*)</th>
+    <td class="left"><input type="text" name="hostname"></td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("IP"); ?> (*)</th>
+    <td class="left">
+      <input type="text" value="<?php echo $ip ?>" name="ip">
+    </td>
+  </tr>
 <?php
     }
 ?>
   <tr>
-    <th> <?php echo gettext("IP"); ?> </th>
-    <td class="left"><input type="text" value="<?php echo $ip ?>" name="ip"></td>
-  </tr>
-  <tr>
-    <th> <?php echo gettext("Asset"); ?> </th>
+    <th> <?php echo gettext("Asset"); ?> (*)</th>
     <td class="left">
       <select name="asset">
         <option value="0">
@@ -74,21 +82,21 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold C"); ?> </th>
+    <th> <?php echo gettext("Threshold C"); ?> (*)</th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_c" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold A"); ?> </th>
+    <th> <?php echo gettext("Threshold A"); ?> (*)</th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_a" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("RRD Profile"); ?> <br/>
+    <th> <?php echo gettext("RRD Profile"); ?> (*)<br/>
         <font size="-2">
           <a href="../rrd_conf/new_rrd_conf_form.php">
 	  <?php echo gettext("Insert new profile"); ?> ?</a>
@@ -135,7 +143,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Sensors"); ?> <br/>
+    <th> <?php echo gettext("Sensors"); ?> (*)<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">
 	  <?php echo gettext("Insert new sensor"); ?> ?</a>
@@ -207,8 +215,22 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     <th> <?php echo gettext("Mac"); ?> </th>
     <td class="left"><input type="text" name="mac" /></td>
   </tr>
+  <tr>
+    <th> <?php echo gettext("Mac Vendor"); ?></th>
+    <td class="left"><input type="text" name="mac_vendor" /></td>
+  </tr>
 <?php
-    }
+    } else {
+?>
+        <input type="hidden" name="ips" value="<?php echo $_POST["ips"] ?>" />
+<?php
+        for ($i = 0; $i < $_POST["ips"]; $i++) {
+?>
+        <input type="hidden" name="ip_<?php echo $i ?>" 
+            value="<?php echo $_POST["ip_$i"] ?>" />
+<?php
+        } /* foreach */
+    } /* if ($scan) */
 ?>
   <tr>
     <th> <?php echo gettext("Description"); ?> </th>
@@ -224,6 +246,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   </tr>
 </table>
 </form>
+
+<p align="center"><i>Values marked with (*) are mandatory</b></i></p>
 
 </body>
 </html>

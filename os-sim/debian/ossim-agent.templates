@@ -1,7 +1,7 @@
 Template: ossim-agent/sensor
 Type: string
 Default: 127.0.0.1
-Description: What's your OSSIM Agent ip? (Don't use 127.0.0.1)
+Description: What's your OSSIM Agent ip? (Don't use 127.0.0.1 if you want to monitoring this sensor from framework)
 
 Template: ossim-agent/interface
 Type: string

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 
-<directive id="1" name="Possible intrusion" priority="5">
+<directive id="1" name="Possible intrusion against DST_IP" priority="5">
     <rule type="detector" name="Intrusion rule matched" reliability="1"
     occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
     plugin_id="1001"
@@ -43,7 +43,7 @@
     </rule>
 </directive>
 
-<directive id="2" name="Possible Trojan" priority="4">
+<directive id="2" name="Possible Trojan against DST_IP:DST_PORT" priority="4">
     <rule type="detector" name="Rare but open dest port used" reliability="1"
     occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
     plugin_id="1104" plugin_sid="101,102">
@@ -83,10 +83,10 @@
     </rule>
 </directive>
 
-<directive id="4" name="Possible Worm" priority="4">
+<directive id="4" name="Possible Worm port DST_PORT/PROTOCOL" priority="4">
     <rule type="detector" name="Rare dest connection" reliability="1"
     occurrence="1" from="ANY" to="ANY" port_from="ANY"
-    port_to="25,80,135,137,139,445,1433,1434" plugin_id="1104"
+    port_to="25,135,137,139,445,1433,1434" plugin_id="1104"
     plugin_sid="ANY">
         <rules>
             <rule type="detector" name="Too many rare connections (15) against same port" reliability="3" time_out="180" occurrence="15"
@@ -117,7 +117,7 @@
     </rule>
 </directive>
 
-<directive id="5" name="Possible Plague" priority="4">
+<directive id="5" name="Possible Plague at port DST_PORT" priority="4">
     <rule type="detector" name="Rare dest connection" reliability="1"
     occurrence="1" from="ANY" to="ANY" port_from="ANY"
     port_to="25,80,135,137,139,445,1433,1434" plugin_id="1104"
@@ -154,7 +154,7 @@
 </directive>
 
 
-<directive id="6" name="Peer anomaly. Worm ? P2P ?" priority="4">
+<directive id="6" name="Peer anomaly on SRC_IP. Worm ? P2P ?" priority="4">
     <rule type="detector" name="Active host sender / known hosts anomaly" reliability="2"
     occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
     plugin_id="1508" plugin_sid="1,29">
@@ -167,7 +167,7 @@
     </rule>
 </directive>
 
-<directive id="7" name="Strange host behaviour" priority="3">
+<directive id="7" name="Strange host behaviour on SRC_IP" priority="3">
     <rule type="detector" name="RRD anomaly" reliability="2"
     occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
     plugin_id="1508" plugin_sid="ANY">
@@ -192,7 +192,7 @@
     </rule>
 </directive>
 
-<directive id="9" name="Compromised host compromising other host" priority="5">
+<directive id="9" name="Compromised host compromising other host (SRC_IP->DST_IP)" priority="5">
     <rule type="detector" name="Host compromised" reliability="8"
     occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
     plugin_id="1505" plugin_sid="1">
@@ -205,7 +205,7 @@
     </rule>
 </directive>
 
-<directive id="10" name="Possible Worm port 80" priority="4">
+<directive id="10" name="Possible Worm port 80. Origin: SRC_IP" priority="4">
     <rule type="detector" name="Rare dest connection" reliability="1"
     occurrence="1" from="ANY" to="ANY" port_from="ANY"
     port_to="80" plugin_id="1104"
@@ -236,6 +236,92 @@
                     </rule>
                 </rules>
             </rule>
+        </rules>
+    </rule>
+</directive>
+
+<directive id="11" name="Possible portscan originating at SRC_IP" priority="4">
+    <rule type="detector" name="Rare dest connection" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1104" plugin_sid="ANY" protocol="TCP">
+        <rules>
+            <rule type="detector" name="Too many rare connections (15) against
+            same ip" reliability="3" time_out="300" occurrence="15"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1104" plugin_sid="ANY" sticky="true"
+            sticky_different="DST_PORT" protocol="TCP">
+                <rules>
+                    <rule type="detector" name="Too many rare connections
+                    (300) against same ip" reliability="5" time_out="1200"
+                    occurrence="300" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1104"
+                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP">
+                        <rules>
+                    <rule type="detector" name="Too many rare connections (2000) against same ip" reliability="10" time_out="1800" occurrence="2000" from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY" plugin_id="1104"
+		    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+            protocol="TCP">
+                    <rules>
+                    <rule type="detector" name="Too many rare connections
+                    (20000) against same ip" reliability="10" time_out="43200"
+                    occurrence="20000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1104"
+                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP"/>
+                    </rules>
+                    </rule>
+                        </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<directive id="12" name="Possible brute force login attempt against DST_IP" priority="5">
+  <rule type="detector" name="Authentication failure" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    time_out="10" plugin_id="4002" plugin_sid="1,2,3">
+      <rules>
+        <rule type="detector" name="Authentication failure (3 times)"
+          reliability="+1" occurrence="3" from="1:SRC_IP" to="ANY" 
+          port_from="ANY" time_out="15" port_to="ANY" 
+          plugin_id="4002" plugin_sid="1,2,3" sticky="true">
+          <rules>
+            <rule type="detector" name="Authentication failure (5 times)"
+              reliability="+2" occurrence="5" from="1:SRC_IP" to="ANY" 
+              port_from="ANY" time_out="20" port_to="ANY" 
+              plugin_id="4002" plugin_sid="1,2,3" sticky="true">
+              <rules>
+                <rule type="detector" name="Authentication failure (10 times)"
+                  reliability="+2" occurrence="10" from="1:SRC_IP" to="ANY" 
+                  port_from="ANY" time_out="30" port_to="ANY" 
+                  plugin_id="4002" plugin_sid="1,2,3" sticky="true">
+                </rule>
+              </rules>
+            </rule>
+          </rules>
+        </rule>
+      </rules>
+    </rule>
+</directive>
+
+<directive id="13" name="Possible DST_PORT intrusion against DST_IP" priority="3">
+    <rule type="detector" name="Intrusion rule matched" reliability="2"
+    occurrence="1" from="ANY" to="ANY" protocol="TCP" port_from="ANY" port_to="119,143,110,25,80,21,53,445,3128,8080,3306,1443" plugin_id="1001" plugin_sid="ANY">
+        <rules>
+            <rule type="detector" name="Attack response" reliability="+5"
+            time_out="10" from="1:DST_IP" to="1:SRC_IP" port_from="1:DST_PORT"
+            port_to="ANY" protocol="TCP" plugin_id="1001"
+            plugin_sid="ANY"/>
+            <rule type="monitor" name="Attacked host's C raised"
+            reliability="+3" from="1:DST_IP" plugin_id="2001"
+            plugin_sid="1" condition="ge" value="200" interval="10"
+            time_out="600" absolute="false"/>
+            <rule type="detector" name="Attacked host behaving badly" reliability="+2" time_out="600"
+            occurrence="100" from="1:DST_IP" to="ANY" port_from="ANY"
+            port_to="!1:DST_PORT" plugin_id="1104" plugin_sid="!3"
+            sticky="true" sticky_different="DST_IP"/>
         </rules>
     </rule>
 </directive>

@@ -87,7 +87,7 @@ if ($net_list) {
            <?php // echo $net ?>
       </td>
 
-      <td>
+      <td class="left">
         <img src="../pixmaps/solid-blue.jpg" height="8" 
              width="<?php echo $width ?>"
              title="<?php echo $vulnerability ?>">
@@ -172,7 +172,7 @@ if ($ip_stats) {
          </a>
       </td>
 
-      <td>
+      <td class="left">
 <?php
     if (!strcmp($ip,$host))
         $bar = "../pixmaps/solid-red.jpg";
@@ -202,7 +202,7 @@ $vmeter_dir = $conf->get_conf("base_dir") . "/vulnmeter/last/";
 
 // Show only the non-empty GIF charts reported by Nessus
 
-if ($handle = opendir('last')) {
+if ($handle = @opendir('last')) {
     while (false !== ($file = readdir($handle))) {
    if (($file != ".") && ($file != "..") && (filesize($vmeter_dir.$file) > 0)){
             if (eregi("(.gif)$",$file)){
@@ -215,6 +215,8 @@ if ($handle = opendir('last')) {
         }
     }
     closedir($handle);
+} else {
+    echo "<br/>" . gettext("No scan have been done yet") . ".<br/>";
 }
 
 } // if (!$_GET["noimages"])

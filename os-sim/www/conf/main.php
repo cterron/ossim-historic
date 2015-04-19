@@ -1,6 +1,16 @@
 <?php
 require_once ('classes/Session.inc');
 Session::logcheck("MenuConfiguration", "ConfigurationMain");
+?>
+
+<html>
+<head>
+  <title> <?php echo gettext("Main Configuration"); ?> </title>
+  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+</head>
+
+<?php
 
 require_once ('ossim_conf.inc');
 $ossim_conf = new ossim_conf();
@@ -13,7 +23,17 @@ $CONFIG = array (
         "desc"  => gettext("Configure Internationalization"),
         "conf"  => array 
         (
-            "language"          => "select",
+            "language"          => array
+                (
+                    "de_DE" => gettext("German"),
+                    "en_GB" => gettext("English"),
+                    "es_ES" => gettext("Spanish"),
+                    "fr_FR" => gettext("French"),
+                    "ja_JP" => gettext("Japanese"),
+                    "pt_BR" => gettext("Brazilian Portuguese"),
+                    "zh_CN" => gettext("Simplified Chinese"),
+                    "zh_TW" => gettext("Traditional Chinese")
+                ),
             "locale_dir"        => "text"
         )
     ),
@@ -57,18 +77,45 @@ $CONFIG = array (
         )
     ),
 
+    "phpgacl" => array 
+    (
+        "title" => gettext("phpGACL"),
+        "desc"  => gettext("Access control list database configuration") ,
+        "conf"  => array 
+        (
+            "phpgacl_path"  => "text",
+            "phpgacl_type"  => "text",
+            "phpgacl_host"  => "text",
+            "phpgacl_base"  => "text",
+            "phpgacl_user"  => "text",
+            "phpgacl_pass"  => "password",
+        )
+    ),
+
     "php" => array 
     (
         "title" => gettext("PHP"),
         "desc"  => gettext("PHP Configuration (graphs, acls, database api)"),
         "conf"  => array 
         (
-            "phpgacl_path"  => "text",
-            "adodb_path"    => "text",
-            "jpgraph_path"  => "text",
-            "fpdf_path"	    => "text",
-            "report_graph_type" => "select",
-            "use_resolv"    => "select"
+            "adodb_path"        => "text",
+            "jpgraph_path"      => "text",
+            "fpdf_path"	        => "text",
+            "report_graph_type" => array
+                (
+                    "images"  => gettext("Images (php jpgraph)"),
+                    "applets" => gettext("Applets (jfreechart)")
+                ),
+            "use_svg_graphics"  => array
+                (
+                    "0" => gettext("No"),
+                    "1" => gettext("Yes (Need SVG plugin)")
+                ),
+            "use_resolv"        => array 
+                (
+                    "0" => gettext("No"),
+                    "1" => gettext("Yes")
+                )
         )
     ),
 
@@ -98,8 +145,9 @@ $CONFIG = array (
         "desc"  => gettext("Links to other applications"),
         "conf"  => array 
         (
-            "ntop_link"     => "text",
             "ossim_link"    => "text",
+            "acid_link"     => "text",
+            "ntop_link"     => "text",
             "opennms_link"  => "text"
         )
     ),
@@ -133,7 +181,11 @@ $CONFIG = array (
             "nessus_port"           => "text",
             "nessus_path"           => "text",
             "nessus_rpt_path"       => "text",
-            "nessus_distributed"    => "select"
+            "nessus_distributed"    => array
+                (
+                    "0" => gettext("No"),
+                    "1" => gettext("Yes")
+                )
         )
     ),
 
@@ -143,7 +195,6 @@ $CONFIG = array (
         "desc"  => gettext("Acid cache configuration"),
         "conf"  => array 
         (
-            "acid_link"         => "text",
             "acid_user"         => "text",
             "acid_pass"         => "password",
             "acid_path"         => "text",
@@ -158,22 +209,30 @@ $CONFIG = array (
         "desc"  => gettext("Path to other applications"),
         "conf"  => array 
         (
-            "nmap_path"     => "text",
-            "p0f_path"      => "text",
-            "arpwatch_path" => "text",
-            "mail_path"     => "text",
-            "touch_path"    => "text",
-            "wget_path"     => "text",
-            "have_scanmap3d"     => "select"
+            "nmap_path"         => "text",
+            "p0f_path"          => "text",
+            "arpwatch_path"     => "text",
+            "mail_path"         => "text",
+            "touch_path"        => "text",
+            "wget_path"         => "text",
+            "have_scanmap3d"    => array
+                (
+                    "0" => gettext("No"),
+                    "1" => gettext("Yes")
+                )
         )
     )
-
 );
 
 
 function valid_value ($key, $value) 
 {
-    $numeric_values = array ("recovery", "threshold", "use_resolv", "have_scanmap3d");
+    $numeric_values = array (
+            "recovery",
+            "threshold", 
+            "use_resolv",
+            "have_scanmap3d"
+        );
 
     if (in_array($key, $numeric_values)) {
         if (!is_numeric($value)) {
@@ -185,19 +244,51 @@ function valid_value ($key, $value)
     return True;
 }
 
+function submit ()
+{
+?>
+    <!-- submit -->
+    <tr>
+      <td colspan="2">
+        <input type="submit" name="update" 
+            value=" <?php echo gettext("Update configuration"); ?> " />
+        <input type="submit" name="reset" 
+            value=" <?php echo gettext("Reset default values"); ?> " />
+      </td>
+    </tr>
+    <!-- end sumbit -->
+<?php
+}
+
 
 if ($_POST["update"]) 
 {
     require_once ('classes/Config.inc');
     $config = new Config();
 
-    if (valid_value($_POST["conf"], $_POST["value"])) {
-        $value_update = mysql_real_escape_string($_POST["value"]);
-        $config->update($_POST["conf"], $value_update);
+    for ($i = 0; $i < $_POST["nconfs"]; $i++)
+    {
+        if (valid_value($_POST["conf_$i"], $_POST["value_$i"])) {
+            $value_update = mysql_real_escape_string($_POST["value_$i"]);
+            $config->update($_POST["conf_$i"], $value_update);
+        }
     }
 }
 
-if ($_POST["reset"]) {
+if ($_REQUEST["reset"]) {
+
+    if (!isset($_GET["confirm"])) {
+?>
+        <p align="center">
+          <b><?php echo gettext("Are you sure ?") ?></b>
+          <br/>
+          <a href="?reset=1&confirm=1"><?php echo gettext("Yes") ?></a>&nbsp;|&nbsp;
+          <a href="main.php"><?php echo gettext("No") ?></a>
+        </p>
+<?php
+        exit;
+    }
+
     require_once ('classes/Config.inc');
     $config = new Config();
     $config->reset();
@@ -205,147 +296,76 @@ if ($_POST["reset"]) {
 
 ?>
 
-<html>
-<head>
-  <title> <?php echo gettext("Main Configuration"); ?> </title>
-  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
-</head>
 <body>
 
   <h1> <?php echo gettext("Main Configuration"); ?> </h1>
   
+  <form method="POST" action="<?php echo $_SERVER["PHP_SELF"] ?>" />
   <table align="center">
+
+
 <?php
+    submit();
+
+    $count = 0;
     foreach ($CONFIG as $key => $val)
     {
-        print "<tr><th colspan=\"3\">" . $val["title"] . "</th></tr>";
-        print "<tr><td colspan=\"3\">" . $val["desc"] . "</td></tr>";
+        print "<tr><th colspan=\"2\">" . $val["title"] . "</th></tr>";
+        print "<tr><td colspan=\"2\">" . $val["desc"] . "</td></tr>";
+
         foreach ($val["conf"] as $conf => $type)
         {
             $conf_value = $ossim_conf->get_conf($conf);
 ?>
-        <form method="POST" action="<?php echo $_SERVER["PHP_SELF"] ?>" \>
-        <tr>
-          <td>
-            <input type="hidden" name="conf" value="<?php echo $conf ?>" />
-            <?php echo "<b>$conf</b>"; ?>
-          </td>
-          <td class="left">
-<?php 
-    if ($conf == "use_resolv" || $conf == "have_scanmap3d" || 
-        $conf == "nessus_distributed" ) { 
-?>
-            <select name="value">
-              <option <?php if (!$conf_value) echo " selected " ?>
-                value="0"> <?php echo gettext("No"); ?> </option>
-              <option <?php if ($conf_value) echo " selected " ?> 
-                value="1"> <?php echo gettext("Yes"); ?> </option>
-            </select>
-<?php 
-    } elseif ($conf == "report_graph_type") {
-?>
-            <select name="value">
-              <option <?php if ($conf_value == "images") echo " selected " ?>
-                value="images"> <?php echo gettext("Images (php jpgraph)"); ?> </option>
-              <option <?php if ($conf_value == "applets") echo " selected " ?> 
-                value="applets"> <?php echo gettext("Applets (jfreechart)"); ?> </option>
-            </select>
-<?php
-    } elseif ($conf == "language") {
-/* Let's put this somewhere readable within a foreach loop */
-?>
-            <select name="value">
-              <option <?php if ($conf_value == "en_GB") echo " selected " ?>
-                value="en_GB"> <?php echo gettext("English"); ?> </option>
-              <option <?php if ($conf_value == "es_ES") echo " selected " ?> 
-                value="es_ES"> <?php echo gettext("Spanish"); ?> </option>
-              <option <?php if ($conf_value == "de_DE") echo " selected " ?> 
-                value="de_DE"> <?php echo gettext("German"); ?> </option>
-              <option <?php if ($conf_value == "fr_FR") echo " selected " ?> 
-                value="fr_FR"> <?php echo gettext("French"); ?> </option>
-              <option <?php if ($conf_value == "ja_JP") echo " selected " ?> 
-                value="ja_JP"> <?php echo gettext("Japanese"); ?> </option>
-              <option <?php if ($conf_value == "cn") echo " selected " ?> 
-                value="cn"> <?php echo gettext("Chinese"); ?> </option>
-            </select>
-<?php
+    <tr>
 
-    } else { 
-?>
-            <input type="<?php echo $type ?>" 
-                size="30" name="value" 
-                value="<?php echo $conf_value ?>" />
-<?php 
-    } 
-?>
-          </td>
-          <td><input 
-<?php if ($ossim_conf->is_in_file($conf)) echo " class=\"disabled\" "; ?>
-                style="" type="submit" name="update" value="update" 
-<?php if ($ossim_conf->is_in_file($conf)) echo " " . gettext("DISABLED") . " "; ?>
-          />
-          </td>
-        </tr>
-        </form>
+      <input type="hidden" name="conf_<?php echo $count ?>"
+             value="<?php echo $conf ?>" />
+
+      <td><b><?php echo $conf ?></b></td>
+      <td class="left">
 <?php
+            $input = "";
+
+            /* select */
+            if (is_array($type)) {
+                $input .= "<select name=\"value_$count\">";
+                foreach ($type as $option_value => $option_text)
+                {
+                    $input .= "<option ";
+                    if ($conf_value == $option_value) $input .= " SELECTED ";
+                    $input .= "value=\"$option_value\">$option_text</option>";
+                }
+                $input .= "</select>";
+            }
+
+            /* input */
+            else {
+                $input .= "<input ";
+                if ($ossim_conf->is_in_file($conf)) {
+                    $input .= " class=\"disabled\" ";
+                    $input .= " DISABLED ";
+                }
+                $input .= "type=\"$type\" size=\"30\" 
+                    name=\"value_$count\" value=\"$conf_value\" />";
+            }
+
+            echo $input;
+?>
+      </td>
+    </tr>
+<?php
+            $count += 1;
         }
-        print "<tr><td colspan=\"3\"><br/></td></tr>";
     }
+    submit();
 ?>
 
-    <tr>
-    <form method="POST" action="<?php echo $_SERVER["PHP_SELF"] ?>" \>
-      <td colspan="3">
-        <input type="submit" name="reset" value=" <?php echo gettext("Reset default values"); ?> " />
-      </td>
-    </form>
-    </tr>
-
-
-
-<!--
-    <tr><td colspan="3"><br/></td></tr>
-    <tr><th colspan="3">Reload server structures</th></tr>
-    <tr><td colspan="3"></td></tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php">RELOAD ALL</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php?what=policies">Reload policies</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php?what=hosts">Reload hosts</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php?what=nets">Reload nets</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php?what=sensors">Reload sensors</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <a href="reload.php?what=directives">Reload directives</a>
-      </td>
-    </tr>
-    <tr><td colspan="3"><hr noshade></td></tr>
-    <tr><th colspan="3"><a href="../setup/ossim_acl.php">Reload ACLS</a></th></tr>
-    <tr><td colspan="3"></td></tr>
--->
-
+    <input type="hidden" name="nconfs" value="<?php echo $count ?>" />
 
   </table>
-    
-  
+  </form>
+
 </body>
 </html>
+

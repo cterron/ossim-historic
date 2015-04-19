@@ -47,15 +47,16 @@ Session::logcheck("MainMenu", "Index", "session/login.php");
   $menu["Reports"][] = array("name" => gettext("Anomalies") , "url" => "control_panel/anomalies.php");
   $menu["Reports"][] = array("name" => gettext("Incidents") , "url" => "incidents/index.php");
   //
+  $menu["Monitors"][] = array("name" => gettext("Riskmeter") , "url" => "riskmeter/index.php");
   $menu["Monitors"][] = array("name" => gettext("Session") , "url" => "ntop/session.php?sensor=" . $sensor["host"]);
   $menu["Monitors"][] = array("name" => gettext("Network") , "url" => "ntop/index.php?sensor=" . $sensor["host"]);
   $menu["Monitors"][] = array("name" => gettext("Availability") , "url" => $conf->get_conf("opennms_link"));
   $menu["Monitors"][] = array("name" => gettext("Sensors") , "url" => "sensor/sensor_plugins.php");
-  $menu["Monitors"][] = array("name" => gettext("Riskmeter") , "url" => "riskmeter/index.php");
   //
   $menu["Policy"][] = array("name" => gettext("Policy") , "url" => "policy/policy.php");
   $menu["Policy"][] = array("name" => gettext("Hosts") , "url" => "host/host.php");
   $menu["Policy"][] = array("name" => gettext("Networks") , "url" => "net/net.php");
+  $menu["Policy"][] = array("name" => gettext("Network groups") , "url" => "net/netgroup.php");
   $menu["Policy"][] = array("name" => gettext("Sensors") , "url" => "sensor/sensor.php");
   $menu["Policy"][] = array("name" => gettext("Signatures") , "url" => "signature/signature.php");
   $menu["Policy"][] = array("name" => gettext("Ports") , "url" => "port/port.php");
@@ -70,7 +71,7 @@ Session::logcheck("MainMenu", "Index", "session/login.php");
   $menu["Configuration"][] = array("name" => gettext("RRD Config") , "url" => "rrd_conf/rrd_conf.php");
   $menu["Configuration"][] = array("name" => gettext("Host Scan") , "url" => "scan/hostscan.php");
   //
-  $menu["Tools"][] = array("name" => gettext("Scan") , "url" => "scan/scan.php");
+  $menu["Tools"][] = array("name" => gettext("Net Scan") , "url" => "netscan/index.php");
   $menu["Tools"][] = array("name" => gettext("Rule Viewer") , "url" => "editor/editor.php");
   $menu["Tools"][] = array("name" => gettext("Backup") , "url" => "backup/index.php");
   //
@@ -86,17 +87,17 @@ Session::logcheck("MainMenu", "Index", "session/login.php");
 ?>
 
 <!-- MENU -->
-<tr><td height=23 background="pixmaps/top/naranja.gif" style="padding-left:35px; padding-top:1px">
+<tr><td height=23 background="pixmaps/top/naranja.gif" style="padding-left:30px; padding-top:1px">
 
   <table border=0 cellpadding=0 cellspacing=0><tr>
 <? $i=0; foreach ($menu as $name => $opc) { ?>
-  <td style="padding-right:12px">
+  <td style="padding-right:10px">
      <table border=0 cellpadding=0 cellspacing=0><tr>
        <? if ($option==$i) { ?>
-       <td style="padding-right:5px"><img src="pixmaps/top/abajo.gif" border=0></td>
+       <td style="padding-right:3px"><img src="pixmaps/top/abajo.gif" border=0></td>
        <td class=blue><? echo strtoupper(gettext($name)) ?></td>
        <? } else { ?>
-       <td style="padding-right:5px"><img src="pixmaps/top/dcha.gif" border=0></td>
+       <td style="padding-right:3px"><img src="pixmaps/top/dcha.gif" border=0></td>
        <td class=white><a class=white href="top.php?option=<? echo $i ?>">
 <?  echo strtoupper(gettext($name)) ?></a></td>
        <? } ?>
@@ -108,7 +109,7 @@ Session::logcheck("MainMenu", "Index", "session/login.php");
 </td></tr>
 
 <!-- SUBMENU -->
-<tr><td height=23 background="pixmaps/top/azul.gif" valign=bottom style="padding-left:35px">
+<tr><td height=24 background="pixmaps/top/azul.gif" valign=bottom style="padding-left:30px">
 
   <table border=0 cellpadding=0 cellspacing=0><tr>
 <? if (!is_array($menu[$keys[$option]])) { 
@@ -123,10 +124,10 @@ Session::logcheck("MainMenu", "Index", "session/login.php");
       <table border=0 cellpadding=0 cellspacing=0><tr>
         <? if ($soption==$i) { ?>
         <td><img src="pixmaps/top/li.gif" border=0></td>
-        <td class=blue bgcolor=white style="padding-left:10px;padding-right:10px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
+        <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
         <td><img src="pixmaps/top/ld.gif" border=0></td>
         <? } else { ?>
-        <td class=blue style="padding-left:10px;padding-right:10px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
+        <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
         <? } ?>
       </tr></table>
     </td>

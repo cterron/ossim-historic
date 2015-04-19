@@ -111,6 +111,30 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                     $_GET["target"], $_GET["metric_type"], 
                     $_GET["metric_value"]);
             }
+
+        } elseif ($_GET["ref"] == 'Hardware') { 
+            if (!isset($_GET["title"]) or !isset($_GET["priority"]))
+            {
+                echo "<p align=\"center\">";
+                printf(gettext("Error trying to insert new hardware ticket (argument missing)"));
+                echo "</p>";
+                exit;
+            } else {
+                $incident_id = Incident::insert_hardware (
+                                $conn, $_GET["title"], $_GET["priority"]);
+            }
+
+        } elseif ($_GET["ref"] == 'Install') { 
+            if (!isset($_GET["title"]) or !isset($_GET["priority"]))
+            {
+                echo "<p align=\"center\">";
+                printf(gettext("Error trying to insert new install ticket (argument missing)"));
+                echo "</p>";
+                exit;
+            } else {
+                $incident_id = Incident::insert_install (
+                                $conn, $_GET["title"], $_GET["priority"]);
+            }
         }
     }
     
@@ -349,6 +373,17 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                                      $_POST["metric_type"],
                                      $_POST["metric_value"]);
 
+        elseif ($incident->get_ref() == "Hardware")
+            Incident::update_hardware ($conn,
+                                       $incident_id,
+                                       $_POST["title"]);
+
+        elseif ($incident->get_ref() == "Install")
+            Incident::update_install ($conn,
+                                      $incident_id,
+                                      $_POST["title"]);
+            
+
         /* re-read from db */
         $incident_list = Incident::get_list($conn, 
                                             "WHERE incident.id = $incident_id");
@@ -574,9 +609,9 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     <td><?php echo strftime("%A %d-%b-%Y", time()) ?></td>
     <td>
        <?php echo gettext("Description"); ?> <br/>
-      <textarea name="description" rows="2" cols="30"></textarea><br/>
+      <textarea name="description" rows="6" cols="40"></textarea><br/>
        <?php echo gettext("Action"); ?> <br/>
-      <textarea name="action" rows="2" cols="30"></textarea><br/>
+      <textarea name="action" rows="6" cols="40"></textarea><br/>
        <?php echo gettext("Attachment"); ?> <br/>
       <input type="file" name="file" />
     </td>

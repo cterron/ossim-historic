@@ -24,12 +24,6 @@ CREATE TABLE host (
   PRIMARY KEY       (ip)
 );
 
-DROP TABLE IF EXISTS scan;
-CREATE TABLE scan (
-    ip              varchar(15) UNIQUE NOT NULL,
-    active          int NOT NULL,
-    PRIMARY KEY     (ip)
-);
 
 DROP TABLE IF EXISTS net;
 CREATE TABLE net (
@@ -46,6 +40,30 @@ CREATE TABLE net (
 );
 
 
+DROP TABLE IF EXISTS net_group;
+CREATE TABLE net_group (
+  name              varchar(128) UNIQUE NOT NULL,
+  threshold_c       int NOT NULL,
+  threshold_a       int NOT NULL,
+  rrd_profile       varchar(64),
+  descr             varchar(255),
+  PRIMARY KEY       (name)
+);
+
+DROP TABLE IF EXISTS net_group_scan;
+CREATE TABLE net_group_scan (
+    net_group_name               varchar(128) NOT NULL,
+      plugin_id       INTEGER NOT NULL,
+      plugin_sid      INTEGER NOT NULL,
+      PRIMARY KEY (net_group_name, plugin_id, plugin_sid)
+);        
+         
+DROP TABLE IF EXISTS net_group_reference;
+CREATE TABLE net_group_reference (
+    net_group_name        varchar(128) NOT NULL,
+    net_name     varchar(128) NOT NULL,
+    PRIMARY KEY     (net_group_name, net_name)
+);
 
 
 /* ======== signatures ======== */
@@ -532,6 +550,7 @@ CREATE TABLE users (
 INSERT INTO users (login, name, pass) VALUES ('admin', 'OSSIM admin', '21232f297a57a5a743894a0e4a801fc3');
 
 
+
 --
 -- Table: incident
 --
@@ -540,7 +559,8 @@ CREATE TABLE incident (
     id          INTEGER NOT NULL AUTO_INCREMENT,
     title       VARCHAR(128) NOT NULL,
     date        TIMESTAMP NOT NULL,
-    ref         ENUM ('Alarm', 'Metric') NOT NULL DEFAULT 'Alarm',
+    ref         ENUM ('Alarm', 'Metric', 'Hardware', 'Install') NOT NULL DEFAULT 'Alarm',
+    family      ENUM ('OSSIM', 'Hardware', 'Install') NOT NULL DEFAULT 'OSSIM',
     priority    INTEGER NOT NULL,
     PRIMARY KEY (id)
 );

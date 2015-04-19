@@ -44,6 +44,36 @@ class Host {
     function get_nat()          { return $this->nat; }
     function get_descr()        { return $this->descr; }
 
+    function get_os($conn)
+    {
+        if ($host_os_list = Host_os::get_list($conn, 
+                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        {
+            return $host_os_list[0]->get_os();
+        }
+        return "unknown";
+    }
+
+    function get_mac_address($conn)
+    {
+        if ($host_mac_list = Host_mac::get_list($conn, 
+                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        {
+            return $host_mac_list[0]->get_mac();
+        }
+        return "";
+    }
+
+    function get_mac_vendor($conn)
+    {
+        if ($host_mac_list = Host_mac::get_list($conn, 
+                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        {
+            return $host_mac_list[0]->get_vendor();
+        }
+        return "";
+    }
+
     function get_sensors($conn) {
         return Host_sensor_reference::get_list($conn, $this->ip);
     }
@@ -76,7 +106,7 @@ class Host {
 
     function insert($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a,
                     $rrd_profile, $alert, $persistence, $nat, $sensors,
-                    $descr, $os = "unknown", $mac = "unkown")
+                    $descr, $os = "unknown", $mac = "", $mac_vendor = "")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -91,6 +121,7 @@ class Host {
         $descr = htmlentities($descr);
         $os = htmlentities($os);
         $mac = htmlentities($mac);
+        $mac_vendor = htmlentities($mac_vendor);
 
         $query = "INSERT INTO host (
             ip, hostname, asset, threshold_c, threshold_a, rrd_profile, 
@@ -99,22 +130,26 @@ class Host {
              $threshold_a, '$rrd_profile', '$alert', '$persistence', 
              '$nat', '$descr');";
         if ($conn->Execute($query) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
+            print 'error inserting host: '.$conn->ErrorMsg().'<BR>';
             exit;
         } else {
             Host_sensor_reference::insert($conn, $ip, $sensors);
         }
 
+        /* insert os info, don't check error messages.. */
         $query = "INSERT INTO host_os (ip, os, previous, date, anom) 
-            VALUES (inet_aton('$ip'), '$os', '$os', curdate(), 0);";
-        if ($conn->Execute($query) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
+          VALUES (inet_aton('$ip'), '$os', '$os', curdate(), 0);";
+        $conn->Execute($query);
+
+        /* insert mac info, don't check error messages.. */
+        $query = "INSERT INTO host_mac (ip, mac, previous, date, vendor, anom)
+          VALUES (inet_aton('$ip'), '$mac', '$mac', curdate(), '$mac_vendor', 0);";
+        $conn->Execute($query);
     }
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
-                    $rrd_profile, $alert, $persistence, $nat, $sensors, $descr)
+                    $rrd_profile, $alert, $persistence, $nat, $sensors,
+                    $descr, $os = "unknow", $mac = "", $mac_vendor = "")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -127,6 +162,9 @@ class Host {
         $alert = htmlentities($alert);
         $nat = htmlentities($nat);
         $descr = htmlentities($descr);
+        $os = htmlentities($os);
+        $mac = htmlentities($mac);
+        $mac_vendor = htmlentities($mac_vendor);
 
         $query = "UPDATE host SET hostname = '$hostname', 
             ip = '$ip', asset = $asset, 
@@ -137,9 +175,28 @@ class Host {
         if ($conn->Execute($query) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
-        } else {
-            Host_sensor_reference::delete($conn, $ip);
-            Host_sensor_reference::insert($conn, $ip, $sensors);
+        }
+
+        /* update sensor info */
+        Host_sensor_reference::delete($conn, $ip);
+        Host_sensor_reference::insert($conn, $ip, $sensors);
+
+        /* update os and mac info */
+        if ($os != "unkown") {
+            $query = "UPDATE host_os SET os = '$os'
+                WHERE inet_ntoa(ip) = '$ip'";
+            if ($conn->Execute($query) === false) {
+                print 'error updating: '.$conn->ErrorMsg().'<BR>';
+                exit;
+            }
+        }
+        if ($mac != "unkown") {
+            $query = "UPDATE host_mac SET mac = '$mac', vendor = '$mac_vendor'
+                WHERE inet_ntoa(ip) = '$ip'";
+            if ($conn->Execute($query) === false) {
+                print 'error updating: '.$conn->ErrorMsg().'<BR>';
+                exit;
+            }
         }
     }
 

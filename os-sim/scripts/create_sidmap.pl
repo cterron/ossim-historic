@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.5 2004/11/25 15:43:20 dvgil Exp $ #
+# $Id: create_sidmap.pl,v 1.9 2005/03/04 11:30:11 dkarg Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
@@ -24,7 +24,6 @@ my $MULTILINE_RULE_REGEXP  = '^\s*#*\s*(?:%ACTIONS%)'.
 my $SINGLELINE_RULE_REGEXP = '^\s*#*\s*(?:%ACTIONS%)'.
                              '\s.+;\s*\)\s*$'; # ';
 
-
 my $USAGE = << "RTFM";
 
 Parse active rules in *.rules in one or more directories and create a SID 
@@ -32,6 +31,8 @@ map. Result is sent to standard output, which can be redirected to a
 sid-msg.map file.
 
 Usage: $0 <rulesdir> [rulesdir2, ...]
+    Optional -e writes directly into db.
+    Optional -q forces quiet operation.
 
 RTFM
 
@@ -48,10 +49,22 @@ $config{rule_actions} = "alert|drop|log|pass|reject|sdrop|activate|dynamic";
 $SINGLELINE_RULE_REGEXP =~ s/%ACTIONS%/$config{rule_actions}/;
 $MULTILINE_RULE_REGEXP  =~ s/%ACTIONS%/$config{rule_actions}/;
 
+# Execute directly. Default off.
+# Be quiet. Default off.
+my $execute = 0;
+my $quiet = 0;
 
 # Read in all rules from each rules file (*.rules) in each rules dir.
 # into %sidmap.
 foreach my $rulesdir (@rulesdirs) {
+    if($rulesdir =~ /^-e$/){
+        $execute = 1;
+        next;
+    }
+    if($rulesdir =~ /^-q$/){
+        $quiet = 1;
+        next;
+    }
     opendir(RULESDIR, "$rulesdir") or die("could not open \"$rulesdir\": $!\n");
 
     while (my $file = readdir(RULESDIR)) {
@@ -343,12 +356,17 @@ sub update_ossim_db()
             my ($class_id, $priority) = (${$info}[0], ${$info}[1]);
             my $msg = $sidinfo{$sid}{"msg"};
             if(!defined($msg)){ $msg = "Undefined msg, please check"; }
+            $msg =~ s/\'/\\\'/g;
 
-            print "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);\n";
-            # my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
-            # my $stm = $conn->prepare($query);
-            # $stm->execute();
-            # print "Inserting $msg: [$plugin_id:$plugin_sid:$priority]\n";
+            my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
+
+            if($execute){
+                my $stm = $conn->prepare($query);
+                $stm->execute();
+                print "Inserting $msg: [1001:$sid:$priority]\n" unless ($quiet);
+            } else {
+                print "$query\n";
+            }
 		 
         }
     }

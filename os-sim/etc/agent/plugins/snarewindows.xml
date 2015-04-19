@@ -4,6 +4,9 @@
      Snare Agent for Windows
      http://www.intersectalliance.com/projects/SnareWindows/
      http://sourceforge.net/projects/snare/
+
+     NOTE: you need to enter regedit and change the delimiter attribute to one
+     or more spaces.
 -->
 <plugin id="1518" process="" type="detector" start="no" enable="yes">
     <startup></startup>

@@ -3,6 +3,7 @@
 require_once 'classes/Net_qualification.inc';
 require_once 'classes/Net_vulnerability.inc';
 require_once 'classes/Net_sensor_reference.inc';
+require_once 'classes/Net_group.inc';
 require_once 'classes/Control_panel_net.inc';
 require_once 'ossim_conf.inc';
 
@@ -119,6 +120,7 @@ class Net {
         Control_panel_net::delete($conn, $name);
         Net_qualification::delete($conn, $name);
         Net_vulnerability::delete($conn, $name);
+        Net_group_reference::check_orphan($conn, $name);
         Net_sensor_reference::delete($conn, $name);
     }
 
@@ -163,6 +165,10 @@ class Net {
     {
 
         $net_list = explode(",", $nets);
+
+        if (!is_array($net_list = explode (",", $nets)))
+              return False;
+
         foreach ($net_list as $n) 
         {
             list($net, $mask) = split("/", $n);
@@ -177,9 +183,26 @@ class Net {
         return False;
     }
 
+    function expand_CIDR($nets)
+    {
+        require_once ('classes/CIDR.inc');
+
+        $ip_range = array();
+
+        if (! is_array($net_list = explode (",", $nets)))
+            return NULL;
+
+        foreach ($net_list as $n) {
+            if (is_array($cidr_range = CIDR::expand_CIDR($n, "FULL", "IP")))
+                $ip_range = array_merge($ip_range, $cidr_range);
+        }
+
+        return $ip_range;
+    }
+
     function enable_nessus($conn, $net_name)
     {
-        $name = mysql_real_escape_string($name);
+        $net_name = mysql_real_escape_string($net_name);
         $query = "INSERT INTO net_scan (net_name, plugin_id, plugin_sid) 
             VALUES ('$net_name', 3001, 0)";
         if ($conn->Execute($query) === false) {
@@ -189,7 +212,7 @@ class Net {
     }
     function disable_nessus($conn, $net_name)
     {
-        $name = mysql_real_escape_string($name);
+        $net_name = mysql_real_escape_string($net_name);
         $query = "DELETE FROM net_scan 
             WHERE net_name = '$net_name' AND plugin_id = 3001";
         if ($conn->Execute($query) === false) {
@@ -201,6 +224,8 @@ class Net {
     {
 
         $net_list = Net::get_list($conn);
+        if (is_array($net_list))
+            return False;
         foreach ($net_list as $n) 
         {
             list($net, $mask) = split("/", $n);
@@ -215,8 +240,19 @@ class Net {
         return False;
     }
 
+    function check_orphan($conn)
+    {
+        $query =  "SELECT * FROM net_group_reference LEFT JOIN net ON net.name = net_group_reference.net_name WHERE descr IS NULL";
 
-
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                Net_sensor_reference::delete($conn, $rs->fields["net_name"], $rs->fields["sensor_name"]);
+                $rs->MoveNext();
+            }
+        }
+    }
 }
 
 ?>

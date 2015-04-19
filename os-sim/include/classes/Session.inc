@@ -49,9 +49,10 @@ class Session {
         $conn = $db->connect();
 
         $pass = md5($this->pass);
+        $login = mysql_real_escape_string($this->login);
 
         $query = "SELECT * FROM users WHERE login = '" .
-            $this->login . "' AND pass = '" . $pass . "'";
+            $login . "' AND pass = '" . $pass . "'";
 
         if ($rs = &$conn->Execute($query) && (!$rs->EOF)) 
         {

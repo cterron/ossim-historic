@@ -220,7 +220,15 @@ sub main {
       push @rrdargs, "CDEF:negcomp=0,obs,-";
       push @rrdargs, "AREA:obs2$color2:Attack";
       push @rrdargs, "AREA:negcomp$color1:Compromise";
-      push @rrdargs, "-t", "$hostname Metrics", "HRULE:$threshold_a#000000", "HRULE:-$threshold_c#000000", "-r";
+      if ($type ne 'level') {
+          my $threshold = $ossim_conf::ossim_data->{"threshold"};
+          my $upper_limit = $threshold * 2.5;
+          my $lower_limit = -($threshold * 2.5);
+      
+          push @rrdargs, "HRULE:$threshold_a#000000", "HRULE:-$threshold_c#000000";
+          push @rrdargs, "-u", int($upper_limit), "-l", int($lower_limit);
+      }
+      push @rrdargs, "-t", "$hostname Metrics", "-r";
    }
    elsif ($what eq 'anomaly' || $what eq 'tune') {
       my $hash = RRDs::info $file;
@@ -267,8 +275,11 @@ sub main {
 
    push @rrdargs, "--font", "TITLE:11:$font", "--font", "AXIS:7:$font", "--zoom", "$zoom";
 
+   my ($prints,$xs,$ys) = RRDs::graph $tempname, 
+       "-s", $start,               # --start seconds
+       "-e", $end,                 # --end seconds
+       @rrdargs;
 
-   my ($prints,$xs,$ys)=RRDs::graph $tempname, "-s", $start, "-e", $end, @rrdargs;
 
    my $ERR=RRDs::error;
    msg_err("ERROR while generating graffic: $ERR\n") if $ERR;

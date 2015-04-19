@@ -28,6 +28,7 @@ $origpath = $ossim_conf->get_conf("ossim_link") . "/java/";
 $base_dir = $ossim_conf->get_conf("base_dir");
 
 $datapath = "$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$datapath/$backlog_id.txt";
+$imagepath = "$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$javapath/images/";
 $javapath = "$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$javapath/";
 ?>
   <h1 align="center"> <?php echo gettext("Alarm viewer"); ?> </h1>
@@ -35,6 +36,7 @@ $javapath = "$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$javapath/";
 <applet archive="<?php echo $origpath; ?>/mm.mysql-2.0.14-bin.jar,<?php echo $origpath; ?>/scanmap3d.jar" code="net.ossim.scanmap.OssimScanMap3DApplet" width="400" height="400" alt="Applet de prueba">
         <param name="dataUrl" value="<?php echo $javapath; ?>/scanmap3d.conf">
         <param name="textFileDataUrl" value="<?php echo $datapath;?>">
+        <param name="imagesBaseUrl" value="<?php echo $imagepath;?>">
 </applet>
 
 

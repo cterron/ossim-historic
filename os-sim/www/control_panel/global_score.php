@@ -25,10 +25,12 @@ require_once ('classes/Control_panel_net.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Net.inc');
+require_once ('classes/Net_group.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
 require_once ('acid_funcs.inc');
-require_once ('common.inc');
+require_once ('classes/Util.inc');
+require_once ('common.inc'); // TODO: move functions to Util.inc
 
 
 
@@ -76,6 +78,7 @@ $framework_conf = new ossim_conf();
 $THRESHOLD = $framework_conf->get_conf("threshold");
 $graph_link = $framework_conf->get_conf("graph_link");
 $acid_link = $framework_conf->get_conf("acid_link");
+$use_svg_graphics = $framework_conf->get_conf("use_svg_graphics");
 
 if (!$range = mysql_escape_string($_GET["range"]))  $range = 'day';
 
@@ -88,6 +91,39 @@ $hosts_order_by_c = Control_panel_host::get_metric_list($conn, $range, 'compromi
 $hosts_order_by_a = Control_panel_host::get_metric_list($conn, $range, 'attack');
 $nets_order_by_c = Control_panel_net::get_metric_list($conn, $range, 'compromise');
 $nets_order_by_a = Control_panel_net::get_metric_list($conn, $range, 'attack');
+
+$net_groups = Net_group::get_list($conn);
+
+if (is_array($nets_order_by_c)) {
+foreach($nets_order_by_c as $temp_net){
+    $net_name = $temp_net->get_net_name();
+    if($net_groups){
+    foreach($net_groups as $net_group){
+        $ng_name = $net_group->get_name();
+        $net_group_array[$ng_name]["name"] = $ng_name;
+        if(Net_group::isNetInGroup($conn, $ng_name, $net_name)){
+            $net_group_array[$ng_name]["time_range"] = $temp_net->get_time_range(); 
+            $net_group_array[$ng_name]["max_c"] += $temp_net->get_max_c(); 
+            $net_group_array[$ng_name]["max_a"] += $temp_net->get_max_a(); 
+            if($net_group_array[$ng_name]["max_c_date"] < $temp_net->get_max_c_date()){
+                $net_group_array[$ng_name]["max_c_date"] = $temp_net->get_max_c_date();
+            }
+            if($net_group_array[$ng_name]["max_a_date"] < $temp_net->get_max_a_date()){
+                $net_group_array[$ng_name]["max_a_date"] = $temp_net->get_max_a_date();
+            }
+        }
+    }
+    }
+}
+}
+
+function ordenar_c($a, $b){
+     return ($a["max_c"] < $b["max_c"]) ? True : False;
+}
+
+function ordenar_a($a, $b){
+     return ($a["max_a"] < $b["max_a"]) ? True : False;
+}
 
 
 /* get global values */
@@ -152,6 +188,17 @@ if (!$rs_global = &$conn->Execute("$query"))
             $sec_level = ($rs_global->fields["c_sec_level"] + 
                               $rs_global->fields["a_sec_level"]) / 2;
                 $sec_level = sprintf("%.2f", $sec_level);
+                if ($use_svg_graphics) {
+                    echo " 
+            <td>
+                <a href=\"$image\">
+                 <embed src=\"svg_level.php?sl=$sec_level&scale=0.8\"  
+                        pluginspage=\"http://www.adobe.com/svg/viewer/install/\"
+                        type=\"image/svg+xml\" height=\"85\" width=\"100\" /> 
+                </a>
+            </td>
+                ";
+            } else {
                 if ($sec_level >= 95) {
                     $bgcolor = "green";
                     $fontcolor = "white";
@@ -178,8 +225,8 @@ if (!$rs_global = &$conn->Execute("$query"))
                   <font size=\"+1\"color=\"$fontcolor\">$sec_level%</font>
                 </a>
               </b>
-            </td>
-                ";
+            </td>";
+            }
             ?>
         </tr>
         <tr><td colspan="2"></td></tr>
@@ -283,28 +330,163 @@ if (!$rs_global = &$conn->Execute("$query"))
       </td>
       <!-- End Global A levels -->
 
+<?php 
+    if (is_array($net_group_array)){
+    ?>
     </tr>
-    
-    <tr><th colspan="6"> <?php echo gettext("Networks"); ?> </th></tr>
+    <tr><th colspan="6"> <?php echo gettext("Groups"); ?> </th></tr>
     <tr>
 
-      <!-- Net C levels -->
+      <!-- Group C levels -->
       <td valign="top">
         <table width="100%">
+          <tr>
+            <th colspan="2"> <?php echo gettext("Group"); ?> </th>
+            <th> <?php echo gettext("Max C date"); ?> </th>
+            <th> <?php echo gettext("Max C"); ?> </th>
+            <th> <?php echo gettext("Current C"); ?> </th>
+          </tr>
+<?php
+    usort($net_group_array, "ordenar_c");
+    $temporary = current($net_group_array);
+    while($temporary){
+        $image = graph_image_link($temporary["name"], "net", "compromise",
+                              $start, "N", 1, $range);
+?>
+          <tr>
+            <td class="left" nowrap>
+            <?php if($_GET["expand"] && $_GET["expand"] == $temporary["name"]){ ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>?range=<?php echo $range;?>">-</a>
+            <?php } else { ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>?expand=<?php echo $temporary["name"] . "&range=" . $range;?>">+</a>
+            <?php } ?>
+            <b><?php echo Util::beautify($temporary["name"]) ?></b></td>
+            <td nowrap>
+              <a href="<?php echo $image ?>"><img 
+                 src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $temporary["max_c"] / 
+                Net_group::netthresh_c($conn, $temporary["name"]);
+            if ($priority > 10) $priority = 10;
+        ?>
+        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: C level exceeded (Group " .
+                $temporary["name"] .")&" .
+            "priority=$priority&" .
+            "target=Net " . $temporary["name"] . "&" .
+            "metric_type=Compromise&" .
+            "metric_value=" . $temporary["max_c"] ?>">
+            <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
+            </a>
+            </td>
+            <td nowrap><font size="-2"><?php echo $temporary["max_c_date"] ?></font></td>
+            <?php 
+                echocolor($temporary["max_c"], 
+                            Net_group::netthresh_c($conn, $temporary["name"]),
+                            get_acid_date_link($temporary["max_c_date"]));
+                echocolor(Net_group::get_compromise($conn, $temporary["name"]),
+                            Net_group::netthresh_c($conn, $temporary["name"]),
+                            $image);
+            $temporary = next($net_group_array);
+            ?>
+          </tr>
+<?php } ?>
+
+        </table>
+      </td>
+      <!-- end Group C levels -->
+<?php } ?>
+<?php 
+    if (is_array($net_group_array)){
+?>
+      <!-- Group A levels -->
+      <td valign="top">
+        <table width="100%">
+          <tr>
+            <th colspan="2"> <?php echo gettext("Group"); ?> </th>
+            <th> <?php echo gettext("Max A date"); ?> </th>
+            <th> <?php echo gettext("Max A"); ?> </th>
+            <th> <?php echo gettext("Current A"); ?> </th>
+          </tr>
+<?php
+    usort($net_group_array, "ordenar_a");
+    $temporary = current($net_group_array);
+    while($temporary){
+        $image = graph_image_link($temporary["name"], "net", "compromise",
+                              $start, "N", 1, $range);
+?>
+          <tr>
+            <td class="left" nowrap>
+            <?php if($_GET["expand"] && $_GET["expand"] == $temporary["name"]){ ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>?range=<?php echo
+            $range;?>">-</a>
+            <?php } else { ?>
+            <a href="<?php echo $_SERVER["PHP_SELF"]?>?expand=<?php echo $temporary["name"] . "&range=" . $range;?>">+</a>
+            <?php } ?>
+            <b><?php echo Util::beautify($temporary["name"]) ?></b></td>
+            <td nowrap>
+              <a href="<?php echo $image ?>"><img 
+                 src="../pixmaps/graph.gif" border="0"/></a>
+        <?php 
+            $priority = $temporary["max_a"] / 
+                Net_group::netthresh_a($conn, $temporary["name"]);
+            if ($priority > 10) $priority = 10;
+        ?>
+        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+            "ref=Metric&" .
+            "title=Metric Threshold: A level exceeded (Group " .
+                $temporary["name"] .")&" .
+            "priority=$priority&" .
+            "target=Net " . $temporary["name"] . "&" .
+            "metric_type=Compromise&" .
+            "metric_value=" . $temporary["max_c"] ?>">
+            <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
+            </a>
+            </td>
+            <td nowrap><font size="-2"><?php echo $temporary["max_c_date"] ?></font></td>
+            <?php 
+                echocolor($temporary["max_a"], 
+                            Net_group::netthresh_a($conn, $temporary["name"]),
+                            get_acid_date_link($temporary["max_a_date"]));
+                echocolor(Net_group::get_attack($conn, $temporary["name"]), 
+                            Net_group::netthresh_a($conn, $temporary["name"]),
+                            $image);
+            $temporary = next($net_group_array);
+            ?>
+          </tr>
+<?php } ?>
+
+        </table>
+      </td>
+      <!-- end Group A levels -->
+<?php } ?>
+
+    </tr>
+    <tr><th colspan="6"> <?php echo gettext("Networks"); ?> </th></tr>
+    <tr>
+    <td>
+      <!-- Net C levels -->
+     <table width="100%">
           <tr>
             <th colspan="2"> <?php echo gettext("Network"); ?> </th>
             <th> <?php echo gettext("Max C date"); ?> </th>
             <th> <?php echo gettext("Max C"); ?> </th>
             <th> <?php echo gettext("Current C"); ?> </th>
           </tr>
-<?php 
+
+<?php
     if ($nets_order_by_c)
     foreach ($nets_order_by_c as $net) {
+        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net->get_net_name()))
+        if (($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
+        && ($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
+        && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}
         $image = graph_image_link($net->get_net_name(), "net", "compromise",
                               $start, "N", 1, $range);
 ?>
           <tr>
-            <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
+            <td class="left" nowrap><b><?php echo Util::beautify($net->get_net_name()); ?></b></td>
             <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
@@ -320,7 +502,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             "priority=$priority&" .
             "target=Net " . $net->get_net_name() . "&" .
             "metric_type=Compromise&" .
-            "metric_value=" . $rs_global->fields["max_c"] ?>">
+            "metric_value=" . $net->get_max_c() ?>">
             <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
             </a>
             </td>
@@ -344,7 +526,6 @@ if (!$rs_global = &$conn->Execute("$query"))
       </td>
       <!-- end net C levels -->
 
-
       <!-- Net A levels --> 
       <td valign="top">
         <table width="100%">
@@ -357,11 +538,15 @@ if (!$rs_global = &$conn->Execute("$query"))
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
+        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net->get_net_name()))
+        if (($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
+        && ($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
+        && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}
         $image = graph_image_link($net->get_net_name(), "net", "attack",
                               $start, "N", 1, $range);
 ?>
           <tr>
-            <td nowrap><b><?php echo $net->get_net_name(); ?></b></td>
+            <td class="left" nowrap><b><?php echo Util::beautify($net->get_net_name()); ?></b></td>
             <td nowrap>
               <a href="<?php echo $image ?>"><img 
                  src="../pixmaps/graph.gif" border="0"/></a>
@@ -377,7 +562,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             "priority=$priority&" .
             "target=Net " . $net->get_net_name() . "&" .
             "metric_type=Attack&" .
-            "metric_value=" . $rs_global->fields["max_a"] ?>">
+            "metric_value=" . $net->get_max_a() ?>">
             <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
             </a>
             </td>
@@ -423,7 +608,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                                   $start, "N", 1, $range); 
 ?>
           <tr>
-            <td nowrap><a href="../report/index.php?host=<?php 
+            <td nowrap class="left"><a href="../report/index.php?host=<?php 
                 echo $host_ip ?>&section=metrics"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
@@ -442,7 +627,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             "priority=$priority&" .
             "target=Host $host_ip&" .
             "metric_type=Compromise&" .
-            "metric_value=" . $rs_global->fields["max_c"] ?>">
+            "metric_value=" . $host->get_max_c() ?>">
             <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
             </a>
             </td>
@@ -489,7 +674,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                                   $start, "N", 1, $range); 
     ?>
           <tr>
-            <td nowrap><a href="../report/index.php?host=<?php 
+            <td nowrap class="left"><a href="../report/index.php?host=<?php 
                 echo $host_ip ?>&section=metrics"><?php 
                    echo Host::ip2hostname($conn, $host_ip) ?></a>
             <?php echo Host_os::get_os_pixmap($conn, $host_ip); ?>
@@ -508,7 +693,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             "priority=$priority&" .
             "target=Host $host_ip&" .
             "metric_type=Attack&" .
-            "metric_value=" . $rs_global->fields["max_a"] ?>">
+            "metric_value=" . $host->get_max_a() ?>">
             <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
             </a>
             </td>

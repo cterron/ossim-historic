@@ -1,8 +1,21 @@
 INSERT INTO config (conf, value) VALUES ('ossim_link', '/ossim/');
 INSERT INTO config (conf, value) VALUES ('report_graph_type', 'images');
 INSERT INTO config (conf, value) VALUES ('have_scanmap3d', '0');
+INSERT INTO config (conf, value) VALUES ('use_svg_graphics', '0');
+INSERT INTO config (conf, value) VALUES ('phpgacl_type', 'mysql'); 
+INSERT INTO config (conf, value) VALUES ('phpgacl_host', 'localhost'); 
+INSERT INTO config (conf, value) VALUES ('phpgacl_base', 'ossim_acl'); 
+INSERT INTO config (conf, value) VALUES ('phpgacl_user', 'root'); 
+INSERT INTO config (conf, value) VALUES ('phpgacl_pass', 'ossim'); 
 INSERT INTO config (conf, value) VALUES ('locale_dir', '/usr/share/locale');
 INSERT INTO config (conf, value) VALUES ('language', 'en_GB');
+
+UPDATE config SET value = 'admin' WHERE conf = 'acid_user';
+UPDATE config SET value = 'admin' WHERE conf = 'acid_pass';
+UPDATE config SET value = 'http://localhost/acid' WHERE conf = 'acid_link';
+
+
+ALTER TABLE alert CHANGE condition alert_condition INTEGER;
 
 DROP TABLE IF EXISTS host_ids;
 CREATE TABLE host_ids(
@@ -25,6 +38,35 @@ CREATE TABLE sensor_interfaces (
     name    varchar(255) NOT NULL,
     main    int NOT NULL,
     PRIMARY KEY (sensor, interface)
+);
+
+--
+-- Network grouping
+--
+
+DROP TABLE IF EXISTS net_group;
+CREATE TABLE net_group (
+  name              varchar(128) UNIQUE NOT NULL,
+  threshold_c       int NOT NULL,
+  threshold_a       int NOT NULL,
+  rrd_profile       varchar(64),
+  descr             varchar(255),
+  PRIMARY KEY       (name)
+);
+
+DROP TABLE IF EXISTS net_group_scan;
+CREATE TABLE net_group_scan (
+    net_group_name               varchar(128) NOT NULL,
+      plugin_id       INTEGER NOT NULL,
+      plugin_sid      INTEGER NOT NULL,
+      PRIMARY KEY (net_group_name, plugin_id, plugin_sid)
+);        
+         
+DROP TABLE IF EXISTS net_group_reference;
+CREATE TABLE net_group_reference (
+    net_group_name        varchar(128) NOT NULL,
+    net_name     varchar(128) NOT NULL,
+    PRIMARY KEY     (net_group_name, net_name)
 );
 
 --
@@ -180,4 +222,17 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (151
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 620, NULL, NULL, "Snare Agent for Windows: Trusted domain information modified");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 768, NULL, NULL, "Snare Agent for Windows: A collision was detected between a namespace element in two forests");
 
+
+-- incident table changes
+ALTER TABLE incident change column ref ref ENUM ('Alarm', 'Metric', 'Hardware', 'Install') NOT NULL DEFAULT 'Alarm' after date;
+ALTER TABLE incident add column family ENUM ('OSSIM', 'Hardware', 'Install') NOT NULL DEFAULT 'OSSIM' after ref;
+
+-- Parser Syslog
+DELETE FROM plugin_sid WHERE plugin_id = '4002';
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 1, NULL, NULL, 'pam_unix: Authentication failure', 2, 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 2, NULL, NULL, 'pam_unix: 2 more authentication failures', 3, 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 3, NULL, NULL, 'SSHd: Failed password', 3, 2);
+
+-- new net scan, table scan no longer needed
+DROP TABLE IF EXISTS scan;
 

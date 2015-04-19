@@ -132,6 +132,11 @@ struct _SimCommand {
     struct {
       gint            id;
       gint            plugin_id;
+    } plugin_unknown;
+
+    struct {
+      gint            id;
+      gint            plugin_id;
     } plugin_stop;
 
     struct {

@@ -80,7 +80,7 @@ SimSession*       sim_session_new                             (GObject       *se
 							       GTcpSocket    *socket);
 
 GInetAddr*        sim_session_get_ia                          (SimSession *session);
-void              sim_session_read                            (SimSession  *session);
+gboolean          sim_session_read                            (SimSession  *session);
 gint              sim_session_write                           (SimSession  *session,
 							       SimCommand  *command);
 gboolean          sim_session_has_plugin_type                 (SimSession     *session,

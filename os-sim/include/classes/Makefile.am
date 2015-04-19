@@ -4,6 +4,7 @@ classes_DATA = Alarm.inc \
 	Backlog.inc \
 	Backlog_alert.inc \
 	Category.inc \
+	CIDR.inc \
 	Classification.inc \
 	Config.inc \
 	Control_panel_host.inc \
@@ -25,6 +26,9 @@ classes_DATA = Alarm.inc \
 	Incident_file.inc \
 	Link.inc \
 	Locale.inc \
+	Net_group.inc \
+	Net_group_reference.inc \
+	Net_group_scan.inc \
 	Net_sensor_reference.inc \
 	Net.inc \
 	Net_qualification.inc \
@@ -52,9 +56,11 @@ classes_DATA = Alarm.inc \
 	Scan.inc \
 	SecurityReport.inc \
 	Sensor.inc \
+	Sensor_interfaces.inc \
 	Session.inc \
 	Signature_group.inc \
 	Signature_group_reference.inc \
-	Signature.inc
+	Signature.inc \
+	Util.inc
 
 EXTRA_DIST   = $(classes_DATA)

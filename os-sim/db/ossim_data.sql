@@ -8153,10 +8153,8 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (400
 -- UNIX Syslog Sids
 --
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 1, NULL, NULL, 'pam_unix: Authentication failure', 2, 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 2, NULL, NULL, 'SSHd: Failed password', 3, 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 3, NULL, NULL, 'Telnetd: Authentication failure', 2, 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 4, NULL, NULL, 'Proftp: Login failed', 2, 2);
-
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 2, NULL, NULL, 'pam_unix: 2 more authentication failures', 3, 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4002, 3, NULL, NULL, 'SSHd: Failed password', 3, 2);
 
 --
 -- Cisco Pix Sids

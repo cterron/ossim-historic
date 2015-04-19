@@ -53,10 +53,10 @@ class Net_sensor_reference {
         }
     }
 */
-    function delete($conn, $net_name) 
+    function delete($conn, $net_name, $sensor_name = "%") 
     {
         $query = "DELETE FROM net_sensor_reference 
-                    WHERE net_name = '$net_name'";
+                    WHERE net_name = '$net_name' AND sensor_name LIKE '$sensor_name'";
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -68,11 +68,23 @@ class Net_sensor_reference {
                                                                                 
         $query = "SELECT * FROM net_sensor_reference
                     WHERE net_name = '$net' AND sensor_name='$sensor_name';";
-        echo $query;
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
+    }
+    function check_orphan($conn)
+    {
+        $query =  "SELECT * FROM net_sensor_reference LEFT JOIN sensor ON sensor.name = net_sensor_reference.sensor_name WHERE name IS NULL";
+
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+        } else { 
+            while (!$rs->EOF) {
+                Net_sensor_reference::delete($conn, $rs->fields["net_name"], $rs->fields["sensor_name"]);
+                $rs->MoveNext();
+            }        
+        }
     }
 }
 

@@ -39,6 +39,7 @@
 #include "sim-session.h"
 #include "sim-server.h"
 #include "sim-sensor.h"
+#include <signal.h>
 
 extern SimMain    ossim;
 
@@ -167,6 +168,64 @@ sim_server_new (SimConfig  *config)
 /*
  *
  *
+ */
+static void
+async_sig_int (int signum)
+{
+  //gnet_tcp_socket_delete (async_server);
+  exit (EXIT_FAILURE);
+}
+
+
+/*
+ *
+ *
+ *
+ */
+static void
+async_accept (GTcpSocket* serversock, GTcpSocket* client, gpointer data)
+{
+  SimServer *server = (SimServer *) data;
+  GError *error;
+
+  if (client)
+    {
+      SimSession		*session;
+      SimSensor		*sensor;
+      SimSessionData	*session_data;
+      GThread		*thread;
+      GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (client);
+      sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
+      if (sensor)
+	{
+	  session = sim_server_get_session_by_sensor (server, sensor);
+	  if (session)
+	    sim_session_close (session);
+	}
+      gnet_inetaddr_unref (ia);
+      
+      session_data = g_new0 (SimSessionData, 1);
+      session_data->config = server->_priv->config;
+      session_data->server = server;
+      session_data->socket = client;
+
+      /* Session Thread */
+      thread = g_thread_create(sim_server_session, session_data, TRUE, &error);
+      if (thread == NULL)
+	{
+	  g_message ("threadsdd error %d: %s", error->code, error->message);
+	}
+    }
+  else
+    {
+      g_message ("server  error");
+      exit (EXIT_FAILURE);
+    }
+}
+
+/*
+ *
+ *
  *
  *
  *
@@ -185,6 +244,19 @@ sim_server_run (SimServer *server)
 
   g_message ("Waiting for connections...");
   server->_priv->socket = gnet_tcp_socket_server_new_with_port (server->_priv->port);
+
+  signal (SIGINT, async_sig_int);
+
+  gnet_tcp_socket_server_accept_async (server->_priv->socket, async_accept, server);
+
+  while (1)
+  {
+    usleep(100);
+  }
+
+  g_message ("SERVERE  ERRRROORES");
+
+/*
   while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
     {
       GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
@@ -202,10 +274,10 @@ sim_server_run (SimServer *server)
       session_data->server = server;
       session_data->socket = socket;
 
-      /* Session Thread */
       thread = g_thread_create(sim_server_session, session_data, TRUE, NULL);
       if (thread != NULL) continue;
     }
+*/
 }
 
 /*
@@ -223,7 +295,7 @@ sim_server_session (gpointer data)
   SimServer       *server = session_data->server;
   GTcpSocket      *socket = session_data->socket;
   SimSession      *session;
-                                 
+
   g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
   g_return_val_if_fail (server, NULL);
@@ -235,7 +307,15 @@ sim_server_session (gpointer data)
   session = sim_session_new (G_OBJECT (server), config, socket);
   sim_server_append_session (server, session);
 
-  sim_session_read (session);
+  g_message ("SESSION APPEND");
+
+
+//  sim_session_read (session);
+
+  while (!sim_session_is_close(session))
+  {
+    usleep(100);
+  }
 
   g_message ("Remove Session");
   sim_server_remove_session (server, session);

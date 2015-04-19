@@ -4,8 +4,8 @@ SUBDIRS = src \
 	db \
 	pixmaps \
 	include \
-	www \
 	mrtg \
+	www \
 	scripts \
 	contrib
 

@@ -76,7 +76,6 @@ class Sensor_interfaces {
             exit;
         }
     }
-
 }
 
 ?>
