@@ -43,7 +43,6 @@ struct _SimXmlConfigPrivate {
 
 #define OBJECT_CONFIG           "config"
 #define OBJECT_LOG              "log"
-#define OBJECT_SENSOR           "sensor"
 #define OBJECT_DATASOURCES      "datasources"
 #define OBJECT_DATASOURCE       "datasource"
 #define OBJECT_DIRECTIVE        "directive"
@@ -71,6 +70,9 @@ struct _SimXmlConfigPrivate {
 #define PROPERTY_HA_IP				  "HA_ip"
 #define PROPERTY_HA_PORT				"HA_port"
 #define PROPERTY_HA_ROLE				"HA_role"
+#define PROPERTY_PRIMARY				"primary"				//primary master server? The primary master server is from the initial data is loaded.
+#define PROPERTY_LOCAL_DB				"local_DB"			//this and the following, needed to know where to connect if the DB is not local
+#define PROPERTY_RSERVER_NAME		"rserver_name"	//
 
 
 static void sim_xml_config_class_init (SimXmlConfigClass *klass);
@@ -437,8 +439,8 @@ sim_xml_config_set_config_framework (SimXmlConfig  *xmlconfig,
  */
 void
 sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
-				      SimConfig     *config,
-				      xmlNodePtr     node)
+																      SimConfig     *config,
+																      xmlNodePtr     node)
 {
   SimConfigDS  *ds;
   gchar        *value;
@@ -471,6 +473,27 @@ sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
       ds->dsn = g_strdup (value);
       xmlFree(value);      
     }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_LOCAL_DB)))
+    {
+			if (!g_ascii_strncasecmp (value, "true", 4))
+				ds->local_DB = TRUE;
+			else
+			if (!g_ascii_strncasecmp (value, "false", 4))
+				ds->local_DB = FALSE;
+			else
+			{
+				g_message ("Error: Please put a valid value (true/false) in the Local_DB Parameter");
+				xmlFree(value);      
+				return;
+			}
+    }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_RSERVER_NAME)))
+    {
+      ds->rserver_name = g_strdup (value);
+      xmlFree(value);      
+    }
+
+
 
   config->datasources = g_list_append (config->datasources, ds);
 }
@@ -885,6 +908,28 @@ sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
     xmlFree(value);
   }
 
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PRIMARY)))
+  {
+    if (!g_ascii_strcasecmp (value, "true"))
+		{
+			rserver->primary = TRUE;
+		}
+		else				
+		if (!g_ascii_strcasecmp (value, "false"))
+		{
+			rserver->primary = FALSE;
+		}
+		else
+		{
+      g_message ("Error: May be that you introduced a bad primary in the server's config.xml?: please write TRUE or FALSE");
+    	xmlFree(value);
+      sim_config_rserver_free(rserver);
+			return;
+		}
+    xmlFree(value);
+  }
+
+
   if (!rserver->port)
 	{
 		rserver->port = 40001;
@@ -934,10 +979,7 @@ sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
 }
 
 /*
- *
- *
- *
- *
+ *	This function takes all its parameters from config file.
  */
 SimConfig*
 sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
@@ -960,13 +1002,11 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
   
   config = sim_config_new ();
 
-  children = node->xmlChildrenNode;
+	children = node->xmlChildrenNode;
   while (children) 
 	{
     if (!strcmp ((gchar *) children->name, OBJECT_LOG))
 			sim_xml_config_set_config_log (xmlconfig, config, children);
-/*    if (!strcmp ((gchar *) children->name, OBJECT_SENSOR))
-			sim_xml_config_set_config_sensor (xmlconfig, config, children);*/
     if (!strcmp ((gchar *) children->name, OBJECT_DATASOURCES))
 			sim_xml_config_set_config_datasources (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_DIRECTIVE))
@@ -1004,4 +1044,49 @@ sim_xml_config_get_config (SimXmlConfig  *xmlconfig)
 
   return xmlconfig->_priv->config;
 }
+#if 0
+/*
+ *
+ *
+ */
+void
+sim_xml_config_set_config_max_event_tmp (SimConfig     *config)
+{
+	GdaDataModel  *dm;
+  GdaValue      *value;
+	gchar					*query;
+
+  g_return_if_fail (config);
+  g_return_if_fail (SIM_IS_CONFIG (config));
+
+
+	query = g_strdup_printf ("SELECT value FROM config WHERE conf='max_event_tmp'");	
+  dm = sim_database_execute_single_command (ossim.ossimdb, query);
+
+	if (dm)
+	{
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical: gda_value_is_null: assertion `value != NULL' failed
+    {                                       
+      if (!gda_value_is_null (value))
+      {
+        config->max_event_tmp = gda_value_stringify (value);
+      }
+      else
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_config_set_config_max_event_tmp value null");
+    }
+    else
+      config->max_event_tmp = 0;
+	}
+	else
+	{
+		g_message ("Error: Config DATA MODEL ERROR");
+    config->max_event_tmp = 0;		
+	}
+
+	g_free (query);
+}
+#endif
+
+
 // vim: set tabstop=2:

@@ -19,10 +19,10 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
     require_once ('classes/Security.inc');
     require_once ('classes/Util.inc');
 
-    $action = GET('action');
-    $scan_date = GET('scan_date');
+    $action = REQUEST('action');
+    $scan_date = REQUEST('scan_date');
     
-    ossim_valid($scan_date, OSS_ALPHA, 'illegal:'._("Scan date"));
+    ossim_valid($scan_date, OSS_ALPHA, OSS_PUNC, 'illegal:'._("Scan date"));
     ossim_valid($action, OSS_ALPHA, 'illegal:'._("Action"));
 
     if (ossim_error()) {

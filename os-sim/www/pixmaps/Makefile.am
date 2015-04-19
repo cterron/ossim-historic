@@ -3,6 +3,7 @@ SUBDIRS = os top panel
 pixmapsdir = $(datadir)/ossim/www/pixmaps
 pixmaps_DATA = arrow.gif \
 	arrow2.gif \
+	calendar.gif \
 	delim.jpg \
 	gauge-green.jpg \
 	gradient1.jpg \

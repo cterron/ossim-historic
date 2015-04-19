@@ -11,7 +11,7 @@ class ActionMail:
     def sendmail(self, sender, recipients, subject, message):
     
         # Create a text/plain message
-        msg = MIMEText(message)
+        msg = MIMEText(message, 'plain', 'latin-1')
 
         msg['Subject'] = subject
         msg['From'] = sender
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     sender = "David Gil <dgil@ossim.net>"
     recipients = [ "David Gil <dgil@ossim.net>", "DK <dk@ossim.net>" ]
     subject = "Test message from Ossim frameworkd"
-    message = "test."
+    message = "test.\r\ntest."
 
     m.sendmail(sender, recipients, subject, message)
 

@@ -47,6 +47,9 @@ typedef enum {
   SIM_COMMAND_SCOPE_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN,
   SIM_COMMAND_SCOPE_SERVER_GET_SENSORS,
+  SIM_COMMAND_SCOPE_SENSOR,						//command from children server	
+  SIM_COMMAND_SCOPE_SERVER_GET_SERVERS,
+  SIM_COMMAND_SCOPE_SERVER,						//command from children server	
   SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS,
   SIM_COMMAND_SCOPE_SERVER_SET_DATA_ROLE,
   SIM_COMMAND_SCOPE_SENSOR_PLUGIN,							
@@ -72,7 +75,9 @@ typedef enum {
   SIM_COMMAND_SCOPE_HOST_SERVICE_EVENT,
   SIM_COMMAND_SCOPE_HOST_IDS_EVENT,
   SIM_COMMAND_SCOPE_OK,
-  SIM_COMMAND_SCOPE_ERROR
+  SIM_COMMAND_SCOPE_ERROR,
+  SIM_COMMAND_SCOPE_DATABASE_QUERY,
+  SIM_COMMAND_SCOPE_DATABASE_ANSWER
 } SimCommandScopeType;
 
 typedef enum {
@@ -81,6 +86,8 @@ typedef enum {
   SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN,
   SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS,
+  SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS,
+  SIM_COMMAND_SYMBOL_SERVER,
   SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS,
   SIM_COMMAND_SYMBOL_SERVER_SET_DATA_ROLE,
   SIM_COMMAND_SYMBOL_SENSOR_PLUGIN,
@@ -130,6 +137,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_HOST,
   SIM_COMMAND_SYMBOL_HOSTNAME,
   SIM_COMMAND_SYMBOL_SERVERNAME,
+  SIM_COMMAND_SYMBOL_SENSORNAME, //used only to get Policy from sensors
   SIM_COMMAND_SYMBOL_OS,
   SIM_COMMAND_SYMBOL_MAC,
   SIM_COMMAND_SYMBOL_SERVICE,
@@ -138,6 +146,7 @@ typedef enum {
   SIM_COMMAND_SYMBOL_APPLICATION,
   SIM_COMMAND_SYMBOL_DATA,
   SIM_COMMAND_SYMBOL_EVENT_TYPE,
+  SIM_COMMAND_SYMBOL_HIDS_EVENT_TYPE, //FIXME: Used only for backwards compatibility. Remove when using the agent-1.0
   SIM_COMMAND_SYMBOL_TARGET,
   SIM_COMMAND_SYMBOL_WHAT,
   SIM_COMMAND_SYMBOL_EXTRA_DATA,
@@ -167,7 +176,13 @@ typedef enum {
   SIM_COMMAND_SYMBOL_ROLE_STORE,
   SIM_COMMAND_SYMBOL_ROLE_QUALIFY,
   SIM_COMMAND_SYMBOL_ROLE_RESEND_ALARM,
-  SIM_COMMAND_SYMBOL_ROLE_RESEND_EVENT
+  SIM_COMMAND_SYMBOL_ROLE_RESEND_EVENT,
+  SIM_COMMAND_SYMBOL_DATABASE_QUERY,
+  SIM_COMMAND_SYMBOL_DATABASE_ANSWER,
+  SIM_COMMAND_SYMBOL_ANSWER,
+//  SIM_COMMAND_SYMBOL_QUERY,
+	SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE, //What kind of element is the answer/query talking about? host, network, directives...
+  SIM_COMMAND_SYMBOL_IS_PRIORITIZED
 } SimCommandSymbolType;
 
 
@@ -185,6 +200,9 @@ static const struct
   { "session-append-plugin", SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN },
   { "session-remove-plugin", SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN },
   { "server-get-sensors", SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS },
+  { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
+  { "server-get-servers", SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS },
+  { "server", SIM_COMMAND_SYMBOL_SERVER },
   { "server-get-sensor-plugins", SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS },
   { "server-set-data-role", SIM_COMMAND_SYMBOL_SERVER_SET_DATA_ROLE },
   { "sensor-plugin", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN },
@@ -210,7 +228,9 @@ static const struct
   { "host-service-event", SIM_COMMAND_SYMBOL_HOST_SERVICE_EVENT },
   { "host-ids-event", SIM_COMMAND_SYMBOL_HOST_IDS_EVENT},
   { "ok", SIM_COMMAND_SYMBOL_OK },
-  { "error", SIM_COMMAND_SYMBOL_ERROR }
+  { "error", SIM_COMMAND_SYMBOL_ERROR },
+  { "database-query", SIM_COMMAND_SYMBOL_DATABASE_QUERY },
+  { "database-answer", SIM_COMMAND_SYMBOL_DATABASE_ANSWER }
 };
 
 static const struct
@@ -235,7 +255,7 @@ static const struct
   { "type", SIM_COMMAND_SYMBOL_TYPE },
   { "name", SIM_COMMAND_SYMBOL_NAME },
   { "state", SIM_COMMAND_SYMBOL_STATE },
-  { "enabled", SIM_COMMAND_SYMBOL_ENABLED },
+  { "enabled", SIM_COMMAND_SYMBOL_ENABLED }
 };
 
 static const struct
@@ -248,7 +268,7 @@ static const struct
   { "type", SIM_COMMAND_SYMBOL_TYPE },
   { "name", SIM_COMMAND_SYMBOL_NAME },
   { "state", SIM_COMMAND_SYMBOL_STATE },
-  { "enabled", SIM_COMMAND_SYMBOL_ENABLED },
+  { "enabled", SIM_COMMAND_SYMBOL_ENABLED }
 };
 
 static const struct
@@ -256,6 +276,15 @@ static const struct
   gchar *name;
   guint token;
 } server_get_sensors_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }	//this is the server's name involved.
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} server_get_servers_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
   { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }	//this is the server's name involved.
 };
@@ -283,8 +312,20 @@ static const struct
 } sensor_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
   { "host", SIM_COMMAND_SYMBOL_HOST },
-  { "state", SIM_COMMAND_SYMBOL_STATE }
+  { "state", SIM_COMMAND_SYMBOL_STATE },
+  { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }	//this is the server's name to wich the sensor is attached
 };
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} server_symbols[] = {									//answer to server-get-servers
+  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "host", SIM_COMMAND_SYMBOL_HOST },	//this is the answer; this is one server attached to servername.
+  { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }	//this is the server's name to wich the server is attached
+};
+
 
 
 static const struct
@@ -406,7 +447,7 @@ static const struct
   gchar *name;
   guint token;
 } event_symbols[] = {
-  { "type", SIM_COMMAND_SYMBOL_TYPE },
+  { "type", SIM_COMMAND_SYMBOL_TYPE },	//="detector" / ="monitor"
   { "id", SIM_COMMAND_SYMBOL_ID },		//this ID is referring the event's id, I mean, the id assigned to the event in insert_event_alarm()
 																			//So this field has sense just in case the event received is from another server.	
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
@@ -444,7 +485,8 @@ static const struct
   { "userdata6", SIM_COMMAND_SYMBOL_USERDATA6 },
   { "userdata7", SIM_COMMAND_SYMBOL_USERDATA7 },
   { "userdata8", SIM_COMMAND_SYMBOL_USERDATA8 },
-  { "userdata9", SIM_COMMAND_SYMBOL_USERDATA9 }
+  { "userdata9", SIM_COMMAND_SYMBOL_USERDATA9 },
+  { "is_prioritized", SIM_COMMAND_SYMBOL_IS_PRIORITIZED }
 };
 
 static const struct
@@ -571,6 +613,7 @@ static const struct
   { "id", SIM_COMMAND_SYMBOL_ID },		
   { "hostname", SIM_COMMAND_SYMBOL_HOSTNAME },
   { "event_type", SIM_COMMAND_SYMBOL_EVENT_TYPE },
+  { "hids_event_type", SIM_COMMAND_SYMBOL_HIDS_EVENT_TYPE },
   { "target", SIM_COMMAND_SYMBOL_TARGET },
   { "what", SIM_COMMAND_SYMBOL_WHAT },
   { "extra_data", SIM_COMMAND_SYMBOL_EXTRA_DATA },
@@ -598,8 +641,32 @@ static const struct
   gchar *name;
   guint token;
 } ok_symbols[] = {
-  { "id", SIM_COMMAND_SYMBOL_ID },
+  { "id", SIM_COMMAND_SYMBOL_ID }
 };
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} database_query_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },		
+  { "database-element-type", SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE },
+  { "servername", SIM_COMMAND_SYMBOL_SERVERNAME },
+  { "sensorname", SIM_COMMAND_SYMBOL_SENSORNAME }
+};
+
+static const struct
+{
+  gchar *name;
+  guint token;
+} database_answer_symbols[] = {
+  { "id", SIM_COMMAND_SYMBOL_ID },		
+  { "answer", SIM_COMMAND_SYMBOL_ANSWER },
+  { "database-element-type", SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE },
+  { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }
+};
+
+
 
 static GScanner  *GLOBAL_scanner;
 
@@ -621,12 +688,17 @@ static gboolean sim_command_session_remove_plugin_scan	(SimCommand    *command,
 
 static gboolean sim_command_server_get_sensors_scan			(SimCommand    *command,
 																													 GScanner      *scanner);
+static gboolean sim_command_sensor_scan									(SimCommand    *command,
+																	                        GScanner      *scanner);
+static gboolean sim_command_server_get_servers_scan     (SimCommand    *command,
+                                                           GScanner      *scanner);
+static gboolean sim_command_server_scan									(SimCommand    *command,
+																	                        GScanner      *scanner);
 static gboolean sim_command_server_get_sensor_plugins_scan (SimCommand    *command,
 																														GScanner      *scanner);
 
 static gboolean sim_command_server_set_data_role_scan		(SimCommand    *command,
 																													GScanner      *scanner);
-
 static gboolean sim_command_sensor_plugin_scan					(SimCommand    *command,
 																											    GScanner      *scanner);
 static gboolean sim_command_sensor_plugin_start_scan		(SimCommand    *command,
@@ -673,7 +745,10 @@ static gboolean sim_command_host_ids_event_scan					(SimCommand    *command,
 																										      GScanner      *scanner);
 static gboolean sim_command_ok_scan											(SimCommand    *command,
 																										      GScanner      *scanner);
-
+static gboolean	sim_command_database_query_scan					(SimCommand    *command,
+													                                GScanner      *scanner);
+static gboolean	sim_command_database_answer_scan					(SimCommand    *command,
+													                                GScanner      *scanner);
 
 static gpointer parent_class = NULL;
 static gint sim_server_signals[LAST_SIGNAL] = { 0 };
@@ -1088,6 +1163,27 @@ sim_command_new_from_rule (SimRule  *rule)
       g_string_append_printf (str, "value=\"%s\" ", value);
     }
 
+	/* Interval */
+  interval = sim_rule_get_interval (rule);
+  if (interval > 0)
+    {
+      g_string_append_printf (str, "interval=\"%d\" ", interval);
+    }
+
+  /* Absolute */
+  absolute = sim_rule_get_absolute (rule);
+	if (interval > 0)
+	{
+		if (absolute)
+      str = g_string_append (str, "absolute=\"true\"");
+		else
+      str = g_string_append (str, "absolute=\"false\"");
+	}
+	else	//if interval is 0, that implies that absolute is true, as we don't have any time to compare with it. We only are able to
+				//know when the "value" as been reached (ie. when somebody has reached 100 network packets), but it can spend as much time as it wants.
+	  str = g_string_append (str, "absolute=\"true\"");
+
+
   /* PORT FROM */
   list = sim_rule_get_src_ports (rule);
   if (list)
@@ -1124,12 +1220,6 @@ sim_command_new_from_rule (SimRule  *rule)
       list = list->next;
     }
 
-  /* Interval */
-  interval = sim_rule_get_interval (rule);
-  if (interval > 0)
-    {
-      g_string_append_printf (str, "interval=\"%d\" ", interval);
-    }
 
   /* SRC IAS */
   list = sim_rule_get_src_inets (rule);
@@ -1169,13 +1259,6 @@ sim_command_new_from_rule (SimRule  *rule)
 	str = g_string_append (str, "\" ");
 
       list = list->next;
-    }
-
-  /* Absolute */
-  absolute = sim_rule_get_absolute (rule);
-  if (absolute)
-    {
-      str = g_string_append (str, "absolute=\"true\"");
     }
 
   str = g_string_append (str, "\n");
@@ -1218,6 +1301,18 @@ sim_command_start_scanner()
   /* Added server get sensors symbols */
   for (i = 0; i < G_N_ELEMENTS (server_get_sensors_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SENSORS, server_get_sensors_symbols[i].name, GINT_TO_POINTER (server_get_sensors_symbols[i].token));
+
+	/* Added sensor symbols */
+  for (i = 0; i < G_N_ELEMENTS (sensor_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR, sensor_symbols[i].name, GINT_TO_POINTER (sensor_symbols[i].token));
+
+	/* Added server symbols */
+  for (i = 0; i < G_N_ELEMENTS (server_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SERVER, server_symbols[i].name, GINT_TO_POINTER (server_symbols[i].token));
+
+  /* Added server get servers symbols */
+  for (i = 0; i < G_N_ELEMENTS (server_get_servers_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SERVERS, server_get_servers_symbols[i].name, GINT_TO_POINTER (server_get_servers_symbols[i].token));
 
   /* Added server get sensor plugins symbols */
   for (i = 0; i < G_N_ELEMENTS (server_get_sensor_plugins_symbols); i++)
@@ -1319,6 +1414,16 @@ sim_command_start_scanner()
   for (i = 0; i < G_N_ELEMENTS (ok_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_OK, ok_symbols[i].name, GINT_TO_POINTER (ok_symbols[i].token));
 
+	/* Add Database Query symbols (remote DB) */
+  for (i = 0; i < G_N_ELEMENTS (database_query_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_DATABASE_QUERY, database_query_symbols[i].name, GINT_TO_POINTER (database_query_symbols[i].token));
+
+	/* Add Database Answer symbols (remote DB) */
+  for (i = 0; i < G_N_ELEMENTS (database_answer_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_DATABASE_ANSWER, database_answer_symbols[i].name, GINT_TO_POINTER (database_answer_symbols[i].token));
+
+
+
   GLOBAL_scanner = scanner;
 
 }
@@ -1361,6 +1466,10 @@ sim_command_scan (SimCommand    *command,
 						
 			case SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS:
 					  if (!sim_command_server_get_sensors_scan (command, scanner))
+							OK=FALSE;
+	          break;
+			case SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS:
+					  if (!sim_command_server_get_servers_scan (command, scanner))
 							OK=FALSE;
 	          break;
       case SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS:
@@ -1473,6 +1582,17 @@ sim_command_scan (SimCommand    *command,
 					  if (!sim_command_host_ids_event_scan (command, scanner))
 							OK=FALSE;
 	          break;
+		
+    /*Commands from Children Servers; answer to a previous query from this (or an upper) server */
+    case SIM_COMMAND_SYMBOL_SENSOR: //answer to SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS query made in this server to a children server.
+					  if (!sim_command_sensor_scan (command, scanner))
+							OK=FALSE;
+	          break;
+	  case SIM_COMMAND_SYMBOL_SERVER: //answer to SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS query made in this server to a children server.
+					  if (!sim_command_server_scan (command, scanner))
+							OK=FALSE;
+	          break;
+	
       case SIM_COMMAND_SYMBOL_OK:
 						if (!sim_command_ok_scan (command, scanner))
 							OK = FALSE;
@@ -1481,10 +1601,20 @@ sim_command_scan (SimCommand    *command,
       case SIM_COMMAND_SYMBOL_ERROR:
 					  command->type = SIM_COMMAND_TYPE_ERROR;
 	          break;
+			case SIM_COMMAND_SYMBOL_DATABASE_QUERY:
+					  if (!sim_command_database_query_scan (command, scanner))
+							OK=FALSE;
+	          break;
+			case SIM_COMMAND_SYMBOL_DATABASE_ANSWER:
+					  if (!sim_command_database_answer_scan (command, scanner))
+							OK=FALSE;
+	          break;
+
+
       default:
 					  if (scanner->token == G_TOKEN_EOF)
 					    break;
-						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_scan: error command unknown; Buffer from command: %s",buffer);
+						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_scan: error command unknown; Buffer from command: [%s]",buffer);
 						return FALSE;
     }
   }
@@ -1881,7 +2011,7 @@ sim_command_server_get_sensors_scan (SimCommand    *command,
 					  	command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: get sensors event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: get sensors event incorrect. Please check the id issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
             }
 	          break;
@@ -1918,6 +2048,76 @@ sim_command_server_get_sensors_scan (SimCommand    *command,
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_get_sensors_scan: id: %d",command->id);
 	return TRUE;
 }
+
+/*
+ *
+ */
+static gboolean
+sim_command_server_get_servers_scan (SimCommand    *command,
+																     GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SERVER_GET_SERVERS;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SERVER_GET_SERVERS);
+  do
+  {
+    g_scanner_get_next_token (scanner);
+ 
+    switch (scanner->token)
+    {
+      case SIM_COMMAND_SYMBOL_ID:
+					  g_scanner_get_next_token (scanner); /* = */
+					  g_scanner_get_next_token (scanner); /* value */
+
+					  if (scanner->token != G_TOKEN_STRING)
+					    break;
+
+            if (sim_string_is_number (scanner->value.v_string, 0))
+					  	command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: get servers event incorrect. Please check the id issued from the frameworkd or the master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+	          break;
+	
+			case SIM_COMMAND_SYMBOL_SERVERNAME:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+						if (scanner->value.v_string)
+	            command->data.server_get_servers.servername = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: get servers; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              return FALSE;
+						}
+            break;
+
+					
+      default:
+					  if (scanner->token == G_TOKEN_EOF)
+					    break;
+	  				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_get_servers_scan: error symbol unknown");
+	          return FALSE;
+    }
+  }
+  while(scanner->token != G_TOKEN_EOF);
+  
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_get_servers_scan: id: %d",command->id);
+	return TRUE;
+}
+
 
 /*
  *
@@ -2206,7 +2406,14 @@ sim_command_sensor_plugin_scan (SimCommand    *command,
 
 						if (scanner->token != G_TOKEN_STRING)
 							break;
-						command->data.sensor_plugin.sensor = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.sensor_plugin.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Sensor plugin event incorrect. Please check the sensor ip issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
 						break;
 
 			case SIM_COMMAND_SYMBOL_PLUGIN_ID:
@@ -2298,7 +2505,7 @@ sim_command_sensor_plugin_start_scan (SimCommand    *command,
               command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin start event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin start event incorrect. Please check the id issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
             }
 						break;
@@ -2328,7 +2535,13 @@ sim_command_sensor_plugin_start_scan (SimCommand    *command,
 
 						if (scanner->token != G_TOKEN_STRING)
 							break;
-						command->data.sensor_plugin_start.sensor = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.sensor_plugin_start.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Sensor plugin start. Please check the sensor ip issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 
 			case SIM_COMMAND_SYMBOL_PLUGIN_ID:
@@ -2341,7 +2554,7 @@ sim_command_sensor_plugin_start_scan (SimCommand    *command,
 							command->data.sensor_plugin_start.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin start event incorrect. Please check the plugin_id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin start event incorrect. Please check the plugin_id issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
             }
 						break;
@@ -2409,7 +2622,7 @@ sim_command_sensor_plugin_stop_scan (SimCommand    *command,
 	            command->data.sensor_plugin_stop.servername = g_strdup (scanner->value.v_string);
 						else
 						{
-              g_message("Error: sensor plugin start; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin stop; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
 						}
             break;
@@ -2420,7 +2633,13 @@ sim_command_sensor_plugin_stop_scan (SimCommand    *command,
 
 						if (scanner->token != G_TOKEN_STRING)
 							break;
-						command->data.sensor_plugin_stop.sensor = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.sensor_plugin_stop.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Sensor plugin stop. Please check the sensor ip issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 
 			case SIM_COMMAND_SYMBOL_PLUGIN_ID:
@@ -2483,7 +2702,7 @@ sim_command_sensor_plugin_enable_scan (SimCommand    *command,
               command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin enabled event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin enable event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
               return FALSE;
             }
 						break;
@@ -2502,7 +2721,7 @@ sim_command_sensor_plugin_enable_scan (SimCommand    *command,
 	            command->data.sensor_plugin_enable.servername = g_strdup (scanner->value.v_string);
 						else
 						{
-              g_message("Error: sensor plugin enabled; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin enable; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
 						}
             break;
@@ -2513,6 +2732,14 @@ sim_command_sensor_plugin_enable_scan (SimCommand    *command,
 
 						if (scanner->token != G_TOKEN_STRING)
 							break;
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.sensor_plugin_enable.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Sensor plugin enable. Please check the sensor ip issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
 						command->data.sensor_plugin_enable.sensor = g_strdup (scanner->value.v_string);
 						break;
 
@@ -2527,7 +2754,7 @@ sim_command_sensor_plugin_enable_scan (SimCommand    *command,
 							command->data.sensor_plugin_enable.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin enabled event incorrect. Please check the plugin_id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin enable event incorrect. Please check the plugin_id issued from the agent: %s", scanner->value.v_string);
               return FALSE;
             }
 
@@ -2537,7 +2764,7 @@ sim_command_sensor_plugin_enable_scan (SimCommand    *command,
 			default:
 						if (scanner->token == G_TOKEN_EOF)
 							break;
-						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_enabled_scan: error symbol unknown");
+						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_enable_scan: error symbol unknown");
 						return FALSE;
     }
   }
@@ -2578,7 +2805,7 @@ sim_command_sensor_plugin_disable_scan (SimCommand    *command,
 	            command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin disabled event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin disable event incorrect. Please check the id issued from the agent: %s", scanner->value.v_string);
               return FALSE;
             }
 						break;
@@ -2597,7 +2824,7 @@ sim_command_sensor_plugin_disable_scan (SimCommand    *command,
 	            command->data.sensor_plugin_disable.servername = g_strdup (scanner->value.v_string);
 						else
 						{
-              g_message("Error: sensor plugin disabled; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin disable; Server Name incorrect. Please check the server name issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
 						}
             break;
@@ -2608,7 +2835,13 @@ sim_command_sensor_plugin_disable_scan (SimCommand    *command,
 
 						if (scanner->token != G_TOKEN_STRING)
 							break;
-						command->data.sensor_plugin_disable.sensor = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.sensor_plugin_disable.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Sensor plugin disable. Please check the sensor ip issued from the frameworkd or a master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 
 			case SIM_COMMAND_SYMBOL_PLUGIN_ID:
@@ -2622,7 +2855,7 @@ sim_command_sensor_plugin_disable_scan (SimCommand    *command,
 							command->data.sensor_plugin_disable.plugin_id = strtol (scanner->value.v_string, (char **) NULL, 10);
             else
             {
-              g_message("Error: sensor plugin disabled event incorrect. Please check the plugin_id issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: sensor plugin disable event incorrect. Please check the plugin_id issued from the frameworkd or a master server: %s", scanner->value.v_string);
               return FALSE;
             }
 
@@ -2631,7 +2864,7 @@ sim_command_sensor_plugin_disable_scan (SimCommand    *command,
 			default:
 						if (scanner->token == G_TOKEN_EOF)
 							break;
-						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_disabled_scan: error symbol unknown");
+						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_plugin_disable_scan: error symbol unknown");
 						return FALSE;
     }
   }
@@ -2971,6 +3204,8 @@ static gboolean
 sim_command_event_scan (SimCommand    *command,
 												GScanner      *scanner)
 {
+  struct tm      tm;	//needed to check the time parameter.
+
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (scanner != NULL);
@@ -2985,7 +3220,6 @@ sim_command_event_scan (SimCommand    *command,
   command->data.event.plugin_id = 0;
   command->data.event.plugin_sid = 0;
 
-  command->data.event.priority = 0;
   command->data.event.protocol = NULL;
   command->data.event.src_ip = NULL;
   command->data.event.src_port = 0;
@@ -3000,9 +3234,10 @@ sim_command_event_scan (SimCommand    *command,
   command->data.event.snort_sid = 0;
   command->data.event.snort_cid = 0;
 
+  command->data.event.priority = 0;
   command->data.event.reliability = 0;
-  command->data.event.asset_src = 0;
-  command->data.event.asset_dst = 0;
+  command->data.event.asset_src = 1;
+  command->data.event.asset_dst = 1;
   command->data.event.risk_a = 0;
   command->data.event.risk_c = 0;
   command->data.event.alarm = FALSE;
@@ -3020,6 +3255,7 @@ sim_command_event_scan (SimCommand    *command,
 	command->data.event.userdata7 = NULL;
 	command->data.event.userdata8 = NULL;
 	command->data.event.userdata9 = NULL;
+	command->data.event.is_prioritized = FALSE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_EVENT);
   do
@@ -3103,7 +3339,13 @@ sim_command_event_scan (SimCommand    *command,
 				      command->type = SIM_COMMAND_TYPE_NONE;
 	    			  break;
 				    }
-	  				command->data.event.date = g_strdup (scanner->value.v_string);
+				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
+		  				command->data.event.date = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
+              return FALSE;														 
+						}
           	break;
 			
 			case SIM_COMMAND_SYMBOL_SENSOR:
@@ -3115,7 +3357,13 @@ sim_command_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						command->data.event.sensor = g_strdup (scanner->value.v_string);
+						if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+							command->data.event.sensor = g_strdup (scanner->value.v_string);
+						else
+            {
+              g_message("Error: event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 						
 			case SIM_COMMAND_SYMBOL_INTERFACE:
@@ -3170,7 +3418,13 @@ sim_command_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						command->data.event.src_ip = g_strdup (scanner->value.v_string);
+						if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+							command->data.event.src_ip = g_strdup (scanner->value.v_string);
+						else
+            {
+              g_message("Error: event incorrect. Please check the src ip issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 						
 			case SIM_COMMAND_SYMBOL_SRC_PORT:
@@ -3201,7 +3455,13 @@ sim_command_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						command->data.event.dst_ip = g_strdup (scanner->value.v_string);
+						if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+							command->data.event.dst_ip = g_strdup (scanner->value.v_string);
+						else
+            {
+              g_message("Error: event incorrect. Please check the dst ip issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 						
 			case SIM_COMMAND_SYMBOL_DST_PORT:
@@ -3573,6 +3833,22 @@ sim_command_event_scan (SimCommand    *command,
               break;
             }
             command->data.event.userdata9 = g_strdup (scanner->value.v_string);
+            break;
+
+      case SIM_COMMAND_SYMBOL_IS_PRIORITIZED:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (!g_ascii_strcasecmp (scanner->value.v_string, "true"))
+              command->data.event.is_prioritized = TRUE;
+            else
+              command->data.event.is_prioritized = FALSE;
             break;
 
 			default:
@@ -4067,6 +4343,8 @@ static gboolean
 sim_command_host_os_event_scan (SimCommand    *command,
 																 GScanner      *scanner)
 {
+  struct tm      tm;	//needed to check the time parameter.
+
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (scanner);
@@ -4098,8 +4376,13 @@ sim_command_host_os_event_scan (SimCommand    *command,
 					    command->type = SIM_COMMAND_TYPE_NONE;
 	  	  		  break;
 		  		  }
-
-					  command->data.host_os_event.date = g_strdup (scanner->value.v_string);
+				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
+		  				command->data.host_os_event.date = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: Host OS event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
+              return FALSE;														 
+						}
 		  			break;
 
 			case SIM_COMMAND_SYMBOL_ID:
@@ -4126,8 +4409,13 @@ sim_command_host_os_event_scan (SimCommand    *command,
 			  		  command->type = SIM_COMMAND_TYPE_NONE;
 			    	  break;
 				    }
-	
-					  command->data.host_os_event.host = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+              command->data.host_os_event.host = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Host OS event incorrect. Please check the host ip issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 		  			break;
 
       case SIM_COMMAND_SYMBOL_OS:
@@ -4170,8 +4458,13 @@ sim_command_host_os_event_scan (SimCommand    *command,
 		          command->type = SIM_COMMAND_TYPE_NONE;
     		      break;
         		}
-
-		       	command->data.host_os_event.sensor = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+		       		command->data.host_os_event.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Host OS event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
     			  break;
 
       case SIM_COMMAND_SYMBOL_INTERFACE:
@@ -4238,6 +4531,8 @@ static gboolean
 sim_command_host_mac_event_scan (SimCommand    *command,
 																	GScanner      *scanner)
 {
+  struct tm      tm;	//needed to check the date parameter.
+
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (scanner);
@@ -4270,8 +4565,13 @@ sim_command_host_mac_event_scan (SimCommand    *command,
 	 			    	command->type = SIM_COMMAND_TYPE_NONE;
 	   				  break;
 				    }	
-	
-			 			command->data.host_mac_event.date = g_strdup (scanner->value.v_string);
+				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
+		  				command->data.host_mac_event.date = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: Host mac event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
+              return FALSE;														 
+						}
 						break;
 
 			case SIM_COMMAND_SYMBOL_ID:
@@ -4298,8 +4598,13 @@ sim_command_host_mac_event_scan (SimCommand    *command,
 	    			  command->type = SIM_COMMAND_TYPE_NONE;
 				      break;
 				    }
-
-	 					command->data.host_mac_event.host = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+	 						command->data.host_mac_event.host = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Host MAC event incorrect. Please check the host ip issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 
       case SIM_COMMAND_SYMBOL_MAC:
@@ -4337,8 +4642,14 @@ sim_command_host_mac_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+							command->data.host_mac_event.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Host MAC event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 
-						command->data.host_mac_event.sensor = g_strdup (scanner->value.v_string);
 						break;
 
 			case SIM_COMMAND_SYMBOL_PLUGIN_ID:
@@ -4426,6 +4737,8 @@ static gboolean
 sim_command_host_service_event_scan (SimCommand    *command,
 																		  GScanner      *scanner)
 {
+  struct tm      tm;	//needed to check the date parameter.
+
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (scanner);
@@ -4460,7 +4773,13 @@ sim_command_host_service_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						command->data.host_service_event.date = g_strdup (scanner->value.v_string);
+						if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
+		  				command->data.host_service_event.date = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: Host Service event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
+              return FALSE;														 
+						}
 						break;
 
 			case SIM_COMMAND_SYMBOL_ID:
@@ -4488,7 +4807,13 @@ sim_command_host_service_event_scan (SimCommand    *command,
 							break;
 						}
 
-						command->data.host_service_event.host = g_strdup (scanner->value.v_string);
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+							command->data.host_service_event.host = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
 						break;
 
 			case SIM_COMMAND_SYMBOL_PORT:
@@ -4561,7 +4886,14 @@ sim_command_host_service_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-		        command->data.host_service_event.sensor = g_strdup (scanner->value.v_string);
+
+            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+			        command->data.host_service_event.sensor = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
     			  break;
 
       case SIM_COMMAND_SYMBOL_INTERFACE:
@@ -4649,6 +4981,8 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 																 GScanner      *scanner)
 {
   char *temporal;
+  struct tm      tm;	//needed to check the date parameter.
+
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (scanner);
@@ -4697,7 +5031,13 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						command->data.host_ids_event.date = g_strdup (scanner->value.v_string);
+						if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
+		  				command->data.host_ids_event.date = g_strdup (scanner->value.v_string);
+						else
+						{
+              g_message("Error: Host IDS event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
+              return FALSE;														 
+						}
 						break;
 
 			case SIM_COMMAND_SYMBOL_ID:
@@ -4741,6 +5081,9 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 						break;
 
 			case SIM_COMMAND_SYMBOL_EVENT_TYPE:
+			//FIXME: the HIDS_EVENT_TYPE field is duplicated. When the new agent enters the game, this must be removed. 
+			//Both keywords, event_type, and hids_event_type stores data in the same place at this moment.
+			case SIM_COMMAND_SYMBOL_HIDS_EVENT_TYPE:
 						g_scanner_get_next_token (scanner); /* = */
 						g_scanner_get_next_token (scanner); /* value */
 
@@ -4751,6 +5094,18 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 						}
 						command->data.host_ids_event.event_type = g_strdup (scanner->value.v_string);
 						break;
+
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+						{
+							command->type = SIM_COMMAND_TYPE_NONE;
+							break;
+						}
+						command->data.host_ids_event.event_type = g_strdup (scanner->value.v_string);
+						break;
+
 
 			case SIM_COMMAND_SYMBOL_TARGET:
 						g_scanner_get_next_token (scanner); /* = */
@@ -5008,6 +5363,186 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 }
 
 /*
+ * This is an answer from a children server to a SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS query made in this server (or in a master server and
+ * resended here) and sended to children. This is only needed to resend it to a master server or the
+ * frameworkd
+ */
+static gboolean
+sim_command_sensor_scan (SimCommand    *command,
+												GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SENSOR;
+  command->data.sensor.host = NULL;
+  command->data.sensor.state = 0;
+  command->data.sensor.servername = NULL;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR);
+  do
+  {
+    g_scanner_get_next_token (scanner);
+ 
+    switch (scanner->token)
+    {
+      case SIM_COMMAND_SYMBOL_ID:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+
+            if (sim_string_is_number (scanner->value.v_string, 0))
+							command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: sensor event incorrect. Please check the id issued from the children server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
+						break;
+
+			case SIM_COMMAND_SYMBOL_HOST:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+						command->data.sensor.host = g_strdup (scanner->value.v_string);
+						break;
+
+			//FIXME: not used
+			case SIM_COMMAND_SYMBOL_STATE:
+						g_scanner_get_next_token (scanner); 
+						g_scanner_get_next_token (scanner); 
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+/*
+						if (g_ascii_strcasecmp (scanner->value.v_string, "start"))
+							command->data.sensorgin.state = 1;
+						else if (g_ascii_strcasecmp (scanner->value.v_string, "stop"))
+							command->data.sensor_plugin.state = 2;
+						else if (g_ascii_strcasecmp (scanner->value.v_string, "unknown"))
+							command->data.sensor_plugin.state = 3;
+		*/
+						break;
+
+      case SIM_COMMAND_SYMBOL_SERVERNAME:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (scanner->value.v_string)
+              command->data.sensor.servername = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: sensor; Server Name incorrect. Please check the server name issued from the children server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
+			default:
+						if (scanner->token == G_TOKEN_EOF)
+							break;
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_sensor_scan: error symbol unknown");
+						return FALSE;
+      }
+  }
+  while(scanner->token != G_TOKEN_EOF);
+	return TRUE;
+}
+
+/*
+ * This is an answer from a children server to a SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS query made in this server (or in a master server and
+ * resended here) and sended to children. This is only needed to resend it to a master server or the
+ * frameworkd
+ */
+static gboolean
+sim_command_server_scan (SimCommand    *command,
+												GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_SERVER;
+  command->data.server.host = NULL;
+  command->data.server.servername = NULL;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SERVER);
+  do
+  {
+    g_scanner_get_next_token (scanner);
+ 
+    switch (scanner->token)
+    {
+      case SIM_COMMAND_SYMBOL_ID:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+
+            if (sim_string_is_number (scanner->value.v_string, 0))
+							command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: server answer incorrect. Please check the id issued from the children server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
+						break;
+
+			case SIM_COMMAND_SYMBOL_HOST:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+						command->data.server.host = g_strdup (scanner->value.v_string);
+						break;
+
+      case SIM_COMMAND_SYMBOL_SERVERNAME:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (scanner->value.v_string)
+              command->data.server.servername = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: server; Server Name incorrect. Please check the server name issued from the children server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
+			default:
+						if (scanner->token == G_TOKEN_EOF)
+							break;
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_server_scan: error symbol unknown");
+						return FALSE;
+      }
+  }
+  while(scanner->token != G_TOKEN_EOF);
+	return TRUE;
+}
+
+
+
+/*
  * OK response
  *
  */
@@ -5053,6 +5588,208 @@ sim_command_ok_scan (SimCommand    *command,
   while(scanner->token != G_TOKEN_EOF);
   return TRUE;
 }
+
+/*
+ *	Scan and store the query wich has arrived to this server. May be executed here or in an upper server (depending on servername)
+ */
+static gboolean
+sim_command_database_query_scan (SimCommand    *command,
+																GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_DATABASE_QUERY;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_DATABASE_QUERY);
+  do
+  {
+    g_scanner_get_next_token (scanner);
+
+    switch (scanner->token)
+    {
+	    case SIM_COMMAND_SYMBOL_ID:
+					  g_scanner_get_next_token (scanner); /* = */
+					  g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+
+            if (sim_string_is_number (scanner->value.v_string, 0))
+              command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: database query event incorrect. Please check the symbol_id issued from the other server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+	
+						break;
+
+			case SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+            if (sim_string_is_number (scanner->value.v_string, 0))
+              command->data.database_query.database_element_type = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: Database query event incorrect. Please check the id issued from the remote machine: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
+						break;
+	
+      case SIM_COMMAND_SYMBOL_SERVERNAME:
+      case SIM_COMMAND_SYMBOL_SENSORNAME:	//we will use the servername variable to store the name of the connected machine, regardless
+																					//its a server or a sensor. The sensor must be able to ask only for its Policy
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (scanner->value.v_string)
+              command->data.database_query.servername = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Database query; Server Name incorrect. Please check the server name issued from the children server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+/*						
+			case SIM_COMMAND_SYMBOL_QUERY:
+						g_scanner_get_next_token (scanner); 
+						g_scanner_get_next_token (scanner); 
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+						command->data.database_query.query = g_strdup (scanner->value.v_string);
+						break;
+						*/
+					
+			default:
+						if (scanner->token == G_TOKEN_EOF)
+					    break;
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_database_query_scan: error symbol unknown: %s", scanner->value.v_string);
+						return FALSE;
+    }
+  }
+  while(scanner->token != G_TOKEN_EOF);
+
+	return TRUE;
+}
+
+/*
+ *	Scan and store the query answer wich has arrived here from a master server.
+ */
+static gboolean
+sim_command_database_answer_scan (SimCommand    *command,
+																GScanner      *scanner)
+{
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (scanner != NULL);
+
+  command->type = SIM_COMMAND_TYPE_DATABASE_ANSWER;
+
+  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_DATABASE_ANSWER);
+  do
+  {
+    g_scanner_get_next_token (scanner);
+
+    switch (scanner->token)
+    {
+	    case SIM_COMMAND_SYMBOL_ID:
+					  g_scanner_get_next_token (scanner); /* = */
+					  g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+
+            if (sim_string_is_number (scanner->value.v_string, 0))
+              command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: database answer event incorrect. Please check the symbol_id issued from the other server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+	
+						break;
+
+			case SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE:
+						g_scanner_get_next_token (scanner); /* = */
+						g_scanner_get_next_token (scanner); /* value */
+
+						if (scanner->token != G_TOKEN_STRING)
+							break;
+            if (sim_string_is_number (scanner->value.v_string, 0))
+              command->data.database_answer.database_element_type = strtol (scanner->value.v_string, (char **) NULL, 10);
+            else
+            {
+              g_message("Error: Database answer event incorrect. Please check the id issued from the remote machine: %s", scanner->value.v_string);
+              return FALSE;
+            }
+
+						break;
+	
+      case SIM_COMMAND_SYMBOL_SERVERNAME:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (scanner->value.v_string)
+              command->data.database_answer.servername = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Database answer; Server Name incorrect. Please check the server name issued from the master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
+	      case SIM_COMMAND_SYMBOL_ANSWER:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            if (scanner->value.v_string)
+              command->data.database_answer.answer = g_strdup (scanner->value.v_string);
+            else
+            {
+              g_message("Error: Database answer; No answer. Please check the answer issued from the master server: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+						
+					
+					
+			default:
+						if (scanner->token == G_TOKEN_EOF)
+					    break;
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_database_query_scan: error symbol unknown");
+						return FALSE;
+    }
+  }
+  while(scanner->token != G_TOKEN_EOF);
+
+	return TRUE;
+}
+
 
 /*
  *
@@ -5124,10 +5861,20 @@ sim_command_get_string (SimCommand    *command)
 		      break;
 
     case SIM_COMMAND_TYPE_SENSOR:
-				  str = g_strdup_printf ("sensor host=\"%s\" state=\"%s\"\n", 
+				  str = g_strdup_printf ("sensor host=\"%s\" state=\"%s\" servername=\"%s\" id=\"%d\"\n", 
 															   command->data.sensor.host,
-														     (command->data.sensor.state) ? "on" : "off");
+														     (command->data.sensor.state) ? "on" : "off",
+                                 command->data.sensor.servername,
+																 command->id);
 		      break;
+
+    case SIM_COMMAND_TYPE_SERVER:
+				  str = g_strdup_printf ("server host=\"%s\" servername=\"%s\" id=\"%d\"\n", 
+															   command->data.server.host,
+                                 command->data.server.servername,
+																 command->id);
+		      break;
+
 
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN:
 				  switch (command->data.sensor_plugin.state)
@@ -5165,6 +5912,16 @@ sim_command_get_string (SimCommand    *command)
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLE:
 		      str = g_strdup_printf ("sensor-plugin-disable plugin_id=\"%d\"\n", command->data.sensor_plugin_disable.plugin_id);
 				  break;
+	  case SIM_COMMAND_TYPE_DATABASE_QUERY:
+		      str = g_strdup_printf ("database-query database-element-type=\"%d\" servername=\"%s\"\n", command->data.database_query.database_element_type, command->data.database_query.servername);
+				  break;
+
+	  case SIM_COMMAND_TYPE_DATABASE_ANSWER:
+		      str = g_strdup_printf ("database-answer database-element-type=\"%d\" servername=\"%s\" answer=\"%s\"\n", command->data.database_answer.database_element_type, command->data.database_answer.servername, command->data.database_answer.answer);
+				  break;
+
+
+
 
     default:
 		      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_string: error command unknown");
@@ -5201,7 +5958,12 @@ sim_command_get_event (SimCommand     *command)
   if (command->data.event.date)
   {
     if (strptime (command->data.event.date, "%Y-%m-%d %H:%M:%S", &tm))
+		{
 			event->time =  mktime (&tm);
+		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->time= %d", event->time);
+      event->diff_time = (time (NULL) > event->time) ? (time (NULL) - event->time) : 0;					
+		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->diff_time= %d", event->diff_time);
+		}
 		else
 			return NULL;
   }
@@ -5289,7 +6051,7 @@ sim_command_get_event (SimCommand     *command)
 			event->priority = 5;
     else
 			event->priority = command->data.event.priority;
-  }
+	}
 
 	if (command->data.event.filename)
 		event->filename = g_strdup (command->data.event.filename);
@@ -5318,6 +6080,10 @@ sim_command_get_event (SimCommand     *command)
 
 	event->buffer = g_strdup (command->buffer);	//we need this to resend data to other servers, or to send
 																							//events that matched with policy to frameworkd (future implementation)
+	if (command->data.event.is_prioritized)	
+		event->is_prioritized = TRUE;
+	else
+		event->is_prioritized = FALSE;
 	
   return event;
 }

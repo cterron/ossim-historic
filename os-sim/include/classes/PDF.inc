@@ -1,15 +1,16 @@
 <?php
-require_once('ossim_conf.inc');
+require_once 'ossim_conf.inc';
+require_once 'classes/SecurityReport.inc';
+require_once 'classes/Log_action.inc';
+require_once 'classes/Incident.inc';
+require_once 'classes/Host.inc';
+
 $path_conf = $GLOBALS["CONF"];
 $fpdf_path = $path_conf->get_conf("fpdf_path");
-
 define('FPDF_FONTPATH','font/');
 define('DEFAULT_LINE_HEIGTH', 6);
 
 require($fpdf_path . '/fpdf.php');
-
-require_once ('classes/SecurityReport.inc');
-require_once ('classes/Log_action.inc');
 
 class PDF extends FPDF
 {
@@ -18,8 +19,25 @@ class PDF extends FPDF
     var $conf;
     var $security_report;
 
-    function PDF($title = "OSSIM Report", 
-                 $orientation='P', $unit='mm', $format='A5')
+    /*
+    Function PDF
+        $title = Title given to the PDF report
+        $orientation = Can be P (portrait) or L (Landscape)
+        $unit = User measure unit:
+                    * pt: point
+                    * mm: millimeter
+                    * cm: centimeter
+                    * in: inch 
+
+        $format = The format used for pages:
+                    * A3
+                    * A4
+                    * A5
+                    * Letter
+                    * Legal 
+    */
+
+    function PDF($title = "OSSIM Report", $orientation='P', $unit='mm', $format='A5')
     {
         $this->FPDF($orientation, $unit, $format);
         $this->title = $title;
@@ -40,6 +58,8 @@ class PDF extends FPDF
         $this->SetTitle($title);
         $this->SetCreator('OSSIM framework');
         $this->AddPage();
+        
+        /* Log pdf created */
         Log_action::log(19,NULL);
     }
 
@@ -76,7 +96,7 @@ class PDF extends FPDF
         $this->SetTextColor(0);
     }
 
-    function __WriteTitle($title, $color = "blue") 
+    function __WriteTitle($title, $color = "blue")
     {
         $this->SetFont('Arial','B',14);
         if ($color == "blue")
@@ -152,7 +172,7 @@ class PDF extends FPDF
             }
             $count++;
         }
-            
+
         $count = 0;
 
         foreach ($content as $row)
@@ -182,18 +202,18 @@ class PDF extends FPDF
     function __AttackHosts($title, $ip_target, $limit = 10, $color = "blue",
     $type = "event")
     {
-        require_once ('classes/Host.inc');
-    
+
+
         $content[] = array("Host", "Occurrences");
         $length  = array(80, 25);
 
-        $attack = $this->security_report->AttackHost($this->ossim_conn, 
+        $attack = $this->security_report->AttackHost($this->ossim_conn,
                                                      $ip_target,
-                                                     $limit, 
+                                                     $limit,
                                                      $type);
         /* resolve ips */
         for ($i = 0; $i < count($attack); $i++)
-            $attack[$i][0] = 
+            $attack[$i][0] =
                 Host::ip2hostname($this->ossim_conn, $attack[$i][0]);
 
         $content = array_merge($content, $attack);
@@ -248,16 +268,17 @@ class PDF extends FPDF
      * INCIDENTS
      */
 
-    function __get_ids($ref)
+    function __get_ids($ref,$priority,$fil)
     {
-        if ($ref != "Metric" && $ref != "Alarm" && $ref != "Event")
+        if ($ref != "Metric" && $ref != "Alarm" && $ref != "Event" && $ref != "Vulnerability")
             return NULL;
 
         $ids = array();
 
-        $incident_list = Incident::get_list($this->ossim_conn,
-            "WHERE ref = '$ref' ORDER BY date DESC");
-        if (is_array($incident_list)) {
+	$incident_list = Incident::get_list($this->ossim_conn,
+	              "WHERE ref = '$ref' and $priority $fil ORDER BY priority DESC");
+
+	if (is_array($incident_list)) {
             foreach ($incident_list as $incident) {
                 $ids[] = $incident->get_id();
             }
@@ -266,57 +287,49 @@ class PDF extends FPDF
         return $ids;
     }
 
-    function get_metric_ids()
+    function get_metric_ids($priority,$fil)
     {
-        return $this->__get_ids("Metric");
+        return $this->__get_ids("Metric",$priority,$fil);
     }
 
-    function get_alarm_ids()
+    function get_alarm_ids($priority,$fil)
     {
-        return $this->__get_ids("Alarm");
+        return $this->__get_ids("Alarm",$priority,$fil);
     }
 
-    function get_event_ids()
+    function get_event_ids($priority,$fil)
     {
-        return $this->__get_ids("Event");
+        return $this->__get_ids("Event",$priority,$fil);
+    }
+
+    function get_vulnerability_ids($priority,$fil)
+    {
+	return $this->__get_ids("Vulnerability",$priority,$fil);
     }
 
 
-    function IncidentGeneralData($reason, $date, $place, $responsible, $summary)
+    function IncidentGeneralData($title,$date)
     {
         $this->__WriteTitle(gettext("GENERAL DATA"));
         $this->SetFont('Arial', '', 12);
 
-        $this->__WriteBold(gettext("Reason: "));
-        $this->Write(DEFAULT_LINE_HEIGTH, $reason);
-        $this->Ln(DEFAULT_LINE_HEIGTH);
+	    $this->__WriteBold(gettext("Title: "));
+	    $this->Write(DEFAULT_LINE_HEIGTH, $title);
+	    $this->Ln(DEFAULT_LINE_HEIGTH);
+
 
         $this->__WriteBold(gettext("Date: "));
         $this->Write(DEFAULT_LINE_HEIGTH, $date);
-        $this->Ln(DEFAULT_LINE_HEIGTH);
-
-        $this->__WriteBold(gettext("Place: "));
-        $this->Write(DEFAULT_LINE_HEIGTH, $place);
-        $this->Ln(DEFAULT_LINE_HEIGTH);
-
-        $this->__WriteBold(gettext("Responsible: "));
-        $this->Write(DEFAULT_LINE_HEIGTH, $responsible);
         $this->Ln(DEFAULT_LINE_HEIGTH * 2);
 
-        $this->__WriteTitle(gettext("SUMMARY"));
-        $this->SetFont('Arial', '', 12);
-        $this->Write(DEFAULT_LINE_HEIGTH, $summary);
-        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
     }
 
-    function IncidentSummary($title, $ref, $summary)
+    function IncidentSummary($title, $ref, $summary, $priority, $fil)
     {
-        require_once ('classes/Incident.inc');
-
         $ids = array();
-        
+
         $this->__WriteTitle($title);
-        $this->SetFont('Arial', '', 12); 
+	    $this->SetFont('Arial', '', 12);
 
         /* Summary */
         $this->Write(DEFAULT_LINE_HEIGTH, $summary);
@@ -324,8 +337,9 @@ class PDF extends FPDF
 
         $this->Write(DEFAULT_LINE_HEIGTH, gettext("List of $ref"."s:"));
         $this->Ln(DEFAULT_LINE_HEIGTH);
-        $incident_list = Incident::get_list($this->ossim_conn, 
-            "WHERE ref = '$ref' ORDER BY date DESC");
+
+	    $incident_list = Incident::get_list($this->ossim_conn,"WHERE ref = '$ref' and $priority $fil ORDER BY priority DESC");
+
         if (is_array($incident_list)) {
             foreach ($incident_list as $incident) {
                 $priority = $incident->get_priority($this->ossim_conn);
@@ -357,61 +371,69 @@ class PDF extends FPDF
 
     function Incident($incident_id)
     {
-        require_once ('classes/Incident.inc');
 
         $incident_list = Incident::get_list(
+
             $this->ossim_conn, "WHERE incident.id = $incident_id");
-        $incident = $incident_list[0];
+            $incident = $incident_list[0];
 
-        /* title */
-        $this->__WriteTitle($incident->get_title());
+            /* title */
+            $this->__WriteTitle($incident->get_title());
 
-        /* type */
-        $this->__WriteBold("Incident type: ");
-        $this->Write(DEFAULT_LINE_HEIGTH, $incident->get_ref());
-        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
 
-        /* Alarm or Metric specific data */
-        if ($incident->get_ref() == "Alarm" or $incident->get_ref() == "Event")
-        {
-            if ($alarm_list = $incident->get_alarms($this->ossim_conn)) {
-                foreach ($alarm_list as $alarm) {
-                    $this->__WriteBold("Source ips: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ips());
-                    $this->Ln();
-                    $this->__WriteBold("Destination ips: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_dst_ips());
-                    $this->Ln();
-                    $this->__WriteBold("Source ports: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
-                    $this->Ln();
-                    $this->__WriteBold("Destination ports: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
-                    $this->Ln();
-                }
-            }
-        } elseif ($incident->get_ref() == "Metric") {
-            if ($metric_list = $incident->get_metrics($this->ossim_conn)) {
-                foreach ($metric_list as $metric) {
-                    $this->__WriteBold("Target: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_target());
-                    $this->Ln();
-                    $this->__WriteBold("Metric type: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_type());
-                    $this->Ln();
-                    $this->__WriteBold("Metric value: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_value());
-                    $this->Ln();
-                }
-            }
-        }
+            /* Alarm or Metric specific data */
+            if ($incident->get_ref() == "Alarm" or $incident->get_ref() == "Event")
+            {
+                    if ($alarm_list = $incident->get_alarms($this->ossim_conn)) {
+                        foreach ($alarm_list as $alarm) {
+                            $this->__WriteBold("Source ips: ");
+                            $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ips());
+                            $this->Ln();
+                            $this->__WriteBold("Destination ips: ");
+                            $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_dst_ips());
+                            $this->Ln();
+                            $this->__WriteBold("Source ports: ");
+                            $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
+                            $this->Ln();
+                            $this->__WriteBold("Destination ports: ");
+                            $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
+                            $this->Ln();
+                        } /*foreach*/
+                    } /*if*/      
+            } elseif ($incident->get_ref() == "Metric") {
+                if ($metric_list = $incident->get_metrics($this->ossim_conn)) {
+                    foreach ($metric_list as $metric) {
+                        $this->__WriteBold("Target: ");
+                        $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_target());
+                        $this->Ln();
+                        $this->__WriteBold("Metric type: ");
+                        $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_type());
+                        $this->Ln();
+                        $this->__WriteBold("Metric value: ");
+                        $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_value());
+                        $this->Ln();
+                    } /*foreach*/
+                } /*if*/  
+            } elseif ($incident->get_ref() == "Vulnerability") {
+	            if ($vulnerability_list = $incident->get_vulnerabilities($this->ossim_conn)) {
+	                foreach ($vulnerability_list as $vulnerability) {
+	                    $this->__WriteBold("IP: ");
+	                    $this->Write(DEFAULT_LINE_HEIGTH, $vulnerability->get_ip() . "     ");
+	                    $this->__WriteBold("Port: ");
+	                    $this->Write(DEFAULT_LINE_HEIGTH, $vulnerability->get_port() . "     ");
+	                    $this->__WriteBold("Nessus ID: ");
+	                    $this->Write(DEFAULT_LINE_HEIGTH, $vulnerability->get_nessus_id() . "     ");
+	                    $this->Ln();
+	                } /*foreach*/
+	            } /*if*/
+            } /*elseif*/  
+
 
         /* in charge */
         $this->Ln();
         $this->__WriteBold("In charge: ");
         $this->Write(DEFAULT_LINE_HEIGTH,
-                     $incident->get_in_charge($this->ossim_conn));
-        $this->Ln();
+        $incident->get_in_charge($this->ossim_conn) . "     ");
 
         /* status */
         $this->__WriteBold("Status: ");
@@ -419,20 +441,19 @@ class PDF extends FPDF
         $color = "";
         if ($status == "Open") $color = "red";
         $this->__WriteBold($status, $color);
-        $this->Ln();
+    	$this->__WriteBold("     ");
 
         /* priority */
         $this->__WriteBold("Priority: ");
         $priority = $incident->get_priority($this->ossim_conn);
         $color = $incident->get_priority_bgcolor($priority);
         $this->__WriteBold($priority, $color);
-        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+        $this->Ln(DEFAULT_LINE_HEIGTH * 3);
 
         /* tickets */
         if ($tickets = $incident->get_tickets($this->ossim_conn)) {
             foreach ($tickets as $ticket) {
-                $this->__WriteBold("[" . $ticket->get_date() . 
-                    " revision] ");
+                $this->__WriteBold("[" . $ticket->get_date() . " revision] ");
                 $this->Ln();
                 $this->__WriteBold("User: ");
                 $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_user());
@@ -459,16 +480,15 @@ class PDF extends FPDF
                 $this->__WriteBold("In charge: ");
                 $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_in_charge());
                 $this->Ln();
-                if ($ticket->get_transferred()) {
+                if ($ticket->get_transferred) {
                     $this->__WriteBold("Transferred: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, 
-                                 $ticket->get_transferred());
+                    $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_transferred());
                     $this->Ln();
                 }
                 $this->Ln(DEFAULT_LINE_HEIGTH * 2);
-            }
+            } /*foreach*/
         }
-    }
+    } /*end function incident*/
 
 
     /*
@@ -482,7 +502,7 @@ class PDF extends FPDF
         require_once ('classes/Control_panel_host.inc');
         require_once ('classes/Session.inc');
         $user = Session::get_session_user();
-        
+
         $content = array();
         $length = array(40, 40, 40);
 
@@ -497,38 +517,38 @@ class PDF extends FPDF
         array_push($content, $tmp_array);
 
         if ($target == "host") {
-            $hosts = Control_panel_host::get_metric_list($this->ossim_conn, 
-                                                         $time_range, 
+            $hosts = Control_panel_host::get_metric_list($this->ossim_conn,
+                                                         $time_range,
                                                          $type);
             if (is_array($hosts)) {
                 foreach ($hosts as $host) {
                     if ($type == "compromise")
                         $tmp_array = array (
-                            Host::ip2hostname($this->ossim_conn, 
-                                              $host->get_host_ip()), 
+                            Host::ip2hostname($this->ossim_conn,
+                                              $host->get_host_ip()),
                             $host->get_max_c(),
                             $host->get_max_c_date());
                     elseif ($type == "attack")
                         $tmp_array = array (
-                            Host::ip2hostname($this->ossim_conn, 
-                                              $host->get_host_ip()), 
+                            Host::ip2hostname($this->ossim_conn,
+                                              $host->get_host_ip()),
                             $host->get_max_a(),
                             $host->get_max_a_date());
                     $content[] = $tmp_array;
                 }
             }
         } elseif ($target == "net") {
-            $nets = Control_panel_net::get_metric_list($this->ossim_conn, 
-                                                       $time_range, 
+            $nets = Control_panel_net::get_metric_list($this->ossim_conn,
+                                                       $time_range,
                                                        $type);
             if (is_array($nets)) {
                 foreach ($nets as $net) {
                     if ($type == "compromise")
-                        $tmp_array = array ($net->get_net_name(), 
+                        $tmp_array = array ($net->get_net_name(),
                                             $net->get_max_c(),
                                             $net->get_max_c_date());
                     elseif ($type == "attack")
-                        $tmp_array = array ($net->get_net_name(), 
+                        $tmp_array = array ($net->get_net_name(),
                                             $net->get_max_a(),
                                             $net->get_max_a_date());
                     $content[] = $tmp_array;
@@ -541,26 +561,26 @@ class PDF extends FPDF
                 print $conn->ErrorMsg();
             else {
                 if ($type == "compromise")
-                    $tmp_array = array ("GLOBAL", 
+                    $tmp_array = array ("GLOBAL",
                                         $rs_global->fields["max_c"],
                                         $rs_global->fields["max_c_date"]);
                 elseif ($type == "attack")
-                    $tmp_array = array ("GLOBAL", 
+                    $tmp_array = array ("GLOBAL",
                                         $rs_global->fields["max_a"],
                                         $rs_global->fields["max_a_date"]);
                 $content[] = $tmp_array;
             }
-            
+
         }
-        
+
         if ($type == "compromise")
             $color = "blue";
         if ($type == "attack")
             $color = "red";
 
-        $this->__WriteTable("Metrics last $time_range", 
+        $this->__WriteTable("Metrics last $time_range",
                             $length, $content, 0, $color);
-        
+
     }
 
     /* ---------------------------------------------------------------- */
@@ -573,15 +593,15 @@ class PDF extends FPDF
     /* V1.0 : 2004-01-17                                                */
     /*                                                                  */
     /* ---------------------------------------------------------------- */
-    
+
     function _readstr($var, &$pos, $n)
     {
         //Read some bytes from string
         $string = substr($var, $pos, $n);
         $pos += $n;
         return $string;
-    }					
-    
+    }
+
     function _readstr_int($var, &$pos)
     {
         //Read a 4-byte integer from string
@@ -608,7 +628,7 @@ class PDF extends FPDF
         $h=$this->_readstr_int($var,$pos);
         $bpc=ord($this->_readstr($var,$pos,1));
         if ($bpc > 8)
-            $this->Error('16-bit depth not supported');
+            $this->Error('16-bit depth not supported: '.$file);
         $ct = ord($this->_readstr($var,$pos,1));
         if ($ct == 0)
             $colspace='DeviceGray';
@@ -617,18 +637,18 @@ class PDF extends FPDF
         elseif ($ct == 3)
             $colspace='Indexed';
         else
-            $this->Error('Alpha channel not supported');
+            $this->Error('Alpha channel not supported: '.$file);
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Unknown compression method');
+            $this->Error('Unknown compression method: '.$file);
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Unknown filter method');
+            $this->Error('Unknown filter method: '.$file);
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Interlacing not supported');
+            $this->Error('Interlacing not supported: '.$file);
         $this->_readstr($var,$pos,4);
         $parms = '/DecodeParms <</Predictor 15 /Colors ' . ($ct==2 ? 3 : 1)
                  . ' /BitsPerComponent ' . $bpc . ' /Columns ' . $w . '>>';
 
-	//Scan chunks looking for palette, transparency and image data
+	    //Scan chunks looking for palette, transparency and image data
         $pal = '';
         $trns = '';
         $data = '';
@@ -670,9 +690,9 @@ class PDF extends FPDF
                 $this->_readstr($var,$pos,$n+4);
         }
         while($n);
-	
+
 	if ($colspace == 'Indexed' and empty($pal))
-            $this->Error('Missing palette');
+            $this->Error('Missing palette in ' . $file);
         return array('w'     => $w,
                      'h'     => $h,
                      'cs'    => $colspace,
@@ -687,39 +707,39 @@ class PDF extends FPDF
     function MemImage($data, $x, $y, $width=0, $height=0, $link='')
     {
     	$id = md5($data);
-    	if (!isset($this->images[$id]))
-    	{
-    	    $info = $this->_parsemempng( $data );
-    	    $info['i'] = count($this->images)+1;
-    	    $this->images[$id]=$info;
-    	}
-    	else
-    	    $info = $this->images[$id];
-    	    
-    	// Automatic width and height calculation if needed
-    	if ($width == 0 and $height == 0)
-    	{
-    	    // image at 72 dpi
-    	    $width = $info['w'] / $this->k;
-    	    $height = $info['h'] / $this->k;
-    	}
-    	if ($width == 0)
-    	    $width = $height * $info['w'] / $info['h'];
-    	if ($height == 0)
-    	    $height = $width * $info['h'] / $info['w'];
-    
-    	$this->_out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q',
-    	                     $width * $this->k, $height * $this->k, $x * $this->k,
-    			     ($this->h-($y+$height))*$this->k, $info['i']));
+	if (!isset($this->images[$id]))
+	{
+	    $info = $this->_parsemempng( $data );
+	    $info['i'] = count($this->images)+1;
+	    $this->images[$id]=$info;
+	}
+	else
+	    $info = $this->images[$id];
+
+	// Automatic width and height calculation if needed
+	if ($width == 0 and $height == 0)
+	{
+	    // image at 72 dpi
+	    $width = $info['w'] / $this->k;
+	    $height = $info['h'] / $this->k;
+	}
+	if ($width == 0)
+	    $width = $height * $info['w'] / $info['h'];
+	if ($height == 0)
+	    $height = $width * $info['h'] / $info['w'];
+
+	$this->_out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q',
+	                     $width * $this->k, $height * $this->k, $x * $this->k,
+			     ($this->h-($y+$h))*$this->k, $info['i']));
     }
-    
+
     function GDImage($image, $x, $y, $width=0, $height=0, $link='')
     {
-    	ob_start();
-    	imagepng($image);
-    	$data = ob_get_contents();
-    	ob_end_clean();
-            $this->MemImage($data, $x, $y, $width, $height, $link);
+	ob_start();
+	imagepng($image);
+	$data = ob_get_contents();
+	ob_end_clean();
+        $this->MemImage($data, $x, $y, $width, $height, $link);
     }
 }
 ?>

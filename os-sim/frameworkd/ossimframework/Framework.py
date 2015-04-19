@@ -6,10 +6,12 @@ class Framework:
 
     def __init__ (self):
         self.__classes = [
-                "ControlPanel",
+##                "ControlPanel",
+##                "RRDUpdate",
+                "ControlPanelRRD",
                 "AcidCache",
-                "RRDUpdate",
                 "Listener",
+                "Scheduler",
 #                "SOC",
             ]
 

@@ -53,7 +53,7 @@ class Host {
         {
             return $os["os"];
         }
-        return "unknown";
+        return "Unknown";
     }
 
     function get_mac_address($conn)
@@ -111,7 +111,7 @@ class Host {
 
     function insert($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a,
                     $rrd_profile, $alert, $persistence, $nat, $sensors,
-                    $descr, $os = "unknown", $mac = "", $mac_vendor = "")
+                    $descr, $os = "Unknown", $mac = "", $mac_vendor = "")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -141,16 +141,21 @@ class Host {
         }
 
         foreach ($sensors as $sensor) {
+
+	    if($os != "Unknown"){
             $sql = "INSERT INTO host_os (ip, os, date, anom, sensor)
                     VALUES (inet_aton(?), ?, CURRENT_TIMESTAMP, '0', inet_aton(?))";
             $params = array($ip, $os, $db_sensor_list[$sensor]);
             $conn->Execute($sql, $params);
+	    }
             
+	    if($mac != ""){ 
             $sql = "INSERT INTO host_mac (ip, mac, date, vendor, anom, sensor) 
                     VALUES (inet_aton(?), ?, CURRENT_TIMESTAMP, ?, '0', inet_aton(?))";
             
             $params = array($ip, $mac, $mac_vendor, $db_sensor_list[$sensor]);
             $conn->Execute($sql, $params);
+            }
         }
 
         $infolog = array($hostname,"[".$ip."]");
@@ -160,7 +165,7 @@ class Host {
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
                     $rrd_profile, $alert, $persistence, $nat, $sensors,
-                    $descr, $os = "unknown", $mac = "", $mac_vendor = "")
+                    $descr, $os = "Unknown", $mac = "", $mac_vendor = "")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
@@ -193,15 +198,15 @@ class Host {
         }
 
         foreach ($sensors as $sensor) {
-            if ($os != "unknown") {
+            if ($os != "Unknown") {
                 $sql = "INSERT INTO host_os (ip, os, date, anom, sensor) VALUES 
-                        (inet_aton(?), ?, CURRENT_TIMESTAMP, '1', inet_aton(?))";
+                        (inet_aton(?), ?, CURRENT_TIMESTAMP, '0', inet_aton(?))";
                 $params = array($ip, $os, $db_sensor_list[$sensor]);
                 $conn->Execute($sql, $params);
             }
-            if ($mac != "unknown") {
+            if ($mac != "") {
                 $sql = "INSERT INTO host_mac (ip, mac, date, vendor, anom, sensor) VALUES
-                        (inet_aton(?), ?, CURRENT_TIMESTAMP, ?, '1', inet_aton(?))";
+                        (inet_aton(?), ?, CURRENT_TIMESTAMP, ?, '0', inet_aton(?))";
                 $params = array($ip, $mac, $mac_vendor, $db_sensor_list[$sensor]);
                 $conn->Execute($sql, $params);
             }
@@ -231,7 +236,20 @@ class Host {
         
     }
 
-    function ip2hostname($conn, $ip) {
+    function ip2hostname($conn, $ip, $is_sensor = false, $force_no_dns = false) {
+
+	if($is_sensor == true){
+        	$sql = "SELECT * FROM sensor WHERE ip = ?";
+        	$params = array($ip);
+        	if (!$rs = $conn->Execute($sql, $params)) {
+            	print 'error: '.$conn->ErrorMsg().'<BR>';
+            	exit;
+        	}
+        	if (!$rs->EOF) {
+            	return $rs->fields["name"]; 
+        	}
+	}
+
         $sql = "SELECT * FROM host WHERE ip = ?";
         $params = array($ip);
         if (!$rs = $conn->Execute($sql, $params)) {
@@ -245,7 +263,7 @@ class Host {
             require_once ('ossim_conf.inc');
             $config = $GLOBALS["CONF"];
             $use_resolv = $config->get_conf("use_resolv");
-            if ($use_resolv and preg_match("/\d+\.\d+\.\d+\.\d+/", $ip))
+            if ($use_resolv and preg_match("/\d+\.\d+\.\d+\.\d+/", $ip) and $force_no_dns == false)
                 return gethostbyaddr($ip);
             else 
                 return $ip;
@@ -321,7 +339,7 @@ class Host {
                 {
                     $sql = "SELECT sensor.ip AS sensor 
                         FROM sensor, net_sensor_reference
-                        WHERE name = sensor_name AND net_name = ?'";
+                        WHERE name = sensor_name AND net_name = ?";
                     $params = array($net_name);
                     if (!$rs = &$conn->Execute($sql, $params)) {
                         print $conn->ErrorMsg();

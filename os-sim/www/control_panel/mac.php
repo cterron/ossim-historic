@@ -41,6 +41,9 @@ ossim_valid($ex_mac, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_mac"));
 ossim_valid($ex_macs, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_macs"));
 ossim_valid($num, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("num"));
 
+//casting
+$inf = intval($inf);
+$sup = intval($sup);
 
 if (ossim_error()) {
         die(ossim_error());

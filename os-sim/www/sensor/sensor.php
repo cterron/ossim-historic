@@ -131,8 +131,8 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     </tr>
 
 <?php
-        } /* sensor_list */
-    } /* foreach */
+        } /* foreach */
+    } /* sensor_list */
 
     $db->close($conn);
 ?>

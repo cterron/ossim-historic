@@ -32,13 +32,14 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !defined(__sim_util_h__)
-#  define __sim_util_h__
+#ifndef __SIM_UTIL_H__
+#define __SIM_UTIL_H__ 1
 
 #include <glib.h>
 #include <gnet.h>
 
 #include "sim-enums.h"
+#include "sim-database.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,10 @@ struct _Plugin_PluginSid
 };
 
 typedef struct _SimPortProtocol    SimPortProtocol;
+struct _SimPortProtocol {
+  gint              port;
+  SimProtocolType   protocol;
+};
 
 SimPortProtocol* sim_port_protocol_new (gint              port,
 					SimProtocolType   protocol);
@@ -94,7 +99,21 @@ inline gchar *		sim_string_substitute_char  (gchar *string,
 										                            gchar c_orig,
 										                            gchar c_dest);
 
-guint							sim_g_strv_length				(gchar				**str_array);
+guint							sim_g_strv_length						(gchar				**str_array);
+gboolean					sim_base64_encode						(gchar *_in, 
+																								guint inlen,
+																								gchar *_out,
+																								guint outmax,
+																								guint *outlen);
+gboolean					sim_base64_decode						(	gchar *in,
+																								guint inlen, 
+																								gchar *out, 
+																								guint *outlen);
+
+size_t						sim_strnlen									(	const char *str,
+																								size_t maxlen);
+gchar*						sim_normalize_host_mac			(gchar *old_mac);
+
 	
 G_END_DECLS
 

@@ -181,10 +181,6 @@ sim_server_new (SimConfig  *config)
 	if (config->server.ip)
 		server->_priv->ip = g_strdup (config->server.ip);
 
-	//load the server's role specified in DB (this can be changed with an event from a
-	//master server)
-	sim_server_load_role (server);
-
 
   return server;
 }
@@ -220,6 +216,38 @@ sim_server_HA_new (SimConfig  *config)
   return server;
 }
 
+/*
+ * NOTE: This is NOT the "normal" server. This is used to store & maintain configuration of children servers.
+ */
+SimServer*
+sim_server_new_from_dm (GdaDataModel  *dm,
+												gint row)
+{
+  SimServer *server;
+  GdaValue     *value;
+	SimConfig	*config;
+
+  g_return_val_if_fail (dm, NULL);
+  g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
+
+	config = sim_config_new ();	//used almost only to store the server's role
+
+  server = SIM_SERVER (g_object_new (SIM_TYPE_SERVER, NULL));
+	server->_priv->config = config;
+
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+  server->_priv->name = gda_value_stringify (value);
+
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+  server->_priv->ip = gda_value_stringify (value);
+
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
+  server->_priv->port = gda_value_get_integer (value);
+
+  return server;
+
+}
+
 
 /*
  * OSSIM has internally in fact two servers; the ossim.server (the "main" server), wich
@@ -250,7 +278,7 @@ sim_server_listen_run (SimServer *server)
 	if (!server->_priv->ip)
 		server->_priv->ip = g_strdup("0.0.0.0");
 	
-	serverip = gnet_inetaddr_new_nonblock(server->_priv->ip, 0);
+	serverip = gnet_inetaddr_new_nonblock (server->_priv->ip, 0);
 	if (!serverip)
 	{
 	  g_message("Error creating server address. Please check that the ip %s has the right format",server->_priv->ip);
@@ -414,7 +442,17 @@ sim_server_session (gpointer data)
 
 
 	  if (sim_server_remove_session (server, session))
-		{
+		{ /*
+		  if (sim_session_is_sensor (session))
+  		{
+		    GInetAddr *ia = sim_sensor_get_ia (sim_session_get_sensor (session));
+    		gchar *ip = gnet_inetaddr_get_canonical_name (ia);
+		    if (sim_session_get_hostname (session))
+    		  g_message ("- Session Sensor %s %s: REMOVED", sim_session_get_hostname (session), ip);
+		    else
+    	  g_message ("- Session Sensor: REMOVED");
+		    g_free (ip);
+		  }*/
 			g_object_unref (session);
 		
 		  g_message ("Session Removed");
@@ -551,7 +589,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
     SimSession *session = (SimSession *) list->data;
       
 		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_push_session_plugin_command");
-    if ((session != NULL) && SIM_IS_SESSION(session))
+    if ((session != NULL) && SIM_IS_SESSION (session))
 		{
       if (session_type == SIM_SESSION_TYPE_ALL || session_type == session->type)
       {
@@ -750,6 +788,31 @@ sim_server_set_data_role (SimServer		*server,
 	sim_config_set_data_role (conf, command);
 }
 
+/*
+ * Same than sim_server_set_data_role, but this only stores data in memory and directly from role.
+ */
+void
+sim_server_set_role	(SimServer *server,
+											SimRole	*role)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+  g_return_if_fail (role);
+	
+	SimConfig *config = server->_priv->config;
+	config->server.role = role;
+}
+
+SimRole *
+sim_server_get_role	(SimServer *server)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+	
+	SimConfig *config = server->_priv->config;
+	return config->server.role;
+}
+
 SimConfig*
 sim_server_get_config (SimServer   *server)
 {
@@ -759,7 +822,24 @@ sim_server_get_config (SimServer   *server)
 	return server->_priv->config;
 }
 
+gint
+sim_server_get_port (SimServer   *server)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
 
+	return server->_priv->port;
+}
+
+void
+sim_server_set_port (SimServer   *server,
+											gint			port)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+
+	server->_priv->port = port;
+}
 /*
  *
  * Debug function: print the server sessions 
@@ -784,6 +864,22 @@ void sim_server_debug_print_sessions (SimServer *server)
 }
 
 void
+sim_server_debug_print  (SimServer *server)
+{
+  gchar *aux = g_strdup_printf("%s|%s|%d",  sim_server_get_name (server),
+                                            sim_server_get_ip (server),
+                                            sim_server_get_port (server));
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_sensor_debug_print: %s", aux);
+
+  g_free (aux);
+
+}
+
+/*
+ * 
+ */
+void
 sim_server_load_role (SimServer	*server)
 {
   GdaDataModel	*dm;
@@ -794,165 +890,42 @@ sim_server_load_role (SimServer	*server)
   SimConfig *config = server->_priv->config;
 
 	//load correlate role
-	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_correlate'");
+	query = g_strdup_printf ("SELECT correlate, cross_correlate, store, qualify, resend_alarm, resend_event  FROM server_role WHERE name = '%s'", sim_server_get_name (server));
 	dm = sim_database_execute_single_command (ossim.dbossim, query);
 	if (dm)
 	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
+		if (gda_data_model_get_n_rows (dm) == 0)
 		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->correlate = atoi (c);
-			else
-			{
-				config->server.role->correlate = FALSE;
-				g_message ("Error in the correlate data value from configuration");
-			}			
+			config->server.role->correlate       = 1;
+			config->server.role->cross_correlate = 1;
+			config->server.role->store           = 1;
+			config->server.role->qualify         = 1;
+			config->server.role->resend_alarm    = 1;
+			config->server.role->resend_event    = 1;
 		}
 		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in correlate value");
-	}
-	else
-	  g_message ("CONFIG DATA MODEL ERROR, correlate");			
-
-	g_free (query);
-	g_object_unref (dm);
-
-	//load cross_correlate role
-	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_cross_correlate'");
-	dm = sim_database_execute_single_command (ossim.dbossim, query);
-	if (dm)
-	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
 		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->cross_correlate = atoi (c);
-			else
-			{
-				config->server.role->cross_correlate = FALSE;
-				g_message ("Error in the cross correlate data value from configuration");
-			}			
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+			config->server.role->correlate = gda_value_get_tinyint (value);
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 1, 0);
+			config->server.role->cross_correlate = gda_value_get_tinyint (value);
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 2, 0);
+			config->server.role->store = gda_value_get_tinyint (value);
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 3, 0);
+			config->server.role->qualify = gda_value_get_tinyint (value);
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 4, 0);
+			config->server.role->resend_alarm = gda_value_get_tinyint (value);
+			value = (GdaValue *) gda_data_model_get_value_at (dm, 5, 0);
+			config->server.role->resend_event = gda_value_get_tinyint (value);
 		}
-		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in cross correlate value");
+		g_object_unref (dm);
 	}
 	else
-	  g_message ("CONFIG DATA MODEL ERROR, cross correlate");			
+	  g_message ("LOAD ROLE DATA MODEL ERROR");		
 
 	g_free (query);
-	g_object_unref (dm);
-
-
-	//load store role
-  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_store'");
-	dm = sim_database_execute_single_command (ossim.dbossim, query);
-	if (dm)
-	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
-		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->store = atoi (c);
-			else
-			{
-				config->server.role->store = FALSE;
-				g_message ("Error in the store data value from configuration");
-			}			
-		}
-		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in store value");
-	}
-	else
-	  g_message ("CONFIG DATA MODEL ERROR, store");			
-
-	g_free (query);
-	g_object_unref (dm);
-
-  //Load qualify role
-	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_qualify'");
-	dm = sim_database_execute_single_command (ossim.dbossim, query);
-	if (dm)
-	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
-		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->qualify = atoi (c);
-			else
-			{
-				config->server.role->qualify = FALSE;
-				g_message ("Error in the qualify data value from configuration");
-			}			
-		}
-		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in qualify value");
-	}
-	else
-	  g_message ("CONFIG DATA MODEL ERROR, Qualificate");			
-
-	g_free (query);
-	g_object_unref (dm);
-
-	//load resend_alarm value role
-  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_resend_alarm'");
-	dm = sim_database_execute_single_command (ossim.dbossim, query);
-	if (dm)
-	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
-		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->resend_alarm = atoi (c);
-			else
-			{
-				config->server.role->resend_alarm = FALSE;
-				g_message ("Error in the resend data value from configuration");
-			}			
-		}
-		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in resend alarm value");
-	}
-	else
-	  g_message ("CONFIG DATA MODEL ERROR, Resend alarm");			
-
-	g_free (query);
-	g_object_unref (dm);
-	
-	//load resend_event value role
-  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_resend_event'");
-	dm = sim_database_execute_single_command (ossim.dbossim, query);
-	if (dm)
-	{
-		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-		if (!gda_value_is_null (value))
-		{
-			c = gda_value_stringify (value);
-			if (sim_string_is_number (c, 0))
-				config->server.role->resend_event = atoi (c);
-			else
-			{
-				config->server.role->resend_event = FALSE;
-				g_message ("Error in the resend data value from configuration");
-			}			
-		}
-		else
-		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in resend event value");
-	}
-	else
-	  g_message ("CONFIG DATA MODEL ERROR, resend event");			
-
-	g_free (query);
-	g_object_unref (dm);
 
 }
-
-
 
 
 // vim: set tabstop=2:

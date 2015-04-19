@@ -197,7 +197,7 @@ class Util {
     }
 
     /*
-     *  PRE: $date must be in format YYYY-MM-DD HH-MM
+     *  PRE: $date must be in format YYYY-MM-DD HH:MM
      *       $target must be ip_src or ip_dst
      */
     function get_acid_date_link($date, $ip = "", $target = "")
@@ -249,7 +249,7 @@ class Util {
     }
 
     /*
-     *  PRE: $date must be in format YYYY-MM-DD HH-MM
+     *  PRE: $date must be in format YYYY-MM-DD HH:MM
      *       
      */
     function get_acid_pair_link($date, $ip = "", $ip2 = "")
@@ -300,19 +300,20 @@ class Util {
 
     /*
      *  PRE: 
-     *     $since and $last must be in format YYYY-MM-DD HH-MM-SS
+     *     $since and $last must be in format YYYY-MM-DD HH:MM:SS
      *     $desc must be "time_d" or "time_a"
+     *     $target must be "ip_src", "ip_dst" or "ip_both"
      */
-    function get_acid_events_link($since, $last, $order = "time_d")
+    function get_acid_events_link($since, $last, $order = "time_d", $ip = "", $target ="ip_both")
     {
 
         require_once ('ossim_conf.inc');
         $conf = $GLOBALS["CONF"];
         $acid_link = $conf->get_conf("acid_link");
         $acid_prefix = $conf->get_conf("event_viewer");
-        
+
         $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/";
-        
+
         /*
          * regs[1] => year
          * regs[2] => month
@@ -325,33 +326,35 @@ class Util {
         preg_match($pattern, $last, $regs_last);
 
         $link = "$acid_link" . "/" . $acid_prefix .
-            "_qry_main.php?new=1" . 
+            "_qry_main.php?new=1" .
             "&time[0][0]=(" .
-            "&time[0][1]=>=" . 
+            "&time[0][1]=>=" .
             "&time[0][2]=" . $regs_since[2] .
             "&time[0][3]=" . $regs_since[3] .
             "&time[0][4]=" . $regs_since[1] .
             "&time[0][5]=" . $regs_since[4] .
             "&time[0][6]=" . $regs_since[5] .
             "&time[0][7]=" . $regs_since[6] .
-            "&time[0][8]=)" . 
+            "&time[0][8]=)" .
             "&time[0][9]=AND" .
             "&time[1][0]=(" .
-            "&time[1][1]=<=" . 
+            "&time[1][1]=<=" .
             "&time[1][2]=" . $regs_last[2] .
             "&time[1][3]=" . $regs_last[3] .
             "&time[1][4]=" . $regs_last[1] .
             "&time[1][5]=" . $regs_last[4] .
             "&time[1][6]=" . $regs_last[5] .
             "&time[1][7]=" . $regs_last[6] .
-            "&time[1][8]=)";
+            "&time[1][8]=)&time[1][9]=";
+
+        if ($ip)
+          $link .= "&ip_addr[0][1]=$target&ip_addr[0][2]==&ip_addr[0][3]=$ip";
 
         $link .= "&sort_order=$order&".
                  "submit=Query+DB&num_result_rows=-1&time_cnt=2&ip_addr_cnt=1";
 
         return $link;
     }
-
 
     function graph_image_link($ip, $type, $what, $start, $end, $zoom, $range) {
         $cgi_link = "show_image.php";
@@ -419,6 +422,236 @@ class Util {
         // escape break lines
         $str = preg_replace("/(\r)|(\r?\n)/", '\n', $str);
         return $str;
+    }
+
+    /*
+     * $options = array(
+     *    'input_name'       => 'document.forms[0].foo' )
+     */
+    function draw_js_calendar($options, $debug = false)
+    {
+        static $first_time = true;
+        static $js_calendar_num = 0;
+        $html = '';
+        if ($first_time) {
+            $html .= '
+                <SCRIPT LANGUAGE="JavaScript" SRC="../js/mattkruse/CalendarPopup.js"></SCRIPT>
+                <DIV ID="testdiv1" STYLE="position:absolute;visibility:hidden;background-color:white;layer-background-color:white;"></DIV>
+            ';
+            $first_time = false;
+        }
+        $js_calendar_num++;
+        $js_cal_obj_name = 'cal'.$js_calendar_num;
+        $js_anchor_name  = 'anchor'.$js_calendar_num;
+        $html .= '
+        <script>
+            var '.$js_cal_obj_name.' = new CalendarPopup("testdiv1");
+            '.$js_cal_obj_name.'.setCssPrefix("CALENDAR");
+            '.$js_cal_obj_name.'.showNavigationDropdowns();
+            '.$js_cal_obj_name.'.setMonthNames("'._("January").'","'._("February").'","'._("March").'","'._("April").'","'._("May").'","'._("June").'","'._("July").'","'._("August").'","'._("September").'","'._("October").'","'._("November").'","'._("December").'");
+            '.$js_cal_obj_name.'.setMonthAbbreviations("'._("Jan").'","'._("Feb").'","'._("Mar").'","'._("Apr").'","'._("May").'","'._("Jun").'","'._("Jul").'","'._("Aug").'","'._("Sep").'","'._("Oct").'","'._("Nov").'","'._("Dec").'");
+            '.$js_cal_obj_name.'.setDayHeaders("'._("Sun").'","'._("Mon").'","'._("Tue").'","'._("Wed").'","'._("Thu").'","'._("Fri").'","'._("Sat").'");
+            '.$js_cal_obj_name.'.setTodayText("'._("Today").'");
+        </script> 
+        <a href="#" name='.$js_anchor_name.' id='.$js_anchor_name.'
+           onClick="'.$js_cal_obj_name.'.select('.$options['input_name'].',\''.$js_anchor_name.'\',\'yyyy-MM-dd\'); return false;">
+        <img src="../pixmaps/calendar.gif" border=0 title="'._("Date format is").' YY-MM-DD"></a>
+        ';
+        if ($debug) {
+            printr($html);
+        }
+        echo $html;
+    }
+
+	function cidr_conv($cidr_address) {
+		$last_bin = "";
+		$result = array();
+  		$first = substr($cidr_address, 0, strpos($cidr_address, "/"));
+  		$netmask = substr(strstr($cidr_address, "/"), 1);
+
+		$first_bin = str_pad(decbin(ip2long($first)), 32, "0", STR_PAD_LEFT);
+		$netmask_bin = str_pad(str_repeat("1", (integer)$netmask), 32, "0", STR_PAD_RIGHT);
+	
+		$temp = $first_bin & $netmask_bin;
+ 
+		for ($i = 0; $i < 32; $i++) {
+			if ($netmask_bin[$i] == "1") 
+				$last_bin .= $first_bin[$i];
+			else
+				$last_bin .= "1";
+		}
+
+		$result[0] =  long2ip(bindec($temp));
+		$result[1] =  long2ip(bindec($last_bin));
+
+		return $result;
+	}
+
+    /*
+    * Gets all the data needed to paginate results
+    * This is an associative array with the following
+    * values filled in:
+    *
+    * array(
+    *    'current' => X,    // current page you are
+    *    'numrows' => X,    // total number of results
+    *    'next'    => X,    // row number where next page starts
+    *    'prev'    => X,    // row number where prev page starts
+    *    'remain'  => X,    // number of results remaning *in next page*
+    *    'numpages'=> X,    // total number of pages
+    *    'from'    => X,    // the row to start fetching
+    *    'to'      => X,    // the row to stop fetching
+    *    'limit'   => X,    // how many results per page
+    *    'maxpages'   => X, // how many pages to show (Google style)
+    *    'firstpage'  => X, // the row number of the first page
+    *    'lastpage'   => X, // the row number where the last page starts
+    *    'pages'   => array(    // assoc with page "number => start row"
+    *                1 => X,
+    *                2 => X,
+    *                3 => X
+    *                )
+    *    );
+    * @param int $from    The row to start fetching
+    * @param int $limit   How many results per page
+    * @param int $numrows Number of results from query
+    *
+    * @return array associative array with data
+    *
+    */
+    function pager_get_data($from, $limit, $numrows, $maxpages = 10)
+    {
+        if (empty($numrows) || ($numrows < 0)) {
+            $null = null;
+            return $null;
+        }
+        $from = (empty($from)) ? 0 : $from;
+
+        if ($limit <= 0) {
+            die(_("wrong \"limit\" param"));
+        }
+
+        // Total number of pages
+        $pages = ceil($numrows/$limit);
+        $data['numpages'] = $pages;
+
+        // first & last page
+        $data['firstpage'] = 1;
+        $data['lastpage']  = $pages;
+
+        // Build pages array
+        $data['pages'] = array();
+        for ($i=1; $i <= $pages; $i++) {
+            $offset = $limit * ($i-1);
+            $data['pages'][$i] = $offset;
+            // $from must point to one page
+            if ($from == $offset) {
+                // The current page we are
+                $data['current'] = $i;
+            }
+        }
+        if (!isset($data['current'])) {
+            die(_("wrong \"from\" param"));
+        }
+
+        // Limit number of pages (Google style)
+        if ($maxpages) {
+            $radio = floor($maxpages/2);
+            $minpage = $data['current'] - $radio;
+            if ($minpage < 1) {
+                $minpage = 1;
+            }
+            $maxpage = $data['current'] + $radio - 1;
+            if ($maxpage > $data['numpages']) {
+                $maxpage = $data['numpages'];
+            }
+            if ($data['numpages'] < $maxpages) {
+                $minpage = 1;
+                $maxpage = $data['numpages'];
+            } else {
+                // if we're at the top of the range, move minpage down...
+                if ($data['lastpage'] - $minpage < $maxpages) {
+                    $minpage = $data['lastpage'] - $maxpages + 1;
+                }
+                // if we're at the bottom of the range, move maxpage up...
+                if ($maxpage < $maxpages) {
+                    $maxpage = $maxpages;
+                }
+            }
+            foreach (range($minpage, $maxpage) as $page) {
+                $tmp[$page] = $data['pages'][$page];
+            }
+            $data['pages'] = $tmp;
+            $data['maxpages'] = $maxpages;
+        } else {
+            $data['maxpages'] = null;
+        }
+
+        // Prev link
+        $prev = $from - $limit;
+        $data['prev'] = ($prev >= 0) ? $prev : null;
+
+        // Next link
+        $next = $from + $limit;
+        $data['next'] = ($next < $numrows) ? $next : null;
+
+        // Results remaining in next page & Last row to fetch
+        if ($data['current'] == $pages) {
+            $data['remain'] = 0;
+            $data['to'] = $numrows;
+        } else {
+            if ($data['current'] == ($pages - 1)) {
+                $data['remain'] = $numrows - ($limit*($pages-1));
+            } else {
+                $data['remain'] = $limit;
+            }
+            $data['to'] = $data['current'] * $limit;
+        }
+        $data['numrows'] = $numrows;
+        $data['from']    = $from + 1;
+        $data['limit']   = $limit;
+
+        return $data;
+    }
+
+    function pager_draw($from, $limit, $numrows, $my_link=false)
+    {
+        $d = Util::pager_get_data($from, $limit, $numrows);
+        $html = '
+<table width="60%" align="center" style="border-width: 0px">
+<tr>
+    <td style="border-width: 0px">'.$d['numrows'].' '._("results found").'</td>
+    <td style="border-width: 0px">('.sprintf(_("Page %d of %d"), $d['current'], $d['numpages']).')</td>
+    <td style="border-width: 0px">'.sprintf(_("%d results per page"), $d['limit']).'</td>
+</tr>
+<tr>';
+        // previous link
+        if ($d['current'] > 1) {
+            $link = $my_link."&page_from=".$d['prev'];
+            $prev = '<a href="'.$link.'">&lt; '._("Previous").'</a>';
+        } else {
+            $prev = '&nbsp;';
+        }
+        $html .= "<td style=\"border-width: 0px\">$prev</td><td style=\"border-width: 0px\">";
+        // pages links
+        if(count($d['pages']) > 0){
+        foreach ($d['pages'] as $page => $row) {
+            if ($page == $d['current']) {
+                $page = '<font color="red">'.$page.'</font> ';
+            }
+            $link = $my_link."&page_from=".$row;
+            $html .= '&nbsp;<a href="'.$link.'">'.$page.'</a>';
+        }
+        }
+        // next link
+        if ($d['current'] < $d['numpages']) {
+            $link = $my_link."&page_from=".$d['next'];
+            $next = '<a href="'.$link.'">'._("Next").' &gt;</a>';
+        } else {
+            $next = '&nbsp;';
+        }
+        $html .= "</td><td style=\"border-width: 0px\">$next</td></tr></table>";
+
+        return $html;
     }
 
 }

@@ -6,7 +6,7 @@ require_once 'ossim_db.inc';
 require_once 'classes/Incident.inc';
 require_once 'classes/Incident_ticket.inc';
 require_once 'classes/Incident_tag.inc';
-
+require_once 'classes/Osvdb.inc';
 
 $id = GET('id');
 
@@ -173,7 +173,28 @@ function format_user($user, $html = true, $show_email = false)
                         "New OS: <b>". $a_os . "</b><br>";
                
                 }
-                
+            }
+        } elseif ($ref == 'Vulnerability') {
+            $vulnerability_list = $incident->get_vulnerabilities($conn);
+            foreach ($vulnerability_list as $vulnerability_data) {
+                // Osvdb starting
+                $nessus_id = $vulnerability_data->get_nessus_id();
+                $osvdb_id = Osvdb::get_osvdbid_by_nessusid($conn,$nessus_id);
+                if ($osvdb_id)
+                    $nessus_id = "<a href=\"osvdb.php?id=" . $osvdb_id . "\">" . $nessus_id . "</a>";
+                // Osvdb end
+
+                echo
+                    "IP: <b>" .
+                        $vulnerability_data->get_ip() . "</b><br> " .
+                    "Port: <b>" .
+                        $vulnerability_data->get_port() . "</b><br> " .
+                    "Nessus ID: <b>" .
+                        $nessus_id . "</b><br>" .
+                    "Risk: <b>" .
+                        $vulnerability_data->get_risk() . "</b><br>" .
+                    "Description: <b>" .
+                        Osvdb::sanity($vulnerability_data->get_description()) . "</b><br>";
             }
         }
     ?>
@@ -196,7 +217,7 @@ function format_user($user, $html = true, $show_email = false)
            
         <input type="button" name="submit_delete" value="<?=_("Delete")?>"
                style="width: 10em; color: red;"
-               onClick="document.location = 'manageincident.php?action=delincident&incident_id=<?=$id?>';"
+               onClick="c = confirm('<?=_("Are you sure?")?>'); if (c) document.location = 'manageincident.php?action=delincident&incident_id=<?=$id?>';"
                />
         </form>
     </td>

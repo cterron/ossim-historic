@@ -2,6 +2,7 @@
 
 require_once ('classes/Net.inc');
 require_once ('classes/Session.inc');
+require_once ('classes/Security.inc');
 require_once ('classes/Log_action.inc');
 require_once ("ossim_db.inc");
 
@@ -76,6 +77,7 @@ class Alarm {
     function get_snort_cid()        { return $this->snort_cid;      }
     function get_alarm()            { return $this->alarm;          }
 
+    /* deprecated */
     function get_count($conn, $src_ip = "", $dst_ip = "", $hide_closed = 1)
     {
         $count = 0;
@@ -199,37 +201,65 @@ class Alarm {
     }
 
     function get_list($conn, $src_ip, $dst_ip, $hide_closed = 1,
-                      $order, $inf = 0, $sup = 25)
+                      $order, $inf = null, $sup = null, $from_date = null, $to_date = null)
     {
         $list = array();
-        $where = "";
+        $where = array();
+
         /* ip filter */
-        if ($src_ip and $dst_ip) {
-            $where .= " WHERE (inet_aton('$src_ip') = src_ip OR
-                inet_aton('$dst_ip') = dst_ip) ";
-        } elseif ($src_ip) {
-            $where .= " WHERE (inet_aton('$src_ip') = src_ip) ";
-        } elseif ($dst_ip) {
-            $where .= " WHERE (inet_aton('$dst_ip') = dst_ip) ";
-        } else {
-            $where = "";
+        if (valid_ip($src_ip)) $src_ip .= "/32";
+        if (valid_ip($dst_ip)) $dst_ip .= "/32";
+
+        if (isset($src_ip)) list($source_start, $source_end) = Util::cidr_conv($src_ip);
+        if (isset($dst_ip)) list($dest_start, $dest_end) = Util::cidr_conv($dst_ip);
+    
+        /* If both src and dst are equal, try to find all alarms where src OR dst are equal to the IP */
+        if ($src_ip && ($src_ip == $dst_ip)) {
+            $where[] = "(inet_aton('$source_start') <= src_ip AND inet_aton('$source_end') >= src_ip)
+                        OR
+                        (inet_aton('$dest_start') <= dst_ip AND inet_aton('$dest_end') >= dst_ip)";
+        } elseif ($src_ip) {  
+            $where[] = "(inet_aton('$source_start') <= src_ip AND inet_aton('$source_end') >= src_ip)";
+        } elseif ($dst_ip) { 
+            $where[] = "(inet_aton('$dest_start') <= dst_ip AND inet_aton('$dest_end') >= dst_ip)";
+        }
+        /* hide closed */
+        if ($hide_closed == 1) {
+            $where[] = "alarm.status = 'open' ";
+        }
+        /* date range filter */
+        if ($from_date) {
+            list($y, $m, $d) = preg_split('#-#', $from_date);
+            if (!checkdate($m, $d, $y)) {
+                print _("Invalid date").": $from_date";
+                return array();
+            }
+            $where[] = "(timestamp >= '$from_date')";
         }
         
-        if ($hide_closed == 1) {
-            if ($where == "")
-                $where = " WHERE alarm.status = 'open' ";
-            else
-                $where = " AND (alarm.status = 'open') ";
+        if ($to_date) {
+            list($y, $m, $d) = preg_split('#-#', $to_date);
+            if (!checkdate($m, $d, $y)) {
+                print _("Invalid date").": $to_date";
+                return array();
+            }
+            $where[] = "(timestamp <= '$to_date 23:59:59')";
         }
 
         /* number of events per page */
-        $nevents = $sup - $inf;
+        $limit = "";
+        if ($sup !== null && $inf !== null) {
+            $nevents = $sup - $inf;
+            $limit = "LIMIT $nevents OFFSET $inf";
+        }
 
-        $query = OssimQuery("SELECT *, timestamp + 0 AS timestamp, 
+        $sql_where = count($where) ? 'WHERE ' . implode(" AND ", $where) : "";
+
+        $sql = "SELECT *, timestamp + 0 AS timestamp, 
                   inet_ntoa(src_ip), inet_ntoa(dst_ip) 
-            FROM alarm $where $order LIMIT $nevents OFFSET $inf");
+                FROM alarm $sql_where $order $limit";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
             return array();
         }
@@ -590,7 +620,8 @@ class Alarm {
        Log_action::log(11,$infolog);
     }
 
-    function delete_from_backlog($conn, $backlog_id, $alarm_id)
+    function delete_from_backlog($conn, $backlog_id, $alarm_id, $hide_closed = 0,
+                                 $src_ip = null, $dst_ip = null, $from_date = null, $to_date = null)
     {
         /* delete ALL */
         if (!strcmp($backlog_id, "all")) {
@@ -602,7 +633,46 @@ class Alarm {
                 print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             }
 
-
+        // XXXX Work in progress, non functional
+        } elseif ($backlog_id == 'filter') {
+        
+            $where_ip = array();
+            $where_alarm_status = array();
+            $where_timestamp = array();
+            
+            /* ip filter */
+            if ($src_ip and $dst_ip) {
+                $where_ip[] = "(inet_aton('$src_ip') = src_ip OR
+                             inet_aton('$dst_ip') = dst_ip) ";
+            } elseif ($src_ip) {
+                $where_ip[] = "(inet_aton('$src_ip') = src_ip) ";
+            } elseif ($dst_ip) {
+                $where_ip[] = "(inet_aton('$dst_ip') = dst_ip) ";
+            }
+            /* hide closed */
+            if ($hide_closed == 1) {
+                $where_alarm_status[] = "alarm.status = 'open' ";
+            }
+            /* date range filter */
+            if ($from_date) {
+                list($y, $m, $d) = preg_split('#-#', $from_date);
+                if (!checkdate($m, $d, $y)) {
+                    print _("Invalid date").": $from_date";
+                    return array();
+                }
+                $where_timestamp[] = "(timestamp >= '$from_date')";
+            }
+            
+            if ($to_date) {
+                list($y, $m, $d) = preg_split('#-#', $to_date);
+                if (!checkdate($m, $d, $y)) {
+                    print _("Invalid date").": $to_date";
+                    return array();
+                }
+                $where_timestamp[] = "(timestamp <= '$to_date 23:59:59')";
+            }
+            $where1 = '';
+            // XXX to be continued...
         } else {
 
 

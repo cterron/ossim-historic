@@ -20,6 +20,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     require_once ('classes/Host_vulnerability.inc');
     require_once ('classes/Host.inc');
     require_once ('classes/Net.inc');
+    require_once ('classes/Util.inc');
 
     require_once 'classes/Security.inc';
 
@@ -84,23 +85,30 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 if(Host_vulnerability::in_host_vulnerability($conn, $host)){
 ?>
 &nbsp;&nbsp;<b>Vulnerabilites</b><br/><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="../vulnmeter/index.php?noimages=1&host=<?php
-    echo $host ?>"
-    target="report">
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../vulnmeter/index.php?noimages=1&host=<?php echo $host ?>" target="report">
+<?php
+    $ip_stats = Host_vulnerability::get_list ($conn, "WHERE ip = \"$host\"", "ORDER BY scan_date DESC", $ggregated = true, 1);
+        foreach($ip_stats as $host_vuln){
+             $scan_date = $host_vuln->get_scan_date();
+        }
+?>
     <?php echo gettext("Vulnmeter"); ?> </a><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="../vulnmeter/last/<?php 
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../vulnmeter/<?php echo date("YmdHis", strtotime($scan_date)); ?>/<?php
     echo ereg_replace("\.","_", $host); ?>/index.html"
     target="report">
-    <?php echo gettext("Security Problems"); ?> </a><br/><br/>
+    <?php echo gettext("Security Problems"); ?> </a><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../incidents/index.php?ref=Vulnerability&status=Open&filter=OK&order_by=life_time&with_text=<?php echo $host; ?>" target="report">
+    <?php echo gettext("Incidents"); ?> </a><br/><br/>
 <?php }
 ?>
-&nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $host) . 
+&nbsp;&nbsp;<a href="<?php echo Sensor::get_sensor_link($conn, $host) .
     "/$host.html" ?>" target="report">
     <?php echo gettext("Usage"); ?> </a><br/><br/>
     <?php
     if((Host::in_host($conn, $host)) || (Net::isIpInAnyNet($conn, $host))){
     ?>
-&nbsp;&nbsp;<a href="<?php 
+&nbsp;&nbsp;
+<a href="<?php 
 $interface = Sensor::get_sensor_interface($conn,$host);
 echo Sensor::get_sensor_link($conn, $host) . 
     "/plugins/rrdPlugin?action=list&key=interfaces/$interface/hosts/$ip_slashed&title=host%20$host" ?>" target="report">

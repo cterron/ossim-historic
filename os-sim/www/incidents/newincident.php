@@ -8,6 +8,7 @@ require_once 'classes/Incident_alarm.inc';
 require_once 'classes/Incident_event.inc';
 require_once 'classes/Incident_metric.inc';
 require_once 'classes/Incident_anomaly.inc';
+require_once 'classes/Incident_vulnerability.inc';
 
 $db = new ossim_db();
 $conn = $db->connect();
@@ -26,6 +27,8 @@ if ($edit) {
     $incident = $list[0];
     $title = $incident->get_title();
     $priority = $incident->get_priority();
+    $event_start = $incident->get_event_start();
+    $event_end = $incident->get_event_end();
     $type = $incident->get_type();
     switch ($ref) {
         case 'Alarm':
@@ -66,11 +69,16 @@ if ($edit) {
                 list($a_sen, $a_date, $a_os) = explode(",", $anom_data_new);
             }
             break;
+        case 'Vulnerability':
+            list($vulnerability) = Incident_vulnerability::get_list($conn, "WHERE incident_vulns.incident_id=$incident_id");
+            $ip = $vulnerability->get_ip();
+            $port = $vulnerability->get_port();
+            $nessus_id = $vulnerability->get_nessus_id();
+            $risk = $vulnerability->get_risk();
+            $description = $vulnerability->get_description();
+            break;
     }
 } else {
-    $title = GET('title');
-    $priority = GET('priority');
-    $type = GET('type');
     $title = GET('title');
     $priority = GET('priority');
     $type = GET('type');
@@ -79,6 +87,8 @@ if ($edit) {
     $src_ports = GET('src_ports');
     $dst_ports = GET('dst_ports');
     $target = GET('target');
+    $event_start = GET('event_start');
+    $event_end = GET('event_end');
     $metric_type = GET('metric_type');
     $metric_value = GET('metric_value');
     $anom_type  = GET('anom_type');
@@ -96,6 +106,11 @@ if ($edit) {
     $a_prot     = GET('a_prot');
     $a_os_o     = GET('a_os_o');
     $a_os       = GET('a_os');
+    $ip         = GET('ip');
+    $port       = GET('port');
+    $nessus_id  = GET('nessus_id');
+    $risk       = GET('risk');
+    $description = GET('description');
 }
 ?>
 
@@ -172,6 +187,17 @@ if ($edit) {
     <td class="left">
       <input type="text" name="dst_ports" value="<?=$dst_ports?>" /></td>
   </tr>
+  <tr>
+    <th><?=_("Start of related events") ?></th>
+    <td class="left">
+      <input type="text" name="event_start" value="<?=$event_start?>" /></td>
+  </tr>
+  <tr>
+    <th><?=_("End of related events") ?></th>
+    <td class="left">
+      <input type="text" name="event_end" value="<?=$event_end?>" /></td>
+  </tr>
+
 <?php
     } elseif ($ref == "Metric") {
 ?>
@@ -202,6 +228,16 @@ if ($edit) {
     <td class="left">
       <input type="text" name="metric_value" value="<?=$metric_value?>" />
     </td>
+  </tr>
+  <tr>
+    <th><?=_("Start of related events") ?></th>
+    <td class="left">
+      <input type="text" name="event_start" value="<?=$event_start?>" /></td>
+  </tr>
+  <tr>
+    <th><?=_("End of related events") ?></th>
+    <td class="left">
+      <input type="text" name="event_end" value="<?=$event_end?>" /></td>
   </tr>
 <?php
     } elseif ($ref == "Anomaly") {
@@ -327,6 +363,41 @@ if ($edit) {
     }
 ?>
 
+
+<?php
+    } elseif ($ref == "Vulnerability") {
+?>
+
+ <tr>
+    <th><?=_("IP") ?></th>
+    <td class="left">
+      <input type="text" name="ip" value="<?=$ip?>" />
+    </td>
+  </tr>
+    <tr>
+    <th><?=_("Port") ?></th>
+    <td class="left">
+      <input type="text" name="port" size="30" value="<?=$port?>" />
+    </td>
+  </tr>
+     <tr>
+    <th><?=_("Nessus ID") ?></th>
+    <td class="left">
+      <input type="text" name="nessus_id" size="30" value="<?=$nessus_id?>" />
+    </td>
+  </tr>
+    <tr>
+    <th><?=_("Risk") ?></th>
+    <td class="left">
+      <input type="text" name="risk" size="30" value="<?=$risk?>" />
+    </td>
+  </tr>
+     <tr>
+    <th><?=_("Description") ?></th>
+    <td style="border-width: 0px;">
+        <textarea name="description" rows="10" cols="80" wrap="hard"><?=$description?></textarea>
+    </td>
+  </tr>
 
 <?php
     }

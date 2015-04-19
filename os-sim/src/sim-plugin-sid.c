@@ -169,19 +169,16 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
 }
 
 /*
- *
- *
+ * This is probably the slowest function, as it has to load tons of data.
+ * I try to speed it up as much as possible.
  *
  */
-SimPluginSid*
+inline SimPluginSid*
 sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
 												    gint           row)
 {
   SimPluginSid  *plugin_sid;
   GdaValue      *value;
-
-  g_return_val_if_fail (dm, NULL);
-  g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
 
   plugin_sid = SIM_PLUGIN_SID (g_object_new (SIM_TYPE_PLUGIN_SID, NULL));
 
@@ -205,7 +202,23 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
   if (!gda_value_is_null (value))
     plugin_sid->_priv->name = gda_value_stringify (value);
 
-	//gda_value_free (value); //FIXME: why this fails?
+	//FIXME: This MUST be substituted because | is the symbol that we are using to separe data
+	//to send it to children servers. We have to use uuencode the data sended in sim_session_cmd_database_query() 
+	//to send the data and remove this section:
+	//**********
+	/*
+	sim_string_substitute_char (plugin_sid->_priv->name, '|', ' ');
+	//also some other things needed to remove temporarly until uuencode.
+	sim_string_substitute_char (plugin_sid->_priv->name, '\\', ' ');
+	sim_string_substitute_char (plugin_sid->_priv->name, '\'', ' ');
+	sim_string_substitute_char (plugin_sid->_priv->name, '\"', ' ');
+	sim_string_substitute_char (plugin_sid->_priv->name, '\r', ' ');
+	sim_string_substitute_char (plugin_sid->_priv->name, '\n', ' ');
+	*/
+	//***********
+	
+	
+	//gda_value_free (value); //FIXME: why does this fails?
 
   return plugin_sid;
 }
@@ -301,7 +314,6 @@ sim_plugin_sid_set_reliability (SimPluginSid  *plugin_sid,
 {
   g_return_if_fail (plugin_sid);
   g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
-  g_return_if_fail (reliability > 0);
 
   plugin_sid->_priv->reliability = reliability;
 }
@@ -333,7 +345,6 @@ sim_plugin_sid_set_priority (SimPluginSid  *plugin_sid,
 {
   g_return_if_fail (plugin_sid);
   g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
-  g_return_if_fail (priority > 0);
 
   plugin_sid->_priv->priority = priority;
 }
@@ -401,17 +412,10 @@ sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
   g_string_append (insert, ", sid");
   g_string_append_printf (values, ", %d", plugin_sid->_priv->sid);
 
-  if (plugin_sid->_priv->reliability > 0)
-    {
-      g_string_append (insert, ", reliability");
-      g_string_append_printf (values, ", %d", plugin_sid->_priv->reliability);
-    }
-
-  if (plugin_sid->_priv->priority > 0)
-    {
-      g_string_append (insert, ", priority");
-      g_string_append_printf (values, ", %d", plugin_sid->_priv->priority);
-    }
+  g_string_append (insert, ", reliability");
+  g_string_append_printf (values, ", %d", plugin_sid->_priv->reliability);
+  g_string_append (insert, ", priority");
+  g_string_append_printf (values, ", %d", plugin_sid->_priv->priority);
 
   g_string_append (insert, ", name)");
   g_string_append_printf (values, ", '%s')", plugin_sid->_priv->name);
@@ -430,16 +434,16 @@ sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
  *
  */
 void
-sim_plugin_sid_print_internal_data (SimPluginSid  *plugin_sid)
+sim_plugin_sid_debug_print (SimPluginSid  *plugin_sid)
 {
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_plugin_sid_print_internal_data:");
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Name: %s", plugin_sid->_priv->name);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "plugin_id: %d", plugin_sid->_priv->plugin_id);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sid: %d", plugin_sid->_priv->sid);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "reliability: %d", plugin_sid->_priv->reliability);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "priority: %d", plugin_sid->_priv->priority);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       Name: %s", plugin_sid->_priv->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       plugin_id: %d", plugin_sid->_priv->plugin_id);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       sid: %d", plugin_sid->_priv->sid);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       reliability: %d", plugin_sid->_priv->reliability);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       priority: %d", plugin_sid->_priv->priority);
 
 
 

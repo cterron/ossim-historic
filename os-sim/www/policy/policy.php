@@ -34,8 +34,14 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
       <th> <?php echo gettext("Plugin Group"); ?> </th>
       <th> <?php echo gettext("Sensors"); ?> </th>
       <th> <?php echo gettext("Time Range"); ?> </th>
+      <th> <?php echo gettext("Targets"); ?> </th>
       <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Correlate"); ?> </th>
+      <th> <?php echo gettext("Cross Correlate"); ?> </th>
       <th> <?php echo gettext("Store"); ?> </th>
+      <th> <?php echo gettext("Qualify"); ?> </th>
+      <th> <?php echo gettext("Resend Alarms"); ?> </th>
+      <th> <?php echo gettext("Resend Events"); ?> </th>
       <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
@@ -158,12 +164,75 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
       </td>
 
+      <!-- Targets -->
+      <td>
+<?php
+            if ($target_list = $policy->get_targets ($conn)) {
+                foreach($target_list as $target) {
+                    echo $target->get_target_name() . '<br/>';
+                }
+            }
+?>
+      </td>
+
+
       <td><?php echo $policy->get_descr(); ?></td>
-      <td><?php if($policy->get_store() == 1){
-      echo _("Yes");
-      } elseif ($policy->get_store() == 0){
-      echo _("No");
-      }?></td>
+
+
+
+       <!-- Targets -->
+      
+<?php
+            if ($role_list = $policy->get_role ($conn)) {
+                foreach($role_list as $role) {
+               ?><td><?php 
+									  if ($role->get_correlate() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_correlate() == 0)
+										  echo _("No");
+								?></td>
+               <td><?php 
+									  if ($role->get_cross_correlate() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_cross_correlate() == 0)
+										  echo _("No");
+								?></td>
+               <td><?php 
+									  if ($role->get_store() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_store() == 0)
+										  echo _("No");
+								?></td>
+               <td><?php 
+									  if ($role->get_qualify() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_qualify() == 0)
+										  echo _("No");
+								?></td>
+               <td><?php 
+									  if ($role->get_resend_alarm() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_resend_alarm() == 0)
+										  echo _("No");
+								?></td>
+               <td><?php 
+									  if ($role->get_resend_event() == 1){
+											echo _("Yes"); 
+										}
+										elseif ($role->get_resend_event() == 0)
+										  echo _("No");
+								?></td><?php
+
+                }
+            }
+?>
+      
+
 
       <td>
         <a href="modifypolicyform.php?id=<?php
@@ -182,12 +251,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
 
   <tr>
-    <td colspan="10">
+    <td colspan="16">
         <a href="newpolicyform.php"> <?php echo gettext("Insert new policy"); ?> </a>
     </td>
   </tr>
   <tr>
-    <td colspan="10"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
+    <td colspan="16"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
   </tr>
   </table>
     

@@ -69,33 +69,34 @@ struct _SimHostLevelClass {
 
 GType             sim_host_level_get_type                        (void);
 SimHostLevel*     sim_host_level_new                             (const GInetAddr  *ia,
-								  gint              c,
-								  gint              a);
+																																  gint              c,
+																																  gint              a);
 SimHostLevel*     sim_host_level_new_from_dm                     (GdaDataModel     *dm,
 								  gint              row);
 
 GInetAddr*        sim_host_level_get_ia                          (SimHostLevel     *host_level);
 void              sim_host_level_set_ia                          (SimHostLevel     *host_level,
-								  const GInetAddr  *ia);
+																																  const GInetAddr  *ia);
 
 gdouble           sim_host_level_get_c                           (SimHostLevel     *host_level);
 void              sim_host_level_set_c                           (SimHostLevel     *host_level,
-								  gdouble           c);
+																																  gdouble           c);
 void              sim_host_level_plus_c                          (SimHostLevel     *host_level,
-								  gdouble           c);
+																																  gdouble           c);
 
 gdouble           sim_host_level_get_a                           (SimHostLevel     *host_level);
 void              sim_host_level_set_a                           (SimHostLevel     *host_level,
-								  gdouble           a);
+																																  gdouble           a);
 void              sim_host_level_plus_a                          (SimHostLevel     *host_level,
-								  gdouble           a);
+																																  gdouble           a);
 
 void              sim_host_level_set_recovery                    (SimHostLevel     *host_level,
-								  gint              recovery);
+																																  gint              recovery);
 
 gchar*            sim_host_level_get_insert_clause               (SimHostLevel     *host_level);
 gchar*            sim_host_level_get_update_clause               (SimHostLevel     *host_level);
 gchar*            sim_host_level_get_delete_clause               (SimHostLevel     *host_level);
+void							sim_host_level_debug_print										 (SimHostLevel		 *host_level);
 
 G_END_DECLS
 

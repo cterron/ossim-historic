@@ -1,5 +1,6 @@
 <?php
-require_once ('classes/Session.inc');
+require_once 'classes/Session.inc';
+require_once 'classes/Security.inc';
 Session::logcheck("MenuTools", "ToolsBackup");
 
 require_once 'classes/Util.inc';
@@ -12,17 +13,16 @@ $backup_dir = $conf->get_conf("backup_dir");
 
 $isDisabled = Backup::running_restoredb();
 
-$perform = $_POST["perform"];
+$perform = POST("perform");
 
 if (!$isDisabled) {
 	if ($perform == "insert") {
-    		$insert = $_POST["insert"];
-	        Backup::Insert($insert);
+		$insert = POST("insert");
+        Backup::Insert($insert);
     }  elseif ($perform == "delete") {
-	    	$delete = $_POST["delete"];
-	    	Backup::Delete($delete);
+    	$delete = POST("delete");
+    	Backup::Delete($delete);
 	}
-	unset($_POST["perform"]);
 }
 
 $db = new ossim_db();
@@ -31,9 +31,13 @@ $conn = $db->snort_connect();
 $insert = Array();
 $delete = Array();
 
+if (!is_dir($backup_dir)) {
+    die(ossim_error(_("Could not access backup dir").": <b>$backup_dir</b>"));
+}
+
 $dir = dir($backup_dir);
 while ($file = $dir->read()) {
-   if($file == "." || $file == "..") {
+   if ($file == "." || $file == "..") {
    	continue;
    }
    if (is_dir($backup_dir.$file)) {
@@ -64,6 +68,7 @@ $db->close($conn);
 	<head>
 		<title>Backup</title>
  		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+        <meta http-equiv="refresh" content="120">
   		<meta http-equiv="Pragma" content="no-cache">
   		<link rel="stylesheet" type="text/css" href="../style/style.css"/>
   		<script language="javascript">
@@ -87,27 +92,31 @@ $db->close($conn);
   			</tr>
   			<tr>
   				<td>
-  					<select name="insert[]" size="10" multiple>
-<?php if (count($insert)) {
-for ($i=0; $i<count($insert); $i++) { ?>
-						<option value=<?=$insert[$i]?>>&nbsp;&nbsp;<?=$insert[$i]?>&nbsp;&nbsp;</option>
-<?php } 
+		<select name="insert[]" size="10" multiple>
+<?php
+if (is_array($insert)) {
+    for ($i=0; $i<count($insert); $i++) {
+?>
+       <option value="<?=$insert[$i]?>">&nbsp;&nbsp;<?=$insert[$i]?>&nbsp;&nbsp;</option>
+<?php }
 } else { ?>
-						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?php echo gettext("NONE"); ?>&nbsp;--&nbsp;&nbsp;</option>
+	<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?=_("NONE")?>&nbsp;--&nbsp;&nbsp;</option>
 <?php } ?>
-  					</select>
+	   </select>
   				</td>
 				<td></td>
 				<td>
-					<select name="delete[]" size="10" multiple>
-<?php if (count($delete)) {
-for ($i=0; $i<count($delete); $i++) { ?>
-						<option size="100" value=<?=$delete[$i]?>>&nbsp;&nbsp;<?=$delete[$i]?>&nbsp;&nbsp;</option>
+		<select name="delete[]" size="10" multiple>
+<?php
+if (is_array($delete)) {
+    for ($i=0; $i<count($delete); $i++) {
+?>
+		<option size="100" value="<?=$delete[$i]?>">&nbsp;&nbsp;<?=$delete[$i]?>&nbsp;&nbsp;</option>
 <?php } 
 } else { ?>
-						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?php echo gettext("NONE"); ?>&nbsp;--&nbsp;&nbsp;</option>
+		<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?=_("NONE")?>&nbsp;--&nbsp;&nbsp;</option>
 <?php } ?>
-					</select>
+	   </select>
 				</td>
   			</tr>
   			<tr>

@@ -5,7 +5,7 @@ require_once 'classes/Host_sensor_reference.inc';
 require_once 'classes/Sensor.inc';
 require_once 'classes/Net.inc';
 require_once 'classes/Log_action.inc';
-require_once ("ossim_db.inc");
+require_once 'ossim_db.inc';
 
 class Sensor {
 
@@ -35,6 +35,7 @@ class Sensor {
 
     function get_list($conn, $args = "") 
     {
+        $list = array();
         $query = OssimQuery("SELECT * FROM sensor $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -73,6 +74,78 @@ class Sensor {
             $rs->MoveNext();
         }
         return $list;
+    }
+
+    function get_count($conn)
+    {
+        $num = 0;
+        $sql = "SELECT count(*) as count FROM sensor;";
+        if (!$rs = $conn->Execute($sql)) {
+            die($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) {
+	       $num = $rs->fields["count"];
+        }
+        return $num;
+    }
+
+    function check_plugin_rel($conn, $sensor, $plugin_id)
+    {
+    	$plugin_id = intval($plugin_id);
+        $has_plugin = false;
+
+        $sql = "SELECT count(*) as count
+                FROM net,net_group_scan,net_group_reference,net_sensor_reference,sensor
+                WHERE net.name = net_group_reference.net_name AND
+                      net_group_scan.plugin_id = ? AND
+                      net_sensor_reference.net_name = net_group_reference.net_name AND
+                      sensor.name = net_sensor_reference.sensor_name AND
+                      net_group_scan.net_group_name = net_group_reference.net_group_name AND
+                      sensor.ip = ?";
+        $params = array($plugin_id, $sensor);
+        if (!$rs = $conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) {
+	       if ($rs->fields["count"] > 0) {
+	           $has_plugin = true;
+	       }
+        }
+
+        $sql = "SELECT count(*) as count
+                FROM net,net_scan,net_sensor_reference,sensor
+                WHERE net.name = net_scan.net_name AND
+                      net_scan.plugin_id = ? AND 
+                      net_sensor_reference.net_name = net_scan.net_name AND
+                      sensor.name = net_sensor_reference.sensor_name AND
+                      sensor.ip = ?";
+        $params = array($plugin_id, $sensor);
+        if (!$rs = $conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) {
+	       if ($rs->fields["count"] > 0) {
+	           $has_plugin = true;
+	       }
+        }
+        $sql = "SELECT count(*) as count
+                FROM host_scan,host,sensor,host_sensor_reference
+                WHERE plugin_id = ? AND
+                      host_sensor_reference.sensor_name = sensor.name AND
+                      host_sensor_reference.host_ip = inet_ntoa(host_scan.host_ip) AND
+                      host.ip = inet_ntoa(host_scan.host_ip) AND
+                      sensor.ip = ?";
+        if (!$rs = $conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) {
+	       if ($rs->fields["count"] > 0) {
+	           $has_plugin = true;
+	       }
+        }
+
+        return $has_plugin;
+
     }
 
     function insert($conn, $name, $ip, $priority, $port, $descr)
@@ -143,12 +216,12 @@ class Sensor {
         $sensor_ip = '';
 
         /* read from host table */
-        $query = OssimQuery("SELECT sensor.ip FROM host_sensor_reference, sensor 
-            WHERE host_sensor_reference.host_ip = '$host_ip' AND 
-            sensor.name = host_sensor_reference.sensor_name 
-            ORDER BY sensor.priority DESC LIMIT 1");
+        $query = "SELECT sensor.ip FROM host_sensor_reference, sensor 
+                  WHERE host_sensor_reference.host_ip = ? AND 
+                        sensor.name = host_sensor_reference.sensor_name 
+                  ORDER BY sensor.priority DESC LIMIT 1";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($query, array($host_ip))) {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
             list($protocol, $ip, $port)  = 
@@ -168,19 +241,18 @@ class Sensor {
     
                 if (Net::isIpInNet($host_ip, $ips)) 
                 {
-                    $query = OssimQuery("SELECT ip FROM sensor, net_sensor_reference 
-                        WHERE name = sensor_name AND net_name = '$net_name'");
+                    $query = "SELECT ip
+                              FROM sensor, net_sensor_reference 
+                              WHERE name = sensor_name AND net_name = ?";
 
-                    if (!$rs = &$conn->Execute($query)) {
+                    if (!$rs = &$conn->Execute($query, array($net_name))) {
                         print $conn->ErrorMsg();
                     } 
                     
                     elseif (!$rs->EOF) 
                     {
-                        list($protocol, $ip, $port) = 
-                            split(':', $conf->get_conf("ntop_link"));
-                        $sensor_ip = "$protocol://" . 
-                            $rs->fields["ip"] . ":$port";
+                        list($protocol, $ip, $port) = split(':', $conf->get_conf("ntop_link"));
+                        $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
 
                         return $sensor_ip;
                     }
@@ -213,13 +285,14 @@ class Sensor {
         $sensor_interface_name = '';
 
         /* read from host table */
-        $query = OssimQuery("SELECT sensor_interfaces.interface FROM
-        host_sensor_reference, sensor, sensor_interfaces
-            WHERE host_sensor_reference.host_ip = '$host_ip' AND 
-            sensor.name = host_sensor_reference.sensor_name AND
-            sensor_interfaces.main = 1 ORDER BY sensor.priority DESC LIMIT 1");
+        $query = "SELECT sensor_interfaces.interface
+                  FROM host_sensor_reference, sensor, sensor_interfaces
+                  WHERE host_sensor_reference.host_ip = ? AND 
+                        sensor.name = host_sensor_reference.sensor_name AND
+                        sensor_interfaces.main = 1
+                  ORDER BY sensor.priority DESC LIMIT 1";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($query, array($host_ip))) {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
             $sensor_interface_name = $rs->fields["interface"];
@@ -236,12 +309,13 @@ class Sensor {
     
                 if (Net::isIpInNet($host_ip, $ips)) 
                 {
-                    $query = OssimQuery("SELECT sensor_interfaces.interface FROM sensor,
-                    net_sensor_reference, sensor_interfaces WHERE
-                    sensor_interfaces.name = sensor.name AND net_name =
-                    '$net_name' AND sensor_interfaces.main = 1");
+                    $query = "SELECT sensor_interfaces.interface
+                              FROM sensor, net_sensor_reference, sensor_interfaces
+                              WHERE sensor_interfaces.name = sensor.name AND
+                                    net_name = ? AND
+                                    sensor_interfaces.main = 1";
 
-                    if (!$rs = &$conn->Execute($query)) {
+                    if (!$rs = &$conn->Execute($query, array($net_name))) {
                         print $conn->ErrorMsg();
                     } 
                     

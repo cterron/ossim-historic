@@ -103,7 +103,7 @@ if (!$nmap_exists){
         scan2html ($scan);
     } else {
         echo "<p align=\"center\">";
-        echo gettext("NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, you need root privileges.");
+        echo gettext("NOTE: This tool is a nmap frontend. In order to use all nmap functionality, you need root privileges.");
         echo "<br/>";
         echo gettext("For this purpose you can use suphp, or set suid to nmap binary (chmod 4750 /usr/bin/nmap) changing the group to the one of the web-user (chgrp www /usr/bin/nmap).");
         echo "</p>";

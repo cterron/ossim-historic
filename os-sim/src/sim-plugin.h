@@ -73,19 +73,22 @@ struct _SimPluginClass {
 GType               sim_plugin_get_type                        (void);
 SimPlugin*          sim_plugin_new                             (void);
 SimPlugin*          sim_plugin_new_from_dm                     (GdaDataModel  *dm,
-								gint           row);
+																																gint           row);
 SimPlugin*          sim_plugin_clone                           (SimPlugin     *plugin);
 
 gint                sim_plugin_get_id                          (SimPlugin     *plugin);
 void                sim_plugin_set_id                          (SimPlugin     *plugin,
-								gint           id);
+																																gint           id);
 gchar*              sim_plugin_get_name                        (SimPlugin     *plugin);
 void                sim_plugin_set_name                        (SimPlugin     *plugin,
-								gchar         *name);
+																																gchar         *name);
 gchar*              sim_plugin_get_description                 (SimPlugin     *plugin);
 void                sim_plugin_set_description                 (SimPlugin     *plugin,
-								gchar         *description);
-
+																																gchar         *description);
+void								sim_plugin_set_sim_type											(SimPlugin      *plugin,
+																				                         SimPluginType  type);
+SimPluginType				sim_plugin_get_sim_type											(SimPlugin      *plugin);
+	
 G_END_DECLS
 
 #ifdef __cplusplus

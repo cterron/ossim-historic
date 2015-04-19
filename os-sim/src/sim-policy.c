@@ -37,6 +37,7 @@
 #include "sim-sensor.h"
 #include "sim-inet.h"
 #include "sim-event.h"
+#include "os-sim.h"
 /*****/
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -51,6 +52,8 @@
 #endif
 /*****/
 #include <config.h>
+
+extern SimMain    ossim;
 
 enum 
 {
@@ -73,11 +76,14 @@ struct _SimPolicyPrivate {
   GList  *src;  				// SimInet objects
   GList  *dst;
   GList  *ports;				//port & protocol list, SimPortProtocol object.
-  GList  *categories;
   GList  *sensors; 			//gchar* sensor's ip (i.e. "1.1.1.1")
   GList  *plugin_ids; 	//(guint *) list with each one of the plugin_id's
   GList  *plugin_sids;	//
   GList  *plugin_groups;	// *Plugin_PluginSid structs
+
+	GList	 *targets;			//gchar* target's name (i.e. "target_A"). This is a bit different to the other policy fields.
+												//This field tell us if this policy has to been executed in this server. It doesn't compares anything
+												//from the event received, and that's why we don't need the IP, just the name.
 };
 
 static gpointer parent_class = NULL;
@@ -141,7 +147,6 @@ sim_policy_instance_init (SimPolicy *policy)
   policy->_priv->src = NULL;
   policy->_priv->dst = NULL;
   policy->_priv->ports = NULL;
-  policy->_priv->categories = NULL;
   policy->_priv->sensors = NULL;
   policy->_priv->plugin_ids = NULL;
   policy->_priv->plugin_sids = NULL;
@@ -915,6 +920,68 @@ sim_policy_free_plugin_groups (SimPolicy* policy)
   g_list_free (policy->_priv->plugin_groups);
 }
 
+/*
+ *
+ */
+void
+sim_policy_append_target (SimPolicy        *policy,
+		                    	gchar           *target_name)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (target_name);
+
+  policy->_priv->targets = g_list_append (policy->_priv->targets, target_name);
+}
+
+/*
+ * This removes the link in the list, but not the target's name string in memory. To remove all the data, you'll need to use sim_policy_free_targets()
+ */
+void
+sim_policy_remove_target (SimPolicy        *policy,
+                          gchar            *target_name)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (target_name);
+
+  policy->_priv->targets = g_list_remove (policy->_priv->targets, target_name);
+}
+
+/*
+ *
+ */
+GList*
+sim_policy_get_targets (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+
+  return policy->_priv->targets;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_free_targets (SimPolicy* policy)
+{
+  GList   *list;
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+  list = policy->_priv->targets;
+  while (list)
+  {
+    gchar *target_name = (gchar *) list->data;
+    g_free (target_name);
+    list = list->next;
+  }
+  g_list_free (policy->_priv->targets);
+}
+
 
 /*
  *
@@ -944,6 +1011,24 @@ sim_policy_match (SimPolicy        *policy,
     
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_match, Policy ID: %d", policy->_priv->id);
 
+	//First, test if this policy has to been executed in this server
+	found = FALSE;
+	list = policy->_priv->targets;
+	while (list)	
+	{
+		gchar *target = (gchar *) list->data;
+		gchar *server_aux = sim_server_get_name (ossim.server);
+		if (!g_ascii_strcasecmp (target, server_aux) ||
+				!g_ascii_strcasecmp (target, SIM_IN_ADDR_ANY_CONST))
+		{
+			found = TRUE;
+			break;
+		}
+		list = list->next;
+	}
+  if (!found) return FALSE;
+
+
   start = ((policy->_priv->begin_day - 1) * 24 + policy->_priv->begin_hour);
   end = ((policy->_priv->end_day - 1) * 24 + policy->_priv->end_hour);
   
@@ -967,7 +1052,9 @@ sim_policy_match (SimPolicy        *policy,
   {
     SimInet *cmp = (SimInet *) list->data;
 
-//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s", gnet_inetaddr_get_canonical_name(src_ia));
+//    gchar *ip_temp = gnet_inetaddr_get_canonical_name(src_ia);
+//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s", ip_temp);
+//    g_free (ip_temp);
 
 		if (sim_inet_is_reserved(cmp)) //check if "any" is the source
  	  {
@@ -987,11 +1074,16 @@ sim_policy_match (SimPolicy        *policy,
 	
   if (!found)
 	{
-//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s Doesn't matches with any", gnet_inetaddr_get_canonical_name(src_ia));
+//    gchar *ip_temp = gnet_inetaddr_get_canonical_name(src_ia);
+//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s Doesn't matches with any", ip_temp);
+//	  g_free (ip_temp);
 		return FALSE;
 	}
-//	else
-//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s OK!; Match with policy: %d", gnet_inetaddr_get_canonical_name(src_ia),policy->_priv->id);
+//	else {
+//    gchar *ip_temp = gnet_inetaddr_get_canonical_name(src_ia);
+//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s OK!; Match with policy: %d", ip_temp,policy->_priv->id);
+//	  g_free (ip_temp);
+//	}
 
   /* Find destination ip */
   found = FALSE;
@@ -1012,7 +1104,9 @@ sim_policy_match (SimPolicy        *policy,
                              (val1 >> 8) & 0xFF,
                              (val1) & 0xFF);
     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Policy dst: %d bits: %s",cmp->_priv->bits, temp);*/
-//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       dst_ip: %s", gnet_inetaddr_get_canonical_name(dst_ia));
+//    gchar *ip_temp = gnet_inetaddr_get_canonical_name(dst_ia);
+//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       dst_ip: %s", ip_temp);
+//    g_free (ip_temp);
 //		g_free(temp);
 
 		/**************end debug**************/
@@ -1114,23 +1208,67 @@ sim_policy_match (SimPolicy        *policy,
   return TRUE;
 }
 
-void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
+void sim_policy_debug_print	(SimPolicy	*policy) 
 {
+	GList *list;
+	gchar	*aux;
 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_debug_print_policy: id: %d",policy->_priv->id);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_debug_print       : policy %x",policy);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               id: %d",policy->_priv->id);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               description: %s",policy->_priv->description);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               begin_hour:  %s",policy->_priv->begin_hour);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               src:         %x",policy->_priv->src);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               dst:         %x",policy->_priv->dst);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               ports:       %x",policy->_priv->ports);
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               categories:  %x",policy->_priv->categories);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               sensors:     %x",policy->_priv->sensors);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               targets:     %x",policy->_priv->targets);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_groups: %x",policy->_priv->plugin_groups);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               priority: %d",policy->_priv->priority);
 //	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_ids:  %x",policy->_priv->plugin_ids);
 //	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_sids: %x",policy->_priv->plugin_sids);
 
-	GList *list = policy->_priv->plugin_groups;
+	SimRole *role = sim_policy_get_role (policy);
+	sim_role_print (role);
+
+	list = policy->_priv->src;
+	while (list)
+	{
+		SimInet *HostOrNet = (SimInet *) list->data;
+		aux = sim_inet_cidr_ntop (HostOrNet);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               src:         %s", aux);
+		list = list->next;
+		g_free (aux);
+	}
+
+	list = policy->_priv->dst;
+	while (list)
+	{
+		SimInet *HostOrNet = (SimInet *) list->data;
+		aux = sim_inet_cidr_ntop (HostOrNet);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               dst:         %s", aux);
+		list = list->next;
+		g_free (aux);
+	}
+
+
+	list = policy->_priv->ports;
+	while (list)
+	{
+		SimPortProtocol *pp = (SimPortProtocol *) list->data;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               port:        %d/%d",pp->port, pp->protocol);
+		list = list->next;
+	}
+
+	list = policy->_priv->sensors;
+	while (list)
+	{
+		gchar *s = (gchar *) list->data;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               sensor:        %s",s);
+		list = list->next;
+	}
+		
+
+	list = policy->_priv->plugin_groups;
   while (list)
   {
     Plugin_PluginSid *plugin_group = (Plugin_PluginSid *) list->data;
@@ -1139,11 +1277,20 @@ void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
     while (list2)
     {
       gint *plugin_sid = (gint *) list2->data;
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_ids: %d",*plugin_sid);
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_sids: %d",*plugin_sid);
       list2 = list2->next;
     }
     list = list->next;
 	}
+
+	list = policy->_priv->targets;
+	while (list)
+	{
+		gchar *s = (gchar *) list->data;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               target:        %s",s);
+		list = list->next;
+	}
+	
 
 }
 
@@ -1153,10 +1300,8 @@ void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
 SimRole *
 sim_policy_get_role	(SimPolicy *policy)
 {
-  g_return_val_if_fail (policy, FALSE);
-  g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
-  g_return_val_if_fail (policy, FALSE);
-  g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
 	return policy->_priv->role;
 }
@@ -1165,8 +1310,6 @@ void
 sim_policy_set_role	(SimPolicy *policy,
 											SimRole	*role)
 {
-  g_return_if_fail (policy);
-  g_return_if_fail (SIM_IS_POLICY (policy));
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 

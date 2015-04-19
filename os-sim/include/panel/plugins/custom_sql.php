@@ -18,11 +18,14 @@ class Plugin_Custom_SQL extends Panel
             'graph_sql' => '',
             'graph_title' => '',
             'graph_type'  => 'pie',
+            'graph_legend_field'  => 'col',
             'graph_plotshadow' => 0,
             'graph_pie_theme' => 'sand',
             'graph_pie_3dangle' => 0,
             'graph_pie_explode' => 'none',
             'graph_pie_explode_pos' => 1,
+	    'graph_pie_antialiasing' => 0,
+	    'graph_pie_center' => 0.3,
             'graph_show_values' => 1,
             'graph_color' => '#000080',
             'graph_gradient' => '',
@@ -90,6 +93,18 @@ class Plugin_Custom_SQL extends Panel
             $check = $this->get('graph_plotshadow') == $value ? 'checked' : '';
             $html .= "<input type='radio' name='graph_plotshadow' value='$value' $check>$label ";
         }
+	//
+	// Legend field (col, row)
+	//
+        $html .= '<br/>'._("Legend Field").': <select name="graph_legend_field">';
+        $types = array('col'    => _("Columns"),
+                       'row'   => _("Rows"));
+        foreach ($types as $value => $label) {
+            $checked = $this->get('graph_legend_field') == $value ? 'selected' : '';
+            $html .= "<option value='$value' $checked>$label</option>";
+        }
+        $html .= '</select><br/>';
+
         /********************************************************
                          PIE OPTIONS
         ********************************************************/
@@ -128,6 +143,22 @@ class Plugin_Custom_SQL extends Panel
             $check = $this->get('graph_pie_explode') == $value ? 'checked' : '';
             $html .= "<input type='radio' name='graph_pie_explode' value='$value' $check>$label ";
         }
+        //
+        // Center position
+        //
+        $html .= '<br/>'._("Center Position").': <input type="text" name="graph_pie_center"'.
+                ' value="'.$this->get('graph_pie_center').'" size=2>';
+        //
+        // Antialiasing
+        //
+        $html .= '<br/>'._("Use Antialiasing").": ";
+        $opts = array(0 => _("No"), 1 => _("Yes"));
+        foreach ($opts as $value => $label) {
+            $check = $this->get('graph_pie_antialiasing') == $value ? 'checked' : '';
+            $html .= "<input type='radio' name='graph_pie_antialiasing' value='$value' $check>$label ";
+        }
+
+
         /********************************************************
                          BAR & POINTS OPTIONS
         ********************************************************/

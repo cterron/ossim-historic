@@ -1,9 +1,9 @@
 msgid ""
-msgstr ""
-"Project-Id-Version: OSSIM 0.9.9rc2\n"
+""
+msgstr "Project-Id-Version: OSSIM 0.9.9rc4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-06-20 10:28+0200\n"
-"PO-Revision-Date: 2006-08-21 17:22+0100\n"
+"PO-Revision-Date: 2007-03-14 17:22+0100\n"
 "Last-Translator: Dmitri Belotchkine <dmitri.belotchkine@gmail.com>\n"
 "Language-Team: Dmitri Belotchkine <dmitri.belotchkine@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -5430,8 +5430,7 @@ msgid ""
 "button instead.\\n"
 "\\n"
 "Continue anyway?"
-msgstr ""
-"вместо этого.\\n"
+msgstr "вместо этого.\\n"
 "\\n"
 "Продолжить?"
 
@@ -5533,8 +5532,7 @@ msgstr "Пожалуйста, повторите сканирования"
 msgid ""
 "Could not find database information for a scan happening at the specified\n"
 "date"
-msgstr ""
-"Не возможно найти информацию в базе данных о сканировании произошедшем в указанную\n"
+msgstr "Не возможно найти информацию в базе данных о сканировании произошедшем в указанную\n"
 "дату"
 
 #: www/vulnmeter/index.php:75
@@ -5792,8 +5790,7 @@ msgstr "Не возможно загрузить библиотеку ADODB"
 msgid ""
 "\n"
 "                Make sure that adodb_path is pointing to the right path"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Убедитесь, что adodb_path указывает на правильный путь"
 
 #: include/ossim_error.inc:88
@@ -5804,8 +5801,7 @@ msgstr "PHP-domxml не загружен"
 msgid ""
 "\n"
 "                Make sure that php-domxml is installed and loaded"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Убедитесь, что php-domxml установлен и загружен"
 
 #: include/ossim_error.inc:96
@@ -5817,8 +5813,7 @@ msgid ""
 "\n"
 "                Make sure that nmap is installed and nmap_path is pointing to\n"
 "                the right path"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Убедитесь, что nmap установлен и nmap_path указывает на\n"
 "                правильный путь"
 
@@ -5830,8 +5825,7 @@ msgstr "Не возможно загрузить FPDF библиотеку"
 msgid ""
 "\n"
 "                Make sure that fpdf_path is pointing to the right path"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Убедитесь, что fpdf_path указывает на правильный путь"
 
 #: include/ossim_error.inc:113
@@ -5842,8 +5836,7 @@ msgstr "Не возможно загрузить библиотеку jpgraph"
 msgid ""
 "\n"
 "                Make sure that jpgraph_path is pointing to the right path"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Убедитесь, что jpgraph_path указывает на правильный путь"
 
 #: include/ossim_error.inc:121
@@ -6031,8 +6024,7 @@ msgstr "Не верная сеть"
 msgid ""
 "Please introduce the net argument in nmap\n"
 "            format example: ?net=192.168.1.1-255"
-msgstr ""
-"Пожалуйста, представьте аргумент сети как в примере\n"
+msgstr "Пожалуйста, представьте аргумент сети как в примере\n"
 "            формата nmap: ?net=192.168.1.1-255"
 
 #: include/ossim_error.inc:305
@@ -6083,8 +6075,7 @@ msgstr "Строка не верна!"
 msgid ""
 "\n"
 "                For security reasons, bad characters have been skipped"
-msgstr ""
-"\n"
+msgstr "\n"
 "                Из соображений безопасности некорректные символы были пропущены"
 
 #: include/ossim_error.inc:363
@@ -6512,3 +6503,140 @@ msgstr "Отчёт о метриках"
 msgid "Incidents Report"
 msgstr "Отчёт об инциндентах"
 
+msgid "Legend:"
+msgstr "Легенда:"
+
+msgid "C O M P R O M I S E"
+msgstr " К О М П Р О М Е Т И Р О В А Н И Е"
+
+msgid "A T T A C K"
+msgstr "А Т А К А"
+
+msgid "Networks outside groups"
+msgstr "Сети вне групп"
+
+msgid "Max Date"
+msgstr "Последн. Дата"
+
+msgid "Max"
+msgstr "Макс"
+
+msgid "Current"
+msgstr "Текущий"
+
+msgid "Metric over 100% threshold"
+msgstr "Метрика превысила порог 100%"
+
+msgid "Metric over 300% threshold"
+msgstr " Метрика превысила порог 300%"
+
+msgid "Metric over 500% threshold"
+msgstr "Метрика превысила порог  500%"
+
+msgid "No appreciable risk"
+msgstr "Не значительный риск"
+
+msgid "from"
+msgstr "от"
+
+msgid "to"
+msgstr "до"
+
+msgid "YY-MM-DD"
+msgstr "ГГ-ММ-ДД"
+
+msgid "source"
+msgstr "источник"
+
+msgid "destination"
+msgstr "назначение"
+
+msgid "Num. alarms per page"
+msgstr "Количество строк на странице"
+
+msgid "Show aggregated scans"
+msgstr "Показать список сканирований"
+
+msgid "Schedule scans"
+msgstr "Назначить сканирование"
+
+msgid "Showing aggregated scans"
+msgstr "Показ списка сканирований"
+
+msgid "Scanned Hosts"
+msgstr "Просканированные Хосты"
+
+msgid "Scanned Nets"
+msgstr "Просканированые Сети"
+
+msgid "Coloring information"
+msgstr "Значение цветов"
+
+msgid "Scans older than"
+msgstr "Сканирования старше чем"
+
+msgid "Showing top 20 hosts"
+msgstr "Показ 20 самых уязвимых хостов"
+
+msgid "Scheduling information"
+msgstr "Информация о планировании"
+
+msgid "Minute"
+msgstr "Минута"
+
+msgid "Hour"
+msgstr "Час"
+
+msgid "Day of Month"
+msgstr "День Месяца"
+
+msgid "Day of Week"
+msgstr "День недели"
+
+msgid "Scan now"
+msgstr "Сканировать сейчас"
+
+msgid "Warning: scheduling two different scans for the same month, day, hour and minute will yield unexpected results."
+msgstr "Предупреждение: назначение двух разных сканирований на тот же месяц, день, час и минуту может привести к непредсказуемым результатам."
+
+msgid "Of course you can select multiiple sensors for a certain schedule."
+msgstr "Конечно же вы можете выбрать несколько сенсоров на одно определенное задание сканирования."
+
+msgid "Add another schedule"
+msgstr "Добавить другое задание"
+
+msgid "Select sensors for this scan"
+msgstr "Выбрать сенсоры для этого сканирования"
+
+msgid "Empty means all"
+msgstr "При отсутствии выбора будут задействованы все сенсоры"
+
+msgid "Day of week"
+msgstr "День Недели"
+
+msgid "Sample would scan the 13th of each month, at 03:00"
+msgstr "В примере сканирование происходит 13 числа каждого месяца в 3:00"
+
+msgid "field</th><th>allowed values"
+msgstr "поле</th><th>разрешенные значения"
+
+msgid "Specify your scheduling information using crontab-like syntax"
+msgstr "Используйте синтакс crontab при планировании заданий"
+
+msgid "minute"
+msgstr "минута"
+
+msgid "hour"
+msgstr "час"
+
+msgid "day of month"
+msgstr "день месяца"
+
+msgid "day of week"
+msgstr "день недели"
+
+msgid "Use * as wildcard"
+msgstr "Используйте  * в качестве шаблона "
+
+msgid "At least one Sensor required"
+msgstr "Нужно выбрать хотя бы один сенсор"

@@ -44,7 +44,7 @@ if (ossim_error()) {
 
         $acid_link = $conf->get_conf("acid_link");
         $acid_prefix = $conf->get_conf("event_viewer");
-        $acid_main_link = $conf->get_conf("acid_link") . $acid_prefix . "_stat_ipaddr.php?ip=$host&netmask=32";
+        $acid_main_link = $conf->get_conf("acid_link") . "/$acid_prefix" . "_stat_ipaddr.php?ip=$host&netmask=32";
 
         echo "<frame src=\"". $acid_main_link . "\" name=\"report\">";
     }

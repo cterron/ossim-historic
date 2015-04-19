@@ -28,7 +28,7 @@ Session::logcheck("MenuMonitors", "MonitorsAvailability");
 
     $fr_up = "menu.php?sensor=$sensor";
     $fr_down = $conf->get_conf("nagios_link") . 
-        "/cgi-bin/status.cgi?hostgroup=all&style=grid";
+        "/cgi-bin/status.cgi?hostgroup=all";
 ?>
 <frameset cols="18%,82%" border="0" frameborder="0">
 <frame src="<?php echo $fr_up ?>">

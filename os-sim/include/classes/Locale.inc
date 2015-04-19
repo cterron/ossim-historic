@@ -2,7 +2,7 @@
 require_once 'ossim_conf.inc';
 
 $DEFAULT_LANGUAGE = "en_GB";
-$DEFAULT_LOCALE_DIR = "/usr/share/locale";
+$DEFAULT_LOCALE_DIR = "/usr/share/locale/";
 
 $conf = new ossim_conf();
 
@@ -15,10 +15,10 @@ if (!$locale_dir = $conf->get_conf("locale_dir", FALSE))
 // I18N support information here
 
 // try out some locale options:
-// 1) For debian works @euro
+// 1) For debian works @euro or .UTF8
 // 2) Mac OS X needs putenv()
 list($lang, $country) = explode("_", $language);
-$envlang = setlocale(LC_ALL, $language, "{$language}@euro", $lang);
+$envlang = setlocale(LC_ALL, $language, "{$language}@euro", $lang, "{$language}.UTF8");
 if ($envlang) {
     putenv("LANG=$envlang");
 }

@@ -44,6 +44,7 @@
 #include "sim-plugin.h"
 #include "sim-plugin-sid.h"
 #include "sim-sensor.h"
+#include "sim-server.h"
 #include "sim-host.h"
 #include "sim-net.h"
 #include "sim-event.h"
@@ -68,6 +69,7 @@ extern "C" {
 #define EVENT_SEQ_TABLE         "event_seq"
 #define BACKLOG_SEQ_TABLE       "backlog_seq"
 #define BACKLOG_EVENT_SEQ_TABLE "backlog_event_seq" //FIXME: needed?
+#define EVENT_TMP_SEQ_TABLE			"event_tmp_seq"
 		
 G_BEGIN_DECLS
 	
@@ -95,6 +97,8 @@ G_LOCK_DEFINE_STATIC (s_mutex_policies);
 G_LOCK_DEFINE_STATIC (s_mutex_host_levels);
 G_LOCK_DEFINE_STATIC (s_mutex_net_levels);
 G_LOCK_DEFINE_STATIC (s_mutex_events);
+G_LOCK_DEFINE_STATIC (s_mutex_servers);
+G_LOCK_DEFINE_STATIC (s_mutex_host_plugin_sids); //to insert new entries in host_plugin_sid safely
 
 GType             sim_container_get_type                        (void);
 SimContainer*     sim_container_new                             (SimConfig     *config);
@@ -168,6 +172,7 @@ void		sim_container_db_insert_host_service_ul		(SimContainer  *container,
 								 gchar				 *interface,
 								 gchar         *service,
 								 gchar         *application);
+
 void		sim_container_db_update_host_service_ul		(SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
@@ -185,6 +190,44 @@ void		sim_container_db_insert_host_ids_event_ul 	(SimContainer  *container,
 																											gchar         *timestamp,
 																											gint					sid,
 																											gulong				cid);
+void		sim_container_db_insert_host_plugin_sid 		(SimContainer   *container,
+						                                          SimDatabase   *database,
+            						                              GInetAddr    *ia,
+                        						                  gint          plugin_id,
+                                    						      gint          plugin_sid);
+void		sim_container_db_insert_host_plugin_sid_ul	(SimContainer   *container,
+						                                          SimDatabase   *database,
+            						                              GInetAddr    *ia,
+                        						                  gint          plugin_id,
+                                    						      gint          plugin_sid);
+
+/* Cross correlation functions*/
+GList* sim_container_db_get_reference_sid (SimContainer  *container,
+       				                             SimDatabase   *database,
+              			                       gint           reference_id,
+                    		      	           gint           plugin_id,
+                        			             gint           plugin_sid);
+
+GList* sim_container_db_get_host_services (SimContainer  *container,
+			                                    SimDatabase   *database,
+						                              GInetAddr     *ia,
+									                        gchar         *sensor,
+												                  gint          port);
+
+GList* sim_container_db_host_get_single_plugin_sid (SimContainer *container,
+			                                             SimDatabase *database,
+						                                       GInetAddr     *ia);
+//									                                 gint          plugin_id);
+
+GList*	sim_container_db_get_osvdb_base_name (SimDatabase   *database,
+									                             gint           osvdb_id);
+GList*	sim_container_db_get_osvdb_version_name (SimDatabase   *database,
+							                                 gint           osvdb_id);
+
+//loading data...
+void		sim_container_remote_load_element						(SimDBElementType element_type);
+void		sim_container_wait_rload_complete						(SimContainer *container);
+void		sim_container_set_rload_complete						(SimContainer *container);
 
 
 /* Recovery Function */
@@ -564,6 +607,37 @@ void              sim_container_set_net_levels_recovery         (SimContainer  *
 								 SimDatabase   *database,
 								 gint           recovery);
 
+/* Server functions. This servers are regarding the children servers. The main server configuration
+ * is done directly from config.xml (may be stored in ddbb after that)*/
+void              sim_container_db_load_servers_ul              (SimContainer  *container,
+																																 SimDatabase   *database);
+void              sim_container_append_server_ul                (SimContainer  *container,
+																																 SimServer     *server);
+void              sim_container_remove_server_ul                (SimContainer  *container,
+																																 SimServer     *server);
+GList*            sim_container_get_servers_ul                  (SimContainer  *container);
+void              sim_container_set_servers_ul                  (SimContainer  *container,
+																																 GList         *servers);
+void              sim_container_free_servers_ul                 (SimContainer  *container);
+
+SimServer*        sim_container_get_server_by_name_ul           (SimContainer  *container,
+																																 gchar         *name);
+
+void              sim_container_db_load_servers                 (SimContainer  *container,
+																																 SimDatabase   *database);
+void              sim_container_append_server                   (SimContainer  *container,
+																																 SimServer     *server);
+void              sim_container_remove_server                   (SimContainer  *container,
+																																 SimServer     *server);
+GList*            sim_container_get_servers                     (SimContainer  *container);
+void              sim_container_set_servers                     (SimContainer  *container,
+																																 GList         *servers);
+void              sim_container_free_servers                    (SimContainer  *container);
+
+SimServer*        sim_container_get_server_by_name              (SimContainer  *container,
+								 gchar         *name);
+
+	
 /* Backlogs Functions */
 void              sim_container_db_insert_backlog_ul            (SimContainer  *container,
 								 SimDatabase   *database,
@@ -609,6 +683,19 @@ void              sim_container_free_events                     (SimContainer  *
 
 gboolean          sim_container_is_empty_events                 (SimContainer  *container);
 gint              sim_container_length_events                   (SimContainer  *container);
+
+//Debug functions
+void							sim_container_debug_print_all									(SimContainer *container); //all the debug below in one function
+void							sim_container_debug_print_plugins							(SimContainer *container);
+void							sim_container_debug_print_plugin_sids					(SimContainer *container);
+void							sim_container_debug_print_sensors							(SimContainer *container);
+void							sim_container_debug_print_hosts								(SimContainer *container);
+void							sim_container_debug_print_nets								(SimContainer *container);
+void							sim_container_debug_print_host_levels					(SimContainer *container);
+void							sim_container_debug_print_net_levels					(SimContainer *container);
+void							sim_container_debug_print_policy							(SimContainer *container);
+void							sim_container_debug_print_servers							(SimContainer *container);
+
 
 
 G_END_DECLS

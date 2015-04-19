@@ -14,7 +14,7 @@ class Net {
 
     var $name;
     var $ips;
-    var $priority;
+    var $asset;
     var $threshold_c;
     var $threshold_a;
     var $rrd_profile;
@@ -22,12 +22,12 @@ class Net {
     var $persistence;
     var $descr;
 
-    function Net ($name, $ips, $priority, $threshold_c, $threshold_a,
+    function Net ($name, $ips, $asset, $threshold_c, $threshold_a,
                   $rrd_profile, $alert, $persistence, $descr)
     {
         $this->name        = $name;
         $this->ips         = $ips;
-        $this->priority    = $priority;
+        $this->asset       = $asset;
         $this->threshold_c = $threshold_c;
         $this->threshold_a = $threshold_a;
         $this->rrd_profile = $rrd_profile;
@@ -38,7 +38,7 @@ class Net {
 
     function get_name()         { return $this->name; }
     function get_ips()          { return $this->ips; }
-    function get_priority()     { return $this->priority; }
+    function get_asset()        { return $this->asset; }
     function get_threshold_c()  { return $this->threshold_c; }
     function get_threshold_a()  { return $this->threshold_a; }
     function get_rrd_profile()  { return $this->rrd_profile; }
@@ -64,7 +64,7 @@ class Net {
                 {
                     $list[] = new Net  ($rs->fields["name"],
                                         $rs->fields["ips"],
-                                        $rs->fields["priority"],
+                                        $rs->fields["asset"],
                                         $rs->fields["threshold_c"],
                                         $rs->fields["threshold_a"],
                                         $rs->fields["rrd_profile"],
@@ -89,7 +89,7 @@ class Net {
         while (!$rs->EOF) {
             $list[] = new Net  ($rs->fields["name"],
                                 $rs->fields["ips"],
-                                $rs->fields["priority"],
+                                $rs->fields["asset"],
                                 $rs->fields["threshold_c"],
                                 $rs->fields["threshold_a"],
                                 $rs->fields["rrd_profile"],
@@ -101,10 +101,10 @@ class Net {
         return $list;
     }
 
-    function insert($conn, $name, $ips, $priority, $threshold_c, $threshold_a, 
+    function insert($conn, $name, $ips, $asset, $threshold_c, $threshold_a, 
                     $rrd_profile, $alert, $persistence, $sensors, $descr)
     {
-        settype($priority, "int");
+        settype($asset, "int");
         settype($threshold_c, "int");
         settype($threshold_a, "int");
         settype($alert, "int");
@@ -115,9 +115,9 @@ class Net {
         $name = str_replace(" ", "_", $name);
         $ips = str_replace(" ", "", $ips);
 
-        $sql = "INSERT INTO net (name, ips, priority, threshold_c, threshold_a, rrd_profile, alert, persistence, descr) VALUES
+        $sql = "INSERT INTO net (name, ips, asset, threshold_c, threshold_a, rrd_profile, alert, persistence, descr) VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $params = array($name, $ips, $priority, $threshold_c, $threshold_a, $rrd_profile, $alert, $persistence, $descr);
+        $params = array($name, $ips, $asset, $threshold_c, $threshold_a, $rrd_profile, $alert, $persistence, $descr);
         if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -130,12 +130,12 @@ class Net {
         Log_action::log(27,$infolog);
     }
 
-    function update($conn, $name, $ips, $priority, $threshold_c, $threshold_a, 
+    function update($conn, $name, $ips, $asset, $threshold_c, $threshold_a, 
                     $rrd_profile, $alert, $persistence, $sensors, $descr)
     {
         $skip_group_update = 1;
         Net::delete($conn, $name, $skip_group_update );
-        Net::insert($conn, $name, $ips, $priority,
+        Net::insert($conn, $name, $ips, $asset,
                     $threshold_c, $threshold_a, $rrd_profile,
                     $alert, $persistence, $sensors, $descr);
       

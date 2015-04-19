@@ -62,8 +62,9 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         die(ossim_error());
     }
 
-    if(!empty($insert)) {
-    
+    if (!empty($insert)) {
+
+    $sensors = array();    
     $num_sens = 0;
     for ($i = 1; $i <= $nsens; $i++) {
         $name = "mboxs" . $i;

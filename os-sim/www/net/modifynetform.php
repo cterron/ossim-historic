@@ -58,26 +58,26 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
                value="<?php echo $net->get_ips(); ?>"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Priority"); ?> </th>
+    <th> <?php echo gettext("Asset"); ?> </th>
     <td class="left">
-      <select name="priority">
+      <select name="asset">
         <option
-        <?php if ($net->get_priority() == 0) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 0) echo " SELECTED "; ?>
           value="0">0</option>
         <option
-        <?php if ($net->get_priority() == 1) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 1) echo " SELECTED "; ?>
           value="1">1</option>
         <option
-        <?php if ($net->get_priority() == 2) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 2) echo " SELECTED "; ?>
           value="2">2</option>
         <option
-        <?php if ($net->get_priority() == 3) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 3) echo " SELECTED "; ?>
           value="3">3</option>
         <option
-        <?php if ($net->get_priority() == 4) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 4) echo " SELECTED "; ?>
           value="4">4</option>
         <option
-        <?php if ($net->get_priority() == 5) echo " SELECTED "; ?>
+        <?php if ($net->get_asset() == 5) echo " SELECTED "; ?>
           value="5">5</option>
       </select>
     </td>

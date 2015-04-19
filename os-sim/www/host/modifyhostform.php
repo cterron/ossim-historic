@@ -232,45 +232,23 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <tr>
     <th> <?php echo gettext("OS"); ?> </th>
     <td class="left">
-      <select name="os"
-      >
-        <option value="unknown">
-	<?php echo gettext("Unknown"); ?> </option>
-
-        <option 
-            <?php match_os("win", $host->get_os($conn)) ?> 
-            value="windows">
-	<?php echo gettext("Windows"); ?> </option>
-
-        <option 
-            <?php match_os("linux", $host->get_os($conn)) ?> 
-            value="linux">
-	        <?php echo gettext("Linux"); ?> </option>
-
-        <option 
-            <?php match_os("bsd", $host->get_os($conn)) ?> 
-            value="bsd">
-	        <?php echo gettext("BSD"); ?> </option>
-
-        <option 
-            <?php match_os("mac", $host->get_os($conn)) ?> 
-            value="mac">
-	        <?php echo gettext("Mac"); ?> </option>
-
-        <option 
-            <?php match_os("sun", $host->get_os($conn)) ?> 
-            value="sun">
-	        <?php echo gettext("Sun"); ?> </option>
-
-        <option 
-            <?php match_os("plan9", $host->get_os($conn)) ?> 
-            value="plan9">
-	        <?php echo gettext("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
-
-        <option 
-            value="unknown">
-	        <?php echo gettext("Other"); ?> </option>
-
+      <select name="os">
+        <option value="Unknown"> </option>
+        <option value="Windows" <? match_os("Win", $host->get_os($conn)) ?>><?=_("Microsoft Windows"); ?> </option>
+        <option value="Linux" <? match_os("Linux", $host->get_os($conn)) ?>><?=_("Linux"); ?> </option>
+        <option value="FreeBSD" <? match_os("FreeBSD", $host->get_os($conn)) ?>><?=_("FreeBSD"); ?> </option>
+        <option value="NetBSD" <? match_os("NetBSD", $host->get_os($conn)) ?>><?=_("NetBSD"); ?> </option>
+        <option value="OpenBSD" <? match_os("OpenBSD", $host->get_os($conn)) ?>><?=_("OpenBSD"); ?> </option>
+        <option value="MacOS" <? match_os("MacOS", $host->get_os($conn)) ?>><?=_("Apple MacOS"); ?> </option>
+        <option value="Solaris" <? match_os("Solaris", $host->get_os($conn)) ?>><?=_("SUN Solaris"); ?> </option>
+        <option value="Cisco" <? match_os("Cisco", $host->get_os($conn)) ?>><?=_("Cisco IOS"); ?> </option>
+        <option value="AIX" <? match_os("AIX", $host->get_os($conn)) ?>><?=_("IBM AIX"); ?> </option>
+        <option value="HP-UX" <? match_os("HP-UX", $host->get_os($conn)) ?>><?=_("HP-UX"); ?> </option>
+        <option value="Tru64" <? match_os("Tru64", $host->get_os($conn)) ?>><?=_("Compaq Tru64"); ?> </option>
+        <option value="IRIX" <? match_os("IRIX", $host->get_os($conn)) ?>><?=_("SGI IRIX"); ?> </option>
+        <option value="BSD/OS" <? match_os("BSD\/OS", $host->get_os($conn)) ?>><?=_("BSD/OS"); ?> </option>
+        <option value="SunOS" <? match_os("SunOS", $host->get_os($conn)) ?>><?=_("SunOS"); ?> </option>
+        <option value="Plan9" <? match_os("Plan9", $host->get_os($conn)) ?>><?=_("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
       </select>
     </td>
   </tr>

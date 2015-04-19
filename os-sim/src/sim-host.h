@@ -84,7 +84,9 @@ void              sim_host_set_name                        (SimHost          *ho
 
 gint              sim_host_get_asset                       (SimHost          *host);
 void              sim_host_set_asset                       (SimHost          *host,
-							    gint              asset);
+																												    gint              asset);
+
+void							sim_host_debug_print											(SimHost					*host);
 
 G_END_DECLS
 

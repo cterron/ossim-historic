@@ -44,6 +44,11 @@ ossim_valid($ex_servs, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_servs"));
 ossim_valid($ex_servp, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("ex_servp"));
 ossim_valid($num, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("num"));
 
+
+//casting
+$inf = intval($inf);
+$sup = intval($sup);
+
 if (ossim_error()) {
     die(ossim_error());
 }

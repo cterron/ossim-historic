@@ -35,12 +35,15 @@
 #include <libgda/libgda.h>
 
 #include "sim-database.h"
+#include "os-sim.h"
 #include <config.h>
 
 #define PROVIDER_MYSQL   "MySQL"
 #define PROVIDER_PGSQL   "PostgreSQL"
 #define PROVIDER_ORACLE  "Oracle"
 #define PROVIDER_ODBC    "odbc"
+
+extern SimMain    ossim;
 
 gboolean restarting_mysql = FALSE; //no mutex needed 
 
@@ -58,6 +61,9 @@ struct _SimDatabasePrivate {
   gchar           *name;        /* DS Name */
   gchar           *provider  ;  /* Data Source */
   gchar           *dsn;         /* User Name */
+
+  gboolean        local_DB;			//if False: database queries are executed against other ossim server in other machine. 
+	gchar						*rserver_name;
 };
 
 static gpointer parent_class = NULL;
@@ -82,6 +88,8 @@ sim_database_impl_finalize (GObject  *gobject)
     g_free (database->_priv->provider);
   if (database->_priv->dsn)
     g_free (database->_priv->dsn);
+  if (database->_priv->rserver_name)
+    g_free (database->_priv->rserver_name);
 
   gda_connection_close (database->_priv->conn);
   g_object_unref (database->_priv->client);
@@ -116,6 +124,7 @@ sim_database_instance_init (SimDatabase *database)
   database->_priv->name = NULL;
   database->_priv->provider = NULL;
   database->_priv->dsn = NULL;
+  database->_priv->local_DB = TRUE;
 
   database->_priv->mutex = g_mutex_new ();
 }
@@ -157,40 +166,44 @@ sim_database_get_type (void)
 SimDatabase*
 sim_database_new (SimConfigDS  *config)
 {
+  g_return_val_if_fail (config, NULL);
+
   SimDatabase    *db = NULL;
   GdaError       *error;
   GList          *errors = NULL;
   gint            i;
-  
-  g_return_val_if_fail (config, NULL);
-  g_return_val_if_fail (config->name, NULL);
-  g_return_val_if_fail (config->provider, NULL);
-  g_return_val_if_fail (config->dsn, NULL);
+	
+	if (config->local_DB)
+	{
 
-  db = SIM_DATABASE (g_object_new (SIM_TYPE_DATABASE, NULL));
+		g_return_val_if_fail (config->name, NULL);
+	  g_return_val_if_fail (config->provider, NULL);
+		g_return_val_if_fail (config->dsn, NULL);
 
-  db->_priv->name = g_strdup (config->name);
-  db->_priv->provider = g_strdup (config->provider);
-  db->_priv->dsn = g_strdup (config->dsn);
+	  db = SIM_DATABASE (g_object_new (SIM_TYPE_DATABASE, NULL));
 
-  if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_MYSQL))
-    db->type = SIM_DATABASE_TYPE_MYSQL;
-  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_PGSQL))
-    db->type = SIM_DATABASE_TYPE_PGSQL;
-  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ORACLE))
-    db->type = SIM_DATABASE_TYPE_ORACLE;
-  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ODBC))
-    db->type = SIM_DATABASE_TYPE_ODBC;
-  else
-    db->type = SIM_DATABASE_TYPE_NONE;
+		db->_priv->name = g_strdup (config->name);
+	  db->_priv->provider = g_strdup (config->provider);
+		db->_priv->dsn = g_strdup (config->dsn);
 
-  db->_priv->client = gda_client_new ();
-  db->_priv->conn = gda_client_open_connection_from_string  (db->_priv->client,
-							     db->_priv->provider,
-							     db->_priv->dsn,
-							     GDA_CONNECTION_OPTIONS_DONT_SHARE);
+	  if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_MYSQL))
+		  db->type = SIM_DATABASE_TYPE_MYSQL;
+	  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_PGSQL))
+		  db->type = SIM_DATABASE_TYPE_PGSQL;
+	  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ORACLE))
+		  db->type = SIM_DATABASE_TYPE_ORACLE;
+	  else if (!g_ascii_strcasecmp (db->_priv->provider, PROVIDER_ODBC))
+		  db->type = SIM_DATABASE_TYPE_ODBC;
+	  else
+		  db->type = SIM_DATABASE_TYPE_NONE;
 
-  if (!gda_connection_is_open (db->_priv->conn))
+	  db->_priv->client = gda_client_new ();
+		db->_priv->conn = gda_client_open_connection_from_string  (db->_priv->client,
+								     db->_priv->provider,
+								     db->_priv->dsn,
+								     GDA_CONNECTION_OPTIONS_DONT_SHARE);
+
+	  if (!gda_connection_is_open (db->_priv->conn))
     {
       g_print ("CONNECTION ERROR\n");
       g_print ("NAME: %s", db->_priv->name);
@@ -201,14 +214,23 @@ sim_database_new (SimConfigDS  *config)
       exit (EXIT_FAILURE);
     }
 
-  errors = gda_error_list_copy (gda_connection_get_errors (db->_priv->conn));
-  for (i = 0; i < g_list_length(errors); i++)
+	  errors = gda_error_list_copy (gda_connection_get_errors (db->_priv->conn));
+		for (i = 0; i < g_list_length(errors); i++)
     {
       error = (GdaError *) g_list_nth_data (errors, i);
       
       g_message ("ERROR %lu: %s", gda_error_get_number (error), gda_error_get_description (error));
     }
-  gda_error_list_free (errors);
+	  gda_error_list_free (errors);
+	}
+	else //remote DB.
+	{
+		db = SIM_DATABASE (g_object_new (SIM_TYPE_DATABASE, NULL));
+
+		db->_priv->name = g_strdup (config->name);
+		db->_priv->local_DB = FALSE;
+		db->_priv->rserver_name = g_strdup (config->rserver_name);
+	}
 
   return db;
 }
@@ -231,6 +253,10 @@ sim_database_execute_no_query  (SimDatabase  *database,
   g_return_val_if_fail (SIM_IS_DATABASE (database), -1);
   g_return_val_if_fail (buffer != NULL, -1);
 
+	ret = 0; 
+
+	if (database->_priv->local_DB)
+	{
   g_mutex_lock (database->_priv->mutex);
 
   command = gda_command_new (buffer, 
@@ -286,6 +312,33 @@ sim_database_execute_no_query  (SimDatabase  *database,
   gda_command_free (command);
 
   g_mutex_unlock (database->_priv->mutex);
+	}
+/*	else	//remote DB
+	{
+	
+	  GList *list = sim_server_get_sessions (ossim.server);
+	  while (list)
+  	{
+	    SimSession *session = (SimSession *) list->data;
+  	  if ((sim_session_is_master_server (session)) &&
+					(g_ascii_strcmp (database->_priv->rserver_name, sim_session_get_hostname (session))) )
+			{
+				//FIXME: check if integrate this in sim_command_get_string() could be interesting: compare speed in both ways.
+				gchar *query = g_strdup_printf ("database-query ds_name='%s' query='%s'", database->_priv->name, buffer);
+
+	  	  sim_session_write_from_buffer (session, query);
+				break;
+			}
+
+	    list = list->next;
+  	}
+
+	  g_list_free (list);
+	
+
+
+
+	}*/
 
   return ret;
 }
@@ -382,6 +435,19 @@ sim_database_get_conn (SimDatabase  *database)
 }
 
 /*
+ *	Returns the DS name of the database (defined in server's config.xml)
+ */
+gchar*
+sim_database_get_name (SimDatabase  *database)
+{
+  g_return_val_if_fail (database != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+
+  return database->_priv->name;  
+}
+
+
+/*
  * This returns from the database and table specified, a sequence number.
  * The number is "reserved".
  * The table specified should be something like blablabla_seq or lalalala_seq, you know ;)
@@ -435,6 +501,17 @@ sim_database_get_id (SimDatabase  *database,
   return id;
 }
 
+/*
+ * returns if this Database is local, or this server has to ask for data to other server
+ */
+gboolean
+sim_database_is_local (SimDatabase  *database)
+{
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+
+	return database->_priv->local_DB;
+}
 
 // vim: set tabstop=2:
 

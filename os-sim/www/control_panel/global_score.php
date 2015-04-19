@@ -22,12 +22,14 @@ $conn = $db->connect();
 ////////////////////////////////////////////////////////////////
 
 $valid_range = array('day', 'week', 'month', 'year');
+
 $range = GET('range');
 if (!$range) {
     $range = 'day';
 } elseif (!in_array($range, $valid_range)) {
     die(ossim_error('Invalid range'));
 }
+
 
 if ($range == 'day') {
     $rrd_start = "N-1D";
@@ -303,7 +305,7 @@ function html_service_level()
     if ($use_svg) {
         return "
             <td><a href='$link'>
-                 <embed src='svg_level.php?sl=$sec_level&scale=0.8'  
+                 <embed src='svg_level.php?sl=$level&scale=0.8'  
                         pluginspage='http://www.adobe.com/svg/viewer/install/'
                         type='image/svg+xml' height='85' width='100' /> 
             </a></td>";
@@ -416,6 +418,14 @@ function html_report()
     $metric    = $GLOBALS['_max'];
     $threshold = $GLOBALS['_threshold'];
     $ac        = $GLOBALS['_ac'];
+    $max_date  = $GLOBALS['_max_date'];
+    global $range;
+
+    $range_translations = array("day" => "today", "week" => "this week", "month" => "this month", "year" => "this year");
+
+    if($max_date == 0){
+	$max_date = $range_translations[$range];
+    }
     
     $title = sprintf(_("Metric Threshold: %s level exceeded"), strtoupper($ac));
     $target = "$subject_type: $subject";
@@ -431,7 +441,9 @@ function html_report()
         "priority=$priority&" .
         "target=".urlencode($target)."&" .
         "metric_type=$type&" .
-        "metric_value=$metric'>".
+        "metric_value=$metric&".
+        "event_start=$max_date&" .
+        "event_end=$max_date'>".
         '<img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>'.
         '</a>';
     return $html;
@@ -666,7 +678,8 @@ while (!$rs->EOF) {
         $rs->MoveNext(); continue;
     }
     //*/
-    $name = $rs->fields['hostname'] ? $rs->fields['hostname'] : $ip;
+   $name = Host::ip2hostname($conn, $ip);
+   // $name = $rs->fields['hostname'] ? $rs->fields['hostname'] : $ip;
     if ($net === null) {
         $ext_hosts[$ip] = array(
                         'name'        => $name,
@@ -699,9 +712,9 @@ while (!$rs->EOF) {
         $group = $net['group'];
         $net_name = $net['name'];
         if ($group) {
-            $groups[$group]['nets'][$net_name]['hosts'][$name] = $data;
+            $groups[$group]['nets'][$net_name]['hosts'][$ip] = $data;
         } else {
-            $networks[$net_name]['hosts'][$name] = $data;
+            $networks[$net_name]['hosts'][$ip] = $data;
         }
         //printr($data);
     }
@@ -830,7 +843,73 @@ Page Header (links, riskmeter, rrd)
     </td>
     </tr><tr>
     <td class="noborder">
-    <img src="../report/graphs/draw_rrd.php?ip=global_<?=$user?>&what=compromise&start=<?=$rrd_start?>&end=N&type=global&zoom=0.85">
+    <map id="riskmap" name="riskmap">
+    <?php
+    define("GRAPH_HEIGHT",100);
+    define("GRAPH_WIDTH",400);
+    define("GRAPH_BORDER_HEIGHT",42);
+    define("GRAPH_BORDER_WIDTH",50);
+    define("GRAPH_ZOOM","0.85");
+    $time_range = time();
+        switch($range){
+        case 'day':
+            $nmapitems = 4*6;
+            $basetime = 60*60;
+            $deltax0_percent = ( $basetime - ( intval(date("i"))*60+intval(date("s")) ) ) / $basetime;
+            break;
+        case 'week':
+            $nmapitems = 7*4;
+            $basetime = 6*60*60;
+            $deltax0_percent = ( $basetime - ( (intval(date("G"))%6)*3600+intval(date("i"))*60+intval(date("s")) ) ) / $basetime;
+            break;
+        case 'month':
+            $nmapitems = 4*7;
+            $basetime = 24*60*60;
+            $deltax0_percent = ( $basetime - ( intval(date("G"))*3600+intval(date("i"))*60+intval(date("s")) ) ) / $basetime;
+            break;
+        case 'year':
+            $nmapitems = 12;
+            $deltax0_percent = ( (intval(date("t"))*24*60*60) - (intval(date("j"))*24*3600+intval(date("G"))*3600+intval(date("i"))*60+intval(date("s"))) ) / (intval(date("t"))*24*60*60);
+            break;
+        default:
+            die(ossim_error('Invalid range'));
+    }
+    $zoom = floatval(GRAPH_ZOOM);
+    $xcanvas = 0;
+    $ycanvas = 0;
+    $wcanvas = GRAPH_WIDTH*$zoom;
+    $hcanvas = GRAPH_HEIGHT*$zoom;
+    $deltax = $wcanvas/$nmapitems;
+    $deltay = $hcanvas;
+    $deltax0 = $deltax0_percent*$deltax;
+    $cx = $xcanvas+(GRAPH_BORDER_WIDTH*$zoom);
+    $cy = $ycanvas+(GRAPH_BORDER_HEIGHT*$zoom);
+    $i = 0;
+    if ($deltax0 > 0)
+    {
+        $start_epoch = $time_range-($nmapitems*$basetime);
+        $start_acid = date("Y-m-d H:i:s",$start_epoch);
+        $end_epoch = $time_range-($nmapitems*$basetime)+$deltax0_percent*$basetime;
+        $end_acid = date("Y-m-d H:i:s",$end_epoch);
+//        echo "<area shape=\"rect\" target=\"_blank\" href=\"".Util::get_acid_events_link($start_acid,$end_acid)."\" title=\"$start_acid -> $end_acid\" coords=\"".round($cx).",".round($cy).",".round($cx+$deltax0).",".round($cy+$deltay)."\">\n";
+        echo "<area shape=\"rect\" target=\"_blank\" href=\"find_peaks.php?start=".$start_epoch."&end=".$end_epoch."&type="."host"."&range=".$range."\" title=\"$start_acid -> $end_acid\" coords=\"".round($cx).",".round($cy).",".round($cx+$deltax0).",".round($cy+$deltay)."\">\n";
+        $cx = $cx + $deltax0;
+        $i++;
+        $nmapitems++;
+    }
+    for(;$i<$nmapitems;$i++){
+        $start_epoch = $time_range+$deltax0_percent*$basetime-(($nmapitems-$i)*$basetime);
+        $start_acid = date("Y-m-d H:i:s",$start_epoch);
+        $end_epoch = $time_range+$deltax0_percent*$basetime-(($nmapitems-$i)*$basetime)+$basetime;
+        $end_acid = date("Y-m-d H:i:s",$end_epoch);
+//        echo "<area shape=\"rect\" target=\"_blank\" href=\"".Util::get_acid_events_link($start_acid,$end_acid)."\" title=\"$start_acid -> $end_acid\" coords=\"".round($cx).",".round($cy).",".round($cx+$deltax).",".round($cy+$deltay)."\">\n";
+        echo "<area shape=\"rect\" target=\"_blank\" href=\"find_peaks.php?start=".$start_epoch."&end=".$end_epoch."&type="."host"."&range=".$range."\" title=\"$start_acid -> $end_acid\" coords=\"".round($cx).",".round($cy).",".round($cx+$deltax).",".round($cy+$deltay)."\">\n";
+        $cx = $cx + $deltax;
+    }
+
+    ?>
+    </map>
+    <img usemap="#riskmap" border=0 src="../report/graphs/draw_rrd.php?ip=global_<?=$user?>&what=compromise&start=<?=$rrd_start?>&end=N&type=global&zoom=<?=GRAPH_ZOOM?>">
     </td>
     <td class="noborder">
     <table>
@@ -970,16 +1049,16 @@ Network Groups
                 </tr>
                 <?
                 if (isset($net_data['hosts'])) {
-                    foreach ($net_data['hosts'] as $host_name => $host_data) {
+                    foreach ($net_data['hosts'] as $host_ip => $host_data) {
                         $host++;
                 ?>
                         <tr id="host_<?=$host?>_<?=$ac?>" style="display: none">
                             <td width="6%" style="border: 0px;">&nbsp;</td>
                             <td style="text-align: left">&nbsp;&nbsp;
-                                <a href="../report/index.php?host=<?=$host_name?>&section=metrics"><?=$host_name?></a>
+                                <a href="../report/index.php?host=<?=$host_ip?>&section=metrics"><?=$host_data['name']?></a>
                             </td>
                             <?
-                            html_set_values($host_name,
+                            html_set_values($host_ip,
                                        'host',
                                        $host_data["max_$ac"],
                                        $host_data["max_{$ac}_date"],
@@ -1043,16 +1122,16 @@ Network outside groups
             <?
             if ($num_hosts) {
                 uasort($net_data['hosts'], 'order_by_risk');
-                foreach ($net_data['hosts'] as $host_name => $host_data) {
+                foreach ($net_data['hosts'] as $host_ip => $host_data) {
                     $host++;
             ?>
                     <tr id="host_<?=$host?>_<?=$ac?>" style="display: none">
                         <td width="3%" style="border: 0px;">&nbsp;</td>
                         <td style="text-align: left">&nbsp;&nbsp;
-                            <a href="../report/index.php?host=<?=$host_name?>&section=metrics"><?=$host_name?></a>
+                            <a href="../report/index.php?host=<?=$host_ip?>&section=metrics"><?=$host_data['name']?></a>
                         </td>
                         <?
-                        html_set_values($host_name,
+                        html_set_values($host_ip,
                                    'host',
                                    $host_data["max_$ac"],
                                    $host_data["max_{$ac}_date"],
@@ -1088,10 +1167,13 @@ Hosts
         <?
         $i = 0;
         foreach ($hosts as $ip => $host_data) {
+            $group = $host_data['group'] ? " - ".$host_data['group'] : '';
         ?>
         <tr>
         <td nowrap colspan="2" style="text-align: left">
-            <a href="../report/index.php?host=<?=$ip?>&section=metrics"><?=$host_data['name']." - ".$host_data['network']?><br>(<?=$host_data['group']?>)</a>
+          <a href="../report/index.php?host=<?=$ip?>&section=metrics" title="<?=$host_data['network'].$group ?>">
+            <?=$host_data['name']?>
+          </a>
         </td>
         <?
         html_set_values($ip,
@@ -1158,7 +1240,7 @@ Hosts outside networks
 </tr>
 </table>
 <br>
-<b>Legend:</b><br>
+<b><?=_("Legend")?>:</b><br>
 <table width="30%" align="left">
 <tr>
     <?=_html_metric(0, 100, '#')?>

@@ -203,24 +203,24 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <tr>
     <th> <?php echo gettext("OS"); ?> </th>
     <td class="left">
-      <select name="os"
-      >
-        <option value="unknown">
-	<?php echo gettext("Unknown"); ?> </option>
-        <option value="windows">
-	<?php echo gettext("Windows"); ?> </option>
-        <option value="linux">
-	<?php echo gettext("Linux"); ?> </option>
-        <option value="bsd">
-	<?php echo gettext("BSD"); ?> </option>
-        <option value="mac">
-	<?php echo gettext("Mac"); ?> </option>
-        <option value="sun">
-	<?php echo gettext("Sun"); ?> </option>
-        <option value="plan9">
-	<?php echo gettext("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
-        <option value="unknown">
-	<?php echo gettext("Other"); ?> </option>
+      <select name="os">
+        <option value="Unknown"> </option>
+        <option value="Windows"><?=_("Microsoft Windows"); ?> </option>
+        <option value="Linux"><?=_("Linux"); ?> </option>
+        <option value="FreeBSD"><?=_("FreeBSD"); ?> </option>
+        <option value="NetBSD"><?=_("NetBSD"); ?> </option>
+        <option value="OpenBSD"><?=_("OpenBSD"); ?> </option>
+        <option value="MacOS"><?=_("Apple MacOS"); ?> </option>
+        <option value="Solaris"><?=_("SUN Solaris"); ?> </option>
+        <option value="Cisco"><?=_("Cisco IOS"); ?> </option>
+        <option value="AIX"><?=_("IBM AIX"); ?> </option>
+        <option value="HP-UX"><?=_("HP-UX"); ?> </option>
+        <option value="Tru64"><?=_("Compaq Tru64"); ?> </option>
+        <option value="IRIX"><?=_("SGI IRIX"); ?> </option>
+        <option value="BSD/OS"><?=_("BSD/OS"); ?> </option>
+        <option value="SunOS"><?=_("SunOS"); ?> </option>
+        <option value="Plan9"><?=_("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
+
       </select>
     </td>
   </tr>

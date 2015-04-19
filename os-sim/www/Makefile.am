@@ -1,5 +1,6 @@
 SUBDIRS= action \
 	backup \
+	business_processes \
 	conf \
 	control_panel \
 	directives \
@@ -24,6 +25,7 @@ SUBDIRS= action \
 	rrd_conf \
 	scan \
 	sensor \
+	server \
 	session \
 	setup \
 	signature \

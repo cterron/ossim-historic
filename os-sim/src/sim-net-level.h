@@ -66,32 +66,33 @@ struct _SimNetLevelClass {
 
 GType             sim_net_level_get_type                        (void);
 SimNetLevel*      sim_net_level_new                             (const gchar   *name,
-								 gint           c,
-								 gint           a);
+																																 gint           c,
+																																 gint           a);
 SimNetLevel*      sim_net_level_new_from_dm                     (GdaDataModel  *dm,
-								 gint           row);
+																																 gint           row);
 
 gchar*            sim_net_level_get_name                        (SimNetLevel   *net_level);
 void              sim_net_level_set_name                        (SimNetLevel   *net_level,
-								 const gchar   *name);
+																																 const gchar   *name);
 
 gdouble           sim_net_level_get_c                           (SimNetLevel   *net_level);
 void              sim_net_level_set_c                           (SimNetLevel   *net_level,
-								 gdouble        c);
+																																 gdouble        c);
 void              sim_net_level_plus_c                          (SimNetLevel   *net_level,
-								 gdouble        c);
+																																 gdouble        c);
 
 gdouble           sim_net_level_get_a                           (SimNetLevel   *net_level);
 void              sim_net_level_set_a                           (SimNetLevel   *net_level,
-								 gdouble        a);
+																																 gdouble        a);
 void              sim_net_level_plus_a                          (SimNetLevel   *net_level,
-								 gdouble        a);
+																																 gdouble        a);
 
 void              sim_net_level_set_recovery                    (SimNetLevel   *net_level,
-								 gint           recovery);
+																																 gint           recovery);
 gchar*            sim_net_level_get_insert_clause               (SimNetLevel   *net_level);
 gchar*            sim_net_level_get_update_clause               (SimNetLevel   *net_level);
 gchar*            sim_net_level_get_delete_clause               (SimNetLevel   *net_level);
+void							sim_net_level_debug_print											(SimNetLevel  *net_level);
 
 G_END_DECLS
 

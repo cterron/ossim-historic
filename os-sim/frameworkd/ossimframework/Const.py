@@ -3,7 +3,7 @@
 #
 
 # Ossim framework daemon version
-VERSION = "0.9.8"
+VERSION = "0.9.9rc4"
 
 # default delay between iterations
 # overriden with -s option
@@ -12,6 +12,9 @@ SLEEP = 300
 # default configuration file
 # overriden with -c option
 CONFIG_FILE = "/etc/ossim/framework/ossim.conf"
+
+# Default frameworkd path
+FRAMEWORKD_DIR = "/usr/share/ossim-framework/ossimframework/"
 
 # default log directory location
 LOG_DIR = "/var/log/ossim/"

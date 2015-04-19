@@ -80,7 +80,7 @@ gboolean         sim_xml_config_save (SimXmlConfig *xmlconfig,
 gchar*           sim_xml_config_to_string (SimXmlConfig *xmlconfig);
 
 SimConfig*       sim_xml_config_new_config_from_node (SimXmlConfig *xmlconfig,
-						      xmlNodePtr       node);
+																								      xmlNodePtr       node);
 
 SimConfig*       sim_xml_config_get_config (SimXmlConfig  *xmlconfig);
 

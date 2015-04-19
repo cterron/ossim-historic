@@ -86,6 +86,7 @@ etc/cron.daily/Makefile
 etc/init.d/Makefile
 etc/logrotate.d/Makefile
 db/Makefile
+db/plugins/Makefile
 pixmaps/Makefile
 include/Makefile
 include/classes/Makefile
@@ -95,11 +96,13 @@ include/panel/plugins/Makefile
 include/xajax/Makefile
 www/Makefile
 www/action/Makefile
+www/business_processes/Makefile
 www/conf/Makefile
 www/control_panel/Makefile
 www/directives/Makefile
-www/feed/Makefile
 www/editor/Makefile
+www/event_viewer/Makefile
+www/feed/Makefile
 www/hids/Makefile
 www/host/Makefile
 www/incidents/Makefile
@@ -120,6 +123,7 @@ www/riskmeter/Makefile
 www/rrd_conf/Makefile
 www/scan/Makefile
 www/sensor/Makefile
+www/server/Makefile
 www/session/Makefile
 www/setup/Makefile
 www/signature/Makefile
@@ -141,6 +145,10 @@ mrtg/global/Makefile
 mrtg/hosts/Makefile
 mrtg/nets/Makefile
 scripts/Makefile
+scripts/correlation/Makefile
+scripts/extract_nessus/Makefile
+scripts/extract_osvdb/Makefile
+scripts/extract_osvdb/OS/Makefile
 contrib/Makefile
 contrib/fonts/Makefile
 contrib/ntop/Makefile
@@ -156,6 +164,7 @@ contrib/debian/init.d/Makefile
 contrib/fedora/Makefile
 contrib/fedora/init.d/Makefile
 contrib/oinkmaster/Makefile
+contrib/osvdb/Makefile
 contrib/spade/Makefile
 contrib/snort/Makefile
 contrib/patches/Makefile

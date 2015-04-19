@@ -24,7 +24,7 @@ require_once ('classes/Port.inc');
 require_once ('classes/Util.inc');
 require_once ('classes/Security.inc');
 
-/* number of events by page */
+/* default number of events per page */
 $ROWS = 50;
 
 /* connect to db */
@@ -40,16 +40,36 @@ $dst_ip = GET('dst_ip');
 $inf = GET('inf');
 $sup = GET('sup');
 $hide_closed = GET('hide_closed');
+// By default only show alarms from the past week
+if (!GET('date_from')) {
+    list($y, $m, $d) = explode('-', date('Y-m-d'));
+    $date_from = date('Y-m-d', mktime(0, 0, 0, $m, $d-7, $y));
+} else {
+    $date_from = GET('date_from');
+}
+$date_to = GET('date_to');
+$num_alarms_page = GET('num_alarms_page');
 
 ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
 ossim_valid($delete, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("delete"));
 ossim_valid($close, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("close"));
 ossim_valid($delete_day, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("delete_day"));
-ossim_valid($src_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
-ossim_valid($dst_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
+$ret1 = ossim_valid($src_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
+$ret2 = ossim_valid($src_ip, OSS_IP_CIDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
+if(!$ret1 && !$ret2) die(ossim_error());
+// Cleanup errors
+ossim_set_error(false);
+$ret3 = ossim_valid($dst_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
+$ret4 = ossim_valid($dst_ip, OSS_IP_CIDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
+if(!$ret1 && !$ret2) die(ossim_error());
+// Cleanup errors
+ossim_set_error(false);
 ossim_valid($inf, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("inf"));
 ossim_valid($sup, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("order"));
 ossim_valid($hide_closed, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("hide_closed"));
+ossim_valid($date_from, OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("from date"));
+ossim_valid($date_to, OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("to date"));
+ossim_valid($num_alarms_page, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("field number of alarms per page"));
 
 if (ossim_error()) {
     die(ossim_error());
@@ -64,10 +84,12 @@ if (!empty($close)) {
 }
 
 if ($list = GET('delete_backlog')) {
-    if (!strcmp($list, "all"))
+    if (!strcmp($list, "all")) {
         $backlog_id = $list;
-    else
+        $id = null;
+    } else {
         list($backlog_id, $id) = split("-", $list);
+    }
     Alarm::delete_from_backlog($conn, $backlog_id, $id);
 }
 
@@ -92,28 +114,70 @@ if ((!empty($src_ip)) && (!empty($dst_ip))) {
     $where = '';
 }
 
+if ($num_alarms_page) {
+    $ROWS = $num_alarms_page;
+}
+
 if (empty($inf))
     $inf = 0;
 if (!$sup)
     $sup = $ROWS;
 
-?>
+$alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
+                              "ORDER BY $order", $inf, $sup, $date_from, $date_to);
 
-    <?php
-        $hide_closed  == 1? 1 : 0;
+?>
+<form method="GET">
+<table width="60%" align="center">
+<tr><th colspan="2">
+<?=_("Filter")?>
+<?php
+        $hide_closed  == 1 ? 1 : 0;
         $not_hide_closed = !$hide_closed;
     ?>
-    <input type="checkbox" 
+    (<input type="checkbox" 
         onClick="document.location='<?php echo 
             $_SERVER["PHP_SELF"] .
             "?order=$order&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip" .
-            "&hide_closed=$not_hide_closed" ?>'"
+            "&hide_closed=$not_hide_closed&num_alarms_page=$num_alarms_page" ?>'"
         <?php if ($hide_closed) echo " checked " ?> 
-    /><?php echo gettext("Hide closed alarms"); ?><br/>
-
+    /><?php echo gettext("Hide closed alarms"); ?>)
+</th></tr>
+<tr>
+    <td width="20%" style="text-align: right; border-width: 0px">
+        <b><?=_('Date')?></b>:
+    </td>
+    <td style="text-align: left; border-width: 0px">
+        <?=_('from')?> <input type="text" size=10 name="date_from" value="<?=$date_from?>">&nbsp;
+          <? Util::draw_js_calendar(array('input_name' => 'document.forms[0].date_from', true))?>
+        <?=_('to')?> <input type="text" size="10" name="date_to" value="<?=$date_to?>">&nbsp;
+          <? Util::draw_js_calendar(array('input_name' => 'document.forms[0].date_to', true))?> (<?=_('YY-MM-DD')?>)
+    </td>
+</tr>
+<tr>
+    <td width="25%" style="text-align: right; border-width: 0px">
+        <b><?=_("IP Address")?></b>:
+    </td>
+    <td style="text-align: left; border-width: 0px" nowrap>    
+        <?=_("source")?>: <input type="text" size="15" name="src_ip" value="<?=$src_ip?>">&nbsp;-&nbsp;
+        <?=_("destination")?>: <input type="text" size="15" name="dst_ip" value="<?=$dst_ip?>">
+    </td>
+</tr>
+<tr>
+    <td width="25%" style="text-align: right; border-width: 0px" nowrap>
+        <b><?=_("Num. alarms per page")?></b>:
+    </td>
+    <td style="text-align: left; border-width: 0px">
+        <input type="text" size=3 name="num_alarms_page" value="<?=$ROWS?>">
+    </td>
+</tr>
+<tr><th colspan="2"><input type="submit" value="<?=_("Go")?>"></th></td>
+</table>
+</form>
+<br>
     <table width="100%">
       <tr>
-        <td colspan="8">
+        <td colspan="10">
 <?php
 
     /* 
@@ -123,12 +187,12 @@ if (!$sup)
             "?order=$order" . 
             "&sup=" . ($sup - $ROWS) .
             "&inf=" . ($inf - $ROWS) .
-            "&hide_closed=$hide_closed";
+            "&hide_closed=$hide_closed&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to";
     $sup_link = $_SERVER["PHP_SELF"] . 
         "?order=$order" . 
         "&sup=" . ($sup + $ROWS) .
         "&inf=" . ($inf + $ROWS) .
-        "&hide_closed=$hide_closed";
+        "&hide_closed=$hide_closed&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to";
     if ($src_ip) {
         $inf_link .= "&src_ip=$src_ip";
         $sup_link .= "&src_ip=$src_ip";
@@ -137,7 +201,9 @@ if (!$sup)
         $inf_link .= "&dst_ip=$dst_ip";
         $sup_link .= "&dst_ip=$dst_ip";
     }
-    $count = Alarm::get_count($conn, $src_ip, $dst_ip, $hide_closed);
+    // XXX missing performance improve here
+    $tot_alarms = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed, "", null, null, $date_from, $date_to);
+    $count = count($tot_alarms);
     
     if ($inf >= $ROWS) {
         echo "<a href=\"$inf_link\">&lt;-"; printf(gettext("Prev %d"),$ROWS); echo "</a>";
@@ -162,38 +228,36 @@ if (!$sup)
         <th>#</th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("plugin_sid", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Alarm"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("risk", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Risk"); ?> </a></th>
         <th> <?php echo gettext("Sensor"); ?> </th>
         <th> <?php echo gettext("Since"); ?> </th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("timestamp", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip" ?>"> 
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to" ?>"> 
             <?php echo gettext("Last"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("src_ip", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Source"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("dst_ip", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Destination"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("status", $order) .
-                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip"
+                "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Status"); ?> </a></th>
         <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php
     $time_start = time();
-    if ($alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
-                                      "ORDER by $order", 
-                                      $inf, $sup))
+    if (count($alarm_list))
     {
         $datemark = "";
 
@@ -246,13 +310,13 @@ if (!$sup)
                 ";
                 echo "
                 <tr>
-                  <td></td>
+                  <td>&nbsp;</td>
                   <td colspan=\"8\">
                     <!--<hr border=\"0\"/>-->
                     <b>$date_formatted</b> [$link_delete]<br/>
                     <!--<hr border=\"0\"/>-->
                   </td>
-                  <td></td>
+                  <td>&nbsp;</td>
                 </tr>
                 ";
             }
@@ -423,7 +487,7 @@ if (!$sup)
 ?>
         <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Alarm&"  .
-            "title=$alarm_name_orig&" .
+            "title=".urlencode($alarm_name_orig)."&" .
             "priority=$risk&" .
             "src_ips=$src_ip&" .
             "src_ports=$src_port&" .
@@ -438,7 +502,7 @@ if (!$sup)
 ?>
       <tr>
         <td></td>
-        <td colspan="8">
+        <td colspan="10">
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"><?php
             echo gettext("Delete ALL alarms"); ?></a> &nbsp;|&nbsp;
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?purge=1"><?php

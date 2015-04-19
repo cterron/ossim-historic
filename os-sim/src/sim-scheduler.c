@@ -43,6 +43,7 @@
 #include "sim-server.h"
 #include "sim-session.h"
 #include <config.h>
+#include "sim-enums.h"
 
 extern SimMain  ossim;
 
@@ -72,12 +73,12 @@ struct _SimSchedulerPrivate {
 static gpointer parent_class = NULL;
 static gint sim_container_signals[LAST_SIGNAL] = { 0 };
 
-static GTime       last = 0;
-static GTime       timer = 0;
+static time_t       last = 0;
+static time_t       timer = 0;
 
 //the following used in sim_scheduler_task_store_event_number_at_5min()
-static GTime       event_last = 0;
-static GTime       event_timer = 300; //FIXME: A variable in config may be more friendly than this...
+static time_t       event_last = 0;
+static time_t       event_timer = 300; //FIXME: A variable in config may be more friendly than this...
 
 /* GType Functions */
 
@@ -192,7 +193,7 @@ sim_scheduler_task_calculate (SimScheduler  *scheduler,
  */
 void
 sim_scheduler_task_correlation (SimScheduler  *scheduler,
-				gpointer       data)
+																gpointer       data)
 {
   g_return_if_fail (scheduler != NULL);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
@@ -225,10 +226,14 @@ sim_scheduler_task_execute_at_interval (SimScheduler  *scheduler,
 
   timer = config->scheduler.interval; //interval is 15 by default in config.xml
 
-	//Functions to execute:
-	sim_scheduler_task_calculate(scheduler, data);//do the net and host level recovering
-  sim_scheduler_task_GDAErrorHandling(); 	//do a GDA check to test if everything goes fine.
-  sim_scheduler_task_rservers (scheduler); //(Re)connect with Main Server/s
+	//Functions to execute (some of them just if DB is local).:
+	if (sim_database_is_local (ossim.dbossim))
+	{
+		sim_scheduler_task_calculate (scheduler, data);//do the net and host level recovering
+		sim_scheduler_task_GDAErrorHandling(); 	//do a GDA check to test if everything goes fine.
+	}
+  sim_scheduler_task_rservers (SIM_SCHEDULER_STATE_NORMAL); //(Re)connect with Main Server/s & HA servers
+
 //  sim_scheduler_task_rservers (scheduler); //(Re)connect with the other HA Server.
 
 }
@@ -354,17 +359,14 @@ sim_scheduler_session (gpointer data)
 
 /*
  * This function will open the connection against all the servers from which OSSIM gets information, hosts, networks,
- * and commands from the "Main Server" (called "rservers" in config.xml). If connection is lost, this will try to reopen it.
- *
+ * (called "rservers" in config.xml) and commands from the "Main Server", identified as primary. If connection is lost,
+ * this will try to reopen it.
  */
 void
-sim_scheduler_task_rservers (SimScheduler  *scheduler)
+sim_scheduler_task_rservers (SimSchedulerState state)
 {
   GThread  *thread;
   GList    *list;
-
-  g_return_if_fail (scheduler);
-  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
   list = ossim.config->rservers;
 
@@ -375,6 +377,16 @@ sim_scheduler_task_rservers (SimScheduler  *scheduler)
 	while (list)
   {
     SimConfigRServer *rserver = (SimConfigRServer*) list->data;
+
+		//This is usefull when we are connecting to the primary master server to load DB data from it (in sim_container_start_temp_listen())
+		//we only want to activate the primary master server session, not other master server sessions or HA servers.
+		if (state == SIM_SCHEDULER_STATE_INITIAL)	
+			if (!rserver->primary)
+			{
+				list = list->next;
+				continue;
+			}
+
 
 		SimSessionType	sesstype;		
 		SimServer				*srv;
@@ -391,9 +403,10 @@ sim_scheduler_task_rservers (SimScheduler  *scheduler)
 			srv = ossim.server;
 		}
 		
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_task_rservers, sim_scheduler_backlogs_time_out: backlogs %d", g_list_length (list));
 		//if the rservers defined aren't active, we've to activate them to accept instructions from
 		//them (remember, rservers are the servers "up" in the multiserver architecture) or to accept 
-		//data from an HA server. A rserver can be also another HA server in the same level than this.
+		//data from an HA server. A rserver can be also another HA server in the same level than this one.
 		if (!sim_server_get_session_by_ia (srv, sesstype, rserver->ia))
 		{
 		  rserver->socket = gnet_tcp_socket_new (rserver->ia); //connect to its master server or to the HA server.
@@ -402,6 +415,7 @@ sim_scheduler_task_rservers (SimScheduler  *scheduler)
 			{
 				SimSession *session = sim_session_new (G_OBJECT (srv), ossim.config, rserver->socket);					
 				sim_session_set_hostname (session, rserver->name);
+				sim_session_set_is_initial (session, state);
 				if (!sim_session_must_close (session))
 				{
 					session->type = sesstype;
@@ -409,6 +423,7 @@ sim_scheduler_task_rservers (SimScheduler  *scheduler)
 				  g_message ("Connecting to remote server: %s\n", rserver->name);
 					/* session thread */
 					thread = g_thread_create(sim_scheduler_session, session, FALSE, NULL);
+				  g_return_if_fail (thread);
 				}
 				else
 				{
@@ -430,6 +445,7 @@ sim_scheduler_task_rservers (SimScheduler  *scheduler)
 			
 		}
     list = list->next;
+		
   }
 
 }
@@ -458,9 +474,12 @@ sim_scheduler_run (SimScheduler *scheduler)
   while (TRUE)
   {
     sleep (1);
-    sim_scheduler_task_correlation (scheduler, NULL); //removes backlog entries when needed
+		if (sim_database_is_local (ossim.dbossim)) //this functions has no sense if the DB is not local
+		{
+	    sim_scheduler_task_correlation (scheduler, NULL); //removes backlog entries when needed
+			sim_scheduler_task_store_event_number_at_5min (scheduler); //stores the event number each 5 minutes (I know, this is a bad style, I'm sorry)
+		}
     sim_scheduler_task_execute_at_interval (scheduler, NULL);//execute some tasks in the time interval defined in config.xml
-    sim_scheduler_task_store_event_number_at_5min (scheduler); //stores the event number each 5 minutes (I know, this is a bad style, I'm sorry)
   }
 }
 

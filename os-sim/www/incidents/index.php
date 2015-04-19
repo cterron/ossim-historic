@@ -137,6 +137,9 @@ function order_img($subject)
               <option <? if ($ref == "Anomaly") echo "selected" ?> value="Anomaly">
     	        <?php echo gettext("Anomaly"); ?>
               </option>
+              <option <? if ($ref == "Vulnerability") echo "selected" ?> value="Vulnerability">
+                <?php echo gettext("Vulnerability"); ?>
+              </option>
             </select>
           </td>
           <td style="border-width: 0px;">
@@ -277,7 +280,15 @@ function order_img($subject)
       </td>
       <td><b>
         <a href="incident.php?id=<?= $incident->get_id() ?>">
+
             <?= $incident->get_title(); ?></a></b>
+<?php
+if($incident->get_ref() == "Vulnerability"){
+$vulnerability_list = $incident->get_vulnerabilities($conn);
+// Only use first index, there shouldn't be more
+echo " <font color=\"grey\" size=\"1\">(" . $vulnerability_list[0]->get_ip() . ":" . $vulnerability_list[0]->get_port() . ")</font>";
+}
+?>
       </td>
       <?php 
         $priority = $incident->get_priority();
@@ -291,7 +302,7 @@ function order_img($subject)
         <?
         $rows = 0;
         foreach ($incident->get_tags() as $tag_id) {
-            echo $incident_tag->get_html_tag($tag_id) . "<br/>\n";
+            echo "<font color=\"grey\" size=\"1\">" . $incident_tag->get_html_tag($tag_id) . "</font><br/>\n";
             $rows++;
         }
         if (!$rows) echo "&nbsp;";
@@ -325,7 +336,10 @@ function order_img($subject)
         <a href="newincident.php?ref=Event&title=New+Event+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Event"); ?> </a> | 
         <a href="newincident.php?ref=Metric&title=New+Metric+incident&priority=1&target=&metric_type=&metric_value=0">
-	<?php echo gettext("Metric"); ?> </a> )
+	<?php echo gettext("Metric"); ?> </a> |
+        <a href="newincident.php?ref=Vulnerability&title=New+Vulnerability+incident&priority=1&ip=&port=&nessus_id=&risk=&description=">
+    <?php echo gettext("Vulnerability"); ?> </a> )
+
     
       </td>
     </tr>

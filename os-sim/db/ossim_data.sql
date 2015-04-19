@@ -2745,6 +2745,9 @@ INSERT INTO plugin (id, type, name, description) VALUES (1519, 1, 'netgear', 'Ne
 INSERT INTO plugin (id, type, name, description) VALUES (1520, 1, 'netscreen', 'Juniper Netscreen');
 INSERT INTO plugin (id, type, name, description) VALUES (1521, 1, 'postfix', 'Postfix mailer');
 INSERT INTO plugin (id, type, name, description) VALUES (1522, 1, 'juniperfw', 'Juniper-Netscreen FW');
+INSERT INTO plugin (id, type, name, description) VALUES (1523, 1, 'heartbeat', 'Heartbeat without CRM');
+INSERT INTO plugin (id, type, name, description) VALUES (1524, 1, 'spamassassin', 'Spamassassin: Perl-based spam filter using text analysis');
+INSERT INTO plugin (id, type, name, description) VALUES (1525, 1, 'nagios', 'Nagios: host, service and network monitor');
 
 INSERT INTO plugin (id, type, name, description) VALUES (2001, 2, 'ossim', 'OS-SIM');
 INSERT INTO plugin (id, type, name, description) VALUES (2002, 2, 'arp_watch', 'Arpwatch');
@@ -2760,6 +2763,10 @@ INSERT INTO plugin (id, type, name, description) VALUES (3002, 3, 'nmap', 'NMap'
 INSERT INTO plugin (id, type, name, description) VALUES (4001, 1, 'osiris', 'Osiris HIDS');
 
 INSERT INTO plugin (id, type, name, description) VALUES (4002, 1, 'syslogd', 'Syslog Daemon');
+
+INSERT INTO plugin (id, type, name, description) VALUES (5001, 4, "os", "Operating Systems");
+INSERT INTO plugin (id, type, name, description) VALUES (5002, 4, "services", "Services / Ports");
+INSERT INTO plugin (id, type, name, description) VALUES (5003, 4, "osvdb", "Open Source Vulnerability Database");
 
 --
 -- Data: Plugin Sid
@@ -11693,6 +11700,8 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (151
 -- Snare for Windows Sids
 --
 
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 10, NULL, NULL, 'Snare Agent for Windows: Document printed');
+
 -- Audit Privilege Use
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 576, NULL, NULL, 'Snare Agent for Windows: Special privileges assigned to new loggon');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1518, 577, NULL, NULL, 'Snare Agent for Windows: Privileged Service Called');
@@ -12146,6 +12155,52 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (152
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 283, 139, NULL, 'juniperfw: WORM:NIMDA:SCRIPTS-CMD attack');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 284, 139, NULL, 'juniperfw: WORM:NIMDA:SCRIPTS-ROOT attack');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 285, NULL, NULL, 'juniperfw: unknown');
+
+
+
+--
+-- Heartbeat sids
+--
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 1, NULL, NULL, 'heartbeat: node up');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 2, NULL, NULL, 'heartbeat: node active');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 3, NULL, NULL, 'heartbeat: node dead');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 4, NULL, NULL, 'heartbeat: link up');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 5, NULL, NULL, 'heartbeat: link dead');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 6, NULL, NULL, 'heartbeat: resources being acquired');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 7, NULL, NULL, 'heartbeat: resources acquired');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 8, NULL, NULL, 'heartbeat: no resources to acquire');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 9, NULL, NULL, 'heartbeat: standby');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 10, NULL, NULL, 'heartbeat: standby completed');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 11, NULL, NULL, 'heartbeat: shutdown');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 12, NULL, NULL, 'heartbeat: shutdown completed');
+insert into plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1523, 13, NULL, NULL, 'heartbeat: late heartbeat');
+
+
+--
+-- Spamassassin sids
+--
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1524, 1, NULL, NULL, 'spamassassin: spam detected');
+
+
+--
+-- NagiOS sids
+--
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 1, 2, 3, 'nagios: host alert - hard down');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 2, 1, 3, 'nagios: host alert - hard up');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 3, 2, 3, 'nagios: host alert - hard unreachable');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 4, 1, 1, 'nagios: host alert - soft down');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 5, 0, 1, 'nagios: host alert - soft up');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 6, 1, 1, 'nagios: host alert - soft unreachable');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 7, 2, 3, 'nagios: service alert - hard critical');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 8, 1, 3, 'nagios: service alert - hard ok');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 9, 1, 2, 'nagios: service alert - hard unknown');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 10, 1, 2, 'nagios: service alert - hard warning');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 11, 1, 1, 'nagios: service alert - soft critical');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 12, 0, 1, 'nagios: service alert - soft ok');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 13, 1, 1, 'nagios: service alert - soft unknown');
+INSERT INTO plugin_sid (plugin_id, sid, priority, reliability, name) VALUES (1525, 14, 1, 1, 'nagios: service alert - soft warning');
+
+
 --
 -- Monitors Sids
 --
@@ -12864,12 +12919,20 @@ INSERT INTO log_config (code, log, descr, priority) VALUES (043, 1, 'Tools - Net
 INSERT INTO log_config (code, log, descr, priority) VALUES (044, 0, 'Tools - Backup restored %1% ', 2);
 INSERT INTO log_config (code, log, descr, priority) VALUES (045, 0, 'Tools - Backup deleted %1% ', 3);
 
--- Server role
-INSERT INTO config (conf, value) VALUES ('server_store', '1');
-INSERT INTO config (conf, value) VALUES ('server_correlate', '1');
-INSERT INTO config (conf, value) VALUES ('server_cross_correlate', '1');
-INSERT INTO config (conf, value) VALUES ('server_qualify', '1');
-INSERT INTO config (conf, value) VALUES ('server_resend_alarm', '1');
-INSERT INTO config (conf, value) VALUES ('server_resend_event', '1');
 
 
+-- OS
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 1, NULL, NULL, 1, 1, "Windows");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 2, NULL, NULL, 1, 1, "Linux");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 3, NULL, NULL, 1, 1, "Cisco");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 4, NULL, NULL, 1, 1, "BSD");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 5, NULL, NULL, 1, 1, "FreeBSD");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 6, NULL, NULL, 1, 1, "NetBSD");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 7, NULL, NULL, 1, 1, "OpenBSD");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 8, NULL, NULL, 1, 1, "HP-UX");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 9, NULL, NULL, 1, 1, "Solaris");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 10, NULL, NULL, 1, 1, "Macos");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 11, NULL, NULL, 1, 1, "Plan9");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 12, NULL, NULL, 1, 1, "SCO");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 13, NULL, NULL, 1, 1, "AIX");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES (5001, 14, NULL, NULL, 1, 1, "UNIX");

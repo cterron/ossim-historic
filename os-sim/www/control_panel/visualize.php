@@ -18,12 +18,12 @@ $backlog_id = GET('backlog_id');
 ossim_valid($backlog_id, OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("backlog_id"));
 
 if (ossim_error()) {
-            die(ossim_error());
+    die(ossim_error());
 }
 
 
 $proto = "http";
-if ($_SERVER[HTTPS] == "on")
+if ($_SERVER['HTTPS'] == "on")
     $proto = "https";
 
 require_once("ossim_conf.inc");

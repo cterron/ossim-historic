@@ -79,6 +79,7 @@ SimNet*           sim_net_new                             (const gchar      *nam
 							   gint              asset);
 SimNet*           sim_net_new_from_dm                     (GdaDataModel     *dm,
 							   gint              row);
+SimNet*						sim_net_split_internal_ips							(SimNet  *net);
 
 gchar*            sim_net_get_name                        (SimNet           *net);
 void              sim_net_set_name                        (SimNet           *net,
@@ -99,6 +100,11 @@ void              sim_net_free_inets                      (SimNet           *net
 
 gboolean          sim_net_has_inet                        (SimNet           *net,
 							   SimInet          *inet);
+
+gchar*						sim_net_get_ips													(SimNet						*net);
+void							sim_net_set_ips													(SimNet						*net,
+																					                  gchar						*ips); //string with multiple IPs
+void							sim_net_debug_print											(SimNet						*net);
 
 G_END_DECLS
 

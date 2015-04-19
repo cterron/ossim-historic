@@ -15,6 +15,8 @@ class Incident {
     var $in_charge;
     var $status;
     var $last_update;
+    var $event_start;
+    var $event_end;
     /*
      * array of TAG IDs related to this incident
      */
@@ -23,7 +25,7 @@ class Incident {
     
     function Incident ($id, $title, $date, $ref, $type, $priority,
                        $in_charge, $status, $last_update, $tags, 
-                       $life_time_diff = null)
+                       $life_time_diff = null, $event_start, $event_end)
     {
         $this->id       = intval($id);
         $this->title    = $title;
@@ -36,16 +38,40 @@ class Incident {
         $this->last_update = $last_update;
         $this->tags     = $tags;
         $this->_life_time_diff = $life_time_diff; /* Private property */
+        $this->event_start = $event_start;
+        $this->event_end = $event_end;
     }
 
-    function get_id()       { return intval($this->id); }
-    function get_title()    { return $this->title;      }
-    function get_ref()      { return $this->ref;        }
-    function get_type()     { return $this->type;       }
-    function get_priority()  { return $this->priority;  }
-    function get_status()    { return $this->status;    }
-    function get_in_charge() { return $this->in_charge; }
-    function get_tags()      { return $this->tags;      }
+    function get_id() { 
+        return intval($this->id); 
+    }
+    function get_title() { 
+        return $this->title;
+    }
+    function get_ref() { 
+        return $this->ref;
+    }
+    function get_type() { 
+        return $this->type;
+    }
+    function get_priority() { 
+        return $this->priority;  
+    }
+    function get_status() { 
+        return $this->status;
+    }
+    function get_in_charge() { 
+        return $this->in_charge; 
+    }
+    function get_tags() { 
+        return $this->tags;      
+    }
+    function get_event_start() { 
+        return $this->event_start;      
+    }
+    function get_event_end() { 
+        return $this->event_end;      
+    }
 
     function get_in_charge_name($conn)
     {
@@ -69,6 +95,28 @@ class Incident {
         return Util::date_diff(time(), $this->last_update);
     }
 
+    /*
+     * Returns an Incident's event duration
+     */
+/*
+*
+* Broken, DK. (2007-01-23)
+*
+*/
+/*
+    function get_event_duration($format='yMdhm')
+    {
+        $id  = $this->id;
+        $status = $this->status;
+        $start_date = $this->event_start;
+        $end_date = $this->event_end;
+
+	print "A $start_date - $end_date B";
+
+        return  Util::date_diff($end_date, $start_date, $format);
+    }
+*/
+
     function get_date()
     {
         return Util::timestamp2date($this->date);
@@ -89,7 +137,7 @@ class Incident {
         $status = $this->status;
         $start_date = $this->date;
         $last_update = $this->last_update;
-        
+
         if ($status == 'Closed') {
             $end_date = $last_update;
         } else {
@@ -186,10 +234,21 @@ class Incident {
             'metric_type'  => array(OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Metric type")),
             'metric_value' => array(OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Metric value"))
         );
+        $vulnerability = array (
+            'ip' => array (OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:' . _("Ip")), 
+            'port' => array (OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:' . _("Port")), 
+            'nessus_id' => array (OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:' . _("Nessus ID")), 
+            'risk' => array (OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:' . _("Risk" ))
+        );
+
+
+        
+        
         if ($type == 'incident_insert') return array_merge($incident, $incident_insert);
         if ($type == 'incident_update') return array_merge($incident, $incident_update);
         if ($type == 'event')    return $event;
         if ($type == 'metric')   return $metric;
+        if ($type == 'vulnerability')   return $vulnerability;
     }
         
 
@@ -209,7 +268,6 @@ class Incident {
     function get_list ($conn, $args = "")
     {
         require_once ('classes/Session.inc');
-    
         $user = Session::get_session_user();
         $list = array();
         $sql = "SELECT incident.id," .
@@ -220,7 +278,9 @@ class Incident {
                "incident.priority, " .
                "incident.in_charge, " .
                "incident.status, " .
-               "incident.last_update " .
+               "incident.last_update, " .
+               "incident.event_start, " .
+               "incident.event_end " .
                "FROM incident $args";
         
         if (!$rs = &$conn->Execute(OssimQuery($sql))) {
@@ -240,8 +300,11 @@ class Incident {
                                             $rs->fields["priority"],
                                             $rs->fields["in_charge"],
                                             $rs->fields["status"],
+                                            $rs->fields["last_update"],
                                             array(),
-                                            $rs->fields["last_update"]);
+					    null,
+                                            $rs->fields["event_start"],
+                                            $rs->fields["event_end"]);
                 }
                 $rs->MoveNext();
             }
@@ -362,6 +425,16 @@ class Incident {
                        "AND incident_metric.incident_id = incident.id";
             $sqls[] = Incident::_build_sql($sql, $tmp_w);
             $all_parms = array_merge($all_parms, $parms, array($text));
+
+            //
+            // Search over the IPs in vulnerabilities
+            //
+            $tmp_w = $where;
+            $tmp_w[] = "(UPPER(incident_vulns.ip) = ?) " .
+                       "AND incident_vulns.incident_id = incident.id";
+            $sqls[] = Incident :: _build_sql($sql, $tmp_w);
+            $all_parms = array_merge($all_parms, $parms, array (str_replace('%','',$text)));
+
             //
             // Build the final big UNION SQL and params
             // 
@@ -421,7 +494,9 @@ class Incident {
                                             $rs->fields["status"],
                                             $rs->fields["last_update"],
                                             $itags,
-                                            $life_time_diff
+                                            $life_time_diff,
+                                            $rs->fields["event_start"],
+                                            $rs->fields["event_end"]
                                             );
                 }
                 $rs->MoveNext();
@@ -500,6 +575,10 @@ class Incident {
             "WHERE incident_id = " . $this->id . " ORDER BY id");
     }
 
+    function get_vulnerabilities($conn) {
+        require_once ('classes/Incident_vulnerability.inc');
+        return Incident_vulnerability :: get_list($conn, "WHERE incident_id = " . $this->id . " ORDER BY id");
+    }
 
     /* get users that are part of an incident (the main Admin included)
      * (user, in_charge, transferred and subscribed to incidents)
@@ -678,8 +757,7 @@ class Incident {
         print $output;
     }
 
-
-    function __insert($conn, $title, $type, $priority, $ref)
+    function __insert($conn, $title, $type, $priority, $ref, $event_start, $event_end )
     {
         foreach (Incident::get_validations('incident_insert') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
@@ -688,13 +766,16 @@ class Incident {
         require_once ('classes/Session.inc');
         $user = Session::get_session_user();
 
+	$event_start = date('Y-m-d H:i:s', strtotime($event_start));
+	$event_end = date('Y-m-d H:i:s', strtotime($event_end));
+
         $query = "INSERT INTO incident " .
                  "(title, type_id, ref, priority, " .
-                 "in_charge, status, date, last_update) " .
-                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                 "in_charge, status, date, last_update, event_start, event_end) " .
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $date = date('Y-m-d H:i:s');
         $params = array($title, $type, $ref, $priority,
-                        $user, 'Open', $date, $date);
+                        $user, 'Open', $date, $date, $event_start, $event_end);
         if ($conn->Execute($query, $params) === false) {
             die('error inserting incident: '.$conn->ErrorMsg());
         }
@@ -716,13 +797,13 @@ class Incident {
     }
 
     function insert_alarm($conn, $title, $type, $priority, 
-                          $src_ips, $dst_ips, $src_ports, $dst_ports)
+                          $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end)
     {
         foreach (Incident::get_validations('event') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
         }
         $last_id = Incident::__insert($conn, $title, $type, $priority, 
-                                      "Alarm", "OSSIM");
+                                      "Alarm", $event_start, $event_end);
         if (ossim_error()) return false;
         $sql = "INSERT INTO incident_alarm
                 (incident_id, src_ips, dst_ips, src_ports, dst_ports)
@@ -734,13 +815,13 @@ class Incident {
     }
 
     function insert_event($conn, $title, $type, $priority, 
-                          $src_ips, $dst_ips, $src_ports, $dst_ports)
+                          $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end)
     {
         foreach (Incident::get_validations('event') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
         }
         $last_id = Incident::__insert($conn, $title, $type, $priority, 
-                                      "Event", "OSSIM");
+                                      "Event", $event_start, $event_end);
         if (ossim_error()) return false;
         $sql = "INSERT INTO incident_event
                 (incident_id, src_ips, dst_ips, src_ports, dst_ports)
@@ -757,7 +838,7 @@ class Incident {
         $s_data_orig = implode(",", $data_orig);
         $s_data_new = implode(",", $data_new);
         $last_id = Incident::__insert($conn, $title, $type, $priority, 
-                                      "Anomaly", "OSSIM");
+                                      "Anomaly", "","");
         if (ossim_error()) return false;
         $sql = "INSERT INTO incident_anomaly
                 (incident_id, anom_type, ip, data_orig, data_new)
@@ -770,19 +851,40 @@ class Incident {
     }
  
 
+   function insert_vulnerability($conn, $title, $type, $priority, $ip, $port, $nessus_id, $risk, $description) {
+        
+        foreach (Incident :: get_validations('vulnerability') as $var => $rule) {
+            if (!ossim_valid($$var, $rule))  return false;
+        }
+        $last_id = Incident :: __insert($conn, $title, $type, $priority,
+        "Vulnerability", "", "");
+        if (ossim_error()) return false;
+        
+        // XXX move to sequences
+        $sql = "INSERT INTO incident_vulns 
+                (incident_id, ip, port, nessus_id, risk, description) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        
+        $params = array ($last_id, $ip, $port, $nessus_id, $risk, $description);
+        if (!$conn->Execute($sql, $params))
+            die($conn->ErrorMsg());
+
+        return $last_id;
+    }
+
 
 
     /*
      * @static
      */
     function insert_metric($conn, $title, $type, $priority, 
-                           $target, $metric_type, $metric_value)
+                           $target, $metric_type, $metric_value, $event_start, $event_end)
     {
         foreach (Incident::get_validations('metric') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
         }
         $last_id = Incident::__insert($conn, $title, $type, $priority, 
-                                      "Metric", "OSSIM");
+                                      "Metric", $event_start, $event_end);
         if (ossim_error()) return false;
         // XXX move to sequences
         $sql = "INSERT INTO incident_metric " .
@@ -815,15 +917,19 @@ class Incident {
         return true;
     }
 
-    function __update($conn, $incident_id, $title, $type, $priority)
+    function __update($conn, $incident_id, $title, $type, $priority, $event_start, $event_end )
     {
         foreach (Incident::get_validations('incident_update') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
         }
+
+	    $event_start = date('Y-m-d H:i:s', strtotime($event_start));
+	    $event_end = date('Y-m-d H:i:s', strtotime($event_end));
+
         $sql = "UPDATE incident SET " .
-               "title = ?, type_id = ?, priority = ?, date = date " .
+               "title = ?, type_id = ?, priority = ?, date = date, event_start = ?, event_end = ? " .
                "WHERE id = ?";
-        $params = array($title, $type, $priority, $incident_id);
+        $params = array($title, $type, $priority, $event_start, $event_end, $incident_id);
         if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
 
         // XXX would be nice to add here a ticket telling that
@@ -834,9 +940,9 @@ class Incident {
     }
 
     function update_alarm ($conn, $incident_id, $title, $type, $priority,
-                           $src_ips, $dst_ips, $src_ports, $dst_ports)
+                           $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end)
     {
-        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        Incident::__update($conn, $incident_id, $title, $type, $priority, $event_start, $event_end);
         if (ossim_error()) return false;
 
         foreach (Incident::get_validations('event') as $var => $rule) {
@@ -851,9 +957,9 @@ class Incident {
     }
 
     function update_event ($conn, $incident_id, $title, $type, $priority,
-                           $src_ips, $dst_ips, $src_ports, $dst_ports)
+                           $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end)
     {
-        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        Incident::__update($conn, $incident_id, $title, $type, $priority, $event_start, $event_end);
         if (ossim_error()) return false;
 
         foreach (Incident::get_validations('event') as $var => $rule) {
@@ -868,13 +974,13 @@ class Incident {
     }
 
     function update_metric ($conn, $incident_id, $title, $type, $priority,
-                            $target, $metric_type, $metric_value)
+                            $target, $metric_type, $metric_value, $event_start, $event_end)
     {
         foreach (Incident::get_validations('metric') as $var => $rule) {
             if (!ossim_valid($$var, $rule)) return false;
         }
 
-        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        Incident::__update($conn, $incident_id, $title, $type, $priority, $event_start, $event_end);
         if (ossim_error()) return false;
 
         $sql = "UPDATE incident_metric " .
@@ -902,7 +1008,20 @@ class Incident {
         return true;
     }
 
+     function update_vulnerability($conn, $incident_id, $title, $type, $priority, $ip, $port, $nessus_id, $risk, $description) {
+        Incident :: __update($conn, $incident_id, $title, $type, $priority);
+        if (ossim_error())
+            return false;
 
+        $sql = "UPDATE incident_vulns " .
+        "SET ip = ?, port = ?, nessus_id = ?, risk = ?, description = ? " .
+        "WHERE incident_id = ?";
+        $params = array ($ip, $port, $nessus_id, $risk, $description, $incident_id);
+        if (!$conn->Execute($sql, $params))
+            die($conn->ErrorMsg());
+        return true;
+    }
+  
 
     function delete($conn, $id)
     {
@@ -1071,7 +1190,7 @@ class Incident {
        
         foreach ($status as $key=>$value)
         {
-            array_push($list, array ($key, $value));
+            array_push($list, array ( $key, $value));
         }
         return $list;
     }
@@ -1081,10 +1200,8 @@ class Incident {
         $list = array();
         $status = array();
         
-        if ($incident_list = Incident::get_list($conn))
-        {
-            foreach ($incident_list as $incident)
-            {
+        if ($incident_list = Incident::get_list($conn)){
+            foreach ($incident_list as $incident){
                 $tmp = $incident->get_in_charge($conn);
                 if (array_key_exists($tmp, $status))
                     $status[$tmp] += 1;
@@ -1095,14 +1212,20 @@ class Incident {
        
         foreach ($status as $key=>$value)
         {
-            array_push($list, array ($key, $value));
+            array_push($list, array (
+                $key, 
+                $value
+            ));
         }
         return $list;
     }
 
     function chk_status($status)
     {
-        return in_array((string)$status, array('Open', 'Closed'));
+        return in_array((string)$status, array(
+            'Open',
+            'Closed'
+        ));
     }
 
 }

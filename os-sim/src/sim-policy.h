@@ -170,11 +170,19 @@ GList*            sim_policy_get_plugin_groups                 (SimPolicy       
 void              sim_policy_free_plugin_groups                (SimPolicy        *policy);
 
 
-void							sim_policy_debug_print_policy									(SimPolicy				*policy);
+void							sim_policy_debug_print												(SimPolicy				*policy);
 
 SimRole*					sim_policy_get_role														(SimPolicy					*policy);
 void		          sim_policy_set_role                           (SimPolicy          *policy,
 																																	SimRole						*role);
+/* Servers */
+void              sim_policy_append_target							     (SimPolicy        *policy,
+																													     gchar            *target);
+void              sim_policy_remove_target								   (SimPolicy        *policy,
+																													     gchar            *target);
+GList*            sim_policy_get_targets										 (SimPolicy        *policy);
+void              sim_policy_free_targets		               (SimPolicy        *policy);
+
 
 
 G_END_DECLS

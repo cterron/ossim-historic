@@ -58,21 +58,25 @@ $data = array();
 if (!$rs = $conn->Execute($sql)) {
     mydie("Error was: ".$conn->ErrorMsg()."\n\nQuery was: ".$sql);
 }
-// Only one record (row) and 1 or >2 fields.
-// Use column (fields) name as legend.
-if ($rs->RecordCount() == 1 && $rs->FieldCount() != 2) {
-    for ($i = 0; $i < $rs->FieldCount(); $i++) {
-        $field = $rs->FetchField($i);
-        $data['legend'][] = $field->name;
-        $data['values'][] = $rs->fields[$i];
+// Check options and use columns or rows as legend.
+
+    switch ($options['graph_legend_field']) {
+        case 'col':
+    	    for ($i = 0; $i < $rs->FieldCount(); $i++) {
+        	$field = $rs->FetchField($i);
+        	$data['legend'][] = $field->name;
+        	$data['values'][] = $rs->fields[$i];
+    	    }
+	    break;
+        case 'row':
+            while (!$rs->EOF) {
+        	$data['legend'][] = $rs->fields[0];
+        	$data['values'][] = $rs->fields[1];
+        	$rs->MoveNext();
+    	    }
+	    break;
     }
-} else {
-    while (!$rs->EOF) {
-        $data['legend'][] = $rs->fields[0];
-        $data['values'][] = $rs->fields[1];
-        $rs->MoveNext();
-    }
-}
+ 
 $data['title'] = $options['graph_title'];
 $width = 510;
 if ($options['graph_type'] == 'pie') {
@@ -82,7 +86,9 @@ if ($options['graph_type'] == 'pie') {
     // Setup graph
     $graph = new PieGraph($width,250,"auto");
     $graph->SetShadow();
-    $graph->SetAntiAliasing();
+    if ($options['graph_pie_antialiasing']) {
+    	$graph->SetAntiAliasing();
+    }
     
     // Setup graph title
     $graph->title->Set($data['title']);
@@ -98,7 +104,7 @@ if ($options['graph_type'] == 'pie') {
     //$plot->SetFont(FF_VERDANA,FS_BOLD);
     //$plot->SetFontColor("darkred");
     $plot->SetSize(0.3);
-    $plot->SetCenter(0.20);
+    $plot->setCenter($options['graph_pie_center']);
     $plot->SetLegends($data['legend']);
     $plot->setTheme($options['graph_pie_theme']);
     if ($options['graph_plotshadow']) {

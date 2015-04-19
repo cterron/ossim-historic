@@ -66,6 +66,18 @@ struct	_SimRole			//this hasn't got any data from sensor associated.
   gboolean  resend_alarm;
 };
 
+typedef struct _SimHostServices	SimHostServices;	//used only for cross_correlation at this moment.
+struct _SimHostServices
+{
+	gchar	*ip;
+	gint port;
+	gint protocol;
+	gchar	*service;
+	gchar *version;
+	gchar	*date;
+	gchar	*sensor;
+};
+
 G_BEGIN_DECLS
 
 typedef struct _SimEvent        SimEvent;
@@ -75,19 +87,24 @@ struct _SimEvent {
   GObject parent;
 
   guint              id;
+  guint              id_tmp;	//this applies only to table event_tmp, the column "id". It has nothing to do with the above id.
+															//This id is needed to keep control about what events from that table.
   guint              snort_sid;
   guint              snort_cid;
 
   SimEventType       type;
 
   /* Event Info */
-  GTime              time;
+  time_t              time;
+  time_t              diff_time; //as soon as the event arrives, this is setted. Here is stored the difference between the parsed time from agent log
+																	//line, and the time when the event arrives to server.
   gchar             *sensor;
   gchar             *interface;
 
   /* Plugin Info */
   gint               plugin_id;
   gint               plugin_sid;
+  gchar*             plugin_sid_name;	//needed for event_tmp table.
 
   /* Plugin Type Detector */
   SimProtocolType    protocol;
@@ -139,6 +156,8 @@ struct _SimEvent {
 																		// to re-correlate "host_mac_event...", because the correlation information is in "event...". So in 
 																		// sim_organizer_correlation() we check this variable. Also, in this way, we are able to correlate
 																		// the event with another event wich arrives to server2. 
+	gboolean					is_prioritized;	// Needed to know in the master server if the event sent from children server has the priority changed or not.
+	gboolean					is_reliability_setted; //I dont' know how to reduce this variable, it's auto-explained :)
 	SimRole						*role;
 
 	/* additional data (not necessary used) */
@@ -172,6 +191,7 @@ gchar*		sim_event_get_update_clause				(SimEvent	*event);
 gchar*    sim_event_get_replace_clause      (SimEvent   *event);
 
 gchar*		sim_event_get_alarm_insert_clause	(SimEvent	*event);
+gchar*		sim_event_get_insert_into_event_tmp_clause (SimEvent   *event);
 
 gchar*		sim_event_to_string								(SimEvent	*event);
 
@@ -180,7 +200,6 @@ void			sim_event_print										(SimEvent	*event);
 gchar*		sim_event_get_msg									(SimEvent	*event);
 gboolean	sim_event_is_special							(SimEvent *event);
 gchar*    sim_event_get_str_from_type       (SimEventType type);
-
 
 G_END_DECLS
 

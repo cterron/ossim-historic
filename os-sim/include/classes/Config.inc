@@ -95,6 +95,13 @@ class Config {
         Config::insert('snort_host', 'localhost');
         Config::insert('snort_port', '3306');
 
+	    /* Osvdb: Osvdb database configuration */
+        Config::insert('osvdb_type', 'mysql');
+        Config::insert('osvdb_base', 'osvdb');
+        Config::insert('osvdb_user', 'root');
+        Config::insert('osvdb_pass', 'ossim');
+        Config::insert('osvdb_host', 'localhost');
+ 
         /* Server: Configure where the server is listening to */
         Config::insert('server_address', 'localhost');
         Config::insert('server_port', '40001');
@@ -167,6 +174,9 @@ class Config {
 
         /* User action logging*/
         Config::insert('user_action_log', '1'); 
+
+        /*Real time event viewer*/
+        Config::insert('max_event_tmp', '10000'); 
     } 
     
     /* Debian specific values */

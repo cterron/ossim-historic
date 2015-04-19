@@ -22,8 +22,7 @@ class Host_scan {
     function get_list($conn, $args = "") 
     {
 
-        $query = OssimQuery("SELECT *, inet_ntoa(host_ip) FROM host_scan
-        $args");
+        $query = OssimQuery("SELECT *, inet_ntoa(host_ip) FROM host_scan $args");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();

@@ -9,7 +9,7 @@ notifempty
 # for each log which is rotated
 sharedscripts
 
-/var/log/ossim/agent.log /var/log/ossim/agent_error.log /var/log/ossim agent_watch.log {
+/var/log/ossim/agent.log /var/log/ossim/agent_error.log /var/log/ossim/agent_watch.log {
     daily
     prerotate
         /etc/init.d/ossim-agent stop > /dev/null 2>&1

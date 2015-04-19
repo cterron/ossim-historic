@@ -112,9 +112,9 @@ static gpointer
 sim_thread_scheduler (gpointer data)
 {
   g_message ("sim_thread_scheduler");
-
-  ossim.scheduler = sim_scheduler_new (ossim.config);
-  sim_scheduler_run (ossim.scheduler);
+	
+	SimScheduler * scheduler = (SimScheduler *) data;
+  sim_scheduler_run (scheduler);
 
   return NULL;
 }
@@ -125,7 +125,7 @@ sim_thread_organizer (gpointer data)
 {
   g_message ("sim_thread_organizer");
 
-  ossim.organizer = sim_organizer_new (ossim.config);
+	SimOrganizer *organizer = (SimOrganizer *) data;
   sim_organizer_run (ossim.organizer);
 
   return NULL;
@@ -137,8 +137,8 @@ sim_thread_server (gpointer data)
 {
   g_message ("sim_thread_server");
 
-  ossim.server = sim_server_new (ossim.config);
-  sim_server_listen_run (ossim.server);
+	SimServer *server = (SimServer *) data;	
+  sim_server_listen_run (server);
 
   return NULL;
 }
@@ -305,7 +305,7 @@ main (int argc, char *argv[])
   gnet_ipv6_set_policy (GIPV6_POLICY_IPV4_ONLY);
   
   /* GDA Init */
-  gda_init ("OSSIM", "0.9.9rc1_", argc, argv);
+  gda_init ("OSSIM", "0.9.9rc3", argc, argv);
 
   /* Catch system signals */
   init_signals();
@@ -315,7 +315,7 @@ main (int argc, char *argv[])
   {
     if (!(xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config)))
 			g_error ("Config XML File %s is invalid", simCmdArgs.config);
-      
+    
     if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
 			g_error ("Config is %s invalid", simCmdArgs.config);
   }
@@ -334,13 +334,27 @@ main (int argc, char *argv[])
   /* Database Options */
   ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSSIM);
   if (!ds)
+	{
     g_error ("OSSIM DB XML Config");
+	}
   ossim.dbossim = sim_database_new (ds);
 
   ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_SNORT);
   if (!ds)
+	{
     g_error ("SNORT DB XML Config");
-  ossim.dbsnort = sim_database_new (ds);
+	}
+	ossim.dbsnort = sim_database_new (ds);
+
+	ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSVDB);
+  if (!ds)
+	{
+    g_message ("Error / Warning: OSVDB DB XML Config. If you want to use OSVDB please insert data load into config.xml. If you think that you don't need to use it, or you're running a server without DB in multiserver mode, just ignore this error.");
+    ossim.dbosvdb = NULL;
+	}
+  else
+	  ossim.dbosvdb = sim_database_new (ds);
+
 
   /* Log Init */
   sim_log_init ();
@@ -355,29 +369,45 @@ main (int argc, char *argv[])
   /* Create the main loop before any socket is open. It seems that this fixes some errors.*/
   loop = g_main_loop_new (NULL, FALSE);
 
-  /* Container init */
-  ossim.container = sim_container_new (ossim.config);
+/*
+GList *list3 = ossim.config->rservers;
+ while (list3)
+  {
+        SimConfigRServer *rserver = (SimConfigRServer*) list3->data;
+       sim_config_rserver_debug_print (rserver);
+			 list3 = list3->next;
+}
+*/
 
   /* Initializes the listening keywords scanner*/
   sim_command_start_scanner();
 
+	/* Init instances */
+  ossim.server = sim_server_new (ossim.config);				//needed to be defined for container remote load.
+  ossim.container = sim_container_new (ossim.config);	//Load all the data needed from DB (or from DB in a remote server).
+  ossim.scheduler = sim_scheduler_new (ossim.config);
+  ossim.organizer = sim_organizer_new (ossim.config);
+
 	/* Server Thread */
-  thread = g_thread_create (sim_thread_server, NULL, FALSE, NULL);
+  thread = g_thread_create (sim_thread_server, ossim.server, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
-	
+
+	//After DB data loading, we can continue with some config data from DB (or from remote primary master server)
+	sim_config_load_database_config (ossim.config, ossim.dbossim);
+
 	/* Server HA Thread: Manage conns to the other HA server*/ 
 /*  thread = g_thread_create (sim_thread_HA_server, NULL, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 */
   /* Scheduler Thread */
-  thread = g_thread_create (sim_thread_scheduler, NULL, FALSE, NULL);
+  thread = g_thread_create (sim_thread_scheduler, ossim.scheduler, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
   /* Organizer Thread */
-  thread = g_thread_create (sim_thread_organizer, NULL, FALSE, NULL);
+  thread = g_thread_create (sim_thread_organizer, ossim.organizer, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 

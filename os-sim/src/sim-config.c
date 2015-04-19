@@ -39,6 +39,7 @@
 #include "os-sim.h"
 #include <config.h>
 #include "sim-event.h"
+#include "sim-container.h"
 
 extern SimMain  ossim; //needed to be able to access to ossim.dbossim directly in sim_config_set_data_role()
 
@@ -113,10 +114,6 @@ sim_config_class_init (SimConfigClass * class)
 static void
 sim_config_instance_init (SimConfig *config)
 {
-  /*config->sensor.name = NULL;
-  config->sensor.ip = NULL;
-  config->sensor.interface = NULL;*/
-
   config->log.filename = NULL;
 
   config->datasources = NULL;
@@ -124,6 +121,8 @@ sim_config_instance_init (SimConfig *config)
   config->rservers = NULL;
 
   config->notify_prog = NULL;
+  
+	config->max_event_tmp = 0;
 
   config->directive.filename = NULL;
 
@@ -202,6 +201,8 @@ sim_config_ds_new (void)
   ds->name = NULL;
   ds->provider = NULL;
   ds->dsn = NULL;
+  ds->local_DB = TRUE;
+  ds->rserver_name = NULL;
 
   return ds;
 }
@@ -222,6 +223,8 @@ sim_config_ds_free (SimConfigDS *ds)
     g_free (ds->provider);
   if (ds->dsn)
     g_free (ds->dsn);
+	if (ds->rserver_name)
+		g_free (ds->rserver_name);
 
   g_free (ds);
 }
@@ -245,45 +248,22 @@ sim_config_set_data_role (SimConfig		*config,
 	config->server.role->resend_event = cmd->data.server_set_data_role.resend_event;	
 	config->server.role->resend_alarm = cmd->data.server_set_data_role.resend_alarm;	
 
+	
 	//Also store in DB the configuration
-	gchar *store = g_strdup_printf ("%d", config->server.role->store);
-	gchar *correlate = g_strdup_printf ("%d", config->server.role->correlate);
-	gchar *cross_correlate = g_strdup_printf ("%d", config->server.role->cross_correlate);
-	gchar *qualify = g_strdup_printf ("%d", config->server.role->qualify);
-	gchar *resend_event = g_strdup_printf ("%d", config->server.role->resend_event);
-	gchar *resend_alarm = g_strdup_printf ("%d", config->server.role->resend_alarm);
 	
 	gchar *query;
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_store'", store);
+	query = g_strdup_printf ("REPLACE INTO server_role (name, correlate, cross_correlate, store, qualify, resend_alarm, resend_event)"
+														"	VALUES ('%s', %d, %d, %d, %d, %d, %d)", cmd->data.server_set_data_role.servername, 
+														 cmd->data.server_set_data_role.correlate,
+														 cmd->data.server_set_data_role.cross_correlate,
+														 cmd->data.server_set_data_role.store,
+													   cmd->data.server_set_data_role.qualify,
+														 cmd->data.server_set_data_role.resend_event,
+														 cmd->data.server_set_data_role.resend_alarm);
+
   sim_database_execute_no_query (ossim.dbossim, query);
 	g_free (query);
 
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_correlate'", correlate);
-  sim_database_execute_no_query (ossim.dbossim, query);
-	g_free (query);
-	
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_cross_correlate'", cross_correlate);
-  sim_database_execute_no_query (ossim.dbossim, query);
-	g_free (query);
-	
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_qualify'", qualify);
-  sim_database_execute_no_query (ossim.dbossim, query);
-	g_free (query);
-	
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_resend_alarm'", resend_alarm);
-  sim_database_execute_no_query (ossim.dbossim, query);
-	g_free (query);
-
-	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_resend_event'", resend_event);
-  sim_database_execute_no_query (ossim.dbossim, query);
-	g_free (query);
-	
-	g_free (store);
-	g_free (correlate);
-	g_free (cross_correlate);
-	g_free (qualify);
-	g_free (resend_alarm);
-	g_free (resend_event);
 }
 
 /*
@@ -377,9 +357,27 @@ sim_config_rserver_new (void)
   rserver->iochannel = NULL;
   rserver->HA_role = HA_ROLE_NONE;
   rserver->is_HA_server = FALSE;
-
+  rserver->primary = TRUE; //usually there will be just one rserver
   return rserver;
 }
+
+void
+sim_config_rserver_debug_print (SimConfigRServer *rserver)
+{
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_config_rserver_debug_print:");
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->name: %s", rserver->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->ip: %s", rserver->ip);
+  gchar *ip_temp = gnet_inetaddr_get_canonical_name(rserver->ia);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->ia: %s", ip_temp);
+  g_free (ip_temp);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->port: %d", rserver->port);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->socket: %x", rserver->socket);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->iochannel: %x", rserver->iochannel);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->HA_role: %d", rserver->HA_role);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "            rserver->primary: %d", rserver->primary);
+}
+
 
 /*
  *
@@ -400,6 +398,97 @@ sim_config_rserver_free (SimConfigRServer *rserver)
 	
   g_free (rserver);
 }
+
+/*
+ * Loads all the data needed from configuration in DB.
+ * If this server is a children server without local DB, this data will be loaded from sim_container_new() to simplify things.
+ */
+void
+sim_config_load_database_config	(SimConfig     *config,
+																SimDatabase			*database)
+{
+  g_return_if_fail (config);
+  g_return_if_fail (SIM_IS_CONFIG (config));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+
+	if (sim_database_is_local (database))
+	{
+		//set the maximum number of events that can appear in event_tmp ossim DB table.
+		sim_config_set_config_db_max_event_tmp (config, database);	//NOTE: if this is a children server, this won't be loaded because
+																																//as we can't store data in event_tmp it has no sense to know how much
+																																//data could we store
+
+		//load the server's role specified in DB (this can be changed with an event from a
+		//master server). 
+		sim_server_load_role (ossim.server);
+		
+		//Load the children server's role
+		GList *list;
+		list = sim_container_get_servers (ossim.container);
+		while (list)
+		{
+			SimServer *server = (SimServer *) list->data;
+			sim_server_load_role (server);
+			list = list->next;
+		}
+    g_list_free (list);
+
+	}
+
+}
+
+/*
+ * This function extracts how much events should be stored in event_tmp table in ossim db.
+ *
+ */
+void
+sim_config_set_config_db_max_event_tmp (SimConfig     *config,
+			                    		          SimDatabase   *database)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+	gchar					*max_event_tmp;
+
+  g_return_if_fail (config);
+  g_return_if_fail (SIM_IS_CONFIG (config));
+
+  query = g_strdup_printf ("SELECT value FROM config WHERE conf='max_event_tmp'");
+  dm = sim_database_execute_single_command (database, query);
+
+  if (dm)
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) 
+    {
+      if (!gda_value_is_null (value))
+      {
+				max_event_tmp = gda_value_stringify (value); //we extract a string and convert it to a number to use it in sim_organizer_store_event_tmp()
+				
+				if (sim_string_is_number (max_event_tmp, 0))
+					config->max_event_tmp = atoi (max_event_tmp);
+				else
+				{
+					g_message ("Error: max_event_tmp value from config table wrong. Please check it.");
+					config->max_event_tmp = 0;
+				}
+      }
+      else
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_config_set_config_max_event_tmp value null");
+    }
+    else
+      config->max_event_tmp = 0;
+  }
+  else
+  {
+    g_message ("Error: Config DATA MODEL ERROR");
+    config->max_event_tmp = 0;
+  }
+
+  g_free (query);
+}
+
 
 // vim: set tabstop=2:
 

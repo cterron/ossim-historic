@@ -514,8 +514,7 @@ if (GET('net')) {
 
     
 } else {
-    $ip_stats = Host_qualification::get_list
-        ($conn, "", "ORDER BY compromise + attack DESC");
+    $ip_stats = Host_qualification::get_list($conn, "", "ORDER BY compromise + attack DESC");
 }
 
 #if (count($ip_stats) > 0) {
@@ -546,7 +545,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "host_qualification"),
 
 <?php
 
-if ($ip_stats) {
+if (isset($ip_stats)) {
     foreach ($ip_stats as $stat) {
     
         $ip = $stat->get_host_ip();

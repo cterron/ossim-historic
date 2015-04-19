@@ -105,7 +105,7 @@ sim_net_instance_init (SimNet *net)
 
   net->_priv->name = NULL;
   net->_priv->ips = NULL;
-  net->_priv->asset = 0;
+  net->_priv->asset = 1;
 
   net->_priv->inets = NULL;
 }
@@ -148,8 +148,8 @@ sim_net_get_type (void)
  */
 SimNet*
 sim_net_new (const gchar   *name,
-			     const gchar   *ips,
-	     gint     asset)
+				     const gchar   *ips,
+				     gint			     asset)
 {
   SimNet *net = NULL;
   gint        i;
@@ -161,35 +161,8 @@ sim_net_new (const gchar   *name,
   net->_priv->name = g_strdup (name);
   net->_priv->ips = g_strdup (ips);
   net->_priv->asset = asset;
-
-  if (net->_priv->ips)
-  {
-    if (strchr (net->_priv->ips, ','))
-  	{
-		  gchar **values = g_strsplit (net->_priv->ips, ",", 0);
-		  for (i = 0; values[i] != NULL; i++)
-	  	{
-	    	GList *list = sim_get_inets (values[i]);
-		    while (list)
-				{
-				  SimInet *inet = (SimInet *) list->data;
-		  		sim_net_append_inet (net, inet);
-				  list = list->next;
-				}
-	    }
-		  g_strfreev (values);
-		}
-  	else
-		{
-		  GList *list = sim_get_inets (net->_priv->ips);
-	  	while (list)
-	    {
-  	    SimInet *inet = (SimInet *) list->data;
-    	  sim_net_append_inet (net, inet);
-      	list = list->next;
-	    }
-		}
-  }
+  
+	return (sim_net_split_internal_ips (net));  // == return net
 
   return net;
 }
@@ -221,40 +194,37 @@ sim_net_new_from_dm (GdaDataModel  *dm,
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   net->_priv->asset = gda_value_get_integer (value);
   
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_net_new_from_dm: %s",net->_priv->ips);
 
-  if (net->_priv->ips)
-    {
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_net_new_from_dm: %s",net->_priv->ips);
-    
-      if (strchr (net->_priv->ips, ',')) //may be that there are more than one Network under the same name
-	{
-	  gchar **values = g_strsplit (net->_priv->ips, ",", 0);
-	  for (i = 0; values[i] != NULL; i++)			//example: values[i]="192.168.0.1/24-192.168.0.0/24"
-	    {
-	      GList *list = sim_get_inets (values[i]); 
-	      while (list)
-		{
-		  SimInet *inet = (SimInet *) list->data;
-		  sim_net_append_inet (net, inet);		//append inet (SimInet) object to net (SimNet) list.
-		  list = list->next;
-		}
-	    }
-	  g_strfreev (values);
-	}
-      else //just one network
-	{
-	  GList *list = sim_get_inets (net->_priv->ips);
-	  while (list)
-	    {
-	      SimInet *inet = (SimInet *) list->data;
-	      sim_net_append_inet (net, inet);
-	      list = list->next;
-	    }
-	}
-    }
-
-  return net;
+	return (sim_net_split_internal_ips (net));	// == return net
 }
+
+/*
+ *
+ */
+gchar*
+sim_net_get_ips (SimNet  *net)
+{
+  g_return_val_if_fail (net, NULL);
+  g_return_val_if_fail (SIM_IS_NET (net), NULL);
+
+  return net->_priv->ips;
+}
+
+/*
+ *
+ */
+void
+sim_net_set_ips (SimNet  *net,
+									gchar	*ips) //string with multiple IPs
+{
+  g_return_if_fail (net);
+  g_return_if_fail (SIM_IS_NET (net));
+
+  net->_priv->ips = ips;
+}
+
+
 
 /*
  *
@@ -407,6 +377,51 @@ sim_net_free_inets (SimNet           *net)
 }
 
 /*
+ * The SimNet object has one field, "ips", where are stored all the IPs in a single string.
+ * To be able to operate with the multiple networks that there are in that string, they has to be splitted and stored
+ * inside SimInet GList.
+ */
+SimNet*
+sim_net_split_internal_ips (SimNet	*net)
+{
+	gint i;
+
+  g_return_if_fail (net);
+  g_return_if_fail (SIM_IS_NET (net));
+
+  if (net->_priv->ips)
+  {    
+	  if (strchr (net->_priv->ips, ',')) //may be that there are more than one Network under the same name
+		{
+			gchar **values = g_strsplit (net->_priv->ips, ",", 0);
+		  for (i = 0; values[i] != NULL; i++)			//example: values[i]="192.168.0.1/24-192.168.0.0/24"
+		  {
+			  GList *list = sim_get_inets (values[i]); 
+				while (list)
+				{
+				  SimInet *inet = (SimInet *) list->data;
+					sim_net_append_inet (net, inet);		//append inet (SimInet) object to net (SimNet) list.
+				  list = list->next;
+				}
+		  }
+			g_strfreev (values);
+		}
+		else //just one network
+		{
+		  GList *list = sim_get_inets (net->_priv->ips);
+			while (list)
+		  {	
+			  SimInet *inet = (SimInet *) list->data;
+		    sim_net_append_inet (net, inet);
+				list = list->next;
+		  }
+		}
+  }
+
+	return net;
+}
+
+/*
  * Check with each one of the SimInet objects inside net, if someone matches with the inet object. 
  *
  */
@@ -433,5 +448,18 @@ sim_net_has_inet (SimNet         *net,
 	}  
   
   return FALSE;
+}
+
+void
+sim_net_debug_print (SimNet	*net)
+{
+
+  g_return_if_fail (net);
+  g_return_if_fail (SIM_IS_NET (net));
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_net_debug_print");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                 name: %s", net->_priv->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                 ips: %s", net->_priv->ips);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                 asset: %d", net->_priv->asset);
 }
 // vim: set tabstop=2:

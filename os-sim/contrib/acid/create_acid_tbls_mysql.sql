@@ -124,10 +124,12 @@ CREATE TABLE ossim_event (
 	type            INT NOT NULL,
 	priority	INT DEFAULT 1,
 	reliability	INT DEFAULT 1,
-	asset_src	INT DEFAULT 1,
-	asset_dst	INT DEFAULT 1,
-	risk_c		INT DEFAULT 1,
-	risk_a		INT DEFAULT 1,
+	asset_src	 INT DEFAULT 1,
+	asset_dst	 INT DEFAULT 1,
+	risk_c		 INT DEFAULT 1,
+	risk_a		 INT DEFAULT 1,
+	plugin_id	 INTEGER NOT NULL,
+	plugin_sid INTEGER NOT NULL,
 	PRIMARY KEY (sid, cid),
 	INDEX		(type),
         INDEX           (priority),
@@ -135,7 +137,9 @@ CREATE TABLE ossim_event (
         INDEX           (asset_src),
         INDEX           (asset_dst),
         INDEX           (risk_c),
-        INDEX           (risk_a)
+        INDEX           (risk_a),
+				INDEX           (plugin_id),
+				INDEX           (plugin_sid)
 );
 
 DROP TABLE IF EXISTS extra_data;

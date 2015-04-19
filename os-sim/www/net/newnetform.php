@@ -42,10 +42,10 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Priority"); ?> </th>
+    <th> <?php echo gettext("Asset"); ?> </th>
     <td class="left">
-      <select name="priority">
-   <!-- <option value="0">0</option> -->
+      <select name="asset">
+        <option value="0">0</option>
         <option value="1">1</option>
         <option selected value="2">2</option>
         <option value="3">3</option>

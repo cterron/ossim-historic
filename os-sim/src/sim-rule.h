@@ -116,11 +116,11 @@ void              sim_rule_set_reliability                 (SimRule     *rule,
 gboolean          sim_rule_get_rel_abs                     (SimRule     *rule);
 void              sim_rule_set_rel_abs                     (SimRule     *rule,
 							    gboolean     rel_abs);
-GTime             sim_rule_get_time_out                    (SimRule     *rule);
+time_t             sim_rule_get_time_out                    (SimRule     *rule);
 void              sim_rule_set_time_out                    (SimRule     *rule,
-							    GTime        time_out);
+							    time_t        time_out);
 void							sim_rule_set_time_last									(SimRule   *rule,
-																				                    GTime      time_last);
+																				                    time_t      time_last);
 gboolean					sim_rule_is_time_out										(SimRule      *rule);
 	
 gint              sim_rule_get_occurrence                  (SimRule     *rule);

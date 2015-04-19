@@ -1,4 +1,5 @@
-import os, sys, time, re, datetime, stat, tarfile, threading, pwd
+#!/usr/bin/python
+import os, sys, time, re, datetime, stat, tarfile, threading, pwd, tempfile
 
 from sets import Set
 from optparse import OptionParser
@@ -8,6 +9,7 @@ import Framework
 from OssimConf import OssimConf
 from OssimDB import OssimDB
 import Const
+from Vulnerabilities import Vulnerabilities
 
 class DoNessus (threading.Thread) :
 
@@ -26,6 +28,7 @@ class DoNessus (threading.Thread) :
         self.__active_sensors = Set()
         self.__status = 0
         self.__last_error = None
+        self.__sensor_list = []
         threading.Thread.__init__(self)
 
     def __startup (self) :
@@ -43,52 +46,34 @@ class DoNessus (threading.Thread) :
     def __cleanup (self) :
         self.__conn.close()
 
-#    def __parse_options(self):
-#
-#        usage = "%prog [-c]"
-#        parser = OptionParser(usage = usage)
-#        parser.add_option("-c", "--check", dest="check", action="store_true",
-#                          help="Check list of running sensors", metavar="FILE")
-#        (options, args) = parser.parse_args()
-#
-#        return options
+    def load_sensors (self, sensor_list = []) :
+        self.__debug("Loading sensors")
+        self.__sensor_list = sensor_list
 
-    def __check_sensors(self) :
+    def get_sensors_by_id (self, id) :
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        tmp_conn = None
+        self.__debug("Getting sensors from policy id %d" % int(id))
         sensors = []
-        active_sensors = Set()
-        query = "SELECT * FROM sensor"
-        hash = self.__conn.exec_query(query)
+        tmp_conn = OssimDB()
+        tmp_conn.connect ( tmp_conf["ossim_host"],
+                              tmp_conf["ossim_base"],
+                              tmp_conf["ossim_user"],
+                              tmp_conf["ossim_pass"])
+
+        query = "SELECT * FROM plugin_scheduler_sensor_reference where plugin_scheduler_id = %d" % int(id)
+        hash = tmp_conn.exec_query(query)
 
         for row in hash:
-            sensors.append(row["ip"])
+            sensors.append(row["sensor_name"])
 
-        # Only add those actually needed for scanning
-        for sensor in sensors:
-            query = "SELECT net.name,ips,sensor.ip AS sensor_ip FROM net,net_scan,net_sensor_reference,sensor WHERE net.name = net_scan.net_name AND net_scan.plugin_id = 3001 AND net_sensor_reference.net_name = net_scan.net_name AND sensor.name = net_sensor_reference.sensor_name AND sensor.ip = '%s'" % sensor
-            hash = self.__conn.exec_query(query)
-            if hash != []:
-                active_sensors.add(sensor)
+        print sensors
 
-            query = "SELECT sensor.ip, inet_ntoa(host_scan.host_ip) AS temporal FROM host_scan,host,sensor,host_sensor_reference WHERE plugin_id = 3001 AND host_sensor_reference.sensor_name = sensor.name AND host_sensor_reference.host_ip = inet_ntoa(host_scan.host_ip) AND host.ip = inet_ntoa(host_scan.host_ip) AND sensor.ip = '%s' " % sensor
-            hash = self.__conn.exec_query(query)
-            if hash != []:
-                active_sensors.add(sensor)
+        if len(sensors) == 0:
+            return False
 
-        pids = Set()
-
-        for sensor in active_sensors:
-            pid = os.fork()
-            if pid:
-                pids.add(pid)
-            else:
-                if self.__is_active(sensor):
-                    print "Sensor %s is alive" % sensor
-                os._exit(0)
-        for pid in pids:
-            os.waitpid(pid, 0)
-
-        print "All checks done, leaving"
-        sys.exit()
+        tmp_conn.close()
+        return sensors
 
     def __rm_rf (self, what) :
         """ Recursively delete a directory """
@@ -111,7 +96,98 @@ class DoNessus (threading.Thread) :
             os.chdir("..")
             os.rmdir(what)
 
-    def delete(self, delete_date) :
+    def __get_latest_scan_dates(self):
+        scan_date_array = {}
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        tmp_conn = None
+        self.__debug("Getting latest scan dates")
+        tmp_conn = OssimDB()
+        tmp_conn.connect ( tmp_conf["ossim_host"],
+                              tmp_conf["ossim_base"],
+                              tmp_conf["ossim_user"],
+                              tmp_conf["ossim_pass"])
+
+        query = "SELECT hostvul.ip as ip, date_format(hostvul.scan_date,\"%Y%m%d%H%i%s\") as scan_date FROM (SELECT ip, max(scan_date) AS mymax FROM host_vulnerability group by ip) AS myvul, host_vulnerability AS hostvul WHERE hostvul.ip=myvul.ip AND hostvul.scan_date=myvul.mymax"
+        hash = tmp_conn.exec_query(query)
+
+        for row in hash:
+            scan_date_array[row["ip"]] = row["scan_date"]
+        return scan_date_array
+
+    def generate_report(self, report_name, host_list = []) :
+        self.__debug("Generating report")
+
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        ip_scan_dates = {}
+        nsr_filedescriptors = {}
+        unique_scan_dates = Set() # .add()
+        report_fds = {}
+        combined_nessus_report = []
+        ip_scan_dates = self.__get_latest_scan_dates()
+        today_date = datetime.datetime.today().strftime("%Y%m%d%H%M00")
+
+        nessus_rpt_path = os.path.normpath(tmp_conf["nessus_rpt_path"])
+        report_dir = os.path.normpath(os.path.join(nessus_rpt_path, today_date + ".report"))
+        tmp_name = tempfile.mktemp(".ossim.report.nsr")
+        if os.path.isdir(report_dir) == True:
+            self.__debug("Report dir %s already exists, returning" % report_dir)
+            return False
+
+        for scan_key, scan_value in ip_scan_dates.iteritems():
+            self.__debug("Scan ip %s, Scan date %s." % (scan_key, scan_value))
+            unique_scan_dates.add(scan_value)
+
+        for scan_date in unique_scan_dates:
+            try:
+                nsr_filedescriptors[scan_date] = open(os.path.join(nessus_rpt_path, scan_date, "report.nsr"), "r")
+            except IOError:
+                self.__debug("Failed to open scan directory for %s" % scan_date)
+                pass
+
+        outfile =  open(tmp_name, "w")
+        for ip in host_list:
+            r = re.compile('^'+ip)
+            nsr_filedescriptors[ip_scan_dates[ip]].seek(0)
+            for line in nsr_filedescriptors[ip_scan_dates[ip]]:
+                if r.search(line): 
+                    combined_nessus_report.append(line.rstrip("\r\n"))
+
+        for nessus_fd in nsr_filedescriptors:
+            nsr_filedescriptors[nessus_fd].close()
+
+        try:
+            for line in combined_nessus_report:
+                outfile.write(line + "\n")
+        finally:
+            outfile.close()
+        self.__debug("Report written into %s" % tmp_name)
+
+        nessusrc = tmp_conf["nessusrc_path"]
+        if tmp_conf["nessus_path"]:
+            Const.NESSUS_BIN = tmp_conf["nessus_path"]
+
+        if os.path.exists(tmp_name) == True :
+            self.__debug("Writing html report into %s" % report_dir)
+            cmd = "%s -T html_graph -i %s -o %s" % (Const.NESSUS_BIN, tmp_name, report_dir)
+            os.system(cmd)
+
+        if os.path.isdir(report_dir) == True and len(report_dir) > 4:
+            os.chmod(report_dir,0755)
+            os.chdir(report_dir)
+            for dirpath,dirnames,dirfiles in os.walk(report_dir):
+                for dir in dirnames:
+                    if dir == []: pass
+                    os.chmod(dir, 0755)
+            outfile =  open(os.path.join(report_dir, "report_name.txt"), "w")
+            try:
+                outfile.write(report_name+ "\n")
+            finally:
+                outfile.close()
+
+
+        os.unlink(tmp_name)
+
+    def delete(self, delete_date, report = False) :
 # Short sanity check.
         if len(delete_date) < 14:
             return False
@@ -119,10 +195,12 @@ class DoNessus (threading.Thread) :
         delete_dir = os.path.normpath(self.__conf["nessus_rpt_path"])
         deleted_dir = os.path.join(delete_dir, delete_date)
         self.__rm_rf(deleted_dir)
-        query = "DELETE FROM host_vulnerability WHERE scan_date = '%s'" % delete_date
-        self.__conn.exec_query(query)
-        query = "DELETE FROM net_vulnerability WHERE scan_date = '%s'" % delete_date
-        self.__conn.exec_query(query)
+        if not report:
+            self.__debug("Deleting database entries")
+            query = "DELETE FROM host_vulnerability WHERE scan_date = '%s'" % delete_date
+            self.__conn.exec_query(query)
+            query = "DELETE FROM net_vulnerability WHERE scan_date = '%s'" % delete_date
+            self.__conn.exec_query(query)
         return True
 
     def restore(self, restore_date) :
@@ -141,7 +219,7 @@ class DoNessus (threading.Thread) :
             return True
         return False
  
-    def archive(self, archive_date) :
+    def archive(self, archive_date, report = False) :
         """ Create a tar / gzip copy of a directory, delete it afterwards """
         self.__startup()
         archive_dir = os.path.normpath(self.__conf["nessus_rpt_path"])
@@ -243,14 +321,14 @@ class DoNessus (threading.Thread) :
         pattern = re.compile("^([^\|]*)\|[^\|]*\|([^\|]*)\|.*")
         for line in tempfd.readlines():
             result = pattern.search(line)
-        if result is not None:
-            try:
-                (first, second) = result.groups()
-                if not refs.has_key(first):
-                    refs[first] = {"sids": Set() }
-                refs[first]["sids"].add(second)
-            except Exception, e:
-                print "%s" % e
+            if result is not None:
+                try:
+                    (first, second) = result.groups()
+                    if not refs.has_key(first):
+                        refs[first] = {"sids": Set() }
+                    refs[first]["sids"].add(second)
+                except Exception, e:
+                    print "%s" % e
 
         tempfd.close()
 
@@ -305,10 +383,10 @@ class DoNessus (threading.Thread) :
                 (risk) = result2[0]
             except IndexError:
                 # continue
-		risk = "None"
+                risk = "None"
             if risk == "":
                 # continue
-		risk = "None"
+                risk = "None"
             
             hosts.add(host)
             risk = re.sub(" \/.*|if.*","", risk)
@@ -364,7 +442,11 @@ class DoNessus (threading.Thread) :
 
         self.__debug("\nBacking up vulnerability levels (into files)")
 
-        uid = pwd.getpwnam("mysql")[2]
+        try:
+            uid = pwd.getpwnam("mysql")[2]
+        except Exception, e:
+        # Mysql user might not be on the server host
+            uid = 0
 
         os.chown(today, uid, -1)
 
@@ -406,10 +488,12 @@ class DoNessus (threading.Thread) :
 
         if self.__conf["nessus_path"]:
             Const.NESSUS_BIN = self.__conf["nessus_path"]
-        if self.__conf["nessus_distributed"] == 1:
+        if self.__conf["nessus_distributed"] == "1":
             nessus_distributed = True
+            self.__debug("nessus_distributed (True) -> " + self.__conf["nessus_distributed"])
         else:
             nessus_distributed = False
+            self.__debug("nessus_distributed (False) -> " + self.__conf["nessus_distributed"])
         self.__nessus_user = self.__conf["nessus_user"]
         self.__nessus_pass = self.__conf["nessus_pass"]
         self.__nessus_host = self.__conf["nessus_host"]
@@ -421,9 +505,9 @@ class DoNessus (threading.Thread) :
         self.__dirnames["nessus_tmp"] = os.path.join(self.__dirnames["nessus_rpt_path"], "tmp") + "/"
         self.__dirnames["sensors"] = os.path.join(self.__dirnames["nessus_tmp"], "sensors") + "/"
         self.__dirnames["today"] = os.path.join(self.__dirnames["nessus_rpt_path"], today_date) + "/"
-        self.__filenames["targets"] = os.path.join(self.__dirnames["nessus_tmp"], "targets.txt")
-        self.__filenames["result_nsr_txt"] = os.path.join(self.__dirnames["nessus_tmp"], "result.txt")
-        self.__filenames["result_nsr"] = os.path.join(self.__dirnames["nessus_tmp"], "result.nsr")
+        self.__filenames["targets"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "targets.txt")
+        self.__filenames["result_nsr_txt"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.txt")
+        self.__filenames["result_nsr"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.nsr")
         self.__linknames["last"] = os.path.join(self.__dirnames["nessus_rpt_path"],"last")
         self.__filenames["today_nsr"] = os.path.join(self.__dirnames["nessus_tmp"],"temp_res." + today_date + ".nsr")
 
@@ -456,11 +540,6 @@ class DoNessus (threading.Thread) :
         if self.__conf["nessusrc_path"]:
             self.__nessusrc = self.__conf["nessusrc_path"]
 
-        # Are we only checking the sensors ? 
-#        options = self.__parse_options()
-#        if options.check:
-#            self.__check_sensors() 
-
         self.__status = 10
 
         if nessus_distributed == True :
@@ -474,10 +553,13 @@ class DoNessus (threading.Thread) :
             scan_networks = [] 
             sensors = []
             active_sensors = []
-            query = "SELECT * FROM sensor"
-            hash = self.__conn.exec_query(query)
-            for row in hash:
-                sensors.append(row["ip"])
+            if len(self.__sensor_list) > 0:
+                sensors = self.__sensor_list
+            else:
+                query = "SELECT * FROM sensor"
+                hash = self.__conn.exec_query(query)
+                for row in hash:
+                    sensors.append(row["ip"])
 
             self.__filenames["targetfile"] = {}
             self.__filenames["nsrfile"] = {}
@@ -487,12 +569,24 @@ class DoNessus (threading.Thread) :
                 self.__filenames["targetfile"][sensor] = os.path.join(self.__dirnames["sensors"], sensor + ".targets.txt")
                 sensorfd = open(self.__filenames["targetfile"][sensor],"w")
 
-                query = "SELECT net.name,ips,sensor.ip AS sensor_ip FROM net,net_scan,net_sensor_reference,sensor WHERE net.name = net_scan.net_name AND net_scan.plugin_id = 3001 AND net_sensor_reference.net_name = net_scan.net_name AND sensor.name = net_sensor_reference.sensor_name AND sensor.ip = '%s'" % sensor
+                # net_group_scan (3001,net_group_name) -> net_group_reference (net_group_name, net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip)
+                query = "SELECT net.name,net.ips,sensor.ip FROM net,net_group_scan,net_group_reference, net_sensor_reference,sensor WHERE net_group_scan.plugin_id = 3001 AND net_group_scan.net_group_name = net_group_reference.net_group_name AND net_group_reference.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
                 hash = self.__conn.exec_query(query)
                 for row in hash:
-                    self.__debug("Adding net %s" % row["ips"])
+                    self.__debug("Adding net %s from net_group" % row["ips"])
                     sensorfd.writelines(row["ips"] + "\n")
                     scan_networks.append(row["ips"])
+
+                # net_scan(3001,net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip) => (net_name,net_ip,sensor_ip)
+                query = "SELECT net.name,net.ips,sensor.ip FROM net,net_scan,net_sensor_reference,sensor WHERE net_scan.plugin_id = 3001 AND net_scan.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
+                hash = self.__conn.exec_query(query)
+                for row in hash:
+                    if row["ips"] in scan_networks:
+                        self.__debug("DUP net, already defined within net_group: %s" % row["ips"])
+                    else:
+                        self.__debug("Adding net %s" % row["ips"])
+                        sensorfd.writelines(row["ips"] + "\n")
+                        scan_networks.append(row["ips"])
 
                 query = "SELECT sensor.ip, inet_ntoa(host_scan.host_ip) AS temporal FROM host_scan,host,sensor,host_sensor_reference WHERE plugin_id = 3001 AND host_sensor_reference.sensor_name = sensor.name AND host_sensor_reference.host_ip = inet_ntoa(host_scan.host_ip) AND host.ip = inet_ntoa(host_scan.host_ip) AND sensor.ip = '%s' " % sensor
                 hash = self.__conn.exec_query(query)
@@ -569,15 +663,12 @@ class DoNessus (threading.Thread) :
 
             # Back to parent
 
-
             for sensor in active_sensors:
                 try:
                     os.unlink (self.__filenames["nsrfile"][sensor])
                     os.unlink (self.__filenames["targetfile"][sensor])
                 except OSError:
                     pass
-
-
 
         else: # non-distributed
             self.__debug("Entering non-distributed mode")
@@ -637,6 +728,10 @@ class DoNessus (threading.Thread) :
 
         if os.path.exists(self.__filenames["result_nsr"]) == True :
             self.__update_vulnerability_tables(self.__filenames["result_nsr"], today_date) 
+        # XXX TODO Call to vulnerabilities
+            self.__debug("Calling Vulnerabilities from within DoNessus for nsr: %s" % self.__filenames["result_nsr"])
+            vuln = Vulnerabilities()
+            vuln.process(self.__filenames["result_nsr"], today_date)
 
         try:
             if os.stat(self.__filenames["today_nsr"])[stat.ST_SIZE] > 0:
@@ -693,7 +788,24 @@ class DoNessus (threading.Thread) :
 
 if __name__ == "__main__":
 
-
     donessus = DoNessus()
+    usage = "%prog [-i scheduler_id]"
+    parser = OptionParser(usage = usage)
+    parser.add_option("-i", "--scheduler-id", dest="scheduler_id", action="store", help = "Scheduler id to execute", metavar="sched_id")
+    (options, args) = parser.parse_args()
+
+    sensors = []
+
+    if options.scheduler_id is not None:
+        sensors = donessus.get_sensors_by_id(options.scheduler_id)
+        if sensors == False:
+            # Wrong scheduler id
+            print "Wrong scheduler id %d" % int(options.scheduler_id)
+            sys.exit()
+    else:
+        sensors.append("127.0.0.1")
+        sensors.append("127.0.0.2")
+
+    donessus.load_sensors(sensors)
     donessus.start()
 # vim:ts=4 sts=4 tw=79 expandtab:

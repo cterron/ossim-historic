@@ -128,10 +128,12 @@ inline	void			sim_sensor_add_number_host_mac_events				(SimSensor	*sensor);
 inline	void			sim_sensor_add_number_host_service_events		(SimSensor	*sensor);
 inline	void			sim_sensor_add_number_host_ids_events				(SimSensor	*sensor);
 
-void							sim_sensor_debug_events_number (SimSensor  *sensor); //debug function
+void							sim_sensor_debug_events_number							(SimSensor  *sensor); //debug function
 void							sim_sensor_reset_events_number							(SimSensor	*sensor);
 event_kind				sim_sensor_get_events_number								(SimSensor *sensor);
-	
+
+void							sim_sensor_debug_print											(SimSensor *sensor);
+
 G_END_DECLS
 
 #ifdef __cplusplus

@@ -34,6 +34,7 @@
 
 
 #include "sim-plugin.h"
+#include "os-sim.h"	//log
 #include <config.h>
 
 enum
@@ -193,6 +194,7 @@ sim_plugin_clone (SimPlugin *plugin)
   new_plugin->type = plugin->type;
   new_plugin->_priv->id = plugin->_priv->id;
   new_plugin->_priv->name = (plugin->_priv->name) ? g_strdup (plugin->_priv->name) : NULL;
+  new_plugin->_priv->description = (plugin->_priv->description) ? g_strdup (plugin->_priv->description) : NULL;
 
   return new_plugin;
 }
@@ -298,4 +300,48 @@ sim_plugin_set_description (SimPlugin  *plugin,
 
   plugin->_priv->description = description;
 }
+
+
+/*
+ * This function should be called sim_plugin_set_type, but there are other "get" function called with that name.
+ */
+void
+sim_plugin_set_sim_type (SimPlugin  		*plugin,
+											   SimPluginType  type)
+{
+  g_return_if_fail (plugin);
+  g_return_if_fail (SIM_IS_PLUGIN (plugin));
+
+  plugin->type = type;
+}
+
+/*
+ * This function should be called sim_plugin_get_type, but there are another function called with that name.
+ */
+SimPluginType
+sim_plugin_get_sim_type (SimPlugin  		*plugin)
+{
+  g_return_if_fail (plugin);
+  g_return_if_fail (SIM_IS_PLUGIN (plugin));
+
+  return plugin->type;
+}
+
+/*
+ * Debug function.
+ */
+void sim_plugin_debug_print (SimPlugin	*plugin)
+{
+  g_return_if_fail (plugin);
+  g_return_if_fail (SIM_IS_PLUGIN (plugin));
+
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_plugin_debug_print:");
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         type: %d", plugin->type);
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         description: %s", plugin->_priv->description);
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         name: %s", plugin->_priv->name);
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         id: %d", plugin->_priv->id);
+
+
+}
+
 // vim: set tabstop=2:

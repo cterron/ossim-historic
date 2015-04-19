@@ -44,6 +44,7 @@ extern "C" {
 #define SIM_DELIMITER_LIST          ","
 #define SIM_DELIMITER_LEVEL         ":"
 #define SIM_DELIMITER_RANGE         "-"
+#define SIM_DELIMITER_PIPE	        "|"	//used to separate data in remote DB loading
 #define SIM_IN_ADDR_ANY_CONST       "ANY"
 #define SIM_IN_ADDR_ANY_IP_STR      "0.0.0.0"
 
@@ -75,7 +76,7 @@ extern "C" {
 #define SIM_DETECTOR_CONST          "DETECTOR"
 #define SIM_MONITOR_CONST           "MONITOR"
 
-#define BUFFER_SIZE                 1024
+#define BUFFER_SIZE                 2048
 #define TIMEBUF_SIZE                26
 
 #define GENERATOR_SPP_SPADE         104
@@ -103,6 +104,7 @@ extern "C" {
 
 #define SIM_DS_OSSIM                "ossimDS"
 #define SIM_DS_SNORT                "snortDS"
+#define SIM_DS_OSVDB                "osvdbDS"
 
 #define SIM_PLUGIN_ID_DIRECTIVE     1505
 
@@ -222,7 +224,9 @@ typedef enum {
   SIM_COMMAND_TYPE_CONNECT,
   SIM_COMMAND_TYPE_SESSION_APPEND_PLUGIN,
   SIM_COMMAND_TYPE_SESSION_REMOVE_PLUGIN,
+  SIM_COMMAND_TYPE_SERVER,										//msg to send to frameworkd or to master servers
   SIM_COMMAND_TYPE_SERVER_GET_SENSORS,
+  SIM_COMMAND_TYPE_SERVER_GET_SERVERS,
   SIM_COMMAND_TYPE_SERVER_GET_SENSOR_PLUGINS,
   SIM_COMMAND_TYPE_SERVER_SET_DATA_ROLE,
   SIM_COMMAND_TYPE_SENSOR,										
@@ -251,7 +255,9 @@ typedef enum {
   SIM_COMMAND_TYPE_HOST_SERVICE_EVENT,
   SIM_COMMAND_TYPE_HOST_IDS_EVENT,
   SIM_COMMAND_TYPE_OK,
-  SIM_COMMAND_TYPE_ERROR
+  SIM_COMMAND_TYPE_ERROR,
+  SIM_COMMAND_TYPE_DATABASE_QUERY,
+  SIM_COMMAND_TYPE_DATABASE_ANSWER
 } SimCommandType;
 
 typedef enum {
@@ -270,6 +276,40 @@ typedef enum {
   SIM_SESSION_STATE_DISCONNECT,
   SIM_SESSION_STATE_CONNECT
 } SimSessionState;
+
+typedef enum {
+	SIM_DB_ELEMENT_TYPE_PLUGINS			,
+	SIM_DB_ELEMENT_TYPE_PLUGIN_SIDS	,
+	SIM_DB_ELEMENT_TYPE_PLUGIN_REFERENCES	, //cross correlation
+	SIM_DB_ELEMENT_TYPE_HOST_PLUGIN_SIDS	, //cross correlation
+	SIM_DB_ELEMENT_TYPE_SENSORS			,
+	SIM_DB_ELEMENT_TYPE_HOSTS				,
+	SIM_DB_ELEMENT_TYPE_NETS				,
+	SIM_DB_ELEMENT_TYPE_POLICIES		,
+	SIM_DB_ELEMENT_TYPE_HOST_LEVELS ,
+	SIM_DB_ELEMENT_TYPE_NET_LEVELS	,
+	SIM_DB_ELEMENT_TYPE_SERVER_ROLE	, //as this is a config parameter it won't be stored in container, it will be stored in server's config.
+	SIM_DB_ELEMENT_TYPE_LOAD_COMPLETE, //this is not a type of element to load. But we will use it in sim_container_new() to tell that we have ended the data loading msgs
+} SimDBElementType;
+
+typedef enum {
+	SIM_SCHEDULER_STATE_NORMAL	= 0,
+	SIM_SCHEDULER_STATE_INITIAL	= 1
+} SimSchedulerState;
+
+typedef enum
+{
+	SIM_POLICY_ELEMENT_TYPE_GENERAL,
+	SIM_POLICY_ELEMENT_TYPE_ROLE,
+	SIM_POLICY_ELEMENT_TYPE_SRC,
+	SIM_POLICY_ELEMENT_TYPE_DST,
+	SIM_POLICY_ELEMENT_TYPE_PORTS,
+	SIM_POLICY_ELEMENT_TYPE_SENSORS,
+	SIM_POLICY_ELEMENT_TYPE_PLUGIN_IDS,
+	SIM_POLICY_ELEMENT_TYPE_PLUGIN_SIDS,
+	SIM_POLICY_ELEMENT_TYPE_PLUGIN_GROUPS,
+	SIM_POLICY_ELEMENT_TYPE_TARGETS
+} SimPolicyElementType;
 
 #ifdef __cplusplus
 }

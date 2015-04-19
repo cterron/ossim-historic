@@ -138,12 +138,14 @@ sim_host_level_new (const GInetAddr     *ia,
 
   g_return_val_if_fail (ia, NULL);
 
-  if (c < 1) c = 1;
-  if (a < 1) a = 1;
+	if (c < 0) c = 0; //The RRDupdate.py file modifies this to 0.0001 or something like that; RRD's need not be 0. If the value is 0 the graphic didn't print a line.
+  if (a < 0) a = 0; // sooooo the framework need to change that a bit to fix that RRD problem.
 
   host_level = SIM_HOST_LEVEL (g_object_new (SIM_TYPE_HOST_LEVEL, NULL));
-  if (gnet_inetaddr_get_canonical_name(ia))
+  gchar *ip_temp = gnet_inetaddr_get_canonical_name(ia);
+  if (ip_temp)
   {        
+    g_free (ip_temp);
     host_level->_priv->ia = gnet_inetaddr_clone (ia);
     host_level->_priv->c = c;
     host_level->_priv->a = a;  
@@ -418,4 +420,20 @@ sim_host_level_get_delete_clause (SimHostLevel  *host_level)
 	}
 
   return query;
+}
+
+void
+sim_host_level_debug_print (SimHostLevel  *host_level)
+{
+	g_return_if_fail (host_level);
+  g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_host_level_debug_print");
+  gchar *ip_temp = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                ip host: %s", ip_temp);
+  g_free (ip_temp);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                c: %f", host_level->_priv->c);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                a: %f", host_level->_priv->a);
+
+
 }

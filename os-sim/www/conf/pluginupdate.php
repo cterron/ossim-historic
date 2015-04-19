@@ -23,14 +23,14 @@
         die(ossim_error());
     }
 
-    if (($priority < 0) or ($priority > 10)) {
-        echo "<p align=\"center\"> " . gettext("Priority must be between 0 and 10") . " </p>";
+    if (($priority < 0) or ($priority > 5)) {
+        echo "<p align=\"center\"> " . gettext("Priority must be between 0 and 5") . " </p>";
         echo "<p align=\"center\"><a href=\"pluginsid.php?id=$id\"> " . gettext("Back") . " </a></p>";
         exit();
     }
 
-    if (($reliability < 0) or ($reliability > 5)) {
-        echo "<p align=\"center\"> " . gettext("Reliability must be between 0 and 5") . " </p>";
+    if (($reliability < 0) or ($reliability > 10)) {
+        echo "<p align=\"center\"> " . gettext("Reliability must be between 0 and 10") . " </p>";
         echo "<p align=\"center\"><a href=\"pluginsid.php?id=$id\"> " . gettext("Back") . " </a></p>";
         exit();
     }

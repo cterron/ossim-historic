@@ -41,14 +41,15 @@ class SecurityReport
                         $ip_target = "dst_ip";
                   }
                   $query = OssimQuery("SELECT count($ip_target) AS occurrences,
-                  inet_ntoa($ip_target) as ip FROM alarm
+                  inet_ntoa($ip_target) as ip FROM alarm where $ip_target != INET_ATON('0.0.0.0')
                   GROUP BY $ip_target ORDER BY occurrences DESC");
                   $temp_conn = $this->ossim_conn;
                   break;
             case "event":
             default:
                   $query = OssimQuery("SELECT count($ip_target) AS occurrences,
-                  inet_ntoa($ip_target) as ip FROM acid_event
+                  inet_ntoa($ip_target) as ip FROM acid_event where $ip_target != INET_ATON('0.0.0.0')
+                  AND ossim_risk_c >= 0 AND ossim_risk_a >= 0
                   GROUP BY $ip_target ORDER BY occurrences DESC");
                   $temp_conn = $this->snort_conn;
         }
@@ -83,17 +84,22 @@ class SecurityReport
 
         switch($type){
             case "alarm":
-                  $query = OssimQuery("SELECT count(name) AS occurrences, name as sig_name
-                  from alarm, plugin_sid WHERE plugin_sid.plugin_id = alarm.plugin_id
-                  AND plugin_sid.sid = alarm.plugin_sid GROUP BY name ORDER BY occurrences 
-                  DESC LIMIT $limit");
+                  $query = "SELECT count(name) AS occurrences, name as sig_name
+                            FROM alarm, plugin_sid
+                            WHERE plugin_sid.plugin_id = alarm.plugin_id AND
+                                  plugin_sid.sid = alarm.plugin_sid
+                            GROUP BY name
+                            ORDER BY occurrences 
+                            DESC LIMIT $limit";
                   $temp_conn = $this->ossim_conn;
                   break;
             case "event":
             default:
-                  $query = OssimQuery("SELECT count(sig_name) AS occurrences, sig_name
-                  FROM acid_event GROUP BY sig_name
-                  ORDER BY occurrences DESC LIMIT $limit");
+                  $query = "SELECT count(sig_name) AS occurrences, sig_name
+                            FROM acid_event
+                            GROUP BY sig_name
+                            ORDER BY occurrences
+                            DESC LIMIT $limit";
                   $temp_conn = $this->snort_conn;
         }
 

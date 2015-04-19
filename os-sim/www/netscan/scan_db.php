@@ -64,7 +64,7 @@
 
                     Host::update ($conn,
                                   $ip,
-                                  gethostbyname($ip),
+                                  gethostbyaddr($ip),
                                   $global_info["asset"],
                                   $global_info["threshold_c"],
                                   $global_info["threshold_a"], 
@@ -90,7 +90,7 @@
 
                     Host::insert ($conn,
                                   $ip,
-                                  gethostbyname($ip),
+                                  gethostbyaddr($ip),
                                   $global_info["asset"],
                                   $global_info["threshold_c"],
                                   $global_info["threshold_a"], 

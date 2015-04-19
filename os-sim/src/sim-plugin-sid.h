@@ -92,7 +92,7 @@ void              sim_plugin_sid_set_priority                    (SimPluginSid  
 gchar*            sim_plugin_sid_get_name                        (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_name                        (SimPluginSid  *plugin_sid,
 								  gchar         *name);
-void							sim_plugin_sid_print_internal_data 						 (SimPluginSid  *plugin_sid); //debug function
+void							sim_plugin_sid_debug_print				 						 (SimPluginSid  *plugin_sid); //debug function
 
 gchar*            sim_plugin_sid_get_insert_clause               (SimPluginSid  *plugin_sid);
 

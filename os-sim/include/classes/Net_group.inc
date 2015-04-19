@@ -1,6 +1,7 @@
 <?php
 
 require_once 'classes/Net_group_reference.inc';
+require_once 'classes/Net_sensor_reference.inc';
 require_once 'ossim_conf.inc';
 require_once 'classes/Log_action.inc';
 require_once 'classes/Session.inc';
@@ -97,7 +98,22 @@ class Net_group {
     
     }
 
+    function get_sensors($conn, $name){
+        $sensors = array();
+        $networks = Net_group::get_networks($conn, $name);
 
+        foreach($networks as $network){
+            $name = $network->get_net_name();
+            $sensor_list = Net_sensor_reference::get_list($conn, $name);
+            if(is_array($sensor_list)){
+            foreach($sensor_list as $sensor){
+                if(!in_array($sensor->get_sensor_name(), $sensors)) array_push($sensors, $sensor->get_sensor_name());
+            }
+            }
+        }
+
+        return $sensors;
+    }
 
     function insert($conn, $name, $threshold_c, $threshold_a, $rrd_profile, $nets, $descr)
     {
@@ -222,7 +238,7 @@ class Net_group {
 
     function check_orphan($conn)
     {
-        $sql =  "SELECT * FROOM net_sensor_reference LEFT JOIN  sensor ON
+        $sql =  "SELECT * FROM net_sensor_reference LEFT JOIN  sensor ON
                  sensor.name = net_sensor_reference.sensor_name WHERE name IS NULL";
 
         if (!$rs = &$conn->Execute($sql)) {

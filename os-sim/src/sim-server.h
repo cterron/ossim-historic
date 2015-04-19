@@ -86,6 +86,8 @@ GType             sim_server_get_type                      (void);
 SimServer*        sim_server_new                           (SimConfig       *config);
 SimServer*        sim_server_HA_new                        (SimConfig       *config);
 
+SimServer*				sim_server_new_from_dm									(GdaDataModel  *dm,
+																		                        gint row);
 void              sim_server_listen_run                    (SimServer       *server);
 void              sim_server_master_run                    (SimServer       *server);
 
@@ -110,10 +112,17 @@ SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,
 void              sim_server_debug_print_sessions           (SimServer    *server); //debug function
 gchar*						sim_server_get_ip													(SimServer   *server);
 gchar*						sim_server_get_name												(SimServer   *server);
+gint							sim_server_get_port												(SimServer   *server);
+void							sim_server_set_port												(SimServer   *server,
+																															gint				port);
 
 SimConfig*				sim_server_get_config											(SimServer   *server);
 void							sim_server_load_role											(SimServer *server);
-	
+void							sim_server_set_role												(SimServer *server,
+																														SimRole *role);
+
+SimRole*					sim_server_get_role												(SimServer *server);
+
 G_END_DECLS
 
 #ifdef __cplusplus

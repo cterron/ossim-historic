@@ -72,7 +72,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
         for ($i = 0; $i < $nnets; $i++)
         {
             $net_name = POST("net$i");
-            ossim_valid($net_name, OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_NULLABLE, 'illegal:'._("net$i"));
+            ossim_valid($net_name,  OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("net$i"));
             if (ossim_error()) { die(ossim_error()); }
 
             if ($net_list = Net::get_list($conn, "WHERE name = '$net_name'"))

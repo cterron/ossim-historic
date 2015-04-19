@@ -123,7 +123,7 @@ class Action(threading.Thread):
             # dest hosts
             if self.__request['dst_ip'] not in host_dest_list and \
               (not Util.isIpInNet(self.__request['dst_ip'],
-                                  net_source_list)) and \
+                                  net_dest_list)) and \
               'ANY' not in host_dest_list and \
               'ANY' not in net_dest_list:
                 match = 0
@@ -188,29 +188,40 @@ class Action(threading.Thread):
 
     def requestRepr(self, request):
         
-        str  = " Alert detail: \n"
+        temp_str  = " Alert detail: \n"
         for key, value in request.iteritems():
-            str += " * %s: \t%s\n" % (key, value)
-        return str
+            temp_str += " * %s: \t%s\n" % (key, value)
+        return temp_str
 
 
     def doAction(self, action_id):
 
-        replaces= {}
-        replaces["DATE"] = self.__request['date']
-        replaces["PLUGIN_ID"] = self.__request['plugin_id']
-        replaces["PLUGIN_SID"] = self.__request['plugin_sid']
-        replaces["RISK"] = self.__request['risk']
-        replaces["PRIORITY"] = self.__request['priority']
-        replaces["RELIABILITY"] = self.__request['reliability']
-        replaces["SRC_IP"] = self.__request['src_ip']
-        replaces["DST_IP"] = self.__request['dst_ip']
-        replaces["SRC_PORT"] = self.__request['src_port']
-        replaces["DST_PORT"] = self.__request['dst_port']
-        replaces["PROTOCOL"] = self.__request['protocol']
-        replaces["SENSOR"] = self.__request['sensor']
-        replaces["PLUGIN_NAME"] = self.__request['plugin_id']
-        replaces["SID_NAME"] = self.__request['plugin_sid']
+        replaces = {
+                'DATE':         self.__request.get('date', ''),
+                'PLUGIN_ID':    self.__request.get('plugin_id', ''),
+                'PLUGIN_SID':   self.__request.get('plugin_sid', ''),
+                'RISK':         self.__request.get('risk', ''),
+                'PRIORITY':     self.__request.get('priority', ''),
+                'RELIABILITY':  self.__request.get('reliability', ''),
+                'SRC_IP':       self.__request.get('src_ip', ''),
+                'DST_IP':       self.__request.get('dst_ip', ''),
+                'PROTOCOL':     self.__request.get('protocol', ''),
+                'SENSOR':       self.__request.get('sensor', ''),
+                'PLUGIN_NAME':  self.__request.get('plugin_id', ''),
+                'SID_NAME':     self.__request.get('plugin_sid', ''),
+                'USERDATA1':    self.__request.get('userdata1', ''),
+                'USERDATA2':    self.__request.get('userdata2', ''),
+                'USERDATA3':    self.__request.get('userdata3', ''),
+                'USERDATA4':    self.__request.get('userdata4', ''),
+                'USERDATA5':    self.__request.get('userdata5', ''),
+                'USERDATA6':    self.__request.get('userdata6', ''),
+                'USERDATA7':    self.__request.get('userdata7', ''),
+                'USERDATA8':    self.__request.get('userdata8', ''),
+                'USERDATA9':    self.__request.get('userdata9', ''),
+                'FILENAME':     self.__request.get('filename', ''),
+                'USERNAME':     self.__request.get('username', ''),
+                'PASSWORD':     self.__request.get('password', ''),
+            }
 
         query = "SELECT * FROM plugin WHERE id = %d" % int(self.__request['plugin_id'])
 
@@ -241,10 +252,11 @@ class Action(threading.Thread):
                     email_message = action_email['message']
 
                     for replace in replaces:
-                        email_from = email_from.replace(replace, replaces[replace])
-                        email_to = email_to.replace(replace, replaces[replace])
-                        email_subject= email_subject.replace(replace, replaces[replace])
-                        email_message = email_message.replace(replace, replaces[replace])
+                        if replaces[replace]:
+                            email_from = email_from.replace(replace, replaces[replace])
+                            email_to = email_to.replace(replace, replaces[replace])
+                            email_subject= email_subject.replace(replace, replaces[replace])
+                            email_message = email_message.replace(replace, replaces[replace])
                     
                     m = ActionMail()
                     m.sendmail(email_from,
@@ -272,16 +284,18 @@ class Action(threading.Thread):
     def mailNotify(self):
 
         email = self.__conf['email_alert']
+        emails = self.__conf['email_sender']
+
+        if emails is None or emails == "":
+            emails = "ossim@localhost"
 
         if email is not None and email != "":
 
             m = ActionMail()
-            m.sendmail("ossim@localhost",
-                       [ self.__conf['email_alert'] ],
+            m.sendmail( self.__conf['email_sender'] , [ self.__conf['email_alert'] ],
                        "Ossim Alert from server '%s'" % (socket.gethostname()),
                        self.requestRepr(self.__request))
-            print __name__, ": Notification sent to %s" %\
-                (self.__conf['email_alert'])
+            print __name__, ": Notification sent from %s to %s" % (emails, (self.__conf['email_alert']))
 
 
     def run(self):

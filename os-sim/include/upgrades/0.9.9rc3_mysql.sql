@@ -22,7 +22,6 @@ INSERT INTO config (conf, value) VALUES ('server_resend_alarm', '1');
 INSERT INTO config (conf, value) VALUES ('server_resend_event', '1');
 
 -- Event role.
-DROP TABLE IF EXISTS policy_role_reference;
 CREATE TABLE policy_role_reference (
     policy_id       INTEGER NOT NULL REFERENCES policy(id),
     correlate       BOOLEAN NOT NULL DEFAULT '1',
@@ -53,6 +52,7 @@ CREATE TABLE backlog_event_seq (
          id INTEGER UNSIGNED NOT NULL
  );
 INSERT INTO backlog_event_seq VALUES (0);
+
 
 
 

@@ -45,14 +45,27 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <regex.h>
 
 #include "sim-inet.h"
-#include "sim-database.h"
+#include "sim-util.h"
 
-struct _SimPortProtocol {
-  gint              port;
-  SimProtocolType   protocol;
+#define CHAR64(c)           (((c) < 0 || (c) > 127) ? -1 : index_64[(c)])
+static gchar     base64_table[] =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static gchar     index_64[128] = {
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
+   52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1,
+   -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+   15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+   -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+   41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1
 };
+
+
+
 
 /*
  *
@@ -680,10 +693,6 @@ inline gchar *
 sim_string_remove_char	(gchar *string,
 													gchar c)
 {
-	int n;
-	gboolean ok = FALSE;
-  int count = 0;
-
 	if (!string)
 		return FALSE;
 
@@ -705,10 +714,6 @@ sim_string_substitute_char	(gchar *string,
 														gchar c_orig,
 														gchar	c_dest)
 {
-	int n;
-	gboolean ok = FALSE;
-  int count = 0;
-
 	if (!string)
 		return FALSE;
 
@@ -837,6 +842,8 @@ void sim_gda_value_extract_type(GdaValue *value)
  * string: string to check.
  *
  * this function will take a glist and will check if the string is any of the strings inside the GList
+ * If the string is "ANY", any of the strings inside GList will match.
+ *
  * Warning: Please, use this function just to check gchar's. Any other use will be very probably a segfault.
  */
 gboolean
@@ -849,7 +856,7 @@ sim_cmp_list_gchar (GList *list, gchar *string)
 	while (list)
 	{
 		cmp = (gchar *) list->data;
-		if (!strcmp (cmp, string))
+		if ((!strcmp (cmp, string)) || (!strcmp (string, "ANY")))
 			return TRUE;							//found!
 		list = list->next;
 	}
@@ -857,7 +864,19 @@ sim_cmp_list_gchar (GList *list, gchar *string)
 	
 }
 
+void
+sim_role_print (SimRole *role)
+{
+	g_return_if_fail (role);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "SimRole printing data:");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        correlate:       %d", role->correlate);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        cross correlate: %d", role->cross_correlate);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        store:           %d", role->store);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        qualify:         %d", role->qualify);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        resend_event:    %d", role->resend_event);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "        resend_alarm:    %d", role->resend_alarm);
+}
 /*
  *
  * 
@@ -865,4 +884,344 @@ sim_cmp_list_gchar (GList *list, gchar *string)
  *dentro de hostmac:
  * sim_event_counter(event->time, SIM_COMMAND_SYMBOL_HOST_MAC_EVENT, event->sensor);
  */
+/*
+
+ * BASE64 encoding to send data over the network.
+ * _in: src buffer 
+ * inlen: strlen (src buffer)
+ * _out: dst buffer (reserved outside this function). This is where the base64 string will be stored.
+ * outmax: max size of the dst buffer to avoid overflows
+ * outlen: modified bytes (not needed to perform the encode, just information)
+ *
+ */
+//FIXME: Remove outlen and subtitute it with a return?
+gboolean sim_base64_encode (gchar *_in, 
+														guint inlen,
+														gchar *_out,
+														guint outmax,
+														guint *outlen)
+{
+	g_return_val_if_fail (_in, FALSE);
+
+  const guchar *in = (const guchar *) _in;
+  guchar  *out = (guchar *) _out;
+  guchar   oval;
+  gchar   *temp;
+  guint   olen;
+	
+
+   olen = (inlen + 2) / 3 * 4;
+//   if (outlen)
+//       *outlen = olen;
+   if (outmax < olen)
+       return FALSE;
+
+   temp = (gchar *) out;
+   while (inlen >= 3)
+   {
+       *out++ = base64_table[in[0] >> 2];
+       *out++ = base64_table[((in[0] << 4) & 0x30) | (in[1] >> 4)];
+       *out++ = base64_table[((in[1] << 2) & 0x3c) | (in[2] >> 6)];
+       *out++ = base64_table[in[2] & 0x3f];
+       in += 3;
+       inlen -= 3;
+   }
+   if (inlen > 0)
+   {
+       *out++ = base64_table[in[0] >> 2];
+       oval = (in[0] << 4) & 0x30;
+       if (inlen > 1)
+           oval |= in[1] >> 4;
+       *out++ = base64_table[oval];
+       *out++ = (inlen < 2) ? '=' : base64_table[(in[1] << 2) & 0x3c];
+       *out++ = '=';
+   }
+
+   if (olen < outmax)
+       *out = '\0';
+
+   return TRUE;
+
+}
+
+/*
+ * BASE64 decoding to receive data over the network.
+ * in: src buffer in BASE64 to decode
+ * inlen: strlen (src buffer)
+ * out: dst buffer (reserved outside this function). This will contain the data in clear.
+ * outlen: number of modified bytes (just information)
+ *
+ */
+gboolean sim_base64_decode(	gchar *in,
+														guint inlen, 
+														gchar *out, 
+														guint *outlen)
+{
+   guint        len = 0,
+                   lup;
+   gint            c1,
+                   c2,
+                   c3,
+                   c4;
+
+
+
+   if (in[0] == '+' && in[1] == ' ')
+       in += 2;
+
+   if (*in == '\0')
+       return FALSE; 
+
+   for (lup = 0; lup < inlen / 4; lup++)
+   {
+       c1 = in[0];
+       if (CHAR64(c1) == -1)
+           return FALSE;
+       c2 = in[1];
+       if (CHAR64(c2) == -1)
+           return FALSE;
+       c3 = in[2];
+       if (c3 != '=' && CHAR64(c3) == -1)
+           return FALSE;
+       c4 = in[3];
+       if (c4 != '=' && CHAR64(c4) == -1)
+           return FALSE;
+       in += 4;
+       *out++ = (CHAR64(c1) << 2) | (CHAR64(c2) >> 4);
+       ++len;
+       if (c3 != '=')
+       {
+           *out++ = ((CHAR64(c2) << 4) & 0xf0) | (CHAR64(c3) >> 2);
+           ++len;
+           if (c4 != '=')
+           {
+               *out++ = ((CHAR64(c3) << 6) & 0xc0) | CHAR64(c4);
+               ++len;
+           }
+       }
+   *outlen = len;
+   }
+
+   *out = 0;
+   return TRUE;
+
+}
+
+
+// As BSD hasn't got strnlen, we copy here the strnlen from libc
+
+/* Find the length of STRING, but scan at most MAXLEN characters.
+   Copyright (C) 1991, 1993, 1997, 2000, 2001 Free Software Foundation, Inc.
+   Contributed by Jakub Jelinek <jakub@redhat.com>.
+
+   Based on strlen written by Torbjorn Granlund (tege@sics.se),
+   with help from Dan Sahlin (dan@sics.se);
+   commentary by Jim Blandy (jimb@ai.mit.edu).
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
+
+
+/* Find the length of S, but scan at most MAXLEN characters.  If no
+   '\0' terminator is found in that many characters, return MAXLEN.  */
+size_t
+sim_strnlen (const char *str, size_t maxlen)
+{
+  const char *char_ptr, *end_ptr = str + maxlen;
+  const unsigned long int *longword_ptr;
+  unsigned long int longword, magic_bits, himagic, lomagic;
+
+  if (maxlen == 0)
+    return 0;
+
+  if (__builtin_expect (end_ptr < str, 0))
+    end_ptr = (const char *) ~0UL;
+
+  /* Handle the first few characters by reading one character at a time.
+     Do this until CHAR_PTR is aligned on a longword boundary.  */
+  for (char_ptr = str; ((unsigned long int) char_ptr
+			& (sizeof (longword) - 1)) != 0;
+       ++char_ptr)
+    if (*char_ptr == '\0')
+      {
+	if (char_ptr > end_ptr)
+	  char_ptr = end_ptr;
+	return char_ptr - str;
+      }
+
+  /* All these elucidatory comments refer to 4-byte longwords,
+     but the theory applies equally well to 8-byte longwords.  */
+
+  longword_ptr = (unsigned long int *) char_ptr;
+
+  /* Bits 31, 24, 16, and 8 of this number are zero.  Call these bits
+     the "holes."  Note that there is a hole just to the left of
+     each byte, with an extra at the end:
+
+     bits:  01111110 11111110 11111110 11111111
+     bytes: AAAAAAAA BBBBBBBB CCCCCCCC DDDDDDDD
+
+     The 1-bits make sure that carries propagate to the next 0-bit.
+     The 0-bits provide holes for carries to fall into.  */
+  magic_bits = 0x7efefeffL;
+  himagic = 0x80808080L;
+  lomagic = 0x01010101L;
+  if (sizeof (longword) > 4)
+    {
+      /* 64-bit version of the magic.  */
+      /* Do the shift in two steps to avoid a warning if long has 32 bits.  */
+      magic_bits = ((0x7efefefeL << 16) << 16) | 0xfefefeffL;
+      himagic = ((himagic << 16) << 16) | himagic;
+      lomagic = ((lomagic << 16) << 16) | lomagic;
+    }
+  if (sizeof (longword) > 8)
+    abort ();
+
+  /* Instead of the traditional loop which tests each character,
+     we will test a longword at a time.  The tricky part is testing
+     if *any of the four* bytes in the longword in question are zero.  */
+  while (longword_ptr < (unsigned long int *) end_ptr)
+    {
+      /* We tentatively exit the loop if adding MAGIC_BITS to
+	 LONGWORD fails to change any of the hole bits of LONGWORD.
+
+	 1) Is this safe?  Will it catch all the zero bytes?
+	 Suppose there is a byte with all zeros.  Any carry bits
+	 propagating from its left will fall into the hole at its
+	 least significant bit and stop.  Since there will be no
+	 carry from its most significant bit, the LSB of the
+	 byte to the left will be unchanged, and the zero will be
+	 detected.
+
+	 2) Is this worthwhile?  Will it ignore everything except
+	 zero bytes?  Suppose every byte of LONGWORD has a bit set
+	 somewhere.  There will be a carry into bit 8.  If bit 8
+	 is set, this will carry into bit 16.  If bit 8 is clear,
+	 one of bits 9-15 must be set, so there will be a carry
+	 into bit 16.  Similarly, there will be a carry into bit
+	 24.  If one of bits 24-30 is set, there will be a carry
+	 into bit 31, so all of the hole bits will be changed.
+
+	 The one misfire occurs when bits 24-30 are clear and bit
+	 31 is set; in this case, the hole at bit 31 is not
+	 changed.  If we had access to the processor carry flag,
+	 we could close this loophole by putting the fourth hole
+	 at bit 32!
+
+	 So it ignores everything except 128's, when they're aligned
+	 properly.  */
+
+      longword = *longword_ptr++;
+
+      if ((longword - lomagic) & himagic)
+	{
+	  /* Which of the bytes was the zero?  If none of them were, it was
+	     a misfire; continue the search.  */
+
+	  const char *cp = (const char *) (longword_ptr - 1);
+
+	  char_ptr = cp;
+	  if (cp[0] == 0)
+	    break;
+	  char_ptr = cp + 1;
+	  if (cp[1] == 0)
+	    break;
+	  char_ptr = cp + 2;
+	  if (cp[2] == 0)
+	    break;
+	  char_ptr = cp + 3;
+	  if (cp[3] == 0)
+	    break;
+	  if (sizeof (longword) > 4)
+	    {
+	      char_ptr = cp + 4;
+	      if (cp[4] == 0)
+		break;
+	      char_ptr = cp + 5;
+	      if (cp[5] == 0)
+		break;
+	      char_ptr = cp + 6;
+	      if (cp[6] == 0)
+		break;
+	      char_ptr = cp + 7;
+	      if (cp[7] == 0)
+		break;
+	    }
+	}
+      char_ptr = end_ptr;
+    }
+
+  if (char_ptr > end_ptr)
+    char_ptr = end_ptr;
+  return char_ptr - str;
+}
+
+gchar*
+sim_normalize_host_mac (gchar *old_mac)
+{
+  // if size OK, just put MAC to uppercase
+  if (strlen(old_mac) == 17)
+  {
+    return g_ascii_strup(old_mac, -1);
+  }
+
+  regex_t compre;
+  if(regcomp(&compre, "^([[:xdigit:]]{1,2}):([[:xdigit:]]{1,2}):([[:xdigit:]]{1,2}):([[:xdigit:]]{1,2}):([[:xdigit:]]{1,2}):([[:xdigit:]]{1,2})$", REG_EXTENDED) != 0)
+  {
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_normalize_host_mac: Failed regcomp");
+    return NULL;
+  }
+
+  size_t nmatch = compre.re_nsub + 1;
+  regmatch_t *pmatch = g_new(regmatch_t, nmatch);
+
+  int match = regexec(&compre, old_mac, nmatch, pmatch, 0);
+  regfree(&compre);
+
+  if (match != 0)
+  {
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: Failed match regexp");
+    g_free(pmatch);
+    return NULL;
+  }
+
+  gchar *good_mac = g_malloc(18);
+  gchar *mac = good_mac;
+  int i;
+  for(i=1; i<nmatch; i++)
+  {
+    int start = pmatch[i].rm_so;
+    int end = pmatch[i].rm_eo;
+    size_t size = end - start;
+
+    if (size == 1) {
+      *mac++ = '0';
+      *mac++ = g_ascii_toupper(old_mac[start]);
+    }
+    else {
+      *mac++ = g_ascii_toupper(old_mac[start]);
+      *mac++ = g_ascii_toupper(old_mac[start+1]);
+    }
+    if (i < nmatch-1)
+      *mac++ = ':';
+  }
+  *mac = '\0';
+  g_free(pmatch);
+
+  return good_mac;
+}
+
+// vim: set tabstop=2 sts=2 noexpandtab:
 

@@ -2,7 +2,12 @@
 
 import sys
 
+print "This agent code is obsoleted, please refer to the 'agent' tree or download the agent-*.tgz package"
+print "If you want to use it nonetheless, comment these lines inside 'ossim-agent'"
+sys.exit(0)
+
 sys.path.append('/usr/share/ossim-agent/')
+sys.path.append('/usr/local/share/ossim-agent/')
 from pyossim.main import main, waitforever
 
 

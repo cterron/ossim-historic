@@ -282,4 +282,20 @@ sim_host_set_asset (SimHost  *host,
   else host->_priv->asset = asset;
 }
 
+void
+sim_host_debug_print	(SimHost	*host)
+{
+  g_return_if_fail (host);
+  g_return_if_fail (SIM_IS_HOST (host));
+	
+	gchar	*aux = gnet_inetaddr_get_canonical_name (host->_priv->ia);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_host_debug_print");
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "     name: %s",host->_priv->name);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "     ia: %s",aux);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "     asset: %d",host->_priv->asset);
+	
+	g_free (aux);
+
+}
+
 // vim: set tabstop=2:

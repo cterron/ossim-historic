@@ -1,5 +1,145 @@
 # ChangeLog for OSSIM
 
+        01 Apr 2007 DK <dk@ossim.net> :
+        * 0.9.9rc4 released.
+
+* OSSIM-0.9.9rc4 (01 Apr 2007)
+
+        31 Mar 2007 DK <dk@ossim.net> :
+        * Server: small bugfix.
+        * Policy: allow for 'any' taget.
+        * Disable old agent code.
+
+        17 Mar 2007 DK <dk@ossim.net> :
+        * Nessus: custom report generation.
+	Please delete the following lines after update:
+        * Still wondering ;-)
+        * tvvcox: wondering on what he's been working since last september.
+        * juanma: wondering on what he's been working since last september.
+        * dgil: wondering on what he's been working since last september.
+
+        12 Mar 2007 DK <dk@ossim.net> :
+        * Nessus: fix network group nessus selection.
+        * Nessus: Add net group names when updating scans.
+        * Bugfixes.
+
+        10 Mar 2007 DK <dk@ossim.net> :
+        * Executive Panel: proof of concept "tag cloud plugin". It might be interesting to generate taglines using something like http://chir.ag/tech/download/tagline/.
+
+        07 Mar 2007 DK <dk@ossim.net> :
+        * Nessus: scanning fixes, scan without selecting sensors works again. Fixed bug where host's sensors wouldn't appear in the to-be-scanned list.
+        * OSVDB: uploaded get_osvdb.pl, fetches vulnerability (nessus<->osvdb) information as well as plugin sids.
+        06 Mar 2007 Alberto Roman <alberto@ossim.net> :
+        * Fix: filename, username, password and userdata* keywords, are now being sent to the frameworkd if the alarm has those data stored.. 
+        * C&A limited (reverted): Change from previous commit reverted. Need more study
+ 
+        02 Mar 2007 DK <dk@ossim.net> :
+        * Realtime event viewer: visual enhancements.
+
+        27 Feb 2006 Alberto Roman <alberto@ossim.net> : All this changes applies to
+				ossim server:
+        * Cross Correlation: OS & services from host-os-event and host
+          service-event events are inserted into host_plugin_sid table to do
+          cros correlation. Host Service events now inserts it's ports as
+					plugin_sids inside host_plugin_sid. Host OS events inserts the event
+					as a different plugin_sid deppending on the S.O. used 
+        * Event visibility: Server stores data inside event_tmp table and deletes the older
+          regularly. The events will be viewed in a near future thanks to
+          "dinamic" framework. You can specify in config table from ossim DB you can put the number of events that
+          will be keeped in event_tmp. Server needs restart to re-read that
+          configuration (at this time)
+				* Server without DB: Multiple changes to let ossim server load without DB.Separate the data loading from DB.
+          Now it can send a message to master servers to load data. Mutexes
+          used to assure that ossim server won't start working until all the
+          data has been loaded
+        * Priority & reliability: columns in plugin_sid table can be 0.
+        * Removed: fixed asset_src and asset_dst; Now it can be
+          modified in children servers and resended to upper ones.
+        * Removed: threshold check when qualifying. Not used since long time ago.
+        * Logging: Show in the log the remote IP wich has been disconnected
+        * Fixed directives: problem with directives and "ANY" keyword in filename, username,
+          userdata1... etc. Thx to Selamarjan for the bug report
+        * server: sends absolute=false in watch_rules (clarification)
+        * BASE64 support: Added to the ossim-server to send certain data over the
+          network. Now it's totally safe to send strange characters in the (i.e.)
+          description of the plugins_sids or in the plugin name description. The data is
+          encoded when sended, and decoded in the reception.
+        * Policy: The server now knows how to difference between different policies for
+          different "targets", servers or sensors (still some modifications
+					needed in the agent to do this). You can tell if a specific server will apply a specific policy.
+        * Code: Added sim_strnlen (copied from libc) to let BSD compile
+        * Multi level: Added multiple server configuration initial support. Now the Master server (at
+          this time, only the primary master server) can
+          read data from different servers in database to maintain the state. This
+          will be used to configure all the ossim server architecture from a single
+          point, without need to setup individually each server. [Some features still
+          not implemented, stay tuned! ]
+        * Server Role: Assigned different server role for each of the children servers.
+        * Risk Assesment: Risk assesment has been changed a bit. Up until now, we divided the
+          values by 10, after that we divided it by 2.5 to let de data appear
+          correctly. Now, we divide the values directly by 25, so the data is
+          automatically adjusted. Now the risk is much more accurate.
+        * Default Risk: Modified the default risk to 0. Formerly the event risk was by
+          default 1 to be able to print the RRD. If the risk is 0, the RRD can
+          paint nothing and it appears ugly. Now that is controlled in the
+          Framework; if some risk is 0, it's been changed with a 0.0001 to let
+          the Framework paint a line in the RRD.
+        * Temporary FIX: -Added temporary hids_event_type accepted for host-hid-_event messages.
+          hids_event_type is equivalent to event_type, it stores data in the same place.
+        * C&A limited:  Say that the agent and server has been disconnected (server falls down, or
+          network is broken some time i.e.). If the event received from the agent, is
+          sended to the server more than MAX_DIFF_TIME (60 seconds) after the
+          reconnection, the it won't update the C & A and won't do the correlation.
+        * ossim_event table:  Added plugin_id & plugin-sid fields
+        * FIX: Added IPv6 fix to compile in MAC Tiger (thx Drizzt). 	 
+ 
+        26 Feb 2007 DK <dk@ossim.net> :
+        * DoNessus.py: fixing "reentrancy".
+        * Nessus reporting: Show scanned hosts & networks.
+        * Nessus reporting: bugfixes, limit shown hosts.
+        * Nessus reporting: colorize showing scan age.
+
+        23 Feb 2007 DK <dk@ossim.net> :
+        * Nessus reporting: Many reporting enhancements: per date, per network
+        * New tag for ticket email templates: TICKET_INVERSE_HISTORY, same as
+          TICKET_HISTORY but reversed :-)
+
+        22 Feb 2007 DK <dk@ossim.net> :
+        * Nessus reporting: when limiting to a single network, only show scan dates where that network was involved.
+
+        21 Feb 2007 DK <dk@ossim.net> :
+        * Plugin scheduler: Allow for out-of-schedule scanning.
+         	separated reporting.
+
+        20 Feb 2007 DK <dk@ossim.net> :
+        * Agent: Snare plugin.
+
+        19 Feb 2007 DK <dk@ossim.net> :
+        * Plugin scheduler: allow for plugin scheduling using crontab.
+        * Frameworkd: Add scheduling watcher thread.
+        * Listener: Allow "scheduling id" as sensor argument in order to reproduce stored scans.
+
+        09 Feb 2007 Alejandro Lopez <alopezp@ossim.net> :
+        * Frameworkd: Only update RRD files neccesary and purge old RRD files (1 year old)
+          each n iterations in order to increase speed.
+        * Frameworkd: Improve Max C&A and level calculation.
+        * Frameworkd: Propagate MAX C&A values to bigger time ranges in order to avoid inexact
+          values returned from rrdtool AVERAGE.
+        * Agent: new Nagios and Heartbeat plugins.
+        * Agent: p0f plugin ignore OS version because p0f isn't accurate.
+        * Server: ignore OS version, backwards compatibility.
+
+        02 Feb 2007 DK <dk@ossim.net> :
+        * Nessus reporting: unified viewing of nessus scans.
+        * Nessus scanning: Sensor selection.
+        * Agent fixes: Missing host-ids-event && fields.
+        * Agent: Osiris plugin.
+        * Small policy fix.
+	      * Alarm console: Added ability to filter by host/CIDR
+        * Incidents: Added new "start of incident" field for metric, alarm & event incidents.
+        * Backup: Also backup ACL database.
+        * DB SQL: Fix SQL creation files.
+
         22 Sep 2006 DK <dk@ossim.net> :
         * 0.9.9rc3 released.
 
@@ -129,14 +269,14 @@
         * POST() now supports arrays (was causing problems in for Plugin Groups)
 
         05 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
-		* New panel plugin: import/export panel configurations. This allows
-		  user to easily exchange custom graphs and window layouts.
+        * New panel plugin: import/export panel configurations. This allows
+          user to easily exchange custom graphs and window layouts.
 
         31 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * New configuration options:
 	        - configs_dir (where to store the configurations of user panels)
 			- plugins_dir (where to add new custom plugins for the panel)
-		* More HTML style and fixes detected in the panel
+        * More HTML style and fixes detected in the panel
 
         29 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * Prepared the upgrade system for the new upcomming 0.9.9rc1 release
@@ -148,12 +288,12 @@
         24 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * Enhanced error messages detected in user input
         * Fixes for bugs detected in Configuration -> Users
-		* Added new perms for user: Show Executive Panel & Edit Executive Panel
-		* Changed default perms for:
-			Incidents -> Incidents to allow
-			Incidents -> Report to allow
-			Tools -> RuleViewer to deny
-			Tools -> Backup to deny
+        * Added new perms for user: Show Executive Panel & Edit Executive Panel
+        * Changed default perms for:
+           Incidents -> Incidents to allow
+           Incidents -> Report to allow
+           Tools -> RuleViewer to deny
+           Tools -> Backup to deny
 
         12 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * Corrected several typos recently introduced
@@ -170,10 +310,10 @@
         * Improved sensor stats
 
         26 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
-		* Security.inc: new function REQUEST()
-		* Security.inc: fixes for nullable+mail and ip addres validations
-		* Attachments for incident tickets working again
-		* Graphs now show errors as a graph instead of a broken image
+        * Security.inc: new function REQUEST()
+        * Security.inc: fixes for nullable+mail and ip addres validations
+        * Attachments for incident tickets working again
+        * Graphs now show errors as a graph instead of a broken image
 
         20 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * Continued the work in the Executive panel (new plugins, improvements,

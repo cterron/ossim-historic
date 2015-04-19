@@ -17,10 +17,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 <?php
     
     require_once 'classes/Policy.inc';
+    require_once 'classes/Plugingroup.inc';
     require_once 'classes/Host.inc';
     require_once 'classes/Net.inc';
     require_once 'classes/Port_group.inc';
     require_once 'classes/Sensor.inc';
+    require_once 'classes/Server.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Security.inc';
 
@@ -320,10 +322,21 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     <td class="left">
 <?
     /* ===== plugin groups ==== */
-    foreach ($policy->get_plugingroups($conn, $id, true) as $group) {
-        $checked = $group['policy_id'] ? 'checked' : ''; 
+    $plug_groups = Plugingroup::get_list($conn);
+    $my_groups   = $policy->get_plugingroups($conn, $id);
+    foreach ($plug_groups as $group) {
+        $group_id = $group->get_id();
+        $group_name = $group->get_name();
+        $checked = '';
+        // Manual intersection between all plugin groups and the policy suscribed groups
+        foreach ($my_groups as $my_group) {
+            if ($group_id == $my_group['id']) {
+                $checked = 'checked';
+            }
+        }
+        
 ?>
-    <input type="checkbox" name="plugins[<?=$group['id']?>]" <?=$checked?>> <?=$group['name']?><br/>
+    <input type="checkbox" name="plugins[<?=$group_id?>]" <?=$checked?>> <?=$group_name?><br/>
 <? } ?>
     </td>
   </tr>
@@ -599,21 +612,152 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
+    <th> <?php echo gettext("Targets"); ?> <br/>
+        <font size="-2">
+          <a href="../sensor/newsensorform.php">
+	  <?php echo gettext("Insert new sensor"); ?> ?</a>
+        </font><br/>
+        <font size="-2">
+          <a href="../server/newserverform.php">
+	  <?php echo gettext("Insert new server"); ?> ?</a>
+        </font><br/>
+    </th>
+    <td class="left">
+<?php
+
+    /* ===== target sensors ==== */
+    $i = 1;
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
+        foreach($sensor_list as $sensor) {
+            $sensor_name = $sensor->get_name();
+            $sensor_ip =   $sensor->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "targetsensor"; ?>"
+            value="<?php echo count($sensor_list); ?>">
+<?php
+            }
+            $name = "targboxsensor" . $i;
+?>
+        <input type="checkbox" 
+<?php
+            if (Policy_target_reference::in_policy_target_reference
+                                         ($conn, $id, $sensor_name))
+            {
+                echo " CHECKED ";
+            }
+?>
+            name="<?php echo $name;?>"
+            value="<?php echo $sensor_name; ?>">
+            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+?>
+
+<?php
+    /* ===== target servers ==== */
+    $i = 1;
+    if ($server_list = Server::get_list($conn, "ORDER BY name")) {
+        foreach($server_list as $server) {
+            $server_name = $server->get_name();
+            $server_ip =   $server->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "targetserver"; ?>"
+            value="<?php echo count($server_list); ?>">
+<?php
+            }
+            $name = "targboxserver" . $i;
+?>
+        <input type="checkbox" 
+<?php
+            if (Policy_target_reference::in_policy_target_reference
+                                         ($conn, $id, $server_name))
+            {
+                echo " CHECKED ";
+            }
+?>
+            name="<?php echo $name;?>"
+            value="<?php echo $server_name; ?>">
+            <?php echo $server_ip . " (" . $server_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+   /* == ANY target == */
+?>
+    <input type="checkbox" 
+<?php
+            if (Policy_target_reference::in_policy_target_reference
+                                         ($conn, $id, "any"))
+            {
+                echo " CHECKED ";
+            }
+?>
+name="target_any" value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
+
+  <tr>
     <th> <?php echo gettext("Description"); ?> </th>
     <td class="left">
         <textarea name="descr" rows="2" 
             cols="20"><?php echo $policy->get_descr(); ?></textarea>
     </td>
   </tr>
+
+<?php
+  if ($role_list = $policy->get_role ($conn)) {
+	                foreach($role_list as $role) {
+?>										
+  <tr>
+    <th> <?php echo gettext("Correlate events"); ?> </th>
+    <td class="left">
+    <input type="radio" name="correlate" value="1" <?php if($role->get_correlate() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="correlate" value="0" <?php if($role->get_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("Cross Correlate events"); ?> </th>
+    <td class="left">
+    <input type="radio" name="cross_correlate" value="1" <?php if($role->get_cross_correlate() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="cross_correlate" value="0" <?php if($role->get_cross_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
   <tr>
     <th> <?php echo gettext("Store events"); ?> </th>
     <td class="left">
-    <input type="radio" name="store" value="1" <?php if($policy->get_store() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
-    <input type="radio" name="store" value="0" <?php if($policy->get_store() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    <input type="radio" name="store" value="1" <?php if($role->get_store() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="store" value="0" <?php if($role->get_store() == 0) echo " checked "; ?>> <?= _("No"); ?>
     </td>
   </tr>
-
-
+  <tr>
+    <th> <?php echo gettext("Qualify events"); ?> </th>
+    <td class="left">
+    <input type="radio" name="qualify" value="1" <?php if($role->get_qualify() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="qualify" value="0" <?php if($role->get_qualify() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("Resend alarms"); ?> </th>
+    <td class="left">
+    <input type="radio" name="resend_alarms" value="1" <?php if($role->get_resend_alarm() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="resend_alarms" value="0" <?php if($role->get_resend_alarm() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?php echo gettext("Resend events"); ?> </th>
+    <td class="left">
+    <input type="radio" name="resend_events" value="1" <?php if($role->get_resend_event() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="resend_events" value="0" <?php if($role->get_resend_event() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
+	<?php
+  }
+}
+?>
 
 <?php
     $db->close($conn);

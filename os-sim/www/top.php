@@ -77,7 +77,7 @@ $upgrade = new Upgrade();
   if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Events"),
-      "url" => $conf->get_conf("acid_link") . "/".$conf->get_conf("event_viewer")."_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"
+      "url" => "event_viewer/index.php"
     );
     
   if (Session::menu_perms("MenuControlPanel", "ControlPanelVulnerabilities"))
@@ -212,13 +212,13 @@ $upgrade = new Upgrade();
       "url" => "sensor/sensor.php"
     );
 
-/*
-  if (Session::menu_perms("MenuPolicy", "PolicySignatures"))
+
+  if (Session::menu_perms("MenuPolicy", "PolicyServers"))
     $menu["Policy"][] = array (
-      "name" => gettext("Signatures"),
-      "url" => "signature/signature.php"
+      "name" => gettext("Servers"),
+      "url" => "server/server.php"
     );
-*/
+
 
   if (Session::menu_perms("MenuPolicy", "PolicyPorts"))
     $menu["Policy"][] = array (
@@ -357,7 +357,7 @@ $upgrade = new Upgrade();
        <? if ($option==$i) { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/abajo.gif" border=0></td>
        <td class=blue NOWRAP>
-	   <? if($language != "ru_RU.UTF-8") echo strtoupper(gettext($name)); else echo gettext($name); ?>
+	   <? if($language != "ru_RU.UTF-8") echo htmlentities(strtoupper(html_entity_decode(gettext($name)))); else echo gettext($name); ?>
 	   </td>
        <? } else { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/dcha.gif" border=0></td>
@@ -393,7 +393,9 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
         <? if ($soption==$i) { ?>
         <td><img src="pixmaps/top/li.gif" border=0></td>
         <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue
-		href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>"><? if($language != "ru_RU.UTF-8") echo strtoupper($op["name"]); else echo $op["name"]; ?></a></td>
+		href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>">
+<? if($language != "ru_RU.UTF-8") echo htmlentities(strtoupper(html_entity_decode($op["name"]))); else echo $op["name"]; ?></a></td>
+
         <td><img src="pixmaps/top/ld.gif" border=0></td>
         <? } else { ?>
         <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo $op["name"]; #echo strtoupper($op["name"]) ?></a></td>

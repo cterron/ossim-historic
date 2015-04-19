@@ -57,7 +57,7 @@ extern "C" {
 #define HA_ROLE_PASSIVE	1
 #define HA_ROLE_ACTIVE	2
 	
-	
+
 G_BEGIN_DECLS
 
 typedef struct _SimConfig        SimConfig;
@@ -75,6 +75,8 @@ struct _SimConfig {
 
   gchar   *notify_prog;
 
+	gint		max_event_tmp;	//this is taken from 'config' table in DB. It means the maximum number 
+													//of events that should be inside event_tmp table.
   struct {
     gchar    *filename;
   } log;
@@ -124,6 +126,8 @@ struct _SimConfigDS {
   gchar    *name;
   gchar    *provider;
   gchar    *dsn;
+  gboolean local_DB;     //if False: database queries are executed against other ossim server in other machine.
+  gchar		 *rserver_name;     //if local_DB=False, this is the server where we have to connect to.
 };
 
 struct _SimConfigNotify {
@@ -131,7 +135,7 @@ struct _SimConfigNotify {
   GList    *alarm_risks;
 };
 
-struct _SimConfigRServer {	//servers "up" in the architecture. Also, the HA remote server is a rserver too.
+struct _SimConfigRServer {	//servers "up" in the architecture directly connected. Also, the HA remote server is a rserver too.
   gchar				*name;
   gchar				*ip;	//ip & ia has the same address. //FIXME: redundant storage
   GInetAddr		*ia;
@@ -140,6 +144,12 @@ struct _SimConfigRServer {	//servers "up" in the architecture. Also, the HA remo
 	GIOChannel	*iochannel;
 	gint				HA_role;			//HA_ROLE_PASSIVE, HA_ROLE_ACTIVE, HA_ROLE_NONE
 	gboolean		is_HA_server;	//true if the remote server is an HA server.
+	gboolean		primary; //true if the rserver is the main master server. At last, this rserver thinks that this is the 
+												//main master server, I mean: ie. in an architecture like this:
+												//server1->server2->server3, where server3 is the children server lower in the architecture, the "real" main master
+												//server is the server1. But for server3, his main & primary master server will be server2.
+												//NOTE: Mandatory in server's config.xml. If not specified, this server won't be able to extract data
+												//(hosts, nets..) from it.
 };
 
 GType             sim_config_get_type                        (void);
@@ -156,6 +166,17 @@ SimConfigRServer* sim_config_rserver_new                     (void);
 void              sim_config_rserver_free                    (SimConfigRServer *rserver);
 void							sim_config_set_data_role										(SimConfig   *config,
 																															SimCommand  *cmd);
+void							sim_config_rserver_debug_print							(SimConfigRServer *rserver);
+
+//aggg do this here...
+#ifndef __SIM_DATABASE_H__
+#include "sim-database.h"
+void							sim_config_set_config_db_max_event_tmp			(SimConfig     *config,
+													                                     SimDatabase   *database);
+
+void							sim_config_load_database_config							(SimConfig     *config,
+																	                             SimDatabase     *database);
+#endif
 
 G_END_DECLS
 

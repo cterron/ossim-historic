@@ -79,7 +79,7 @@ class Session {
         $conn = $db->connect();
 
         $pass = md5($this->pass);
-        $login = mysql_escape_string($this->login);
+        $login = $this->login;
 
         $sql = "SELECT * FROM users WHERE login = ? AND pass = ?";
         $params = array($login, $pass);

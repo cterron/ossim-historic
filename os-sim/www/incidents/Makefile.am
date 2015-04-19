@@ -11,7 +11,8 @@ incidents_DATA = attachment.php \
 	newincident.php \
 	newincidenttypeform.php \
 	newincidenttype.php \
-	manageincident.php
+	manageincident.php \
+	osvdb.php
 
 EXTRA_DIST   = $(incidents_DATA)
 

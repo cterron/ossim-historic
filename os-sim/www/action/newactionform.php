@@ -136,11 +136,12 @@ function submit()
 
 <table align="center" width="50%">
 <tr>
-<td colspan="2">
-<div style="text-align: left;">
+<td colspan="2" style="text-align: left">
 <?php 
-echo gettext("You can use the following keywords within any field which will be get substituted by it's matching value upon action execution") . "." . gettext("They're pretty much self explanatory") . "."; 
+echo gettext("You can use the following keywords within any field which will be get substituted by it's matching value upon action execution") . "."; 
 ?>
+<table width="80%" align="center" style="border-width: 0px"><tr>
+<td style="text-align: left" valign="top">
 <ul>
 <li> DATE
 <li> PLUGIN_ID
@@ -157,7 +158,22 @@ echo gettext("You can use the following keywords within any field which will be 
 <li> PLUGIN_NAME
 <li> SID_NAME
 </ul>
-</div>
+<td style="text-align: left" valign="top">
+<ul>
+<li> USERNAME
+<li> PASSWORD
+<li> FILENAME
+<li> USERDATA1
+<li> USERDATA2
+<li> USERDATA3
+<li> USERDATA4
+<li> USERDATA5
+<li> USERDATA6
+<li> USERDATA7
+<li> USERDATA8
+<li> USERDATA9
+</ul>
+</td></tr></table>
 </td></tr>
 <form name="new_action" method="POST">
   <tr>

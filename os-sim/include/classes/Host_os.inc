@@ -12,7 +12,9 @@ class Host_os{
         $nanoms = $sup - $inf;
 
         $sql = "SELECT distinct ip, sensor FROM host_os LIMIT ? OFFSET ?";
-        $params = array($nanoms, $inf);
+        $params = array((int)$nanoms, (int)$inf);
+
+        $list = array();
 
         if (!$ips = &$conn->Execute($sql, $params)){
             print $conn->ErrorMsg();
@@ -23,6 +25,7 @@ class Host_os{
                 $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr 
                         from host_os where  ip= ? and sensor = ? order by date desc";
                 $params = array($ips->fields["ip"], $ips->fields["sensor"]);
+
                 
                 if (!$aux = &$conn->Execute($sql, $params)) {
                     print $conn->ErrorMsg();
@@ -128,56 +131,47 @@ class Host_os{
         require_once('classes/Security.inc');
 
         $list = array();
-		$num_anom = 0;
-		
-		$num_anom = (int) $num_anom;
-		$limit = (int) $limit;
-        
-		$sql = "SELECT distinct ip, sensor FROM host_os";
+ 
+	$sql = "SELECT distinct inet_ntoa(ip) as ip, inet_ntoa(sensor) as sensor FROM host_os";
+
         if (!$ips = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
-			
+            $num_anom = 0;
             while ((!$ips->EOF) && (($num_anom < $limit) || ($limit == "all"))) {
-                $sql2 = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip)
-                         as ip_addr from host_os where ip= ? and sensor = ? order by date desc";
-                $params2 = array($ips->fields["ip"], $ips->fields["sensor"]);
+	        if ( (Session::hostAllowed($conn, $ips->fields["ip"])) and (Session::hostAllowed($conn, $ips->fields["sensor"])) ) {
+			$sql = "SELECT *, inet_ntoa(sensor) AS ip_sensor, inet_ntoa(ip) AS ip_addr FROM host_os
+				WHERE ip = inet_aton(?) AND sensor = inet_aton(?) ORDER BY date DESC";
+			$params = array($ips->fields["ip"], $ips->fields["sensor"]);
 
-                if (!$aux = &$conn->Execute($sql2, $params2)) {
-                    print $conn->ErrorMsg();
-                } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or 
-                           (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-                {
-                    $ip        = $aux->fields["ip_addr"];    
-                    $os        = $aux->fields["os"];
-                    $date      = $aux->fields["date"];
-                    $sensor    = $aux->fields["ip_sensor"];
-                    $interface = $aux->fields["interface"];
-                    if ((!$aux->EOF) && ($aux->RecordCount() > 1)) {
-                        $aux->MoveNext();
-                    }    
-                    if ($aux->RecordCount() > 1) {    
-                        $old_os  = $aux->fields["os"];
-                        $old_date = $aux->fields["date"];
-                        $control = 0;    
-                        while ((!$aux->EOF) && ($control == "0")) {
-                            $old_date = $aux->fields["date"];
-                            $old_os  = $aux->fields["os"];
-                            if ($aux->fields["anom"] == "0") $control = "1"; 
-                            $aux->MoveNext();
-                        }
-                        
-                        $num_anom++;
-
-                        list($os_main, ) = split(" ", $os, 2);
-                        list($previous_main, ) = split(" ", $old_os, 2);
-                        if ($os_main != $previous_main) {
-                            $list[] = array("ip" => $ip, "os" => $os, "date" => $date, "old_os" => $old_os,
-                                            "old_date" => $old_date, "sensor" => $sensor, "interface" => $interface);
-                        }
-                    }
-                } 
-            $ips->MoveNext();
+			if (!$aux = &$conn->Execute($sql, $params)) {
+			    print $conn->ErrorMsg();
+			} elseif ($aux->fields["anom"] != "0") {
+			    $ip        = $aux->fields["ip_addr"];    
+			    $os        = $aux->fields["os"];
+			    $date      = $aux->fields["date"];
+			    $sensor    = $aux->fields["ip_sensor"];
+			    $interface = $aux->fields["interface"];
+			    $next_anom = true;
+			    $is_anom = false;
+			    while ($aux->MoveNext() and $next_anom) {    
+			        if ($aux->fields["anom"] == "0")
+				    $next_anom = false;
+				$old_os  = $aux->fields["os"];
+				$old_date = $aux->fields["date"];
+				list($os_main, ) = explode(" ", $os, 2);
+				list($previous_main, ) = explode(" ", $old_os, 2);
+				if ($os_main != $previous_main)
+				  $is_anom = true;
+                            }
+			    if ($is_anom) {
+				$num_anom++;
+				$list[] = array("ip" => $ip, "os" => $os, "date" => $date, "old_os" => $old_os,
+				                "old_date" => $old_date, "sensor" => $sensor, "interface" => $interface);
+			    }
+			} 
+		}
+                $ips->MoveNext();
             } 
         }
         return $list;
@@ -188,26 +182,30 @@ class Host_os{
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
                 
-        $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr from host_os where 
-                ip = inet_aton(?) and sensor = inet_aton(?) order by date desc";
+        $list = array();
+
+        if ( !(Session::hostAllowed($conn, $host)) or !(Session::hostAllowed($conn, $sensor)) )
+	    return $list;
+
+        $sql = "SELECT *, inet_ntoa(sensor) AS ip_sensor, inet_ntoa(ip) AS ip_addr FROM host_os
+                WHERE ip = inet_aton(?) AND sensor = inet_aton(?) ORDER BY date DESC";
         $params = array($host, $sensor);
+
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
-        } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or
-                    (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-        {
+        } elseif ($aux->fields["anom"] != "0") {
             $os  = $aux->fields["os"];
             $date = $aux->fields["date"];
             $sensor = $aux->fields["ip_sensor"];
             $interface = $aux->fields["interface"];
-            if ((!$aux->EOF) && ($aux->RecordCount() <= 1)) {
-                $aux->MoveNext();
-            }             
-            while ((!$aux->EOF) && ($aux->fields["anom"] == "1")) {
+	    $next_anom = true;
+	    while ($aux->MoveNext() && $next_anom) {
+	        if ($aux->fields["anom"] == "0")
+		    $next_anom = false;
                 $old_os = $aux->fields["os"];
                 $old_date = $aux->fields["date"];
-                $list[] = array("ip" => $host, "os" => $os, "date" => $date, "old_os" => $old_os, "old_date" => $old_date, "sensor" => $sensor, "interface" => $interface);
-                $aux->MoveNext();
+                $list[] = array("ip" => $host, "os" => $os, "date" => $date, "old_os" => $old_os, "old_date" => $old_date,
+		                "sensor" => $sensor, "interface" => $interface);
                 $os = $old_os;
                 $date = $old_date;
             }
@@ -221,6 +219,8 @@ class Host_os{
         $sql  = "SELECT * FROM host_os WHERE ip = inet_aton(?) ".
                 "ORDER BY date DESC";
         $params = array($host);
+
+	$first_os = "";
         
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
@@ -230,11 +230,12 @@ class Host_os{
                 if ($aux->fields["anom"] == "0") {
                     return array("host" => $host, "os" => $aux->fields["os"]);
                 }
+		if($first_os == ""){$first_os = $aux->fields["os"];}
                 $aux->MoveNext();
             }
-            // If no "0 anom" record found, use the first record introduced
+            // If no "0 anom" record found, use the last record introduced
             // in the DB
-            return array("host" => $host, "os" => $aux->fields["os"]);
+            return array("host" => $host, "os" => $first_os);
         }
         return null;
     }
@@ -281,15 +282,17 @@ class Host_os{
         if ( $os_data = Host_os::get_ip_data($conn, $host)) {
             $os = $os_data["os"];
             if (preg_match('/win/i', $os)) {
-                return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
+                return "<img src=\"$pixmap_dir/os/win.png\" alt=\"Windows\" />";
             } elseif (preg_match('/linux/i', $os)) {
-                return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
+                return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"Linux\" />";
             } elseif (preg_match('/bsd/i', $os)) {
-                return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
+                return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"BSD\" />";
             } elseif (preg_match('/mac/i', $os)) {
-                return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
-            } elseif (preg_match('/sun|solaris/i', $os)) {
-                return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
+                return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"MacOS\" />";
+            } elseif (preg_match('/sunos/i', $os)) {
+                return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"SunOS\" />";
+            } elseif (preg_match('/solaris/i', $os)) {
+                return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"Solaris\" />";
             }
         }
         return "";
@@ -298,15 +301,17 @@ class Host_os{
     function get_os_pixmap_nodb($os, $pixmap_dir = '../pixmaps/')
     {
         if (preg_match('/win/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
+            return "<img src=\"$pixmap_dir/os/win.png\" alt=\"Windows\" />";
         } elseif (preg_match('/linux/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
+            return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"Linux\" />";
         } elseif (preg_match('/bsd/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
+            return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"BSD\" />";
         } elseif (preg_match('/mac/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
-        } elseif (preg_match('/sun|solaris/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
+            return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"MacOS\" />";
+        } elseif (preg_match('/sun/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"SunOS\" />";
+        } elseif (preg_match('/solaris/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"Solaris\" />";
         }
         return "";
     }

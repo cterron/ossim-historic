@@ -12,14 +12,18 @@
         $pixmap_dir = "../pixmaps/";
 
         if (preg_match('/win/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
+            return "<img src=\"$pixmap_dir/os/win.png\" alt=\"Windows\" />";
         } elseif (preg_match('/linux/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";            } elseif (preg_match('/bsd/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
+            return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"Linux\" />";
+        } elseif (preg_match('/bsd/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"BSD\" />";
         } elseif (preg_match('/mac/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
-        } elseif (preg_match('/sun|solaris/i', $os)) {
-            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";            }
+            return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"MacOS\" />";
+        } elseif (preg_match('/sun/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"SunOS\" />";
+        } elseif (preg_match('/solaris/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"Solaris\" />";
+        }
     }
 
     function scan2html($scan)

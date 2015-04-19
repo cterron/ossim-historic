@@ -14,4 +14,12 @@ class xajaxTableResponse extends xajaxResponse {
         $this->addScript("var tbl=xajax.\$('".$tableName."');tbl.rows[".$rowNumber."].insertCell(-1).innerHTML='".addSlashes($cellContents)."';");
     }
 }
+
+function xajax_debug($var, &$resp)
+{
+    $html = printr($var, false, true);
+    $resp->AddAppend("xajax_debug", "innerHTML", $html);
+    return $resp;
+}
+
 ?>

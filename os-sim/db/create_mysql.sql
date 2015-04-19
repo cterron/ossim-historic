@@ -7,6 +7,14 @@ CREATE TABLE config (
     PRIMARY KEY (conf)
 );
 
+DROP TABLE IF EXISTS user_config;
+CREATE TABLE user_config (
+	login VARCHAR(64)  NOT NULL REFERENCES users (login),
+    category VARCHAR(64) NOT NULL DEFAULT 'main',
+    name VARCHAR(64) NOT NULL,
+    value TEXT,
+    PRIMARY KEY (login, category, name)
+);
 
 /* ======== hosts & nets ======== */
 DROP TABLE IF EXISTS host;
@@ -29,7 +37,7 @@ DROP TABLE IF EXISTS net;
 CREATE TABLE net (
   name              varchar(128) UNIQUE NOT NULL,
   ips               varchar(255) NOT NULL,
-  priority          int NOT NULL,
+  asset             int NOT NULL,
   threshold_c       int NOT NULL,
   threshold_a       int NOT NULL,
   alert             int NOT NULL,
@@ -168,7 +176,8 @@ CREATE TABLE net_sensor_reference (
     PRIMARY KEY     (net_name, sensor_name)
 );
 
-/*Used to store how much events arrive to the server in a specific time*/
+/*Used to store how much events arrive to the server in a specific time, from a
+ * specific sensor*/
 DROP TABLE IF EXISTS sensor_stats;
 CREATE TABLE sensor_stats (
     name            varchar(64) NOT NULL,
@@ -186,9 +195,10 @@ CREATE TABLE policy (
     id              int NOT NULL auto_increment,
     priority        smallint NOT NULL,
     descr           varchar(255),
-    server_name     varchar(64) NOT NULL,   /*this is the server to wich applies the policy*/        
     PRIMARY KEY     (id)
 );
+
+DROP TABLE IF EXISTS policy_seq;
 CREATE TABLE policy_seq (
 	id INT NOT NULL
 );
@@ -272,6 +282,41 @@ CREATE TABLE policy_role_reference (
     resend_alarm    BOOLEAN	NOT NULL DEFAULT '1',
     resend_event    BOOLEAN	NOT NULL DEFAULT '1',
     PRIMARY KEY (policy_id)
+);
+
+DROP TABLE IF EXISTS policy_target_reference;
+CREATE TABLE policy_target_reference (
+    policy_id       int NOT NULL,
+    target_name     varchar(64),   /*this is the target to wich applies the policy, it can be server or sensor names*/        
+    PRIMARY KEY     (policy_id, target_name)
+);
+
+/* ======== servers ======== */
+
+/* This table is needed only in multi-level architecture in the upper master
+ * server. This is filled with
+ * the information in server's config.xml, and from the children servers wich
+ * connects into the master */
+
+DROP TABLE IF EXISTS server_role;
+CREATE TABLE server_role (
+    name            varchar(64) NOT NULL,
+    correlate       BOOLEAN	NOT NULL DEFAULT '1',
+    cross_correlate BOOLEAN	NOT NULL DEFAULT '1',
+    store           BOOLEAN	NOT NULL DEFAULT '1',
+    qualify         BOOLEAN	NOT NULL DEFAULT '1',
+    resend_alarm    BOOLEAN	NOT NULL DEFAULT '1',
+    resend_event    BOOLEAN	NOT NULL DEFAULT '1',
+    PRIMARY KEY     (name)
+);
+
+DROP TABLE IF EXISTS server;
+CREATE TABLE server (
+    name            varchar(64) NOT NULL,
+    ip              varchar(15) NOT NULL,
+    port            int NOT NULL,
+    descr           varchar(255) NOT NULL,
+    PRIMARY KEY     (name)
 );
 
 
@@ -560,6 +605,8 @@ CREATE TABLE plugin_group_descr (
     descr       VARCHAR(255) NOT NULL,
     PRIMARY KEY (group_id, name)
 );
+
+DROP TABLE IF EXISTS plugin_group_descr_seq;
 CREATE TABLE plugin_group_descr_seq (
 	id INT NOT NULL
 );
@@ -636,6 +683,85 @@ CREATE TABLE backlog_event (
 );
 
 --
+-- Table: Temporary Event Tables
+--
+
+DROP TABLE IF EXISTS event_tmp;
+CREATE TABLE event_tmp (
+        id              BIGINT NOT NULL,
+        timestamp       TIMESTAMP NOT NULL,
+        sensor          TEXT NOT NULL,
+        interface       TEXT NOT NULL,
+        type            INTEGER NOT NULL,
+        plugin_id       INTEGER NOT NULL,
+        plugin_sid      INTEGER NOT NULL,
+        plugin_sid_name varchar(255),
+        protocol        INTEGER,
+        src_ip          INTEGER UNSIGNED,
+        dst_ip          INTEGER UNSIGNED,
+        src_port        INTEGER,
+        dst_port        INTEGER,
+        priority        INTEGER DEFAULT 1,
+        reliability     INTEGER DEFAULT 1,
+        asset_src       INTEGER DEFAULT 1,
+        asset_dst       INTEGER DEFAULT 1,
+        risk_a          INTEGER DEFAULT 1,
+        risk_c          INTEGER DEFAULT 1,
+        alarm           TINYINT DEFAULT 1,
+        filename        varchar(255),
+        username        varchar(255),
+        password        varchar(255),
+        userdata1       varchar(255),
+        userdata2       varchar(255),
+        userdata3       varchar(255),
+        userdata4       varchar(255),
+        userdata5       varchar(255),
+        userdata6       varchar(255),
+        userdata7       varchar(255),
+        userdata8       varchar(255),
+        userdata9       varchar(255),
+        PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS event_tmp_filter;
+CREATE TABLE event_tmp_filter (
+        id              BIGINT NOT NULL,
+        login           varchar(255),
+        timestamp       TIMESTAMP NOT NULL,
+        sensor          TEXT NOT NULL,
+        interface       TEXT NOT NULL,
+        type            INTEGER NOT NULL,
+        plugin_id       INTEGER NOT NULL,
+        plugin_sid      INTEGER NOT NULL,
+        event_name      varchar(255),
+        protocol        INTEGER,
+        src_ip          INTEGER UNSIGNED,
+        dst_ip          INTEGER UNSIGNED,
+        src_port        INTEGER,
+        dst_port        INTEGER,
+        priority        INTEGER DEFAULT 1,
+        reliability     INTEGER DEFAULT 1,
+        asset_src       INTEGER DEFAULT 1,
+        asset_dst       INTEGER DEFAULT 1,
+        risk_a          INTEGER DEFAULT 1,
+        risk_c          INTEGER DEFAULT 1,
+        alarm           TINYINT DEFAULT 1,
+        filename        varchar(255),
+        username        varchar(255),
+        password        varchar(255),
+        userdata1       varchar(255),
+        userdata2       varchar(255),
+        userdata3       varchar(255),
+        userdata4       varchar(255),
+        userdata5       varchar(255),
+        userdata6       varchar(255),
+        userdata7       varchar(255),
+        userdata8       varchar(255),
+        userdata9       varchar(255),
+        PRIMARY KEY (id, login)
+);
+
+--
 -- Sequences 
 --
 
@@ -656,6 +782,13 @@ CREATE TABLE backlog_event_seq (
          id INTEGER UNSIGNED NOT NULL
 );
 INSERT INTO backlog_event_seq VALUES (0);
+
+DROP TABLE IF EXISTS event_tmp_seq;
+CREATE TABLE event_tmp_seq (
+         id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO event_tmp_seq (id) VALUES (0);
+
 
 --
 -- Table: Alarm
@@ -755,7 +888,7 @@ CREATE TABLE incident (
     id          INTEGER NOT NULL AUTO_INCREMENT,
     title       VARCHAR(128) NOT NULL,
     date        DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
-    ref         ENUM ('Alarm', 'Alert', 'Event', 'Metric', 'Anomaly') NOT NULL DEFAULT 'Alarm',
+    ref         ENUM ('Alarm', 'Alert', 'Event', 'Metric', 'Anomaly', 'Vulnerability') NOT NULL DEFAULT 'Alarm',
     type_id     VARCHAR(64) NOT NULL DEFAULT "Generic",
     priority    INTEGER NOT NULL,
     status      ENUM ('Open', 'Closed') NOT NULL DEFAULT 'Open',
@@ -781,6 +914,7 @@ INSERT INTO incident_type (id, descr) VALUES ("Security Weakness", "");
 INSERT INTO incident_type (id, descr) VALUES ("Net Performance", "");
 INSERT INTO incident_type (id, descr) VALUES ("Applications and Systems Failures", "");
 INSERT INTO incident_type (id, descr) VALUES ("Anomalies", "");
+INSERT INTO incident_type (id, descr) VALUES ('Nessus Vulnerability',"");
 
 --
 -- Table: incident ticket
@@ -872,6 +1006,28 @@ CREATE TABLE incident_anomaly (
      PRIMARY KEY (id, incident_id)
 );
 
+--
+-- Table: incident vulnerabilities
+--
+
+DROP TABLE IF EXISTS incident_vulns;
+CREATE TABLE incident_vulns (
+    id int(11) NOT NULL,
+    incident_id int(11) NOT NULL,
+    ip varchar(255) NOT NULL,
+    port varchar(255) NOT NULL,
+    nessus_id varchar(255) NOT NULL,
+    risk varchar(255) NOT NULL,
+    description text default NULL,
+    PRIMARY KEY (id,incident_id)
+);
+
+DROP TABLE IF EXISTS incident_vulns_seq;
+CREATE TABLE incident_vulns_seq (
+    id int(11) NOT NULL
+);
+INSERT INTO incident_vulns_seq VALUES(0);
+
 
 --
 -- Table: incident TAGs
@@ -896,6 +1052,9 @@ CREATE TABLE incident_tag_descr_seq (
         id INT NOT NULL
 );
 INSERT INTO incident_tag_descr_seq VALUES (0);
+INSERT INTO incident_tag_descr VALUES(65001,'OSSIM_INTERNAL_PENDING','DONT DELETE');
+INSERT INTO incident_tag_descr VALUES(65002,'OSSIM_INTERNAL_FALSE_POSITIVE','DONT DELETE');
+
 
 --
 -- Table: incident_subscrip
@@ -964,6 +1123,128 @@ CREATE TABLE log_action(
     info        VARCHAR(255) NOT NULL,
     PRIMARY KEY (date, code, info)
 );
+
+---------------------------------------------------------------
+---- Business Processes
+---------------------------------------------------------------
+
+DROP TABLE IF EXISTS bp_process;
+CREATE TABLE bp_process (
+	id          INT NOT NULL,
+	name        VARCHAR(255) NOT NULL,
+	description TEXT,
+	PRIMARY KEY (id)
+);
+
+--
+-- List of assets conforming a bussiness process
+--
+DROP TABLE IF EXISTS bp_asset;
+CREATE TABLE bp_asset (
+	id          INT NOT NULL,
+	name        VARCHAR(255) NOT NULL,
+	description TEXT,
+	PRIMARY KEY (id)
+);
+
+--
+-- List of members that conform an asset
+-- "member" is for example: 10.10.10.10, /etc/passwd
+-- "member_type" is for example: host, file
+--
+DROP TABLE IF EXISTS bp_asset_member;
+CREATE TABLE bp_asset_member (
+	asset_id	INT NOT NULL REFERENCES bp_asset(id),
+	member      TEXT NOT NULL,
+	member_type VARCHAR(255) NOT NULL REFERENCES bp_asset_member_type(type_name)
+);
+
+--
+-- List of supported member types
+--
+DROP TABLE IF EXISTS bp_asset_member_type;
+CREATE TABLE bp_asset_member_type (
+	type_name  VARCHAR(255) NOT NULL UNIQUE,
+	PRIMARY KEY (type_name)
+);
+
+--
+-- Which assets belongs to which business process (and its relevance)
+-- Note: the same asset could belong to many processes
+--
+DROP TABLE IF EXISTS bp_process_asset_reference;
+CREATE TABLE bp_process_asset_reference (
+	process_id  INT NOT NULL REFERENCES bp_process(id),
+	asset_id    INT NOT NULL REFERENCES bp_asset(id),
+	severity    INT(2) NOT NULL, /* How important is that asset (0 - low, 1 - medium, 2 - high) */
+	PRIMARY KEY (process_id, asset_id)
+);
+
+--
+-- Lists persons responsible of that asset
+--
+DROP TABLE IF EXISTS bp_asset_responsible;
+CREATE TABLE bp_asset_responsible (
+	asset_id 	INT NOT NULL REFERENCES bp_asset(id),
+	login 		VARCHAR(64) NOT NULL REFERENCES users(login),
+	PRIMARY KEY (asset_id, login)
+);
+
+--
+-- Status of the diferent members
+-- (frameworkd fills that table)
+--
+-- col "measure_type" is for example: alarm, vulnerability, incident, metric
+--
+DROP TABLE IF EXISTS bp_member_status;
+CREATE TABLE bp_member_status (
+	member        TEXT NOT NULL REFERENCES bp_asset_member(member),
+	status_date   DATETIME NOT NULL,
+	measure_type  VARCHAR(255) NOT NULL,
+	severity      INT(2) NOT NULL /* 0-none, 1-low, 2-med, 3-high */
+);
+
+--
+-- Sequence used for the business process related tables
+--
+DROP TABLE IF EXISTS bp_seq;
+CREATE TABLE bp_seq (
+	id INT NOT NULL
+);
+INSERT INTO bp_seq (id) VALUES (0);
+
+-----------------------------------------------
+INSERT INTO bp_asset_member_type (type_name) VALUES ('host');
+
+--
+-- Plugin Scheduler
+--
+DROP TABLE IF EXISTS plugin_scheduler;
+CREATE TABLE plugin_scheduler(
+	id          INT NOT NULL,
+	plugin VARCHAR(255) NOT NULL,
+	plugin_minute VARCHAR(255) NOT NULL,
+	plugin_hour VARCHAR(255) NOT NULL,
+	plugin_day_month VARCHAR(255) NOT NULL,
+	plugin_month VARCHAR(255) NOT NULL,
+	plugin_day_week VARCHAR(255) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_sensor_reference;
+CREATE TABLE plugin_scheduler_sensor_reference(
+	plugin_scheduler_id          INT NOT NULL,
+	sensor_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY     (plugin_scheduler_id, sensor_name)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_seq;
+CREATE TABLE plugin_scheduler_seq (
+	id INT NOT NULL
+);
+INSERT INTO plugin_scheduler_seq (id) VALUES (0);
+
+
 
 -- vim:ts=4 sts=4 tw=79 expandtab:
 

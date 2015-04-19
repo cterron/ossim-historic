@@ -216,7 +216,7 @@ sim_sensor_new_from_dm (GdaDataModel  *dm,
   sensor->_priv->ia = gnet_inetaddr_new_nonblock (gda_value_get_string (value), 0);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
-  //sensor->_priv->port = gda_value_get_integer (value);
+  sensor->_priv->port = gda_value_get_integer (value);
 
   return sensor;
 }
@@ -629,6 +629,23 @@ sim_sensor_reset_events_number(SimSensor	*sensor)
 	sensor->_priv->event_number.host_os_events = 0;
 	sensor->_priv->event_number.host_service_events = 0;
 	sensor->_priv->event_number.host_ids_events = 0;
+}
+
+void
+sim_sensor_debug_print	(SimSensor *sensor)
+{
+	GInetAddr *ia = sim_sensor_get_ia (sensor);
+  gchar *ip = gnet_inetaddr_get_canonical_name (ia);
+
+	gchar *aux = g_strdup_printf("%s|%s|%d",  sim_sensor_get_name (sensor),
+                                            ip,
+                                            sim_sensor_get_port (sensor));
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_sensor_debug_print: %s", aux);
+
+	g_free (aux);
+  g_free (ip);
+
 }
 
 // vim: set tabstop=2:

@@ -1,6 +1,9 @@
 <?php
 require_once ('classes/Session.inc');
 Session::logcheck("MenuReports", "ReportsPDFReport");
+require_once 'classes/Incident.inc';
+require_once 'classes/Incident_tag.inc';
+require_once 'classes/Incident_type.inc';
 ?>
 
 <html>
@@ -185,57 +188,153 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
 <?php
     }
 
-    function incident_report()
+
+
+
+
+function incident_report()
     {
+
+        // First time we visit this page, show by default only Open incidents
+        // when GET() returns NULL, means that the param is not set
+        if (!(GET('status'))) $status = 'Open';
+
+        $db = new ossim_db();
+        $conn = $db->connect();
+
 ?>
+
+  <!-- filter -->
+
+  <form name="filter" method="GET" action="<?= $_SERVER["PHP_SELF"] ?>">
+   <table align="center" width="100%">
     <tr>
-      <th> <?php echo gettext("Incident Report Options"); ?> </th>
+      <th colspan="7"><?php echo gettext("Incidents Report Options"); ?></th>
     </tr>
+   <table align="center" width="100%">
     <tr>
-      <!-- incident report -->
-      <td>
-        <table align="center" valign="center">
+      <table align="center" valign="center" width="100%">
           <tr>
-            <td><?php echo gettext("Reason: ") ?></td>
-            <td><textarea name="reason"></textarea>
+          <td> <?php echo gettext("Class");  /* ref */  ?> </td>
+          <td> <?php echo gettext("Type"); /* type */ ?> </td>
+          <td> <?php echo gettext("In charge"); ?> </td>
+          <td> <?php echo gettext("Title"); ?> </td>
+          <td> <?php echo gettext("Date"); ?> </td>
+          <td> <?php echo gettext("Status"); ?> </td>
+          <td> <?php echo gettext("Priority"); ?> </td>
+          <td> <?php echo gettext("Action"); ?> </td>
           </tr>
-          <tr>
-            <td><?php echo gettext("Date: ") ?></td>
-            <td><input type="text" size="22" name="date"
-                       value="<?php echo date("F j, Y, g:i a"); ?>" />
+        <tr>
+          <td class="left">
+          <table>
+            <tr>
+                <td class="left">
+                    <input type="checkbox" name="Alarm" checked>
+                        <?php echo gettext("Alarm"); ?>
+                    </input>
+                </td>
+            </tr>
+            <tr>
+                <td class="left">
+                    <input type="checkbox" name="Event" checked>
+                        <?php echo gettext("Event"); ?>
+                    </input>
+                </td>
+            </tr>
+            <tr>
+                <td class="left">
+                    <input type="checkbox" name="Metric" checked>
+                        <?php echo gettext("Metric"); ?>
+                    </input>
+                </td>
+            </tr>
+            <tr>
+                <td class="left">
+                    <input type="checkbox" name="Anomaly" checked>
+                        <?php echo gettext("Anomaly"); ?>
+                    </input>
+                </td>
+            </tr>
+            <tr>
+                <td class="left">
+                    <input type="checkbox" name="Vulnerability" checked>
+                        <?php echo gettext("Vulnerability"); ?>
+                    </input>
+                </td>
+            </tr>
+           </table>
+          </td>
+        <td valign="top">
+            <select name="Type">
+              <option value="ALL">
+                <?php echo gettext("ALL"); ?>
+              </option>
+              <? foreach (Incident_type::get_list($conn) as $itype) {
+                  $id = $itype->get_id();
+              ?>
+                  <option <? if ($type == $id) echo "selected" ?> value="<?=$id?>">
+                    <?= $id ?>
+                  </option>
+              <? } ?>
+            </select>
+          </td>
+          <td valign="top" >
+            <input type="text" name="In_Charge" value="<?= $in_charge ?>" /></td>
+          <td valign="top" >
+            <input type="text" name="Title" value="<?= $title ?>" /></td>
+          <td valign="top" >
+            <input type="text" size="22" name="Date" value="<?php echo date("F j, Y, g:i a"); ?>" /></td>
+          <td valign="top" >
+            <select name="Status">
+              <option value="ALL">
+                <?php echo gettext("ALL"); ?>
+              </option>
+              <option <? if ($status == "Open") echo "selected" ?>
+                value="Open">
+                <?php echo gettext("Open"); ?>
+              </option>
+              <option <? if ($status == "Closed") echo "selected" ?>
+                value="Closed">
+                <?php echo gettext("Closed"); ?>
+              </option>
+            </select>
+          </td>
+          <td valign="top" >
+            <table>
+                <tr>
+                    <td class="left">
+                        <input type="checkbox" name="High" checked>
+                            <?php echo gettext("High"); ?>
+                        </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left">
+                        <input type="checkbox" name="Medium" checked>
+                            <?php echo gettext("Medium"); ?>
+                        </input>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left">
+                        <input type="checkbox" name="Low" checked>
+                            <?php echo gettext("Low"); ?>
+                        </input>
+                    </td>
+                </tr>
+            </table>
             </td>
-          </tr>
-          <tr>
-            <td><?php echo gettext("Location: ") ?></td>
-            <td><input type="text" name="location" size="22" /></td>
-          </tr>
-          <tr>
-            <td><?php echo gettext("In Charge: ") ?></td>
-            <td><input type="text" name="in_charge" size="22" /></td>
-          </tr>
-          <tr>
-            <td><?php echo gettext("Summary: ") ?></td>
-            <td><textarea name="summary"></textarea>
-          </tr>
-          <tr>
-            <td><?php echo gettext("Metrics notes: ") ?></td>
-            <td><textarea name="metrics_notes"></textarea></td>
-          </tr>
-          <tr>
-            <td><?php echo gettext("Alarms notes: ") ?></td>
-            <td><textarea name="alarms_notes"></textarea></td>
-          </tr>
-          <tr>
-            <td><?php echo gettext("Events notes: ") ?></td>
-            <td><textarea name="events_notes"></textarea></td>
-          </tr>
-        </table>
-      </td>
-      <!-- end incident report -->
-    </tr>
-    <tr>
-      <td><input type="submit" name="submit_incident" value="<?php echo gettext('Generate'); ?>" /></td>
-    </tr>
+          <td valign="top" nowrap >
+            <input type="submit" name="submit_incident" value="Generate" />
+          </td>
+        </tr>
+      </tr>
+      </table>
+    </td></tr>
+  </table>
+  </form>
+  <br/>
+  <!-- end filter -->
 <?php
     }
 

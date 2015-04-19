@@ -348,6 +348,21 @@ class Incident_ticket {
                         $ticket->get_action()."\n\n";
         }
         $values['TICKET_HISTORY'] = $history;
+
+        $history = '';
+        $list = Incident_ticket::get_list($conn, "WHERE incident_ticket.incident_id = $incident_id ORDER BY incident_ticket.date DESC");
+        foreach ($list as $ticket) {
+            $login = $ticket->get_user();
+            list($author) = Session::get_list($conn, "WHERE login = '$login'");
+            $history .= $ticket->get_date().' '.$author->get_name().' <'.$author->get_email().">\n".
+                        "------------------------------------------------------\n".
+                        _("Description").":\n".
+                        $ticket->get_description()."\n\n".
+                        _("Action").":\n".
+                        $ticket->get_action()."\n\n";
+        }
+        $values['TICKET_INVERSE_HISTORY'] = $history;
+
         //
         // Incident data
         //
@@ -444,7 +459,7 @@ TICKET_ACTION
 
 Past tickets:
 
-TICKET_HISTORY
+TICKET_INVERSE_HISTORY
 ';
         
         require_once 'ossim_conf.inc';

@@ -20,6 +20,8 @@ class Host_mac{
         $sql = "SELECT distinct ip, sensor FROM host_mac LIMIT ? OFFSET ?";
         $params = array($nanoms, $inf);
 
+        $list = array();
+
         if (!$ips = &$conn->Execute($sql, $params)){
             print $conn->ErrorMsg();
         } else {
@@ -145,49 +147,46 @@ class Host_mac{
 
         $list = array();
 
-        $sql = "SELECT distinct ip, sensor FROM host_mac";
+        $sql = "SELECT distinct inet_ntoa(ip) as ip, inet_ntoa(sensor) as sensor FROM host_mac";
 
         if (!$ips = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             $num_anom = 0;
             while ((!$ips->EOF) && (($num_anom < $limit) || ($limit == "all"))) {
-                $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr from host_mac where 
-                        ip = ?  and sensor = ? order by date desc";
-                $params = array($ips->fields["ip"], $ips->fields["sensor"]);
-                if (!$aux = &$conn->Execute($sql, $params)) {
-                    print $conn->ErrorMsg();
-                } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or 
-                           (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-                {
-                    $ip        = $aux->fields["ip_addr"];    
-                    $mac       = $aux->fields["mac"];
-                    $vendor    = $aux->fields["vendor"];
-                    $date      = $aux->fields["date"];
-                    $sensor    = $aux->fields["ip_sensor"];
-                    $interface = $aux->fields["interface"];
-                    if ((!$aux->EOF) && ($aux->RecordCount() > 1)) {
-                        $aux->MoveNext();
-                    }    
-                    if ($aux->RecordCount() > 1) {    
-                        $old_mac  = $aux->fields["mac"];
-                        $old_vendor = $aux->fields["vendor"];
-                        $old_date = $aux->fields["date"];
-                        $control = 0;    
-                        while ((!$aux->EOF) && ($control == "0")) {
-                            $old_date = $aux->fields["date"];
-                            $old_mac  = $aux->fields["mac"];
-                            $old_vendor = $aux->fields["vendor"];
-                            if ($aux->fields["anom"] == "0") $control = "1"; 
-                            $aux->MoveNext();
-                        }
-                        $num_anom++;
-                        $list[] = array("ip" => $ip, "mac" => $mac, "date" => $date, "old_mac" => $old_mac,
-                                        "old_date" => $old_date, "sensor" => $sensor, "vendor" => $vendor,
-                                        "old_vendor" => $old_vendor, "interface" => $interface);
-                    }
-                } 
-            $ips->MoveNext();
+                if ( (Session::hostAllowed($conn, $ips->fields["ip"])) and (Session::hostAllowed($conn, $ips->fields["sensor"])) ) {
+			$sql = "SELECT *, inet_ntoa(sensor) AS ip_sensor, inet_ntoa(ip) AS ip_addr FROM host_mac
+				WHERE ip = inet_aton(?) AND sensor = inet_aton(?) ORDER BY date DESC";
+			$params = array($ips->fields["ip"], $ips->fields["sensor"]);
+
+			if (!$aux = &$conn->Execute($sql, $params)) {
+			    print $conn->ErrorMsg();
+			} elseif ($aux->fields["anom"] != "0") {
+			    $ip        = $aux->fields["ip_addr"];    
+			    $mac       = $aux->fields["mac"];
+			    $vendor    = $aux->fields["vendor"];
+			    $date      = $aux->fields["date"];
+			    $sensor    = $aux->fields["ip_sensor"];
+			    $interface = $aux->fields["interface"];
+			    $next_anom = true;
+			    $is_anom = false;
+			    while ($aux->MoveNext() and $next_anom) {
+				if ($aux->fields["anom"] == "0")
+				    $next_anom = false; 
+				$old_mac  = $aux->fields["mac"];
+				$old_vendor = $aux->fields["vendor"];
+				$old_date = $aux->fields["date"];
+				$is_anom = true;
+                            }
+			    if ($is_anom) {
+				$num_anom++;
+				$list[] = array("ip" => $ip, "mac" => $mac, "date" => $date, "old_mac" => $old_mac,
+						"old_date" => $old_date, "sensor" => $sensor, "vendor" => $vendor,
+						"old_vendor" => $old_vendor, "interface" => $interface);
+                            }
+			} 
+            	}
+		$ips->MoveNext();
             } 
         }
         return $list;
@@ -197,31 +196,33 @@ class Host_mac{
     {
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
+
+        $list = array();
+
+	if ( !(Session::hostAllowed($conn, $host)) or !(Session::hostAllowed($conn, $sensor)) )
+	    return $list;
                 
-        $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr 
-                from host_mac where ip = inet_aton(?) and sensor = inet_aton(?) order by date desc";
+        $sql = "SELECT *, inet_ntoa(sensor) AS ip_sensor, inet_ntoa(ip) AS ip_addr FROM host_mac
+                WHERE ip = inet_aton(?) AND sensor = inet_aton(?) ORDER BY date DESC";
         $params = array($host, $sensor);
 
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
-        } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or
-                    (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-        {
+        } elseif ($aux->fields["anom"] != "0") {
             $mac  = $aux->fields["mac"];
             $vendor = $aux->fields["vendor"];
             $date = $aux->fields["date"];
             $sensor = $aux->fields["ip_sensor"];
             $interface = $aux->fields["interface"];
-            if ((!$aux->EOF) && ($aux->RecordCount() <= 1)) {
-                $aux->MoveNext();
-            }             
-            while ((!$aux->EOF) && ($aux->fields["anom"] == "1")) {
+	    $next_anom = true;
+            while ($aux->MoveNext() && $next_anom) {
+	        if ($aux->fields["anom"] == "0")
+		    $next_anom = false;
                 $old_mac = $aux->fields["mac"];
                 $old_date = $aux->fields["date"];
                 $old_vendor = $aux->fields["vendor"];
                 $list[] = array("ip" => $host, "mac" => $mac, "date" => $date, "vendor" => $vendor, "old_vendor" => $old_vendor,
                                 "old_mac" => $old_mac, "old_date" => $old_date, "sensor" => $sensor, "interface" => $interface);
-                $aux->MoveNext();
                 $mac = $old_mac;
                 $date = $old_date;
                 $vendor = $old_vendor;

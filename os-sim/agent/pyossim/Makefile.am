@@ -42,6 +42,8 @@ ossim_pyossim_DATA    =  Agent.py \
 		ParserOsiris.py \
 		ParserRealSecure.py \
 		ParserJuniperFW.py \
+		ParserHeartbeat.py \
+		ParserNagios.py \
 		Plugin.py
 
 

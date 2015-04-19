@@ -55,8 +55,8 @@ struct _SimRulePrivate {
   gint        reliability;
   gboolean    rel_abs;
 
-  GTime       time_out;
-  GTime       time_last;
+  time_t       time_out;
+  time_t       time_last;
   gint        occurrence;
 
   SimConditionType   condition;
@@ -1123,7 +1123,7 @@ sim_rule_set_absolute (SimRule   *rule,
  *
  *
  */
-GTime
+time_t
 sim_rule_get_time_out (SimRule   *rule)
 {
   g_return_val_if_fail (rule, 0);
@@ -1140,7 +1140,7 @@ sim_rule_get_time_out (SimRule   *rule)
  */
 void
 sim_rule_set_time_out (SimRule   *rule,
-		       GTime      time_out)
+		       time_t      time_out)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1155,7 +1155,7 @@ sim_rule_set_time_out (SimRule   *rule,
  *
  *
  */
-GTime
+time_t
 sim_rule_get_time_last (SimRule   *rule)
 {
   g_return_val_if_fail (rule, 0);
@@ -1172,7 +1172,7 @@ sim_rule_get_time_last (SimRule   *rule)
  */
 void
 sim_rule_set_time_last (SimRule   *rule,
-								       GTime      time_last)
+								       time_t      time_last)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -3774,6 +3774,9 @@ sim_rule_match_by_event (SimRule      *rule,
 
 /*
  *
+ * This is needed to set the data from the actual event to the rule.
+ * If there are in the directive an element with (ie.) a src_ip = "ANY", we need to know what src_ip has  matched with the "ANY" keyword
+ * so rules with 1:SRC_IP knows the value.
  *
  */
 void
@@ -3785,11 +3788,13 @@ sim_rule_set_event_data (SimRule      *rule,
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: src_ia: %s", gnet_inetaddr_get_canonical_name(event->src_ia));
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: dst_ia: %s", gnet_inetaddr_get_canonical_name(event->dst_ia));
+  gchar *ip_src = gnet_inetaddr_get_canonical_name(event->src_ia);
+  gchar *ip_dst = gnet_inetaddr_get_canonical_name(event->dst_ia);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: src_ia: %s", ip_src);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: dst_ia: %s", ip_dst);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: sensor: %s", event->sensor);
 	 
-  if (gnet_inetaddr_get_canonical_name(event->src_ia) && gnet_inetaddr_get_canonical_name(event->dst_ia))
+  if (ip_src && ip_dst)
   {
     rule->_priv->src_ia = (event->src_ia) ? gnet_inetaddr_clone (event->src_ia) : NULL;
     rule->_priv->dst_ia = (event->dst_ia) ? gnet_inetaddr_clone (event->dst_ia) : NULL;
@@ -3813,6 +3818,9 @@ sim_rule_set_event_data (SimRule      *rule,
   }
   else
     g_message("Error: The src or dst of an event is wrong");
+
+  g_free (ip_src);
+  g_free (ip_dst);
 }
 
 /*
@@ -4021,7 +4029,9 @@ sim_rule_print (SimRule      *rule)
     {
       SimSensor *sensor = (SimSensor *) list->data;
       GInetAddr *sensor_ia = sim_sensor_get_ia (sensor);
-      g_message (" %s ", gnet_inetaddr_get_canonical_name(sensor_ia));
+      gchar *ip_sensor=gnet_inetaddr_get_canonical_name(sensor_ia);
+      g_message (" %s ", ip_sensor);
+      g_free (ip_sensor);
       list = list->next;
     }
 

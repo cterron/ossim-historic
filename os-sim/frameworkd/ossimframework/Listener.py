@@ -39,6 +39,9 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
 
         command = None
         subcommand = None
+        sensors = None
+        param = None
+        extra_data = None
 
         try:
             command = line.split()[0]
@@ -53,25 +56,56 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
             #        nessus action="stop"
             #
             subcommand = line.split()[1]
-            param = line.split()[2]
+            sensors = param = line.split()[2]
         except ValueError, IndexError:
             pass
-
 
         #
         #  TODO:
         #  move all this code to an external class in DoNessus.py
         #  for example, NessusManager
         #
+
+        sensor_list = []
+
         if command == "nessus":
+
             if FrameworkBaseRequestHandler.__nessus == None:
                 FrameworkBaseRequestHandler.__nessus = DoNessus()
+
+            if subcommand == "report":
+                extra_data = line.split()[3]
+                # Ugly variable confusion
+                title =  sensors
+                sensor_list = extra_data.split(",")
+                print __name__, ": Report host list:", sensor_list
+                FrameworkBaseRequestHandler.__nessus.generate_report(title, sensor_list)
+
             if subcommand == "start":
+
+                # I know this is dirty but is_digit isn't working "as is". 
+                try: 
+                    int(sensors)
+                    print __name__, ": Got schedule request."
+                    sensor_list = FrameworkBaseRequestHandler.__nessus.get_sensors_by_id(sensors)
+                    print __name__, ": Sensor_list_1:", sensor_list
+                    if sensor_list == False:
+                        self.wfile.write("wrong scheduler id\n")
+                        print __name__, ": wrong scheduler id."
+                        return
+                except ValueError, e:
+                    sensor_list = sensors.split(",")
+                    print __name__, ": Splitting up sensors."
+
+                print __name__, ": Sensor_list:", sensor_list
+
                 if FrameworkBaseRequestHandler.__nessus.status() == 0:
                     try:
+                        FrameworkBaseRequestHandler.__nessus.load_sensors(sensor_list)
                         FrameworkBaseRequestHandler.__nessus.start()
                         self.wfile.write("ok\n")
                     except AssertionError: 
+                        FrameworkBaseRequestHandler.__nessus.load_sensors(sensor_list)
                         FrameworkBaseRequestHandler.__nessus.run()
                         self.wfile.write("ok\n")
                 elif FrameworkBaseRequestHandler.__nessus.status() > 0 :
@@ -95,15 +129,18 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
                 self.wfile.write("nessus archive ack " + param + "\n")
             if subcommand == "delete":
                 print __name__, ": Got delete request for", param
-                FrameworkBaseRequestHandler.__nessus.delete(param)
+                if param.endswith(".report"):
+                    FrameworkBaseRequestHandler.__nessus.delete(param, True)
+                else:
+                    FrameworkBaseRequestHandler.__nessus.delete(param, False)
                 self.wfile.write("nessus delete ack " + param + "\n")
             if subcommand == "restore":
                 print __name__, ": Got restore request for", param
                 FrameworkBaseRequestHandler.__nessus.restore(param)
                 self.wfile.write("nessus restore ack " + param + "\n")
-
-        a = Action.Action(line)
-        a.start()
+        else:
+            a = Action.Action(line)
+            a.start()
 
         return
 

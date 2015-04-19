@@ -8,6 +8,7 @@ classes_DATA = About.inc \
 	Backlog.inc \
 	Backlog_event.inc \
 	Backup.inc \
+	Business_Process.inc \
 	Category.inc \
 	CIDR.inc \
 	Classification.inc \
@@ -15,6 +16,8 @@ classes_DATA = About.inc \
 	Control_panel_host.inc \
 	Control_panel_net.inc \
 	Event.inc \
+	Event_viewer.inc \
+	Event_viewer_draw.inc \
 	Host.inc \
 	Host_ids.inc \
 	Host_mac.inc \
@@ -35,6 +38,7 @@ classes_DATA = About.inc \
 	Incident_file.inc \
 	Incident_tag.inc \
 	Incident_type.inc \
+	Incident_vulnerability.inc \
 	Locale.inc \
 	Log_config.inc \
 	Log_action.inc \
@@ -46,10 +50,13 @@ classes_DATA = About.inc \
 	Net_qualification.inc \
 	Net_scan.inc \
 	Net_vulnerability.inc \
+	Osvdb.inc \
 	PDF.inc \
 	Plugin.inc \
 	Plugin_reference.inc \
 	Plugin_sid.inc \
+	Plugin_scheduler.inc \
+	Plugin_scheduler_sensor_reference.inc \
 	Plugingroup.inc \
 	Policy_host_reference.inc \
 	Policy.inc \
@@ -58,6 +65,8 @@ classes_DATA = About.inc \
 	Policy_ports_reference.inc \
 	Policy_sensor_reference.inc \
 	Policy_sig_reference.inc \
+	Policy_role_reference.inc \
+	Policy_target_reference.inc \
 	Policy_time.inc \
 	Port_group.inc \
 	Port_group_reference.inc \
@@ -69,6 +78,7 @@ classes_DATA = About.inc \
 	Response_net.inc \
 	Response_plugin.inc \
 	Response_port.inc \
+	Role.inc \
 	RRD_anomaly_global.inc \
 	RRD_anomaly.inc \
 	RRD_config.inc \
@@ -78,6 +88,7 @@ classes_DATA = About.inc \
 	Sensor.inc \
 	Sensor_interfaces.inc \
 	Session.inc \
+	Server.inc \
 	Signature_group.inc \
 	Signature_group_reference.inc \
 	Signature.inc \

@@ -11,11 +11,16 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") $proto = "https";
 
 $datapath = "$proto://".$_SERVER['SERVER_ADDR'].":".$_SERVER['SERVER_PORT']."$pathtographs/graphs";
 
+//This is used to give the name to the created pdf
+$date_gen = date("d-m-y");
+
 
 function clean_tmp_files()
 {
-    foreach($GLOBALS['tmp_files'] as $file) {
-        unlink($file);
+    if (isset($GLOBALS['tmp_files'])){
+        foreach($GLOBALS['tmp_files'] as $file) {
+            unlink($file);
+        }
     }
 }
 
@@ -81,7 +86,7 @@ if (POST('submit_security')) {
         if ($newpage) $pdf->AddPage();
         $pdf->EventsByRisk($limit);
     }
-    $pdf->Output();
+    $pdf->Output("OSSIM-".$date_gen.".pdf", "I");
 
 } elseif (POST('submit_metrics')) {
 
@@ -131,47 +136,91 @@ if (POST('submit_security')) {
         $pdf->Metrics("year", "attack", "host");
     }
     
-    $pdf->Output();
+    $pdf->Output("OSSIM-".$date_gen.".pdf", "I");
 
 } elseif (POST('submit_incident')) {
-    
-    $reason = $date = $location = $in_charge = "";
-    $reason = POST('reason');
-    $date   = POST('date');
-    $location  = POST('location');
-    $in_charge = POST('in_charge');
 
-    $summary       = POST('summary');
-    $metrics_notes = POST('metrics_notes');
-    $alarms_notes  = POST('alarms_notes');
-    $events_notes  = POST('events_notes');
-    
+    $alarm = POST('Alarm');
+    $event = POST('Event');
+    $metric = POST('Metric');
+    $anomaly = POST('Anomaly');
+    $vulnerability = POST('Vulnerability');
+    $type = POST('Type');
+    $in_charge = POST('In_Charge');
+    $title = POST('Title');
+    $date = POST('Date');
+    $status = POST('Status');
+
     $pdf = new PDF("OSSIM Incident Report", "P", "mm", "A4");
 
-    $pdf->IncidentGeneralData($reason, $date, $location, $in_charge, $summary);
+    $pdf->IncidentGeneralData($title, $date);
+
+    $priority = 0;
+    if (POST('High')) {
+        $priority = " (priority > 7";
+        if (POST('Medium'))
+            $priority .= " or ( priority > 4 and priority <= 7 )";
+        if (POST('Low'))
+            $priority .= " or ( priority > 0 and priority <= 4 )";
+        $priority .= ")";
+        }
+    elseif (POST('Medium')) {
+        $priority = " (priority > 4 and priority =< 7";
+        if (isset($_POST["Low"]))
+            $priority .= " or ( priority > 0 and priority <= 4 )";
+        $priority .= ")";
+        }
+    elseif (POST('Low'))
+        $priority = " ( priority > 0 and priority <= 4 )";
+
+    $fil = "";
+    if ($type != "ALL")
+         $fil .= " and type_id = '$type'";
+
+    if ($status != "ALL")
+         $fil .= " and status = '$status'";
+
+    if ($in_charge != "")
+        $fil .= " and in_charge = '$in_charge'";
 
     /* metrics */
-    $pdf->IncidentSummary(gettext("1. METRICS"), "Metric", $metrics_notes);
-    $ids = $pdf->get_metric_ids();
-    foreach ($ids as $incident_id) {
-        $pdf->Incident($incident_id);
+    if (POST('Metric')){
+        $pdf->IncidentSummary(gettext("METRICS"), "Metric", $metrics_notes, $priority, $fil);
+        $ids = $pdf->get_metric_ids($priority,$fil);
+        foreach ($ids as $incident_id) {
+            $pdf->Incident($incident_id);
+        }
     }
 
     /* alarms */
-    $pdf->IncidentSummary(gettext("2. ALARMS"), "Alarm", $alarms_notes);
-    $ids = $pdf->get_alarm_ids();
-    foreach ($ids as $incident_id) {
-        $pdf->Incident($incident_id);
+    if (POST('Alarm')){
+        $pdf->IncidentSummary(gettext("ALARMS"), "Alarm", $alarms_notes, $priority, $fil);
+        $ids = $pdf->get_alarm_ids($priority,$fil);
+        foreach ($ids as $incident_id) {
+            $pdf->Incident($incident_id);
+        }
     }
 
     /* events */
-    $pdf->IncidentSummary(gettext("3. ALERTS"), "Event", $events_notes);
-    $ids = $pdf->get_event_ids();
-    foreach ($ids as $incident_id) {
-        $pdf->Incident($incident_id);
+    if (POST('Event')){
+        $pdf->IncidentSummary(gettext("ALERTS"), "Event", $events_notes, $priority, $fil);
+        $ids = $pdf->get_event_ids($priority,$fil);
+        foreach ($ids as $incident_id) {
+            $pdf->Incident($incident_id);
+        }
     }
 
-    $pdf->Output();
+    /* vulnerabilities */
+    if (POST('Vulnerability')){
+        $pdf->IncidentSummary(gettext("VULNERABILITIES"), "Vulnerability", $vulnerabilities_notes, $priority, $fil);
+        $ids = $pdf->get_vulnerability_ids($priority,$fil);
+        foreach ($ids as $incident_id) {
+            $pdf->Incident($incident_id);
+        }
+    }
+
+    $pdf->Output("OSSIM-".$date_gen.".pdf", "I");
+
 
 }  elseif (POST('submit_alarms')) {
 
@@ -218,6 +267,7 @@ if (POST('submit_security')) {
         if ($newpage) $pdf->AddPage();
         $pdf->EventsByRisk($limit, "alarm");
     }
-    $pdf->Output();
+    
+    $pdf->Output("OSSIM-".$date_gen.".pdf");
 }
 ?>

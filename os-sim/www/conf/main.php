@@ -48,7 +48,8 @@ $CONFIG = array (
         "conf"  => array 
         (
             "frameworkd_address"    => "text",
-            "frameworkd_port"       => "text"
+            "frameworkd_port"       => "text",
+            "frameworkd_dir"       => "text"
         )
     ),
 
@@ -68,6 +69,21 @@ $CONFIG = array (
             "snort_pass"            => "password",
             "snort_host"            => "text",
             "snort_port"            => "text"
+        )
+    ),
+
+
+    "osvdb" => array 
+    (
+        "title" => gettext("Osvdb"),
+        "desc"  => gettext("Open source vulnerability database configuration") ,
+        "conf"  => array 
+        (
+            "osvdb_type"            => "text",
+            "osvdb_base"            => "text",
+            "osvdb_user"            => "text",
+            "osvdb_pass"            => "password",
+            "osvdb_host"            => "text",
         )
     ),
 
@@ -202,7 +218,20 @@ $CONFIG = array (
                 (
                     "0" => gettext("No"),
                     "1" => gettext("Yes")
-                )
+                ),
+            "vulnerability_incident_threshold" => array
+                (
+                    "0" => "0",
+                    "1" => "1",
+                    "2" => "2",
+                    "3" => "3",
+                    "4" => "4",
+                    "5" => "5",
+                    "6" => "6",
+                    "7" => "7",
+                    "8" => "8",
+                    "9" => "9",
+                ),
         )
     ),
 
@@ -258,6 +287,16 @@ $CONFIG = array (
                     "1" => gettext("Yes")
                 )     
        )
+   ),
+
+   "event_viewer" => array
+   (
+        "title" => gettext("Real time event viewer"),
+        "desc" => gettext("Real time event viewer"),
+        "conf" => array
+        (
+         "max_event_tmp" => "text"
+        )
    )
 );
 
@@ -268,7 +307,8 @@ function valid_value ($key, $value)
             "recovery",
             "threshold", 
             "use_resolv",
-            "have_scanmap3d"
+            "have_scanmap3d",
+            "max_event_tmp"
         );
 
     if (in_array($key, $numeric_values)) {

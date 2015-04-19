@@ -11,6 +11,7 @@ class Upgrade
 {
     var $upgrades_path;
     var $conn;
+    var $snort;
     var $conf; // $GLOBALS["CONF"] from ossim_conf.inc
     var $about;
     var $ossim_dbtype;
@@ -38,6 +39,7 @@ class Upgrade
         
         $db = new ossim_db();
         $this->conn = $db->connect();
+        $this->snort = $db->snort_connect();
         $this->conf = $GLOBALS["CONF"];
         $this->ossim_dbtype = $this->conf->get_conf("ossim_type"); // ej: mysql
         $this->about = new About();
@@ -233,6 +235,7 @@ class Upgrade
         $this->php = new $class;
         // Make some useful properties available to it
         $this->php->conn  = &$this->conn;
+        $this->php->snort = &$this->snort;
         $this->php->conf  = &$this->conf;
         $this->php->about = &$this->about;
         $this->php->ossim_dbtype = $this->ossim_dbtype;

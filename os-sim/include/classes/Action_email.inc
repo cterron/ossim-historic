@@ -1,6 +1,6 @@
 <?php
 
-require_once("ossim_db.inc");
+require_once "ossim_db.inc";
 
 class Action_email {
 
@@ -13,10 +13,10 @@ class Action_email {
     function Action_email ($action_id, $from, $to, $subject, $message)
     {
         $this->action_id    = $action_id;
-        $this->from         = mysql_escape_string($from);
-        $this->to           = mysql_escape_string($to);
-        $this->subject      = mysql_escape_string($subject);
-        $this->message      = mysql_escape_string($message);
+        $this->from         = $from;
+        $this->to           = $to;
+        $this->subject      = $subject;
+        $this->message      = $message;
     }
 
     function get_action_id()    { return $this->action_id; }

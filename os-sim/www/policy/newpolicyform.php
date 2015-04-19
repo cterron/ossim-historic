@@ -21,6 +21,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     require_once ('classes/Net.inc');
     require_once ('classes/Port_group.inc');
     require_once ('classes/Plugingroup.inc');
+    require_once ('classes/Server.inc');
     require_once ('classes/Sensor.inc');
     require_once ('ossim_db.inc');
     $db = new ossim_db();
@@ -362,11 +363,112 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
       </table>
     </td>
   </tr>
+
+  <tr>
+    <th><?=_("Targets").required()?><br/>
+        <font size="-2">
+          <a href="../sensor/newsensorform.php"><?=_("Insert new sensor?")?></a>
+        </font><br/>
+        <font size="-2">
+          <a href="../server/newserverform.php"><?=_("Insert new server?")?></a>
+        </font><br/>
+    </th>
+    <td class="left">
+<?php
+
+    /* ===== target sensors ==== */
+    $i = 1;
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
+        foreach($sensor_list as $sensor) {
+            $sensor_name = $sensor->get_name();
+            $sensor_ip =   $sensor->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "targetsensor"; ?>"
+            value="<?php echo count($sensor_list); ?>">
+<?php
+            }
+            $name = "targboxsensor" . $i;
+?>
+        <input type="checkbox" name="<?php echo $name;?>"
+            value="<?php echo $sensor_name; ?>">
+            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+
+?>
+<?php
+    /* ===== target servers ==== */
+    $i = 1;
+    if ($server_list = Server::get_list($conn, "ORDER BY name")) {
+        foreach($server_list as $server) {
+            $server_name = $server->get_name();
+            $server_ip =   $server->get_ip();
+            if ($i == 1) {
+?>
+        <input type="hidden" name="<?php echo "targetserver"; ?>"
+            value="<?php echo count($server_list); ?>">
+<?php
+            }
+            $name = "targboxserver" . $i;
+?>
+        <input type="checkbox" name="<?php echo $name;?>"
+            value="<?php echo $server_name; ?>">
+            <?php echo $server_ip . " (" . $server_name . ")<br>";?>
+        </input>
+<?php
+            $i++;
+        }
+    }
+
+   /* == ANY target == */
+?>
+    <input type="checkbox" name="target_any"
+           value="any" checked>&nbsp;<b><?=_("ANY")?></b><br></input>
+
+  <tr>
+    <th> <?= _("Correlate events").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="correlate" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="correlate" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?= _("Cross Correlate events").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="cross_correlate" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="cross_correlate" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
   <tr>
     <th> <?= _("Store events").required() ?> </th>
     <td class="left">
     <input type="radio" name="store" value="1" checked> <?= _("Yes"); ?>
     <input type="radio" name="store" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?= _("Qualify events").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="qualify" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="qualify" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?= _("Resend alarms").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="resend_alarms" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="resend_alarms" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
+  <tr>
+    <th> <?= _("Resend events").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="resend_events" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="resend_events" value="0" > <?= _("No"); ?>
     </td>
   </tr>
 

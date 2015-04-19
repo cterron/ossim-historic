@@ -6,7 +6,7 @@
     file.
     Verbose = no means only send a summary.
 --> 
-<plugin id="4001" process="osiris" type="detector" start="no" enable="no">
+<plugin id="4001" process="osirisd" type="detector" start="no" enable="no">
     <startup></startup>
     <shutdown></shutdown>
     <source>syslog</source>

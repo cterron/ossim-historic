@@ -159,7 +159,9 @@ class Agent:
             ParserSyslog, \
             ParserPostfix, \
             ParserNetscreen, \
-            ParserJuniperFW 
+            ParserJuniperFW, \
+            ParserHeartbeat, \
+            ParserNagios
 #            ParserIntruShield
 
         parsers = {
@@ -186,6 +188,8 @@ class Agent:
             "1520":     ParserNetscreen.ParserNetscreen,
             "1521":     ParserPostfix.ParserPostfix,
             "1522":     ParserJuniperFW.ParserJuniperFW,
+            "1523":     ParserHeartbeat.ParserHeartbeat,
+            "1525":     ParserNagios.ParserNagios,
             "4001":     ParserOsiris.ParserOsiris,
             "4002":     ParserSyslog.ParserSyslog,
         }

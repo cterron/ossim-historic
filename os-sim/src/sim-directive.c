@@ -58,9 +58,9 @@ struct _SimDirectivePrivate {
 
   gboolean   matched;	//this is filled in the last level of the directive
 
-  GTime      time_out;
+  time_t      time_out;
   gint64     time;
-  GTime      time_last;
+  time_t      time_last;
 
   GNode     *rule_root; //this is tested in sim_rule_match_by_event. It's a SimRule.
   GNode     *rule_curr;
@@ -429,7 +429,7 @@ void sim_directive_set_priority (SimDirective   *directive,
  *
  *
  */
-GTime
+time_t
 sim_directive_get_time_out (SimDirective   *directive)
 {
   g_return_val_if_fail (directive, 0);
@@ -446,7 +446,7 @@ sim_directive_get_time_out (SimDirective   *directive)
  */
 void 
 sim_directive_set_time_out (SimDirective   *directive,
-			    GTime           time_out)
+			    time_t           time_out)
 {
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
@@ -461,7 +461,7 @@ sim_directive_set_time_out (SimDirective   *directive,
  *
  *
  */
-GTime
+time_t
 sim_directive_get_time_last (SimDirective   *directive)
 {
   g_return_val_if_fail (directive, 0);
@@ -477,7 +477,7 @@ sim_directive_get_time_last (SimDirective   *directive)
  *
  */
 void sim_directive_set_time_last (SimDirective   *directive,
-				  GTime           time_last)
+				  time_t           time_last)
 {
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
@@ -590,11 +590,11 @@ sim_directive_get_curr_rule (SimDirective  *directive)
  *
  *
  */
-GTime
+time_t
 sim_directive_get_rule_curr_time_out_max (SimDirective  *directive)
 {
   GNode  *node;
-  GTime   time_out = 0;
+  time_t   time_out = 0;
 
   g_return_val_if_fail (directive, 0);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), 0);
@@ -605,7 +605,7 @@ sim_directive_get_rule_curr_time_out_max (SimDirective  *directive)
   while (node)
     {
       SimRule *rule = (SimRule *) node->data;
-      GTime   time = sim_rule_get_time_out (rule);
+      time_t   time = sim_rule_get_time_out (rule);
 
       if (!time)
 	return 0;
@@ -696,7 +696,7 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
     
     if (sim_rule_match_by_event (rule, event))
 		{
-		  GTime time_last = time (NULL);
+		  time_t time_last = time (NULL);
 			directive->_priv->rule_curr = node;		//each time that the event matches, the directive goes down one level to 
 																						//the node that matched. next time, the event will be checked against this level
 																						//FIXME: may be that there are a memory leak in the parent node? 
@@ -759,7 +759,7 @@ sim_directive_backlog_match_by_not (SimDirective  *directive)
 		//if the rule is timeouted &&       
     if ((sim_rule_is_time_out (rule)) && (sim_rule_get_not (rule)) && (!sim_rule_is_not_invalid (rule))) 
 		{
-		  GTime time_last = time (NULL);
+		  time_t time_last = time (NULL);
 	  	directive->_priv->rule_curr = node;
 		  directive->_priv->time_last = time_last;
 		  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);

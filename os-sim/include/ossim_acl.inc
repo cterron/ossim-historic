@@ -127,9 +127,9 @@ $ACL_MAIN_MENU = array (
                     "name"          => "Policy -> Sensors",
                     "default_perm"  => false
                 ),
-            "PolicySignatures" => array
+            "PolicyServers" => array
                 (
-                    "name"          => "Policy -> PolicySignatures",
+                    "name"          => "Policy -> PolicyServers",
                     "default_perm"  => false
                 ),
             "PolicyPorts" => array
@@ -197,6 +197,11 @@ $ACL_MAIN_MENU = array (
                 (
                     "name"          => "Incidents -> Tags",
                     "default_perm"  => false
+                ),
+            "Osvdb"  => array
+                (
+                    "name"          => "Incidents -> Osvdb",
+                    "default_perm"  => true
                 ),
         ),
     "MenuMonitors"      => array

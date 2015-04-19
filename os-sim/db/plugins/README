@@ -1,0 +1,36 @@
+
+ +-----------+----------------+----------+
+ | plugin_id | plugin_name    | type     |
+ +-----------+----------------+-----------
+ | 1001-1124 | snort          | detector |
+ |      1501 | apache         | detector |
+ |      1502 | iis            | detector |
+ |      1503 | iptables       | detector |
+ |      1506 | realsecure     | detector |
+ | 1507,1508 | rrd            | detector |
+ |      1510 | cisco-router   | detector |
+ |      1511 | p0f            | detector |
+ |      1512 | arpwatch       | detector |
+ |      1515 | cisco-ids      | detector |
+ |      1516 | pads           | detector |
+ |      1517 | ntsyslog       | detector |
+ |      1519 | netgear        | detector |
+ |      1520 | netscreen      | detector |
+ |      1521 | postfix        | detector |
+ |      1522 | netscreen-fw   | detector |
+ |      1523 | heartbeat      | detector |
+ |      1524 | spamassassin   | detector |
+ |      1525 | nagios         | detector |
+ +-----------+----------------+----------+
+ |      2001 | ossim-ca       | monitor  |
+ |      2004 | opennms        | monitor  |
+ |      2005 | ntop           | monitor  | * INCOMPLETE!
+ |      2006 | tcptrack       | monitor  |
+ |      2008 | nmap           | monitor  |
+ +-----------+----------------+----------+
+ |      4003 | ssh            | detector |
+ |      4004 | pam_unix       | detector |
+ |      4005 | sudo           | detector |
+ +-----------+----------------+----------+
+
+

@@ -157,13 +157,17 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         $ossim_link = $conf->get_conf("ossim_link");
         $acid_prefix = $conf->get_conf("event_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
-        
-        if (!strcmp($target, "ip_src")){
-            if($report_type == "alarm") $target = "src_ip";
-            $title = "Attacker hosts";
-        } elseif (!strcmp($target, "ip_dst")){
-            if($report_type == "alarm") $target = "dst_ip";
-            $title = "Attacked hosts";
+
+        if (!strcmp($target, "ip_src")) {
+            if ($report_type == "alarm") {
+                $target = "src_ip";
+            }
+            $title = _("Attacker hosts");
+        } elseif (!strcmp($target, "ip_dst")) {
+            if ($report_type == "alarm") {
+                $target = "dst_ip";
+            }
+            $title = _("Attacked hosts");
         }
 ?>
         <h2>Top <?php echo "$NUM_HOSTS $title" ?></h2>
@@ -181,14 +185,12 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 
                 $ip = $l[0];
                 $occurrences = number_format($l[1], 0, ",", ".");
-                $hostname = Host::ip2hostname(
-                    $security_report->ossim_conn, $ip);
-                $os_pixmap = Host_os::get_os_pixmap(
-                    $security_report->ossim_conn, $ip);
-                if($report_type == "alarm"){
-                    if($target == "ip_src"){
+                $hostname = Host::ip2hostname($security_report->ossim_conn, $ip);
+                $os_pixmap = Host_os::get_os_pixmap($security_report->ossim_conn, $ip);
+                if ($report_type == "alarm") {
+                    if ($target == "src_ip") {
                         $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip; 
-                    } elseif($target == "ip_dst"){
+                    } elseif ($target == "dst_ip") {
                         $link = "$ossim_link/control_panel/alarm_console.php?dst_ip=" . $ip; 
                     } else {
                         $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip . "&dst_ip=" . $ip; 
@@ -276,9 +278,8 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 ?>
           <tr>
              <?php
-                if($report_type == "alarm"){
-                    // XXX $ip is missing, are we using this type of report?
-                    $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip . "&dst_ip=" . $ip; 
+                if ($report_type == "alarm") {
+                    $link = "$ossim_link/control_panel/alarm_console.php"; 
                 } else {
                     $link = "$acid_link/".$acid_prefix."_qry_main.php?new=1&" . 
                     "sig[0]==&" . 

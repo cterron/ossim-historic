@@ -113,7 +113,7 @@ class ParserSnort(Parser.Parser):
         
         start_time = time.time()
  
-        patternl1 = re.compile('^(\d+)/(\d+)-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?')
+        patternl1 = re.compile('^(\d+)/(\d+)(/?(\d\d))?-(\d\d:\d\d:\d\d).*{(\w+)}\s+([\d\.]+):?(\d+)?\s+..\s+([\d\.]+):?(\d+)?')
         patternl2 = re.compile('\[(\d+):(\d+):\d+\]')
         patternl3 = re.compile('\[Priority:\s+(\d+)\]')
         patternl4 = re.compile('\[(\d+):(\d+)\]$')
@@ -181,10 +181,12 @@ class ParserSnort(Parser.Parser):
                 
                 if result1 is not None:
 
-                    (month, day, date, protocol, 
+                    (month, day, placeholder, year, date, protocol, 
                      src_ip, src_port, dst_ip, dst_port) = result1.groups()
 
-                    year = time.strftime('%Y', time.localtime(time.time()))
+                    if year is None:
+                        year = time.strftime('%Y', time.localtime(time.time()))
+
                     date = year + '-' + month + '-' + day + ' ' + date
                     self.agent.sendEvent  (type = 'detector',
                                      date       = date,

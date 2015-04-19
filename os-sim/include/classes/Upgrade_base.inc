@@ -8,6 +8,7 @@ class upgrade_base
      */
     var $upgrades_path;
     var $conn;
+    var $snort;
     var $conf;
     var $about;
     var $ossim_dbtype;

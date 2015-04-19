@@ -95,8 +95,10 @@ sim_event_impl_finalize (GObject  *gobject)
 	g_free (event->userdata7);
 	g_free (event->userdata8);
 	g_free (event->userdata9);
-
+  
   g_free (event->buffer);
+
+	g_free (event->plugin_sid_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -118,17 +120,20 @@ sim_event_instance_init (SimEvent *event)
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_event_instance_init");
 
   event->id = 0;
+  event->id_tmp = 0;
   event->snort_sid = 0;
   event->snort_cid = 0;
 
   event->type = SIM_EVENT_TYPE_NONE;
 
   event->time = time (NULL);
+  event->diff_time = 0;
   event->sensor = NULL;
   event->interface = NULL;
 
   event->plugin_id = 0;
   event->plugin_sid = 0;
+  event->plugin_sid_name = NULL;
 
   event->plugin = NULL;
   event->pluginsid = NULL;
@@ -144,12 +149,12 @@ sim_event_instance_init (SimEvent *event)
   event->interval = 0;
 
   event->alarm = FALSE;
-  event->priority = 1;
-  event->reliability = 1;
-  event->asset_src = 1;
+  event->priority = 0;
+  event->reliability = 0;
+  event->asset_src = 1; //can't be changed to 0: among other things, event_directive won't work then!
   event->asset_dst = 1;
-  event->risk_c = 1;
-  event->risk_a = 1;
+  event->risk_c = 0;
+  event->risk_a = 0;
 
   event->data = NULL;
   event->log = NULL;
@@ -164,7 +169,9 @@ sim_event_instance_init (SimEvent *event)
   event->rserver = FALSE;
   event->store_in_DB = TRUE; //we want to store everything by default
 
-	event->is_correlated = FALSE;
+	event->is_correlated = FALSE;	//local mode
+	event->is_prioritized = FALSE;	//this is sent across network
+	event->is_reliability_setted = FALSE;	//local only at this time
 
 	event->data_storage = NULL;
 	
@@ -309,6 +316,7 @@ sim_event_clone (SimEvent       *event)
 
   new_event->plugin = event->plugin;
   new_event->pluginsid = event->pluginsid;
+	(event->plugin_sid_name) ? new_event->plugin_sid_name = g_strdup (event->plugin_sid_name) : NULL;
 
   new_event->protocol = event->protocol;
   (event->src_ia) ? new_event->src_ia = gnet_inetaddr_clone (event->src_ia): NULL;
@@ -1025,6 +1033,81 @@ sim_event_sanitize (SimEvent *event)
 	sim_string_substitute_char (event->log, ';', ','); 
 		
 }
+
+/*
+ * This query will insert event into the event_tmp table. This is needed for the dinamic event viewer
+ * in the framework.
+ *
+ */
+gchar*
+sim_event_get_insert_into_event_tmp_clause (SimEvent   *event)
+{
+  gchar    timestamp[TIMEBUF_SIZE];
+  gchar   *query;
+  gint     c;
+  gint     a;
+
+  g_return_val_if_fail (event, NULL);
+  g_return_val_if_fail (SIM_IS_EVENT (event), NULL);
+
+  c = rint (event->risk_c);
+  a = rint (event->risk_a);
+
+  if (c < 0)
+    c = 0;
+  else if (c > 10)
+    c = 10;
+  if (a < 0)
+    a = 0;
+  else if (a > 10)
+    a = 10;
+
+  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+
+  query = g_strdup_printf ("INSERT INTO event_tmp "
+			   "(id, timestamp, sensor, interface, type, plugin_id, plugin_sid, plugin_sid_name, " 
+			   "protocol, src_ip, dst_ip, src_port, dst_port, "
+			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
+				 "filename, username, password, userdata1, userdata2, userdata3, userdata4, userdata5, userdata6, userdata7, userdata8, userdata9)"
+			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d, '%s',"
+			   " %d, %lu, %lu, %d, %d, "
+				 " %d, %d, %d, %d, %d, %d, %d,"
+				 " '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+         event->id_tmp,
+			   timestamp,
+			   (event->sensor) ? event->sensor : "",
+			   (event->interface) ? event->interface : "",
+			   event->type,
+			   event->plugin_id,
+			   event->plugin_sid,
+				 event->plugin_sid_name,
+			   event->protocol,
+			   (event->src_ia) ? sim_inetaddr_ntohl (event->src_ia) : -1,
+			   (event->dst_ia) ? sim_inetaddr_ntohl (event->dst_ia) : -1,
+			   event->src_port,
+			   event->dst_port,
+			   event->priority,
+			   event->reliability,
+			   event->asset_src,
+			   event->asset_dst,
+			   c, a,
+			   event->alarm,
+				 event->filename,
+				 event->username,
+				 event->password,
+				 event->userdata1,
+				 event->userdata2,
+				 event->userdata3,
+				 event->userdata4,
+				 event->userdata5,
+				 event->userdata6,
+				 event->userdata7,
+				 event->userdata8,
+				 event->userdata9);
+
+  return query;
+}
+
 
 // vim: set tabstop=2:
 

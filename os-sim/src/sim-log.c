@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 
 /****debug****/
 #include <stdio.h>
@@ -74,6 +75,36 @@ sim_log_reopen(void)
   }
 
 	return ok;
+}
+
+/*
+ * Return a log timestamp. Die if case of errors
+ * The user must deallocate the string
+ */
+
+inline gchar *sim_log_timestamp(void){
+   gchar *msg;
+   time_t t;
+  struct tm ltime;
+  char timebuf[TIMEBUF_SIZE];
+  if ((t = time(NULL))==(time_t)-1){
+       g_message("OSSIM-Critical: can't obtain current time in %s:%s",__FILE__,__LINE__);
+    exit(EXIT_FAILURE);
+  }
+  if (localtime_r(&t,&ltime)==NULL){
+     g_message("OSSIM-Critical: can't obtain local time in %s:%s",__FILE__,__LINE__);
+    exit(EXIT_FAILURE);
+  }
+  if (strftime(timebuf,TIMEBUF_SIZE,"%F %T",&ltime)==0){
+   g_message("OSSIM-Critical: can't generate timestamp in %s:%s",__FILE__,__LINE__);
+   exit(EXIT_FAILURE);
+  }
+  msg = g_strdup(timebuf);
+  if (msg == NULL){
+    g_message("OSSIM-Critical: can't generate timestamp in %s:%s",__FILE__,__LINE__);
+    exit(EXIT_FAILURE);
+  }
+  return msg;
 }
 
 /*
@@ -117,7 +148,8 @@ sim_log_handler (const gchar     *log_domain,
                  const gchar     *message,
                  gpointer         data)
 {
-  gchar   *msg;
+  gchar   *msg = NULL;
+  gchar   *timestamp = NULL;
 
   g_return_if_fail (message);
   g_return_if_fail (ossim.log.fd);
@@ -125,34 +157,35 @@ sim_log_handler (const gchar     *log_domain,
   if (ossim.log.level < log_level)
     return;
 
+  timestamp = sim_log_timestamp();
   switch (log_level)
-    {
+  {
       case G_LOG_LEVEL_ERROR: /*A G_LOG_LEVEL_ERROR is always a FATAL error. FIXME?.  */
-        msg = g_strdup_printf ("%s-Error: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Error: %s\n",timestamp,log_domain, message);
         sim_log_write(msg,log_domain);
         break;
       case G_LOG_LEVEL_CRITICAL:
-        msg = g_strdup_printf ("%s-Critical: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Critical: %s\n",timestamp, log_domain, message);
         sim_log_write(msg,log_domain);
         break;
       case G_LOG_LEVEL_WARNING:
-        msg = g_strdup_printf ("%s-Warning: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Warning: %s\n", timestamp, log_domain, message);
         sim_log_write(msg,log_domain);
         break;
       case G_LOG_LEVEL_MESSAGE:
-        msg = g_strdup_printf ("%s-Message: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Message: %s\n", timestamp, log_domain, message);
         sim_log_write(msg,log_domain);
         break;
       case G_LOG_LEVEL_INFO:
-        msg = g_strdup_printf ("%s-Info: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Info: %s\n", timestamp,log_domain, message);
         sim_log_write(msg,log_domain);
         break;
       case G_LOG_LEVEL_DEBUG:
-//					fprintf(stdout, "--%s--\n", message); fflush(stdout);
-        msg = g_strdup_printf ("%s-Debug: %s\n", log_domain, message);
+        msg = g_strdup_printf ("%s %s-Debug: %s\n",timestamp, log_domain, message);
         sim_log_write(msg,log_domain);
         break;
-    }
+  }
+  g_free(timestamp);
 }
 
 

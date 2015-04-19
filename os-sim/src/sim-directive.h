@@ -93,12 +93,12 @@ void              sim_directive_set_backlog_id                  (SimDirective   
 gchar*            sim_directive_get_name                        (SimDirective     *directive);
 void              sim_directive_set_name                        (SimDirective     *directive,
 								 const gchar      *name);
-GTime             sim_directive_get_time_out                    (SimDirective     *directive);
+time_t             sim_directive_get_time_out                    (SimDirective     *directive);
 void              sim_directive_set_time_out                    (SimDirective     *directive,
-								 GTime             time_out);
-GTime             sim_directive_get_time_last                   (SimDirective     *directive);
+								 time_t             time_out);
+time_t             sim_directive_get_time_last                   (SimDirective     *directive);
 void              sim_directive_set_time_last                   (SimDirective     *directive,
-								 GTime             time_out);
+								 time_t             time_out);
 
 GNode*            sim_directive_get_root_node                   (SimDirective     *directive);
 void              sim_directive_set_root_node                   (SimDirective     *directive,
@@ -112,7 +112,7 @@ SimRule*          sim_directive_get_curr_rule                   (SimDirective   
 
 gint              sim_directive_get_rule_level                  (SimDirective     *directive);
 
-GTime             sim_directive_get_rule_curr_time_out_max      (SimDirective     *directive);
+time_t             sim_directive_get_rule_curr_time_out_max      (SimDirective     *directive);
 
 void              sim_directive_append_action                   (SimDirective     *directive,
 								 SimAction        *action);

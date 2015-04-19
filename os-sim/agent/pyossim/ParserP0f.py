@@ -26,7 +26,9 @@ class ParserP0f(Parser.Parser):
 
         os_hash = {}
 
-        pattern = '<\S+\s+(\S+)\s+(\S+)\s+(\d+):(\d+):(\d+)\s+(\S+)>\s+(\d+\.\d+\.\d+\.\d+):\d+\s+-\s+([^\(]*)'
+        # We only want the name of OS
+#        pattern = '<\S+\s+(\S+)\s+(\S+)\s+(\d+):(\d+):(\d+)\s+(\S+)>\s+(\d+\.\d+\.\d+\.\d+):\d+\s+-\s+([^\(]*)'
+        pattern = '<\S+\s+(\S+)\s+(\S+)\s+(\d+):(\d+):(\d+)\s+(\S+)>\s+(\d+\.\d+\.\d+\.\d+):\d+\s+-\s+(\S+)'
             
         location = self.plugin["location"]
 
@@ -101,7 +103,7 @@ class ParserP0f(Parser.Parser):
                              host       = source,
                              os         = ops,
                              date       = date,
-			                 sensor     = self.plugin["sensor"],							  
+                             sensor     = self.plugin["sensor"],							  
                              iface      = self.plugin["interface"],
                              plugin_id  = self.plugin["id"],
                              plugin_sid = 1,

@@ -42,9 +42,11 @@
 #include "sim-enums.h"
 #include "sim-config.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
 
 #define SIM_TYPE_DATABASE                  (sim_database_get_type ())
 #define SIM_DATABASE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_DATABASE, SimDatabase))
@@ -74,16 +76,15 @@ struct _SimDatabaseClass {
 GType           sim_database_get_type                        (void);
 SimDatabase*    sim_database_new                             (SimConfigDS  *config);
 gint            sim_database_execute_no_query                (SimDatabase  *database,
-							      const gchar  *buffer);
+																												      const gchar  *buffer);
 GdaDataModel*   sim_database_execute_single_command          (SimDatabase  *database,
-							      const gchar  *buffer);
+																												      const gchar  *buffer);
+gchar*					sim_database_get_name												(SimDatabase  *database);
 
 G_END_DECLS
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* __SIM_DATABASE_H__ */
 
 // vim: set tabstop=2:

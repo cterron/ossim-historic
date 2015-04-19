@@ -65,8 +65,7 @@ class Scan {
     function ping_scan()
     {
         $command = sprintf(NMAP_PING_SCAN_COMMAND, $this->nmap, $this->network);
-        $this->__ping_scan_process_output
-            ($this->__get_command_output($command));
+        $this->__ping_scan_process_output($this->__get_command_output($command));
     }
 
     function __ping_scan_process_output($output)
@@ -75,10 +74,11 @@ class Scan {
         {
             if (preg_match(NMAP_PING_SCAN_REGEXP, $line, $regs)) 
             {
-                $this->scan[$regs[1]] = array ("ip"        => $regs[1],
-                                               "mac"       => "",
-                                               "os"        => "",
-                                               "services"  => array ());
+                $this->scan[$regs[1]] = array ("ip"         => $regs[1],
+                                               "mac"        => "",
+                                               "mac_vendor" => "",
+                                               "os"         => "",
+                                               "services"   => array ());
             }
         }
     }
@@ -97,7 +97,7 @@ class Scan {
         {
             /* mac */
             if (preg_match(NMAP_MAC_ADDRESS_REGEXP, $line, $regs)) {
-                $this->scan[$ip]["mac"] = $regs[1];
+                $this->scan[$ip]["mac"] = strtoupper($regs[1]);
                 $this->scan[$ip]["mac_vendor"] = $regs[2];
             
             /* os */

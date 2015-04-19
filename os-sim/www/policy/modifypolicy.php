@@ -18,14 +18,20 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 <?php
 require_once 'classes/Security.inc';
 
-$id         = GET('id');
-$priority   = POST('priority');
-$begin_hour = POST('begin_hour');
-$end_hour   = POST('end_hour');
-$begin_day  = POST('begin_day');
-$end_day    = POST('end_day');
-$descr      = POST('descr');
-$store      = POST('store');
+$id              = GET('id');
+$priority        = POST('priority');
+$begin_hour      = POST('begin_hour');
+$end_hour        = POST('end_hour');
+$begin_day       = POST('begin_day');
+$end_day         = POST('end_day');
+$descr           = POST('descr');
+$correlate       = POST('correlate');
+$cross_correlate = POST('cross_correlate');
+$store           = POST('store');
+$qualify         = POST('qualify');
+$resend_alarms   = POST('resend_alarms');
+$resend_events   = POST('resend_events');
+$target_any      = POST('target_any');
 
 ossim_valid($priority, OSS_NULLABLE, OSS_DIGIT, OSS_SCORE, 'illegal:'._("Priority"));
 ossim_valid($begin_hour, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Begin hour"));
@@ -34,6 +40,7 @@ ossim_valid($end_day, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._
 ossim_valid($end_hour, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("End hour"));
 ossim_valid($descr, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("Description"));
 ossim_valid($store, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("Store"));
+ossim_valid($target_any, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Target any"));
 ossim_valid($id, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Policy id"));
 
 if (ossim_error()) {
@@ -193,6 +200,48 @@ if(POST('insert')) {
         die(ossim_error("At least one Sensor required"));
     }
 
+    /* targets (sensors) */
+    $targets_sen = array();
+    for ($i = 1; $i <= POST('targetsensor'); $i++) {
+        $name = "targboxsensor" . $i;
+
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $targets_sen[] = POST("$name");
+        }
+
+    }
+
+    /* targets (servers) */
+    $targets_ser = array();
+    for ($i = 1; $i <= POST('targetserver'); $i++) {
+        $name = "targboxserver" . $i;
+
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $targets_ser[] = POST("$name");
+        }
+
+    }
+    if (!count($targets_sen) && !count($targets_ser) && (strcasecmp($target_any,"any"))) {
+        die(ossim_error("At least one Target is required"));
+    }
+
+    $target = array_merge((array)$targets_sen, (array)$targets_ser);
+    if(!strcasecmp($target_any,"any")) array_push($target, "any");
+
     require_once ('classes/Policy.inc');
     require_once ('ossim_db.inc');
     $db = new ossim_db();
@@ -202,7 +251,9 @@ if(POST('insert')) {
     Policy::update($conn, $id, $priority, $begin_hour, $end_hour, 
                    $begin_day, $end_day, $descr,
                    $source_ips, $dest_ips, $source_nets, $dest_nets,
-                   $ports, $plug_groups, $sensors, $store);
+                   $ports, $plug_groups, $sensors, 
+                   $target,
+                   $correlate, $cross_correlate, $store, $qualify, $resend_alarms, $resend_events);
 ?>
     <p> <?php echo gettext("Policy succesfully updated"); ?> </p>
     <p><a href="policy.php">

@@ -125,6 +125,14 @@ void							sim_session_resend_buffer										(gchar *buffer);
 gchar*						sim_session_get_hostname										(SimSession *session);	
 void							sim_session_set_hostname										(SimSession *session,
 																																gchar			*hostname);
+void							sim_session_set_is_initial									(SimSession *session,
+																											          gboolean tf);
+gboolean					sim_session_get_is_initial									(SimSession *session);
+void							sim_session_set_fully_stablished						(SimSession *session);
+void							sim_session_wait_fully_stablished						(SimSession *session);
+void							sim_session_set_id													(SimSession *session,
+																															gint id);
+gint							sim_session_get_id													(SimSession *session);
 
 G_END_DECLS
 

@@ -8,9 +8,11 @@ controlpanel_DATA = backlog.php \
 	os.php \
 	handle_mac.php \
 	handle_services.php \
+	find_peaks.php \
 	global_score.php \
 	alarm_console.php \
 	events.php \
+	event_panel.php \
 	anomalies.php \
 	visualize.php \
 	rrd_anomaly.php \

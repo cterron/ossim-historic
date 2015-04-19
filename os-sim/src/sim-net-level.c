@@ -140,8 +140,8 @@ sim_net_level_new (const gchar  *name,
 
   g_return_val_if_fail (name, NULL);
 
-  if (c < 1) c = 1;
-  if (a < 1) a = 1;
+	if (c < 0) c = 0;
+  if (a < 0) a = 0;
 
   net_level = SIM_NET_LEVEL (g_object_new (SIM_TYPE_NET_LEVEL, NULL));
   net_level->_priv->name = g_strdup (name);
@@ -398,4 +398,20 @@ sim_net_level_get_delete_clause (SimNetLevel  *net_level)
 
   return query;
 }
+
+void
+sim_net_level_debug_print (SimNetLevel  *net_level)
+{
+  g_return_if_fail (net_level);
+  g_return_if_fail (SIM_IS_NET_LEVEL (net_level));
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_net_level_debug_print");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                name host: %s", net_level->_priv->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                c: %f", net_level->_priv->c);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                a: %f", net_level->_priv->a);
+
+
+}
+
+
 // vim: set tabstop=2:

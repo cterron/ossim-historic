@@ -9,17 +9,14 @@ class Host_services{
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
         
-		$list = array();
-		$nanoms = 0;
+	$list = array();
 
-		$nanoms = (int) $nanoms;
-		$sup = (int) $sup;
-		$inf = (int) $sup;
-
-		$nanoms = $sup - $inf;
+	$nanoms = $sup - $inf;
 
         $sql = "SELECT distinct ip, port, sensor FROM host_services LIMIT ? OFFSET ?";
         $params = array($nanoms, $inf);
+
+        $list = array();
 
         if (!$ips = &$conn->Execute($sql, $params)){
             print $conn->ErrorMsg();
@@ -84,8 +81,8 @@ class Host_services{
                         }
                 
                     }
-            }
-            $ips->MoveNext();
+                }
+                $ips->MoveNext();
             }
         } 
         return $list;
@@ -184,63 +181,58 @@ class Host_services{
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
 
-        $sql = "SELECT distinct ip, port, sensor FROM host_services";
         $list = array();
+
+        $sql = "SELECT distinct inet_ntoa(ip) as ip, port, inet_ntoa(sensor) as sensor FROM host_services";
+
         if (!$ips = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             $num_anom = 0;
             while ((!$ips->EOF) && (($num_anom < $limit) || ($limit == "all"))) {
-                $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor,  inet_ntoa(ip) as ip_addr from host_services where
-                        ip = ? and sensor = ? and port = ? order by date desc";
-                $params = array($ips->fields["ip"], $ips->fields["sensor"], $ips->fields["port"]);
-                if (!$aux = &$conn->Execute($sql, $params)) {
-                    print $conn->ErrorMsg();
-                } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or 
-                           (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-                {
-                    $ip        = $aux->fields["ip_addr"];
-                    $port      = $aux->fields["port"];
-                    $protocol  = $aux->fields["protocol"];
-                    $version   = $aux->fields["version"];
-                    $service   = $aux->fields["service"];
-                    $service_type = $aux->fields["service_type"];
-                    $origin    = $aux->fields["origin"];
-                    $date      = $aux->fields["date"];
-                    $sensor    = $aux->fields["ip_sensor"];
-                    $interface = $aux->fields["interface"];
-                    if ((!$aux->EOF) && ($aux->RecordCount() > 1)) {
-                        $aux->MoveNext();
-                    }    
-                    if ($aux->RecordCount() > 1) { 
-                        $old_protocol  = $aux->fields["protocol"];
-                        $old_version   = $aux->fields["version"];
-                        $old_service   = $aux->fields["service"];
-                        $old_service_type = $aux->fields["service_type"];
-                        $old_origin    = $aux->fields["origin"];
-                        $old_date = $aux->fields["date"];
-                        $control = 0;    
-                        while ((!$aux->EOF) && ($control == "0")) {
-                            $old_protocol  = $aux->fields["protocol"];
-                            $old_version   = $aux->fields["version"];
-                            $old_service   = $aux->fields["service"];
-                            $old_service_type = $aux->fields["service_type"];
-                            $old_origin    = $aux->fields["origin"];
-                            $old_date = $aux->fields["date"];
-                            if ($aux->fields["anom"] == "0") $control = "1"; 
-                            $aux->MoveNext();
-                        }
-                        $num_anom++;
-                        $list[] = array("ip" => $ip, "port" => $port, "date" => $date, "old_date" => $old_date,
-                                        "protocol" => $protocol, "old_protocol" => $old_protocol, "service" => $service,
-                                        "old_service" => $old_service, "service_type" => $service_type,
-                                        "old_service_type" => $old_service_type, "version" => $version, "old_version" => $old_version, 
-                                        "origin" => $origin, "old_origin" => $old_origin,
-                                        "sensor" => $sensor, "interface" => $interface);
-                    }
+                if ( (Session::hostAllowed($conn, $ips->fields["ip"])) and (Session::hostAllowed($conn, $ips->fields["sensor"])) ) {
+			$sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr from host_services where
+				ip = inet_aton(?) and sensor = inet_aton(?) and port = ? order by date desc";
+			$params = array($ips->fields["ip"], $ips->fields["sensor"], $ips->fields["port"]);
+			if (!$aux = &$conn->Execute($sql, $params)) {
+			    print $conn->ErrorMsg();
+			} elseif ($aux->fields["anom"] != "0") {
+			    $ip        = $aux->fields["ip_addr"];
+			    $port      = $aux->fields["port"];
+			    $protocol  = $aux->fields["protocol"];
+			    $version   = $aux->fields["version"];
+			    $service   = $aux->fields["service"];
+			    $service_type = $aux->fields["service_type"];
+			    $origin    = $aux->fields["origin"];
+			    $date      = $aux->fields["date"];
+			    $sensor    = $aux->fields["ip_sensor"];
+			    $interface = $aux->fields["interface"];
+			    $next_anom = true;
+			    $is_anom = false;
+			    while ($aux->MoveNext() and $next_anom) { 
+			        if ($aux->fields["anom"] == "0")
+				    $next_anom = false;
+				$old_protocol  = $aux->fields["protocol"];
+				$old_version   = $aux->fields["version"];
+				$old_service   = $aux->fields["service"];
+				$old_service_type = $aux->fields["service_type"];
+				$old_origin    = $aux->fields["origin"];
+				$old_date = $aux->fields["date"];
+				$is_anom = true;
+                            }
+			    if ($is_anom) {
+				$num_anom++;
+				$list[] = array("ip" => $ip, "port" => $port, "date" => $date, "old_date" => $old_date,
+						"protocol" => $protocol, "old_protocol" => $old_protocol, "service" => $service,
+						"old_service" => $old_service, "service_type" => $service_type,
+						"old_service_type" => $old_service_type, "version" => $version, "old_version" => $old_version, 
+						"origin" => $origin, "old_origin" => $old_origin,
+						"sensor" => $sensor, "interface" => $interface);
+			    }
+			} 
                 } 
-            $ips->MoveNext();
-            } 
+		$ips->MoveNext();
+            }
         }
         return $list;
     } 
@@ -250,14 +242,18 @@ class Host_services{
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
                 
+        $list = array();
+
+	if ( !(Session::hostAllowed($conn, $host)) or !(Session::hostAllowed($conn, $sensor)) )
+	    return $list;
+
         $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr from host_services
                 where ip = inet_aton(?) and port = ? and sensor = inet_aton(?) order by date desc";
         $params = array($host, $port, $sensor);
+
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
-        } elseif (((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or
-                    (Session::hostAllowed($conn, $aux->fields["ip_sensor"]))) and ($aux->fields["anom"] != "0"))
-        {
+        } elseif ($aux->fields["anom"] != "0") {
             $ip        = $aux->fields["ip_addr"];
             $port      = $aux->fields["port"];
             $protocol  = $aux->fields["protocol"];
@@ -268,10 +264,10 @@ class Host_services{
             $date = $aux->fields["date"];
             $sensor = $aux->fields["ip_sensor"];
             $interface = $aux->fields["interface"];
-            if ((!$aux->EOF) && ($aux->RecordCount() <= 1)) {
-                $aux->MoveNext();
-            }             
-            while ((!$aux->EOF) && ($aux->fields["anom"] == "1")) {
+	    $next_anom = true;
+            while ($aux->MoveNext() && $next_anom) {
+                if ($aux->fields["anom"] == "0")
+		    $next_anom = false;
                 $old_date = $aux->fields["date"];
                 $old_protocol  = $aux->fields["protocol"];
                 $old_version   = $aux->fields["version"];
@@ -286,7 +282,6 @@ class Host_services{
                                  "old_service_type" => $old_service_type, "origin" => $origin,
                                  "old_origin" => $old_origin, "sensor" => $sensor, "interface" => $interface);
  
-                $aux->MoveNext();
                 $protocol = $old_protocol;
                 $date = $old_date;
                 $version = $old_version;

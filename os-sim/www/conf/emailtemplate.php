@@ -135,6 +135,10 @@ $labels = array(
     'TICKET_HISTORY' => array(
                         'help' => _("The complete list of tickets related to this incident"),
                         'sample' => '-- Here goes the list of tickets --'
+                     ),
+    'TICKET_INVERSE_HISTORY' => array(
+                        'help' => _("The complete list of tickets related to this incident") . " (" . _("reverse order") . ")",
+                        'sample' => '-- Here goes the reversed list of tickets --'
                      )
 );
 

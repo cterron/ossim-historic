@@ -74,10 +74,22 @@ struct _SimCommand {
       SimSessionType  type;
     } connect;
 
+    struct {												//command sent from server to frameworkd or to other servers
+      gchar           *host;        //ip, not name. This is the children server connected to server "servername"
+      gchar           *servername;    // OSSIM name.
+    } server;
+
+
 		struct {
       gint            id;
-			gchar						*servername; //OSSIM server name, no FQDN
+			gchar						*servername; //OSSIM name, no FQDN. Tells the name of the server from where we want to know the sensors connected.
     } server_get_sensors;
+
+    struct {
+      gint            id;
+			gchar						*servername; //OSSIM server name, no FQDN
+    } server_get_servers;
+
 
     struct {
       gint            id;
@@ -96,8 +108,9 @@ struct _SimCommand {
     } server_set_data_role;
 
     struct {												//command sent from server to frameworkd
-      gchar           *host;
+      gchar           *host;        //ip, not name
       gboolean        state;
+      gchar           *servername;  //this info is inserted by the server. This is the server to wich is attached the sensor
     } sensor;
 
     struct {
@@ -223,7 +236,6 @@ struct _SimCommand {
       gint               plugin_sid;
 
       /* Plugin Type Detector */
-      gint               priority;
       gchar             *protocol;
       gchar             *src_ip;
       gchar             *dst_ip;
@@ -242,6 +254,7 @@ struct _SimCommand {
       guint32            snort_cid;
 
       gint               reliability;
+      gint               priority;
       gint               asset_src;
       gint               asset_dst;
       gdouble            risk_c;
@@ -262,6 +275,8 @@ struct _SimCommand {
 			gchar							*userdata7;
 			gchar							*userdata8;
 			gchar							*userdata9;
+
+			gboolean					is_prioritized;	//needed to know if the children server has changed the event's priority, or it should be done in master server.
 
     } event;
 
@@ -346,6 +361,20 @@ struct _SimCommand {
 			gchar							*userdata8;
 			gchar							*userdata9;
     } host_ids_event;
+
+		struct {
+      gint							id;	//Not used at this moment.
+			SimDBElementType	database_element_type; //is this a Host query, or a network query, or a directive query....
+			gchar							*servername;	//the master server to wich is sended this query, has to know where does the msg come from.
+																			//This is the server who originated the query.
+		} database_query;
+	
+		struct {
+      gint							id;
+			gchar							*answer;
+			SimDBElementType	database_element_type; //is this a Host answer, or a network answer, or a directive answer....
+			gchar							*servername;	//children server to wich is sended the answer
+		} database_answer;
 
   } data;
 };

@@ -58,6 +58,7 @@ typedef struct {
 
   SimDatabase	*dbossim;
   SimDatabase	*dbsnort;
+  SimDatabase	*dbosvdb;
 
   GMutex	*mutex_directives;
   GMutex	*mutex_backlogs;

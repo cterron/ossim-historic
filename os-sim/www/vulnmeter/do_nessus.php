@@ -21,16 +21,176 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 <?php
     require_once 'classes/Security.inc';
 
-    $status = GET('status');
+    $status = REQUEST('status');
+    $interactive = REQUEST('interactive');
+    $nsensors = REQUEST('nsensors');
+    $sensors = REQUEST('sensors');
+    $scheduler_id = REQUEST('scheduler_id');
+
+    ossim_valid($nsensors, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nsensors"));
     ossim_valid($status, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Status"));
+    ossim_valid($scheduler_id, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Status"));
 
     if (ossim_error()) {
         die(ossim_error());
     }    
-    
+
+require_once ('ossim_acl.inc');
+require_once ('ossim_db.inc');
+require_once ('classes/Sensor.inc');
+require_once ('classes/Net_group_scan.inc');
+require_once ('classes/Net_group.inc');
+
+$db = new ossim_db();
+$conn = $db->connect();
+
+define("NESSUS", 3001);
+
+$tmp_sensors = Sensor::get_all($conn, "ORDER BY name ASC");
+$sensor_list = array();
+// Quick & dirty sensor index array for "sensor#" further below
+$sensor_index = array();
+$tmp_index = 0;
+
+foreach($tmp_sensors as $sensor){
+	if(Sensor::check_plugin_rel($conn, $sensor->get_ip(), NESSUS)){
+	$sensor_index[$sensor->get_name()] = $tmp_index;
+	$tmp_index++;
+	array_push($sensor_list, $sensor);
+	}
+}
+
+    function show_form(){
+	global $sensor_list;
+        global $conn;
+	global $sensor_index;
+
+	$global_i = 0;
+
+	$num = count($sensor_list);
+	if($num > 20){
+	   $cols = 5;
+	} else {
+	   $cols = 3;
+	}
+	   $rows = intval($num / $cols) +1 ;
+
+	?>
+	<h3><center> <?= _("Select sensors for this scan"); ?> </center></h3>
+<ul>
+<?php
+$group_scan_list = Net_group_scan::get_list($conn, "WHERE plugin_id = " . NESSUS);
+foreach($group_scan_list as $group_scan){
+$net_group_sensors = Net_group::get_sensors($conn, $group_scan->get_net_group_name());
+echo "\n<script>\n";
+echo "var " . $group_scan->get_net_group_name() . " = true;\n";
+echo "</script>\n";
+$sensor_string = "";
+foreach($net_group_sensors as $ng_sensor => $name){
+if($sensor_string == ""){
+$sensor_string .= $sensor_index[$name];
+} else {
+$sensor_string .= "," . $sensor_index[$name];
+}
+}
+print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_group_name() . "','" . $sensor_string . "');\">" . $group_scan->get_net_group_name() . "</a>";
+}
+?>
+</ul>
+	<form action="<?= $_SERVER["PHP_SELF"]?>" method="POST">
+<p>
+<?= _("Please adjust incident creation threshold, incidents will only be created for vulnerabilities whose risk level exceeds the threshold."); ?><br/>
+<?= _("It is recommended to set a high level at the beginning in order to concentrate on more critical vulnerabilities first, lowering it after having solved/tagged them as false positivies."); ?><br/>
+<?= _("Threshold configuration can be found at Configuration->Main, \"vulnerability_incident_threshold\"."); ?>&nbsp;
+<?= _("Current ris risk threshold is:"); ?>
+<b>
+<?php
     require_once ('ossim_conf.inc');
     $conf = $GLOBALS["CONF"];
-    $data_dir = $conf->get_conf("data_dir");
+    print $conf->get_conf("vulnerability_incident_threshold");
+?>
+</b>
+</p>
+	<h4><center> (<?= _("Empty means all"); ?>) </center></h4>
+	<center><a href="#" onClick="return selectAll('sensors');"><?= _("Select / Unselect all");?></a></center>
+<br/>
+        <table width="100%" align="left" border="0"><tr>
+	<?php
+	for($i=1;$i<=$rows;$i++){
+	?>
+	<?php
+	    for($a=0;$a <$cols && $global_i < $num ;$a++){
+	        $sensor = $sensor_list[$global_i];
+	    	echo "<td width=\"" . intval(100/$cols) . "%\">";
+	        $all['sensors'][] = "sensor".$global_i;
+		?>
+		<div align="left">
+	        <input align="left" type="checkbox" id="<?= "sensor".$global_i ?>" name="<?= "sensor".$global_i ?>"
+		               value="<?= $sensor->get_ip() ?>" /><?=$sensor->get_name()?></div></td>
+	        <?php
+		$global_i++;
+	    }
+	    echo "</tr>\n";
+	    ?>
+	    <?php
+	}
+	    echo "</table>\n";
+
+?>
+<center>
+<input type="hidden" name="nsensors" value="<?php echo $global_i ?>" />
+<input type="Submit" value="<?= _("Submit"); ?>">
+</center>
+</form>
+<center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
+<script>
+var check_sensors = true;
+
+function selectAll(category)
+{
+    if (category == 'sensors') {
+    <? foreach ($all['sensors'] as $id) { ?>
+        document.getElementById('<?=$id?>').checked = check_sensors;
+    <? } ?>
+        check_sensors = check_sensors == false ? true : false;
+    }
+    return false;
+}
+
+function selectSome(name, identifiers)
+{
+
+arrayOfStrings = identifiers.split(",");
+for (var i=0; i < arrayOfStrings.length; i++) {
+document.getElementById("sensor" + arrayOfStrings[i]).checked = window[name];
+}
+window[name] = window[name] == false ? true : false;
+return false;
+} 
+            
+</script>
+</body>
+</html>
+<?php
+    }
+
+    if($interactive == "yes"){
+    	show_form();
+	exit();
+    }
+
+    $sensors = "";
+    for ($i = 0; $i < $nsensors; $i++) {
+    	if (ossim_error()) { die(ossim_error()); }
+        if ($sensors == "")
+            $sensors = POST("sensor$i");
+        else
+	    if (POST("sensor$i") != "")
+                $sensors .= "," . POST("sensor$i");
+    } 
+
+    require_once ('ossim_conf.inc');
+    $conf = $GLOBALS["CONF"];
 
     /* Frameworkd's address & port */
     $address = $conf->get_conf("frameworkd_address");
@@ -55,9 +215,26 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
     if($status == "reset"){
         $in = 'nessus reset now' . "\n";
         socket_write ($socket, $in, strlen ($in));
+	?>
+	<center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
+	<?php
+	exit();
+    }
+    if(strlen($sensors) == 0){
+	foreach($sensor_list as $sensor){
+        if ($sensors == "")
+            $sensors = $sensor->get_ip();
+        else
+            $sensors .= "," . $sensor->get_ip();
+
+	}
     }
 
-    $in = 'nessus start now' . "\n";
+    if($scheduler_id > 0){
+    $in = 'nessus start ' . $scheduler_id . "\n";
+    } else {
+    $in = 'nessus start ' . $sensors . "\n";
+    }
     $out = '';
     socket_write ($socket, $in, strlen ($in));
  
@@ -129,6 +306,7 @@ break;
         }
         sleep(5);
     }
+    socket_close($socket);
 
 ?>
 <center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>

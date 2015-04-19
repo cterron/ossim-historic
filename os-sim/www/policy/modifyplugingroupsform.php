@@ -81,6 +81,7 @@ function validate_sids_str(id)
             }
         }
     );
+    return false;
 }
 
 </script>
@@ -132,7 +133,7 @@ function validate_sids_str(id)
                                  name="sids[<?=$id?>]"
                                  value="<?=$sids?>"
                                  size="48">&nbsp;
-                        <a href="#" onClick="javascript: validate_sids_str('<?=$id?>')">&lt;-</a>
+                        <a href="#" onClick="javascript: return validate_sids_str('<?=$id?>')">&lt;-</a>
                     </span>&nbsp;
                     
                 </td>

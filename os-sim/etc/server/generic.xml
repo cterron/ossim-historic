@@ -310,12 +310,14 @@
     <rule type="detector" name="Intrusion rule matched" reliability="2"
     occurrence="1" from="ANY" to="ANY" protocol="TCP" port_from="ANY" port_to="119,143,110,25,80,21,53,445,3128,8080,3306,1443" plugin_id="1001" plugin_sid="ANY">
         <rules>
-			<!-- Match anything except 403 forbidden responses, since they
-			don't show a successful intrusion -->
+			<!-- Match anything except 403 forbidden responses, NETBIOS SMB-DS repeated logon failure
+                        WEB-CLIENT ShockwaveFlash.ShockwaveFlash ActiveX CLSID access,
+                        WEB-CLIENT Mozilla bitmap width integer overflow multipacket attempt,
+			since they don't show a successful intrusion -->
             <rule type="detector" name="Attack response" reliability="+5"
             time_out="10" from="1:DST_IP" to="1:SRC_IP" port_from="1:DST_PORT"
             port_to="ANY" protocol="TCP" plugin_id="1001"
-            plugin_sid="!1201"/>
+            plugin_sid="!1201,!2924,!7978,!3634"/>
             <rule type="monitor" name="Attacked host's C raised"
             reliability="+3" from="1:DST_IP" plugin_id="2001"
             plugin_sid="1" condition="ge" value="200" interval="10"

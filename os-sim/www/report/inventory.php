@@ -53,7 +53,7 @@ if (ossim_error()) {
         
         foreach ($lines as $line) {
             preg_match ('/(\S+)\s+open\s+([\w\-\_\?]+)(\s+)?(.*)$/', $line, $regs);
-            if ($regs[0]) {
+            if (isset($regs[0])) {
                 list($port, $protocol) = explode("/", $regs[1]);
                 $protocol = getprotobyname($protocol);
                 if ($protocol == -1) {

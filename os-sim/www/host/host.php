@@ -25,7 +25,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
     $order = GET('order');
     $search = POST('search');
-    ossim_valid($order, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , 'illegal:'._("order"));
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE, OSS_PUNC, OSS_SCORE, OSS_ALPHA , 'illegal:'._("order"));
     ossim_valid($search, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , OSS_PUNC, 'illegal:'._("search"));
 
     if (ossim_error()) {

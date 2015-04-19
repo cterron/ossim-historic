@@ -388,15 +388,18 @@ class OssimNotice extends OssimMainError {
 /*
  * Function for debuging vars (developers only)
  */
-function printr($var, $die = false)
+function printr($var, $die = false, $return = false)
 {
     if ($var === null)      $str = 'null';
     elseif ($var === false) $str = 'false';
     elseif ($var === true)  $str = 'true';
     elseif ($var === '')    $str = "''";
     else   $str = print_r($var, true);
-    
-    echo "<pre>".htmlentities($str)."</pre>";
+    $str = "<pre>".htmlentities($str)."</pre>";
+    if ($return) {
+        return $str;
+    }
+    echo $str;
     if ($die) die();
 }
 

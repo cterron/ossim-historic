@@ -26,8 +26,12 @@
     <!ENTITY    ciscopix    SYSTEM '/etc/ossim/agent/plugins/ciscopix.xml'>
     <!ENTITY    ciscorouter SYSTEM '/etc/ossim/agent/plugins/ciscorouter.xml'>
     <!ENTITY    fw1         SYSTEM '/etc/ossim/agent/plugins/fw1.xml'>
+    <!ENTITY    heartbeat   SYSTEM '/etc/ossim/agent/plugins/heartbeat.xml'>
     <!ENTITY    iis         SYSTEM '/etc/ossim/agent/plugins/iis.xml'>
     <!ENTITY    iptables    SYSTEM '/etc/ossim/agent/plugins/iptables.xml'>
+    <!ENTITY    juniperfw   SYSTEM '/etc/ossim/agent/plugins/juniperfw.xml'>
+    <!ENTITY    nagios      SYSTEM '/etc/ossim/agent/plugins/nagios.xml'>
+    <!ENTITY    nagios2     SYSTEM '/etc/ossim/agent/plugins/nagios2.xml'>
     <!ENTITY    netgear     SYSTEM '/etc/ossim/agent/plugins/netgear.xml'>
     <!ENTITY    netscreen   SYSTEM '/etc/ossim/agent/plugins/netscreen.xml'>
     <!ENTITY    ntop        SYSTEM '/etc/ossim/agent/plugins/ntop.xml'>
@@ -41,7 +45,6 @@
     <!ENTITY    realsecure  SYSTEM '/etc/ossim/agent/plugins/realsecure.xml'>
     <!ENTITY    rrd         SYSTEM '/etc/ossim/agent/plugins/rrd.xml'>
     <!ENTITY    snarewindows SYSTEM '/etc/ossim/agent/plugins/snarewindows.xml'>
-    <!ENTITY    juniperfw   SYSTEM '/etc/ossim/agent/plugins/juniperfw.xml'>
     <!ENTITY    snort       SYSTEM '/etc/ossim/agent/plugins/snort.xml'>
     <!ENTITY    syslog      SYSTEM '/etc/ossim/agent/plugins/syslog.xml'>
     <!ENTITY    tcptrack    SYSTEM '/etc/ossim/agent/plugins/tcptrack.xml'>
@@ -80,6 +83,7 @@
 <!-- &ciscopix; -->
 <!-- >&ciscorouter; -->
 <!-- &fw1; -->
+<!-- &heartbeat; -->
 <!-- &iis; -->
 <!-- &iptables; -->
 <!-- &netgear; -->

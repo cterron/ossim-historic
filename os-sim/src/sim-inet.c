@@ -43,7 +43,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <netinet/in.h>
 
+#if defined(__APPLE__) && defined(__MACH__) && !defined(s6_addr16)
+#define s6_addr16   __u6_addr.__u6_addr16
+#endif
+/*
 #ifdef BSD
 #define KERNEL
 #include <netinet/in.h>
@@ -53,7 +58,7 @@
 #define _KERNEL
 #include <netinet/in.h>
 #endif
-
+*/
 enum
 {
   DESTROY,

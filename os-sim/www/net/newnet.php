@@ -20,7 +20,7 @@ require_once 'classes/Security.inc';
 $net_name = POST('name');
 $threshold_a = POST('threshold_a');
 $threshold_c = POST('threshold_c');
-$priority = POST('priority');
+$asset = POST('asset');
 $descr = POST('descr');
 $nsens = POST('nsens');
 $ips = POST('ips');
@@ -28,9 +28,9 @@ $alert = POST('alert');
 $persistence = POST('persistence');
 $rrd_profile = POST('rrd_profile');
 
-ossim_valid($net_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_SPACE, 'illegal:'._("Net name"));
-ossim_valid($ips, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_SPACE, 'illegal:'._("Ips"));
-ossim_valid($priority, OSS_DIGIT, 'illegal:'._("Priority"));
+ossim_valid($net_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Net name"));
+ossim_valid($ips, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Ips"));
+ossim_valid($asset, OSS_DIGIT, 'illegal:'._("Asset"));
 ossim_valid($threshold_a, OSS_DIGIT, 'illegal:'._("threshold_a"));
 ossim_valid($threshold_c, OSS_DIGIT, 'illegal:'._("threshold_c"));
 ossim_valid($nsens, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("nnets"));
@@ -43,8 +43,8 @@ if (ossim_error()) {
     die(ossim_error());
 }
 
-if(POST('insert')) {
-
+if (POST('insert')) {
+    $sensors = array();
     for ($i = 1; $i <= $nsens; $i++) {
         $name = "mboxs" . $i;
         ossim_valid(POST("$name"), OSS_NULLABLE, OSS_ALPHA, OSS_PUNC, OSS_SPACE);
@@ -55,14 +55,16 @@ if(POST('insert')) {
         if (!empty($aux_name))
             $sensors[] = POST("$name");
     }
-
+    if (!count($sensors)) {
+        die(ossim_error("At least one sensor is required"));
+    }
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
     require_once 'classes/Net_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
    
-    Net::insert ($conn, $net_name, $ips, $priority, $threshold_c, $threshold_a, 
+    Net::insert ($conn, $net_name, $ips, $asset, $threshold_c, $threshold_a, 
                  $rrd_profile, $alert, $persistence, $sensors, $descr);
 
     if(POST('nessus')){

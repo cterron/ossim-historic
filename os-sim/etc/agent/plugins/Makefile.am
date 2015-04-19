@@ -7,8 +7,11 @@ plugins_DATA = apache.xml \
 	ciscopix.xml \
 	ciscorouter.xml \
 	fw1.xml \
+	heartbeat.xml \
 	iis.xml \
 	iptables.xml \
+	nagios.xml \
+	nagios2.xml \
 	netgear.xml \
 	netscreen.xml \
 	juniperfw.xml \

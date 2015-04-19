@@ -106,7 +106,26 @@ class ossim_db {
             return NULL;
     }
 
-    function close($conn) {
+    function osvdb_connect() {
+
+        $conf = $GLOBALS["CONF"];
+
+        $base = $conf->get_conf("osvdb_base");
+        $user = $conf->get_conf("osvdb_user");
+        $pass = $conf->get_conf("osvdb_pass");
+        $host = $conf->get_conf("osvdb_host");
+        $type = $conf->get_conf("osvdb_type");
+
+        $this->conn = &ADONewConnection($type);
+        if ($this->conn->NConnect($host, $user, $pass, $base))
+            return $this->conn;
+        else
+            return NULL;
+    }
+
+
+
+   function close($conn) {
         $conn->Close();
     }
 

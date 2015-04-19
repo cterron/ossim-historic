@@ -69,7 +69,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
           ?>"> <?php echo gettext("Net"); ?> </a></th>
       <th> <?php echo gettext("Ips"); ?> </th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("priority", $order);
+            echo ossim_db::get_order("asset", $order);
           ?>"> <?php echo gettext("Asset"); ?> </a></th>
       <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
             echo ossim_db::get_order("threshold_c", $order);
@@ -107,7 +107,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     <tr>
       <td><?php echo $net->get_name(); ?></td>
       <td><?php echo $net->get_ips(); ?></td>
-      <td><?php echo $net->get_priority(); ?></td>
+      <td><?php echo $net->get_asset(); ?></td>
       <td><?php echo $net->get_threshold_c(); ?></td>
       <td><?php echo $net->get_threshold_a(); ?></td>
       <td>

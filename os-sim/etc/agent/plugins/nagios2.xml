@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!--
+    Nagios Daemon
+    Host and Service alert
+    source = syslog | nagios
+-->
+<plugin id="1525" process="nagios2" type="detector" start="no" enable="yes">
+
+    <startup>/etc/init.d/nagios2 start</startup>
+    <shutdown>/etc/init.d/nagios2 stop</shutdown>
+
+    <source>nagios</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>/var/log/nagios2/nagios.log</location>
+</plugin>
+

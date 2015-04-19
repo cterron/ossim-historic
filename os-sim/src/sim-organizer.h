@@ -54,6 +54,9 @@ extern "C" {
 #define SIM_IS_ORGANIZER_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_ORGANIZER))
 #define SIM_ORGANIZER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_ORGANIZER, SimOrganizerClass))
 
+#define MAX_DIFF_TIME 60	//max time that the events could be in the agent without send it to the server. If this time is exceeded
+													//the event won't update the C & A, and won't enter into correlation. (it still will qualify, generate alarms..)
+
 G_BEGIN_DECLS
 
 typedef struct _SimOrganizer        SimOrganizer;
@@ -77,21 +80,26 @@ void              sim_organizer_run                             (SimOrganizer  *
 
 void              sim_organizer_correlation_plugin              (SimOrganizer *organizer, 
 																																 SimEvent     *event);
+void              sim_organizer_correlation_plugin_new              (SimOrganizer *organizer, 
+																																 SimEvent     *event);
 
 void              sim_organizer_mac_os_change                   (SimOrganizer *organizer, 
 																																 SimEvent     *event);
 SimPolicy*				sim_organizer_get_policy											(SimOrganizer *organizer,
 			                                                           SimEvent     *event);
 	
-/* Correlate Function */
-void              sim_organizer_qualify		                      (SimOrganizer  *organizer,
+/* Priority Function */
+gint              sim_organizer_reprioritize                     (SimOrganizer  *organizer,
 																																 SimEvent      *event,
 																																 SimPolicy			*policy);
+gint              sim_organizer_risk_levels                      (SimOrganizer  *organizer,
+																																 SimEvent      *event);
+
 
 /* Correlate Function */
 void              sim_organizer_correlation                     (SimOrganizer  *organizer,
 																																 SimEvent      *event);
-/* Correlate Function */
+/* Store Functions */
 void              sim_organizer_snort                           (SimOrganizer  *organizer,
 																																 SimEvent      *event);
 gint							sim_organizer_snort_signature_get_id					(SimDatabase  *db_snort,
@@ -117,6 +125,7 @@ void              sim_organizer_backlog_match                   (SimDatabase   *
 																																 SimEvent      *event);
 void              sim_organizer_resend                          (SimEvent  *event, 
                                                                  SimRole   *role);
+void							sim_organizer_store_event_tmp									(SimEvent *event);
 
 G_END_DECLS
 
