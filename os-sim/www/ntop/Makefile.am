@@ -5,4 +5,5 @@ ntop_DATA = index.php \
 	net_session.php \
 	session.php
 EXTRA_DIST   = $(ntop_DATA)
+DISTCLEANFILES = Makefile.in
 

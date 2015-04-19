@@ -6,6 +6,7 @@ require_once 'classes/Sensor.inc';
 require_once 'classes/Net.inc';
 require_once 'classes/Log_action.inc';
 require_once 'ossim_db.inc';
+require_once 'classes/WebIndicator.inc';
 
 class Sensor {
 
@@ -162,6 +163,9 @@ class Sensor {
         }
         $infolog = array($name,"[".$ip."]");
         Log_action::log(33,$infolog);
+
+        WebIndicator::set_on("Reload_sensors");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function update($conn, $name, $ip, $priority, $port, $descr)
@@ -180,6 +184,8 @@ class Sensor {
         $infolog = array($name,"[".$ip."]");
         Log_action::log(34,$infolog);
  
+        WebIndicator::set_on("Reload_sensors");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function delete($conn, $name)
@@ -195,8 +201,11 @@ class Sensor {
         Net_sensor_reference::check_orphan($conn);
         Host_sensor_reference::check_orphan($conn);
        
-       $infolog = array($name);
-       Log_action::log(35,$infolog);
+        $infolog = array($name);
+        Log_action::log(35,$infolog);
+
+        WebIndicator::set_on("Reload_sensors");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     /*

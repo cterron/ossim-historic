@@ -20,6 +20,10 @@ classes_DATA = About.inc \
 	Event_viewer_draw.inc \
 	Host.inc \
 	Host_ids.inc \
+	Host_group.inc \
+	Host_group_scan.inc \
+	Host_group_reference.inc \
+	Host_group_sensor_reference.inc \
 	Host_mac.inc \
 	Host_netbios.inc \
 	Host_os.inc \
@@ -94,7 +98,10 @@ classes_DATA = About.inc \
 	Signature.inc \
 	Upgrade.inc \
 	Upgrade_base.inc \
+	User_config.inc \
 	Util.inc \
+	WebIndicator.inc \
 	Xajax.inc 
 
 EXTRA_DIST   = $(classes_DATA)
+DISTCLEANFILES = Makefile.in

@@ -115,6 +115,10 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     <p> <?php echo gettext("Host succesfully inserted"); ?> </p>
     <p><a href="host.php">
     <?php echo gettext("Back"); ?> </a></p>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

@@ -17,8 +17,9 @@ class Net_scan {
     }
 
     function get_net_name()          { return $this->net_name;        }
-    function get_plugin_id()        { return $this->plugin_id;      }
-    function get_plugin_sid()       { return $this->plugin_sid;     }
+    function get_plugin_id()         { return $this->plugin_id;       }
+    function get_plugin_sid()        { return $this->plugin_sid;      }
+    function get_name()              { return $this->net_name;        }
 
     function get_list($conn, $args = "") 
     {

@@ -2,7 +2,7 @@ import Const, re, datetime
 from OssimDB import OssimDB
 from OssimConf import OssimConf
 from time import strftime
-
+ 
 class Vulnerabilities :
 
     def __init__ (self) :

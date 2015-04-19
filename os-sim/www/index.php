@@ -14,7 +14,7 @@ $ossim_link = $conf->get_conf("ossim_link");
         type="application/rss+xml">
 </head>
 <frameset rows="130,*" border="0" frameborder="0">
-<frame src="top.php?menu=main">
+<frame src="top.php?menu=main" name="top">
 <frame src="#" name="main">
 </frameset>
 </html>

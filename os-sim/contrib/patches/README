@@ -28,4 +28,8 @@ Name:   10_running_multiple_instances.patch
 Descr:  Running multiple Ossim instances in the same machine
 Author: Joao Luis Faria <jlfaria@users.sourceforge.net>
 
+Name:   11_top_input_box.patch
+Descr:  Input box in top.php to go to inventory data for that host
+Author: Jose Antonio Izquierdo <izquierdolopez@itdeusto.com>
+
 

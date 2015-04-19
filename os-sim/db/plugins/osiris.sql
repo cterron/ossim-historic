@@ -1,0 +1,84 @@
+-- Osiris HIDS
+-- plugin_id: 4001
+--
+
+DELETE FROM plugin WHERE id = "4001";
+DELETE FROM plugin_sid where plugin_id = "4001";
+
+INSERT INTO plugin (id, type, name, description) VALUES (4001, 1, 'osiris', 'Osiris HIDS');
+
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 10, NULL, NULL, 'Generic Information');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 11, NULL, NULL, 'Generic Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 12, NULL, NULL, 'Generic File Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 13, NULL, NULL, 'Daemon Info');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 14, NULL, NULL, 'Daemon Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 15, NULL, NULL, 'Daemon Unauthorized');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 16, NULL, NULL, 'Daemon Authorized');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 17, NULL, NULL, 'Daemon Critical');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 18, NULL, NULL, 'Cert Mismatch');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 100, NULL, NULL, 'Auth Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 101, NULL, NULL, 'Login Success');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 102, NULL, NULL, 'Auth Login Failure');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 103, NULL, NULL, 'Auth Warning');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 104, NULL, NULL, 'Auth Save Success');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 105, NULL, NULL, 'Auth Save Failure');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 106, NULL, NULL, 'Auth DB Reload');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 200, NULL, NULL, 'Compare Begin');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 201, NULL, NULL, 'Compare End');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 202, NULL, NULL, 'File Missing');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 203, NULL, NULL, 'File New');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 204, NULL, NULL, 'Checksum');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 205, NULL, NULL, 'Device');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 206, NULL, NULL, 'Inode');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 207, NULL, NULL, 'Permission');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 208, NULL, NULL, 'Symlinks');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 209, NULL, NULL, 'UID');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 210, NULL, NULL, 'GID');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 211, NULL, NULL, 'Modification Time Changed');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 212, NULL, NULL, 'Last Access Time');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 213, NULL, NULL, 'Inode Time Changed');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 214, NULL, NULL, 'Device Type');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 215, NULL, NULL, 'Bytes');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 216, NULL, NULL, 'Blocks');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 217, NULL, NULL, 'Blocksize');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 218, NULL, NULL, 'Owner Sid');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 219, NULL, NULL, 'Group Sid');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 220, NULL, NULL, 'Windows file attribute');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 221, NULL, NULL, 'Generic New');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 222, NULL, NULL, 'Generic Missing');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 223, NULL, NULL, 'Generic Diff');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 300, NULL, NULL, 'DB Open Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 301, NULL, NULL, 'DB Store Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 302, NULL, NULL, 'DB Trusted Set');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 303, NULL, NULL, 'DB Create Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 304, NULL, NULL, 'DB Autoaccept Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 305, NULL, NULL, 'DB Autoaccept');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 400, NULL, NULL, 'Peer Message');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 401, NULL, NULL, 'Peer Close');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 402, NULL, NULL, 'Peer Invalid Message');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 403, NULL, NULL, 'Peer Read Failure');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 404, NULL, NULL, 'Peer Write Failure');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 500, NULL, NULL, 'Scan Begin');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 501, NULL, NULL, 'Scan End');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 502, NULL, NULL, 'Scan Abort');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 503, NULL, NULL, 'Scan Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 504, NULL, NULL, 'Scan Spawn');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 600, NULL, NULL, 'Session Key Failure');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 601, NULL, NULL, 'Session Key Valid');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 602, NULL, NULL, 'Session Key Update');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 603, NULL, NULL, 'Session Key Invalid');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 604, NULL, NULL, 'Session Key Lost');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 605, NULL, NULL, 'Session Key Missing');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 606, NULL, NULL, 'Session Key New');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 700, NULL, NULL, 'HTTP Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 701, NULL, NULL, 'HTTP Receive');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 702, NULL, NULL, 'Notify Error');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 703, NULL, NULL, 'Notify Info');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 800, NULL, NULL, 'Scheduler Reload');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 801, NULL, NULL, 'Scheduler Start');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 802, NULL, NULL, 'Scheduler Stop');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 803, NULL, NULL, 'Scheduler Fail');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 804, NULL, NULL, 'Scheduler Info');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 10000, NULL, NULL, 'Logfile permission denied');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4001, 10001, NULL, NULL, 'Checking ok');
+

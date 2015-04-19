@@ -142,6 +142,21 @@ sim_inet_get_type (void)
 }
 
 /*
+ * Return the mask of an SimInet object
+ *
+ *
+ */
+gint
+sim_inet_get_mask (SimInet  *inet)
+{
+  g_return_val_if_fail (inet, -1);
+  g_return_val_if_fail (SIM_IS_INET (inet), -1);
+
+  return inet->_priv->bits;
+}
+
+
+/*
  * Returns the number of bits that a string that contains a number has.
  * This is usefull to store the netmask of the networks in the SimInet objects.
  */
@@ -337,6 +352,10 @@ sim_inet_has_inet (SimInet   *inet1,
       struct sockaddr_in* sa_in1 = (struct sockaddr_in*) &inet1->_priv->sa;
       struct sockaddr_in* sa_in2 = (struct sockaddr_in*) &inet2->_priv->sa;
 
+      // inet2 is a biggest network than inet1, so does not belong to inet1
+      if (inet2->_priv->bits < inet1->_priv->bits)
+        return FALSE;
+
       guint32 val1 = ntohl (sa_in1->sin_addr.s_addr);
       guint32 val2 = ntohl (sa_in2->sin_addr.s_addr);
 
@@ -441,6 +460,8 @@ sim_inet_ntop (SimInet  *inet)
 			     (val) & 0xFF);
     }
 #ifdef HAVE_IPV6
+/* //FIXME: As most of the OSSIM code is for ipv4, we are commenting some ipv6 things wich gave some compilation problems in FreeBSD 6.2 
+ * We will uncomment this when we had start the real coding for ipv6
   else if (inet->_priv->sa.ss_family == AF_INET6)
     {
       struct sockaddr_in6* sa_in6 = (struct sockaddr_in6*) &inet->_priv->sa;
@@ -455,6 +476,7 @@ sim_inet_ntop (SimInet  *inet)
 			     ntohs(sa_in6->sin6_addr.s6_addr16[6]),
 			     ntohs(sa_in6->sin6_addr.s6_addr16[7]));
     }
+*/		
 #endif
 
   return ret;
@@ -487,6 +509,7 @@ sim_inet_cidr_ntop (SimInet  *inet)
 			     (inet->_priv->bits) ? inet->_priv->bits : 32);
     }
 #ifdef HAVE_IPV6
+/*		
   else if (inet->_priv->sa.ss_family == AF_INET6)
     {
       struct sockaddr_in6* sa_in6 = (struct sockaddr_in6*) &inet->_priv->sa;
@@ -502,8 +525,20 @@ sim_inet_cidr_ntop (SimInet  *inet)
 			     ntohs(sa_in6->sin6_addr.s6_addr16[7]),
 			     (inet->_priv->bits) ? inet->_priv->bits : 128);
     }
+*/		
 #endif
 
   return ret;
+}
+
+gboolean
+sim_inet_debug_print (SimInet   *inet)
+{
+  g_return_val_if_fail (inet, FALSE);
+  g_return_val_if_fail (SIM_IS_INET (inet),FALSE);
+
+  gchar *temp = sim_inet_cidr_ntop(inet);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_debug_print: %s", temp);
+  g_free(temp);
 }
 // vim: set tabstop=2:

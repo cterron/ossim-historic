@@ -22,6 +22,10 @@ $plugin_list = Plugin::get_list($conn, "ORDER BY name");
  */
 function validate_sids_str($str)
 {
+#    // $str = '';
+    if ($str == '') {
+        return array(false, _("Sid can not be empty. Specify '0' if you want ALL sids"));
+    }
     $values = preg_split('/(\s*,\s*)/', $str);
     $ret = $m = array();
     foreach ($values as $v) {

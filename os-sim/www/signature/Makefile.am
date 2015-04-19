@@ -6,4 +6,4 @@ signature_DATA = modifysignature.php \
 	newsignatureform.php \
 	signature.php
 EXTRA_DIST   = $(signature_DATA)
-
+DISTCLEANFILES = Makefile.in

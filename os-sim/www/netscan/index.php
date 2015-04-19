@@ -96,6 +96,11 @@ if (!$nmap_exists){
 <?php
 
     require_once ('classes/Scan.inc');
+    
+    if (GET('clearscan')) {
+        Scan::del_scan();
+    }
+
     $scan = Scan::get_scan();
 
     if (is_array($scan)) {

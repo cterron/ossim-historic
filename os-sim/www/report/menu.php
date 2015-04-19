@@ -54,10 +54,16 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     echo $host ?>&origin=passive" target="report">
     <?php echo gettext("Inventory"); ?> </a><br/><br/>
     
+<?php if (Session::menu_perms("MenuControlPanel", "ControlPanelMetrics")) { ?>
+
 &nbsp;&nbsp;<a href="metrics.php?host=<?php 
     echo $host ?>" target="report">
     <?php echo gettext("Metrics"); ?> </a><br/><br/>
+
+<?php } // Sesion::menu_perms("MenuControlPanel", "ControlPanelMetrics") ?>
     
+<?php if (Session::menu_perms("MenuControlPanel", "ControlPanelAlarms")) { ?>
+
 &nbsp;&nbsp;<b> <?php echo gettext("Alarms"); ?> </b><br/><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="../control_panel/alarm_console.php?src_ip=<?php 
     echo $host ?>&dst_ip=<?php echo $host ?>" 
@@ -70,6 +76,10 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     echo $host ?>" target="report">
     <?php echo gettext("Destination"); ?> </a><br/><br/>
     
+<?php } // Sesion::menu_perms("MenuControlPanel", "ControlPanelAlarms") ?>
+
+<?php if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents")) { ?>
+
 &nbsp;&nbsp;<b> <?php echo gettext("Events"); ?> </b><br/><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo $acid_main_link ?>"
     target="report">
@@ -80,6 +90,8 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="<?php echo "$acid_link/".$acid_prefix."_stat_alerts.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr[0][1]=ip_dst&ip_addr[0][2]==&ip_addr[0][3]=".$host."&ip_addr_cnt=1&sort_order=time_d" ?>"
     target="report">
     <?php echo gettext("Dst Unique events"); ?> </a><br/><br/>
+
+<?php } // Sesion::menu_perms("MenuControlPanel", "ControlPanelEvents") ?>
 
 <?php 
 if(Host_vulnerability::in_host_vulnerability($conn, $host)){

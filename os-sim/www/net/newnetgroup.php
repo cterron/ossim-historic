@@ -37,6 +37,7 @@ if (ossim_error()) {
 
 if (POST('insert')) {
    
+    $nets = array();
     for ($i = 1; $i <= $nnets; $i++) {
         $name = "mboxs" . $i;
         

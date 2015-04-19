@@ -42,7 +42,7 @@
 #include "sim-enums.h"
 #include "sim-plugin.h"
 #include "sim-plugin-sid.h"
-
+#include "sim-packet.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -173,6 +173,8 @@ struct _SimEvent {
 	gchar							*userdata7;
 	gchar							*userdata8;
 	gchar							*userdata9;
+	/* packet data */
+	SimPacket *packet;
 	
 };
 

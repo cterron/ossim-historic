@@ -33,6 +33,11 @@ class Panel
         $this->params['plugin']      = $params['plugin'];
         $this->params['plugin_opts'] = $plugin_opts;
         $this->params['window_opts'] = $params['window_opts'];
+        if (isset($params['metric_opts'])) {
+        $this->params['metric_opts'] = $params['metric_opts'];
+        } else {
+        $this->params['metric_opts'] = array();
+        }
     }
     
     // This method is called from $ajax->saveConfig(), in case the plugin

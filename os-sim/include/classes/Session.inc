@@ -21,7 +21,7 @@ class Session {
     var $nets;
     var $company;
     var $department;
-    
+
     function Session ($login, $pass, $allowed_nets, $name = "", $email = "",
     $company = "", $department = "")
     {
@@ -75,19 +75,70 @@ class Session {
 
     function login()
     {
+        $conf = $GLOBALS['CONF'];
+        $ossim_link = $conf->get_conf("ossim_link");
         $db = new ossim_db();
         $conn = $db->connect();
 
-        $pass = md5($this->pass);
+        $authenticated = false;
+
+        $password = $this->pass;
         $login = $this->login;
+
+/*
+// 2007/04/05 DK: Currently it doesn't make sense not to use local users.
+// If a user doesn't exist locally he won't have access to anything.
+
+        if($conf->get_conf("login_enforce_existing_user") == "yes"){
+            $sql = "SELECT * FROM users WHERE login = ?";
+            $params = array($login);
+
+            if (($rs = &$conn->Execute($sql, $params)) && ($rs->EOF) ) {
+               // return false if enforcing and no results match the given user
+               $db->close($conn);
+               return false;
+            }
+        }
+*/
+
+        $db->close($conn);
+
+        // Always enabled
+        if(Session::login_mysql($login, $password)){
+            $_SESSION["_user"] = $login;
+            return true;;
+        }
+
+        if($conf->get_conf("login_enable_ldap") == "yes" && Session::login_ldap($login, $password)){
+            $_SESSION["_user"] = $login;
+            return true;
+
+        }
+
+        return false;
+    }
+
+    /*
+    Add additional login methods below these lines.
+    Functions should be called "login_XXX" and there should be at least one configuration
+    variable saying "login_enable_XXX" with yes/no values. This way we avoid unnecesary dependencies
+    and errors.
+    Return values should be "true" or "false".
+    */
+
+    function login_mysql($login = "", $password = "")
+    {
+        $db = new ossim_db();
+        $conn = $db->connect();
+
+        $pass = md5($password);
 
         $sql = "SELECT * FROM users WHERE login = ? AND pass = ?";
         $params = array($login, $pass);
 
-        if ($rs = &$conn->Execute($sql, $params) && (!$rs->EOF)) 
+        if ($rs = &$conn->Execute($sql, $params) && (!$rs->EOF))
         {
-            
-            $_SESSION["_user"] = $this->login;
+
             $db->close($conn);
             return true;
         }
@@ -95,6 +146,41 @@ class Session {
         $db->close($conn);
         return false;
     }
+    function login_ldap($login= "", $password = "")
+    {
+        $conf = $GLOBALS['CONF'];
+        $ldap_server = $conf->get_conf("login_ldap_server");
+        $ldap_o = $conf->get_conf("login_ldap_o");
+        $ldap_ou = $conf->get_conf("login_ldap_ou");
+
+        $ldaprdn  = 'cn='.$login.','.$ldap_ou.','.$ldap_o;     // ldap rdn or dn
+
+        if (!function_exists('ldap_connect')) {
+            echo ossim_error(_("LDAP authentication enabled in the configuration, but the php ldap extension is not available"));
+            return false;
+        }
+        // connect to ldap server
+        $ldapconn = @ldap_connect($ldap_server);
+
+        $ret = false;
+        if ($ldapconn === false) {
+            echo ossim_error(_("Could not connect to ldap server").": $ldap_server");
+        } else {
+            // bind to ldap server
+            $ldapbind = @ldap_bind($ldapconn, $ldaprdn, $password);
+            
+            // verify binding
+            if ($ldapbind === false) {
+                echo ossim_error(ldap_error($ldapconn));
+            } else {
+                $ret = true;
+            }
+            ldap_close($ldapconn);
+        }
+        return $ret;
+    }
+
+
 
     function logout()
     {
@@ -107,7 +193,7 @@ class Session {
 
         if (!isset($_SESSION["_user"]) )
             return true;
-     
+
         if (! $gacl->acl_check($menu,
                                $submenu,
                                ACL_DEFAULT_USER_SECTION,
@@ -122,7 +208,7 @@ class Session {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -131,7 +217,7 @@ class Session {
         $gacl = $GLOBALS['ACL'];
         if (array_key_exists('user', $_POST))
             $user = $_POST["user"];
-        
+
         if (array_key_exists('pass', $_POST))
     	    $pass = $_POST["pass"];
 
@@ -139,19 +225,19 @@ class Session {
 		    $sess = new Session($user, $pass, "");
 		  	$sess->login();
 		}
-        
+
         if (!$login_location) {
             $conf = $GLOBALS['CONF'];
             $ossim_link = $conf->get_conf("ossim_link");
-            $login_location = $ossim_link . '/session/login.php'; 
+            $login_location = $ossim_link . '/session/login.php';
         }
-        
-        $dest = $_SERVER["PHP_SELF"];
+
+        $dest = urlencode($_SERVER["REQUEST_URI"]);
         if ( ! isset($_SESSION["_user"]) ) {
             header("Location: $login_location?dest=$dest");
             exit;
         }
-        
+
         if (! $gacl->acl_check($menu,
                                $submenu,
                                ACL_DEFAULT_USER_SECTION,
@@ -178,12 +264,12 @@ class Session {
         $gacl = $GLOBALS['ACL'];
         $user = $_POST["user"];
         $pass = $_POST["pass"];
-        
+
         if ($user && $pass) {
         	$sess = new Session($user, $pass, "");
         	$sess->login();
         }
-    
+
         $dest = $_SERVER["PHP_SELF"];
         if ( ! isset($_SESSION["_user"]) ) {
             header("Location: $login_location?dest=$dest");
@@ -212,8 +298,8 @@ class Session {
     }
 
 
-    /* 
-     * Backwards compatibility with allowedNets function 
+    /*
+     * Backwards compatibility with allowedNets function
      * (acid patches, old ossim-framework code, etc)
      */
     function getValue($user = "")
@@ -227,7 +313,7 @@ class Session {
     {
         $gacl = $GLOBALS['ACL'];
         static $allowedNetsCache;
-    
+
         if (!$user)
             $user = Session::get_session_user();
 
@@ -246,7 +332,7 @@ class Session {
     {
         $gacl = $GLOBALS['ACL'];
         static $allowedSensorsCache;
-    
+
         if (!$user)
             $user = Session::get_session_user();
 
@@ -265,22 +351,22 @@ class Session {
     function hostAllowed($conn, $host = "ANY", $user = "")
     {
         static $hostAllowedCache;
-    
+
         if (!is_object($conn)) {
             echo "Missing database connection object.";
             exit();
         }
-        
+
         if ($host == "ANY")
             return true;
-   
+
         if (!$user)
             $user = Session::get_session_user();
 
         if (isset($hostAllowedCache["$user"]["$host"])) {
             return $hostAllowedCache["$user"]["$host"];
         }
-        
+
         $allowed_nets = Session::allowedNets($user);
         $allowed_sensors = Session::allowedSensors($user);
 
@@ -326,16 +412,63 @@ class Session {
 
         $networks = Net_group::get_networks($conn, $group);
 
+        if (empty($networks))
+            return true;
+
         foreach ($networks as $network){
-        	if(Session::netAllowed($conn, $network->net_name, $user)){
-                		$groupAllowedCache["$user"]["$group"] = true;
-        		return true;
+        	if(!Session::netAllowed($conn, $network->net_name, $user)){
+                		$groupAllowedCache["$user"]["$group"] = false;
+        		return false;
         	}
         }
 
-        $groupAllowedCache["$user"]["$group"] = false;
-        return false;
+        $groupAllowedCache["$user"]["$group"] = true;
+        return true;
     }
+
+	function groupHostAllowed($conn, $group = "ANY", $user = "")
+    {
+        static $groupAllowedCache;
+
+        if (!is_object($conn)) {
+            echo "Missing database connection object.";
+            exit();
+        }
+
+        if ($group == "ANY")
+            return true;
+
+        if (!$user)
+            $user = Session::get_session_user();
+
+        if (isset($groupAllowedCache["$user"]["$group"])) {
+            return $groupAllowedCache["$user"]["$group"];
+        }
+
+        $hosts = Host_group::get_hosts($conn, $group);
+
+        if (empty($hosts))
+            return true;
+
+        foreach ($hosts as $host){
+            /*
+             * get info from host name $host
+             * use Host::get_list(), as it perform host permission verification
+             *  Host::get_list() -> Session::hostAllowed()
+             * no need to call directly Session::hostAllowed()
+             */
+                $h = Host::get_list($conn, "WHERE ip = '$host->host_ip'");
+		if(empty($h)){
+                        $groupAllowedCache["$user"]["$group"] = false;
+                        return false;
+                }
+        }
+
+        $groupAllowedCache["$user"]["$group"] = true;
+        return true;
+	}
+
+
 
     function netAllowed($conn, $net = "ANY", $user = "")
     {
@@ -348,21 +481,21 @@ class Session {
 
         if ($net == "ANY")
             return true;
- 
+
         if (!$user)
             $user = Session::get_session_user();
 
         if (isset($netAllowedCache["$user"]["$net"])) {
             return $netAllowedCache["$user"]["$net"];
         }
-       
+
         $allowed_nets = Session::allowedNets($user);
         $allowed_sensors = Session::allowedSensors($user);
 
         if ($allowed_nets)
         {
-            /* 
-             * get ips from network $net 
+            /*
+             * get ips from network $net
              * don't use Net::get_list(), it's a recursive call:
              *  Net::get_list() -> Session::netAllowed() -> Net::get_list()
              */
@@ -381,7 +514,7 @@ class Session {
             }
         }
 
-        if ($allowed_sensors) 
+        if ($allowed_sensors)
         {
             $sensor_list = split(",", $allowed_sensors);
             if (!array_intersect(Net::get_related_sensors($conn, $net),
@@ -438,7 +571,7 @@ class Session {
         return NULL;
     }
 
-    function insert ($conn, $login, $pass, $name, $email, 
+    function insert ($conn, $login, $pass, $name, $email,
                      $perms, $nets, $sensors, $company, $department)
     {
         global $ACL_MAIN_MENU;
@@ -457,7 +590,7 @@ class Session {
         }
 
         /* insert into GACL database */
-        
+
         $gacl_api = new gacl_api($ACL_OPTIONS);
 
         $gacl_api->add_object (ACL_DEFAULT_USER_SECTION, /* section */
@@ -514,7 +647,7 @@ class Session {
                 true,
                 true,
                 $sensors);
-                
+
         $infolog = array($login);
         Log_action::log(4,$infolog);
     }
@@ -523,11 +656,11 @@ class Session {
     {
         global $ACL_MAIN_MENU;
         global $ACL_OPTIONS;
-        
+
         /* modify OSSIM database */
         $sql = "UPDATE users SET name = ?, allowed_nets = ?, email = ?, company = ?, department = ? WHERE login = ?";
         $params = array($name, $nets, $email, $company, $department, $login);
-        
+
         if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -563,10 +696,10 @@ class Session {
                             $perms[$key],
                             true);
                     }
-                } 
-                
+                }
+
                 /* there is no menu entry, insert it */
-                else 
+                else
                 {
                     $gacl_api->add_acl(
                         array($aco_section => array ($key)),
@@ -579,7 +712,7 @@ class Session {
                 }
             }
         }
-       
+
         /* update allowed nets */
         if ($acl_ids = $gacl_api->search_acl (
                             ACL_DEFAULT_DOMAIN_SECTION,
@@ -628,8 +761,8 @@ class Session {
             }
         }
         $infolog = array($login);
-        Log_action::log(6,$infolog); 
-        
+        Log_action::log(6,$infolog);
+
     }
 
     function changepass ($conn, $login, $pass)
@@ -642,14 +775,14 @@ class Session {
             exit;
         }
         $infolog = array($login);
-        Log_action::log(5,$infolog);  
+        Log_action::log(5,$infolog);
     }
 
     function delete ($conn, $login)
     {
         global $ACL_MAIN_MENU;
         global $ACL_OPTIONS;
-        
+
         if ($login == ACL_DEFAULT_OSSIM_ADMIN) {
             print "<p>Can't remove default user</p>";
             exit;
@@ -684,7 +817,7 @@ class Session {
                                          "ARO"),
                 "ARO",
                 true);
-        $infolog = array($login);        
+        $infolog = array($login);
         Log_action::log(3,$infolog);
     }
 }

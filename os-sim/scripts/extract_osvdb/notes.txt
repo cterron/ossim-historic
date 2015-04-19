@@ -3,7 +3,9 @@
 Ossim uses OSVDB data to do some cross-correlation. If you want to update the data between OSVDB id's and snort id's, you must follow this simple steps:
 
 1.- Download the OSVDB XML file. Please go to www.osvdb.org and accept the Agreement. After that, do:
-http://osvdb.org/exports/xmlDumpByID-Current.xml.bz2
+
+# wget http://osvdb.org/exports/xmlDumpByID-Current.xml.bz2
+# bunzip2 xmlDumpByID-Current.xml.bz2
 
 2.- extract all the snort rules with cve or bugtraq associations:
 

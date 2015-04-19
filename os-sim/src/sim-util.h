@@ -113,7 +113,8 @@ gboolean					sim_base64_decode						(	gchar *in,
 size_t						sim_strnlen									(	const char *str,
 																								size_t maxlen);
 gchar*						sim_normalize_host_mac			(gchar *old_mac);
-
+guint8 * sim_hex2bin(gchar *);
+gchar * sim_bin2hex(guint8*,guint);
 	
 G_END_DECLS
 

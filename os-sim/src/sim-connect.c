@@ -49,18 +49,26 @@ sim_connect_send_alarm(SimConfig *config, SimEvent *event)
   gchar *ip_src = NULL;
   gchar *ip_dst = NULL;
   gchar *hostname = NULL;
-  guint n;
+  gsize n;
   GList	*notifies = NULL;
   gint	risk,port;
   gchar timestamp[TIMEBUF_SIZE];
-  // risk_a gets inserted too, have to check this.
 
   risk = event->risk_a;
+
+	// Send max risk 
+  // i.e., to avoid risk=0 when destination is 0.0.0.0
+  if (event->risk_a > event->risk_c)
+    risk = event->risk_a;
+  else
+    risk = event->risk_c;
 
   hostname = g_strdup(config->framework.host);
 
   if (!hostname)
   {
+		//may be that this host hasn't got any frameworkd. If the event is forwarded to other server, it will be sended to the
+		//other server framework (supposed it has a defined one).
 	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_connect_send_alarm: Hostname error");
     return 1;
   }

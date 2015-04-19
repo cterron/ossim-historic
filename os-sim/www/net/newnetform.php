@@ -31,18 +31,18 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th> <?php echo gettext("Name"); ?> </th>
+    <th> <?php echo gettext("Name"); ?> (*)</th>
     <td class="left"><input type="text" name="name" size="30"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Ips"); ?> </th>
+    <th> <?php echo gettext("Ips"); ?> (*)</th>
     <td class="left">
        <i> <?php echo gettext("example");?>: 192.168.0.0/24,192.168.1.0/24 </i><br/>
       <input type="text" name="ips" size="30">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Asset"); ?> </th>
+    <th> <?php echo gettext("Asset"); ?> (*)</th>
     <td class="left">
       <select name="asset">
         <option value="0">0</option>
@@ -55,21 +55,21 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold C"); ?> </th>
+    <th> <?php echo gettext("Threshold C"); ?> (*)</th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_c" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold A"); ?> </th>
+    <th> <?php echo gettext("Threshold A"); ?> (*)</th>
     <td class="left">
       <input type="text" value="<?php echo $threshold ?>" 
              name="threshold_a" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("RRD Profile"); ?> <br/>
+    <th> <?php echo gettext("RRD Profile"); ?> (*)<br/>
         <font size="-2">
           <a href="../rrd_conf/new_rrd_conf_form.php">
 	  <?php echo gettext("Insert new profile"); ?> ?</a>
@@ -110,7 +110,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 -->
 
   <tr>
-    <th> <?php echo gettext("Sensors"); ?> <br/>
+    <th> <?php echo gettext("Sensors"); ?> (*)<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">
 	  <?php echo gettext("Insert new sensor"); ?> ?</a>
@@ -167,6 +167,9 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
   </tr>
 </table>
 </form>
+
+<p align="center"><i><?php echo gettext("Values marked with (*) are mandatory"); ?></b></i></p>
+
 <?php
     $db->close($conn);
 ?>

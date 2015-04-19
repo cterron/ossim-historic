@@ -4,6 +4,7 @@
 //    Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
 //    $user = Session::get_session_user();
 
+    header("Content-Type: image/svg+xml");
     $sl = GET('sl');
     $scale = GET('scale');
 
@@ -14,7 +15,7 @@
         die(ossim_error());
     }
 
-    header("Content-Type: image/svg+xml");
+
     
     $sec_level = $sl;
     if ($sec_level >= 95) {
@@ -41,10 +42,11 @@
     $coordmax = $yscale * 100 + 5;
     $coordcur = $yscale * $sec_level + 5;
 
-$blob = '<?xml version="1.0" ?>
+$blob = '<?xml version="1.0" standalone="yes"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
  "http://www.w3.org/TR/2001/REC-SVG20010904/DTD/svg10.dtd">
-<svg width="100%" height="100%" viewBox="0 0 130 '. (100*$yscale + 37) .'" preserveAspectRatio="xMinYMid meet">
+<svg xmlns="http://www.w3.org/2000/svg"
+xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 130 '. (100*$yscale + 37) .'" preserveAspectRatio="xMinYMid meet">
 <desc>
   Draw a thermometer to show the service level
 </desc>

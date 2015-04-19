@@ -2,6 +2,8 @@
 require_once 'classes/Session.inc';
 require_once 'ossim_conf.inc';
 require_once 'panel/Panel.php';
+require_once 'classes/User_config.inc';
+require_once 'ossim_db.inc';
 
 /*
 
@@ -94,6 +96,36 @@ class Window_Panel_Ajax
         return $plugins;
     }
 
+    function getPanelTabs()
+    {
+        $db = new ossim_db();
+        $conn = $db->connect();
+
+        $config = new User_config($conn);
+        $login = Session::get_session_user();
+
+        $tabs = $config->get($login, 'panel_tabs', 'php');
+        if ($tabs == null) {
+            return false;
+        } else {
+            return $tabs;
+        }
+
+        // Save a var into the database as a serialized PHP var
+
+    }
+
+    function setPanelTabs($tabs)
+    {
+        $db = new ossim_db();
+        $conn = $db->connect();
+
+        $config = new User_config($conn);
+        $login = Session::get_session_user();
+
+        $config->set($login, 'panel_tabs', $tabs, 'php');
+    }
+
     function getConfigFile()
     {
         $conf = &$GLOBALS['conf'];
@@ -130,13 +162,32 @@ class Window_Panel_Ajax
         if (!$user) {
             die("Not logged in, aborting");
         }
-        $config_file = $configs_dir.'/'.$user;
+        if(GET('panel_id')){
+            $config_file_name = $user . "_" . GET('panel_id');
+        } else {
+            $config_file_name = $user;
+        }
+
+        $config_file = $configs_dir.'/'. $config_file_name;
+        /*
+          Migrate old panel file to first new panel file
+        */ 
+	if(!file_exists($config_file) && file_exists($configs_dir . '/' . $user)){
+            rename(($configs_dir . '/' . $user), $config_file);
+        }
+
+        /* Bugfix: after moving the config file always use new format, even if there are no tabs present */
+	if(!file_exists($config_file) && file_exists($configs_dir . '/' . $user . "_1")){
+            $config_file = $configs_dir.'/'. $config_file_name . "_1";
+        }
         return $config_file;
     }
 
-    function loadConfig($window_id = null)
+    function loadConfig($window_id = null, $filename = null)
     {
-        $filename = $this->getConfigFile();
+        if($filename == null)
+            $filename = $this->getConfigFile();
+
         if (!is_file($filename)) {
             $data = null;
         } else {
@@ -220,6 +271,35 @@ class Window_Panel_Ajax
         $html .= "<textarea name='window_help' rows='10' cols='35' wrap='on'>$help</textarea>";
         return $html;
     }
+
+    function showMetricsHTML($options)
+    {
+        $metric_sql = isset($options['metric_opts']['metric_sql']) ? $options['metric_opts']['metric_sql'] : '';
+        $low_threshold = isset($options['metric_opts']['low_threshold']) ? $options['metric_opts']['low_threshold'] : '';
+        $high_threshold = isset($options['metric_opts']['high_threshold']) ? $options['metric_opts']['high_threshold'] : '';
+        $enable_metrics = isset($options['metric_opts']['enable_metrics']) ? $options['metric_opts']['enable_metrics'] : '';
+        $enable_metrics_yes = $enable_metrics_no = '';
+        if ($enable_metrics == '1') {
+            $enable_metrics_yes = 'checked';
+        } else {
+            $enable_metrics_no = 'checked';
+        }
+
+        $html = '';        
+        $html .= _("Enable Metrics for this panel?"). 
+          ':<br/><input type="radio" name="enable_metrics" value="1" '.$enable_metrics_yes.'>'._("Yes").
+          '<br/><input type="radio" name="enable_metrics" value="0" '.$enable_metrics_no.'>'._("No").
+          '<br/>';
+        $html .= _("Please enter code which will provide the metric which we'll compare against.") . '<hr>';
+        $html .= _("SQL code") . ':<br/>';
+        $html .= '<textarea name="metric_sql" rows="17" cols="55" wrap="soft">';
+        $html .= $metric_sql;
+        $html .= '</textarea><br/><br/>';
+        $html .= _("Low Threshold") . ': <br/><input type="text" name="low_threshold" value="'.$low_threshold.'"><br/><br/>';
+        $html .= _("High Threshold") . ': <br/><input type="text" name="high_threshold" value="'.$high_threshold.'"><br/><br/>';
+        return $html;
+    }
+ 
     
     function &getPlugin($options)
     {

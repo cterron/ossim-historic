@@ -152,7 +152,11 @@ class ParserLog(Detector):
             sys.exit()
 
         # compile the list of regexp
-        for key, item in self._plugin.rules().iteritems():
+        unsorted_rules = self._plugin.rules()
+        keys = unsorted_rules.keys()
+        keys.sort()
+        for key in keys:
+            item = unsorted_rules[key]
             self.rules.append(RuleMatch(key, item, self._plugin))
 
         # Move to the end of file
@@ -183,9 +187,10 @@ class ParserLog(Detector):
                 # logger.debug('Line read: %s' % (line))
 
                 for rule in self.rules:
+#                    logger.info("Trying rule: [%s]" % (rule.name))
                     rule.feed(line)
                     if rule.match():
-                        logger.info("Matched rule: [%s]" % (rule.name))
+                        logger.debug("Matched rule: [%s]" % (rule.name))
                         event = rule.generate_event(line)
                         if event is not None:
                             self.send_message(event)

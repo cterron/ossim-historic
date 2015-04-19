@@ -4,3 +4,5 @@ panel_DATA = Ajax_Panel.php \
 		Panel.php  
 
 EXTRA_DIST   = $(panel_DATA)
+
+DISTCLEANFILES = Makefile.in

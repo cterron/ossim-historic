@@ -85,10 +85,8 @@ $conn = $db->connect();
 
 ?>
 
-  <table align="center" width="100%">
-    <table width="100%">
-    <tr>
-    <td colspan = 8>
+  <table align="center" width="100%"><tr><td>
+    <form action="handle_anomaly.php" method="GET">
     <table align="center" width="100%">
     <tr>
     <th colspan=8><?php echo gettext("RRD global anomalies"); ?>
@@ -109,7 +107,6 @@ $conn = $db->connect();
     <th align="center"> <?php echo gettext("Delete"); ?> </th>
     </tr>
 
-<form action="handle_anomaly.php" method="GET">
 <?php
 
 $where_clause = "where acked = 0";
@@ -145,14 +142,13 @@ if ($event_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
 <td> <?php echo round(($event->get_count())/$perl_interval);?>h. </td>
 <td><font color="red"><?php echo ($event->get_over()/$rrd_temp->get_col($event->get_what(),"threshold"))*100;?>%</font>/<?php echo $event->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
-echo $event->get_what();?>"></input></td>
+echo $event->get_what();?>"></td>
 <td align="center"><input type="checkbox" name="del,<?php echo $ip?>,<?php
-echo $event->get_what();?>"></input></td>
+echo $event->get_what();?>"></td>
 </tr>
 <?php }}
 
 ?>
-<tr></tr>
 <tr><th colspan="8"><?php echo gettext("RRD anomalies");?>
 <a name="Anomalies" href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title=" <?php echo gettext("Fix"); ?> "><img src="../pixmaps/Hammer2.png" width="24" border="0"></a>
 <a href="rrd_anomaly.php" target="_blank">[<?php echo gettext("Get full list"); ?>]</a>
@@ -189,9 +185,9 @@ echo $ip;?>">
 <td> <?php echo round(($event->get_count())/$perl_interval);?>h. </td>
 <td><font color="red"><?php echo 0;//echo ($event->get_over()/$rrd_temp->get_col($event->get_what(),"threshold"))*100;?>%</font>/<?php echo $event->get_over();?></td>
 <td align="center"><input type="checkbox" name="ack,<?php echo $ip?>,<?php
-echo $event->get_what();?>"></input></td>
+echo $event->get_what();?>"></td>
 <td align="center"><input type="checkbox" name="del,<?php echo $ip?>,<?php
-echo $event->get_what();?>"></input></td>
+echo $event->get_what();?>"></td>
 </tr>
 <?php }}?>
 <tr>
@@ -200,12 +196,16 @@ echo $event->get_what();?>"></input></td>
 <input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
+</table>
 </form>
+</td>
+
+</tr>
+<tr><td>
 
 <!-- OS detection -->
-    <table width="100%">
-    <tr>
-    <td colspan="7">
+<form action="handle_os.php" method="GET">
+<input type="hidden" name="back" value="<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>">
     <table width="100%">
     <tr>
     	<th colspan="9"><u> <?php echo gettext("OS Changes"); ?> </u> <a name="OS" 
@@ -229,7 +229,6 @@ echo gettext("Get full list"); ?> </a> ]
         <th></th>
       <?php } ?>
     </tr>
-<form action="handle_os.php" method="GET">
 <?php
 if ($anom_os_list = Host_os::get_anom_list($conn)) {
     foreach($anom_os_list as $anom_os) {
@@ -239,14 +238,14 @@ if ($anom_os_list = Host_os::get_anom_list($conn)) {
 <td colspan="1">
 <?php 
 if (($ex_os == $anom_os["ip"]) && ($ex_oss == $anom_os["sensor"])) { ?>
-	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></e>
+	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></a>
 <?php } else { ?>
-	<a href="<?php echo $_SERVER["PHP_SELF"]."?ex_os=".$anom_os["ip"]."&ex_oss=".$anom_os["sensor"] ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></e>
+	<a href="<?php echo $_SERVER["PHP_SELF"]."?ex_os=".$anom_os["ip"]."&ex_oss=".$anom_os["sensor"] ?>"><img src="../pixmaps/arrow2.gif" border="0"></a>
 <?php } ?>
 </td><td>
 <A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_os["ip"]) . 
     "/".$anom_os["ip"].".html";?>" target="_blank" title="<?php
-echo $ip;?>">
+echo $anom_os["ip"];?>">
 <?php echo Host::ip2hostname($conn, $anom_os["ip"]);?></A>
 </td>
 <td colspan="1"><?php echo Host::ip2hostname($conn, $anom_os["sensor"], true);?></td>
@@ -273,7 +272,7 @@ if (($ex_os == $anom_os["ip"]) && ($ex_oss == $anom_os["sensor"])) {
 	<td>
 	<A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_os_ip["ip"]) . 
 	    "/".$anom_os_ip["ip"].".html";?>" target="_blank" title="<?php
-	echo $ip;?>">
+	echo $anom_os_ip["ip"];?>">
 	<?php echo Host::ip2hostname($conn, $anom_os_ip["ip"]);?></A>
 	</td>
 	<td><?php echo Host::ip2hostname($conn, $anom_os_ip["sensor"], true);?></td>
@@ -282,17 +281,16 @@ if (($ex_os == $anom_os["ip"]) && ($ex_oss == $anom_os["sensor"])) {
 	<td colspan="1"><?php echo $anom_os_ip["date"];?></td>
 	<td>
 	<input type="checkbox" name="ip,<?php echo
-$anom_os_ip["ip"].",".$anom_os_ip["sensor"].",".$anom_os_ip["date"];?>" value="<?php echo "ack".$anom_os_ip["ip"]; ?>"></input>
+$anom_os_ip["ip"].",".$anom_os_ip["sensor"].",".$anom_os_ip["date"];?>" value="<?php echo "ack".$anom_os_ip["ip"]; ?>">
 	</td>
 	<td>
-	<input type="checkbox" name="ip,<?php echo $anom_os_ip["ip"];?>,<?php echo $anom_os_ip["sensor"];?>,<?php echo $anom_os_ip["old_date"];?>" value="<?php echo "ignore".$anom_os_ip["ip"];?>"></input>
+	<input type="checkbox" name="ip,<?php echo $anom_os_ip["ip"];?>,<?php echo $anom_os_ip["sensor"];?>,<?php echo $anom_os_ip["old_date"];?>" value="<?php echo "ignore".$anom_os_ip["ip"];?>">
 	</td>
 <td>
  <a href="<?php echo
- "../incidents/newincident.php?ref=Anomaly&anom_type=os&anom_ip=".$anom_os_ip["ip"]."&a_sen=".$anom_os_ip["sensor"]."
- [".$anom_os_ip["interface"]."]&a_os_o=".$anom_os_ip["old_os"]."&a_os=".$anom_os_ip["os"]."&a_date=".$anom_os_ip["date"]."&title=Host
- ".$anom_os_ip["ip"]."
- changed its OS"; ?>">
+ "../incidents/newincident.php?ref=Anomaly&anom_type=os&anom_ip=".$anom_os_ip["ip"]."&a_sen=".$anom_os_ip["sensor"].
+ "[".$anom_os_ip["interface"]."]&a_os_o=".$anom_os_ip["old_os"]."&a_os=".$anom_os_ip["os"]."&a_date=".$anom_os_ip["date"]."&title=Host "
+ .$anom_os_ip["ip"]." changed its OS"; ?>">
  <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
  </a>
 </td>                                                                                                             
@@ -307,17 +305,16 @@ $anom_os_ip["ip"].",".$anom_os_ip["sensor"].",".$anom_os_ip["date"];?>" value="<
 <input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
-</form>
     </table>
+</form>
     </td>
     </tr>
     <!-- end OS detection -->
 
 <!-- Mac detection -->
-    <br/>
-    <table width="100%">
-    <tr>
-    <td colspan="8">
+    <tr><td>
+<form action="handle_mac.php" method="GET">
+<input type="hidden" name="back" value="<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>">
     <table width="100%">
     <tr>
     	<th colspan="9"><u> <?php echo gettext("Mac Changes"); ?> </u> <a name="Mac" 
@@ -341,7 +338,6 @@ echo gettext("Get full list"); ?> </a> ]
         <th></th>
       <?php } ?>
     </tr>
-<form action="handle_mac.php" method="GET">
 <?php
 if ($anom_mac_list = Host_mac::get_anom_list($conn)) {
     foreach($anom_mac_list as $anom_mac) {
@@ -351,14 +347,14 @@ if ($anom_mac_list = Host_mac::get_anom_list($conn)) {
 <td colspan="1">
 <?php 
 if (($ex_mac == $anom_mac["ip"]) && ($ex_macs == $anom_mac["sensor"])) { ?>
-	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></e>
+	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></a>
 <?php } else { ?>
-	<a href="<?php echo $_SERVER["PHP_SELF"]."?ex_mac=".$anom_mac["ip"]."&ex_macs=".$anom_mac["sensor"] ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></e>
+	<a href="<?php echo $_SERVER["PHP_SELF"]."?ex_mac=".$anom_mac["ip"]."&ex_macs=".$anom_mac["sensor"] ?>"><img src="../pixmaps/arrow2.gif" border="0"></a>
 <?php } ?>
 </td><td>
 <A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_mac["ip"]) . 
     "/".$anom_mac["ip"].".html";?>" target="_blank" title="<?php
-echo $ip;?>">
+echo $anom_mac["ip"];?>">
 <?php echo Host::ip2hostname($conn, $anom_mac["ip"]);?></A>
 </td>
 <td colspan="1"><?php echo Host::ip2hostname($conn, $anom_mac["sensor"], true);?></td>
@@ -384,7 +380,7 @@ if (($ex_mac == $anom_mac["ip"]) && ($ex_macs == $anom_mac["sensor"])) {
 	<td>
 	<A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_mac_ip["ip"]) . 
 	    "/".$anom_mac_ip["ip"].".html";?>" target="_blank" title="<?php
-	echo $ip;?>">
+	echo $anom_mac_ip["ip"];?>">
 	<?php echo Host::ip2hostname($conn, $anom_mac_ip["ip"]);?></A>
 	</td>
 	<td><?php echo Host::ip2hostname($conn, $anom_mac_ip["sensor"], true);?></td>
@@ -392,17 +388,16 @@ if (($ex_mac == $anom_mac["ip"]) && ($ex_macs == $anom_mac["sensor"])) {
 	<td><?php echo $anom_mac_ip["old_mac"];?></td>
 	<td colspan="1"><?php echo $anom_mac_ip["date"];?></td>
 	<td>
-	<input type="checkbox" name="ip,<?php echo $anom_mac_ip["ip"].",".$anom_mac_ip["sensor"].",".$anom_mac_ip["date"];?>" value="<?php echo "ack".$anom_mac_ip["ip"]; ?>"></input>
+	<input type="checkbox" name="ip,<?php echo $anom_mac_ip["ip"].",".$anom_mac_ip["sensor"].",".$anom_mac_ip["date"];?>" value="<?php echo "ack".$anom_mac_ip["ip"]; ?>">
 	</td>
 	<td>
-	<input type="checkbox" name="ip,<?php echo $anom_mac_ip["ip"];?>,<?php echo $anom_mac_ip["sensor"];?>,<?php echo $anom_mac_ip["old_date"];?>" value="<?php echo "ignore".$anom_mac_ip["ip"];?>"></input>
+	<input type="checkbox" name="ip,<?php echo $anom_mac_ip["ip"];?>,<?php echo $anom_mac_ip["sensor"];?>,<?php echo $anom_mac_ip["old_date"];?>" value="<?php echo "ignore".$anom_mac_ip["ip"];?>">
 	</td>
 <td>
  <a href="<?php echo
- "../incidents/newincident.php?ref=Anomaly&anom_type=mac&anom_ip=".$anom_mac_ip["ip"]."&a_sen=".$anom_mac_ip["sensor"]."
- [".$anom_mac_ip["interface"]."]&a_ven=.".$anom_mac_ip["vendor"]."&a_ven_o=".$a_mac_ip["old_vendor"]."&a_mac_o=".$anom_mac_ip["old_mac"]."&a_mac=".$anom_mac_ip["mac"]."&a_date=".$anom_mac_ip["date"]."&title=Host
- ".$anom_mac_ip["ip"]."
- changed its MAC address"; ?>">
+ "../incidents/newincident.php?ref=Anomaly&anom_type=mac&anom_ip=".$anom_mac_ip["ip"]."&a_sen=".$anom_mac_ip["sensor"].
+ "[".$anom_mac_ip["interface"]."]&a_ven=.".$anom_mac_ip["vendor"]."&a_ven_o=".$anom_mac_ip["old_vendor"]."&a_mac_o=".$anom_mac_ip["old_mac"]."&a_mac=".$anom_mac_ip["mac"]."&a_date=".$anom_mac_ip["date"]."&title=Host "
+ .$anom_mac_ip["ip"]." changed its MAC address"; ?>">
  <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
  </a>
 </td>                                                                                                             
@@ -417,21 +412,20 @@ if (($ex_mac == $anom_mac["ip"]) && ($ex_macs == $anom_mac["sensor"])) {
 <input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
-</form>
     </table>
+</form>
     </td>
     </tr>
     <!-- end Mac detection -->
-<br/>
+
+<tr><td>
 
 <!--  Start Service detection -->
-    <br/>
+<form action="handle_services.php" method="GET">
+<input type="hidden" name="back" value="<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>">
     <table width="100%">
     <tr>
-    <td colspan="7">
-    <table width="100%">
-    <tr>
-    	<th colspan="10"><u> <?php echo gettext("Service Changes"); ?> </u> <a
+   	<th colspan="10"><u> <?php echo gettext("Service Changes"); ?> </u> <a
         name="Service" 
         href="<?php echo $_SERVER["PHP_SELF"]?>?#Service" title=" <?php echo gettext("Fix"); ?> "><img
         src="../pixmaps/Hammer2.png" width="24" border="0"></a>  
@@ -454,7 +448,6 @@ echo gettext("Get full list"); ?> </a> ]
         <th></th>
       <?php } ?>
     </tr>
-<form action="handle_services.php" method="GET">
 <?php
 if ($anom_services_list = Host_services::get_anom_list($conn)) {
     foreach($anom_services_list as $anom_services) {
@@ -465,15 +458,15 @@ if ($anom_services_list = Host_services::get_anom_list($conn)) {
 <td colspan="1">
 <?php 
 if (($ex_serv == $anom_services["ip"]) && ($ex_servs == $anom_services["sensor"]) && ($ex_servp == $anom_services["port"]) ) { ?>
-	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></e>
+	<a href="<?php echo $_SERVER["PHP_SELF"] ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></a>
 <?php } else { ?>
 	<a href="<?php echo
-    $_SERVER["PHP_SELF"]."?ex_serv=".$anom_services["ip"]."&ex_servs=".$anom_services["sensor"]."&ex_servp=".$anom_services["port"] ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></e>
+    $_SERVER["PHP_SELF"]."?ex_serv=".$anom_services["ip"]."&ex_servs=".$anom_services["sensor"]."&ex_servp=".$anom_services["port"] ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></a>
 <?php } ?>
 </td><td>
 <A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_services["ip"]) . 
     "/".$anom_services["ip"].".html";?>" target="_blank" title="<?php
-echo $ip;?>">
+echo $anom_services["ip"];?>">
 <?php echo Host::ip2hostname($conn, $anom_services["ip"]);?></A>
 </td>
 <td colspan="1"><?php echo Host::ip2hostname($conn, $anom_services["sensor"], true);?></td>
@@ -482,7 +475,7 @@ echo $ip;?>">
 $anom_services["service"]."/".getprotobynumber($anom_services["protocol"])."[".$anom_services["version"]."]";?></font></td>
 <td colspan="1"><?php echo $anom_services["old_service"]."/".getprotobynumber($anom_services["old_protocol"])." [".$anom_services["old_version"]."]";?></td>
 <td colspan="1"><?php echo $anom_services["date"];?></td>
-<?php if ($ex_os) { ?>
+<?php if ($ex_serv) { ?>
   <td colspan="1">&nbsp;</td>
   <td colspan="1">&nbsp;</td>
   <td colspan="1">&nbsp;</td>
@@ -501,28 +494,28 @@ if (($ex_serv == $anom_services["ip"]) && ($ex_servs == $anom_services["sensor"]
 	<td>
 	<A HREF="<?php echo Sensor::get_sensor_link($conn, $anom_services_ip["ip"]) . 
 	    "/".$anom_services_ip["ip"].".html";?>" target="_blank" title="<?php
-	echo $ip;?>">
+	echo $anom_services_ip["ip"];?>">
 	<?php echo Host::ip2hostname($conn, $anom_services_ip["ip"]);?></A>
 	</td>
     <td colspan="1"><?php echo Host::ip2hostname($conn, $anom_services_ip["sensor"], true);?></td>
     <td colspan="1"><?php echo $anom_services_ip["port"];?></td>
     <td colspan="1"><font color="red"><?php echo $anom_services_ip["service"]."/".getprotobynumber($anom_services_ip["protocol"])." [".$anom_services_ip["version"]."]";?></font></td>
-    <td colspan="1"><?php echo $anom_services_ip["service"]."/".getprotobynumber($anom_services_ip["old_protocol"])." [".$anom_services_ip["old_version"]."]";?></td>
+    <td colspan="1"><?php echo $anom_services_ip["old_service"]."/".getprotobynumber($anom_services_ip["old_protocol"])." [".$anom_services_ip["old_version"]."]";?></td>
     <td colspan="1"><?php echo $anom_services_ip["date"];?></td>
     <td>
         <input type="checkbox" name="ip,<?php echo
         $anom_services_ip["ip"];?>,<?php echo $anom_services_ip["sensor"];?>,<?php
         echo $anom_services_ip["date"];?>,<?php echo
-        $anom_services_ip["port"];?>" value="<?php echo "ack".$anom_services_ip["ip"];?>"></input>
+        $anom_services_ip["port"];?>" value="<?php echo "ack".$anom_services_ip["ip"];?>">
     </td>
     <td>
     <input type="checkbox" name="ip,<?php echo $anom_services_ip["ip"];?>,<?php echo $anom_services_ip["sensor"];?>,<?php
-    echo $anom_services_ip["old_date"];?>,<?php echo $anom_services_ip["port"];?>" value="<?php echo "ignore".$anom_services_ip["ip"];?>"></input>
+    echo $anom_services_ip["old_date"];?>,<?php echo $anom_services_ip["port"];?>" value="<?php echo "ignore".$anom_services_ip["ip"];?>">
     </td>
 <td>
  <a href="<?php echo
- "../incidents/newincident.php?ref=Anomaly&anom_type=service&anom_ip=".$anom_services_ip["ip"]."&a_sen=".$anom_services_ip["sensor"]."
- [".$anom_services_ip["interface"]."]&a_port=".$anom_services_ip["port"]."&a_prot=".getprotobynumber($anom_services_ip["protocol"])."&a_ver_o=".$anom_services_ip["version"]."&a_prot_o=".getprotobynumber($anom_services_ip["old_protocol"])."&a_ver=".$anom_services_ip["old_version"]."&a_date=".$anom_services_ip["date"]."&title=Host ".$anom_services_ip["ip"]." changed protocol/version at port ".$anom_services_ip["port"]; ?>">
+ "../incidents/newincident.php?ref=Anomaly&anom_type=service&anom_ip=".$anom_services_ip["ip"]."&a_sen=".$anom_services_ip["sensor"].
+ "[".$anom_services_ip["interface"]."]&a_port=".$anom_services_ip["port"]."&a_prot=".getprotobynumber($anom_services_ip["protocol"])."&a_ver_o=".$anom_services_ip["version"]."&a_prot_o=".getprotobynumber($anom_services_ip["old_protocol"])."&a_ver=".$anom_services_ip["old_version"]."&a_date=".$anom_services_ip["date"]."&title=Host ".$anom_services_ip["ip"]." changed protocol/version at port ".$anom_services_ip["port"]; ?>">
  <img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>
  </a>
 </td>                                                                                                             
@@ -537,15 +530,12 @@ if (($ex_serv == $anom_services["ip"]) && ($ex_servs == $anom_services["sensor"]
 <input type="reset" value=" <?php echo gettext("reset"); ?> ">
 </td>
 </tr>
-</form>
     </table>
+</form>
     </td>
     </tr>
     <!-- end services detection -->
-<br/>
 
-</table>
-<br/>
  </table>
 
 <?php

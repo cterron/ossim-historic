@@ -10,6 +10,7 @@ from OssimConf import OssimConf
 from OssimDB import OssimDB
 import Const
 from Vulnerabilities import Vulnerabilities
+import Util
 
 class DoNessus (threading.Thread) :
 
@@ -29,6 +30,13 @@ class DoNessus (threading.Thread) :
         self.__status = 0
         self.__last_error = None
         self.__sensor_list = []
+        self.__nets_list = []
+        self.__hosts_list = []
+        self.__hostgroups_list = []
+        self.__scan_type = None
+        self.__sensors_scan = []
+        self.__sensors_targets = {}
+
         threading.Thread.__init__(self)
 
     def __startup (self) :
@@ -46,10 +54,19 @@ class DoNessus (threading.Thread) :
     def __cleanup (self) :
         self.__conn.close()
 
+    def set_scan_type(self, type):
+        self.__scan_type = type
+    
     def load_sensors (self, sensor_list = []) :
         self.__debug("Loading sensors")
         self.__sensor_list = sensor_list
 
+    def load_hosts (self, hostgroup_list, net_list, host_list):
+        self.__debug("Loading hostgroups/nets/hosts")
+        self.__hostgroups_list = hostgroup_list
+        self.__nets_list = net_list
+        self.__hosts_list = host_list
+        
     def get_sensors_by_id (self, id) :
         tmp_conf = OssimConf (Const.CONFIG_FILE)
         tmp_conn = None
@@ -74,6 +91,89 @@ class DoNessus (threading.Thread) :
 
         tmp_conn.close()
         return sensors
+
+    def get_sheduler_list_by_id (self, id, type) :
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        tmp_conn = None
+        self.__debug("Getting %s from policy id %d" % (type,int(id)))
+        list = []
+        tmp_conn = OssimDB()
+        tmp_conn.connect ( tmp_conf["ossim_host"],
+                              tmp_conf["ossim_base"],
+                              tmp_conf["ossim_user"],
+                              tmp_conf["ossim_pass"])
+
+        query = "SELECT * FROM plugin_scheduler_%s_reference where plugin_scheduler_id = %d" % (type,int(id))
+        hash = tmp_conn.exec_query(query)
+
+        if type == "host":
+            col = "ip"
+        else:
+            col = "%s_name" % type
+
+        for row in hash:
+            list.append(row[col])
+
+        print list
+
+        tmp_conn.close()
+        return list
+
+
+    def get_nets(self, netgroups, nets):
+        netgroups_l = netgroups.split(",")
+        nets_l = []
+        if not nets == "":
+            nets_l = nets.split(",")
+        net_list = []
+
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        tmp_conn = None
+        tmp_conn = OssimDB()
+        tmp_conn.connect ( tmp_conf["ossim_host"],
+                              tmp_conf["ossim_base"],
+                              tmp_conf["ossim_user"],
+                              tmp_conf["ossim_pass"])
+        for group in netgroups_l:
+            self.__debug(group)
+            query = "SELECT * FROM net_group_reference where net_group_name='%s'" % group
+            hash = tmp_conn.exec_query(query)
+            for row in hash:
+                if not row["net_name"] in net_list:
+                    net_list.append(row["net_name"])
+        for net in nets_l:
+            if not net in net_list:
+                net_list.append(net)
+        tmp_conn.close()
+        return net_list
+
+    def join_list(self, list1, list2):
+        tmp_list = []
+        
+        for item in list1:
+            if not item in tmp_list:
+                tmp_list.append(item)
+        for item in list2:
+            if not item in tmp_list:
+                tmp_list.append(item)
+        return tmp_list
+
+    def get_shedule_scan_type(self, id):
+        tmp_conf = OssimConf (Const.CONFIG_FILE)
+        tmp_conn = None
+        tmp_conn = OssimDB()
+        tmp_conn.connect ( tmp_conf["ossim_host"],
+                              tmp_conf["ossim_base"],
+                              tmp_conf["ossim_user"],
+                              tmp_conf["ossim_pass"])
+        query = "SELECT type_scan FROM plugin_scheduler WHERE id = '%s'" % id
+        hash = tmp_conn.exec_query(query)
+        if hash != []:
+            scan_type = hash[0]["type_scan"]
+        else: 
+            scan_type = None
+        tmp_conn.close()
+        return scan_type
 
     def __rm_rf (self, what) :
         """ Recursively delete a directory """
@@ -241,24 +341,6 @@ class DoNessus (threading.Thread) :
         self.__rm_rf(archived_dir)
         return True
 
-    def __isIpInNet (self, ip, networks) :
-        pattern_ip = '(\d+)\.(\d+)\.(\d+)\.(\d+)'
-        pattern_net = '(\d+)\.(\d+)\.(\d+)\.(\d+)/(\d+)'
-        for network in networks:
-            result_ip = re.findall(str(pattern_ip),ip)
-            result_net = re.findall(str(pattern_net),network)
-            for result_network in result_net:  
-                try:
-                    (ip_oct1, ip_oct2, ip_oct3, ip_oct4) = result_ip[0]
-                    (net_oct1, net_oct2, net_oct3, net_oct4, mask) = result_network
-                except IndexError:
-                    return 0
-                ip_val = int(ip_oct1)*256*256*256 + int(ip_oct2)*256*256 + int(ip_oct3)*256 + int(ip_oct4)
-                net_val = int(net_oct1)*256*256*256 + int(net_oct2)*256*256 + int(net_oct3)*256 + int(net_oct4)
-                if (ip_val >> (32 - int(mask))) == (net_val >> (32 - int(mask))):
-                    return 1
-        return 0
-
     def __get_networks (self, ip) :
         query = "SELECT * FROM net"
         host_networks = []
@@ -266,7 +348,7 @@ class DoNessus (threading.Thread) :
         for row in hash:
             temp = []
             temp.append(row["ips"])
-            if self.__isIpInNet(ip, temp):
+            if Util.isIpInNet(ip, temp):
                 host_networks.append(row["name"])
         return host_networks
 
@@ -299,12 +381,15 @@ class DoNessus (threading.Thread) :
         return False
 
     def __append (self, source, dest) :
-        tempfd1 = open(source,"r")
-        tempfd2 = open(dest,"a")
-        for line in tempfd1:
-            tempfd2.write(line)
-        tempfd1.close()
-        tempfd2.close()
+        try:
+            tempfd1 = open(source,"r")
+            tempfd2 = open(dest,"a")
+            for line in tempfd1:
+                tempfd2.write(line)
+            tempfd1.close()
+            tempfd2.close()
+        except Exception, e:
+            print "__append: %s" % e
 
     def __update_cross_correlation (self, nsr_file) :
         """ This function updates the host_plugin_sid cross-correlation table
@@ -482,6 +567,14 @@ class DoNessus (threading.Thread) :
     def get_error (self) :
         return self.__last_error
 
+
+    def add_ip_to_sensor(self, ip, sensor):
+        if not sensor in self.__sensors_scan:
+            self.__sensors_scan.append(sensor)
+            self.__sensors_targets[sensor] = ip + "\n"
+        else:
+            self.__sensors_targets[sensor] = self.__sensors_targets[sensor] + ip + "\n"
+
     def run (self) :
         self.__startup()
         self.__status = 1
@@ -550,56 +643,90 @@ class DoNessus (threading.Thread) :
                     os.mkdir(self.__dirnames["sensors"], 0755)
                 except OSError, e :
                     print e
-            scan_networks = [] 
+             
             sensors = []
             active_sensors = []
-            if len(self.__sensor_list) > 0:
-                sensors = self.__sensor_list
-            else:
-                query = "SELECT * FROM sensor"
-                hash = self.__conn.exec_query(query)
-                for row in hash:
-                    sensors.append(row["ip"])
 
             self.__filenames["targetfile"] = {}
             self.__filenames["nsrfile"] = {}
-
             self.__status = 15
-            for sensor in sensors:
-                self.__filenames["targetfile"][sensor] = os.path.join(self.__dirnames["sensors"], sensor + ".targets.txt")
-                sensorfd = open(self.__filenames["targetfile"][sensor],"w")
 
-                # net_group_scan (3001,net_group_name) -> net_group_reference (net_group_name, net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip)
-                query = "SELECT net.name,net.ips,sensor.ip FROM net,net_group_scan,net_group_reference, net_sensor_reference,sensor WHERE net_group_scan.plugin_id = 3001 AND net_group_scan.net_group_name = net_group_reference.net_group_name AND net_group_reference.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
-                hash = self.__conn.exec_query(query)
-                for row in hash:
-                    self.__debug("Adding net %s from net_group" % row["ips"])
-                    sensorfd.writelines(row["ips"] + "\n")
-                    scan_networks.append(row["ips"])
-
-                # net_scan(3001,net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip) => (net_name,net_ip,sensor_ip)
-                query = "SELECT net.name,net.ips,sensor.ip FROM net,net_scan,net_sensor_reference,sensor WHERE net_scan.plugin_id = 3001 AND net_scan.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
-                hash = self.__conn.exec_query(query)
-                for row in hash:
-                    if row["ips"] in scan_networks:
-                        self.__debug("DUP net, already defined within net_group: %s" % row["ips"])
-                    else:
-                        self.__debug("Adding net %s" % row["ips"])
+            if (self.__scan_type == "hosts"):
+                self.__debug("Entering Netgroup/Hostgroup/Net/Host based scan")
+                self.__sensors_scan = []
+                self.__sensors_targets = {}
+                scan_networks = []
+                for net in self.__nets_list:
+                    query = "SELECT net.ips,sensor.ip FROM net, net_sensor_reference, sensor WHERE net_sensor_reference.sensor_name = sensor.name and net.name = net_sensor_reference.net_name and net.name = '%s'" % net
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        self.__debug("Adding net %s in sensor %s" % (row["ips"], row["ip"]))
+                        self.add_ip_to_sensor(row["ips"], row["ip"])
+                        scan_networks.append(row["ips"])
+                for host in self.__hosts_list:
+                    query = "SELECT sensor.ip FROM host_sensor_reference, sensor WHERE host_sensor_reference.sensor_name = sensor.name and host_ip = '%s'" % host
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        self.__debug("Adding host %s in sensor %s" % (host, row["ip"]))
+                        self.add_ip_to_sensor(host, row["ip"])
+                for hostgroup in self.__hostgroups_list:
+                    query = "SELECT sensor.ip, host_ip FROM host_group_reference, host_group_sensor_reference, sensor WHERE host_group_sensor_reference.sensor_name = sensor.name and host_group_reference.host_group_name = host_group_sensor_reference.group_name and host_group_reference.host_group_name = '%s'" % hostgroup
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        self.__debug("Adding host %s in sensor %s from hostgroup %s" % (row["host_ip"], row["ip"],hostgroup))
+                        self.add_ip_to_sensor(row["host_ip"], row["ip"])
+                    
+                for sensor in self.__sensors_scan:
+                    self.__filenames["targetfile"][sensor] = os.path.join(self.__dirnames["sensors"], sensor + ".targets.txt")
+                    sensorfd = open(self.__filenames["targetfile"][sensor],"w")
+                    sensorfd.writelines(self.__sensors_targets[sensor])
+                    sensorfd.close()
+                sensors = self.__sensors_scan
+            else:
+                self.__debug("Entering sensor based scan")
+                scan_networks = []
+                if len(self.__sensor_list) > 0:
+                    sensors = self.__sensor_list
+                else:
+                    query = "SELECT * FROM sensor"
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        sensors.append(row["ip"])
+                for sensor in sensors:
+                    self.__filenames["targetfile"][sensor] = os.path.join(self.__dirnames["sensors"], sensor + ".targets.txt")
+                    sensorfd = open(self.__filenames["targetfile"][sensor],"w")
+    
+                    # net_group_scan (3001,net_group_name) -> net_group_reference (net_group_name, net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip)
+                    query = "SELECT net.name,net.ips,sensor.ip FROM net,net_group_scan,net_group_reference, net_sensor_reference,sensor WHERE net_group_scan.plugin_id = 3001 AND net_group_scan.net_group_name = net_group_reference.net_group_name AND net_group_reference.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        self.__debug("Adding net %s from net_group" % row["ips"])
                         sensorfd.writelines(row["ips"] + "\n")
                         scan_networks.append(row["ips"])
-
-                query = "SELECT sensor.ip, inet_ntoa(host_scan.host_ip) AS temporal FROM host_scan,host,sensor,host_sensor_reference WHERE plugin_id = 3001 AND host_sensor_reference.sensor_name = sensor.name AND host_sensor_reference.host_ip = inet_ntoa(host_scan.host_ip) AND host.ip = inet_ntoa(host_scan.host_ip) AND sensor.ip = '%s' " % sensor
-                hash = self.__conn.exec_query(query)
-                for row in hash:
-                    if(self.__isIpInNet(row["temporal"], scan_networks)):
-                        self.__debug("DUP host, already defined within network: %s" % row["temporal"])
-                    else :
-                        try:
-                            sensorfd.writelines(row["temporal"] + "\n")
-                        except KeyError, e:
-                            pass
-                        self.__debug("Adding host %s" % row["temporal"])
-                sensorfd.close()
+    
+                    # net_scan(3001,net_name) -> net (name) -> net_sensor_reference (net_name,sensor_name) -> sensor (name,ip) => (net_name,net_ip,sensor_ip)
+                    query = "SELECT net.name,net.ips,sensor.ip FROM net,net_scan,net_sensor_reference,sensor WHERE net_scan.plugin_id = 3001 AND net_scan.net_name = net.name AND net.name = net_sensor_reference.net_name AND net_sensor_reference.sensor_name = sensor.name AND sensor.ip = '%s'" % sensor
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        if row["ips"] in scan_networks:
+                            self.__debug("DUP net, already defined within net_group: %s" % row["ips"])
+                        else:
+                            self.__debug("Adding net %s" % row["ips"])
+                            sensorfd.writelines(row["ips"] + "\n")
+                            scan_networks.append(row["ips"])
+    
+                    query = "SELECT sensor.ip, inet_ntoa(host_scan.host_ip) AS temporal FROM host_scan,host,sensor,host_sensor_reference WHERE plugin_id = 3001 AND host_sensor_reference.sensor_name = sensor.name AND host_sensor_reference.host_ip = inet_ntoa(host_scan.host_ip) AND host.ip = inet_ntoa(host_scan.host_ip) AND sensor.ip = '%s' " % sensor
+                    hash = self.__conn.exec_query(query)
+                    for row in hash:
+                        if(Util.isIpInNet(row["temporal"], scan_networks)):
+                            self.__debug("DUP host, already defined within network: %s" % row["temporal"])
+                        else :
+                            try:
+                                sensorfd.writelines(row["temporal"] + "\n")
+                            except KeyError, e:
+                                pass
+                            self.__debug("Adding host %s" % row["temporal"])
+                    sensorfd.close()
 
             pids = Set()
             self.__status = 20
@@ -690,7 +817,7 @@ class DoNessus (threading.Thread) :
             hash = self.__conn.exec_query(query)
             for row in hash:
                 try:
-                    if self.__isIpInNet(row["temporal"],scan_networks) == True:
+                    if Util.isIpInNet(row["temporal"], scan_networks):
                         print "Dup: %s. Please check your config" % row["temporal"]
                     else:
                         self.__debug("Adding host %s" % row["temporal"])
@@ -786,6 +913,38 @@ class DoNessus (threading.Thread) :
 
         return
 
+
+    def load_shedule(self, id):
+        scan_type = self.get_shedule_scan_type(id)
+        print "Schedule scan type: %s" % scan_type
+        if scan_type == "sensor":
+            sensors = []
+            sensors = self.get_sensors_by_id(id)
+            if sensors == []:
+                # Wrong scheduler id
+                print "Wrong scheduler id %d" % int(id)
+                sys.exit()
+            else:
+                print __name__, ": Sensor_list:", sensors
+                self.set_scan_type("sensor")
+                self.load_sensors(sensors)
+        else:
+            netgroups = self.get_sheduler_list_by_id(id, "netgroup")
+            nets = self.get_sheduler_list_by_id(id, "net")
+            hostgroups_list = self.get_sheduler_list_by_id(id, "hostgroup")
+            hosts_list = self.get_sheduler_list_by_id(id, "host")
+            nets_list = self.join_list(netgroups,nets)
+            print __name__, ": Net_list:", nets_list
+            print __name__, ": Host_list:", hosts_list
+            print __name__, ": Hostgroup_list:", hostgroups_list
+            if nets_list == [] and hosts_list == [] and hostgroups_list == []:
+                # Wrong scheduler id
+                print "Wrong scheduler id %d" % int(id)
+                sys.exit()
+            self.set_scan_type("hosts")
+            self.load_hosts(hostgroups_list, nets_list, hosts_list)
+
+
 if __name__ == "__main__":
 
     donessus = DoNessus()
@@ -794,18 +953,12 @@ if __name__ == "__main__":
     parser.add_option("-i", "--scheduler-id", dest="scheduler_id", action="store", help = "Scheduler id to execute", metavar="sched_id")
     (options, args) = parser.parse_args()
 
-    sensors = []
-
     if options.scheduler_id is not None:
-        sensors = donessus.get_sensors_by_id(options.scheduler_id)
-        if sensors == False:
-            # Wrong scheduler id
-            print "Wrong scheduler id %d" % int(options.scheduler_id)
-            sys.exit()
+        donessus.load_shedule(options.scheduler_id)
     else:
         sensors.append("127.0.0.1")
         sensors.append("127.0.0.2")
-
-    donessus.load_sensors(sensors)
+        donessus.load_sensors(sensors)
+    
     donessus.start()
 # vim:ts=4 sts=4 tw=79 expandtab:

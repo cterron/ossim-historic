@@ -5,4 +5,4 @@ rrd_conf_DATA = new_rrd_conf.php \
 	new_rrd_conf_form.php \
 	rrd_conf.php 
 EXTRA_DIST   = $(rrd_conf_DATA)
-
+DISTCLEANFILES = Makefile.in

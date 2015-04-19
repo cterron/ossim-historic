@@ -16,6 +16,7 @@ Session::logcheck("MenuPolicy", "PolicyResponses");
   <h1><?php echo gettext("New Response Action"); ?></h1>
 
 <?php
+
 define (ANY, "ANY");
 
 /* list of response objects */
@@ -198,8 +199,7 @@ function select_response_object($title, $objects, $id)
 ?>
             </select>
             <br/>
-            <input onClick="document.forms['new_response'].submit()"
-                   type="submit" name="<?php echo $id ?>_add"
+            <input type="submit" name="<?php echo $id ?>_add"
                    value="<?php echo gettext("Add") ?>" />
             <input type="submit" name="<?php echo $id ?>_clear"
                    value="<?php echo gettext("Clear") ?>" />
@@ -232,8 +232,7 @@ $db->close($conn);
       <td>
         <textarea name="descr"></textarea>
         <br/>
-        <input onClick="document.forms['new_response'].submit()"
-               type="submit" name="descr_add"
+        <input type="submit" name="descr_add"
                value="<?php echo gettext("Add") ?>" />
         <input type="submit" name="descr_clear"
                value="<?php echo gettext("Clear") ?>" />

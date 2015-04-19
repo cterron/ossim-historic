@@ -98,6 +98,7 @@ function ossim_valid()
     }
     if (!$cons) $cons = get_defined_constants();
     $parms = func_get_args();
+
     $subject = $parms[0]; // the var to be validated
     if (is_object($subject) || is_array($subject)) {
         printr($subject);
@@ -308,7 +309,6 @@ function REQUEST($param)
 {
     return isset($_REQUEST[$param]) ? strip($_REQUEST[$param]) : null;
 }
-
 
 /* TESTS
 function test($res, $expected)

@@ -362,16 +362,23 @@ sim_scheduler_session (gpointer data)
  * (called "rservers" in config.xml) and commands from the "Main Server", identified as primary. If connection is lost,
  * this will try to reopen it.
  */
-void
+gboolean
 sim_scheduler_task_rservers (SimSchedulerState state)
 {
   GThread  *thread;
   GList    *list;
+	gboolean exist_rserver;
 
   list = ossim.config->rservers;
 
   if (list != NULL)
+	{
     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_task_rservers: there are some rservers");
+		exist_rserver = TRUE;
+	}
+	else
+		exist_rserver = FALSE;
+
 	
 	//may be that the connection with the master servers has been lost. Reopen if needed...
 	while (list)
@@ -448,6 +455,7 @@ sim_scheduler_task_rservers (SimSchedulerState state)
 		
   }
 
+	return exist_rserver;
 }
 
 /*
@@ -569,16 +577,18 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 		      
 		    	  if (rule->type == SIM_RULE_TYPE_MONITOR)
 						{	
+#if 0							
 					//	  SimCommand *cmd = sim_command_new_from_rule (rule);
 						  sim_server_push_session_plugin_command (ossim.server, 
 																										  SIM_SESSION_TYPE_SENSOR, 
 																										  sim_rule_get_plugin_id (rule),
 																										  rule);
 						//  g_object_unref (cmd);
-											
+#endif											
 						}
 		      
 		    	  children = children->next;
+
 		  	  }
 				} 
 		    else

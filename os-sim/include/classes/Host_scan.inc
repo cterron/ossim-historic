@@ -84,7 +84,14 @@ class Host_scan {
         }
         return $rs->fields[0];
     }
-}
 
+    function get_name($conn){
+        $sql = "SELECT hostname FROM host WHERE ip = ?";
+	if (!$rs = &$conn->Execute($sql, $this->host_ip)) {
+	         print $conn->ErrorMsg();
+        }
+        return $rs->fields[0];
+	}
+}
 
 ?>

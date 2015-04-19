@@ -20,7 +20,5 @@ create_services_table.pl # -->
 service_tables.sql
 
 # Filled in manually. Each os needs an unique identifier
-os_tables.sql
+os-sim/db/plugins/ossim-os.sql
 
-#plugin_ids 
-os_services_tables.sql

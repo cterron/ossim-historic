@@ -80,6 +80,10 @@ if (POST('insert')) {
     <p> <?php echo gettext("Network succesfully inserted"); ?> </p>
     <p><a href="net.php">
     <?php echo gettext("Back"); ?> </a></p>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

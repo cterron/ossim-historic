@@ -11,4 +11,4 @@ sensor_DATA = editsensor.php \
   interfaces.php \
   sensor_plugins.php
 EXTRA_DIST   = $(sensor_DATA)
-
+DISTCLEANFILES = Makefile.in

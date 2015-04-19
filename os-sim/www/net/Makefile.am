@@ -14,3 +14,4 @@ net_DATA = deletenet.php \
 
 EXTRA_DIST   = $(net_DATA)
 
+DISTCLEANFILES = Makefile.in

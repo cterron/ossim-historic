@@ -155,7 +155,7 @@ if ($edit) {
     </td>
   </tr>
   <tr>
-    <th>Type</th>
+    <th><?= _("Type") ?></th>
 <?php
     Incident::print_td_incident_type($conn, $type);
 ?>

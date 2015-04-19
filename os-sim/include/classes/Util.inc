@@ -452,6 +452,7 @@ class Util {
             '.$js_cal_obj_name.'.setMonthAbbreviations("'._("Jan").'","'._("Feb").'","'._("Mar").'","'._("Apr").'","'._("May").'","'._("Jun").'","'._("Jul").'","'._("Aug").'","'._("Sep").'","'._("Oct").'","'._("Nov").'","'._("Dec").'");
             '.$js_cal_obj_name.'.setDayHeaders("'._("Sun").'","'._("Mon").'","'._("Tue").'","'._("Wed").'","'._("Thu").'","'._("Fri").'","'._("Sat").'");
             '.$js_cal_obj_name.'.setTodayText("'._("Today").'");
+            '.$js_cal_obj_name.'.setYearSelectStartOffset(10);
         </script> 
         <a href="#" name='.$js_anchor_name.' id='.$js_anchor_name.'
            onClick="'.$js_cal_obj_name.'.select('.$options['input_name'].',\''.$js_anchor_name.'\',\'yyyy-MM-dd\'); return false;">
@@ -617,7 +618,7 @@ class Util {
     {
         $d = Util::pager_get_data($from, $limit, $numrows);
         $html = '
-<table width="60%" align="center" style="border-width: 0px">
+<table width="100%" align="center" style="border-width: 0px">
 <tr>
     <td style="border-width: 0px">'.$d['numrows'].' '._("results found").'</td>
     <td style="border-width: 0px">('.sprintf(_("Page %d of %d"), $d['current'], $d['numpages']).')</td>
@@ -631,16 +632,16 @@ class Util {
         } else {
             $prev = '&nbsp;';
         }
-        $html .= "<td style=\"border-width: 0px\">$prev</td><td style=\"border-width: 0px\">";
+        $html .= "<td style=\"border-width: 0px\">$prev</td><td style=\"border-width: 0px\" nowrap>";
         // pages links
-        if(count($d['pages']) > 0){
-        foreach ($d['pages'] as $page => $row) {
-            if ($page == $d['current']) {
-                $page = '<font color="red">'.$page.'</font> ';
+        if (count($d['pages']) > 0) {
+            foreach ($d['pages'] as $page => $row) {
+                if ($page == $d['current']) {
+                    $page = '<font color="red">'.$page.'</font> ';
+                }
+                $link = $my_link."&page_from=".$row;
+                $html .= '&nbsp;<a href="'.$link.'">'.$page.'</a>';
             }
-            $link = $my_link."&page_from=".$row;
-            $html .= '&nbsp;<a href="'.$link.'">'.$page.'</a>';
-        }
         }
         // next link
         if ($d['current'] < $d['numpages']) {

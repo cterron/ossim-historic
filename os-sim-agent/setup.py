@@ -13,9 +13,9 @@ lib  = [ ('share/ossim-agent/ossim_agent',
             glob.glob(os.path.join('ossim_agent', '*.py'))) ]
 
 etc = [ ('/etc/ossim/agent',
-            glob.glob(os.path.join('etc', '*.cfg')) ),
+            glob.glob(os.path.join('etc', 'agent', '*.cfg')) ),
         ('/etc/ossim/agent/plugins',
-            glob.glob(os.path.join('etc', 'plugins', '*.cfg'))) ]
+            glob.glob(os.path.join('etc', 'agent', 'plugins', '*.cfg'))) ]
 
 data = etc + doc + man + lib
 

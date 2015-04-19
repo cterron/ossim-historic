@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
+?>
+
 <html>
 <head>
   <title> <?php echo gettext("Riskmeter"); ?> </title>

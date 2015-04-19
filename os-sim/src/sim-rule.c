@@ -1268,7 +1268,7 @@ sim_rule_set_plugin_id (SimRule   *rule,
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
-  g_return_if_fail (plugin_id > 0);
+  g_return_if_fail (plugin_id >= 0);
 
   rule->_priv->plugin_id = plugin_id;
 }
@@ -3242,7 +3242,7 @@ sim_rule_match_by_event (SimRule      *rule,
   g_return_val_if_fail (rule, FALSE);
   g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
   g_return_val_if_fail (rule->type != SIM_RULE_TYPE_NONE, FALSE);
-  g_return_val_if_fail (rule->_priv->plugin_id > 0, FALSE);
+  g_return_val_if_fail (rule->_priv->plugin_id >= 0, FALSE);
   g_return_val_if_fail (event, FALSE);
   g_return_val_if_fail (SIM_IS_EVENT (event), FALSE);
   g_return_val_if_fail (event->type != SIM_EVENT_TYPE_NONE, FALSE);
@@ -3265,7 +3265,7 @@ sim_rule_match_by_event (SimRule      *rule,
     return FALSE;
 
   /* Match Plugin ID */
-  if (rule->_priv->plugin_id != event->plugin_id)
+  if ((rule->_priv->plugin_id != 0) && (rule->_priv->plugin_id != event->plugin_id))
     return FALSE;
 
 	//Match "Not" fields. 
@@ -3322,6 +3322,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		} 
 	} 
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "AAAAAAAAAAAAAAAA");
  	// Match !dst ports
 	if (rule->_priv->dst_ports_not) 
 	{ 
@@ -3377,6 +3378,7 @@ sim_rule_match_by_event (SimRule      *rule,
     g_object_unref (sensor_ia);
   }
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "NBBBBBBBBBBBBBA");
  	/* Match other things like !filename, !username, 1userdata1...*/
 	if (rule->_priv->filename_not)
 	{
@@ -3486,6 +3488,7 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "CCCCCCCCCCC");
   /* Find dst_ia */
   if ((rule->_priv->dst_inets) && (event->dst_ia))
   {
@@ -3510,6 +3513,8 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE0000000000");
   /* Find src_port */
   if (rule->_priv->src_ports)
   {
@@ -3531,6 +3536,8 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE11111111111111");
   /* Find dst_port */
   if (rule->_priv->dst_ports)
   {
@@ -3552,6 +3559,8 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE");
   /* Protocols */
   if (rule->_priv->protocols)
   {
@@ -3573,6 +3582,7 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "DDDDDDDDDDDDDDDDD");
   /* Match sensor */
   if (rule->_priv->sensors)
   {
@@ -3597,6 +3607,7 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "FFFFFFFFFFF");
 	/* Match other things like filename, username, userdata1...*/
 	if (rule->_priv->filename)
 	{
@@ -3678,6 +3689,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		}
   }
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GGGGGGGGGGG");
   /* If rule is sticky */
   if (rule->_priv->sticky)
     event->sticky = TRUE;
@@ -3736,6 +3748,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		}
   }
 
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "HHHHHHHHHHH");
   /* Match Occurrence */
   if (rule->_priv->occurrence > 1)
   {
@@ -3867,82 +3880,83 @@ sim_rule_print (SimRule      *rule)
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
 
-  g_message ("Rule: ");
-  g_message ("sticky=%d ", rule->_priv->sticky);
-  g_message ("not=%d ", rule->_priv->not);
-  g_message ("name=%s ", rule->_priv->name);
-  g_message ("level=%d ", rule->_priv->level);
-  g_message ("priority=%d ", rule->_priv->priority);
-  g_message ("reliability=%d ", rule->_priv->reliability);
-  g_message ("time_out=%d ", rule->_priv->time_out);
-  g_message ("occurrence=%d ", rule->_priv->occurrence);
-  g_message ("plugin_id=%d ", rule->_priv->plugin_id);
-  g_message ("plugin_sid=%d ", g_list_length (rule->_priv->plugin_sids));
-  g_message ("src_inets=%d ", g_list_length (rule->_priv->src_inets));
-  g_message ("\nplugin_sids_not=%d ", g_list_length (rule->_priv->plugin_sids_not));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Rule: ");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_impl_finalize: Name %s, Level %d", rule->_priv->name, rule->_priv->level);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sticky=%d ", rule->_priv->sticky);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "not=%d ", rule->_priv->not);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "name=%s ", rule->_priv->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "level=%d ", rule->_priv->level);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "priority=%d ", rule->_priv->priority);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "reliability=%d ", rule->_priv->reliability);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "time_out=%d ", rule->_priv->time_out);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "occurrence=%d ", rule->_priv->occurrence);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "plugin_id=%d ", rule->_priv->plugin_id);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "plugin_sid=%d ", g_list_length (rule->_priv->plugin_sids));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_inets=%d ", g_list_length (rule->_priv->src_inets));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "\nplugin_sids_not=%d ", g_list_length (rule->_priv->plugin_sids_not));
   list = rule->_priv->src_inets;
   while (list)
     {
       SimInet *ia = (SimInet *) list->data;
       ip = sim_inet_ntop (ia);
-      g_message (" %s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", ip);
       g_free (ip);
       list = list->next;
     }
 
-	g_message ("dst_inets=%d ", g_list_length (rule->_priv->dst_inets));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_inets=%d ", g_list_length (rule->_priv->dst_inets));
   list = rule->_priv->dst_inets;
   while (list)
     {
       SimInet *ia = (SimInet *) list->data;
       ip = sim_inet_ntop (ia);
-      g_message (" %s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", ip);
       g_free (ip);
       list = list->next;
     }
-  g_message ("src_ports=%d ", g_list_length (rule->_priv->src_ports));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_ports=%d ", g_list_length (rule->_priv->src_ports));
   list = rule->_priv->src_ports;
   while (list)
     {
       gint port = GPOINTER_TO_INT (list->data);
-      g_message (" %d ", port);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", port);
       list = list->next;
     }
-  g_message ("dst_ports=%d ", g_list_length (rule->_priv->dst_ports));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_ports=%d ", g_list_length (rule->_priv->dst_ports));
   list = rule->_priv->dst_ports;
   while (list)
     {
       gint port = GPOINTER_TO_INT (list->data);
-      g_message (" %d ", port);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", port);
       list = list->next;
     }
-  g_message ("sensors=%d ", g_list_length (rule->_priv->sensors));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sensors=%d ", g_list_length (rule->_priv->sensors));
   list = rule->_priv->sensors;
   while (list)
     {
 			SimSensor *sensor = (SimSensor *) list->data;
-      g_message (" %s ", sim_sensor_get_name(sensor));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", sim_sensor_get_name(sensor));
       list = list->next;
     }
 
-	g_message ("protocols=%d ", g_list_length (rule->_priv->protocols));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "protocols=%d ", g_list_length (rule->_priv->protocols));
 	list = rule->_priv->protocols;
   while (list)
     {
-      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", GPOINTER_TO_INT (list->data));
       list = list->next;
     }
 
 
-	g_message ("vars=%d ", g_list_length (rule->_priv->vars));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "vars=%d ", g_list_length (rule->_priv->vars));
 	list = rule->_priv->vars;
 	while (list)
 	{
 		SimRuleVar *var = (SimRuleVar *) list->data;
-    g_message ("    rule name: %s",sim_rule_get_name(rule));
-    g_message ("    type: %d",var->type);
-    g_message ("    attr: %d",var->attr);
-    g_message ("    negated: %d",var->negated);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "    rule name: %s",sim_rule_get_name(rule));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "    type: %d",var->type);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "    attr: %d",var->attr);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "    negated: %d",var->negated);
 		list = list->next;
 	}
 
@@ -3950,181 +3964,181 @@ sim_rule_print (SimRule      *rule)
   if (rule->_priv->src_ia)
     {
       ip = gnet_inetaddr_get_canonical_name (rule->_priv->src_ia);
-      g_message ("src_ia=%s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_ia=%s ", ip);
       g_free (ip);
     }
   if (rule->_priv->dst_ia)
     {
       ip = gnet_inetaddr_get_canonical_name (rule->_priv->dst_ia);
-      g_message ("dst_ia=%s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_ia=%s ", ip);
       g_free (ip);
     }
    if (rule->_priv->sensor)
     {
       ip = gnet_inetaddr_get_canonical_name (rule->_priv->dst_ia);
-      g_message ("sensor=%s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sensor=%s ", ip);
       g_free (ip);
     }
- g_message ("src_port=%d ", rule->_priv->src_port);
-  g_message ("dst_port=%d ", rule->_priv->dst_port);
+ g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_port=%d ", rule->_priv->src_port);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_port=%d ", rule->_priv->dst_port);
 
-  g_message ("src_inets_not=%d ", g_list_length (rule->_priv->src_inets_not));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_inets_not=%d ", g_list_length (rule->_priv->src_inets_not));
 	list = rule->_priv->src_inets_not;
   while (list)
     {
       SimInet *ia = (SimInet *) list->data;
       ip = sim_inet_ntop (ia);
-      g_message (" %s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", ip);
       g_free (ip);
       list = list->next;
     }
 
-  g_message ("dst_inets_not=%d ", g_list_length (rule->_priv->dst_inets_not));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_inets_not=%d ", g_list_length (rule->_priv->dst_inets_not));
 	list = rule->_priv->dst_inets_not;
   while (list)
     {
       SimInet *ia = (SimInet *) list->data;
       ip = sim_inet_ntop (ia);
-      g_message (" %s ", ip);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", ip);
       g_free (ip);
       list = list->next;
     }
 
-	g_message ("src_ports_not=%d ", g_list_length (rule->_priv->src_ports_not));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "src_ports_not=%d ", g_list_length (rule->_priv->src_ports_not));
 	list = rule->_priv->src_ports_not;
   while (list)
     {
-      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", GPOINTER_TO_INT (list->data));
       list = list->next;
     }
 
-	g_message ("dst_ports_not=%d ", g_list_length (rule->_priv->dst_ports_not));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "dst_ports_not=%d ", g_list_length (rule->_priv->dst_ports_not));
 	list = rule->_priv->dst_ports_not;
   while (list)
     {
-      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", GPOINTER_TO_INT (list->data));
       list = list->next;
     }
 
-	g_message ("protocols_not=%d ", g_list_length (rule->_priv->protocols_not));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "protocols_not=%d ", g_list_length (rule->_priv->protocols_not));
 	list = rule->_priv->protocols_not;
   while (list)
     {
-      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", GPOINTER_TO_INT (list->data));
       list = list->next;
     }
 
-  g_message ("plugin_sids_not=%d ", g_list_length (rule->_priv->plugin_sids_not));
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "plugin_sids_not=%d ", g_list_length (rule->_priv->plugin_sids_not));
 	list = rule->_priv->plugin_sids_not;
   while (list)
     {
-      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %d ", GPOINTER_TO_INT (list->data));
       list = list->next;
     }
 
 
-	g_message ("sensors_not=%d ", g_list_length (rule->_priv->sensors_not));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sensors_not=%d ", g_list_length (rule->_priv->sensors_not));
 	list = rule->_priv->sensors_not;
   while (list)
     {
       SimSensor *sensor = (SimSensor *) list->data;
       GInetAddr *sensor_ia = sim_sensor_get_ia (sensor);
       gchar *ip_sensor=gnet_inetaddr_get_canonical_name(sensor_ia);
-      g_message (" %s ", ip_sensor);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", ip_sensor);
       g_free (ip_sensor);
       list = list->next;
     }
 
-	g_message ("filename=%d ", g_list_length (rule->_priv->filename));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "filename=%d ", g_list_length (rule->_priv->filename));
 	list = rule->_priv->filename;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
 
-	g_message ("username=%d ", g_list_length (rule->_priv->username));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "username=%d ", g_list_length (rule->_priv->username));
 	list = rule->_priv->username;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
 
-	g_message ("password=%d ", g_list_length (rule->_priv->password));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "password=%d ", g_list_length (rule->_priv->password));
 	list = rule->_priv->password;
   while (list)
   {
 		gchar *lala = (gchar *)(list->data);
-    g_message (" -%s- ", lala);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " -%s- ", lala);
     list = list->next;
   }
-	g_message ("userdata1=%d ", g_list_length (rule->_priv->userdata1));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata1=%d ", g_list_length (rule->_priv->userdata1));
 	list = rule->_priv->userdata1;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata2=%d ", g_list_length (rule->_priv->userdata2));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata2=%d ", g_list_length (rule->_priv->userdata2));
 	list = rule->_priv->userdata2;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata3=%d ", g_list_length (rule->_priv->userdata3));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata3=%d ", g_list_length (rule->_priv->userdata3));
 	list = rule->_priv->userdata3;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata4=%d ", g_list_length (rule->_priv->userdata4));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata4=%d ", g_list_length (rule->_priv->userdata4));
 	list = rule->_priv->userdata4;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata5=%d ", g_list_length (rule->_priv->userdata5));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata5=%d ", g_list_length (rule->_priv->userdata5));
 	list = rule->_priv->userdata5;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata6=%d ", g_list_length (rule->_priv->userdata6));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata6=%d ", g_list_length (rule->_priv->userdata6));
 	list = rule->_priv->userdata6;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata7=%d ", g_list_length (rule->_priv->userdata7));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata7=%d ", g_list_length (rule->_priv->userdata7));
 	list = rule->_priv->userdata7;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata8=%d ", g_list_length (rule->_priv->userdata8));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata8=%d ", g_list_length (rule->_priv->userdata8));
 	list = rule->_priv->userdata8;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
-	g_message ("userdata9=%d ", g_list_length (rule->_priv->userdata9));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "userdata9=%d ", g_list_length (rule->_priv->userdata9));
 	list = rule->_priv->userdata9;
   while (list)
   {
-    g_message (" %s ", (gchar *) (list->data));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, " %s ", (gchar *) (list->data));
     list = list->next;
   }
 
   
-	g_message ("\n");
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "\n");
 }
 
 /*

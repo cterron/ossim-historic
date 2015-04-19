@@ -75,6 +75,15 @@ class Logger:
 
     set_verbose = staticmethod(set_verbose)
 
+    def next_verbose_level(verbose):
+        levels = ['debug', 'info', 'warning', 'error', 'critical']
+        if verbose in levels:
+            index = levels.index(verbose)
+            if index > 0:
+                return levels[index-1]
+        return verbose
+    next_verbose_level = staticmethod(next_verbose_level)
+
 
 if __name__ == "__main__":
 

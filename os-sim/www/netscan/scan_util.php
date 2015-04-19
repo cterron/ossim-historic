@@ -76,6 +76,11 @@ EOF;
       echo <<<EOF
         </td>
       </tr>
+      <tr>
+        <td colspan="5">
+          <a href="../netscan/index.php?clearscan=1">Clear scan result</a>
+        </td>
+      </tr>
     </table>
     </form>
 EOF;

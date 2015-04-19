@@ -189,7 +189,7 @@ Control.Panel = {
         var i,j,h,w,id;
         var ids = new Array();
         var panel = tmpstyle = '';
-        var style = 'height: '+this.options.posHeight+'px; width: '+this.options.posWidth+'px;';
+        var style = 'width: '+this.options.posWidth+'px;';
         panel += '<table width="1%" border="0" cellspacing="0" cellpading="0"><tr>';
         for (i = 1; i <= this.options.cols; i++) {
             panel += '<td valign="top">\n\t<table>\n';

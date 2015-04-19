@@ -1,6 +1,5 @@
-diff -c -r arpwatch-2.1a11/arpwatch.8 arpwatch-2.1a11-dk/arpwatch.8
-*** arpwatch-2.1a11/arpwatch.8	Sun Oct  8 22:31:28 2000
---- arpwatch-2.1a11-dk/arpwatch.8	Mon Jan 12 21:15:29 2004
+*** arpwatch-2.1a15/arpwatch.8	2007-07-11 21:50:28.000000000 +0200
+--- arpwatch-2.1a15_ossim/arpwatch.8	2007-07-11 21:50:39.000000000 +0200
 ***************
 *** 27,33 ****
   .na
@@ -19,21 +18,20 @@ diff -c -r arpwatch-2.1a11/arpwatch.8 arpwatch-2.1a11-dk/arpwatch.8
   .B -f
   .I datafile
 ***************
-*** 81,86 ****
---- 81,90 ----
-  The
-  .B -N
+*** 83,88 ****
+--- 83,92 ----
   flag disables reporting any bogons.
-+ .LP
-+ The
-+ .B -w
-+ flag is used to specify an interface without a valid IPv4 address.
   .LP
   The
++ .B -w
++ flag is used to specify an interface without a valid IPv4 address.
++ .LP
++ The
   .B -r
-diff -c -r arpwatch-2.1a11/arpwatch.c arpwatch-2.1a11-dk/arpwatch.c
-*** arpwatch-2.1a11/arpwatch.c	Sat Oct 14 04:07:35 2000
---- arpwatch-2.1a11-dk/arpwatch.c	Mon Jan 12 21:13:53 2004
+  flag is used to specify a savefile
+  (perhaps created by
+*** arpwatch-2.1a15/arpwatch.c	2007-07-11 20:34:36.000000000 +0200
+--- arpwatch-2.1a15_ossim/arpwatch.c	2007-07-11 20:51:06.000000000 +0200
 ***************
 *** 145,151 ****
   main(int argc, char **argv)
@@ -47,7 +45,7 @@ diff -c -r arpwatch-2.1a11/arpwatch.c arpwatch-2.1a11-dk/arpwatch.c
   main(int argc, char **argv)
   {
   	register char *cp;
-! 	register int op, pid, snaplen, timeout, linktype, status, noip = 0;
+! 	register int op, pid, snaplen, timeout, linktype, status, noip=0;
   #ifdef TIOCNOTTY
   	register int fd;
   #endif
@@ -69,49 +67,35 @@ diff -c -r arpwatch-2.1a11/arpwatch.c arpwatch-2.1a11-dk/arpwatch.c
   
   		case 'd':
 ***************
-*** 194,199 ****
---- 194,203 ----
-  				usage();
+*** 201,206 ****
+--- 201,209 ----
+  		case 'r':
+  			rfilename = optarg;
   			break;
-  
 + 		case 'w':
 + 			++noip;
 + 			break;
-+ 
-  		case 'N':
-  			++nobogons;
-  			break;
+  
+  		default:
+  			usage();
 ***************
 *** 221,232 ****
-  			exit(1);
-  		}
-  
-  		/* Determine network and netmask */
-! 		if (pcap_lookupnet(interface, &net, &netmask, errbuf) < 0) {
-! 			(void)fprintf(stderr, "%s: bad interface %s: %s\n",
-! 			    prog, interface, errbuf);
-! 			exit(1);
-  		}
-  
-  		/* Drop into the background if not debugging */
-  		if (!debug) {
---- 225,243 ----
+--- 224,241 ----
   			exit(1);
   		}
   
 + 		if(noip){
 + 		/* Be able to sniff on interfaces without address */
-+ 		net = 0;
-+ 		netmask = 0;
++ 			net = 0;
++ 			netmask = 0;
 + 		} else {
   		/* Determine network and netmask */
-! 			if (pcap_lookupnet(interface, &net, &netmask, errbuf) < 0) {
-! 				(void)fprintf(stderr, "%s: bad interface %s: %s\n",
-! 				    prog, interface, errbuf);
-! 				exit(1);
-! 			}
+  		if (pcap_lookupnet(interface, &net, &netmask, errbuf) < 0) {
+  			(void)fprintf(stderr, "%s: bad interface %s: %s\n",
+  			    prog, interface, errbuf);
+  			exit(1);
   		}
-+ 		
++ 		}
   
   		/* Drop into the background if not debugging */
   		if (!debug) {
@@ -124,7 +108,7 @@ diff -c -r arpwatch-2.1a11/arpwatch.c arpwatch-2.1a11-dk/arpwatch.c
   	    " [-n net[/width]] [-r file]\n", prog);
   	exit(1);
   }
---- 761,767 ----
+--- 759,765 ----
   	extern char version[];
   
   	(void)fprintf(stderr, "Version %s\n", version);

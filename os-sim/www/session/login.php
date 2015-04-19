@@ -98,7 +98,7 @@
                     header ("Location: ../index.php");
                     exit;
                 } else {
-                    header ("Location: " . $dest);
+                    header ("Location: " . urldecode($dest));
                     exit;
                 }
 

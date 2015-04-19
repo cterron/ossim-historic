@@ -39,8 +39,9 @@ class Scheduler(threading.Thread):
         query = "select max(id) as id from plugin_scheduler"
         hash = self.__db.exec_query(query)
 
-        for row in hash:
-            return row["id"]
+        if hash != []:
+            if hash[0]["id"] is not None:
+                return hash[0]["id"]
 
         return 0
 
@@ -126,12 +127,21 @@ class Scheduler(threading.Thread):
                     query = "SELECT * FROM plugin_scheduler"
                     hash = self.__db.exec_query(query)
 
-                    if self.__conf["frameworkd_dir"]:
-                        Const.FRAMEWORKD_DIR = self.__conf["frameworkd_dir"]
+                    FRAMEWORKD_DIR = self.__conf["frameworkd_dir"] or \
+                        "/usr/share/ossim-framework/ossimframework"
 
                     for row in hash:
-                        entry = "%s\t%s\t%s\t%s\t%s\t%s" % (row["plugin_minute"], row["plugin_hour"], row["plugin_day_month"], row["plugin_month"], row["plugin_day_week"], os.path.join(Const.FRAMEWORKD_DIR, "DoNessus.py" + " -i " + str(row["id"])))
-                        crontab.append(entry + "\n")
+                        donessus_command = "python " +\
+                            os.path.join(FRAMEWORKD_DIR, "DoNessus.py") +\
+                            " -i " + str(row["id"])
+                        entry = "%s\t%s\t%s\t%s\t%s\t%s\n" % \
+                            (row["plugin_minute"],\
+                             row["plugin_hour"],\
+                             row["plugin_day_month"],\
+                             row["plugin_month"],\
+                             row["plugin_day_week"],\
+                             donessus_command)
+                        crontab.append(entry)
                         self.__debug(entry)
 
                     

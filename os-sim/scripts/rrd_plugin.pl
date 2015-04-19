@@ -44,6 +44,7 @@ sub usage {
     print "                   comma separated\n";
     print "    -o logfile     Set output file for logs\n";
     print "                   (default: /var/log/ossim/rrd_plugin.log)\n";
+    print "    -v             (debug mode)\n";
     exit 0
 }
 
@@ -69,7 +70,7 @@ print PID $$;
 close(PID);
 
 my %options=();
-getopts("i:d:o:",\%options);
+getopts("i:d:o:v",\%options);
 
 if (defined $options{d}) {
     ($ds_type, $ds_host, $ds_name, $ds_user, $ds_pass, $ds_port) =
@@ -91,6 +92,10 @@ else {
 my $rrd_log = "/var/log/ossim/rrd_plugin.log";
 if (defined $options{o}) {
 	$rrd_log = $options{o};
+}
+
+if (defined $options{v}) {
+	$DEBUG = 1;
 }
 
 my $dsn = join ":","dbi",$ds_type,$ds_name,$ds_host,$ds_port;
@@ -265,8 +270,8 @@ sub rrd_config {
 	my $profile = $row->{rrd_profile};
 
 	if (!$profile) {
-	    my $asset = 0;
-	    $query = "SELECT ips, rrd_profile, priority FROM net";
+	    my $mymask = 0;
+	    $query = "SELECT ips, rrd_profile FROM net";
 	    $stm = $conn->prepare($query);
 	    $stm->execute();
 	    while ($row = $stm->fetchrow_hashref) {
@@ -280,9 +285,9 @@ sub rrd_config {
 		    my $val2 = ip2long($ip);
 		    
 		    if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask))) {
-			if ($row->{priority} > $asset) {
+			if ($mask > $mymask) {
 			    $profile = $row->{rrd_profile};
-			    $asset = $row->{priority};
+			    $mymask = $mask;
 			}
 		    }
 		}
@@ -291,6 +296,7 @@ sub rrd_config {
 
 	next unless ($profile);
 
+        print "Found profile '$profile' for host $ip\n" if $DEBUG;		     
 	$query = "SELECT rrd_attrib, threshold, priority, persistence FROM rrd_config WHERE profile = '$profile' AND enable = 1";
 	$stm = $conn->prepare($query);
 	$stm->execute();

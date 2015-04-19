@@ -58,7 +58,10 @@ if (!empty($confirm)) {
     <p> <?php echo gettext("Host deleted"); ?> </p>
     <p><a href="host.php">
     <?php echo gettext("Back"); ?> </a></p>
-    <?php exit(); ?>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

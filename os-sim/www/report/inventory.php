@@ -173,18 +173,21 @@ if (ossim_error()) {
       <tr><td colspan="2"></td></tr>
       <tr><th colspan="2"> <?php echo gettext("Port / Service information"); ?> 
       <?php if(GET('origin') == 'active'){
+      echo gettext("[Active view]") . "<BR>";
       ?>
       (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $host?>&origin=passive">
-      <?php echo gettext("Active"); ?> </A>)
+      <?php echo gettext("Show passive view"); ?> </A>)
       [ <a href="<?php 
         echo $_SERVER["PHP_SELF"]?>?host=<?php 
         echo $host ?>&update=services&origin=active">
 	<?php echo gettext("update"); ?> </a> ]
         </th></h2>
       </tr>
-        <?php } else { ?>
+        <?php } else { 
+        echo gettext("[Passive view]") . "<BR>";
+        ?>
       (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $host?>&origin=active">
-      <?php echo gettext("Passive"); ?> </A>)
+      <?php echo gettext("Show active view"); ?> </A>)
         </th></h2>
         <?php } ?>
       <tr>

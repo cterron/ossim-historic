@@ -1,4 +1,6 @@
 <?php
+require_once 'panel/Panel.php';
+
 class Plugin_Config_Exchange extends Panel
 {
     var $defaults = array(
@@ -14,7 +16,7 @@ class Plugin_Config_Exchange extends Panel
     
     function decode($text)
     {
-        list($plugin, $data) = explode('::', $text);
+        list($plugin, $data) = explode('::', trim($text));
         $data = preg_replace("/\s*/s", '', $data);
         $data = unserialize(base64_decode($data));
         $data['exported_plugin'] = $plugin;

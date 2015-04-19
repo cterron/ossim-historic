@@ -22,13 +22,18 @@ require_once 'classes/Security.inc';
 
 <?php
 
+$back = GET("back");
+ossim_valid($back, OSS_ALPHA, OSS_PUNC, 'illegal:'._("back"));
+
 $db = new ossim_db();
 $conn = $db->connect();
 
 while (list($key,$val) = each($_GET)) {
+    if (substr($key, 0, 3) != "ip,")
+        continue;
     list($place_holder, $ip, $sensor, $date) = split (",", $key, 4);
     $ip = $val;
-    if(preg_match("/ack/i", $ip)){
+    if(preg_match("/^ack/i", $ip)){
         $ip = ereg_replace("ack","",$ip);
         $ip = ereg_replace ("_",".",$ip);
         $sensor = ereg_replace ("_",".",$sensor);
@@ -44,7 +49,7 @@ while (list($key,$val) = each($_GET)) {
         
         print "Ack: $ip $date $sensor<br>";
         Host_os::ack_ign($conn, $ip, $date, $sensor);
-    } elseif(preg_match("/ignore/i", $ip)){
+    } elseif(preg_match("/^ignore/i", $ip)){
         $ip = ereg_replace("ignore","",$ip);
         $ip = ereg_replace ("_",".",$ip);
         $sensor = ereg_replace ("_",".",$sensor);
@@ -66,7 +71,7 @@ while (list($key,$val) = each($_GET)) {
     $db->close($conn);
 ?>
     <p> <?php echo gettext("Successfully Acked/Deleted"); ?> </p>
-    <p><a href="anomalies.php"> <?php echo gettext("Back"); ?> </a></p>
+    <p><a href="<?php echo urldecode($back); ?>"> <?php echo gettext("Back"); ?> </a></p>
 
 </body>
 </html>

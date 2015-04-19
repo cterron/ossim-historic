@@ -1,7 +1,8 @@
 INCLUDES = -DG_LOG_DOMAIN=\"OSSIM\" \
 	-DOS_SIM_GLOBAL_CONFIG_FILE=\""$(sysconfdir)/ossim/server/config.xml"\" \
 	-DOS_SIM_GLOBAL_DIRECTIVE_FILE=\""$(sysconfdir)/ossim/server/directives.xml"\" \
-	-DOS_SIM_LOG_DIR=\""$(localstatedir)/log/ossim/"\"
+	-DOS_SIM_LOG_DIR=\""$(localstatedir)/log/ossim/"\" \
+	-DOS_SIM_RUN_DIR=\""$(localstatedir)/run/ossim-server.pid\""
 
 bin_PROGRAMS = ossim-server
 
@@ -37,8 +38,12 @@ ossim_server_SOURCES = \
 		sim-connect.c \
 		sim-log.c \
 		sim-server.c \
+		sim-snort.c \
+		sim-packet.c \
 		main.c
 
 ossim_server_LDADD = $(DEPS_LIBS)
 
 AM_CPPFLAGS = $(DEPS_CFLAGS)
+
+DISTCLEANFILES = Makefile.in

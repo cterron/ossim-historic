@@ -48,4 +48,4 @@ ossim_pyossim_DATA    =  Agent.py \
 
 
 EXTRA_DIST   = $(ossim_pyossim_DATA)
-
+DISTCLEANFILES = Makefile.in

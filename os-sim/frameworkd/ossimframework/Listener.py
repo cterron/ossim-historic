@@ -1,4 +1,4 @@
-import threading, socket, sys, SocketServer, os
+import threading, socket, sys, SocketServer, os, re
 from time import sleep
 
 import Const
@@ -36,27 +36,9 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
     def process_data(self, line):
 
         print __name__, ":", line
-
         command = None
-        subcommand = None
-        sensors = None
-        param = None
-        extra_data = None
-
         try:
             command = line.split()[0]
-
-            #
-            # FIXME:
-            #
-            # line *should* be:
-            #        command attr1="blabla" attr2="blabla" attr3="blabla"
-            # for example:
-            #        nessus action="start"
-            #        nessus action="stop"
-            #
-            subcommand = line.split()[1]
-            sensors = param = line.split()[2]
         except ValueError, IndexError:
             pass
 
@@ -66,55 +48,78 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
         #  for example, NessusManager
         #
 
-        sensor_list = []
-
         if command == "nessus":
-
+            result = re.findall("action=\"([a-z]+)\"", line)
+            if result != []:
+                action = result[0]
+            
             if FrameworkBaseRequestHandler.__nessus == None:
                 FrameworkBaseRequestHandler.__nessus = DoNessus()
 
-            if subcommand == "report":
-                extra_data = line.split()[3]
-                # Ugly variable confusion
-                title =  sensors
-                sensor_list = extra_data.split(",")
-                print __name__, ": Report host list:", sensor_list
-                FrameworkBaseRequestHandler.__nessus.generate_report(title, sensor_list)
+            if action == "report":
+                result = re.findall("title=\"([a-zA-Z+]+)\" list=\"([0-9\.,]*)\"", line)
+                if result != []:
+                    (title,list) = result[0]
+                    sensor_list = list.split(",")
+                    print __name__, ": Report host list:", sensor_list
+                    FrameworkBaseRequestHandler.__nessus.generate_report(title, sensor_list)
 
-            if subcommand == "start":
-
-                # I know this is dirty but is_digit isn't working "as is". 
-                try: 
-                    int(sensors)
-                    print __name__, ": Got schedule request."
-                    sensor_list = FrameworkBaseRequestHandler.__nessus.get_sensors_by_id(sensors)
-                    print __name__, ": Sensor_list_1:", sensor_list
-                    if sensor_list == False:
-                        self.wfile.write("wrong scheduler id\n")
-                        print __name__, ": wrong scheduler id."
-                        return
-                except ValueError, e:
-                    sensor_list = sensors.split(",")
-                    print __name__, ": Splitting up sensors."
-
-                print __name__, ": Sensor_list:", sensor_list
-
-                if FrameworkBaseRequestHandler.__nessus.status() == 0:
-                    try:
+            if action == "scan":
+                sensor_list = []
+                hosts_list = []
+                hostgroups_list = []
+                nets_list = []
+                netgroups_list = []
+                
+                result = re.findall("target_type=\"([a-z]+)\"" , line)
+                if result != []:
+                    target_type = result[0]
+                    # need to be modifified to support schedule for host, hostgropup, etc..
+                    if target_type == "schedule":
+                        result = re.findall("id=\"([0-9]*)\"", line)
+                        if result != []:
+                            id = result[0]
+                            print __name__, ": Got schedule request."
+                            FrameworkBaseRequestHandler.__nessus.load_shedule(id)
+                    elif target_type == "sensors":
+                        result = re.findall("list=\"([0-9\.,]*)\"", line)
+                        if result != []:
+                            list = result[0]
+                            if not list == "":
+                                sensor_list = list.split(",")
+                        print __name__, ": Sensor_list:", sensor_list
+                        FrameworkBaseRequestHandler.__nessus.set_scan_type("sensor")
                         FrameworkBaseRequestHandler.__nessus.load_sensors(sensor_list)
-                        FrameworkBaseRequestHandler.__nessus.start()
-                        self.wfile.write("ok\n")
-                    except AssertionError: 
-                        FrameworkBaseRequestHandler.__nessus.load_sensors(sensor_list)
-                        FrameworkBaseRequestHandler.__nessus.run()
-                        self.wfile.write("ok\n")
-                elif FrameworkBaseRequestHandler.__nessus.status() > 0 :
-                    print __name__, ": scan already started, status:", FrameworkBaseRequestHandler.__nessus.status()
-                    self.wfile.write("Scan already started, status: " + str(FrameworkBaseRequestHandler.__nessus.status()) + "%\n")
-            if subcommand == "status":
+                    elif target_type == "hosts":
+                        result = re.findall("netgroups=\"([0-9a-zA-Z\._,]*)\" nets=\"([0-9a-zA-Z\._,]*)\" hostgroups=\"([0-9a-zA-Z\._,]*)\" hosts=\"([0-9\.,]*)\"", line)
+                        if result != []:
+                            (netgroups,nets,hostgroups,hosts) = result[0]
+                            nets_list = FrameworkBaseRequestHandler.__nessus.get_nets(netgroups,nets)
+                            if not hostgroups == "":
+                                hostgroups_list = hostgroups.split(",")
+                            if not hosts == "":
+                                hosts_list = hosts.split(",")
+                        print __name__, ": Net_list:", nets_list
+                        print __name__, ": Host_list:", hosts_list
+                        print __name__, ": Hostgroup_list:", hostgroups_list
+                        FrameworkBaseRequestHandler.__nessus.set_scan_type("hosts")
+                        FrameworkBaseRequestHandler.__nessus.load_hosts(hostgroups_list, nets_list, hosts_list)
+
+                    if FrameworkBaseRequestHandler.__nessus.status() == 0:
+                        try:
+                            FrameworkBaseRequestHandler.__nessus.start()
+                            self.wfile.write("ok\n")
+                        except AssertionError: 
+                            FrameworkBaseRequestHandler.__nessus.run()
+                            self.wfile.write("ok\n")
+                    elif FrameworkBaseRequestHandler.__nessus.status() > 0 :
+                        print __name__, ": scan already started, status:", FrameworkBaseRequestHandler.__nessus.status()
+                        self.wfile.write("Scan already started, status: " + str(FrameworkBaseRequestHandler.__nessus.status()) + "%\n")
+            
+            if action == "status":
                 print __name__, ": status:", FrameworkBaseRequestHandler.__nessus.status()
                 self.wfile.write(str(FrameworkBaseRequestHandler.__nessus.status()) + "\n")
-            if subcommand == "reset" and FrameworkBaseRequestHandler.__nessus.status() == -1:
+            if action == "reset" and FrameworkBaseRequestHandler.__nessus.status() == -1:
                 print __name__, ": Resetting status"
                 self.wfile.write("Resetting status\n")
                 FrameworkBaseRequestHandler.__nessus.reset_status()
@@ -123,21 +128,30 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
                 FrameworkBaseRequestHandler.__nessus.get_error()
                 self.wfile.write("Previous scan aborted raising errors, please check your logfile. Error: " + \
                 str(FrameworkBaseRequestHandler.__nessus.get_error()) + "\n")
-            if subcommand == "archive":
-                print __name__, ": Got archive request for", param
-                FrameworkBaseRequestHandler.__nessus.archive(param)
-                self.wfile.write("nessus archive ack " + param + "\n")
-            if subcommand == "delete":
-                print __name__, ": Got delete request for", param
-                if param.endswith(".report"):
-                    FrameworkBaseRequestHandler.__nessus.delete(param, True)
+            if action == "archive":
+                result = re.findall("report=\"([a-z0-9.]+)\"", line)
+                if result != []:
+                    report = result[0]
+                    print __name__, ": Got archive request for", report
+                    FrameworkBaseRequestHandler.__nessus.archive(report)
+                    self.wfile.write("nessus archive ack " + param + "\n")
+            if action == "delete":
+                result = re.findall("report=\"([a-z0-9.]+)\"", line)
+                if result != []:
+                    report = result[0]
+                print __name__, ": Got delete request for", report
+                if report.endswith(".report"):
+                    FrameworkBaseRequestHandler.__nessus.delete(report, True)
                 else:
-                    FrameworkBaseRequestHandler.__nessus.delete(param, False)
-                self.wfile.write("nessus delete ack " + param + "\n")
-            if subcommand == "restore":
-                print __name__, ": Got restore request for", param
-                FrameworkBaseRequestHandler.__nessus.restore(param)
-                self.wfile.write("nessus restore ack " + param + "\n")
+                    FrameworkBaseRequestHandler.__nessus.delete(report, False)
+                self.wfile.write("nessus delete ack " + report + "\n")
+            if action == "restore":
+                result = re.findall("report=\"([a-z0-9.]+)\"", line)
+                if result != []:
+                    report = result[0]
+                print __name__, ": Got restore request for", report
+                FrameworkBaseRequestHandler.__nessus.restore(report)
+                self.wfile.write("nessus restore ack " + report + "\n")
         else:
             a = Action.Action(line)
             a.start()
@@ -164,6 +178,7 @@ class Listener(threading.Thread):
 
         self.__server.serve_forever()
 
+        
 if __name__ == "__main__":
 
     listener = Listener()

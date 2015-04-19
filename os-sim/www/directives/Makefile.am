@@ -6,3 +6,5 @@ directives_DATA = directivemenu.xsl \
 	xslt-php4-to-php5.php
 
 EXTRA_DIST   = $(directives_DATA)
+
+DISTCLEANFILES = Makefile.in

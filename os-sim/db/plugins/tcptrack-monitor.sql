@@ -2,11 +2,10 @@
 -- type: monitor
 -- plugin_id: 2006
 --
--- $Id: tcptrack-monitor.sql,v 1.2 2007/03/26 18:36:15 juanmals Exp $
+-- $Id: tcptrack-monitor.sql,v 1.3 2007/08/03 11:35:49 alberto_r Exp $
 --
 DELETE FROM plugin WHERE id = "2006";
 DELETE FROM plugin_sid where plugin_id = "2006";
-
 
 INSERT INTO plugin (id, type, name, description) VALUES (2006, 2, 'tcptrack', 'tcptrack');
 

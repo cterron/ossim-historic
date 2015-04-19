@@ -11,6 +11,7 @@ class Incident {
     var $date;
     var $ref;
     var $type;
+    var $type_descr;
     var $priority;
     var $in_charge;
     var $status;
@@ -54,11 +55,17 @@ class Incident {
     function get_type() { 
         return $this->type;
     }
+    function set_type_descr($descr) { 
+        $this->type_descr = $descr;
+    }
+    function get_type_descr() { 
+        return $this->type_descr;
+    }
     function get_priority() { 
         return $this->priority;  
     }
     function get_status() { 
-        return $this->status;
+        return $this->status == 'Open' ? _("Open") : _("Closed");
     }
     function get_in_charge() { 
         return $this->in_charge; 
@@ -182,11 +189,11 @@ class Incident {
     function get_priority_string($priority)
     {
         if ($priority > 7)
-            return "High";
+            return _("High");
         elseif ($priority > 4)
-            return "Medium";
+            return _("Medium");
         else
-            return "Low";
+            return _("Low");
     }
 
     /*
@@ -256,11 +263,11 @@ class Incident {
     {
         $status = htmlentities($status);
         if ($status == 'Open')
-            echo "<font color=\"red\"><b>Open</b></font>";
+            echo "<font color=\"red\"><b>"._("Open")."</b></font>";
         elseif ($status == 'Closed')
-            echo "<font color=\"blue\"><b>Closed</b></font>";
+            echo "<font color=\"blue\"><b>"._("Closed")."</b></font>";
         elseif ($status == 'False')
-            echo "<b>Closed (False)</b>";
+            echo "<b>"._("Closed (False)")."</b>";
         else
             echo "<b>$status</b>";
     }
@@ -311,6 +318,57 @@ class Incident {
         }
         return $list;
     }
+
+    function get_list_type_descr ($conn, $args = "")
+    {
+        require_once ('classes/Session.inc');
+        $user = Session::get_session_user();
+        $list = array();
+        $sql = "SELECT incident.id," .
+               "incident.title," .
+               "incident.date, " .
+               "incident.ref, " .
+               "incident.type_id as type, " .
+               "incident.priority, " .
+               "incident.in_charge, " .
+               "incident.status, " .
+               "incident.last_update, " .
+               "incident.event_start, " .
+               "incident.event_end, " .
+               "incident_type.descr " .
+               "FROM incident LEFT JOIN incident_type ON (incident.type_id = incident_type.id) $args";
+        
+        if (!$rs = &$conn->Execute(OssimQuery($sql))) {
+            die($conn->ErrorMsg());
+        } else {
+            while (!$rs->EOF) {
+                // XXX This should be improved, this is doing 2 queries
+                //     per record
+                $allowed = Incident::get_users_list($conn, $rs->fields["id"]);
+                if (in_array($user, $allowed))
+                {
+                    $my_incident = new Incident ($rs->fields["id"],
+                                            $rs->fields["title"],
+                                            $rs->fields["date"],
+                                            $rs->fields["ref"],
+                                            $rs->fields["type"],
+                                            $rs->fields["priority"],
+                                            $rs->fields["in_charge"],
+                                            $rs->fields["status"],
+                                            $rs->fields["last_update"],
+                                            array(),
+                                            null,
+                                            $rs->fields["event_start"],
+                                            $rs->fields["event_end"]);
+                    $my_incident->set_type_descr($rs->fields["descr"]);										
+                    $list[] = $my_incident;										
+                }
+                $rs->MoveNext();
+            }
+        }
+        return $list;
+    }
+
 
     function search($conn, $search_criteria,
                     $order_by = 'life_time',
@@ -766,8 +824,12 @@ class Incident {
         require_once ('classes/Session.inc');
         $user = Session::get_session_user();
 
-	$event_start = date('Y-m-d H:i:s', strtotime($event_start));
-	$event_end = date('Y-m-d H:i:s', strtotime($event_end));
+        if (empty($event_start))
+            $event_start = "now";
+        if (empty($event_end))
+            $event_end = "now";
+        $event_start = date('Y-m-d H:i:s', strtotime($event_start));
+        $event_end = date('Y-m-d H:i:s', strtotime($event_end));
 
         $query = "INSERT INTO incident " .
                  "(title, type_id, ref, priority, " .
@@ -860,12 +922,11 @@ class Incident {
         "Vulnerability", "", "");
         if (ossim_error()) return false;
         
-        // XXX move to sequences
         $sql = "INSERT INTO incident_vulns 
-                (incident_id, ip, port, nessus_id, risk, description) 
-                VALUES (?, ?, ?, ?, ?, ?)";
-        
-        $params = array ($last_id, $ip, $port, $nessus_id, $risk, $description);
+                (id, incident_id, ip, port, nessus_id, risk, description) 
+                VALUES (?,?, ?, ?, ?, ?, ?)";
+        $vuln_entry_id = $conn->GenID('incident_vulns_seq'); 
+        $params = array ($vuln_entry_id, $last_id, $ip, $port, $nessus_id, $risk, $description);
         if (!$conn->Execute($sql, $params))
             die($conn->ErrorMsg());
 
@@ -923,6 +984,10 @@ class Incident {
             if (!ossim_valid($$var, $rule)) return false;
         }
 
+        if (empty($event_start))
+            $event_start = "now";
+        if (empty($event_end))
+            $event_end = "now";
 	    $event_start = date('Y-m-d H:i:s', strtotime($event_start));
 	    $event_end = date('Y-m-d H:i:s', strtotime($event_end));
 
@@ -997,7 +1062,7 @@ class Incident {
         $s_data_orig = implode(",", $data_orig);
         $s_data_new = implode(",", $data_new);
                    
-        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        Incident::__update($conn, $incident_id, $title, $type, $priority, "", "");
         if (ossim_error()) return false;
 
         $sql = "UPDATE incident_anomaly " .
@@ -1009,7 +1074,7 @@ class Incident {
     }
 
      function update_vulnerability($conn, $incident_id, $title, $type, $priority, $ip, $port, $nessus_id, $risk, $description) {
-        Incident :: __update($conn, $incident_id, $title, $type, $priority);
+        Incident :: __update($conn, $incident_id, $title, $type, $priority, "", "");
         if (ossim_error())
             return false;
 
@@ -1035,6 +1100,7 @@ class Incident {
         $conn->Execute("DELETE FROM incident_file   WHERE incident_id=$id");
         $conn->Execute("DELETE FROM incident_subscrip  WHERE incident_id=$id");
         $conn->Execute("DELETE FROM incident_tag    WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_vulns  WHERE incident_id=$id");
         $conn->Execute("DELETE FROM incident WHERE id=$id");
         $conn->CompleteTrans();
         if ($conn->HasFailedTrans()) {
@@ -1150,7 +1216,7 @@ class Incident {
     {
         $list = array();
         $type = array();
-        
+
         if ($incident_list = Incident::get_list($conn))
         {
             foreach ($incident_list as $incident)
@@ -1162,7 +1228,32 @@ class Incident {
                     $type[$tmp] = 1;
             }
         }
+        arsort ($type);        
+        foreach ($type as $key=>$value)
+        {
+            array_push($list, array ($key, $value));
+        }
+
+        return $list;
+    }
+
+    function incidents_by_type_descr($conn)
+    {
+        $list = array();
+        $type = array();
         
+        if ($incident_list = Incident::get_list_type_descr($conn))
+        {
+            foreach ($incident_list as $incident)
+            {
+                $tmp = $incident->get_type_descr();
+                if (array_key_exists($tmp, $type)) 
+                    $type[$tmp] += 1;
+                else 
+                    $type[$tmp] = 1;
+            }
+        }
+        arsort ($type);        
         foreach ($type as $key=>$value)
         {
             array_push($list, array ($key, $value));
@@ -1195,12 +1286,16 @@ class Incident {
         return $list;
     }
 
-    function incidents_by_user($conn)
-    {
+        
+    function incidents_by_user($conn, $open_only = true)
+    {       
         $list = array();
         $status = array();
+        $args = "";
         
-        if ($incident_list = Incident::get_list($conn)){
+        if($open_only) $args = "WHERE status = \"Open\"";
+        
+        if ($incident_list = Incident::get_list($conn, $args)){
             foreach ($incident_list as $incident){
                 $tmp = $incident->get_in_charge($conn);
                 if (array_key_exists($tmp, $status))
@@ -1209,7 +1304,7 @@ class Incident {
                     $status[$tmp] = 1;
             }
         }
-       
+        arsort ($status);       
         foreach ($status as $key=>$value)
         {
             array_push($list, array (

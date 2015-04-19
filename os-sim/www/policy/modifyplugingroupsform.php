@@ -86,6 +86,8 @@ function validate_sids_str(id)
 
 </script>
 <form id="myform" name="myform" action="modifyplugingroups.php?action=<?=GET('action')?>&id=<?=$group_id?>" method="POST">
+<center><input type="submit" value="<?=_("Accept")?>"></center>
+<br>
 <table align="center" width="95%">
     <tr>
         <th width="10%"><?=_("Group ID")?></th>

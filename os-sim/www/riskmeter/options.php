@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
+?>
+
 <html>
 <head>
   <link rel="stylesheet" href="../style/style.css"/>

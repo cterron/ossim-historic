@@ -86,8 +86,8 @@ foreach ($groups as $group) {
 ?>
 
   </tr></table>
-</td><td>
-<td style="border-width: 0px; text-align: right"><a href="./configure_event_viewer.php"><?=_("Configure Event Tabs")?></td>
+</td>
+<td style="border-width: 0px; text-align: right"><a href="./configure_event_viewer.php"><?=_("Configure Event Tabs")?></a>
 </td>
 </tr>
 </table>

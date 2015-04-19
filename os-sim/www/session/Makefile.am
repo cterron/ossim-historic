@@ -10,4 +10,4 @@ session_DATA = changepass.php \
 	users.php
 
 EXTRA_DIST   = $(session_DATA)
-
+DISTCLEANFILES = Makefile.in

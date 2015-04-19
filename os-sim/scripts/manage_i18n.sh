@@ -10,7 +10,7 @@ xgettext -d ossim -s -o ossim.po -f filenames
 for i in `ls $OSSIM_HOME/locale/ | grep -v CVS`; 
 do 
 echo "Updating $i"; 
-msgmerge -s -U $OSSIM_HOME/locale/$i/LC_MESSAGES/ossim.po $OSSIM_HOME/ossim.po;
+msgmerge -N -s -U $OSSIM_HOME/locale/$i/LC_MESSAGES/ossim.po $OSSIM_HOME/ossim.po;
 msgfmt -c -v -o $OSSIM_HOME/locale/$i/LC_MESSAGES/ossim.mo $OSSIM_HOME/locale/$i/LC_MESSAGES/ossim.po;
 echo "Finished updating $i"; 
 done

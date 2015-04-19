@@ -37,16 +37,21 @@ $delete_day = GET('delete_day');
 $order = GET('order');
 $src_ip = GET('src_ip');
 $dst_ip = GET('dst_ip');
-$inf = GET('inf');
+$backup_inf = $inf = GET('inf');
 $sup = GET('sup');
 $hide_closed = GET('hide_closed');
 // By default only show alarms from the past week
+/*
+// DK 2007/04/02
 if (!GET('date_from')) {
     list($y, $m, $d) = explode('-', date('Y-m-d'));
     $date_from = date('Y-m-d', mktime(0, 0, 0, $m, $d-7, $y));
 } else {
+*/
     $date_from = GET('date_from');
+/*
 }
+*/
 $date_to = GET('date_to');
 $num_alarms_page = GET('num_alarms_page');
 
@@ -226,12 +231,12 @@ $alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
             */ ?>">Plugin id</a></th>
 -->
         <th>#</th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+        <th width="25%"><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
                 echo ossim_db::get_order("plugin_sid", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Alarm"); ?> </a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("risk", $order) .
+                echo ossim_db::get_order("risk desc", $order) .
                 "&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip&num_alarms_page=$num_alarms_page&date_from=$date_from&date_to=$date_to"
             ?>"> <?php echo gettext("Risk"); ?> </a></th>
         <th> <?php echo gettext("Sensor"); ?> </th>
@@ -306,7 +311,7 @@ $alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
                 $link_delete = "
                     <a href=\"" . 
                         $_SERVER["PHP_SELF"] . "?delete_day=" . 
-                        $alarm->get_timestamp() . "&hide_closed=$hide_closed\"> ". gettext("Delete")." </a>
+                        $alarm->get_timestamp() . "&inf=".($sup-$ROWS)."&sup=$sup&hide_closed=$hide_closed\"> ". gettext("Delete")." </a>
                 ";
                 echo "
                 <tr>
@@ -344,6 +349,14 @@ $alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
                 $alarm_name = "<a href=\"" . $alarm_link .  "\">$alarm_name</a>";
             }
             echo $alarm_name;
+if($backlog_id){
+$aid = $alarm->get_event_id();
+$summary = Alarm::get_alarm_stats($conn, $backlog_id, $aid);
+$event_count_label = $summary["total_count"] . " events";
+} else {
+$event_count_label = 1 . " event";
+}
+echo " <font color=\"#AAAAAA\" style=\"font-size: 8px;\">(" . $event_count_label . ")</font>";
 ?>
         </b></td>
         
@@ -471,7 +484,10 @@ $alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
         if ($backlog_id == 0) {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?delete=$event_id&hide_closed=$hide_closed"?>">
+            "?delete=$event_id" .
+            "&sup=" . "$sup" .
+            "&inf=" . ($sup-$ROWS) .
+            "&hide_closed=$hide_closed"; ?>">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
         } else {
@@ -500,6 +516,20 @@ $alarm_list = Alarm::get_list($conn, $src_ip, $dst_ip, $hide_closed,
 <?php
         } /* foreach alarm_list */
 ?>
+      <tr>
+      <td colspan="10">
+<?php
+    if ($backup_inf >= $ROWS) {
+        echo "<a href=\"$inf_link\">&lt;-"; printf(gettext("Prev %d"),$ROWS); echo "</a>";
+    }
+    if ($sup < $count) {
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$backup_inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $ROWS); echo " -&gt;</a>";
+    } else { 
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$backup_inf, $count, $count); echo ")&nbsp;&nbsp;";
+    }
+?>
+      </td></tr>
       <tr>
         <td></td>
         <td colspan="10">

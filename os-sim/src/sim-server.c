@@ -244,6 +244,9 @@ sim_server_new_from_dm (GdaDataModel  *dm,
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   server->_priv->port = gda_value_get_integer (value);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_new_from_dm: %s", server->_priv->name);
+  sim_server_debug_print(server);
+
   return server;
 
 }
@@ -289,8 +292,8 @@ sim_server_listen_run (SimServer *server)
 	
   if (!server->_priv->socket)
   {
-    printf("Error in bind; may be another app is running in port %d?",server->_priv->port); //the log file may be in use.
-    g_message("Error in bind; may be another app is running in port %d?",server->_priv->port);
+    printf("Error in bind; may be another app is running in port %d? You should also check the <server ... ip=\"\"> entry and see if any of your local interfaces has got that ip address.",server->_priv->port); //the log file may be in use.
+    g_message("Error in bind; may be another app is running in port %d? You should also check the <server ... ip=\"\"> entry and see if any of your local interfaces has got that ip address.",server->_priv->port);
     exit (EXIT_FAILURE);   
   }
 
@@ -894,7 +897,7 @@ sim_server_load_role (SimServer	*server)
 	dm = sim_database_execute_single_command (ossim.dbossim, query);
 	if (dm)
 	{
-		if (gda_data_model_get_n_rows (dm) == 0)
+		if (gda_data_model_get_n_rows (dm) == 0) // needed to define the role of the local server if user didn't inserted it
 		{
 			config->server.role->correlate       = 1;
 			config->server.role->cross_correlate = 1;

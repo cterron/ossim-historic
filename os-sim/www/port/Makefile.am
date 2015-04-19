@@ -9,3 +9,5 @@ port_DATA = modifyport.php \
 	port.php 
 EXTRA_DIST   = $(port_DATA)
 
+DISTCLEANFILES = Makefile.in
+

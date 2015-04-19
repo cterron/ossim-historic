@@ -48,5 +48,9 @@ if (POST('insert')) {
     <p> <?php echo gettext("Sensor succesfully inserted"); ?> </p>
     <p><a href="sensor.php"> <?php echo gettext("Back"); ?> </a></p>
 
+<?
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 </body>
 </html>

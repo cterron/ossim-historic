@@ -17,6 +17,9 @@ def isIpInNet(host, net_list):
         b = base.split('.')
         h = host.split('.')
 
+        if len(b) != 4 or len(h) != 4:
+            continue
+
         val1 = int(b[0])*256*256*256 +\
                int(b[1])*256*256 +\
                int(b[2])*256 +\

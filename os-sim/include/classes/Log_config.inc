@@ -25,9 +25,9 @@ Class Log_config {
 
 
 
-    function get_list($conn, $where = "", $order = "")
+    function get_list($conn, $args = "")
     {
-	$query = OssimQuery("SELECT * FROM  log_config $order");
+	$query = OssimQuery("SELECT * FROM log_config $args");
 
 	if (!$rs = &$conn->Execute($query)) {
 		print $conn->ErrorMsg();

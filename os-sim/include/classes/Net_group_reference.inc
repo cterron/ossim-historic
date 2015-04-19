@@ -16,11 +16,20 @@ class Net_group_reference {
     function get_net_group_name()      { return $this->net_group_name; }
     function get_net_name()  { return $this->net_name; }
     
-    function get_list($conn, $net) 
+    function get_list($conn, $net, $plugin)
     {
         $list = array();
-        $sql = "SELECT * FROM net_group_reference WHERE net_group_name = ?";
-        if (!$rs = &$conn->Execute($sql, array($net))) {
+
+	if ($plugin != "") {
+            $sql = "SELECT net_group_name, net_group_reference.net_name
+                    FROM net_group_reference, net_scan
+                    WHERE net_group_reference.net_group_name = ? AND
+                          net_group_reference.net_name = net_scan.net_name";
+        } else {
+	        $sql = "SELECT * FROM net_group_reference WHERE net_group_name = ?";
+        }
+	
+	if (!$rs = &$conn->Execute($sql, array($net))) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

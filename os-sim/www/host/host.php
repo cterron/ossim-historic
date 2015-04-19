@@ -21,6 +21,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     require_once 'classes/Host_scan.inc';
     require_once 'classes/Plugin.inc';
     require_once 'classes/Security.inc';
+    require_once 'classes/WebIndicator.inc';
 
 
     $order = GET('order');
@@ -146,8 +147,12 @@ echo gettext("None");
       <?php echo gettext("Insert new host"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="12"><a href="../conf/reload.php?what=hosts">
-      <?php echo gettext("Reload"); ?> </a></td>
+      <td colspan="12"><a href="../conf/reload.php?what=hosts&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
+if (WebIndicator::is_on("Reload_hosts")) {
+    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
+} else {
+    echo gettext("Reload");
+} ?> </a></td>
     </tr>
   </table>
 

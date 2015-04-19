@@ -43,7 +43,7 @@ AC_MSG_CHECKING([for struct sockaddr_storage])
 AC_TRY_COMPILE([ #include <sys/types.h>
 #include <sys/socket.h>], [struct sockaddr_storage s; s],
   have_sockaddr_storage=yes, have_sockaddr_storage=no)
-if test "$have_sockaddr_storage" = yes; then
+if test "$have_sockaddr_storage" = "yes" ; then
   AC_DEFINE(HAVE_SOCKADDR_STORAGE,1,[Whether you have struct sockaddr_storage])
   AC_MSG_RESULT(yes)
 else
@@ -65,6 +65,7 @@ AC_TRY_LINK([ #include <sys/types.h>
 )
 
 PKG_CHECK_MODULES(DEPS, glib-2.0 >= 2.2 gobject-2.0 >= 2.2 gthread-2.0 >= 2.2 libgda >= 1.0 gnet-2.0 > 2.0)
+
 
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
@@ -106,6 +107,7 @@ www/feed/Makefile
 www/hids/Makefile
 www/host/Makefile
 www/incidents/Makefile
+www/maps/Makefile
 www/nagios/Makefile
 www/net/Makefile
 www/ntop/Makefile
@@ -114,6 +116,7 @@ www/pixmaps/Makefile
 www/pixmaps/os/Makefile
 www/pixmaps/panel/Makefile
 www/pixmaps/top/Makefile
+www/pixmaps/therm/Makefile
 www/policy/Makefile
 www/port/Makefile
 www/report/Makefile
@@ -135,6 +138,9 @@ www/java/images/Makefile
 www/js/Makefile
 www/js/rico/Makefile
 www/js/scriptaculous/Makefile
+www/js/mattkruse/Makefile
+www/js/OpenLayers/img/Makefile
+www/js/OpenLayers/Makefile
 www/netscan/Makefile
 www/response/Makefile
 www/upgrade/Makefile
@@ -163,9 +169,31 @@ contrib/debian/httpd/Makefile
 contrib/debian/init.d/Makefile
 contrib/fedora/Makefile
 contrib/fedora/init.d/Makefile
+contrib/fedora/sysconfig/Makefile
 contrib/oinkmaster/Makefile
 contrib/osvdb/Makefile
 contrib/spade/Makefile
 contrib/snort/Makefile
 contrib/patches/Makefile
+contrib/py-rrdtool/Makefile
+contrib/barnyard/Makefile
+locale/zh_TW/LC_MESSAGES/Makefile
+locale/zh_TW/Makefile
+locale/es/LC_MESSAGES/Makefile
+locale/es/Makefile
+locale/fr/LC_MESSAGES/Makefile
+locale/fr/Makefile
+locale/zh_CN/LC_MESSAGES/Makefile
+locale/zh_CN/Makefile
+locale/Makefile
+locale/ru/LC_MESSAGES/Makefile
+locale/ru/Makefile
+locale/en/LC_MESSAGES/Makefile
+locale/en/Makefile
+locale/de/LC_MESSAGES/Makefile
+locale/de/Makefile
+locale/ja/LC_MESSAGES/Makefile
+locale/ja/Makefile
+locale/pt_BR/LC_MESSAGES/Makefile
+locale/pt_BR/Makefile
 ])

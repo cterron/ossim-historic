@@ -8,6 +8,7 @@ require_once 'classes/Role.inc';
 require_once 'classes/Net.inc';
 require_once 'classes/Log_action.inc';
 require_once ("ossim_db.inc");
+require_once 'classes/WebIndicator.inc';
 
 class Server {
 
@@ -31,6 +32,7 @@ class Server {
 
     function get_list($conn, $args = "") 
     {
+        $list = array();
         $query = OssimQuery("SELECT * FROM server $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -52,7 +54,8 @@ class Server {
 
     function get_role($conn, $args = "") 
     {
-        $query = OssimQuery("SELECT * FROM server_role $args");
+        $list = array();
+        $query = OssimQuery("SELECT server_role.*,ip FROM server_role LEFT JOIN server USING (name) $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -61,7 +64,7 @@ class Server {
                 if (Session::hostAllowed($conn, $rs->fields["ip"]))
                 {
                     $list[] = new Role   ($rs->fields["name"],
-										                      $rs->fields["correlate"],
+                                          $rs->fields["correlate"],
                                           $rs->fields["cross_correlate"],
                                           $rs->fields["store"],
                                           $rs->fields["qualify"],
@@ -109,6 +112,9 @@ class Server {
         }
         $infolog = array($name,"[".$ip."]");
         Log_action::log(33,$infolog);
+
+//        WebIndicator::set_on("Reload_servers");
+//        WebIndicator::set_on("ReloadPolicy");
     }
 
     function update($conn, $name, $ip, $port, $descr, $r_correlate, $r_cross_correlate, $r_store, $r_qualify, $r_resend_alarm, $r_resend_event )
@@ -129,6 +135,8 @@ class Server {
         $infolog = array($name,"[".$ip."]");
         Log_action::log(34,$infolog);
  
+//        WebIndicator::set_on("Reload_servers");
+//        WebIndicator::set_on("ReloadPolicy");
     }
 
     function delete($conn, $name)
@@ -141,8 +149,11 @@ class Server {
         if (!$conn->Execute($sql, array($name))) {
             die($conn->ErrorMsg());
         }
-       $infolog = array($name);
-       Log_action::log(35,$infolog);
+        $infolog = array($name);
+        Log_action::log(35,$infolog);
+
+//        WebIndicator::set_on("Reload_servers");
+//        WebIndicator::set_on("ReloadPolicy");
     }
  
 

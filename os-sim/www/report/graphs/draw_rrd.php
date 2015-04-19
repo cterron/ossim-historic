@@ -48,7 +48,7 @@ $zoom = GET('zoom') ? GET('zoom') : 1;
 // params validations
 //
 
-if (!in_array($what, array('compromise', 'attack'))) {
+if (!in_array($what, array('compromise', 'attack', 'ser_lev'))) {
     mydie(sprintf(_("Invalid param '%s' with value '%s'"), 'what', $what));
 }
 if (!in_array($type, array('host', 'net', 'global', 'level'))) {
@@ -99,6 +99,8 @@ if ($what == "compromise") {
     $ds="ds1";
     $color1="#ff0000";
     $color2="#0000ff";
+} elseif ($what == "ser_lev") {
+    $color1="#24d428";
 }
 
 //
@@ -106,21 +108,21 @@ if ($what == "compromise") {
 //
 
 // default values
-$threshold_a = $threshold_c = $conf->get_conf('threshold');
-$hostname  = $ip;
+    $threshold_a = $threshold_c = $conf->get_conf('threshold');
+    $hostname  = $ip;
 
-if ($type == 'host' || $type == 'net') {
-    $column = $what == 'compromise' ? 'threshold_c' : 'threshold_a';
-    $match  = $type == 'host' ? 'ip' : 'name';
-    $sql = "SELECT threshold_c, threshold_a FROM $type WHERE $match = ?";
-    if (!$rs = $conn->Execute($sql, array($ip))) {
-        mydie($conn->ErrorMsg());
+    if ($type == 'host' || $type == 'net') {
+        $column = $what == 'compromise' ? 'threshold_c' : 'threshold_a';
+        $match  = $type == 'host' ? 'ip' : 'name';
+        $sql = "SELECT threshold_c, threshold_a FROM $type WHERE $match = ?";
+        if (!$rs = $conn->Execute($sql, array($ip))) {
+            mydie($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) { // if a specific threshold was set for this host, use it
+            $threshold_c = $rs->fields['threshold_c'];
+            $threshold_a = $rs->fields['threshold_a'];
+        }
     }
-    if (!$rs->EOF) { // if a specific threshold was set for this host, use it
-        $threshold_c = $rs->fields['threshold_c'];
-        $threshold_a = $rs->fields['threshold_a'];
-    }
-}
 //
 // RRDTool cmd execution
 //
@@ -140,14 +142,24 @@ if ($type != 'level') {
     $ymin = -1 * (int)(2.5 * $threshold_c);
     $params .= "-u $ymax -l $ymin ";
 }
-$params .=
-         "DEF:obs=$rrdpath/$ip.rrd:$ds:AVERAGE " .
-         "DEF:obs2=$rrdpath/$ip.rrd:ds1:AVERAGE " .
-         "CDEF:negcomp=0,obs,- " .
-         "AREA:obs2$color2:" . _("Attack") . " " .
-         "AREA:negcomp$color1:" . _("Compromise") . " " .
-         "HRULE:$threshold_a#000000 " .
-         "HRULE:-$threshold_c#000000 ";
+if ($what != "ser_lev") {
+    $params .=
+            "DEF:obs=$rrdpath/$ip.rrd:$ds:AVERAGE " .
+            "DEF:obs2=$rrdpath/$ip.rrd:ds1:AVERAGE " .
+            "CDEF:negcomp=0,obs,- " .
+            "AREA:obs2$color2:" . _("Attack") . " " .
+            "AREA:negcomp$color1:" . _("Compromise") . " " .
+            "HRULE:$threshold_a#000000 " .
+            "HRULE:-$threshold_c#000000 ";
+} elseif ($what == "ser_lev"){
+    $params .=
+            " --vertical-label=Percentage " .
+            " --upper-limit=100  --lower-limit=0 " .
+            "DEF:obs=$rrdpath/$ip.rrd:ds0:AVERAGE " .
+            "DEF:obs2=$rrdpath/$ip.rrd:ds1:AVERAGE " .
+            "CDEF:ser_lev=obs,obs2,+,2,/ " .
+            "AREA:ser_lev$color1:'" . _("Service level") ."'";
+}
 
          
 exec("$rrdtool_bin $params 2>&1", $output, $exit_code);

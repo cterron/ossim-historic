@@ -3,6 +3,7 @@
 # Init file for the OSSIM server 
 #
 # description: Ossim server
+# chkconfig: - 92 83
 #
 # processname: ossim-server
 # config: /etc/ossim/server/config.xml
@@ -13,19 +14,23 @@
 # Source networking configuration.
 . /etc/sysconfig/network
 
+
+if [ -f /etc/sysconfig/ossim-server ]; then
+  . /etc/sysconfig/ossim-server
+fi
+
 # Check networking
 [ "${NETWORKING}" == "no" ] && exit 0
+
 # Check ossim-server file
 [ -x "/usr/bin/ossim-server" ] || exit 1
-# Check ossim-server config file
-[ -r "/etc/ossim/server/config.xml" ] || exit 1
 
 RETVAL=0
 prog="ossim-server"
 
 start () {
 	echo -n $"Starting $prog: "
-	daemon $prog -d -c /etc/ossim/server/config.xml
+	daemon $prog $OPTIONS
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/\$prog

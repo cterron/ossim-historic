@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: OSSIM 0.9.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-15 14:01+0100\n"
+"POT-Creation-Date: 2007-05-09 23:21+0200\n"
 "PO-Revision-Date: 2005-01-19 12:46+0100\n"
 "Last-Translator: Stéphane Fournier <gingurz@ossim.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -28,14 +28,14 @@ msgstr ""
 
 # conf/pluginref.php:55 control_panel/alarm_console.php:106
 # control_panel/alarm_console.php:109 control_panel/backlog.php:73
-#: www/conf/pluginref.php:68 www/control_panel/alarm_console.php:212
-#: www/control_panel/alarm_console.php:215 www/control_panel/backlog.php:94
+#: www/conf/pluginref.php:68 www/control_panel/alarm_console.php:217
+#: www/control_panel/alarm_console.php:220 www/control_panel/backlog.php:94
 #: www/control_panel/mac.php:141 www/control_panel/mac.php:144
-#: www/control_panel/mac.php:321 www/control_panel/mac.php:324
+#: www/control_panel/mac.php:323 www/control_panel/mac.php:326
 #: www/control_panel/os.php:140 www/control_panel/os.php:143
-#: www/control_panel/os.php:325 www/control_panel/os.php:328
+#: www/control_panel/os.php:328 www/control_panel/os.php:331
 #: www/control_panel/services.php:144 www/control_panel/services.php:147
-#: www/control_panel/services.php:333 www/control_panel/services.php:336
+#: www/control_panel/services.php:335 www/control_panel/services.php:338
 #: www/userlog/user_action_log.php:164 www/userlog/user_action_log.php:167
 #, php-format
 msgid "%d-%d of %d"
@@ -64,7 +64,7 @@ msgstr "2"
 msgid "3"
 msgstr "3"
 
-#: include/panel/plugins/custom_sql.php:130
+#: include/panel/plugins/custom_sql.php:140
 msgid "3D Angle"
 msgstr ""
 
@@ -92,7 +92,7 @@ msgstr ""
 msgid "<b>Name</b> required, should be only letters and underscores"
 msgstr ""
 
-#: www/control_panel/global_score.php:928
+#: www/control_panel/global_score.php:940
 msgid "A T T A C K"
 msgstr ""
 
@@ -114,10 +114,6 @@ msgstr ""
 # conf/main.php:142
 #: www/conf/main.php:240
 msgid "ACID"
-msgstr ""
-
-#: www/host/modifyhostform.php:244 www/host/newhostform.php:211
-msgid "AIX"
 msgstr ""
 
 #: www/report/pdfreport.php:197
@@ -147,8 +143,9 @@ msgstr "TOUS"
 # policy/modifypolicyform.php:232
 #: www/directives/directive.php:196 www/policy/modifypolicyform.php:141
 #: www/policy/modifypolicyform.php:237 www/policy/modifypolicyform.php:394
-#: www/policy/newpolicyform.php:99 www/policy/newpolicyform.php:168
-#: www/policy/newpolicyform.php:275
+#: www/policy/modifypolicyform.php:701 www/policy/newpolicyform.php:99
+#: www/policy/newpolicyform.php:168 www/policy/newpolicyform.php:275
+#: www/policy/newpolicyform.php:430
 msgid "ANY"
 msgstr "N'importe"
 
@@ -170,11 +167,11 @@ msgid ""
 "reached"
 msgstr ""
 
-#: www/policy/modifyplugingroupsform.php:147
+#: www/panel/draw_map.php:257 www/policy/modifyplugingroupsform.php:148
 msgid "Accept"
 msgstr ""
 
-#: www/panel/window_panel.php:259
+#: www/panel/window_panel.php:318
 msgid "Accept config"
 msgstr ""
 
@@ -233,20 +230,20 @@ msgstr "Accepté"
 # sensor/sensor_plugins.php:119 sensor/sensor_plugins.php:121
 # signature/signature.php:31
 #: www/action/action.php:29 www/backup/index.php:142 www/conf/pluginsid.php:76
-#: www/control_panel/alarm_console.php:255 www/control_panel/events.php:75
-#: www/editor/rule.php:83 www/host/host.php:71 www/incidents/incident.php:49
-#: www/incidents/incident.php:325 www/incidents/incident.php:450
-#: www/incidents/index.php:120 www/net/net.php:94 www/net/netgroup.php:70
-#: www/policy/policy.php:45 www/port/port.php:41
-#: www/report/pdfreportform.php:225 www/rrd_conf/rrd_conf.php:42
-#: www/scan/hostscan.php:54 www/scan/scan.php:52 www/sensor/interfaces.php:88
-#: www/sensor/interfaces.php:143 www/sensor/sensor.php:71
-#: www/sensor/sensor_plugins.php:144 www/sensor/sensor_plugins.php:146
-#: www/server/server.php:101 www/signature/signature.php:40
-#: www/userlog/user_action_log.php:68 www/userlog/user_action_log.php:193
-#: www/vulnmeter/handle_scan.php:26 www/vulnmeter/scheduler.php:40
-#: www/vulnmeter/scheduler.php:71 www/vulnmeter/scheduler.php:127
-#: www/vulnmeter2/handle_scan.php:26
+#: www/control_panel/alarm_console.php:260 www/editor/rule.php:83
+#: www/host/host.php:71 www/host/hostgroup.php:55
+#: www/incidents/incident.php:49 www/incidents/incident.php:325
+#: www/incidents/incident.php:450 www/incidents/index.php:120
+#: www/net/net.php:94 www/net/netgroup.php:70 www/policy/policy.php:45
+#: www/port/port.php:41 www/report/pdfreportform.php:225
+#: www/rrd_conf/rrd_conf.php:42 www/scan/hostscan.php:54 www/scan/scan.php:52
+#: www/sensor/interfaces.php:88 www/sensor/interfaces.php:143
+#: www/sensor/sensor.php:71 www/sensor/sensor_plugins.php:145
+#: www/sensor/sensor_plugins.php:147 www/server/server.php:101
+#: www/signature/signature.php:40 www/userlog/user_action_log.php:68
+#: www/userlog/user_action_log.php:193 www/vulnmeter/handle_scan.php:26
+#: www/vulnmeter/scheduler.php:53 www/vulnmeter/scheduler.php:84
+#: www/vulnmeter/scheduler.php:140
 msgid "Action"
 msgstr "Action"
 
@@ -318,16 +315,16 @@ msgstr ""
 # session/users.php:38
 #: www/action/action.php:15 www/business_processes/asset_list.php:73
 #: www/business_processes/bp_list.php:32
-#: www/business_processes/bp_list.php:146 www/incidents/incidenttag.php:122
-#: www/incidents/incidenttype.php:34 www/policy/plugingroups.php:49
-#: www/response/newresponseform.php:261 www/response/response.php:34
-#: www/session/users.php:58 www/top.php:231
+#: www/business_processes/bp_list.php:146
+#: www/event_viewer/configure_event_viewer.php:321
+#: www/incidents/incidenttag.php:122 www/incidents/incidenttype.php:34
+#: www/policy/plugingroups.php:49 www/response/newresponseform.php:260
+#: www/response/response.php:34 www/session/users.php:58 www/top.php:237
 msgid "Actions"
 msgstr "Actions"
 
 # report/inventory.php:174 scan/scan.php:42 sensor/sensor.php:48
-#: www/report/inventory.php:178 www/scan/scan.php:51 www/sensor/sensor.php:69
-#: www/server/server.php:91
+#: www/scan/scan.php:51 www/sensor/sensor.php:69 www/server/server.php:91
 msgid "Active"
 msgstr "Actif"
 
@@ -347,11 +344,11 @@ msgid "Actives"
 msgstr "Actif"
 
 #: www/business_processes/bp_edit.php:134 www/response/newresponseform.php:203
-#: www/response/newresponseform.php:237
+#: www/response/newresponseform.php:236
 msgid "Add"
 msgstr ""
 
-#: www/vulnmeter/scheduler.php:186
+#: www/vulnmeter/scheduler.php:199
 msgid "Add another schedule"
 msgstr ""
 
@@ -369,6 +366,10 @@ msgstr ""
 
 #: www/incidents/incidenttype.php:78
 msgid "Add new type"
+msgstr ""
+
+#: www/event_viewer/configure_event_viewer.php:221
+msgid "Add replacement tag"
 msgstr ""
 
 # incidents/incident.php:369 incidents/index.php:201
@@ -397,8 +398,8 @@ msgstr ""
 "inquiétez pasd'être une plate forme de tests d'un de vos amis"
 
 # control_panel/alerts.php:58 incidents/index.php:106 incidents/index.php:287
-#: www/control_panel/alarm_console.php:232 www/control_panel/events.php:69
-#: www/incidents/index.php:129 www/incidents/index.php:327
+#: www/control_panel/alarm_console.php:237 www/control_panel/events.php:69
+#: www/incidents/index.php:129 www/incidents/index.php:329
 #: www/report/pdfreportform.php:233 www/report/sec_report.php:265
 #: www/report/sec_report.php:339
 msgid "Alarm"
@@ -416,7 +417,7 @@ msgstr "Visionneuse d'alarmes"
 msgid "Alarm Security report"
 msgstr "Rapport de sécurité"
 
-#: www/control_panel/events.php:256
+#: www/control_panel/events.php:253
 msgid "Alarm Summary"
 msgstr ""
 
@@ -451,17 +452,29 @@ msgstr ""
 msgid "Alert"
 msgstr "Alerte"
 
+# host/newhostform.php:200
+#: www/event_viewer/configure_event_viewer.php:239
+#, fuzzy
+msgid "Align"
+msgstr "Plan9"
+
 # control_panel/anomalies.php:68
 #: www/business_processes/asset_list.php:56
 #: www/control_panel/anomalies.php:103 www/control_panel/anomalies.php:166
 #: www/control_panel/rrd_anomaly.php:91 www/control_panel/rrd_global.php:73
-#: include/panel/plugins/custom_sql.php:138
+#: www/event_viewer/index.php:61 include/panel/plugins/custom_sql.php:148
 msgid "All"
 msgstr "Toutes"
 
 #: www/conf/emailtemplate.php:271
 msgid "All changes will be lost. Continue anyway?"
 msgstr ""
+
+# top.php:69
+#: www/event_viewer/index.php:61
+#, fuzzy
+msgid "All plugins"
+msgstr "Plugins"
 
 #: www/upgrade/index.php:118
 msgid "All upgrades"
@@ -502,7 +515,7 @@ msgid ""
 "Host_ARP_Event, etc.."
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:290 www/vulnmeter2/do_nessus.php:225
+#: www/vulnmeter/do_nessus.php:289
 msgid "An error ocurred, please check your frameworkd & web server logs:"
 msgstr ""
 
@@ -512,7 +525,7 @@ msgid "Anomalies"
 msgstr "Anomalies"
 
 # control_panel/anomalies.php:16 report/menu.php:95 top.php:47
-#: www/incidents/index.php:138 www/incidents/index.php:328
+#: www/incidents/index.php:138 www/incidents/index.php:330
 #: www/report/pdfreportform.php:254
 #, fuzzy
 msgid "Anomaly"
@@ -524,6 +537,13 @@ msgstr "Anomalies"
 msgid "Anomaly type"
 msgstr "Anomalies"
 
+# control_panel/anomalies.php:259 host/newhostform.php:196
+# host/newhostform.php:207
+#: www/host/modifyhostform.php:242 www/host/newhostform.php:213
+#, fuzzy
+msgid "Apple MacOS"
+msgstr "Mac"
+
 # conf/main.php:252
 #: www/conf/main.php:139
 msgid "Applets (jfreechart)"
@@ -534,7 +554,7 @@ msgstr "Appliquette (jfreechart)"
 msgid "Applications"
 msgstr "Applications"
 
-#: www/panel/panel.php:153
+#: www/panel/panel.php:331
 msgid "Apply"
 msgstr ""
 
@@ -545,29 +565,28 @@ msgid "Apply Changes"
 msgstr "Chngement d'OS"
 
 # report/inventory.php:174 scan/scan.php:42 sensor/sensor.php:48
-#: www/vulnmeter/index.php:219 www/vulnmeter2/index.old.php:150
-#: www/vulnmeter2/index.php:175
+#: www/vulnmeter/index.php:221 www/vulnmeter/report.php:82
 #, fuzzy
 msgid "Archive"
 msgstr "Actif"
 
-#: www/vulnmeter/handle_scan.php:37 www/vulnmeter2/handle_scan.php:37
+#: www/vulnmeter/handle_scan.php:37
 msgid "Archiving"
 msgstr ""
 
 # host/deletehost.php:30 net/deletenet.php:30 policy/deletepolicy.php:27
 # port/deleteport.php:27 scan/deletehostscan.php:29 session/deleteuser.php:32
 # signature/deletesignature.php:27
-#: www/host/deletehost.php:35 www/incidents/deleteincidenttype.php:39
-#: www/net/deletenet.php:30 www/net/deletenetgroup.php:30
-#: www/policy/deletepolicy.php:29 www/port/deleteport.php:32
-#: www/scan/deletehostscan.php:31 www/session/deleteuser.php:40
-#: www/signature/deletesignature.php:30
+#: www/host/deletehost.php:35 www/host/deletehostgroup.php:30
+#: www/incidents/deleteincidenttype.php:39 www/net/deletenet.php:30
+#: www/net/deletenetgroup.php:30 www/policy/deletepolicy.php:29
+#: www/port/deleteport.php:32 www/scan/deletehostscan.php:31
+#: www/session/deleteuser.php:40 www/signature/deletesignature.php:30
 msgid "Are you sure"
 msgstr "Etes-vous sure"
 
 # sensor/deletesensor.php:30
-#: www/conf/main.php:361
+#: www/conf/main.php:393
 msgid "Are you sure ?"
 msgstr "Etes-vous sur ?"
 
@@ -587,7 +606,9 @@ msgstr ""
 # host/modifyhostform.php:56 host/newhostform.php:58 report/report.php:38
 #: www/directives/directive.php:485 www/directives/directive.php:487
 #: www/host/host.php:50 www/host/modifyhostform.php:69
-#: www/host/newhostform.php:79 www/net/net.php:73 www/report/report.php:42
+#: www/host/newhostform.php:79 www/net/modifynet.php:33
+#: www/net/modifynetform.php:61 www/net/net.php:73 www/net/newnet.php:33
+#: www/net/newnetform.php:45 www/report/report.php:42
 msgid "Asset"
 msgstr "Evaluation"
 
@@ -610,21 +631,33 @@ msgstr "Evaluation"
 msgid "Assets Management"
 msgstr ""
 
-#: www/policy/modifypolicy.php:140 www/policy/newpolicy.php:134
+#: www/policy/modifypolicy.php:142 www/policy/newpolicy.php:136
 msgid "At least one Destination IP or Net required"
 msgstr ""
 
-#: www/policy/modifypolicy.php:160 www/policy/newpolicy.php:154
+#: www/policy/modifypolicy.php:162 www/policy/newpolicy.php:156
 msgid "At least one Port required"
 msgstr ""
 
-#: www/policy/modifypolicy.php:102 www/policy/newpolicy.php:97
+# control_panel/alerts.php:16 control_panel/visualize.php:15
+#: www/vulnmeter/scheduler.php:108
+#, fuzzy
+msgid "At least one Sensor required"
+msgstr "Backlog ID requis"
+
+#: www/policy/modifypolicy.php:104 www/policy/newpolicy.php:99
 msgid "At least one Source IP or Net required"
 msgstr ""
 
-#: www/policy/newpolicy.php:167
+#: www/policy/newpolicy.php:169
 msgid "At least one plugin group required"
 msgstr ""
+
+# control_panel/alerts.php:16 control_panel/visualize.php:15
+#: www/net/modifynet.php:60
+#, fuzzy
+msgid "At least one sensor is required"
+msgstr "Backlog ID requis"
 
 # incidents/incident.php:582
 #: www/incidents/incident.php:319 www/incidents/incident.php:441
@@ -632,7 +665,7 @@ msgid "Attachment"
 msgstr "Pièce jointe"
 
 # control_panel/show_image.php:37
-#: www/control_panel/show_image.php:55 www/report/graphs/draw_rrd.php:147
+#: www/control_panel/show_image.php:55 www/report/graphs/draw_rrd.php:150
 msgid "Attack"
 msgstr "Attaque"
 
@@ -668,16 +701,20 @@ msgstr ""
 msgid "Availability"
 msgstr "Disponibilité"
 
-#: include/panel/plugins/custom_sql.php:232
+#: www/report/graphs/incidents_bar_graph.php:85
+msgid "Average:"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:264
 msgid "Axis Scale Grace"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:220
+#: include/panel/plugins/custom_sql.php:252
 msgid "Axis Scale Values"
 msgstr ""
 
 # host/newhostform.php:194
-#: www/host/modifyhostform.php:249 www/host/newhostform.php:213
+#: www/host/modifyhostform.php:249 www/host/newhostform.php:220
 #, fuzzy
 msgid "BSD/OS"
 msgstr "BSD"
@@ -703,15 +740,17 @@ msgstr "BSD"
 #: www/conf/pluginupdate.php:34 www/conf/pluginupdate.php:51
 #: www/control_panel/handle_anomaly.php:58 www/control_panel/handle_mac.php:69
 #: www/control_panel/handle_os.php:69 www/control_panel/handle_services.php:71
-#: www/host/deletehost.php:60 www/host/modifyhost.php:106
-#: www/host/newhost.php:82 www/host/newhost.php:117
-#: www/incidents/deleteincidenttype.php:63 www/incidents/manageincident.php:15
-#: www/incidents/modifyincidenttype.php:49
+#: www/host/deletehost.php:60 www/host/deletehostgroup.php:53
+#: www/host/modifyhost.php:110 www/host/modifyhostgroup.php:60
+#: www/host/modifyhostgroup.php:94 www/host/newhost.php:82
+#: www/host/newhost.php:117 www/host/newhostgroup.php:60
+#: www/host/newhostgroup.php:95 www/incidents/deleteincidenttype.php:63
+#: www/incidents/manageincident.php:15 www/incidents/modifyincidenttype.php:49
 #: www/incidents/newincidenttype.php:44 www/net/deletenet.php:56
-#: www/net/deletenetgroup.php:55 www/net/modifynet.php:81
-#: www/net/modifynetgroup.php:73 www/net/newnet.php:80
-#: www/net/newnetgroup.php:73 www/policy/deletepolicy.php:49
-#: www/policy/modifypolicy.php:257 www/policy/newpolicy.php:249
+#: www/net/deletenetgroup.php:55 www/net/modifynet.php:84
+#: www/net/modifynetgroup.php:73 www/net/newnet.php:82
+#: www/net/newnetgroup.php:74 www/policy/deletepolicy.php:49
+#: www/policy/modifypolicy.php:260 www/policy/newpolicy.php:253
 #: www/port/deleteport.php:52 www/port/modifyport.php:59
 #: www/port/newport.php:59 www/port/newsingleport.php:47
 #: www/response/deleteresponse.php:36 www/rrd_conf/delete_rrd_conf.php:51
@@ -725,12 +764,9 @@ msgstr "BSD"
 #: www/session/modifyuser.php:106 www/session/newuser.php:113
 #: www/setup/ossim_acl.php:105 www/signature/deletesignature.php:49
 #: www/signature/modifysignature.php:57 www/signature/newsignature.php:55
-#: www/vulnmeter/do_nessus.php:145 www/vulnmeter/do_nessus.php:220
+#: www/vulnmeter/do_nessus.php:145 www/vulnmeter/do_nessus.php:219
 #: www/vulnmeter/do_nessus.php:312 www/vulnmeter/handle_scan.php:79
-#: www/vulnmeter/index.php:151 www/vulnmeter/scheduler.php:102
-#: www/vulnmeter2/do_nessus.php:103 www/vulnmeter2/do_nessus.php:166
-#: www/vulnmeter2/do_nessus.php:247 www/vulnmeter2/handle_scan.php:79
-#: www/vulnmeter2/index.old.php:109 www/vulnmeter2/index.php:124
+#: www/vulnmeter/index.php:153 www/vulnmeter/scheduler.php:115
 #: include/ossim_error.inc:74 include/ossim_error.inc:382
 msgid "Back"
 msgstr "Retour"
@@ -751,12 +787,12 @@ msgid "Back to main"
 msgstr "Retour au menu principal"
 
 # control_panel/backlog.php:16 top.php:65
-#: www/control_panel/backlog.php:16 www/top.php:260
+#: www/control_panel/backlog.php:16 www/top.php:266
 msgid "Backlog"
 msgstr ""
 
 # conf/main.php:109 top.php:75
-#: www/conf/main.php:189 www/top.php:327
+#: www/conf/main.php:189 www/top.php:333
 msgid "Backup"
 msgstr "Sauvegarde"
 
@@ -778,25 +814,25 @@ msgid "Backup configuration: backup database, directory, interval"
 msgstr "Configuration de la sauvegarde: base de données, répertoire, interval"
 
 # sensor/editsensor.php:150
-#: include/panel/Ajax_Panel.php:149
+#: include/panel/Ajax_Panel.php:195
 #, fuzzy
 msgid "Bad data found in config file"
 msgstr "Charger les valeurs par défaut pour le fichier de configuration snort"
 
 # conf/reload.php:39
 #: www/conf/reload.php:49 www/sensor/get_sensor_plugins.php:39
-#: www/sensor/get_sensors.php:37 www/sensor/sensor_plugins.php:102
+#: www/sensor/get_sensors.php:37 www/sensor/sensor_plugins.php:103
 #: www/server/server_get_servers.php:66
 msgid "Bad response from server"
 msgstr "Mauvaise réponse du serveur"
 
-#: include/panel/plugins/custom_sql.php:165
-msgid "Bar & Points Options"
+#: include/panel/plugins/custom_sql.php:197
+msgid "Bar, Radar & Points Options"
 msgstr ""
 
 # control_panel/alarm_console.php:16 report/menu.php:48
 # report/pdfreportform.php:118 top.php:40
-#: include/panel/plugins/custom_sql.php:81
+#: include/panel/plugins/custom_sql.php:91
 #, fuzzy
 msgid "Bars"
 msgstr "Alarmes"
@@ -821,13 +857,13 @@ msgid "Begin"
 msgstr "Début"
 
 # policy/modifypolicyform.php:400
-#: www/policy/modifypolicy.php:37 www/policy/newpolicy.php:36
+#: www/policy/modifypolicy.php:38 www/policy/newpolicy.php:37
 #, fuzzy
 msgid "Begin day"
 msgstr "Début"
 
 # policy/modifypolicyform.php:400
-#: www/policy/modifypolicy.php:36 www/policy/newpolicy.php:35
+#: www/policy/modifypolicy.php:37 www/policy/newpolicy.php:36
 #, fuzzy
 msgid "Begin hour"
 msgstr "Début"
@@ -903,7 +939,7 @@ msgstr "Par hôte : Envoyés"
 msgid "By host: Total"
 msgstr "Par hôte : Total"
 
-#: www/control_panel/global_score.php:925
+#: www/control_panel/global_score.php:937
 msgid "C O M P R O M I S E"
 msgstr ""
 
@@ -913,7 +949,7 @@ msgstr ""
 
 # conf/pluginsid.php:50 directives/directive.php:246
 #: www/conf/pluginsid.php:59 www/directives/directive.php:268
-#: www/panel/window_panel.php:220
+#: www/panel/window_panel.php:284
 msgid "Category"
 msgstr "Catégorie"
 
@@ -922,12 +958,12 @@ msgid "Category Name not configured"
 msgstr ""
 
 # editor/rule.php:92
-#: include/panel/plugins/custom_sql.php:206
+#: include/panel/plugins/custom_sql.php:238
 #, fuzzy
 msgid "Center"
 msgstr "Contenu"
 
-#: include/panel/plugins/custom_sql.php:149
+#: include/panel/plugins/custom_sql.php:159
 msgid "Center Position"
 msgstr ""
 
@@ -941,25 +977,37 @@ msgstr "Changer le mot de passe"
 msgid "Change password"
 msgstr "Changer le mot de passe"
 
+#: include/panel/plugins/maps.php:39
+msgid "Choose map type"
+msgstr ""
+
+#: www/host/modifyhostform.php:244 www/host/newhostform.php:215
+msgid "Cisco IOS"
+msgstr ""
+
 # conf/pluginsid.php:54
-#: www/conf/pluginsid.php:63 www/incidents/index.php:114
-#: www/report/pdfreportform.php:218
+#: www/conf/pluginsid.php:63 www/incidents/incident.php:108
+#: www/incidents/index.php:114 www/report/pdfreportform.php:218
 msgid "Class"
 msgstr "Classe"
 
 # report/anomalies.php:81
-#: www/response/newresponseform.php:205 www/response/newresponseform.php:239
+#: www/response/newresponseform.php:205 www/response/newresponseform.php:238
 #, fuzzy
 msgid "Clear"
 msgstr "année"
 
-#: www/control_panel/alarm_console.php:457
+#: www/control_panel/alarm_console.php:470
 msgid "Click here to close alarm"
 msgstr ""
 
 #: www/control_panel/mac.php:99 www/control_panel/os.php:98
 #: www/control_panel/services.php:102
 msgid "Click here to see the only the anomalies"
+msgstr ""
+
+#: www/host/modifyhostform.php:280
+msgid "Click here to set the position in the map"
 msgstr ""
 
 #: www/netscan/do_scan.php:38
@@ -975,6 +1023,10 @@ msgstr "Cliquez sur les catégories de directives pour les étendres ou réduire"
 #: www/directives/directive.php:262
 msgid "Click on the left side to view a directive"
 msgstr "Cliquez sur le bandeau de gauche pour afficher une directive"
+
+#: www/panel/draw_map.php:256
+msgid "Click on the map to set the position of the host"
+msgstr ""
 
 # incidents/incident.php:626 incidents/index.php:125
 #: www/incidents/incident.php:407 www/incidents/index.php:173
@@ -1016,23 +1068,45 @@ msgstr ""
 msgid "Code"
 msgstr "Fermé"
 
-#: include/panel/plugins/custom_sql.php:180
+#: include/panel/plugins/custom_sql.php:212
 msgid "Color"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:115
+#: include/panel/plugins/custom_sql.php:125
 msgid "Color Theme"
 msgstr ""
 
 # report/inventory.php:170
-#: www/vulnmeter/index.php:230
+#: www/vulnmeter/index.php:232
 #, fuzzy
 msgid "Coloring information"
 msgstr "Information de Port / Service"
 
-#: include/panel/plugins/custom_sql.php:100
+# editor/rule.php:92
+#: www/event_viewer/configure_event_viewer.php:234
+#, fuzzy
+msgid "Column contents"
+msgstr "Contenu"
+
+#: www/event_viewer/configure_event_viewer.php:231
+msgid "Column label"
+msgstr ""
+
+# conf/main.php:52
+#: www/event_viewer/configure_event_viewer.php:237
+#, fuzzy
+msgid "Column settings"
+msgstr "Configurer les paramètres des métriques"
+
+#: include/panel/plugins/custom_sql.php:110
 msgid "Columns"
 msgstr ""
+
+# scan/hostscan.php:15
+#: www/event_viewer/configure_event_viewer.php:162
+#, fuzzy
+msgid "Columns display configuration for group"
+msgstr "Configuration de scan d'hôte"
 
 # directives/directive.php:292
 #: www/directives/directive.php:313
@@ -1077,8 +1151,12 @@ msgstr ""
 msgid "Company"
 msgstr ""
 
+#: www/host/modifyhostform.php:247 www/host/newhostform.php:218
+msgid "Compaq Tru64"
+msgstr ""
+
 # control_panel/show_image.php:34
-#: www/control_panel/show_image.php:52 www/report/graphs/draw_rrd.php:148
+#: www/control_panel/show_image.php:52 www/report/graphs/draw_rrd.php:151
 msgid "Compromise"
 msgstr "Compromis"
 
@@ -1088,7 +1166,7 @@ msgstr "Compromis"
 msgid "Config Import"
 msgstr "Configuration"
 
-#: www/panel/window_panel.php:253
+#: www/panel/window_panel.php:329
 msgid "Config for window position"
 msgstr ""
 
@@ -1096,6 +1174,12 @@ msgstr ""
 #: www/top.php:53
 msgid "Configuration"
 msgstr "Configuration"
+
+# conf/main.php:52
+#: www/event_viewer/index.php:90
+#, fuzzy
+msgid "Configure Event Tabs"
+msgstr "Configurer les paramètres des métriques"
 
 # top.php:35
 #: www/conf/main.php:14
@@ -1121,6 +1205,10 @@ msgstr ""
 # conf/main.php:24
 #: www/conf/main.php:36
 msgid "Configure the server's listening address"
+msgstr ""
+
+#: www/conf/main.php:324
+msgid "Configure various login options"
 msgstr ""
 
 # editor/rule.php:92
@@ -1155,8 +1243,8 @@ msgid "Correlate"
 msgstr "Corrélation"
 
 # control_panel/alerts.php:63
-#: www/policy/modifypolicyform.php:707 www/policy/newpolicyform.php:431
-#: www/server/modifyserverform.php:71 www/server/newserverform.php:52
+#: www/policy/modifypolicyform.php:708 www/policy/newpolicyform.php:433
+#: www/server/modifyserverform.php:70 www/server/newserverform.php:52
 #, fuzzy
 msgid "Correlate events"
 msgstr "Niveau de corrélation"
@@ -1175,31 +1263,34 @@ msgstr "Niveau de corrélation"
 msgid "Could not access backup dir"
 msgstr ""
 
-#: www/vulnmeter/index.php:81 www/vulnmeter2/index.old.php:75
-#: www/vulnmeter2/index.php:78
+#: www/html2pdf/pipeline.class.php:501
+msgid "Could not fetch data"
+msgstr ""
+
+#: www/vulnmeter/index.php:81
 msgid ""
 "Could not find database information for a scan happening at the specified\n"
 "date"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:145
+#: include/panel/Ajax_Panel.php:191
 msgid "Could not read config file"
 msgstr ""
 
-#: www/report/graphs/draw_rrd.php:161
+#: www/report/graphs/draw_rrd.php:173
 #, php-format
 msgid "Could not read rrdtool created image: '%s'"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:180
+#: include/panel/Ajax_Panel.php:226
 msgid "Could not save config in file, invalid perms?"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:118
+#: include/panel/Ajax_Panel.php:150
 msgid "Could not stat configs dir"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:183
+#: include/panel/Ajax_Panel.php:229
 msgid "Could not write to file, disk full?"
 msgstr ""
 
@@ -1211,6 +1302,10 @@ msgstr ""
 msgid "Create New Process"
 msgstr ""
 
+#: www/incidents/incident.php:110 www/incidents/index.php:263
+msgid "Created"
+msgstr ""
+
 # top.php:64
 #: www/policy/policy.php:40 www/server/server.php:94
 #, fuzzy
@@ -1218,24 +1313,24 @@ msgid "Cross Correlate"
 msgstr "Corrélation croisée"
 
 # top.php:64
-#: www/policy/modifypolicyform.php:714 www/policy/newpolicyform.php:438
-#: www/server/modifyserverform.php:78 www/server/newserverform.php:59
+#: www/policy/modifypolicyform.php:715 www/policy/newpolicyform.php:440
+#: www/server/modifyserverform.php:77 www/server/newserverform.php:59
 #, fuzzy
 msgid "Cross Correlate events"
 msgstr "Corrélation croisée"
 
 # top.php:64
-#: www/server/modifyserver.php:36 www/server/newserver.php:37 www/top.php:254
+#: www/server/modifyserver.php:36 www/server/newserver.php:37 www/top.php:260
 msgid "Cross Correlation"
 msgstr "Corrélation croisée"
 
 # control_panel/global_score.php:199 control_panel/global_score.php:298
 # control_panel/global_score.php:415
-#: www/control_panel/global_score.php:947
-#: www/control_panel/global_score.php:982
-#: www/control_panel/global_score.php:1081
-#: www/control_panel/global_score.php:1153
-#: www/control_panel/global_score.php:1196
+#: www/control_panel/global_score.php:959
+#: www/control_panel/global_score.php:994
+#: www/control_panel/global_score.php:1093
+#: www/control_panel/global_score.php:1165
+#: www/control_panel/global_score.php:1208
 #, fuzzy
 msgid "Current"
 msgstr "C actuel"
@@ -1255,11 +1350,7 @@ msgstr "Niveau C actuel"
 msgid "Current password"
 msgstr "Mot de passe courant"
 
-#: www/vulnmeter/do_nessus.php:105
-msgid "Current ris risk threshold is:"
-msgstr ""
-
-#: www/vulnmeter/scheduler.php:52
+#: www/vulnmeter/do_nessus.php:105 www/vulnmeter/scheduler.php:65
 msgid "Current risk threshold is:"
 msgstr ""
 
@@ -1267,7 +1358,11 @@ msgstr ""
 msgid "Custom HTML contents"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:44
+#: include/panel/plugins/maps.php:49
+msgid "Custom Image"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:47
 msgid "Custom SQL graph"
 msgstr ""
 
@@ -1286,12 +1381,12 @@ msgid "DEST Ports"
 msgstr "Ports DEST"
 
 # conf/main.php:282 sensor/sensor_plugins.php:167
-#: www/sensor/sensor_plugins.php:198
+#: www/sensor/sensor_plugins.php:199
 msgid "DISABLED"
 msgstr "DESACTIVE"
 
 # sensor/sensor_plugins.php:151
-#: www/sensor/sensor_plugins.php:176 www/server/server.php:52
+#: www/sensor/sensor_plugins.php:177 www/server/server.php:52
 msgid "DOWN"
 msgstr "NOK"
 
@@ -1307,14 +1402,14 @@ msgstr "Base de données"
 
 # control_panel/alerts.php:60 incidents/incident.php:456
 # incidents/index.php:205 report/inventory.php:192
-#: www/backup/index.php:141 www/control_panel/alarm_console.php:148
+#: www/backup/index.php:141 www/control_panel/alarm_console.php:153
 #: www/control_panel/backlog.php:110 www/control_panel/events.php:71
 #: www/control_panel/handle_mac.php:39 www/control_panel/handle_mac.php:55
 #: www/control_panel/handle_os.php:39 www/control_panel/handle_os.php:55
 #: www/control_panel/handle_services.php:39
 #: www/control_panel/handle_services.php:56 www/control_panel/os.php:172
-#: www/control_panel/services.php:177 www/event_viewer/index.php:44
-#: www/report/inventory.php:196 www/report/pdfreportform.php:222
+#: www/control_panel/services.php:177 www/event_viewer/index.php:138
+#: www/report/inventory.php:199 www/report/pdfreportform.php:222
 #: www/userlog/user_action_log.php:177
 msgid "Date"
 msgstr "Date"
@@ -1343,25 +1438,25 @@ msgid "Day"
 msgstr "Jour"
 
 # control_panel/global_score.php:111
-#: www/vulnmeter/scheduler.php:123 www/vulnmeter/scheduler.php:250
+#: www/vulnmeter/scheduler.php:136 www/vulnmeter/scheduler.php:299
 #, fuzzy
 msgid "Day of Month"
 msgstr "Mois dernier"
 
 # control_panel/global_score.php:108
-#: www/vulnmeter/scheduler.php:252
+#: www/vulnmeter/scheduler.php:301
 #, fuzzy
 msgid "Day of Week"
 msgstr "Semaine dernière"
 
 # report/metrics.php:207
-#: www/vulnmeter/scheduler.php:75
+#: www/vulnmeter/scheduler.php:88
 #, fuzzy
 msgid "Day of month"
 msgstr "Dernier mois"
 
 # report/metrics.php:204
-#: www/vulnmeter/scheduler.php:77 www/vulnmeter/scheduler.php:125
+#: www/vulnmeter/scheduler.php:90 www/vulnmeter/scheduler.php:138
 #, fuzzy
 msgid "Day of week"
 msgstr "Dernière semaine"
@@ -1382,20 +1477,20 @@ msgstr "Valeurs par défaut chargées"
 # scan/hostscan.php:71 sensor/sensor.php:102 session/users.php:65
 # signature/signature.php:60
 #: www/action/action.php:39 www/backup/index.php:128
-#: www/control_panel/alarm_console.php:309
-#: www/control_panel/alarm_console.php:475
-#: www/control_panel/alarm_console.php:484 www/control_panel/anomalies.php:109
+#: www/control_panel/alarm_console.php:314
+#: www/control_panel/alarm_console.php:488
+#: www/control_panel/alarm_console.php:497 www/control_panel/anomalies.php:109
 #: www/control_panel/anomalies.php:172 www/control_panel/backlog.php:119
 #: www/control_panel/backlog.php:152 www/control_panel/rrd_anomaly.php:97
 #: www/control_panel/rrd_global.php:79 www/host/host.php:134
-#: www/incidents/incident.php:218 www/incidents/incidenttype.php:58
-#: www/net/net.php:162 www/net/netgroup.php:125 www/policy/plugingroups.php:64
+#: www/host/hostgroup.php:102 www/incidents/incident.php:218
+#: www/incidents/incidenttype.php:58 www/net/net.php:162
+#: www/net/netgroup.php:127 www/policy/plugingroups.php:64
 #: www/policy/policy.php:243 www/port/port.php:73 www/rrd_conf/rrd_conf.php:64
 #: www/scan/hostscan.php:80 www/sensor/sensor.php:128
 #: www/server/server.php:198 www/session/users.php:93
-#: www/signature/signature.php:69 www/vulnmeter/index.php:218
-#: www/vulnmeter/scheduler.php:151 www/vulnmeter2/index.old.php:149
-#: www/vulnmeter2/index.php:174
+#: www/signature/signature.php:69 www/vulnmeter/index.php:220
+#: www/vulnmeter/report.php:81 www/vulnmeter/scheduler.php:164
 msgid "Delete"
 msgstr "Effacer"
 
@@ -1409,7 +1504,7 @@ msgstr "Effacer"
 msgid "Delete ALL"
 msgstr "Effacer"
 
-#: www/control_panel/alarm_console.php:507
+#: www/control_panel/alarm_console.php:520
 msgid "Delete ALL alarms"
 msgstr "Effacer TOUTES les alarmes"
 
@@ -1433,6 +1528,10 @@ msgstr "Effacer le réseau"
 #: www/host/deletehost.php:15
 msgid "Delete host"
 msgstr "Effacer l'hôte"
+
+#: www/host/deletehostgroup.php:15
+msgid "Delete host group"
+msgstr ""
 
 # scan/deletehostscan.php:15
 #: www/scan/deletehostscan.php:15
@@ -1485,7 +1584,7 @@ msgstr "Effacer l'utilisateur"
 # policy/policy.php:160 port/port.php:64 rrd_conf/rrd_conf.php:53
 # scan/hostscan.php:71 sensor/sensor.php:102 session/users.php:65
 # signature/signature.php:60
-#: www/vulnmeter/handle_scan.php:34 www/vulnmeter2/handle_scan.php:34
+#: www/vulnmeter/handle_scan.php:34
 #, fuzzy
 msgid "Deleting"
 msgstr "Effacer"
@@ -1517,15 +1616,18 @@ msgstr ""
 # sensor/sensor.php:49 signature/modifysignatureform.php:82
 # signature/newsignatureform.php:56 signature/signature.php:30
 #: www/action/action.php:28 www/action/modifyactionform.php:34
-#: www/action/modifyactionform.php:169 www/action/newactionform.php:21
-#: www/action/newactionform.php:180 www/business_processes/asset_edit.php:146
+#: www/action/modifyactionform.php:213 www/action/newactionform.php:21
+#: www/action/newactionform.php:182 www/business_processes/asset_edit.php:146
 #: www/business_processes/asset_edit.php:260
 #: www/business_processes/bp_edit.php:183
 #: www/business_processes/bp_edit.php:227
 #: www/business_processes/bp_edit.php:309
 #: www/business_processes/bp_list.php:79 www/conf/plugin.php:47
-#: www/host/host.php:70 www/host/modifyhostform.php:324
-#: www/host/newhostform.php:261 www/incidents/incident.php:323
+#: www/event_viewer/configure_event_viewer.php:320 www/host/host.php:70
+#: www/host/hostgroup.php:54 www/host/modifyhostform.php:270
+#: www/host/modifyhostgroup.php:33 www/host/modifyhostgroupform.php:184
+#: www/host/newhostform.php:249 www/host/newhostgroup.php:33
+#: www/host/newhostgroupform.php:149 www/incidents/incident.php:323
 #: www/incidents/incident.php:445 www/incidents/incidenttag.php:100
 #: www/incidents/incidenttag.php:121 www/incidents/incidenttype.php:33
 #: www/incidents/modifyincidenttype.php:23
@@ -1537,9 +1639,9 @@ msgstr ""
 #: www/net/netgroup.php:69 www/net/newnet.php:40 www/net/newnetform.php:157
 #: www/net/newnetgroup.php:32 www/net/newnetgroupform.php:121
 #: www/policy/modifyplugingroups.php:59
-#: www/policy/modifyplugingroupsform.php:92 www/policy/modifypolicy.php:40
-#: www/policy/modifypolicyform.php:695 www/policy/newpolicy.php:39
-#: www/policy/newpolicyform.php:474 www/policy/plugingroups.php:48
+#: www/policy/modifyplugingroupsform.php:93 www/policy/modifypolicy.php:41
+#: www/policy/modifypolicyform.php:759 www/policy/newpolicy.php:40
+#: www/policy/newpolicyform.php:480 www/policy/plugingroups.php:48
 #: www/policy/policy.php:38 www/port/modifyport.php:28
 #: www/port/modifyportform.php:91 www/port/newportform.php:58
 #: www/port/newsingleport.php:28 www/port/newsingleportform.php:40
@@ -1547,7 +1649,7 @@ msgstr ""
 #: www/response/response.php:27 www/sensor/modifysensor.php:29
 #: www/sensor/modifysensorform.php:104 www/sensor/newsensor.php:29
 #: www/sensor/newsensorform.php:65 www/sensor/sensor.php:70
-#: www/server/modifyserver.php:34 www/server/modifyserverform.php:118
+#: www/server/modifyserver.php:34 www/server/modifyserverform.php:117
 #: www/server/newserver.php:35 www/server/newserverform.php:96
 #: www/server/server.php:100 www/signature/modifysignatureform.php:88
 #: www/signature/newsignatureform.php:56 www/signature/signature.php:39
@@ -1575,7 +1677,7 @@ msgid "Dest"
 msgstr "Dest"
 
 # incidents/incident.php:285
-#: www/response/newresponseform.php:256
+#: www/response/newresponseform.php:255
 #, fuzzy
 msgid "Dest Hosts"
 msgstr "Ports dst"
@@ -1586,25 +1688,25 @@ msgid "Dest Ips"
 msgstr ""
 
 # incidents/incident.php:285
-#: www/response/newresponseform.php:255
+#: www/response/newresponseform.php:254
 #, fuzzy
 msgid "Dest Nets"
 msgstr "Ports dst"
 
 # incidents/incident.php:285
-#: www/incidents/newincident.php:186 www/response/newresponseform.php:259
+#: www/incidents/newincident.php:186 www/response/newresponseform.php:258
 #: www/response/response.php:31
 msgid "Dest Ports"
 msgstr ""
 
 # control_panel/alerts.php:62 incidents/incident.php:271 report/menu.php:58
-#: www/control_panel/alarm_console.php:250 www/control_panel/events.php:73
+#: www/control_panel/alarm_console.php:255 www/control_panel/events.php:73
 #: www/report/menu.php:71 www/session/login.php:83
 msgid "Destination"
 msgstr "Destination"
 
 # control_panel/alerts.php:62 incidents/incident.php:271 report/menu.php:58
-#: www/event_viewer/index.php:53
+#: www/event_viewer/index.php:147
 #, fuzzy
 msgid "Destination IP"
 msgstr "Destination"
@@ -1674,11 +1776,11 @@ msgid "Directive numbering"
 msgstr "Directive"
 
 # top.php:63
-#: www/top.php:248
+#: www/top.php:254
 msgid "Directives"
 msgstr "Directives"
 
-#: include/panel/Ajax_Panel.php:114
+#: include/panel/Ajax_Panel.php:146
 msgid "Directory for panel config files does not exists."
 msgstr ""
 
@@ -1689,10 +1791,18 @@ msgstr ""
 msgid "Do not change"
 msgstr "Attribué"
 
+#: www/vulnmeter/scheduler.php:43
+msgid "DoNessus.py needs to be executable for the scheduler to work."
+msgstr ""
+
 # directives/directive.php:252
 #: www/directives/directive.php:274
 msgid "DoS"
 msgstr "Déni de service"
+
+#: www/policy/modifypolicyform.php:751 www/policy/newpolicyform.php:476
+msgid "Does not apply to targets without associated database."
+msgstr ""
 
 # ntop/menu.php:193
 #: www/ntop/menu.php:222
@@ -1720,12 +1830,12 @@ msgstr ""
 msgid "Dst Unique events"
 msgstr ""
 
-#: www/report/graphs/incidents_bar_graph.php:80
-msgid "Duration in days"
+#: www/report/graphs/incidents_bar_graph.php:85
+msgid "Duration in days."
 msgstr ""
 
 # sensor/sensor_plugins.php:160
-#: www/sensor/sensor_plugins.php:191
+#: www/sensor/sensor_plugins.php:192
 msgid "ENABLED"
 msgstr "ACTIVE"
 
@@ -1739,14 +1849,18 @@ msgstr ""
 "de cette règle dans l'entièreté de la chaîne d'attaque"
 
 # sensor/editsensor.php:513
-#: include/panel/plugins/custom_sql.php:118
+#: include/panel/plugins/custom_sql.php:128
 #, fuzzy
 msgid "Earth"
 msgstr "arpwatch"
 
-#: www/incidents/incident.php:210 www/panel/panel.php:158
+#: www/incidents/incident.php:210 www/panel/panel.php:338
 #: www/policy/plugingroups.php:63
 msgid "Edit"
+msgstr ""
+
+#: www/panel/panel.php:339 www/panel/panel.php:342
+msgid "Edit Tabs"
 msgstr ""
 
 # sensor/editsensor.php:32
@@ -1756,6 +1870,10 @@ msgstr "Editer la sonde"
 
 #: www/directives/directive.php:283
 msgid "Element of a directive"
+msgstr ""
+
+#: www/report/graphs/sec_therm.php:121
+msgid "Elevated"
 msgstr ""
 
 #: www/session/newuserform.php:76 www/session/users.php:48
@@ -1782,8 +1900,7 @@ msgstr ""
 msgid "Email to"
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:114 www/vulnmeter/scheduler.php:195
-#: www/vulnmeter2/do_nessus.php:72
+#: www/vulnmeter/do_nessus.php:114 www/vulnmeter/scheduler.php:241
 msgid "Empty means all"
 msgstr ""
 
@@ -1792,6 +1909,10 @@ msgstr ""
 #: www/rrd_conf/new_rrd_conf_form.php:49
 msgid "Enable"
 msgstr "Activer"
+
+#: include/panel/Ajax_Panel.php:284
+msgid "Enable Metrics for this panel?"
+msgstr ""
 
 # rrd_conf/modify_rrd_conf_form.php:111
 #: www/host/modifyhostform.php:228 www/host/newhostform.php:197
@@ -1807,7 +1928,7 @@ msgid "Enable nessus scan"
 msgstr "Activer le scan nessus"
 
 # sensor/sensor_plugins.php:120
-#: www/sensor/sensor_plugins.php:145
+#: www/sensor/sensor_plugins.php:146
 msgid "Enabled"
 msgstr "Activé"
 
@@ -1817,12 +1938,12 @@ msgid "End"
 msgstr "Fin"
 
 # policy/modifypolicyform.php:400
-#: www/policy/modifypolicy.php:38 www/policy/newpolicy.php:37
+#: www/policy/modifypolicy.php:39 www/policy/newpolicy.php:38
 #, fuzzy
 msgid "End day"
 msgstr "Fin"
 
-#: www/policy/modifypolicy.php:39 www/policy/newpolicy.php:38
+#: www/policy/modifypolicy.php:40 www/policy/newpolicy.php:39
 msgid "End hour"
 msgstr ""
 
@@ -1830,7 +1951,7 @@ msgstr ""
 msgid "End of related events"
 msgstr ""
 
-#: www/report/graphs/draw_rrd.php:59
+#: www/control_panel/find_peaks.php:20 www/report/graphs/draw_rrd.php:59
 msgid "End param"
 msgstr ""
 
@@ -1901,7 +2022,7 @@ msgstr "Erreur d'ouverture"
 msgid "Error!"
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:271 www/vulnmeter2/do_nessus.php:206
+#: www/vulnmeter/do_nessus.php:270
 msgid "Error! return was:"
 msgstr ""
 
@@ -1909,7 +2030,7 @@ msgstr ""
 msgid "Error: no valid version upgrade"
 msgstr ""
 
-#: www/incidents/index.php:132 www/incidents/index.php:337
+#: www/incidents/index.php:132 www/incidents/index.php:339
 #: www/report/pdfreportform.php:240 www/report/sec_report.php:267
 #: www/report/sec_report.php:341
 msgid "Event"
@@ -1951,8 +2072,7 @@ msgstr ""
 msgid "Executive Panel"
 msgstr ""
 
-#: www/vulnmeter/index.php:81 www/vulnmeter2/index.old.php:75
-#: www/vulnmeter2/index.php:78
+#: www/vulnmeter/index.php:81
 msgid "Exiting"
 msgstr ""
 
@@ -1961,18 +2081,18 @@ msgstr ""
 msgid "Expand / Collapse"
 msgstr "Etendre / Réduire"
 
-#: include/panel/plugins/custom_sql.php:135
+#: include/panel/plugins/custom_sql.php:145
 msgid "Explode Slice"
 msgstr ""
 
 # sensor/editsensor.php:105 sensor/editsensor.php:279
 # sensor/editsensor.php:690
-#: www/panel/window_panel.php:245
+#: www/panel/window_panel.php:321
 #, fuzzy
 msgid "Export Config"
 msgstr "Erreur d'ouverture"
 
-#: www/panel/window_panel.php:108
+#: www/panel/window_panel.php:172
 msgid "Exported text"
 msgstr ""
 
@@ -1981,12 +2101,16 @@ msgstr ""
 msgid "External applications"
 msgstr "Applications externes"
 
-#: www/incidents/index.php:267
+#: www/incidents/incident.php:113 www/incidents/index.php:268
 msgid "Extra"
 msgstr ""
 
 #: www/hids/host_detail.php:46
 msgid "Extra Data"
+msgstr ""
+
+#: include/panel/plugins/rss.php:37
+msgid "Fade older RSS entries using smaller text?"
 msgstr ""
 
 # control_panel/alarm_console.php:136
@@ -1995,15 +2119,23 @@ msgstr ""
 msgid "Fast"
 msgstr "Dernier"
 
+#: include/panel/plugins/rss.php:29
+msgid "Feed url"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:187
+msgid "Fill Radar"
+msgstr ""
+
 # incidents/index.php:76
-#: www/control_panel/alarm_console.php:133 www/incidents/index.php:94
+#: www/control_panel/alarm_console.php:138 www/incidents/index.php:94
 #: www/userlog/user_action_log.php:61
 msgid "Filter"
 msgstr "Filtre"
 
-#: www/control_panel/mac.php:129 www/control_panel/mac.php:309
-#: www/control_panel/os.php:128 www/control_panel/os.php:313
-#: www/control_panel/services.php:132 www/control_panel/services.php:321
+#: www/control_panel/mac.php:129 www/control_panel/mac.php:311
+#: www/control_panel/os.php:128 www/control_panel/os.php:316
+#: www/control_panel/services.php:132 www/control_panel/services.php:323
 #, php-format
 msgid "First"
 msgstr ""
@@ -2034,7 +2166,7 @@ msgstr ""
 "Pour des raisons de sécurité, vous devez le changer via Configuration-"
 ">Utilisateurs"
 
-#: www/netscan/index.php:108
+#: www/netscan/index.php:113
 msgid ""
 "For this purpose you can use suphp, or set suid to nmap binary (chmod 4750 /"
 "usr/bin/nmap) changing the group to the one of the web-user (chgrp www /usr/"
@@ -2076,12 +2208,12 @@ msgstr ""
 msgid "FrameworkD"
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:300 www/vulnmeter2/do_nessus.php:235
+#: www/vulnmeter/do_nessus.php:299
 msgid "Frameworkd said:"
 msgstr ""
 
 # host/newhostform.php:194
-#: www/host/modifyhostform.php:254 www/host/newhostform.php:215
+#: www/host/modifyhostform.php:239 www/host/newhostform.php:210
 #, fuzzy
 msgid "FreeBSD"
 msgstr "BSD"
@@ -2111,7 +2243,7 @@ msgid "GENERAL DATA"
 msgstr ""
 
 # control_panel/global_score.php:207 control_panel/global_score.php:254
-#: www/control_panel/global_score.php:950
+#: www/control_panel/global_score.php:962
 msgid "GLOBAL SCORE"
 msgstr "NIVEAU GLOBAL"
 
@@ -2136,7 +2268,7 @@ msgid "Generic ossim"
 msgstr "Générique d'Ossim"
 
 # conf/main.php:264
-#: www/panel/panel.php:148
+#: www/panel/panel.php:326
 #, fuzzy
 msgid "Geom"
 msgstr "Allemand"
@@ -2163,31 +2295,43 @@ msgstr "Lister"
 
 # control_panel/global_score.php:190 control_panel/global_score.php:196
 # control_panel/global_score.php:243 ntop/menu.php:120 riskmeter/index.php:66
-#: www/control_panel/global_score.php:936
-#: www/control_panel/global_score.php:944 www/ntop/menu.php:164
-#: www/riskmeter/index.php:117 www/riskmeter/index.php:133
+#: www/control_panel/global_score.php:948
+#: www/control_panel/global_score.php:956 www/ntop/menu.php:164
+#: www/riskmeter/index.php:118 www/riskmeter/index.php:134
 msgid "Global"
 msgstr "Globale"
 
-#: www/control_panel/alarm_console.php:174
+#: www/control_panel/alarm_console.php:179
 msgid "Go"
+msgstr ""
+
+#: www/event_viewer/index.php:28
+msgid "Go to Forensics"
+msgstr ""
+
+#: www/event_viewer/configure_event_viewer.php:307
+msgid "Go to Plugin Groups configuration page"
 msgstr ""
 
 #: www/business_processes/bp_list.php:98
 msgid "Good"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:211
+#: include/panel/plugins/custom_sql.php:243
 msgid "Gradient"
 msgstr ""
 
+#: include/panel/plugins/custom_sql.php:82
+msgid "Graph Link"
+msgstr ""
+
 # incidents/index.php:93 incidents/index.php:210
-#: include/panel/plugins/custom_sql.php:74
+#: include/panel/plugins/custom_sql.php:77
 #, fuzzy
 msgid "Graph Title"
 msgstr "Titre"
 
-#: include/panel/plugins/custom_sql.php:79
+#: include/panel/plugins/custom_sql.php:87
 msgid "Graph Type"
 msgstr ""
 
@@ -2200,30 +2344,30 @@ msgid "Greater than"
 msgstr ""
 
 # policy/policy.php:34
-#: www/control_panel/global_score.php:979
+#: www/control_panel/global_score.php:991
 msgid "Group"
 msgstr "Groupe"
 
 # policy/policy.php:34
-#: www/policy/modifyplugingroupsform.php:90
+#: www/policy/modifyplugingroupsform.php:91
 #, fuzzy
 msgid "Group ID"
 msgstr "Groupe"
 
-#: www/net/modifynetgroupform.php:47
+#: www/host/modifyhostgroupform.php:47 www/net/modifynetgroupform.php:47
 msgid "Group Name"
 msgstr "Nom du groupe"
 
 # policy/policy.php:34
-#: www/riskmeter/index.php:223
+#: www/riskmeter/index.php:224
 msgid "Groups"
 msgstr "Groupes"
 
-#: www/host/modifyhostform.php:259 www/host/newhostform.php:217
+#: www/host/modifyhostform.php:246 www/host/newhostform.php:217
 msgid "HP-UX"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:219
+#: include/panel/Ajax_Panel.php:265
 msgid "HTML Window Help Message"
 msgstr ""
 
@@ -2235,7 +2379,7 @@ msgstr ""
 msgid "Here you can see an example of what can be done"
 msgstr ""
 
-#: www/control_panel/alarm_console.php:144
+#: www/control_panel/alarm_console.php:149
 msgid "Hide closed alarms"
 msgstr ""
 
@@ -2245,9 +2389,14 @@ msgstr ""
 
 # incidents/index.php:134
 #: www/business_processes/bp_edit.php:42 www/incidents/incident.php:424
-#: www/incidents/index.php:183 www/report/pdfreportform.php:307
+#: www/incidents/index.php:183 www/report/graphs/sec_therm.php:120
+#: www/report/pdfreportform.php:307
 msgid "High"
 msgstr "Haut"
+
+#: include/panel/Ajax_Panel.php:294
+msgid "High Threshold"
+msgstr ""
 
 #: www/directives/directive.php:387
 msgid ""
@@ -2266,7 +2415,7 @@ msgstr ""
 msgid "History"
 msgstr "Historique"
 
-#: include/panel/plugins/custom_sql.php:202
+#: include/panel/plugins/custom_sql.php:234
 msgid "Horizontal"
 msgstr ""
 
@@ -2278,12 +2427,11 @@ msgstr ""
 #: www/control_panel/anomalies.php:221 www/control_panel/anomalies.php:333
 #: www/control_panel/anomalies.php:445 www/control_panel/os.php:169
 #: www/control_panel/rrd_anomaly.php:94 www/control_panel/rrd_global.php:76
-#: www/hids/index.php:34 www/incidents/newincident.php:252
-#: www/netscan/scan_util.php:63 www/report/index.php:16
-#: www/report/inventory.php:21 www/report/menu.php:29
+#: www/hids/index.php:34 www/host/hostgroup.php:42
+#: www/incidents/newincident.php:252 www/netscan/scan_util.php:63
+#: www/report/index.php:16 www/report/inventory.php:21 www/report/menu.php:29
 #: www/report/metrics.php:20 www/report/sec_report.php:178
 #: www/scan/hostscan.php:45 www/scan/scan.php:47 www/vulnmeter/index.php:31
-#: www/vulnmeter2/index.old.php:25 www/vulnmeter2/index.php:25
 msgid "Host"
 msgstr "Hôte"
 
@@ -2295,8 +2443,8 @@ msgstr "Hôte"
 msgid "Host "
 msgstr ""
 
-#: www/control_panel/global_score.php:1150
-#: www/control_panel/global_score.php:1193
+#: www/control_panel/global_score.php:1162
+#: www/control_panel/global_score.php:1205
 #, fuzzy
 msgid "Host Address"
 msgstr "Adresse MAC"
@@ -2328,7 +2476,7 @@ msgid "Host Report"
 msgstr "Rapport sur les hôtes"
 
 # top.php:71
-#: www/top.php:291
+#: www/top.php:297
 msgid "Host Scan"
 msgstr "Scan d'hôte"
 
@@ -2340,6 +2488,31 @@ msgstr ""
 #: www/host/deletehost.php:58
 msgid "Host deleted"
 msgstr "Hôte effacé"
+
+#: www/host/deletehostgroup.php:51
+msgid "Host group deleted"
+msgstr ""
+
+#: www/host/hostgroup.php:28
+msgid "Host group name"
+msgstr ""
+
+#: www/host/newhostgroup.php:93
+msgid "Host group succesfully inserted"
+msgstr ""
+
+#: www/host/modifyhostgroup.php:92
+msgid "Host group succesfully updated"
+msgstr ""
+
+#: www/host/hostgroup.php:15 www/top.php:199
+msgid "Host groups"
+msgstr ""
+
+#: www/host/modifyhostgroup.php:28 www/host/modifyhostgroup.php:32
+#: www/host/newhostgroup.php:28 www/host/newhostgroup.php:32
+msgid "Host name"
+msgstr ""
 
 # report/report.php:15
 #: www/report/report.php:16
@@ -2366,32 +2539,39 @@ msgstr "Configuration de scan d'hôte inséré avec succès"
 msgid "Host succesfully inserted"
 msgstr "Insertion de l'hôte effectué avec succès"
 
+# port/modifyport.php:54
+#: www/host/modifyhost.php:108
+#, fuzzy
+msgid "Host succesfully updated"
+msgstr "Port mis à jour avec succès"
+
 # host/modifyhostform.php:42 host/newhostform.php:43 report/report.php:30
 # sensor/modifysensorform.php:39 sensor/newsensorform.php:25
 # sensor/sensor.php:36
 #: www/host/host.php:43 www/host/modifyhostform.php:55
 #: www/host/newhostform.php:66 www/report/report.php:34
 #: www/sensor/modifysensorform.php:44 www/sensor/newsensorform.php:35
-#: www/sensor/sensor.php:57 www/server/modifyserverform.php:49
+#: www/sensor/sensor.php:57 www/server/modifyserverform.php:48
 #: www/server/newserverform.php:37 www/server/server.php:81
 msgid "Hostname"
 msgstr "Nom de l'hôte"
 
 # control_panel/global_score.php:405 host/host.php:15 top.php:57
-#: www/control_panel/global_score.php:1147 www/host/host.php:15
-#: www/riskmeter/index.php:530 www/top.php:193 www/vulnmeter/index.php:339
-#: www/vulnmeter2/index.old.php:240 www/vulnmeter2/index.php:275
+#: www/control_panel/global_score.php:1159 www/host/host.php:15
+#: www/host/hostgroup.php:43 www/host/modifyhostgroupform.php:55
+#: www/host/newhostgroupform.php:40 www/riskmeter/index.php:531
+#: www/top.php:193 www/vulnmeter/index.php:341
 msgid "Hosts"
 msgstr "Hôtes"
 
-#: www/control_panel/global_score.php:1190
+#: www/control_panel/global_score.php:1202
 msgid "Hosts outside defined networks"
 msgstr ""
 
 # control_panel/alerts.php:61 incidents/incident.php:264
 # policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
-#: www/vulnmeter/scheduler.php:74 www/vulnmeter/scheduler.php:122
-#: www/vulnmeter/scheduler.php:249
+#: www/vulnmeter/scheduler.php:87 www/vulnmeter/scheduler.php:135
+#: www/vulnmeter/scheduler.php:298
 #, fuzzy
 msgid "Hour"
 msgstr "Source"
@@ -2410,8 +2590,12 @@ msgstr "Hôte"
 msgid "How many times we have to match a unique"
 msgstr ""
 
-#: www/policy/plugingroups.php:46 www/vulnmeter/scheduler.php:42
-#: www/vulnmeter/scheduler.php:72
+#: www/host/modifyhostform.php:245 www/host/newhostform.php:216
+msgid "IBM AIX"
+msgstr ""
+
+#: www/policy/plugingroups.php:46 www/vulnmeter/scheduler.php:55
+#: www/vulnmeter/scheduler.php:85
 msgid "ID"
 msgstr ""
 
@@ -2425,12 +2609,16 @@ msgid ""
 "continue"
 msgstr ""
 
-#: www/report/graphs/incidents_pie_graph.php:34
+#: www/report/graphs/incidents_pie_graph.php:38
 msgid "INCIDENT BY STATUS"
 msgstr ""
 
 #: www/report/graphs/incidents_pie_graph.php:32
 msgid "INCIDENT BY TYPE"
+msgstr ""
+
+#: www/report/graphs/incidents_pie_graph.php:35
+msgid "INCIDENT BY TYPE DESCRIPTION"
 msgstr ""
 
 #: www/report/graphs/incidents_pie_graph.php:29
@@ -2439,15 +2627,16 @@ msgstr ""
 
 # host/modifyhostform.php:48 host/newhostform.php:54 net/modifynetform.php:51
 # sensor/modifysensorform.php:47 sensor/newsensorform.php:29
-#: www/host/modifyhostform.php:61 www/host/newhostform.php:70
-#: www/incidents/newincident.php:372 www/net/modifynetform.php:55
-#: www/report/graphs/draw_rrd.php:57 www/riskmeter/frameoptions.php:5
-#: www/sensor/modifysensorform.php:52 www/sensor/newsensorform.php:39
-#: www/server/modifyserverform.php:57 www/server/newserverform.php:42
+#: www/event_viewer/index.php:48 www/host/modifyhostform.php:61
+#: www/host/newhostform.php:70 www/incidents/newincident.php:372
+#: www/net/modifynetform.php:55 www/report/graphs/draw_rrd.php:57
+#: www/riskmeter/frameoptions.php:5 www/sensor/modifysensorform.php:52
+#: www/sensor/newsensorform.php:39 www/server/modifyserverform.php:56
+#: www/server/newserverform.php:42
 msgid "IP"
 msgstr "IP"
 
-#: www/control_panel/alarm_console.php:159 www/scan/deletehostscan.php:23
+#: www/control_panel/alarm_console.php:164 www/scan/deletehostscan.php:23
 #, fuzzy
 msgid "IP Address"
 msgstr "Adresse MAC"
@@ -2457,10 +2646,6 @@ msgstr "Adresse MAC"
 #, fuzzy
 msgid "IP address"
 msgstr "Adresse MAC"
-
-#: www/host/modifyhostform.php:264 www/host/newhostform.php:219
-msgid "IRIX"
-msgstr ""
 
 # conf/plugin.php:29 control_panel/alerts.php:57
 #: www/conf/plugin.php:38 www/control_panel/backlog.php:106
@@ -2491,6 +2676,10 @@ msgstr "Ignorer"
 msgid "Images (php jpgraph)"
 msgstr ""
 
+#: www/policy/modifypolicyform.php:751 www/policy/newpolicyform.php:476
+msgid "Implicit value is always No for them."
+msgstr ""
+
 #: include/panel/plugins/config_exchange.php:39
 msgid "Import text"
 msgstr ""
@@ -2503,7 +2692,7 @@ msgstr "Responsable"
 
 # incidents/incident.php:630 incidents/index.php:94
 #: www/incidents/incident.php:345 www/incidents/index.php:117
-#: www/incidents/index.php:264 www/report/pdfreportform.php:220
+#: www/incidents/index.php:265 www/report/pdfreportform.php:220
 msgid "In charge"
 msgstr "Attribué"
 
@@ -2570,7 +2759,7 @@ msgstr ""
 msgid "Incidents"
 msgstr "Incidents"
 
-#: www/top.php:303
+#: www/top.php:309
 msgid "Incidents Email Template"
 msgstr ""
 
@@ -2615,7 +2804,7 @@ msgstr ""
 
 # sensor/sensor.php:142
 #: www/backup/index.php:124 www/netscan/scan_util.php:67
-#: www/response/newresponseform.php:277 www/rrd_conf/new_rrd_conf_form.php:91
+#: www/response/newresponseform.php:276 www/rrd_conf/new_rrd_conf_form.php:91
 #: www/sensor/sensor.php:168 www/server/server.php:240
 msgid "Insert"
 msgstr "Insérer"
@@ -2627,7 +2816,7 @@ msgid "Insert New Member"
 msgstr "Insérer un nouvel utilisateur"
 
 # policy/modifypolicyform.php:54 policy/modifypolicyform.php:149
-#: www/incidents/index.php:325
+#: www/incidents/index.php:327
 #, fuzzy
 msgid "Insert new Incident"
 msgstr "Insérer un nouveau réseau"
@@ -2661,10 +2850,15 @@ msgstr "Insérer un nouveau groupe de ports"
 
 # host/host.php:138 host/newhostform.php:15 policy/modifypolicyform.php:51
 # policy/modifypolicyform.php:146
-#: www/host/host.php:146 www/host/newhostform.php:23
+#: www/host/host.php:146 www/host/modifyhostgroupform.php:57
+#: www/host/newhostform.php:23 www/host/newhostgroupform.php:43
 #: www/policy/modifypolicyform.php:58 www/policy/modifypolicyform.php:153
 msgid "Insert new host"
 msgstr "Insérer un hôte"
+
+#: www/host/hostgroup.php:114 www/host/newhostgroupform.php:15
+msgid "Insert new host group"
+msgstr ""
 
 # scan/newhostscanform.php:15
 #: www/scan/newhostscanform.php:15
@@ -2696,7 +2890,7 @@ msgid "Insert new network"
 msgstr "Insérer un nouveau réseau"
 
 # net/net.php:147 net/newnetform.php:15
-#: www/net/netgroup.php:135 www/net/newnetgroupform.php:15
+#: www/net/netgroup.php:137 www/net/newnetgroupform.php:15
 msgid "Insert new network group"
 msgstr "Inserer un nouveau groupe réseau"
 
@@ -2728,7 +2922,8 @@ msgstr "Insérer un nouveau groupe de ports"
 
 # host/modifyhostform.php:102 host/newhostform.php:94
 # net/modifynetform.php:96 net/newnetform.php:75
-#: www/host/modifyhostform.php:115 www/host/newhostform.php:115
+#: www/host/modifyhostform.php:115 www/host/modifyhostgroupform.php:112
+#: www/host/newhostform.php:115 www/host/newhostgroupform.php:129
 #: www/net/modifynetform.php:100 www/net/modifynetgroupform.php:112
 #: www/net/newnetform.php:75 www/net/newnetgroupform.php:92
 msgid "Insert new profile"
@@ -2749,7 +2944,8 @@ msgstr "Insérer un nouveau scan"
 # net/modifynetform.php:145 net/newnetform.php:116
 # policy/modifypolicyform.php:354 sensor/newsensorform.php:15
 # sensor/sensor.php:150
-#: www/host/modifyhostform.php:171 www/host/newhostform.php:162
+#: www/host/modifyhostform.php:171 www/host/modifyhostgroupform.php:143
+#: www/host/newhostform.php:162 www/host/newhostgroupform.php:93
 #: www/net/modifynetform.php:149 www/net/newnetform.php:116
 #: www/policy/modifypolicyform.php:348 www/policy/modifypolicyform.php:618
 #: www/sensor/newsensorform.php:15 www/sensor/sensor.php:176
@@ -2789,7 +2985,7 @@ msgid "Insert new user"
 msgstr "Insérer un nouvel utilisateur"
 
 # sensor/sensor.php:142
-#: www/netscan/scan_db.php:88
+#: www/netscan/scan_db.php:98
 msgid "Inserting "
 msgstr "Insertion "
 
@@ -2822,7 +3018,7 @@ msgstr "Signatures"
 msgid "Invalid param '%s' with value '%s'"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:127
+#: include/panel/Ajax_Panel.php:159
 msgid "Invalid perms for configs dir"
 msgstr ""
 
@@ -2861,7 +3057,7 @@ msgstr "Le serveur OSSIM est-il démarré à"
 msgid "Is Ossim framework running at %1% ?"
 msgstr "Le serveur OSSIM est-il démarré à"
 
-#: www/vulnmeter/do_nessus.php:103 www/vulnmeter/scheduler.php:50
+#: www/vulnmeter/do_nessus.php:103 www/vulnmeter/scheduler.php:63
 msgid ""
 "It is recommended to set a high level at the beginning in order to "
 "concentrate on more critical vulnerabilities first, lowering it after having "
@@ -2890,11 +3086,11 @@ msgid "Language"
 msgstr "Langue"
 
 # control_panel/alarm_console.php:136
-#: www/control_panel/alarm_console.php:242 www/control_panel/mac.php:151
-#: www/control_panel/mac.php:331 www/control_panel/os.php:150
-#: www/control_panel/os.php:335 www/control_panel/services.php:154
-#: www/control_panel/services.php:343 www/vulnmeter/index.php:169
-#: www/vulnmeter2/index.old.php:117 www/vulnmeter2/index.php:142
+#: www/control_panel/alarm_console.php:247 www/control_panel/mac.php:151
+#: www/control_panel/mac.php:333 www/control_panel/os.php:150
+#: www/control_panel/os.php:338 www/control_panel/services.php:154
+#: www/control_panel/services.php:345 www/vulnmeter/index.php:171
+#: www/vulnmeter/report.php:59
 #, php-format
 msgid "Last"
 msgstr "Dernier"
@@ -2908,6 +3104,10 @@ msgstr "Dernier jour"
 #: www/control_panel/show_image.php:47
 msgid "Last Month"
 msgstr "Mois dernier"
+
+#: www/incidents/incident.php:111
+msgid "Last Update"
+msgstr ""
 
 # control_panel/global_score.php:108
 #: www/control_panel/show_image.php:45
@@ -2930,8 +3130,7 @@ msgid "Last month"
 msgstr "Dernier mois"
 
 # vulnmeter/index.php:62
-#: www/vulnmeter/index.php:147 www/vulnmeter2/index.old.php:107
-#: www/vulnmeter2/index.php:121
+#: www/vulnmeter/index.php:148
 msgid "Last scan"
 msgstr "Dernier scan"
 
@@ -2945,12 +3144,18 @@ msgstr "Dernière semaine"
 msgid "Last year"
 msgstr "Dernier mois"
 
-#: include/panel/plugins/custom_sql.php:99
-msgid "Legend Field"
+#: www/host/modifyhostform.php:281 include/panel/plugins/maps.php:56
+msgid "Lat"
 msgstr ""
 
-#: www/control_panel/global_score.php:1231
-msgid "Legend:"
+# directives/directive.php:316 directives/directive.php:337
+#: www/control_panel/global_score.php:1243
+#, fuzzy
+msgid "Legend"
+msgstr "Nié"
+
+#: include/panel/plugins/custom_sql.php:109
+msgid "Legend Field"
 msgstr ""
 
 #: www/directives/directive.php:432
@@ -2963,7 +3168,7 @@ msgstr ""
 msgid "Less than"
 msgstr "Scan Nessus"
 
-#: www/incidents/index.php:263
+#: www/incidents/index.php:264
 msgid "Life Time"
 msgstr ""
 
@@ -2984,7 +3189,7 @@ msgid "Links to other applications"
 msgstr "Liens vers d'autres applications"
 
 # host/newhostform.php:192
-#: www/host/modifyhostform.php:269 www/host/newhostform.php:221
+#: www/host/modifyhostform.php:238 www/host/newhostform.php:209
 msgid "Linux"
 msgstr "Linux"
 
@@ -3009,7 +3214,7 @@ msgstr ""
 "Charger les valeurs par défaut pour le fichier de configuration de SPADE"
 
 # session/users.php:32
-#: www/panel/panel.php:185 www/panel/panel.php:203
+#: www/panel/panel.php:380 www/panel/panel.php:398
 #, fuzzy
 msgid "Loading"
 msgstr "Login"
@@ -3029,11 +3234,20 @@ msgstr "Login"
 msgid "Logout"
 msgstr "Déconnexion"
 
+#: www/host/modifyhostform.php:282 include/panel/plugins/maps.php:57
+msgid "Lon"
+msgstr ""
+
 # incidents/index.php:140
 #: www/business_processes/bp_edit.php:40 www/incidents/incident.php:422
-#: www/incidents/index.php:189 www/report/pdfreportform.php:321
+#: www/incidents/index.php:189 www/report/graphs/sec_therm.php:123
+#: www/report/pdfreportform.php:321
 msgid "Low"
 msgstr "Bas"
+
+#: include/panel/Ajax_Panel.php:293
+msgid "Low Threshold"
+msgstr ""
 
 #: www/report/pdfreport.php:188
 msgid "METRICS"
@@ -3041,12 +3255,12 @@ msgstr ""
 
 # control_panel/anomalies.php:259 host/newhostform.php:196
 # host/newhostform.php:207
-#: www/control_panel/anomalies.php:335 www/host/newhostform.php:240
-#: www/incidents/index.php:330 www/netscan/scan_util.php:64
+#: www/control_panel/anomalies.php:335 www/host/newhostform.php:228
+#: www/incidents/index.php:332 www/netscan/scan_util.php:64
 msgid "Mac"
 msgstr "Mac"
 
-#: www/host/modifyhostform.php:310
+#: www/host/modifyhostform.php:256
 msgid "Mac Address"
 msgstr "Adresse MAC"
 
@@ -3056,28 +3270,34 @@ msgid "Mac Changes"
 msgstr "Changement d'adresse MAC"
 
 # control_panel/mac.php:49
-#: www/host/modifyhostform.php:317 www/host/newhostform.php:244
+#: www/host/modifyhostform.php:263 www/host/newhostform.php:232
 msgid "Mac Vendor"
 msgstr ""
-
-# control_panel/anomalies.php:259 host/newhostform.php:196
-# host/newhostform.php:207
-#: www/host/modifyhostform.php:274 www/host/newhostform.php:223
-#, fuzzy
-msgid "MacOS"
-msgstr "Mac"
 
 # report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
 # top.php:67
 #: www/report/menu.php:76 www/sensor/interfaces.php:87
-#: www/sensor/interfaces.php:142 www/top.php:267
+#: www/sensor/interfaces.php:142 www/top.php:273
 msgid "Main"
 msgstr "Principal"
 
 # conf/main.php:210 conf/main.php:216
-#: www/conf/main.php:380 www/conf/main.php:386
+#: www/conf/main.php:412 www/conf/main.php:418
 msgid "Main Configuration"
 msgstr "Configuration principale"
+
+#: www/panel/draw_map.php:37
+msgid ""
+"Map configuration not found, please configure a map using the Executive Panel"
+msgstr ""
+
+#: www/host/modifyhostform.php:277
+msgid "Map location"
+msgstr ""
+
+#: include/panel/plugins/maps.php:20
+msgid "Maps"
+msgstr ""
 
 #: www/server/server.php:44
 msgid "Master server at"
@@ -3097,11 +3317,11 @@ msgstr "Matrice"
 
 # control_panel/global_score.php:198 control_panel/global_score.php:297
 # control_panel/global_score.php:414
-#: www/control_panel/global_score.php:946
-#: www/control_panel/global_score.php:981
-#: www/control_panel/global_score.php:1080
-#: www/control_panel/global_score.php:1152
-#: www/control_panel/global_score.php:1195
+#: www/control_panel/global_score.php:958
+#: www/control_panel/global_score.php:993
+#: www/control_panel/global_score.php:1092
+#: www/control_panel/global_score.php:1164
+#: www/control_panel/global_score.php:1207
 #, fuzzy
 msgid "Max"
 msgstr "C max"
@@ -3138,14 +3358,38 @@ msgstr "Niveau C max (dernière année)"
 
 # control_panel/global_score.php:197 control_panel/global_score.php:296
 # control_panel/global_score.php:413
-#: www/control_panel/global_score.php:945
-#: www/control_panel/global_score.php:980
-#: www/control_panel/global_score.php:1079
-#: www/control_panel/global_score.php:1151
-#: www/control_panel/global_score.php:1194
+#: www/control_panel/global_score.php:957
+#: www/control_panel/global_score.php:992
+#: www/control_panel/global_score.php:1091
+#: www/control_panel/global_score.php:1163
+#: www/control_panel/global_score.php:1206
 #, fuzzy
 msgid "Max Date"
 msgstr "Date de C max"
+
+#: include/panel/plugins/metrics.php:37
+msgid "Max categories"
+msgstr ""
+
+#: include/panel/plugins/rss.php:35
+msgid "Max description length in chars"
+msgstr ""
+
+#: include/panel/plugins/rss.php:31
+msgid "Max entries to show"
+msgstr ""
+
+#: include/panel/plugins/metrics.php:35
+msgid "Max panels per category"
+msgstr ""
+
+#: include/panel/plugins/rss.php:33
+msgid "Max title length in chars"
+msgstr ""
+
+#: include/panel/plugins/maps.php:74
+msgid "Max zoom"
+msgstr ""
 
 #: www/directives/directive.php:466
 msgid ""
@@ -3190,7 +3434,7 @@ msgid "Message:"
 msgstr ""
 
 # incidents/index.php:109 incidents/index.php:289
-#: www/incidents/index.php:135 www/incidents/index.php:339
+#: www/incidents/index.php:135 www/incidents/index.php:341
 #: www/report/pdfreportform.php:247
 msgid "Metric"
 msgstr "Métrique"
@@ -3200,15 +3444,15 @@ msgstr "Métrique"
 msgid "Metric Threshold: %s level exceeded"
 msgstr ""
 
-#: www/control_panel/global_score.php:1239
+#: www/control_panel/global_score.php:1251
 msgid "Metric over 100% threshold"
 msgstr ""
 
-#: www/control_panel/global_score.php:1243
+#: www/control_panel/global_score.php:1255
 msgid "Metric over 300% threshold"
 msgstr ""
 
-#: www/control_panel/global_score.php:1247
+#: www/control_panel/global_score.php:1259
 msgid "Metric over 500% threshold"
 msgstr ""
 
@@ -3224,10 +3468,15 @@ msgstr ""
 
 # conf/main.php:51 control_panel/global_score.php:17 report/menu.php:46
 # report/pdfreportform.php:113 top.php:39
-#: www/conf/main.php:92 www/report/graphs/draw_rrd.php:135
-#: www/report/menu.php:59 www/report/metrics.php:28 www/top.php:67
+#: www/conf/main.php:92 www/panel/window_panel.php:308
+#: www/report/graphs/draw_rrd.php:137 www/report/menu.php:59
+#: www/report/metrics.php:28 www/top.php:67
 msgid "Metrics"
 msgstr "Métriques"
+
+#: include/panel/plugins/metrics.php:14
+msgid "Metrics Metapanel"
+msgstr ""
 
 # report/pdfreportform.php:19 top.php:45
 #: www/report/pdfreportform.php:56
@@ -3240,18 +3489,26 @@ msgstr "Rapport de sécurité"
 msgid "Metrics Report Options"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:201
+#: www/host/modifyhostform.php:237 www/host/newhostform.php:208
+msgid "Microsoft Windows"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:233
 msgid "Middle Horizontal"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:200
+#: include/panel/plugins/custom_sql.php:232
 msgid "Middle Vertical"
+msgstr ""
+
+#: include/panel/plugins/maps.php:75
+msgid "Min zoom"
 msgstr ""
 
 # report/menu.php:63 sensor/interfaces.php:87 sensor/interfaces.php:142
 # top.php:67
-#: www/vulnmeter/scheduler.php:73 www/vulnmeter/scheduler.php:121
-#: www/vulnmeter/scheduler.php:248
+#: www/vulnmeter/scheduler.php:86 www/vulnmeter/scheduler.php:134
+#: www/vulnmeter/scheduler.php:297
 #, fuzzy
 msgid "Minute"
 msgstr "Principal"
@@ -3277,11 +3534,11 @@ msgstr ""
 # host/host.php:125 net/net.php:136 policy/policy.php:157 port/port.php:61
 # rrd_conf/rrd_conf.php:47 sensor/sensor.php:100 signature/signature.php:57
 #: www/action/action.php:38 www/conf/pluginsid.php:134 www/host/host.php:133
-#: www/incidents/incidenttype.php:57 www/net/net.php:161
-#: www/net/netgroup.php:124 www/policy/policy.php:240 www/port/port.php:70
-#: www/rrd_conf/modify_rrd_conf_form.php:172 www/rrd_conf/rrd_conf.php:58
-#: www/sensor/sensor.php:126 www/server/server.php:196
-#: www/signature/signature.php:66
+#: www/host/hostgroup.php:101 www/incidents/incidenttype.php:57
+#: www/net/net.php:161 www/net/netgroup.php:126 www/policy/policy.php:240
+#: www/port/port.php:70 www/rrd_conf/modify_rrd_conf_form.php:172
+#: www/rrd_conf/rrd_conf.php:58 www/sensor/sensor.php:126
+#: www/server/server.php:196 www/signature/signature.php:66
 msgid "Modify"
 msgstr "Modifier"
 
@@ -3319,6 +3576,10 @@ msgstr ""
 #: www/host/modifyhostform.php:15
 msgid "Modify host"
 msgstr "Modifier l'hôte"
+
+#: www/host/modifyhostgroupform.php:15
+msgid "Modify host group"
+msgstr ""
 
 # net/modifynetform.php:15
 #: www/net/modifynetform.php:15
@@ -3389,8 +3650,8 @@ msgstr "Moniteurs"
 
 # report/pdfreportform.php:94
 #: www/report/graphs/incidents_bar_graph.php:56
-#: www/report/pdfreportform.php:172 www/vulnmeter/scheduler.php:76
-#: www/vulnmeter/scheduler.php:124 www/vulnmeter/scheduler.php:251
+#: www/report/pdfreportform.php:172 www/vulnmeter/scheduler.php:89
+#: www/vulnmeter/scheduler.php:137 www/vulnmeter/scheduler.php:300
 msgid "Month"
 msgstr "Mois"
 
@@ -3425,10 +3686,10 @@ msgstr "NOTE: admin-admin pour l'utilisateur par défaut"
 msgid "NOTE: No selection allows ALL"
 msgstr ""
 
-#: www/netscan/index.php:106
+#: www/netscan/index.php:111
 #, fuzzy
 msgid ""
-"NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, "
+"NOTE: This tool is a nmap frontend. In order to use all nmap functionality, "
 "you need root privileges."
 msgstr ""
 "NOTE : Cet outil est un frontend de nmap. Pour utiliser toutes les "
@@ -3455,7 +3716,7 @@ msgstr "DESACTIVE"
 msgid "Nagios ENABLED"
 msgstr "ACTIVE"
 
-#: www/net/net.php:29 www/net/netgroup.php:29
+#: www/host/hostgroup.php:27 www/net/net.php:29 www/net/netgroup.php:29
 msgid "Nagios action"
 msgstr ""
 
@@ -3471,10 +3732,12 @@ msgstr ""
 #: www/business_processes/bp_edit.php:226
 #: www/business_processes/bp_edit.php:305 www/conf/plugin.php:41
 #: www/conf/pluginsid.php:67 www/directives/directive.php:88
-#: www/editor/rule.php:81 www/incidents/incidenttag.php:96
-#: www/incidents/incidenttag.php:120 www/net/newnetform.php:34
-#: www/net/newnetgroupform.php:35 www/policy/modifyplugingroups.php:58
-#: www/policy/modifyplugingroupsform.php:91 www/policy/plugingroups.php:47
+#: www/editor/rule.php:81 www/event_viewer/configure_event_viewer.php:319
+#: www/host/newhostgroupform.php:35 www/incidents/incident.php:107
+#: www/incidents/incidenttag.php:96 www/incidents/incidenttag.php:120
+#: www/net/newnetform.php:34 www/net/newnetgroupform.php:35
+#: www/policy/modifyplugingroups.php:58
+#: www/policy/modifyplugingroupsform.php:92 www/policy/plugingroups.php:47
 #: www/port/modifyportform.php:44 www/port/newportform.php:21
 #: www/report/inventory.php:85 www/sensor/interfaces.php:86
 #: www/sensor/interfaces.php:141 www/session/modifyuser.php:32
@@ -3523,6 +3786,12 @@ msgstr "ACTIVE"
 msgid "Nessus ID"
 msgstr "Scan Nessus"
 
+# top.php:44
+#: www/vulnmeter/report_form.php:75
+#, fuzzy
+msgid "Nessus Report"
+msgstr "Rapport sur les hôtes"
+
 # net/net.php:66
 #: www/net/netgroup.php:68
 msgid "Nessus Scan"
@@ -3540,7 +3809,7 @@ msgid "Nessus client configuration"
 msgstr "Configuration du client Nessus"
 
 # vulnmeter/do_nessus.php:30
-#: www/vulnmeter/do_nessus.php:245 www/vulnmeter2/do_nessus.php:180
+#: www/vulnmeter/do_nessus.php:244
 msgid ""
 "Nessus scan started, depending on number of hosts to be scanned this may "
 "take a while"
@@ -3552,7 +3821,6 @@ msgstr ""
 #: www/net/net.php:69 www/net/netgroup.php:57 www/netscan/do_scan.php:22
 #: www/netscan/do_scan.php:23 www/ntop/menu_session.php:90
 #: www/report/inventory.php:151 www/vulnmeter/index.php:32
-#: www/vulnmeter2/index.old.php:26 www/vulnmeter2/index.php:26
 #, fuzzy
 msgid "Net"
 msgstr "Réseaux"
@@ -3563,7 +3831,7 @@ msgid "Net "
 msgstr ""
 
 # net/net.php:66
-#: www/netscan/index.php:51 www/top.php:315
+#: www/netscan/index.php:51 www/top.php:321
 msgid "Net Scan"
 msgstr "Scan réseau"
 
@@ -3589,12 +3857,12 @@ msgid "Net name"
 msgstr "Nom du réseau"
 
 # net/modifynet.php:71
-#: www/net/modifynet.php:79
+#: www/net/modifynet.php:82
 msgid "Net succesfully updated"
 msgstr "Mise à jour du réseau effectué avec succès"
 
 # host/newhostform.php:194
-#: www/host/modifyhostform.php:279 www/host/newhostform.php:225
+#: www/host/modifyhostform.php:240 www/host/newhostform.php:211
 #, fuzzy
 msgid "NetBSD"
 msgstr "BSD"
@@ -3615,20 +3883,19 @@ msgid "Netname"
 msgstr "Nom du réseau"
 
 # vulnmeter/index.php:73
-#: www/vulnmeter/index.php:241 www/vulnmeter2/index.old.php:166
-#: www/vulnmeter2/index.php:192
+#: www/vulnmeter/index.php:243
 msgid "Nets"
 msgstr "Réseaux"
 
 # control_panel/global_score.php:295 control_panel/global_score.php:352
 # top.php:51
-#: www/control_panel/global_score.php:1078 www/top.php:168
+#: www/control_panel/global_score.php:1090 www/top.php:168
 msgid "Network"
 msgstr "Réseau"
 
 # control_panel/global_score.php:288 net/net.php:15 riskmeter/index.php:151
 # top.php:58
-#: www/control_panel/global_score.php:976
+#: www/control_panel/global_score.php:988
 #, fuzzy
 msgid "Network Groups"
 msgstr "Goupes réseaux"
@@ -3650,7 +3917,7 @@ msgid "Network group deleted"
 msgstr "Groupe réseau effacé"
 
 # net/newnet.php:70
-#: www/net/newnetgroup.php:71
+#: www/net/newnetgroup.php:72
 msgid "Network group succesfully inserted"
 msgstr "Groupe réseau inséré avec succès"
 
@@ -3661,12 +3928,12 @@ msgstr "Groupe réseau mis à jour avec succès"
 
 # control_panel/global_score.php:288 net/net.php:15 riskmeter/index.php:151
 # top.php:58
-#: www/net/netgroup.php:15 www/top.php:205
+#: www/net/netgroup.php:15 www/top.php:211
 msgid "Network groups"
 msgstr "Goupes réseaux"
 
 # net/newnet.php:70
-#: www/net/newnet.php:78
+#: www/net/newnet.php:80
 msgid "Network succesfully inserted"
 msgstr "Réseau inséré avec succès"
 
@@ -3674,13 +3941,13 @@ msgstr "Réseau inséré avec succès"
 # top.php:58
 #: www/net/modifynetgroupform.php:55 www/net/net.php:15
 #: www/net/netgroup.php:58 www/net/newnetgroupform.php:40
-#: www/riskmeter/index.php:343 www/setup/ossim_acl.php:28 www/top.php:199
+#: www/riskmeter/index.php:344 www/setup/ossim_acl.php:28 www/top.php:205
 msgid "Networks"
 msgstr "Réseaux"
 
 # control_panel/global_score.php:288 net/net.php:15 riskmeter/index.php:151
 # top.php:58
-#: www/control_panel/global_score.php:1075
+#: www/control_panel/global_score.php:1087
 #, fuzzy
 msgid "Networks outside groups"
 msgstr "Goupes réseaux"
@@ -3737,6 +4004,10 @@ msgstr "Version"
 # incidents/index.php:153
 #: www/action/newactionform.php:135
 msgid "New action"
+msgstr ""
+
+#: www/host/newhostgroup.php:15
+msgid "New host group"
 msgstr ""
 
 # scan/newhostscan.php:15
@@ -3804,18 +4075,18 @@ msgid "New vendor"
 msgstr "Nouvelle sonde"
 
 # sensor/newsensor.php:15
-#: www/panel/panel.php:40
+#: www/panel/panel.php:174
 #, fuzzy
 msgid "New window"
 msgstr "Nouvelle sonde"
 
 # conf/pluginref.php:57 control_panel/alarm_console.php:107
 # control_panel/backlog.php:75
-#: www/conf/pluginref.php:70 www/control_panel/alarm_console.php:213
+#: www/conf/pluginref.php:70 www/control_panel/alarm_console.php:218
 #: www/control_panel/backlog.php:96 www/control_panel/mac.php:142
-#: www/control_panel/mac.php:322 www/control_panel/os.php:141
-#: www/control_panel/os.php:326 www/control_panel/services.php:145
-#: www/control_panel/services.php:334 www/userlog/user_action_log.php:165
+#: www/control_panel/mac.php:324 www/control_panel/os.php:141
+#: www/control_panel/os.php:329 www/control_panel/services.php:145
+#: www/control_panel/services.php:336 www/userlog/user_action_log.php:165
 #, php-format
 msgid "Next %d"
 msgstr "%d Suivantes"
@@ -3827,81 +4098,91 @@ msgstr "%d Suivantes"
 # sensor/interfaces.php:126 sensor/interfaces.php:149
 # session/deleteuser.php:37 signature/deletesignature.php:30
 #: www/conf/main.php:143 www/conf/main.php:148 www/conf/main.php:219
-#: www/conf/main.php:272 www/conf/main.php:286 www/conf/main.php:364
-#: www/host/deletehost.php:40 www/incidents/deleteincidenttype.php:44
+#: www/conf/main.php:272 www/conf/main.php:286 www/conf/main.php:311
+#: www/conf/main.php:316 www/conf/main.php:396
+#: www/event_viewer/configure_event_viewer.php:246 www/host/deletehost.php:40
+#: www/host/deletehostgroup.php:35 www/incidents/deleteincidenttype.php:44
 #: www/net/deletenet.php:35 www/net/deletenetgroup.php:35
-#: www/policy/deletepolicy.php:32 www/policy/modifypolicyform.php:710
-#: www/policy/modifypolicyform.php:717 www/policy/modifypolicyform.php:724
-#: www/policy/modifypolicyform.php:731 www/policy/modifypolicyform.php:738
-#: www/policy/modifypolicyform.php:745 www/policy/newpolicyform.php:434
-#: www/policy/newpolicyform.php:441 www/policy/newpolicyform.php:448
-#: www/policy/newpolicyform.php:455 www/policy/newpolicyform.php:462
-#: www/policy/newpolicyform.php:469 www/policy/policy.php:193
+#: www/policy/deletepolicy.php:32 www/policy/modifypolicyform.php:711
+#: www/policy/modifypolicyform.php:718 www/policy/modifypolicyform.php:725
+#: www/policy/modifypolicyform.php:732 www/policy/modifypolicyform.php:739
+#: www/policy/modifypolicyform.php:746 www/policy/newpolicyform.php:436
+#: www/policy/newpolicyform.php:443 www/policy/newpolicyform.php:450
+#: www/policy/newpolicyform.php:457 www/policy/newpolicyform.php:464
+#: www/policy/newpolicyform.php:471 www/policy/policy.php:193
 #: www/policy/policy.php:200 www/policy/policy.php:207
 #: www/policy/policy.php:214 www/policy/policy.php:221
 #: www/policy/policy.php:228 www/port/deleteport.php:35
 #: www/rrd_conf/delete_rrd_conf.php:35 www/sensor/deletesensor.php:37
 #: www/sensor/interfaces.php:103 www/sensor/interfaces.php:107
 #: www/sensor/interfaces.php:126 www/sensor/interfaces.php:149
-#: www/server/deleteserver.php:37 www/server/modifyserverform.php:74
-#: www/server/modifyserverform.php:81 www/server/modifyserverform.php:88
-#: www/server/modifyserverform.php:95 www/server/modifyserverform.php:102
-#: www/server/modifyserverform.php:109 www/server/newserverform.php:55
+#: www/server/deleteserver.php:37 www/server/modifyserverform.php:73
+#: www/server/modifyserverform.php:80 www/server/modifyserverform.php:87
+#: www/server/modifyserverform.php:94 www/server/modifyserverform.php:101
+#: www/server/modifyserverform.php:108 www/server/newserverform.php:55
 #: www/server/newserverform.php:62 www/server/newserverform.php:69
 #: www/server/newserverform.php:76 www/server/newserverform.php:83
 #: www/server/newserverform.php:90 www/server/server.php:152
 #: www/server/server.php:159 www/server/server.php:166
 #: www/server/server.php:173 www/server/server.php:180
 #: www/server/server.php:187 www/session/deleteuser.php:45
-#: www/signature/deletesignature.php:33
+#: www/signature/deletesignature.php:33 include/panel/Ajax_Panel.php:286
 #: include/panel/plugins/custom_cloud.php:56
-#: include/panel/plugins/custom_sql.php:91
-#: include/panel/plugins/custom_sql.php:155
-#: include/panel/plugins/custom_sql.php:170
+#: include/panel/plugins/custom_sql.php:101
+#: include/panel/plugins/custom_sql.php:165
+#: include/panel/plugins/custom_sql.php:188
+#: include/panel/plugins/custom_sql.php:202
+#: include/panel/plugins/metrics.php:42 include/panel/plugins/metrics.php:47
+#: include/panel/plugins/rss.php:39
 msgid "No"
 msgstr "Non"
 
-#: www/panel/panel.php:160
+#: www/panel/panel.php:341
 msgid "No Edit"
 msgstr ""
 
-#: www/report/graphs/draw_rrd.php:128
+#: www/report/graphs/draw_rrd.php:130
 #, php-format
 msgid "No RRD available for: '%s' at '%s'"
 msgstr ""
 
-#: www/control_panel/global_score.php:1235
+#: www/control_panel/global_score.php:1247
 msgid "No appreciable risk"
 msgstr ""
 
 #: include/panel/plugins/custom_cloud.php:65
 #: include/panel/plugins/custom_html.php:25
+#: include/panel/plugins/metrics.php:57 include/panel/plugins/rss.php:50
 msgid "No extra settings needed for this category"
 msgstr ""
 
 # incidents/index.php:15 top.php:48
-#: www/incidents/index.php:317
+#: www/incidents/index.php:319
 #, fuzzy
 msgid "No incidents"
 msgstr "Incidents"
 
 # port/deleteport.php:45
-#: www/policy/modifypolicy.php:173
+#: www/policy/modifypolicy.php:175
 #, fuzzy
 msgid "No plugin group selected"
+msgstr "Groupe réseau effacé"
+
+# port/deleteport.php:45
+#: www/event_viewer/configure_event_viewer.php:310
+#, fuzzy
+msgid "No plugin groups found"
 msgstr "Groupe réseau effacé"
 
 #: www/policy/modifyplugingroups.php:76
 msgid "No plugins or SIDs selected"
 msgstr ""
 
-#: www/vulnmeter/index.php:415 www/vulnmeter2/index.old.php:313
-#: www/vulnmeter2/index.php:350
+#: www/vulnmeter/index.php:417
 msgid "No scans have been done yet"
 msgstr ""
 
-#: www/vulnmeter/index.php:50 www/vulnmeter2/index.old.php:44
-#: www/vulnmeter2/index.php:44
+#: www/vulnmeter/index.php:50
 msgid "No scans have been issued yet"
 msgstr ""
 
@@ -3916,10 +4197,11 @@ msgstr ""
 # host/host.php:118 host/modifyhostform.php:123 host/newhostform.php:109
 # net/modifynetform.php:117 net/newnetform.php:90
 #: www/business_processes/asset_list.php:57 www/host/host.php:126
-#: www/host/modifyhostform.php:136 www/host/newhostform.php:130
+#: www/host/modifyhostform.php:136 www/host/modifyhostgroupform.php:133
+#: www/host/newhostform.php:130 www/host/newhostgroupform.php:144
 #: www/net/modifynetform.php:121 www/net/modifynetgroupform.php:133
 #: www/net/newnetform.php:90 www/net/newnetgroupform.php:107
-#: include/panel/plugins/custom_sql.php:137
+#: include/panel/plugins/custom_sql.php:147
 msgid "None"
 msgstr "Aucune"
 
@@ -3972,18 +4254,17 @@ msgstr ""
 
 # incidents/index.php:15 top.php:48
 #: www/report/graphs/incidents_bar_graph.php:57
-#: www/report/graphs/incidents_bar_graph.php:81
+#: www/report/graphs/incidents_bar_graph.php:86
 #, fuzzy
 msgid "Num. Incidents"
 msgstr "Incidents"
 
-#: www/control_panel/alarm_console.php:168
+#: www/control_panel/alarm_console.php:173
 msgid "Num. alarms per page"
 msgstr ""
 
 # directives/directive.php:247
-#: www/vulnmeter/index.php:34 www/vulnmeter2/index.old.php:28
-#: www/vulnmeter2/index.php:28
+#: www/vulnmeter/index.php:34 www/vulnmeter/report_form.php:36
 #, fuzzy
 msgid "Number"
 msgstr "Nombres"
@@ -4000,17 +4281,17 @@ msgstr "Nombres"
 
 #: www/control_panel/anomalies.php:199 www/control_panel/anomalies.php:306
 #: www/control_panel/anomalies.php:416 www/control_panel/anomalies.php:536
-#: www/control_panel/mac.php:165 www/control_panel/mac.php:277
-#: www/control_panel/os.php:164 www/control_panel/os.php:281
+#: www/control_panel/mac.php:165 www/control_panel/mac.php:279
+#: www/control_panel/os.php:164 www/control_panel/os.php:284
 #: www/control_panel/rrd_anomaly.php:129 www/control_panel/rrd_global.php:128
-#: www/control_panel/services.php:168 www/control_panel/services.php:289
+#: www/control_panel/services.php:168 www/control_panel/services.php:291
 msgid "OK"
 msgstr ""
 
 # host/newhostform.php:183 report/report.php:39
 #: www/control_panel/anomalies.php:223 www/control_panel/os.php:171
 #: www/host/modifyhostform.php:233 www/host/newhostform.php:204
-#: www/incidents/index.php:332 www/netscan/scan_util.php:65
+#: www/incidents/index.php:334 www/netscan/scan_util.php:65
 #: www/report/report.php:43
 msgid "OS"
 msgstr "OS"
@@ -4069,13 +4350,17 @@ msgstr "OSSIM"
 #: www/control_panel/handle_os.php:15 www/control_panel/handle_services.php:8
 #: www/control_panel/handle_services.php:15 www/control_panel/mac.php:8
 #: www/control_panel/os.php:8 www/control_panel/services.php:8
-#: www/editor/rule.php:61 www/hids/host_detail.php:8 www/hids/index.php:8
-#: www/host/deletehost.php:8 www/host/host.php:8 www/host/modifyhost.php:8
-#: www/host/modifyhostform.php:8 www/host/newhost.php:8
-#: www/host/newhostform.php:8 www/incidents/deleteincidenttype.php:8
-#: www/incidents/incident.php:30 www/incidents/incidenttag.php:75
-#: www/incidents/incidenttype.php:8 www/incidents/index.php:22
-#: www/incidents/modifyincidenttype.php:8
+#: www/editor/rule.php:61 www/event_viewer/configure_event_viewer.php:285
+#: www/event_viewer/index.php:20 www/hids/host_detail.php:8
+#: www/hids/index.php:8 www/host/deletehost.php:8
+#: www/host/deletehostgroup.php:8 www/host/host.php:8 www/host/hostgroup.php:8
+#: www/host/modifyhost.php:8 www/host/modifyhostform.php:8
+#: www/host/modifyhostgroup.php:8 www/host/modifyhostgroupform.php:8
+#: www/host/newhost.php:8 www/host/newhostform.php:8
+#: www/host/newhostgroup.php:8 www/host/newhostgroupform.php:8
+#: www/incidents/deleteincidenttype.php:8 www/incidents/incident.php:30
+#: www/incidents/incidenttag.php:75 www/incidents/incidenttype.php:8
+#: www/incidents/index.php:22 www/incidents/modifyincidenttype.php:8
 #: www/incidents/modifyincidenttypeform.php:8
 #: www/incidents/newincident.php:119 www/incidents/newincidenttype.php:8
 #: www/incidents/newincidenttypeform.php:13 www/incidents/osvdb.php:17
@@ -4085,7 +4370,7 @@ msgstr "OSSIM"
 #: www/net/net.php:8 www/net/netgroup.php:8 www/net/newnet.php:8
 #: www/net/newnetform.php:8 www/net/newnetgroup.php:8
 #: www/net/newnetgroupform.php:8 www/netscan/do_scan.php:9
-#: www/netscan/index.php:31 www/netscan/scan_db.php:8 www/ntop/menu.php:8
+#: www/netscan/index.php:31 www/netscan/scan_db.php:10 www/ntop/menu.php:8
 #: www/ntop/menu_session.php:9 www/policy/deletepolicy.php:8
 #: www/policy/modifyplugingroupsform.php:39 www/policy/modifypolicy.php:9
 #: www/policy/modifypolicyform.php:8 www/policy/newpolicy.php:9
@@ -4117,8 +4402,9 @@ msgstr "OSSIM"
 #: www/signature/deletesignature.php:8 www/signature/modifysignature.php:8
 #: www/signature/modifysignatureform.php:8 www/signature/newsignature.php:8
 #: www/signature/newsignatureform.php:8 www/signature/signature.php:8
-#: www/upgrade/index.php:76 www/vulnmeter/do_nessus.php:12
-#: www/vulnmeter/scheduler.php:9 www/vulnmeter2/do_nessus.php:12
+#: www/tmp/ceo.php:6 www/upgrade/index.php:76 www/vulnmeter/do_nessus.php:12
+#: www/vulnmeter/report.php:10 www/vulnmeter/report_form.php:10
+#: www/vulnmeter/scheduler.php:9
 msgid "OSSIM Framework"
 msgstr "OSSIM Framework"
 
@@ -4154,6 +4440,16 @@ msgstr "Login OSSIM"
 msgid "OSSIM configuration"
 msgstr "Configuration OSSIM"
 
+#: www/conf/main.php:304
+msgid "OSSIM login methods"
+msgstr ""
+
+# session/login.php:88
+#: www/conf/main.php:323
+#, fuzzy
+msgid "OSSIM login options"
+msgstr "Login OSSIM"
+
 # directives/directive.php:77
 #: www/directives/directive.php:91
 msgid "Occurrence"
@@ -4170,7 +4466,7 @@ msgstr "Occurrences"
 msgid "Ocurrences"
 msgstr "Ocurrences"
 
-#: www/vulnmeter/scheduler.php:182
+#: www/vulnmeter/scheduler.php:195
 msgid "Of course you can select multiiple sensors for a certain schedule."
 msgstr ""
 
@@ -4228,7 +4524,7 @@ msgid "Open source vulnerability database configuration"
 msgstr "Configuration des listes de contrôle d'accès"
 
 # incidents/incident.php:623 incidents/index.php:122
-#: www/host/modifyhostform.php:284 www/host/newhostform.php:227
+#: www/host/modifyhostform.php:241 www/host/newhostform.php:212
 #, fuzzy
 msgid "OpenBSD"
 msgstr "Ouvert"
@@ -4243,9 +4539,13 @@ msgstr "Système d'exploitation"
 msgid "Options"
 msgstr ""
 
+#: www/event_viewer/configure_event_viewer.php:228
+msgid "Options for column"
+msgstr ""
+
 # host/newhostform.php:202
-#: www/net/net.php:32 www/net/netgroup.php:32 www/port/port.php:24
-#: www/report/report.php:24
+#: www/host/hostgroup.php:29 www/net/net.php:32 www/net/netgroup.php:32
+#: www/port/port.php:24 www/report/report.php:24
 #, fuzzy
 msgid "Order"
 msgstr "Autre"
@@ -4300,16 +4600,16 @@ msgstr ""
 msgid "PHP-domxml  not loaded"
 msgstr ""
 
-#: www/riskmeter/index.php:98
+#: www/riskmeter/index.php:99
 msgid "Page Refresh"
 msgstr "Rafraichissement"
 
-#: www/control_panel/alarm_console.php:520 www/userlog/user_action_log.php:240
+#: www/control_panel/alarm_console.php:533 www/userlog/user_action_log.php:240
 msgid "Page loaded in"
 msgstr ""
 
 # sensor/editsensor.php:388
-#: www/panel/panel.php:147
+#: www/panel/panel.php:325
 #, fuzzy
 msgid "Panel config"
 msgstr "Configuration de base"
@@ -4319,11 +4619,6 @@ msgstr "Configuration de base"
 #, fuzzy
 msgid "Parameters missing"
 msgstr "Permissions"
-
-# report/inventory.php:183
-#: www/report/inventory.php:187
-msgid "Passive"
-msgstr "Passif"
 
 # session/login.php:98 session/users.php:37
 #: www/session/login.php:165 www/session/users.php:49
@@ -4338,7 +4633,7 @@ msgid "Password unchanged if field left blank"
 msgstr "Mot de passe inchangé si le champ est laissé vide"
 
 # report/inventory.php:183
-#: include/panel/plugins/custom_sql.php:119
+#: include/panel/plugins/custom_sql.php:129
 #, fuzzy
 msgid "Pastel"
 msgstr "Passif"
@@ -4352,6 +4647,10 @@ msgstr "Chemin d'accès vers d'autres applications"
 #: www/sensor/editsensor.php:481
 msgid "Paths"
 msgstr "Chemins d'accès"
+
+#: include/panel/plugins/rss.php:62
+msgid "Pear XML_RSS needs to be enabled for this to work"
+msgstr ""
 
 #: www/backup/index.php:144
 msgid "Percent"
@@ -4389,49 +4688,63 @@ msgstr ""
 "évenement (20 mins)"
 
 # report/inventory.php:183
-#: include/panel/plugins/custom_sql.php:80
+#: include/panel/plugins/custom_sql.php:88
 #, fuzzy
 msgid "Pie"
 msgstr "Passif"
 
 # host/modifyhostform.php:198 host/newhostform.php:173
 # net/modifynetform.php:185 net/newnetform.php:148
-#: include/panel/plugins/custom_sql.php:111
+#: include/panel/plugins/custom_sql.php:121
 #, fuzzy
 msgid "Pie Options"
 msgstr "Options de scan"
 
 # host/newhostform.php:200
-#: include/panel/plugins/custom_sql.php:199
+#: include/panel/plugins/custom_sql.php:231
 #, fuzzy
 msgid "Plain"
 msgstr "Plan9"
 
 # host/newhostform.php:200
-#: www/host/modifyhostform.php:289 www/host/newhostform.php:229
+#: www/host/modifyhostform.php:251 www/host/newhostform.php:222
 msgid "Plan9"
 msgstr "Plan9"
 
-#: www/vulnmeter/do_nessus.php:102 www/vulnmeter/scheduler.php:49
+#: www/vulnmeter/do_nessus.php:102 www/vulnmeter/scheduler.php:62
 msgid ""
 "Please adjust incident creation threshold, incidents will only be created "
 "for vulnerabilities whose risk level exceeds the threshold."
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:271 www/vulnmeter2/do_nessus.php:206
+#: www/vulnmeter/do_nessus.php:270
 msgid "Please check your frameworkd logs."
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:251
+#: include/panel/plugins/custom_sql.php:283
 msgid "Please configure options at the Settings tab"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:248
+#: include/panel/plugins/custom_sql.php:280
 msgid "Please configure options at the Sub-category tab"
+msgstr ""
+
+#: www/event_viewer/configure_event_viewer.php:62
+msgid "Please configure settings for group"
 msgstr ""
 
 #: include/ossim_error.inc:213
 msgid "Please enter a valid username"
+msgstr ""
+
+#: include/panel/Ajax_Panel.php:288
+msgid ""
+"Please enter code which will provide the metric which we'll compare against."
+msgstr ""
+
+#: www/vulnmeter/scheduler.php:45
+msgid ""
+"Please ignore this warning in case frameworkd is running on another host."
 msgstr ""
 
 #: include/ossim_error.inc:306
@@ -4477,15 +4790,18 @@ msgid "Please introduce the net argument in nmap"
 msgstr ""
 
 # ntop/session.php:21
-#: include/panel/Ajax_Panel.php:171 include/panel/Ajax_Panel.php:238
-#: include/panel/Ajax_Panel.php:246 include/panel/Ajax_Panel.php:254
+#: include/panel/Ajax_Panel.php:217 include/panel/Ajax_Panel.php:313
+#: include/panel/Ajax_Panel.php:321 include/panel/Ajax_Panel.php:329
 #, fuzzy
 msgid "Please select a category first"
 msgstr "SVP, choisissez une sonde"
 
+#: www/event_viewer/configure_event_viewer.php:67
+msgid "Please specify at least one group"
+msgstr ""
+
 # vulnmeter/index.php:63
-#: www/vulnmeter/index.php:51 www/vulnmeter2/index.old.php:45
-#: www/vulnmeter2/index.php:45
+#: www/vulnmeter/index.php:51
 #, fuzzy
 msgid "Please update scan"
 msgstr "Mettre à jour le scan"
@@ -4509,13 +4825,13 @@ msgstr ""
 msgid "Please, select the network you want to scan:"
 msgstr "Sélectionnez le réseau à scanner :"
 
-#: include/panel/plugins/custom_sql.php:90
+#: include/panel/plugins/custom_sql.php:100
 msgid "Plot Shadow"
 msgstr ""
 
 # conf/pluginsid.php:42 sensor/sensor_plugins.php:117
-#: www/conf/pluginsid.php:51 www/sensor/sensor_plugins.php:142
-#: www/vulnmeter/scheduler.php:41
+#: www/conf/pluginsid.php:51 www/sensor/sensor_plugins.php:143
+#: www/vulnmeter/scheduler.php:54
 msgid "Plugin"
 msgstr ""
 
@@ -4525,20 +4841,20 @@ msgstr ""
 msgid "Plugin Group"
 msgstr "Id Plugin"
 
-#: www/policy/modifypolicy.php:168 www/policy/newpolicy.php:162
+#: www/policy/modifypolicy.php:170 www/policy/newpolicy.php:164
 msgid "Plugin Group ID"
 msgstr ""
 
 # top.php:69
 #: www/policy/modifyplugingroupsform.php:47
 #: www/policy/modifypolicyform.php:315 www/policy/newpolicyform.php:224
-#: www/policy/plugingroups.php:25 www/top.php:241
+#: www/policy/plugingroups.php:25 www/top.php:247
 #, fuzzy
 msgid "Plugin Groups"
 msgstr "Plugins"
 
 # directives/directive.php:82
-#: www/directives/directive.php:97 www/vulnmeter/scheduler.php:120
+#: www/directives/directive.php:97 www/vulnmeter/scheduler.php:133
 msgid "Plugin ID"
 msgstr ""
 
@@ -4586,10 +4902,22 @@ msgid "Plugin sid"
 msgstr "Sid Plugin"
 
 # top.php:69
-#: www/response/newresponseform.php:260 www/response/response.php:33
-#: www/top.php:279
+#: www/response/newresponseform.php:259 www/response/response.php:33
+#: www/top.php:285
 msgid "Plugins"
 msgstr "Plugins"
+
+#: include/panel/plugins/custom_sql.php:174
+msgid "Point Options"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:89
+msgid "Points"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:178
+msgid "Points / Radar Legend"
+msgstr ""
 
 # policy/policy.php:15 top.php:33 top.php:56
 #: www/policy/policy.php:15 www/top.php:51 www/top.php:186
@@ -4602,19 +4930,19 @@ msgid "Policy deleted"
 msgstr "Police effacée"
 
 # policy/policy.php:15 top.php:33 top.php:56
-#: www/netscan/scan_db.php:52 www/policy/deletepolicy.php:21
-#: www/policy/modifypolicy.php:42 www/policy/modifypolicyform.php:31
+#: www/netscan/scan_db.php:61 www/policy/deletepolicy.php:21
+#: www/policy/modifypolicy.php:44 www/policy/modifypolicyform.php:31
 #, fuzzy
 msgid "Policy id"
 msgstr "Police"
 
 # policy/newpolicy.php:128
-#: www/policy/newpolicy.php:247
+#: www/policy/newpolicy.php:251
 msgid "Policy succesfully inserted"
 msgstr "Police insérée avec succès"
 
 # policy/modifypolicy.php:136
-#: www/policy/modifypolicy.php:255
+#: www/policy/modifypolicy.php:258
 msgid "Policy succesfully updated"
 msgstr "Police mise à jour avec succès"
 
@@ -4626,7 +4954,7 @@ msgstr "Police mise à jour avec succès"
 #: www/incidents/newincident.php:326 www/incidents/newincident.php:378
 #: www/port/modifyport.php:44 www/port/newport.php:42
 #: www/sensor/modifysensorform.php:98 www/sensor/newsensorform.php:61
-#: www/sensor/sensor.php:65 www/server/modifyserverform.php:63
+#: www/sensor/sensor.php:65 www/server/modifyserverform.php:62
 #: www/server/newserverform.php:47 www/server/server.php:86
 msgid "Port"
 msgstr "Port"
@@ -4688,7 +5016,7 @@ msgstr "Vers le port"
 # port/newportform.php:25 port/port.php:15 port/port.php:30 top.php:61
 #: www/policy/modifypolicyform.php:244 www/policy/newpolicyform.php:175
 #: www/port/modifyportform.php:52 www/port/newportform.php:25
-#: www/port/port.php:15 www/port/port.php:39 www/top.php:225
+#: www/port/port.php:15 www/port/port.php:39 www/top.php:231
 msgid "Ports"
 msgstr "Ports"
 
@@ -4697,13 +5025,17 @@ msgstr "Ports"
 msgid "Portscan/scan"
 msgstr "Scan/scan de port"
 
+#: www/report/graphs/sec_therm.php:122
+msgid "Precaution"
+msgstr ""
+
 # conf/pluginref.php:53 control_panel/alarm_console.php:103
 # control_panel/backlog.php:71
-#: www/conf/pluginref.php:66 www/control_panel/alarm_console.php:209
+#: www/conf/pluginref.php:66 www/control_panel/alarm_console.php:214
 #: www/control_panel/backlog.php:92 www/control_panel/mac.php:136
-#: www/control_panel/mac.php:316 www/control_panel/os.php:135
-#: www/control_panel/os.php:320 www/control_panel/services.php:139
-#: www/control_panel/services.php:328 www/userlog/user_action_log.php:161
+#: www/control_panel/mac.php:318 www/control_panel/os.php:135
+#: www/control_panel/os.php:323 www/control_panel/services.php:139
+#: www/control_panel/services.php:330 www/userlog/user_action_log.php:161
 #, php-format
 msgid "Prev %d"
 msgstr "%d précédentes"
@@ -4756,10 +5088,8 @@ msgstr "OS précédent"
 #: www/directives/directive.php:488 www/incidents/incident.php:48
 #: www/incidents/incident.php:338 www/incidents/incident.php:412
 #: www/incidents/index.php:119 www/incidents/index.php:262
-#: www/incidents/newincident.php:140 www/net/modifynet.php:33
-#: www/net/modifynetform.php:61 www/net/newnet.php:33
-#: www/net/newnetform.php:45 www/policy/modifypolicy.php:35
-#: www/policy/modifypolicyform.php:286 www/policy/newpolicy.php:34
+#: www/incidents/newincident.php:140 www/policy/modifypolicy.php:36
+#: www/policy/modifypolicyform.php:286 www/policy/newpolicy.php:35
 #: www/policy/newpolicyform.php:209 www/policy/policy.php:32
 #: www/report/pdfreportform.php:224 www/rrd_conf/modify_rrd_conf_form.php:116
 #: www/rrd_conf/new_rrd_conf_form.php:45 www/sensor/modifysensor.php:30
@@ -4822,7 +5152,7 @@ msgstr "Protocol"
 msgid "Protocols"
 msgstr "Protocols"
 
-#: www/control_panel/alarm_console.php:509
+#: www/control_panel/alarm_console.php:522
 msgid "Purge orphaned events"
 msgstr ""
 
@@ -4831,8 +5161,8 @@ msgstr ""
 msgid "Qualify"
 msgstr ""
 
-#: www/policy/modifypolicyform.php:728 www/policy/newpolicyform.php:452
-#: www/server/modifyserverform.php:92 www/server/newserverform.php:73
+#: www/policy/modifypolicyform.php:729 www/policy/newpolicyform.php:454
+#: www/server/modifyserverform.php:91 www/server/newserverform.php:73
 msgid "Qualify events"
 msgstr ""
 
@@ -4848,7 +5178,7 @@ msgid "RRD Anomalies"
 msgstr "Anomalies RRD"
 
 # rrd_conf/rrd_conf.php:15 top.php:70
-#: www/rrd_conf/rrd_conf.php:15 www/top.php:285
+#: www/rrd_conf/rrd_conf.php:15 www/top.php:291
 msgid "RRD Config"
 msgstr "Configuration RRD"
 
@@ -4864,10 +5194,11 @@ msgstr "Configuration de RRD (graphisme)"
 
 # host/modifyhostform.php:99 host/newhostform.php:91 net/modifynetform.php:94
 # net/newnetform.php:72
-#: www/host/host.php:59 www/host/modifyhostform.php:112
-#: www/host/newhostform.php:112 www/net/modifynetform.php:98
-#: www/net/modifynetgroupform.php:110 www/net/net.php:82
-#: www/net/netgroup.php:67 www/net/newnetform.php:72
+#: www/host/host.php:59 www/host/hostgroup.php:52
+#: www/host/modifyhostform.php:112 www/host/modifyhostgroupform.php:110
+#: www/host/newhostform.php:112 www/host/newhostgroupform.php:126
+#: www/net/modifynetform.php:98 www/net/modifynetgroupform.php:110
+#: www/net/net.php:82 www/net/netgroup.php:67 www/net/newnetform.php:72
 #: www/net/newnetgroupform.php:89
 msgid "RRD Profile"
 msgstr "Profil RRD"
@@ -4895,8 +5226,20 @@ msgstr "Profil RRD"
 msgid "RRD profile deleted"
 msgstr "Profil RRD effacé"
 
+#: include/panel/plugins/rss.php:15
+msgid "RSS Feed"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:90
+msgid "Radar"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:183
+msgid "Radar Options"
+msgstr ""
+
 # control_panel/alerts.php:59
-#: include/panel/plugins/custom_sql.php:209
+#: include/panel/plugins/custom_sql.php:241
 #, fuzzy
 msgid "Raised"
 msgstr "Risque"
@@ -4920,11 +5263,11 @@ msgstr "Référence id"
 msgid "Reference sid"
 msgstr "Référence sid"
 
-#: include/panel/plugins/custom_sql.php:207
+#: include/panel/plugins/custom_sql.php:239
 msgid "Reflection Left"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:208
+#: include/panel/plugins/custom_sql.php:240
 msgid "Reflection Right"
 msgstr ""
 
@@ -4999,6 +5342,16 @@ msgstr ""
 msgid "Report Type"
 msgstr "Rapports"
 
+#: www/vulnmeter/report_form.php:79
+msgid "Report successfully created, please reload page."
+msgstr ""
+
+# top.php:31
+#: www/vulnmeter/report_form.php:107
+#, fuzzy
+msgid "Report title"
+msgstr "Rapports"
+
 # top.php:31
 #: www/report/graphs/attack_graph.php:12
 #: www/report/graphs/events_received_graph.php:10
@@ -5014,7 +5367,7 @@ msgid "Reporting"
 msgstr "Rapports"
 
 # top.php:31
-#: www/top.php:48
+#: www/top.php:48 www/vulnmeter/index.php:149 www/vulnmeter/report.php:59
 msgid "Reports"
 msgstr "Rapports"
 
@@ -5039,19 +5392,19 @@ msgstr "Alarmes"
 msgid "Resend Events"
 msgstr ""
 
-#: www/policy/modifypolicyform.php:735 www/policy/newpolicyform.php:459
-#: www/server/modifyserverform.php:99 www/server/newserverform.php:80
+#: www/policy/modifypolicyform.php:736 www/policy/newpolicyform.php:461
+#: www/server/modifyserverform.php:98 www/server/newserverform.php:80
 #, fuzzy
 msgid "Resend alarms"
 msgstr "Effacer TOUTES les alarmes"
 
-#: www/policy/modifypolicyform.php:742 www/policy/newpolicyform.php:466
-#: www/server/modifyserverform.php:106 www/server/newserverform.php:87
+#: www/policy/modifypolicyform.php:743 www/policy/newpolicyform.php:468
+#: www/server/modifyserverform.php:105 www/server/newserverform.php:87
 msgid "Resend events"
 msgstr ""
 
 # policy/modifypolicyform.php:144 policy/policy.php:28
-#: www/vulnmeter/do_nessus.php:291 www/vulnmeter2/do_nessus.php:226
+#: www/vulnmeter/do_nessus.php:290
 #, fuzzy
 msgid "Reset"
 msgstr "Dest"
@@ -5062,7 +5415,7 @@ msgid "Reset completed"
 msgstr "Remise à zero terminée"
 
 # directives/directive.php:285 directives/directive.php:295
-#: www/conf/main.php:334
+#: www/conf/main.php:366
 #, fuzzy
 msgid "Reset default values"
 msgstr "Valeur par défaut"
@@ -5089,7 +5442,7 @@ msgid "Response id is required"
 msgstr ""
 
 # top.php:31
-#: www/response/response.php:23 www/top.php:236
+#: www/response/response.php:23 www/top.php:242
 msgid "Responses"
 msgstr ""
 
@@ -5099,11 +5452,23 @@ msgstr ""
 msgid "Responsibles"
 msgstr ""
 
-#: www/vulnmeter/handle_scan.php:40 www/vulnmeter2/handle_scan.php:40
+#: www/vulnmeter/handle_scan.php:40
 msgid "Restoring"
 msgstr ""
 
-#: www/netscan/scan_db.php:25
+#: include/panel/plugins/metrics.php:45
+msgid "Restrict to this tab's panels?"
+msgstr ""
+
+#: www/netscan/scan_db.php:30
+msgid "Return to Scan Results page"
+msgstr ""
+
+#: www/panel/panel.php:81
+msgid "Return to executive panel"
+msgstr ""
+
+#: www/netscan/scan_db.php:33
 msgid "Return to host's policy"
 msgstr "Retour à la police de l'hôte"
 
@@ -5115,7 +5480,7 @@ msgstr "Re-taper le nouveau mot de passe"
 # control_panel/alerts.php:59
 #: www/business_processes/bp_list.php:30
 #: www/business_processes/bp_list.php:145
-#: www/control_panel/alarm_console.php:236 www/control_panel/events.php:70
+#: www/control_panel/alarm_console.php:241 www/control_panel/events.php:70
 #: www/incidents/newincident.php:390 www/report/sec_report.php:343
 msgid "Risk"
 msgstr "Risque"
@@ -5123,17 +5488,17 @@ msgstr "Risque"
 # conf/plugin.php:8 conf/pluginref.php:8 conf/pluginsid.php:8
 # conf/pluginupdate.php:3 control_panel/global_score.php:142
 # riskmeter/index.php:8 riskmeter/index.php:16 top.php:54
-#: www/conf/pluginupdate.php:3 www/control_panel/global_score.php:905
+#: www/conf/pluginupdate.php:3 www/control_panel/global_score.php:917
 #: www/riskmeter/index.php:28 www/top.php:156
 msgid "Riskmeter"
 msgstr "Risquéval"
 
-#: include/panel/plugins/custom_sql.php:101
+#: include/panel/plugins/custom_sql.php:111
 msgid "Rows"
 msgstr ""
 
 # top.php:74
-#: www/top.php:321
+#: www/top.php:327
 msgid "Rule Viewer"
 msgstr "Visionneuse de règles"
 
@@ -5160,16 +5525,21 @@ msgstr ""
 msgid "Russian"
 msgstr ""
 
+#: www/host/modifyhostform.php:248 www/host/newhostform.php:219
+msgid "SGI IRIX"
+msgstr ""
+
 # sensor/editsensor.php:739
 #: www/sensor/editsensor.php:752
 msgid "SPADEDIR"
 msgstr "SPADEDIR"
 
-#: www/panel/custom_graph.php:49
+#: www/panel/custom_graph.php:49 www/panel/panel.php:109
+#: include/panel/plugins/metrics.php:114
 msgid "SQL Query invalid due security reasons"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:61
+#: include/panel/Ajax_Panel.php:289 include/panel/plugins/custom_sql.php:64
 msgid "SQL code"
 msgstr ""
 
@@ -5187,12 +5557,19 @@ msgstr "IP SRC"
 msgid "SRC Ports"
 msgstr "Ports SRC"
 
-#: www/vulnmeter/scheduler.php:229
+# control_panel/alarm_console.php:16 report/menu.php:48
+# report/pdfreportform.php:118 top.php:40
+#: www/host/modifyhostform.php:243 www/host/newhostform.php:214
+#, fuzzy
+msgid "SUN Solaris"
+msgstr "Alarmes"
+
+#: www/vulnmeter/scheduler.php:278
 msgid "Sample would scan the 13th of each month, at 03:00"
 msgstr ""
 
 # top.php:73
-#: include/panel/plugins/custom_sql.php:117
+#: include/panel/plugins/custom_sql.php:127
 #, fuzzy
 msgid "Sand"
 msgstr "Scan"
@@ -5223,8 +5600,6 @@ msgstr "Remise à zero terminée"
 
 # host/host.php:61
 #: www/vulnmeter/handle_scan.php:25 www/vulnmeter/index.php:33
-#: www/vulnmeter2/handle_scan.php:25 www/vulnmeter2/index.old.php:27
-#: www/vulnmeter2/index.php:27
 #, fuzzy
 msgid "Scan date"
 msgstr "Type de scan"
@@ -5234,7 +5609,7 @@ msgid "Scan not started"
 msgstr ""
 
 # top.php:73
-#: www/vulnmeter/scheduler.php:151
+#: www/vulnmeter/scheduler.php:164
 #, fuzzy
 msgid "Scan now"
 msgstr "Scan"
@@ -5250,13 +5625,13 @@ msgstr "Options de scan"
 # incidents/incident.php:373 incidents/incident.php:459
 # incidents/index.php:95 incidents/index.php:212
 # sensor/sensor_plugins.php:118
-#: www/vulnmeter/do_nessus.php:248 www/vulnmeter2/do_nessus.php:183
+#: www/vulnmeter/do_nessus.php:247
 #, fuzzy
 msgid "Scan status:"
 msgstr "Statut"
 
 # sensor/modifysensor.php:50
-#: www/vulnmeter/do_nessus.php:280 www/vulnmeter2/do_nessus.php:215
+#: www/vulnmeter/do_nessus.php:279
 #, fuzzy
 msgid "Scan succesfully completed."
 msgstr "Sonde mise à jour avec succès"
@@ -5275,14 +5650,17 @@ msgstr "Type de scan"
 
 # host/modifyhostform.php:198 host/newhostform.php:173
 # net/modifynetform.php:185 net/newnetform.php:148
-#: www/vulnmeter/index.php:220
+#: www/vulnmeter/index.php:222
 #, fuzzy
-msgid "Scanned Hosts:"
+msgid "Scanned Hosts"
 msgstr "Options de scan"
 
-#: www/vulnmeter/index.php:221
-msgid "Scanned Nets:"
-msgstr ""
+# host/modifyhostform.php:198 host/newhostform.php:173
+# net/modifynetform.php:185 net/newnetform.php:148
+#: www/vulnmeter/index.php:223
+#, fuzzy
+msgid "Scanned Nets"
+msgstr "Options de scan"
 
 # net/modifynetform.php:15
 #: www/netscan/do_scan.php:34
@@ -5290,7 +5668,7 @@ msgstr ""
 msgid "Scanning network"
 msgstr "Modifier le réseau"
 
-#: www/vulnmeter/index.php:232 www/vulnmeter/index.php:233
+#: www/vulnmeter/index.php:234 www/vulnmeter/index.php:235
 msgid "Scans older than"
 msgstr ""
 
@@ -5299,13 +5677,19 @@ msgstr ""
 msgid "Scantype"
 msgstr "Type de scan"
 
-#: www/vulnmeter/index.php:150
+#: www/vulnmeter/index.php:152
 msgid "Schedule scans"
 msgstr ""
 
 #: www/nagios/menu.php:127
 msgid "Scheduling Queue"
 msgstr ""
+
+# report/inventory.php:170
+#: www/vulnmeter/scheduler.php:18
+#, fuzzy
+msgid "Scheduling information"
+msgstr "Information de Port / Service"
 
 # host/host.php:150
 #: www/business_processes/asset_list.php:63 www/host/host.php:158
@@ -5347,7 +5731,7 @@ msgstr "Rapport de sécurité"
 #: www/session/modifyuserform.php:186 www/session/modifyuserform.php:191
 #: www/session/newuserform.php:124 www/session/newuserform.php:143
 #: www/session/newuserform.php:162 www/vulnmeter/do_nessus.php:115
-#: www/vulnmeter/scheduler.php:196 www/vulnmeter2/do_nessus.php:73
+#: www/vulnmeter/scheduler.php:242
 msgid "Select / Unselect all"
 msgstr ""
 
@@ -5355,12 +5739,11 @@ msgstr ""
 msgid "Select a TAG to see its meaning"
 msgstr ""
 
-#: www/action/newactionform.php:190
+#: www/action/newactionform.php:192
 msgid "Select an action type"
 msgstr ""
 
-#: www/vulnmeter/do_nessus.php:79 www/vulnmeter/scheduler.php:190
-#: www/vulnmeter2/do_nessus.php:67
+#: www/vulnmeter/do_nessus.php:79 www/vulnmeter/scheduler.php:203
 msgid "Select sensors for this scan"
 msgstr ""
 
@@ -5371,7 +5754,7 @@ msgid "Self explaining"
 msgstr ""
 
 # control_panel/alarm_console.php:131
-#: www/control_panel/alarm_console.php:237 www/control_panel/anomalies.php:222
+#: www/control_panel/alarm_console.php:242 www/control_panel/anomalies.php:222
 #: www/control_panel/anomalies.php:334 www/control_panel/anomalies.php:446
 #: www/control_panel/handle_mac.php:38 www/control_panel/handle_mac.php:54
 #: www/control_panel/handle_os.php:38 www/control_panel/handle_os.php:54
@@ -5436,16 +5819,21 @@ msgstr "Sonde mise à jour avec succès"
 # net/modifynetform.php:143 net/net.php:65 net/newnetform.php:113
 # policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
 # sensor/sensor_plugins.php:15 top.php:53 top.php:59
-#: www/host/host.php:68 www/host/modifyhostform.php:168
-#: www/host/newhostform.php:159 www/net/modifynetform.php:147
-#: www/net/net.php:91 www/net/newnetform.php:113
+#: www/host/host.php:68 www/host/hostgroup.php:53
+#: www/host/modifyhostform.php:168 www/host/modifyhostgroupform.php:140
+#: www/host/newhostform.php:159 www/host/newhostgroupform.php:90
+#: www/net/modifynetform.php:147 www/net/net.php:91 www/net/newnetform.php:113
 #: www/policy/modifypolicyform.php:345 www/policy/newpolicyform.php:242
-#: www/policy/policy.php:35 www/response/newresponseform.php:257
+#: www/policy/policy.php:35 www/response/newresponseform.php:256
 #: www/response/response.php:32 www/sensor/sensor.php:15
 #: www/sensor/sensor_plugins.php:15 www/setup/ossim_acl.php:33 www/top.php:178
-#: www/top.php:211 www/vulnmeter/scheduler.php:126
+#: www/top.php:217 www/vulnmeter/scheduler.php:139
 msgid "Sensors"
 msgstr "Sondes"
+
+#: include/panel/plugins/metrics.php:40
+msgid "Separate by tab names?"
+msgstr ""
 
 # conf/main.php:23
 #: www/conf/main.php:35
@@ -5491,7 +5879,7 @@ msgid "Server succesfully updated"
 msgstr "Sonde mise à jour avec succès"
 
 # conf/main.php:23
-#: www/server/server.php:15 www/top.php:218
+#: www/server/server.php:15 www/top.php:224
 #, fuzzy
 msgid "Servers"
 msgstr "Serveur"
@@ -5499,7 +5887,7 @@ msgstr "Serveur"
 # port/newsingleportform.php:36 report/inventory.php:190
 # report/sec_report.php:407
 #: www/port/newsingleport.php:27 www/port/newsingleportform.php:36
-#: www/report/inventory.php:194 www/report/sec_report.php:471
+#: www/report/inventory.php:197 www/report/sec_report.php:471
 msgid "Service"
 msgstr "Service"
 
@@ -5515,7 +5903,7 @@ msgid "Service Detail"
 msgstr ""
 
 # control_panel/global_score.php:143
-#: www/control_panel/global_score.php:906
+#: www/control_panel/global_score.php:918 www/control_panel/show_image.php:58
 msgid "Service Level"
 msgstr "Niveau de service"
 
@@ -5530,13 +5918,17 @@ msgstr ""
 msgid "Service [Version]"
 msgstr "Services"
 
+#: www/report/graphs/draw_rrd.php:161
+msgid "Service level"
+msgstr ""
+
 # ntop/menu.php:142
 #: www/ntop/menu.php:181
 msgid "Service statistic"
 msgstr "Statistique des services"
 
 # ntop/menu.php:125
-#: www/incidents/index.php:334 www/netscan/scan_util.php:66
+#: www/incidents/index.php:336 www/netscan/scan_util.php:66
 #: www/ntop/menu.php:168
 msgid "Services"
 msgstr "Services"
@@ -5546,37 +5938,58 @@ msgstr "Services"
 msgid "Session"
 msgstr "Session"
 
+#: include/panel/plugins/maps.php:77
+msgid ""
+"Set 'Show controls' to yes and press 'Update Output' for zoom and lat/lon "
+"information"
+msgstr ""
+
 #: www/setup/ossim_acl.php:15
 msgid "Setting up domain access"
 msgstr ""
 
-#: www/panel/window_panel.php:236
+#: www/panel/window_panel.php:300
 msgid "Settings"
+msgstr ""
+
+#: www/conf/main.php:305
+msgid "Setup main login methods"
 msgstr ""
 
 # control_panel/mac.php:30
 #: www/control_panel/mac.php:81 www/control_panel/os.php:80
 #: www/control_panel/services.php:84 www/control_panel/show_image.php:50
-#: www/control_panel/show_image.php:53 www/vulnmeter/index.php:217
-#: www/vulnmeter2/index.old.php:148 www/vulnmeter2/index.php:173
+#: www/control_panel/show_image.php:53 www/control_panel/show_image.php:56
+#: www/vulnmeter/index.php:219 www/vulnmeter/report.php:80
 #, fuzzy
 msgid "Show"
 msgstr "Montrer 10"
 
-#: www/vulnmeter/index.php:149 www/vulnmeter2/index.php:123
+#: www/report/inventory.php:190
+msgid "Show active view"
+msgstr ""
+
+#: www/vulnmeter/index.php:151
 msgid "Show aggregated scans"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:169
+#: include/panel/plugins/maps.php:70
+msgid "Show controls"
+msgstr ""
+
+#: www/report/inventory.php:179
+msgid "Show passive view"
+msgstr ""
+
+#: include/panel/plugins/custom_sql.php:201
 msgid "Show values"
 msgstr ""
 
-#: www/vulnmeter/index.php:162 www/vulnmeter2/index.php:135
+#: www/vulnmeter/index.php:164
 msgid "Showing aggregated scans"
 msgstr ""
 
-#: www/vulnmeter/index.php:158 www/vulnmeter2/index.old.php:113
-#: www/vulnmeter2/index.php:131
+#: www/vulnmeter/index.php:160
 msgid "Showing date:"
 msgstr ""
 
@@ -5593,7 +6006,7 @@ msgid "Showing only anomalies, click here to see the complete services list"
 msgstr ""
 
 # policy/policy.php:34
-#: www/vulnmeter/index.php:389
+#: www/vulnmeter/index.php:391
 #, fuzzy
 msgid "Showing top"
 msgstr "Groupe de sig"
@@ -5639,7 +6052,7 @@ msgid "Simplified Chinese"
 msgstr "Chinois simplifié"
 
 # control_panel/alarm_console.php:132
-#: www/control_panel/alarm_console.php:238
+#: www/control_panel/alarm_console.php:243
 msgid "Since"
 msgstr "Depuis"
 
@@ -5695,16 +6108,9 @@ msgstr ""
 msgid "Socket_create() failed: reason"
 msgstr "socket_create() a échoué: raison: %s\n"
 
-# control_panel/alarm_console.php:16 report/menu.php:48
-# report/pdfreportform.php:118 top.php:40
-#: www/host/modifyhostform.php:294 www/host/newhostform.php:231
-#, fuzzy
-msgid "Solaris"
-msgstr "Alarmes"
-
 # control_panel/alerts.php:61 incidents/incident.php:264
 # policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
-#: www/control_panel/alarm_console.php:246 www/control_panel/events.php:72
+#: www/control_panel/alarm_console.php:251 www/control_panel/events.php:72
 #: www/policy/modifypolicyform.php:53 www/policy/newpolicyform.php:37
 #: www/policy/policy.php:27 www/report/menu.php:68
 #: www/response/response.php:28
@@ -5712,14 +6118,14 @@ msgid "Source"
 msgstr "Source"
 
 # report/menu.php:52
-#: www/response/newresponseform.php:254
+#: www/response/newresponseform.php:253
 #, fuzzy
 msgid "Source Hosts"
 msgstr "Source ou dest"
 
 # control_panel/alerts.php:61 incidents/incident.php:264
 # policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
-#: www/event_viewer/index.php:49
+#: www/event_viewer/index.php:143
 #, fuzzy
 msgid "Source IP"
 msgstr "Source"
@@ -5736,13 +6142,13 @@ msgid "Source Ips"
 msgstr ""
 
 # report/menu.php:52
-#: www/response/newresponseform.php:253
+#: www/response/newresponseform.php:252
 #, fuzzy
 msgid "Source Nets"
 msgstr "Source ou dest"
 
 # incidents/incident.php:278
-#: www/incidents/newincident.php:180 www/response/newresponseform.php:258
+#: www/incidents/newincident.php:180 www/response/newresponseform.php:257
 #: www/response/response.php:30
 msgid "Source Ports"
 msgstr ""
@@ -5762,7 +6168,7 @@ msgstr "Configuration de Spade"
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: www/vulnmeter/scheduler.php:233
+#: www/vulnmeter/scheduler.php:282
 msgid "Specify your scheduling information using crontab-like syntax"
 msgstr ""
 
@@ -5774,7 +6180,7 @@ msgstr ""
 msgid "Start of related events"
 msgstr ""
 
-#: www/report/graphs/draw_rrd.php:58
+#: www/control_panel/find_peaks.php:19 www/report/graphs/draw_rrd.php:58
 msgid "Start param"
 msgstr ""
 
@@ -5789,12 +6195,12 @@ msgstr ""
 # incidents/incident.php:373 incidents/incident.php:459
 # incidents/index.php:95 incidents/index.php:212
 # sensor/sensor_plugins.php:118
-#: www/backup/index.php:143 www/control_panel/alarm_console.php:254
+#: www/backup/index.php:143 www/control_panel/alarm_console.php:259
 #: www/incidents/incident.php:47 www/incidents/incident.php:334
 #: www/incidents/incident.php:403 www/incidents/index.php:118
-#: www/incidents/index.php:266 www/report/pdfreportform.php:223
-#: www/sensor/sensor_plugins.php:143 www/vulnmeter/do_nessus.php:31
-#: www/vulnmeter/do_nessus.php:32 www/vulnmeter2/do_nessus.php:30
+#: www/incidents/index.php:267 www/report/pdfreportform.php:223
+#: www/sensor/sensor_plugins.php:144 www/vulnmeter/do_nessus.php:31
+#: www/vulnmeter/do_nessus.php:32
 msgid "Status"
 msgstr "Statut"
 
@@ -5818,15 +6224,15 @@ msgstr ""
 
 # control_panel/alerts.php:61 incidents/incident.php:264
 # policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
-#: www/policy/modifypolicy.php:41 www/policy/newpolicy.php:40
+#: www/policy/modifypolicy.php:42 www/policy/newpolicy.php:41
 #: www/policy/policy.php:41 www/server/modifyserver.php:37
 #: www/server/newserver.php:38 www/server/server.php:95
 #, fuzzy
 msgid "Store"
 msgstr "Source"
 
-#: www/policy/modifypolicyform.php:721 www/policy/newpolicyform.php:445
-#: www/server/modifyserverform.php:85 www/server/newserverform.php:66
+#: www/policy/modifypolicyform.php:722 www/policy/newpolicyform.php:447
+#: www/server/modifyserverform.php:84 www/server/newserverform.php:66
 msgid "Store events"
 msgstr ""
 
@@ -5835,7 +6241,7 @@ msgid "String is not valid!"
 msgstr ""
 
 # conf/pluginsid.php:50 directives/directive.php:246
-#: www/panel/window_panel.php:228
+#: www/panel/window_panel.php:292
 #, fuzzy
 msgid "Sub-category"
 msgstr "Catégorie"
@@ -5849,13 +6255,13 @@ msgid "Subject:"
 msgstr ""
 
 #: www/sensor/interfaces.php:27 www/vulnmeter/do_nessus.php:142
-#: www/vulnmeter/scheduler.php:193 www/vulnmeter/scheduler.php:254
-#: www/vulnmeter2/do_nessus.php:70 www/vulnmeter2/do_nessus.php:100
+#: www/vulnmeter/report_form.php:133 www/vulnmeter/scheduler.php:239
+#: www/vulnmeter/scheduler.php:303
 msgid "Submit"
 msgstr ""
 
 # control_panel/handle_anomaly.php:60 control_panel/handle_mac.php:54
-#: www/vulnmeter/handle_scan.php:78 www/vulnmeter2/handle_scan.php:78
+#: www/vulnmeter/handle_scan.php:78
 #, fuzzy
 msgid "Successfully"
 msgstr "Accepté/effacé avec succès"
@@ -5867,7 +6273,7 @@ msgid "Successfully Acked/Deleted"
 msgstr "Accepté/effacé avec succès"
 
 # sensor/newsensor.php:50
-#: www/vulnmeter/scheduler.php:101
+#: www/vulnmeter/scheduler.php:114
 #, fuzzy
 msgid "Successfully inserted"
 msgstr "Sonde inserée avec succès"
@@ -5879,7 +6285,7 @@ msgid "Sun"
 msgstr "Sun"
 
 # host/newhostform.php:198
-#: www/host/modifyhostform.php:299 www/host/newhostform.php:233
+#: www/host/modifyhostform.php:250 www/host/newhostform.php:221
 #, fuzzy
 msgid "SunOS"
 msgstr "Sun"
@@ -5909,6 +6315,14 @@ msgstr ""
 msgid "TCP"
 msgstr "TCP"
 
+#: www/panel/panel.php:75
+msgid "Tab Name"
+msgstr ""
+
+#: www/panel/panel.php:76
+msgid "Tab icon url"
+msgstr ""
+
 # incidents/incident.php:300
 #: www/incidents/incident.php:464 www/top.php:143
 #, fuzzy
@@ -5933,6 +6347,12 @@ msgstr "Cible"
 #: www/incidents/newincident.php:205
 msgid "Target (net, ip, etc)"
 msgstr ""
+
+# incidents/incident.php:300
+#: www/policy/modifypolicy.php:43 www/policy/newpolicy.php:42
+#, fuzzy
+msgid "Target any"
+msgstr "Cible"
 
 # incidents/incident.php:300
 #: www/policy/modifypolicyform.php:615 www/policy/newpolicyform.php:368
@@ -6087,7 +6507,7 @@ msgid "There are no defined actions"
 msgstr ""
 
 # sensor/sensor_plugins.php:46
-#: www/sensor/sensor_plugins.php:52
+#: www/sensor/sensor_plugins.php:53
 msgid "There aren't any sensors connected to OSSIM server"
 msgstr "Il n'y a aucune sonde connectée au serveur OSSIM"
 
@@ -6160,7 +6580,8 @@ msgstr "Seuil"
 
 # host/modifyhostform.php:93 host/newhostform.php:84 net/modifynetform.php:88
 # net/newnetform.php:65
-#: www/host/modifyhostform.php:106 www/host/newhostform.php:105
+#: www/host/modifyhostform.php:106 www/host/modifyhostgroupform.php:104
+#: www/host/newhostform.php:105 www/host/newhostgroupform.php:82
 #: www/net/modifynetform.php:92 www/net/modifynetgroupform.php:104
 #: www/net/newnetform.php:65 www/net/newnetgroupform.php:82
 msgid "Threshold A"
@@ -6168,13 +6589,14 @@ msgstr "Seuil A"
 
 # host/modifyhostform.php:87 host/newhostform.php:77 net/modifynetform.php:82
 # net/newnetform.php:58
-#: www/host/modifyhostform.php:100 www/host/newhostform.php:98
+#: www/host/modifyhostform.php:100 www/host/modifyhostgroupform.php:98
+#: www/host/newhostform.php:98 www/host/newhostgroupform.php:75
 #: www/net/modifynetform.php:86 www/net/modifynetgroupform.php:98
 #: www/net/newnetform.php:58 www/net/newnetgroupform.php:75
 msgid "Threshold C"
 msgstr "Seuil C"
 
-#: www/vulnmeter/do_nessus.php:104 www/vulnmeter/scheduler.php:51
+#: www/vulnmeter/do_nessus.php:104 www/vulnmeter/scheduler.php:64
 msgid ""
 "Threshold configuration can be found at Configuration->Main, "
 "\"vulnerability_incident_threshold\"."
@@ -6189,14 +6611,16 @@ msgstr ""
 
 # host/modifyhostform.php:93 host/newhostform.php:84 net/modifynetform.php:88
 # net/newnetform.php:65
-#: www/host/host.php:56 www/net/net.php:79 www/net/netgroup.php:64
+#: www/host/host.php:56 www/host/hostgroup.php:49 www/net/net.php:79
+#: www/net/netgroup.php:64
 #, fuzzy
 msgid "Threshold_A"
 msgstr "Seuil A"
 
 # host/modifyhostform.php:87 host/newhostform.php:77 net/modifynetform.php:82
 # net/newnetform.php:58
-#: www/host/host.php:53 www/net/net.php:76 www/net/netgroup.php:61
+#: www/host/host.php:53 www/host/hostgroup.php:46 www/net/net.php:76
+#: www/net/netgroup.php:61
 #, fuzzy
 msgid "Threshold_C"
 msgstr "Seuil C"
@@ -6255,7 +6679,7 @@ msgstr "Vers"
 msgid "To change the password for other user is not allowed"
 msgstr ""
 
-#: include/panel/Ajax_Panel.php:108
+#: include/panel/Ajax_Panel.php:140
 msgid "To fix that, execute as root the following commands"
 msgstr ""
 
@@ -6320,7 +6744,7 @@ msgid "Total Children Servers"
 msgstr ""
 
 # control_panel/alerts.php:236
-#: www/control_panel/events.php:257
+#: www/control_panel/events.php:254
 #, php-format
 msgid "Total Events: %d"
 msgstr ""
@@ -6368,8 +6792,9 @@ msgstr "Le"
 
 # conf/plugin.php:35 incidents/index.php:92
 #: www/business_processes/asset_edit.php:302 www/conf/plugin.php:44
-#: www/event_viewer/index.php:38 www/incidents/index.php:115
-#: www/incidents/index.php:265 www/report/pdfreportform.php:219
+#: www/event_viewer/index.php:132 www/incidents/incident.php:109
+#: www/incidents/index.php:115 www/incidents/index.php:266
+#: www/incidents/newincident.php:158 www/report/pdfreportform.php:219
 msgid "Type"
 msgstr ""
 
@@ -6387,7 +6812,7 @@ msgid "UDP"
 msgstr "UDP"
 
 # sensor/sensor_plugins.php:144
-#: www/sensor/sensor_plugins.php:169 www/server/server.php:47
+#: www/sensor/sensor_plugins.php:170 www/server/server.php:47
 msgid "UP"
 msgstr "OK"
 
@@ -6404,27 +6829,22 @@ msgid "Unable to load Jpgraph library"
 msgstr ""
 
 # control_panel/alerts.php:237
-#: www/control_panel/events.php:258
+#: www/control_panel/events.php:255
 #, php-format
 msgid "Unique Dst IPAddr: %d"
 msgstr "IPAddr de dst unique : %d"
 
 # control_panel/alerts.php:239
-#: www/control_panel/events.php:260
+#: www/control_panel/events.php:257
 #, php-format
 msgid "Unique Dst Ports: %d"
 msgstr "Ports de dst uniques : %d"
 
 # control_panel/alerts.php:238
-#: www/control_panel/events.php:259
+#: www/control_panel/events.php:256
 #, php-format
 msgid "Unique Types: %d"
 msgstr "Types uniques : %d"
-
-# control_panel/mac.php:73 host/newhostform.php:188
-#: www/host/modifyhostform.php:239 www/host/newhostform.php:209
-msgid "Unknown"
-msgstr "Inconnu"
 
 # control_panel/mac.php:73 host/newhostform.php:188
 #: include/ossim_error.inc:178
@@ -6438,7 +6858,7 @@ msgid "Update"
 msgstr "Mise à jour"
 
 # net/modifynet.php:15
-#: www/panel/window_panel.php:248
+#: www/panel/window_panel.php:324
 #, fuzzy
 msgid "Update Output"
 msgstr "Mise à jour du réseau"
@@ -6449,12 +6869,12 @@ msgid "Update Policy"
 msgstr "Mettre à jour la police"
 
 # vulnmeter/do_nessus.php:15
-#: www/vulnmeter/do_nessus.php:19 www/vulnmeter2/do_nessus.php:19
+#: www/vulnmeter/do_nessus.php:19
 msgid "Update Scan"
 msgstr "Mis à jour du scan"
 
 # sensor/editsensor.php:737
-#: www/conf/main.php:332 www/conf/userlog.php:37
+#: www/conf/main.php:364 www/conf/userlog.php:37
 #, fuzzy
 msgid "Update configuration"
 msgstr "Configuration de Spade"
@@ -6469,6 +6889,10 @@ msgstr "Nom de l'utilisateur de la base de données"
 #: www/host/modifyhost.php:15
 msgid "Update host"
 msgstr "Mise à jour de l'hôte"
+
+#: www/host/modifyhostgroup.php:15
+msgid "Update host group"
+msgstr ""
 
 # sensor/interfaces.php:82
 #: www/sensor/interfaces.php:82
@@ -6491,8 +6915,7 @@ msgid "Update policy"
 msgstr "Mettre à jour la police"
 
 # vulnmeter/index.php:63
-#: www/vulnmeter/index.php:148 www/vulnmeter2/index.old.php:108
-#: www/vulnmeter2/index.php:122
+#: www/vulnmeter/index.php:150
 msgid "Update scan"
 msgstr "Mettre à jour le scan"
 
@@ -6508,12 +6931,12 @@ msgid "Update server"
 msgstr "Mettre à jour la sonde"
 
 # session/users.php:63
-#: www/netscan/scan_db.php:63
+#: www/netscan/scan_db.php:73
 msgid "Updating "
 msgstr "Mise à jour "
 
 # session/users.php:63
-#: www/top.php:308
+#: www/top.php:314
 #, fuzzy
 msgid "Upgrade"
 msgstr "Mise à jour"
@@ -6523,11 +6946,11 @@ msgstr "Mise à jour"
 msgid "Usage"
 msgstr "Usage"
 
-#: www/vulnmeter/scheduler.php:240
+#: www/vulnmeter/scheduler.php:289
 msgid "Use * as wildcard"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:154
+#: include/panel/plugins/custom_sql.php:164
 msgid "Use Antialiasing"
 msgstr ""
 
@@ -6557,7 +6980,7 @@ msgid "User action logging"
 msgstr ""
 
 # session/modifyuserform.php:60 session/newuserform.php:28
-#: www/top.php:297
+#: www/top.php:303
 msgid "User action logs"
 msgstr ""
 
@@ -6587,7 +7010,7 @@ msgid "User in charge"
 msgstr ""
 
 # session/modifyuserform.php:60 session/newuserform.php:28
-#: www/top.php:333
+#: www/top.php:339
 msgid "User log"
 msgstr ""
 
@@ -6622,7 +7045,7 @@ msgid "User succesfully updated"
 msgstr "Utilisateur mis à jour avec succès"
 
 # session/users.php:15 top.php:68
-#: www/session/users.php:15 www/setup/ossim_acl.php:19 www/top.php:273
+#: www/session/users.php:15 www/setup/ossim_acl.php:19 www/top.php:279
 msgid "Users"
 msgstr "Utilisateurs"
 
@@ -6650,7 +7073,7 @@ msgstr "VLANs"
 msgid "VULNERABILITIES"
 msgstr ""
 
-#: www/host/modifyhostform.php:339 www/host/newhostform.php:275
+#: www/host/modifyhostform.php:294 www/host/newhostform.php:263
 msgid "Values marked with (*) are mandatory"
 msgstr ""
 
@@ -6660,16 +7083,20 @@ msgid "Vendor"
 msgstr "Fabricant"
 
 # report/inventory.php:191
-#: www/report/inventory.php:195 www/session/login.php:154
+#: www/report/inventory.php:198 www/session/login.php:154
 #: www/upgrade/index.php:131
 msgid "Version"
 msgstr "Version"
 
 # incidents/incident.php:314
-#: include/panel/plugins/custom_sql.php:203
+#: include/panel/plugins/custom_sql.php:235
 #, fuzzy
 msgid "Vertical"
 msgstr "Valeur de la métrique"
+
+#: www/report/graphs/sec_therm.php:119
+msgid "Very High"
+msgstr ""
 
 # directives/directive.php:250
 #: www/directives/directive.php:272
@@ -6677,7 +7104,7 @@ msgid "Virus and Worms"
 msgstr "Virus et vers"
 
 # control_panel/alerts.php:243
-#: www/control_panel/events.php:264
+#: www/control_panel/events.php:261
 msgid "Visualize alarm"
 msgstr "Visualiser les alarmes"
 
@@ -6687,7 +7114,7 @@ msgid "Vulnerabilities"
 msgstr "Vulnérabilités"
 
 # top.php:42
-#: www/incidents/index.php:141 www/incidents/index.php:341
+#: www/incidents/index.php:141 www/incidents/index.php:343
 #: www/report/pdfreportform.php:261
 #, fuzzy
 msgid "Vulnerability"
@@ -6696,10 +7123,7 @@ msgstr "Vulnérabilités"
 # report/menu.php:78 vulnmeter/index.php:8
 #: www/report/menu.php:95 www/vulnmeter/handle_scan.php:8
 #: www/vulnmeter/index.php:9 www/vulnmeter/index.php:57
-#: www/vulnmeter/index.php:59 www/vulnmeter2/handle_scan.php:8
-#: www/vulnmeter2/index.old.php:9 www/vulnmeter2/index.old.php:51
-#: www/vulnmeter2/index.old.php:53 www/vulnmeter2/index.php:9
-#: www/vulnmeter2/index.php:51 www/vulnmeter2/index.php:53
+#: www/vulnmeter/index.php:59
 msgid "Vulnmeter"
 msgstr "Vulnéramètre"
 
@@ -6708,14 +7132,14 @@ msgstr "Vulnéramètre"
 msgid "Warning"
 msgstr "Avertissement"
 
-#: www/vulnmeter/scheduler.php:182
+#: www/vulnmeter/scheduler.php:195
 msgid ""
 "Warning: scheduling two different scans for the same month, day, hour and "
 "minute will yield unexpected results."
 msgstr ""
 
 # control_panel/anomalies.php:71 control_panel/anomalies.php:132
-#: include/panel/plugins/custom_sql.php:120
+#: include/panel/plugins/custom_sql.php:130
 #, fuzzy
 msgid "Water"
 msgstr "Quoi"
@@ -6804,24 +7228,29 @@ msgstr "Quand"
 msgid "Who (Name and Email) received this email too"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:205
+#: include/panel/plugins/custom_sql.php:237
 msgid "Wide Middle Horizontal"
 msgstr ""
 
-#: include/panel/plugins/custom_sql.php:204
+#: include/panel/plugins/custom_sql.php:236
 msgid "Wide Middle Vertical"
 msgstr ""
 
+#: www/event_viewer/configure_event_viewer.php:248
+msgid "Width"
+msgstr ""
+
 # host/newhostform.php:190
-#: include/panel/Ajax_Panel.php:204
+#: include/panel/Ajax_Panel.php:250
 #, fuzzy
 msgid "Window Title"
 msgstr "Windows"
 
-# host/newhostform.php:190
-#: www/host/modifyhostform.php:304 www/host/newhostform.php:235
-msgid "Windows"
-msgstr "Windows"
+# sensor/editsensor.php:544
+#: www/event_viewer/configure_event_viewer.php:244
+#, fuzzy
+msgid "Wrap"
+msgstr "Graphique"
 
 # host/deletehost.php:20
 #: include/ossim_error.inc:247
@@ -6909,6 +7338,10 @@ msgstr "Sonde incorrecte"
 msgid "YES"
 msgstr "OUI"
 
+#: www/control_panel/alarm_console.php:159
+msgid "YY-MM-DD"
+msgstr ""
+
 # report/pdfreportform.php:100
 #: www/report/graphs/incidents_bar_graph.php:56
 #: www/report/pdfreportform.php:178
@@ -6922,15 +7355,17 @@ msgstr "Année"
 # sensor/interfaces.php:127 sensor/interfaces.php:148
 # session/deleteuser.php:36 signature/deletesignature.php:29
 #: www/conf/main.php:149 www/conf/main.php:220 www/conf/main.php:273
-#: www/conf/main.php:287 www/conf/main.php:363 www/host/deletehost.php:38
+#: www/conf/main.php:287 www/conf/main.php:310 www/conf/main.php:315
+#: www/conf/main.php:395 www/event_viewer/configure_event_viewer.php:245
+#: www/host/deletehost.php:38 www/host/deletehostgroup.php:33
 #: www/incidents/deleteincidenttype.php:43 www/net/deletenet.php:33
 #: www/net/deletenetgroup.php:33 www/policy/deletepolicy.php:31
-#: www/policy/modifypolicyform.php:709 www/policy/modifypolicyform.php:716
-#: www/policy/modifypolicyform.php:723 www/policy/modifypolicyform.php:730
-#: www/policy/modifypolicyform.php:737 www/policy/modifypolicyform.php:744
-#: www/policy/newpolicyform.php:433 www/policy/newpolicyform.php:440
-#: www/policy/newpolicyform.php:447 www/policy/newpolicyform.php:454
-#: www/policy/newpolicyform.php:461 www/policy/newpolicyform.php:468
+#: www/policy/modifypolicyform.php:710 www/policy/modifypolicyform.php:717
+#: www/policy/modifypolicyform.php:724 www/policy/modifypolicyform.php:731
+#: www/policy/modifypolicyform.php:738 www/policy/modifypolicyform.php:745
+#: www/policy/newpolicyform.php:435 www/policy/newpolicyform.php:442
+#: www/policy/newpolicyform.php:449 www/policy/newpolicyform.php:456
+#: www/policy/newpolicyform.php:463 www/policy/newpolicyform.php:470
 #: www/policy/policy.php:190 www/policy/policy.php:197
 #: www/policy/policy.php:204 www/policy/policy.php:211
 #: www/policy/policy.php:218 www/policy/policy.php:225
@@ -6938,9 +7373,9 @@ msgstr "Année"
 #: www/sensor/deletesensor.php:35 www/sensor/interfaces.php:102
 #: www/sensor/interfaces.php:108 www/sensor/interfaces.php:127
 #: www/sensor/interfaces.php:148 www/server/deleteserver.php:35
-#: www/server/modifyserverform.php:73 www/server/modifyserverform.php:80
-#: www/server/modifyserverform.php:87 www/server/modifyserverform.php:94
-#: www/server/modifyserverform.php:101 www/server/modifyserverform.php:108
+#: www/server/modifyserverform.php:72 www/server/modifyserverform.php:79
+#: www/server/modifyserverform.php:86 www/server/modifyserverform.php:93
+#: www/server/modifyserverform.php:100 www/server/modifyserverform.php:107
 #: www/server/newserverform.php:54 www/server/newserverform.php:61
 #: www/server/newserverform.php:68 www/server/newserverform.php:75
 #: www/server/newserverform.php:82 www/server/newserverform.php:89
@@ -6948,10 +7383,13 @@ msgstr "Année"
 #: www/server/server.php:163 www/server/server.php:170
 #: www/server/server.php:177 www/server/server.php:184
 #: www/session/deleteuser.php:44 www/signature/deletesignature.php:32
-#: include/panel/plugins/custom_cloud.php:55
-#: include/panel/plugins/custom_sql.php:91
-#: include/panel/plugins/custom_sql.php:155
-#: include/panel/plugins/custom_sql.php:170
+#: include/panel/Ajax_Panel.php:285 include/panel/plugins/custom_cloud.php:55
+#: include/panel/plugins/custom_sql.php:101
+#: include/panel/plugins/custom_sql.php:165
+#: include/panel/plugins/custom_sql.php:188
+#: include/panel/plugins/custom_sql.php:202
+#: include/panel/plugins/metrics.php:41 include/panel/plugins/metrics.php:46
+#: include/panel/plugins/rss.php:38
 msgid "Yes"
 msgstr "Oui"
 
@@ -6960,7 +7398,8 @@ msgid "Yes (Need SVG plugin)"
 msgstr "Oui (Module SVG requis)"
 
 # ntop/session.php:21
-#: www/host/newhost.php:80
+#: www/host/modifyhostgroup.php:58 www/host/newhost.php:80
+#: www/host/newhostgroup.php:58
 #, fuzzy
 msgid "You Need to select at least one sensor"
 msgstr "SVP, choisissez une sonde"
@@ -6971,7 +7410,7 @@ msgstr "SVP, choisissez une sonde"
 msgid "You can also use negated elements. I.e."
 msgstr "Vous pouvez aussi utiliser les éléments <<nié>>. I.e. "
 
-#: include/panel/Ajax_Panel.php:112
+#: include/panel/Ajax_Panel.php:144
 msgid ""
 "You can configure the panel configs directory at 'Configuration -> Main -> "
 "Executive Panel -> panel_configs_dir''"
@@ -7018,6 +7457,20 @@ msgid ""
 "substituted by it's matching value upon action execution"
 msgstr ""
 
+#: www/action/modifyactionform.php:160
+msgid ""
+"You can use the following keywords within any field which will be get "
+"substituted by it's matching value upon action execution\n"
+msgstr ""
+
+#: include/panel/plugins/rss.php:58
+msgid "You need 'allow_url_fopen' enabled on your php.ini for this to work"
+msgstr ""
+
+#: include/panel/plugins/rss.php:63
+msgid "You should be able to enable it issuing the following commands:"
+msgstr ""
+
 # directives/directive.php:282
 #: www/directives/directive.php:304
 msgid ""
@@ -7034,8 +7487,20 @@ msgstr ""
 msgid "Your unix server running samba gets attacked by the sasser worm"
 msgstr "Votre serveur Unix utilisant Samba est attaqué par le vers Sasser"
 
+#: include/panel/plugins/maps.php:58
+msgid "Zoom"
+msgstr ""
+
 #: www/report/graphs/draw_rrd.php:60
 msgid "Zoom parameter"
+msgstr ""
+
+#: www/report/inventory.php:176
+msgid "[Active view]"
+msgstr ""
+
+#: www/report/inventory.php:187
+msgid "[Passive view]"
 msgstr ""
 
 # sensor/editsensor.php:520
@@ -7074,13 +7539,17 @@ msgstr ""
 msgid "action_id is required"
 msgstr "Backlog ID requis"
 
+#: www/event_viewer/configure_event_viewer.php:261
+msgid "add column"
+msgstr ""
+
 # sensor/editsensor.php:470
 #: www/sensor/editsensor.php:483
 msgid "adodb"
 msgstr "adodb"
 
 # report/sec_report.php:218
-#: www/host/modifyhost.php:49 www/host/newhost.php:48
+#: www/host/modifyhost.php:51 www/host/newhost.php:48
 #, fuzzy
 msgid "alert"
 msgstr "Alerte"
@@ -7091,7 +7560,7 @@ msgid "arpwatch"
 msgstr "arpwatch"
 
 # host/modifyhostform.php:56 host/newhostform.php:58 report/report.php:38
-#: www/host/modifyhost.php:48 www/host/newhost.php:47
+#: www/host/modifyhost.php:50 www/host/newhost.php:47
 #, fuzzy
 msgid "asset"
 msgstr "Evaluation"
@@ -7100,12 +7569,24 @@ msgstr "Evaluation"
 msgid "backlog_id"
 msgstr ""
 
+# top.php:73
+#: www/event_viewer/configure_event_viewer.php:344
+#, fuzzy
+msgid "cancel"
+msgstr "Scan"
+
+# editor/rule.php:92
+#: www/event_viewer/configure_event_viewer.php:241
+#, fuzzy
+msgid "center"
+msgstr "Contenu"
+
 #: www/incidents/index.php:95
 msgid "change to "
 msgstr ""
 
 # incidents/incident.php:626 incidents/index.php:125
-#: www/control_panel/alarm_console.php:55
+#: www/control_panel/alarm_console.php:60
 #, fuzzy
 msgid "close"
 msgstr "Fermé"
@@ -7115,8 +7596,7 @@ msgid "column"
 msgstr ""
 
 # riskmeter/resetip.php:11
-#: www/vulnmeter/do_nessus.php:250 www/vulnmeter/do_nessus.php:263
-#: www/vulnmeter2/do_nessus.php:185 www/vulnmeter2/do_nessus.php:198
+#: www/vulnmeter/do_nessus.php:249 www/vulnmeter/do_nessus.php:262
 #, fuzzy
 msgid "completed."
 msgstr "Remise à zero terminée"
@@ -7125,7 +7605,7 @@ msgstr "Remise à zero terminée"
 msgid "confirm"
 msgstr ""
 
-#: www/vulnmeter/handle_scan.php:78 www/vulnmeter2/handle_scan.php:78
+#: www/vulnmeter/handle_scan.php:78
 msgid "d"
 msgstr ""
 
@@ -7136,38 +7616,39 @@ msgid "date"
 msgstr "Mise à jour"
 
 # report/anomalies.php:84
-#: www/report/anomalies.php:84 www/report/graphs/incidents_bar_graph.php:77
+#: www/report/anomalies.php:84 www/report/graphs/incidents_bar_graph.php:82
 msgid "day"
 msgstr "jour"
 
 # report/metrics.php:207
-#: www/vulnmeter/scheduler.php:237
+#: www/vulnmeter/scheduler.php:286
 #, fuzzy
 msgid "day of month"
 msgstr "Dernier mois"
 
 # report/metrics.php:204
-#: www/vulnmeter/scheduler.php:239
+#: www/vulnmeter/scheduler.php:288
 #, fuzzy
 msgid "day of week"
 msgstr "Dernière semaine"
 
 # report/anomalies.php:84
-#: www/report/graphs/incidents_bar_graph.php:77
-#: www/report/graphs/incidents_bar_graph.php:78 www/vulnmeter/index.php:232
-#: www/vulnmeter/index.php:233
+#: www/report/graphs/incidents_bar_graph.php:82
+#: www/report/graphs/incidents_bar_graph.php:83 www/vulnmeter/index.php:234
+#: www/vulnmeter/index.php:235
 #, fuzzy
 msgid "days"
 msgstr "jour"
 
 # sensor/interfaces.php:49
-#: www/control_panel/alarm_console.php:54 www/control_panel/backlog.php:35
+#: www/control_panel/alarm_console.php:59 www/control_panel/backlog.php:35
+#: www/event_viewer/configure_event_viewer.php:194
 #, fuzzy
 msgid "delete"
 msgstr "Effacé"
 
 # sensor/interfaces.php:49
-#: www/control_panel/alarm_console.php:56
+#: www/control_panel/alarm_console.php:61
 #, fuzzy
 msgid "delete_day"
 msgstr "Effacé"
@@ -7178,7 +7659,7 @@ msgid "deleted"
 msgstr "Effacé"
 
 # sensor/editsensor.php:744
-#: www/host/modifyhost.php:52 www/host/newhost.php:51
+#: www/host/modifyhost.php:54 www/host/newhost.php:51
 #: www/signature/modifysignature.php:29 www/signature/newsignature.php:27
 #, fuzzy
 msgid "descr"
@@ -7190,7 +7671,7 @@ msgid "dest"
 msgstr "dest"
 
 # control_panel/alerts.php:62 incidents/incident.php:271 report/menu.php:58
-#: www/control_panel/alarm_console.php:163
+#: www/control_panel/alarm_console.php:168
 #, fuzzy
 msgid "destination"
 msgstr "Destination"
@@ -7207,13 +7688,17 @@ msgid "directive_id"
 msgstr "Directive"
 
 # sensor/sensor_plugins.php:163
-#: www/sensor/sensor_plugins.php:194
+#: www/sensor/sensor_plugins.php:195
 msgid "disable"
 msgstr "désactiver"
 
+#: www/event_viewer/index.php:53
+msgid "display by"
+msgstr ""
+
 # sensor/editsensor.php:744
-#: www/control_panel/alarm_console.php:62
-#: www/control_panel/alarm_console.php:63 www/control_panel/backlog.php:38
+#: www/control_panel/alarm_console.php:67
+#: www/control_panel/alarm_console.php:68 www/control_panel/backlog.php:38
 #, fuzzy
 msgid "dst_ip"
 msgstr "dest"
@@ -7233,9 +7718,15 @@ msgid "edit"
 msgstr "Moyen"
 
 # sensor/sensor_plugins.php:170
-#: www/sensor/sensor_plugins.php:201
+#: www/sensor/sensor_plugins.php:202
 msgid "enable"
 msgstr "activer"
+
+# host/host.php:61
+#: www/event_viewer/index.php:50
+#, fuzzy
+msgid "end date"
+msgstr "Type de scan"
 
 #: www/control_panel/events.php:34
 msgid "event_id"
@@ -7283,12 +7774,12 @@ msgid ""
 msgstr ""
 
 # report/pdfreportform.php:68
-#: www/control_panel/alarm_console.php:72
+#: www/control_panel/alarm_console.php:77
 #, fuzzy
 msgid "field number of alarms per page"
 msgstr "Nombre d'hôte par table"
 
-#: www/vulnmeter/scheduler.php:232
+#: www/vulnmeter/scheduler.php:281
 msgid "field</th><th>allowed values"
 msgstr ""
 
@@ -7307,12 +7798,12 @@ msgid "force"
 msgstr "Source"
 
 # directives/directive.php:78
-#: www/control_panel/alarm_console.php:151
+#: www/control_panel/alarm_console.php:156
 #, fuzzy
 msgid "from"
 msgstr "De"
 
-#: www/control_panel/alarm_console.php:70
+#: www/control_panel/alarm_console.php:75
 msgid "from date"
 msgstr ""
 
@@ -7321,12 +7812,22 @@ msgstr ""
 msgid "graph"
 msgstr "Graphique"
 
-#: www/panel/panel.php:33 www/panel/window_panel.php:89
-#: www/panel/window_panel.php:109
+# policy/policy.php:34
+#: www/event_viewer/index.php:54 www/event_viewer/index.php:55
+#, fuzzy
+msgid "group id"
+msgstr "Groupe"
+
+#: www/panel/panel.php:96 www/panel/window_panel.php:153
+#: www/panel/window_panel.php:173
 msgid "help"
 msgstr ""
 
-#: www/control_panel/alarm_console.php:69 www/userlog/user_action_log.php:38
+#: www/host/modifyhostgroup.php:31 www/host/newhostgroup.php:31
+msgid "hhosts"
+msgstr ""
+
+#: www/control_panel/alarm_console.php:74 www/userlog/user_action_log.php:38
 #: www/userlog/user_action_log.php:39
 msgid "hide_closed"
 msgstr ""
@@ -7345,7 +7846,7 @@ msgstr "Info de l'hôte"
 # host/modifyhostform.php:42 host/newhostform.php:43 report/report.php:30
 # sensor/modifysensorform.php:39 sensor/newsensorform.php:25
 # sensor/sensor.php:36
-#: www/host/modifyhost.php:42 www/host/newhost.php:41
+#: www/host/modifyhost.php:44 www/host/newhost.php:41
 #, fuzzy
 msgid "hostname"
 msgstr "Nom de l'hôte"
@@ -7361,20 +7862,20 @@ msgid "hostname of the snort database server"
 msgstr "Nom d'hote du serveur hébergant la base de données Snort"
 
 # control_panel/global_score.php:405 host/host.php:15 top.php:57
-#: www/vulnmeter/index.php:389
+#: www/vulnmeter/index.php:391
 #, fuzzy
 msgid "hosts"
 msgstr "Hôtes"
 
 # report/anomalies.php:87
-#: www/vulnmeter/scheduler.php:236
+#: www/vulnmeter/scheduler.php:285
 #, fuzzy
 msgid "hour"
 msgstr "Dernière heure"
 
 # sensor/editsensor.php:520
 #: www/conf/pluginsid.php:25 www/conf/pluginupdate.php:17
-#: www/host/modifyhost.php:44 www/host/newhost.php:43
+#: www/host/modifyhost.php:46 www/host/newhost.php:43
 #: www/incidents/attachment.php:10 www/incidents/modifyincidenttype.php:24
 #: www/incidents/newincidenttype.php:24
 #, fuzzy
@@ -7386,7 +7887,7 @@ msgstr "acid"
 msgid "in order to advance one correlation level"
 msgstr ""
 
-#: www/conf/pluginref.php:26 www/control_panel/alarm_console.php:67
+#: www/conf/pluginref.php:26 www/control_panel/alarm_console.php:72
 #: www/control_panel/backlog.php:39 www/control_panel/mac.php:37
 #: www/control_panel/os.php:36 www/control_panel/services.php:39
 #: www/userlog/user_action_log.php:36
@@ -7394,7 +7895,7 @@ msgid "inf"
 msgstr ""
 
 # sensor/sensor.php:142
-#: www/host/modifyhost.php:41 www/host/newhost.php:40
+#: www/host/modifyhost.php:43 www/host/newhost.php:40
 #: www/scan/newhostscan.php:24 www/signature/modifysignature.php:26
 #: www/signature/newsignature.php:24
 #, fuzzy
@@ -7412,7 +7913,7 @@ msgstr "Interface"
 #: www/control_panel/handle_services.php:37
 #: www/control_panel/handle_services.php:54
 #: www/control_panel/show_image.php:19 www/hids/host_detail.php:27
-#: www/host/deletehost.php:23 www/host/modifyhost.php:43
+#: www/host/deletehost.php:23 www/host/modifyhost.php:45
 #: www/host/modifyhostform.php:27 www/host/newhost.php:42
 #: www/host/newhostform.php:37 www/userlog/user_action_log.php:185
 msgid "ip"
@@ -7456,6 +7957,12 @@ msgstr "Dernières 6h"
 msgid "last hour"
 msgstr "Dernière heure"
 
+# report/sec_report.php:218
+#: www/event_viewer/configure_event_viewer.php:240
+#, fuzzy
+msgid "left"
+msgstr "Alerte"
+
 #: www/directives/directive.php:52
 msgid "level"
 msgstr ""
@@ -7471,13 +7978,13 @@ msgstr "Fichier de Log"
 
 # control_panel/anomalies.php:259 host/newhostform.php:196
 # host/newhostform.php:207
-#: www/host/modifyhost.php:56 www/host/newhost.php:55
+#: www/host/modifyhost.php:58 www/host/newhost.php:55
 #, fuzzy
 msgid "mac"
 msgstr "Mac"
 
 # control_panel/mac.php:49
-#: www/host/modifyhost.php:55 www/host/newhost.php:54
+#: www/host/modifyhost.php:57 www/host/newhost.php:54
 #, fuzzy
 msgid "mac_vendor"
 msgstr "Fabricant"
@@ -7517,12 +8024,12 @@ msgstr "Seuil"
 msgid "mins"
 msgstr "Domaines"
 
-#: www/vulnmeter/scheduler.php:235
+#: www/vulnmeter/scheduler.php:284
 msgid "minute"
 msgstr ""
 
 # report/anomalies.php:82
-#: www/report/anomalies.php:82 www/vulnmeter/scheduler.php:238
+#: www/report/anomalies.php:82 www/vulnmeter/scheduler.php:287
 msgid "month"
 msgstr "mois"
 
@@ -7542,7 +8049,7 @@ msgid "n/a"
 msgstr ""
 
 # conf/main.php:260
-#: www/host/modifyhost.php:58 www/host/newhost.php:57
+#: www/host/modifyhost.php:60 www/host/newhost.php:57
 #, fuzzy
 msgid "nagios"
 msgstr "Anglais"
@@ -7554,6 +8061,7 @@ msgstr "Anglais"
 # signature/modifysignatureform.php:39 signature/newsignatureform.php:21
 # signature/signature.php:28
 #: www/conf/pluginsid.php:26 www/editor/rule.php:12
+#: www/host/deletehostgroup.php:22 www/host/modifyhostgroupform.php:28
 #: www/net/deletenetgroup.php:22 www/net/modifynetgroupform.php:28
 #: www/port/modifyport.php:26 www/port/newport.php:23
 #: www/signature/modifysignature.php:27 www/signature/newsignature.php:25
@@ -7581,11 +8089,11 @@ msgstr "Nom de la base de données Snort"
 msgid "name of the snort database user"
 msgstr "Nom de l'utilisateur de la base de données Snort"
 
-#: www/host/modifyhost.php:51 www/host/newhost.php:50
+#: www/host/modifyhost.php:53 www/host/newhost.php:50
 msgid "nat"
 msgstr ""
 
-#: www/host/modifyhost.php:57 www/host/newhost.php:56
+#: www/host/modifyhost.php:59 www/host/newhost.php:56
 msgid "nesus"
 msgstr ""
 
@@ -7621,6 +8129,10 @@ msgstr "nmap"
 msgid "nnets"
 msgstr "Réseaux"
 
+#: include/panel/plugins/maps.php:71
+msgid "no"
+msgstr ""
+
 #: www/business_processes/bp_edit.php:129
 msgid "not assigned"
 msgstr ""
@@ -7638,7 +8150,8 @@ msgid "nportse"
 msgstr "Rapports"
 
 # session/users.php:15 top.php:68
-#: www/host/modifyhost.php:47 www/host/newhost.php:46
+#: www/host/modifyhost.php:49 www/host/modifyhostgroup.php:34
+#: www/host/newhost.php:46 www/host/newhostgroup.php:34
 #, fuzzy
 msgid "nsens"
 msgstr "Utilisateurs"
@@ -7648,7 +8161,7 @@ msgstr "Utilisateurs"
 # policy/modifypolicyform.php:351 policy/policy.php:35 sensor/sensor.php:15
 # sensor/sensor_plugins.php:15 top.php:53 top.php:59
 #: www/session/modifyuser.php:35 www/session/newuser.php:35
-#: www/vulnmeter/do_nessus.php:30 www/vulnmeter2/do_nessus.php:29
+#: www/vulnmeter/do_nessus.php:30
 #, fuzzy
 msgid "nsensors"
 msgstr "Sondes"
@@ -7667,21 +8180,25 @@ msgstr "ntop"
 msgid "num"
 msgstr ""
 
+#: www/event_viewer/index.php:52
+msgid "num results"
+msgstr ""
+
 # sensor/editsensor.php:532
 #: www/sensor/editsensor.php:545
 msgid "opennms"
 msgstr "opennms"
 
-#: www/report/graphs/incidents_bar_graph.php:78
+#: www/report/graphs/incidents_bar_graph.php:83
 msgid "or more"
 msgstr ""
 
 #: www/conf/plugin.php:25 www/conf/pluginref.php:24 www/conf/pluginsid.php:24
-#: www/control_panel/alarm_console.php:53
-#: www/control_panel/alarm_console.php:68 www/control_panel/backlog.php:36
+#: www/control_panel/alarm_console.php:58
+#: www/control_panel/alarm_console.php:73 www/control_panel/backlog.php:36
 #: www/control_panel/backlog.php:40 www/control_panel/mac.php:38
 #: www/control_panel/os.php:37 www/control_panel/services.php:40
-#: www/host/host.php:28 www/host/modifyhost.php:59
+#: www/host/host.php:28 www/host/modifyhost.php:61
 #: www/rrd_conf/modify_rrd_conf_form.php:36 www/rrd_conf/rrd_conf.php:25
 #: www/scan/hostscan.php:22 www/scan/scan.php:33 www/sensor/sensor.php:27
 #: www/server/server.php:27 www/session/users.php:26
@@ -7694,7 +8211,7 @@ msgstr ""
 # control_panel/anomalies.php:194 control_panel/anomalies.php:259
 # control_panel/global_score.php:412 control_panel/global_score.php:479
 # report/sec_report.php:148 scan/hostscan.php:36 scan/scan.php:38
-#: www/host/modifyhost.php:54 www/host/newhost.php:53
+#: www/host/modifyhost.php:56 www/host/newhost.php:53
 #, fuzzy
 msgid "os"
 msgstr "Hôte"
@@ -7703,6 +8220,12 @@ msgstr "Hôte"
 #: www/sensor/editsensor.php:520
 msgid "p0f"
 msgstr "p0f"
+
+# directives/directive.php:78
+#: www/event_viewer/index.php:51
+#, fuzzy
+msgid "page from"
+msgstr "De"
 
 # sensor/editsensor.php:421
 #: www/sensor/editsensor.php:434
@@ -7725,7 +8248,7 @@ msgid "path to snort rules directory"
 msgstr "Chemin d'accès au répertoire des règles snort"
 
 # session/users.php:63
-#: www/panel/panel.php:203
+#: www/panel/panel.php:398
 #, fuzzy
 msgid "pending"
 msgstr "Mise à jour "
@@ -7742,7 +8265,7 @@ msgid "perms"
 msgstr "opennms"
 
 # rrd_conf/modify_rrd_conf_form.php:107
-#: www/host/modifyhost.php:50 www/host/newhost.php:49
+#: www/host/modifyhost.php:52 www/host/newhost.php:49
 #, fuzzy
 msgid "persistence"
 msgstr "Persistant"
@@ -7815,12 +8338,12 @@ msgstr ""
 # policy/modifypolicyform.php:144 policy/policy.php:28
 #: www/control_panel/anomalies.php:200 www/control_panel/anomalies.php:307
 #: www/control_panel/anomalies.php:417 www/control_panel/anomalies.php:537
-#: www/control_panel/mac.php:166 www/control_panel/mac.php:278
-#: www/control_panel/os.php:165 www/control_panel/os.php:282
+#: www/control_panel/mac.php:166 www/control_panel/mac.php:280
+#: www/control_panel/os.php:165 www/control_panel/os.php:285
 #: www/control_panel/rrd_anomaly.php:130 www/control_panel/rrd_global.php:129
-#: www/control_panel/services.php:169 www/control_panel/services.php:290
-#: www/host/newhostform.php:269 www/policy/modifypolicyform.php:759
-#: www/policy/newpolicyform.php:486 www/session/changepassform.php:59
+#: www/control_panel/services.php:169 www/control_panel/services.php:292
+#: www/host/newhostform.php:257 www/policy/modifypolicyform.php:773
+#: www/policy/newpolicyform.php:492 www/session/changepassform.php:59
 #: www/session/modifyuserform.php:79 www/session/modifyuserform.php:221
 #: www/session/newuserform.php:82 www/session/newuserform.php:194
 #, fuzzy
@@ -7831,8 +8354,14 @@ msgstr "Dest"
 msgid "reverse order"
 msgstr ""
 
+# incidents/index.php:134
+#: www/event_viewer/configure_event_viewer.php:242
+#, fuzzy
+msgid "right"
+msgstr "Haut"
+
 # rrd_conf/rrd_conf.php:30
-#: www/host/modifyhost.php:53 www/host/newhost.php:52
+#: www/host/modifyhost.php:55 www/host/newhost.php:52
 #, fuzzy
 msgid "rrd_profile"
 msgstr "Profile"
@@ -7842,7 +8371,7 @@ msgstr "Profile"
 msgid "rrdtool"
 msgstr "rrdtool"
 
-#: www/report/graphs/draw_rrd.php:155
+#: www/report/graphs/draw_rrd.php:167
 #, php-format
 msgid "rrdtool cmd failed with error: '%s' (exit code: %s)"
 msgstr ""
@@ -7852,8 +8381,18 @@ msgstr ""
 msgid "rrdtool lib directory"
 msgstr "Répertoire des librairies rrdtool"
 
+# report/menu.php:87
+#: www/event_viewer/configure_event_viewer.php:345
+#, fuzzy
+msgid "save"
+msgstr "Usage"
+
+#: www/event_viewer/configure_event_viewer.php:252
+msgid "save column"
+msgstr ""
+
 # sensor/sensor_plugins.php:163
-#: www/control_panel/svg_level.php:11
+#: www/control_panel/svg_level.php:12
 #, fuzzy
 msgid "scale"
 msgstr "désactiver"
@@ -7865,8 +8404,7 @@ msgid "scan"
 msgstr "Scan"
 
 # top.php:73
-#: www/vulnmeter/index.php:169 www/vulnmeter2/index.old.php:117
-#: www/vulnmeter2/index.php:142
+#: www/vulnmeter/index.php:171
 #, fuzzy
 msgid "scans"
 msgstr "Scan"
@@ -7877,7 +8415,7 @@ msgstr "Scan"
 msgid "search"
 msgstr "Cherche"
 
-#: www/control_panel/alarm_console.php:520 www/userlog/user_action_log.php:240
+#: www/control_panel/alarm_console.php:533 www/userlog/user_action_log.php:240
 msgid "seconds"
 msgstr ""
 
@@ -7890,6 +8428,12 @@ msgstr ""
 #, fuzzy
 msgid "sensors"
 msgstr "Sondes"
+
+# sensor/sensor.php:142
+#: www/event_viewer/configure_event_viewer.php:339
+#, fuzzy
+msgid "settings"
+msgstr "Insertion "
 
 #: www/control_panel/events.php:35
 msgid "show_all"
@@ -7904,7 +8448,7 @@ msgstr ""
 msgid "sid"
 msgstr ""
 
-#: www/control_panel/svg_level.php:10
+#: www/control_panel/svg_level.php:11
 msgid "sl"
 msgstr ""
 
@@ -7922,21 +8466,27 @@ msgstr "socket_create() a échoué: raison: %s\n"
 
 # control_panel/alerts.php:61 incidents/incident.php:264
 # policy/modifypolicyform.php:49 policy/policy.php:27 report/menu.php:55
-#: www/control_panel/alarm_console.php:162
+#: www/control_panel/alarm_console.php:167
 #, fuzzy
 msgid "source"
 msgstr "Source"
 
-#: www/control_panel/alarm_console.php:57
-#: www/control_panel/alarm_console.php:58 www/control_panel/backlog.php:37
+#: www/control_panel/alarm_console.php:62
+#: www/control_panel/alarm_console.php:63 www/control_panel/backlog.php:37
 msgid "src_ip"
 msgstr ""
 
 # sensor/sensor_plugins.php:154
 #: www/control_panel/event_panel.php:246 www/control_panel/show_image.php:21
-#: www/sensor/sensor_plugins.php:179
+#: www/sensor/sensor_plugins.php:180
 msgid "start"
 msgstr "Démarrer"
+
+# session/users.php:63
+#: www/event_viewer/index.php:49
+#, fuzzy
+msgid "start date"
+msgstr "Mise à jour"
 
 # sensor/editsensor.php:754
 #: www/sensor/editsensor.php:767
@@ -7944,7 +8494,7 @@ msgid "statefile"
 msgstr "Fichier d'état"
 
 # sensor/sensor_plugins.php:147
-#: www/control_panel/event_panel.php:247 www/sensor/sensor_plugins.php:172
+#: www/control_panel/event_panel.php:247 www/sensor/sensor_plugins.php:173
 msgid "stop"
 msgstr "Stop"
 
@@ -7984,41 +8534,44 @@ msgid "this would match the whole class C except"
 msgstr "Cela correspondra à l'ensemble de la classe C eet"
 
 # rrd_conf/modify_rrd_conf_form.php:91
-#: www/host/modifyhost.php:45 www/host/newhost.php:44 www/net/modifynet.php:34
-#: www/net/modifynetgroup.php:28 www/net/newnet.php:34
-#: www/net/newnetgroup.php:28
+#: www/host/modifyhost.php:47 www/host/modifyhostgroup.php:29
+#: www/host/newhost.php:44 www/host/newhostgroup.php:29
+#: www/net/modifynet.php:34 www/net/modifynetgroup.php:28
+#: www/net/newnet.php:34 www/net/newnetgroup.php:28
 #, fuzzy
 msgid "threshold_a"
 msgstr "Seuil"
 
 # rrd_conf/modify_rrd_conf_form.php:91
-#: www/host/modifyhost.php:46 www/host/newhost.php:45 www/net/modifynet.php:35
-#: www/net/modifynetgroup.php:29 www/net/newnet.php:35
-#: www/net/newnetgroup.php:29
+#: www/host/modifyhost.php:48 www/host/modifyhostgroup.php:30
+#: www/host/newhost.php:45 www/host/newhostgroup.php:30
+#: www/net/modifynet.php:35 www/net/modifynetgroup.php:29
+#: www/net/newnet.php:35 www/net/newnetgroup.php:29
 #, fuzzy
 msgid "threshold_c"
 msgstr "Seuil"
 
 # sensor/editsensor.php:526
-#: www/control_panel/alarm_console.php:153
+#: www/control_panel/alarm_console.php:158
 #, fuzzy
 msgid "to"
 msgstr "ntop"
 
 # session/users.php:63
-#: www/control_panel/alarm_console.php:71
+#: www/control_panel/alarm_console.php:76
 #, fuzzy
 msgid "to date"
 msgstr "Mise à jour"
 
 # host/host.php:61
-#: www/control_panel/show_image.php:22 www/upgrade/index.php:21
+#: www/control_panel/find_peaks.php:18 www/control_panel/show_image.php:22
+#: www/upgrade/index.php:21
 #, fuzzy
 msgid "type"
 msgstr "Type de scan"
 
 # report/inventory.php:178
-#: www/report/inventory.php:182
+#: www/report/inventory.php:183
 msgid "update"
 msgstr "Mis à jour"
 
@@ -8076,6 +8629,10 @@ msgstr "avec l'utilisateur"
 #: www/report/anomalies.php:81
 msgid "year"
 msgstr "année"
+
+#: include/panel/plugins/maps.php:72
+msgid "yes"
+msgstr ""
 
 #: www/control_panel/show_image.php:23
 msgid "zoom"
@@ -8169,6 +8726,10 @@ msgstr ""
 #~ msgid "Ocurrence"
 #~ msgstr "Ocurrence"
 
+# report/inventory.php:183
+#~ msgid "Passive"
+#~ msgstr "Passif"
+
 # directives/directive.php:69
 #~ msgid "Rules"
 #~ msgstr "Règles"
@@ -8197,9 +8758,17 @@ msgstr ""
 #~ msgid "Successfully Acked/Deleted/Ignored"
 #~ msgstr "Accepté/effacé/ignoré avec succès"
 
+# control_panel/mac.php:73 host/newhostform.php:188
+#~ msgid "Unknown"
+#~ msgstr "Inconnu"
+
 # conf/pluginupdate.php:11
 #~ msgid "Unknown plugin id - sid"
 #~ msgstr "Plugin id - sid inconnu"
+
+# host/newhostform.php:190
+#~ msgid "Windows"
+#~ msgstr "Windows"
 
 #~ msgid "of"
 #~ msgstr "de"

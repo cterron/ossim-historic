@@ -220,7 +220,12 @@ sim_container_start_temp_listen (SimContainer *container)
 
 	GList	*list;
 	
-	sim_scheduler_task_rservers (SIM_SCHEDULER_STATE_INITIAL); //we have to start the connection to the rservers here as there aren't any active conn at this moment
+	if (!sim_scheduler_task_rservers (SIM_SCHEDULER_STATE_INITIAL)) //we have to start the connection to the rservers here as there aren't any active conn at this moment
+	{
+	  g_print ("Error: I can't find any remote server to load data. May be you forget to specify it in server.xml?. If this server hasn't got DB (as it seems you specified), it needs to load data from a parent server to work.\n");
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: I can't find any remote server to load data. May be you forget to specify it in server.xml?. If this server hasn't got DB (as it seems you specified), it needs to load data from a parent server to work.");
+    exit (EXIT_FAILURE);
+	}
 
 	list = sim_server_get_sessions (ossim.server);	//here we will get just one session, the session with primary master server,
 																									//as no other sessions are stablished yet
@@ -423,8 +428,8 @@ sim_container_db_insert_host_os_ul (SimContainer  *container,
   os_esc = g_strescape (os, NULL);
    
 	//we want to insert only the hosts defined in Policy->hosts or inside a network from policy->networks
-	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
-		return;
+//	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+//		return;
   
   query = g_strdup_printf ("INSERT INTO host_os (ip, date, os, sensor, interface) VALUES (%lu, '%s', '%s', '%lu', '%s')",
 			   sim_inetaddr_ntohl (ia), date, os_esc, sim_ipchar_2_ulong (sensor), interface);
@@ -502,7 +507,7 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
   GdaValue      *value;
   gchar         *query;
   gchar         *version = NULL;
-	gchar					**m_and_v; //mac and vendor
+	gchar					**m_and_v = NULL; //mac and vendor
   gint           row;
   
   g_return_val_if_fail (container, NULL);
@@ -823,9 +828,9 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
   g_return_if_fail (application);
 
 
-  if ((sim_container_get_host_by_ia (container, ia) == NULL) && 
-      (sim_container_get_nets_has_ia (container, ia) == NULL))
-    return; /* Update only those hosts that are defined as hosts or networks. */
+//  if ((sim_container_get_host_by_ia (container, ia) == NULL) && 
+//      (sim_container_get_nets_has_ia (container, ia) == NULL))
+//    return; /* Update only those hosts that are defined as hosts or networks. */
 
   temp_proto = getprotobynumber(protocol);
   if (temp_proto->p_name == NULL)
@@ -2357,6 +2362,7 @@ sim_container_db_load_plugin_sids_ul (SimContainer  *container,
   gint           row;
   gchar         *query = "SELECT plugin_id, sid, reliability, priority, name FROM plugin_sid";
 
+
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database);
@@ -2365,6 +2371,7 @@ sim_container_db_load_plugin_sids_ul (SimContainer  *container,
   dm = sim_database_execute_single_command (database, query);
   if (dm)
   {
+		g_message ("Please be patient; This will take a while. Depending on your plugin_sid list and your system, may be some minutes...");
 		//this is done outside im_plugin_sid_new_from_dm() rying to accelerate the loop
 	  g_return_if_fail (GDA_IS_DATA_MODEL (dm));
 

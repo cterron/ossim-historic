@@ -101,9 +101,13 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     $db->close($conn);
 }
 ?>
-    <p>Host succesfully updated</p>
+    <p><?= _("Host succesfully updated")?></p>
     <p><a href="host.php">
     <?php echo gettext("Back"); ?> </a></p>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

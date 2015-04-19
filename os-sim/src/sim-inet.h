@@ -84,6 +84,7 @@ struct _SimInetClass {
 };
 
 GType             sim_inet_get_type                        (void);
+gint              sim_inet_get_mask                        (SimInet          *inet);
 
 SimInet*          sim_inet_new                             (const gchar      *hostname_ip);
 SimInet*          sim_inet_new_from_ginetaddr              (const GInetAddr  *ia);
@@ -99,6 +100,8 @@ gboolean          sim_inet_is_reserved                     (SimInet          *in
 
 gchar*            sim_inet_ntop                            (SimInet          *inet);
 gchar*            sim_inet_cidr_ntop                       (SimInet          *inet);
+
+gboolean          sim_inet_debug_print                     (SimInet          *inet);
 
 G_END_DECLS
 

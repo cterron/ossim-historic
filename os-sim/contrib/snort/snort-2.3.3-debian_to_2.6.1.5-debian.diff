@@ -1,0 +1,118 @@
+diff -au snort-2.3.3/debian/changelog snort-2.6.1.5/debian/changelog
+--- snort-2.3.3/debian/changelog	2007-07-17 10:11:40.000000000 +0200
++++ snort-2.6.1.5/debian/changelog	2007-07-17 10:51:10.000000000 +0200
+@@ -1,3 +1,9 @@
++snort (2.6.1.5-1ossim1) unstable; urgency=low
++
++  * Ossim patches
++
++ -- David Gil <dgil@ossim.net>  Tue, 17 Jul 2007 10:34:14 +0200
++
+ snort (2.3.3-14) unstable; urgency=low
+ 
+   * Use the patch provided by Matt Kraai to fix the FTBFS due to the
+diff -au snort-2.3.3/debian/control snort-2.6.1.5/debian/control
+--- snort-2.3.3/debian/control	2007-07-17 10:11:40.000000000 +0200
++++ snort-2.6.1.5/debian/control	2007-07-17 10:51:10.000000000 +0200
+@@ -9,7 +9,7 @@
+ Package: snort
+ Architecture: any
+ Pre-Depends: adduser (>= 3.11)
+-Depends: snort-rules-default (>= ${Source-Version}), debconf (>= 0.2.80) | debconf-2.0, syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
++Depends: snort-rules-default, debconf (>= 0.2.80) | debconf-2.0, syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
+ Conflicts: snort-mysql, snort-pgsql
+ Replaces: snort-common (<< 2.0.2-3)
+ Recommends: snort-doc
+@@ -71,7 +71,7 @@
+ Architecture: any
+ Priority: extra
+ Pre-Depends: adduser (>= 3.11)
+-Depends: snort-rules-default (>= ${Source-Version}), debconf (>= 0.2.80) | debconf-2.0, syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
++Depends: snort-rules-default, debconf (>= 0.2.80) | debconf-2.0, syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
+ Conflicts: snort, snort-pgsql
+ Description: Flexible Network Intrusion Detection System [MySQL]
+  Distribution of Snort with support for logging to a MySQL database.
+@@ -91,7 +91,7 @@
+ Provides: snort
+ Architecture: any
+ Priority: optional
+-Depends: snort-rules-default (>= ${Source-Version}), debconf (>= 0.2.80) | debconf-2.0, adduser (>= 3.11), syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
++Depends: snort-rules-default, debconf (>= 0.2.80) | debconf-2.0, adduser (>= 3.11), syslogd | system-log-daemon, ${shlibs:Depends}, snort-common (>= ${Source-Version}), logrotate, coreutils
+ Conflicts: snort, snort-mysql
+ Description: Flexible Network Intrusion Detection System [PostgreSQL]
+  Distribution of Snort with support for logging to a PostgreSQL dbase.
+@@ -107,17 +107,3 @@
+  .
+  Homepage: http://www.snort.org
+ 
+-Package: snort-rules-default
+-Provides: snort-rules
+-Architecture: all
+-Depends: debconf (>= 0.2.80) | debconf-2.0, adduser (>= 3.11), syslogd | system-log-daemon, ${shlibs:Depends}
+-Suggests: snort (>= 2.2.0) | snort-pgsql (>= 2.2.0) | snort-mysql (>= 2.2.0)
+-Recommends: oinkmaster
+-Description: Flexible Network Intrusion Detection System ruleset
+- Snort default ruleset which provides a common set of accepted and test
+- network intrusion detection rules developed by the Snort community.
+- .
+- These rules can be used as a basis for development of additional rules.
+- .
+- Homepage: http://www.snort.org/rules/
+-
+Subdirectorios comunes: snort-2.3.3/debian/CVS y snort-2.6.1.5/debian/CVS
+Subdirectorios comunes: snort-2.3.3/debian/my y snort-2.6.1.5/debian/my
+Subdirectorios comunes: snort-2.3.3/debian/po y snort-2.6.1.5/debian/po
+diff -au snort-2.3.3/debian/rules snort-2.6.1.5/debian/rules
+--- snort-2.3.3/debian/rules	2007-07-17 10:11:41.000000000 +0200
++++ snort-2.6.1.5/debian/rules	2007-07-17 10:51:46.000000000 +0200
+@@ -29,7 +29,7 @@
+ build-indep: build-indep-stamp
+ build-indep-stamp:
+ 	dh_testdir
+-	cd doc && make snort_manual.pdf
++#	cd doc && make snort_manual.pdf
+ 
+ build: build-stamp
+ build-stamp:
+@@ -117,14 +117,14 @@
+ 	install -m 644 -o root -g root `pwd`/etc/unicode.map $(TMP)/snort-common/etc/snort/
+ 	install -m 644 -o root -g root `pwd`/etc/threshold.conf $(TMP)/snort-common/etc/snort/
+ 
+-	cp rules/*.rules $(TMP)/snort-rules-default/etc/snort/rules/
++#	cp rules/*.rules $(TMP)/snort-rules-default/etc/snort/rules/
+ #	mkdir -p $(TMP)/snort-rules-default/usr/share/snort/
+ #	install -m 644 -o root -g root `pwd`/debian/oldrules.md5 $(TMP)/snort-rules-default/usr/share/snort/oldrules.md5
+ 	
+-	cp etc/sid-msg.map $(TMP)/snort-rules-default/etc/snort/
+-	cp etc/gen-msg.map $(TMP)/snort-rules-default/etc/snort/
+-	cp etc/classification.config $(TMP)/snort-rules-default/etc/snort/
+-	cp etc/reference.config $(TMP)/snort-rules-default/etc/snort/
++#	cp etc/sid-msg.map $(TMP)/snort-rules-default/etc/snort/
++#	cp etc/gen-msg.map $(TMP)/snort-rules-default/etc/snort/
++#	cp etc/classification.config $(TMP)/snort-rules-default/etc/snort/
++#	cp etc/reference.config $(TMP)/snort-rules-default/etc/snort/
+ 
+ 	mv src/snort-mysql $(TMP)/snort-mysql/usr/sbin/snort
+ 	mv src/snort-pgsql $(TMP)/snort-pgsql/usr/sbin/snort
+@@ -146,7 +146,7 @@
+ 	rm -rf $(TMP)/snort-doc/usr/share/doc/snort-doc/CVS
+ 	rm -rf $(TMP)/snort-doc/usr/share/doc/snort-doc/contrib/CVS
+ 	chmod +x $(TMP)/snort-doc/usr/share/doc/snort-doc/examples/snort*
+-	cp -a doc/signatures/ $(TMP)/snort-doc/usr/share/doc/snort-doc/
++#	cp -a doc/signatures/ $(TMP)/snort-doc/usr/share/doc/snort-doc/
+ 	rm -rf $(TMP)/snort-doc/usr/share/man
+ 	rm -rf $(TMP)/snort-rules-default/usr/share/man
+ 	dh_undocumented -i
+diff -au snort-2.3.3/debian/snort-doc.docs snort-2.6.1.5/debian/snort-doc.docs
+--- snort-2.3.3/debian/snort-doc.docs	2007-07-17 10:11:40.000000000 +0200
++++ snort-2.6.1.5/debian/snort-doc.docs	2007-07-17 10:51:10.000000000 +0200
+@@ -16,9 +16,7 @@
+ doc/README.thresholding
+ doc/README.UNSOCK
+ doc/README.wireless
+-doc/RULES.todo
+ doc/snort_schema_v106.pdf
+-doc/snort_manual.pdf
+ doc/faq.pdf
+ doc/TODO
+ doc/USAGE

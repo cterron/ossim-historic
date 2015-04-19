@@ -5,3 +5,5 @@ correla_DATA = create_services_table.pl \
 			   notes
 
 EXTRA_DIST   = $(correla_DATA)
+
+DISTCLEANFILES = Makefile.in

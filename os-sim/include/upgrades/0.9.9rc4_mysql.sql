@@ -167,7 +167,7 @@ CREATE TABLE bp_member_status (
 	member        TEXT NOT NULL REFERENCES bp_asset_member(member),
 	status_date   DATETIME NOT NULL,
 	measure_type  VARCHAR(255) NOT NULL,
-	severity      INT(2) NOT NULL /* 0-none, 1-low, 2-med, 3-high */
+	severity      INT(2) NOT NULL /* number between 0-10: 0 = ok, 2 = low, 5 = med, 7 = high */
 );
 
 --
@@ -325,11 +325,11 @@ REPLACE INTO plugin(id, type, name, description) VALUES(5003, 4, "ovsdb", "Open 
 
 --New osvdb DB config info
 
-REPLACE INTO config (conf, value) VALUES ('osvdb_type', 'mysql');
-REPLACE INTO config (conf, value) VALUES ('osvdb_base', 'osvdb');
-REPLACE INTO config (conf, value) VALUES ('osvdb_user', 'root');
-REPLACE INTO config (conf, value) VALUES ('osvdb_pass', 'ossim');
-REPLACE INTO config (conf, value) VALUES ('osvdb_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('osvdb_type', 'mysql');
+INSERT INTO config (conf, value) VALUES ('osvdb_base', 'osvdb');
+INSERT INTO config (conf, value) VALUES ('osvdb_user', 'root');
+INSERT INTO config (conf, value) VALUES ('osvdb_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('osvdb_host', 'localhost');
 
 REPLACE INTO config (conf, value) VALUES ('vulnerability_incident_threshold', '0');
 

@@ -9,6 +9,7 @@ require_once 'classes/Session.inc';
 require_once 'ossim_conf.inc';
 require_once 'classes/Log_action.inc';
 require_once ("ossim_db.inc");
+require_once 'classes/WebIndicator.inc';
 
 class Net {
 
@@ -128,6 +129,9 @@ class Net {
        
         $infolog = array($name);
         Log_action::log(27,$infolog);
+
+        WebIndicator::set_on("Reload_nets");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function update($conn, $name, $ips, $asset, $threshold_c, $threshold_a, 
@@ -141,6 +145,9 @@ class Net {
       
         $infolog = array($name);
         Log_action::log(28,$infolog);
+
+        WebIndicator::set_on("Reload_nets");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function delete($conn, $name, $skip_group_update = 0) {
@@ -160,6 +167,9 @@ class Net {
         
         $infolog = array($name);
         Log_action::log(29,$infolog);
+
+        WebIndicator::set_on("Reload_nets");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function netthresh_c($conn, $name) {

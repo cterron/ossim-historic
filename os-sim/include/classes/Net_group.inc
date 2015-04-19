@@ -31,15 +31,14 @@ class Net_group {
     function get_descr()        { return $this->descr; }
 
 
-    function get_networks($conn, $name = "")
+    function get_networks($conn, $name = "", $plugin = "")
     {
         if ($name != "") {
-            return Net_group_reference::get_list($conn, $name);
+            return Net_group_reference::get_list($conn, $name, $plugin);
         } else {
-            return Net_group_reference::get_list($conn, $this->name);
+            return Net_group_reference::get_list($conn, $this->name, $plugin);
         }
     }
-
 
     function get_list($conn, $args = "") 
     {

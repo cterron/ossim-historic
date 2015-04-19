@@ -5,12 +5,14 @@ SUBDIRS= action \
 	control_panel \
 	directives \
 	editor \
+	event_viewer \
 	feed \
 	hids \
 	host \
 	incidents \
 	java \
 	js \
+	maps \
 	nagios \
 	net \
 	netscan \
@@ -46,4 +48,4 @@ install-data-hook:
 	mkdir -p $(localstatedir)/lib/ossim/rrd/global_qualification
 	mkdir -p $(localstatedir)/lib/ossim/rrd/level_qualification
 	   
-
+DISTCLEANFILES = Makefile.in

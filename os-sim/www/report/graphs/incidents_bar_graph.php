@@ -65,10 +65,15 @@ if ($by == "monthly_by_status") {
     $ttl_groups[4] = 0;
     $ttl_groups[5] = 0;
     $ttl_groups[6] = 0;
+
+    $total_days = 0;
+    $day_count;
     
     foreach ($list as $incident) {
         $ttl_secs = $incident->get_life_time('s');
         $days = round($ttl_secs/60/60/24);
+        $total_days += $days;
+        $day_count++;
         if ($days < 1) $days = 1;
         if ($days > 6) $days = 6;
         @$ttl_groups[$days]++;
@@ -77,7 +82,8 @@ if ($by == "monthly_by_status") {
     $labelx = array('1 '._("day"), '2 '._("days"), '3 '._("days"),
                     '4 '._("days"), '5 '._("days"), '6 '._("or more"));
     $title = '';
-    $titley = _("Duration in days");
+    if($day_count < 1) $day_count = 1;
+    $titley = _("Duration in days.") . " " . _("Average:") . " " .  $total_days/$day_count;
     $titlex = _("Num. Incidents");
     $width = 500;
 } else {

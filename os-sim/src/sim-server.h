@@ -109,6 +109,7 @@ gpointer					sim_server_thread_monitor_requests				(gpointer data);
 SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,
 																												    SimSensor   *sensor);
 
+void							sim_server_debug_print										(SimServer		*server);
 void              sim_server_debug_print_sessions           (SimServer    *server); //debug function
 gchar*						sim_server_get_ip													(SimServer   *server);
 gchar*						sim_server_get_name												(SimServer   *server);

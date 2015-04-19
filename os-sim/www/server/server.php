@@ -21,6 +21,7 @@ Session::logcheck("MenuPolicy", "PolicyServers");
     require_once 'classes/Plugin.inc';
     require_once 'classes/Security.inc';
     require_once 'server_get_servers.php';
+    require_once 'classes/WebIndicator.inc';
     
     $order = GET('order');
     
@@ -141,7 +142,7 @@ Session::logcheck("MenuPolicy", "PolicyServers");
       ?></td>
       <?php
       $aux = $server->get_name();
-      if ($role_list = Server::get_role($conn, "WHERE name = '$aux'")) {
+      if ($role_list = Server::get_role($conn, "WHERE server_role.name = '$aux'")) {
         $role = $role_list[0];
     }
                ?><td><?php
@@ -248,7 +249,12 @@ Session::logcheck("MenuPolicy", "PolicyServers");
       <td colspan="12"><a href="newserverform.php"> <?php echo gettext("Insert new server"); ?> </a></td>
     </tr>
 <!--    <tr>
-      <td colspan="10"><a href="../conf/reload.php?what=servers"> <?php echo gettext("Reload"); ?> </a></td>
+      <td colspan="12"><a href="../conf/reload.php?what=servers&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
+if (WebIndicator::is_on("Reload_servers")) {
+    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
+} else {
+    echo gettext("Reload");
+} ?> </a></td>
     </tr>-->
 </table>
 

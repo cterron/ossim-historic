@@ -195,6 +195,7 @@ sim_net_new_from_dm (GdaDataModel  *dm,
   net->_priv->asset = gda_value_get_integer (value);
   
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_net_new_from_dm: %s",net->_priv->ips);
+  sim_net_debug_print (net);
 
 	return (sim_net_split_internal_ips (net));	// == return net
 }

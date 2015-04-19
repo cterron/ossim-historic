@@ -1,4 +1,7 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuReports", "ReportsHostReport");
+
 require_once 'classes/Security.inc';
 require_once 'classes/PDF.inc';
 

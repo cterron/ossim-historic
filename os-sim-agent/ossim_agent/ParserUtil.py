@@ -19,12 +19,30 @@ def snort_id(id):
 
 def normalize_protocol(protocol):
 
-    # TODO: fill table with /etc/protocols
     proto_table = {
         '1':    'icmp',
         '6':    'tcp',
         '17':   'udp',
     }
+
+#
+#   fill protocols table reading /etc/protocols
+#
+#    try:
+#        fd = open('/etc/protocols')
+#    except IOError:
+#        pass
+#    else:
+#        pattern = re.compile("(\w+)\s+(\d+)\s+\w+")
+#        for line in fd.readlines():
+#            result = pattern.search(line)
+#            if result:
+#                proto_name   = result.groups()[0]
+#                proto_number = result.groups()[1]
+#                if not proto_table.has_key(proto_number):
+#                    proto_table[proto_number] = proto_name
+#        fd.close()
+#
 
     if proto_table.has_key(str(protocol)):
         return proto_table[str(protocol)]

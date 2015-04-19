@@ -5,3 +5,4 @@ action_DATA = action.php \
 	newactionform.php
 
 EXTRA_DIST   = $(action_DATA)
+DISTCLEANFILES = Makefile.in

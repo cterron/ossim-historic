@@ -20,6 +20,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Net_scan.inc';
     require_once 'classes/Plugin.inc';
     require_once 'classes/Security.inc';
+    require_once 'classes/WebIndicator.inc';
 
     $nessus_action = GET('nessus');
     $nagios_action = GET('nagios');
@@ -172,7 +173,12 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
       <td colspan="11"><a href="newnetform.php"> <?php echo gettext("Insert new network"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="11"><a href="../conf/reload.php?what=nets"> <?php echo gettext("Reload"); ?> </a></td>
+      <td colspan="11"><a href="../conf/reload.php?what=nets&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
+if (WebIndicator::is_on("Reload_nets")) {
+    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
+} else {
+	echo gettext("Reload");
+} ?> </a></td>
     </tr>
   </table>
     

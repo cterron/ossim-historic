@@ -4,8 +4,6 @@ TODO
 - missing sensors stuff (see Session::hostAllowed() & Host::get_realted_sensors())
 - now everybody can see hosts outside defined networks, maybe add a new user perm
 - max metric date could be shown in days/hours/mins (see Util::date_diff())
-- current global score es simplemente la suma de los scores de host_qualification
-        sin ningun chequeo extra (ver get_score())
 - add help
 */
 
@@ -16,6 +14,18 @@ Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
 
 $db = new ossim_db();
 $conn = $db->connect();
+
+if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents")) {
+    $event_perms = true;
+} else {
+    $event_perms = false;
+}
+
+if (Session::menu_perms("MenuReports", "ReportsHostReport")) {
+    $host_report_perms = true;
+} else {
+    $host_report_perms = false;
+}
 
 ////////////////////////////////////////////////////////////////
 // Param validation
@@ -357,6 +367,7 @@ function html_set_values($subject,
      
 function _html_metric($metric, $threshold, $link)
 {
+    global $event_perms;
     $risk = round($metric/$threshold*100);
     $font_color = 'color="white"';
     $color = '';
@@ -373,8 +384,13 @@ function _html_metric($metric, $threshold, $link)
         $font_color = 'color="black"';
         $risk = '-';
     }
-    $html = "<td $color><span title='$metric / $threshold ("._("metric/threshold").")'>".
-            "<a href='$link'><font $font_color>$risk</font></a></span></td>"; 
+    $html = "<td $color><span title='$metric / $threshold ("._("metric/threshold").")'>";
+    if ($event_perms) {
+        $html .= "<a href='$link'><font $font_color>$risk</font></a>";
+    } else {
+        $html .= "<font $font_color>$risk</font>";
+    }
+    $html .= "</span></td>"; 
     return $html; 
 }
 
@@ -411,7 +427,7 @@ function html_rrd()
             src="../pixmaps/graph.gif" border="0"/></a>';
 }
 
-function html_report()
+function html_incident()
 {
     $subject   = $GLOBALS['_subject'];
     $subject_type = $GLOBALS['_subject_type'];
@@ -447,6 +463,20 @@ function html_report()
         '<img src="../pixmaps/incident.png" width="12" alt="i" border="0"/>'.
         '</a>';
     return $html;
+}
+
+function html_host_report($ip, $name, $title='')
+{
+    global $host_report_perms;
+    if ($title) {
+        $title = "title='$title'";
+    }
+    if ($host_report_perms) {
+        return "<a href='../report/index.php?host=$ip&section=metrics' $title>
+                $name</a>";
+    } else {
+        return "<span $title>$name</span>";
+    }
 }
 
 function html_date()
@@ -869,7 +899,8 @@ Page Header (links, riskmeter, rrd)
             break;
         case 'year':
             $nmapitems = 12;
-            $deltax0_percent = ( (intval(date("t"))*24*60*60) - (intval(date("j"))*24*3600+intval(date("G"))*3600+intval(date("i"))*60+intval(date("s"))) ) / (intval(date("t"))*24*60*60);
+            $basetime = intval(date("t"))*24*60*60;
+            $deltax0_percent = ( $basetime - ( intval(date("j"))*24*3600+intval(date("G"))*3600+intval(date("i"))*60+intval(date("s")) ) ) / $basetime;
             break;
         default:
             die(ossim_error('Invalid range'));
@@ -970,7 +1001,7 @@ Global
                    $ac
                    );
         ?>
-        <td><?=html_rrd()?> <?=html_report()?></td>
+        <td><?=html_rrd()?> <?=html_incident()?></td>
         <td nowrap><?=html_date()?></td>
         <?=html_max()?>
         <?=html_current()?>
@@ -1013,7 +1044,7 @@ Network Groups
                        $ac
                        );
             ?>
-            <td><?=html_rrd()?> <?=html_report()?></td>
+            <td><?=html_rrd()?> <?=html_incident()?></td>
             <td nowrap><?=html_date()?></td>
             <?=html_max()?>
             <?=html_current()?>
@@ -1042,7 +1073,7 @@ Network Groups
                                $ac
                                );
                     ?>
-                    <td><?=html_rrd()?> <?=html_report()?></td>
+                    <td><?=html_rrd()?> <?=html_incident()?></td>
                     <td nowrap><?=html_date()?></td>
                     <?=html_max()?>
                     <?=html_current()?>
@@ -1055,7 +1086,7 @@ Network Groups
                         <tr id="host_<?=$host?>_<?=$ac?>" style="display: none">
                             <td width="6%" style="border: 0px;">&nbsp;</td>
                             <td style="text-align: left">&nbsp;&nbsp;
-                                <a href="../report/index.php?host=<?=$host_ip?>&section=metrics"><?=$host_data['name']?></a>
+                                <?= html_host_report($host_ip, $host_data['name']) ?>
                             </td>
                             <?
                             html_set_values($host_ip,
@@ -1067,7 +1098,7 @@ Network Groups
                                        $ac
                                        );
                             ?>
-                            <td><?=html_rrd()?> <?=html_report()?></td>
+                            <td><?=html_rrd()?> <?=html_incident()?></td>
                             <td nowrap><?=html_date()?></td>
                             <?=html_max()?>
                             <?=html_current()?>
@@ -1114,7 +1145,7 @@ Network outside groups
                    $ac
                    );
         ?>
-        <td nowrap><?=html_rrd()?> <?=html_report()?></td>
+        <td nowrap><?=html_rrd()?> <?=html_incident()?></td>
         <td nowrap><?=html_date()?></td>
         <?=html_max()?>
         <?=html_current()?>
@@ -1128,7 +1159,7 @@ Network outside groups
                     <tr id="host_<?=$host?>_<?=$ac?>" style="display: none">
                         <td width="3%" style="border: 0px;">&nbsp;</td>
                         <td style="text-align: left">&nbsp;&nbsp;
-                            <a href="../report/index.php?host=<?=$host_ip?>&section=metrics"><?=$host_data['name']?></a>
+                            <?= html_host_report($host_ip, $host_data['name']) ?>
                         </td>
                         <?
                         html_set_values($host_ip,
@@ -1140,7 +1171,7 @@ Network outside groups
                                    $ac
                                    );
                         ?>
-                        <td><?=html_rrd()?> <?=html_report()?></td>
+                        <td><?=html_rrd()?> <?=html_incident()?></td>
                         <td nowrap><?=html_date()?></td>
                         <?=html_max()?>
                         <?=html_current()?>
@@ -1171,9 +1202,7 @@ Hosts
         ?>
         <tr>
         <td nowrap colspan="2" style="text-align: left">
-          <a href="../report/index.php?host=<?=$ip?>&section=metrics" title="<?=$host_data['network'].$group ?>">
-            <?=$host_data['name']?>
-          </a>
+          <?= html_host_report($ip, $host_data['name'], $host_data['network'].$group) ?>
         </td>
         <?
         html_set_values($ip,
@@ -1185,7 +1214,7 @@ Hosts
                    $ac
                    );
         ?>
-        <td><?=html_rrd()?> <?=html_report()?></td>
+        <td><?=html_rrd()?> <?=html_incident()?></td>
         <td nowrap><?=html_date()?></td>
         <?=html_max()?>
         <?=html_current()?>
@@ -1213,7 +1242,7 @@ Hosts outside networks
         ?>
         <tr>
         <td colspan="2" style="text-align: left">
-            <a href="../report/index.php?host=<?=$ip?>&section=metrics"><?=$ip?></a>
+            <?= html_host_report($ip, $ip) ?>
         </td>
         <?
         html_set_values($ip,
@@ -1225,7 +1254,7 @@ Hosts outside networks
                    $ac
                    );
         ?>
-        <td><?=html_rrd()?> <?=html_report()?></td>
+        <td><?=html_rrd()?> <?=html_incident()?></td>
         <td nowrap><?=html_date()?></td>
         <?=html_max()?>
         <?=html_current()?>

@@ -204,7 +204,9 @@ class Action(threading.Thread):
                 'PRIORITY':     self.__request.get('priority', ''),
                 'RELIABILITY':  self.__request.get('reliability', ''),
                 'SRC_IP':       self.__request.get('src_ip', ''),
+                'SRC_PORT':     self.__request.get('src_port', ''),
                 'DST_IP':       self.__request.get('dst_ip', ''),
+                'DST_PORT':     self.__request.get('dst_port', ''),
                 'PROTOCOL':     self.__request.get('protocol', ''),
                 'SENSOR':       self.__request.get('sensor', ''),
                 'PLUGIN_NAME':  self.__request.get('plugin_id', ''),
@@ -221,6 +223,8 @@ class Action(threading.Thread):
                 'FILENAME':     self.__request.get('filename', ''),
                 'USERNAME':     self.__request.get('username', ''),
                 'PASSWORD':     self.__request.get('password', ''),
+                'BACKLOG_ID':   self.__request.get('backlog_id', ''),
+                'EVENT_ID':     self.__request.get('event_id', ''),
             }
 
         query = "SELECT * FROM plugin WHERE id = %d" % int(self.__request['plugin_id'])
@@ -247,20 +251,23 @@ class Action(threading.Thread):
                     (action_id)
                 for action_email in self.__db.exec_query(query):
                     email_from = action_email['_from']
-                    email_to = action_email['_to']
+                    email_to = action_email['_to'].split(',')
                     email_subject = action_email['subject']
                     email_message = action_email['message']
 
                     for replace in replaces:
                         if replaces[replace]:
                             email_from = email_from.replace(replace, replaces[replace])
-                            email_to = email_to.replace(replace, replaces[replace])
+                            for to_mail in email_to:
+                                to_mail = to_mail.strip()
+                                to_mail = to_mail.replace(replace,\
+                                                          replaces[replace])
                             email_subject= email_subject.replace(replace, replaces[replace])
                             email_message = email_message.replace(replace, replaces[replace])
                     
                     m = ActionMail()
                     m.sendmail(email_from,
-                               [ email_to ],
+                               email_to,
                                email_subject,
                                email_message +\
                                "\n\n" + self.requestRepr(self.__request))

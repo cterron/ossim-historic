@@ -6,3 +6,5 @@ server_DATA = config.xml \
               trojans.xml 
 
 EXTRA_DIST   = $(server_DATA)
+
+DISTCLEANFILES = Makefile.in

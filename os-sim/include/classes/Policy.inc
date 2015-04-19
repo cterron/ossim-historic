@@ -7,7 +7,9 @@ require_once 'classes/Policy_target_reference.inc';
 require_once 'classes/Policy_role_reference.inc';
 require_once 'classes/Policy_port_reference.inc';
 require_once 'classes/Policy_time.inc';
+require_once ('classes/Log_action.inc');
 require_once 'ossim_db.inc';
+require_once 'classes/WebIndicator.inc';
 
 class Policy {
 
@@ -168,6 +170,17 @@ class Policy {
 
         Policy_time::insert($conn, 
                             $begin_hour, $end_hour, $begin_day, $end_day, $id);
+
+        // don't log if it is an update
+        $bt = debug_backtrace();
+        if (!isset($bt[1]) ||
+            (isset($bt[1])) && ($bt[1]["function"] != "update")) {
+            $infolog = array($id,"(".$descr.")");
+            Log_action::log(46,$infolog);
+        }
+
+        WebIndicator::set_on("Reload_policies");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function update($conn, 
@@ -196,12 +209,23 @@ class Policy {
                        $port_list, $plug_groups, $sensor_list, 
                        $target_list,
                        $correlate, $cross_correlate, $store, $qualify, $resend_alarm, $resend_event, $id);
+
+        $infolog = array($id,"(".$descr.")");
+        Log_action::log(48,$infolog);
+
+        WebIndicator::set_on("Reload_policies");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function delete($conn, $id)
     {
         $id = intval($id);
 
+        $policy = Policy::get_list($conn, "where id=$id");
+        if (count($policy) != 1)
+            return;
+        $descr = $policy[0]->get_descr();    
+        
         Policy_host_reference::delete($conn, $id);
         Policy_net_reference::delete($conn, $id);
         Policy_port_reference::delete($conn, $id);
@@ -218,6 +242,16 @@ class Policy {
         $sql = "DELETE FROM policy WHERE id = ?";
         $conn->Execute($sql, $params);
 
+        // don't log if it is an update'
+        $bt = debug_backtrace();
+        if (!isset($bt[1]) ||
+            (isset($bt[1])) && ($bt[1]["function"] != "update")) {
+            $infolog = array($id,"(".$descr.")");
+            Log_action::log(47,$infolog);
+        }
+
+        WebIndicator::set_on("Reload_policies");
+        WebIndicator::set_on("ReloadPolicy");
     }
 }
 

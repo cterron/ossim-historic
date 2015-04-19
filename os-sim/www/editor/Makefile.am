@@ -5,3 +5,4 @@ editor_DATA = dir.php \
 	rule.php
 EXTRA_DIST   = $(editor_DATA)
 
+DISTCLEANFILES = Makefile.in

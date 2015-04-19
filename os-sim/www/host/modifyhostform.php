@@ -278,7 +278,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
       <input type="submit" value="OK">
       <input type="reset" value="reset">
     </td>
-  </tr>
+  </tr>    
 </table>
 </form>
 

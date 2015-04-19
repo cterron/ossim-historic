@@ -3,7 +3,7 @@ from Monitor import Monitor
 from Logger import Logger
 logger = Logger.logger
 
-import httplib
+import httplib, socket
 
 class MonitorHTTP(Monitor):
 
@@ -26,8 +26,14 @@ class MonitorHTTP(Monitor):
         query = self.queries[rule_name]
 
         logger.debug("Sending query to monitor: %s" % (query))
-        self.conn.request("GET", query)
-        response = self.conn.getresponse()
+
+        try:
+            self.conn.request("GET", query)
+            response = self.conn.getresponse()
+        except socket.error, msg:
+            logger.error(msg)
+            return data
+
         if response.status == 200:
             data = response.read()
             logger.debug("Received data from monitor: %s" % (data))

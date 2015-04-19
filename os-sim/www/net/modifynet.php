@@ -57,7 +57,7 @@ if (POST('insert')) {
             $sensors[] = POST($name);
     }
     if (!count($sensors)) {
-        die(ossim_error("At least one sensor is required"));
+        die(ossim_error(_("At least one sensor is required")));
     }
     require_once 'ossim_db.inc';
     require_once 'classes/Net.inc';
@@ -82,6 +82,10 @@ if (POST('insert')) {
     <p> <?php echo gettext("Net succesfully updated"); ?> </p>
     <p><a href="net.php">
     <?php echo gettext("Back"); ?> </a></p>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

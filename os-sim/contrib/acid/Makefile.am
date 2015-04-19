@@ -5,3 +5,4 @@ acid_DATA = acid.patch \
 	create_acid_tbls_mysql.sql 
 
 EXTRA_DIST = $(acid_DATA)
+DISTCLEANFILES = Makefile.in

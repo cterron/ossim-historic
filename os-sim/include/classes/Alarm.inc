@@ -276,8 +276,8 @@ class Alarm {
                     $sensor_allowed = 1;
             }
 
-            if ( (Session::hostAllowed($conn, $rs->fields["src_ip"])) or
-                 (Session::hostAllowed($conn, $rs->fields["dst_ip"])) or
+            if ( (Session::hostAllowed($conn, $rs->fields["inet_ntoa(src_ip)"])) or
+                 (Session::hostAllowed($conn, $rs->fields["inet_ntoa(dst_ip)"])) or
                  ($sensor_allowed) )
             {
                 $list[] = new Alarm (
@@ -516,6 +516,7 @@ class Alarm {
     {
         $expand = false;
         $count = 0;
+        $total_count = 0;
         
         $data = array();
         $dst_ips = array();
@@ -555,10 +556,12 @@ class Alarm {
                     $expand = true;
                 }
 
+                $total_count++;
                 $rs->MoveNext();
             }
         }
         $data["count"] = $count;
+        $data["total_count"] = $total_count;
         $uniq_dst_ips = array_unique($dst_ips);
         $data["dst_ips"] = count($uniq_dst_ips);
         $uniq_types = array_unique($types);

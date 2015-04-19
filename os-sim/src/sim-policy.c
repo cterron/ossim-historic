@@ -1216,7 +1216,10 @@ void sim_policy_debug_print	(SimPolicy	*policy)
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_debug_print       : policy %x",policy);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               id: %d",policy->_priv->id);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               description: %s",policy->_priv->description);
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               begin_hour:  %s",policy->_priv->begin_hour);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               begin_day:  %d",policy->_priv->begin_day);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               end_day:  %d",policy->_priv->end_day);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               begin_hour:  %d",policy->_priv->begin_hour);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               end_hour:  %d",policy->_priv->end_hour);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               src:         %x",policy->_priv->src);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               dst:         %x",policy->_priv->dst);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               ports:       %x",policy->_priv->ports);
@@ -1228,7 +1231,8 @@ void sim_policy_debug_print	(SimPolicy	*policy)
 //	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_sids: %x",policy->_priv->plugin_sids);
 
 	SimRole *role = sim_policy_get_role (policy);
-	sim_role_print (role);
+  if (role)
+  	sim_role_print (role);
 
 	list = policy->_priv->src;
 	while (list)

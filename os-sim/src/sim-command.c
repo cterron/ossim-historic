@@ -35,156 +35,12 @@
 #include <gnet.h>
 #include <time.h>
 #include <string.h>
-
+#include <zlib.h>
 #include "sim-command.h"
 #include "sim-rule.h"
 #include "sim-util.h"
 #include <config.h>
-
-typedef enum {
-  SIM_COMMAND_SCOPE_COMMAND,
-  SIM_COMMAND_SCOPE_CONNECT,
-  SIM_COMMAND_SCOPE_SESSION_APPEND_PLUGIN,
-  SIM_COMMAND_SCOPE_SESSION_REMOVE_PLUGIN,
-  SIM_COMMAND_SCOPE_SERVER_GET_SENSORS,
-  SIM_COMMAND_SCOPE_SENSOR,						//command from children server	
-  SIM_COMMAND_SCOPE_SERVER_GET_SERVERS,
-  SIM_COMMAND_SCOPE_SERVER,						//command from children server	
-  SIM_COMMAND_SCOPE_SERVER_GET_SENSOR_PLUGINS,
-  SIM_COMMAND_SCOPE_SERVER_SET_DATA_ROLE,
-  SIM_COMMAND_SCOPE_SENSOR_PLUGIN,							
-  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_START,
-  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_STOP,
-  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_ENABLE,
-  SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLE,
-  SIM_COMMAND_SCOPE_PLUGIN_STATE_STARTED,
-  SIM_COMMAND_SCOPE_PLUGIN_STATE_UNKNOWN,
-  SIM_COMMAND_SCOPE_PLUGIN_STATE_STOPPED,
-  SIM_COMMAND_SCOPE_PLUGIN_ENABLED,
-  SIM_COMMAND_SCOPE_PLUGIN_DISABLED,
-  SIM_COMMAND_SCOPE_EVENT,
-  SIM_COMMAND_SCOPE_RELOAD_PLUGINS,
-  SIM_COMMAND_SCOPE_RELOAD_SENSORS,
-  SIM_COMMAND_SCOPE_RELOAD_HOSTS,
-  SIM_COMMAND_SCOPE_RELOAD_NETS,
-  SIM_COMMAND_SCOPE_RELOAD_POLICIES,
-  SIM_COMMAND_SCOPE_RELOAD_DIRECTIVES,
-  SIM_COMMAND_SCOPE_RELOAD_ALL,
-  SIM_COMMAND_SCOPE_HOST_OS_EVENT,
-  SIM_COMMAND_SCOPE_HOST_MAC_EVENT,
-  SIM_COMMAND_SCOPE_HOST_SERVICE_EVENT,
-  SIM_COMMAND_SCOPE_HOST_IDS_EVENT,
-  SIM_COMMAND_SCOPE_OK,
-  SIM_COMMAND_SCOPE_ERROR,
-  SIM_COMMAND_SCOPE_DATABASE_QUERY,
-  SIM_COMMAND_SCOPE_DATABASE_ANSWER
-} SimCommandScopeType;
-
-typedef enum {
-  SIM_COMMAND_SYMBOL_INVALID = G_TOKEN_LAST,
-  SIM_COMMAND_SYMBOL_CONNECT,
-  SIM_COMMAND_SYMBOL_SESSION_APPEND_PLUGIN,
-  SIM_COMMAND_SYMBOL_SESSION_REMOVE_PLUGIN,
-  SIM_COMMAND_SYMBOL_SERVER_GET_SENSORS,
-  SIM_COMMAND_SYMBOL_SERVER_GET_SERVERS,
-  SIM_COMMAND_SYMBOL_SERVER,
-  SIM_COMMAND_SYMBOL_SERVER_GET_SENSOR_PLUGINS,
-  SIM_COMMAND_SYMBOL_SERVER_SET_DATA_ROLE,
-  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN,
-  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_START,
-  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_STOP,
-  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLE,
-  SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLE,
-  SIM_COMMAND_SYMBOL_PLUGIN_STATE_STARTED,
-  SIM_COMMAND_SYMBOL_PLUGIN_STATE_UNKNOWN,
-  SIM_COMMAND_SYMBOL_PLUGIN_STATE_STOPPED,
-  SIM_COMMAND_SYMBOL_PLUGIN_ENABLED,
-  SIM_COMMAND_SYMBOL_PLUGIN_DISABLED,
-  SIM_COMMAND_SYMBOL_EVENT,
-  SIM_COMMAND_SYMBOL_RELOAD_PLUGINS,
-  SIM_COMMAND_SYMBOL_RELOAD_SENSORS,
-  SIM_COMMAND_SYMBOL_RELOAD_HOSTS,
-  SIM_COMMAND_SYMBOL_RELOAD_NETS,
-  SIM_COMMAND_SYMBOL_RELOAD_POLICIES,
-  SIM_COMMAND_SYMBOL_RELOAD_DIRECTIVES,
-  SIM_COMMAND_SYMBOL_RELOAD_ALL,
-  SIM_COMMAND_SYMBOL_OK,
-  SIM_COMMAND_SYMBOL_HOST_OS_EVENT,
-  SIM_COMMAND_SYMBOL_HOST_MAC_EVENT,
-  SIM_COMMAND_SYMBOL_HOST_SERVICE_EVENT,
-  SIM_COMMAND_SYMBOL_HOST_IDS_EVENT,
-  SIM_COMMAND_SYMBOL_ERROR,
-  SIM_COMMAND_SYMBOL_ID,
-  SIM_COMMAND_SYMBOL_SENSOR,
-  SIM_COMMAND_SYMBOL_STATE,
-  SIM_COMMAND_SYMBOL_ENABLED,
-  SIM_COMMAND_SYMBOL_INTERFACE,
-  SIM_COMMAND_SYMBOL_TYPE,
-  SIM_COMMAND_SYMBOL_NAME,
-  SIM_COMMAND_SYMBOL_DATE,
-  SIM_COMMAND_SYMBOL_PLUGIN_TYPE,
-  SIM_COMMAND_SYMBOL_PLUGIN_ID,
-  SIM_COMMAND_SYMBOL_PLUGIN_SID,
-  SIM_COMMAND_SYMBOL_PRIORITY,
-  SIM_COMMAND_SYMBOL_PROTOCOL,
-  SIM_COMMAND_SYMBOL_SRC_IP,
-  SIM_COMMAND_SYMBOL_SRC_PORT,
-  SIM_COMMAND_SYMBOL_DST_IP,
-  SIM_COMMAND_SYMBOL_DST_PORT,
-  SIM_COMMAND_SYMBOL_CONDITION,
-  SIM_COMMAND_SYMBOL_VALUE,
-  SIM_COMMAND_SYMBOL_INTERVAL,
-  SIM_COMMAND_SYMBOL_HOST,
-  SIM_COMMAND_SYMBOL_HOSTNAME,
-  SIM_COMMAND_SYMBOL_SERVERNAME,
-  SIM_COMMAND_SYMBOL_SENSORNAME, //used only to get Policy from sensors
-  SIM_COMMAND_SYMBOL_OS,
-  SIM_COMMAND_SYMBOL_MAC,
-  SIM_COMMAND_SYMBOL_SERVICE,
-  SIM_COMMAND_SYMBOL_VENDOR,
-  SIM_COMMAND_SYMBOL_PORT,
-  SIM_COMMAND_SYMBOL_APPLICATION,
-  SIM_COMMAND_SYMBOL_DATA,
-  SIM_COMMAND_SYMBOL_EVENT_TYPE,
-  SIM_COMMAND_SYMBOL_HIDS_EVENT_TYPE, //FIXME: Used only for backwards compatibility. Remove when using the agent-1.0
-  SIM_COMMAND_SYMBOL_TARGET,
-  SIM_COMMAND_SYMBOL_WHAT,
-  SIM_COMMAND_SYMBOL_EXTRA_DATA,
-  SIM_COMMAND_SYMBOL_LOG,
-  SIM_COMMAND_SYMBOL_SNORT_SID,
-  SIM_COMMAND_SYMBOL_SNORT_CID,
-  SIM_COMMAND_SYMBOL_ASSET_SRC,
-  SIM_COMMAND_SYMBOL_ASSET_DST,
-  SIM_COMMAND_SYMBOL_RISK_A,
-  SIM_COMMAND_SYMBOL_RISK_C,
-  SIM_COMMAND_SYMBOL_ALARM,
-  SIM_COMMAND_SYMBOL_RELIABILITY,
-  SIM_COMMAND_SYMBOL_FILENAME,	//this and the following words, are used in events, and in HIDS events (not MAC, OS, or service events)
-  SIM_COMMAND_SYMBOL_USERNAME,
-  SIM_COMMAND_SYMBOL_PASSWORD,
-  SIM_COMMAND_SYMBOL_USERDATA1,
-  SIM_COMMAND_SYMBOL_USERDATA2,
-  SIM_COMMAND_SYMBOL_USERDATA3,
-  SIM_COMMAND_SYMBOL_USERDATA4,
-  SIM_COMMAND_SYMBOL_USERDATA5,
-  SIM_COMMAND_SYMBOL_USERDATA6,
-  SIM_COMMAND_SYMBOL_USERDATA7,
-  SIM_COMMAND_SYMBOL_USERDATA8,
-  SIM_COMMAND_SYMBOL_USERDATA9,
-  SIM_COMMAND_SYMBOL_ROLE_CORRELATE, //different kinds of servers, each one with its own role.
-  SIM_COMMAND_SYMBOL_ROLE_CROSS_CORRELATE, 
-  SIM_COMMAND_SYMBOL_ROLE_STORE,
-  SIM_COMMAND_SYMBOL_ROLE_QUALIFY,
-  SIM_COMMAND_SYMBOL_ROLE_RESEND_ALARM,
-  SIM_COMMAND_SYMBOL_ROLE_RESEND_EVENT,
-  SIM_COMMAND_SYMBOL_DATABASE_QUERY,
-  SIM_COMMAND_SYMBOL_DATABASE_ANSWER,
-  SIM_COMMAND_SYMBOL_ANSWER,
-//  SIM_COMMAND_SYMBOL_QUERY,
-	SIM_COMMAND_SYMBOL_DATABASE_ELEMENT_TYPE, //What kind of element is the answer/query talking about? host, network, directives...
-  SIM_COMMAND_SYMBOL_IS_PRIORITIZED
-} SimCommandSymbolType;
-
+#include "sim-scanner-tokens.h"
 
 /*
  * Remember that when the server sends something, the keywords are written in
@@ -230,7 +86,8 @@ static const struct
   { "ok", SIM_COMMAND_SYMBOL_OK },
   { "error", SIM_COMMAND_SYMBOL_ERROR },
   { "database-query", SIM_COMMAND_SYMBOL_DATABASE_QUERY },
-  { "database-answer", SIM_COMMAND_SYMBOL_DATABASE_ANSWER }
+  { "database-answer", SIM_COMMAND_SYMBOL_DATABASE_ANSWER },
+	{"snort-event", SIM_COMMAND_SYMBOL_SNORT_EVENT}
 };
 
 static const struct
@@ -486,7 +343,7 @@ static const struct
   { "userdata7", SIM_COMMAND_SYMBOL_USERDATA7 },
   { "userdata8", SIM_COMMAND_SYMBOL_USERDATA8 },
   { "userdata9", SIM_COMMAND_SYMBOL_USERDATA9 },
-  { "is_prioritized", SIM_COMMAND_SYMBOL_IS_PRIORITIZED }
+  { "is_prioritized", SIM_COMMAND_SYMBOL_IS_PRIORITIZED },
 };
 
 static const struct
@@ -666,9 +523,108 @@ static const struct
   { "servername", SIM_COMMAND_SYMBOL_SERVERNAME }
 };
 
+static const struct
+{
+  gchar *name;
+  guint token;
+} snort_event_symbols[]={
+  {"sensor",SIM_COMMAND_SYMBOL_SNORT_EVENT_SENSOR},
+	{"interface",SIM_COMMAND_SYMBOL_SNORT_EVENT_IF},
+  {"unziplen",SIM_COMMAND_SYMBOL_UNZIPLEN},
+	{"gzipdata",SIM_COMMAND_SYMBOL_GZIPDATA},
+	{"event_type",SIM_COMMAND_SYMBOL_SNORT_EVENT_TYPE}
+};
+static const struct 
+{
+	gchar *name;
+	guint token;
+} snort_event_data_symbols[]={
+	{"type",SIM_COMMAND_SYMBOL_SNORT_EVENT_DATA_TYPE},
+	{"date",SIM_COMMAND_SYMBOL_SNORT_EVENT_DATE},
+	{"snort_gid",SIM_COMMAND_SYMBOL_SNORT_EVENT_GID},
+	{"snort_sid",SIM_COMMAND_SYMBOL_SNORT_EVENT_SID},
+	{"snort_rev",SIM_COMMAND_SYMBOL_SNORT_EVENT_REV},
+	{"snort_classification",SIM_COMMAND_SYMBOL_SNORT_EVENT_CLASSIFICATION},
+	{"snort_priority",SIM_COMMAND_SYMBOL_SNORT_EVENT_PRIORITY},
+	{"packet_type",SIM_COMMAND_SYMBOL_SNORT_EVENT_PACKET_TYPE}
+};
 
+static const struct{
+	gchar *name;
+	gint token;
+} snort_event_packet_raw_symbols[]={
+{"raw_packet",SIM_COMMAND_SYMBOL_SNORT_EVENT_PACKET_RAW}
+};
 
-static GScanner  *GLOBAL_scanner;
+static const struct
+{
+	gchar *name;
+	guint token;
+} snort_event_packet_ip_symbols[]={
+  {"ip_ver",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_VER},
+	{"ip_tos",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_TOS},
+	{"ip_id",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_ID},
+	{"ip_offset",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_OFFSET},
+	{"ip_hdrlen",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_HDRLEN},
+	{"ip_len",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_LEN},
+	{"ip_ttl",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_TTL},
+	{"ip_proto",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_PROTO},
+	{"ip_csum",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_CSUM},
+	{"ip_src",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_SRC},
+	{"ip_dst",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_DST},
+	{"ip_optnum",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_OPTNUM},
+	{"ip_optcode",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_OPTCODE},
+	{"ip_optlen",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_OPTLEN},
+	{"ip_optpayload",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_OPTPAYLOAD},
+	{"ip_ippayload",SIM_COMMAND_SYMBOL_SNORT_EVENT_IP_PAYLOAD}
+};
+
+static const struct 
+{
+	gchar *name;
+	guint token;
+} snort_event_packet_icmp_symbols[]={
+	{"icmp_type",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_TYPE},
+	{"icmp_code",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_CODE},
+	{"icmp_csum",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_CSUM},
+	{"icmp_id",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_ID},
+	{"icmp_seq",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_SEQ},
+	{"icmp_payload",SIM_COMMAND_SYMBOL_SNORT_EVENT_ICMP_PAYLOAD}
+};
+
+static const struct
+{
+	gchar *name;
+	guint token;
+	
+} snort_event_packet_udp_symbols[]={
+	{"udp_sport",SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_SPORT},
+	{"udp_dport",SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_DPORT},
+	{"udp_len",SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_LEN},
+	{"udp_csum",SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_CSUM},
+	{"udp_payload",SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_PAYLOAD}
+};
+
+static const struct
+{
+	gchar *name;
+	guint token;
+} snort_event_packet_tcp_symbols[]={
+	{"tcp_sport",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_SPORT},
+	{"tcp_dport",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_DPORT},
+	{"tcp_seq",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_SEQ},
+	{"tcp_ack",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_ACK},
+	{"tcp_flags",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_FLAGS},
+	{"tcp_offset",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_OFFSET},
+	{"tcp_window",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_WINDOW},
+	{"tcp_csum",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_CSUM},
+	{"tcp_urgptr",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_URGPTR},
+	{"tcp_optnum",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_OPTNUM},
+	{"tcp_optcode",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_OPTCODE},
+	{"tcp_optlen",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_OPTLEN},
+	{"tcp_optpayload",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_OPTPAYLOAD},
+	{"tcp_payload",SIM_COMMAND_SYMBOL_SNORT_EVENT_TCP_PAYLOAD}
+};
 
 
 enum 
@@ -749,9 +705,24 @@ static gboolean	sim_command_database_query_scan					(SimCommand    *command,
 													                                GScanner      *scanner);
 static gboolean	sim_command_database_answer_scan					(SimCommand    *command,
 													                                GScanner      *scanner);
-
+																													
+gboolean sim_command_snort_event_scan							(SimCommand *command,
+																													GScanner			*scanner);		
+static GPrivate *privScanner=NULL;
 static gpointer parent_class = NULL;
 static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+
+/*
+ * Init de TLS system for all the threads
+ * must be called AFTER g_thread_init()
+ * The thread local variable store the pointer to the lexical scanner
+ */
+ 
+ void sim_command_init_tls(void){
+                privScanner = g_private_new((GDestroyNotify)g_scanner_destroy);
+ }
+
+
 
 /* GType Functions */
 
@@ -851,8 +822,6 @@ sim_command_impl_finalize (GObject  *gobject)
 						g_free (cmd->data.event.userdata7);
       		if (cmd->data.event.userdata8)
 						g_free (cmd->data.event.userdata8);
-      		if (cmd->data.event.userdata9)
-						g_free (cmd->data.event.userdata9);
 	
       break;
 
@@ -1268,10 +1237,10 @@ sim_command_new_from_rule (SimRule  *rule)
   return command;
 }
 
-void
+GScanner *
 sim_command_start_scanner()
 {
-  GScanner *scanner;
+  GScanner *scanner =  NULL;
   gint         i;
 
   /* Create scanner */
@@ -1421,10 +1390,34 @@ sim_command_start_scanner()
 	/* Add Database Answer symbols (remote DB) */
   for (i = 0; i < G_N_ELEMENTS (database_answer_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_DATABASE_ANSWER, database_answer_symbols[i].name, GINT_TO_POINTER (database_answer_symbols[i].token));
+  /* Add snort event symbols */
+  for (i = 0; i < G_N_ELEMENTS (snort_event_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SNORT_EVENT, snort_event_symbols[i].name, GINT_TO_POINTER (snort_event_symbols[i].token));	
+		/* Add snort data symbols*/
+for (i = 0; i < G_N_ELEMENTS (snort_event_data_symbols); i++)
+    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SNORT_EVENT_DATA, snort_event_data_symbols[i].name, GINT_TO_POINTER (snort_event_data_symbols[i].token));	
+/* Add raw  symbools */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_packet_raw_symbols);i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_PACKET_RAW, snort_event_packet_raw_symbols[i].name, GINT_TO_POINTER (snort_event_packet_raw_symbols[i].token));
+
+	/* Add ip symbools */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_packet_ip_symbols);i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_IP, snort_event_packet_ip_symbols[i].name, GINT_TO_POINTER (snort_event_packet_ip_symbols[i].token));
+	/* Add icmp symbols */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_packet_icmp_symbols); i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_ICMP,snort_event_packet_icmp_symbols[i].name, GINT_TO_POINTER (snort_event_packet_icmp_symbols[i].token));
+	/* Add udp symbols */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_packet_udp_symbols); i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_UDP,snort_event_packet_udp_symbols[i].name, GINT_TO_POINTER (snort_event_packet_udp_symbols[i].token));
+	/* Add tcp symbols */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_packet_tcp_symbols);i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_TCP,snort_event_packet_tcp_symbols[i].name, GINT_TO_POINTER (snort_event_packet_tcp_symbols[i].token));
+	/* Add snort data symbols */
+	for (i = 0; i < G_N_ELEMENTS (snort_event_data_symbols);i++)
+		g_scanner_scope_add_symbol (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_TCP,snort_event_data_symbols[i].name, GINT_TO_POINTER (	snort_event_data_symbols[i].token));
 
 
-
-  GLOBAL_scanner = scanner;
+	return scanner;
 
 }
 
@@ -1442,12 +1435,16 @@ sim_command_scan (SimCommand    *command,
   GScanner    *scanner;
 	gboolean OK=TRUE; //if a problem appears in the command scanning, we'll return.
 
+  gchar *aux;
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (buffer != NULL);
-  
-  scanner = GLOBAL_scanner;
-
+	if ((scanner = (GScanner*)g_private_get(privScanner))==NULL){
+	                   scanner = sim_command_start_scanner();
+	                   g_private_set(privScanner,scanner);
+	          g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Scanner: %p, thread: %p",scanner,g_thread_self ());
+	}
+	 
   /* Sets input text */
   g_scanner_input_text (scanner, buffer, strlen (buffer));
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_COMMAND);
@@ -1609,8 +1606,12 @@ sim_command_scan (SimCommand    *command,
 					  if (!sim_command_database_answer_scan (command, scanner))
 							OK=FALSE;
 	          break;
-
-
+			case SIM_COMMAND_SYMBOL_SNORT_EVENT:
+					 aux = g_strdup(scanner->text);
+			     if (!sim_command_snort_event_scan(command,scanner))
+					    OK=FALSE;
+					 return OK; /* all the process is in sim_command_snort_event_scan */
+					 break;
       default:
 					  if (scanner->token == G_TOKEN_EOF)
 					    break;
@@ -3850,7 +3851,6 @@ sim_command_event_scan (SimCommand    *command,
             else
               command->data.event.is_prioritized = FALSE;
             break;
-
 			default:
 					  if (scanner->token == G_TOKEN_EOF)
 					    break;
@@ -5685,6 +5685,7 @@ sim_command_database_query_scan (SimCommand    *command,
 	return TRUE;
 }
 
+
 /*
  *	Scan and store the query answer wich has arrived here from a master server.
  */
@@ -5945,7 +5946,10 @@ sim_command_get_event (SimCommand     *command)
 
   g_return_val_if_fail (command, NULL);
   g_return_val_if_fail (SIM_IS_COMMAND (command), NULL);
-  g_return_val_if_fail (command->type == SIM_COMMAND_TYPE_EVENT, NULL);
+	//
+	if (command->type!= SIM_COMMAND_TYPE_EVENT && command->type!=SIM_COMMAND_TYPE_SNORT_EVENT)
+		return NULL;
+  //g_return_val_if_fail (command->type == SIM_COMMAND_TYPE_EVENT , NULL);
   g_return_val_if_fail (command->data.event.type, NULL);
 
   type = sim_event_get_type_from_str (command->data.event.type); //monitor or detector?
@@ -5964,14 +5968,20 @@ sim_command_get_event (SimCommand     *command)
       event->diff_time = (time (NULL) > event->time) ? (time (NULL) - event->time) : 0;					
 		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->diff_time= %d", event->diff_time);
 		}
-		else
+		else{
+		  g_object_unref(event);
 			return NULL;
+		}
   }
   if (command->data.event.sensor) 
     event->sensor = g_strdup (command->data.event.sensor);
 	
-	if (!(ia_temp = gnet_inetaddr_new_nonblock (event->sensor, 0))) //sanitize
+	if (!(ia_temp = gnet_inetaddr_new_nonblock (event->sensor, 0)))
+	{ //sanitize
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event: Error: please specify sensor IP");
+		g_object_unref(event);
 		return NULL;
+	}
 	else
 		gnet_inetaddr_unref (ia_temp);
 					
@@ -5980,8 +5990,10 @@ sim_command_get_event (SimCommand     *command)
 
   if (command->data.event.plugin_id)
     event->plugin_id = command->data.event.plugin_id;
-	else
+	else{
+	  g_object_unref(event);
 		return NULL;
+	}
 	
   if (command->data.event.plugin_sid)
     event->plugin_sid = command->data.event.plugin_sid;
@@ -5994,8 +6006,10 @@ sim_command_get_event (SimCommand     *command)
 		{
 			if (sim_string_is_number (command->data.event.protocol, 0))
 				event->protocol = (SimProtocolType) atoi(command->data.event.protocol);
-			else
+			else{
+			  g_object_unref(event);
 				return NULL;
+		  }
 		}
 	}
 	else
@@ -6005,8 +6019,10 @@ sim_command_get_event (SimCommand     *command)
 	//If it's not defined, it will be 0.0.0.0 to avoid problems inside DB and other places.
   if (command->data.event.src_ip)
     event->src_ia = gnet_inetaddr_new_nonblock (command->data.event.src_ip, 0);
-	if (!event->src_ia)
+	if (!event->src_ia){
+		g_object_unref(event);
 		return NULL;
+	}
 	
   if (command->data.event.dst_ip)
     event->dst_ia = gnet_inetaddr_new_nonblock (command->data.event.dst_ip, 0);
@@ -6084,6 +6100,9 @@ sim_command_get_event (SimCommand     *command)
 		event->is_prioritized = TRUE;
 	else
 		event->is_prioritized = FALSE;
+	/* if snort_event, copy snort data*/
+	if (command->type == SIM_COMMAND_TYPE_SNORT_EVENT)
+		event->packet = (SimPacket*)g_object_ref(command->packet);
 	
   return event;
 }

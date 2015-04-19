@@ -8,3 +8,5 @@ scriptaculous_DATA = builder.js \
 			slider.js
 
 EXTRA_DIST   = $(scriptaculous_DATA)
+
+DISTCLEANFILES = Makefile.in

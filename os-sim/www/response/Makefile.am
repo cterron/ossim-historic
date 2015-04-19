@@ -5,4 +5,4 @@ response_DATA =   deleteresponse.php \
 
 
 EXTRA_DIST   = $(response_DATA)
-
+DISTCLEANFILES = Makefile.in

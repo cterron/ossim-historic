@@ -175,6 +175,9 @@ sim_host_new_from_dm (GdaDataModel  *dm,
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   host->_priv->asset = gda_value_get_smallint (value);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_host_new_from_dm: %s", host->_priv->name);
+  sim_host_debug_print	(host);
+
   return host;
 }
 

@@ -9,5 +9,6 @@ ossim_agent_DATA    = AUTHORS \
 	setup.py
 
 EXTRA_DIST   = $(ossim_agent_DATA)
+DISTCLEANFILES = Makefile.in
 
 

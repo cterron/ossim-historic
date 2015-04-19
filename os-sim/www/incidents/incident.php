@@ -104,13 +104,13 @@ function format_user($user, $html = true, $show_email = false)
 
     <td><b><?=$name?></b></td>
     <td class="left">
-        Name: <b><?=$title?> </b><br/>
-        Class: <?=$ref?><br/>
-        Type: <?=$type?><br/>
-        Created: <?=$created?> (<?=$life?>)<br/>
-        Last Update: <?=$updated?><br/>
+        <?=_("Name")?>: <b><?=$title?> </b><br/>
+        <?=_("Class")?>: <?=$ref?><br/>
+        <?=_("Type")?>: <?=$type?><br/>
+        <?=_("Created")?>: <?=$created?> (<?=$life?>)<br/>
+        <?=_("Last Update")?>: <?=$updated?><br/>
         <hr/>
-        Extra: <?=$taghtm?><br/>
+        <?=_("Extra")?>: <?=$taghtm?><br/>
         <hr/>
     <?php
         if ($ref == 'Alarm' or $ref == 'Event') {

@@ -16,3 +16,4 @@ incidents_DATA = attachment.php \
 
 EXTRA_DIST   = $(incidents_DATA)
 
+DISTCLEANFILES = Makefile.in

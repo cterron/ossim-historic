@@ -90,11 +90,11 @@ class Host_ids {
 
 
 
-    function delete($conn, $ip, $date, $sid, $target) {
+    function delete($conn, $ip, $date, $sid, $target)
+    {
         settype($sid, "int");
-
-        $sql = OssimQuery("DELETE FROM host_ids WHERE ip = inet_aton(?)
-        AND date = ? AND sid = ? AND targe = ?");
+        $sql = "DELETE FROM host_ids WHERE ip = inet_aton(?)
+                AND date = ? AND sid = ? AND targe = ?";
         $params = array($ip, $date, $sid, $target);
         if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';

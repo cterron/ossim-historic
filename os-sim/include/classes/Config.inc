@@ -108,11 +108,13 @@ class Config {
 
         /* Metrics: Configure metric settings */
         Config::insert('recovery', '1');
-        Config::insert('threshold', '300');
+        Config::insert('threshold', '30');
 
         /* PHP: PHP Configuration (graphs, acls, database api) */
         Config::insert('phpgacl_path', '/var/www/phpgacl/');
         Config::insert('fpdf_path', '/usr/share/fpdf/');
+        Config::insert('xajax_php_path', 'xajax/');
+        Config::insert('xajax_js_path', '../js/');
         Config::insert('report_graph_type', 'images');
         Config::insert('use_svg_graphics', '0');
         Config::insert('use_resolv', '0');
@@ -177,6 +179,13 @@ class Config {
 
         /*Real time event viewer*/
         Config::insert('max_event_tmp', '10000'); 
+
+        /* Login option */
+        Config::insert('login_enforce_existing_user', 'yes'); 
+        Config::insert('login_enable_ldap', 'no'); 
+        Config::insert('login_ldap_server', '127.0.0.1'); 
+        Config::insert('login_ldap_o', 'o=company'); 
+        Config::insert('login_ldap_ou', 'ou=people'); 
     } 
     
     /* Debian specific values */

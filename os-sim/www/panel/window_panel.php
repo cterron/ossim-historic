@@ -65,6 +65,16 @@ if (GET('interface') == 'ajax') {
         $help  = isset($options['window_opts']['help'])  ? $options['window_opts']['help'] : '';
         $opts['window_opts']['title'] = GET('window_title') ? GET('window_title') : $title;
         $opts['window_opts']['help']  = GET('window_help') !== null ? GET('window_help') : $help;
+
+        $enable_metrics = isset($options['metric_opts']['enable_metrics'])  ? $options['metric_opts']['enable_metrics'] : '';
+        $opts['metric_opts']['enable_metrics']  = GET('enable_metrics') !== null ? GET('enable_metrics') : $enable_metrics;
+        $metric_sql = isset($options['metric_opts']['metric_sql'])  ? $options['metric_opts']['metric_sql'] : '';
+        $opts['metric_opts']['metric_sql']  = GET('metric_sql') !== null ? GET('metric_sql') : $metric_sql;
+        $low_threshold = isset($options['metric_opts']['low_threshold'])  ? $options['metric_opts']['low_threshold'] : '';
+        $high_threshold = isset($options['metric_opts']['high_threshold'])  ? $options['metric_opts']['high_threshold'] : '';
+        $opts['metric_opts']['low_threshold']  = GET('low_threshold') !== null ? intval(GET('low_threshold')) : $low_threshold;
+        $opts['metric_opts']['high_threshold']  = GET('high_threshold') !== null ? intval(GET('high_threshold')) : $high_threshold;
+
     }
     if (!isset($options['plugin_opts'])) {
         $options['plugin_opts'] = array();
@@ -79,13 +89,67 @@ if (GET('interface') == 'ajax') {
 
     if ($method == 'saveConfig') {
         echo $ajax->saveConfig($id, $opts);
-        
+
     } elseif ($method == 'showWindowContents') {
         // XXX This should save the options as temp.. so the user
         //     will be able to revert the settings
         $opts = $ajax->loadConfig($id);
+
+        // Add metric threshold indicator
+        $indicator = "";
+        if(isset($opts['metric_opts']['enable_metrics']) && $opts['metric_opts']['enable_metrics'] == 1 && isset($opts['metric_opts']['metric_sql']) && strlen($opts['metric_opts']['metric_sql']) > 0){
+
+        $db = new ossim_db;
+        $conn = $db->connect();
+        $sql = $opts['metric_opts']['metric_sql'];
+        if (!$rs = $conn->Execute($sql)) {
+            echo "Error was: ".$conn->ErrorMsg()."\n\nQuery was: ".$sql;
+            exit();
+        }
+        $metric_value = $rs->fields[0];
+        $db->close($conn);
+            $low_threshold = $opts['metric_opts']['low_threshold'];
+            $high_threshold = $opts['metric_opts']['high_threshold'];
+
+            // We need 5 states for the metrics: 
+            /* 
+                  * green
+                -25 % 
+                  * green-yellow
+              - lower threshold
+                  * green-yellow
+                +25 %
+                  * yellow
+                -25 %
+                  * yellow-red
+              - upper threshold
+                  * yellow-red
+                +25 %
+                  * red
+            */
+
+            $first_comp = $low_threshold - ($low_threshold / 4);
+            $second_comp = $low_threshold + ($low_threshold / 4);
+            $third_comp = $high_threshold + ($high_threshold / 4);
+            $fourth_comp = $high_threshold + ($high_threshold / 4);
+
+            if($metric_value <= $first_comp){
+              $indicator = " <img src=\"../pixmaps/traffic_light1.gif\"/> ";
+            } elseif($metric_value > $first_comp && $metric_value <= $second_comp){
+              $indicator = " <img src=\"../pixmaps/traffic_light2.gif\"/> ";
+            } elseif($metric_value > $second_comp && $metric_value <= $third_comp){
+              $indicator = " <img src=\"../pixmaps/traffic_light3.gif\"/> ";
+            } elseif($metric_value > $third_comp && $metric_value <= $fourth_comp){
+              $indicator = " <img src=\"../pixmaps/traffic_light4.gif\"/> ";
+            } elseif ($metric_value > $fourth_comp){
+              $indicator = " <img src=\"../pixmaps/traffic_light5.gif\"/> ";
+            } else {
+              $indicator = " <img src=\"../pixmaps/traffic_light0.gif\"/> ";
+            }
+        }
+
         $data['CONTENTS'] = $ajax->showWindowContents($opts);
-        $data['TITLE']    = $opts['window_opts']['title'];
+        $data['TITLE']    = $opts['window_opts']['title'] . $indicator;
         $data['HELP_LABEL'] = _("help");
         $data['HELP_MSG'] = Util::string2js($opts['window_opts']['help']);
         $data['CONFIG']   = '';
@@ -113,9 +177,8 @@ if (GET('interface') == 'ajax') {
         echo $ajax->parseTemplate('./window_tpl.htm', $data);
     
     } else {
-        //printr($opts);
         // security check: only allow calling valid methods of Window_Panel_Ajax
-        $allowed = array('showCategoriesHTML', 'showSubCategoryHTML',
+        $allowed = array('showCategoriesHTML', 'showSubCategoryHTML', 'showMetricsHTML',
                          'showSettingsHTML');
         if (!in_array($method, $allowed)) {
             die("Invalid method: '$method'");
@@ -201,6 +264,11 @@ if (GET('interface') == 'ajax') {
       padding: 3px;
       z-index: 1001;
   }
+.tag_cloud { padding: 3px; text-decoration: none; }
+.tag_cloud:link  { color: #81d601; }
+.tag_cloud:visited { color: #019c05; }
+.tag_cloud:hover { color: #ffffff; background: #69da03; }
+.tag_cloud:active { color: #ffffff; background: #ACFC65; }
     </style>
 </head>
 <body>
@@ -209,6 +277,7 @@ if (GET('interface') == 'ajax') {
 <script>Element.hide('help');</script>
 
 <form id="panel" method="POST">
+<input type="hidden" name="panel_id" value="<?= GET('panel_id'); ?>">
 <table width="100%" align="center">
 <tr>
 <td width="40%">
@@ -239,9 +308,21 @@ if (GET('interface') == 'ajax') {
       </div>
     </div>
 
+    <div id="panel4">
+      <div id="panel4Header" class="accordionTabTitleBar">
+        <?=_("Metrics")?>
+      </div>
+      <div id="panel4Content"  class="accordionTabContentBox">
+      </div>
+    </div>
+
+
 </div>
 <br>
 <center>
+    <input type="button" value="<?=_("Accept config")?>"
+           onClick="javascript: ajax_save('<?=$id?>'); document.location = 'panel.php';">
+    &nbsp;
     <input type="button" name="export" value="<?=_("Export Config")?> -&gt;"
            onClick="javascript: ajax_save('<?=$id?>'); ajax_show(false, 'export');">
     &nbsp;
@@ -256,8 +337,7 @@ if (GET('interface') == 'ajax') {
 </center>
 <br>
 <center>
-    <input type="button" value="<?=_("Accept config")?>"
-           onClick="javascript: ajax_save('<?=$id?>'); document.location = 'panel.php';">
+    
 </center>
 </td></tr>
 </table>
@@ -268,6 +348,7 @@ if (GET('interface') == 'ajax') {
                     - panel1Header: Category
                     - panel2Header: Subcategory
                     - panel3Header: Settings
+                    - panel3Header: Panel Metrics
 */
 function ajax_show(tab, window)
 {
@@ -279,6 +360,7 @@ function ajax_show(tab, window)
     }
     var method;
     var refresh;
+
     if (id == 'panel1Header') {
         method = 'showCategoriesHTML';
         refresh = 'panel1Content';
@@ -291,6 +373,10 @@ function ajax_show(tab, window)
         method = 'showSettingsHTML';
         refresh = 'panel3Content';
     }
+    if (id == 'panel4Header') {
+        method = 'showMetricsHTML';
+        refresh = 'panel4Content';
+    }
     if (id == 'output') {
         method = 'showWindowContents';
         refresh = 'output';
@@ -299,7 +385,7 @@ function ajax_show(tab, window)
         method = 'showExportText';
         refresh = 'output';
     }
-    ajax_url = '<?=$_SERVER['PHP_SELF']?>?interface=ajax&ajax_method='+method+'&id=<?=$id?>';
+    ajax_url = '<?=$_SERVER['PHP_SELF']?>?interface=ajax&ajax_method='+method+'&id=<?=$id?>&panel_id=<?=GET('panel_id')?>';
     Element.show('loading');
     // Ajax functionallity from Prototype v.1.x
     new Ajax.Updater (
@@ -309,9 +395,12 @@ function ajax_show(tab, window)
             method: 'get',
             asynchronous: true,
             parameters: Form.serialize('panel'),
+            evalScripts: true,
             onComplete: function(req) {
+                //$('debug').innerHTML = req.responseText;
                 Element.hide('loading');
                 $('refresh').innerHTML = req.responseText;
+                
             }
         }
     );
@@ -320,7 +409,7 @@ function ajax_show(tab, window)
 
 function ajax_save(id)
 {
-    ajax_url = '<?=$_SERVER['PHP_SELF']?>?interface=ajax&ajax_method=saveConfig&id='+id;
+    ajax_url = '<?=$_SERVER['PHP_SELF']?>?interface=ajax&panel_id=<?=GET('panel_id')?>&ajax_method=saveConfig&id='+id;
     var debug = 'debug';
     var myAjax = new Ajax.Updater (
         debug,  // Element to refresh

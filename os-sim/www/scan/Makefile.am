@@ -8,4 +8,4 @@ scan_DATA = deletescan.php \
 	newhostscan.php
 
 EXTRA_DIST   = $(scan_DATA)
-
+DISTCLEANFILES = Makefile.in

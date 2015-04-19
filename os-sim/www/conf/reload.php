@@ -1,10 +1,15 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuPolicy", "PolicyServers");   // Who manage server can reload server conf
+
 require_once ("classes/Session.inc");
 require_once ("classes/Security.inc");
 
     $what = GET('what');
+    $back = GET('back');
 
     ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("What"));
+    ossim_valid($back, OSS_ALPHA, OSS_PUNC, 'illegal:'._("back"));
     
     if (ossim_error()) {
         die(ossim_error());
@@ -32,7 +37,7 @@ require_once ("classes/Security.inc");
         printf(gettext("socket_connect() failed: reason: %s %s\n"), $result, socket_strerror($result));
     } 
 
-    $in = 'connect id="1"' . "\n";
+    $in = 'connect id="1" type="web"' . "\n";
     $out = '';
     socket_write ($socket, $in, strlen ($in));
     $out = socket_read ($socket, 2048);
@@ -51,6 +56,34 @@ require_once ("classes/Security.inc");
     }
 
     socket_close ($socket);
+
+    // Switch off web indicator
+    require_once ('classes/WebIndicator.inc');
+    if ($what == "all") {
+        WebIndicator::set_off("Reload_policies");
+        WebIndicator::set_off("Reload_hosts");
+        WebIndicator::set_off("Reload_nets");
+        WebIndicator::set_off("Reload_sensors");
+        WebIndicator::set_off("Reload_plugins");
+        WebIndicator::set_off("Reload_directives");
+        WebIndicator::set_off("Reload_servers");
+    } else {
+    	WebIndicator::set_off("Reload_" . $what);
+    }
+
+    // Reset main indicator if no more policy reload need   
+    if (!WebIndicator::is_on("Reload_policies") &&
+        !WebIndicator::is_on("Reload_hosts") &&
+        !WebIndicator::is_on("Reload_nets") &&
+        !WebIndicator::is_on("Reload_sensors") &&
+        !WebIndicator::is_on("Reload_plugins") &&
+        !WebIndicator::is_on("Reload_directives") &&
+        !WebIndicator::is_on("Reload_servers")) {
+            WebIndicator::set_off("ReloadPolicy");
+        }
+    
+    // update indicators on top frame
+    $OssimWebIndicator->update_display();
 ?>
 
 <html>
@@ -59,6 +92,7 @@ require_once ("classes/Security.inc");
 </head>
 <body>
   <p> <?php echo gettext("Reload completed successfully"); ?> </p>
+  <p><a href="<?php echo urldecode($back); ?>"> <?php echo gettext("Back"); ?> </a></p>
 </body>
 </html>
 

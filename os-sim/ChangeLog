@@ -1,5 +1,120 @@
 # ChangeLog for OSSIM
 
+        08 Aug 2007 DK <dk@ossim.net> :
+        * 0.9.9rc5 released.
+
+* OSSIM-0.9.9rc5 (08 Aug 2007)
+
+        08 Aug 2007 DK <dk@ossim.net> :
+        * Contributed by Gaston and Federico: Host group code, host / host group scan support with nesssus.
+
+        08 Aug 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+       
+        * More works in BPs
+        * Fix menu displaying errors on new installations
+
+        30 Jul 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+
+	    * Fixes and improvements to the executive panel: cloud plugin, tabs, rss
+
+        11 Jul 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+       
+        * Tons of fixes and improvements in BPs
+
+        26 Jun 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * Business Processes now ready for testing and QA
+
+        12 Jun 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+
+        * More spanish translations (contributed by Jose Izquierdo)
+
+        07 Jun 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+		* Made the use of the bundled xajax lib optional. Patch by dgil (reworked a
+          bit by me)
+
+        04 Jun 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * include/classes/Member_status.inc:
+        	- New class for getting the ntop throughput of a member ip
+        	- More info for sensors: througput and connected networks
+        	- Some performance issues corrected
+
+        01 Jun 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * www/maps/positions_map.php:
+          - List now loaded via Ajax calls
+          - Implemented pager
+
+        31 Mar 2007 DK <dk@ossim.net> :
+        * Server: small bugfix.
+        * Policy: allow for 'any' taget.
+        * Disable old agent code.
+
+        31 May 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * include/ossim_db.inc: Check the mysql php extension and give a clear
+          error message in case it isn't available (too many support request about
+          that)
+        * include/classes/Session.inc: More error checking and reporting for the
+          LDAP auth method
+
+        29 May 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Updated bundled xajax version to 0.25 (fixed E_ALL messeges in the lib too)
+
+        25 May 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Maps changes:
+        - Created a new manager class for getting the status of ossim objects
+        	like:	sensors, hosts, networks, etc with a common interface.
+        	This class will be   used for Business Processess among others
+    	- New way for handling popups, now customizables in content and 
+    		appereance through CSS
+        
+        11 May 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * www/maps/: draw_openlayers.php, openlayers_markers_text.php: Show a popup
+          when click on an icon
+          
+        10 May 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Revamped version of the maps functionality
+
+        09 May 2007 DK <dk@ossim.net> :
+        * Executive panel: New plugin, RSS feed.
+
+        08 May 2007 DK <dk@ossim.net> :
+        * Executive panel: Associate an optional metric to each panel.
+        * Executive panel: New plugin, metric meta panel.
+
+        27 Apr 2007 DK <dk@ossim.net> :
+        * Executive panel: Two new graph types: trends && radars. (Trends was 99% done by Cox)
+        * Executive panel: Tab icons.
+        * Executive panel: SQL graphs now allow to specify target links.
+
+        26 Apr 2007 DK <dk@ossim.net> :
+        * Executive panel: Multi tab support. Full screen mode.
+        * Agent: Fix plugin startup code.
+        * Agent: Fix daemon mode.
+
+        20 Apr 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+		* Initial version of the Maps plugin
+          for the executive panel. This will allow to see the status and the
+          location of your servers in a geographic map or custom image (ex. your
+          home made network graph).
+
+        12 Apr 2007 Alberto Roman <alberto@ossim.net> :
+        * Fix: If connection between the Db and ossim server is lost,
+          ossim-server will try to reconnect each 10 seconds to the DB
+          until it goes up again. 
+ 
+        05 Apr 2007 DK <dk@ossim.net> :
+        * Login: add ldap support. Thx Jose.
+        * Test.
+
+        02 Apr 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * www/event_viewer/configure_event_viewer.php: Now users can move columns
+          to left or right
+          
         01 Apr 2007 DK <dk@ossim.net> :
         * 0.9.9rc4 released.
 
@@ -10,11 +125,30 @@
         * Policy: allow for 'any' taget.
         * Disable old agent code.
 
+        30 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * The Events tab in the menu now links directly to the event viewer,
+          users still wanting to use Acid/BASE should click the "Go to Forensics"
+          link inside the event viewer
+        * Added 3 new column options: width, wrap & align
+        
+        29 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Fix, language change not working on certain systems: Try .UTF8 too
+        
+        29 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Added support for plugin groups input instead of a list of plugins
+        * Configured settings now actually changes the event viewer behavior
+        * Added a default hardcoded "All plugins"
+        
+        28 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * more functionalities
+                
+        27 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * New ajax tool for configuring the event viewer (still work in progress)
+
         17 Mar 2007 DK <dk@ossim.net> :
         * Nessus: custom report generation.
 	Please delete the following lines after update:
         * Still wondering ;-)
-        * tvvcox: wondering on what he's been working since last september.
         * juanma: wondering on what he's been working since last september.
         * dgil: wondering on what he's been working since last september.
 
@@ -26,15 +160,27 @@
         10 Mar 2007 DK <dk@ossim.net> :
         * Executive Panel: proof of concept "tag cloud plugin". It might be interesting to generate taglines using something like http://chir.ag/tech/download/tagline/.
 
+        09 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * Now the event viewer could be customized through PHP.
+        * include/classes/Event_viewer.inc, include/classes/Event_viewer_draw.inc,
+          www/event_viewer/index.php: - Added page and table customization options
+          - Added TODO - Added more data to display
+
         07 Mar 2007 DK <dk@ossim.net> :
         * Nessus: scanning fixes, scan without selecting sensors works again. Fixed bug where host's sensors wouldn't appear in the to-be-scanned list.
         * OSVDB: uploaded get_osvdb.pl, fetches vulnerability (nessus<->osvdb) information as well as plugin sids.
+
         06 Mar 2007 Alberto Roman <alberto@ossim.net> :
         * Fix: filename, username, password and userdata* keywords, are now being sent to the frameworkd if the alarm has those data stored.. 
         * C&A limited (reverted): Change from previous commit reverted. Need more study
  
         02 Mar 2007 DK <dk@ossim.net> :
         * Realtime event viewer: visual enhancements.
+
+        02 Mar 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * include/classes/Action_email.inc: Fix wrong escape (caused double escape
+          on action modifies)
 
         27 Feb 2006 Alberto Roman <alberto@ossim.net> : All this changes applies to
 				ossim server:
@@ -92,7 +238,11 @@
           reconnection, the it won't update the C & A and won't do the correlation.
         * ossim_event table:  Added plugin_id & plugin-sid fields
         * FIX: Added IPv6 fix to compile in MAC Tiger (thx Drizzt). 	 
- 
+
+        27 Feb 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * Initial commit of the new event viewer for the Snort DB (it should eventually replace BASE)
+
         26 Feb 2007 DK <dk@ossim.net> :
         * DoNessus.py: fixing "reentrancy".
         * Nessus reporting: Show scanned hosts & networks.
@@ -103,6 +253,13 @@
         * Nessus reporting: Many reporting enhancements: per date, per network
         * New tag for ticket email templates: TICKET_INVERSE_HISTORY, same as
           TICKET_HISTORY but reversed :-)
+
+        23 Feb 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * include/classes/: Upgrade.inc, Upgrade_base.inc: New property $snort
+          (with it you can do manipulations to the snort db whithin the PHP upgrade
+          scripts)
+        * rc4 upgrade fixes
 
         22 Feb 2007 DK <dk@ossim.net> :
         * Nessus reporting: when limiting to a single network, only show scan dates where that network was involved.
@@ -129,6 +286,15 @@
         * Agent: p0f plugin ignore OS version because p0f isn't accurate.
         * Server: ignore OS version, backwards compatibility.
 
+        07 Feb 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Fix plugin group displaying (was showing many copies of the same group)
+
+        06 Feb 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        Calendar features:
+        * Added help about date format here too
+        * Added the new date selector
+        * Better calendar integration into Ossim, translations and style
+
         02 Feb 2007 DK <dk@ossim.net> :
         * Nessus reporting: unified viewing of nessus scans.
         * Nessus scanning: Sensor selection.
@@ -139,6 +305,30 @@
         * Incidents: Added new "start of incident" field for metric, alarm & event incidents.
         * Backup: Also backup ACL database.
         * DB SQL: Fix SQL creation files.
+
+        30 Jan 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * New function:
+          Util::draw_js_calendar(), which displays a nice calendar icon that you
+          can click on for a comfortable date selector widget.
+        
+          Its using the Mattkruse library, thanks for it Mat!
+          (http://www.javascripttoolbox.com/lib/calendar/)
+        
+          Integration still in progress
+
+        24 Jan 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * E_ALL, security, fixes for rc4
+
+	    11 Jan 2007  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Added alarm list limits support: by number of alarms per page and by start/end
+          date
+
+        21 Dec 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * A lot of fixes and improvements to the business processes interface
+
+        13 Nov 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Non-functional, developer-only release of the upcomming new
+          feature: business processes
 
         22 Sep 2006 DK <dk@ossim.net> :
         * 0.9.9rc3 released.
@@ -198,6 +388,42 @@
           always connect to server before sending any message.
         * frameworkd: many fixes and improvements, thanks to alexlopa!
 
+        18 Sep 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * www/control_panel/global_score.php: - Show hostnames if they are defined
+          in table "host" - Added a leyend
+          
+        14 Sep 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * etc/httpd/ossim.conf: IMPORTANT: Certain data intensive parts of ossim
+          requires this setting (php_value memory_limit 16M). If the execution of a script is aborted with no
+          error message, probably this is the source of the problem.
+
+        14 Sep 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * www/report/pdfreport.php: - Now graphs access require auth
+        
+        08 Sep 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        
+        * Global Score rewritten.
+        
+          Main changes are:
+        
+          - New: Inherited threshold for hosts who belongs to defined networks:
+          host -> net -> group -> global
+          - Fix: Show all groups
+          - New: Groups can be expanded to show networks, and networks to show hosts (no need to
+          reload the page)
+          - Fix: Max Date calculation in global and group (was comparing with just "<")
+          - Fix: Reduced execution time
+          - Fix: Reduced num of queries
+          - Fix: i18n & urlencoding of new incident link
+          - Fix: E_ALL when user didn't have full perms
+          - New: More information given about hosts
+          - New: Metrics are given in percentage. Mouse over the percentage
+          to see      the actual values
+          - New: Rows are ordered by metric (this is round(metric / threshold * 100)) and alphabetically
+
+        09 Aug 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Fix: was imposible to view all incidents (opened & closed)
+          
         9 Aug 2006 Alberto <alberto@ossim.net> : 
         * Events with ";": fixed a problem with a GDA call that made the
           insertion into DB to fail. If there are a ";" inside log, it will
@@ -213,6 +439,23 @@
         * event protocol: If the sensor doesn't issue a protocol, we will
           treat it as "OTHER" although it will be inserted (to be able to
           search it in ACID) as a TCP one.
+
+        02 Aug 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * Really old ossim versions used
+          already the plugin_id 4002-4 (Proftp: login failure). Ensure its
+          replacement with the new one (sshd: invalid user)
+        * reduced reliability of SHELLCODE
+          (from 3 to 1) (change already done in ossim_data.sql)
+        
+        26 Jul 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * include/classes/Host.inc: E_ALL
+        * include/classes/Host_os.inc, www/report/report.php: Performance: save one
+          query per row
+        * include/classes/Host_os.inc: Minor code clean-up, added comments
+          		
+        10 Jul 2006  Tomas V.V.Cox <tvvcox@ossim.net>
+        * starting 0.9.9rc3 release
+        * Fix: server not storing aprwatch events due to typo (only for upgraded systems)
 				
         26 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * New feature for Executive panel: help labels
@@ -266,7 +509,7 @@
           - userdata9
 
         07 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
-        * POST() now supports arrays (was causing problems in for Plugin Groups)
+        * POST() now supports arrays (was causing problems for Plugin Groups)
 
         05 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * New panel plugin: import/export panel configurations. This allows

@@ -1,6 +1,8 @@
 <?php
-    session_start();
-    $scan = $_SESSION["_scan"];
+    // menu authentication
+    require_once ('classes/Session.inc');
+    Session::logcheck("MenuTools", "ToolsScan");
+
 ?>
 
 <html>
@@ -20,7 +22,13 @@
      * Update ossim database with scan structure
      */
 
-    update_db($_POST, $scan);
+    if (isset($_SESSION["_scan"])) {
+        $scan = $_SESSION["_scan"];
+        update_db($_POST, $scan);
+
+        echo "<br/><a href=\"../netscan/index.php\">" . 
+            gettext ("Return to Scan Results page") . "</a><br/>";
+    }
     echo "<br/><a href=\"../host/host.php\">" . 
         gettext ("Return to host's policy") . "</a>";
 
@@ -48,14 +56,16 @@
                 $sensors = array();
                 for ($j = 1; $j <= $global_info["nsens"]; $j++) {
                     $name = "mboxs" . $j;
-                    ossim_valid($global_info[$name], OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,
-                    OSS_SPACE, 'illegal:'._("Policy id"));
+                    if (isset($global_info[$name])) {
+                        ossim_valid($global_info[$name], OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,
+                        OSS_SPACE, 'illegal:'._("Policy id"));
 
-                    if (ossim_error()) {
-                            die(ossim_error());
-                    }
-                    if (!empty($global_info[$name]))
+                        if (ossim_error()) {
+                                die(ossim_error());
+                        }
+
                         $sensors[] = $global_info[$name];
+                    }
                 }
 
 
@@ -79,8 +89,8 @@
                                   $scan["$ip"]["mac_vendor"]);
                                   
                     Host_scan::delete ($conn, $ip, 3001);
-                    if ($global_info["nessus"]) {
-                        Host_scan::insert ($conn, $ip, 3001);
+                    if (isset($global_info["nessus"])) {
+                        Host_scan::insert ($conn, $ip, 3001, 0);
                     }
 
                 } else {
@@ -104,7 +114,7 @@
                                   $scan[$ip]["mac"],
                                   $scan[$ip]["mac_vendor"]);
 
-                    if($global_info["nessus"]) {
+                    if (isset($global_info["nessus"])) {
                         Host_scan::insert ($conn, $ip, 3001, 0);
                     }                
                 }

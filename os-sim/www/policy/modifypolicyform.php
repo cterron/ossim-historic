@@ -700,14 +700,6 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
 name="target_any" value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
 
-  <tr>
-    <th> <?php echo gettext("Description"); ?> </th>
-    <td class="left">
-        <textarea name="descr" rows="2" 
-            cols="20"><?php echo $policy->get_descr(); ?></textarea>
-    </td>
-  </tr>
-
 <?php
   if ($role_list = $policy->get_role ($conn)) {
 	                foreach($role_list as $role) {
@@ -716,21 +708,21 @@ name="target_any" value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
     <th> <?php echo gettext("Correlate events"); ?> </th>
     <td class="left">
     <input type="radio" name="correlate" value="1" <?php if($role->get_correlate() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
-    <input type="radio" name="correlate" value="0" <?php if($role->get_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    <input type="radio" name="correlate" value="0" <?php if($role->get_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
     <th> <?php echo gettext("Cross Correlate events"); ?> </th>
     <td class="left">
     <input type="radio" name="cross_correlate" value="1" <?php if($role->get_cross_correlate() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
-    <input type="radio" name="cross_correlate" value="0" <?php if($role->get_cross_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    <input type="radio" name="cross_correlate" value="0" <?php if($role->get_cross_correlate() == 0) echo " checked "; ?>> <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
     <th> <?php echo gettext("Store events"); ?> </th>
     <td class="left">
     <input type="radio" name="store" value="1" <?php if($role->get_store() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
-    <input type="radio" name="store" value="0" <?php if($role->get_store() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    <input type="radio" name="store" value="0" <?php if($role->get_store() == 0) echo " checked "; ?>> <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
@@ -754,10 +746,23 @@ name="target_any" value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
     <input type="radio" name="resend_events" value="0" <?php if($role->get_resend_event() == 0) echo " checked "; ?>> <?= _("No"); ?>
     </td>
   </tr>
+<tr>
+<td colspan="2" class="left">
+1) <?= _("Does not apply to targets without associated database.") ?> <?= _("Implicit value is always No for them."); ?>
+</td>
+</tr>
 	<?php
   }
 }
 ?>
+  <tr>
+    <th> <?php echo gettext("Description"); ?> </th>
+    <td class="left">
+        <textarea name="descr" rows="2" 
+            cols="20"><?php echo $policy->get_descr(); ?></textarea>
+    </td>
+  </tr>
+
 
 <?php
     $db->close($conn);

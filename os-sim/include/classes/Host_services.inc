@@ -4,6 +4,11 @@ require_once ("ossim_db.inc");
 
 class Host_services{
 
+    /*
+     * Return list of the all records (anomalies or not) for each host
+     * An inferior and superior limit of record is given 
+     * (used by secondary specific anomalie screen)
+     */
     function get_list($conn, $inf, $sup)
     {
         require_once('classes/Session.inc');
@@ -28,7 +33,7 @@ class Host_services{
                 if (!$aux = &$conn->Execute($sql, $params)) {
                     print $conn->ErrorMsg();
                 } elseif ((Session::hostAllowed($conn, $aux->fields["ip_addr"])) 
-                            or (Session::hostAllowed($conn, $aux->fields["ip_sensor"])))
+                            and (Session::hostAllowed($conn, $aux->fields["ip_sensor"])))
                 {
                     if (($aux->fields["anom"] == "0") || ($aux->RecordCount() == "1")) {
                         $list[] =  array("ip" => $aux->fields["ip_addr"], "port" => $aux->fields["port"],
@@ -90,10 +95,18 @@ class Host_services{
 
 
 
+    /*
+     * Return list of all records (anomalies or not) of a specific host
+     * (used by secondary specific anomalie screen)
+     */
     function get_ip_list($conn, $host, $sensor, $port)
     {
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
+
+        $list = array();
+        if ( !(Session::hostAllowed($conn, $host)) or !(Session::hostAllowed($conn, $sensor)) )
+            return $list;
 
         $sql = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip) as ip_addr from host_services where 
                 ip = inet_aton(?) and port = ? and sensor = inet_aton(?)  order by date desc";
@@ -101,81 +114,89 @@ class Host_services{
         $params = array($host, $port, $sensor);
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
-        } elseif ((Session::hostAllowed($conn, $aux->fields["ip_addr"])) or 
-                    (Session::hostAllowed($conn, $aux->fields["ip_sensor"])))
-        {
-            if ($aux->RecordCount() == "1") {
-                $list[] =  array("ip" => $aux->fields["ip_addr"], "port" => $aux->fields["port"],
-                                 "protocol" => $aux->fields["protocol"], "old_protocol" => $aux->fields["protocol"],
-                                 "version" => $aux->fields["version"], "old_version" => $aux->fields["version"],
-                                 "service" => $aux->fields["service"], "old_service" => $aux->fields["service"],
-                                 "service_type" => $aux->fields["service_type"], "old_service_type" => $aux->fields["service_type"],
-                                 "origin" => $aux->fields["origin"], "old_origin" => $aux->fields["origin"],
-                                 "date" => $aux->fields["date"], "old_date" => $aux->fields["date"],
-                                 "sensor" => $aux->fields["ip_sensor"], "interface" => $aux->fields["interface"]);
-            } else {
-                if ($aux->fields["anom"] == "0") {
-                    $list[] = array("ip" => $aux->fields["ip_addr"], "port" => $aux->fields["port"],
-                                 "protocol" => $aux->fields["protocol"], "old_protocol" => $aux->fields["protocol"],
-                                 "version" => $aux->fields["version"], "old_version" => $aux->fields["version"],
-                                 "service" => $aux->fields["service"], "old_service" => $aux->fields["service"],
-                                 "service_type" => $aux->fields["service_type"], "old_service_type" => $aux->fields["service_type"],
-                                 "origin" => $aux->fields["origin"], "old_origin" => $aux->fields["origin"],
-                                 "date" => $aux->fields["date"], "old_date" => $aux->fields["date"],
-                                 "sensor" => $aux->fields["ip_sensor"], "interface" => $aux->fields["interface"]);
-
-                    $aux->MoveNext();
-                }    
-                $ip = $aux->fields["ip_addr"];
-                $port = $aux->fields["port"];
-                $protocol = $aux->fields["protocol"];
-                $version = $aux->fields["version"];
-                $service = $aux->fields["service"];
-                $service_type = $aux->fields["service_type"];
-                $origin = $aux->fields["origin"];
-                $date = $aux->fields["date"];
-                $sensor = $aux->fields["ip_sensor"];
-                $interface = $aux->fields["interface"];
-                $aux->MoveNext();
-                while (!$aux->EOF){
-                    if ($aux->fields["anom"] == "0") {
-                        $list[] =   array("ip" => $aux->fields["ip_addr"], "port" => $aux->fields["port"],
-                                        "protocol" => $aux->fields["protocol"], "old_protocol" => $aux->fields["protocol"],
-                                        "version" => $aux->fields["version"], "old_version" => $aux->fields["version"],
-                                        "service" => $aux->fields["service"], "old_service" => $aux->fields["service"],
-                                        "service_type" => $aux->fields["service_type"], "old_service_type" => $aux->fields["service_type"],
-                                        "origin" => $aux->fields["origin"], "old_origin" => $aux->fields["origin"],
-                                        "date" => $aux->fields["date"], "old_date" => $aux->fields["date"],
-                                        "sensor" => $aux->fields["ip_sensor"], "interface" => $aux->fields["interface"]);
-                        $aux->MoveNext();
-                    }
-                    $old_protocol  = $aux->fields["protocol"];
-                    $old_date = $aux->fields["date"];
-                    $old_version = $aux->fields["version"];
-                    $old_service = $aux->fields["service"];
-                    $old_service_type = $aux->fields["service_type"];
-                    $old_origin = $aux->fields["origin"];
-                    $list[] =  array("ip" => $ip, "port" => $aux->fields["port"], "date" => $date,
-                                     "old_date" => $old_date, "protocol" => $protocol, "old_protocol" => $old_protocol,
-                                     "version" => $version, "old_version" => $old_version, "service" => $service,
-                                     "old_service" => $old_service, "service_type" => $service_type,
-                                     "old_service_type" => $old_service_type, "origin" => $origin,
-                                     "old_origin" => $old_origin, "sensor" => $sensor, "interface" => $interface);
-                    if (!$aux->EOF) $aux->MoveNext();
-                    $protocol = $old_protocol;
-                    $date = $old_date;
-                    $version = $old_version;
-                    $service = $old_service;
-                    $service_type = $old_service_type;
-                    $origin = $old_origin;
-                }
-            }
+            return $list;
         }
+            
+        if ($aux->RecordCount() == "1") {
+            $list[] =  array("ip" => $aux->fields["ip_addr"], "port" => $aux->fields["port"],
+                             "date" => $aux->fields["date"], "old_date" => $aux->fields["date"],
+                             "protocol" => $aux->fields["protocol"], "old_protocol" => $aux->fields["protocol"],
+                             "version" => $aux->fields["version"], "old_version" => $aux->fields["version"],
+                             "service" => $aux->fields["service"], "old_service" => $aux->fields["service"],
+                             "service_type" => $aux->fields["service_type"], "old_service_type" => $aux->fields["service_type"],
+                             "origin" => $aux->fields["origin"], "old_origin" => $aux->fields["origin"],
+                             "sensor" => $aux->fields["ip_sensor"], "interface" => $aux->fields["interface"]);
+            return $list;
+        }
+
+        $ip = $aux->fields["ip_addr"];
+        $sensor = $aux->fields["ip_sensor"];
+        $interface = $aux->fields["interface"];
+        $port      = $aux->fields["port"];
+
+        $protocol     = $aux->fields["protocol"];
+        $version      = $aux->fields["version"];
+        $service      = $aux->fields["service"];
+        $service_type = $aux->fields["service_type"];
+        $origin       = $aux->fields["origin"];
+        $date         = $aux->fields["date"];
+        $anom         = $aux->fields["anom"];
+        $aux->MoveNext();
+        do {
+            $old_protocol     = $aux->fields["protocol"];
+            $old_version      = $aux->fields["version"];
+            $old_service      = $aux->fields["service"];
+            $old_service_type = $aux->fields["service_type"];
+            $old_origin       = $aux->fields["origin"];
+            $old_date         = $aux->fields["date"];
+            if ($anom == "0") {
+                $list[] =  array("ip" => $ip, "port" => $port,
+                                 "date" => $date, "old_date" => $date,
+                                 "protocol" => $protocol, "old_protocol" => $protocol,
+                                 "version" => $version, "old_version" => $version,
+                                 "service" => $service, "old_service" => $service,
+                                 "service_type" => $service_type, "old_service_type" => $service_type,
+                                 "origin" => $origin, "old_origin" => $origin,
+                                 "sensor" => $sensor, "interface" => $interface);
+            } else {
+                $list[] =  array("ip" => $ip, "port" => $port,
+                                 "date" => $date, "old_date" => $old_date,
+                                 "protocol" => $protocol, "old_protocol" => $old_protocol,
+                                 "version" => $version, "old_version" => $old_version,
+                                 "service" => $service, "old_service" => $old_service,
+                                 "service_type" => $service_type, "old_service_type" => $old_service_type,
+                                 "origin" => $origin, "old_origin" => $old_origin,
+                                 "sensor" => $sensor, "interface" => $interface);
+            }
+            $protocol     = $old_protocol;
+            $version      = $old_version;
+            $service      = $old_service;
+            $service_type = $old_service_type;
+            $origin       = $old_origin;
+            $date         = $old_date;
+            $anom         = $aux->fields["anom"];
+            $aux->MoveNext();
+        }
+        while (!$aux->EOF);
+        $list[] =  array("ip" => $ip, "port" => $port,
+                         "date" => $date, "old_date" => $old_date,
+                         "protocol" => $protocol, "old_protocol" => $old_protocol,
+                         "version" => $version, "old_version" => $old_version,
+                         "service" => $service, "old_service" => $old_service,
+                         "service_type" => $service_type, "old_service_type" => $old_service_type,
+                         "origin" => $origin, "old_origin" => $old_origin,
+                         "sensor" => $sensor, "interface" => $interface);
+    
         return $list;
     } 
 
 
 
+    /*
+     * Return list of the last anomalie for each host (if any)
+     * A total of '$limit' records is calculated (one record per host)
+     * (used by control pannel/anomalies on host summary and by secondary specific anomalie screen)
+     */
     function get_anom_list($conn, $limit = 10)
     {
         require_once('classes/Session.inc');
@@ -237,6 +258,10 @@ class Host_services{
         return $list;
     } 
 
+    /*
+     * Return list of all last anomalies of a specific host
+     * (used by control pannel/anomalies, showing record detail)
+     */
     function get_anom_ip_list($conn, $host, $sensor, $port)
     {
         require_once('classes/Session.inc');
@@ -295,10 +320,19 @@ class Host_services{
         return $list;
     }
 
+    /*
+     * Get seen all specifics services for this host (not return anomalies)
+     *   if origin=0 : passive detection (pads)
+     *   if origin=1 : active detection (nmap) 
+     * (used in inventory...)
+     */
     function get_ip_data($conn, $host, $origin)
     {
         $sql = "SELECT distinct(port) from host_services where ip =
-                inet_aton(?) order by date desc";
+                inet_aton(?)";
+        if ($origin != "")
+            $sql .= " and origin = '$origin' ";
+
         $params = array($host);
         $list = array(); 
         if (!$aux = &$conn->Execute($sql, $params)) {
@@ -311,12 +345,11 @@ class Host_services{
                 if ($origin != "") {
                     $sql2 .= " and origin = '$origin' ";
                 }
+                $sql2 .= " order by date desc";
                 if (!$aux2 = &$conn->Execute($sql2)){
                     print $conn->ErrorMsg();
                 } else {
-                    if ($aux2->RecordCount() == 0) {
-                        $aux->MoveNext();
-                    } else {
+                    if ($aux2->RecordCount() != 0) {
                         $port      = $aux2->fields["port"];
                         $protocol  = $aux2->fields["protocol"];
                         $version   = $aux2->fields["version"];

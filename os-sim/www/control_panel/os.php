@@ -76,9 +76,8 @@ if ($show_anom != "1") {
 ?>
 
 <?php if ($show_anom != "1") { ?>
-<table align="center">
-<?php echo gettext("Show");?>
 <form method="GET" action="os.php">
+<?php echo gettext("Show");?>
 <input type="hidden" name="inf" value="<?php echo $inf ?>"/>
 <select name="num" onChange="submit()">
 <option value="10"  <?if ($num == "10") echo "SELECTED"; ?>>10</option>
@@ -87,7 +86,7 @@ if ($show_anom != "1") {
 <option value="all" <?if ($num == "all") echo "SELECTED"; ?>>All</option>
 </select>
 <?php echo gettext(" per page"); ?>
-</table>
+</form>
 </br>
 <?php } ?>
 
@@ -97,6 +96,7 @@ if ($show_anom)
 else 
     echo "<a href=\"os.php?show_anom=1\">".gettext("Click here to see the only the anomalies")."</a>";
  ?>
+<form action="handle_os.php" method="GET">
 <table width="100%">
 <?php if ($num != "all"){ ?>
     <tr>
@@ -121,8 +121,9 @@ else
         "&inf=" . ($count - $num) .
         "&num=" . $num; 
     ?>
-    <table width="100%" bgcolor="#EFEFEF">       
-    <td align=left>
+    <table width="100%" bgcolor="#EFEFEF">
+    <colgroup span=3 width="33%"></colgroup>       
+    <tr><td align=left>
     <?php
     if ($inf != "0"){ 
         echo "<a href=\"$first_link\">";  printf(gettext("First")); echo "</a>";
@@ -137,10 +138,10 @@ else
     ?>
     <?php
     if ($sup < $count) {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $sup, $count); echo ")&nbsp;&nbsp;";
         echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $num); echo " -&gt;</a>";
     } else {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $count, $count); echo ")&nbsp;&nbsp;";
     }
     ?>
     </td>
@@ -150,17 +151,16 @@ else
         echo "<a href=\"$last_link\">"; printf(gettext("Last")); echo "</a>";
     }
     ?>
-    </td>
+    </td></tr>
   
     </table>
-      </tr>
-
-      <tr>
+      </td></tr>
 
 <?php } ?>
 
 <tr>
 <td align="center" colspan="12">
+<input type="hidden" name="back" value="<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>">
 <input type="submit" value=" <?php echo gettext("OK"); ?> ">
 <input type="reset" value=" <?php echo gettext("reset"); ?> "> </td>
 </tr>
@@ -177,9 +177,6 @@ else
 <th><?php echo gettext("Ignore"); ?> </th>
 </tr>
 
-<form action="handle_os.php" method="GET">
-
-
 <?php 
 if ($host_os_list) {
      $row = 0;
@@ -189,11 +186,11 @@ if ($host_os_list) {
 
 <tr <?php  
     $os_main = $previous_main = "";
-    list($os_main, ) = split(" ", $host_os["os"], 2);
-    list($previous_main, ) = split(" ", $host_os["old_os"], 2);
-    if (($host_os["os"] != $host_os["old_os"]) && ($os_main != $previous_main))
+    list($os_main, ) = split(" ", strtolower($host_os["os"]), 2);
+    list($previous_main, ) = split(" ", strtolower($host_os["old_os"]), 2);
+    if ($os_main != $previous_main)
         echo 'bgcolor="#f7a099"';
-    elseif ($host_os["os"] != $host_os["old_os"]) 
+    elseif (strtolower($host_os["os"]) != strtolower($host_os["old_os"]))
         echo 'bgcolor="#e6e571"';
     else echo 'bgcolor="#bbcadd"';
 ?>>
@@ -208,11 +205,11 @@ if ((!empty($ex_os)) && (!empty($ex_oss)) && ($ex_os == $host_os["ip"]) && ($ex_
 ?>
 <a href="<?php echo $_SERVER["PHP_SELF"]."?sup=".$sup."&inf=".$inf."&num=".$num;
 if ($show_anom == "1") 
-    echo "&show_anom=1" ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></e>
+    echo "&show_anom=1" ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></a>
 <?php } else { ?>
 <a href="<?php echo
 $_SERVER["PHP_SELF"]."?inf=".$inf."&sup=".$sup."&num=".$num."&ex_os=".$host_os["ip"]."&ex_oss=".$host_os["sensor"];
-if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></e>
+if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif" border="0"></a>
 <?php
 }
 
@@ -227,11 +224,11 @@ if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif"
 <td><?php echo $delta; ?></td>
 <td>
 <input type="checkbox" name="ip,<?php echo $host_os["ip"];?>,<?php echo $host_os["sensor"];?>,<?php
-echo $host_os["date"];?>" value="<?php echo "ack".$host_os["ip"];?>" <? if ($host_os["os"] == $host_os["old_os"]) echo "disabled" ?> ></input>
+echo $host_os["date"];?>" value="<?php echo "ack".$host_os["ip"];?>" <? if (strtolower($host_os["os"]) == strtolower($host_os["old_os"])) echo "disabled" ?> >
 </td>
 <td>
 <input type="checkbox" name="ip,<?php echo $host_os["ip"];?>,<?php echo $host_os["sensor"];?>,<?php
-echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? if ($host_os["os"] == $host_os["old_os"]) echo "disabled" ?> ></input>
+echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? if (strtolower($host_os["os"]) == strtolower($host_os["old_os"])) echo "disabled" ?> >
 </td>
 </tr>
 <?php 
@@ -240,12 +237,15 @@ if (($ex_os == $host_os["ip"]) && ($ex_oss == $host_os["sensor"])) {
 if ($host_os_ip_list = Host_os::get_ip_list($conn, $host_os["ip"],$host_os["sensor"])) {
 
 	foreach ($host_os_ip_list as $host_os_ip){
+    $os_main_ip = $previous_main_ip = "";
+    list($os_main_ip, ) = split(" ", strtolower($host_os_ip["os"]), 2);
+    list($previous_main_ip, ) = split(" ", strtolower($host_os_ip["old_os"]), 2);
  		 $delta = Util::date_diff($host_os_ip["date"], $host_os_ip["old_date"], 'yMdhms');
         	 if ($delta == "00:00:00") $delta = "-";
 	  ?>
-	  <tr<?php  if (($host_os_ip["os"] != $host_os_ip["old_os"]) && ($os_main != $previous_main)) 
+	  <tr<?php  if ($os_main_ip != $previous_main_ip)
                     echo ' bgcolor="#eac3c3"';
-                elseif ($host_os_ip["os"] != $host_os_ip["old_os"])
+                elseif (strtolower($host_os_ip["os"]) != strtolower($host_os_ip["old_os"]))
                     echo ' bgcolor="#e4e3a5"';
                 else 
                     echo ' bgcolor="#dfe7f0"'?>>
@@ -259,12 +259,8 @@ if ($host_os_ip_list = Host_os::get_ip_list($conn, $host_os["ip"],$host_os["sens
 	  <td><?php echo $delta; ?> 
       </td>
 <td>
-<input type="checkbox" name="ip,<?php echo $host_os["ip"];?>,<?php echo $host_os["sensor"];?>,<?php
-echo $host_os["date"];?>" value="<?php echo "ack".$host_os["ip"];?>" <? if ($host_os["os"] == $host_os["old_os"]) echo "disabled" ?> ></input>
 </td>
 <td>
-<input type="checkbox" name="ip,<?php echo $host_os["ip"];?>,<?php echo $host_os["sensor"];?>,<?php
-echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? if ($host_os["os"] == $host_os["old_os"]) echo "disabled" ?> ></input>
 </td>
 </tr>	  
 <?php
@@ -282,7 +278,6 @@ echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? i
 <input type="reset" value=" <?php echo gettext("reset"); ?> "></td>
 </tr>
 
-</form>
 <?php if ($num != "all"){ ?>
      <tr>
         <td colspan="12">
@@ -307,7 +302,8 @@ echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? i
 ?>
 
     <table width="100%" bgcolor="#EFEFEF">
-    <td align=left>
+    <colgroup span=3 width="33%"></colgroup>       
+    <tr><td align=left>
     <?php
     if ($inf != "0"){
         echo "<a href=\"$first_link\">";  printf(gettext("First")); echo "</a>";
@@ -322,10 +318,10 @@ echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? i
     ?>
     <?php
     if ($sup < $count) {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $sup, $count); echo ")&nbsp;&nbsp;";
         echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $num); echo " -&gt;</a>";
     } else {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $count, $count); echo ")&nbsp;&nbsp;";
     }
     ?>
     </td>
@@ -336,18 +332,17 @@ echo $host_os["old_date"];?>" value="<?php echo "ignore".$host_os["ip"];?>" <? i
     }
     ?>
     </td>
-
+    </tr>
     </table>
 
         </td>
       </tr>
 
-      <tr>
-
 <?php } ?>
 
 
 </table>
+</form>
 </body>
 </html>
 

@@ -18,6 +18,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     require_once ('classes/Policy.inc');
     require_once ('classes/Host.inc');
     require_once ('ossim_db.inc');
+    require_once ('classes/WebIndicator.inc');
     $order = 'priority DESC';
 
 ?>
@@ -256,7 +257,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     </td>
   </tr>
   <tr>
-    <td colspan="16"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
+    <td colspan="16"><a href="../conf/reload.php?what=policies&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
+if (WebIndicator::is_on("Reload_policies")) {
+    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
+} else {
+    echo gettext("Reload");
+} ?> </a></td>
   </tr>
   </table>
     

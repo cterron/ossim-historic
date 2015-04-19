@@ -1,9 +1,10 @@
 from Config import Conf, Plugin
 from Output import Output
 from Logger import Logger
+from Task import Task
 logger = Logger.logger
 
-import threading, string, time, os, commands
+import threading, string, time, os, commands, datetime
 
 class Watchdog(threading.Thread):
 
@@ -44,7 +45,7 @@ class Watchdog(threading.Thread):
             return pid[0]
     pidof = staticmethod(pidof)
 
-    def start_process(plugin):
+    def start_process(plugin, notify=True):
 
         id      = plugin.get("config", "plugin_id")
         process = plugin.get("config", "process")
@@ -54,20 +55,31 @@ class Watchdog(threading.Thread):
         # start service
         if command:
             logger.info("Starting service %s (%s): %s.." % (id, name, command))
-            logger.debug(commands.getstatusoutput(command))
+            task = Task(command)
+            task.Run(1,0)
+            timeout = 5
+            start = datetime.datetime.now()
+            plugin.start_time = float(time.time())
+            while task.Done() is 0:
+                time.sleep(0.1)
+                now = datetime.datetime.now()
+                if (now - start).seconds> timeout:
+                    task.Kill()
+                    logger.info("Could not start %s, returning after %s second(s) wait time." % (command, timeout))
 
         # notify result to server
-        if not process:
-            logger.info("plugin (%s) has an unknown state" % (name))
-            Output.plugin_state(self.PLUGIN_UNKNOWN_STATE_MSG % (id))
-        elif Watchdog.pidof(process) is not None:
-            logger.info("plugin (%s) is running" % (name))
-            Output.plugin_state(Watchdog.PLUGIN_START_STATE_MSG % (id))
-        else:
-            logger.warning("error starting plugin %s (%s)" % (id, name))
+        if notify:
+            if not process:
+                logger.info("plugin (%s) has an unknown state" % (name))
+                Output.plugin_state(self.PLUGIN_UNKNOWN_STATE_MSG % (id))
+            elif Watchdog.pidof(process) is not None:
+                logger.info("plugin (%s) is running" % (name))
+                Output.plugin_state(Watchdog.PLUGIN_START_STATE_MSG % (id))
+            else:
+                logger.warning("error starting plugin %s (%s)" % (id, name))
     start_process = staticmethod(start_process)
 
-    def stop_process(plugin):
+    def stop_process(plugin, notify=True):
 
         id      = plugin.get("config", "plugin_id")
         process = plugin.get("config", "process")
@@ -80,18 +92,19 @@ class Watchdog(threading.Thread):
             logger.debug(commands.getstatusoutput(command))
 
         # notify result to server
-        if not process:
-            logger.info("plugin (%s) has an unknown state" % (name))
-            Output.plugin_state(Watchdog.PLUGIN_UNKNOWN_STATE_MSG % (id))
-        elif Watchdog.pidof(process) is None:
-            logger.info("plugin (%s) is not running" % (name))
-            Output.plugin_state(Watchdog.PLUGIN_STOP_STATE_MSG % (id))
-        else:
-            logger.warning("error stopping plugin %s (%s)" % (id, name))
+        if notify:
+            if not process:
+                logger.info("plugin (%s) has an unknown state" % (name))
+                Output.plugin_state(Watchdog.PLUGIN_UNKNOWN_STATE_MSG % (id))
+            elif Watchdog.pidof(process) is None:
+                logger.info("plugin (%s) is not running" % (name))
+                Output.plugin_state(Watchdog.PLUGIN_STOP_STATE_MSG % (id))
+            else:
+                logger.warning("error stopping plugin %s (%s)" % (id, name))
     stop_process = staticmethod(stop_process)
 
 
-    def enable_process(plugin):
+    def enable_process(plugin, notify=True):
 
         id      = plugin.get("config", "plugin_id")
         name    = plugin.get("config", "name")
@@ -100,11 +113,12 @@ class Watchdog(threading.Thread):
         plugin.set("config", "enable", "yes")
 
         # notify to server
-        logger.info("plugin (%s) is now enable" % (name))
-        Output.plugin_state(Watchdog.PLUGIN_ENABLE_STATE_MSG % (id))
+        if notify:
+            logger.info("plugin (%s) is now enable" % (name))
+            Output.plugin_state(Watchdog.PLUGIN_ENABLE_STATE_MSG % (id))
     enable_process = staticmethod(enable_process)
 
-    def disable_process(plugin):
+    def disable_process(plugin, notify=True):
 
         id      = plugin.get("config", "plugin_id")
         name    = plugin.get("config", "name")
@@ -113,9 +127,39 @@ class Watchdog(threading.Thread):
         plugin.set("config", "enable", "no")
 
         # notify to server
-        logger.info("plugin (%s) is now disabled" % (name))
-        Output.plugin_state(Watchdog.PLUGIN_DISABLE_STATE_MSG % (id))
+        if notify:
+            logger.info("plugin (%s) is now disabled" % (name))
+            Output.plugin_state(Watchdog.PLUGIN_DISABLE_STATE_MSG % (id))
     disable_process = staticmethod(disable_process)
+
+
+    # restart services every interval
+    def _restart_services(self, plugin):
+
+        name = plugin.get("config", "name")
+
+        if not plugin.has_option("config", "restart") or \
+           not plugin.has_option("config", "enable"):
+            return
+            
+        if plugin.getboolean("config", "restart") and \
+           plugin.getboolean("config", "enable"):
+
+            current_time = time.time()
+            if plugin.has_option("config", "restart_interval"):
+                restart_interval = plugin.getint("config", "restart_interval")
+            else:
+                restart_interval = 3600
+
+            if not hasattr(plugin, 'start_time'):
+                # The plugin was started before agent startup
+                plugin.start_time = float(time.time())
+            else:
+                if plugin.start_time + restart_interval < current_time:
+                    logger.info("Plugin %s must be restarted" % (name))
+                    self.stop_process(plugin)
+                    self.start_process(plugin)
+
 
     def run(self):
 
@@ -127,6 +171,9 @@ class Watchdog(threading.Thread):
                 process = plugin.get("config", "process")
                 name    = plugin.get("config", "name")
 
+                logger.info("Checking process %s for plugin %s." \
+                    % (process, name))
+
                 # 1) unknown process to monitoring
                 if not process:
                     logger.info("plugin (%s) has an unknown state" % (name))
@@ -137,13 +184,19 @@ class Watchdog(threading.Thread):
                     logger.info("plugin (%s) is running" % (name))
                     Output.plugin_state(self.PLUGIN_START_STATE_MSG % (id))
 
+                    # check for for plugin restart
+                    self._restart_services(plugin)
+
+
                 # 3) process is not running
                 else:
                     logger.warning("plugin (%s) is not running" % (name))
                     Output.plugin_state(self.PLUGIN_STOP_STATE_MSG % (id))
 
-                    # restart services (if start=yes in plugin configuration)
-                    if plugin.getboolean("config", "start"):
+                    # restart services (if start=yes in plugin 
+                    # configuration and plugin is enabled)
+                    if plugin.getboolean("config", "start") and \
+                       plugin.getboolean("config", "enable"):
                         self.start_process(plugin)
 
                 # send plugin enable/disable state
@@ -164,7 +217,7 @@ class Watchdog(threading.Thread):
 
             # stop service (if stop=yes in plugin configuration)
             if plugin.getboolean("config", "stop"):
-                self.stop_process(plugin)
+                self.stop_process(plugin=plugin, notify=False)
 
 
 # vim:ts=4 sts=4 tw=79 expandtab:

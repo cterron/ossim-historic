@@ -21,6 +21,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     require_once 'classes/Security.inc';
     require_once 'get_sensor_plugins.php';
     require_once 'get_sensors.php';
+    require_once 'classes/WebIndicator.inc';
     
     $order = GET('order');
     
@@ -176,7 +177,12 @@ functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partia
       <td colspan="10"><a href="newsensorform.php"> <?php echo gettext("Insert new sensor"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="10"><a href="../conf/reload.php?what=sensors"> <?php echo gettext("Reload"); ?> </a></td>
+      <td colspan="10"><a href="../conf/reload.php?what=sensors&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
+if (WebIndicator::is_on("Reload_sensors")) {
+    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
+} else {
+    echo gettext("Reload");
+} ?> </a></td>
     </tr>
 </table>
 

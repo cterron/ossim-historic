@@ -57,5 +57,9 @@ if (POST('insert')) {
     <p> <?php echo gettext("Server succesfully updated"); ?> </p>
     <p><a href="server.php"> <?php echo gettext("Back"); ?> </a></p>
 
+<?
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 </body>
 </html>

@@ -2,6 +2,7 @@
 require_once 'classes/Security.inc';
 require_once 'classes/Session.inc';
 require_once 'classes/Upgrade.inc';
+require_once 'classes/WebIndicator.inc';
 Session::logcheck("MainMenu", "Index", "session/login.php");
 
 $upgrade = new Upgrade();
@@ -41,6 +42,7 @@ $upgrade = new Upgrade();
   if (Session::am_i_admin() && $upgrade->needs_upgrade()) {
     $menu["Upgrade"][] = array(
         "name" => gettext("System Upgrade Needed"),
+        "id" => "System Upgrade Needed",
         "url"  => "upgrade/index.php"
     );
   }
@@ -58,45 +60,67 @@ $upgrade = new Upgrade();
   /* Control Panel */
   if (Session::menu_perms("MenuControlPanel", "ControlPanelExecutive"))
     $menu["Control Panel"][] = array (
-      "name" => gettext("Executive Panel") , 
+      "name" => gettext("Executive Panel"),
+      "id" => "Executive Panel",
       "url" => "panel/"
     );
-  
   if (Session::menu_perms("MenuControlPanel", "ControlPanelMetrics"))
     $menu["Control Panel"][] = array (
-      "name" => gettext("Metrics") , 
+      "name" => gettext("Metrics"),
+      "id" => "Metrics",
       "url" => "control_panel/global_score.php"
     );
-
   if (Session::menu_perms("MenuControlPanel", "ControlPanelAlarms"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Alarms"),
+      "id" => "Alarms",
       "url" => "control_panel/alarm_console.php?&hide_closed=1"
     );
-
   if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Events"),
-      "url" => "event_viewer/index.php"
+      "id" => "Forensics",
+      "url" => $conf->get_conf("acid_link") . "/".$conf->get_conf("event_viewer")."_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"
     );
-    
   if (Session::menu_perms("MenuControlPanel", "ControlPanelVulnerabilities"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Vulnerabilities"),
+      "id" => "Vulnerabilities",
       "url" => "vulnmeter/index.php"
     );
-
   if (Session::menu_perms("MenuControlPanel", "ControlPanelAnomalies"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Anomalies"),
+      "id" => "Anomalies",
       "url" => "control_panel/anomalies.php"
     );
-
   if (Session::menu_perms("MenuControlPanel", "ControlPanelHids"))
     $menu["Control Panel"][] = array (
       "name" => gettext("Hids"),
+      "id" => "Hids",
       "url" => "hids/index.php"
     );
+  if (Session::menu_perms("MenuControlPanel", "BusinessProcesses"))
+    $menu["Control Panel"][] = array (
+      "name" => gettext("Business Processes"),
+      "id" => "Business Processes",
+      "url" => "business_processes/index.php"
+    );
+  if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
+    $menu["Control Panel"][] = array (
+      "name" => gettext("Event Viewer"),
+      "id" => "Events Viewer",
+      "url" => "event_viewer/index.php"
+    );
+/*
+  if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
+    $menu["Control Panel"][] = array (
+      "name" => gettext("RT Events"),
+      "id" => "RT Events",
+      "url" => "control_panel/event_panel.php"
+    );
+*/
+
 
 
 
@@ -104,24 +128,25 @@ $upgrade = new Upgrade();
   if (Session::menu_perms("MenuReports", "ReportsHostReport"))
     $menu["Reports"][] = array (
       "name" => gettext("Host Report"),
+      "id" => "Host Report",
       "url" => "report/report.php"
     );
-
   if (Session::menu_perms("MenuReports", "ReportsAlarmReport"))
     $menu["Reports"][] = array (
       "name" => gettext("Alarm Report"),
+      "id" => "Alarm Report",
       "url" => "report/sec_report.php?section=all&type=alarm"
     );
-
   if (Session::menu_perms("MenuReports", "ReportsSecurityReport"))
     $menu["Reports"][] = array (
       "name" => gettext("Security Report"),
+      "id" => "Security Report",
       "url" => "report/sec_report.php?section=all"
     );
-
   if (Session::menu_perms("MenuReports", "ReportsPDFReport"))
     $menu["Reports"][] = array (
       "name" => gettext("PDF Report"),
+      "id" => "PDF Report",
       "url" => "report/pdfreportform.php"
     );
 
@@ -129,24 +154,25 @@ $upgrade = new Upgrade();
   if (Session::menu_perms("MenuIncidents", "IncidentsIncidents"))
     $menu["Incidents"][] = array (
       "name" => gettext("Incidents"),
+      "id" => "Incidents",
       "url" => "incidents/index.php?&status=Open"
     );
-
   if (Session::menu_perms("MenuIncidents", "IncidentsTypes"))
     $menu["Incidents"][] = array (
       "name" => gettext("Types"),
+      "id" => "Types",
       "url" => "incidents/incidenttype.php"
     );
-
   if (Session::menu_perms("MenuIncidents", "IncidentsTags"))
     $menu["Incidents"][] = array (
       "name" => gettext("Tags"),
+      "id" => "Tags",
       "url" => "incidents/incidenttag.php"
     );
-
   if (Session::menu_perms("MenuIncidents", "IncidentsReport"))
     $menu["Incidents"][] = array (
       "name" => gettext("Report"),
+      "id" => "Report",
       "url" => "report/incidentreport.php"
     );
 
@@ -154,110 +180,119 @@ $upgrade = new Upgrade();
   if (Session::menu_perms("MenuMonitors", "MonitorsRiskmeter"))
     $menu["Monitors"][] = array (
       "name" => gettext("Riskmeter"),
+      "id" => "Riskmeter",
       "url" => "riskmeter/index.php"
     );
-
   if (Session::menu_perms("MenuMonitors", "MonitorsSession"))
     $menu["Monitors"][] = array (
       "name" => gettext("Session"),
+      "id" => "Session",
       "url" => "ntop/session.php?sensor=" . $sensor_ntop["host"]
     );
-
   if (Session::menu_perms("MenuMonitors", "MonitorsNetwork"))
     $menu["Monitors"][] = array (
-      "name" => gettext("Network"), 
+      "name" => gettext("Network"),
+      "id" => "Network",
       "url" => "ntop/index.php?sensor=" . $sensor_ntop["host"]
     );
   if (Session::menu_perms("MenuMonitors", "MonitorsAvailability"))
     $menu["Monitors"][] = array (
       "name" => gettext("Availability"),
+      "id" => "Availability",
       "url" => "nagios/index.php?sensor=" . $sensor_nagios["host"]
     );
   if (Session::menu_perms("MenuMonitors", "MonitorsSensors"))
     $menu["Monitors"][] = array (
       "name" => gettext("Sensors"),
+      "id" => "Sensors",
       "url" => "sensor/sensor_plugins.php"
     );
 
   /* Policy */
-
   if (Session::menu_perms("MenuPolicy", "PolicyPolicy"))
     $menu["Policy"][] = array (
       "name" => gettext("Policy"),
+      "id" => "Policy",
       "url" => "policy/policy.php"
     );
-
-
   if (Session::menu_perms("MenuPolicy", "PolicyHosts"))
     $menu["Policy"][] = array (
-      "name" => gettext("Hosts"), 
+      "name" => gettext("Hosts"),
+      "id" => "Hosts",
       "url" => "host/host.php"
     );
-
+  if (Session::menu_perms("MenuPolicy", "PolicyHosts"))
+    $menu["Policy"][] = array (
+      "name" => gettext("Host groups"),
+      "id" => "Host groups",
+      "url" => "host/hostgroup.php"
+    );
   if (Session::menu_perms("MenuPolicy", "PolicyNetworks"))
     $menu["Policy"][] = array (
       "name" => gettext("Networks"),
+      "id" => "Networks",
       "url" => "net/net.php"
     );
-
   if (Session::menu_perms("MenuPolicy", "PolicyNetworks"))
     $menu["Policy"][] = array (
       "name" => gettext("Network groups"),
+      "id" => "Network groups",
       "url" => "net/netgroup.php"
     );
-
   if (Session::menu_perms("MenuPolicy", "PolicySensors"))
     $menu["Policy"][] = array (
       "name" => gettext("Sensors"),
+      "id" => "Sensors",
       "url" => "sensor/sensor.php"
     );
-
-
   if (Session::menu_perms("MenuPolicy", "PolicyServers"))
     $menu["Policy"][] = array (
       "name" => gettext("Servers"),
+      "id" => "Servers",
       "url" => "server/server.php"
     );
-
-
   if (Session::menu_perms("MenuPolicy", "PolicyPorts"))
     $menu["Policy"][] = array (
       "name" => gettext("Ports"),
+      "id" => "Ports",
       "url" => "port/port.php"
     );
-
   if (Session::menu_perms("MenuPolicy", "PolicyActions"))
     $menu["Policy"][] = array (
       "name" => gettext("Actions"),
+      "id" => "Actions",
       "url" => "action/action.php"
     );
   if (Session::menu_perms("MenuPolicy", "PolicyResponses"))
     $menu["Policy"][] = array (
       "name" => gettext("Responses"),
+      "id" => "Responses",
       "url" => "response/response.php"
     );
   if (Session::menu_perms("MenuPolicy", "PolicyPluginGroups"))
     $menu["Policy"][] = array (
       "name" => gettext("Plugin Groups"),
+      "id" => "Plugin Groups",
       "url" => "policy/plugingroups.php"
     );
-  
+
   /* Correlation */
   if (Session::menu_perms("MenuCorrelation", "CorrelationDirectives"))
     $menu["Correlation"][] = array(
       "name" => gettext("Directives"),
+      "id" => "Directives",
       "url" => "directives/index.php"
     );
-
   if (Session::menu_perms("MenuCorrelation", "CorrelationCrossCorrelation"))
     $menu["Correlation"][] = array (
       "name" => gettext("Cross Correlation"),
+      "id" => "Cross Correlation",
       "url" => "conf/pluginref.php"
     );
-
   if (Session::menu_perms("MenuCorrelation", "CorrelationBacklog"))
     $menu["Correlation"][] = array(
       "name" => gettext("Backlog"),
+      "id" => "Backlog",
       "url" => "control_panel/backlog.php"
     );
 
@@ -265,72 +300,81 @@ $upgrade = new Upgrade();
   if (Session::menu_perms("MenuConfiguration", "ConfigurationMain"))
     $menu["Configuration"][] = array (
       "name" => gettext("Main"),
+      "id" => "Main",
       "url" => "conf/main.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationUsers"))
     $menu["Configuration"][] = array (
       "name" => gettext("Users"),
+      "id" => "Users",
       "url" => "session/users.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationPlugins"))
     $menu["Configuration"][] = array (
       "name" => gettext("Plugins"),
+      "id" => "Plugins",
       "url" => "conf/plugin.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationRRDConfig"))
     $menu["Configuration"][] = array (
       "name" => gettext("RRD Config"),
+      "id" => "RRD Config",
       "url" => "rrd_conf/rrd_conf.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationHostScan"))
     $menu["Configuration"][] = array(
       "name" => gettext("Host Scan"),
+      "id" => "Host Scan",
       "url" => "scan/hostscan.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationUserActionLog"))
     $menu["Configuration"][] = array(
       "name" => gettext("User action logs"),
+      "id" => "User action logs",
       "url" => "conf/userlog.php"
     );
-
   if (Session::menu_perms("MenuConfiguration", "ConfigurationEmailTemplate"))
     $menu["Configuration"][] = array(
       "name" => gettext("Incidents Email Template"),
+      "id" => "Incidents Email Template",
       "url" => "conf/emailtemplate.php"
     );
   if (Session::menu_perms("MenuConfiguration", "ConfigurationUpgrade"))
     $menu["Configuration"][] = array(
       "name" => gettext("Upgrade"),
+      "id" => "Upgrade",
       "url" => "upgrade/"
+    );
+  if (Session::menu_perms("MenuConfiguration", "ConfigurationMaps"))
+    $menu["Configuration"][] = array(
+      "name" => gettext("Maps"),
+      "id" => "Maps",
+      "url" => "maps/"
     );
 
   /* Tools */
   if (Session::menu_perms("MenuTools", "ToolsScan"))
     $menu["Tools"][] = array (
       "name" => gettext("Net Scan"),
+      "id" => "Net Scan",
       "url" => "netscan/index.php"
     );
-
   if (Session::menu_perms("MenuTools", "ToolsRuleViewer"))
     $menu["Tools"][] = array (
       "name" => gettext("Rule Viewer"),
+      "id" => "Rule Viewer",
       "url" => "editor/editor.php"
     );
-
   if (Session::menu_perms("MenuTools", "ToolsBackup"))
     $menu["Tools"][] = array (
       "name" => gettext("Backup"),
+      "id" => "Backup",
       "url" => "backup/index.php"
     );
-
   if (Session::menu_perms("MenuTools", "ToolsUserLogViewer"))
     $menu["Tools"][] = array (
       "name" => gettext("User log"),
+      "id" => "User log",
       "url" => "userlog/user_action_log.php"
     );
 
@@ -340,10 +384,17 @@ $upgrade = new Upgrade();
   $option = GET('option');
   $soption = GET('soption');
   $url = GET('url');
-    
-    if (empty($option)) $option = 0;
-    if (empty($soption)) $soption = 0;
-    
+
+  if (empty($option)) $option = 0;
+  if (!isset($soption)) {
+  	if (isset($_SESSION["_TopMenu_" . $option]))
+        $soption = $_SESSION["_TopMenu_" . $option];
+    else
+        $soption = 0;
+  } else {
+  	$_SESSION["_TopMenu_" . $option] = $soption; 
+  }
+
   $keys=array_keys($menu);
 ?>
 
@@ -365,10 +416,14 @@ $upgrade = new Upgrade();
         <a class=white href="top.php?option=<?=$i ?>"><?=gettext($name);?></a>
 <?php
 if($name == "Logout"){
-echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>"; 
+echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
 }
-?></td>
-       <? } ?>
+?>&nbsp;</td>
+       <? }
+if($name == "Policy"){
+    echo "<td id=\"ReloadPolicy\" style=\"display:none\"><img src=\"pixmaps/top/reload-policy.gif\" title='Policy reload needed' /></td>";
+}
+?>
      </tr></table>
    </td>
 <? $i++; } ?>
@@ -380,12 +435,12 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
 <tr><td height=24 background="pixmaps/top/azul.gif" valign=bottom style="padding-left:30px">
 
   <table border=0 cellpadding=0 cellspacing=0><tr>
-<? if (!is_array($menu[$keys[$option]])) { 
+<? if (!is_array($menu[$keys[$option]])) {
     // jump to url if not array
     $url = $menu[$keys[$option]];
     }
-  else {     
-    foreach ($menu[$keys[$option]] as $i => $op) { 
+  else {
+    foreach ($menu[$keys[$option]] as $i => $op) {
       if ($soption==$i && !(GET('soption'))) $url = $op["url"];
     ?>
     <td>
@@ -395,16 +450,42 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
         <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue
 		href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>">
 <? if($language != "ru_RU.UTF-8") echo htmlentities(strtoupper(html_entity_decode($op["name"]))); else echo $op["name"]; ?></a></td>
-
-        <td><img src="pixmaps/top/ld.gif" border=0></td>
         <? } else { ?>
         <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo $op["name"]; #echo strtoupper($op["name"]) ?></a></td>
+        <? }
+$menu1 = $keys[$option];
+$menu2 = $op["id"];
+if($menu1 == "Policy" && $menu2 == "Policy") {
+    echo "<td "; if ($soption==$i) echo "bgcolor=white ";
+    echo "id=\"Reload_policies\"><img src='pixmaps/top/reload-policy.gif' title='Policies reload needed' /></td>";
+}
+if($menu1 == "Policy" && $menu2 == "Hosts") {
+    echo "<td "; if ($soption==$i) echo "bgcolor=white ";
+    echo "id=\"Reload_hosts\"><img src='pixmaps/top/reload-policy.gif' title='Hosts reload needed' /></td>";
+}
+if($menu1 == "Policy" && $menu2 == "Networks") {
+    echo "<td "; if ($soption==$i) echo "bgcolor=white ";
+    echo "id=\"Reload_nets\"><img src='pixmaps/top/reload-policy.gif' title='Nets reload needed' /></td>";
+}
+if($menu1 == "Policy" && $menu2 == "Sensors") {
+    echo "<td "; if ($soption==$i) echo "bgcolor=white ";
+    echo "id=\"Reload_sensors\"><img src='pixmaps/top/reload-policy.gif' title='Sensors reload needed' /></td>";
+}
+if($menu1 == "Policy" && $menu2 == "Servers") {
+    echo "<td "; if ($soption==$i) echo "bgcolor=white ";
+    echo "id=\"Reload_servers\"><img src='pixmaps/top/reload-policy.gif' title='Servers reload needed' /></td>";
+}
+?>
+        <? if ($soption==$i) { ?>
+        <td><img src="pixmaps/top/ld.gif" border=0></td>
+        <? } else { ?>
+        <td>&nbsp;</td>
         <? } ?>
       </tr></table>
     </td>
     <? if ($i+1!=$soption) { ?> <td><img src="pixmaps/top/sep.gif" border=0></td> <? } ?>
-<?  } 
-   } 
+<?  }
+   }
 ?> </tr></table>
 
 </td></tr>
@@ -412,7 +493,9 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
 
 <? if ($url!="") { ?>
 <script> parent.frames["main"].document.location.href = '<? echo $url ?>' </script>
-<? } ?>
+<? }
+$OssimWebIndicator->update_display();
+?>
 </body>
 </html>
 

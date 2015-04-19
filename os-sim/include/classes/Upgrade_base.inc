@@ -1,4 +1,5 @@
 <?php
+require_once 'ossim_db.inc';
 
 class upgrade_base
 {
@@ -14,6 +15,12 @@ class upgrade_base
     var $ossim_dbtype;
     var $ossim_current_version;
     var $ossim_schema_version;
+    
+    function upgrade_base()
+    {
+        $db = new ossim_db();
+        $this->snort = &$db->snort_connect();
+    }
     
     function start_upgrade()
     {
@@ -33,7 +40,7 @@ class upgrade_base
     {
         $proto = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https' : 'http';
         $port  = $_SERVER['SERVER_PORT'];
-        $host = $_SERVER['HTTP_HOST'];
+        $host = $_SERVER['SERVER_NAME'];
         $path = $this->conf->get_conf('ossim_link');
         $ossim_acl = $proto.'://'.$host.':'.$port.'/'.$path.'/setup/ossim_acl.php';
         echo _("Executing").": $ossim_acl<br>";

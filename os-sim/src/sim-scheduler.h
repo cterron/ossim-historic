@@ -77,11 +77,11 @@ void              sim_scheduler_run                             (SimScheduler  *
 /* Backlogs Time Out */
 void              sim_scheduler_backlogs_time_out               (SimScheduler  *scheduler);
 
-void		sim_scheduler_task_execute_at_interval									(SimScheduler  *scheduler,
+void							sim_scheduler_task_execute_at_interval				(SimScheduler  *scheduler,
 																																	gpointer       data);				    
-void 		sim_scheduler_task_GDAErrorHandling											(void);
-void		sim_scheduler_task_store_event_number_at_5min						(SimScheduler  *scheduler);
-void		sim_scheduler_task_rservers															(SimSchedulerState state);
+void							sim_scheduler_task_GDAErrorHandling						(void);
+void							sim_scheduler_task_store_event_number_at_5min	(SimScheduler  *scheduler);
+gboolean					sim_scheduler_task_rservers										(SimSchedulerState state);
 	
 G_END_DECLS
 

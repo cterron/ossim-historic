@@ -54,7 +54,7 @@
         <?php
         if (is_array($source_net_list = $response->get_source_nets($conn))) {
             foreach ($source_net_list as $net) {
-                echo gettext("Net ") . $net->get_net()."<br/>";
+                echo gettext("Net") . ' ' . $net->get_net()."<br/>";
             }
         }
         ?>
@@ -66,7 +66,7 @@
         <?php
         if (is_array($source_host_list = $response->get_source_hosts($conn))) {
             foreach ($source_host_list as $host) {
-                echo gettext("Host ") . 
+                echo gettext("Host") . ' ' .  
                     Host::ip2hostname($conn, $host->get_host())."<br/>";
             }
         }
@@ -87,7 +87,7 @@
         <?php
         if (is_array($dest_net_list = $response->get_dest_nets($conn))) {
             foreach ($dest_net_list as $net) {
-                echo gettext("Net ") . $net->get_net()."<br/>";
+                echo gettext("Net") . ' ' . $net->get_net()."<br/>";
             }
         }
         ?>
@@ -99,7 +99,7 @@
         <?php
         if (is_array($dest_host_list = $response->get_dest_hosts($conn))) {
             foreach ($dest_host_list as $host) {
-                echo gettext("Host ") . 
+                echo gettext("Host") . ' ' . 
                     Host::ip2hostname($conn, $host->get_host())."<br/>";
             }
         }
@@ -181,7 +181,7 @@
       <!-- end actions -->
 
       <td>
-        <a href="deleteresponse.php?id=<?php echo $response->get_id() ?>">Delete</a>
+        <a href="deleteresponse.php?id=<?php echo $response->get_id() ?>"><?=_("Delete")?></a>
       </td>
 
     </tr>

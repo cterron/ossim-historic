@@ -88,6 +88,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
                 foreach($network_list as $network) {
                     echo $network->get_net_name() . '<br/>';
                 }
+            } else {
+            	echo "&nbsp;";
             }
 ?>    
       </td>

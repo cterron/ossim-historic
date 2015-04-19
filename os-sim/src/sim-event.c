@@ -99,6 +99,9 @@ sim_event_impl_finalize (GObject  *gobject)
   g_free (event->buffer);
 
 	g_free (event->plugin_sid_name);
+	if (event->packet){
+		g_object_unref(event->packet);
+	}
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -191,6 +194,7 @@ sim_event_instance_init (SimEvent *event)
 	event->userdata9 = NULL;	
 	
 	event->buffer = NULL;	
+	event->packet = NULL;
 	
 }
 

@@ -79,6 +79,7 @@ if(!$scan_date){
         }
         if(!Host_vulnerability::scan_exists($conn, $scan_date)){
         echo _("Could not find database information for a scan happening at the specified\ndate") . " : <b>" . Util::timestamp2date($scan_date) . "</b>.<br>" . _("Exiting") . ".";
+	$db->close($conn);
         exit();
         }
 }
@@ -358,9 +359,9 @@ if ($ip_stats) {
         <a href="<?php echo date("YmdHis", strtotime($stat->get_scan_date())) . "/$ip_"; ?>/index.html">
 <?php
     if (!strcmp($ip,$host))
-        echo "<font color=\"red\">$ip</font>";
+        echo "<font color=\"red\">".Host::ip2hostname($conn, $ip)."</font>";
     else
-        echo colorize_item($ip, $stat->get_scan_date());
+        echo colorize_item(Host::ip2hostname($conn, $ip), $stat->get_scan_date());
 ?>
          </a>
       </td>
@@ -382,7 +383,7 @@ if ($ip_stats) {
       </td>
     </tr>
 <?php
-} /* if ($ip_list) */
+} /* if ($ip_stats) */
 ?>
     <!-- end C & A levels for each IP -->
 </table>
@@ -418,6 +419,7 @@ if ($handle = @opendir($scan_date)) {
 
 } // if (!GET("noimages"))
 }
+$db->close($conn);
 ?>
 
 <br/>

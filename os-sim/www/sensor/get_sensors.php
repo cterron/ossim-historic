@@ -1,5 +1,4 @@
 <?php
-
 require_once ('classes/Session.inc');
 require_once ('classes/Util.inc');
 
@@ -66,12 +65,4 @@ function server_get_sensors($conn) {
     socket_close ($socket);
     return $list;
 }
-
-#
-# debug
-# print_r(server_get_sensors());
-#
-
 ?>
-
-

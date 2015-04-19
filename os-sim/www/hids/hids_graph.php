@@ -1,4 +1,6 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelHids");
  
 
 require_once ('classes/Host_ids.inc');

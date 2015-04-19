@@ -1,6 +1,9 @@
 <?php
 header('Content-Type: text/xml');
 
+    require_once 'classes/Session.inc';
+    Session::logcheck("MenuIncidents", "IncidentsIncidents");
+
     require_once 'ossim_db.inc';
     require_once 'classes/Incident.inc';
     require_once 'classes/Security.inc';

@@ -4,3 +4,4 @@ OS_DATA = get_OS_OSVDB.pl \
 		  wrapper_get_OSVDB.sh
 
 EXTRA_DIST   = $(OS_DATA)
+DISTCLEANFILES = Makefile.in

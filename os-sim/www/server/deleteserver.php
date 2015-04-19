@@ -52,7 +52,10 @@ if (GET('confirm')) {
     <p> <?php echo gettext("Server deleted"); ?> </p>
     <p><a href="server.php"> 
     <?php echo gettext("Back"); ?> </a></p>
-    <?php exit(); ?>
+<?
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

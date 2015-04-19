@@ -3,6 +3,7 @@
 # Init file for the OSSIM framework 
 #
 # description: Ossim framework
+# chkconfig: - 93 83
 #
 # processname: ossim-framework
 # config: /etc/ossim/framework/ossim.conf
@@ -13,17 +14,21 @@
 # Source networking configuration.
 . /etc/sysconfig/network
 
+if [ -f /etc/sysconfig/ossim-framework ]; then
+  . /etc/sysconfig/ossim-framework
+fi
+
 # Check that networking is up.
 [ -x "/usr/bin/python" ] || exit 1
+
 [ -r "/usr/bin/ossim-framework" ] || exit 1
-[ -r "/etc/ossim/framework/ossim.conf" ] || exit 1
 
 RETVAL=0
 prog="ossim-framework"
 
 start () {
 	echo -n $"Starting $prog: "
-	daemon $prog -d -c /etc/ossim/framework/ossim.conf
+	daemon $prog $OPTIONS
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/\$prog

@@ -15,3 +15,4 @@ fonts_DATA = COPYRIGHT.TXT \
 	Vera.ttf
  
 EXTRA_DIST   = $(fonts_DATA)
+DISTCLEANFILES = Makefile.in

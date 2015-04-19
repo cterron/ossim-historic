@@ -40,17 +40,36 @@ require_once ('ossim_db.inc');
 require_once ('classes/Sensor.inc');
 require_once ('classes/Net_group_scan.inc');
 require_once ('classes/Net_group.inc');
+require_once ('classes/Net_scan.inc');
+require_once ('classes/Host_group_scan.inc');
+require_once ('classes/Host_group.inc');
+require_once ('classes/Host_scan.inc');
 
 $db = new ossim_db();
 $conn = $db->connect();
 
 define("NESSUS", 3001);
 
-$tmp_sensors = Sensor::get_all($conn, "ORDER BY name ASC");
 $sensor_list = array();
 // Quick & dirty sensor index array for "sensor#" further below
 $sensor_index = array();
 $tmp_index = 0;
+
+$tmp_sensors = Sensor::get_all($conn, "ORDER BY name ASC");
+$tmp_group_hosts = Host_group_scan::get_list($conn, "ORDER BY host_group_name ASC");
+$tmp_group_nets = Net_group_scan::get_list($conn, "ORDER BY net_group_name ASC");
+$tmp_host = Host_scan::get_list($conn, "ORDER BY host_ip ASC");
+$tmp_nets = Net_scan::get_list($conn, "ORDER BY net_name ASC");
+
+$net_group_index = array();
+$host_group_index = array();
+$hosts_index = array();
+$nets_index = array();
+
+$net_group_list = array();
+$host_group_list = array();
+$hosts_list = array();
+$nets_list = array();
 
 foreach($tmp_sensors as $sensor){
 	if(Sensor::check_plugin_rel($conn, $sensor->get_ip(), NESSUS)){
@@ -60,10 +79,47 @@ foreach($tmp_sensors as $sensor){
 	}
 }
 
+$tmp_index = 0;
+foreach($tmp_group_nets as $gn){
+	$net_group_index[$gn->get_name($conn)] = $tmp_index;
+        $tmp_index++;
+        array_push($net_group_list, $gn);
+}
+
+$tmp_index = 0;
+foreach($tmp_group_hosts as $gh){
+        $host_group_index[$gh->get_name($conn)] = $tmp_index;
+        $tmp_index++;
+        array_push($host_group_list, $gh);
+}
+
+$tmp_index = 0;
+foreach($tmp_host as $hs){
+        $hosts_index[$hs->get_name($conn)] = $tmp_index;
+        $tmp_index++;
+        array_push($hosts_list, $hs);
+}
+
+$tmp_index = 0;
+foreach($tmp_nets as $ns){
+        $nets_index[$ns->get_name($conn)] = $tmp_index;
+        $tmp_index++;
+        array_push($nets_list, $ns);
+}
+
+
     function show_form(){
 	global $sensor_list;
+	global $net_group_list;
+	global $host_group_list;
+	global $hosts_list;
+	global $nets_list;
         global $conn;
 	global $sensor_index;
+	global $net_group_index;
+	global $host_group_index;
+	global $hosts_index;
+	global $nets_index;
 
 	$global_i = 0;
 
@@ -75,10 +131,53 @@ foreach($tmp_sensors as $sensor){
 	}
 	   $rows = intval($num / $cols) +1 ;
 
+        $num_ng = count($net_group_list);
+
+        if($num_ng > 20){
+           $cols = 5;
+        } else {
+           $cols = 3;
+        }
+           $rows_ng = intval($num_ng / $cols) +1 ;
+
+        $num_hg = count($host_group_list);
+
+        if($num_hg > 20){
+           $cols = 5;
+        } else {
+           $cols = 3;
+        }
+           $rows_hg = intval($num_hg / $cols) +1 ;
+
+        $num_hs = count($hosts_list);
+
+        if($num_hs > 20){
+           $cols = 5;
+        } else {
+           $cols = 3;
+        }
+           $rows_hs = intval($num_hs / $cols) +1 ;
+
+        $num_ns = count($nets_list);
+
+        if($num_ns > 20){
+           $cols = 5;
+        } else {
+           $cols = 3;
+        }
+           $rows_ns = intval($num_ns / $cols) +1 ;
+
+	if($num_ns + $num_hs + $num_hg + $num_ng > 20){
+	   $cols_full = 5;
+        } else {
+           $cols_full = 3;
+        }
+
 	?>
 	<h3><center> <?= _("Select sensors for this scan"); ?> </center></h3>
 <ul>
 <?php
+
 $group_scan_list = Net_group_scan::get_list($conn, "WHERE plugin_id = " . NESSUS);
 foreach($group_scan_list as $group_scan){
 $net_group_sensors = Net_group::get_sensors($conn, $group_scan->get_net_group_name());
@@ -86,6 +185,7 @@ echo "\n<script>\n";
 echo "var " . $group_scan->get_net_group_name() . " = true;\n";
 echo "</script>\n";
 $sensor_string = "";
+
 foreach($net_group_sensors as $ng_sensor => $name){
 if($sensor_string == ""){
 $sensor_string .= $sensor_index[$name];
@@ -93,8 +193,54 @@ $sensor_string .= $sensor_index[$name];
 $sensor_string .= "," . $sensor_index[$name];
 }
 }
-print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_group_name() . "','" . $sensor_string . "');\">" . $group_scan->get_net_group_name() . "</a>";
+
+$nets_string = "";
+$nets = Net_group::get_networks($conn, $group_scan->get_net_group_name(), NESSUS);
+
+foreach($nets as $net){
+$name = $net->get_net_name();
+if($nets_string == ""){
+$nets_string .= $nets_index[$name];
+} else {
+$nets_string .= "," . $nets_index[$name];
 }
+}
+
+print "<li><a href=\"#\" onClick=\"return selectSomeNets('". $group_scan->get_net_group_name() . "','" . $sensor_string . "','" . $nets_string . "');\">" . $group_scan->get_net_group_name() . "</a>";
+}
+
+$group_scan_list = Host_group_scan::get_list($conn, "WHERE plugin_id = " . NESSUS);
+foreach($group_scan_list as $group_scan){
+$host_group_sensors = Host_group::get_sensors($conn, $group_scan->get_host_group_name());
+echo "\n<script>\n";
+echo "var " . $group_scan->get_host_group_name() . " = true;\n";
+echo "</script>\n";
+$sensor_string = "";
+
+foreach($host_group_sensors as $hg_sensor){
+$name = $hg_sensor->get_sensor_name();
+if($sensor_string == ""){
+$sensor_string .= $sensor_index[$name];
+} else {
+$sensor_string .= "," . $sensor_index[$name];
+}
+}
+
+$hosts_string = "";
+$hosts = Host_group::get_hosts($conn, $group_scan->get_host_group_name(), NESSUS);
+
+foreach($hosts as $host){
+$name = $host->get_host_name($conn);
+if($hosts_string == ""){
+$hosts_string .= $hosts_index[$name];
+} else {
+$hosts_string .= "," . $hosts_index[$name];
+}
+}
+
+print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_host_group_name() . "','" . $sensor_string . "','" . $hosts_string . "');\">" . $group_scan->get_host_group_name() . "</a>";
+}
+
 ?>
 </ul>
 	<form action="<?= $_SERVER["PHP_SELF"]?>" method="POST">
@@ -102,7 +248,7 @@ print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_gr
 <?= _("Please adjust incident creation threshold, incidents will only be created for vulnerabilities whose risk level exceeds the threshold."); ?><br/>
 <?= _("It is recommended to set a high level at the beginning in order to concentrate on more critical vulnerabilities first, lowering it after having solved/tagged them as false positivies."); ?><br/>
 <?= _("Threshold configuration can be found at Configuration->Main, \"vulnerability_incident_threshold\"."); ?>&nbsp;
-<?= _("Current ris risk threshold is:"); ?>
+<?= _("Current risk threshold is:"); ?>
 <b>
 <?php
     require_once ('ossim_conf.inc');
@@ -112,10 +258,18 @@ print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_gr
 </b>
 </p>
 	<h4><center> (<?= _("Empty means all"); ?>) </center></h4>
-	<center><a href="#" onClick="return selectAll('sensors');"><?= _("Select / Unselect all");?></a></center>
+	<center><a href="#" onClick="return selectAll();"><?= _("Select / Unselect all");?></a></center>
 <br/>
+
+<table width="100%" border="0" align="left"><tr><td>
+	<input type="radio" name="groupType" value="sensor" checked onClick="selectGroup('sensor');"> Sensor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<input type="radio" name="groupType" value="host" onClick="selectGroup('host');"> NetGroup / Nets / HostGroup / Hosts
+</td></tr>
+<tr><td>
+        <div id="rowSensor">
         <table width="100%" align="left" border="0"><tr>
 	<?php
+	
 	for($i=1;$i<=$rows;$i++){
 	?>
 	<?php
@@ -135,8 +289,120 @@ print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_gr
 	    <?php
 	}
 	    echo "</table>\n";
+        ?>
+        </div>
 
-?>
+	<div id="rowHost" style="display: none">
+        <table width="100%" align="left" border="0">
+        <tr>
+	<th colspan="3">NetGroups</th></tr><tr>
+	<?php
+
+	$global_ng = 0;
+	for($i=1;$i<=$rows_ng;$i++){
+	?>
+        <?php
+	    for($a=0;$a <$cols_full && $global_ng < $num_ng ;$a++){
+		$netgroup = $net_group_list[$global_ng];                
+		echo "<td width=\"" . intval(100/$cols_full) . "%\">";
+        	$all['netgroups'][] = "netgroup".$global_ng;
+	        ?>
+                <div align="left">
+                <input align="left" type="checkbox" id="<?= "netgroup".$global_ng ?>" name="netgroupList[]"
+                               value="<?= $netgroup->get_name() ?>" /><?=$netgroup->get_name($conn)?></div></td>
+		 <?php
+                $global_ng++;
+            }
+
+           echo "</tr>\n";
+	    ?>
+            <tr>
+	    <?php
+		}
+            ?>
+
+	<th colspan="3">HostGroups</th></tr><tr>
+
+        <?php
+        $global_hg = 0;
+        for($i=1;$i<=$rows_hg;$i++){
+	?>
+        <?php
+            for($a=0;$a <$cols_full && $global_hg < $num_hg ;$a++){
+                $hostgroup = $host_group_list[$global_hg];
+                echo "<td width=\"" . intval(100/$cols_full) . "%\">";
+                $all['hostgroups'][] = "hostgroup".$global_hg;
+		 ?>
+                <div align="left">
+                <input align="left" type="checkbox" id="<?= "hostgroup".$global_hg ?>" name="hostgroupList[]"
+                               value="<?= $hostgroup->get_name() ?>" /><?=$hostgroup->get_name($conn)?></div></td>
+                 <?php
+                $global_hg++;
+            }
+
+           echo "</tr>\n";
+           ?>
+           <tr>
+	   <?php
+                }
+           ?>
+
+	<th colspan="3">Nets</th></tr><tr>
+        
+        <?php
+        $global_ns = 0;
+        for($i=1;$i<=$rows_ns;$i++){
+        ?>
+        <?php
+            for($a=0;$a <$cols_full && $global_ns < $num_ns ;$a++){
+                $nets = $nets_list[$global_ns];
+                echo "<td width=\"" . intval(100/$cols_full) . "%\">";
+                $all['nets'][] = "net".$global_ns;
+                 ?>
+                <div align="left">
+                <input align="left" type="checkbox" id="<?= "net".$global_ns ?>" name="netList[]"
+                               value="<?= $nets->get_name() ?>" /><?=$nets->get_name($conn)?></div></td>
+                 <?php
+                $global_ns++;
+            }
+
+            echo "</tr>\n";
+            ?>
+           <tr>
+	     <?php
+                }
+             ?>
+
+	<th colspan="3">Hosts</th></tr><tr>
+
+        <?php
+        $global_hs = 0;
+        for($i=1;$i<=$rows_hs;$i++){
+        ?>
+        <?php
+            for($a=0;$a <$cols_full && $global_hs < $num_hs ;$a++){
+                $hosts = $hosts_list[$global_hs];
+                echo "<td width=\"" . intval(100/$cols_full) . "%\">";
+                $all['hosts'][] = "host".$global_hs;
+                 ?>
+                <div align="left">
+                <input align="left" type="checkbox" id="<?= "host".$global_hs ?>" name="hostList[]"
+                               value="<?= $hosts->get_host_ip() ?>" /><?=$hosts->get_name($conn)?></div></td>
+                 <?php
+                $global_hs++;
+            }
+
+            echo "</tr>\n";
+            ?>
+            <?php
+                }
+
+	echo "</table>\n";
+        ?>
+        </div>	
+
+</td></tr></table>
+
 <center>
 <input type="hidden" name="nsensors" value="<?php echo $global_i ?>" />
 <input type="Submit" value="<?= _("Submit"); ?>">
@@ -145,29 +411,99 @@ print "<li><a href=\"#\" onClick=\"return selectSome('". $group_scan->get_net_gr
 <center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
 <script>
 var check_sensors = true;
+var check_nethost = true;
+var scanType = 'sensor';
 
-function selectAll(category)
+function selectAll()
 {
-    if (category == 'sensors') {
-    <? foreach ($all['sensors'] as $id) { ?>
+
+if (scanType  == 'sensor') {
+    <? if (count($all['sensors']) != 0) {
+    	foreach ($all['sensors'] as $id) { ?>
         document.getElementById('<?=$id?>').checked = check_sensors;
-    <? } ?>
+    <? }} ?>
         check_sensors = check_sensors == false ? true : false;
     }
-    return false;
+else {
+    <? if (count($all['netgroups']) != 0) {
+        foreach ($all['netgroups'] as $id) { ?>
+        document.getElementById('<?=$id?>').checked = check_nethost;
+    <? }} ?>
+    <? if (count($all['hostgroups']) != 0) {
+        foreach ($all['hostgroups'] as $id) { ?>
+        document.getElementById('<?=$id?>').checked = check_nethost;
+    <? }} ?>
+    <? if (count($all['nets']) != 0) {
+        foreach ($all['nets'] as $id) { ?>
+        document.getElementById('<?=$id?>').checked = check_nethost;
+    <? }} ?>
+    <? if (count($all['hosts']) != 0) {
+        foreach ($all['hosts'] as $id) { ?>
+        document.getElementById('<?=$id?>').checked = check_nethost;
+    <? }} ?>
+        check_nethost = check_nethost == false ? true : false;
+     }
+return false;
 }
 
-function selectSome(name, identifiers)
+function selectSomeNets(name, identifiersSensors, identifiersNets)
 {
 
-arrayOfStrings = identifiers.split(",");
-for (var i=0; i < arrayOfStrings.length; i++) {
-document.getElementById("sensor" + arrayOfStrings[i]).checked = window[name];
+if (identifiersSensors.length != 0) {
+	arrayOfStringsSensor = identifiersSensors.split(",");
+	for (var i=0; i < arrayOfStringsSensor.length; i++) {
+	document.getElementById("sensor" + arrayOfStringsSensor[i]).checked = window[name];
+	}
 }
+
+if (identifiersNets.length != 0) {
+	arrayOfStringsNets = identifiersNets.split(",");
+	for (var i=0; i < arrayOfStringsNets.length; i++) {
+	document.getElementById("net" + arrayOfStringsNets[i]).checked = window[name];
+	}
+}
+
 window[name] = window[name] == false ? true : false;
 return false;
+
 } 
-            
+
+function selectSomeHosts(name, identifiersSensors, identifiersHosts)
+{
+
+if (identifiersSensors.length != 0) {
+	arrayOfStringsSensor = identifiersSensors.split(",");
+	for (var i=0; i < arrayOfStringsSensor.length; i++) {
+	document.getElementById("sensor" + arrayOfStringsSensor[i]).checked = window[name];
+	}	
+}
+
+if (identifiersHosts.length != 0) {
+	arrayOfStringsHosts = identifiersHosts.split(",");
+	for (var i=0; i < arrayOfStringsHosts.length; i++) {
+	document.getElementById("host" + arrayOfStringsHosts[i]).checked = window[name];
+	}
+}
+
+window[name] = window[name] == false ? true : false;
+return false;
+
+}
+
+function selectGroup(category)
+
+{
+    if (category == 'sensor') {
+	document.getElementById("rowHost").style.display = 'none';
+        document.getElementById("rowSensor").style.display = 'block';
+    } else {
+        document.getElementById("rowHost").style.display = 'block';
+        document.getElementById("rowSensor").style.display = 'none';
+    }
+
+scanType = category;
+}
+ 
 </script>
 </body>
 </html>
@@ -188,6 +524,43 @@ return false;
 	    if (POST("sensor$i") != "")
                 $sensors .= "," . POST("sensor$i");
     } 
+
+    $netgroup_l = "";
+    $netgroup_array = POST("netgroupList");
+    for ($i = 0;$i < count($netgroup_array);$i++) {
+        if ($netgroup_l == "")
+            $netgroup_l = $netgroup_array[$i];
+        else
+            $netgroup_l .= "," . $netgroup_array[$i];
+    }
+
+    $hostgroup_l = "";
+    $hostgroup_array = POST("hostgroupList");
+    for ($i = 0;$i < count($hostgroup_array);$i++) {
+        if ($hostgroup_l == "")
+            $hostgroup_l = $hostgroup_array[$i];
+        else
+            $hostgroup_l .= "," . $hostgroup_array[$i];
+    }
+
+    $net_l = "";
+    $net_array = POST("netList");
+    for ($i = 0;$i < count($net_array);$i++) {
+        if ($net_l == "")
+            $net_l = $net_array[$i];
+        else
+            $net_l .= "," . $net_array[$i];
+    }
+
+    $host_l = "";
+    $host_array = POST("hostList");
+    for ($i = 0;$i < count($host_array);$i++) {
+        if ($host_l == "")
+            $host_l = $host_array[$i];
+        else
+            $host_l .= "," . $host_array[$i];
+    }
+
 
     require_once ('ossim_conf.inc');
     $conf = $GLOBALS["CONF"];
@@ -213,7 +586,7 @@ return false;
     }
 
     if($status == "reset"){
-        $in = 'nessus reset now' . "\n";
+        $in = 'nessus action="reset"' . "\n";
         socket_write ($socket, $in, strlen ($in));
 	?>
 	<center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
@@ -231,9 +604,13 @@ return false;
     }
 
     if($scheduler_id > 0){
-    $in = 'nessus start ' . $scheduler_id . "\n";
+        $in = 'nessus action="scan" target_type="schedule" id="' . $scheduler_id . '"' . "\n";
     } else {
-    $in = 'nessus start ' . $sensors . "\n";
+        if (POST("groupType") == "sensor"){
+            $in = 'nessus action="scan" target_type="sensors" list="' . $sensors . '"' . "\n";
+        } else  {
+            $in = 'nessus action="scan" target_type="hosts" netgroups="' . $netgroup_l . '" nets="' . $net_l . '" hostgroups="' . $hostgroup_l . '" hosts="' . $host_l . '"' . "\n";
+        }
     }
     $out = '';
     socket_write ($socket, $in, strlen ($in));
@@ -251,7 +628,7 @@ return false;
 </center>
 <?php flush(); ?>
 <?php
-    $in = 'nessus status get' . "\n";
+    $in = 'nessus action="status"' . "\n";
 
     while (socket_write($socket, $in, strlen ($in)) && ($out = socket_read ($socket, 255, PHP_BINARY_READ)))
     {

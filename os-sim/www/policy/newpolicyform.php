@@ -433,21 +433,21 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     <th> <?= _("Correlate events").required() ?> </th>
     <td class="left">
     <input type="radio" name="correlate" value="1" checked> <?= _("Yes"); ?>
-    <input type="radio" name="correlate" value="0" > <?= _("No"); ?>
+    <input type="radio" name="correlate" value="0" > <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
     <th> <?= _("Cross Correlate events").required() ?> </th>
     <td class="left">
     <input type="radio" name="cross_correlate" value="1" checked> <?= _("Yes"); ?>
-    <input type="radio" name="cross_correlate" value="0" > <?= _("No"); ?>
+    <input type="radio" name="cross_correlate" value="0" > <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
     <th> <?= _("Store events").required() ?> </th>
     <td class="left">
     <input type="radio" name="store" value="1" checked> <?= _("Yes"); ?>
-    <input type="radio" name="store" value="0" > <?= _("No"); ?>
+    <input type="radio" name="store" value="0" > <?= _("No"); ?> <small>1)</small>
     </td>
   </tr>
   <tr>
@@ -471,6 +471,10 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     <input type="radio" name="resend_events" value="0" > <?= _("No"); ?>
     </td>
   </tr>
+<tr>
+<td colspan="2" class="left">
+1) <?= _("Does not apply to targets without associated database.") ?> <?= _("Implicit value is always No for them."); ?>
+</td>
 
   <tr>
     <th><?= _("Description").required() ?></th>

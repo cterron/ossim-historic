@@ -218,6 +218,9 @@ sim_sensor_new_from_dm (GdaDataModel  *dm,
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   sensor->_priv->port = gda_value_get_integer (value);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_sensor_new_from_dm: %s", sensor->_priv->name);
+  sim_sensor_debug_print(sensor);
+
   return sensor;
 }
 

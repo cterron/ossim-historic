@@ -4,10 +4,6 @@ from Logger import Logger
 logger = Logger.logger
 
 from MonitorList import MonitorList
-from MonitorSocket import MonitorSocket
-from MonitorCommand import MonitorCommand
-from MonitorDatabase import MonitorDatabase
-from MonitorHTTP import MonitorHTTP
 
 class MonitorScheduler(threading.Thread):
 
@@ -17,20 +13,29 @@ class MonitorScheduler(threading.Thread):
 
     def new_monitor(self, type, plugin, watch_rule):
         if type in ('socket', 'unix_socket'):
+            from MonitorSocket import MonitorSocket
             monitor = MonitorSocket(plugin, watch_rule)
             self.monitor_list.appendRule(monitor)
         elif type == 'database':
+            from MonitorDatabase import MonitorDatabase
             monitor = MonitorDatabase(plugin, watch_rule)
             self.monitor_list.appendRule(monitor)
-        elif type in ('log', 'file'):
-            monitor = MonitorFile(plugin, watch_rule)
-            self.monitor_list.appendRule(monitor)
         elif type == ('command'):
+            from MonitorCommand import MonitorCommand
             monitor = MonitorCommand(plugin, watch_rule)
             self.monitor_list.appendRule(monitor)
         elif type == ('http'):
+            from MonitorHTTP import MonitorHTTP
             monitor = MonitorHTTP(plugin, watch_rule)
             self.monitor_list.appendRule(monitor)
+#
+#        TODO: still not implemented
+#
+#        elif type in ('log', 'file'):
+#            from MonitorFile import MonitorFile
+#            monitor = MonitorFile(plugin, watch_rule)
+#            self.monitor_list.appendRule(monitor)
+#
          
     def run(self):
         logger.debug("Monitor Scheduler started")

@@ -58,10 +58,11 @@
 
 /* Global Variables */
 SimMain        ossim;
+GPrivate       *currentgscanner;
 
 void sim_terminate(int mode)
 {
-  unlink("/var/run/ossim-server.pid");
+  unlink(OS_SIM_RUN_DIR);
   
   if (mode == 1)
     abort(); //core file rulez
@@ -255,8 +256,8 @@ void
 sim_pid_init(void)
 {
   int fd_pid;
-  if ((fd_pid = open ("/var/run/ossim-server.pid", O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) < 0)
-      g_message ("Can't create /var/run/ossim-server.pid");
+  if ((fd_pid = open (OS_SIM_RUN_DIR, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) < 0)
+      g_message ("Can't create %s",OS_SIM_RUN_DIR);
   else
   {
     char pid_str[16];
@@ -300,12 +301,15 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
+	// Init thread vars to avoid concurrency in GScanner
+	sim_command_init_tls();	
+
   /*GNET Init */
   gnet_init();
   gnet_ipv6_set_policy (GIPV6_POLICY_IPV4_ONLY);
   
   /* GDA Init */
-  gda_init ("OSSIM", "0.9.9rc3", argc, argv);
+  gda_init ("OSSIM", "0.9.9rc4", argc, argv);
 
   /* Catch system signals */
   init_signals();
@@ -314,51 +318,54 @@ main (int argc, char *argv[])
   if (simCmdArgs.config)
   {
     if (!(xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config)))
-			g_error ("Config XML File %s is invalid", simCmdArgs.config);
+			g_print ("Config XML File %s is invalid\n", simCmdArgs.config);
     
     if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
-			g_error ("Config is %s invalid", simCmdArgs.config);
+			g_print ("Config is %s invalid\n", simCmdArgs.config);
   }
   else
   {
     if (!g_file_test (OS_SIM_GLOBAL_CONFIG_FILE, G_FILE_TEST_EXISTS))
-			g_error ("Config XML File %s: Not Exists", OS_SIM_GLOBAL_CONFIG_FILE);
+			g_print ("Config XML File %s: Not Exists\n", OS_SIM_GLOBAL_CONFIG_FILE);
       
     if (!(xmlconfig = sim_xml_config_new_from_file (OS_SIM_GLOBAL_CONFIG_FILE)))
-			g_error ("Config XML File %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+			g_print ("Config XML File %s is invalid\n", OS_SIM_GLOBAL_CONFIG_FILE);
       
     if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
-			g_error ("Config %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+			g_print ("Config %s is invalid\n", OS_SIM_GLOBAL_CONFIG_FILE);
   }
+
+	/* Log Init */
+  sim_log_init ();
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Starting OSSIM server debug with process id: %d",getpid());
 
   /* Database Options */
   ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSSIM);
   if (!ds)
 	{
-    g_error ("OSSIM DB XML Config");
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Failed to load OSSIM DB XML Config");
+    g_print ("Failed to load OSSIM DB XML Config\n");
 	}
   ossim.dbossim = sim_database_new (ds);
 
   ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_SNORT);
   if (!ds)
 	{
-    g_error ("SNORT DB XML Config");
+    g_print ("Failed to load SNORT DB XML Config\n");
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Failed to load SNORT DB XML Config");
 	}
 	ossim.dbsnort = sim_database_new (ds);
 
 	ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSVDB);
   if (!ds)
 	{
-    g_message ("Error / Warning: OSVDB DB XML Config. If you want to use OSVDB please insert data load into config.xml. If you think that you don't need to use it, or you're running a server without DB in multiserver mode, just ignore this error.");
+    g_print ("Error / Warning: OSVDB DB XML Config. If you want to use OSVDB please insert data load into config.xml. If you think that you don't need to use it, or you're running a server without DB in multiserver mode, just ignore this error.\n");
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error / Warning: OSVDB DB XML Config. If you want to use OSVDB please insert data load into config.xml. If you think that you don't need to use it, or you're running a server without DB in multiserver mode, just ignore this error.");
     ossim.dbosvdb = NULL;
 	}
   else
 	  ossim.dbosvdb = sim_database_new (ds);
 
-
-  /* Log Init */
-  sim_log_init ();
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Starting OSSIM server debug with process id: %d",getpid());
 
   /* pid init */
   sim_pid_init();
@@ -380,7 +387,7 @@ GList *list3 = ossim.config->rservers;
 */
 
   /* Initializes the listening keywords scanner*/
-  sim_command_start_scanner();
+//  sim_command_start_scanner();
 
 	/* Init instances */
   ossim.server = sim_server_new (ossim.config);				//needed to be defined for container remote load.

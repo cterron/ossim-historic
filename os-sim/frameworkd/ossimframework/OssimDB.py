@@ -15,7 +15,7 @@ class OssimDB:
 
     def __init__ (self) :
         self.conn = None
-        self.conf = OssimConf.OssimConf(Const.CONFIG_FILE, complete = False)
+        self.conf = OssimConf.OssimMiniConf()
 
     def connect (self, host, db, user, passwd = ""):
         self.conn = adodb.NewADOConnection(self.conf["ossim_type"])
@@ -33,7 +33,8 @@ class OssimDB:
         try:
             cursor = self.conn.Execute(query)
         except Exception, e:
-            print __name__, ": Error executing query (%s)" % (e)
+            print __name__, \
+                ': Error executing query (%s) """%s"""' % (query, e)
             return []
         while not cursor.EOF:
             arr.append(cursor.GetRowAssoc(0))

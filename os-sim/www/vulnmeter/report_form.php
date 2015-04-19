@@ -74,7 +74,7 @@ if($action == "generate"){
 
     if($title == "") $title = urlencode(_("Nessus Report"));
 
-    $in = "nessus report $title $hosts \n";
+    $in = 'nessus action="report" title="' . $title . '" list="' .  $hosts . '"' . "\n";
     socket_write ($socket, $in, strlen ($in));
     print "<center><a href=\"report.php\" target=\"main\">" .  _("Report successfully created, please reload page.") . "</a></center>";
 
@@ -100,8 +100,8 @@ $global_i = 0;
 
 ?>
 
-<h3> Select hosts for custom report</h3>
-Note: Only hosts that have been scanned are available for selection.
+<h3><?=_("Select hosts for custom report")?></h3>
+<?=_("Note: Only hosts that have been scanned are available for selection")?>.
 
 <form action="<?= $_SERVER["PHP_SELF"]?>" method="POST">
 <?= _("Report title"); ?> <input type="text" name="title" size="50">

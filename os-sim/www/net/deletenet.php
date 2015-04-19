@@ -54,7 +54,10 @@ if (GET('confirm')) {
     <p> <?php echo gettext("Net deleted"); ?> </p>
     <p><a href="net.php">
     <?php echo gettext("Back"); ?> </a></p>
-    <?php exit(); ?>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

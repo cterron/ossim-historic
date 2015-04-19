@@ -261,6 +261,9 @@ if(POST('insert')) {
 <?php
     $db->close($conn);
 }
+
+// update indicators on top frame
+$OssimWebIndicator->update_display();
 ?>
 
 </body>

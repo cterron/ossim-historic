@@ -6,13 +6,13 @@ class Framework:
 
     def __init__ (self):
         self.__classes = [
-##                "ControlPanel",
-##                "RRDUpdate",
                 "ControlPanelRRD",
                 "AcidCache",
                 "Listener",
                 "Scheduler",
-#                "SOC",
+                "SOC",
+                "BusinessProcesses",
+                "Backup",
             ]
 
 
@@ -93,10 +93,18 @@ class Framework:
 
     def main(self):
 
+        from OssimConf import OssimConf
+        conf = OssimConf (Const.CONFIG_FILE)
+
         for c in self.__classes :
-            exec "from %s import %s" % (c, c)
-            exec "t = %s()" % (c)
-            t.start()
+            conf_entry = "frameworkd_" + c.lower()
+            if str(conf[conf_entry]).lower() in ('1', 'yes', 'true'):
+                print __name__, c.upper() + " is enabled"
+                exec "from %s import %s" % (c, c)
+                exec "t = %s()" % (c)
+                t.start()
+            else:
+                print __name__, c.upper() + " is disabled"
 
 
 if __name__ == "__main__" :

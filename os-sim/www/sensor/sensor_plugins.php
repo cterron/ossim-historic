@@ -38,6 +38,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
     $db = new ossim_db();
     $conn = $db->connect();
 
+    $db_sensor_list = array();
     $tmp_list = Sensor::get_list($conn);
     if (is_array($tmp_list)) {
         foreach ($tmp_list as $tmp) {
@@ -67,7 +68,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
             /*
              *  Send message to server
              *    sensor-plugin-CMD sensor="" plugin_id=""
-             *  where CMD can be (start|stop|enabled|disabled)
+             *  where CMD can be (start|stop|enable|disable)
              */
            
             require_once ('ossim_conf.inc');
@@ -104,7 +105,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
             }
 
             /* send command */
-            $msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"";
+            $msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"\n";
             socket_write($socket, $msg, strlen($msg));
             socket_close($socket);
 
@@ -190,14 +191,14 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 ?>
       <td><font color="GREEN"><b> <?php echo gettext("ENABLED"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=disabled&id=$id" ?>">
+            "?sensor=$ip&ip=$ip&cmd=disable&id=$id" ?>">
 	    <?php echo gettext("disable"); ?> </a></td>
 <?php
                     } else {
 ?>
       <td><font color="RED"><b> <?php echo gettext("DISABLED"); ?> </b></font></td>
       <td><a href="<?PHP echo $_SERVER["PHP_SELF"] . 
-            "?sensor=$ip&ip=$ip&cmd=enabled&id=$id" ?>">
+            "?sensor=$ip&ip=$ip&cmd=enable&id=$id" ?>">
 	    <?php echo gettext("enable"); ?> </a></td>
 <?php
                     }
@@ -206,6 +207,13 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 <?php
                 } # if
             } # foreach
+?>
+    <tr>
+      <td colspan="5">
+        <a href="<?PHP echo $_SERVER["PHP_SELF"] . "?sensor=$ip" ?>"> Refresh </a>
+      </td>
+    </tr>
+<?php
         } # if
 ?>
         </table>

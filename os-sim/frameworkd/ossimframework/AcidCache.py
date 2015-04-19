@@ -1,5 +1,6 @@
 import os, sys, time, re
-import urllib
+import pycurl
+import StringIO
 
 from OssimConf import OssimConf
 from OssimDB import OssimDB
@@ -40,8 +41,8 @@ class AcidCache (threading.Thread) :
         }
 
         # web authentication?
-        ossim_web_user = self.__conf["ossim_web_user"] or "ossim"
-        ossim_web_pass = self.__conf["ossim_web_pass"] or "ossim"
+#        ossim_web_user = self.__conf["ossim_web_user"] or "ossim"
+#        ossim_web_pass = self.__conf["ossim_web_pass"] or "ossim"
 
         result = re.compile("(\w+:\/\/)(.*?)(\/.*)$").search(acid_link)
         if result is not None:
@@ -56,33 +57,53 @@ class AcidCache (threading.Thread) :
         acid_pass = self.__conf["acid_pass"]
         session = "/session/login.php?dest="
         for key, url in self.__urls.iteritems():
-
-            if self.__conf["acid_user"]:
-                self.__urls[key] = "%s%s:%s@%s%s%s%s%s%s&user=%s&pass=%s" % \
-                    (acid_scheme, ossim_web_user, ossim_web_pass, ossim_ip,
-                     ossim_link, session, acid_link, acid_prefix, url, acid_user, acid_pass)
-            else:
-                self.__urls[key] = "%s%s%s%s%s%s%s&user=%s&pass=%s" % \
-                    (ossim_scheme, ossim_ip, ossim_link, session, acid_link, 
-                     acid_prefix, url, acid_user, acid_pass) 
+            self.__urls[key] = "%s%s%s%s%s" % (acid_scheme, ossim_ip, acid_link, acid_prefix, url)
 
         while 1:
 
-            for key, url in self.__urls.iteritems():
-                try:
-                    fname = self.__conf["acid_path"] + "/" + key + ".html"
-                    # TODO: hid the passwords!
-                    print __name__, ': Fetching %s from "%s"' % (fname, url)
+            # Open ossim session
+            print __name__, ': Login to web framework'
+            contents = StringIO.StringIO()
+            url = "%s%s%s/session/login.php" % (ossim_scheme, ossim_ip, ossim_link)
+            curl = pycurl.Curl()
+            curl.setopt(pycurl.WRITEFUNCTION, contents.write)
+            curl.setopt(pycurl.URL, url)
+            curl.setopt(pycurl.FOLLOWLOCATION, 1)
+            curl.setopt(pycurl.COOKIEFILE, "")
+            curl.setopt(pycurl.HTTPPOST, [('user',acid_user),
+                                          ('pass',acid_pass)])
+            try:
+                curl.perform()
+            except Exception, e:
+                print __name__, ":", e
 
-                    fin = urllib.urlopen(url)
-                    fout = open (fname, "w")
-                    fout.writelines(fin.readlines())
-                    fin.close()
-                    fout.close()
+            match = re.search(r".*OSSIM Framework Login.*", contents.getvalue())
+            contents.close()
+            if match is not None:
+                print >>sys.stderr, __name__, ":", "Error : Failed login to web framework"
+            else:
+                for key, url in self.__urls.iteritems():
+                    contents = StringIO.StringIO()
+                    try:
+                        fname = self.__conf["acid_path"] + "/" + key + ".html"
 
-                except Exception, e:
-                    print __name__, ":", e
+                        print __name__, ': Fetching %s from "%s"' % (fname, url)
+    
+                        curl.setopt(pycurl.URL, url)
+                        curl.setopt(pycurl.FOLLOWLOCATION, 1)
+                        curl.setopt(pycurl.WRITEFUNCTION, contents.write)
+                        curl.perform()
+
+                        fout = open (fname, "w")
+                        fout.writelines(contents.getvalue())
+                        fout.close()
+
+                    except Exception, e:
+                        print __name__, ":", e
+
+                    contents.close()
  
+            curl.close()
             time.sleep(float(Const.SLEEP))
 
 

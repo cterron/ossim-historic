@@ -3,9 +3,14 @@ require_once 'classes/Session.inc';
 require_once 'classes/Security.inc';
 require_once 'classes/Xajax.inc';
 require_once 'classes/Util.inc';
+Session::logcheck("MenuControlPanel", "BusinessProcesses");
+Session::logcheck("MenuControlPanel", "BusinessProcessesEdit");
 
 $db = new ossim_db();
 $conn = $db->connect();
+
+$proc_id = GET('proc_id');
+$referrer = GET('referrer');
 
 $id = GET('id');
 if (!ossim_valid($id, OSS_DIGIT, 'illegal:ID')) {
@@ -18,6 +23,7 @@ $xajax->registerFunction("remove_responsible");
 $xajax->registerFunction("edit_asset");
 $xajax->registerFunction("draw_members");
 $xajax->registerFunction("remove_member");
+$xajax->registerFunction("draw_members_select");
 
 function draw_responsibles($selected_value)
 {
@@ -72,12 +78,20 @@ function draw_members($form_data)
         if (ossim_error()) {
             $resp->AddAssign("form_errors", "innerHTML", ossim_error());
         } else {
-            $sql = "INSERT INTO bp_asset_member (asset_id, member, member_type) " .
-                   "VALUES (?, ?, ?)";
-            $params = array($id, $form_data["member_name"], $form_data["member_type"]);
-            if (!$conn->Execute($sql, $params)) {
+            // Check for duplicates
+            $sql = "SELECT member FROM bp_asset_member WHERE asset_id=? AND member=? AND member_type=?";
+            if (!$rs = $conn->Execute($sql, array($id, $form_data["member_name"], $form_data["member_type"]))) {
                 $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
                 return $resp;
+            }
+            if ($rs->EOF) {
+                $sql = "INSERT INTO bp_asset_member (asset_id, member, member_type) " .
+                       "VALUES (?, ?, ?)";
+                $params = array($id, $form_data["member_name"], $form_data["member_type"]);
+                if (!$conn->Execute($sql, $params)) {
+                    $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
+                    return $resp;
+                }
             }
             $resp->AddAssign("form_errors", "innerHTML", '');
         }
@@ -140,13 +154,26 @@ function remove_member($name, $type)
 
 function edit_asset($form_data)
 {
-    global $conn, $id;
+    global $conn, $id, $proc_id, $referrer;
     $resp = new xajaxResponse();
     ossim_valid($form_data['bp_name'], OSS_INPUT, 'illegal:'._("Name"));
     ossim_valid($form_data['bp_desc'], OSS_TEXT, 'illegal:'._("Description"));
     if (ossim_error()) {
         $resp->AddAssign("form_errors", "innerHTML", ossim_error());
     } else {
+        // Check if there is already an asset with that name
+        $sql = "SELECT name FROM bp_asset WHERE name=?";
+        if ($id != 0) {
+            $sql .= " AND id <> $id";
+        }
+        $params = array($form_data['bp_name']);
+        if (!$rs = $conn->Execute($sql, $params)) {
+            $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
+            return $resp;
+        } elseif (!$rs->EOF) {
+            $resp->AddAssign("form_errors", "innerHTML", ossim_error(_("There is already an asset with that name")));
+            return $resp;
+        }
         // New record
         if ($id == 0) {
             $sql = "INSERT INTO bp_asset (id, name, description) VALUES (?, ?, ?)";
@@ -155,7 +182,7 @@ function edit_asset($form_data)
             if (!$conn->Execute($sql, $params)) {
                 $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
             } else {
-                $resp->addRedirect($_SERVER['PHP_SELF']."?id=$id");
+                $resp->addRedirect($_SERVER['PHP_SELF']."?id=$id&proc_id=$proc_id");
             }
         // Continue button, reflect possible changes in name or description
         } else {
@@ -163,6 +190,10 @@ function edit_asset($form_data)
             $params = array($form_data['bp_name'], $form_data['bp_desc'], $id);
             if (!$conn->Execute($sql, $params)) {
                 $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
+            } elseif ($referrer == 'bp_list') {
+                $resp->addRedirect("./bp_list.php");
+            } elseif ($proc_id) {
+                $resp->addRedirect("./bp_edit.php?id=$proc_id");
             } else {
                 $resp->addRedirect("./asset_list.php");
             }
@@ -191,6 +222,78 @@ function get_users($asset_id = null)
         $params = array();
     }
     return $conn->getAll($sql, $params);
+}
+
+function draw_members_select($form_data)
+{
+    global $conn, $id;
+    $resp = new xajaxResponse();
+    $type = $form_data['member_type'];
+    // The user selected the empty type
+    if (!$type) {
+        $resp->AddAssign("members_select", "innerHTML", _("Please select a type"));
+        return $resp;
+    }
+    //
+    // Get the list of members of the given type
+    //
+    $options = array();
+    switch ($type) {
+        case 'host':
+            include_once 'classes/Host.inc';
+            $list = Host::get_list($conn, null, 'ORDER BY hostname');
+            foreach ($list as $obj) {
+                $descr = $obj->get_descr();
+                if (strlen($descr) > 50) {
+                    $descr = substr($descr, 0, 47) . '...';
+                }
+                $options[$obj->get_ip()] = $obj->get_hostname().' '.$obj->get_ip().' - '.$descr;
+            }
+            break;
+        case 'net':
+            include_once 'classes/Net.inc';
+            $list = Net::get_list($conn, 'ORDER BY name');
+            foreach ($list as $obj) {
+                $descr = $obj->get_descr();
+                if (strlen($descr) > 50) {
+                    $descr = substr($descr, 0, 47) . '...';
+                }
+                $options[$obj->get_name()] = $obj->get_name().' '.$obj->get_ips().' - '.$descr;
+            }
+            break;
+        case 'host_group':
+            include_once 'classes/Host_group.inc';
+            $list = Host_group::get_list($conn, 'ORDER BY name');
+            foreach ($list as $obj) {
+                $descr = $obj->get_descr();
+                if (strlen($descr) > 50) {
+                    $descr = substr($descr, 0, 47) . '...';
+                }
+                $options[$obj->get_name()] = $obj->get_name().' - '.$descr;
+            }
+            break;
+        case 'net_group':
+            include_once 'classes/Net_group.inc';
+            $list = Net_group::get_list($conn, 'ORDER BY name');
+            foreach ($list as $obj) {
+                $descr = $obj->get_descr();
+                if (strlen($descr) > 50) {
+                    $descr = substr($descr, 0, 47) . '...';
+                }
+                $options[$obj->get_name()] = $obj->get_name().' - '.$descr;
+            }
+            break;
+    }
+    //
+    // Build the SELECT tag
+    //
+    $html = '<select name="member_name">';
+    foreach ($options as $name => $description) {
+        $html .= "<option value='$name'>$description</option>";
+    }
+    $html .= '</select>';
+    $resp->AddAssign("members_select", "innerHTML", $html);
+    return $resp;
 }
 
 $xajax->setRequestURI($_SERVER["REQUEST_URI"]);
@@ -222,8 +325,9 @@ if ($id != 0) {
 <html>
 <head>
   <title><?_("Business Processes")?></title>
+  <script src="../js/prototype.js" type="text/javascript"></script>
   <link rel="stylesheet" href="../style/style.css"/>
-<?= $xajax->printJavascript('', '../js/xajax.js'); ?>
+<?= $xajax->printJavascript('', XAJAX_JS); ?>
 <style type="text/css">
     .contents {
         width: 60%;
@@ -249,6 +353,12 @@ if ($id != 0) {
 <body>
 <div id="xajax_debug"></div>
 <div id="form_errors"></div>
+<? if ($id == 0) { ?>
+    <h2><?=_("New Asset wizard")?></h2>
+<? } else { ?>
+    <h2><?=_("Edit Asset")?>: <?=$data['name']?></h2>
+<? } ?>
+
 <form id="bp_form">
 <table width="100%"><tr><td style="border-width: 0px">
 <table width="60%" style="border-width: 0px">
@@ -266,6 +376,8 @@ if ($id != 0) {
 <br>
 <? if ($id == 0) { ?>
     <center>
+    <input type="button" value="<?=_("Cancel")?>"
+           onClick="javascript: history.go(-1);">&nbsp;
     <input type="button" value="<?=_("Continue")?>"
            onClick="javascript: xajax_edit_asset(xajax.getFormValues('bp_form'))">
     </center>
@@ -295,21 +407,23 @@ if ($id != 0) {
 </div>
 <script>xajax_draw_members(false)</script>
 <br/>
-<div class="row" style="width: 40%">
-<table width="50%" align="right">
+<div class="row" style="width: 80%">
+<table width="100%" align="center">
 <tr><th colspan="2"><?=_("Insert New Member")?></th></tr>
 <tr>
     <td><?=_("Type")?></td>
     <td style="text-align: left">
-        <select name="member_type">
+        <select name="member_type"
+                onChange="javascript: $(members_select).innerHTML = '<b><i><?=_("Loading...")?></i></b>'; xajax_draw_members_select(xajax.getFormValues('bp_form', true, 'member_type'));">
+            <option></option>
         <? foreach ($bp_types as $i => $type) { ?>
-            <option><?=$type[0]?></option>
+            <option value="<?=$type[0]?>"><?=$type[0]?></option>
         <? } ?>
         </select>
     </td>
 </tr><tr>
     <td><?=_("Name")?></td>
-    <td><input type="text" name="member_name"></td>
+    <td id="members_select" style="text-align: left"><?=_("Please select a type")?></td>
 </tr><tr>
     <td colspan="2">
     <input type="button" onClick="javascript: xajax_draw_members(xajax.getFormValues('bp_form', true, 'member_'))" value="Add">

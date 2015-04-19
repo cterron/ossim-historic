@@ -63,6 +63,44 @@ static gchar     index_64[128] = {
    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1
 };
+static gchar *hexdigitchar = "0123456789ABCDEF";
+gchar *sim_bin2hex(guint8 *data,guint len){
+	gchar *d = g_new(gchar,len*2+1);
+	int i,j=0;
+	if (d!=NULL){
+		for (i=0;i<(len);i++){
+			d[i*2] = hexdigitchar[(data[i]&0xf0)>>4];
+			d[i*2+1] = hexdigitchar[data[i]&0xf];
+		}
+		d[i*2]='\0';
+	}
+
+	return d;
+}
+
+guint8 *sim_hex2bin(gchar *data){
+  int i,j=0,k;
+	size_t l;
+	gchar *st=NULL;
+	gchar temp[3];
+	if (data!=NULL){
+		  l = strlen(data);
+			if (l % 2) return NULL;
+			st=g_new(gchar,l/2);
+			if (st!=NULL){
+				for(i=0;i<l;i+=2){
+					if (g_ascii_isxdigit(data[i]) && g_ascii_isxdigit(data[i+1])){
+						st[j++] =   g_ascii_xdigit_value(data[i])*16+  g_ascii_xdigit_value(data[i+1]);
+					}else{
+						g_free(st);
+						st = NULL;
+						break;
+					}
+				}
+			}
+	  }
+	return st;
+}
 
 
 

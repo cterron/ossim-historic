@@ -8,3 +8,4 @@ ntop_DATA = ntop-2.2.93.diff \
 	rrdPlugin.c.diff
 
 EXTRA_DIST = $(ntop_DATA)
+DISTCLEANFILES = Makefile.in

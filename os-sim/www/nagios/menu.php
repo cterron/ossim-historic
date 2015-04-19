@@ -36,8 +36,8 @@ require_once ('classes/Sensor.inc');
 $sensor_list = Sensor::get_list($conn, "ORDER BY name");
 
 /* nagios link */
-$scheme = $nagios_default["scheme"] ? $nagios_default["scheme"] : "http";
-$path = $nagios_default["path"] ? $nagios_default["path"] : "/nagios/";
+$scheme = isset($nagios_default["scheme"]) ? $nagios_default["scheme"] : "http";
+$path = isset($nagios_default["path"]) ? $nagios_default["path"] : "/nagios/";
 $nagios = "$scheme://$sensor/$path";
 
 $db->close($conn);

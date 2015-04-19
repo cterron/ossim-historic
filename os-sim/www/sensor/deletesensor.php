@@ -58,7 +58,10 @@ if (GET('confirm')) {
     <p> <?php echo gettext("Sensor deleted"); ?> </p>
     <p><a href="sensor.php"> 
     <?php echo gettext("Back"); ?> </a></p>
-    <?php exit(); ?>
+<?
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

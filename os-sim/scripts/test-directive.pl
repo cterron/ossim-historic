@@ -92,21 +92,6 @@ sub directive2 {
     print $sock $event_path_1_1_2 . "\n";
 }
 
-sub directive3 {
-    $src_ip = '192.168.1.10';
-    $dst_ip = '192.168.1.11';
-    $src_port = '1765';
-    $dst_port = '139';
-
-    my $event_path_1 = 'event type="detector" date="2004-06-30 10:35:49" plugin_id="1001" plugin_sid="1185" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$src_ip.'" src_port="'.$src_port.'" dst_ip="'.$dst_ip.'" dst_port="'.$dst_port.'"';
-
-    my $event_path_1_1 = 'event type="detector" date="2004-06-30 10:35:49" plugin_id="1001" plugin_sid="1000001" sensor="'.$sensor.'" interface="eth0" protocol="TCP" src_ip="'.$dst_ip.'" src_port="'.$dst_port.'" dst_ip="'.$src_ip.'" dst_port="'.$src_port.'"';
-
-    # PATH 1,1,1
-    print $sock $event_path_1 . "\n";
-    print $sock $event_path_1_1 . "\n";    
-}
-
 sub directive4 {
     my $i;
     my $n;
@@ -430,9 +415,6 @@ sub main {
 	case 2  { 
 	    directive2();
 	}
-	case 3  {
-	    directive3();
-	}
 	case 4  {
 	    directive4();
 	}
@@ -459,8 +441,9 @@ sub main {
 	}
     case 12 {
         directive12();
-    }
-    }
+  }
+	else {print "That directive hasn't got any associated test."}
+  }
     
     close($sock);
 }

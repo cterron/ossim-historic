@@ -168,7 +168,7 @@ $xajax->processRequests();
     <title>Event viewer</title>
     <script src="../js/prototype.js" type="text/javascript"></script>
     <script src="../js/scriptaculous/scriptaculous.js" type="text/javascript"></script>
-    <?= $xajax->printJavascript('', '../js/xajax.js'); ?>
+    <?= $xajax->printJavascript('', XAJAX_JS); ?>
     <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <style type="text/css">

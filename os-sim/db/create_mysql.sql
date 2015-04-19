@@ -12,7 +12,7 @@ CREATE TABLE user_config (
 	login VARCHAR(64)  NOT NULL REFERENCES users (login),
     category VARCHAR(64) NOT NULL DEFAULT 'main',
     name VARCHAR(64) NOT NULL,
-    value TEXT,
+    value MEDIUMTEXT,
     PRIMARY KEY (login, category, name)
 );
 
@@ -29,9 +29,43 @@ CREATE TABLE host (
   nat               varchar(15),
   rrd_profile       varchar(64),
   descr             varchar(255),
+  lat				varchar(255) DEFAULT 0,
+  lon				varchar(255) DEFAULT 0,
   PRIMARY KEY       (ip)
 );
 
+DROP TABLE IF EXISTS host_group;
+CREATE TABLE host_group (
+  name              varchar(128) UNIQUE NOT NULL,
+  threshold_c       int NOT NULL,
+  threshold_a       int NOT NULL,
+  rrd_profile       varchar(64),
+  descr             varchar(255),
+  PRIMARY KEY       (name)
+);
+
+DROP TABLE IF EXISTS host_group_scan;
+CREATE TABLE host_group_scan (
+  host_group_name               varchar(128) NOT NULL,
+  plugin_id       INTEGER NOT NULL,
+  plugin_sid      INTEGER NOT NULL,
+  PRIMARY KEY (host_group_name, plugin_id, plugin_sid)
+);
+
+DROP TABLE IF EXISTS host_group_reference;
+CREATE TABLE host_group_reference (
+  host_group_name        varchar(128) NOT NULL,
+  host_ip                varchar(15) NOT NULL,
+  PRIMARY KEY     (host_group_name, host_ip)
+);
+
+
+DROP TABLE IF EXISTS host_group_sensor_reference;
+CREATE TABLE host_group_sensor_reference (
+    group_name      varchar(128) NOT NULL,
+    sensor_name     varchar(64) NOT NULL,
+    PRIMARY KEY     (group_name, sensor_name)
+);
 
 DROP TABLE IF EXISTS net;
 CREATE TABLE net (
@@ -64,8 +98,8 @@ CREATE TABLE net_group_scan (
       plugin_id       INTEGER NOT NULL,
       plugin_sid      INTEGER NOT NULL,
       PRIMARY KEY (net_group_name, plugin_id, plugin_sid)
-);        
-         
+);
+
 DROP TABLE IF EXISTS net_group_reference;
 CREATE TABLE net_group_reference (
     net_group_name        varchar(128) NOT NULL,
@@ -274,7 +308,7 @@ CREATE TABLE policy_plugin_group_reference (
 
 DROP TABLE IF EXISTS policy_role_reference;
 CREATE TABLE policy_role_reference (
-    policy_id       INTEGER NOT NULL REFERENCES policy(id), 
+    policy_id       INTEGER NOT NULL REFERENCES policy(id),
     correlate       BOOLEAN	NOT NULL DEFAULT '1',
     cross_correlate BOOLEAN	NOT NULL DEFAULT '1',
     store           BOOLEAN	NOT NULL DEFAULT '1',
@@ -287,7 +321,7 @@ CREATE TABLE policy_role_reference (
 DROP TABLE IF EXISTS policy_target_reference;
 CREATE TABLE policy_target_reference (
     policy_id       int NOT NULL,
-    target_name     varchar(64),   /*this is the target to wich applies the policy, it can be server or sensor names*/        
+    target_name     varchar(64),   /*this is the target to wich applies the policy, it can be server or sensor names*/
     PRIMARY KEY     (policy_id, target_name)
 );
 
@@ -455,7 +489,7 @@ CREATE TABLE control_panel (
 );
 
 --
--- Table: Host Mac. 
+-- Table: Host Mac.
 --
 DROP TABLE IF EXISTS host_mac;
 CREATE TABLE host_mac (
@@ -762,7 +796,7 @@ CREATE TABLE event_tmp_filter (
 );
 
 --
--- Sequences 
+-- Sequences
 --
 
 DROP TABLE IF EXISTS event_seq;
@@ -934,7 +968,7 @@ CREATE TABLE incident_ticket (
     PRIMARY KEY (id, incident_id)
 );
 
-DROP TABLE IF EXISTS incident_ticket_seq; 
+DROP TABLE IF EXISTS incident_ticket_seq;
 CREATE TABLE incident_ticket_seq (
 	id INT NOT NULL
 );
@@ -1167,6 +1201,11 @@ CREATE TABLE bp_asset_member_type (
 	type_name  VARCHAR(255) NOT NULL UNIQUE,
 	PRIMARY KEY (type_name)
 );
+INSERT INTO bp_asset_member_type (type_name) VALUES ('host');
+INSERT INTO bp_asset_member_type (type_name) VALUES ('net');
+INSERT INTO bp_asset_member_type (type_name) VALUES ('file');
+INSERT INTO bp_asset_member_type (type_name) VALUES ('host_group');
+INSERT INTO bp_asset_member_type (type_name) VALUES ('net_group');
 
 --
 -- Which assets belongs to which business process (and its relevance)
@@ -1201,7 +1240,7 @@ CREATE TABLE bp_member_status (
 	member        TEXT NOT NULL REFERENCES bp_asset_member(member),
 	status_date   DATETIME NOT NULL,
 	measure_type  VARCHAR(255) NOT NULL,
-	severity      INT(2) NOT NULL /* 0-none, 1-low, 2-med, 3-high */
+	severity      INT(2) NOT NULL /* number between 0-10: 0 = ok, 2 = low, 5 = med, 7 = high */
 );
 
 --
@@ -1213,8 +1252,6 @@ CREATE TABLE bp_seq (
 );
 INSERT INTO bp_seq (id) VALUES (0);
 
------------------------------------------------
-INSERT INTO bp_asset_member_type (type_name) VALUES ('host');
 
 --
 -- Plugin Scheduler
@@ -1228,14 +1265,43 @@ CREATE TABLE plugin_scheduler(
 	plugin_day_month VARCHAR(255) NOT NULL,
 	plugin_month VARCHAR(255) NOT NULL,
 	plugin_day_week VARCHAR(255) NOT NULL,
+	type_scan VARCHAR(255) NOT NULL,
 	PRIMARY KEY (id)
 );
 
 DROP TABLE IF EXISTS plugin_scheduler_sensor_reference;
-CREATE TABLE plugin_scheduler_sensor_reference(
+CREATE TABLE plugin_scheduler_sensor_reference (
 	plugin_scheduler_id          INT NOT NULL,
 	sensor_name VARCHAR(255) NOT NULL,
     PRIMARY KEY     (plugin_scheduler_id, sensor_name)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_netgroup_reference;
+CREATE TABLE plugin_scheduler_netgroup_reference (
+    plugin_scheduler_id          INT NOT NULL,
+    netgroup_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY     (plugin_scheduler_id, netgroup_name)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_hostgroup_reference;
+CREATE TABLE plugin_scheduler_hostgroup_reference (
+    plugin_scheduler_id          INT NOT NULL,
+    hostgroup_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY     (plugin_scheduler_id, hostgroup_name)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_net_reference;
+CREATE TABLE plugin_scheduler_net_reference (
+    plugin_scheduler_id          INT NOT NULL,
+    net_name VARCHAR(255) NOT NULL,
+    PRIMARY KEY     (plugin_scheduler_id, net_name)
+);
+
+DROP TABLE IF EXISTS plugin_scheduler_host_reference;
+CREATE TABLE plugin_scheduler_host_reference (
+    plugin_scheduler_id          INT NOT NULL,
+    ip  varchar(15) NOT NULL,
+    PRIMARY KEY     (plugin_scheduler_id, ip)
 );
 
 DROP TABLE IF EXISTS plugin_scheduler_seq;
@@ -1244,7 +1310,45 @@ CREATE TABLE plugin_scheduler_seq (
 );
 INSERT INTO plugin_scheduler_seq (id) VALUES (0);
 
+--
+-- Maps
+--
+DROP TABLE IF EXISTS map;
+CREATE TABLE map (
+	id INT NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	engine ENUM('openlayers_op', 'openlayers_ve', 'openlayers_yahoo', 'openlayers_image'),
+	engine_data1 MEDIUMTEXT,
+	engine_data2 TEXT,
+	engine_data3 TEXT,
+	engine_data4 TEXT,
+	center_x VARCHAR(255),
+	center_y VARCHAR(255),
+	zoom INT,
+	show_controls BOOL DEFAULT 1,
+	PRIMARY KEY (id)
+);
+DROP TABLE IF EXISTS map_seq;
+CREATE TABLE map_seq (
+     id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO map_seq VALUES (0);
 
+DROP TABLE IF EXISTS map_element;
+CREATE TABLE map_element (
+	id INT NOT NULL,
+	type ENUM('host', 'sensor', 'network', 'server'),
+	ossim_element_key VARCHAR(255),
+	map_id INT NOT NULL REFERENCES map(id),
+	x VARCHAR(255),
+	y VARCHAR(255),
+	PRIMARY KEY (id)
+);
+DROP TABLE IF EXISTS map_element_seq;
+CREATE TABLE map_element_seq (
+     id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO map_element_seq VALUES (0);
 
 -- vim:ts=4 sts=4 tw=79 expandtab:
 

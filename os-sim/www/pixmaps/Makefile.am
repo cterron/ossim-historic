@@ -1,4 +1,4 @@
-SUBDIRS = os top panel
+SUBDIRS = os top panel therm
 
 pixmapsdir = $(datadir)/ossim/www/pixmaps
 pixmaps_DATA = arrow.gif \
@@ -26,7 +26,13 @@ pixmaps_DATA = arrow.gif \
 	riskmeter.png \
 	incident.png \
 	logo.png \
-	logo3.jpg
+	logo3.jpg \
+	traffic_light0.gif \
+	traffic_light1.gif \
+	traffic_light2.gif \
+	traffic_light3.gif \
+	traffic_light4.gif \
+	traffic_light5.gif
 
 EXTRA_DIST   = $(pixmaps_DATA)
-
+DISTCLEANFILES = Makefile.in

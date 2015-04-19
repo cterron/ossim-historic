@@ -154,6 +154,50 @@ function submit()
 ?>
 
 <table align="center">
+<tr>
+<td colspan="2" style="text-align: left">
+<?php
+echo gettext("You can use the following keywords within any field which will be get substituted by it's matching value upon action execution
+") . ":";
+?>    
+<table width="80%" align="center" style="border-width: 0px"><tr>
+<td style="text-align: left" valign="top">
+<ul> 
+<li> DATE
+<li> PLUGIN_ID
+<li> PLUGIN_SID
+<li> RISK
+<li> PRIORITY
+<li> RELIABILITY
+<li> SRC_IP
+<li> DST_IP
+<li> SRC_PORT
+<li> DST_PORT
+<li> PROTOCOL
+<li> SENSOR
+<li> BACKLOG_ID
+<li> EVENT_ID
+</ul>
+</td>
+<td style="text-align: left" valign="top">
+<ul> 
+<li> PLUGIN_NAME
+<li> SID_NAME
+<li> USERNAME
+<li> PASSWORD
+<li> FILENAME
+<li> USERDATA1
+<li> USERDATA2
+<li> USERDATA3
+<li> USERDATA4
+<li> USERDATA5
+<li> USERDATA6
+<li> USERDATA7
+<li> USERDATA8
+<li> USERDATA9
+</ul>
+</td></tr></table>
+</td></tr>
 <form method="POST">
   <input type="hidden" name="id" value="<?php echo $action->get_id() ?>" />
   <tr>

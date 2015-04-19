@@ -47,9 +47,45 @@ $CONFIG = array (
         "desc"  => gettext("Configure the frameworkd's listening address"),
         "conf"  => array 
         (
-            "frameworkd_address"    => "text",
-            "frameworkd_port"       => "text",
-            "frameworkd_dir"       => "text"
+            "frameworkd_address"        => "text",
+            "frameworkd_port"           => "text",
+            "frameworkd_dir"            => "text",
+
+            "frameworkd_controlpanelrrd"    => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_acidcache"          => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_listener"           => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_scheduler"          => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_soc"                => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_businessprocesses"  => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_backup"             => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
         )
     ),
 
@@ -133,6 +169,8 @@ $CONFIG = array (
             "adodb_path"        => "text",
             "jpgraph_path"      => "text",
             "fpdf_path"	        => "text",
+            "xajax_php_path"    => "text",
+            "xajax_js_path"     => "text",
             "report_graph_type" => array
                 (
                     "images"  => gettext("Images (php jpgraph)"),
@@ -297,7 +335,39 @@ $CONFIG = array (
         (
          "max_event_tmp" => "text"
         )
+   ),
+
+   "login_methods" => array
+   (
+        "title" => gettext("OSSIM login methods"),
+        "desc" => gettext("Setup main login methods"),
+        "conf" => array
+        (
+         "login_enforce_existing_user" => array
+             (
+                 "yes" => _("Yes"),
+                 "no" => _("No")
+             ),
+         "login_enable_ldap" => array
+             (
+                 "yes" => _("Yes"),
+                 "no" => _("No")
+             )
+        )
+   ),
+
+   "login_options" => array
+   (
+        "title" => gettext("OSSIM login options"),
+        "desc" => gettext("Configure various login options"),
+        "conf" => array
+        (
+         "login_ldap_server" => "text",
+         "login_ldap_o" => "text",
+         "login_ldap_ou" => "text"
+        )
    )
+
 );
 
 

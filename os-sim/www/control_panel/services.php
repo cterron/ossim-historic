@@ -80,9 +80,8 @@ if ($show_anom != "1") {
 ?>
 
 <?php if ($show_anom != "1") { ?>
-<table align="center">
-<?php echo gettext("Show");?>
 <form method="GET" action="services.php">
+<?php echo gettext("Show");?>
 <input type="hidden" name="inf" value="<?php echo $inf ?>"/>
 <select name="num" onChange="submit()">
 <option value="10"  <?if ($num == "10") echo "SELECTED"; ?>>10</option>
@@ -91,7 +90,7 @@ if ($show_anom != "1") {
 <option value="all" <?if ($num == "all") echo "SELECTED"; ?>>All</option>
 </select>
 <?php echo gettext(" per page"); ?>
-</table>
+</form>
 </br>
 <?php } ?>
 
@@ -101,6 +100,7 @@ if ($show_anom)
 else 
     echo "<a href=\"services.php?show_anom=1\">".gettext("Click here to see the only the anomalies")."</a>";
  ?>
+<form action="handle_services.php" method="GET">
 <table width="100%">
 <?php if ($num != "all"){ ?>
     <tr>
@@ -125,7 +125,9 @@ else
         "&inf=" . ($count - $num) .
         "&num=" . $num; 
     ?>
-    <table width="100%" bgcolor="#EFEFEF">       
+    <table width="100%" bgcolor="#EFEFEF">    
+    <colgroup span=3 width="33%"></colgroup>       
+    <tr>   
     <td align=left>
     <?php
     if ($inf != "0"){ 
@@ -141,10 +143,10 @@ else
     ?>
     <?php
     if ($sup < $count) {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $sup, $count); echo ")&nbsp;&nbsp;";
         echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $num); echo " -&gt;</a>";
     } else {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $count, $count); echo ")&nbsp;&nbsp;";
     }
     ?>
     </td>
@@ -155,16 +157,15 @@ else
     }
     ?>
     </td>
-  
+    </tr>
     </table>
-      </tr>
-
-      <tr>
+      </td></tr>
 
 <?php } ?>
 
 <tr>
 <td align="center" colspan="12">
+<input type="hidden" name="back" value="<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>">
 <input type="submit" value=" <?php echo gettext("OK"); ?> ">
 <input type="reset" value=" <?php echo gettext("reset"); ?> "> </td>
 </tr>
@@ -181,9 +182,6 @@ else
 <th><?php echo gettext("Ack"); ?> </th>
 <th><?php echo gettext("Ignore"); ?> </th>
 </tr>
-
-<form action="handle_services.php" method="GET">
-
 
 <?php 
 if ($Host_services_list) {
@@ -206,11 +204,11 @@ if (($ex_serv == $Host_services["ip"]) && ($ex_servs == $Host_services["sensor"]
 ?>
 <a href="<?php echo $_SERVER["PHP_SELF"]."?sup=".$sup."&inf=".$inf."&num=".$num;
 if ($show_anom == "1") 
-    echo "&show_anom=1" ?>"><img src="../pixmaps/arrow.gif" border=\"0\"></e>
+    echo "&show_anom=1" ?>"><img src="../pixmaps/arrow.gif" border="0"></a>
 <?php } else { ?>
 <a href="<?php echo
 $_SERVER["PHP_SELF"]."?inf=".$inf."&sup=".$sup."&num=".$num."&ex_serv=".$Host_services["ip"]."&ex_servs=".$Host_services["sensor"]."&ex_servp=".$Host_services["port"];
-if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif" border=\"0\"></e>
+if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif" border="0"></a>
 <?php
 }
 
@@ -227,14 +225,14 @@ if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif"
 <td>
 <input type="checkbox" name="ip,<?php echo $Host_services["ip"];?>,<?php echo $Host_services["sensor"];?>,<?php
 echo $Host_services["date"];?>" value="<?php echo "ack".$Host_services["ip"];?>" <? if  (($Host_services["protocol"] == $Host_services["old_protocol"]) &&
-        ($Host_services["version"] == $Host_services["old_version"])) echo "disabled" ?> ></input>
+        ($Host_services["version"] == $Host_services["old_version"])) echo "disabled" ?> >
 </td>
 <td>
 <input type="checkbox" name="ip,<?php echo $Host_services["ip"];?>,<?php echo $Host_services["sensor"];?>,<?php
 echo $Host_services["old_date"];?>" value="<?php echo "ignore".$Host_services["ip"];?>"
 <? 
     if (($Host_services["protocol"] == $Host_services["old_protocol"]) &&
-        ($Host_services["version"] == $Host_services["old_version"])) echo "disabled" ?> ></input>
+        ($Host_services["version"] == $Host_services["old_version"])) echo "disabled" ?> >
 </td>
 </tr>
 <?php 
@@ -246,7 +244,11 @@ if ($Host_services_ip_list = Host_services::get_ip_list($conn, $Host_services["i
  		 $delta = Util::date_diff($Host_services_ip["date"], $Host_services_ip["old_date"], 'yMdhms');
         	 if ($delta == "00:00:00") $delta = "-";
 	  ?>
-	  <tr bgcolor="#eac3c3">
+	  <tr <?php if (($Host_services_ip["service"] != $Host_services_ip["old_service"]) ||
+                        ($Host_services_ip["version"] != $Host_services_ip["old_version"]))
+                       echo 'bgcolor="#eac3c3"';
+                    else
+                       echo 'bgcolor="#dfe7f0"';?>>
 	  <td>&nbsp;</td>
 	  <td><?php echo $Host_services_ip["ip"];?></td>
 	  <td><?php echo $Host_services_ip["sensor"]."[".$Host_services_ip["interface"]."]";?></td>
@@ -258,21 +260,11 @@ if ($Host_services_ip_list = Host_services::get_ip_list($conn, $Host_services["i
 
 <?php //comprobación protocol version?>
     
-      <td <?php if (($Host_services_ip["service"] != $Host_services_ip["old_service"]) ||
-                    ($Host_services_ip["version"] != $Host_services_ip["old_version"]))
-                echo 'bgcolor="#f7a099"';?>><?php echo $delta; ?>
+      <td><?php echo $delta; ?>
       </td>
 <td>
-<input type="checkbox" name="ip,<?php echo $Host_services_ip["ip"];?>,<?php echo $Host_services_ip["sensor"];?>,<?php
-echo $Host_services_ip["date"].",".$Host_services_ip["port"];?>" value="<?php
-echo "ack".$Host_services_ip["ip"];?>" <? if  (($Host_services_ip["protocol"] == $Host_services_ip["old_protocol"]) && ($Host_services_ip["version"] == $Host_services_ip["old_version"])) echo "disabled" ?> ></input>
 </td>
 <td>
-<input type="checkbox" name="ip,<?php echo $Host_services_ip["ip"];?>,<?php
-echo $Host_services_ip["sensor"];?>,<?php
-echo $Host_services_ip["old_date"].",".$Host_services_ip["port"];?>" value="<?php echo "ignore".$Host_services["ip"];?>" <? if
-        (($Host_services["protocol"] == $Host_services["old_protocol"]) &&
-        ($Host_services["version"] == $Host_services["old_version"])) echo "disabled" ?> ></input>
 </td>
 </tr>	  
 <?php
@@ -290,7 +282,6 @@ echo $Host_services_ip["old_date"].",".$Host_services_ip["port"];?>" value="<?ph
 <input type="reset" value=" <?php echo gettext("reset"); ?> "></td>
 </tr>
 
-</form>
 <?php if ($num != "all"){ ?>
      <tr>
         <td colspan="12">
@@ -315,6 +306,8 @@ echo $Host_services_ip["old_date"].",".$Host_services_ip["port"];?>" value="<?ph
 ?>
 
     <table width="100%" bgcolor="#EFEFEF">
+    <colgroup span=3 width="33%"></colgroup>       
+    <tr>
     <td align=left>
     <?php
     if ($inf != "0"){
@@ -330,10 +323,10 @@ echo $Host_services_ip["old_date"].",".$Host_services_ip["port"];?>" value="<?ph
     ?>
     <?php
     if ($sup < $count) {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $sup, $count); echo ")&nbsp;&nbsp;";
         echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $num); echo " -&gt;</a>";
     } else {
-        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf+1, $count, $count); echo ")&nbsp;&nbsp;";
     }
     ?>
     </td>
@@ -344,18 +337,17 @@ echo $Host_services_ip["old_date"].",".$Host_services_ip["port"];?>" value="<?ph
     }
     ?>
     </td>
-
+    </tr>
     </table>
 
         </td>
       </tr>
 
-      <tr>
-
 <?php } ?>
 
 
 </table>
+</form>
 </body>
 </html>
 

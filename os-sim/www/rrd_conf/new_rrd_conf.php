@@ -34,7 +34,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if ($rrd_list = RRD_Config::get_list($conn,  "WHERE profile = 'global'"))
+    if ($rrd_list = RRD_Config::get_list($conn,  "WHERE profile = 'Default'"))
     {
         foreach ($rrd_list as $rrd)
         {

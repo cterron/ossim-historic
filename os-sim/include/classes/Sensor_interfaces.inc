@@ -23,9 +23,8 @@ class Sensor_interfaces {
 
     function get_list($conn, $sensor) 
     {
-        $query = OssimQuery("SELECT * FROM sensor_interfaces where sensor =
-        '$sensor' ORDER BY MAIN DESC");
-        if (!$rs = &$conn->Execute($query)) {
+        $query = "SELECT * FROM sensor_interfaces where sensor=? ORDER BY main DESC";
+        if (!$rs = &$conn->Execute($query, array($sensor))) {
             print $conn->ErrorMsg();
         } else {
             $list = array();

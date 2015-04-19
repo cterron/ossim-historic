@@ -8,3 +8,5 @@ java_DATA = jcommon-0.9.5.jar \
 	jossim-graph.jar 
  
 EXTRA_DIST   = $(java_DATA)
+
+DISTCLEANFILES = Makefile.in

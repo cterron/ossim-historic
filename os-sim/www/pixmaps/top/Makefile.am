@@ -10,7 +10,8 @@ top_DATA = abajo.gif \
 	li.gif		\
 	naranja.gif	\
 	sep.gif     \
-	arriba.gif
+	arriba.gif  \
+	reload-policy.gif
 
 EXTRA_DIST   = $(top_DATA)
-
+DISTCLEANFILES = Makefile.in

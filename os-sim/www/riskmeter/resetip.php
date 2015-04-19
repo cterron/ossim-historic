@@ -1,4 +1,7 @@
 <?php
+    require_once ('classes/Session.inc');
+    Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
+
     require_once 'classes/Security.inc';
 
     $ip = GET('ip');

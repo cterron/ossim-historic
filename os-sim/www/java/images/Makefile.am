@@ -18,3 +18,5 @@ images_DATA = blank.jpg \
 	udppacket.jpg
 
 EXTRA_DIST = $(images_DATA)
+
+DISTCLEANFILES = Makefile.in

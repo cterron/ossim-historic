@@ -16,7 +16,7 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 
 <body>
 
-<h1> Nessus custom reports </h1>
+<h1><?=_("Nessus custom reports")?></h1>
 <?php
 
 require_once ('classes/Security.inc');
@@ -86,7 +86,7 @@ echo $report_name;
 ?>
 </table>
 <br/>
-<a href="#" onClick="dothings('report_form.php')"> Generate new report </a>
+<a href="#" onClick="dothings('report_form.php')"><?=_("Generate new report")?></a>
 </center>
 
 

@@ -17,7 +17,7 @@
 
     ossim_valid($range, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("range"));
     ossim_valid($ip, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("ip"));
-    ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("what"));
+    ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, OSS_PUNC, 'illegal:'._("what"));
     ossim_valid($start, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("start"));
     ossim_valid($type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("type"));
     ossim_valid($zoom, OSS_DIGIT, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("zoom"));
@@ -52,7 +52,11 @@
     <?php echo gettext("Compromise"); ?> </a>]<BR>
     <?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
     "?range=$range&ip=$ip&what=attack&start=$start&type=$type&zoom=$zoom"?>">
-    <?php echo gettext("Attack"); ?> </a>]</td></tr>
+    <?php echo gettext("Attack"); ?> </a>]<BR>
+     <?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
+    "?range=$range&ip=$ip&what=ser_lev&start=$start&type=$type&zoom=$zoom"?>">
+    <?php echo gettext("Service Level"); ?> </a>]
+    </td></tr>
     <tr><td colspan="2"><HR noshade></td></tr>
     <tr><td colspan="2" align="center">
       <img src="<?php echo "../report/graphs/draw_rrd.php?ip=$ip&what=$what&start=$start&end=N&type=$type"; ?>">

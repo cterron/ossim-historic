@@ -3,3 +3,4 @@ nagios_DATA = index.php \
 	menu.php
 EXTRA_DIST   = $(nagios_DATA)
 
+DISTCLEANFILES = Makefile.in

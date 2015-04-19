@@ -260,6 +260,7 @@ function order_img($subject)
       <th NOWRAP><a href="?order_by=id<?=$filter?>"><?=_("Ticket").order_img('id')?></a></th>
       <th NOWRAP><a href="?order_by=title<?=$filter?>"><?=_("Title").order_img('title')?></a></th>
       <th NOWRAP><a href="?order_by=priority<?=$filter?>"><?=_("Priority").order_img('priority')?></a></th>
+      <th NOWRAP><a href="?order_by=date<?=$filter?>"><?=_("Created").order_img('date')?></a></th>
       <th NOWRAP><a href="?order_by=life_time<?=$filter?>"><?=_("Life Time").order_img('life_time')?></a></th>
       <th><?=_("In charge") ?></th>
       <th><?=_("Type") ?></th>
@@ -286,7 +287,9 @@ function order_img($subject)
 if($incident->get_ref() == "Vulnerability"){
 $vulnerability_list = $incident->get_vulnerabilities($conn);
 // Only use first index, there shouldn't be more
+if(!empty($vulnerability_list)){
 echo " <font color=\"grey\" size=\"1\">(" . $vulnerability_list[0]->get_ip() . ":" . $vulnerability_list[0]->get_port() . ")</font>";
+}
 }
 ?>
       </td>
@@ -294,6 +297,7 @@ echo " <font color=\"grey\" size=\"1\">(" . $vulnerability_list[0]->get_ip() . "
         $priority = $incident->get_priority();
       ?>
       <td><?=Incident::get_priority_in_html($priority)?></td>
+      <td NOWRAP><?= $incident->get_date() ?></td>
       <td NOWRAP><?= $incident->get_life_time() ?></td>
       <td><?= $incident->get_in_charge_name($conn) ?></td>
       <td><?= $incident->get_type() ?></td>

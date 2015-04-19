@@ -24,6 +24,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUserlog");
 	$conn = $db->connect();
 ?>
 
+<form method="POST" action="<?php echo $_SERVER["PHP_SELF"] ?>" />
  <table align=center>
 
 
@@ -42,7 +43,7 @@ function submit ($conn)
 if (POST('update'))
 {
                   
-    for ($i = 0; $i < POST('nconfs'); $i++) 
+    for ($i = 1; $i <= POST('nconfs'); $i++) 
     {
         if (POST("value_$i") == 'on'){
             Log_config::update_log($conn,$i,'1');
@@ -56,7 +57,6 @@ if (POST('update'))
 
 ?>
 
-<form method="POST" action="<?php echo $_SERVER["PHP_SELF"] ?>" />
 <?php
 	submit($conn);
 ?>
@@ -67,8 +67,8 @@ if (POST('update'))
 </tr>
 
 <?php
-    $count = 0;
-    if ($log_conf_list = Log_config::get_list($conn,"",'code'))
+    $max = 0;
+    if ($log_conf_list = Log_config::get_list($conn, "ORDER BY descr"))
     {
 
 	   foreach($log_conf_list as $log_conf) 
@@ -90,10 +90,10 @@ if (POST('update'))
 	    ?>
 
 	   <td><?php echo $input; ?></td>
-	   <tr>
+	   </tr>
 <?php
        $input = "";
-	   $count += 1;
+	   $max = max($max, $log_conf->get_code());
 	  
 	   }
 	
@@ -101,10 +101,10 @@ if (POST('update'))
 
 ?>
 
-<input type="hidden" name="nconfs" value="<?php echo $count ?>" />
 <?php submit($conn); ?>    
-</form>
  </table> 
+<input type="hidden" name="nconfs" value="<?php echo $max ?>" />
+</form>
          
 <?php
 $db->close($conn);

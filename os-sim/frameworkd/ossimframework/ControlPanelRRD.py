@@ -135,7 +135,7 @@ class ControlPanelRRD (threading.Thread) :
 # This needs some checking, we don't need HWPREDICT here and I got some probs
 # on MacosX (def update_rrd_simple) so I removed aberrant behaviour detection.
             rrdtool.create(rrdfile,
-                           '-b', str(timestamp), '-s300',
+                           '-b', str(timestamp-1), '-s300',
                            'DS:ds0:GAUGE:600:0:1000000',
                            'DS:ds1:GAUGE:600:0:1000000',
                            'RRA:AVERAGE:0.5:1:800',
@@ -147,14 +147,16 @@ class ControlPanelRRD (threading.Thread) :
                            'RRA:MAX:0.5:6:800',
                            'RRA:MAX:0.5:24:800',
                            'RRA:MAX:0.5:288:800')
-        else:
-            print __name__, ": Updating %s with values (C=%s, A=%s).." \
+
+        print __name__, ": Updating %s with values (C=%s, A=%s).." \
                 % (rrdfile, compromise, attack)
 
             # RRDs::update("$dotrrd", "$time:$inlast:$outlast");
         # It may fail here, I don't know if it only happens on MacosX but this
         # does solve it. (DK 2006/02)
         # Usually update fails after creation rrd
+        # Fix : create and update can't be done on the same second
+        #  so create one second in the past (LL 2007/05)
         try:
             rrdtool.update(rrdfile, str(timestamp) + ":" + \
                             str(compromise) + ":" +\

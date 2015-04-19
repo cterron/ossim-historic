@@ -4,4 +4,4 @@ riskmeter_DATA = frameoptions.php \
 	options.php \
 	resetip.php
 EXTRA_DIST   = $(riskmeter_DATA)
-
+DISTCLEANFILES = Makefile.in

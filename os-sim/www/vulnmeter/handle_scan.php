@@ -65,7 +65,7 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
             $error->display("FRAMW_NOTRUN", array($address.":".$port));
     }
 
-    $in = 'nessus ' . $action . " " . $scan_date . "\n";
+    $in = 'nessus action="' . $action . '" report="' . $scan_date . '"' . "\n";
     $out = '';
     socket_write ($socket, $in, strlen ($in));
 

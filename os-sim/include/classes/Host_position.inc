@@ -1,5 +1,7 @@
 <?php
-
+/*
+ * XXX Deprecated file
+ */
 require_once ("ossim_db.inc");
 
 class Host_position {

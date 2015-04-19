@@ -140,6 +140,7 @@ if ($options['graph_type'] == 'pie') {
     $graph->yaxis->scale->SetGrace($options['graph_y_top'], $options['graph_y_bot']);
     $graph->xaxis->scale->SetGrace($options['graph_x_top'], $options['graph_x_bot']);
     
+
     $graph->SetMarginColor($background);
     $graph->img->SetMargin(40,30,20,40);
     $graph->SetShadow();
@@ -208,44 +209,132 @@ if ($options['graph_type'] == 'pie') {
 } elseif ($options['graph_type'] == 'points') {
     
     require_once "$jpgraph/jpgraph_line.php";
+    $background = "white";
     $incref = false;
-    // Graph metadata
-    $graph = new Graph($width, 300, "auto");
-    $graph->SetScale("textlin");
+
+    // Setup graph
+    $graph = new Graph($width, 250, "auto");
+    $graph->SetScale('textlin',
+                     $options['graph_y_min'],
+                     $options['graph_y_max'],
+                     $options['graph_x_min'],
+                     $options['graph_x_max']
+                     );
+    $graph->yaxis->scale->SetGrace($options['graph_y_top'], $options['graph_y_bot']);
+    $graph->xaxis->scale->SetGrace($options['graph_x_top'], $options['graph_x_bot']);
+    
+    $graph->SetMarginColor($background);
     $graph->img->SetMargin(60,60,40,60);
+    $graph->SetShadow();
+ 
     $graph->xgrid->Show(true);
     $graph->legend->SetLayout(LEGEND_HOR);
     $graph->legend->Pos(0.5,0.96,"center","bottom");
     $graph->SetShadow();
-    // Build graph title
-    $date = date("F j, Y, g:i a");
-    $title = " - Graphed on ". $date ;
-    $graph->title->Set($title);
+    // Setup graph title
+    $graph->title->Set($data['title']);
     $graph->title->SetFont(FF_FONT1,FS_BOLD);
-    //$graph->xaxis->title->Set($scale);
+
     $graph->xaxis->SetTickLabels($data['legend']);
     $graph->yaxis->title->SetFont(FF_FONT1,FS_BOLD);
     $graph->xaxis->title->SetFont(FF_FONT1,FS_BOLD);
-    $graph->yaxis->SetColor("blue");
+    $graph->yaxis->SetColor("black");
     
     // Create the data plot
     $plot = new LinePlot($data['values']);
-    $plot->SetColor("blue");
+    $color = $options['graph_color'];
+    $plot->SetColor($color);
     $plot->SetWeight(2);
     $plot->mark->SetType(MARK_FILLEDCIRCLE);
     $plot->mark->SetColor('blue');
     
+    if (!empty($options['graph_point_legend'])) {
+        $plot->SetLegend($options['graph_point_legend']);
+    }    
     if (!empty($options['graph_show_values'])) {
+        if (!isset($plot->value) || !method_exists($plot->value, 'show')) {
+            mydie("This JPGraph version does not support 'Show values'");
+        }
         $plot->value->HideZero();
         $plot->value->SetFormat('%u');
         $plot->value->SetFont(FF_FONT1,FS_BOLD);
         $plot->value->SetColor('blue');
         $plot->value->SetMargin(10);
-        $plot->SetLegend("# of selected alerts");
         $plot->value->Show();
-    }    
+    }
+
     // Add the data plot to the graph
     $graph->Add($plot);
+
+} elseif ($options['graph_type'] == 'radar') {
+    
+    require_once "$jpgraph/jpgraph_radar.php";
+    $background = "white";
+    $incref = false;
+
+    // Setup graph
+    $graph = new RadarGraph($width, 250, "auto");
+    $graph->SetShadow();
+
+    $graph->title->Set($data['title']);
+    $graph->title->SetFont(FF_FONT1,FS_BOLD);
+
+    $graph->SetMarginColor($background);
+    $graph->img->SetMargin(40,30,20,40);
+
+    $graph->SetTitles($data['legend']);
+    $graph->SetCenter(0.5,0.55);
+    $graph->HideTickMarks();
+    $graph->SetColor($background);
+    $graph->grid->SetColor('darkgray');
+    $graph->grid->Show();
+
+    $graph->axis->title->SetMargin(5);
+    $graph->SetGridDepth(DEPTH_BACK);
+    $graph->SetSize(0.6);
+
+    $plot = new RadarPlot($data['values']);
+    $color = $options['graph_color'];
+    $plot->SetColor($color);
+    $plot->SetLineWeight(1);
+    $plot->mark->SetType(MARK_IMG_SBALL,'red');
+
+    if (!empty($options['graph_point_legend'])) {
+        $plot->SetLegend($options['graph_point_legend']);
+    }    
+
+
+    if (!empty($options['graph_radar_fill'])) {
+        $plot->SetFillColor($color);
+    }    
+
+/*
+// Todo: Add the possibility to add multiple graphs into one radar, they look nifty.
+// Uncomment the lines below if you want to see it (number of $data2 && $data3 array elements must match those of the provided data.
+
+$data2 = array(45,44,90,20,140);
+$data3 = array(23,34,45,8,97);
+
+$plot2 = new RadarPlot($data2);
+$plot2->SetColor('red@0.4');
+$plot2->SetLineWeight(1);
+$plot2->SetLegend("Goal 2008");
+$plot2->SetFillColor('blue@0.7');
+
+$plot3 = new RadarPlot($data3);
+$plot3->SetColor('red@0.4');
+$plot3->SetLineWeight(1);
+$plot3->SetLegend("Goal 2009");
+$plot3->SetFillColor('green@0.7');
+
+$graph->Add($plot2);
+$graph->Add($plot3);
+*/
+
+    // Add the data plot to the graph
+    $graph->Add($plot);
+
+
 
 } else {
     die("Graph type not valid");

@@ -20,7 +20,10 @@ ossim_valid($action_id, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Action id"));
 ossim_valid($action_type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Action type"));
 ossim_valid($descr, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_AT, OSS_NULLABLE, 'illegal:'._("Description"));
 ossim_valid($email_from, OSS_MAIL_ADDR, OSS_NULLABLE, 'illegal:'._("Email from"));
-ossim_valid($email_to, OSS_MAIL_ADDR, OSS_NULLABLE, 'illegal:'._("Email to"));
+foreach (split(',', $email_to) as $to_mail) {
+    $to_mail = trim($to_mail);
+    ossim_valid($to_mail, OSS_MAIL_ADDR, OSS_NULLABLE, 'illegal:'._("Email to"));
+}
 ossim_valid($email_subject, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_AT, "><", OSS_NULLABLE, 'illegal:'._("Email subject"));
 ossim_valid($email_message, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_AT, "><", OSS_NULLABLE, OSS_NL, 'illegal:'._("Email message"));
 ossim_valid($exec_command, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_AT, "><", OSS_NULLABLE, 'illegal:'._("Exec command"));
@@ -155,11 +158,13 @@ echo gettext("You can use the following keywords within any field which will be 
 <li> DST_PORT
 <li> PROTOCOL
 <li> SENSOR
-<li> PLUGIN_NAME
-<li> SID_NAME
+<li> BACKLOG_ID
+<li> EVENT_ID
 </ul>
 <td style="text-align: left" valign="top">
 <ul>
+<li> PLUGIN_NAME
+<li> SID_NAME
 <li> USERNAME
 <li> PASSWORD
 <li> FILENAME

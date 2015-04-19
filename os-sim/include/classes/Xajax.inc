@@ -1,6 +1,21 @@
 <?php
 
-require_once ('xajax/xajax.inc.php');
+$config = $GLOBALS["CONF"];
+
+$xajax_php_path = $config->get_conf("xajax_php_path");
+$xajax_included = @include_once "$xajax_php_path/xajax.inc.php";
+if (!$xajax_included) {
+    // xajax default php location, included in the source
+    include_once 'xajax/xajax.inc.php';
+}
+$xajax_js_path = $config->get_conf("xajax_js_path");
+$xajax_js = $xajax_js_path . DIRECTORY_SEPARATOR . 'xajax.js';
+if (!is_file($xajax_js)) {
+    // xajax default js location, included in the source
+    $xajax_js_path  = "../js/";
+}
+
+DEFINE('XAJAX_JS', $xajax_js_path . DIRECTORY_SEPARATOR . 'xajax.js');
 
 class xajaxTableResponse extends xajaxResponse {
 

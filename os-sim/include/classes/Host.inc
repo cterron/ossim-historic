@@ -1,12 +1,15 @@
 <?php
-require_once ('ossim_conf.inc');
-require_once ('classes/Host_sensor_reference.inc');
-require_once ('classes/Host_os.inc');
-require_once ('classes/Host_mac.inc');
-require_once ('classes/Net.inc');
-require_once ('classes/Session.inc');
-require_once ('classes/Log_action.inc');
-require_once ("ossim_db.inc");
+require_once 'ossim_conf.inc';
+require_once 'classes/Host_sensor_reference.inc';
+require_once 'classes/Host_qualification.inc';
+require_once 'classes/Host_mac.inc';
+require_once 'classes/Host_os.inc';
+require_once 'classes/Host_services.inc';
+require_once 'classes/Net.inc';
+require_once 'classes/Session.inc';
+require_once 'classes/Log_action.inc';
+require_once 'ossim_db.inc';
+require_once 'classes/WebIndicator.inc';
 
 class Host {
 
@@ -160,7 +163,9 @@ class Host {
 
         $infolog = array($hostname,"[".$ip."]");
         Log_action::log(24,$infolog);
-   
+        
+        WebIndicator::set_on("Reload_hosts");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
@@ -176,6 +181,8 @@ class Host {
         $sql = "UPDATE host SET hostname = ?, ip = ?, asset = ?, threshold_c = ?,
                 threshold_a = ?, rrd_profile = ?, alert = ?, persistence = ?, nat = ?,
                 descr = ? WHERE ip = ?";
+        //printr($lat); exit;
+        $conn->Debug = 1;
         $params = array($hostname, $ip, $asset, $threshold_c, $threshold_a,
                         $rrd_profile, $alert, $persistence, $nat, $descr, $ip);
         if ($conn->Execute($sql, $params) === false) {
@@ -212,33 +219,60 @@ class Host {
             }
         }
 
-    $infolog = array($hostname,"[".$ip."]");
-    Log_action::log(26,$infolog);
+        $infolog = array($hostname,"[".$ip."]");
+        Log_action::log(26,$infolog);
+        
+        WebIndicator::set_on("Reload_hosts");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
-    function delete($conn, $ip) {
-        
-        $sql = "DELETE FROM host WHERE ip = ?";
+    function delete($conn, $ip)
+    {
+        Host_sensor_reference::delete($conn, $ip);
+        Host_qualification::delete($conn, $ip);
+        Host_services::delete($conn, $ip);
         $params = array($ip);
-        
-        if ($conn->Execute($sql, $params) === false) {
-            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        } else {
-        /* WORK IN PROGRESS	
-	    Host_sensor_reference::delete($conn, $ip);
-            Host_os::delete($conn, $ip);
-            Host_mac::delete($conn, $ip,NULL);
-	*/
+        // Business Processes
+        $sql = "DELETE FROM bp_asset_member WHERE member=? AND member_type='host'";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
         }
-    $infolog = array($ip);
-    Log_action::log(25,$infolog);
+        // Host ids
+        $sql = "DELETE FROM host_ids WHERE ip=?";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+        // Host group reference
+        $sql = "DELETE FROM host_group_reference WHERE host_ip=?";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+        // Host sensor reference
+        $sql = "DELETE FROM host_sensor_reference WHERE host_ip=?";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+        // Host scan
+        $sql = "DELETE FROM host_scan WHERE inet_ntoa(host_ip) = ?";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+        // Finally hosts table
+        $sql = "DELETE FROM host WHERE ip = ?";
+        if (!$conn->Execute($sql, $params)) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+
+        $infolog = array($ip);
+        Log_action::log(25,$infolog);
         
+        WebIndicator::set_on("Reload_hosts");
+        WebIndicator::set_on("ReloadPolicy");
     }
 
-    function ip2hostname($conn, $ip, $is_sensor = false, $force_no_dns = false) {
-
-	if($is_sensor == true){
+    function ip2hostname($conn, $ip, $is_sensor = false, $force_no_dns = false)
+    {
+    	if ($is_sensor == true){
         	$sql = "SELECT * FROM sensor WHERE ip = ?";
         	$params = array($ip);
         	if (!$rs = $conn->Execute($sql, $params)) {
@@ -248,7 +282,7 @@ class Host {
         	if (!$rs->EOF) {
             	return $rs->fields["name"]; 
         	}
-	}
+    	}
 
         $sql = "SELECT * FROM host WHERE ip = ?";
         $params = array($ip);
@@ -259,8 +293,6 @@ class Host {
         if (!$rs->EOF) {
             return $rs->fields["hostname"]; 
         } else {
-    
-            require_once ('ossim_conf.inc');
             $config = $GLOBALS["CONF"];
             $use_resolv = $config->get_conf("use_resolv");
             if ($use_resolv and preg_match("/\d+\.\d+\.\d+\.\d+/", $ip) and $force_no_dns == false)

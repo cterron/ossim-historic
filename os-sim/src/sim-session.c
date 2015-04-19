@@ -248,15 +248,24 @@ sim_session_new (GObject       *object,
 
 	gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new: remote IP/port: %s/%d", ip_temp, gnet_inetaddr_get_port (session->_priv->ia));
+  g_message ("New Session remote IP: %s", ip_temp);
 	g_free (ip_temp);
 		
   if (gnet_inetaddr_is_loopback (session->_priv->ia)) //if the agent is in the same host than the server, we should get the real ip.
   {
-    gnet_inetaddr_unref (session->_priv->ia);
-    session->_priv->ia = gnet_inetaddr_get_host_addr ();
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new Remote address is loopback, applying new address: %s ", ip_temp);
-		g_free (ip_temp);
+		GInetAddr *aux = gnet_inetaddr_get_host_addr ();
+		if (aux)
+		{
+			gnet_inetaddr_unref (session->_priv->ia);
+	    session->_priv->ia = aux;
+		  gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new Remote address is loopback, applying new address: %s ", ip_temp);
+			g_free (ip_temp);
+		}
+		else
+		{
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new: Warning: we will maintain the 127.0.0.1 address. Please check your /etc/hosts file to include the real IP");
+		}
   }
 
   session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
@@ -350,8 +359,14 @@ sim_session_cmd_connect (SimSession  *session,
 		      break;
   }
 	
+	if (sensor)
+		
+		
 	if (command->data.connect.hostname)
 		sim_session_set_hostname (session, command->data.connect.hostname);
+	else
+		sim_session_set_hostname (session, "");
+
 	
 	if (session->type != SIM_SESSION_TYPE_NONE)
 	{
@@ -401,51 +416,51 @@ sim_session_cmd_session_append_plugin (SimSession  *session,
 
   plugin = sim_container_get_plugin_by_id (ossim.container, command->data.session_append_plugin.id);
   if (plugin)
-    {
-      plugin_state = sim_plugin_state_new_from_data (plugin,
+  {
+    plugin_state = sim_plugin_state_new_from_data (plugin,
 						     command->data.session_append_plugin.id,
 						     command->data.session_append_plugin.state,
 						     command->data.session_append_plugin.enabled);
 
-      session->_priv->plugin_states = g_list_append (session->_priv->plugin_states, plugin_state);
+    session->_priv->plugin_states = g_list_append (session->_priv->plugin_states, plugin_state);
 
-      cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-      cmd->id = command->id;
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
 
-      sim_session_write (session, cmd);
-      g_object_unref (cmd);
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
   
       /* Directives with root rule type MONITOR */
-      if (plugin->type == SIM_PLUGIN_TYPE_MONITOR)
-	{      
-	  GList *directives = NULL;
-	  g_mutex_lock (ossim.mutex_directives);
-	  directives = sim_container_get_directives_ul (ossim.container);
-	  while (directives)
+    if (plugin->type == SIM_PLUGIN_TYPE_MONITOR)
+	  {      
+	    GList *directives = NULL;
+  	  g_mutex_lock (ossim.mutex_directives);
+	    directives = sim_container_get_directives_ul (ossim.container);
+  	  while (directives)
 	    {
 	      SimDirective *directive = (SimDirective *) directives->data;
 	      SimRule *rule = sim_directive_get_root_rule (directive);
 
 	      if (sim_rule_get_plugin_id (rule) == command->data.session_append_plugin.id)
-		{
-		  cmd = sim_command_new_from_rule (rule);
-		  sim_session_write (session, cmd);
-		  g_object_unref (cmd);
-		}
+	    	{
+					cmd = sim_command_new_from_rule (rule);
+				  sim_session_write (session, cmd);
+				  g_object_unref (cmd);
+				}
 
 	      directives = directives->next;
-	    }
-	  g_mutex_unlock (ossim.mutex_directives);
-	}
-    }
+		  }
+		  g_mutex_unlock (ossim.mutex_directives);
+		}
+  }
   else
-    {
-      cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-      cmd->id = command->id;
+  {
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+    cmd->id = command->id;
 
-      sim_session_write (session, cmd);
-      g_object_unref (cmd);
-    }
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
 }
 
 /*
@@ -2160,6 +2175,11 @@ sim_session_cmd_host_os_event (SimSession  *session,
 			event->src_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
 		}
 		g_free (ip_temp);
+
+    //we want to process only the hosts defined in Policy->hosts or inside a network from policy->networks
+	  if ((sim_container_get_host_by_ia(ossim.container, event->src_ia) == NULL) &&
+				(sim_container_get_nets_has_ia(ossim.container, event->src_ia) == NULL))
+  	  return;
 		
 		event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
 
@@ -2313,6 +2333,8 @@ sim_session_cmd_host_mac_event (SimSession  *session,
 			g_free (mac);
 		if (vendor)
 			g_free (vendor);	
+		if (mac_and_vendor)
+			g_free (mac_and_vendor);
     gnet_inetaddr_unref (sensor);
   }
   else
@@ -2445,7 +2467,12 @@ sim_session_cmd_host_service_event (SimSession  *session,
     	  g_message("Error: Data sent from agent; host Service event wrong IP %s",command->data.host_service_event.host);
 	    }
 			g_free (ip_temp);
-			
+
+		  //we want to process only the hosts defined in Policy->hosts or inside a network from policy->networks
+		  if ((sim_container_get_host_by_ia (ossim.container, event->src_ia) == NULL) &&
+					(sim_container_get_nets_has_ia (ossim.container, event->src_ia) == NULL))
+    		return;
+	
 	  	event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
       event->data = g_strdup_printf ("%d/%d - %s/%s", port, protocol, command->data.host_service_event.service, (application) ? application: command->data.host_service_event.application );
 			
@@ -2470,6 +2497,8 @@ sim_session_cmd_host_service_event (SimSession  *session,
 	      g_free (application);
 			if (service)
 				g_free (service);
+			if (application_and_service)
+				g_free (application_and_service);
       gnet_inetaddr_unref (sensor);
     }	
   }
@@ -3547,8 +3576,9 @@ sim_session_read (SimSession  *session)
   SimCommand  *cmd = NULL;
   SimCommand  *res;
   GIOError     error;
+  //gchar        buffer[BUFFER_SIZE];
   gchar        buffer[BUFFER_SIZE];
-  guint        n;
+  gsize		     n;
 
   g_return_val_if_fail (session != NULL, FALSE);
   g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
@@ -3582,7 +3612,7 @@ sim_session_read (SimSession  *session)
 		//I'll be very glad is someone has some time to check what's happening) :)
 		if (strlen(buffer) != n)
 		{
-		  g_message ("Received error. Inconsistent data entry, closing socket: %d: %s", error, g_strerror(error));
+		  g_message ("Received error. Inconsistent data entry, closing socket. Received:%d Buffer lenght: %d: %d: %s", n, strlen(buffer), error, g_strerror(error));
 	  	return FALSE;
 		}
 /*
@@ -3638,6 +3668,7 @@ sim_session_read (SimSession  *session)
 
 		if (sim_session_get_is_initial (session))		//is this the session started in sim_container_new();?
 		{
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: This is a initial session load");
 			if (cmd->type == SIM_COMMAND_TYPE_DATABASE_ANSWER)
 			{
         sim_session_cmd_database_answer (session, cmd); 
@@ -3669,6 +3700,7 @@ sim_session_read (SimSession  *session)
 		//this two variables are used in SIM_COMMAND_TYPE_EVENT
 		SimServer	*server = session->_priv->server;
 		SimConfig	*config = sim_server_get_config (server);
+		gboolean *r = FALSE;
 	
 		//this messages can arrive from other servers (up in the architecture -a master server-, down in the
 		//architecture -a children server-, or at the same level -HA server-), from some sensor (an agent) or from the frameworkd.
@@ -3789,6 +3821,9 @@ sim_session_read (SimSession  *session)
 			case SIM_COMMAND_TYPE_DATABASE_ANSWER:											// from master server
 						sim_session_cmd_database_answer (session, cmd); 
 						break;							
+			case SIM_COMMAND_TYPE_SNORT_EVENT:
+					 sim_session_cmd_event (session, cmd);
+		   		break;
 
 			default:
 						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command unknown type");
@@ -3873,7 +3908,7 @@ sim_session_write (SimSession  *session,
 {
   GIOError  error;
   gchar    *str;
-  guint     n;
+  gsize     n;
 
 	g_return_val_if_fail (session != NULL, 0);
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
@@ -3909,7 +3944,7 @@ sim_session_write_from_buffer (SimSession	*session,
 																gchar			*buffer)
 {
 	GIOError	error;
-	guint n;
+	gsize n; //gsize = unsigned integer 32 bits
 	
   g_return_val_if_fail (session != NULL, 0);
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);

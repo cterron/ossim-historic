@@ -41,6 +41,8 @@ if (ossim_error()) {
 
 
 
+$summ_event_count = 0;
+$highest_rule_level = 0;
 
 
 $conf = $GLOBALS["CONF"];
@@ -72,7 +74,6 @@ if (empty($show_all)) {
         <th> <?php echo gettext("Source"); ?> </th>
         <th> <?php echo gettext("Destination"); ?> </th>
         <th> <?php echo gettext("Correlation Level"); ?> </th>
-        <th> <?php echo gettext("Action"); ?> </th>
       </tr>
 
 <?php
@@ -237,15 +238,16 @@ if (empty($show_all)) {
         <!-- src & dst hosts -->
 
         <td><?php echo $alarm->get_rule_level() ?></td>
-        <td><a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $alarm->get_event_id() ?>">Ack</a></td>
       </tr>
 
 <?php
+    if($highest_rule_level == 0) $highest_rule_level = $alarm->get_rule_level();
+
     # Alarm summary
     if ((!$show_all) or ($risk > 1)) {
         $summary = Alarm::get_alarm_stats($conn, $backlog_id, $aid);
         $summ_count = $summary["count"];
+        $summ_event_count += $summ_count;
         $summ_dst_ips = $summary["dst_ips"];
         $summ_types = $summary["types"];
         $summ_dst_ports = $summary["dst_ports"];
@@ -301,6 +303,14 @@ if (empty($show_all)) {
 
 <?php
         } /* foreach alarm_list */
+?>
+<tr>
+<td colspan="9" bgcolor="#eeeeee">
+<font color="black" style="font-size: 9px;"><?= _("Total events matched after highest rule level, before timeout:"); ?> <?= $summary["total_count"] - $summ_event_count; ?></font>
+</td>
+</tr>
+<?php
+
     } /* if alarm_list */
 ?>
     </table>

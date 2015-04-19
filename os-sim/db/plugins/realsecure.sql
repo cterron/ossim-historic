@@ -1,18 +1,12 @@
--- realsecure
+-- Realsecure
 -- plugin_id: 1506
 --
--- $Log: realsecure.sql,v $
--- Revision 1.2  2007/03/26 18:36:15  juanmals
--- delete previous sids before inserting new ones
---
--- Revision 1.1  2006/11/03 11:22:11  dvgil
--- include realsecure id and sids for the new agent
---
+
 DELETE FROM plugin WHERE id = "1506";
 DELETE FROM plugin_sid where plugin_id = "1506";
 
+INSERT INTO plugin (id, type, name, description) VALUES (1506, 1, 'RealSecure', 'RealSecure events');
 
-INSERT INTO plugin (id, type, name, description) VALUES (1506, 1, 'realsecure', 'Real Secure');
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 1, NULL, NULL, "6in4_Tunnel");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1506, 2, NULL, NULL, "AIX_Pdnsd_Overflow");

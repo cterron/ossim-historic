@@ -696,6 +696,7 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
     
     if (sim_rule_match_by_event (rule, event))
 		{
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: True");
 		  time_t time_last = time (NULL);
 			directive->_priv->rule_curr = node;		//each time that the event matches, the directive goes down one level to 
 																						//the node that matched. next time, the event will be checked against this level
@@ -727,6 +728,9 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
 
 		  return TRUE;
 		}
+		else
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: False");
+
 	  node = node->next;
 	}
 

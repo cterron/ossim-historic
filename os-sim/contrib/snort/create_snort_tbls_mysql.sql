@@ -23,7 +23,7 @@
 CREATE TABLE `schema` ( vseq        INT      UNSIGNED NOT NULL,
                       ctime       DATETIME NOT NULL,
                       PRIMARY KEY (vseq));
-INSERT INTO `schema`  (vseq, ctime) VALUES ('106', now());       
+INSERT INTO `schema`  (vseq, ctime) VALUES ('107', now());       
 
 CREATE TABLE event  ( sid 	  INT 	   UNSIGNED NOT NULL,
                       cid 	  INT 	   UNSIGNED NOT NULL,
@@ -39,6 +39,7 @@ CREATE TABLE signature ( sig_id       INT          UNSIGNED NOT NULL AUTO_INCREM
                          sig_priority INT          UNSIGNED,
                          sig_rev      INT          UNSIGNED,
                          sig_sid      INT          UNSIGNED,
+			 sig_gid      INT          UNSIGNED,
                          PRIMARY KEY (sig_id),
                          INDEX   sign_idx (sig_name(20)),
                          INDEX   sig_class_id_idx (sig_class_id));

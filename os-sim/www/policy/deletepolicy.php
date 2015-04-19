@@ -47,7 +47,10 @@ if (!GET('confirm')) {
     <p> <?php echo gettext("Policy deleted"); ?> </p>
     <p><a href="policy.php">
     <?php echo gettext("Back"); ?> </a></p>
-    <?php exit(); ?>
+<?php
+// update indicators on top frame
+$OssimWebIndicator->update_display();
+?>
 
 </body>
 </html>

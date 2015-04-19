@@ -77,15 +77,15 @@ if ($list = Host::get_list($conn, "WHERE ip = '$host'")) {
 $list = Control_panel_host::get_list($conn,
     "WHERE id = '$host' ORDER BY time_range", 3);
     
-if ($list[0]) {
+if (isset($list[0])) {
     $max_c["day"]   = $list[0]->get_max_c();
     $max_c_date["day"]   = $list[0]->get_max_c_date();
 }
-if ($list[1]) {
+if (isset($list[1])) {
     $max_c["month"] = $list[1]->get_max_c();
     $max_c_date["month"] = $list[1]->get_max_c_date();
 }
-if ($list[2]) {
+if (isset($list[2])) {
     $max_c["year"]  = $list[2]->get_max_c();
     $max_c_date["year"]  = $list[2]->get_max_c_date();
 }
@@ -93,15 +93,15 @@ if ($list[2]) {
 /* max A */
 $list = Control_panel_host::get_list($conn, 
     "WHERE id = '$host' ORDER BY time_range", 3);
-if ($list[0]) {
+if (isset($list[0])) {
     $max_a["day"]   = $list[0]->get_max_a();
     $max_a_date["day"]   = $list[0]->get_max_a_date();
 }
-if ($list[1]) {
+if (isset($list[1])) {
     $max_a["month"] = $list[1]->get_max_a();
     $max_a_date["month"] = $list[1]->get_max_a_date();
 }
-if ($list[2]) {
+if (isset($list[2])) {
     $max_a["year"]  = $list[2]->get_max_a();
     $max_a_date["year"]  = $list[2]->get_max_a_date();
 }
@@ -130,7 +130,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
     </table><br/>
     <table align="center">
 <?php 
-    if ($max_c["day"]) { 
+    if (isset($max_c["day"])) { 
 ?>
       <tr>
         <th> <?php echo gettext("Max C Level (last day)"); ?> </th>
@@ -141,7 +141,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
       </tr>
 <?php 
     }
-    if ($max_a["day"]) {
+    if (isset($max_a["day"])) {
 ?>
     
       <tr>
@@ -154,7 +154,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
       <tr><td colspan="2"></td></tr>
 <?php
     }
-    if ($max_c["month"]) {
+    if (isset($max_c["month"])) {
 ?>
       <tr>
         <th> <?php echo gettext("Max C Level (last month)"); ?> </th>
@@ -165,7 +165,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
       </tr>
 <?php
     }
-    if ($max_a["month"]) {
+    if (isset($max_a["month"])) {
 ?>
       <tr>
         <th> <?php echo gettext("Max A Level (last month)"); ?> </th>
@@ -177,7 +177,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
       <tr><td colspan="2"></td></tr>
 <?php
     }
-    if ($max_c["year"]) {
+    if (isset($max_c["year"])) {
 ?>
       <tr>
         <th> <?php echo gettext("Max C Level (last year)"); ?> </th>
@@ -188,7 +188,7 @@ $current_a = Host_qualification::get_ip_attack($conn, $host);
       </tr>
 <?php
     }
-    if ($max_a["year"]) {
+    if (isset($max_a["year"])) {
 ?>
       <tr>
         <th> <?php echo gettext("Max A Level (last year)"); ?> </th>

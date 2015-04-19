@@ -8,6 +8,10 @@ require_once ('ossim_error.inc');
 require_once "ossim_conf.inc";
 $conf = new ossim_conf($read_db=false);
 
+if ($conf->get_conf("ossim_type") == 'mysql' && !function_exists('mysql_connect')) {
+    die(ossim_error("No mysql support available in your PHP installation, try installing the php-mysql extension/package"));
+}
+
 $adodb_path = $conf->get_conf("adodb_path");
 if (!is_readable($adodb_path)) {
     $error = new OssimError();

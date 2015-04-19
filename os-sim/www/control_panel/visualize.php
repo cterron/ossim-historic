@@ -1,4 +1,7 @@
 <?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
+
 require_once ('classes/Locale.inc');
 require_once('classes/Security.inc');
 ?>

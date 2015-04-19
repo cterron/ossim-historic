@@ -19,6 +19,7 @@ $xajax->registerFunction("draw_columns");
 $xajax->registerFunction("draw_error");
 $xajax->registerFunction("add_column");
 $xajax->registerFunction("delete_column");
+$xajax->registerFunction("move_column");
 $xajax->registerFunction("save_column_opts");
 $xajax->registerFunction("save");
 $xajax->registerFunction("end_configuration");
@@ -63,7 +64,7 @@ function save($groups_form)
         }
         $groups_config = $cleaned;
     } else {
-        return draw_error(_("Please specify at least one group"));
+        $groups_config = array();
     }
     
     $config->set($login, 'event_viewer', $groups_config, 'php');
@@ -103,6 +104,29 @@ function delete_column($group_id, $col_num)
     //$resp = new xajaxResponse(); return xajax_debug($groups_config, $resp);
     $config->set($login, 'event_viewer_tmp', $groups_config, 'php');
     return draw_columns($group_id);
+}
+
+function move_column($group_id, $col_num, $to)
+{
+    global $config, $login;
+    $groups_config = $config->get($login, 'event_viewer_tmp', 'php');
+    $groups = array_keys($groups_config);
+    if ($to == 'right') {
+        $right = $groups_config[$group_id][$col_num+1];
+        $current = $groups_config[$group_id][$col_num];
+        $groups_config[$group_id][$col_num+1] = $current;
+        $groups_config[$group_id][$col_num] = $right;
+        $selected = $col_num+1;
+    } else {
+        $left = $groups_config[$group_id][$col_num-1];
+        $current = $groups_config[$group_id][$col_num];
+        $groups_config[$group_id][$col_num-1] = $current;
+        $groups_config[$group_id][$col_num] = $left;
+        $selected = $col_num-1;
+    }
+    $config->set($login, 'event_viewer_tmp', $groups_config, 'php');
+    return draw_columns($group_id, $selected);
+    
 }
 
 function save_column_opts($group_id, $col_num, $form_data)
@@ -147,6 +171,7 @@ function draw_columns($group_id, $selected_col = 1)
          */
         //xajax_debug($groups_config, $resp);
         $html .= '<table width="100%" align="center"><tr>';
+        $num_cols = count($groups_config[$group_id]);
         foreach ($groups_config[$group_id] as $col_num => $col_conf) {
             if ($col_num == $selected_col) {
                 $td_bg = 'background-color: grey';
@@ -158,8 +183,15 @@ function draw_columns($group_id, $selected_col = 1)
             $curr = $groups_config[$group_id][$col_num];
             $curr_label = isset($curr['label']) ? $curr['label'] : $col_num;
             $html .= '<td style="border-width: 0px;'.$td_bg.'">';
-            $tmp = '<a href="#" onClick="javascript: xajax_draw_columns('.$group_id.', '.$col_num.')">'.$curr_label.'</a>&nbsp;
-                      <small>(<a href="#" onClick="javascript: xajax_delete_column('.$group_id.', '.$col_num.')">'._("delete").'</a>)</small>';
+            $tmp = '';
+            if ($col_num != 1) {
+                $tmp = '<a href="#" onClick="javascript: xajax_move_column('.$group_id.', '.$col_num.', \'left\');">&lt;</a>&nbsp;';
+            }
+            $tmp .= '<a href="#" onClick="javascript: xajax_draw_columns('.$group_id.', '.$col_num.')">'.$curr_label.'</a>&nbsp;';
+            if ($col_num != $num_cols) {
+                $tmp .= '<a href="#" onClick="javascript: xajax_move_column('.$group_id.', '.$col_num.', \'right\');">&gt;</a>&nbsp;';
+            }
+            $tmp .= '<small>(<a href="#" onClick="javascript: xajax_delete_column('.$group_id.', '.$col_num.')">'._("delete").'</a>)</small>';
             $html .= ($bold) ? "<b>$tmp</b>" : $tmp;
             $html .= '</td>';
         }
@@ -184,7 +216,6 @@ function draw_columns($group_id, $selected_col = 1)
         } else {
             $col_selected_nowrap = 'selected';
         }
-        $num_cols = count($groups_config[$group_id]);
         // SELECT tag
         $tags = Event_viewer::get_tags();
         $select = '<option value="">'._("Add replacement tag")."</option>";
@@ -256,7 +287,7 @@ $groups = Plugingroup::get_list($conn);
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
   <script src="../js/prototype.js" type="text/javascript"></script>
-  <?= $xajax->printJavascript('', '../js/xajax.js'); ?>
+  <?= $xajax->printJavascript('', XAJAX_JS); ?>
 <script language="JavaScript" type="text/javascript">
   function add_tag(select)
   {

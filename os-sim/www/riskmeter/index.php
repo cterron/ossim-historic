@@ -65,6 +65,7 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
                  ossim_db::max_val($conn, "attack", "net_qualification"));
 
 $net_groups = Net_group::get_list($conn);
+$net_group_array = array();
 
 if (is_array($net_stats)) {
     foreach($net_stats as $temp_net) {

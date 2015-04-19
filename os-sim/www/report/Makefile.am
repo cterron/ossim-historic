@@ -13,3 +13,5 @@ report_DATA = index.php \
 	sec_util.php
 EXTRA_DIST   = $(report_DATA)
 
+DISTCLEANFILES = Makefile.in
+

@@ -3,6 +3,8 @@ require_once 'classes/Session.inc';
 require_once 'classes/Security.inc';
 require_once 'classes/Xajax.inc';
 require_once 'classes/Business_Process.inc';
+Session::logcheck("MenuControlPanel", "BusinessProcesses");
+Session::logcheck("MenuControlPanel", "BusinessProcessesEdit");
 
 $xajax = new xajax();
 $xajax->registerFunction("draw_assets");
@@ -24,14 +26,6 @@ function draw_assets($selected_value)
 {
     global $conn, $id;
     $resp = new xajaxResponse();
-    $actives = array(
-        0 => array('active name id1', '1', 'low'),
-        1 => array('active name id2', '2', 'high'),
-    );
-    // insert new row and retrieve full person data
-    if (is_array($selected_value) && $id = current($selected_value)) {
-        $actives[3] = array('new active', $id);
-    }
     $tpl = '
     <div class="row">
         <div class="col1">%ACTIVE%</div>
@@ -41,8 +35,9 @@ function draw_assets($selected_value)
             <option value="1" %1%>'._("Medium").'</option>
             <option value="2" %2%>'._("High").'</option>
             </select>&nbsp;
-            <a onClick="javascript: xajax_remove_asset(%ID%)">('._("remove").')</a>&nbsp;
-            <a onClick="javascript: xajax_draw_asset_details(%ID%)">('._("details").')</a>
+            <a onClick="javascript: xajax_draw_asset_details(%ID%)">('._("details").')</a>&nbsp;
+            <a href="./asset_edit.php?id=%ID%&proc_id='.$id.'">('._("edit").')</a>&nbsp;
+            <a onClick="javascript: xajax_remove_asset(%ID%)">('._("delete").')</a>
         </div>
     </div><hr>';
     $sql = "SELECT
@@ -134,7 +129,9 @@ function html_assets_select()
     <input type="button" value="'._("Add").'"
            onClick="javascript: xajax_add_asset(xajax.getFormValues(\'bp_form\', true, \'bp_new_asset\'))">&nbsp;
     <input type="button" value="'._("Details").'"
-            onClick="javascript: xajax_draw_asset_details(xajax.getFormValues(\'bp_form\', true, \'bp_new_asset\'))">';
+            onClick="javascript: xajax_draw_asset_details(xajax.getFormValues(\'bp_form\', true, \'bp_new_asset\'))"><br/>
+    <a href="asset_edit.php?id=0&proc_id='.$id.'">'._("Create new asset").'</a>
+    ';
     return $html;
 }
 
@@ -207,9 +204,6 @@ function draw_asset_details($asset_id)
 function add_asset($asset_id)
 {
     global $conn, $id;
-    //$resp = new xajaxResponse();
-    //xajax_debug($asset_id, $resp);
-    //return $resp;
     $sql = "INSERT INTO bp_process_asset_reference
             (process_id, asset_id, severity) VALUES (?, ?, ?)";
     $params = array($id, $asset_id['bp_new_asset'], 1);
@@ -228,6 +222,19 @@ function edit_process($form_data)
     if (ossim_error()) {
         $resp->AddAssign("form_errors", "innerHTML", ossim_error());
     } else {
+        // Check if there is already a BP with that name
+        $sql = "SELECT name FROM bp_process WHERE name=?";
+        if ($id != 0) {
+            $sql .= " AND id <> $id";
+        }
+        $params = array($form_data['bp_name']);
+        if (!$rs = $conn->Execute($sql, $params)) {
+            $resp->AddAssign("form_errors", "innerHTML", $conn->ErrorMsg());
+            return $resp;
+        } elseif (!$rs->EOF) {
+            $resp->AddAssign("form_errors", "innerHTML", ossim_error(_("There is already a process with that name")));
+            return $resp;
+        }
         if ($id == 0) {
             $sql = "INSERT INTO bp_process (id, name, description) VALUES (?, ?, ?)";
             $id = $conn->GenID('bp_seq');
@@ -272,10 +279,10 @@ if ($id != 0) {
 <head>
   <title><?_("Business Processes")?></title>
   <link rel="stylesheet" href="../style/style.css"/>
-<?= $xajax->printJavascript('', '../js/xajax.js'); ?>
+<?= $xajax->printJavascript('', XAJAX_JS); ?>
 <style type="text/css">
     .contents {
-        width: 60%;
+        width: 80%;
     }
     .row {
         clear: both;
@@ -299,6 +306,11 @@ if ($id != 0) {
 <div id="xajax_debug"></div>
 <div id="form_errors"></div>
 <form id="bp_form">
+<? if ($id == 0) { ?>
+    <h2><?=_("New Business Process wizard")?></h2>
+<? } else { ?>
+    <h2><?=_("Edit Business Process")?>: <?=$proc_data['name']?></h2>
+<? } ?>
 <table width="100%" align="center"><tr><td style="border-width: 0px">
 <table width="70%" style="border-width: 0px">
 <tr>
@@ -315,24 +327,26 @@ if ($id != 0) {
 <br>
 <? if ($id == 0) { ?>
     <center>
+    <input type="button" value="<?=_("Cancel")?>"
+           onClick="javascript: history.go(-1);">&nbsp;
     <input type="button" value="<?=_("Continue")?>"
            onClick="javascript: xajax_edit_process(xajax.getFormValues('bp_form'))">
     </center>
 <?
 } else {
 ?>
-<table width="60%"><tr><th><?=_("Assets")?></th></tr></table>
+<table width="80%"><tr><th><?=_("Assets")?></th></tr></table>
 <div id="assets" class="contents">
 <!-- Filled by draw_responsibles() -->
 </div>
 <script>xajax_draw_assets(false)</script>
 <br>
-<div id="html_assets_select" class="row" style="text-align: center; width: 60%">
+<div id="html_assets_select" class="row" style="width: 70%">
 <!-- Filled by draw_assets(), generated at html_assets_select() -->
 </div>
 <br>
 </form>
-</td><td>
+</td><td style="border-width: 0px">
 <input type="button" value="<?=_("Continue")?>-&gt;"
        onClick="javascript: xajax_edit_process(xajax.getFormValues('bp_form'))">
 </tr></table>

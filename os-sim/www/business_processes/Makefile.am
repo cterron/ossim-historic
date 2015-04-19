@@ -6,3 +6,5 @@ bp_DATA = asset_edit.php \
 		index.php 
 
 EXTRA_DIST   = $(bp_DATA)
+
+DISTCLEANFILES = Makefile.in

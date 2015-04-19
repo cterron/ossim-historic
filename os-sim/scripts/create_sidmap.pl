@@ -1,12 +1,14 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.10 2006/08/07 10:36:41 dkarg Exp $ #
+# $Id: create_sidmap.pl,v 1.11 2007/04/19 08:51:36 dkarg Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
 # 2004-05-05 David Gil <dgil@ossim.net>
 #  CHANGES: creates a sql file instead of a sid map in order to 
 #  update OSSIM database
+# 2007-04-19 DK <dk@ossim.net
+# Revert that change, write by default and dump on "-d".
 
 use strict;
 
@@ -31,7 +33,7 @@ map. Result is sent to standard output, which can be redirected to a
 sid-msg.map file.
 
 Usage: $0 <rulesdir> [rulesdir2, ...]
-    Optional -e writes directly into db.
+    Optional -d dump sql to stdout.
     Optional -q forces quiet operation.
 
 RTFM
@@ -49,16 +51,16 @@ $config{rule_actions} = "alert|drop|log|pass|reject|sdrop|activate|dynamic";
 $SINGLELINE_RULE_REGEXP =~ s/%ACTIONS%/$config{rule_actions}/;
 $MULTILINE_RULE_REGEXP  =~ s/%ACTIONS%/$config{rule_actions}/;
 
-# Execute directly. Default off.
+# Dump SQL. Default off.
 # Be quiet. Default off.
-my $execute = 0;
+my $dump = 0;
 my $quiet = 0;
 
 # Read in all rules from each rules file (*.rules) in each rules dir.
 # into %sidmap.
 foreach my $rulesdir (@rulesdirs) {
     if($rulesdir =~ /^-e$/){
-        $execute = 1;
+        $dump= 1;
         next;
     }
     if($rulesdir =~ /^-q$/){
@@ -363,13 +365,13 @@ sub update_ossim_db()
 
             my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
 
-            if($execute){
+            if($dump){
+                print "$query\n";
+            } else {
                 my $stm = $conn->prepare($query);
                 $stm->execute();
                 $stm->finish();
                 print "Inserting $msg: [1001:$sid:$priority]\n" unless ($quiet);
-            } else {
-                print "$query\n";
             }
 		 
         }

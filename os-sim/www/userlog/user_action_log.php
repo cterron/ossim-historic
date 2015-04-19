@@ -46,7 +46,7 @@ if (ossim_error()) {
 $db = new ossim_db();
 $conn = $db->connect();
 
-if (empty($order)) $order = "date";
+if (empty($order)) $order = "date DESC";
 
 if (empty($inf)) $inf = 0;
 if (empty($sup)) $sup = $ROWS;
@@ -98,13 +98,13 @@ if (empty($sup)) $sup = $ROWS;
                 <option <?php if ("" == $code)  echo " selected "?>
                  value="">All</option>"; ?>
         <?php
-        if ($code_list = Log_config::get_list($conn, "ORDER BY code")) {
+        if ($code_list = Log_config::get_list($conn, "ORDER BY descr")) {
                  foreach ($code_list as $code_log) {
                 $code_aux = $code_log->get_code();
         ?>
                  <option  <?php if ($code_aux == $code) echo " selected "; ?>
                   value="<?php echo $code_aux; ?>"><?php echo
-                  "[".$code."]".preg_replace('|%.*?%|'," ",$code_log->get_descr( )); ?>
+                  "[".sprintf("%02d",$code_aux)."] ".preg_replace('|%.*?%|'," ",$code_log->get_descr( )); ?>
                 </option>                
         <?php         
                  }
@@ -225,8 +225,19 @@ if (empty($sup)) $sup = $ROWS;
 } /* foreach alarm_list */
 ?>
       <tr>
-        <td></td>
-        <td colspan="8">
+        <td colspan="5">
+<?php
+    if ($inf >= $ROWS) {
+        echo "<a href=\"$inf_link\">&lt;-"; printf(gettext("Prev %d"),$ROWS); echo "</a>";
+    }
+    if ($sup < $count) {
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
+        echo "<a href=\"$sup_link\">"; printf(gettext("Next %d"), $ROWS); echo " -&gt;</a>";
+    } else {
+        echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $count, $count); echo ")&nbsp;&nbsp;";
+    }
+?>
+
         </td>
       </tr>
 <?php

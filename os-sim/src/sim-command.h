@@ -42,7 +42,7 @@
 #include "sim-enums.h"
 #include "sim-event.h"
 #include "sim-rule.h"
-
+#include "sim-packet.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -58,7 +58,6 @@ G_BEGIN_DECLS
 
 typedef struct _SimCommand        SimCommand;
 typedef struct _SimCommandClass   SimCommandClass;
-
 struct _SimCommand {
   GObject parent;
 
@@ -375,8 +374,19 @@ struct _SimCommand {
 			SimDBElementType	database_element_type; //is this a Host answer, or a network answer, or a directive answer....
 			gchar							*servername;	//children server to wich is sended the answer
 		} database_answer;
+		
+		  } data;
+	struct {
+		  guint unziplen;
+			guint8 *gzipdata;
+			guint32 snort_gid; /* snort generator */
+			guint32 snort_sid; /* snort signature */
+			guint32 snort_rev; /* snort revision */
+			guint32 snort_classification; /* snort classification */
+			guint32 snort_priority; /* snort priority */
 
-  } data;
+		} snort_event;
+	SimPacket *packet;
 };
 
 struct _SimCommandClass {
@@ -389,7 +399,7 @@ SimCommand*       sim_command_new_from_buffer                 (const gchar     *
 SimCommand*       sim_command_new_from_type                   (SimCommandType   type);
 SimCommand*       sim_command_new_from_rule                   (SimRule         *rule);
 
-void              sim_command_start_scanner                   (void);
+GScanner *              sim_command_start_scanner                   (void);
 
 gchar*            sim_command_get_string                      (SimCommand      *command);
 

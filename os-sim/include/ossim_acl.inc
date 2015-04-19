@@ -73,6 +73,16 @@ $ACL_MAIN_MENU = array (
                     "name"          => "Control Panel -> Executive Panel Edit",
                     "default_perm"  => false
                 ),
+            "BusinessProcesses" => array
+                (
+                    "name"          => "Control Panel -> Business Processes",
+                    "default_perm"  => true 
+                ),
+            "BusinessProcessesEdit" => array
+                (
+                    "name"          => "Control Panel -> Business Processes Edit",
+                    "default_perm"  => false
+                ),
             "ControlPanelMetrics" => array
                 (
                     "name"          => "Control Panel -> Metrics",
@@ -291,6 +301,11 @@ $ACL_MAIN_MENU = array (
                 (
                     "name"          => "Configuration -> Upgrades",
                     "default_perm"  => false
+                ),
+            "ConfigurationMaps" => array
+                (
+                    "name"         => "Configuration -> Maps",
+                    "default_perm" => true
                 ),
         ),
     "MenuTools"         => array

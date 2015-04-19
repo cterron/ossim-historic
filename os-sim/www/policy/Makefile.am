@@ -10,3 +10,4 @@ policy_DATA = modifyplugingroups.php \
 		newpolicyform.php
 
 EXTRA_DIST   = $(policy_DATA)
+DISTCLEANFILES = Makefile.in

@@ -18,7 +18,7 @@ if (!$locale_dir = $conf->get_conf("locale_dir", FALSE))
 // 1) For debian works @euro or .UTF8
 // 2) Mac OS X needs putenv()
 list($lang, $country) = explode("_", $language);
-$envlang = setlocale(LC_ALL, $language, "{$language}@euro", $lang, "{$language}.UTF8");
+$envlang = setlocale(LC_ALL, $language, "{$language}.iso88591", "{$language}@euro", $lang, "{$language}.UTF8");
 if ($envlang) {
     putenv("LANG=$envlang");
 }

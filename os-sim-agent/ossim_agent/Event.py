@@ -157,5 +157,14 @@ class WatchRule(Event):
         "to",
         "absolute",
     ]
+class Snort(Event):
+    EVENT_TYPE = 'snort-event'
+    EVENT_ATTRS = [
+        "sensor",
+        "interface",
+        "gzipdata",
+        "unziplen",
+        "event_type"
+    ]
 
 # vim:ts=4 sts=4 tw=79 expandtab:

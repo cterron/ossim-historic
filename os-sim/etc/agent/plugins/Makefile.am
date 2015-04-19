@@ -28,3 +28,5 @@ plugins_DATA = apache.xml \
 	snort.xml \
 	syslog.xml \
 	tcptrack.xml
+
+DISTCLEANFILES = Makefile.in 

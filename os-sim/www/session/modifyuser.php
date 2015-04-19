@@ -30,7 +30,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
     ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
     ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_SPACE, 'illegal:'._("Name"));
-    ossim_valid($email, OSS_MAIL_ADDR, 'illegal:'._("e-mail"));
+    ossim_valid($email, OSS_NULLABLE, OSS_MAIL_ADDR, 'illegal:'._("e-mail"));
     ossim_valid($nnets, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nnets"));
     ossim_valid($nsensors, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nsensors"));
     ossim_valid($company, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE, 'illegal:'._("Company"));

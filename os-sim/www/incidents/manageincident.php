@@ -225,7 +225,7 @@ if ($action == 'newincident') {
             $anom_data_orig = array($a_sen, $a_date, $a_port, $a_prot_o, $a_ver_o);
             $anom_data_new  = array($a_sen, $a_date, $a_port, $a_prot, $a_ver);
             $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
-        } elseif (GET('anom_type')) {
+        } elseif (GET('anom_type') == 'os') {
             $vars = array('title', 'type', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
             foreach ($vars as $v) {
                 $$v = GET("$v");
@@ -233,7 +233,7 @@ if ($action == 'newincident') {
             $anom_data_orig = array($a_sen, $a_date, $a_os_o);
             $anom_data_new  = array($a_sen, $a_date, $a_os);
             $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'os', $anom_ip, $anom_data_orig, $anom_data_new); 
-        }
+        } /*elseif os*/
 
     } /*elseif anomaly*/
    /* insert new vulnerability incident */

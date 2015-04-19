@@ -23,3 +23,5 @@ controlpanel_DATA = backlog.php \
 
 EXTRA_DIST   = $(controlpanel_DATA)
 
+DISTCLEANFILES = Makefile.in
+

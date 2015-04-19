@@ -22,7 +22,7 @@ $descr = POST('descr');
 
 ossim_valid($name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("name"));
 ossim_valid($nports, OSS_DIGIT, 'illegal:'._("nportse"));
-ossim_valid($descr, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Descrition"));
+ossim_valid($descr, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Description"));
 
 if (ossim_error()) {
            die(ossim_error());

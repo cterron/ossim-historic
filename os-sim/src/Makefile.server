@@ -4,7 +4,7 @@ CC=gcc
 PREFIX=/usr/local
 BINDIR=$(PREFIX)/bin
 
-VERSION=\"0.9.8\"
+VERSION=\"0.9.9rc5\"
 
 BINARY=ossim-server
 

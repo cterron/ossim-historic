@@ -5,6 +5,7 @@ DELETE FROM plugin WHERE id = "1001";
 DELETE FROM plugin WHERE id = "1002";
 DELETE FROM plugin WHERE id = "1003";
 DELETE FROM plugin WHERE id = "1100";
+DELETE FROM plugin WHERE id = "1101";
 DELETE FROM plugin WHERE id = "1102";
 DELETE FROM plugin WHERE id = "1103";
 DELETE FROM plugin WHERE id = "1104";
@@ -26,7 +27,14 @@ DELETE FROM plugin WHERE id = "1119";
 DELETE FROM plugin WHERE id = "1120";
 DELETE FROM plugin WHERE id = "1121";
 DELETE FROM plugin WHERE id = "1122";
+DELETE FROM plugin WHERE id = "1123";
 DELETE FROM plugin WHERE id = "1124";
+DELETE FROM plugin WHERE id = "1125";
+DELETE FROM plugin WHERE id = "1126";
+DELETE FROM plugin WHERE id = "1128";
+DELETE FROM plugin WHERE id = "1129";
+DELETE FROM plugin WHERE id = "1130";
+DELETE FROM plugin WHERE id = "1131";
 DELETE FROM plugin_sid where plugin_id = "1001";
 DELETE FROM plugin_sid where plugin_id = "1002";
 DELETE FROM plugin_sid where plugin_id = "1003";
@@ -53,7 +61,14 @@ DELETE FROM plugin_sid where plugin_id = "1119";
 DELETE FROM plugin_sid where plugin_id = "1120";
 DELETE FROM plugin_sid where plugin_id = "1121";
 DELETE FROM plugin_sid where plugin_id = "1122";
+DELETE FROM plugin_sid where plugin_id = "1123";
 DELETE FROM plugin_sid where plugin_id = "1124";
+DELETE FROM plugin_sid where plugin_id = "1125";
+DELETE FROM plugin_sid where plugin_id = "1126";
+DELETE FROM plugin_sid where plugin_id = "1128";
+DELETE FROM plugin_sid where plugin_id = "1129";
+DELETE FROM plugin_sid where plugin_id = "1130";
+DELETE FROM plugin_sid where plugin_id = "1131";
 
 
 INSERT INTO plugin (id, type, name, description) VALUES (1001, 1, 'snort', 'Snort Rules');
@@ -78,11 +93,18 @@ INSERT INTO plugin (id, type, name, description) VALUES (1115, 1, 'spp_asn1', 'A
 INSERT INTO plugin (id, type, name, description) VALUES (1116, 1, 'snort_decoder', 'Snort Internal Decoder');
 INSERT INTO plugin (id, type, name, description) VALUES (1117, 1, 'spp_portscan2', 'Portscan2');
 INSERT INTO plugin (id, type, name, description) VALUES (1118, 1, 'spp_conversation', 'Conversation');
-INSERT INTO plugin (id, type, name, description) VALUES (1119, 1, 'spp_tba', 'TBA');
-INSERT INTO plugin (id, type, name, description) VALUES (1120, 1, 'spp_tba2', 'TBA');
-INSERT INTO plugin (id, type, name, description) VALUES (1121, 1, 'spp_snmp', 'SNMP decoder');
+INSERT INTO plugin (id, type, name, description) VALUES (1119, 1, 'http_inspect', 'http data check');
+INSERT INTO plugin (id, type, name, description) VALUES (1120, 1, 'http_inspect', 'anomalous http server');
+INSERT INTO plugin (id, type, name, description) VALUES (1121, 1, 'flow-portscan', 'flow decoder');
 INSERT INTO plugin (id, type, name, description) VALUES (1122, 1, 'portscan', 'Portscan decoder');
-INSERT INTO plugin (id, type, name, description) VALUES (1124, 1, 'xlink2state', 'xlink2state preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1123, 1, 'frag3', 'Fragmentation decoder');
+INSERT INTO plugin (id, type, name, description) VALUES (1124, 1, 'smtp', 'SMTP preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1125, 1, 'ftp_pp', 'FTP preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1126, 1, 'telnet_pp', 'Telnet preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1128, 1, 'ssh', 'SSH preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1129, 1, 'stream5', 'TCP preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1130, 1, 'dcerp', 'DCE/RPC server preprocessor');
+INSERT INTO plugin (id, type, name, description) VALUES (1131, 1, 'dns', 'DNS preprocessor');
 
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 1292, 101, 103, 'ATTACK-RESPONSES directory listing', 3, 1);
@@ -6247,9 +6269,23 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, r
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 8060, 110, 112, '"EXPLOIT UltraVNC VNCLog Buffer Overflow"', 1, 1);
 
 --
--- Generatos SNORT Plugin Sids
+-- Generators SNORT Plugin Sids
 --
+-- We will separate this in two parts: first, the plugin sids with special priority and reliability or other thing. After that, the other inserts (generated
+-- thanks to scripts/create_sidmap_preprocessors.pl) without priority or reliability. I have separate it here to have a quick look about what's changed or not
+-- 1.- Plugin_sids with something special (don't remove unless you're sure!):
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1002, 1, NULL, NULL, 'tag: Tagged Packet');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1105, 1, NULL, NULL, 'spp_bo: Back Orifice Traffic Detected', 5, 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1117, 1, NULL, NULL, 'spp_portscan2: Portscan detected!', 3, 3);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1104, 4, 201, NULL, 'Spade: Source used odd dest port', 2, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1104, 6, 201, NULL, 'Spade: Source used odd dest for port', 3, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1104, 101, 201, NULL, 'Spade: Rare but open dest port used', 3, 1);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1104, 1, 201, NULL, 'Spade: Closed dest port used');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1104, 3, 201, NULL, 'Spade: Non-live dest used');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1104, 5, 201, NULL, 'Spade: Odd ICMP type/code found');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1104, 102, 201, NULL, 'Spade: Rare dest port used');
+
+-- 2.- plugin_sids directly extracted with scripts/create_sidmap_preprocessors.pl (once removed the entries in the first point)
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1100, 1, NULL, NULL, 'spp_portscan: Portscan Detected');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1100, 2, NULL, NULL, 'spp_portscan: Portscan Status');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1100, 3, NULL, NULL, 'spp_portscan: Portscan Ended');
@@ -6275,6 +6311,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (110
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1106, 2, NULL, NULL, 'spp_rpc_decode: Multiple Records in one packet');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1106, 3, NULL, NULL, 'spp_rpc_decode: Large RPC Record Fragment');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1106, 4, NULL, NULL, 'spp_rpc_decode: Incomplete RPC segment');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1106, 5, NULL, NULL, 'spp_rpc_decode: Zero-length RPC Fragment');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1110, 1, NULL, NULL, 'spp_unidecode: CGI NULL Attack');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1110, 2, NULL, NULL, 'spp_unidecode: Directory Traversal');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1110, 3, NULL, NULL, 'spp_unidecode: Unknown Mapping');
@@ -6299,6 +6336,11 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (111
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 18, NULL, NULL, 'spp_stream4: Multiple acked');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 19, NULL, NULL, 'spp_stream4: Shifting to Emegency Session Mode');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 20, NULL, NULL, 'spp_stream4: Shifting to Suspend Mode');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 21, NULL, NULL, 'spp_stream4: TCP Timestamp option has value of zero');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 22, NULL, NULL, 'spp_stream4: Too many overlapping TCP packets');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 23, NULL, NULL, 'spp_stream4: Packet in established TCP stream missing ACK');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 24, NULL, NULL, 'spp_stream4: Evasive FIN Packet');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1111, 25, NULL, NULL, 'spp_stream4: SYN on established');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1112, 1, NULL, NULL, 'spp_arpspoof: Directed ARP Request');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1112, 2, NULL, NULL, 'spp_arpspoof: Etherframe ARP Mismatch SRC');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1112, 3, NULL, NULL, 'spp_arpspoof: Etherframe ARP Mismatch DST');
@@ -6327,6 +6369,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (111
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 3, NULL, NULL, 'snort_decoder: WARNING: hlen < IP_HEADER_LEN!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 4, NULL, NULL, 'snort_decoder: Bad IPv4 Options');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 5, NULL, NULL, 'snort_decoder: Truncated IPv4 Options');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 6, NULL, NULL, 'snort_decoder: WARNING: hlen > IP_HEADER_LEN!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 45, NULL, NULL, 'snort_decoder: TCP packet len is smaller than 20 bytes!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 46, NULL, NULL, 'snort_decoder: TCP Data Offset is less than 5!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 47, NULL, NULL, 'snort_decoder: TCP Data Offset is longer than payload!');
@@ -6335,9 +6378,11 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (111
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 56, NULL, NULL, 'snort_decoder: T/TCP Detected');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 57, NULL, NULL, 'snort_decoder: Obsolete TCP options');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 58, NULL, NULL, 'snort_decoder: Experimental TCP options');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 59, NULL, NULL, 'snort_decoder: TCP Window Scale Option Scale Invalid (> 14)');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 95, NULL, NULL, 'snort_decoder: Truncated UDP Header!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 96, NULL, NULL, 'snort_decoder: Invalid UDP header, length field < 8');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 97, NULL, NULL, 'snort_decoder: Short UDP packet, length field > payload length');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 98, NULL, NULL, 'snort_decoder: Long UDP packet, length field < payload length');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 105, NULL, NULL, 'snort_decoder: ICMP Header Truncated!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 106, NULL, NULL, 'snort_decoder: ICMP Timestamp Header Truncated!');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1116, 107, NULL, NULL, 'snort_decoder: ICMP Address Header Truncated!');
@@ -6375,6 +6420,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (111
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1119, 15, NULL, NULL, 'http_inspect: OVERSIZE REQUEST-URI DIRECTORY');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1119, 16, NULL, NULL, 'http_inspect: OVERSIZE CHUNK ENCODING');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1119, 17, NULL, NULL, 'http_inspect: UNAUTHORIZED PROXY USE DETECTED');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1119, 18, NULL, NULL, 'http_inspect: WEBROOT DIRECTORY TRAVERSAL');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1120, 1, NULL, NULL, 'http_inspect: ANOMALOUS HTTP SERVER ON UNDEFINED HTTP PORT');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1121, 1, NULL, NULL, 'flow-portscan: Fixed Scale Scanner Limit Exceeded');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1121, 2, NULL, NULL, 'flow-portscan: Sliding Scale Scanner Limit Exceeded');
@@ -6407,6 +6453,52 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (112
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1122, 25, NULL, NULL, 'portscan: ICMP Sweep');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1122, 26, NULL, NULL, 'portscan: ICMP Filtered Sweep');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1122, 27, NULL, NULL, 'portscan: Open Port');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 1, NULL, NULL, 'xlink2state: X-Link2State length greater than 1024');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 1, NULL, NULL, ' frag3: IP Options on fragmented packet');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 2, NULL, NULL, ' frag3: Teardrop attack');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 3, NULL, NULL, ' frag3: Short fragment, possible DoS attempt');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 4, NULL, NULL, ' frag3: Fragment packet ends after defragmented packet');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 5, NULL, NULL, ' frag3: Zero-byte fragment');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 6, NULL, NULL, ' frag3: Bad fragment size, packet size is negative');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 7, NULL, NULL, ' frag3: Bad fragment size, packet size is greater than 65536');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 8, NULL, NULL, ' frag3: Fragmentation overlap');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 9, NULL, NULL, ' frag3: IPv6 BSD mbufs remote kernel buffer overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1123, 10, NULL, NULL, ' frag3: Bogus fragmentation packet. Possible BSD attack');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 1, NULL, NULL, ' smtp: Attempted command buffer overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 2, NULL, NULL, ' smtp: Attempted data header buffer overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 3, NULL, NULL, ' smtp: Attempted response buffer overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 4, NULL, NULL, ' smtp: Attempted specific command buffer overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 5, NULL, NULL, ' smtp: Unknown command');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1124, 6, NULL, NULL, ' smtp: Illegal command');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 1, NULL, NULL, ' ftp_pp: Telnet command on FTP command channel');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 2, NULL, NULL, ' ftp_pp: Invalid FTP command');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 3, NULL, NULL, ' ftp_pp: FTP parameter length overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 4, NULL, NULL, ' ftp_pp: FTP malformed parameter');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 5, NULL, NULL, ' ftp_pp: Possible string format attempt in FTP command/parameter');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 6, NULL, NULL, ' ftp_pp: FTP response length overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 7, NULL, NULL, ' ftp_pp: FTP command channel encrypted');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 8, NULL, NULL, ' ftp_pp: FTP bounce attack');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1125, 9, NULL, NULL, ' ftp_pp: Evasive Telnet command on FTP command channel');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1126, 1, NULL, NULL, ' telnet_pp: Telnet consecutive AYT overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1126, 2, NULL, NULL, ' telnet_pp: Telnet data encrypted');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1126, 3, NULL, NULL, ' telnet_pp: Subnegotiation Begin without matching Subnegotiation End');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 1, NULL, NULL, ' ssh: Gobbles exploit ');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 2, NULL, NULL, ' ssh: SSH1 CRC32 exploit ');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 3, NULL, NULL, ' ssh: Server version string overflow');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 4, NULL, NULL, ' ssh: Protocol mismatch');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 5, NULL, NULL, ' ssh: Bad message direction');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 6, NULL, NULL, ' ssh: Payload size incorrect for the given payload');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1128, 7, NULL, NULL, ' ssh: Failed to detect SSH version string');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 1, NULL, NULL, ' stream5: SYN on established session');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 2, NULL, NULL, ' stream5: Data on SYN packet');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 3, NULL, NULL, ' stream5: Data sent on stream not accepting data');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 4, NULL, NULL, ' stream5: TCP Timestamp is outside of PAWS window');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 5, NULL, NULL, ' stream5: Bad segment, overlap adjusted size less than/equal 0');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 6, NULL, NULL, ' stream5: Window size (after scaling) larger than policy allows');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 7, NULL, NULL, ' stream5: Limit on number of overlapping TCP packets reached');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1129, 8, NULL, NULL, ' stream5: Data sent on stream after TCP Reset');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1130, 1, NULL, NULL, ' dcerpc: Maximum memory usage reached');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1131, 1, NULL, NULL, ' dns: Obsolete DNS RData Type');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1131, 2, NULL, NULL, ' dns: Experimental DNS RData Type');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1131, 3, NULL, NULL, ' dns: Client RData TXT Overflow');
 
 

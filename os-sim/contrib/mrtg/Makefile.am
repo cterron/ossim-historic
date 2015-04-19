@@ -5,3 +5,4 @@ mrtg_DATA = launch-mrtg \
 	mrtg.tgz
 
 EXTRA_DIST = $(mrtg_DATA)
+DISTCLEANFILES = Makefile.in

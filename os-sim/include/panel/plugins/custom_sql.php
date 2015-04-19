@@ -26,9 +26,12 @@ class Plugin_Custom_SQL extends Panel
             'graph_pie_explode_pos' => 1,
 	    'graph_pie_antialiasing' => 0,
 	    'graph_pie_center' => 0.3,
+            'graph_point_legend' => '',
             'graph_show_values' => 1,
             'graph_color' => '#000080',
             'graph_gradient' => '',
+            'graph_link' => '',
+            'graph_radar_fill' => '1',
             'graph_y_min' => 0,
             'graph_y_max' => 0,
             'graph_x_min' => 0,
@@ -59,7 +62,7 @@ class Plugin_Custom_SQL extends Panel
             <br/>
         ';
         $html .= _("SQL code") . ':<br/>';
-        $html .= '<textarea name="graph_sql" rows="17" cols="35" wrap="on">';
+        $html .= '<textarea name="graph_sql" rows="17" cols="55" wrap="soft">';
         $html .= $this->get('graph_sql');
         $html .= '</textarea>';
         return $html;
@@ -72,12 +75,19 @@ class Plugin_Custom_SQL extends Panel
         // Graph Title
         //
         $html .= _("Graph Title");
-        $html .= ': <input type="text" name="graph_title" value="'.$this->get('graph_title').'">';
+        $html .= ': <input type="text" name="graph_title" value="'.$this->get('graph_title').'"><br/>';
+        //
+        // Graph Link
+        //
+        $html .= _("Graph Link");
+        $html .= ': <input type="text" name="graph_link" value="'.$this->get('graph_link').'">';
         //
         // Graph types (pie, bars)
         //
         $html .= '<br/>'._("Graph Type").': <select name="graph_type">';
         $types = array('pie'    => _("Pie"),
+                       'points' => _("Points"),
+                       'radar' => _("Radar"),
                        'bars'   => _("Bars"));
         foreach ($types as $value => $label) {
             $checked = $this->get('graph_type') == $value ? 'selected' : '';
@@ -158,11 +168,33 @@ class Plugin_Custom_SQL extends Panel
             $html .= "<input type='radio' name='graph_pie_antialiasing' value='$value' $check>$label ";
         }
 
+        /********************************************************
+                         RADAR AND POINT OPTIONS
+        ********************************************************/
+        $html .= "<hr/><b>"._("Point Options")."</b><hr/>";
+        //
+        // Point legend
+        //
+        $html .= _("Points / Radar Legend");
+        $html .= ': <input type="text" name="graph_point_legend" value="'.$this->get('graph_point_legend').'">';
+        /********************************************************
+                         RADAR OPTIONS
+        ********************************************************/
+        $html .= "<hr/><b>"._("Radar Options")."</b><hr/>";
+        //
+        // Radar fill
+        //
+        $html .= _("Fill Radar").": ";
+        $opts = array(0 => _("No"), 1 => _("Yes"));
+        foreach ($opts as $value => $label) {
+            $check = $this->get('graph_radar_fill') == $value ? 'checked' : '';
+            $html .= "<input type='radio' name='graph_radar_fill' value='$value' $check>$label ";
+        }
 
         /********************************************************
-                         BAR & POINTS OPTIONS
+                         BAR, RADAR & POINTS OPTIONS
         ********************************************************/
-        $html .= "<hr/><b>"._("Bar & Points Options")."</b><hr/>";
+        $html .= "<hr/><b>"._("Bar, Radar & Points Options")."</b><hr/>";
         //
         // Show values in graph
         //
@@ -243,7 +275,6 @@ END;
 
     function showWindowContents()
     {
-        $html = '';
         if (!$this->get('graph_sql')) {
             return _("Please configure options at the Sub-category tab");
         }
@@ -253,7 +284,11 @@ END;
 
         // Return the image link
         $nocache = rand(100000, 99999999);
-        $html .= '<img src="custom_graph.php?id='.$this->get('id', 'window_opts').'&nocache='.$nocache.'">';
+        $html = '<img border="0" src="custom_graph.php?panel_id='. GET('panel_id') . '&id='.$this->get('id', 'window_opts').'&nocache='.$nocache.'">';
+        $link = $this->get('graph_link');
+        if (!empty($link) && $link != '#') {
+            $html = '<a href="'.$this->get('graph_link').'">'.$html.'</a>';
+        }
         return $html;
     }
    

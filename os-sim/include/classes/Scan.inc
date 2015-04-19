@@ -142,6 +142,13 @@ class Scan {
         }
     }
 
+    function del_scan()
+    {
+        if (isset($_SESSION["_scan"])) {
+            unset($_SESSION["_scan"]);
+        }
+    }
+
 }
 
 ?>

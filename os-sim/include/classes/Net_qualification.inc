@@ -23,6 +23,7 @@ class Net_qualification {
 
     function get_list($conn, $where = "", $order = "") 
     {
+        $list = array();
         $query = OssimQuery("SELECT * FROM net_qualification $where $order");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding='UTF-8' ?>
 
-<!-- netgear router detector -->
+<!-- Juniper netscreen syslog format -->
 <plugin id="1522" process="" type="detector" start="no" enable="yes">
     <startup></startup>
     <shutdown></shutdown>

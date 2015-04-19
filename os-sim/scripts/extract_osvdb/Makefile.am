@@ -5,3 +5,5 @@ eosvdb_DATA = extract_cve_bugtraq.pl \
 			  notes.txt 
 
 EXTRA_DIST   = $(eosvdb_DATA)
+
+DISTCLEANFILES = Makefile.in

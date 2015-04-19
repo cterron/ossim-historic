@@ -163,7 +163,13 @@ class Event_viewer
             "default" => array(
                 'userdata1' => _("Userdata 1"),
                 'userdata2' => _("Userdata 2"),
-                'userdata3' => _("Userdata 3")            
+                'userdata3' => _("Userdata 3"),
+                'userdata4' => _("Userdata 4"),
+                'userdata5' => _("Userdata 5"),
+                'userdata6' => _("Userdata 6"),
+                'userdata7' => _("Userdata 7"),
+                'userdata8' => _("Userdata 8"),
+                'userdata9' => _("Userdata 9")            
             )
         );
     }
@@ -461,7 +467,9 @@ class Event_viewer
         }
         // Print rows with custom format
         foreach ($choice as $col => $label) {
-            $html .= "<b>$label:</b> " . $info[$col] . "<br/>";
+            if ($info[$col]) {
+                $html .= "<b>$label:</b> " . $info[$col] . "<br/>";
+            }
         }
         $html .= '</td></tr></table>';
         return $html;

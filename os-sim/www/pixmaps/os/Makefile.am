@@ -6,3 +6,5 @@ os_DATA = bsd.png \
 	win.png
 
 EXTRA_DIST   = $(os_DATA)
+
+DISTCLEANFILES = Makefile.in

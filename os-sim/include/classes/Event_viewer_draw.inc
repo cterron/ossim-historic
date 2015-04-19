@@ -34,12 +34,34 @@ function toggle_events(from, num_results)
         group_id='event-'+i;
         Element.toggle(group_id);
     }
+
+    if (Element.getStyle('event-'+from, 'display') != 'none') {
+        $('l-event-'+from).innerHTML = "-";
+    } else {
+        $('l-event-'+from).innerHTML = "+";
+
+        // hide all detail block
+        for (i=from; i<=top; i++) {
+            $('detail-'+i).style.display = 'none';
+            $('l-detail-'+i).innerHTML = "+";
+        }
+    }
+    
+    return false;
+}
+
+function toggle_details(detail_id)
+{
+    Element.toggle(detail_id);
+    if (Element.getStyle(detail_id, 'display') != 'none')
+        $('l-'+detail_id).innerHTML = "-";
+    else
+        $('l-'+detail_id).innerHTML = "+";
     return false;
 }
 
 </script>
   
-<body>
 <form method="GET">
 <table align="center" width="70%">
     <tr><th colspan="2"><?=_("Filter")?></th></tr>
@@ -66,10 +88,10 @@ function toggle_events(from, num_results)
     </tr><tr>
         <th style="text-align: right"><?=_("Display by")?>: </th>
         <td style="text-align: left; border-width: 0px">
-            <input type="radio" name="display_by" value="day" <? if ($display_by == 'day') echo "checked" ?>/> <?=_("Date")?>
-            <input type="radio" name="display_by" value="sid_name" <? if ($display_by == 'sid_name') echo "checked" ?>/> <?=_("Type")?>
-            <input type="radio" name="display_by" value="ip_src" <? if ($display_by == 'ip_src') echo "checked" ?>/> <?=_("Source IP")?>
-            <input type="radio" name="display_by" value="ip_dst" <? if ($display_by == 'ip_dst') echo "checked" ?>/> <?=_("Dest. IP")?>
+            <input type="radio" name="display_by" value="day" <? if ($display_by == 'day') echo "checked " ?>/> <?=_("Date")?>
+            <input type="radio" name="display_by" value="sid_name" <? if ($display_by == 'sid_name') echo "checked " ?>/> <?=_("Type")?>
+            <input type="radio" name="display_by" value="ip_src" <? if ($display_by == 'ip_src') echo "checked " ?>/> <?=_("Source IP")?>
+            <input type="radio" name="display_by" value="ip_dst" <? if ($display_by == 'ip_dst') echo "checked " ?>/> <?=_("Dest. IP")?>
         </td>
     </tr>
     <tr><th colspan="2"><input type="submit" value="<?=_("Go")?>"></th>
@@ -92,7 +114,8 @@ $list = $this->get_list($options);
 $link = $_SERVER['PHP_SELF'] . "?host=$host&date_to=$date_to&date_from=$date_from".
         "&total_rows={$this->total_rows}&display_by=$display_by&group_id=$group_id";
 
-echo Util::pager_draw($page_from, $results_per_page, $this->total_rows, $link);
+$pager = Util::pager_draw($page_from, $results_per_page, $this->total_rows, $link);
+echo $pager;
 
 ?>
 
@@ -112,7 +135,7 @@ $list = $this->display_by($display_by, $list);
 $i = 1;
 foreach (array_keys($list) as $k) {
     // Display Groups
-    $expand = '<a href="#" onClick="return toggle_events('.$i.','.count($list[$k]).')">+</a>';
+    $expand = '<a href="#" id="l-event-'.$i.'" onClick="return toggle_events('.$i.','.count($list[$k]).')">+</a>';
     echo "<tr><th colspan='$num_cols' style='text-align: left; background-color: #EDE9E3'>$expand <b>$k (".count($list[$k]).")</b></th></tr>\n";
     // Display columns
     foreach ($list[$k] as $data) {
@@ -123,7 +146,7 @@ foreach (array_keys($list) as $k) {
             // Expand "button"
             if ($col == 1) {
                 $detail_id = "detail-".$i++;
-                $expand = '<a href="#" onClick="Element.toggle(\''.$detail_id.'\'); return false;">+</a> ';
+                $expand = '<a href="#" id="l-'.$detail_id.'" onClick="return toggle_details(\''.$detail_id.'\');">+</a> ';
             } else {
                 $expand = '';
             }
@@ -134,10 +157,9 @@ foreach (array_keys($list) as $k) {
         echo "</tr>\n";
         // Display payload
         echo '<tr id="'.$detail_id.'" style="display: none">'.
-             "<td colspan='$num_cols'>".$this->draw_event_info($data).'</td></tr>';
+             "<td colspan='$num_cols'>".$this->draw_event_info($data)."</td></tr>\n";
     }
 }
 ?>
 </table>
-<? echo Util::pager_draw($page_from, $results_per_page, $this->total_rows, $link); ?>
-
+<? echo "$pager\n"; ?>

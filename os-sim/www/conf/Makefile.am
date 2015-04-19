@@ -9,3 +9,5 @@ conf_DATA = main.php \
 	userlog.php
 EXTRA_DIST   = $(conf_DATA)
 
+DISTCLEANFILES = Makefile.in
+
