@@ -1,85 +1,127 @@
 <?php
-
-require_once("ossim_db.inc");
-
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* - RRD_anomaly_global()
+* - get_what()
+* - get_count()
+* - get_anomaly_time()
+* - get_range()
+* - get_over()
+* - get_acked()
+* - get_list()
+* - ack()
+* - delete()
+* - get_list_count()
+* Classes list:
+* - RRD_anomaly_global
+*/
+require_once ("ossim_db.inc");
 class RRD_anomaly_global {
-
     var $what;
     var $count;
     var $anomaly_time;
     var $range;
     var $over;
     var $acked;
-
-    function RRD_anomaly_global ($what, $count, $anomaly_time, $range,
-                   $over, $acked)
-    {
-        $this->what         = $what;
-        $this->count        = $count;
+    function RRD_anomaly_global($what, $count, $anomaly_time, $range, $over, $acked) {
+        $this->what = $what;
+        $this->count = $count;
         $this->anomaly_time = $anomaly_time;
-        $this->range        = $range;
-        $this->over         = $over;
-        $this->acked        = $acked;
+        $this->range = $range;
+        $this->over = $over;
+        $this->acked = $acked;
     }
-
-    function get_what()             { return $this->what; }
-    function get_count()            { return $this->count; }
-    function get_anomaly_time()     { return $this->anomaly_time; }
-    function get_range()            { return $this->range; }
-    function get_over()             { return $this->over; }
-    function get_acked()            { return $this->acked; }
-
-    function get_list($conn, $where = "", $order = "", $inf, $sup) 
-    {
+    function get_what() {
+        return $this->what;
+    }
+    function get_count() {
+        return $this->count;
+    }
+    function get_anomaly_time() {
+        return $this->anomaly_time;
+    }
+    function get_range() {
+        return $this->range;
+    }
+    function get_over() {
+        return $this->over;
+    }
+    function get_acked() {
+        return $this->acked;
+    }
+    function get_list($conn, $where = "", $order = "", $inf, $sup) {
         $list = array();
         $nanoms = $sup - $inf;
         $query = OssimQuery("SELECT * FROM rrd_anomalies_global $where
         $order LIMIT $nanoms OFFSET $inf");
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = & $conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new RRD_anomaly_global ( $rs->fields["what"],
-                                            $rs->fields["count"],
-                                            $rs->fields["anomaly_time"],
-                                            $rs->fields["range"],
-                                            $rs->fields["over"],
-                                            $rs->fields["acked"]);
+                $list[] = new RRD_anomaly_global($rs->fields["what"], $rs->fields["count"], $rs->fields["anomaly_time"], $rs->fields["range"], $rs->fields["over"], $rs->fields["acked"]);
                 $rs->MoveNext();
             }
         }
         return $list;
     }
-
-    function ack($conn, $what)
-    {
+    function ack($conn, $what) {
         $sql = "UPDATE rrd_anomalies_global SET acked = 1 where what = ?";
-        $params = array($what);
+        $params = array(
+            $what
+        );
         if ($conn->Execute($sql, $params) === false) {
-            print 'error acking: '.$conn->ErrorMsg().'<BR>';
+            print 'error acking: ' . $conn->ErrorMsg() . '<BR>';
             exit;
         }
     }
-
     function delete($conn, $what) {
         $sql = "DELETE FROM rrd_anomalies_global WHERE what = ?";
-        $params = array($what);
+        $params = array(
+            $what
+        );
         if ($conn->Execute($sql, $params) === false) {
-            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
+            print 'error deleting: ' . $conn->ErrorMsg() . '<BR>';
             exit;
         }
     }
-    
     function get_list_count($conn) {
         $sql = "SELECT count(*) FROM rrd_anomalies_global";
-
-        if (!$rs = &$conn->Execute($sql)) {
+        if (!$rs = & $conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             return $rs->fields["count(*)"];
         }
     }
 }
-
-
 ?>

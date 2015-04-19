@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #include <gnet.h>
 
@@ -84,7 +80,7 @@ sim_directive_impl_finalize (GObject  *gobject)
 {
   SimDirective *directive = SIM_DIRECTIVE (gobject);
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_impl_finalize: Id %lu, Name %s, BacklogId %lu, Match %d", 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_impl_finalize: Id %u, Name %s, BacklogId %u, Match %d", 
 	 directive->_priv->id, directive->_priv->name, directive->_priv->backlog_id, directive->_priv->matched);
 
   if (directive->_priv->name)
@@ -696,7 +692,7 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
     
     if (sim_rule_match_by_event (rule, event))
 		{
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: True");
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_backlog_match_by_event; sim_rule_match_by_event: True");
 		  time_t time_last = time (NULL);
 			directive->_priv->rule_curr = node;		//each time that the event matches, the directive goes down one level to 
 																						//the node that matched. next time, the event will be checked against this level
@@ -719,18 +715,20 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
 
 				  sim_directive_set_rule_vars (directive, children);
 				  children = children->next;
+					g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_backlog_match_by_event: There are childrens in %d directive", directive->_priv->id);
 				}
 			}
 		  else
 		  {
 			  directive->_priv->matched = TRUE;
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_backlog_match_by_event: The directive %d has matched", directive->_priv->id);
 		  }
 
 		  return TRUE;
 		}
 		else
 		{
-			//g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: False");
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_backlog_match_by_event: sim_rule_match_by_event: False");
 		}
 
 	  node = node->next;
@@ -1157,7 +1155,9 @@ sim_directive_is_time_out (SimDirective     *directive)
 {
   g_return_val_if_fail (directive, FALSE);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
-  g_return_val_if_fail (!directive->_priv->matched, FALSE);
+
+	if (directive->_priv->matched) // If the directive has matched, then it should be removed.
+		return TRUE;
 
   if ((!directive->_priv->time_out) || (!directive->_priv->time_last))	//if directive hasn't got any time, this
     return FALSE;																												//is the 1st time it enteres here, so no timeout.
@@ -1290,7 +1290,7 @@ sim_directive_backlog_get_update_clause (SimDirective *directive)
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
 
   query = g_strdup_printf ("UPDATE backlog SET matched = %d"
-			   " WHERE id = %lu",
+			   " WHERE id = %u",
 			   directive->_priv->matched,
 			   directive->_priv->backlog_id);
 
@@ -1311,7 +1311,7 @@ sim_directive_backlog_get_delete_clause (SimDirective *directive)
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
 
-  query = g_strdup_printf ("DELETE FROM backlog WHERE id = %lu",
+  query = g_strdup_printf ("DELETE FROM backlog WHERE id = %u",
 			   directive->_priv->backlog_id);
 
   return query;
@@ -1336,7 +1336,7 @@ sim_directive_backlog_event_get_insert_clause (SimDirective *directive,
   query = g_strdup_printf ("INSERT INTO backlog_event"
 			   " (backlog_id, event_id, time_out,"
 			   " occurrence, rule_level, matched)"
-			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
+			   " VALUES (%u, %u, %d, %d, %d, %d)",
 			   directive->_priv->backlog_id,
 			   event->id,
 			   directive->_priv->time_out,
@@ -1366,7 +1366,7 @@ sim_directive_backlog_event_get_delete_clause (SimDirective *directive,
   query = g_strdup_printf ("DELETE FROM backlog_event WHERE backlog_id ="
 			   " (backlog_id, event_id, time_out,"
 			   " occurrence, rule_level, matched)"
-			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
+			   " VALUES (%u, %u, %d, %d, %d, %d)",
 			   directive->_priv->backlog_id,
 			   event->id,
 			   directive->_priv->time_out,

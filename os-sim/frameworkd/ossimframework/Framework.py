@@ -8,12 +8,15 @@ class Framework:
         self.__classes = [
                 "ControlPanelRRD",
                 "AcidCache",
-                "OptimizeDB",
+#                "OptimizeDB",
                 "Listener",
                 "Scheduler",
                 "SOC",
                 "BusinessProcesses",
+                "EventStats",
                 "Backup",
+                "DoNagios",
+                "AlarmGroup",
             ]
 
 
@@ -77,7 +80,7 @@ class Framework:
 
         # log directory
         if not os.path.isdir(Const.LOG_DIR):
-            os.mkdir(Const.LOG_DIR, 0755)
+            os.makedirs(Const.LOG_DIR, 0755)
 
         # daemonize
         if options.daemon is not None:

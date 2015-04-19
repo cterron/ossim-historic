@@ -37,6 +37,7 @@ class BPMember:
     def update_status(self):
         for m in self.measures:
             severity = m.get_severity()
+	    #print severity
             if severity >= Measure.MIN_SEVERITY and \
                severity <= Measure.MAX_SEVERITY:
 
@@ -131,7 +132,13 @@ class BPMemberHostGroup(BPMember):
     def __init__(self, member):
         BPMember.__init__(self, member)
         self.member_type = 'host_group'
-        self.measures = []
+	measure_list = MeasureList(self.member)
+        self.measures = [
+		measure_list['host_group_availability'],
+		measure_list['host_group_vulnerability'],
+		measure_list['host_group_alarm'],
+		measure_list['host_group_metric'],
+	]
 
 class BPMemberNetGroup(BPMember):
 
@@ -158,11 +165,12 @@ class MeasureList:
                 MeasureDB (
                     measure_type = 'host_alarm',
                     request = """
-                SELECT risk AS host_alarm FROM alarm
-                    WHERE dst_ip = inet_aton('%s') OR
-                          src_ip = inet_aton('%s');
+                SELECT MAX(risk) AS host_alarm FROM alarm
+                    WHERE (dst_ip = inet_aton('%s') OR
+                           src_ip = inet_aton('%s')) 
+                           AND status='open';
                     """ % (self.member, self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_metric': \
                 MeasureDB (
@@ -188,10 +196,12 @@ class MeasureList:
                     measure_type = 'host_incident',
                     request = """
                 SELECT priority AS host_incident FROM incident
-                    WHERE title LIKE '%%%s%%';
+                    WHERE title LIKE '%%%s%%' AND status = 'Open';
                     """ % (self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
+
+            ## TODO: fix search pattern ##
             'host_incident_alarm': \
                 MeasureDB (
                     measure_type = 'host_incident_alarm',
@@ -199,10 +209,11 @@ class MeasureList:
                 SELECT incident.priority AS host_incident_alarm, incident.id 
                     FROM incident, incident_alarm
                     WHERE incident.id = incident_alarm.incident_id AND
-                        (incident_alarm.src_ips LIKE "%%%s%%" OR 
-                         incident_alarm.dst_ips LIKE "%%%s%%");
+                        (incident_alarm.src_ips LIKE "%%%s" OR 
+                         incident_alarm.dst_ips LIKE "%%%s") AND
+                        incident.status = 'Open';
                     """ % (self.member, self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_incident_event': \
                 MeasureDB (
@@ -211,10 +222,11 @@ class MeasureList:
                 SELECT incident.priority AS host_incident_event, incident.id 
                     FROM incident, incident_event
                     WHERE incident.id = incident_event.incident_id AND
-                        (incident_event.src_ips LIKE "%%%s%%" OR 
-                         incident_event.dst_ips LIKE "%%%s%%");
+                        (incident_event.src_ips LIKE "%%%s" OR 
+                         incident_event.dst_ips LIKE "%%%s") AND
+                        incident.status = 'Open';
                     """ % (self.member, self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_incident_metric': \
                 MeasureDB (
@@ -223,9 +235,10 @@ class MeasureList:
                 SELECT incident.priority AS host_incident_metric, incident.id
                     FROM incident, incident_metric
                     WHERE incident.id = incident_metric.incident_id AND
-                        incident_metric.target = "%s";
+                        incident_metric.target = "%s" AND
+                        incident.status = 'Open';
                     """ % (self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_incident_anomaly': \
                 MeasureDB (
@@ -234,9 +247,10 @@ class MeasureList:
                 SELECT incident.priority AS host_incident_anomaly, incident.id
                     FROM incident, incident_anomaly
                     WHERE incident.id = incident_anomaly.incident_id AND
-                        incident_anomaly.ip = "%s";
+                        incident_anomaly.ip = "%s" AND
+                        incident.status = 'Open';
                     """ % (self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_incident_vulns': \
                 MeasureDB (
@@ -245,22 +259,21 @@ class MeasureList:
                 SELECT incident.priority AS host_incident_vulns, incident.id 
                     FROM incident, incident_vulns
                     WHERE incident.id = incident_vulns.incident_id AND 
-                        incident_vulns.ip = "%s";
+                        incident_vulns.ip = "%s" AND
+                        incident.status = 'Open';
                     """ % (self.member),
-                    severity_max = 10
+                    severity_max = 7
                 ),
             'host_availability': \
                 MeasureDB (
                     measure_type = 'host_availability',
+                    # TODO: Don't hardcode DB ino, query right DB
                     # nagios plugin_id: 1525
                     # nagios sids for host availability: 1-6
                     request = """
-                SELECT userdata1 AS host_availability 
-                    FROM event_tmp 
-                    WHERE plugin_id='1525' AND src_ip=inet_aton("%s")
-                    ORDER BY timestamp LIMIT 1;
+                    select userdata1 as host_availability FROM snort.event, snort.ossim_event, snort.extra_data, snort.iphdr WHERE snort.event.sid = snort.ossim_event.sid and snort.event.cid = snort.ossim_event.cid and snort.event.sid = snort.extra_data.sid and snort.event.cid = snort.extra_data.cid and snort.event.sid = snort.iphdr.sid and snort.event.cid = snort.iphdr.cid  and snort.iphdr.ip_src = inet_aton("%s") and snort.ossim_event.plugin_id = 1525 order by snort.event.timestamp desc limit 1;
                     """ % (self.member),
-                    severity_max = 100,
+                    severity_max = 70,
                     translation = {
                         'host_availability: DOWN': 100,
                         'host_availability: UP': 0,
@@ -310,6 +323,48 @@ class MeasureList:
                     """,
                     severity_max = 10
                 ),
+	    ###Host_Group measures - JBlasco###
+	    'host_group_availability': \
+	       MeasureDB (
+	          measure_type = 'host_group_availability',
+		  request = """
+		  	select severity as host_group_availability from ossim.host_group_reference as refer, 
+			ossim.bp_member_status as stat where host_group_name = '%s' and refer.host_ip = stat.member and 			     stat.measure_type = 'host_availability' order by stat.severity desc limit 1;
+		  """ % (self.member),
+		  severity_max = 10
+	       ),
+	     'host_group_vulnerability': \
+	       MeasureDB (
+		       measure_type = 'host_group_vulnerability',
+		       request = """select severity as host_group_vulnerability from ossim.host_group_reference as refer, 
+		       			ossim.bp_member_status as stat where host_group_name = '%s' and 
+					refer.host_ip = stat.member and                                                                				     stat.measure_type = 'host_vulnerability' order by stat.severity desc limit 1;
+		       """ % (self.member),
+		       severity_max = 10
+		),
+	     'host_group_alarm': \
+	       MeasureDB (
+	       		measure_type = 'host_group_alarm',
+			request = """select severity as host_group_alarm from ossim.host_group_reference as refer,
+			             ossim.bp_member_status as stat where host_group_name = '%s' and			                                          refer.host_ip = stat.member and                                                                                              stat.measure_type = 'host_alarm' order by stat.severity desc limit 1;
+			""" % (self.member),
+			severity_max = 10
+		),
+	     'host_group_metric': \
+	       MeasureDB (
+	       		measure_type = 'host_group_metric',
+			request = """select severity as host_group_metric from ossim.host_group_reference as refer,
+			             ossim.bp_member_status as stat where host_group_name = '%s' and                                                              refer.host_ip = stat.member and                                                                                              stat.measure_type = 'host_metric' order by stat.severity desc limit 1					       """ % (self.member),
+		  	severity_max = 10
+		),
+	     'host_group_incident': \
+	       MeasureDB (
+	       		measure_type = 'host_group_incident',
+			request = """select severity as host_group_incident from ossim.host_group_reference as refer,
+			             ossim.bp_member_status as stat where host_group_name = '%s' and                                                              refer.host_ip = stat.member and                                                                                              stat.measure_type = 'host_incident' order by stat.severity desc limit 1                                         """ % (self.member),
+                        severity_max = 10
+               ),
+
         }
 
     def __getitem__(self, item):
@@ -339,6 +394,7 @@ class Measure:
 
         def _get_severity(measure):
             measure.measure_value = measure.get_measure()
+	    #print measure.measure_value
             if measure.measure_value is not None:
                 severity = measure.measure_value * Measure.MAX_SEVERITY \
                     / measure.severity_max
@@ -370,6 +426,7 @@ class MeasureDB(Measure):
 
     def get_measure(self):
         result = _DB.exec_query(self.request)
+	#print self.request
         if result != []:
             #
             # IMPORTANT: the result is indexed by measure_type,
@@ -383,7 +440,8 @@ class MeasureDB(Measure):
                 if result[0][self.measure_type] is not None:
                     s = self.translation.get(result[0][self.measure_type],
                                              result[0][self.measure_type])
-                    if type(s) is int: # severity must be integer
+                    if type(s) is int or \
+                       type(s) is long:     # severity must be integer
                         return s
         return None
 
@@ -436,6 +494,17 @@ class BusinessProcesses(threading.Thread):
                     member = BPMemberHost(m['member'])
                 elif m['member_type'] == 'net':
                     member = BPMemberNet(m['member'])
+		elif m['member_type'] == 'host_group':
+		    query = """SELECT host_ip FROM host_group_reference where host_group_name = '%s';""" % (m['member'])
+		    #host_group_reference
+		    result = _DB.exec_query(query)
+		    for row in result:
+		    	member = BPMemberHost(row['host_ip'])
+			if member:
+				member.update_status()
+		    #group_measures = ["host_alarm", "host_metric", "host_vulnerability", "host_incident", "host_incident_alarm", "host_incident_event", "host_incident_metric", "host_incident_anomaly", "host_incident_vulns", "host_availability"]
+		    member = BPMemberHostGroup(m['member'])
+		    		
 
                 if member:
                     member.update_status()

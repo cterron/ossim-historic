@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossiu.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 
 #include "os-sim.h"
@@ -160,7 +156,30 @@ sim_organizer_new (SimConfig	*config)
   return organizer;
 }
 
+/*
+ * Send the monitor rules to the agent
+ */
+static gpointer 
+sim_organizer_thread_monitor_rule (gpointer data)
+{
+	SimRule *rule;
 
+  while (TRUE) 
+  {
+    rule =  (SimRule *) sim_container_pop_monitor_rule (ossim.container);//get and remove the last monitor rule in queue
+
+    if (!rule)
+		  continue;
+
+    sim_server_push_session_plugin_command (ossim.server,
+                                            SIM_SESSION_TYPE_SENSOR,
+                                            sim_rule_get_plugin_id (rule),
+                                            rule);
+		
+
+	}
+
+}
 
 /*
  *
@@ -190,9 +209,20 @@ SimRule *arule;
   SimCommand *cmd = NULL;
   gchar			*str;
 	SimConfig	*config;
+	GThread		*thread;
+	GThread	*ar_thread;
 
   g_return_if_fail (organizer != NULL);
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
+
+  // New thread for the Monitor requests. Rules will be inserted into a queue, and then extracted in this thread
+  thread = g_thread_create (sim_organizer_thread_monitor_rule, NULL, FALSE, NULL);
+  g_return_if_fail (thread);
+  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
+	ar_thread= g_thread_create_full(sim_connect_send_alarm, organizer->_priv->config, 0, FALSE, TRUE, G_THREAD_PRIORITY_HIGH, NULL);
+	g_return_if_fail (ar_thread);
+	g_thread_set_priority (ar_thread, G_THREAD_PRIORITY_URGENT);
+
 
   while (TRUE) 
   {
@@ -277,8 +307,7 @@ SimRule *arule;
 																											//stored here in ossim.host_plugin_sid.
 			sim_organizer_rrd (organizer, event);
 
-			//FIXME: Why is needed the check for event->priority!=0? just to speed up the server? 
-			if ((role->correlate) && (event->priority != 0))
+			if (role->correlate)
 			{
 				insert_event_alarm (event);													//insert alarm in ossim db & assign event->id 
 
@@ -303,20 +332,22 @@ SimRule *arule;
     g_free (str);
 */
 		//time to resend the event/alarm  to master server/s
-		if (role->resend_alarm || role->resend_event)
-		{
-			sim_organizer_resend (event, role);
-		}
+		//FIXME: This code is unstable and unmaintained, uncomment this at your own risk
+		//if (role->resend_alarm || role->resend_event)
+		//{
+		//	sim_organizer_resend (event, role);
+		//}
 		
 		//needed for action/respose. 
 		if (event->alarm) 
 		{
-			cmd = sim_command_new ();
-			cmd->type = SIM_COMMAND_TYPE_EVENT;
-			cmd->data.event.event = event;
-//			sim_server_push_session_command (ossim.server, SIM_SESSION_TYPE_SERVER_UP, cmd);
-			g_object_unref (cmd);
-	    sim_connect_send_alarm (organizer->_priv->config,event);
+			//Go to ar_events queue
+			g_object_ref(event);
+			sim_container_push_ar_event (ossim.container, event);
+
+			// Now this is not needed. Alarms are sent to the framework through the ar_events queue in another trhead (for action/responses), 
+			// so we dont have to wait to continue the correlation proccess
+	    //sim_connect_send_alarm (organizer->_priv->config,event);
     }
 
 		//uncomment this if you want that each time a mac or os change event arrives, an alarm is sent to the framework
@@ -477,7 +508,7 @@ insert_event_alarm (SimEvent	*event)
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: AA");
 		  if (event->backlog_id)		//if the event is also part of an alarm 
 	  	{
-	      query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", event->backlog_id);
+	      query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %u", event->backlog_id);
 	      sim_database_execute_no_query (ossim.dbossim, query1);
 
         g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1:%s",query1);
@@ -499,7 +530,7 @@ insert_event_alarm (SimEvent	*event)
 	  	if (!gda_value_is_null (value))
 	    	backlog_id = gda_value_get_bigint (value);
 	 
-		  query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", backlog_id);
+		  query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %u", backlog_id);
 		  sim_database_execute_no_query (ossim.dbossim, query1);
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1 -2: %s",query1);
 	  	g_free (query1);
@@ -522,8 +553,6 @@ insert_event_alarm (SimEvent	*event)
 			
   g_free (query0);
 
-  query0 = g_strdup_printf ("SELECT count(backlog_id) FROM alarm WHERE backlog_id != 0 GROUP BY event_id HAVING COUNT(backlog_id) > 2");
-  g_free (query0);
 }
 
 
@@ -640,7 +669,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: entering");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: entering");
   if (!event->dst_ia) 
 		return;
 
@@ -648,20 +677,20 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 																												   ossim.dbossim,
 																												   event->dst_ia);
 	
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Number of entries: %d", g_list_length (list_host));
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: Number of entries: %d", g_list_length (list_host));
 
   if (!list_host) //if there aren't any plugin_sid associated with the dst_ia...
     return;
 
   while (list_host)
   {
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Checking host : event->dst_ia: %lu", sim_inetaddr_ntohl (event->dst_ia));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: Checking host : event->dst_ia: %u", sim_inetaddr_ntohl (event->dst_ia));
 
     SimPluginSid *plugin_sid = (SimPluginSid *) list_host->data;
 
 		plugin_id = sim_plugin_sid_get_plugin_id (plugin_sid);
 		sid = sim_plugin_sid_get_sid (plugin_sid);
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: BBDD: %d - %d *** Evento: %d - %d", plugin_id, sid, event->plugin_id, event->plugin_sid);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: BBDD: %d - %d *** Evento: %d - %d", plugin_id, sid, event->plugin_id, event->plugin_sid);
 
 		if (plugin_id == sim_container_get_plugin_id_by_name (ossim.container, "nessus")) //match nessus attack
 		{
@@ -672,12 +701,12 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 																										plugin_id,
 																										sid))
 			{
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Match! Nessus vuln found");
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: Match! Nessus vuln found");
 				event->reliability = 10; 
 				event->is_reliability_setted = TRUE;
 				aux_nessus = TRUE;
 			}
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: NESSUS");
+	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: NESSUS");
 		}
 		else
 		if (plugin_id == sim_container_get_plugin_id_by_name (ossim.container, "os")) ////match O.S.
@@ -690,7 +719,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 			aux_os_tested = TRUE; //needed if we want to "stop" the iteration when the OS is found.
 			while (list_OS)
 			{						
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: OS, list_OS= %d", GPOINTER_TO_INT (list_OS->data));
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: OS, list_OS= %d", GPOINTER_TO_INT (list_OS->data));
 				if (GPOINTER_TO_INT (list_OS->data) == sid)  //match O.S.?
 					aux_os = TRUE;
 				list_OS = list_OS->next;
@@ -720,8 +749,8 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 			while (list_ports)
 			{
 				HostService = (SimHostServices *) list_ports->data;
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: SERVICES port/proto= %d/%d", event->dst_port, event->protocol);
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: SERVICES HostService port/proto: %d/%d",HostService->port, HostService->protocol);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: SERVICES port/proto= %d/%d", event->dst_port, event->protocol);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: SERVICES HostService port/proto: %d/%d",HostService->port, HostService->protocol);
 				if (event->dst_port == sid)
 				{
 					if (HostService->protocol != event->protocol) //event->protocol != protocol stored inside host_services table
@@ -756,7 +785,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 						while (list_base_name)
 						{
 							gchar	*cmp_base_name = (gchar *) list_base_name->data;
-							g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: SERVICES OSVDB cmp base name= %s/%s", cmp_base_name, HostService->version);
+							g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: SERVICES OSVDB cmp base name= %s/%s", cmp_base_name, HostService->version);
 							//do the check always in lower case:
 							gchar *lower_hostversion = g_ascii_strdown (HostService->version, strlen (HostService->version));
 							gchar	*lower_cmpbasename = g_ascii_strdown (cmp_base_name, strlen (cmp_base_name));
@@ -770,7 +799,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 								while (list_version_name)
 								{
 									gchar	*cmp_version_name = (gchar *) list_version_name->data;
-									g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: SERVICES OSVDB cmp version name= %s", cmp_version_name);
+									g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: SERVICES OSVDB cmp version name= %s", cmp_version_name);
 									gchar *lower_versionname = g_ascii_strdown (cmp_version_name, strlen (cmp_version_name));
 									if (g_strstr_len (lower_hostversion, strlen (lower_hostversion), lower_versionname))
 									{
@@ -819,12 +848,12 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
 
 		if (aux_nessus || aux_generic) //we know that it's a real attack thanks to nessus or generic cross-correlation.
 		{
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: aux_nessus || aux_generic");
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: aux_nessus || aux_generic");
 			break;
 		}
 		if ((!aux_os) && aux_os_tested)	//if the OS doesn't matches, nothing else matters
 		{
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: aux_OS");
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin: aux_OS");
 			break;
 		}
 
@@ -865,7 +894,7 @@ sim_organizer_reprioritize (SimOrganizer *organizer,
   plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container, event->plugin_id, event->plugin_sid);
   if (!plugin_sid)
   {
-    g_message ("sim_organizer_reprioritize: Error Plugin %d, PluginSid %d", event->plugin_id, event->plugin_sid);
+    g_message ("sim_organizer_reprioritize: No priority/reliability info (Plugin_id %d, Plugin_Sid %d) Log: %s", event->plugin_id, event->plugin_sid, event->log);
     return 0;
   }
 
@@ -913,7 +942,8 @@ sim_organizer_reprioritize (SimOrganizer *organizer,
 			event->is_prioritized = TRUE;
 		}
   }
-
+	
+	return 1;
   //FIXME: When the event is a directive_event (plugin_id 1505), inside the event->data appears (inserted in sim_organizer_correlation)
   //with the "old" priority. Its needed to re-write the data and modify the priority (if the policy modifies it, of course).
 
@@ -1299,7 +1329,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		  /* Children Rules with type MONITOR */
 		  if (!G_NODE_IS_LEAF (rule_node)) //if this is not the last node (i.e., if it has some children...)
 	    {
-#if 0
+
 	      GNode *children = rule_node->children;
 	      while (children)
 				{
@@ -1308,23 +1338,19 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 				  if (rule->type == SIM_RULE_TYPE_MONITOR)
 				  {
 						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: Monitor rule");
-//			    	SimCommand *cmd = sim_command_new_from_rule (rule);
-				    sim_server_push_session_plugin_command (ossim.server, 
-																							      SIM_SESSION_TYPE_SENSOR, 
-																							      sim_rule_get_plugin_id (rule),
-																							      rule);
-//	    		  g_object_unref (cmd);
+						sim_container_push_monitor_rule (ossim.container, rule);
 			    }
 		  
 				  children = children->next;
 				}
-#endif				
+				
 			} 
 			else	//if the rule is the last node, append the backlog (a directive with all the rules) to remove later.	
 						//Here is where the directive is stored to be destroyed later. As we have reached the last node, it has no sense
 						//that we continue checking events against it.
 			{
 			  removes = g_list_append (removes, backlog);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: Last node; adding it to be removed");
 			}
 		}
 		else
@@ -1357,9 +1383,13 @@ sim_organizer_correlation (SimOrganizer  *organizer,
   {
     SimDirective *backlog = (SimDirective *) list->data;
     sim_container_remove_backlog_ul (ossim.container, backlog);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: Backlog id %d removed", sim_directive_get_backlog_id (backlog));
     
     g_object_unref (backlog);
     list = list->next;
+
+	  GList *list_aux = sim_container_get_backlogs_ul (ossim.container); 
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: After removing backlogs, n: %d", g_list_length (list_aux));
   }
   g_list_free (removes);
   g_mutex_unlock (ossim.mutex_backlogs);
@@ -1391,10 +1421,9 @@ sim_organizer_correlation (SimOrganizer  *organizer,
     if (found)
 		{
 		  list = list->next;
-	  	break;
+	  	continue;
 		}
 
-    found = FALSE;
     tmp = stickys;	//first time server runs this is null.
     while (tmp) 
 		{
@@ -1410,10 +1439,10 @@ sim_organizer_correlation (SimOrganizer  *organizer,
     if (found)
 		{
 		  list = list->next;
-	  	break;
+	  	continue;
 		}
 		
-		//g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: MIDDLE backlogs %d", g_list_length (sim_container_get_backlogs_ul (ossim.container)));
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: MIDDLE backlogs %d", g_list_length (sim_container_get_backlogs_ul (ossim.container)));
 
 		//The directive hasn't match yet, so we try to test if it match with the event itself. (for example, the 1st time)
     if (sim_directive_match_by_event (directive, event)) 
@@ -1466,17 +1495,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
 				  if (rule->type == SIM_RULE_TYPE_MONITOR)
 			    {
-//			      SimCommand *cmd = sim_command_new_from_rule (rule);
-#if 0
-		  			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "MONITOR rule");
-						sim_server_debug_print_sessions (ossim.server);
-								
-			      sim_server_push_session_plugin_command (ossim.server,								//non-blocking call	
-																							      SIM_SESSION_TYPE_SENSOR, 
-																							      sim_rule_get_plugin_id (rule),
-																							      rule);
-//			      g_object_unref (cmd); //done inside sim_server_push_session_plugin_command().
-#endif			      
+						sim_container_push_monitor_rule (ossim.container, rule);
 			    }
 
 			  	children = children->next;
@@ -1538,7 +1557,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		}
 		else
 		{
-		//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_match_by_event FALSE. event->id: %d, directive: %d",event->id, sim_directive_get_id(directive));
+		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_match_by_event FALSE. event->id: %d, directive: %d",event->id, sim_directive_get_id(directive));
 		}
     event->matched = FALSE;
     event->match = FALSE;
@@ -1737,6 +1756,229 @@ sim_organizer_snort_event_sidcid_insert (SimDatabase  *db_snort,
 }
 
 /*
+ * update acid_event cache, making the terrible cache joins useless
+ */
+void 
+sim_organizer_snort_event_update_acid_event (SimDatabase  *db_snort,
+																					SimEvent		*event,
+																					gint					sid,
+																					gulong				cid,
+																					gint					sig_id) 
+{
+	g_return_if_fail (db_snort);
+	g_return_if_fail (SIM_IS_DATABASE (db_snort));
+			 
+	gchar timestamp[TIMEBUF_SIZE];
+	gchar *query;
+  guint c,a;
+  c=rint(event->risk_c);
+  a=rint(event->risk_a);
+
+
+
+/*
+   			    sid                 INT UNSIGNED NOT NULL,
+                            cid                 INT UNSIGNED NOT NULL,
+                            signature           INT UNSIGNED NOT NULL,
+                            sig_name            VARCHAR(255),
+                            sig_class_id        INT UNSIGNED,
+                            sig_priority        INT UNSIGNED,
+                            timestamp           DATETIME NOT NULL,
+                            ip_src              INT UNSIGNED,
+                            ip_dst              INT UNSIGNED,
+                            ip_proto            INT,
+                            layer4_sport        INT UNSIGNED,
+                            layer4_dport        INT UNSIGNED,
+*/
+		 
+	strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+
+  query = g_strdup_printf ("INSERT INTO acid_event (sid, cid, signature, sig_name, sig_class_id, sig_priority, timestamp, ip_src, ip_dst, ip_proto, layer4_sport, layer4_dport, ossim_priority, ossim_reliability, ossim_asset_src, ossim_asset_dst, ossim_risk_c, ossim_risk_a) VALUES (%u, %u, %u, '%s', %u, %u, '%s', %u, %u, %d, %u, %u, %u, %u, %u, %u, %d, %d)", 
+sid, 
+cid, 
+sig_id, 
+event->plugin_sid_name,
+0, // FIXME: get the sig_class_id
+0, // FIXME: get sig_priority
+timestamp,
+(event->src_ia) ? sim_inetaddr_ntohl (event->src_ia) : -1,
+(event->dst_ia) ? sim_inetaddr_ntohl (event->dst_ia) : -1,
+event->protocol,
+event->src_port,
+event->dst_port,
+event->priority,
+event->reliability,
+event->asset_src,
+event->asset_dst,
+c,
+a
+);
+
+  //query = g_strdup_printf ("INSERT INTO event (sid, cid, signature, timestamp) VALUES (%u, %u, %u, '%s')", sid, cid, sig_id, timestamp);
+
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  sim_organizer_snort_event_update_acid_event_ac (db_snort, event, sid, cid, sig_id, timestamp);
+
+}
+
+/*
+ * Update/Insert in ac snort tables for Summary Statistics
+ */
+void
+sim_organizer_snort_event_update_acid_event_ac (SimDatabase  *db_snort,
+                                                SimEvent     *event,
+                                                gint         sid,
+                                                gulong       cid,
+                                                gint         sig_id,
+																								gchar        *timestamp)
+{
+  g_return_if_fail (db_snort);
+  g_return_if_fail (SIM_IS_DATABASE (db_snort));
+  gchar *query;
+
+  // AC_SENSOR queries
+  query = g_strdup_printf ("INSERT INTO ac_sensor_sid (sid,day,cid,first_timestamp,last_timestamp) VALUES (%u,DATE('%s'),1,'%s','%s') ON DUPLICATE KEY UPDATE cid=cid+1,last_timestamp='%s'", sid, timestamp, timestamp, timestamp, timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_sensor_signature (sid,day,signature) VALUES (%u,DATE('%s'),%u)", sid, timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_sensor_ipsrc (sid,day,ip_src) VALUES (%u,DATE('%s'),%u)", sid, timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_sensor_ipdst (sid,day,ip_dst) VALUES (%u,DATE('%s'),%u)", sid, timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+
+  // AC_ALERTS queries
+  query = g_strdup_printf ("INSERT INTO ac_alerts_signature (signature,sig_name,sig_class_id,day,sig_cnt,first_timestamp,last_timestamp) VALUES (%u,'%s',%u, DATE('%s'),1,'%s','%s') ON DUPLICATE KEY UPDATE sig_cnt=sig_cnt+1,last_timestamp='%s'", sig_id, event->plugin_sid_name, 0, timestamp, timestamp, timestamp, timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alerts_sid (signature,day,sid) VALUES (%u,DATE('%s'),%u)", sig_id, timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alerts_ipsrc (signature,day,ip_src) VALUES (%u,DATE('%s'),%u)", sig_id, timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alerts_ipdst (signature,day,ip_dst) VALUES (%u,DATE('%s'),%u)", sig_id, timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+
+  // AC_ALERTS_CLASS queries
+  query = g_strdup_printf ("INSERT INTO ac_alertsclas_classid (sig_class_id,day,cid,first_timestamp,last_timestamp) VALUES (%u,DATE('%s'),1,'%s','%s') ON DUPLICATE KEY UPDATE cid=cid+1,last_timestamp='%s'", 0, timestamp, timestamp, timestamp, timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alertsclas_sid (sig_class_id,day,sid) VALUES (%u,DATE('%s'),%u)", 0, timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alertsclas_signature (sig_class_id,day,signature) VALUES (%u,DATE('%s'),%u)", 0, timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alertsclas_ipsrc (sig_class_id,day,ip_src) VALUES (%u,DATE('%s'),%u)", 0, timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_alertsclas_ipdst (sig_class_id,day,ip_dst) VALUES (%u,DATE('%s'),%u)", 0, timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+
+  // AC_SRC_ADDRESS queries
+  query = g_strdup_printf ("INSERT INTO ac_srcaddr_ipsrc (ip_src,day,cid) VALUES (%u,DATE('%s'),1) ON DUPLICATE KEY UPDATE cid=cid+1", sim_inetaddr_ntohl (event->src_ia), timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_srcaddr_sid (ip_src,day,sid) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->src_ia), timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_srcaddr_signature (ip_src,day,signature) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->src_ia), timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_srcaddr_ipdst (ip_src,day,ip_dst) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->src_ia), timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+
+  // AC_DST_ADDRESS queries
+  query = g_strdup_printf ("INSERT INTO ac_dstaddr_ipdst (ip_dst,day,cid) VALUES (%u,DATE('%s'),1) ON DUPLICATE KEY UPDATE cid=cid+1", sim_inetaddr_ntohl (event->dst_ia), timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_dstaddr_sid (ip_dst,day,sid) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->dst_ia), timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_dstaddr_signature (ip_dst,day,signature) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->dst_ia), timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_dstaddr_ipsrc (ip_dst,day,ip_src) VALUES (%u,DATE('%s'),%u)", sim_inetaddr_ntohl (event->dst_ia), timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  // AC_LAYER4_SPORT queries
+  query = g_strdup_printf ("INSERT INTO ac_layer4_sport (layer4_sport,ip_proto,day,cid,first_timestamp,last_timestamp) VALUES (%u,%u,DATE('%s'),1,'%s','%s') ON DUPLICATE KEY UPDATE cid=cid+1,last_timestamp='%s'", event->src_port, event->protocol, timestamp, timestamp, timestamp, timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_sport_sid (layer4_sport,ip_proto,day,sid) VALUE (%u,%u,DATE('%s'),%u)", event->src_port, event->protocol, timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_sport_signature (layer4_sport,ip_proto,day,signature) VALUES (%u,%u,DATE('%s'),%u)", event->src_port, event->protocol, timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_sport_ipsrc (layer4_sport,ip_proto,day,ip_src) VALUES (%u,%u,DATE('%s'),%u)", event->src_port, event->protocol, timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_sport_ipdst (layer4_sport,ip_proto,day,ip_dst) VALUES (%u,%u,DATE('%s'),%u)", event->src_port, event->protocol, timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+
+  // AC_LAYER4_DPORT queries
+  query = g_strdup_printf ("INSERT INTO ac_layer4_dport (layer4_dport,ip_proto,day,cid,first_timestamp,last_timestamp) VALUES (%u,%u,DATE('%s'),1,'%s','%s') ON DUPLICATE KEY UPDATE cid=cid+1,last_timestamp='%s'", event->dst_port, event->protocol, timestamp, timestamp, timestamp, timestamp);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_dport_sid (layer4_dport,ip_proto,day,sid) VALUE (%u,%u,DATE('%s'),%u)", event->dst_port, event->protocol, timestamp, sid);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_dport_signature (layer4_dport,ip_proto,day,signature) VALUES (%u,%u,DATE('%s'),%u)", event->dst_port, event->protocol, timestamp, sig_id);
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_dport_ipsrc (layer4_dport,ip_proto,day,ip_src) VALUES (%u,%u,DATE('%s'),%u)", event->dst_port, event->protocol, timestamp, sim_inetaddr_ntohl (event->src_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+
+  query = g_strdup_printf ("INSERT IGNORE INTO ac_layer4_dport_ipdst (layer4_dport,ip_proto,day,ip_dst) VALUES (%u,%u,DATE('%s'),%u)", event->dst_port, event->protocol, timestamp, sim_inetaddr_ntohl (event->dst_ia));
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+}
+
+
+
+
+/*
  *
  * This calls to sim_organizer_snort_ossim_event_insert, so the events are stored in the snort DB.
  * This inserts into event (to identify it with cid&sid), into other tables like iphdr to store
@@ -1760,7 +2002,7 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
   g_return_if_fail (cid > 0);
 
   query = g_strdup_printf ("INSERT INTO iphdr (sid, cid, ip_src, ip_dst, ip_proto) "
-			   "VALUES (%u, %u, %lu, %lu, %d)",
+			   "VALUES (%u, %u, %u, %u, %d)",
 			   sid, cid,
 			   (event->src_ia) ? sim_inetaddr_ntohl (event->src_ia) : -1,
 			   (event->dst_ia) ? sim_inetaddr_ntohl (event->dst_ia) : -1,
@@ -1956,9 +2198,9 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
   g_string_append_printf (where, " AND event.timestamp = '%s'", timestamp);
 
   if (event->src_ia)
-    g_string_append_printf (where, " AND ip_src = %lu", sim_inetaddr_ntohl (event->src_ia));
+    g_string_append_printf (where, " AND ip_src = %u", sim_inetaddr_ntohl (event->src_ia));
   if (event->dst_ia)
-    g_string_append_printf (where, " AND ip_dst = %lu", sim_inetaddr_ntohl (event->dst_ia));
+    g_string_append_printf (where, " AND ip_dst = %u", sim_inetaddr_ntohl (event->dst_ia));
   
   g_string_append_printf (where, " AND ip_proto = %d", event->protocol);
 
@@ -2100,13 +2342,18 @@ sim_organizer_snort (SimOrganizer	*organizer,
   g_return_if_fail (event->sensor);
   g_return_if_fail (event->interface);
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort Start: event->sid: %d ; event->cid: %lu",event->snort_sid,event->snort_cid);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort Start: event->sid: %d ; event->cid: %u",event->snort_sid,event->snort_cid);
+
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->sensor: %s ; event->interface: %s",event->sensor, event->interface);
- 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->data: -%s-",event->data);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->log:-%s-",event->log);
-	
-	event->data = g_strdup(event->log);
+
+	if (event->data)
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->data: -%s-",event->data);
+	if (event->log)
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->log:-%s-",event->log);
+
+	if (event->log)
+		event->data = g_strdup(event->log);
+
 
 	
 	//Copy all the extra data to the payload before insert it.
@@ -2137,8 +2384,8 @@ sim_organizer_snort (SimOrganizer	*organizer,
 		return;
 	}
 	sim_plugin_sid_debug_print (plugin_sid);
-
-
+  sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort, sim_plugin_sid_get_name (plugin_sid));
+	
 	/* Events SNORT */
   if ((event->plugin_id >= 1001) && (event->plugin_id < 1500))
   {
@@ -2180,10 +2427,15 @@ sim_organizer_snort (SimOrganizer	*organizer,
 		
       cid = sim_organizer_snort_event_get_cid_from_event (ossim.dbsnort,	//get the CID and insert it into ossim_event & extra_data
 						    event, sid);
+      sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort, sim_plugin_sid_get_name (plugin_sid));
+      sim_organizer_snort_event_update_acid_event (ossim.dbsnort, event, sid, cid, sig_id); //insert into acid_event
 
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort: (snort without sid events) sid: %d, max_cid. %d", sid, cid);
-	
+			event->snort_cid = cid;
+			event->snort_sid = sid;	
 		}
+		sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort, sim_plugin_sid_get_name (plugin_sid));
+    sim_organizer_snort_event_update_acid_event (ossim.dbsnort, event, event->snort_sid, event->snort_cid, sig_id); //insert into acid_event
   }
   else /* Other Events */
   {
@@ -2217,6 +2469,8 @@ sim_organizer_snort (SimOrganizer	*organizer,
 			
 			cid++;
       sim_organizer_snort_event_sidcid_insert (ossim.dbsnort, event, sid, cid, sig_id); //insert into snort.event
+// DK 2008/03: commenting out since it's still being tested
+      sim_organizer_snort_event_update_acid_event (ossim.dbsnort, event, sid, cid, sig_id); //insert into acid_event
 			sim_organizer_snort_event_insert (ossim.dbsnort, event, sid, cid, sig_id); //FIXME: remove sig_id from function if not needed
 																																									// insert cid&sid into ossim_event & extra_data 
 
@@ -2260,6 +2514,8 @@ sim_organizer_snort (SimOrganizer	*organizer,
 									strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 								  if ((event->plugin_sid == EVENT_NEW) || (event->plugin_sid == EVENT_CHANGE))
 									{
+                                                        if (event->data_storage)
+                                                                        {
 						        sim_container_db_insert_host_service_ul (ossim.container,
     																						             	ossim.dbossim,
 																															event->src_ia,
@@ -2270,8 +2526,16 @@ sim_organizer_snort (SimOrganizer	*organizer,
 																															event->interface,
 																															event->data_storage[2], //service
 																															event->data_storage[3]); //application
+
+                                                                                g_strfreev (event->data_storage);
+                                                                        }
+                                                                        else
+                                                                                g_message("sim_organizer_snort: Error: data from Service event incomplete.");
+
 									}
-									g_strfreev (event->data_storage);
+                                                                        break;
+
+
 									break;
 				case SIM_EVENT_HOST_IDS_EVENT: //prelude, HIDS event
 									if (event->data_storage)

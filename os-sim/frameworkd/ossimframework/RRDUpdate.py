@@ -179,7 +179,7 @@ class RRDUpdate(threading.Thread):
             try:
                 rrdpath = self.__conf["rrdpath_incidents"]
                 if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
+                    os.makedirs(rrdpath, 0755)
                 for user in self.__get_incident_users():
                     incidents = self.get_incidents(user["in_charge"])
                     for type in incidents:
@@ -192,7 +192,7 @@ class RRDUpdate(threading.Thread):
             try:
                 rrdpath = self.__conf["rrdpath_host"]
                 if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
+                    os.makedirs(rrdpath, 0755)
                 for host in self.__get_hosts():
                     filename = os.path.join(rrdpath, host["host_ip"] + ".rrd")
                     self.update(filename, host["compromise"], host["attack"])
@@ -204,7 +204,7 @@ class RRDUpdate(threading.Thread):
             try:
                 rrdpath = self.__conf["rrdpath_net"]
                 if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
+                    os.makedirs(rrdpath, 0755)
                 for net in self.__get_nets():
                     filename = os.path.join(rrdpath, net["net_name"] + ".rrd")
                     self.update(filename, net["compromise"], net["attack"])
@@ -215,7 +215,7 @@ class RRDUpdate(threading.Thread):
             try:
                 rrdpath = self.__conf["rrdpath_net"]
                 if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
+                    os.makedirs(rrdpath, 0755)
                 for group in self.__get_groups():
                     filename = os.path.join(rrdpath, "group_" + group["group_name"] + ".rrd")
                     self.update(filename, group["compromise"], group["attack"])
@@ -228,10 +228,10 @@ class RRDUpdate(threading.Thread):
             try:
                 rrdpath = self.__conf["rrdpath_global"]
                 if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
+                    os.makedirs(rrdpath, 0755)
                 rrdpath_level = self.__conf["rrdpath_level"]
                 if not os.path.isdir(rrdpath_level):
-                    os.mkdir(rrdpath_level, 0755)
+                    os.makedirs(rrdpath_level, 0755)
                 for user in self.__get_users():
 
                     # ** FIXME **

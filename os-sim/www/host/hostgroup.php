@@ -1,149 +1,274 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicyHosts");
+// load column layout
+require_once ('../conf/layout.php');
+$category = "policy";
+$name_layout = "host_group_layout";
+$layout = load_layout($name_layout, $category);
 ?>
-
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=7" />
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+  <link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
+  <script type="text/javascript" src="../js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.flexigrid.js"></script>
+  <script type="text/javascript" src="../js/urlencode.js"></script>
 </head>
 <body>
 
-  <h1> <?php echo gettext("Host groups"); ?> </h1>
 
-<?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Host_group.inc';
-    require_once 'classes/Host_group_scan.inc';
-    require_once 'classes/Plugin.inc';
-    require_once 'classes/Security.inc';
+	<?php
+include ("../hmenu.php"); ?>
+	<div  id="headerh1" style="width:100%;height:1px">&nbsp;</div>
 
-    $nessus_action = GET('nessus');    
-    $host_group_name = GET('host_group_name');
-    $order = GET('order');
-
-    ossim_valid($nessus_action, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Nessus action"));
-    ossim_valid($host_group_name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Host group name"));
-    ossim_valid($order, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Order"));
-
-    if (ossim_error()) {
-        die(ossim_error());
-    }
-    if ((!empty($nessus_action)) AND (!empty($host_group_name)))
-    {
-        $db = new ossim_db();
-        $conn = $db->connect();
-        if ($nessus_action == "enable") {
-            Host_group::enable_nessus($conn, $host_group_name);
-        } elseif ($nessus_action = "disable") {
-            Host_group::disable_nessus($conn, $host_group_name);
-        }
-        $db->close($conn);
-    }
-
-
-    if (empty($order)) $order = "name";
+	<table class="noborder">
+	<tr><td valign="top">
+		<table id="flextable" style="display:none"></table>
+	</td><tr>
+	<tr><td valign="top" class="noborder" style="padding-top:10px">
+		<IFRAME src="" frameborder="0" name="addcontent" id="addcontent" width="500"></IFRAME>
+	</td></tr>
+	</table>
+	<style>
+		table, th, tr, td {
+			background:transparent;
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border:none;
+			padding:0px; margin:0px;
+		}
+		input, select {
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border: 1px solid #8F8FC6;
+			font-size:12px; font-family:arial; vertical-align:middle;
+			padding:0px; margin:0px;
+		}
+	</style>
+	<script>
+	function get_width(id) {
+		if (typeof(document.getElementById(id).offsetWidth)!='undefined') 
+			return document.getElementById(id).offsetWidth-20;
+		else
+			return 700;
+	}
+	function action(com,grid) {
+		var items = $('.trSelected', grid);
+		if (com=='Delete selected') {
+			//Delete host by ajax
+			if (typeof(items[0]) != 'undefined') {
+				$("#flextable").changeStatus('Deleting host group...',false);
+				$.ajax({
+						type: "GET",
+						url: "deletehostgroup.php?confirm=yes&name="+urlencode(items[0].id.substr(3)),
+						data: "",
+						success: function(msg) {
+							$("#flextable").flexReload();
+						}
+				});
+			}
+			else alert('You must select a host group');
+		}
+		else if (com=='Modify') {
+			if (typeof(items[0]) != 'undefined') document.location.href = 'newhostgroupform.php?name='+urlencode(items[0].id.substr(3))
+			else alert('You must select a host group');
+		}
+		else if (com=='Insert new host group') {
+			document.location.href = 'newhostgroupform.php'
+		}
+		if (com=='Enable/Disable <b>Nessus</b>') {
+			// Enable/Disable Nessus via ajax
+			if (typeof(items[0]) != 'undefined') {
+				$("#flextable").changeStatus('Toggle Nessus...',false);
+				$.ajax({
+						type: "GET",
+						url: "gethostgroup.php?nessus_action=toggle&host_group_name="+urlencode(items[0].id.substr(3)),
+						data: "",
+						success: function(msg) {
+							$("#flextable").flexReload();
+						}
+				});
+			}
+			else alert('You must select a host group');
+		}
+		if (com=='Enable/Disable <b>Nagios</b>') {
+			// Enable/Disable Nagios via ajax
+			if (typeof(items[0]) != 'undefined') {
+				$("#flextable").changeStatus('Toggle Nagios...',false);
+				$.ajax({
+						type: "GET",
+						url: "gethostgroup.php?nagios_action=toggle&host_group_name="+urlencode(items[0].id.substr(3)),
+						data: "",
+						success: function(msg) {
+							$("#flextable").flexReload();
+						}
+				});
+			}
+			else alert('You must select a host group');
+		}
+	}
+	function save_layout(clayout) {
+		$("#flextable").changeStatus('Saving column layout...',false);
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name:"<?php echo $name_layout
+?>", category:"<?php echo $category
+?>", layout:serialize(clayout) },
+				success: function(msg) {
+					$("#flextable").changeStatus(msg,true);
+				}
+		});
+	}
+	$("#flextable").flexigrid({
+		url: 'gethostgroup.php',
+		dataType: 'xml',
+		colModel : [
+		<?php
+$default = array(
+    "name" => array(
+        'Host Group',
+        100,
+        'true',
+        'left',
+        false
+    ) ,
+    "hosts" => array(
+        'Hosts',
+        150,
+        'false',
+        'left',
+        false
+    ) ,
+    "threshold_c" => array(
+        'Thr_C',
+        40,
+        'true',
+        'center',
+        false
+    ) ,
+    "threshold_a" => array(
+        'Thr_A',
+        40,
+        'true',
+        'center',
+        false
+    ) ,
+    "nessus" => array(
+        'Nessus',
+        40,
+        'false',
+        'center',
+        false
+    ) ,
+    "nagios" => array(
+        'Nagios',
+        40,
+        'false',
+        'center',
+        false
+    ) ,
+    "sensors" => array(
+        'Sensors',
+        100,
+        'false',
+        'center',
+        false
+    ) ,
+    "desc" => array(
+        'Description',
+        200,
+        'false',
+        'left',
+        false
+    ) ,
+    "repository" => array(
+        'Knowledge DB',
+        70,
+        'false',
+        'center',
+        false
+    )
+);
+list($colModel, $sortname, $sortorder, $height) = print_layout($layout, $default, "name", "asc", 300);
+echo "$colModel\n";
 ?>
-
-  <table align="center">
-    <tr>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("name", $order);
-          ?>"> <?php echo gettext("Host"); ?> </a></th>
-      <th> <?php echo gettext("Hosts"); ?> </th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("threshold_c", $order);
-          ?>"> <?php echo gettext("Threshold_C"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("threshold_a", $order);
-          ?>"> <?php echo gettext("Threshold_A"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("rrd_profile", $order);
-          ?>"> <?php echo gettext("RRD Profile"); ?> </a></th>
-      <th> <?php echo gettext("Nessus Scan"); ?> </th>
-      <th> <?php echo gettext("Sensors"); ?> </th>
-      <th> <?php echo gettext("Description"); ?> </th>
-      <th> <?php echo gettext("Action"); ?> </th>
-    </tr>
-
-<?php
-
-    $db = new ossim_db();
-    $conn = $db->connect();
-    if ($host_group_list = Host_group::get_list($conn, "ORDER BY $order")) {
-	foreach($host_group_list as $host_group) {
-            $name = $host_group->get_name();
-
-?>
-
-    <tr>
-      <td><?php echo $host_group->get_name(); ?></td>
-      <td align="left">
-      <?php
-            if ($host_list = $host_group->get_hosts ($conn)) {
-                foreach($host_list as $host) {
-              	      echo $host->get_host_name($conn) . '<br/>';
-		  }
-            } else {
-                echo "&nbsp;";	
-            }
-?>
-      </td>
-
-      <td><?php echo $host_group->get_threshold_c(); ?></td>
-      <td><?php echo $host_group->get_threshold_a(); ?></td>
-      <td>
-        <?php
-            if (!($rrd_profile = $host_group->get_rrd_profile()))
-                echo "None";
-            else
-                echo $rrd_profile;
-        ?>
-      </td>
-      <td>
-      <?php
-        if($scan_list = Host_group_scan::get_list($conn,
-          "WHERE host_group_name = '$name' AND plugin_id = 3001"))
-        {
-          $name = stripslashes($name);
-          echo "<a href=\"". $_SERVER["PHP_SELF"] .
-              "?nessus=disable&host_group_name=$name\">ENABLED</a>";
-        } else {
-        $name = stripslashes($name);
-        echo "<a href=\"". $_SERVER["PHP_SELF"] .
-            "?nessus=enable&host_group_name=$name\">DISABLED</a>";
-        }
-      ?>
-      </td>
-
-      <td><?php
-            if ($sensor_list = $host_group->get_sensors ($conn)) {
-                foreach($sensor_list as $sensor) {
-                    echo $sensor->get_sensor_name() . '<br/>';
-                }
-            }
-?>    </td>
-      <td><?php echo $host_group->get_descr(); ?>&nbsp;</td>
-      <td><a href="modifyhostgroupform.php?name=<?php echo $name ?>"> <?php echo gettext("Modify"); ?> </a>
-          <a href="deletehostgroup.php?name=<?php echo $name ?>"> <?php echo gettext("Delete"); ?> </a></td>
-    </tr>
-
-<?php
-
-        } /* host_list */
-
-    } /* foreach */
-
-    $db->close($conn);
-?>
-    <tr>
-      <td colspan="11"><a href="newhostgroupform.php"> <?php echo gettext("Insert new host group"); ?> </a></td>
-    </tr>
-  </table>
+			],
+		buttons : [
+			{name: 'Insert new host group', bclass: 'add', onpress : action},
+			{separator: true},
+			{name: 'Delete selected', bclass: 'delete', onpress : action},
+			{separator: true},
+			{name: 'Modify', bclass: 'modify', onpress : action},
+			{separator: true},
+			{name: 'Enable/Disable <b>Nessus</b>', bclass: 'various', onpress : action},
+			{separator: true},
+			{name: 'Enable/Disable <b>Nagios</b>', bclass: 'various', onpress : action},
+			{separator: true}
+			],
+		sortname: "<?php echo $sortname
+?>",
+		sortorder: "<?php echo $sortorder
+?>",
+		usepager: true,
+		title: 'HOST GROUPS',
+		pagestat: 'Displaying {from} to {to} of {total} host groups',
+		nomsg: 'No host groups',
+		useRp: true,
+		rp: 25,
+		showTableToggleBtn: true,
+		singleSelect: true,
+		width: get_width('headerh1'),
+		height: <?php echo $height ?>,
+		onColumnChange: save_layout,
+		onEndResize: save_layout
+	});   
+	
+	</script>
 
 </body>
 </html>
-

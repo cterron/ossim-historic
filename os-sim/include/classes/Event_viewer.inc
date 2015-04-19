@@ -1,18 +1,63 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* - Event_viewer()
+* - get_tags()
+* - init_plugins_conf()
+* - get_list()
+* - _my_sort_by_event_count()
+* - display_by()
+* - _resolve_plugin()
+* - _my_rsort_by_key_lenght()
+* - parse_col_tpl()
+* - draw_event_info()
+* - draw()
+* Classes list:
+* - Event_viewer
+*/
 /*
- * TODO:
- * - Custom search
- * - Event delete/ignore (all, by filter, etc)
- * - Graph stats (maybe in another file/page)
- * - Integratation with the report system?
- */
+* TODO:
+* - Custom search
+* - Event delete/ignore (all, by filter, etc)
+* - Graph stats (maybe in another file/page)
+* - Integratation with the report system?
+*/
 require_once 'classes/Session.inc';
 require_once 'classes/Security.inc';
 require_once 'classes/Plugingroup.inc';
 require_once 'classes/Util.inc';
-
-class Event_viewer
-{    
+class Event_viewer {
     /*
     The plugin_conf array tells the event viewer what info should be shown
     when the user displays the event detail.
@@ -20,91 +65,84 @@ class Event_viewer
     The array format is:
     
     $plugin_conf = array(
-        // the plugin id in the format of single id or id range, ex: 234 or 230-250
-        "ossim plugin id" => array(
-            // the plugin sid in the format of single sid or sid range, ex: 10 or
-            // 1-100
-            "ossim plugin sid" => array(
-                "field to display" => "label for that field",
-                "field2 to display" => "label for that field2",
-            ),
-            // This default entry will be used when the event matches "ossim plugin id
-            // but there aren't "ossim plugin sid" specified.
-            "default" => array(
-                "field to display" => "label for that field"
-            )
-        ),
-        // This default entry will be used when the event plugin has no
-        // a specific notation
-        "default" => array (
-            "field to display" => "label for that field"
-        )
-        
+    // the plugin id in the format of single id or id range, ex: 234 or 230-250
+    "ossim plugin id" => array(
+    // the plugin sid in the format of single sid or sid range, ex: 10 or
+    // 1-100
+    "ossim plugin sid" => array(
+    "field to display" => "label for that field",
+    "field2 to display" => "label for that field2",
+    ),
+    // This default entry will be used when the event matches "ossim plugin id
+    // but there aren't "ossim plugin sid" specified.
+    "default" => array(
+    "field to display" => "label for that field"
+    )
+    ),
+    // This default entry will be used when the event plugin has no
+    // a specific notation
+    "default" => array (
+    "field to display" => "label for that field"
+    )
+    
     )
     
     The available fields are:
-        sid: snort sensor id
-        cid: snort event id
-        date: received event date
-        plugin_id: ossim plugin id
-        plugin_name: ossim plugin name
-        plugin_desc: ossim plugin description
-        plugin_sid: ossim plugin sid
-        sid_name: signature name
-        filename: field from snort.extra_data table
-        username: ''
-        password: ''
-        userdata1: ''
-        userdata2: ''
-        userdata3: ''
-        userdata4: ''
-        userdata5: ''
-        userdata6: ''
-        userdata7: ''
-        userdata8: ''
-        userdata9: ''
-        ip_src: the source ip of the event
-        ip_dst: the destination ip of the event
-        ip_proto: the ip protocol
-        port_src: the source port
-        port_dst: the destination port
-        ip_port_src: the source ip and port in the format ip:port
-        ip_port_dst: the destination ip and port in the format ip:port
-        tcp_sport: if protocol is TCP, the source port
-        tcp_dport: if protocol is TCP, the destination port
-        udp_sport: if protocol is UDP, the source port
-        udp_dport: if protocol is UDP, the destination port
+    sid: snort sensor id
+    cid: snort event id
+    date: received event date
+    plugin_id: ossim plugin id
+    plugin_name: ossim plugin name
+    plugin_desc: ossim plugin description
+    plugin_sid: ossim plugin sid
+    sid_name: signature name
+    filename: field from snort.extra_data table
+    username: ''
+    password: ''
+    userdata1: ''
+    userdata2: ''
+    userdata3: ''
+    userdata4: ''
+    userdata5: ''
+    userdata6: ''
+    userdata7: ''
+    userdata8: ''
+    userdata9: ''
+    ip_src: the source ip of the event
+    ip_dst: the destination ip of the event
+    ip_proto: the ip protocol
+    port_src: the source port
+    port_dst: the destination port
+    ip_port_src: the source ip and port in the format ip:port
+    ip_port_dst: the destination ip and port in the format ip:port
+    tcp_sport: if protocol is TCP, the source port
+    tcp_dport: if protocol is TCP, the destination port
+    udp_sport: if protocol is UDP, the source port
+    udp_dport: if protocol is UDP, the destination port
     */
-
     var $plugin_conf = array();
     var $conn = false;
     var $snort = false;
     var $plugin_db = array();
     var $total_rows = false;
-    
     var $results_per_page = 150;
     var $plugin_group = false;
-        
-    function Event_viewer($page, $table)
-    {
+    function Event_viewer($page, $table) {
         $db = new ossim_db();
         $this->conn = $db->connect();
         $this->snort = $db->snort_connect();
-        
         if (isset($page['results_per_page'])) {
-            $this->results_per_page = $page['results_per_page']; 
+            $this->results_per_page = $page['results_per_page'];
         }
         if (!empty($page['plugin_group'])) {
             $this->plugin_group = $page['plugin_group'];
         }
         $this->table = $table;
     }
-
     /*
-     * @static
-     */
-    function get_tags()
-    {
+    * @static
+    */
+    function get_tags() {
         return array(
             'SID' => 'snort sensor id',
             'CID' => 'snort event id',
@@ -135,54 +173,51 @@ class Event_viewer
             'IP_PORTDST' => 'the destination ip and port in the format ip:port'
         );
     }
-
-    function init_plugins_conf($conf = false)
-    {          
+    function init_plugins_conf($conf = false) {
         if ($conf) {
-            $this->plugin_conf = &$conf;
+            $this->plugin_conf = & $conf;
             return true;
         }
         $this->plugin_conf = array(
             "1518" => array(
                 "10" => array(
-                    'username'  => _("Username"),
-                    'filename'  => _("Printed Document"),
-                ),
+                    'username' => _("Username") ,
+                    'filename' => _("Printed Document") ,
+                ) ,
                 "592" => array(
-                    'username'  => _("Username"),
-                    'userdata1' => _("System Date"),
-                    'userdata2' => _("Process ID's"),
-                ),
+                    'username' => _("Username") ,
+                    'userdata1' => _("System Date") ,
+                    'userdata2' => _("Process ID's") ,
+                ) ,
                 "default" => array(
-                    'username'  => _("Username"),
-                    'userdata1' => _("Userdata 1"),
-                    'userdata2' => _("Userdata 2"),
-                    'userdata3' => _("Userdata 3")            
-                ),
-            ),
+                    'username' => _("Username") ,
+                    'userdata1' => _("Userdata 1") ,
+                    'userdata2' => _("Userdata 2") ,
+                    'userdata3' => _("Userdata 3")
+                ) ,
+            ) ,
             "default" => array(
-                'userdata1' => _("Userdata 1"),
-                'userdata2' => _("Userdata 2"),
-                'userdata3' => _("Userdata 3"),
-                'userdata4' => _("Userdata 4"),
-                'userdata5' => _("Userdata 5"),
-                'userdata6' => _("Userdata 6"),
-                'userdata7' => _("Userdata 7"),
-                'userdata8' => _("Userdata 8"),
-                'userdata9' => _("Userdata 9")            
+                'username' => _("Username") ,
+                'userdata1' => _("Userdata 1") ,
+                'userdata2' => _("Userdata 2") ,
+                'userdata3' => _("Userdata 3") ,
+                'userdata4' => _("Userdata 4") ,
+                'userdata5' => _("Userdata 5") ,
+                'userdata6' => _("Userdata 6") ,
+                'userdata7' => _("Userdata 7") ,
+                'userdata8' => _("Userdata 8") ,
+                'userdata9' => _("Userdata 9")
             )
         );
     }
-    
     /*
-     * $options = array('host', 'date_from', 'date_to', 'results_per_page',
-     *                  'from', 
-     *                  'total_rows'                  // if this param is not
-     * passed, the function will calculate the total rows and save that value in
-     * $total_rows
-     */
-    function get_list($options)
-    {
+    * $options = array('host', 'date_from', 'date_to', 'results_per_page',
+    *                  'from',
+    *                  'total_rows'                  // if this param is not
+    * passed, the function will calculate the total rows and save that value in
+    * $total_rows
+    */
+    function get_list($options) {
         $from_date = !empty($options['date_from']) ? $options['date_from'] : false;
         $to_date = !empty($options['date_to']) ? $options['date_to'] : false;
         $host = !empty($options['host']) ? $options['host'] : false;
@@ -195,26 +230,24 @@ class Event_viewer
         if ($from_date) {
             list($y, $m, $d) = preg_split('#-#', $from_date);
             if (!checkdate($m, $d, $y)) {
-                print _("Invalid date").": $from_date";
+                print _("Invalid date") . ": $from_date";
                 return array();
             }
             $where[] = "(e.timestamp >= '$from_date')";
         }
-        
         if ($to_date) {
             list($y, $m, $d) = preg_split('#-#', $to_date);
             if (!checkdate($m, $d, $y)) {
-                print _("Invalid date").": $to_date";
+                print _("Invalid date") . ": $to_date";
                 return array();
             }
             $where[] = "(e.timestamp <= '$to_date 23:59:59')";
         }
-
         /* restrict by plugin group */
         if ($this->plugin_group) {
             list($group) = Plugingroup::get_list($this->conn, "plugin_group.group_id = {$this->plugin_group}");
             $plugins = array();
-            foreach ($group->get_plugins() as $plugin_id => $data) {
+            foreach($group->get_plugins() as $plugin_id => $data) {
                 if ($data['sids'] == 0) {
                     $plugins[] = "oe.plugin_id = '$plugin_id'";
                 } else {
@@ -222,11 +255,11 @@ class Event_viewer
                     foreach(explode(',', $data['sids']) as $sid) {
                         $sids[] = "oe.plugin_sid = $sid";
                     }
-                    $sids_sql = '('.implode(' OR ', $sids).')';
+                    $sids_sql = '(' . implode(' OR ', $sids) . ')';
                     $plugins[] = "oe.plugin_id = '$plugin_id' AND $sids_sql";
                 }
             }
-            $where[] = '('.implode(' OR ', $plugins).')';
+            $where[] = '(' . implode(' OR ', $plugins) . ')';
         }
         /* number of events per page */
         $limit = "";
@@ -234,7 +267,6 @@ class Event_viewer
             $limit = "LIMIT {$options['results_per_page']} OFFSET {$options['from']}";
         }
         $sql_where = count($where) ? 'AND ' . implode(" AND ", $where) : "";
-        
         /* calculate total rows */
         if (!$this->total_rows) {
             $sql = "
@@ -259,7 +291,6 @@ class Event_viewer
             }
             $this->total_rows = $rs->fields['nrows'];
         }
-    
         $sql = "
         SELECT
             e.sid,
@@ -287,7 +318,7 @@ class Event_viewer
             udp.udp_sport,
             udp.udp_dport
         FROM
-            event e,
+            event e use index (time),
             ossim_event oe,
             extra_data ed,
             iphdr ip
@@ -301,7 +332,7 @@ class Event_viewer
             e.cid = ed.cid AND
             e.cid = ip.cid
             $sql_where
-        ORDER BY e.timestamp DESC
+        order by e.timestamp desc
         $limit
         ";
         //printr($sql); exit;
@@ -321,61 +352,59 @@ class Event_viewer
                 $rs->fields['plugin_desc'] = _("n/a");
                 $rs->fields['sid_name'] = _("plugin sid") . " " . $rs->fields['plugin_sid'];
             }
-
             $src = $rs->fields['ip_src'] != '0.0.0.0' ? $rs->fields['ip_src'] : '';
             $dst = $rs->fields['ip_dst'] != '0.0.0.0' ? $rs->fields['ip_dst'] : '';
             switch ($rs->fields['ip_proto']) {
-            case 6:  //tcp
-                $rs->fields['port_src'] = $rs->fields['tcp_sport'];
-                $rs->fields['port_dst'] = $rs->fields['tcp_dport'];
-                $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'].':'.$rs->fields['tcp_sport'] : '';
-                $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'].':'.$rs->fields['tcp_dport'] : '';
-                break;
-            case 17: //udp
-                $rs->fields['port_src'] = $rs->fields['udp_sport'];
-                $rs->fields['port_dst'] = $rs->fields['udp_dport'];
-                $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'].':'.$rs->fields['udp_sport'] : '';
-                $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'].':'.$rs->fields['udp_dport'] : '';
-                break;
-            default:
-                $rs->fields['port_src'] = '';
-                $rs->fields['port_dst'] = '';
-                $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'] : '';
-                $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'] : '';
+                case 6: //tcp
+                    $rs->fields['port_src'] = $rs->fields['tcp_sport'];
+                    $rs->fields['port_dst'] = $rs->fields['tcp_dport'];
+                    $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'] . ':' . $rs->fields['tcp_sport'] : '';
+                    $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'] . ':' . $rs->fields['tcp_dport'] : '';
+                    break;
+
+                case 17: //udp
+                    $rs->fields['port_src'] = $rs->fields['udp_sport'];
+                    $rs->fields['port_dst'] = $rs->fields['udp_dport'];
+                    $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'] . ':' . $rs->fields['udp_sport'] : '';
+                    $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'] . ':' . $rs->fields['udp_dport'] : '';
+                    break;
+
+                default:
+                    $rs->fields['port_src'] = '';
+                    $rs->fields['port_dst'] = '';
+                    $rs->fields['ip_portsrc'] = $src ? $rs->fields['ip_src'] : '';
+                    $rs->fields['ip_portdst'] = $dst ? $rs->fields['ip_dst'] : '';
             }
             $list[] = $rs->fields;
             $rs->MoveNext();
         }
         return $list;
     }
-    
     /*
-     * Used inside display_by()
-     */
-    function _my_sort_by_event_count($a, $b)
-    {
+    * Used inside display_by()
+    */
+    function _my_sort_by_event_count($a, $b) {
         global $list;
         return (count($list[$a]) < count($list[$b])) ? 1 : 0;
     }
-    
-    function display_by($field, $data)
-    {
+    function display_by($field, $data) {
         global $list;
         $list = array();
-        foreach ($data as $values) {
-            list($day, ) = explode(' ', $values['date']);
+        foreach($data as $values) {
+            list($day,) = explode(' ', $values['date']);
             $values['day'] = $day;
             $list[$values[$field]][] = $values;
         }
         // Sort by number of entries when not ordered by date
         if ($field != 'day') {
-            uksort($list, array('Event_viewer', '_my_sort_by_event_count'));
+            uksort($list, array(
+                'Event_viewer',
+                '_my_sort_by_event_count'
+            ));
         }
         return $list;
     }
-    
-    function _resolve_plugin($plugin_id, $plugin_sid)
-    {
+    function _resolve_plugin($plugin_id, $plugin_sid) {
         if (!isset($this->plugin_db[$plugin_id][$plugin_sid])) {
             $sql = "SELECT
                         sid.plugin_id as id,
@@ -392,7 +421,10 @@ class Event_viewer
                         sid.plugin_id = ? AND
                         sid.sid = ?
                     ";
-            if (!$rs = $this->conn->Execute($sql, array($plugin_id, $plugin_sid))) {
+            if (!$rs = $this->conn->Execute($sql, array(
+                $plugin_id,
+                $plugin_sid
+            ))) {
                 die($this->conn->ErrorMsg());
             }
             if (!$rs->EOF) {
@@ -403,28 +435,24 @@ class Event_viewer
         }
         return $this->plugin_db[$plugin_id][$plugin_sid];
     }
-    
-    function _my_rsort_by_key_lenght($a, $b)
-    {
+    function _my_rsort_by_key_lenght($a, $b) {
         if (strlen($a) == strlen($b)) {
             return 0;
         }
         return (strlen($a) > strlen($b)) ? -1 : 1;
     }
-    
-    function parse_col_tpl($data, $col)
-    {
+    function parse_col_tpl($data, $col) {
         $tpl = $this->table[$col]['contents'];
         $data = array_change_key_case($data, CASE_UPPER);
         // order by reverse key lenght to avoid wrong replacements
         // ie with the string SIDNAME avoid 1518NAME instead of "Attack foo"
-        uksort($data, array('Event_viewer', '_my_rsort_by_key_lenght'));
-        
-        return str_replace(array_keys($data), array_values($data), $tpl);
+        uksort($data, array(
+            'Event_viewer',
+            '_my_rsort_by_key_lenght'
+        ));
+        return str_replace(array_keys($data) , array_values($data) , $tpl);
     }
-    
-    function draw_event_info($info)
-    {
+    function draw_event_info($info) {
         $conf = $this->plugin_conf;
         $html = '<table width="100%"><tr><td style="border-width: 0px; text-align: left">';
         $choice = $conf['default'];
@@ -437,21 +465,21 @@ class Event_viewer
                 list($min, $max) = explode('-', $ids);
             }
             // Found the range in IDs
-            if (($info['plugin_id'] >= $min) && ($info['plugin_id'] <= $max )) {
+            if (($info['plugin_id'] >= $min) && ($info['plugin_id'] <= $max)) {
                 // Use default if any
                 if (isset($sids['default'])) {
                     $choice = $sids['default'];
                     unset($sids['default']);
                 }
                 // Run all the SIDs
-                foreach ($sids as $sid => $sid_conf) {
+                foreach($sids as $sid => $sid_conf) {
                     if (strpos($sid, '-') === false) {
                         $min = $max = $sid;
                     } else {
                         list($min, $max) = explode('-', $sid);
                     }
                     // Found the range in SIDs
-                    if (($info['plugin_sid'] >= $min) && ($info['plugin_sid'] <= $max )) {
+                    if (($info['plugin_sid'] >= $min) && ($info['plugin_sid'] <= $max)) {
                         $choice = $sid_conf;
                         break 2;
                     }
@@ -461,22 +489,20 @@ class Event_viewer
         }
         // Print plugin info if any
         if ($info['plugin_name']) {
-            $html .= "
+            $html.= "
             <b>Plugin:</b> {$info['plugin_name']} ({$info['plugin_id']})<br/>
             <b>Plugin SID:</b> {$info['sid_name']} ({$info['plugin_sid']})<br/>";
         }
         // Print rows with custom format
-        foreach ($choice as $col => $label) {
+        foreach($choice as $col => $label) {
             if ($info[$col]) {
-                $html .= "<b>$label:</b> " . $info[$col] . "<br/>";
+                $html.= "<b>$label:</b> " . $info[$col] . "<br/>";
             }
         }
-        $html .= '</td></tr></table>';
+        $html.= '</td></tr></table>';
         return $html;
     }
-    
-    function draw()
-    {
+    function draw() {
         include 'classes/Event_viewer_draw.inc';
         exit;
     }

@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #include <gnet.h>
 #include <time.h>
@@ -97,6 +93,7 @@ static const struct
 } connect_symbols[] = {
   { "id", SIM_COMMAND_SYMBOL_ID },
   { "type", SIM_COMMAND_SYMBOL_TYPE },
+  { "version", SIM_COMMAND_SYMBOL_AGENT_VERSION },
   { "hostname", SIM_COMMAND_SYMBOL_HOSTNAME },	//this is the name of the server or the agent connected. Just mandatory in server conns.
   { "username", SIM_COMMAND_SYMBOL_USERNAME },
   { "password", SIM_COMMAND_SYMBOL_PASSWORD }
@@ -310,6 +307,8 @@ static const struct
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
   { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID },
   { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "fdate", SIM_COMMAND_SYMBOL_DATE_STRING },
+  { "tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
   { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
   { "interface", SIM_COMMAND_SYMBOL_INTERFACE },
   { "priority", SIM_COMMAND_SYMBOL_PRIORITY },
@@ -415,6 +414,8 @@ static const struct
   guint token;
 } host_os_event_symbols[] = {
   { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "fdate", SIM_COMMAND_SYMBOL_DATE_STRING },
+  { "tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
   { "id", SIM_COMMAND_SYMBOL_ID },	//event it, not the message id.	
   { "host", SIM_COMMAND_SYMBOL_HOST },
   { "os", SIM_COMMAND_SYMBOL_OS },
@@ -431,6 +432,8 @@ static const struct
   guint token;
 } host_mac_event_symbols[] = {
   { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "fdate", SIM_COMMAND_SYMBOL_DATE_STRING },
+  { "tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
   { "id", SIM_COMMAND_SYMBOL_ID },		
   { "host", SIM_COMMAND_SYMBOL_HOST },
   { "mac", SIM_COMMAND_SYMBOL_MAC },
@@ -448,6 +451,8 @@ static const struct
   guint token;
 } host_service_event_symbols[] = {
   { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "fdate", SIM_COMMAND_SYMBOL_DATE_STRING },
+  { "tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
   { "id", SIM_COMMAND_SYMBOL_ID },		
   { "host", SIM_COMMAND_SYMBOL_HOST },
   { "port", SIM_COMMAND_SYMBOL_PORT },
@@ -476,6 +481,8 @@ static const struct
   { "extra_data", SIM_COMMAND_SYMBOL_EXTRA_DATA },
   { "sensor", SIM_COMMAND_SYMBOL_SENSOR},
   { "date", SIM_COMMAND_SYMBOL_DATE },
+  { "fdate", SIM_COMMAND_SYMBOL_DATE_STRING },
+  { "tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID },
   { "plugin_sid", SIM_COMMAND_SYMBOL_PLUGIN_SID },
   { "log", SIM_COMMAND_SYMBOL_LOG },
@@ -541,6 +548,8 @@ static const struct
 } snort_event_data_symbols[]={
 	{"type",SIM_COMMAND_SYMBOL_SNORT_EVENT_DATA_TYPE},
 	{"date",SIM_COMMAND_SYMBOL_SNORT_EVENT_DATE},
+  {"fdate", SIM_COMMAND_SYMBOL_SNORT_EVENT_DATE_STRING },
+  {"tzone", SIM_COMMAND_SYMBOL_DATE_TZONE },
 	{"snort_gid",SIM_COMMAND_SYMBOL_SNORT_EVENT_GID},
 	{"snort_sid",SIM_COMMAND_SYMBOL_SNORT_EVENT_SID},
 	{"snort_rev",SIM_COMMAND_SYMBOL_SNORT_EVENT_REV},
@@ -713,14 +722,15 @@ static gpointer parent_class = NULL;
 static gint sim_server_signals[LAST_SIGNAL] = { 0 };
 
 /*
- * Init de TLS system for all the threads
+ * Init the TLS system for all the threads
  * must be called AFTER g_thread_init()
  * The thread local variable store the pointer to the lexical scanner
  */
  
- void sim_command_init_tls(void){
-                privScanner = g_private_new((GDestroyNotify)g_scanner_destroy);
- }
+void sim_command_init_tls(void)
+{
+	privScanner = g_private_new((GDestroyNotify)g_scanner_destroy);
+}
 
 
 
@@ -775,11 +785,16 @@ sim_command_impl_finalize (GObject  *gobject)
 				  if (cmd->data.session_remove_plugin.name)
 					g_free (cmd->data.session_remove_plugin.name);
 		      break;
+
+    case SIM_COMMAND_TYPE_SNORT_EVENT:
+            g_free (cmd->snort_event.gzipdata); //no break as the snort event has to remove also all the event information.
+            if (cmd->packet)
+              g_object_unref (cmd->packet);			
     case SIM_COMMAND_TYPE_EVENT:
 			    if (cmd->data.event.type)
 						g_free (cmd->data.event.type);
-		      if (cmd->data.event.date)
-						g_free (cmd->data.event.date);
+          g_free (cmd->data.event.date_str);
+
 		      if (cmd->data.event.sensor)
 						g_free (cmd->data.event.sensor);
 		      if (cmd->data.event.interface)
@@ -796,9 +811,9 @@ sim_command_impl_finalize (GObject  *gobject)
 						g_free (cmd->data.event.condition);
 		      if (cmd->data.event.value)
 						g_free (cmd->data.event.value);
-
 		      if (cmd->data.event.data)
 						g_free (cmd->data.event.data);
+					g_free (cmd->data.event.log);
 	
       		if (cmd->data.event.filename)
 						g_free (cmd->data.event.filename);
@@ -822,6 +837,10 @@ sim_command_impl_finalize (GObject  *gobject)
 						g_free (cmd->data.event.userdata7);
       		if (cmd->data.event.userdata8)
 						g_free (cmd->data.event.userdata8);
+      		if (cmd->data.event.userdata9)
+						g_free (cmd->data.event.userdata9);
+          if (cmd->data.event.event)
+	          g_object_unref (cmd->data.event.event);
 	
       break;
 
@@ -867,8 +886,7 @@ sim_command_impl_finalize (GObject  *gobject)
 				  break;
 
     case SIM_COMMAND_TYPE_HOST_OS_EVENT:
-      if (cmd->data.host_os_event.date)
-	g_free (cmd->data.host_os_event.date);
+      g_free (cmd->data.host_os_event.date_str);
       if (cmd->data.host_os_event.host)
 	g_free (cmd->data.host_os_event.host);
       if (cmd->data.host_os_event.os)
@@ -880,8 +898,7 @@ sim_command_impl_finalize (GObject  *gobject)
       break;
 
     case SIM_COMMAND_TYPE_HOST_MAC_EVENT:
-      if (cmd->data.host_mac_event.date)
-	g_free (cmd->data.host_mac_event.date);
+      g_free (cmd->data.host_mac_event.date_str);
       if (cmd->data.host_mac_event.host)
 	g_free (cmd->data.host_mac_event.host);
       if (cmd->data.host_mac_event.mac)
@@ -895,8 +912,7 @@ sim_command_impl_finalize (GObject  *gobject)
       break;
 
     case SIM_COMMAND_TYPE_HOST_SERVICE_EVENT:
-      if (cmd->data.host_service_event.date)
-	g_free (cmd->data.host_service_event.date);
+      g_free (cmd->data.host_service_event.date_str);
       if (cmd->data.host_service_event.host)
 	g_free (cmd->data.host_service_event.host);
       if (cmd->data.host_service_event.service)
@@ -912,8 +928,7 @@ sim_command_impl_finalize (GObject  *gobject)
       break;
 
     case SIM_COMMAND_TYPE_HOST_IDS_EVENT:
-      if (cmd->data.host_ids_event.date)
-	g_free (cmd->data.host_ids_event.date);
+      g_free (cmd->data.host_ids_event.date_str);
       if (cmd->data.host_ids_event.host)
 	g_free (cmd->data.host_ids_event.host);
       if (cmd->data.host_ids_event.hostname)
@@ -1144,13 +1159,13 @@ sim_command_new_from_rule (SimRule  *rule)
 	if (interval > 0)
 	{
 		if (absolute)
-      str = g_string_append (str, "absolute=\"true\"");
+      str = g_string_append (str, "absolute=\"true\" ");
 		else
-      str = g_string_append (str, "absolute=\"false\"");
+      str = g_string_append (str, "absolute=\"false\" ");
 	}
 	else	//if interval is 0, that implies that absolute is true, as we don't have any time to compare with it. We only are able to
 				//know when the "value" as been reached (ie. when somebody has reached 100 network packets), but it can spend as much time as it wants.
-	  str = g_string_append (str, "absolute=\"true\"");
+	  str = g_string_append (str, "absolute=\"true\" ");
 
 
   /* PORT FROM */
@@ -1607,7 +1622,6 @@ sim_command_scan (SimCommand    *command,
 							OK=FALSE;
 	          break;
 			case SIM_COMMAND_SYMBOL_SNORT_EVENT:
-					 aux = g_strdup(scanner->text);
 			     if (!sim_command_snort_event_scan(command,scanner))
 					    OK=FALSE;
 					 return OK; /* all the process is in sim_command_snort_event_scan */
@@ -1642,6 +1656,7 @@ sim_command_connect_scan (SimCommand    *command,
   command->data.connect.username = NULL;
   command->data.connect.password = NULL;
   command->data.connect.hostname = NULL;
+  command->data.connect.version= NULL;
   command->data.connect.type = SIM_SESSION_TYPE_NONE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_CONNECT);
@@ -1720,7 +1735,14 @@ sim_command_connect_scan (SimCommand    *command,
 						{
 							command->data.connect.type = SIM_SESSION_TYPE_NONE;
 						}
-						
+						break;
+
+						case SIM_COMMAND_SYMBOL_AGENT_VERSION:
+							g_scanner_get_next_token (scanner); /* = */
+							g_scanner_get_next_token (scanner); /* value */
+							if (scanner->token != G_TOKEN_STRING)
+								break;
+							command->data.connect.version= g_strdup (scanner->value.v_string);
 						break;
 						
 			default:
@@ -3215,7 +3237,8 @@ sim_command_event_scan (SimCommand    *command,
   command->type = SIM_COMMAND_TYPE_EVENT;
   command->data.event.type = NULL;
   command->data.event.id = 0;
-  command->data.event.date = NULL;
+  command->data.event.date = 0;
+  command->data.event.date_str = NULL; //be carefull, if you insert some event without this parameter, you'll get unix date: 1970/01/01
   command->data.event.sensor = NULL;
   command->data.event.interface = NULL;
 
@@ -3238,8 +3261,8 @@ sim_command_event_scan (SimCommand    *command,
 
   command->data.event.priority = 0;
   command->data.event.reliability = 0;
-  command->data.event.asset_src = 1;
-  command->data.event.asset_dst = 1;
+  command->data.event.asset_src = 2;
+  command->data.event.asset_dst = 2;
   command->data.event.risk_a = 0;
   command->data.event.risk_c = 0;
   command->data.event.alarm = FALSE;
@@ -3341,15 +3364,46 @@ sim_command_event_scan (SimCommand    *command,
 				      command->type = SIM_COMMAND_TYPE_NONE;
 	    			  break;
 				    }
-				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
-		  				command->data.event.date = g_strdup (scanner->value.v_string);
+	          if (sim_string_is_number (scanner->value.v_string, 1))
+		          command->data.event.date = strtol(scanner->value.v_string,(char **)NULL,10);
 						else
 						{
               g_message("Error: event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
               return FALSE;														 
 						}
           	break;
-			
+
+      case SIM_COMMAND_SYMBOL_DATE_STRING:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            command->data.event.date_str = g_strdup (scanner->value.v_string);
+            break;
+
+      case SIM_COMMAND_SYMBOL_DATE_TZONE:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.event.tzone = strtol(scanner->value.v_string,(char **)NULL,10);
+            else
+            {
+              g_message("Error: date zone is not right. event incorrect. Please check the date tzone issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
 			case SIM_COMMAND_SYMBOL_SENSOR:
 					  g_scanner_get_next_token (scanner); /* = */
 	  				g_scanner_get_next_token (scanner); /* value */
@@ -4351,7 +4405,8 @@ sim_command_host_os_event_scan (SimCommand    *command,
   g_return_if_fail (scanner);
 
   command->type = SIM_COMMAND_TYPE_HOST_OS_EVENT;
-  command->data.host_os_event.date = NULL;
+  command->data.host_os_event.date = 0;
+  command->data.host_os_event.date_str = NULL;
   command->data.host_os_event.id = 0;
   command->data.host_os_event.host = NULL;
   command->data.host_os_event.os = NULL;
@@ -4377,14 +4432,46 @@ sim_command_host_os_event_scan (SimCommand    *command,
 					    command->type = SIM_COMMAND_TYPE_NONE;
 	  	  		  break;
 		  		  }
-				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
-		  				command->data.host_os_event.date = g_strdup (scanner->value.v_string);
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.host_os_event.date = strtol(scanner->value.v_string,(char **)NULL,10);
 						else
 						{
               g_message("Error: Host OS event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
               return FALSE;														 
 						}
 		  			break;
+
+      case SIM_COMMAND_SYMBOL_DATE_STRING:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            command->data.host_os_event.date_str = g_strdup (scanner->value.v_string);
+
+            break;
+
+      case SIM_COMMAND_SYMBOL_DATE_TZONE:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.host_os_event.tzone = strtol(scanner->value.v_string,(char **)NULL,10);
+            else
+            {
+              g_message("Error: date zone is not right. event incorrect. Please check the date tzone issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
 
 			case SIM_COMMAND_SYMBOL_ID:
 						g_scanner_get_next_token (scanner); /* = */
@@ -4539,7 +4626,9 @@ sim_command_host_mac_event_scan (SimCommand    *command,
   g_return_if_fail (scanner);
 
   command->type = SIM_COMMAND_TYPE_HOST_MAC_EVENT;
-  command->data.host_mac_event.date = NULL;
+  command->data.host_mac_event.date = 0;
+  command->data.host_mac_event.date_str = NULL;
+  command->data.host_mac_event.tzone = 0;
   command->data.host_mac_event.id = 0;
   command->data.host_mac_event.host = NULL;
   command->data.host_mac_event.mac = NULL;
@@ -4565,15 +4654,48 @@ sim_command_host_mac_event_scan (SimCommand    *command,
 				    {
 	 			    	command->type = SIM_COMMAND_TYPE_NONE;
 	   				  break;
-				    }	
-				    if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
-		  				command->data.host_mac_event.date = g_strdup (scanner->value.v_string);
+				    }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+							command->data.host_mac_event.date = strtol(scanner->value.v_string,(char **)NULL,10);
 						else
 						{
               g_message("Error: Host mac event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
               return FALSE;														 
 						}
 						break;
+
+      case SIM_COMMAND_SYMBOL_DATE_STRING:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            command->data.host_mac_event.date_str = g_strdup (scanner->value.v_string);
+
+            break;
+
+      case SIM_COMMAND_SYMBOL_DATE_TZONE:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.host_mac_event.tzone = strtol(scanner->value.v_string,(char **)NULL,10);
+            else
+            {
+              g_message("Error: date zone is not right. event incorrect. Please check the date tzone issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
 
 			case SIM_COMMAND_SYMBOL_ID:
 						g_scanner_get_next_token (scanner); /* = */
@@ -4745,7 +4867,9 @@ sim_command_host_service_event_scan (SimCommand    *command,
   g_return_if_fail (scanner);
 
   command->type = SIM_COMMAND_TYPE_HOST_SERVICE_EVENT;
-  command->data.host_service_event.date = NULL;
+  command->data.host_service_event.date = 0;
+  command->data.host_service_event.date_str = NULL;
+  command->data.host_service_event.tzone = 0;
   command->data.host_service_event.id = 0;
   command->data.host_service_event.host = NULL;
   command->data.host_service_event.port = 0;
@@ -4774,14 +4898,46 @@ sim_command_host_service_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
-		  				command->data.host_service_event.date = g_strdup (scanner->value.v_string);
+            if (sim_string_is_number (scanner->value.v_string, 1))
+	            command->data.host_service_event.date = strtol(scanner->value.v_string,(char **)NULL,10);
 						else
 						{
               g_message("Error: Host Service event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
               return FALSE;														 
 						}
 						break;
+      case SIM_COMMAND_SYMBOL_DATE_STRING:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            command->data.host_service_event.date_str = g_strdup (scanner->value.v_string);
+
+            break;
+
+      case SIM_COMMAND_SYMBOL_DATE_TZONE:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.host_service_event.tzone = strtol(scanner->value.v_string,(char **)NULL,10);
+            else
+            {
+              g_message("Error: date zone is not right. event incorrect. Please check the date tzone issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
+
 
 			case SIM_COMMAND_SYMBOL_ID:
 						g_scanner_get_next_token (scanner); /* = */
@@ -4989,7 +5145,9 @@ sim_command_host_ids_event_scan (SimCommand    *command,
   g_return_if_fail (scanner);
 
   command->type = SIM_COMMAND_TYPE_HOST_IDS_EVENT;
-  command->data.host_ids_event.date = NULL;
+  command->data.host_ids_event.date = 0;
+  command->data.host_ids_event.date_str = NULL;
+  command->data.host_ids_event.tzone = 0;
   command->data.host_ids_event.id = 0;
   command->data.host_ids_event.host = NULL;
   command->data.host_ids_event.hostname = NULL;
@@ -5032,14 +5190,45 @@ sim_command_host_ids_event_scan (SimCommand    *command,
 							command->type = SIM_COMMAND_TYPE_NONE;
 							break;
 						}
-						if (strptime (scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &tm))
-		  				command->data.host_ids_event.date = g_strdup (scanner->value.v_string);
+            if (sim_string_is_number (scanner->value.v_string, 1))
+							command->data.host_ids_event.date = strtol(scanner->value.v_string,(char **)NULL,10);
 						else
 						{
               g_message("Error: Host IDS event incorrect. Please check the date issued from the agent: %s", scanner->value.v_string);
               return FALSE;														 
 						}
 						break;
+
+      case SIM_COMMAND_SYMBOL_DATE_STRING:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+
+            command->data.host_ids_event.date_str = g_strdup (scanner->value.v_string);
+            break;
+
+      case SIM_COMMAND_SYMBOL_DATE_TZONE:
+            g_scanner_get_next_token (scanner); /* = */
+            g_scanner_get_next_token (scanner); /* value */
+
+            if (scanner->token != G_TOKEN_STRING)
+            {
+              command->type = SIM_COMMAND_TYPE_NONE;
+              break;
+            }
+            if (sim_string_is_number (scanner->value.v_string, 1))
+              command->data.host_ids_event.tzone = strtol(scanner->value.v_string,(char **)NULL,10);
+            else
+            {
+              g_message("Error: date zone is not right. event incorrect. Please check the date tzone issued from the agent: %s", scanner->value.v_string);
+              return FALSE;
+            }
+            break;
 
 			case SIM_COMMAND_SYMBOL_ID:
 						g_scanner_get_next_token (scanner); /* = */
@@ -5962,18 +6151,20 @@ sim_command_get_event (SimCommand     *command)
 
   if (command->data.event.date)
   {
-    if (strptime (command->data.event.date, "%Y-%m-%d %H:%M:%S", &tm))
-		{
-			event->time =  mktime (&tm);
-		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->time= %d", event->time);
-      event->diff_time = (time (NULL) > event->time) ? (time (NULL) - event->time) : 0;					
-		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->diff_time= %d", event->diff_time);
-		}
-		else{
-		  g_object_unref(event);
-			return NULL;
-		}
+      event->time = command->data.event.date;
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->time= %u", event->time);
+      event->diff_time = (time (NULL) > event->time) ? (time (NULL) - event->time) : 0;
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event event->diff_time= %u", event->diff_time);
   }
+  else
+  	return NULL;
+
+  if(command->data.event.date_str)
+    event->time_str=g_strdup(command->data.event.date_str);
+
+  if(command->data.event.tzone)
+    event->tzone = command->data.event.tzone;
+
   if (command->data.event.sensor) 
     event->sensor = g_strdup (command->data.event.sensor);
 	
@@ -5992,6 +6183,9 @@ sim_command_get_event (SimCommand     *command)
 	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event: Interface: %s", command->data.event.interface);
 		
 	}
+  else //FIXME: this is a piece of shit. event->interface must be removed from all the code. In the meantime, this silly "fix" is used.
+	  event->interface = g_strdup_printf ("none");
+				 
 
   if (command->data.event.plugin_id)
     event->plugin_id = command->data.event.plugin_id;
@@ -6011,10 +6205,8 @@ sim_command_get_event (SimCommand     *command)
 		{
 			if (sim_string_is_number (command->data.event.protocol, 0))
 				event->protocol = (SimProtocolType) atoi(command->data.event.protocol);
-			else{
-			  g_object_unref(event);
-				return NULL;
-		  }
+			else//if we receive some strange protocol, its converted into a generic one.
+				event->protocol = SIM_PROTOCOL_TYPE_OTHER;
 		}
 	}
 	else

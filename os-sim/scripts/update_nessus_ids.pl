@@ -4,9 +4,6 @@ use ossim_conf;
 use DBI;
 use POSIX;
 
-use strict;
-use warnings;
-
 $| = 1;
 
 my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"ossim_base"}.":".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
@@ -16,13 +13,20 @@ $ossim_conf::ossim_data->{"ossim_pass"})
 
 
 my $nessus = $ossim_conf::ossim_data->{"nessus_path"};
+my $scanner_type = $ossim_conf::ossim_data->{"scanner_type"};
 my $nessus_user = $ossim_conf::ossim_data->{"nessus_user"};
 my $nessus_pass = $ossim_conf::ossim_data->{"nessus_pass"};
 my $nessus_host = $ossim_conf::ossim_data->{"nessus_host"};
 my $nessus_port = $ossim_conf::ossim_data->{"nessus_port"};
 
 
-open (PLUGINS, "$nessus -x -q -p $nessus_host $nessus_port $nessus_user $nessus_pass|");
+if($scanner_type eq "openvas2"){
+$plugin_regexp = '^[^\|]*\.(\d+)\|[^\|]*\|([^\|]*)\|(.*)$';
+} else {
+$plugin_regexp = '^([^\|]*)\|[^\|]*\|([^\|]*)\|.*\\n(.*)$';
+}
+
+open (PLUGINS, "$nessus -x -p -q $nessus_host $nessus_port $nessus_user $nessus_pass|");
 
 my @plugin_rel_db = ();
 my %plugin_rel_hash = ();
@@ -30,12 +34,16 @@ my %plugin_prio_hash = ();
 my $index;
 my $key;
 
+
+# 1.3.6.1.4.1.25623.1.0.61859:Gentoo Security Advisory GLSA 200811-04 (graphviz):2
+
 while(<PLUGINS>){
-if(/^([^\|]*)\|[^\|]*\|([^\|]*)\|.*\\n(.*)$/){
+if(/$plugin_regexp/){
 $plugin_rel_hash{$1} = $2;
 my $risk_level = 2;
 my $temp_risk = $3;
 my $temp_plugin_id = $1;
+
 
     if ($temp_risk =~ /Risk factor : (.*)/) {
     my $risk=$1; 
@@ -73,7 +81,7 @@ delete $plugin_prio_hash{$row->{sid}};
 }
 }
 
-$query = "INSERT INTO plugin_sid(plugin_id, sid, category_id, class_id, reliability, priority, name) VALUES ";
+$query = "INSERT INTO plugin_sid(plugin_id, sid, category_id, class_id, priority, reliability, name) VALUES ";
 
 if(keys %plugin_rel_hash){
 print "Updating...\n";
@@ -82,7 +90,7 @@ print "$key:$plugin_rel_hash{$key}:$plugin_prio_hash{$key}\n";
 #$plugin_rel_hash{$key} =~ s/'/''/; 
 $plugin_rel_hash{$key} =~ s/'/\\'/gs;
 $plugin_rel_hash{$key} =~ s/"/\\"/gs;
-$query .= "(3001, $key, NULL, NULL, $plugin_prio_hash{$key}, 7, 'nessus: $plugin_rel_hash{$key}'),";
+$query .= "(3001, $key, NULL, NULL, $plugin_prio_hash{$key}, 5, 'vuln_scanner: $plugin_rel_hash{$key}'),";
 }
 
 chop($query);

@@ -1,13 +1,23 @@
 import threading, socket, sys, SocketServer, os, re
 from time import sleep
-
 import Const
 import Action
 from DoNessus import DoNessus
+from OssimConf import OssimConf
+from DoNagios import DoNagios
+from NagiosMisc import nagios_host, nagios_host_group, nagios_host_service
+from AlarmGroup import AlarmGroup
+import Const
+
 
 class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
 
     __nessus = None
+    # configuration values
+    __conf = None
+    donag=None
+
+
 
     def handle(self):
 
@@ -28,10 +38,12 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
             except AttributeError:
                 return
 
-
             sleep(1)
 
         return
+
+    def debug(self,msg):
+        print __name__, " : ", msg
 
     def process_data(self, line):
 
@@ -107,12 +119,8 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
                         FrameworkBaseRequestHandler.__nessus.load_hosts(hostgroups_list, nets_list, hosts_list)
 
                     if FrameworkBaseRequestHandler.__nessus.status() == 0:
-                        try:
-                            FrameworkBaseRequestHandler.__nessus.start()
-                            self.wfile.write("ok\n")
-                        except AssertionError: 
-                            FrameworkBaseRequestHandler.__nessus.run()
-                            self.wfile.write("ok\n")
+                        FrameworkBaseRequestHandler.__nessus.run()
+                        self.wfile.write("ok\n")
                     elif FrameworkBaseRequestHandler.__nessus.status() > 0 :
                         print __name__, ": scan already started, status:", FrameworkBaseRequestHandler.__nessus.status()
                         self.wfile.write("Scan already started, status: " + str(FrameworkBaseRequestHandler.__nessus.status()) + "%\n")
@@ -135,7 +143,7 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
                     report = result[0]
                     print __name__, ": Got archive request for", report
                     FrameworkBaseRequestHandler.__nessus.archive(report)
-                    self.wfile.write("nessus archive ack " + param + "\n")
+                    self.wfile.write("nessus archive ack " + report + "\n")
             if action == "delete":
                 result = re.findall("report=\"([a-z0-9.]+)\"", line)
                 if result != []:
@@ -154,10 +162,111 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
                 FrameworkBaseRequestHandler.__nessus.restore(report)
                 self.wfile.write("nessus restore ack " + report + "\n")
         else:
-            a = Action.Action(line)
-            a.start()
+
+        #
+        #  TODO:
+        #  move all this code to an external class in DoNagios.py
+        #  for example, NagiosManager
+        #
+            if command=="nagios":
+                if self.__conf == None:
+                    self.__conf = OssimConf (Const.CONFIG_FILE)
+
+                print "nagios command: " + line
+                action = self.get_var("action=\"([a-z]+)\"",line)
+
+                if action=="add":
+                    type = self.get_var("type=\"([a-zA-Z]+)\"", line)
+
+                    if type=="host":
+                        liststring=self.get_var("list=\"[^\"]+\"",line)
+                        list=liststring.split("|")
+                        for host in list:
+                            host_data=re.match(r"^\s*(list=\")*(?P<ip>([0-9]{1,3}\.){3}[0-9]{1,3})\s+(?P<hostname>[\w_\-.]+)\s*\"*$",host)
+                            if host_data.group('ip') != [] and host_data.group('hostname') != []:
+                                hostname=host_data.group('hostname')
+                                ip=host_data.group('ip')
+                                self.debug("Adding hostname \"%s\" with ip \"%s\" to nagios" % (hostname, ip))
+                                nh=nagios_host(ip,hostname,"",self.__conf)
+                                nh.write()
+
+                    if type=="hostgroup":
+                        name=self.get_var("name=\"([\w_\-.]+)\"",line)
+                        liststring=self.get_var("list=\"([^\"]+)\"",line)
+                        list=liststring.split(",")
+                        hosts=""
+                        for host in list:
+                            host_data=re.match(r"^\s*(list=\")*(?P<ip>([0-9]{1,3}\.){3}[0-9]{1,3})\s*\"*$",host)
+                            if host_data.group('ip') != []:
+                                ip=host_data.group('ip')
+                                if hosts=="":
+                                    hosts=ip
+                                else:
+                                    hosts=ip + "," + hosts
+                                self.debug("Adding host \"%s\" with ip \"%s\" needed by group_name %s to nagios" % (ip, ip, name))
+                                nh=nagios_host(ip, ip, "", self.__conf)
+                                nh.write()
+                            else:
+                                print " In Listener.py, nagios format error in the message " + line
+                                return
+
+                        if hosts!="":
+                            self.debug("Adding %s to nagios" % (name))
+                            nhg=nagios_host_group(name,name,hosts,self.__conf)
+                            nhg.write()
+                        else:
+                            self.debug("Invalid hosts list... not adding %s to nagios" %
+(name))
+
+                    action="reload"
+
+                if action=="del":
+                    type = self.get_var("type=\"([a-zA-Z]+)\"", line)
+
+                    if type=="host":
+                        ip=self.get_var("list=\"\s*(([0-9]{1,3}\.){3}[0-9]{1,3})\s*\"",line)
+                        ip=ip[0]
+                        if ip !="":
+                            self.debug("Deleting hostname \"%s\" from nagios" % (ip))
+                            nh=nagios_host(ip,ip,"",self.__conf)
+                            nh.delete_host()
+
+                    if type=="hostgroup":
+                        name=self.get_var("name=\"([\w_\-.]+)\"",line)
+                        self.debug("Deleting hostgroup_name \"%s\" from nagios" % (name))
+                        nhg=nagios_host_group(name,name,"",self.__conf)
+                        nhg.delete_host_group()
+
+                    action="reload"
+
+
+                if action=="restart" or action=="reload":
+                    if self.donag==None:
+                        self.donag=DoNagios()
+                    self.donag.make_nagios_changes()
+                    self.donag.reload_nagios()
+
+            else:
+                a = Action.Action(line)
+                a.start()
+
+                # Group Alarms
+                ag = AlarmGroup.AlarmGroup()
+                ag.start()
 
         return
+
+    def get_var(self,regex,line):
+        result = re.findall(regex, line)
+        if result != []:
+            return result[0]
+        else:
+            return ""
+
+    def get_vars(self,regex,line):
+        return re.findall(regex, line)
+
+
 
 class Listener(threading.Thread):
 
@@ -171,7 +280,8 @@ class Listener(threading.Thread):
 
         try:
             serverAddress = ("", int(Const.LISTENER_PORT))
-            self.__server = SocketServer.TCPServer(serverAddress,
+            self.__server = SocketServer.ThreadingTCPServer(
+                                                   serverAddress,
                                                    FrameworkBaseRequestHandler)
         except socket.error, e:
             print __name__, ":", e
@@ -179,7 +289,7 @@ class Listener(threading.Thread):
 
         self.__server.serve_forever()
 
-        
+
 if __name__ == "__main__":
 
     listener = Listener()

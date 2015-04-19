@@ -1,5 +1,5 @@
 #!/bin/sh
-OSSIM_HOME=/opt/ossim/
+OSSIM_HOME=/home/dk/cvs/ossim/
 cd $OSSIM_HOME
 rm -f filenames
 find www -name "*.php" >> filenames

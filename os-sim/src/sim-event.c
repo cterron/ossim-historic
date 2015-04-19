@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #include <time.h>
 
@@ -64,7 +60,7 @@ sim_event_impl_finalize (GObject  *gobject)
 {
   SimEvent *event = (SimEvent *) gobject;
   
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_event_impl_finalize: Id %lu, Sid %lu, Cid %lu", 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_event_impl_finalize: Id %u, Sid %u, Cid %u", 
 	 event->id, event->snort_sid, event->snort_cid);
 
   if (event->sensor)
@@ -79,10 +75,12 @@ sim_event_impl_finalize (GObject  *gobject)
     g_free (event->value);
   if (event->data)
     g_free (event->data);
+  g_free (event->time_str);
 
 	if (event->role)
 		g_free (event->role);
-	
+  g_free (event->log);
+
 	g_free (event->filename);//no needed to check, g_free will just return if "filename" is NULL
 	g_free (event->username);
 	g_free (event->password);
@@ -129,8 +127,11 @@ sim_event_instance_init (SimEvent *event)
 
   event->type = SIM_EVENT_TYPE_NONE;
 
-  event->time = time (NULL);
-  event->diff_time = 0;
+	event->time = 0;
+	event->time_str = NULL;
+	event->diff_time = 0;
+	event->tzone = 0;
+
   event->sensor = NULL;
   event->interface = NULL;
 
@@ -154,8 +155,8 @@ sim_event_instance_init (SimEvent *event)
   event->alarm = FALSE;
   event->priority = 0;
   event->reliability = 0;
-  event->asset_src = 1; //can't be changed to 0: among other things, event_directive won't work then!
-  event->asset_dst = 1;
+  event->asset_src = 2; //can't be changed to 0: among other things, event_directive won't work then!
+  event->asset_dst = 2;
   event->risk_c = 0;
   event->risk_a = 0;
 
@@ -380,7 +381,8 @@ sim_event_clone (SimEvent       *event)
 void
 sim_event_print (SimEvent   *event)
 {
-  gchar    timestamp[TIMEBUF_SIZE];
+  gchar    time[TIMEBUF_SIZE];
+  gchar    *timestamp=time;
   gchar    *ip;
 
   g_return_if_fail (event);
@@ -403,11 +405,12 @@ sim_event_print (SimEvent   *event)
 
   g_print (" id=\"%d\"", event->id);
 
+  if (event->time_str)
+    timestamp=event->time_str;
+  else
   if (event->time)
-    {
-      strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
-      g_print (" timestamp=\"%s\"", timestamp);
-    }
+    //strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+    strftime (timestamp, TIMEBUF_SIZE, "%F %T", localtime ((time_t *) &event->time));
 
   g_print (" alarm=\"%d\"", event->alarm);
 
@@ -546,7 +549,7 @@ sim_event_get_insert_clause (SimEvent   *event)
 			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
 			   "snort_sid, snort_cid) "
 			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d,"
-			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %lu, %lu)",
+			   " %d, %u, %u, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %u, %u)",
          event->id,
 			   timestamp,
 			   (event->sensor) ? event->sensor : "",
@@ -607,12 +610,12 @@ sim_event_get_update_clause (SimEvent   *event)
 
   query = g_strdup_printf ("UPDATE event SET timestamp='%s', sensor='%s', interface='%s', "
 			   "type=%d, plugin_id=%d, plugin_sid=%d, "
-			   "protocol=%d, src_ip=%lu, dst_ip=%lu, src_port=%d, dst_port=%d, "
+			   "protocol=%d, src_ip=%u, dst_ip=%u, src_port=%d, dst_port=%d, "
 			   "event_condition=%d, value='%s', time_interval=%d, "
 			   "priority=%d, reliability=%d, asset_src=%d, asset_dst=%d, "
 			   "risk_c=%d, risk_a=%d, alarm=%d, "
-			   "snort_sid=%lu, snort_cid=%lu "
-			   " WHERE id=%lu",
+			   "snort_sid=%u, snort_cid=%u "
+			   " WHERE id=%u",
 			   timestamp,
 			   (event->sensor) ? event->sensor : "",
 			   (event->interface) ? event->interface : "",
@@ -678,7 +681,7 @@ sim_event_get_replace_clause (SimEvent   *event)
 			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
 			   "snort_sid, snort_cid) "
 			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d,"
-			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %lu, %lu)",
+			   " %d, %u, %u, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %u, %u)",
          event->id,
 			   timestamp,
 			   (event->sensor) ? event->sensor : "",
@@ -743,7 +746,7 @@ sim_event_get_alarm_insert_clause (SimEvent   *event)
 			   "(event_id, backlog_id, timestamp, plugin_id, plugin_sid, " 
 			   "protocol, src_ip, dst_ip, src_port, dst_port, "
 			   "risk, snort_sid, snort_cid) "
-			   " VALUES  ('%lu', '%lu', '%s', %d, %d, %d, %lu, %lu, %d, %d, %d, %lu, %lu)",
+			   " VALUES  ('%u', '%u', '%s', %d, %d, %d, %u, %u, %d, %d, %d, %u, %u)",
 			   event->id,
 			   event->backlog_id,
 			   timestamp,
@@ -873,14 +876,15 @@ sim_event_to_string (SimEvent	*event)
 {
   GString   *str; 
   gchar     *ip;
-  gchar      timestamp[TIMEBUF_SIZE];
+  gchar    time[TIMEBUF_SIZE];
+  gchar   *timestamp=time;
 
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
 
   str = g_string_new ("event ");
 
-  g_string_append_printf (str, "id=\"%lu\" ", event->id);
+  g_string_append_printf (str, "id=\"%u\" ", event->id);
   g_string_append_printf (str, "alarm=\"%d\" ", event->alarm);
 
   gchar *aux = sim_event_get_str_from_type (event->type);
@@ -890,12 +894,18 @@ sim_event_to_string (SimEvent	*event)
     g_free (aux);
   }
 
-  if (event->time)
-    {
-      strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
-      g_string_append_printf (str, "date=\"%s\" ", timestamp);
-    }
-  
+  if(event->time_str)
+    timestamp=event->time_str;
+  else
+    if (event->time)
+      //strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+      strftime (timestamp, TIMEBUF_SIZE, "%F %T", localtime ((time_t *) &event->time));
+  g_string_append_printf (str, "fdate=\"%s\" ", timestamp);
+
+  g_string_append_printf (str, "date=\"%u\" ", event->time);
+
+  g_string_append_printf (str, "tzone=\"%d\" ", event->tzone);
+
   if (event->plugin_id)
     g_string_append_printf (str, "plugin_id=\"%d\" ", event->plugin_id);
 
@@ -960,9 +970,9 @@ sim_event_to_string (SimEvent	*event)
     g_string_append_printf (str, "risk_c=\"%lf\" ", event->risk_c);
 
   if (event->snort_sid)
-    g_string_append_printf (str, "snort_sid=\"%lu\" ", event->snort_sid);
+    g_string_append_printf (str, "snort_sid=\"%u\" ", event->snort_sid);
   if (event->snort_cid)
-    g_string_append_printf (str, "snort_cid=\"%lu\" ", event->snort_cid);
+    g_string_append_printf (str, "snort_cid=\"%u\" ", event->snort_cid);
 
   if (event->data)
     g_string_append_printf (str, "data=\"%s\" ", event->data);
@@ -1029,14 +1039,24 @@ sim_event_sanitize (SimEvent *event)
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
 
-	
 	//sim_string_remove_char (event->data, ';'); 
 	//sim_string_remove_char (event->log, ';'); 
 	
 	sim_string_substitute_char (event->data, ';', ','); 
 	sim_string_substitute_char (event->log, ';', ','); 
 	sim_string_substitute_char (event->userdata1, ';', ','); 
-		
+
+	sim_string_substitute_char (event->data, '\'', ',');
+	sim_string_substitute_char (event->log, '\'', ',');
+	sim_string_substitute_char (event->userdata1, '\'', ',');
+	sim_string_substitute_char (event->userdata2, '\'', ',');
+	sim_string_substitute_char (event->userdata3, '\'', ',');
+	sim_string_substitute_char (event->userdata4, '\'', ',');
+	sim_string_substitute_char (event->userdata5, '\'', ',');
+	sim_string_substitute_char (event->userdata6, '\'', ',');
+	sim_string_substitute_char (event->userdata7, '\'', ',');
+	sim_string_substitute_char (event->userdata8, '\'', ',');
+	sim_string_substitute_char (event->userdata9, '\'', ',');
 }
 
 /*
@@ -1075,7 +1095,7 @@ sim_event_get_insert_into_event_tmp_clause (SimEvent   *event)
 			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
 				 "filename, username, password, userdata1, userdata2, userdata3, userdata4, userdata5, userdata6, userdata7, userdata8, userdata9)"
 			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d, '%s',"
-			   " %d, %lu, %lu, %d, %d, "
+			   " %d, %u, %u, %d, %d, "
 				 " %d, %d, %d, %d, %d, %d, %d,"
 				 " '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
          event->id_tmp,

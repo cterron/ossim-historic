@@ -1,13 +1,13 @@
 -- juniper/netscreen-firewall
 -- plugin_id: 1522
 --
--- $Id: netscreen-firewall.sql,v 1.5 2007/12/20 10:26:13 dvgil Exp $
+-- $Id: netscreen-firewall.sql,v 1.9 2009/06/16 11:12:35 jaimeblasco Exp $
 --
 DELETE FROM plugin WHERE id = "1522";
 DELETE FROM plugin_sid where plugin_id = "1522";
 
 
-INSERT INTO plugin (id, type, name, description) VALUES (1522, 1, 'juniper/netscreen-firewall', 'Juniper-Netscreen FW');
+INSERT INTO plugin (id, type, name, description) VALUES (1522, 1, 'juniper-netscreen firewall', 'Juniper-Netscreen FW');
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 1, 205, NULL, 'juniper/netscreen-fw: Permit');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 2, 206, NULL, 'juniper/netscreen-fw: Deny or Reject');
@@ -298,5 +298,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (152
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 287, NULL, NULL, 'juniper/netscreen-fw: Remote admin user logged out');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 288, NULL, NULL, 'juniper/netscreen-fw: Remote admin logging attempt');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 289, NULL, NULL, 'juniper/netscreen-fw: Multiple login failures');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 290, NULL, NULL, 'juniper/netscreen-fw: Detected an IP conflict');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 291, NULL, NULL, 'juniper/netscreen-fw: Tunnel Connection');
 
 

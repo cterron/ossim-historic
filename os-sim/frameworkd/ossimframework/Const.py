@@ -14,6 +14,9 @@ SLEEP = 300
 # overriden with -c option
 CONFIG_FILE = "/etc/ossim/framework/ossim.conf"
 
+# Default asset
+ASSET= 2
+
 # Default frameworkd path
 FRAMEWORKD_DIR = "/usr/share/ossim-framework/ossimframework/"
 

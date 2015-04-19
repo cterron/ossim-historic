@@ -48,7 +48,7 @@ Control.Panel = {
         // to the desired position width and then get the correct size
         // from the browser. After that, deactivate the element again.
         // Note: any need for resizing the element back?
-        Element.setStyle(element, {width: this.options.posWidth+'px'});
+        //Element.setStyle(element, {width: this.options.posWidth+'px'});
         var h = element.offsetHeight;
         els.display = 'none';
         els.position = originalPosition;
@@ -189,7 +189,8 @@ Control.Panel = {
         var i,j,h,w,id;
         var ids = new Array();
         var panel = tmpstyle = '';
-        var style = 'width: '+this.options.posWidth+'px;';
+        //var style = 'width: '+this.options.posWidth+'px;';
+	var style='width:100%';
         panel += '<table width="1%" border="0" cellspacing="0" cellpading="0"><tr>';
         for (i = 1; i <= this.options.cols; i++) {
             panel += '<td valign="top">\n\t<table>\n';

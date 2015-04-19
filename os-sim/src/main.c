@@ -1,37 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
 
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #define _GNU_SOURCE
 
@@ -108,6 +103,7 @@ void init_signals(void)
   signal (SIGFPE, on_signal);
   signal (SIGSEGV, on_signal);
   signal (SIGTERM, on_signal);
+  signal (SIGPIPE, SIG_IGN);
 
 }
 
@@ -187,10 +183,12 @@ options (int argc, char **argv)
 		  {"debug", 0, 0, 'D'},
 		  {"interfaceip", 1, 0, 'i'},	
 		  {"port", 1, 0, 'p'},	
+	    {"help", 0, 0, 'h'},
+		  {"version", 0, 0, 'v'},	
 			{0, 0, 0, 0}
 		};
       
-		c = getopt_long (argc, argv, "dc:D:i:p:", options, &option_index);
+		c = getopt_long (argc, argv, "dc:D:i:p:v", options, &option_index);
 
 		if (c == -1)
 			break;
@@ -212,12 +210,31 @@ options (int argc, char **argv)
 	
 			case 'i':
 	      simCmdArgs.ip = g_strdup (optarg);
+				break;
 
 			case 'p':
 				if (sim_string_is_number (optarg, 0))
 					simCmdArgs.port = strtol (optarg, (char **)NULL, 10);				
-					 
-			case '?':
+				break;
+
+      case 'v':
+        g_print ("Ossim Server Version : %s\n", ossim.version);
+				exit(EXIT_SUCCESS);
+        break;
+
+      case '?':
+      case 'h':
+        g_print ("OSSIM Server Options:"
+        "\n\t-c config_file    Default config file is /etc/ossim/server/config.xml"
+        "\n\t-d                Run as daemon"
+        "\n\t-DLevel           Run in debug mode (level 6 is very useful)"
+        "\n\t-i ip             IP address of the interface connected to the agents (where the server should listen)"
+        "\n\t-p port           The port the server will listen on"
+        "\n\nOSSIM Server version: %s \n\n ",
+        ossim.version);
+        exit(EXIT_SUCCESS);
+        break;
+
 				break;
 	  
 			default:
@@ -296,6 +313,8 @@ main (int argc, char *argv[])
   ossim.dbossim = NULL;
   ossim.dbsnort = NULL;
 
+  ossim.version = g_strdup_printf("2.1.01");
+
   /* Command Line Options */
   options (argc, argv);
 
@@ -311,7 +330,7 @@ main (int argc, char *argv[])
   gnet_ipv6_set_policy (GIPV6_POLICY_IPV4_ONLY);
   
   /* GDA Init */
-  gda_init ("OSSIM", "0.9.9rc4", argc, argv);
+  gda_init ("OSSIM", ossim.version, argc, argv);
 
   /* Catch system signals */
   init_signals();
@@ -339,6 +358,8 @@ main (int argc, char *argv[])
 
 	/* Log Init */
   sim_log_init ();
+	g_message ("Starting OSSIM Server engine. Version: %s", ossim.version);
+
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Starting OSSIM server debug with process id: %d",getpid());
 
   /* Database Options */

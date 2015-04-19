@@ -1,133 +1,187 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicyHosts");
 ?>
 
 <html>
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-                                                                                <?php 
-    
-    require_once ('classes/Security.inc');
-    if (REQUEST('scan')) {
-        echo "<h1>" . gettext("Insert new scan") . "</h1>";
-        echo "<p>";
-        echo gettext("Please, fill these global properties about the hosts you've scaned");
-        echo ":</p>";
-    } else {
-        echo "<h1>" . gettext("Insert new host") . "</h1>";
-    }
+
+<?php
+require_once ('classes/Security.inc');
+if (REQUEST('scan')) {
+    if (GET('withoutmenu') != "1") include ("../hmenu.php");
+    echo "<p>";
+    echo gettext("Please, fill these global properties about the hosts you've scaned");
+    echo ":</p>";
+} else {
+    if (GET('withoutmenu') != "1") include ("../hmenu.php");
+}
 ?>
 
 <?php
-    require_once ('ossim_db.inc');
-    require_once ('ossim_conf.inc');
-    require_once ('classes/Sensor.inc');
-    require_once ('classes/RRD_config.inc');
-
-    $ip = REQUEST('ip');
-    $ips = REQUEST('ips');
-    $scan = REQUEST('scan');
-   
-    ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ip"));
-    ossim_valid($ips, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("ips"));
-    ossim_valid($scan, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("scan"));
-
-    if (ossim_error()) {
-        die(ossim_error());
-    }
-
-    $db = new ossim_db();
-    $conn = $db->connect();
-    $conf = $GLOBALS["CONF"];
-    $threshold = $conf->get_conf("threshold");
-
-    $action = "newhost.php";
-    
-    if (REQUEST('scan')) {
-        $ip = REQUEST('target');
-        $action = "../netscan/scan_db.php";
-    }
+require_once ('ossim_db.inc');
+require_once ('ossim_conf.inc');
+require_once ('classes/Sensor.inc');
+require_once ('classes/RRD_config.inc');
+$ip = REQUEST('ip');
+$ips = REQUEST('ips');
+$scan = REQUEST('scan');
+ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:' . _("ip"));
+ossim_valid($ips, OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _("ips"));
+ossim_valid($scan, OSS_ALPHA, OSS_NULLABLE, 'illegal:' . _("scan"));
+if (ossim_error()) {
+    die(ossim_error());
+}
+$db = new ossim_db();
+$conn = $db->connect();
+$conf = $GLOBALS["CONF"];
+$threshold = $conf->get_conf("threshold");
+$action = "newhost.php";
+if (REQUEST('scan')) {
+    $ip = REQUEST('target');
+    $action = "../netscan/scan_db.php";
+}
 ?>
 
-    <form method="post" action="<?php echo $action ?>">
+    <form method="post" action="<?php
+echo $action ?>">
     <table align="center">
       <input type="hidden" name="insert" value="insert">
 
 <?php
-    if (empty($scan)) {
+if (empty($scan)) {
 ?>
   <tr>
-    <th> <?php echo gettext("Hostname"); ?> (*)</th>
+    <th> <?php
+    echo gettext("Hostname"); ?> (*)</th>
     <td class="left"><input type="text" name="hostname"></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("IP"); ?> (*)</th>
+    <th> <?php
+    echo gettext("IP"); ?> (*)</th>
     <td class="left">
-      <input type="text" value="<?php echo $ip ?>" name="ip">
+      <input type="text" value="<?php
+    echo $ip ?>" name="ip">
     </td>
   </tr>
 <?php
-    }
+} else {
 ?>
   <tr>
-    <th> <?php echo gettext("Asset"); ?> (*)</th>
+    <th> <?php
+    echo gettext("Optional group name"); ?></th>
+    <td class="left"><input type="text" name="groupname"></td>
+  </tr>
+<?php
+}
+?>
+  <tr>
+    <th> <?php
+echo gettext("Asset"); ?> (*)</th>
     <td class="left">
       <select name="asset">
         <option value="0">
-	<?php echo gettext("0"); ?> </option>
+	<?php
+echo gettext("0"); ?> </option>
         <option value="1">
-	<?php echo gettext("1"); ?> </option>
+	<?php
+echo gettext("1"); ?> </option>
         <option selected value="2">
-	<?php echo gettext("2"); ?> </option>
+	<?php
+echo gettext("2"); ?> </option>
         <option value="3">
-	<?php echo gettext("3"); ?> </option>
+	<?php
+echo gettext("3"); ?> </option>
         <option value="4">
-	<?php echo gettext("4"); ?> </option>
+	<?php
+echo gettext("4"); ?> </option>
         <option value="5">
-	<?php echo gettext("5"); ?> </option>
+	<?php
+echo gettext("5"); ?> </option>
       </select>
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold C"); ?> (*)</th>
+    <th> <?php
+echo gettext("Threshold C"); ?> (*)</th>
     <td class="left">
-      <input type="text" value="<?php echo $threshold ?>" 
+      <input type="text" value="<?php
+echo $threshold ?>" 
              name="threshold_c" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Threshold A"); ?> (*)</th>
+    <th> <?php
+echo gettext("Threshold A"); ?> (*)</th>
     <td class="left">
-      <input type="text" value="<?php echo $threshold ?>" 
+      <input type="text" value="<?php
+echo $threshold ?>" 
              name="threshold_a" size="4">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("RRD Profile"); ?> (*)<br/>
+    <th> <?php
+echo gettext("RRD Profile"); ?> (*)<br/>
         <font size="-2">
           <a href="../rrd_conf/new_rrd_conf_form.php">
-	  <?php echo gettext("Insert new profile"); ?> ?</a>
+	  <?php
+echo gettext("Insert new profile"); ?> ?</a>
         </font>
     </th>
     <td class="left">
       <select name="rrd_profile">
 <?php
-    foreach (RRD_Config::get_profile_list($conn) as $profile)
-    {
-        if (strcmp($profile, "global")) 
-        {
-            echo "<option value=\"$profile\">$profile</option>\n";
-        }
+foreach(RRD_Config::get_profile_list($conn) as $profile) {
+    if (strcmp($profile, "global")) {
+        echo "<option value=\"$profile\">$profile</option>\n";
     }
+}
 ?>
         <option value="" selected>
-	<?php echo gettext("None"); ?> </option>
+	<?php
+echo gettext("None"); ?> </option>
       </select>
     </td>
   </tr>
@@ -150,123 +204,142 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 -->
   <tr>
   </tr>
-    <th> <?php echo gettext("NAT"); ?> </th>
+    <th> <?php
+echo gettext("NAT"); ?> </th>
     <td class="left">
       <input type="text" name="nat">
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Sensors"); ?> (*)<br/>
+    <th> <?php
+echo gettext("Sensors"); ?> (*)<br/>
         <font size="-2">
           <a href="../sensor/newsensorform.php">
-	  <?php echo gettext("Insert new sensor"); ?> ?</a>
+	  <?php
+echo gettext("Insert new sensor"); ?> ?</a>
         </font>
     </th>
     <td class="left">
 <?php
-                                                                                
-    /* ===== sensors ==== */
-    $i = 1;
-    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
-        foreach($sensor_list as $sensor) {
-            $sensor_name = $sensor->get_name();
-            $sensor_ip =   $sensor->get_ip();
-            if ($i == 1) {
+/* ===== sensors ==== */
+$i = 1;
+if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
+    foreach($sensor_list as $sensor) {
+        $sensor_name = $sensor->get_name();
+        $sensor_ip = $sensor->get_ip();
+        if ($i == 1) {
 ?>
-        <input type="hidden" name="<?php echo "nsens"; ?>"
-            value="<?php echo count($sensor_list); ?>">
+        <input type="hidden" name="<?php
+            echo "nsens"; ?>"
+            value="<?php
+            echo count($sensor_list); ?>">
 <?php
-            }
-            $name = "mboxs" . $i;
+        }
+        $name = "mboxs" . $i;
 ?>
-        <input type="checkbox" name="<?php echo $name;?>"
-            value="<?php echo $sensor_name; ?>">
-            <?php echo $sensor_ip . " (" . $sensor_name . ")<br>";?>
+        <input type="checkbox" name="<?php
+        echo $name; ?>"
+            value="<?php
+        echo $sensor_name; ?>">
+            <?php
+        echo $sensor_ip . " (" . $sensor_name . ")<br>"; ?>
         </input>
 <?php
-            $i++;
-        }
+        $i++;
     }
+}
 ?>
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Scan options"); ?> </th>
+    <th> <?php
+echo gettext("Scan options"); ?> </th>
     <td class="left">
-      <input type="checkbox" name="nessus" value="1"> <?php echo gettext("Enable nessus scan"); ?> </input><br/>
-      <input type="checkbox" name="nagios" value="1"> <?php echo gettext("Enable nagios"); ?> </input>
+      <input type="checkbox" name="nessus" value="1"> <?php
+echo gettext("Enable nessus scan"); ?> </input><br/>
+      <input type="checkbox" name="nagios" value="1"> <?php
+echo gettext("Enable nagios"); ?> </input>
     </td>
   </tr>
 <?php
-    if (empty($scan)) {
+if (empty($scan)) {
 ?>
   <tr>
-    <th> <?php echo gettext("OS"); ?> </th>
+    <th> <?php
+    echo gettext("OS"); ?> </th>
     <td class="left">
       <select name="os">
         <option value="Unknown"> </option>
-        <option value="Windows"><?=_("Microsoft Windows"); ?> </option>
-        <option value="Linux"><?=_("Linux"); ?> </option>
-        <option value="FreeBSD"><?=_("FreeBSD"); ?> </option>
-        <option value="NetBSD"><?=_("NetBSD"); ?> </option>
-        <option value="OpenBSD"><?=_("OpenBSD"); ?> </option>
-        <option value="MacOS"><?=_("Apple MacOS"); ?> </option>
-        <option value="Solaris"><?=_("SUN Solaris"); ?> </option>
-        <option value="Cisco"><?=_("Cisco IOS"); ?> </option>
-        <option value="AIX"><?=_("IBM AIX"); ?> </option>
-        <option value="HP-UX"><?=_("HP-UX"); ?> </option>
-        <option value="Tru64"><?=_("Compaq Tru64"); ?> </option>
-        <option value="IRIX"><?=_("SGI IRIX"); ?> </option>
-        <option value="BSD/OS"><?=_("BSD/OS"); ?> </option>
-        <option value="SunOS"><?=_("SunOS"); ?> </option>
-        <option value="Plan9"><?=_("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
-        <option value="IPhone"><?=_("IPhone"); ?> </option> 
+        <option value="Windows"><?php echo _("Microsoft Windows"); ?> </option>
+        <option value="Linux"><?php echo _("Linux"); ?> </option>
+        <option value="FreeBSD"><?php echo _("FreeBSD"); ?> </option>
+        <option value="NetBSD"><?php echo _("NetBSD"); ?> </option>
+        <option value="OpenBSD"><?php echo _("OpenBSD"); ?> </option>
+        <option value="MacOS"><?php echo _("Apple MacOS"); ?> </option>
+        <option value="Solaris"><?php echo _("SUN Solaris"); ?> </option>
+        <option value="Cisco"><?php echo _("Cisco IOS"); ?> </option>
+        <option value="AIX"><?php echo _("IBM AIX"); ?> </option>
+        <option value="HP-UX"><?php echo _("HP-UX"); ?> </option>
+        <option value="Tru64"><?php echo _("Compaq Tru64"); ?> </option>
+        <option value="IRIX"><?php echo _("SGI IRIX"); ?> </option>
+        <option value="BSD/OS"><?php echo _("BSD/OS"); ?> </option>
+        <option value="SunOS"><?php echo _("SunOS"); ?> </option>
+        <option value="Plan9"><?php echo _("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
+        <option value="IPhone"><?php echo _("IPhone"); ?> </option> 
 
       </select>
     </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Mac"); ?> </th>
+    <th> <?php
+    echo gettext("Mac"); ?> </th>
     <td class="left"><input type="text" name="mac" /></td>
   </tr>
   <tr>
-    <th> <?php echo gettext("Mac Vendor"); ?></th>
+    <th> <?php
+    echo gettext("Mac Vendor"); ?></th>
     <td class="left"><input type="text" name="mac_vendor" /></td>
   </tr>
 <?php
-    } else {
+} else {
 ?>
-        <input type="hidden" name="ips" value="<?php echo $ips ?>" />
+        <input type="hidden" name="ips" value="<?php
+    echo $ips ?>" />
 <?php
-        for ($i = 0; $i < $ips; $i++) {
+    for ($i = 0; $i < $ips; $i++) {
 ?>
-        <input type="hidden" name="ip_<?php echo $i ?>" 
-            value="<?php echo POST("ip_$i") ?>" />
+        <input type="hidden" name="ip_<?php
+        echo $i ?>" 
+            value="<?php
+        echo POST("ip_$i") ?>" />
 <?php
-        } /* foreach */
-    } /* if ($scan) */
+    } /* foreach */
+} /* if ($scan) */
 ?>
   <tr>
-    <th> <?php echo gettext("Description"); ?> </th>
+    <th> <?php
+echo gettext("Description"); ?> </th>
     <td class="left">
       <textarea name="descr" rows="2" cols="20"></textarea>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <input type="submit" value="OK">
-      <input type="reset" value="<?php echo gettext("reset"); ?>">
+      <input type="submit" value="OK" class="btn" style="font-size:12px">
+      <input type="reset" value="<?php
+echo gettext("reset"); ?>" class="btn" style="font-size:12px">
     </td>
   </tr>
 </table>
 </form>
 
-<p align="center"><i><?php echo gettext("Values marked with (*) are mandatory"); ?></b></i></p>
+<p align="center"><i><?php
+echo gettext("Values marked with (*) are mandatory"); ?></b></i></p>
 
 </body>
 </html>
 
 <?php
-    $db->close($conn);
+$db->close($conn);
 ?>
 

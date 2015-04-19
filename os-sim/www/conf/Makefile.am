@@ -1,6 +1,5 @@
 confdir = $(datadir)/ossim/www/conf
-conf_DATA = index.php \
-	main.php \
+conf_DATA = main.php \
 	emailtemplate.php \
 	reload.php \
 	plugin.php \

@@ -26,7 +26,7 @@ fi
 #
 d_start() {
     start-stop-daemon --quiet --start --exec $DAEMON -- $OPTS -d > /dev/null
-    echo `pidof -x $NAME` > $PIDFILE
+    echo `pidof -o %PPID -x $NAME` > $PIDFILE
 }
 
 #

@@ -1,280 +1,317 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicyServers");
+// load column layout
+require_once ('../conf/layout.php');
+$category = "policy";
+$name_layout = "servers_layout";
+$layout = load_layout($name_layout, $category);
 ?>
-
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+  <meta http-equiv="X-UA-Compatible" content="IE=7" />
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+  <link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
+  <script type="text/javascript" src="../js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.flexigrid.js"></script>
+  <script type="text/javascript" src="../js/urlencode.js"></script>
 </head>
 <body>
                                                                                 
-  <h1> <?php echo gettext("Servers"); ?> </h1>
+	<?php
+include ("../hmenu.php"); ?>
+	<div  id="headerh1" style="width:100%;height:1px">&nbsp;</div>
 
 <?php
-    require_once 'ossim_db.inc';
-    require_once 'ossim_conf.inc';
-    require_once 'classes/Server.inc';
-    require_once 'classes/Plugin.inc';
-    require_once 'classes/Security.inc';
-    require_once 'server_get_servers.php';
-    require_once 'classes/WebIndicator.inc';
-    
-    $order = GET('order');
-    
-    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
-  
-    if (ossim_error()) {
-        die(ossim_error());
-    }
-  
-    if (empty($order))
-         $order = "name";
-
-    $ossim_conf = $GLOBALS["CONF"];
-    $db = new ossim_db();
-    $conn = $db->connect();
-    
-    /* get the port and IP address of the server */
-    $address = $ossim_conf->get_conf("server_address");
-    $port = $ossim_conf->get_conf("server_port");
-
-    echo _("Master server at") . " <b>" . $address . ":" . $port . "</b> " . _("is") . " ";
-    if(check_server($conn) == true){
+require_once 'ossim_db.inc';
+require_once 'ossim_conf.inc';
+require_once 'classes/Server.inc';
+require_once 'server_get_servers.php';
+$ossim_conf = $GLOBALS["CONF"];
+$db = new ossim_db();
+$conn = $db->connect();
+/* get the port and IP address of the server */
+$address = $ossim_conf->get_conf("server_address");
+$port = $ossim_conf->get_conf("server_port");
+echo _("Master server at") . " <b>" . $address . ":" . $port . "</b> " . _("is") . " ";
+if (check_server($conn) == true) {
     echo "<font color=\"green\">";
     echo _("UP");
     echo "</font>";
     // Server up
-    } else {
+    
+} else {
     echo "<font color=\"red\">";
     echo _("DOWN");
     echo "</font>";
     // Server down
-    }
-    echo ".";
-
-?>
-
-  <table align="center">
-  <tr>
-  <th><?php echo gettext("Active Children Servers");?></th>
-  <th><?php echo gettext("Total Children Servers");?></th>
-  </tr><tr>
-  <td><div id="active">0</div></td>
-  <td><b><div id="total">0</div></b></td>
-  </tr>
-  </table>
-  <br/>
-
-  <table align="center">
-    <tr>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php //you can re-order the rows
-            echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">
-	  <?php echo gettext("Ip"); ?> </a></th>
-
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("name", $order);
-          ?>">
-	  <?php echo gettext("Hostname"); ?> </a></th>
-
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("port", $order);
-          ?>">
-	  <?php echo gettext("Port"); ?> </a></th>
-
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("connect", $order);
-          ?>">
-	  <?php echo gettext("Active"); ?> </a></th>
-
-      <th> <?php echo gettext("Correlate"); ?> </th>
-      <th> <?php echo gettext("Cross Correlate"); ?> </th>
-      <th> <?php echo gettext("Store"); ?> </th>
-      <th> <?php echo gettext("Qualify"); ?> </th>
-      <th> <?php echo gettext("Resend Alarms"); ?> </th>
-      <th> <?php echo gettext("Resend Events"); ?> </th>
-
-      <th> <?php echo gettext("Description"); ?> </th>
-      <th> <?php echo gettext("Action"); ?> </th>
-    </tr>
-
-<?php
-    //first, get the servers connected; all this servers are "actived"
-    $server_list = server_get_servers($conn);
-    $server_list_aux = $server_list; //here are stored the connected servers
-    $server_stack = array(); //here will be stored the servers wich are in DDBB
-    $server_configured_stack = array();
-    if($server_list){
-        foreach ($server_list as $server_status){
-            if(in_array($server_status["servername"],$server_stack)) continue;
-            array_push($server_stack,$server_status["servername"]);            
-        }
-    }
-
-    $active_servers = 0;
-    $total_servers = 0;
     
-    if ($server_list = Server::get_list($conn, "ORDER BY $order")) {
-        foreach($server_list as $server) {
-            $ip = $server->get_ip();
-            $name = $server->get_name();
-            $total_servers++;
-
-?>
-
-    <tr>
-      <td><?php echo $server->get_ip(); ?></td>
-<!--      <td><a href="server_get_servers.php?name=<?php echo $name ?>"><?php echo $server->get_ip(); ?></a></td>-->
-      <td><?php echo $server->get_name(); ?></td>
-      <td><?php echo $server->get_port(); ?></td>
-      <td><?php 
-        if (in_array($server->get_name(),$server_stack)){
-            echo "<font color=\"green\"><b>YES</b></font>";
-            $active_servers++;
-            array_push($server_configured_stack,$server->get_name());
-        } else {
-            echo "<font color=\"red\"><b>NO</b></font>";
-        }
-      ?></td>
-      <?php
-      $aux = $server->get_name();
-      if ($role_list = Server::get_role($conn, "WHERE server_role.name = '$aux'")) {
-        $role = $role_list[0];
-    }
-               ?><td><?php
-                    if ($role->get_correlate() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_correlate() == 0)
-                      echo _("No");
-                ?></td>
-               <td><?php
-                    if ($role->get_cross_correlate() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_cross_correlate() == 0)
-                      echo _("No");
-                ?></td>
-               <td><?php
-                    if ($role->get_store() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_store() == 0)
-                      echo _("No");
-                ?></td>
-               <td><?php
-                    if ($role->get_qualify() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_qualify() == 0)
-                      echo _("No");
-                ?></td>
-               <td><?php
-                    if ($role->get_resend_alarm() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_resend_alarm() == 0)
-                      echo _("No");
-                ?></td>
-               <td><?php
-                    if ($role->get_resend_event() == 1){
-                      echo _("Yes");
-                    }
-                    elseif ($role->get_resend_event() == 0)
-                      echo _("No");
-                ?></td><?php
-       ?>
-
-
-
-      <td><?php echo $server->get_descr(); ?>&nbsp;</td>
-      <td>
-        [ <a href="modifyserverform.php?name=<?php echo $name ?>">
-	<?php echo gettext("Modify"); ?> </a> |
-        <a href="deleteserver.php?name=<?php echo $name ?>">
-	<?php echo gettext("Delete"); ?> </a> ]</td>
-    </tr>
-
-<?php
-        } /* foreach */
-    } /* server_list */
-
-    $db->close($conn);
-?>
-
-<?php
-    $diff_arr = array_diff($server_stack,$server_configured_stack);
-
-    if($diff_arr) {
-			
-?>
-    <tr><td colspan="7"></td></tr>
-    <tr>
-      <td colspan="7"><font color="red"><b> <?php echo gettext("Warning"); ?> </b></font>:
-        <?php echo gettext("the following children server(s) are being reported as enabled by the server but aren't configured"); ?> .
-      </td>
-    </tr>
-<?php
-        foreach($diff_arr as $name_diff) { 
-              foreach ($server_list_aux as $server_name){
-                if($name_diff == $server_name["servername"])
-                { 
-                  $aux = $server_name["host"];
-                  $aux2 = $server_name["servername"];
-                  break 1;
-                }
-              }
-        
-?>
-    <tr>
-      <td><?php echo $aux ?></td>
-      <td><?php echo $aux2 ?></td>
-      <td>-</td>
-      <td><font color="green"><b> <?php echo gettext("YES"); ?> </b></font></td>
-      <td>-</td>
-       
-      <td><a href="newserverform.php?ip=<?php echo $aux ?>&hostname=<?php echo $aux2?>"> 
-      <?php echo gettext("Insert"); ?> </a></td>
-    </tr>
-    <tr><td colspan="7"></td></tr>
-<?php
-        }
-   } 
-?>
-    <tr>
-      <td colspan="12"><a href="newserverform.php"> <?php echo gettext("Insert new server"); ?> </a></td>
-    </tr>
-<!--    <tr>
-      <td colspan="12"><a href="../conf/reload.php?what=servers&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
-if (WebIndicator::is_on("Reload_servers")) {
-    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
-} else {
-    echo gettext("Reload");
-} ?> </a></td>
-    </tr>-->
-</table>
-
-<script language="javascript">
-active_servers_div = document.getElementById("active");
-total_servers_div = document.getElementById("total");
-
-<?php
-if($active_servers == 0){
-?>
-active_servers_div.innerHTML = "<font color=\"red\">" + <?php echo $active_servers; ?> + "</font>"; 
-<?php
-} else {
-?>
-active_servers_div.innerHTML = "<font color=\"green\">" + <?php echo $active_servers; ?> + "</font>"; 
-<?php
 }
+echo ".";
+//first, get the servers connected; all this servers are "actived"
+list($server_list, $err) = server_get_servers($conn);
+if ($err != "") echo $err;
+$server_list_aux = $server_list; //here are stored the connected servers
+$server_stack = array(); //here will be stored the servers wich are in DDBB
+$server_configured_stack = array();
+if ($server_list) {
+    foreach($server_list as $server_status) {
+        if (in_array($server_status["servername"], $server_stack)) continue;
+        array_push($server_stack, $server_status["servername"]);
+    }
+}
+$active_servers = 0;
+$total_servers = 0;
+if ($server_list = Server::get_list($conn, "")) {
+    $total_servers = count($server_list);
+    foreach($server_list as $server) {
+        if (in_array($server->get_name() , $server_stack)) {
+            $active_servers++;
+        }
+    }
+}
+$active_servers = ($active_servers == 0) ? "<font color=red><b>$active_servers</b></font>" : "<font color=green><b>$active_servers</b></font>";
+$total_servers = "<b>$total_servers</b>";
+$db->close($conn);
 ?>
-total_servers_div.innerHTML = <?php echo $total_servers; ?>;
-</script>
+
+	<table class="noborder">
+	<tr><td valign="top">
+		<table id="flextable" style="display:none"></table>
+	</td><tr>
+	</table>
+	<style>
+		table, th, tr, td {
+			background:transparent;
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border:none;
+			padding:0px; margin:0px;
+		}
+		input, select {
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border: 1px solid #8F8FC6;
+			font-size:12px; font-family:arial; vertical-align:middle;
+			padding:0px; margin:0px;
+		}
+	</style>
+	<script>
+	function get_width(id) {
+		if (typeof(document.getElementById(id).offsetWidth)!='undefined') 
+			return document.getElementById(id).offsetWidth-5;
+		else
+			return 700;
+	}
+	function action(com,grid) {
+		var items = $('.trSelected', grid);
+		if (com=='Delete selected') {
+			//Delete host by ajax
+			if (typeof(items[0]) != 'undefined') {
+				document.location.href = 'deleteserver.php?confirm=yes&name='+urlencode(items[0].id.substr(3))
+			}
+			else alert('You must select a server');
+		}
+		else if (com=='Modify') {
+			if (typeof(items[0]) != 'undefined') document.location.href = 'modifyserverform.php?name='+urlencode(items[0].id.substr(3))
+			else alert('You must select a server');
+		}
+		else if (com=='Insert new server') {
+			document.location.href = 'newserverform.php'
+		}
+		else if (com=='Reload') {
+			document.location.href = '../conf/reload.php?what=servers&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>'
+		}
+	}
+	function save_layout(clayout) {
+		$("#flextable").changeStatus('Saving column layout...',false);
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name:"<?php echo $name_layout ?>", category:"<?php echo $category ?>", layout:serialize(clayout) },
+				success: function(msg) {
+					$("#flextable").changeStatus(msg,true);
+				}
+		});
+	}
+	$("#flextable").flexigrid({
+		url: 'getserver.php',
+		dataType: 'xml',
+		colModel : [
+		<?php
+$default = array(
+    "ip" => array(
+        'IP',
+        100,
+        'true',
+        'center',
+        false
+    ) ,
+    "name" => array(
+        'Hostname',
+        100,
+        'true',
+        'center',
+        false
+    ) ,
+    "port" => array(
+        'Port',
+        40,
+        'true',
+        'center',
+        false
+    ) ,
+    "active" => array(
+        'Active',
+        50,
+        'false',
+        'center',
+        false
+    ) ,
+    "correlate" => array(
+        'Correlate',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "cross correlate" => array(
+        'Cross Correlate',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "store" => array(
+        'Store',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "qualify" => array(
+        'Qualify',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "resend_alarms" => array(
+        'Resend Alarms',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "resend_events" => array(
+        'Resend Events',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "sign" => array(
+        'Sign',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "sem" => array(
+        'Sem',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "sim" => array(
+        'Sim',
+        30,
+        'false',
+        'center',
+        false
+    ) ,
+    "desc" => array(
+        'Description',
+        260,
+        'false',
+        'left',
+        false
+    )
+);
+list($colModel, $sortname, $sortorder, $height) = print_layout($layout, $default, "name", "asc", 300);
+echo "$colModel\n";
+?>
+			],
+		buttons : [
+			{name: 'Insert new server', bclass: 'add', onpress : action},
+			{separator: true},
+			{name: 'Delete selected', bclass: 'delete', onpress : action},
+			{separator: true},
+			{name: 'Modify', bclass: 'modify', onpress : action},
+			{separator: true},
+			{name: 'Active Children Servers: <?php echo $active_servers ?>', bclass: 'info', iclass: 'ibutton'},
+			{name: 'Total Children Servers: <?php echo $total_servers ?>', bclass: 'info', iclass: 'ibutton'}
+			],
+		sortname: "<?php echo $sortname ?>",
+		sortorder: "<?php echo $sortorder ?>",
+		usepager: true,
+		title: 'SERVERS',
+		pagestat: 'Displaying {from} to {to} of {total} servers',
+		nomsg: 'No servers',
+		useRp: true,
+		rp: 25,
+		showTableToggleBtn: true,
+		singleSelect: true,
+		width: get_width('headerh1'),
+		height: <?php echo $height ?>,
+		onColumnChange: save_layout,
+		onEndResize: save_layout
+	});   
+	
+	</script>
 
 </body>
 </html>

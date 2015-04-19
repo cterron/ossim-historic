@@ -9,7 +9,7 @@ CREATE TABLE config (
 
 DROP TABLE IF EXISTS user_config;
 CREATE TABLE user_config (
-	login VARCHAR(64)  NOT NULL REFERENCES users (login),
+    login VARCHAR(64)  NOT NULL REFERENCES users (login),
     category VARCHAR(64) NOT NULL DEFAULT 'main',
     name VARCHAR(64) NOT NULL,
     value MEDIUMTEXT,
@@ -29,8 +29,8 @@ CREATE TABLE host (
   nat               varchar(15),
   rrd_profile       varchar(64),
   descr             varchar(255),
-  lat				varchar(255) DEFAULT 0,
-  lon				varchar(255) DEFAULT 0,
+  lat                varchar(255) DEFAULT 0,
+  lon                varchar(255) DEFAULT 0,
   PRIMARY KEY       (ip)
 );
 
@@ -226,15 +226,29 @@ CREATE TABLE sensor_stats (
 /* ======== policy ======== */
 DROP TABLE IF EXISTS policy;
 CREATE TABLE policy (
-    id              int NOT NULL auto_increment,
-    priority        smallint NOT NULL,
-    descr           varchar(255),
-    PRIMARY KEY     (id)
+  `id` int(11) NOT NULL auto_increment,
+  `priority` smallint(6) NOT NULL,
+  `active` int(11) NOT NULL,
+  `group` int(11) NOT NULL,
+  `order` int(11) NOT NULL,
+  `descr` varchar(255) default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `group` (`group`),
+  KEY `order` (`order`)
+);
+
+DROP TABLE IF EXISTS policy_group;
+CREATE TABLE `policy_group` (
+  `group_id` int(11) unsigned NOT NULL auto_increment,
+  `name` varchar(100) NOT NULL,
+  `descr` varchar(255) NOT NULL,
+  `order` INT(11) NOT NULL,
+  PRIMARY KEY  (`group_id`)
 );
 
 DROP TABLE IF EXISTS policy_seq;
 CREATE TABLE policy_seq (
-	id INT NOT NULL
+    id INT NOT NULL
 );
 INSERT INTO policy_seq (id) VALUES (0);
 
@@ -288,7 +302,7 @@ CREATE TABLE policy_time (
 DROP TABLE IF EXISTS policy_plugin_reference;
 CREATE TABLE policy_plugin_reference (
     policy_id       int NOT NULL,
-	plugin_id		INTEGER NOT NULL,
+    plugin_id        INTEGER NOT NULL,
     PRIMARY KEY     (policy_id, plugin_id)
 );
 
@@ -309,12 +323,15 @@ CREATE TABLE policy_plugin_group_reference (
 DROP TABLE IF EXISTS policy_role_reference;
 CREATE TABLE policy_role_reference (
     policy_id       INTEGER NOT NULL REFERENCES policy(id),
-    correlate       BOOLEAN	NOT NULL DEFAULT '1',
-    cross_correlate BOOLEAN	NOT NULL DEFAULT '1',
-    store           BOOLEAN	NOT NULL DEFAULT '1',
-    qualify         BOOLEAN	NOT NULL DEFAULT '1',
-    resend_alarm    BOOLEAN	NOT NULL DEFAULT '1',
-    resend_event    BOOLEAN	NOT NULL DEFAULT '1',
+    correlate       BOOLEAN    NOT NULL DEFAULT '1',
+    cross_correlate BOOLEAN    NOT NULL DEFAULT '1',
+    store           BOOLEAN    NOT NULL DEFAULT '1',
+    qualify         BOOLEAN    NOT NULL DEFAULT '1',
+    resend_alarm    BOOLEAN    NOT NULL DEFAULT '1',
+    resend_event    BOOLEAN    NOT NULL DEFAULT '1',
+    sign            INT(10) unsigned NOT NULL default '0',
+    sem             TINYINT(1) NOT NULL default '1',
+    sim             TINYINT(1) NOT NULL default '1',
     PRIMARY KEY (policy_id)
 );
 
@@ -323,6 +340,22 @@ CREATE TABLE policy_target_reference (
     policy_id       int NOT NULL,
     target_name     varchar(64),   /*this is the target to wich applies the policy, it can be server or sensor names*/
     PRIMARY KEY     (policy_id, target_name)
+);
+
+DROP TABLE IF EXISTS policy_host_group_reference;
+CREATE TABLE IF NOT EXISTS policy_host_group_reference (
+    policy_id int(11) NOT NULL,
+    host_group_name varchar(128) NOT NULL,
+    direction enum('source','dest') NOT NULL,
+    PRIMARY KEY (policy_id,host_group_name,direction)
+);
+
+DROP TABLE IF EXISTS policy_net_group_reference;
+CREATE TABLE IF NOT EXISTS policy_net_group_reference (
+    policy_id int(11) NOT NULL,
+    net_group_name varchar(128) NOT NULL,
+    direction enum('source','dest') NOT NULL,
+    PRIMARY KEY (policy_id,net_group_name,direction)
 );
 
 /* ======== servers ======== */
@@ -335,12 +368,15 @@ CREATE TABLE policy_target_reference (
 DROP TABLE IF EXISTS server_role;
 CREATE TABLE server_role (
     name            varchar(64) NOT NULL,
-    correlate       BOOLEAN	NOT NULL DEFAULT '1',
-    cross_correlate BOOLEAN	NOT NULL DEFAULT '1',
-    store           BOOLEAN	NOT NULL DEFAULT '1',
-    qualify         BOOLEAN	NOT NULL DEFAULT '1',
-    resend_alarm    BOOLEAN	NOT NULL DEFAULT '1',
-    resend_event    BOOLEAN	NOT NULL DEFAULT '1',
+    correlate       BOOLEAN    NOT NULL DEFAULT '1',
+    cross_correlate BOOLEAN    NOT NULL DEFAULT '1',
+    store           BOOLEAN    NOT NULL DEFAULT '1',
+    qualify         BOOLEAN    NOT NULL DEFAULT '1',
+    resend_alarm    BOOLEAN    NOT NULL DEFAULT '1',
+    resend_event    BOOLEAN    NOT NULL DEFAULT '1',
+    sign            INT(10) unsigned NOT NULL default '0',
+    sim             TINYINT(1) NOT NULL default '1',
+    sem             TINYINT(1) NOT NULL default '1',
     PRIMARY KEY     (name)
 );
 
@@ -494,14 +530,21 @@ CREATE INDEX type_time ON control_panel(rrd_type,time_range);
 --
 DROP TABLE IF EXISTS host_mac;
 CREATE TABLE host_mac (
-	ip		INTEGER UNSIGNED NOT NULL,
-	mac	        VARCHAR(255) NOT NULL,
-	date            DATETIME NOT NULL,
-	vendor		VARCHAR(255),
-	sensor		INTEGER UNSIGNED NOT NULL,
+    ip        INTEGER UNSIGNED NOT NULL,
+    mac            VARCHAR(255) NOT NULL,
+    date            DATETIME NOT NULL,
+    vendor        VARCHAR(255),
+    sensor        INTEGER UNSIGNED NOT NULL,
     interface   VARCHAR(64) NOT NULL,
     anom        INT DEFAULT 1,
-	PRIMARY KEY     (ip, date, sensor)
+    PRIMARY KEY     (ip, date, sensor)
+);
+
+DROP TABLE IF EXISTS host_mac_vendors;
+CREATE TABLE IF NOT EXISTS host_mac_vendors (
+  mac varchar(8) NOT NULL,
+  vendor varchar(255) NOT NULL,
+  PRIMARY KEY (mac)
 );
 
 --
@@ -509,26 +552,26 @@ CREATE TABLE host_mac (
 --
 DROP TABLE IF EXISTS host_os;
 CREATE TABLE host_os (
-	ip		INTEGER UNSIGNED NOT NULL,
-	os		VARCHAR(255) NOT NULL,
-	date		DATETIME NOT NULL,
-	sensor		INTEGER UNSIGNED NOT NULL,
+    ip        INTEGER UNSIGNED NOT NULL,
+    os        VARCHAR(255) NOT NULL,
+    date        DATETIME NOT NULL,
+    sensor        INTEGER UNSIGNED NOT NULL,
     interface VARCHAR(64) NOT NULL,
     anom        INT DEFAULT 1,
-	PRIMARY KEY	(ip,date,sensor)
+    PRIMARY KEY    (ip,date,sensor)
 );
 
 DROP TABLE IF EXISTS host_services;
 CREATE TABLE host_services (
-	ip		INTEGER UNSIGNED NOT NULL,
+    ip        INTEGER UNSIGNED NOT NULL,
     port    int NOT NULL,
     protocol int NOT NULL,
     service varchar(128),
     service_type varchar(128),
     version varchar(255) NOT NULL DEFAULT "unknown",
-	date		DATETIME NOT NULL,
+    date        DATETIME NOT NULL,
     origin  int NOT NULL DEFAULT 0,
-	sensor		INTEGER UNSIGNED NOT NULL,
+    sensor        INTEGER UNSIGNED NOT NULL,
     interface VARCHAR(64) NOT NULL,
     anom    INT DEFAULT 1,
     PRIMARY KEY (ip, port, protocol, version, date)
@@ -563,7 +606,7 @@ CREATE TABLE rrd_anomalies (
     what                    varchar(100) NOT NULL,
     count                   int NOT NULL,
     anomaly_time            varchar(40) NOT NULL,
-    range                   varchar(30) NOT NULL,
+    `range`                   varchar(30) NOT NULL,
     over                    int NOT NULL,
     acked                   int DEFAULT 0
 );
@@ -574,7 +617,7 @@ CREATE TABLE rrd_anomalies_global (
     what                    varchar(100) NOT NULL,
     count                   int NOT NULL,
     anomaly_time            varchar(40) NOT NULL,
-    range                   varchar(30) NOT NULL,
+    `range`                   varchar(30) NOT NULL,
     over                    int NOT NULL,
     acked                   int DEFAULT 0
 );
@@ -584,9 +627,9 @@ CREATE TABLE rrd_anomalies_global (
 --
 DROP TABLE IF EXISTS category;
 CREATE TABLE category (
-	id		INTEGER NOT NULL,
-	name		VARCHAR (100) NOT NULL,
-	PRIMARY KEY (id)
+    id        INTEGER NOT NULL,
+    name        VARCHAR (100) NOT NULL,
+    PRIMARY KEY (id)
 );
 
 --
@@ -594,11 +637,11 @@ CREATE TABLE category (
 --
 DROP TABLE IF EXISTS classification;
 CREATE TABLE classification (
-	id		INTEGER NOT NULL,
-	name		VARCHAR (100) NOT NULL,
-	description	TEXT,
-	priority	INTEGER,
-	PRIMARY KEY (id)
+    id        INTEGER NOT NULL,
+    name        VARCHAR (100) NOT NULL,
+    description    TEXT,
+    priority    INTEGER,
+    PRIMARY KEY (id)
 );
 
 --
@@ -606,11 +649,11 @@ CREATE TABLE classification (
 --
 DROP TABLE IF EXISTS plugin;
 CREATE TABLE plugin (
-	id		INTEGER NOT NULL,
-	type		SMALLINT NOT NULL,
-	name		VARCHAR (100) NOT NULL,
-	description	TEXT,
-	PRIMARY KEY (id)
+    id        INTEGER NOT NULL,
+    type        SMALLINT NOT NULL,
+    name        VARCHAR (100) NOT NULL,
+    description    TEXT,
+    PRIMARY KEY (id)
 );
 
 --
@@ -618,14 +661,15 @@ CREATE TABLE plugin (
 --
 DROP TABLE IF EXISTS plugin_sid;
 CREATE TABLE plugin_sid (
-	plugin_id	INTEGER NOT NULL,
-	sid		INTEGER NOT NULL,
-	category_id	INTEGER,
-	class_id	INTEGER,
-	reliability	INTEGER DEFAULT 1,
-	priority	INTEGER DEFAULT 1,
-	name		VARCHAR (255) NOT NULL,
-	PRIMARY KEY (plugin_id, sid)
+    plugin_id    INTEGER NOT NULL,
+    sid            INTEGER NOT NULL,
+    category_id    INTEGER,
+    class_id    INTEGER,
+    reliability    INTEGER DEFAULT 1,
+    priority    INTEGER DEFAULT 1,
+    name        VARCHAR (255) NOT NULL,
+    aro         DECIMAL (11,4) NOT NULL DEFAULT 0,
+    PRIMARY KEY (plugin_id, sid)
 );
 
 --
@@ -643,7 +687,7 @@ CREATE TABLE plugin_group_descr (
 
 DROP TABLE IF EXISTS plugin_group_descr_seq;
 CREATE TABLE plugin_group_descr_seq (
-	id INT NOT NULL
+    id INT NOT NULL
 );
 INSERT INTO plugin_group_descr_seq VALUES (0);
 
@@ -689,18 +733,18 @@ CREATE TABLE event (
         snort_cid       INTEGER UNSIGNED,
         PRIMARY KEY (id)
 );
-CREATE INDEX event_idx ON event (id);
+CREATE INDEX event_idx ON event (timestamp);
 
 --
 -- Table: Backlog
 --
 DROP TABLE IF EXISTS backlog;
 CREATE TABLE backlog (
-	id		BIGINT NOT NULL DEFAULT 0,
-	directive_id	INTEGER NOT NULL,
-	timestamp	TIMESTAMP NOT NULL,
-	matched		TINYINT,
-	PRIMARY KEY (id)
+    id        BIGINT NOT NULL DEFAULT 0,
+    directive_id    INTEGER NOT NULL,
+    timestamp    TIMESTAMP NOT NULL,
+    matched        TINYINT,
+    PRIMARY KEY (id)
 );
 
 --
@@ -708,13 +752,13 @@ CREATE TABLE backlog (
 --
 DROP TABLE IF EXISTS backlog_event;
 CREATE TABLE backlog_event (
-	backlog_id	BIGINT NOT NULL,
-	event_id	BIGINT NOT NULL,
-	time_out	INTEGER,
-	occurrence	INTEGER,
-	rule_level	INTEGER,
-	matched		TINYINT,
-	PRIMARY KEY (backlog_id, event_id)
+    backlog_id    BIGINT NOT NULL,
+    event_id    BIGINT NOT NULL,
+    time_out    INTEGER,
+    occurrence    INTEGER,
+    rule_level    INTEGER,
+    matched        TINYINT,
+    PRIMARY KEY (backlog_id, event_id)
 );
 
 CREATE INDEX event_idx ON backlog_event(event_id);
@@ -754,10 +798,10 @@ CREATE TABLE event_tmp (
         userdata3       varchar(255),
         userdata4       varchar(255),
         userdata5       varchar(255),
-        userdata6       varchar(255),
-        userdata7       varchar(255),
-        userdata8       varchar(255),
-        userdata9       varchar(255),
+        userdata6       TEXT,
+        userdata7       TEXT,
+        userdata8       TEXT,
+        userdata9       TEXT,
         PRIMARY KEY (id)
 );
 
@@ -792,10 +836,10 @@ CREATE TABLE event_tmp_filter (
         userdata3       varchar(255),
         userdata4       varchar(255),
         userdata5       varchar(255),
-        userdata6       varchar(255),
-        userdata7       varchar(255),
-        userdata8       varchar(255),
-        userdata9       varchar(255),
+        userdata6       TEXT,
+        userdata7       TEXT,
+        userdata8       TEXT,
+        userdata9       TEXT,
         PRIMARY KEY (id, login)
 );
 
@@ -847,6 +891,31 @@ CREATE TABLE alarm (
         risk            INTEGER,
         snort_sid       INTEGER UNSIGNED,
         snort_cid       INTEGER UNSIGNED,
+        efr             INTEGER (11) NOT NULL DEFAULT 0,
+        PRIMARY KEY (backlog_id),
+        KEY `timestamp` (`timestamp`),
+        KEY `src_ip` (`src_ip`),
+        KEY `dst_ip` (`dst_ip`)
+);
+
+--
+-- Alarmgroups
+--
+DROP TABLE IF EXISTS alarm_group;
+CREATE TABLE alarm_group (
+        id              BIGINT(20) NOT NULL auto_increment,
+        status          ENUM("open","closed") DEFAULT "open",
+        timestamp       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP on UPDATE CURRENT_TIMESTAMP,
+        owner           VARCHAR(64) DEFAULT NULL,
+        descr           VARCHAR(255) NOT NULL,
+        PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS alarm_group_members;
+CREATE TABLE alarm_group_members (
+        group_id        BIGINT(20) NOT NULL,
+        backlog_id      BIGINT(20) NOT NULL,
+        event_id        BIGINT(20) NOT NULL,
         PRIMARY KEY (backlog_id, event_id)
 );
 
@@ -855,11 +924,11 @@ CREATE TABLE alarm (
 --
 DROP TABLE IF EXISTS plugin_reference;
 CREATE TABLE plugin_reference (
-	plugin_id	INTEGER NOT NULL,
-	plugin_sid	INTEGER NOT NULL,
-	reference_id	INTEGER NOT NULL,
-	reference_sid	INTEGER NOT NULL,
-	PRIMARY KEY (plugin_id, plugin_sid, reference_id, reference_sid)
+    plugin_id    INTEGER NOT NULL,
+    plugin_sid    INTEGER NOT NULL,
+    reference_id    INTEGER NOT NULL,
+    reference_sid    INTEGER NOT NULL,
+    PRIMARY KEY (plugin_id, plugin_sid, reference_id, reference_sid)
 );
 
 --
@@ -867,10 +936,10 @@ CREATE TABLE plugin_reference (
 --
 DROP TABLE IF EXISTS host_plugin_sid;
 CREATE TABLE host_plugin_sid (
-	host_ip         INTEGER UNSIGNED NOT NULL,
-	plugin_id	INTEGER NOT NULL,
-	plugin_sid	INTEGER NOT NULL,
-	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
+    host_ip         INTEGER UNSIGNED NOT NULL,
+    plugin_id    INTEGER NOT NULL,
+    plugin_sid    INTEGER NOT NULL,
+    PRIMARY KEY (host_ip, plugin_id, plugin_sid)
 );
 
 --
@@ -878,10 +947,10 @@ CREATE TABLE host_plugin_sid (
 --
 DROP TABLE IF EXISTS host_scan;
 CREATE TABLE host_scan (
-	host_ip         INTEGER UNSIGNED NOT NULL,
-	plugin_id	INTEGER NOT NULL,
-	plugin_sid	INTEGER NOT NULL,
-	PRIMARY KEY (host_ip, plugin_id, plugin_sid)
+    host_ip         INTEGER UNSIGNED NOT NULL,
+    plugin_id    INTEGER NOT NULL,
+    plugin_sid    INTEGER NOT NULL,
+    PRIMARY KEY (host_ip, plugin_id, plugin_sid)
 );
 
 --
@@ -896,10 +965,10 @@ CREATE TABLE net_scan (
 );
 
 
-
 ---
 --- Table: Users
 ---
+
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     login   varchar(64)  NOT NULL,
@@ -909,6 +978,7 @@ CREATE TABLE users (
     email   varchar(64),
     company varchar(128),
     department varchar(128),
+    language varchar(12) DEFAULT 'en_GB' NOT NULL,
     PRIMARY KEY (login)
 );
 
@@ -931,7 +1001,7 @@ CREATE TABLE incident (
     priority    INTEGER NOT NULL,
     status      ENUM ('Open', 'Closed') NOT NULL DEFAULT 'Open',
     last_update DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
-    in_charge 	VARCHAR(64) NOT NULL,
+    in_charge     VARCHAR(64) NOT NULL,
     submitter   VARCHAR(64) NOT NULL,
     event_start DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
     event_end   DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -942,18 +1012,19 @@ DROP TABLE IF EXISTS incident_type;
 CREATE TABLE incident_type (
     id          VARCHAR(64) NOT NULL,
     descr       VARCHAR(255) NOT NULL DEFAULT "",
+    `keywords` varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
 
-INSERT INTO incident_type (id, descr) VALUES ("Generic", "");
-INSERT INTO incident_type (id, descr) VALUES ("Expansion Virus", "");
-INSERT INTO incident_type (id, descr) VALUES ("Corporative Nets Attack", "");
-INSERT INTO incident_type (id, descr) VALUES ("Policy Violation", "");
-INSERT INTO incident_type (id, descr) VALUES ("Security Weakness", "");
-INSERT INTO incident_type (id, descr) VALUES ("Net Performance", "");
-INSERT INTO incident_type (id, descr) VALUES ("Applications and Systems Failures", "");
-INSERT INTO incident_type (id, descr) VALUES ("Anomalies", "");
-INSERT INTO incident_type (id, descr) VALUES ('Nessus Vulnerability',"");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Generic", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Expansion Virus", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Corporative Nets Attack", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Policy Violation", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Security Weakness", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Net Performance", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Applications and Systems Failures", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ("Anomalies", "", "");
+INSERT INTO incident_type (id, descr, keywords) VALUES ('Nessus Vulnerability',"", "");
 
 --
 -- Table: incident ticket
@@ -975,7 +1046,7 @@ CREATE TABLE incident_ticket (
 
 DROP TABLE IF EXISTS incident_ticket_seq;
 CREATE TABLE incident_ticket_seq (
-	id INT NOT NULL
+    id INT NOT NULL
 );
 INSERT INTO incident_ticket_seq VALUES (0);
 
@@ -1100,9 +1171,9 @@ INSERT INTO incident_tag_descr VALUES(65002,'OSSIM_INTERNAL_FALSE_POSITIVE','DON
 --
 DROP TABLE IF EXISTS incident_subscrip;
 CREATE TABLE incident_subscrip (
-	login VARCHAR(64) NOT NULL REFERENCES users(login),
-	incident_id INT(11) NOT NULL REFERENCES incident(id),
-	PRIMARY KEY (login, incident_id)
+    login VARCHAR(64) NOT NULL REFERENCES users(login),
+    incident_id INT(11) NOT NULL REFERENCES incident(id),
+    PRIMARY KEY (login, incident_id)
 );
 
 --
@@ -1110,14 +1181,14 @@ CREATE TABLE incident_subscrip (
 --
 DROP TABLE IF EXISTS restoredb_log;
 CREATE TABLE restoredb_log (
-	id		INTEGER NOT NULL AUTO_INCREMENT,
-	date		TIMESTAMP,
-	pid		INTEGER,
-	users		VARCHAR(64),
-	data		TEXT,
-	status		SMALLINT,
-	percent		SMALLINT,
-	PRIMARY KEY (id)
+    id        INTEGER NOT NULL AUTO_INCREMENT,
+    date        TIMESTAMP,
+    pid        INTEGER,
+    users        VARCHAR(64),
+    data        TEXT,
+    status        SMALLINT,
+    percent        SMALLINT,
+    PRIMARY KEY (id)
 );
 
 --
@@ -1147,7 +1218,7 @@ CREATE TABLE host_ids(
 DROP TABLE IF EXISTS log_config;
 CREATE TABLE log_config(
     code        INTEGER UNSIGNED NOT NULL,
-    log         BOOL	DEFAULT "0",
+    log         BOOL    DEFAULT "0",
     descr       VARCHAR(255) NOT NULL,
     priority    INTEGER UNSIGNED NOT NULL,
     PRIMARY KEY (code)
@@ -1169,10 +1240,11 @@ CREATE TABLE log_action(
 
 DROP TABLE IF EXISTS bp_process;
 CREATE TABLE bp_process (
-	id          INT NOT NULL,
-	name        VARCHAR(255) NOT NULL,
-	description TEXT,
-	PRIMARY KEY (id)
+    id          INT NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    description TEXT,
+    valuation   DECIMAL (11,2) NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
 );
 
 --
@@ -1180,10 +1252,10 @@ CREATE TABLE bp_process (
 --
 DROP TABLE IF EXISTS bp_asset;
 CREATE TABLE bp_asset (
-	id          INT NOT NULL,
-	name        VARCHAR(255) NOT NULL,
-	description TEXT,
-	PRIMARY KEY (id)
+    id          INT NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    description TEXT,
+    PRIMARY KEY (id)
 );
 
 --
@@ -1193,9 +1265,9 @@ CREATE TABLE bp_asset (
 --
 DROP TABLE IF EXISTS bp_asset_member;
 CREATE TABLE bp_asset_member (
-	asset_id	INT NOT NULL REFERENCES bp_asset(id),
-	member      TEXT NOT NULL,
-	member_type VARCHAR(255) NOT NULL REFERENCES bp_asset_member_type(type_name)
+    asset_id    INT NOT NULL REFERENCES bp_asset(id),
+    member      TEXT NOT NULL,
+    member_type VARCHAR(255) NOT NULL REFERENCES bp_asset_member_type(type_name)
 );
 
 --
@@ -1203,8 +1275,8 @@ CREATE TABLE bp_asset_member (
 --
 DROP TABLE IF EXISTS bp_asset_member_type;
 CREATE TABLE bp_asset_member_type (
-	type_name  VARCHAR(255) NOT NULL UNIQUE,
-	PRIMARY KEY (type_name)
+    type_name  VARCHAR(255) NOT NULL UNIQUE,
+    PRIMARY KEY (type_name)
 );
 INSERT INTO bp_asset_member_type (type_name) VALUES ('host');
 INSERT INTO bp_asset_member_type (type_name) VALUES ('net');
@@ -1218,10 +1290,10 @@ INSERT INTO bp_asset_member_type (type_name) VALUES ('net_group');
 --
 DROP TABLE IF EXISTS bp_process_asset_reference;
 CREATE TABLE bp_process_asset_reference (
-	process_id  INT NOT NULL REFERENCES bp_process(id),
-	asset_id    INT NOT NULL REFERENCES bp_asset(id),
-	severity    INT(2) NOT NULL, /* How important is that asset (0 - low, 1 - medium, 2 - high) */
-	PRIMARY KEY (process_id, asset_id)
+    process_id  INT NOT NULL REFERENCES bp_process(id),
+    asset_id    INT NOT NULL REFERENCES bp_asset(id),
+    severity    INT(2) NOT NULL, /* How important is that asset (0 - low, 1 - medium, 2 - high) */
+    PRIMARY KEY (process_id, asset_id)
 );
 
 --
@@ -1229,9 +1301,9 @@ CREATE TABLE bp_process_asset_reference (
 --
 DROP TABLE IF EXISTS bp_asset_responsible;
 CREATE TABLE bp_asset_responsible (
-	asset_id 	INT NOT NULL REFERENCES bp_asset(id),
-	login 		VARCHAR(64) NOT NULL REFERENCES users(login),
-	PRIMARY KEY (asset_id, login)
+    asset_id     INT NOT NULL REFERENCES bp_asset(id),
+    login         VARCHAR(64) NOT NULL REFERENCES users(login),
+    PRIMARY KEY (asset_id, login)
 );
 
 --
@@ -1242,10 +1314,10 @@ CREATE TABLE bp_asset_responsible (
 --
 DROP TABLE IF EXISTS bp_member_status;
 CREATE TABLE bp_member_status (
-	member        TEXT NOT NULL REFERENCES bp_asset_member(member),
-	status_date   DATETIME NOT NULL,
-	measure_type  VARCHAR(255) NOT NULL,
-	severity      INT(2) NOT NULL /* number between 0-10: 0 = ok, 2 = low, 5 = med, 7 = high */
+    member        TEXT NOT NULL REFERENCES bp_asset_member(member),
+    status_date   DATETIME NOT NULL,
+    measure_type  VARCHAR(255) NOT NULL,
+    severity      INT(2) NOT NULL /* number between 0-10: 0 = ok, 2 = low, 5 = med, 7 = high */
 );
 
 --
@@ -1253,7 +1325,7 @@ CREATE TABLE bp_member_status (
 --
 DROP TABLE IF EXISTS bp_seq;
 CREATE TABLE bp_seq (
-	id INT NOT NULL
+    id INT NOT NULL
 );
 INSERT INTO bp_seq (id) VALUES (0);
 
@@ -1263,21 +1335,21 @@ INSERT INTO bp_seq (id) VALUES (0);
 --
 DROP TABLE IF EXISTS plugin_scheduler;
 CREATE TABLE plugin_scheduler(
-	id          INT NOT NULL,
-	plugin VARCHAR(255) NOT NULL,
-	plugin_minute VARCHAR(255) NOT NULL,
-	plugin_hour VARCHAR(255) NOT NULL,
-	plugin_day_month VARCHAR(255) NOT NULL,
-	plugin_month VARCHAR(255) NOT NULL,
-	plugin_day_week VARCHAR(255) NOT NULL,
-	type_scan VARCHAR(255) NOT NULL,
-	PRIMARY KEY (id)
+    id          INT NOT NULL,
+    plugin VARCHAR(255) NOT NULL,
+    plugin_minute VARCHAR(255) NOT NULL,
+    plugin_hour VARCHAR(255) NOT NULL,
+    plugin_day_month VARCHAR(255) NOT NULL,
+    plugin_month VARCHAR(255) NOT NULL,
+    plugin_day_week VARCHAR(255) NOT NULL,
+    type_scan VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id)
 );
 
 DROP TABLE IF EXISTS plugin_scheduler_sensor_reference;
 CREATE TABLE plugin_scheduler_sensor_reference (
-	plugin_scheduler_id          INT NOT NULL,
-	sensor_name VARCHAR(255) NOT NULL,
+    plugin_scheduler_id          INT NOT NULL,
+    sensor_name VARCHAR(255) NOT NULL,
     PRIMARY KEY     (plugin_scheduler_id, sensor_name)
 );
 
@@ -1311,7 +1383,7 @@ CREATE TABLE plugin_scheduler_host_reference (
 
 DROP TABLE IF EXISTS plugin_scheduler_seq;
 CREATE TABLE plugin_scheduler_seq (
-	id INT NOT NULL
+    id INT NOT NULL
 );
 INSERT INTO plugin_scheduler_seq (id) VALUES (0);
 
@@ -1320,18 +1392,18 @@ INSERT INTO plugin_scheduler_seq (id) VALUES (0);
 --
 DROP TABLE IF EXISTS map;
 CREATE TABLE map (
-	id INT NOT NULL,
-	name VARCHAR(255) NOT NULL,
-	engine ENUM('openlayers_op', 'openlayers_ve', 'openlayers_yahoo', 'openlayers_image'),
-	engine_data1 MEDIUMTEXT,
-	engine_data2 TEXT,
-	engine_data3 TEXT,
-	engine_data4 TEXT,
-	center_x VARCHAR(255),
-	center_y VARCHAR(255),
-	zoom INT,
-	show_controls BOOL DEFAULT 1,
-	PRIMARY KEY (id)
+    id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    engine ENUM('openlayers_op', 'openlayers_ve', 'openlayers_yahoo', 'openlayers_image'),
+    engine_data1 MEDIUMTEXT,
+    engine_data2 TEXT,
+    engine_data3 TEXT,
+    engine_data4 TEXT,
+    center_x VARCHAR(255),
+    center_y VARCHAR(255),
+    zoom INT,
+    show_controls BOOL DEFAULT 1,
+    PRIMARY KEY (id)
 );
 DROP TABLE IF EXISTS map_seq;
 CREATE TABLE map_seq (
@@ -1341,13 +1413,13 @@ INSERT INTO map_seq VALUES (0);
 
 DROP TABLE IF EXISTS map_element;
 CREATE TABLE map_element (
-	id INT NOT NULL,
-	type ENUM('host', 'sensor', 'network', 'server'),
-	ossim_element_key VARCHAR(255),
-	map_id INT NOT NULL REFERENCES map(id),
-	x VARCHAR(255),
-	y VARCHAR(255),
-	PRIMARY KEY (id)
+    id INT NOT NULL,
+    type ENUM('host', 'sensor', 'network', 'server'),
+    ossim_element_key VARCHAR(255),
+    map_id INT NOT NULL REFERENCES map(id),
+    x VARCHAR(255),
+    y VARCHAR(255),
+    PRIMARY KEY (id)
 );
 DROP TABLE IF EXISTS map_element_seq;
 CREATE TABLE map_element_seq (
@@ -1355,5 +1427,61 @@ CREATE TABLE map_element_seq (
 );
 INSERT INTO map_element_seq VALUES (0);
 
--- vim:ts=4 sts=4 tw=79 expandtab:
+DROP TABLE IF EXISTS `risk_indicators`;
+CREATE TABLE `risk_indicators` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(100) collate utf8_unicode_ci NOT NULL default '',
+  `map` int(11) NOT NULL default '0',
+  `url` varchar(255) collate utf8_unicode_ci NOT NULL default '',
+  `type` varchar(100) collate utf8_unicode_ci NOT NULL default '',
+  `type_name` varchar(255) collate utf8_unicode_ci NOT NULL default '',
+  `icon` varchar(255) collate utf8_unicode_ci NOT NULL default '',
+  `x` int(11) NOT NULL default '0',
+  `y` int(11) NOT NULL default '0',
+  `w` int(11) NOT NULL default '0',
+  `h` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+);
 
+DROP TABLE IF EXISTS `repository`;
+ CREATE TABLE IF NOT EXISTS `repository` (
+  `id` int(11) NOT NULL auto_increment,
+  `title` varchar(256) NOT NULL,
+  `text` text NOT NULL,
+  `date` date NOT NULL,
+  `user` varchar(64) NOT NULL,
+  `keywords` varchar(256) NOT NULL COMMENT 'Comma separated',
+  PRIMARY KEY  (`id`),
+  KEY `title` (`title`),
+  KEY `keywords` (`keywords`),
+  FULLTEXT KEY `text` (`text`)
+);
+
+DROP TABLE IF EXISTS `repository_attachments`;
+CREATE TABLE IF NOT EXISTS `repository_attachments` (
+  `id` int(11) NOT NULL auto_increment,
+  `id_document` int(11) NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `type` varchar(4) NOT NULL,
+  PRIMARY KEY  (`id`)
+);
+
+DROP TABLE IF EXISTS `repository_relationships`;
+CREATE TABLE IF NOT EXISTS `repository_relationships` (
+  `id` int(11) NOT NULL auto_increment,
+  `id_document` int(11) NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `type` varchar(16) NOT NULL,
+  `keyname` varchar(128) NOT NULL,
+  PRIMARY KEY  (`id`)
+); 
+
+DROP TABLE IF EXISTS `sensor_agent_info`;
+CREATE TABLE IF NOT EXISTS `sensor_agent_info` (
+  `ip` varchar(64) NOT NULL,
+    `version` varchar(64) NOT NULL,
+    PRIMARY KEY  (`ip`)
+);
+
+
+-- vim:ts=4 sts=4 tw=79 expandtab:

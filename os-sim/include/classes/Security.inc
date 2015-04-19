@@ -1,4 +1,112 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* - html_vul_scan()
+* - ossim_valid()
+* - ossim_set_error()
+* - ossim_error()
+* - valid_ip()
+* - valid_cidr()
+* - htm()
+* - strip()
+* - required()
+* - GET()
+* - POST()
+* - REQUEST()
+* Classes list:
+*/
+require_once 'ossim_error.inc';
+function html_vul_scan($string, $is_get) {
+    $scan_for = array(
+        '/<\s*script[^>]*>/Ui'
+    );
+    if (is_array($string)) {
+        foreach($string as $string_piece) {
+            foreach($scan_for as $s) {
+                if ($is_get) {
+                    if (($string_piece == "<=") || ($string_piece == "=>")) {
+                        continue;
+                    }
+                    if ($string_piece != strip_tags($string_piece)) {
+                        die(ossim_error("HTTP GET " . _("param not allowed for security reasons")));
+                    }
+                }
+                if (preg_match($s, $string_piece)) {
+                    die(ossim_error("HTTP POST " . _("param not allowed for security reasons")));
+                }
+            }
+        }
+    } else {
+        $string = html_entity_decode($string);
+        foreach($scan_for as $s) {
+            if ($is_get) {
+                if (preg_match('/^<<./', $string, $m)) {
+                    continue;
+                }
+                if ($string !== strip_tags($string)) {
+                    die(ossim_error("HTTP GET " . _("param not allowed for security reasons")));
+                }
+            }
+            if (preg_match($s, $string)) {
+                die(ossim_error("HTTP POST " . _("param not allowed for security reasons")));
+            }
+        }
+    }
+}
+/*
+* Scan all HTTP vars disallowing common exploits like XSS
+*/
+if (!isset($_html_vars_checked)) {
+    $_is_get = true;
+    foreach(array(
+        $_GET,
+        $_REQUEST,
+        $_POST
+    ) as $globalvar) {
+        foreach($globalvar as $key => $value) {
+            if (is_array($value)) {
+                foreach($value as $v) {
+                    html_vul_scan($v, $_is_get);
+                }
+            } else {
+                html_vul_scan($value, $_is_get);
+            }
+        }
+        $_is_get = false;
+    }
+    $_html_vars_checked = true;
+}
 /*
 
 Usage examples:
@@ -10,7 +118,7 @@ Usage examples:
 // or can be an empty value, add the rule OSS_NULLABLE
 
 if (!ossim_valid($id, OSS_DIGIT)) {
-    echo ossim_error();
+echo ossim_error();
 }
 
 //--- complex validations ---//
@@ -28,8 +136,8 @@ if (!ossim_valid($id, OSS_DIGIT)) {
 // at the ossim_valid() function
 
 $vals = array(
-    'id'   => array(OSS_DIGIT, 'error:Invalid ID, only numbers allowed'),
-    'name' => array(OSS_LETTER, OSS_SPACE, 'error:Only letters and spaces')
+'id'   => array(OSS_DIGIT, 'error:Invalid ID, only numbers allowed'),
+'name' => array(OSS_LETTER, OSS_SPACE, 'error:Only letters and spaces')
 );
 
 $name = isset($_GET['name']) ? $_GET['name'] : null;
@@ -37,79 +145,74 @@ $name = isset($_GET['name']) ? $_GET['name'] : null;
 ossim_valid($id, $vals['id']);
 ossim_valid($name, $vals['name']);
 if (ossim_error()) {
-    echo ossim_error();
+echo ossim_error();
 }
 
- */
-define ('OSS_DIGIT',  '0-9');
-define ('OSS_LETTER', 'A-Za-z');
-define ('OSS_SPACE',  ' ');
-define ('OSS_SCORE',  '_\-');
-define ('OSS_DOT',    '\.');
-define ('OSS_COLON',  ':');
-define ('OSS_AT',     '@');
-define ('OSS_MAC',    'a-fA-F0-9:');
-define ('OSS_PUNC_EXT',   '\'"\.\!#\$%\^&\*_\-\=\+\:;,@\? \\\(\)\/ºª');
+*/
+define('OSS_DIGIT', '0-9');
+define('OSS_LETTER', 'A-Za-z');
+define('OSS_SPACE', ' ');
+define('OSS_SCORE', '_\-');
+define('OSS_DOT', '\.');
+define('OSS_COLON', ':');
+define('OSS_AT', '@');
+define('OSS_MAC', 'a-fA-F0-9:');
+define('OSS_PUNC_EXT', '\'"\.\!#\$%\^&\*_\-\=\+\:;,@\?\\\(\)\/ºª' . OSS_SPACE);
 // Temporary fix, need to check out each and every OSS_PUNC use throughout the code
-define ('OSS_PUNC',   '\.,:@_\-\/\?&\=');
-define ('OSS_SLASH',   '\/');
-define ('OSS_URL',   '\.\/');
-define ('OSS_ALPHA',  OSS_DIGIT . OSS_LETTER . 'ÁÉÍÓÚÝáéíóúýÂÊÎÔÛâêîôûÀÈÌÒÙàèìòùÄËÏÖÜäëïöüÿÃãÕõÅåÑñÇçÞþÆæ');
-define ('OSS_CRONTAB',  OSS_DIGIT . OSS_LETTER . '\*\-,\/'); // Somewhat dangerous, if "/" is allowed don't allow spaces, tabs or anything similar.
-define ('OSS_NL',     '\r\n');
-define ('OSS_INPUT',  OSS_ALPHA . OSS_PUNC);          // for most input text fields
-define ('OSS_TEXT',   OSS_ALPHA . OSS_PUNC . OSS_NL); // for most textarea fields
-define ('OSS_USER',   OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT); // for validating logins/users
-define ('OSS_NET_NAME', OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT . OSS_COLON); // for network names
-define ('OSS_NOTNULL',   'rule:OSS_NOTNULL');   // default for all vars
-define ('OSS_NULLABLE',  'rule:OSS_NULLABLE');  // value can be null, false, missing
-define ('OSS_IP_ADDR',   'func:valid_ip');
-define ('OSS_IP_CIDR',   'func:valid_cidr');
-define ('OSS_MAIL_ADDR', 'regex:[a-zA-Z0-9_\-\.+]+@[a-zA-Z0-9_\-\.]+\.[a-zA-Z]+');
-
-
-define ('OSS_ERROR', _("unkown error")); // default error message
-                                         // don't use
-
-$GLOBALS['ossim_last_error'] = false;  // track the latest error
-
+define('OSS_PUNC', '\.,:@_\-\/\?&\=' . OSS_SPACE);
+define('OSS_SLASH', '\/');
+define('OSS_URL', '\.\/');
+define('OSS_EALPHA_LOWER', 'áéíóúýàèìòùäëïöüÿâêîôûãñõ¨åæç½ðøþß');
+define('OSS_EALPHA_UPPER', 'ÁÉÍÓÚÝÀÈÌÒÙÄËÏÖÜ¾ÂÊÎÔÛÃÑÕ¦ÅÆÇ¼ÐØÞ');
+define('OSS_ALPHA', OSS_DIGIT . OSS_LETTER . "[á-ú][Á-Ú]" . OSS_EALPHA_LOWER . OSS_EALPHA_UPPER);
+define('OSS_CRONTAB', OSS_DIGIT . OSS_LETTER . '\*\-,\/'); // Somewhat dangerous, if "/" is allowed don't allow spaces, tabs or anything similar.
+define('OSS_NL', '\r\n');
+define('OSS_INPUT', OSS_ALPHA . OSS_PUNC); // for most input text fields
+define('OSS_TEXT', OSS_ALPHA . OSS_PUNC . OSS_NL . '\)\(\'"'); // for most textarea fields
+define('OSS_USER', OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT); // for validating logins/users
+define('OSS_NET_NAME', OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT . OSS_COLON); // for network names
+define('OSS_NOTNULL', 'rule:OSS_NOTNULL'); // default for all vars
+define('OSS_NULLABLE', 'rule:OSS_NULLABLE'); // value can be null, false, missing
+define('OSS_IP_ADDR', 'func:valid_ip');
+define('OSS_IP_CIDR', 'func:valid_cidr');
+define('OSS_MAIL_ADDR', 'regex:[a-zA-Z0-9_\-\.+]+@[a-zA-Z0-9_\-\.]+\.[a-zA-Z]+');
+define('OSS_ERROR', _("unkown error")); // default error message
+// don't use
+$GLOBALS['ossim_last_error'] = false; // track the latest error
 /*
- * Function for validating variables against the given rules
- * 
- * @param1 The var to check
- * 
- * @param2 Array with a list of validations
- *         Ex: ossim_valid($foo, array(OSS_AT, OSS_SPACE))
- * or
- * 
- * @param2 to @paramN Checks
- *         Ex: ossim_valid($foo, OSS_AT, OSS_SPACE) 
- * 
- * A check could be:
- *      1) a string that would be converted into a regex. Ex. '0-9' -> '/[^0-9]/'
- *      2) func:<func_name> Will call <func_name> passing var as the only arg.
- *                          Should return true or false.
- *                          Func can also be in the form <Class::method>
- *      3) regex:<regex>   Will check var against the regex.
- *                         Ex. '^[0-9]+' -> '/^[0-9]+/'
- *      4) rule:<rules>    Not suitable for users
- */
-function ossim_valid()
-{
+* Function for validating variables against the given rules
+*
+* @param1 The var to check
+*
+* @param2 Array with a list of validations
+*         Ex: ossim_valid($foo, array(OSS_AT, OSS_SPACE))
+* or
+*
+* @param2 to @paramN Checks
+*         Ex: ossim_valid($foo, OSS_AT, OSS_SPACE)
+*
+* A check could be:
+*      1) a string that would be converted into a regex. Ex. '0-9' -> '/[^0-9]/'
+*      2) func:<func_name> Will call <func_name> passing var as the only arg.
+*                          Should return true or false.
+*                          Func can also be in the form <Class::method>
+*      3) regex:<regex>   Will check var against the regex.
+*                         Ex. '^[0-9]+' -> '/^[0-9]+/'
+*      4) rule:<rules>    Not suitable for users
+*/
+function ossim_valid() {
     static $cons = false;
     if (func_num_args() < 2) {
-        die('Wrong number of params, usage: '.__FUNCTION__.'($var, $rules)');
+        die('Wrong number of params, usage: ' . __FUNCTION__ . '($var, $rules)');
     }
     if (!$cons) $cons = get_defined_constants();
     $parms = func_get_args();
-
     $subject = $parms[0]; // the var to be validated
     if (is_object($subject) || is_array($subject)) {
         printr($subject);
         return ossim_set_error("Wrong datatype passed, expected string");
     }
     array_shift($parms);
-    
     // array of params instead of list of params
     // ej: ossim_valid($foo, array(OSS_DIGIT, OSS_FOO))
     if (func_num_args() == 2 && is_array($parms[0])) {
@@ -118,22 +221,24 @@ function ossim_valid()
     $error_msg = OSS_ERROR;
     $val_notnull = true; // by default do not allow empty vars
     $count = count($parms);
-    for ($i=0; $i < $count; $i++) {
+    for ($i = 0; $i < $count; $i++) {
         //
         // error:
         //
         if (preg_match('/^error:(.+)$/', $parms[$i], $m)) {
             $error_msg = $m[1];
             unset($parms[$i]);
-        //
-        // illegal:
-        //
+            //
+            // illegal:
+            //
+            
         } elseif (preg_match('/^illegal:(.+)$/', $parms[$i], $m)) {
-            $error_msg = sprintf(_("Error in the '%s' field"), $m[1]);
+            $error_msg = sprintf(_("Error in the '%s' field") , $m[1]);
             unset($parms[$i]);
-        //
-        // rule: (NULL permitted or not)
-        //
+            //
+            // rule: (NULL permitted or not)
+            //
+            
         } elseif (preg_match('/^rule:(.+)$/', $parms[$i], $m)) {
             if ($m[1] == 'OSS_NOTNULL') {
                 $val_notnull = true;
@@ -148,14 +253,13 @@ function ossim_valid()
     //
     if ($subject === null || $subject === '') {
         if ($val_notnull) {
-            return ossim_set_error("$error_msg ("._("missing required field").")");
+            return ossim_set_error("$error_msg (" . _("missing required field") . ")");
         } else {
             return true;
         }
     }
     $val_str = '';
-    
-    foreach ($parms as $p) {
+    foreach($parms as $p) {
         //
         // func:
         //
@@ -177,43 +281,33 @@ function ossim_valid()
         //
         if (preg_match('/^regex:(.+)$/', $p, $m)) {
             if (!preg_match('/^' . $m[1] . '$/', $subject)) {
-                $subject = htmlentities($subject);
-                return ossim_set_error("$error_msg " .
-                                       ("(the string '<b>$subject</b>' has not a valid format)"));
+                $subject = htmlentities($subject, ENT_COMPAT, "UTF-8");
+                return ossim_set_error("$error_msg " . ("(the string '<b>$subject</b>' has not a valid format)"));
             }
             continue;
         }
         //
         // OSS_* constants
         //
-        $val_str .= $p;
+        $val_str.= $p;
     }
-    
     //echo "str: '$val_str' validate: '$subject'\n";
     if ($val_str && preg_match("/[^$val_str]/", $subject, $m)) {
         $not = $m[0];
         if ($not == " ") $not = _("spaces");
         if ($not == "\r" || $not == "\n") $not = _("breaklines");
-        $subject = htmlentities($subject);
-        return ossim_set_error("$error_msg " . 
-                               sprintf(_("(\"%s\" not allowed)"), $not) .
-                               "<br>Introduced string: '<b>$subject</b>'");
+        $subject = htmlentities($subject, ENT_COMPAT, "UTF-8");
+        return ossim_set_error("$error_msg " . sprintf(_("(\"%s\" not allowed)") , $not) . "<br>Introduced string: '<b>$subject</b>'");
     }
     return true;
 }
-
-function ossim_set_error($error)
-{
+function ossim_set_error($error) {
     $GLOBALS['ossim_last_error'] = $error;
     return false;
 }
-
-function ossim_error($error_msg = null)
-{
+function ossim_error($error_msg = null) {
     static $ossim_warn = false;
-    
     $error = $error_msg ? $error_msg : $GLOBALS['ossim_last_error'];
-    
     if (!$error) {
         return false;
     }
@@ -221,83 +315,63 @@ function ossim_error($error_msg = null)
         include_once 'ossim_error.inc';
         $ossim_warn = new OssimWarn;
     }
-    return $ossim_warn->get('ERROR', array($error));
+    return $ossim_warn->get('ERROR', array(
+        $error
+    ));
 }
-
-function valid_ip($ip)
-{
-    if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/', $ip, $m) &&
-        $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255)
-    {
+function valid_ip($ip) {
+    if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/', $ip, $m) && $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255) {
         return true;
     }
-    ossim_set_error(_("Invalid IP address. Format allowed: nnn.nnn.nnn.nnn") .
-                    "<br>Entered ip: '<b>$ip</b>'");
+    ossim_set_error(_("Invalid IP address. Format allowed: nnn.nnn.nnn.nnn") . "<br>Entered ip: '<b>$ip</b>'");
     return false;
 }
-
-function valid_cidr($cidr)
-{
-    if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)\/(\d+)$/', $cidr, $m) &&
-        $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255 && $m[5] <= 32)
-    {
+function valid_cidr($cidr) {
+    if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)\/(\d+)$/', $cidr, $m) && $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255 && $m[5] <= 32) {
         return true;
     }
-    ossim_set_error(_("Invalid IP/Mask address. Format allowed: nnn.nnn.nnn.nnn/nn") .
-                    "<br>Entered CIDR: '<b>$cidr</b>'");
+    ossim_set_error(_("Invalid IP/Mask address. Format allowed: nnn.nnn.nnn.nnn/nn") . "<br>Entered CIDR: '<b>$cidr</b>'");
     return false;
 }
-
-
-
 /*
- * Safe html escape. Always use that for printing vars comming
- * from outside ($_GET, $_POST, databases, etc) 
- */
-function htm($var)
-{
-    return nl2br(htmlentities($var));
+* Safe html escape. Always use that for printing vars comming
+* from outside ($_GET, $_POST, databases, etc)
+*/
+function htm($var) {
+    return nl2br(htmlentities($var, ENT_COMPAT, "UTF-8"));
 }
-
-function strip($var)
-{
+function strip($var) {
     return get_magic_quotes_gpc() ? stripslashes($var) : $var;
 }
-
-function required()
-{
-    return '&nbsp;<span class="required" title="'._("Required field").'">*</span>';
+function required() {
+    return '&nbsp;<span class="required" title="' . _("Required field") . '">*</span>';
 }
-
 /*
- * WARNING: if you use this function, it's a MUST to correct quote
- * the values before inserting in the DB. AdoDB provides that, ex:
- * 
- * $get1 = GET('get1');
- * $get2 = GET('get2');
- * $sql = "INSET INTO foo VALUES (?, ?)";
- * $conn->Execute($sql, array($get1, $get2));
- * 
- * $get1 will be automagically quoted against the DB quoting function
- * (ex: mysql_real_escape_string()) and the result (ex: 'It\'s tea time')
- * will replace the first "?". The same for $get2.
- */
-function GET($param)
-{
+* WARNING: if you use this function, it's a MUST to correct quote
+* the values before inserting in the DB. AdoDB provides that, ex:
+*
+* $get1 = GET('get1');
+* $get2 = GET('get2');
+* $sql = "INSET INTO foo VALUES (?, ?)";
+* $conn->Execute($sql, array($get1, $get2));
+*
+* $get1 will be automagically quoted against the DB quoting function
+* (ex: mysql_real_escape_string()) and the result (ex: 'It\'s tea time')
+* will replace the first "?". The same for $get2.
+*/
+function GET($param) {
     return isset($_GET[$param]) ? strip($_GET[$param]) : null;
 }
-
 /*
- * @see GET()
- */
-function POST($param)
-{
+* @see GET()
+*/
+function POST($param) {
     if (isset($_POST[$param])) {
         if (!is_array($_POST[$param])) {
             return strip($_POST[$param]);
         } else {
             $ret = array();
-            foreach ($_POST[$param] as $k => $v) {
+            foreach($_POST[$param] as $k => $v) {
                 $ret[$k] = strip($v);
             }
             return $ret;
@@ -305,22 +379,19 @@ function POST($param)
     }
     return null;
 }
-
 /*
- * @see GET()
- */
-function REQUEST($param)
-{
+* @see GET()
+*/
+function REQUEST($param) {
     return isset($_REQUEST[$param]) ? strip($_REQUEST[$param]) : null;
 }
-
 /* TESTS
 function test($res, $expected)
 {
-    static $test_num = 0;
-    echo '#' . ++$test_num;
-    if ($res != $expected) { echo " FAIL!\n"; return; }
-    echo " GOOD\n";
+static $test_num = 0;
+echo '#' . ++$test_num;
+if ($res != $expected) { echo " FAIL!\n"; return; }
+echo " GOOD\n";
 }
 ini_set('include_path', '../');
 

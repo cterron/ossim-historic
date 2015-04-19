@@ -1,3 +1,442 @@
+ossim (1:2.1-3) ossim; urgency=low
+
+  * Small cosmetic fixes
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 10 Jul 2009 11:20:45 +0100
+
+ossim (1:2.1-2) ossim; urgency=low
+
+  * Minor version bumps for installer CD generation tests.
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+
+ossim (1:2.1-1) ossim; urgency=low
+
+  * Minor version bumps for installer CD generation tests.
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+
+ossim (1:2.1) ossim; urgency=low
+
+  * Unify versioning for release
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090701-1) ossim; urgency=low
+
+  * Visual fixes
+  * License header added to php files
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 30 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090630-1) ossim; urgency=low
+
+  * Bug fixes and more visuals
+  * Fixes openvas reporting bug
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 30 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090629-1) ossim; urgency=low
+
+  * Visual enhancements
+  * Bug fixes
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 29 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090625-1) ossim; urgency=low
+
+  * Added alarm grouping.
+  * Re-organized menu layout.
+  * Added submenus as tabs at some places.
+  * New header design.
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 25 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090623-1) ossim; urgency=low
+
+  * Misc bugfixes: forensics, policy, alarms.
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 23 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090617-1) ossim; urgency=low
+
+  * Alarm console deletion fixes.
+  * Plugin group fixes.
+  * Re-introduce actions into policy.
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 17 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090607-1) ossim; urgency=low
+
+  * SQL line broke DB updates
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 07 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090606-2) ossim; urgency=low
+
+  * Missed a small Incident fix for KDB
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 06 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090606-1) ossim; urgency=low
+
+  * Forensics fixes
+  * Policy fixes
+  * Incidents fixes
+  * Alarm console fixes
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 06 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090604-1) ossim; urgency=low
+
+  * Forensics fixes
+  * Policy fixes
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 04 Jun 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090526-1) ossim; urgency=low
+
+  * Forensics fixes
+  * Policy fixes
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 26 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090522-1) ossim; urgency=low
+
+  * Fix policy
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 22 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090519-2) ossim; urgency=low
+
+  * Fix server postinst
+  * Include new policy images
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 19 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090519-1) ossim; urgency=low
+
+  * New policy interface
+  * New backup code greatly improves performance
+  * Bugfixes
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 19 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090512-1) ossim; urgency=low
+
+  * Many SEM fixes
+  * Flag code in forensics
+  * Forensics fixes
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 12 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090511-1) ossim; urgency=low
+
+  * New flag code
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 11 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090508-1) ossim; urgency=low
+
+  * SEM fixes
+  * Forensic fixes
+  * Directive editor fixes
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 08 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090505-2) ossim; urgency=low
+
+  * Fix forensics
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 05 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090505-1) ossim; urgency=low
+
+  * Small bugfixes
+  * Fix update checks again
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 05 May 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090430-1) ossim; urgency=low
+
+  * SEM fixes
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 30 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090429-1) ossim; urgency=low
+
+  * Link to reporting platform
+  * Fix some directives
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 29 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090428-2) ossim; urgency=low
+
+  * Fix some plugins
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 28 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090428-1) ossim; urgency=low
+
+  * OpenVAS fixes for ossim
+  * Directive fixes
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 28 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090422-1) ossim; urgency=low
+
+  * Add knowledge DB
+  * Fix english localization in forensics
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 22 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090421-1) ossim; urgency=low
+
+  * PHP_SELF --> SCRIPT_NAME
+  * Add new policy roles
+  * Forensic fixes
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 21 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090416-1) ossim; urgency=low
+
+  * Fix directives for directive editor
+  * Enable directive editor
+  * Server fixes
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 16 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090415-1) ossim; urgency=low
+
+  * Prettier t-shark pcap output
+  * Forensics bugfixes
+  * Fixed some forum-reported bugs (delete host, directive editor, server)
+  * Some other minor bugfixes
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 15 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090403-1) ossim; urgency=low
+
+  * Get greenish links instead of orange ones
+  * Reinsert backlog info with extended information
+  * Some other minor bugfixes
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 03 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090402-1) ossim; urgency=low
+
+  * Fix accordion
+  * Fix some forensics issues
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 02 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090401-1) ossim; urgency=low
+
+  * Fix update panel issue
+  * Add conficker directive
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 01 Apr 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090327-2) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Do not call reload acls after postinst, needs more testing
+  * Fix top.php, remove backlog
+  * iclude sem into top.php
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 27 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090327-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Start adding permissions to SEM. 
+  * Reinit the acl DB after install.
+  * Fix RT event viewer.
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 27 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090326-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Fix status bar (closed->open)
+  * Fix server erasing log files
+  * Forensics now shows plugin id and sid in the payload
+  * Fix forensics stylesheet
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 26 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090325-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Fix all the annoying "Back" links
+  * Fix some issues with the new frontend and IE8
+
+ -- Dominique Karg <dk@ossim.net>  Wed, 25 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090324-2) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Fix executive panel tab creation.
+  * Fix some issues with the new frontend and IE8
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 24 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090324-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Get update checks into the frames again
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 24 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090323-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Let's start implementing the new frontend style
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 23 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090317-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Fix nagios frontend
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 17 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090313-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Some minor bugfixes
+  * BSD --> GPL
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 13 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090310-2) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Server crash fixed
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 10 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090310-1) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Move db script to a more useful place. Fix nessus update script.
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 10 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090309-2) ossim; urgency=low
+
+  * New CVS Snapshot.
+  * Fix some anomaly issues
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 09 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090309-1) ossim; urgency=low
+
+  * Remove acidbase from dependencies.
+  * Create update dir
+  * Do not link acidbase stuff
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Mon, 09 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090306-1) ossim; urgency=low
+
+  * Fix plugin sids
+  * New update auto-notifications
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 06 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090305-1) ossim; urgency=low
+
+  * Forensics console fixes.
+  * Server fix: insert into acid_event.
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090304-1) ossim; urgency=low
+
+  * Include some new forensics console enhancements.
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090303-2) ossim; urgency=low
+
+  * reconfig breaks install, just show a message
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090303-1) ossim; urgency=low
+
+  * Fix realtime event viewer, fix server logging.
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 27 Feb 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090227-1) ossim; urgency=low
+
+  * Grab the new forensics console and some bugfixes
+  * New CVS Snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Fri, 27 Feb 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090226-1) ossim; urgency=low
+
+  * CVS snapshot fixing some script issues.
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 26 Feb 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090226) ossim; urgency=low
+
+  * CVS snapshot.
+
+ -- Dominique Karg <dk@ossim.net>  Thu, 26 Feb 2009 11:20:45 +0100
+
+ossim (1:1.0.0~rc1-5+cvs20090224) ossim; urgency=low
+
+  * CVS snapshot.
+
+ -- David Gil <dgil@ossim.net>  Tue, 24 Feb 2009 10:39:45 +0100
+
+ossim (1:1.0.0~rc1-4) ossim; urgency=low
+
+  * Add sudo dependency.
+  * Add rules changes: modify permissions.
+
+ -- DK <dk@ossim.net>  Wed, 26 Nov 2008 20:14:11 +0100
+
+ossim (1:1.0.0~rc1-3) ossim; urgency=low
+
+  * CVS Snapshot.
+
+ -- David Gil <dgil@ossim.net>  Tue, 25 Nov 2008 12:14:11 +0100
+
+ossim (1:1.0.0~rc1-2) ossim; urgency=low
+
+  * New upstream release.
+  * Revert epoch change.
+
+ -- DK <dk@ossim.net>  Tue, 03 Sep 2008 10:12:23 +0100
+
+ossim (1:1.0.0~rc1) ossim; urgency=low
+
+  * New upstream release.
+  * Security fixes
+  * Bug fixes
+
+ -- Juan Manuel Lorenzo <juanma@ossim.net>  Tue, 19 Aug 2008 10:12:23 +0100
+
+ossim (1:0.9.9-3) ossim; urgency=low
+
+  * New upstream release.
+  * Security fixes
+
+ -- Juan Manuel Lorenzo <juanma@ossim.net>  Fri, 22 Feb 2008 16:18:51 +0100
+
 ossim (1:0.9.9-2) ossim; urgency=low
 
   * New upstream release.

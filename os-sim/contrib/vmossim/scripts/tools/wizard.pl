@@ -55,6 +55,7 @@ close INFILE;
 
 if (($profile == "all-in-one") || ($profile == "sensor")) {
     &replace_ip("ip = [0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}", "ip = $ip", "/etc/ossim/agent/config.cfg", "/etc/ossim/agent/config.cfg.temp.new");
+    &replace_ip("sensor = [0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}", "sensor = $ip", "/etc/ossim/agent/config.cfg", "/etc/ossim/agent/config.cfg.temp.new");
     &replace_ip("sensor_name=[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}", "sensor_name=$ip", "/etc/snort/snort.conf", "/etc/snort.conf.temp.new");
 }
 

@@ -73,13 +73,6 @@ install: build
 	install -m644 contrib/acid/*.sql $(TMP)/ossim-mysql/usr/share/doc/ossim-mysql/contrib/
 	install -m644 contrib/osvdb/*.sql $(TMP)/ossim-mysql/usr/share/doc/ossim-mysql/contrib/
 
-	# ossim-agent
-	cd agent ; \
-	python setup.py install --prefix=$(CURDIR)/debian/ossim-agent/usr/ ; \
-	cd -
-	install -m644 etc/agent/config.xml $(TMP)/ossim-agent/etc/ossim/agent/config.xml
-	cp etc/agent/plugins/*.xml $(TMP)/ossim-agent/etc/ossim/agent/plugins/
-#	install -m644 etc/logrotate.d/ossim-agent $(TMP)/ossim-agent/etc/logrotate.d/
 
 	## ossim-server
 	cd src/ && $(MAKE) install DESTDIR=$(CURDIR)/debian/ossim-server
@@ -87,6 +80,7 @@ install: build
 	docbook-to-man doc/ossim-server.xml > debian/ossim-server.8
 	cp etc/logrotate.d/ossim-server debian/ossim-server.logrotate
 	install -d $(CURDIR)/debian/ossim-server/var/log/ossim/
+
 
 	# ossim-framework
 	cp -r include/ www/ $(TMP)/ossim-framework/usr/share/ossim/
@@ -96,6 +90,9 @@ install: build
 		$(TMP)/ossim-framework/etc/ossim/framework/apache.conf
 
 	docbook-to-man doc/ossim-framework.xml > debian/ossim-framework.8
+	install -d $(TMP)/ossim-framework/usr/share/ossim/www/forensics/tmp/
+	install -d $(TMP)/ossim-framework/etc/ossim/updates/
+	install -m755 scripts/check_updates.pl $(TMP)/ossim-framework/etc/cron.daily/ossim-check-updates
 
 	# with .pl extension, the script is not exec via cron.. 
 	# rename to acid-backup
@@ -119,6 +116,13 @@ install: build
 	# ossim-utils
 	install -m755 include/ossim_conf.pm $(TMP)/ossim-utils/usr/lib/perl5/
 	install -m755 scripts/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/
+	install -m755 scripts/*.sh $(TMP)/ossim-utils/usr/share/ossim/scripts/
+	install -m755 scripts/*.py $(TMP)/ossim-utils/usr/share/ossim/scripts/
+	install -d $(TMP)/ossim-utils/usr/bin/
+	install -m755 scripts/connect_ossim_db.sh $(TMP)/ossim-utils/usr/bin/ossim-db
+	install -d $(TMP)/ossim-utils/usr/share/ossim/scripts/sem/
+	install -m755 scripts/sem/*.sh $(TMP)/ossim-utils/usr/share/ossim/scripts/sem/
+	install -m755 scripts/sem/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/sem/
 	install -m755 scripts/correlation/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/correlation/
 	install -m755 scripts/extract_nessus/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/extract_nessus/
 	install -m755 scripts/extract_osvdb/*.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/extract_osvdb/

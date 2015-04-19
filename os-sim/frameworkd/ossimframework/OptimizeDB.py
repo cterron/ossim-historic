@@ -28,7 +28,7 @@ class OptimizeDB (threading.Thread):
     def optimize (self, host, base, user, password):
         self.__conn.connect (host , base, user, password)
 
-        print "Optimizing tables for database: %s" % base;
+        print __name__, "Optimizing tables for database: %s" % base;
         query = "SHOW TABLES;";
         try:
             hash = self.__conn.exec_query(query)
@@ -40,7 +40,8 @@ class OptimizeDB (threading.Thread):
         hash = self.__conn.exec_query(query)
 
         for row in hash:
-            print "Optimizing %s.%s" % (base, row["tables_in_" + base])
+            print __name__, \
+                "Optimizing %s.%s" % (base, row["tables_in_" + base])
             query = "OPTIMIZE TABLE `%s`;" % row["tables_in_" + base]
             hash = self.__conn.exec_query(query)
 

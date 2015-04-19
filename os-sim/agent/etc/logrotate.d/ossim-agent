@@ -1,0 +1,35 @@
+compress
+rotate 5
+# If the log file is missing (for example p0f or arpwatch logs), go on
+# to the next one without issuing an error message
+missingok
+# Do not rotate the log if it is empty
+notifempty
+# postrotate script will only be run once, not once 
+# for each log which is rotated
+sharedscripts
+
+/var/log/ossim/agent.log /var/log/ossim/agent-plain.log /var/log/ossim/agent_error.log /var/log/ossim/agent_stats.log {
+    daily
+    prerotate
+        /etc/init.d/ossim-agent stop > /dev/null 2>&1
+    endscript
+    postrotate
+        /etc/init.d/ossim-agent start > /dev/null 2>&1
+    endscript
+}
+
+/var/log/ossim/p0f*.log /var/log/ossim/arpwatch*.log /var/log/ossim/pads*.log /var/log/ossim/rrd_plugin.log {
+    size=100M
+    prerotate
+		/etc/init.d/ossim-agent stop > /dev/null 2>&1
+        /usr/share/ossim/scripts/kill_threads.sh arpwatch > /dev/null 2>&1
+        /usr/share/ossim/scripts/kill_threads.sh p0f > /dev/null 2>&1
+        /usr/share/ossim/scripts/kill_threads.sh pads > /dev/null 2>&1
+        /usr/share/ossim/scripts/kill_threads.sh rrd_plugin > /dev/null 2>&1
+    endscript
+    postrotate
+        /etc/init.d/ossim-agent start > /dev/null 2>&1
+    endscript
+}
+

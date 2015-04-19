@@ -1,24 +1,34 @@
 #!/usr/bin/env python
 
-import glob, os
 from distutils.core import setup
+from ossim_agent.__init__ import __version__
+
+import glob, os
+
+doc = [ ('share/doc/ossim-agent', 
+            ['doc/INSTALL', 'doc/LICENSE', 'doc/ChangeLog'] )]
 
 man  = [ ('share/man/man8', ['doc/ossim-agent.8.gz']) ]
-doc  = [ ('share/doc/ossim-agent', ['doc/config.dtd', 'doc/config.xml.sample', 'INSTALL', 'COPYING', 'AUTHORS'] ) ]
-lib  = [ ('share/ossim-agent/pyossim/', 
-    glob.glob(os.path.join('pyossim', '*.py'))) ]
-data = man + doc + lib
 
-from pyossim.__init__ import VERSION
+lib  = [ ('share/ossim-agent/ossim_agent',
+            glob.glob(os.path.join('ossim_agent', '*.py'))) ]
+
+etc = [ ('/etc/ossim/agent',
+            glob.glob(os.path.join('etc', 'agent', '*.cfg')) ),
+        ('/etc/ossim/agent/plugins',
+            glob.glob(os.path.join('etc', 'agent', 'plugins', '*.cfg'))) ]
+
+data = etc + doc + man + lib
+
 
 setup (
     name            = "ossim-agent",
-    version         = VERSION,
-    description     = "OSSIM agent",
-    author          = "OSSIM Development Team",
-    author_email    = "ossim@ossim.net",
+    version         = __version__,
+    description     = "Open Source Security Information Management (Agent)",
+    author          = "Ossim Development Team",
+    author_email    = "devel@ossim.net",
     url             = "http://www.ossim.net",
-#    packages        = [ 'pyossim' ],
+    license         = "BSD",
     scripts         = [ 'ossim-agent' ],
     data_files      = data
 )

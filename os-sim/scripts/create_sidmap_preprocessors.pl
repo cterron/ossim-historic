@@ -24,7 +24,7 @@ while(<IN>)
 		$plugin_id = $1;
 		$plugin_sid = $2;
 		$str = $3;
-		print "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1$plugin_id, $plugin_sid, NULL, NULL, '$str');\n";
+		print "INSERT IGNORE INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1$plugin_id, $plugin_sid, NULL, NULL, '$str');\n";
 	}
 }
 close IN;

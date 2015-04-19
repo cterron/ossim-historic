@@ -1,5 +1,19 @@
 # ChangeLog for OSSIM
 
+        06 Mar 2008 DK <dk@ossim.net> :
+        * Event Stats: new event stat code.
+
+        25 Feb 2008 DK <dk@ossim.net> :
+        * Netscan: allow for group creation on scan.
+
+        22 Feb 2008 DK <dk@ossim.net> :
+        * 0.9.9 released.
+
+* OSSIM-0.9.9 (12 Feb 2008)
+
+        22 Oct 2007 DK <dk@ossim.net> :
+        * Lots of missing changelog entries :-)
+
         22 Oct 2007 DK <dk@ossim.net> :
         * ACLs: Created new "Events" tab, changed some permissions.
 

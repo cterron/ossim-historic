@@ -27,12 +27,51 @@
  |      1524 | spamassassin       | detector |
  |      1525 | nagios             | detector |
  |      1526 | stonegate          | detector |
- |      1527 | clurgmgr           | detector |
- |      1528 | cisco-vpn          | detector |
+ |      1527 | cisco-vpn          | detector |
+ |      1528 | clurgmgr           | detector |
+ |      1529 | ipfw               | detector |
  | 1530-1550 | gfi                | detector |
- |      1551 | intrushield	  | detector |
+ |      1551 | intrushield        | detector |
  |      1552 | tarantella         | detector |
  |      1553 | squid              | detector |
+ |      1554 | fortinet/fortigate | detector |
+ |      1555 | clamav             | detector |
+ |      1556 | symantec-ams       | detector |
+ |      1557 | nortel-switch      | detector |
+ |      1558 | sophos-antivirus   | detector |
+ |      1559 | m0n0wall           | detector |
+ |      1560 | pf                 | detector |
+ |      1561 | modsecurity        | detector |
+ |      1562 | vmware_workstation | detector |
+ |      1563 | optenet            | detector |
+ |      1564 | nepenthes          | detector |
+ |      1565 | isa-server         | detector | ** Missing SQL file
+ |      1566 | aladdin            | detector |
+ |      1567 | avast              | detector |
+ |      1568 | bro-ids            | detector |
+ |      1569 | dragon             | detector |
+ |      1570 | honeyd             | detector |
+ |      1571 | mcafee-antivirus   | detector |
+ |      1572 | sidewinder         | detector |
+ |      1573 | sonicwall          | detector |
+ |      1574 | trendmicro         | detector |
+ |      1575 | cyberguard         | detector |
+ |      1576 | vsftpd             | detector |
+ |      1577 | bind               | detector |
+ |      1578 | panda-as           | detector |
+ |      1579 | hp-eva             | detector |
+ |      1580 | webmin             | detector |
+ |      1581 | raslog             | detector |
+ |      1582 | serviceguard       | detector |
+ |      1583 | sitescope          | detector |
+ |      1584 | MS-DHCP            | detector |
+ |	1585 | Oval		  | detector |
+ |	1586 | OpenLDAP 	  | detector |
+ |	1587 | squidguard	  | detector |
+ |      1603 | MS-Exchange        | detector |
+ +-----------+--------------------+----------+
+ |      1801 | forensics-db-1     | detector |
+ +-----------+--------------------+----------+
  |      4001 | osiris             | detector |
  |      4003 | ssh                | detector |
  |      4004 | pam_unix           | detector |
@@ -40,11 +79,17 @@
  |      4006 | iphone             | detector |
  |      4007 | syslog             | detector |
  +-----------+--------------------+----------+
+ |      3001 | nessus             |          |
+ +-----------+--------------------+----------+
  |      2001 | ossim-ca           | monitor  |
  |      2004 | opennms            | monitor  |
  |      2005 | ntop               | monitor  | 
  |      2006 | tcptrack           | monitor  |
  |      2008 | nmap               | monitor  |
+ |      2009 | ping               | monitor  |
+ |      2010 | whois              | monitor  |
+ |      2011 | malware-domain-list| monitor  |
+ |	2012 | wmi-monitor	  | monitor  |
  +-----------+--------------------+----------+
  |      5001 | OS                 | correl.  | 
  |      5002 | services           | correl.  | 
@@ -53,4 +98,8 @@
  |      6001 | ossim-agent        |          | 
  +-----------+--------------------+----------+
  |      7xxx | ossec plugins      |          | 
+ +-----------+--------------------+----------+
+ |9000-10000 | User plugins       |          | 
+ +-----------+--------------------+----------+
+ |20000-30000| OSSIM Internal     |          | 
  +-----------+--------------------+----------+

@@ -1,30 +1,71 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* - Upgrade()
+* - needs_upgrade()
+* - get_all()
+* - get_needed()
+* - sort_by_version()
+* - execute_sql()
+* - create_php_upgrade_object()
+* - destroy_php_upgrade_object()
+* - apply_needed()
+* Classes list:
+* - Upgrade
+*/
 require_once 'classes/Security.inc';
 require_once 'ossim_acl.inc';
 require_once 'ossim_conf.inc';
 require_once 'ossim_db.inc';
 require_once 'classes/About.inc';
-
-class Upgrade
-{
+class Upgrade {
     var $upgrades_path;
     var $conn;
     var $conf; // $GLOBALS["CONF"] from ossim_conf.inc
     var $about;
     var $ossim_dbtype;
     /*
-     * Hardcoded inside include/classes/About.inc
-     */
+    * Hardcoded inside include/classes/About.inc
+    */
     var $ossim_current_version;
     /*
-     * This property is stored in DB (table "conf"). Quering the
-     * schema version we can detect if Ossim packages were updated
-     * but not the dabase
-     */
+    * This property is stored in DB (table "conf"). Quering the
+    * schema version we can detect if Ossim packages were updated
+    * but not the dabase
+    */
     var $ossim_schema_version;
-    
-    function Upgrade()
-    {
+    function Upgrade() {
         $ds = DIRECTORY_SEPARATOR;
         $path = dirname(__FILE__) . $ds . '..' . $ds . 'upgrades';
         if (is_dir($path)) {
@@ -33,43 +74,36 @@ class Upgrade
         } else {
             $this->upgrades_path = $path;
         }
-        
         $db = new ossim_db();
         $this->conn = $db->connect();
-        
         $this->conf = $GLOBALS["CONF"];
         $this->ossim_dbtype = $this->conf->get_conf("ossim_type"); // ej: mysql
         $this->about = new About();
         $this->ossim_current_version = $this->about->get_version(); // ej: 0.9.8
-        $this->ossim_schema_version  = $this->conf->get_conf("ossim_schema_version", false);
+        $this->ossim_schema_version = $this->conf->get_conf("ossim_schema_version", false);
     }
-
     /*
-     * Detects if a database needs upgrade
-     */
-    function needs_upgrade()
-    {
+    * Detects if a database needs upgrade
+    */
+    function needs_upgrade() {
         // Detected old version without schema version tracking
         // we need at least schema version 0.9.8
         if (!$this->ossim_schema_version) {
             // try to guess the version quering properties added in 0.9.8
             if (!$this->conf->get_conf("ossim_link", false)) {
-                ossim_set_error(_("Sorry, before run this script you need to " .
-                                  "upgrade the database to version >= 0.9.8"));
+                ossim_set_error(_("Sorry, before run this script you need to " . "upgrade the database to version >= 2.1"));
             } elseif ($this->conf->get_conf("nagios_link", false)) {
-                ossim_set_error(_("Detected uncompleted 0.9.9 schema (CVS version?). " .
-                                  "Please complete manually the upgrade to at least 0.9.9rc1"));
+                ossim_set_error(_("Detected uncomplete schema (CVS version?). " . "Please complete manually the upgrade to at least 2.1"));
             } else {
-                $this->ossim_schema_version = '0.9.8';
+                $this->ossim_schema_version = '2.1';
             }
             return true;
         }
-        $oss_ver  = $this->ossim_current_version;
+        $oss_ver = $this->ossim_current_version;
         $oss_schm = $this->ossim_schema_version;
         // The schema is greater than the ossim version, just wierd
         if (version_compare($oss_schm, $oss_ver, 'gt')) {
-            ossim_set_error(_("Detected schema version greater than ossim version, " .
-                              "please upgrade Ossim"));
+            ossim_set_error(_("Detected schema version greater than ossim version, " . "please upgrade Ossim"));
             return true;
         }
         // Normal case found when just upgraded ossim packages but not the DB
@@ -78,22 +112,20 @@ class Upgrade
         }
         return false;
     }
-
     /*
-     * Array
-        (
-            [0.9.9] => Array
-            (
-                [php] => Array
-                (
-                    [file] => /home/tvvcox/os-sim/include/upgrades/0.9.9.php
-                    [dbtype] => 
-                )
-            )
-        )
-     */
-    function get_all()
-    {
+    * Array
+    (
+    [0.9.9] => Array
+    (
+    [php] => Array
+    (
+    [file] => /home/tvvcox/os-sim/include/upgrades/0.9.9.php
+    [dbtype] =>
+    )
+    )
+    )
+    */
+    function get_all() {
         static $upgrades = array();
         if (count($upgrades)) {
             return $upgrades;
@@ -107,45 +139,47 @@ class Upgrade
             }
             //$file = '0.9.9_mysql.sql'; // for testing
             /*
-             * Formats allowed:
-             *  - <version>.php
-             *  - <version>_<db_type>.sql
-             */
-             if (!preg_match('/(.+)\.([^.]+)$/', $file, $m)) continue;
-             $name = $m[1];
-             $type = $m[2];
-             if ($type == 'sql') {
+            * Formats allowed:
+            *  - <version>.php
+            *  - <version>_<db_type>.sql
+            */
+            if (!preg_match('/(.+)\.([^.]+)$/', $file, $m)) continue;
+            $name = $m[1];
+            $type = $m[2];
+            if ($type == 'sql') {
                 list($version, $dbtype) = explode('_', $name);
-             } elseif ($type == 'php') {
+            } elseif ($type == 'php') {
                 $version = $name;
-                $dbtype  = null;
-             } else {
-                 continue;
-             }
-             $file = $this->upgrades_path . DIRECTORY_SEPARATOR . $file;
-             $upgrades[$version][$type] = array('file' => $file,
-                                                'dbtype' => $dbtype);
+                $dbtype = null;
+            } else {
+                continue;
+            }
+            $file = $this->upgrades_path . DIRECTORY_SEPARATOR . $file;
+            $upgrades[$version][$type] = array(
+                'file' => $file,
+                'dbtype' => $dbtype
+            );
         }
         // sort the array using version_compare()
-        uksort($upgrades, array($this, 'sort_by_version'));
+        uksort($upgrades, array(
+            $this,
+            'sort_by_version'
+        ));
         //printr($upgrades);
         return $upgrades;
     }
-
-    function get_needed()
-    {
+    function get_needed() {
         static $upgrades = array();
         if (count($upgrades)) {
             return $upgrades;
         }
-        $oss_ver  = $this->ossim_current_version;
+        $oss_ver = $this->ossim_current_version;
         $oss_schm = $this->ossim_schema_version;
         $oss_dbtype = $this->ossim_dbtype;
         $db_req_upgrade = array();
-        
-        foreach ($this->get_all() as $version => $data) {
-            foreach ($data as $type => $options) {
-                $file   = $options['file'];
+        foreach($this->get_all() as $version => $data) {
+            foreach($data as $type => $options) {
+                $file = $options['file'];
                 $dbtype = $options['dbtype'];
                 if ($type == 'sql') {
                     $db_req_upgrade[] = $version;
@@ -153,62 +187,59 @@ class Upgrade
                         continue;
                     }
                 }
-                if (version_compare($version, $oss_schm, 'gt') &&
-                    version_compare($version, $oss_ver, 'le'))
-                {
-                   $upgrades[$version][$type] = array('file' => $file,
-                                                      'dbtype' => $dbtype);
+                if (version_compare($version, $oss_schm, 'gt') && version_compare($version, $oss_ver, 'le')) {
+                    $upgrades[$version][$type] = array(
+                        'file' => $file,
+                        'dbtype' => $dbtype
+                    );
                 }
             }
         }
         // User case: there is a 0.9.9_mysql.sql file, but the user's
         // database is pgsql. Maybe the developers haven't created a .sql
         // file for that engine. Detect this case.
-        foreach ($db_req_upgrade as $req) {
-            if (version_compare($req, $oss_schm, 'gt') &&
-                version_compare($req, $oss_ver, 'le'))
-            {
+        foreach($db_req_upgrade as $req) {
+            if (version_compare($req, $oss_schm, 'gt') && version_compare($req, $oss_ver, 'le')) {
                 $found = false;
                 do {
                     if (!isset($upgrades[$req])) break;
-                    foreach ($upgrades[$req] as $type => $data) {
-                        if ($type == 'sql'  && $data['dbtype'] == $oss_dbtype) {
+
+                    foreach($upgrades[$req] as $type => $data) {
+                        if ($type == 'sql' && $data['dbtype'] == $oss_dbtype) {
                             $found = true;
                             break 2;
                         }
                     }
-                } while (false);
+                }
+                while (false);
                 if (!$found) {
                     $upgrades[$version]['error'] = array(
-                                                  'file' => _("No sql file found for database: ").$oss_dbtype,
-                                                  'dbtype' => null);
+                        'file' => _("No sql file found for database: ") . $oss_dbtype,
+                        'dbtype' => null
+                    );
                 }
             }
         }
         //printr($upgrades);
         return $upgrades;
     }
-
-    function sort_by_version($a, $b)
-    {
+    function sort_by_version($a, $b) {
         if (version_compare($a, $b, 'eq')) return 0;
         return version_compare($a, $b, 'gt') ? 1 : -1;
     }
-
-    function execute_sql($sql_file, $force = false)
-    {
+    function execute_sql($sql_file, $force = false) {
         $database = escapeshellarg($this->conf->get_conf('ossim_base'));
         $user = escapeshellarg($this->conf->get_conf('ossim_user'));
         $pass = escapeshellarg($this->conf->get_conf('ossim_pass'));
         $host = escapeshellarg($this->conf->get_conf('ossim_host'));
         $port = escapeshellarg($this->conf->get_conf('ossim_port'));
-        
         switch ($this->ossim_dbtype) {
             case 'mysql':
                 $force = $force ? '-f' : '';
-                $pass  = $pass ? "-p{$pass}" : '';
+                $pass = $pass ? "-p{$pass}" : '';
                 $cmd = "cat $sql_file | mysql $force -v -u$user $pass -h$host -P$port $database";
                 break;
+
             default:
                 die("Database engine not supported yet");
         }
@@ -220,9 +251,7 @@ class Upgrade
             exit;
         }
     }
-
-    function create_php_upgrade_object($php_file, $version)
-    {
+    function create_php_upgrade_object($php_file, $version) {
         // Create the new upgrade object
         include "$php_file";
         $class = 'upgrade_' . str_replace('.', '', $version);
@@ -231,44 +260,39 @@ class Upgrade
         }
         $this->php = new $class;
         // Make some useful properties available to it
-        $this->php->conn  = &$this->conn;
-        $this->php->conf  = &$this->conf;
-        $this->php->about = &$this->about;
+        $this->php->conn = & $this->conn;
+        $this->php->conf = & $this->conf;
+        $this->php->about = & $this->about;
         $this->php->ossim_dbtype = $this->ossim_dbtype;
         $this->php->ossim_current_version = $this->ossim_current_version;
-        $this->php->ossim_schema_version  = $this->ossim_schema_version;
+        $this->php->ossim_schema_version = $this->ossim_schema_version;
     }
-
-    function destroy_php_upgrade_object()
-    {
+    function destroy_php_upgrade_object() {
         unset($this->php);
     }
-
-    function apply_needed()
-    {
+    function apply_needed() {
         $needed = $this->get_needed();
-        foreach ($needed as $version => $actions) {
+        foreach($needed as $version => $actions) {
             $sql_exec = isset($actions['sql']) ? $actions['sql']['file'] : false;
             $php_exec = isset($actions['php']) ? $actions['php']['file'] : false;
             if ($php_exec) {
                 $this->create_php_upgrade_object($php_exec, $version);
                 // Apply pre upgrade actions
-                echo "<pre>"._("Starting PHP PRE script")."...\n";
+                echo "<pre>" . _("Starting PHP PRE script") . "...\n";
                 $this->php->start_upgrade();
-                echo "\n"._("PHP PRE script ended")."</pre>";
+                echo "\n" . _("PHP PRE script ended") . "</pre>";
             }
             if ($sql_exec) {
                 $this->execute_sql($sql_exec);
             }
             if ($php_exec) {
                 // Apply post upgrade actions
-                echo "<pre>"._("Starting PHP POST script")."...\n";
+                echo "<pre>" . _("Starting PHP POST script") . "...\n";
                 $this->php->end_upgrade();
-                echo "\n"._("PHP POST script ended")."</pre>";
+                echo "\n" . _("PHP POST script ended") . "</pre>";
                 $this->destroy_php_upgrade_object();
             }
-        }                 
+        }
     }
-
 }
 ?>

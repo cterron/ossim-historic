@@ -1038,6 +1038,7 @@ function CP_tmpReturnFunction(y,m,d) {
 		var dt = new Date(y,m-1,d,0,0,0);
 		if (window.CP_calendarObject!=null) { window.CP_calendarObject.copyMonthNamesToWindow(); }
 		window.CP_targetInput.value = formatDate(dt,window.CP_dateFormat);
+		if (typeof CalendarOnChange == 'function') CalendarOnChange();
 		}
 	else {
 		alert('Use setReturnFunction() to define which function will get the clicked results!'); 

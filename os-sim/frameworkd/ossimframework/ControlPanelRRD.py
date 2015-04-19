@@ -95,8 +95,22 @@ class ControlPanelRRD (threading.Thread) :
         for host in self.__get_hosts():
             if Util.isIpInNet(host["host_ip"], allowed_nets) or \
                not allowed_nets:
-                compromise += int(host["compromise"])
-                attack += int(host["attack"])
+                threshold_c = Util.getHostThreshold(self.__conn, host["host_ip"],"C")
+                threshold_a = Util.getHostThreshold(self.__conn, host["host_ip"],"A")
+                asset = Util.getHostAsset(self.__conn, host["host_ip"])
+                if asset is False:
+                    net = Util.getClosestNet(self.__conn, host["host_ip"])
+                    asset = Util.getNetAsset(self.__conn, net)
+
+                if host["compromise"] > (threshold_c * asset):
+                    compromise += (threshold_c * asset)
+                else:
+                    compromise += int(host["compromise"])
+
+                if host["attack"] > (threshold_c * asset):
+                    attack += (threshold_a * asset)
+                else:
+                    attack += int(host["attack"])
 
         if compromise < MIN_GLOBAL_VALUE: compromise = MIN_GLOBAL_VALUE
         if attack < MIN_GLOBAL_VALUE: attack = MIN_GLOBAL_VALUE
@@ -465,7 +479,7 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_bps"] or \
                         '/var/lib/ossim/rrd/business_processes/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     for bp_member in self.__get_bp_members():
                         filename = os.path.join(rrdpath,
                                                 bp_member['measure_type'] +\
@@ -481,7 +495,7 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_incidents"] or \
                         '/var/lib/ossim/rrd/incidents/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     for user in self.__get_incident_users():
                         incidents = self.get_incidents(user["in_charge"])
                         for type in incidents:
@@ -495,7 +509,7 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_host"] or \
                         '/var/lib/ossim/rrd/host_qualification/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     for host in self.__get_hosts():
                         filename = os.path.join(rrdpath, host["host_ip"] + ".rrd")
                         self.update_rrd(filename, host["compromise"], host["attack"])
@@ -508,7 +522,7 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_net"] or \
                         '/var/lib/ossim/rrd/net_qualification/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     for net in self.__get_nets():
                         filename = os.path.join(rrdpath, net["net_name"] + ".rrd")
                         self.update_rrd(filename, net["compromise"], net["attack"])
@@ -521,7 +535,7 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_net"] or \
                         '/var/lib/ossim/rrd/net_qualification/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     for group in self.__get_groups():
                         filename = os.path.join(rrdpath, "group_" + group["group_name"] + ".rrd")
                         self.update_rrd(filename, group["compromise"], group["attack"])
@@ -534,11 +548,11 @@ class ControlPanelRRD (threading.Thread) :
                     rrdpath = self.__conf["rrdpath_global"] or \
                         '/var/lib/ossim/rrd/global_qualification/'
                     if not os.path.isdir(rrdpath):
-                        os.mkdir(rrdpath, 0755)
+                        os.makedirs(rrdpath, 0755)
                     rrdpath_level = self.__conf["rrdpath_level"] or \
                         '/var/lib/ossim/rrd/level_qualification/'
                     if not os.path.isdir(rrdpath_level):
-                        os.mkdir(rrdpath_level, 0755)
+                        os.makedirs(rrdpath_level, 0755)
                     for user in self.__get_users():
 
                         # ** FIXME **

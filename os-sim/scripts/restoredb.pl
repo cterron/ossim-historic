@@ -3,21 +3,23 @@
 # Script 
 #
 # 2004-07-28 Fabio Ospitia Trujillo <fot@ossim.net>
+# 2009-05-13 jmalbarracin
 
 use ossim_conf;
 use DBI;
 use POSIX;
 use Compress::Zlib;
+#setlocale(LC_ALL, "es_US");
 
 use strict;
 use warnings;
 
-sub byebye {
-    print "$0: forking into background...\n";
-    exit;
-}
-
-fork and byebye;
+#sub byebye {
+#    print "$0: forking into background...\n";
+#    exit;
+#}
+#
+#fork and byebye;
 
 my $base_dir = $ossim_conf::ossim_data->{"base_dir"};
 unless ($base_dir) {
@@ -26,11 +28,6 @@ unless ($base_dir) {
 }
 
 my $pidfile = "/tmp/ossim-restoredb.pid";
-
-sub die_clean {
-    unlink $pidfile;
-    exit;
-}
 
 my $pid = $$;
 
@@ -54,7 +51,8 @@ my $snort_port = $ossim_conf::ossim_data->{"snort_port"};
 my $snort_user = $ossim_conf::ossim_data->{"snort_user"};
 my $snort_pass = $ossim_conf::ossim_data->{"snort_pass"};
 
-my $snort_dsn = "dbi:" . $snort_type . ":" . $snort_name . ":" . $snort_host . ":" . $snort_port . ":";
+
+my $snort_dsn = "dbi:" . $snort_type . ":" . $snort_name . ":" . $snort_host . ":" . $snort_port;
 my $snort_conn = DBI->connect($snort_dsn, $snort_user, $snort_pass) or die "Can't connect to Database\n";
 
 # Data Source 
@@ -68,8 +66,17 @@ my $ossim_pass = $ossim_conf::ossim_data->{"ossim_pass"};
 my $ossim_dsn = "dbi:" . $ossim_type . ":" . $ossim_name . ":" . $ossim_host . ":" . $ossim_port . ":";
 my $ossim_conn = DBI->connect($ossim_dsn, $ossim_user, $ossim_pass) or die "Can't connect to Database\n";
 
+my $cmdline = "mysql -u$snort_user -p$snort_pass -h$snort_host -P$snort_port $snort_name";
+
 my $line_curr = 0;
 my $lines = 0;
+
+sub die_clean {
+    unlink $pidfile;
+    $ossim_conn->disconnect();
+    $snort_conn->disconnect();
+    exit;
+}
 
 sub getCurrentTimestamp {
     my $second;
@@ -101,25 +108,13 @@ sub linesFile {
 sub executeFile {
     my ($id, $file) = @_;
 
-    my $percent = 0;
-    my $last = 0;
-
-    my $gz = gzopen("$file", "r") or die "Can't open file log $file";
-    while ($gz->gzreadline($_) > 0) {
-	s/\;//;
-	my $stm = $snort_conn->prepare($_);
-	$stm->execute();
-
-	$line_curr++;
-	$percent = int (($line_curr / $lines) * 100);
-	if ($percent != $last) {
-	    my $query = "UPDATE restoredb_log SET percent = $percent WHERE id = $id";
-	    my $stm1 = $ossim_conn->prepare($query);
-	    $stm1->execute();
-	    $last = $percent;
-	}
+    my $cmd = "zcat \"$file\" | $cmdline";
+    print "Execute $cmd\n";
+    open (F,"$cmd |");
+    while (<F>) {
+        print $_;
     }
-    $gz->gzclose;
+    close F;
 }
 
 sub main {
@@ -154,28 +149,15 @@ sub main {
 
 	next unless (-e $file);
 
-	linesFile($file);
-    }
-
-    foreach $date (@dates) {
-	$date =~ s/-//g;
-
-	my $file;
-	if ($action eq "insert") {
-	    $file = "$backup_dir/insert-$date.sql.gz";
-	} elsif ($action eq "delete") {
-	    $file = "$backup_dir/delete-$date.sql.gz";
-	}
-
-	next unless (-e $file);
-
+	print "Launching sql file: $file\n";
 	executeFile($id, $file);
     }
 
-    $query = "UPDATE restoredb_log SET status = 2 WHERE id = $id";
+    $query = "UPDATE restoredb_log SET status = 2,percent = 100 WHERE id = $id";
     $stm = $ossim_conn->prepare($query);
     $stm->execute();
-
+    
+    $stm->finish();
     die_clean();
 }
 

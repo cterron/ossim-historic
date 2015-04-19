@@ -122,7 +122,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, r
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 1810, 101, 113, 'ATTACK-RESPONSES successful gobbles ssh exploit (GOBBLE)', 3, 1);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 1811, 101, 130, 'ATTACK-RESPONSES successful gobbles ssh exploit (uname, priority, reliability)', 3, 1);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 2104, 101, 110, 'ATTACK-RESPONSES rexec username too long response', 3, 1);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 2123, 101, 113, 'ATTACK-RESPONSES Microsoft cmd.exe banner', 5, 5);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 2123, 101, 113, 'ATTACK-RESPONSES Microsoft cmd.exe banner', 3, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 103, 102, 129, 'BACKDOOR subseven 22', 5, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 109, 102, 129, 'BACKDOOR netbus active', 5, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1001, 110, 102, 129, 'BACKDOOR netbus getinfo', 5, 2);

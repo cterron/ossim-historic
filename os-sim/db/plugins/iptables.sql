@@ -2,6 +2,9 @@
 -- plugin_id: 1503
 --
 -- $Log: iptables.sql,v $
+-- Revision 1.4  2009/05/20 13:53:04  alberto_r
+-- event without defined sid
+--
 -- Revision 1.3  2007/03/26 18:36:15  juanmals
 -- delete previous sids before inserting new ones
 --
@@ -23,6 +26,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (150
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 3, 204, NULL, 'iptables: Drop');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 4, NULL, NULL, 'iptables: traffic inbound');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 5, NULL, NULL, 'iptables: traffic outbound');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1503, 6, NULL, NULL, 'iptables: Generic event');
 
 
 

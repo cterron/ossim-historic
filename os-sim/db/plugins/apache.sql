@@ -2,6 +2,9 @@
 -- plugin_id: 1501
 --
 -- $Log: apache.sql,v $
+-- Revision 1.4  2009/03/20 12:31:54  dvgil
+-- new sid for apache server errors
+--
 -- Revision 1.3  2007/03/26 18:36:15  juanmals
 -- delete previous sids before inserting new ones
 --
@@ -17,6 +20,7 @@ DELETE FROM plugin_sid where plugin_id = "1501";
 
 INSERT INTO plugin (id, type, name, description) VALUES (1501, 1, 'apache', 'Apache');
 
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1501, 1, NULL, NULL, 'apache: server error', 2, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (1501, 200, NULL, NULL, 'apache: OK', 0, 1);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1501, 201, NULL, NULL, 'apache: Created');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1501, 202, NULL, NULL, 'apache: Accepted');

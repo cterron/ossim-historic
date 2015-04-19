@@ -2,13 +2,9 @@ body {
   background: white;
   color: black;
   font-family: tahoma,arial,verdana,helvetica,sans-serif;
-  font-size:  8pt;
-  margin: 1px;
+  font-size: 8pt;
   padding: 1px;
-  margin-top: 1%;
-  margin-left: 2%;
-  margin-right: 2%;
-  margin-bottom: 2%;
+  margin:3px 8px 3px 8px;
 }
 
 a {
@@ -19,7 +15,7 @@ a {
 
 a:hover {
   background: transparent;
-  color: #e7700c;
+  color: #888888;
   text-decoration: underline;
 }
 
@@ -29,7 +25,7 @@ a.selected {
     text-decoration: underline;
 }
 
-
+/*
 h1 {
   background: #7f7f7f;
   color: white;
@@ -41,10 +37,8 @@ h1 {
   font-weight: bold;
   font-size: 110%;
   text-align: center;
-  border-radius: 8px;
-  -moz-border-radius: 8px;
-  -webkit-border-radius: 8px;
-}
+}*/
+h1 { margin-bottom: 15px; padding:5px; border: 1px solid #038D16; background: #cccccc url(../pixmaps/theme/ui-bg_highlight-soft_75_4DC903_1x100.png) 50% 50% repeat-x; font-size: 12px; color: #FFFFFF; font-weight: bold; text-align: center; }
 
 table {
     background: #fafafa;
@@ -53,27 +47,27 @@ table {
     border-color: #bbbbbb;
     border-width: 1px;
     text-align: center;
-    border-radius: 8px;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
 }
 
 .noborder {
     border-width: 0px;
 }
+.ajaxgreen {
+	border-width: 0px;
+	background: #DEEBDB;
+}
 
+/*
 th {
     color: #11334f;
-/*    background: #cbcbcb;*/
     background: #abb7c7;
     border-color: #7f7f7f;
     border-width: 1px;
     font-size: 8pt;
     text-align: center;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
 }
+*/
+th { word-wrap:nowrap; padding:0px 10px 0px 10px; border: 1px solid #aaaaaa; background: #cccccc url(../pixmaps/theme/ui-bg_highlight-soft_75_cccccc_1x300.png) 50% 50% repeat-x; font-size: 11px; color: #222222; font-weight: bold; text-align: center; }
 
 /* same colors than <th> */
 .selected {
@@ -98,6 +92,48 @@ td {
 td.left {
     padding-left: 5px;
     text-align: left;
+}
+td.center {
+    text-align: center;
+}
+
+.small {
+	font-size: 10px;
+	border-width: 0px;
+	text-align: left;
+	background: transparent;
+}
+
+.grayed {
+	color:#eeeeee; text-decoration:underline;
+	font-style:italic;
+}
+.gristab {
+	font-family:arial; color:#000000; font-weight:normal; font-size:12px;
+}
+.gristabon {
+	font-family:arial;  color:#000000; font-weight:bold; font-size:12px;
+}
+a.gristab:hover, a.gristabon:hover {
+	text-decoration:none;
+}
+
+.nobborder {
+	border-width: 0px;
+	text-align: left;
+	background: transparent;
+}
+.center {
+	border-width: 0px;
+	text-align: center;
+}
+.left {
+    padding-left: 5px;
+    text-align: left;
+}
+.right {
+    padding-right: 5px;
+    text-align: right;
 }
 
 /* Subtitle header. */
@@ -134,6 +170,48 @@ input, textarea, select {
     font-family: verdana,arial,helvetica,sans-serif;
     font-size:  8pt;
 }
+
+.btn
+{
+   background: #cccccc url(../pixmaps/theme/bg_button.png) 50% 50% repeat-x; font-size: 10px; color: #222222; text-align: center;
+}
+input.btn:hover
+{
+   border:1px solid #02A705;
+   background: #4AC600 url(../pixmaps/theme/bg_button_on.png) 50% 50% repeat-x; color: #FFFFFF;
+}
+
+.btnoff
+{
+   background: #cccccc url(../pixmaps/theme/bg_button.png) 50% 50% repeat-x; font-size: 10px; color: #AAAAAA; text-align: center;
+}
+
+/* --- border radius --- */
+h1 {
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+}
+
+table {
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
+
+th {
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+input, textarea {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+/* --- border radius --- */
+
 
 input.disabled {
     color: #999;
@@ -192,6 +270,8 @@ p.ticket_body {
   background-color: rgb(236, 234, 171);
 }
 
+.bgred { background:#FFCFCF }
+.bggreen { background:#D2FFCF }
 /* Style for the popup calendar (see ../js/mattkruse/CalendarPopup.js) */
 
 .CALENDARcpYearNavigation,
@@ -291,3 +371,34 @@ SPAN.CALENDARcpTodayTextDisabled
 		{
 		border:solid thin grey;
 		}
+
+		
+/* tooltips */
+div.balloon span { display: none }
+div.balloon:hover { position:relative; z-index:1000; background:transparent; }
+div.balloon:hover span.tooltip {
+  color: #111;
+  display:block;
+  position:absolute;
+  top:12px; left:20px;
+  width:164px;
+  text-align: left;
+  text-decoration:none;
+  z-index: 2000;
+}
+div.balloon:hover span.top {
+  display: block;
+  padding: 28px 8px 0;
+  background: url(../pixmaps/balloon.png) no-repeat top;
+}
+div.balloon:hover span.middle {
+  display: block;
+  padding: 0 8px 0 15px; 
+  background: url(../pixmaps/balloonfill.png) repeat bottom; 
+}
+div.balloon:hover span.bottom {
+  display: block;
+  padding:3px 8px 8px;
+  color: #548912;
+  background: url(../pixmaps/balloon.png) no-repeat bottom;
+}

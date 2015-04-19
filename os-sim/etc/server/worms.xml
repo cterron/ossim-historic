@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+<directive id="6010" name="Possible Worm Infection against DST_IP" priority="3">
+  <rule type="detector" name="Shellcode Detect" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" protocol="ANY">
+    <rules>
+	<rule type="detector" name="TFTP Get" reliability="+10" time_out="50" occurrence="1"
+		    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+		    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY"/>
+	<rule type="detector" name="Connection Established" reliability="+10" time_out="50" occurrence="1"
+                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1104" plugin_sid="ANY" sticky="true" protocol="ANY"/>
+	<rule type="detector" name="Connection Established" reliability="+10" time_out="50" occurrence="1"
+                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1002" plugin_sid="1" sticky="true" protocol="ANY"/>
+    </rules>
+    </rule>
+</directive>
+
+<!--DCOM RPC vulnerability-->
+<directive id="6011" name="Possible Worm Infection against DST_IP via DCOM RPC vulnerability" priority="3">
+  <rule type="detector" name="DCOM RPC vulnerability" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2251" protocol="ANY">
+    <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="+1" time_out="10"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="TFTP GET" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1104" plugin_sid="4,6,101,102" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1002" plugin_sid="1" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                </rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<!--Kill-Bill ASN1 vulnerability-->
+<directive id="6012" name="Possible Worm Infection against DST_IP via Kill-Bill ASN1 vulnerability" priority="3">
+  <rule type="detector" name="Kill-Bill ASN1 vulnerability" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2001944,2383" protocol="ANY">
+    <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="+1" time_out="10"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="TFTP GET" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1104" plugin_sid="4,6,101,102" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1002" plugin_sid="1" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                </rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<!-- MS04011 Lsasrv.dll RPC exploit-->
+<directive id="6013" name="Possible Worm Infection against DST_IP via Lsasrv.dll RPC vulnerability" priority="3">
+  <rule type="detector" name="Lsasrv.dll RPC exploit" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2514,2000046,2000033,2000032" protocol="ANY">
+   <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="+1" time_out="10"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="TFTP GET" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1104" plugin_sid="4,6,101,102" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1002" plugin_sid="1" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                </rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<!-- WINS exploit-->
+<directive id="6014" name="Possible Worm Infection against DST_IP via WINS vulnerability" priority="3">
+  <rule type="detector" name="WINS exploit" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="3199,3017" protocol="ANY">
+   <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="+1" time_out="10"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="TFTP GET" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                        <rule type="detector" name="Connection Attempt" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1104" plugin_sid="4,6,101,102" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+                        </rule>
+                </rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<directive id="6015" name="Possible attack against DST_IP (Microsoft Server Service related attack)" priority="3">
+  <rule type="detector" name="srvsvc NetrPathCanonicalize" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="7209,7210,7215,7218,7219,7220,7221,7223,7224,7225,7226,7227,7228,7229,7230,7232,7233,7234,7235,7236,7237,7238,7240,7241,7247,7248,7249,7250,7251,7252,7253,7256,7257,7258,7263,7266,7267,7268,7269,7271,7272,7273,7274,7275,7276,7277,7278,7280,7281,7282,7283,7284,7285,7286,7288,7289,7295,7296,7297,7298,7299,7300,7301,7304" protocol="ANY">
+   <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="4" time_out="5"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="22002903,638,639,640,641,642,64,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="cmd.exe Banner" reliability="8" occurrence="1" time_out="5"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="2123" sticky="true" protocol="ANY"/>
+			            <rule type="detector" name="TFTP GET" reliability="+6" time_out="10" occurrence="1"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="1444" sticky="true" protocol="ANY">
+                                <rules>
+                                        <rule type="detector" name="Executable File Download" reliability="+10" time_out="10" occurrence="1"
+                                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                                            plugin_id="1001" plugin_sid="2000419,2000427" sticky="true" protocol="ANY"/>
+                                </rules>
+			            <rule type="detector" name="Possible Reverse Shell" reliability="8" occurrence="1" time_out="5"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1104" plugin_sid="4,102" sticky="true" protocol="ANY"/>
+			</rule>
+		</rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<directive id="6016" name="Possible worm scanning behavior on port DST_PORT" priority="6">
+   <rule type="detector" name="Cisco Firewall Drop event" reliability="1"
+   occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="445,139"
+   time_out="2" plugin_id="1514" plugin_sid="106011" sticky="true">
+      <rules>
+         <rule type="detector" name="Cisco Firewall Drop event (3 times)"
+         reliability="+1" occurrence="10" from="ANY" to="ANY"
+         port_from="ANY" time_out="10" port_to="1:DST_PORT"
+         plugin_id="1514" plugin_sid="106011" sticky="true">
+            <rules>
+               <rule type="detector" name="Cisco Firewall Drop event (5 times)"
+               reliability="+1" occurrence="50" from="ANY" to="ANY"
+               port_from="ANY" time_out="30" port_to="1:DST_PORT"
+               plugin_id="1514" plugin_sid="106011" sticky="true">
+                  <rules>
+                     <rule type="detector" name="Cisco Firewall Drop event (10 times)"
+                     reliability="+1" occurrence="100" from="ANY" to="ANY"
+                     port_from="ANY" time_out="60" port_to="1:DST_PORT"
+                     plugin_id="1514" plugin_sid="106011" sticky="true">
+                  </rule>
+               </rules>
+            </rule>
+         </rules>
+      </rule>
+   </rules>
+</rule>
+</directive>
+
+

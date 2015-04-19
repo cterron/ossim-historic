@@ -1,98 +1,168 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
-require_once ('classes/Security.inc');
+// load column layout
+require_once ('../conf/layout.php');
+$category = "conf";
+$name_layout = "plugin_layout";
+$layout = load_layout($name_layout, $category);
 ?>
-
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title> <?php echo gettext("Priority and Reliability configuration"); ?> </title>
+  <title> <?php
+echo gettext("Priority and Reliability configuration"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+  <link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
+  <script type="text/javascript" src="../js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.flexigrid.js"></script>
+  <script type="text/javascript" src="../js/urlencode.js"></script>
 </head>
 <body>
 
-  <h1> <?php echo gettext("Priority and Reliability configuration"); ?> </h1>
+	<?php
+include ("../hmenu.php"); ?>
+	<div  id="headerh1" style="width:100%;height:1px">&nbsp;</div>
 
-<?php
-    require_once 'ossim_db.inc';
-    
-    $db = new ossim_db();
-    $conn = $db->connect();
-   
-
-    $order = GET('order');
-    ossim_valid($order, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA, 'illegal:'._("order"));
-    
-    if (ossim_error()) {
-        die(ossim_error());
-    }
-    
-    if (empty($order)) $order = "id";    
+	<style>
+		table, th, tr, td {
+			background:transparent;
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border:none;
+			padding:0px; margin:0px;
+		}
+		input, select {
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border: 1px solid #8F8FC6;
+			font-size:12px; font-family:arial; vertical-align:middle;
+			padding:0px; margin:0px;
+		}
+	</style>
+	<table id="flextable" style="display:none"></table>
+	<script>
+	function get_width(id) {
+		if (typeof(document.getElementById(id).offsetWidth)!='undefined') 
+			return document.getElementById(id).offsetWidth-20;
+		else
+			return 700;
+	}
+	function save_layout(clayout) {
+		$("#flextable").changeStatus('Saving column layout...',false);
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name:"<?php echo $name_layout
+?>", category:"<?php echo $category
+?>", layout:serialize(clayout) },
+				success: function(msg) {
+					$("#flextable").changeStatus(msg,true);
+				}
+		});
+	}
+	$(document).ready(function() {
+		$("#flextable").flexigrid({
+			url: 'getplugin.php',
+			dataType: 'xml',
+			colModel : [
+			<?php
+$default = array(
+    "id" => array(
+        'Id',
+        50,
+        'true',
+        'center',
+        false
+    ) ,
+    "name" => array(
+        'Name',
+        120,
+        'true',
+        'center',
+        false
+    ) ,
+    "type" => array(
+        'Type',
+        80,
+        'true',
+        'center',
+        false
+    ) ,
+    "description" => array(
+        'Description',
+        560,
+        'true',
+        'left',
+        false
+    )
+);
+list($colModel, $sortname, $sortorder) = print_layout($layout, $default, "id", "asc");
+echo "$colModel\n";
 ?>
-
-    <table align="center">
-      <tr>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("id", $order); ?>"> 
-		<?php echo gettext("Id"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("name", $order); ?>"> 
-		<?php echo gettext("Name"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("type", $order); ?>"> 
-		<?php echo gettext("Type"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-                echo ossim_db::get_order("type", $order); ?>"> 
-		<?php echo gettext("Description"); ?> </a></th>
-      </tr>
-
-<?php
-    require_once 'classes/Plugin.inc';
-    
-    if ($plugin_list = Plugin::get_list($conn, "ORDER BY $order")) {
-        foreach ($plugin_list as $plugin) {
-        
-            $id = $plugin->get_id();
-           
-            # 1505 => OSSIM directives
-            # 2000 - 3000 => Monitors
-#            if (($id != 1505) && (($id < 2000) || ($id >= 3000))) 
-            if ($id != 1505) 
-            {
-                $name = $plugin->get_name();
-                $type = $plugin->get_type();
-?>
-      <tr>
-        <td>
-        <a href="pluginsid.php?id=<?php echo $id ?>&name=<?php echo $name ?>">
-            <?php echo $id; ?></a>
-        </td>
-        <td bgcolor="#eeeee"><b><?php echo $name; ?></b></td>
-        <td>
-<?php
-                if ($type == '1') {
-                    echo "Detector ($type)"; 
-                } elseif ($type == '2') {
-                    echo "Monitor ($type)";
-                } else {
-                    echo "Other ($type)";
-                }
-?>
-        </td>
-        <td><?php echo $plugin->get_description(); ?></td>
-      </tr>
-<?php
-            } /* if 1505 */
-        } /* foreach */
-    } /* if plugin_list */
-?>
-    </table>
+				],
+			searchitems : [
+				{display: 'Name', name : 'name', isdefault: true},
+				{display: 'Description', name : 'description'}
+				],
+			sortname: "<?php echo $sortname
+?>",
+			sortorder: "<?php echo $sortorder
+?>",
+			usepager: true,
+			title: 'PLUGINS',
+			pagestat: 'Displaying {from} to {to} of {total} plugins',
+			nomsg: 'No plugins',
+			useRp: true,
+			rp: 50,
+			showTableToggleBtn: true,
+			singleSelect: true,
+			width: get_width('headerh1'),
+			height: 330,
+			onColumnChange: save_layout,
+			onEndResize: save_layout
+		});   
+	});
+	</script>
 
 </body>
-
-<?php
-    $db->close($conn);
-?>
-
 </html>
+

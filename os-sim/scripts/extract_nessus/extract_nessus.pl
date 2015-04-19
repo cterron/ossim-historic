@@ -19,7 +19,7 @@ while(<IN>)
 	{
 		$nessus_id = $1;
 		$sid = $2;
-		print "INSERT INTO plugin_reference (plugin_id, plugin_sid, reference_id, reference_sid) VALUES (1001, $sid, 3001, $nessus_id);\n";
+		print "REPLACE INTO plugin_reference (plugin_id, plugin_sid, reference_id, reference_sid) VALUES (1001, $sid, 3001, $nessus_id);\n";
 	}
 }
 close IN;

@@ -1,48 +1,88 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once 'classes/Security.inc';
 require_once 'classes/Session.inc';
 require_once 'classes/Xajax.inc';
 require_once 'classes/Member_status.inc';
 require_once 'classes/Util.inc';
-
 Session::logcheck("MenuConfiguration", "ConfigurationMaps");
-
 $map_id = GET('map_id') ? GET('map_id') : die("Invalid map_id");
-
 $db = new ossim_db();
 $conn = $db->connect();
-
 $sql = "SELECT id, name, engine, center_x, center_y, zoom, engine_data3, engine_data4
         FROM map
         WHERE id = ?";
-$map = $conn->GetRow($sql, array($map_id));
+$map = $conn->GetRow($sql, array(
+    $map_id
+));
 switch ($map['engine']) {
-    case 'openlayers_op':    $layer = 'op';    break;
-    case 'openlayers_ve':    $layer = 've';    break;
+    case 'openlayers_op':
+        $layer = 'op';
+        break;
+
+    case 'openlayers_ve':
+        $layer = 've';
+        break;
+
     case 'openlayers_image':
-        $layer  = 'image';
-        $width  = $map['engine_data3'];
+        $layer = 'image';
+        $width = $map['engine_data3'];
         $height = $map['engine_data4'];
         break;
 }
-
 $status = new Member_status;
 $sql = "SELECT id, type, ossim_element_key, x, y
         FROM map_element
         WHERE map_id=?";
-if (!$rs = $conn->Execute($sql, array($map['id']))) {
+if (!$rs = $conn->Execute($sql, array(
+    $map['id']
+))) {
     die(ossim_error($conn->ErrorMsg()));
 }
 $items = array();
 while (!$rs->EOF) {
     /*
     $item = array(
-        'name' => 
-        'icon' =>
-        'status_value' =>
-        'status_text' =>
-        'link' =>
-        'description' =>
+    'name' =>
+    'icon' =>
+    'status_value' =>
+    'status_text' =>
+    'link' =>
+    'description' =>
     */
     $item = $status->get($rs->fields['ossim_element_key'], $rs->fields['type']);
     $item['description'] = Util::string2js($item['description']);
@@ -52,11 +92,11 @@ while (!$rs->EOF) {
     $items[] = $item;
     $rs->MoveNext();
 }
-
 ?>
 <html>
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="refresh" content="180">
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
@@ -72,9 +112,11 @@ while (!$rs->EOF) {
     </style>
     
     <script src="../js/prototype.js" type="text/javascript"></script>
-    <? if ($layer == 've') { ?>
+    <?php
+if ($layer == 've') { ?>
         <script src='http://dev.virtualearth.net/mapcontrol/v3/mapcontrol.js'></script>
-    <? } ?>
+    <?php
+} ?>
     <script src="../js/OpenLayers/OpenLayers.js"></script>
     <script type="text/javascript">
         <!--
@@ -84,9 +126,9 @@ while (!$rs->EOF) {
         //OpenLayers.Popup.OPACITY = 1;
         //OpenLayers.Popup.BORDER = "3px coral solid";
 
-        var zoom = <?=$map['zoom']?>;
-        var lon = <?=$map['center_x']?>;
-        var lat = <?=$map['center_y']?>;
+        var zoom = <?php echo $map['zoom'] ?>;
+        var lon = <?php echo $map['center_x'] ?>;
+        var lat = <?php echo $map['center_y'] ?>;
         var map, layer, markers;
 
         function viewCenter()
@@ -145,26 +187,34 @@ while (!$rs->EOF) {
                            numZoomLevels: 4
                           };
 
-         <? if ($layer == 'image') { ?>
+         <?php
+if ($layer == 'image') { ?>
             layer = new OpenLayers.Layer.Image(
                                 'Custom Image',
-                                './output_image_map.php?map_id=<?=$map_id?>',
+                                './output_image_map.php?map_id=<?php echo $map_id
+?>',
                                 new OpenLayers.Bounds(-180, -90, 90, 180),
-                                new OpenLayers.Size(<?=$width?>, <?=$height?>),
+                                new OpenLayers.Size(<?php echo $width
+?>, <?php echo $height ?>),
                                 options);
             //map.zoomToMaxExtent();
-         <? } ?>
+         <?php
+} ?>
 
-         <? if ($layer == 'op') { ?>
+         <?php
+if ($layer == 'op') { ?>
             layer = new OpenLayers.Layer.WMS( "OpenLayers WMS", 
                         "http://labs.metacarta.com/wms/vmap0", {layers: 'basic'} );
-         <? } ?>
+         <?php
+} ?>
          
-         <? if ($layer == 've') { ?>
+         <?php
+if ($layer == 've') { ?>
             layer = new OpenLayers.Layer.VirtualEarth(
                                 "VE",
                                 {'type': VEMapStyle.Road});
-         <? } ?>
+         <?php
+} ?>
             map.addLayer(layer);
 
             /*
@@ -181,14 +231,17 @@ while (!$rs->EOF) {
                 markers.redraw();
             });
 
-            //var newl = new OpenLayers.Layer.Text( "text", { location:"../maps/openlayers_markers_text.php?map_id=<?=$map_id?>"} );
+            //var newl = new OpenLayers.Layer.Text( "text", { location:"../maps/openlayers_markers_text.php?map_id=<?php echo $map_id
+?>"} );
             //map.addLayer(newl);
             
             markers = new OpenLayers.Layer.Markers( "Markers" );
             map.addLayer(markers);
-        <? foreach ($items as $i) { ?>
-            createMarker(<?=$i['x']?>, <?=$i['y']?>, '<?=$i['icon']?>', '<?=$i['popup']?>');
-        <? } ?>
+        <?php
+foreach($items as $i) { ?>
+            createMarker(<?php echo $i['x'] ?>, <?php echo $i['y'] ?>, '<?php echo $i['icon'] ?>', '<?php echo $i['popup'] ?>');
+        <?php
+} ?>
         }
         
         // -->

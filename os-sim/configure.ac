@@ -64,7 +64,8 @@ AC_TRY_LINK([ #include <sys/types.h>
   ]
 )
 
-PKG_CHECK_MODULES(DEPS, glib-2.0 >= 2.2 gobject-2.0 >= 2.2 gthread-2.0 >= 2.2 gnet-2.0 > 2.0 libxml-2.0)
+PKG_CHECK_MODULES(DEPS, glib-2.0 >= 2.2 gobject-2.0 >= 2.2 gthread-2.0 >= 2.2 gnet-2.0 > 2.0 libxml-2.0 openssl >= 0.9.7)
+
 
 AC_ARG_WITH(libgda,
 [  --with-libgda=<directory>         path for libgda libs and includes])
@@ -93,14 +94,8 @@ AC_SUBST(DEPS_LIBS)
 AC_OUTPUT([
 Makefile
 src/Makefile
-agent/Makefile
-agent/doc/Makefile
-agent/util/Makefile
-agent/pyossim/Makefile
 etc/Makefile
 etc/server/Makefile
-etc/agent/Makefile
-etc/agent/plugins/Makefile
 etc/framework/Makefile
 etc/cron.d/Makefile
 etc/cron.daily/Makefile
@@ -165,11 +160,6 @@ www/netscan/Makefile
 www/response/Makefile
 www/upgrade/Makefile
 www/userlog/Makefile
-mrtg/Makefile
-mrtg/level/Makefile
-mrtg/global/Makefile
-mrtg/hosts/Makefile
-mrtg/nets/Makefile
 scripts/Makefile
 scripts/correlation/Makefile
 scripts/extract_nessus/Makefile

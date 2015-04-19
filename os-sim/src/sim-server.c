@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #include <gnet.h>
 
@@ -60,6 +56,10 @@ struct _SimServerPrivate {
 
 	gchar						*ip;
 	gchar						*name;
+
+  GCond                           *sessions_cond;         //condition & mutex to control fully_stablished var.
+  GMutex                  *sessions_mutex;
+
 };
 
 typedef struct {
@@ -85,6 +85,9 @@ static void
 sim_server_impl_finalize (GObject  *gobject)
 {
   SimServer *server = SIM_SERVER (gobject);
+  g_cond_free (server->_priv->sessions_cond);
+  g_mutex_free (server->_priv->sessions_mutex);
+
 
   g_free (server->_priv);
 
@@ -117,6 +120,10 @@ sim_server_instance_init (SimServer * server)
   
   server->_priv->ip = NULL;
   server->_priv->name = NULL;
+
+  server->_priv->sessions_cond = g_cond_new();
+  server->_priv->sessions_mutex = g_mutex_new();
+
 }
 
 /* Public Methods */
@@ -491,7 +498,13 @@ sim_server_append_session (SimServer     *server,
   g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
 
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
   server->_priv->sessions = g_list_append (server->_priv->sessions, session);
+
+  g_mutex_unlock (server->_priv->sessions_mutex);
 }
 
 /*
@@ -511,15 +524,17 @@ sim_server_remove_session (SimServer     *server,
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
 	  
 	void * tmp = session;
+
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
+  server->_priv->sessions = g_list_remove (server->_priv->sessions, tmp);   //and then, the list node itself
 	g_object_unref (session);//first, remove the data inside the session
 
-	guint length = g_list_length (server->_priv->sessions);
-  server->_priv->sessions = g_list_remove (server->_priv->sessions, tmp);   //and then, the list node itself
+  g_mutex_unlock (server->_priv->sessions_mutex);
 	
-	if (length == g_list_length (server->_priv->sessions)) //if the lenght is the same, we didn't removed anything-> error
-		return 0;
-	else
-		return 1;
+	return 1;
 }
 
 /*
@@ -532,10 +547,17 @@ sim_server_remove_session (SimServer     *server,
 GList*
 sim_server_get_sessions (SimServer     *server)
 {
+  GList *list;
   g_return_val_if_fail (server, NULL);
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
 
-  return g_list_copy (server->_priv->sessions);
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+	list=g_list_copy (server->_priv->sessions);
+  g_mutex_unlock (server->_priv->sessions_mutex);
+
+  return list;
 
 }
 
@@ -554,6 +576,10 @@ sim_server_push_session_command (SimServer       *server,
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
   list = server->_priv->sessions;
   while (list)
   {
@@ -565,6 +591,8 @@ sim_server_push_session_command (SimServer       *server,
 
     list = list->next;
   }
+
+  g_mutex_unlock (server->_priv->sessions_mutex);
 }
 
 /*
@@ -587,6 +615,12 @@ sim_server_push_session_plugin_command (SimServer       *server,
   g_return_if_fail (SIM_IS_SERVER (server));
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
+
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
+  list = server->_priv->sessions;
 		
   list = server->_priv->sessions;
   while (list)
@@ -600,17 +634,19 @@ sim_server_push_session_plugin_command (SimServer       *server,
       {
         if (sim_session_has_plugin_id (session, plugin_id))
 				{
-					monitor_requests	*data = g_new0 (monitor_requests, 1);
+	/*				monitor_requests	*data = g_new0 (monitor_requests, 1);
 					GError						*error;	
 					GThread *thread;
-
+*/
+					g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_push_session_plugin_command. Monitor request for plugin_id: %d", plugin_id);
 					SimCommand *cmd = sim_command_new_from_rule (rule); //this will be freed in sim_server_thread_monitor_requests()
-					data->session = session;
-					data->command = cmd;
-
-				  thread = g_thread_create (sim_server_thread_monitor_requests, data, FALSE, &error);
-			    if (thread == NULL)
-			      g_message ("thread error %d: %s", error->code, error->message);										
+//					data->session = session;
+	//				data->command = cmd;
+				  sim_session_write (session, cmd);
+					g_object_unref (cmd);
+//				  thread = g_thread_create (sim_server_thread_monitor_requests, data, FALSE, &error);
+		//	    if (thread == NULL)
+			//      g_message ("thread error %d: %s", error->code, error->message);										
 
 				}
       }
@@ -624,8 +660,10 @@ sim_server_push_session_plugin_command (SimServer       *server,
       
     list = list->next;
   }
+  g_mutex_unlock (server->_priv->sessions_mutex);
 }
 
+#if 0
 gpointer 
 sim_server_thread_monitor_requests (gpointer data)
 {
@@ -642,7 +680,7 @@ sim_server_thread_monitor_requests (gpointer data)
 
 	return NULL;
 }
-
+#endif
 
 /*
  *
@@ -659,6 +697,10 @@ sim_server_reload (SimServer       *server)
   g_return_if_fail (server);
   g_return_if_fail (SIM_IS_SERVER (server));
 
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
   list = server->_priv->sessions;
   while (list)
     {
@@ -669,6 +711,7 @@ sim_server_reload (SimServer       *server)
 
       list = list->next;
     }
+  g_mutex_unlock (server->_priv->sessions_mutex);
 }
 
 /*
@@ -688,16 +731,24 @@ sim_server_get_session_by_sensor (SimServer   *server,
   g_return_val_if_fail (sensor, NULL);
   g_return_val_if_fail (SIM_IS_SENSOR (sensor), NULL);
 
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
   list = server->_priv->sessions;
   while (list)
   {
     SimSession *session = (SimSession *) list->data;
     if ((session != NULL) && SIM_IS_SESSION(session))
       if (sim_session_get_sensor (session) == sensor)
+			{
+  			g_mutex_unlock (server->_priv->sessions_mutex);
 				return session;
+			}
 
 	  list = list->next;
   }
+  g_mutex_unlock (server->_priv->sessions_mutex);
 
   return NULL; //no sessions stablished
 }
@@ -759,6 +810,10 @@ sim_server_get_session_by_ia (SimServer       *server,
   g_return_val_if_fail (server, NULL);
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
 
+  g_mutex_lock (server->_priv->sessions_mutex);
+  while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+    g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
   list = server->_priv->sessions;
   while (list)
   {
@@ -768,11 +823,15 @@ sim_server_get_session_by_ia (SimServer       *server,
       {
         GInetAddr *tmp = sim_session_get_ia (session);
         if (gnet_inetaddr_equal (tmp, ia)) 
+				{
+  				g_mutex_unlock (server->_priv->sessions_mutex);
           return session;
+				}
       }
 
     list = list->next;
   }
+  g_mutex_unlock (server->_priv->sessions_mutex);
   return NULL;
 }
 
@@ -857,6 +916,10 @@ void sim_server_debug_print_sessions (SimServer *server)
 	GList *list;
 	int a=0;
 	
+	g_mutex_lock (server->_priv->sessions_mutex);
+	while (!server->_priv->sessions_cond)       //if we dont have the condition, g_cond_wait().
+		g_cond_wait (server->_priv->sessions_cond, server->_priv->sessions_mutex);
+
 	list = server->_priv->sessions;
 	while (list)
   {
@@ -865,6 +928,7 @@ void sim_server_debug_print_sessions (SimServer *server)
 		a++;		
 		list = list->next;
 	}							
+  g_mutex_unlock (server->_priv->sessions_mutex);
 
 }
 

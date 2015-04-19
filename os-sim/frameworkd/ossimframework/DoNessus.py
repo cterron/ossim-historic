@@ -22,6 +22,8 @@ class DoNessus (threading.Thread) :
         self.__nessus_host = None
         self.__nessus_port = None
         self.__nessusrc = None
+        self.__nessus_bin = None
+        self.__scanner_type = None
         self.__dirnames = {}
         self.__filenames = {}
         self.__linknames = {}
@@ -184,7 +186,7 @@ class DoNessus (threading.Thread) :
 
         self.__debug("Deleting " + what)
 
-        if os.path.isdir(what) == True:
+        if os.path.isdir(what):
             os.chdir(what)
             for dirpath,dirnames,dirfiles in os.walk(what, topdown=False):
                 for file in dirfiles:
@@ -221,6 +223,7 @@ class DoNessus (threading.Thread) :
         ip_scan_dates = {}
         nsr_filedescriptors = {}
         unique_scan_dates = Set() # .add()
+        scanner_type = tmp_conf["scanner_type"]
         report_fds = {}
         combined_nessus_report = []
         ip_scan_dates = self.__get_latest_scan_dates()
@@ -228,8 +231,11 @@ class DoNessus (threading.Thread) :
 
         nessus_rpt_path = os.path.normpath(tmp_conf["nessus_rpt_path"])
         report_dir = os.path.normpath(os.path.join(nessus_rpt_path, today_date + ".report"))
-        tmp_name = tempfile.mktemp(".ossim.report.nsr")
-        if os.path.isdir(report_dir) == True:
+        if scanner_type == "openvas2":
+            tmp_name = tempfile.mktemp(".ossim.report.nbe")
+        else:
+            tmp_name = tempfile.mktemp(".ossim.report.nsr")
+        if os.path.isdir(report_dir):
             self.__debug("Report dir %s already exists, returning" % report_dir)
             return False
 
@@ -239,15 +245,24 @@ class DoNessus (threading.Thread) :
 
         for scan_date in unique_scan_dates:
             try:
-                nsr_filedescriptors[scan_date] = open(os.path.join(nessus_rpt_path, scan_date, "report.nsr"), "r")
+                if scanner_type == "openvas2":
+                    nsr_filedescriptors[scan_date] = open(os.path.join(nessus_rpt_path, scan_date, "report.nbe"), "r")
+                else:
+                    nsr_filedescriptors[scan_date] = open(os.path.join(nessus_rpt_path, scan_date, "report.nsr"), "r")
             except IOError:
                 self.__debug("Failed to open scan directory for %s" % scan_date)
                 pass
 
         outfile =  open(tmp_name, "w")
         for ip in host_list:
-            r = re.compile('^'+ip)
-            nsr_filedescriptors[ip_scan_dates[ip]].seek(0)
+            if scanner_type == "openvas2":
+                r = re.compile('^results\|[^\|]+\|([^\|]+)\|'+ip)
+            else:
+                r = re.compile('^'+ip)
+            try:
+                nsr_filedescriptors[ip_scan_dates[ip]].seek(0)
+            except:
+                continue
             for line in nsr_filedescriptors[ip_scan_dates[ip]]:
                 if r.search(line): 
                     combined_nessus_report.append(line.rstrip("\r\n"))
@@ -263,15 +278,17 @@ class DoNessus (threading.Thread) :
         self.__debug("Report written into %s" % tmp_name)
 
         nessusrc = tmp_conf["nessusrc_path"]
-        if tmp_conf["nessus_path"]:
-            Const.NESSUS_BIN = tmp_conf["nessus_path"]
+        self.__nessus_bin = self.__nessus_bin or \
+                            tmp_conf["nessus_path"] or \
+                            "/usr/bin/nessus"
 
-        if os.path.exists(tmp_name) == True :
+
+        if os.path.exists(tmp_name):
             self.__debug("Writing html report into %s" % report_dir)
-            cmd = "%s -T html_graph -i %s -o %s" % (Const.NESSUS_BIN, tmp_name, report_dir)
+            cmd = "%s -T html_graph -i %s -o %s" % (self.__nessus_bin, tmp_name, report_dir)
             os.system(cmd)
 
-        if os.path.isdir(report_dir) == True and len(report_dir) > 4:
+        if os.path.isdir(report_dir) and len(report_dir) > 4:
             os.chmod(report_dir,0755)
             os.chdir(report_dir)
             for dirpath,dirnames,dirfiles in os.walk(report_dir):
@@ -327,7 +344,7 @@ class DoNessus (threading.Thread) :
         archived_dir = os.path.join(archive_dir, archive_date)
         archived_file = os.path.join(archive_dir, "backup_" + archive_date + ".tar.gz")
         # File exists already, don't overwrite
-        if os.path.exists(archived_file) == True :
+        if os.path.exists(archived_file):
             return False
 
         tar = tarfile.open(archived_file, "w:gz")
@@ -354,23 +371,23 @@ class DoNessus (threading.Thread) :
         return host_networks
 
     def __test_write_fatal (self, path) :
-        if os.access(path, os.W_OK) == False :
+        if not os.access(path, os.W_OK):
             self.__last_error = "Nessus scan failed. Write permission needed on %s for user %d or group %d"  % (path, os.geteuid(), os.getegid())
             print "Nessus scan failed. Write permission needed on %s for user %d or group %d"  % (path, os.geteuid(), os.getegid())
             self.__cleanup()
             return
 
     def __test_write (self, path) :
-        if os.access(path, os.W_OK) == False :
+        if not os.access(path, os.W_OK):
             return False
         return True
 
     def __debug (self, message) :
-        if self.__set_debug == True :
+        if self.__set_debug:
             print message
 
     def __is_active (self, sensor) :
-        cmd = "%s -c %s -x -s -q %s %s %s %s" % (Const.NESSUS_BIN, self.__nessusrc, sensor, self.__nessus_port, self.__nessus_user, self.__nessus_pass)
+        cmd = "%s -c %s -x -s -q %s %s %s %s" % (self.__nessus_bin, self.__nessusrc, sensor, self.__nessus_port, self.__nessus_user, self.__nessus_pass)
         pattern = "Session ID(.*)Targets"
         output = os.popen(cmd)
         for line in output.readlines():
@@ -403,8 +420,11 @@ class DoNessus (threading.Thread) :
             return
 
         refs = {}
-
-        pattern = re.compile("^([^\|]*)\|[^\|]*\|([^\|]*)\|.*")
+    
+        if self.__scanner_type == "openvas2":
+            pattern = re.compile("^results\|[\d+\.]+\|([\d+\.]+)\|.*\(\d+/tcp\)\|[\d+\.]+\.(\d+)\|.*")
+        else:
+            pattern = re.compile("^([^\|]*)\|[^\|]*\|([^\|]*)\|.*")
         for line in tempfd.readlines():
             result = pattern.search(line)
             if result is not None:
@@ -454,9 +474,14 @@ class DoNessus (threading.Thread) :
             print "Unable to open file %s: %s" % (nsr_txt_file, e)
             return
 
-        for line in vulnsfd:
+        if self.__scanner_type == "openvas2":
+            pattern1 = "^[^\|]+\|[^\|]+\|(\d+\.\d+\.\d+\.\d+)\|"
+            pattern2 = "Risk [Ff]actor\s*[\\n]*:\s*[\\n]*(\w+)[;|\s|\\n]*"
+        else:
             pattern1 = "^(\d+\.\d+\.\d+\.\d+)"
             pattern2 = "Risk [Ff]actor\s*:\W+(\w*)"
+
+        for line in vulnsfd:
             result1 = re.findall(str(pattern1),line)
             result2 = re.findall(str(pattern2),line)
             try:
@@ -473,6 +498,8 @@ class DoNessus (threading.Thread) :
             if risk == "":
                 # continue
                 risk = "None"
+
+
             
             hosts.add(host)
             risk = re.sub(" \/.*|if.*","", risk)
@@ -488,6 +515,13 @@ class DoNessus (threading.Thread) :
             """
             if risk_values.has_key(risk):
                 rv = risk_values[risk]
+
+            # Override using CVSS Score if present
+            pattern3 = re.compile("CVSS Base Score\s*:\s*(\d+)\s*;")
+            result3 = pattern3.search(line)
+            if result3:
+                (risk,) = result3.groups()
+                rv = int(risk)
 
             hv[host] += rv
 
@@ -580,14 +614,27 @@ class DoNessus (threading.Thread) :
         self.__startup()
         self.__status = 1
 
-        if self.__conf["nessus_path"]:
-            Const.NESSUS_BIN = self.__conf["nessus_path"]
+        self.__scanner_type = self.__scanner_type or \
+                            self.__conf["scanner_type"] or \
+                            "openvas2"
+        self.__debug("Scanner type: " + self.__scanner_type)
+
+        # Test DK
+        #self.__update_vulnerability_tables("/tmp/a.nbe", "0000-00-00 00:00:00") 
+        #self.__status = 0
+        #return 
+
+        self.__nessus_bin = self.__nessus_bin or \
+                            self.__conf["nessus_path"] or \
+                            "/usr/bin/nessus"
+
         if self.__conf["nessus_distributed"] == "1":
             nessus_distributed = True
             self.__debug("nessus_distributed (True) -> " + self.__conf["nessus_distributed"])
         else:
             nessus_distributed = False
             self.__debug("nessus_distributed (False) -> " + self.__conf["nessus_distributed"])
+
         self.__nessus_user = self.__conf["nessus_user"]
         self.__nessus_pass = self.__conf["nessus_pass"]
         self.__nessus_host = self.__conf["nessus_host"]
@@ -601,25 +648,31 @@ class DoNessus (threading.Thread) :
         self.__dirnames["today"] = os.path.join(self.__dirnames["nessus_rpt_path"], today_date) + "/"
         self.__filenames["targets"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "targets.txt")
         self.__filenames["result_nsr_txt"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.txt")
-        self.__filenames["result_nsr"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.nsr")
+        if self.__scanner_type == "openvas2":
+            self.__filenames["result_nsr"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.nbe")
+        else:
+            self.__filenames["result_nsr"] = os.path.join(self.__dirnames["nessus_tmp"], today_date + "result.nsr")
         self.__linknames["last"] = os.path.join(self.__dirnames["nessus_rpt_path"],"last")
-        self.__filenames["today_nsr"] = os.path.join(self.__dirnames["nessus_tmp"],"temp_res." + today_date + ".nsr")
+        if self.__scanner_type == "openvas2":
+            self.__filenames["today_nsr"] = os.path.join(self.__dirnames["nessus_tmp"],"temp_res." + today_date + ".nbe")
+        else:
+            self.__filenames["today_nsr"] = os.path.join(self.__dirnames["nessus_tmp"],"temp_res." + today_date + ".nsr")
 
 
         self.__test_write_fatal(self.__dirnames["nessus_rpt_path"])
 
-        if self.__test_write(self.__dirnames["today"]) == False :
+        if not self.__test_write(self.__dirnames["today"]):
             self.__debug("Creating todays scan dir: %s" % self.__dirnames["today"])
             try :
-                os.mkdir(self.__dirnames["today"], 0755)
+                os.makedirs(self.__dirnames["today"], 0755)
             except OSError, e :
                 print e
 
 
-        if self.__test_write(self.__dirnames["nessus_tmp"]) == False :
+        if not self.__test_write(self.__dirnames["nessus_tmp"]):
             print "Creating temp dir: %s" % self.__dirnames["nessus_tmp"]
             try :
-                os.mkdir(self.__dirnames["nessus_tmp"], 0755)
+                os.makedirs(self.__dirnames["nessus_tmp"], 0755)
             except OSError, e :
                 print e
 
@@ -639,12 +692,12 @@ class DoNessus (threading.Thread) :
         scan_networks = []        
         scan_hosts = []
         
-        if nessus_distributed == True :
+        if nessus_distributed:
             self.__debug("Entering distributed mode")
-            if self.__test_write(self.__dirnames["sensors"]) == False :
+            if not self.__test_write(self.__dirnames["sensors"]):
                 self.__debug("Creating sensor temp dir: %s" % self.__dirnames["sensors"])
                 try :
-                    os.mkdir(self.__dirnames["sensors"], 0755)
+                    os.makedirs(self.__dirnames["sensors"], 0755)
                 except OSError, e :
                     print e
              
@@ -748,7 +801,7 @@ class DoNessus (threading.Thread) :
                         self.__debug("Child %s exiting" % sensor)
                         os._exit(0)
 
-                    if self.__is_active(sensor) == False:
+                    if not self.__is_active(sensor):
                         try :
                             os.unlink(self.__filenames["targetfile"][sensor])
                         except OSError, e :
@@ -776,7 +829,11 @@ class DoNessus (threading.Thread) :
                         self.__debug(line)
                     targetfd.close()
 
-                    cmd = "%s -c %s -x -T nsr -q %s %s %s %s %s %s" % (Const.NESSUS_BIN, self.__nessusrc, sensor, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targetfile"][sensor], self.__filenames["nsrfile"][sensor] )
+                    if self.__scanner_type == "openvas2":
+                        cmd = "%s -c %s -x -T nbe -q %s %s %s %s %s %s" % (self.__nessus_bin, self.__nessusrc, sensor, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targetfile"][sensor], self.__filenames["nsrfile"][sensor] )
+                    else:
+                        cmd = "%s -c %s -x -T nsr -q %s %s %s %s %s %s" % (self.__nessus_bin, self.__nessusrc, sensor, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targetfile"][sensor], self.__filenames["nsrfile"][sensor] )
+
                     # Discard output
                     os.system(cmd)
 
@@ -841,7 +898,10 @@ class DoNessus (threading.Thread) :
             for line in tempfd.readlines():
                 self.__debug(line)
             tempfd.close()
-            cmd = "%s -c %s -x -T nsr -q %s %s %s %s %s %s" % (Const.NESSUS_BIN, self.__nessusrc, self.__nessus_host, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targets"], self.__filenames["result_nsr"])
+            if self.__scanner_type == "openvas2":
+                cmd = "%s -c %s -x -T nbe -q %s %s %s %s %s %s" % (self.__nessus_bin, self.__nessusrc, self.__nessus_host, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targets"], self.__filenames["result_nsr"])
+            else:
+                cmd = "%s -c %s -x -T nsr -q %s %s %s %s %s %s" % (self.__nessus_bin, self.__nessusrc, self.__nessus_host, self.__nessus_port, self.__nessus_user, self.__nessus_pass, self.__filenames["targets"], self.__filenames["result_nsr"])
             os.system(cmd)
 
         # Start Converting & calculating
@@ -849,8 +909,11 @@ class DoNessus (threading.Thread) :
         self.__status = 50
 
         # Convert to txt so we can match vulnerabilities
-        if os.path.exists(self.__filenames["result_nsr"]) == True :
-            cmd = "%s -c %s -T text -i %s -o %s" % (Const.NESSUS_BIN, self.__nessusrc, self.__filenames["result_nsr"], self.__filenames["result_nsr_txt"])
+        if os.path.exists(self.__filenames["result_nsr"]):
+            if self.__scanner_type == "openvas2":
+                cmd = "/bin/cp %s %s" % (self.__filenames["result_nsr"], self.__filenames["result_nsr_txt"])
+            else:
+                cmd = "%s -c %s -T text -i %s -o %s" % (self.__nessus_bin, self.__nessusrc, self.__filenames["result_nsr"], self.__filenames["result_nsr_txt"])
             os.system(cmd)
         else:
             self.__status = -1
@@ -858,7 +921,7 @@ class DoNessus (threading.Thread) :
             print "Scan failed check output and try enabling debug"
             return
 
-        if os.path.exists(self.__filenames["result_nsr"]) == True :
+        if os.path.exists(self.__filenames["result_nsr"]):
             self.__update_vulnerability_tables(self.__filenames["result_nsr"], today_date) 
             self.__debug("Calling Vulnerabilities from within DoNessus for nsr: %s" % self.__filenames["result_nsr"])
             vuln = Vulnerabilities()
@@ -877,13 +940,19 @@ class DoNessus (threading.Thread) :
 
         self.__debug("Today is %s" % today_date)
         
-        if os.path.exists(self.__filenames["result_nsr"]) == True :
-            cmd = "%s -c %s -T html_graph -i %s -o %s" % (Const.NESSUS_BIN, self.__nessusrc, self.__filenames["result_nsr"], self.__dirnames["today"])
+        if os.path.exists(self.__filenames["result_nsr"]):
+            cmd = "%s -c %s -T html_graph -i %s -o %s" % (self.__nessus_bin, self.__nessusrc, self.__filenames["result_nsr"], self.__dirnames["today"])
             os.system(cmd)
+            if self.__scanner_type == "openvas2":
+                cmd = "/bin/cp %s %s" % (self.__filenames["result_nsr"], os.path.join(self.__dirnames["today"], "report.nbe"))
+            else:
+                cmd = "/bin/cp %s %s" % (self.__filenames["result_nsr"], os.path.join(self.__dirnames["today"], "report.nsr"))
+            os.system(cmd)
+
 
         self.__status = 90
 
-        if os.path.isdir(self.__dirnames["today"]) == True and len(self.__dirnames["today"]) > 4:
+        if os.path.isdir(self.__dirnames["today"]) and len(self.__dirnames["today"]) > 4:
             if self.__conf["ossim_type"] == "mysql":
                 self.__backup_vulnerability_tables(self.__dirnames["today"]) 
             os.chmod(self.__dirnames["today"],0755)
@@ -893,22 +962,22 @@ class DoNessus (threading.Thread) :
                     if dir == []: pass
                     os.chmod(dir, 0755)
       
-        if os.path.exists(self.__filenames["today_nsr"]) == True :
+        if os.path.exists(self.__filenames["today_nsr"]):
             os.remove(self.__filenames["today_nsr"])
 
-        if os.path.exists(self.__filenames["result_nsr"]) == True:
+        if os.path.exists(self.__filenames["result_nsr"]):
             os.rename(self.__filenames["result_nsr"],self.__filenames["today_nsr"])
 
         try:
             os.remove(self.__linknames["last"])
         except Exception, e:
             pass
-        if os.path.exists(self.__dirnames["today"]) == True:
+        if os.path.exists(self.__dirnames["today"]):
             os.symlink(self.__dirnames["today"], self.__linknames["last"])
 
         self.__status = 95
 
-        if os.path.exists(self.__filenames["today_nsr"]) == True :
+        if os.path.exists(self.__filenames["today_nsr"]):
             self.__update_cross_correlation(self.__filenames["today_nsr"])
 
         self.__debug("Parent exiting")
@@ -951,6 +1020,7 @@ class DoNessus (threading.Thread) :
 
 if __name__ == "__main__":
 
+    sensors = []
     donessus = DoNessus()
     usage = "%prog [-i scheduler_id]"
     parser = OptionParser(usage = usage)

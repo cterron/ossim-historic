@@ -1,220 +1,289 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicySensors");
+// load column layout
+require_once ('../conf/layout.php');
+$category = "policy";
+$name_layout = "sensors_layout";
+$layout = load_layout($name_layout, $category);
+// data
+require_once 'ossim_db.inc';
+require_once 'get_sensors.php';
+require_once 'classes/Sensor.inc';
+$active_sensors = 0;
+$total_sensors = 0;
+$sensor_stack = array();
+$sensor_stack_on = array();
+$sensor_stack_off = array();
+$sensor_configured_stack = array();
+$db = new ossim_db();
+$conn = $db->connect();
+list($sensor_list, $err) = server_get_sensors($conn);
+if ($err != "") echo $err;
+foreach($sensor_list as $sensor_status) {
+    if ($sensor_status["state"] = "on") {
+        array_push($sensor_stack_on, $sensor_status["sensor"]);
+        $sensor_stack[$sensor_status["sensor"]] = 1;
+    } else {
+        array_push($sensor_stack_off, $sensor_status["sensor"]);
+    }
+}
+if ($sensor_list = Sensor::get_list($conn, "")) {
+    $total_sensors = count($sensor_list);
+    foreach($sensor_list as $sensor) {
+        if ($sensor_stack[$sensor->get_ip() ] == 1) {
+            $active_sensors++;
+            array_push($sensor_configured_stack, $sensor->get_ip());
+        }
+    }
+}
+$active_sensors = ($active_sensors == 0) ? "<font color=red><b>$active_sensors</b></font>" : "<font color=green><b>$active_sensors</b></font>";
+$total_sensors = "<b>$total_sensors</b>";
+$db->close($conn);
 ?>
-
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+  <meta http-equiv="X-UA-Compatible" content="IE=7" />
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+  <link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
+  <script type="text/javascript" src="../js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.flexigrid.js"></script>
+  <script type="text/javascript" src="../js/urlencode.js"></script>
 </head>
 <body>
                                                                                 
-  <h1> <?php echo gettext("Sensors"); ?> </h1>
+	<?php
+include ("../hmenu.php"); ?>
+	<div  id="headerh1" style="width:100%;height:1px">&nbsp;</div>
 
 <?php
-    require_once 'ossim_conf.inc';
-    require_once 'ossim_db.inc';
-    require_once 'classes/Sensor.inc';
-    require_once 'classes/Plugin.inc';
-    require_once 'classes/Security.inc';
-    require_once 'get_sensor_plugins.php';
-    require_once 'get_sensors.php';
-    require_once 'classes/WebIndicator.inc';
-    
-    $order = GET('order');
-    
-    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+//$sensor_stack_on[] = "192.168.1.2";
+$diff_arr = array_diff($sensor_stack_on, $sensor_configured_stack);
+if ($diff_arr) {
+?>
+	<table class="noborder"><tr>
+	<td><font color="red"><b> <?php
+    echo gettext("Warning"); ?> </b></font>:
+		<?php
+    echo gettext("the following sensor(s) are being reported as enabled by the server but aren't configured"); ?> .
+	</td>
+	</tr></table>
+
+	<table class="noborder">
+	<?php
+    foreach($diff_arr as $ip_diff) { ?>
+	<tr>
+	<td nowrap><img src="../pixmaps/theme/host.png" border=0 align="absmiddle"><a href="sensor_plugins.php?sensor=<?php
+        echo $ip_diff ?>"><b><?php
+        echo $ip_diff ?></b></a>&nbsp;</td>
+	<td nowrap style="background:#E8E8E8;border:1px solid #D7D7D7">&nbsp;<a href="newsensorform.php?ip=<?php
+        echo $ip_diff ?>"><img src="../pixmaps/tables/table_row_insert.png" border=0 align="absmiddle"> <?php
+        echo gettext("Insert"); ?> </a>&nbsp;</td>
+	</tr>
+	<tr><td colspan="2"></td></tr>
+	<?php
+    } ?>
+	</table>
+<?php
+} ?>
+
   
-    if (ossim_error()) {
-        die(ossim_error());
-    }
-  
-    if (empty($order))
-         $order = "name";
+	<table class="noborder">
+	<tr><td valign="top">
+		<table id="flextable" style="display:none"></table>
+	</td><tr>
+	</table>
+	<style>
+		table, th, tr, td {
+			background:transparent;
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border:none;
+			padding:0px; margin:0px;
+		}
+		input, select {
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border: 1px solid #8F8FC6;
+			font-size:12px; font-family:arial; vertical-align:middle;
+			padding:0px; margin:0px;
+		}
+	</style>
+	<script>
+	function get_width(id) {
+		if (typeof(document.getElementById(id).offsetWidth)!='undefined') 
+			return document.getElementById(id).offsetWidth-5;
+		else
+			return 700;
+	}
+	function action(com,grid) {
+		var items = $('.trSelected', grid);
+		if (com=='Delete selected') {
+			//Delete host by ajax
+			if (typeof(items[0]) != 'undefined') {
+				document.location.href = 'deletesensor.php?confirm=yes&name='+urlencode(items[0].id.substr(3))
+			}
+			else alert('You must select a sensor');
+		}
+		else if (com=='Modify') {
+			if (typeof(items[0]) != 'undefined') document.location.href = 'modifysensorform.php?name='+urlencode(items[0].id.substr(3))
+			else alert('You must select a sensor');
+		}
+		else if (com=='Insert new sensor') {
+			document.location.href = 'newsensorform.php'
+		}
+		else if (com=='Reload') {
+			document.location.href = '../conf/reload.php?what=sensors&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>'
+		}
+		else if (com=='Interfaces') {
+			document.location.href = 'interfaces.php?sensor='+urlencode(items[0].id.substr(3))
+		}
+	}
+	function save_layout(clayout) {
+		$("#flextable").changeStatus('Saving column layout...',false);
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name:"<?php echo $name_layout ?>", category:"<?php echo $category ?>", layout:serialize(clayout) },
+				success: function(msg) {
+					$("#flextable").changeStatus(msg,true);
+				}
+		});
+	}
+	$("#flextable").flexigrid({
+		url: 'getsensor.php',
+		dataType: 'xml',
+		colModel : [
+		<?php
+$default = array(
+    "ip" => array(
+        'IP',
+        100,
+        'true',
+        'center',
+        false
+    ) ,
+    "name" => array(
+        'Hostname',
+        100,
+        'true',
+        'center',
+        false
+    ) ,
+    "priority" => array(
+        'Priority',
+        60,
+        'true',
+        'center',
+        false
+    ) ,
+    "port" => array(
+        'Port',
+        40,
+        'true',
+        'center',
+        false
+    ) ,
+    "version" => array(
+        'Version',
+        180,
+        'false',
+        'center',
+        false
+    ) ,
+    "active" => array(
+        'Active',
+        50,
+        'false',
+        'center',
+        false
+    ) ,
+    //"munin" => array('Munin',40,'false','center',false),
+    "desc" => array(
+        'Description',
+        280,
+        'false',
+        'left',
+        false
+    )
+);
+list($colModel, $sortname, $sortorder, $height) = print_layout($layout, $default, "name", "asc", 300);
+echo "$colModel\n";
 ?>
-
-  <table align="center">
-  <tr>
-  <th><?php echo gettext("Active Sensors");?></th>
-  <th><?php echo gettext("Total Sensors");?></th>
-  </tr><tr>
-  <td><div id="active">0</div></td>
-  <td><b><div id="total">0</div></b></td>
-  </tr>
-  </table>
-  <br/>
-<?php
-$ossim_conf = $GLOBALS["CONF"];
-$use_munin = $ossim_conf->get_conf("use_munin");
-if($use_munin == 1){
-$munin_link = $ossim_conf->get_conf("munin_link");
-?>
-<center><a href="<?= $munin_link; ?>"><img src="../pixmaps/stats.gif" border="0"></a></center>
-<br/>
-<?php
-}
-?>
-
-  <table align="center">
-    <tr>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("inet_aton(ip)", $order);
-          ?>">
-	  <?php echo gettext("Ip"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("name", $order);
-          ?>">
-	  <?php echo gettext("Hostname"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("priority", $order);
-          ?>">
-	  <?php echo gettext("Priority"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("port", $order);
-          ?>">
-	  <?php echo gettext("Port"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("connect", $order);
-          ?>">
-	  <?php echo gettext("Active"); ?> </a></th>
-      <th> <?php echo gettext("Description"); ?> </th>
-      <th> <?php echo gettext("Action"); ?> </th>
-    </tr>
-
-<?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Sensor.inc';
-
-    $db = new ossim_db();
-    $conn = $db->connect();
-
-    $sensor_list = server_get_sensors($conn);
-    $sensor_stack = array();
-    $sensor_configured_stack = array();
-    if($sensor_list){
-        foreach ($sensor_list as $sensor_status){
-            if(in_array($sensor_status["sensor"],$sensor_stack)) continue;
-            if($sensor_status["state"] = "on"){
-                array_push($sensor_stack,$sensor_status["sensor"]);
-            }
-        }
-    }
-
-    $active_sensors = 0;
-    $total_sensors = 0;
-    
-    if ($sensor_list = Sensor::get_list($conn, "ORDER BY $order")) {
-        foreach($sensor_list as $sensor) {
-            $ip = $sensor->get_ip();
-            $name = $sensor->get_name();
-            $total_sensors++;
-
-?>
-
-    <tr>
-      <td><a href="sensor_plugins.php?sensor=<?php echo $ip ?>"><?php echo $sensor->get_ip(); ?></a></td>
-      <td><?php echo $sensor->get_name(); ?></td>
-      <td><?php echo $sensor->get_priority(); ?></td>
-      <td><?php echo $sensor->get_port(); ?></td>
-      <td><?php 
-        if (in_array($sensor->get_ip(),$sensor_stack)){
-            echo "<font color=\"green\"><b>YES</b></font>";
-            $active_sensors++;
-            array_push($sensor_configured_stack,$sensor->get_ip());
-        } else {
-            echo "<font color=\"red\"><b>NO</b></font>";
-        }
-      /*
-        if ($sensor->get_connect() == 1) echo "YES";
-        else echo "NO";
-        */
-      ?></td>
-      <td><?php echo $sensor->get_descr(); ?>&nbsp;</td>
-      <td>
-<!--        <a href="editsensor.php?ip=<?php //echo $ip ?>">Remote edit</a>* -->
-        [ <a href="modifysensorform.php?name=<?php echo $name ?>">
-	<?php echo gettext("Modify"); ?> </a> |
-        <a href="deletesensor.php?name=<?php echo $name ?>">
-	<?php echo gettext("Delete"); ?> </a> |
-        <a href="interfaces.php?sensor=<?php echo $name ?>">
-	<?php echo gettext("Interfaces"); ?> </a> ]</td>
-    </tr>
-
-<?php
-        } /* foreach */
-    } /* sensor_list */
-
-    $db->close($conn);
-?>
-
-<!--
-<p><i>* You must share dsa keys between hosts in order to use this
-functionality</i><br/><i>(see README.sensors for more details).</i><br><i>Partially broken. Use with care or fix.</i></p>
--->
-
-
-<?php
-    $diff_arr = array_diff($sensor_stack,$sensor_configured_stack);
-    if($diff_arr) {
-?>
-    <tr><td colspan="7"></td></tr>
-    <tr>
-      <td colspan="7"><font color="red"><b> <?php echo gettext("Warning"); ?> </b></font>:
-        <?php echo gettext("the following sensor(s) are being reported as enabled by the server but aren't configured"); ?> .
-      </td>
-    </tr>
-<?php
-        foreach($diff_arr as $ip_diff) {
-?>
-    <tr>
-      <td><a href="sensor_plugins.php?sensor=<?php echo $ip_diff ?>">
-        <?php echo $ip_diff ?></a></td>
-      <td>-</td>
-      <td>-</td>
-      <td>-</td>
-      <td><font color="green"><b> <?php echo gettext("YES"); ?> </b></font></td>
-      <td>-</td>
-      <td><a href="newsensorform.php?ip=<?php echo $ip_diff ?>"> 
-      <?php echo gettext("Insert"); ?> </a></td>
-    </tr>
-    <tr><td colspan="7"></td></tr>
-<?php
-        }
-    }
-?>
-    <tr>
-      <td colspan="10"><a href="newsensorform.php"> <?php echo gettext("Insert new sensor"); ?> </a></td>
-    </tr>
-    <tr>
-      <td colspan="10"><a href="../conf/reload.php?what=sensors&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
-if (WebIndicator::is_on("Reload_sensors")) {
-    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
-} else {
-    echo gettext("Reload");
-} ?> </a></td>
-    </tr>
-</table>
-
-<script language="javascript">
-active_sensors_div = document.getElementById("active");
-total_sensors_div = document.getElementById("total");
-
-<?php
-if($active_sensors == 0){
-?>
-active_sensors_div.innerHTML = "<font color=\"red\">" + <?php echo $active_sensors; ?> + "</font>"; 
-<?php
-} else {
-?>
-active_sensors_div.innerHTML = "<font color=\"green\">" + <?php echo $active_sensors; ?> + "</font>"; 
-<?php
-}
-?>
-total_sensors_div.innerHTML = <?php echo $total_sensors; ?>;
-</script>
+			],
+		buttons : [
+			{name: 'Insert new sensor', bclass: 'add', onpress : action},
+			{separator: true},
+			{name: 'Delete selected', bclass: 'delete', onpress : action},
+			{separator: true},
+			{name: 'Modify', bclass: 'modify', onpress : action},
+			{separator: true},
+			{name: 'Interfaces', bclass: 'gear', onpress : action},
+			{separator: true},
+			{name: 'Reload', bclass: '<?php echo (WebIndicator::is_on("Reload_sensors")) ? "reload_red" : "reload" ?>', onpress : action},
+			{separator: true},
+			{name: 'Active Sensors: <?php echo $active_sensors ?>', bclass: 'info', iclass: 'ibutton'},
+			{name: 'Total Sensors: <?php echo $total_sensors ?>', bclass: 'info', iclass: 'ibutton'}
+			],
+		sortname: "<?php echo $sortname ?>",
+		sortorder: "<?php echo $sortorder ?>",
+		usepager: true,
+		title: 'SENSORS',
+		pagestat: 'Displaying {from} to {to} of {total} sensors',
+		nomsg: 'No sensors',
+		useRp: true,
+		rp: 25,
+		showTableToggleBtn: true,
+		singleSelect: true,
+		width: get_width('headerh1'),
+		height: <?php echo $height ?>,
+		onColumnChange: save_layout,
+		onEndResize: save_layout
+	});   
+	
+	</script>
 
 </body>
 </html>

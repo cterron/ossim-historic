@@ -17,6 +17,7 @@ class Vulnerabilities :
         self.__id_false_positive = 65002
         self.__default_incident_type = 'Nessus Vulnerability'
         self.__nsr_fd = None
+        self.__scanner_type = None
         self.__scan_time = None
         self.__ticket_default_user = "admin"
         self.__ticket_default_closed_description = "Automatic closed of the incident"
@@ -25,6 +26,9 @@ class Vulnerabilities :
     def process(self, nsr_file, scan_date, scan_networks, scan_hosts) :
         self.__debug("Generating Incidents for found vulnerabilities")
         self.__scan_time = strftime('%Y-%m-%d %H:%M:%S')
+        self.__scanner_type = self.__scanner_type or \
+                            self.__conf["scanner_type"] or \
+                            "openvas2"
         try:
             self.__nsr_fd = open(nsr_file)
         except Exception, e:
@@ -36,7 +40,10 @@ class Vulnerabilities :
         self.__debug("Generating Incidents finished ok")
 
     def __parse_vulns_file(self):
-        pattern = re.compile("(.*)\|.*\((\d+/tcp)\)\|(\d+)\|(INFO|NOTE|REPORT)\|(.*)")
+        if self.__scanner_type == "openvas2":
+            pattern = re.compile("results\|[\d+\.]+\|([\d+\.]+)\|.*\((\d+/tcp)\)\|[\d+\.]+\.(\d+)\|(Security Hole|Security Note|Security Warning)\|(.*)")
+        else:
+            pattern = re.compile("(.*)\|.*\((\d+/tcp)\)\|(\d+)\|(INFO|NOTE|REPORT)\|(.*)")
         for line in self.__nsr_fd.readlines():
             result = pattern.search(line)
             if result:
@@ -50,13 +57,19 @@ class Vulnerabilities :
                 tmp_risk_value = 0
                 if risk == "NOTE":
                     tmp_risk_value = 0
+                elif risk == "Security Note":
+                    tmp_risk_value = 1
                 elif risk == "INFO":
                     tmp_risk_value = 1
                 elif risk == "LOW":
                     tmp_risk_value = 3
+                elif risk == "Security Warning":
+                    tmp_risk_value = 3
                 elif risk == "MEDIUM":
                     tmp_risk_value = 5
                 elif risk == "HIGH":
+                    tmp_risk_value = 8
+                elif risk == "Security Hole":
                     tmp_risk_value = 8
                 elif risk == "REPORT":
                     tmp_risk_value = 10
@@ -95,7 +108,7 @@ class Vulnerabilities :
                    else:
                        vul_name = "Vulnerability - Unknown detail"
                    priority = self.__calc_priority(risk, ip, nessusid)
-                   query = "INSERT INTO incident(title, date, ref, type_id, priority, status, last_update, in_charge, event_start, event_end) VALUES('%s', '%s', 'Vulnerability', '%s', '%s', 'Open', '%s', 'admin', '0000-00-00 00:00:00', '0000-00-00 00:00:00')" % (vul_name,self.__scan_time,self.__default_incident_type, priority, self.__scan_time)
+                   query = "INSERT INTO incident(title, date, ref, type_id, priority, status, last_update, in_charge, submitter, event_start, event_end) VALUES('%s', '%s', 'Vulnerability', '%s', '%s', 'Open', '%s', 'admin', 'nessus', '0000-00-00 00:00:00', '0000-00-00 00:00:00')" % (vul_name,self.__scan_time,self.__default_incident_type, priority, self.__scan_time)
                    self.__conn.exec_query(query)
                    # TODO: change this for a sequence
                    query = "SELECT MAX(id) id from incident"
@@ -142,7 +155,8 @@ class Vulnerabilities :
 
 
     def __calc_risk(self, text, type):
-        pattern2 = re.compile(";Risk factor : (\w+);")
+        # This regexp isn't complete, but due to the randomnnes of the input and most of them having a CVSS score it should be enough
+        pattern2 = re.compile("Risk [Ff]actor\s*[\\n]*:\s*[\\n]*(\w+)[;|\s|\\n]*")
         result2 = pattern2.search(text)
         if result2:
             (risk,) = result2.groups()
@@ -183,11 +197,17 @@ class Vulnerabilities :
             risk_value = 0
         elif risk == "INFO":
             risk_value = 1
+        elif risk == "Security Note":
+            risk_value = 1
         elif risk == "LOW":
+            risk_value = 3
+        elif risk == "Security Warning":
             risk_value = 3
         elif risk == "MEDIUM":
             risk_value = 5
         elif risk == "HIGH":
+            risk_value = 8
+        elif risk == "Security Hole":
             risk_value = 8
         elif risk == "REPORT":
             risk_value = 10
@@ -228,4 +248,4 @@ class Vulnerabilities :
 if __name__ == "__main__":
     vulnerabilities = Vulnerabilities()
     # This won't close non-present vulnerabilities, limited testing functionality.
-    vulnerabilities.process("../result.nsr", "0000-00-00 00:00:00")
+    vulnerabilities.process("result.nsr", "0000-00-00 00:00:00", "192.168.1.0/24", "192.168.1.123")

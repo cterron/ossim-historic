@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 #include <gnet.h>
 #include <string.h>
@@ -132,6 +128,8 @@ sim_session_impl_finalize (GObject  *gobject)
 
   if (session->_priv->ia)
     gnet_inetaddr_unref (session->_priv->ia);
+  if (session->_priv->hostname)
+		    g_free (session->_priv->hostname);
 
 	g_cond_free (session->_priv->initial_cond);
 	g_mutex_free (session->_priv->initial_mutex);
@@ -375,6 +373,17 @@ sim_session_cmd_connect (SimSession  *session,
 		sim_session_write (session, cmd);
 	  g_object_unref (cmd);
 		session->_priv->connect = TRUE;
+
+		if(command->data.connect.version!=NULL)
+		{
+			//Update server version
+
+			gchar *ip = gnet_inetaddr_get_canonical_name (session->_priv->ia);
+			gchar *query= g_strdup_printf("replace sensor_agent_info(ip,version) values (\"%s\",\"%s\");", ip, command->data.connect.version);
+			g_free (ip);
+			sim_database_execute_no_query(ossim.dbossim, query);
+			g_free(query);
+		}
 	}
 	else
 	{
@@ -1905,7 +1914,8 @@ sim_session_cmd_reload_directives (SimSession  *session,
 		
 		if (for_this_server)	//execute the command in this server
 	  {
-		  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
+		// We dont nedd to remove them in database. Just replace if needed
+//		  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
 		  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
 
 		  sim_container_free_backlogs (ossim.container);
@@ -1996,7 +2006,8 @@ sim_session_cmd_reload_all (SimSession  *session,
 		  sim_container_free_plugin_sids (ossim.container);
 		  sim_container_free_plugins (ossim.container);
 
-		  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
+    // We dont nedd to remove them in database. Just replace if needed
+		// sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
 		  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
 
 		  sim_container_db_load_plugins (ossim.container, ossim.dbossim);
@@ -2128,10 +2139,16 @@ sim_session_cmd_host_os_event (SimSession  *session,
 		event->sensor = g_strdup (command->data.host_os_event.sensor);
 
 		event->interface = g_strdup (command->data.host_os_event.interface);
-		if (strptime (command->data.host_os_event.date, "%Y-%m-%d %H:%M:%S", &tm))
-			event->time =  mktime (&tm);
-		else
-			event->time = time (NULL);
+
+    if(command->data.host_os_event.date)
+      event->time=command->data.host_os_event.date;
+    else
+      if(command->data.host_os_event.date_str)
+        if (strptime (command->data.host_os_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
+          event->time =  mktime (&tm);
+
+    if(!event->time)
+      event->time = time (NULL);
 
 	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
 		if (ip_temp)
@@ -2260,9 +2277,15 @@ sim_session_cmd_host_mac_event (SimSession  *session,
     event->sensor = g_strdup (command->data.host_mac_event.sensor);
 
     event->interface = g_strdup (command->data.host_mac_event.interface);
-    if (strptime (command->data.host_mac_event.date, "%Y-%m-%d %H:%M:%S", &tm))
-      event->time =  mktime (&tm);
+
+    if(command->data.host_mac_event.date)
+      event->time=command->data.host_mac_event.date;
     else
+      if(command->data.host_mac_event.date_str)
+        if (strptime (command->data.host_mac_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
+          event->time =  mktime (&tm);
+
+    if(!event->time)
       event->time = time (NULL);
 
 	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
@@ -2308,7 +2331,8 @@ sim_session_cmd_host_mac_event (SimSession  *session,
   else
     g_message("Error: Data sent from agent; host MAC event wrong IP %s",command->data.host_mac_event.host);
 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "command->data.host_mac_event.date: %s",command->data.host_mac_event.date);
+	if(command->data.host_mac_event.date_str)
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "command->data.host_mac_event.date: %s",command->data.host_mac_event.date_str);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: TYPE: %d",event->plugin_sid);
 				
 }
@@ -2364,7 +2388,8 @@ sim_session_cmd_host_service_event (SimSession  *session,
     {			
       //as the pads plugin uses the same variables to store mac changes and services changes, we must normalize it.
       cmd = sim_command_new_from_type(SIM_COMMAND_TYPE_HOST_MAC_EVENT);
-      cmd->data.host_mac_event.date = g_strdup(command->data.host_service_event.date);
+      cmd->data.host_mac_event.date = command->data.host_service_event.date;
+      cmd->data.host_mac_event.date_str = g_strdup(command->data.host_service_event.date_str);
       cmd->data.host_mac_event.host = g_strdup(command->data.host_service_event.host);
       cmd->data.host_mac_event.mac = g_strdup(command->data.host_service_event.application);
       cmd->data.host_mac_event.sensor = g_strdup(command->data.host_service_event.sensor);
@@ -2421,11 +2446,15 @@ sim_session_cmd_host_service_event (SimSession  *session,
 			event->protocol=SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT;
   
 	    event->interface = g_strdup (command->data.host_service_event.interface);
-      if (strptime (command->data.host_service_event.date, "%Y-%m-%d %H:%M:%S", &tm))
-        event->time =  mktime (&tm);
+      if(command->data.host_service_event.date)
+        event->time=command->data.host_service_event.date;
       else
-        event->time = time (NULL);
-  
+        if(command->data.host_service_event.date_str)
+          if (strptime (command->data.host_service_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
+            event->time =  mktime (&tm);
+      if(!event->time)
+          event->time = time (NULL);
+ 
 	    gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
 			if (ip_temp)
 	      event->src_ia = ia;
@@ -2523,11 +2552,16 @@ sim_session_cmd_host_ids_event (SimSession  *session,
 		else
 			gnet_inetaddr_unref (ia_temp);
 		
-    if (strptime (command->data.host_ids_event.date, "%Y-%m-%d %H:%M:%S", &tm))
-      event->time =  mktime (&tm);
+    if(command->data.host_ids_event.date)
+      event->time=command->data.host_ids_event.date;
     else
-      event->time = time (NULL);
-  
+      if(command->data.host_ids_event.date_str)
+        if (strptime (command->data.host_ids_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
+          event->time =  mktime (&tm);
+
+    if(!event->time)
+        event->time = time (NULL);
+ 
     event->plugin_id = command->data.host_ids_event.plugin_id;
     event->plugin_sid = command->data.host_ids_event.plugin_sid;
 
@@ -3623,7 +3657,8 @@ sim_session_read (SimSession  *session)
 		if (!cmd)
 		{
 		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command null");
-	  	return FALSE;
+			continue; //we don't break the connection if the event is strange, we just reject the event
+	  	//return FALSE;
 		}
 
     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Command from buffer type:%d ; id=%d",cmd->type,cmd->id);

@@ -1,11 +1,47 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 ?>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-  <title> <?php echo gettext("Control Panel"); ?> </title>
+  <title> <?php
+echo gettext("Control Panel"); ?> </title>
   <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
@@ -13,7 +49,11 @@ Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 
 <body>
 
-  <h1 align="center"> <?php echo gettext("Backlog"); ?> </h1>
+<?php
+include ("../hmenu.php"); ?>
+
+<center><small><?php echo _("The backlog contains all those directives matched who either haven't reached the last correlation level or haven't timed out yet") ?></small></center>
+<br/>
 
 <?php
 require_once ('ossim_db.inc');
@@ -22,154 +62,36 @@ require_once ('classes/Backlog.inc');
 require_once ('classes/Plugin_sid.inc');
 require_once ('classes/Util.inc');
 require_once ('classes/Security.inc');
-
-
-
-$delete = GET('delete');
-$order = GET('order');
-$src_ip = GET('src_ip');
-$dst_ip = GET('dst_ip');
-$inf = GET('inf');
-$sup = GET('sup');
-
-ossim_valid($delete, OSS_ALPHA, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("delete"));
-ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("order"));
-ossim_valid($src_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
-ossim_valid($dst_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
-ossim_valid($inf, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("inf"));
-ossim_valid($sup, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("order"));
-
-if (ossim_error()) {
-        die(ossim_error());
-}
-
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
-
-if (!empty($delete)) {
-    Backlog::delete($conn, $delete);
-}
-
-if (empty($order)) 
-    $order = "id";
-
-if ( (!empty($src_ip)) && (!empty($dst_ip)) ) {
-    $where = "WHERE inet_ntoa(src_ip) = '$src_ip' OR inet_ntoa(dst_ip) = '$dst_ip'";
-} elseif (!empty($src_ip)) {
-    $where = "WHERE inet_ntoa(src_ip) = '$src_ip'";
-} elseif (!empty($dst_ip)) {
-    $where = "WHERE inet_ntoa(dst_ip) = '$dst_ip'";
+$query = "select plugin_sid.name as Name, directive_id as Directive,  count(*) as Count from backlog, plugin_sid where backlog.directive_id = plugin_sid.sid and plugin_sid.plugin_id = 1505 group by directive_id order by Count desc;";
+if (!$rs = & $conn->Execute($query)) {
+    print $conn->ErrorMsg();
 } else {
-    $where = '';
-}
-
-if (empty($inf))
-    $inf = 0;
-if (empty($sup))
-    $sup = 25;
-
 ?>
     <table width="100%">
-      <tr>
-        <td colspan="5">
+<tr><th><?php echo _("Directive Name") ?></th><th><?php echo _("Directive Id"); ?></th><th><?php echo _("Count") ?></th><th><?php echo _("Edit"); ?></tr>
 <?php
-
-    /* 
-     * prev and next buttons 
-     */
-    $inf_link = $_SERVER["PHP_SELF"] . 
-            "?order=$order" . 
-            "&sup=" . ($sup - 25) .
-            "&inf=" . ($inf - 25);
-    $sup_link = $_SERVER["PHP_SELF"] . 
-        "?order=$order" . 
-        "&sup=" . ($sup + 25) .
-        "&inf=" . ($inf + 25);
-    $count = Backlog::get_count($conn);
-    
-    if ($inf >= 25) {
-        echo "<a href=\"$inf_link\">&lt;- "; printf(gettext("Prev %d"), 25); echo "</a>";
+    while (!$rs->EOF) {
+        list($waste, $directive_name) = split(":", $rs->fields["Name"], 2);
+?>
+      <tr>
+        <td><?php echo $directive_name
+?> </td>
+        <td><?php echo $rs->fields["Directive"]; ?> </td>
+        <td><?php echo $rs->fields["Count"]; ?> </td>
+	<td><a href="../directive_editor/viewer/index.php?level=1&directive=<?php echo $rs->fields["Directive"]; ?>" target="_blank">View/Edit current directive definition</a></td>
+      </tr>
+<?php
+        $rs->MoveNext();
     }
-    echo "&nbsp;&nbsp;("; printf(gettext("%d-%d of %d"),$inf, $sup, $count); echo ")&nbsp;&nbsp;";
-    if ($sup < $count) {
-        echo "<a href=\"$sup_link\"> "; printf(gettext("Next %d"), 25); echo " -&gt;</a>";
-    }
-?>
-        </td>
-      </tr>
-      
-      <tr>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("id", $order) .
-            "&inf=$inf&sup=$sup"
-            ?>"> <?php echo gettext("Id"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("timestamp", $order) .
-            "&inf=$inf&sup=$sup"
-            ?>"> <?php echo gettext("Date"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("directive_id", $order) .
-            "&inf=$inf&sup=$sup"
-            ?>"> <?php echo gettext("Directive"); ?> </a></th>
-        <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("matched", $order) . 
-            "&inf=$inf&sup=$sup"
-            ?>"> <?php echo gettext("Matched"); ?> </a></th>
-        <th> <?php echo gettext("Delete"); ?> </th>
-      </tr>
-<?php
-    if ($backlog_list = Backlog::get_list($conn, 
-                                          "$where ORDER BY $order",
-                                          $inf, $sup))
-    {
-        foreach($backlog_list as $backlog) {
-
-            $sid = $backlog->get_directive_id();
-            $sid_name = "";
-            if ($plugin_sid_list = Plugin_sid::get_list
-                ($conn, "WHERE plugin_id = 1505 AND sid = $sid")) {
-                $sid_name = $plugin_sid_list[0]->get_name();
-            } else {
-                $sid_name = "Unknown directive";
-            }
- 
-
-?>
-      <tr>
-      <td bgcolor="#eeeeee"><?php echo $backlog->get_id(); ?></td>
-      <td nowrap><?php echo Util::timestamp2date ($backlog->get_timestamp()) ?></td>
-      <td><?php echo ereg_replace("directive_event: ", "", $sid_name) . 
-                " (" . $backlog->get_directive_id() . ") "; ?></td>
-      <td><?php 
-        if ($backlog->get_matched() == 0) {
-            echo gettext("NO");
-        } else {
-            echo "<b> " . gettext("YES") . " </b>";
-        }
-      ?></td>
-      <td><a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete=<?php 
-            echo $backlog->get_id() ?>"> <?php echo gettext("Delete"); ?> </a></td>
-      </tr>
-<?php
-        } /* foreach backlog_list */
-?>
-      <tr>
-        <td colspan="5"><a href="<?php 
-            echo $_SERVER["PHP_SELF"] ?>?delete=all"> <?php echo gettext("Delete ALL"); ?> </a>
-        </td>
-      </tr>
-<?php
-    } /* if backlog_list */
+}
 ?>
     </table>
-
-
 <?php
 $db->close($conn);
 ?>
 
 </body>
 </html>
-
-

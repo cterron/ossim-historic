@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.14 2008/01/10 16:48:43 dvgil Exp $ #
+# $Id: create_sidmap.pl,v 1.16 2008/12/12 18:40:09 juanmals Exp $ #
 
-# Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
+# Copyright (C) 2004 Andreas ï¿½stling <andreaso@it.su.se>
 
 # 2004-05-05 David Gil <dgil@ossim.net>
 #  CHANGES: creates a sql file instead of a sid map in order to 
@@ -361,11 +361,11 @@ sub update_ossim_db()
             my ($class_id, $priority) = (${$info}[0], ${$info}[1]);
             my $msg = $sidinfo{$sid}{"msg"};
             if(!defined($msg)){ $msg = "Undefined msg, please check"; }
+            $msg =~ s/\\/\\\\/g;
             $msg =~ s/\'/\\\'/g;
-            $msg =~ s/\\'/\\\\\'/g;
             $msg =~ s/\-\-/\-/g; # sql comments (s/--/-)
 
-            my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
+            my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, 'snort: $msg', $priority);";
 
             if($dump){
                 print "$query\n";

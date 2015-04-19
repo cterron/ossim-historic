@@ -1,131 +1,114 @@
-/* OSSIM style sheet for NTOP Oct 2007 */
-/* Based on Luca Deri September 1st, 2000 */
+/* Luca Deri September 1st, 2000 */
 
 body
 {
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-/*	background: #fff url("/white_bg.gif") repeat-x;*/
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	/*background: #fff url("/white_bg.gif") repeat-x;*/
+	background: #fff;
 }
 
 th
 {
-    color: #11334f;
-    font-family: arial,helvetica,sans-serif;
-    background: #abb7c7;
-    border-color: #7f7f7f;
-    border-width: 1px;
-    font-size: 8pt;
-    text-align: center;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+font-weight: bold;
+white-space: nowrap;
+border:none;
+background-color: #D1D7DF;
 }
 
-
 table { 
+border-color:black; border-width:1px;
+border-spacing: 1px;
+}
+
+#ntopMenuID table, th, tr, td  { 
+border-spacing: 0px;
 }
 
 span.leftmenuitem
 {
-	font-size: 8pt;
-	font-weight: bold;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+font-weight: bold;
 }
+
+tr
+{
+padding:1px; border:none;
+}
+
 
 td
 {
-    color:black;
-    font-family: arial,helvetica,sans-serif;
-    border-bottom-style: solid;
-    border-color: #7f7f7f;
-    border-color: #cbcbcb;
-    border-width: 1pt;
-    font-size:  8pt;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+border:none;
+background-color: #ededed;
 }
 
 .wrap { 
 white-space: normal;
 }
 
-address 
-{
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-}
+address
+{font-family: Arial, Helvetica, sans-serif;
+font-size: 8pt}
 
-h5 {
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-}
+h5
+{font-family: Arial, Helvetica, sans-serif;
+font-size: 8pt}
 
 form
-{
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-}
+{font-family: Arial, Helvetica, sans-serif;
+font-size: 12px}
 
 h1
-{
-	text-decoration:underline;
-	font-family: arial,helvetica,sans-serif;
-	text-align: center;
-	font-size: 8pt;
-	font-weight: bold
-}
+{font-family: Helvetica, Verdana, Arial, sans-serif;
+text-decoration:underline;
+text-align: center;
+font-size: 16pt;
+font-weight: bold}
 
 h2
-{
-	font-family: arial,helvetica,sans-serif;
-	font-size: 11pt;
-	font-weight: bold
-}
+{font-family: Verdana, Arial, Helvetica, sans-serif;
+font-size: 14pt;
+font-weight: bold}
 
 A:link
-{
-	color: #223399;
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-	text-decoration: none
-}
+{color: #223399;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+text-decoration: none}
 
 A:visited
-{
-	color: white;
-	font-weight: bold;
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-	text-decoration: none
-}
+{color: #223399;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+text-decoration: none}
 
 A:hover
-{
-	background: transparent;
-  	color: #e7700c;
-  	text-decoration: underline;
-	font-family: arial,helvetica,sans-serif;
-	font-size: 8pt;
-}
+{color: black;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+text-decoration: underline}
 
 A:link.nav
-{
-	color: #000000;
-	font-family: arial,helvetica,sans-serif;
-}
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
 
 A:visited.nav
-{
-	color: #000000;
-	font-family: arial,helvetica,sans-serif;
-}
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
 
 A:hover.nav
-{	
-	color: red;
-	font-family: arial,helvetica,sans-serif;
-}
+{color: black;
+font-family: Helvetica, Verdana, Arial, sans-serif}
 
 .nav
-{
-color: #000000;
-	font-family: arial,helvetica,sans-serif;
-}
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
 
 A.age0min { color:#FF0000 }
 A.age5min { color:#FF00FF }

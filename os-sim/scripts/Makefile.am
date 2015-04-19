@@ -5,6 +5,7 @@ SUBDIRS = correlation \
 scriptsdir   = $(datadir)/ossim/scripts
 scripts_SCRIPTS = acid_cache.pl \
 				  chkconfig.pl \
+				  connect_ossim_db.sh \
 				  create_sidmap.pl \
 				  do_nessus.pl \
 				  draw_graph_combined.pl \
@@ -20,7 +21,16 @@ scripts_SCRIPTS = acid_cache.pl \
 	              services.pl \
 				  test-directive.pl \
 				  update_nessus_ids.pl \
-				  check_makefile.sh
+				  check_makefile.sh \
+				parse_cisco_facilities.pl \
+				testShellcode.py \
+				sophos.py \
+				mysql2csv \
+				intrushield_update.py \
+				insertHostNetbiosFromAD.py \
+				create_sidmap_preprocessors.pl \
+				console_alarms.py \
+				check_vars.pl 
 
 DISTCLEANFILES = Makefile.in
 

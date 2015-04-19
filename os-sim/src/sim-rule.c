@@ -1,36 +1,32 @@
-/* Copyright (c) 2003 ossim.net
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission
- *    from the author.
- *
- * 4. Products derived from this software may not be called "Os-sim" nor
- *    may "Os-sim" appear in their names without specific prior written
- *    permission from the author.
- *
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/*
+License:
+
+   Copyright (c) 2003-2006 ossim.net
+   Copyright (c) 2007-2009 AlienVault
+   All rights reserved.
+
+   This package is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; version 2 dated June, 1991.
+   You may not use, modify or distribute this program under any other version
+   of the GNU General Public License.
+
+   This package is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this package; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+   MA  02110-1301  USA
+
+
+On Debian GNU/Linux systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'.
+
+Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+*/
 
 
 #include "sim-rule.h"
@@ -2754,6 +2750,8 @@ sim_rule_clone (SimRule     *rule)
   new_rule->_priv->condition = rule->_priv->condition;
   new_rule->_priv->value = g_strdup (rule->_priv->value);
   new_rule->_priv->interval = rule->_priv->interval;
+  new_rule->_priv->absolute= rule->_priv->absolute;
+
 	/*
 	new_rule->_priv->filename = g_strdup (rule->_priv->filename);
 	new_rule->_priv->username = g_strdup (rule->_priv->username);
@@ -3181,7 +3179,7 @@ sim_rule_is_time_out (SimRule      *rule)
 
   if (rule->_priv->level == 1)
   {
-    if ((rule->_priv->occurrence > 1) && 
+    if ((rule->_priv->occurrence > 1) &&  
 			  (time (NULL) > (rule->_priv->time_last + rule->_priv->time_out)))
 		{
 		  rule->_priv->time_last = 0;
@@ -3322,7 +3320,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		} 
 	} 
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "AAAAAAAAAAAAAAAA");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "AAAAAAAAAAAAAAAA");
  	// Match !dst ports
 	if (rule->_priv->dst_ports_not) 
 	{ 
@@ -3378,7 +3376,7 @@ sim_rule_match_by_event (SimRule      *rule,
     g_object_unref (sensor_ia);
   }
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "NBBBBBBBBBBBBBA");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "NBBBBBBBBBBBBBA");
  	/* Match other things like !filename, !username, 1userdata1...*/
 	if (rule->_priv->filename_not)
 	{
@@ -3488,7 +3486,7 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "CCCCCCCCCCC");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "CCCCCCCCCCC");
   /* Find dst_ia */
   if ((rule->_priv->dst_inets) && (event->dst_ia))
   {
@@ -3537,7 +3535,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		return FALSE;
 
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE11111111111111");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE11111111111111");
   /* Find dst_port */
   if (rule->_priv->dst_ports)
   {
@@ -3560,7 +3558,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		return FALSE;
 
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "EEEEEEEEEEEEE");
   /* Protocols */
   if (rule->_priv->protocols)
   {
@@ -3582,7 +3580,7 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "DDDDDDDDDDDDDDDDD");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "DDDDDDDDDDDDDDDDD");
   /* Match sensor */
   if (rule->_priv->sensors)
   {
@@ -3599,15 +3597,17 @@ sim_rule_match_by_event (SimRule      *rule,
 					(!strcmp (event->sensor, tmp)))
 				{
 					match = TRUE;
+					g_free (tmp);
 					break;
 				}
+			g_free (tmp);
       list = list->next;
     }
   }
 	if (!match)
 		return FALSE;
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "FFFFFFFFFFF");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "FFFFFFFFFFF");
 	/* Match other things like filename, username, userdata1...*/
 	if (rule->_priv->filename)
 	{
@@ -3689,7 +3689,7 @@ sim_rule_match_by_event (SimRule      *rule,
 		}
   }
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GGGGGGGGGGG");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GGGGGGGGGGG");
   /* If rule is sticky */
   if (rule->_priv->sticky)
     event->sticky = TRUE;
@@ -3748,8 +3748,11 @@ sim_rule_match_by_event (SimRule      *rule,
 		}
   }
 
-//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "HHHHHHHHHHH");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "HHHHHHHHHHH");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "count_occu before: %d", rule->_priv->count_occu);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "occurrence before: %d", rule->_priv->occurrence);
   /* Match Occurrence */
+	//FIXME: if there are more than one "occurrence" defined in the rule, only the last event will be stored.
   if (rule->_priv->occurrence > 1)
   {
     if ((rule->_priv->time_out) && (!rule->_priv->time_last))
@@ -3761,16 +3764,19 @@ sim_rule_match_by_event (SimRule      *rule,
 		{
 	  	rule->_priv->count_occu++;
 		  event->count = rule->_priv->count_occu - 1;
-		  return FALSE;
+		  return FALSE;	//don't store this event
 		}
     else
 		{
 	  	event->count = rule->_priv->occurrence;
-		  rule->_priv->count_occu = 1;
+		  rule->_priv->count_occu = 1;  //if we have reached the number of events, "reset" the counter 
 		}
   }
   else
     event->count = 1;
+  
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "count_occu after: %d", rule->_priv->count_occu);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "occurrence after: %d", rule->_priv->occurrence);
 
   /* Not */
 	//If the rule is enterely negated, and after all the checks it matches, we have to return false.

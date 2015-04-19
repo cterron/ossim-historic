@@ -1,271 +1,452 @@
 <?php
+/*****************************************************************************
+*
+*    License:
+*
+*   Copyright (c) 2003-2006 ossim.net
+*   Copyright (c) 2007-2009 AlienVault
+*   All rights reserved.
+*
+*   This package is free software; you can redistribute it and/or modify
+*   it under the terms of the GNU General Public License as published by
+*   the Free Software Foundation; version 2 dated June, 1991.
+*   You may not use, modify or distribute this program under any other version
+*   of the GNU General Public License.
+*
+*   This package is distributed in the hope that it will be useful,
+*   but WITHOUT ANY WARRANTY; without even the implied warranty of
+*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*   GNU General Public License for more details.
+*
+*   You should have received a copy of the GNU General Public License
+*   along with this package; if not, write to the Free Software
+*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+*   MA  02110-1301  USA
+*
+*
+* On Debian GNU/Linux systems, the complete text of the GNU General
+* Public License can be found in `/usr/share/common-licenses/GPL-2'.
+*
+* Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+****************************************************************************/
+/**
+* Class and Function List:
+* Function list:
+* Classes list:
+*/
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicyPolicy");
+session_start();
+// load column layout
+require_once ('../conf/layout.php');
+$category = "policy";
+$name_layout = "policy_layout";
+$layout = load_layout($name_layout, $category);
 ?>
-
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php
+echo gettext("OSSIM Framework"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+  <link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
+  <script type="text/javascript" src="../js/jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.flexigrid.js"></script>
+  <script type="text/javascript" src="../js/urlencode.js"></script>
+
 </head>
 <body>
-                                                                                
-  <h1> <?php echo gettext("Policy"); ?> </h1>
 
+	<?php
+include ("../hmenu.php"); ?>
+	<div  id="headerh1" style="width:100%;height:1px">&nbsp;</div>
+
+	<table class="noborder">
 <?php
-    require_once ('classes/Policy.inc');
-    require_once ('classes/Host.inc');
-    require_once ('ossim_db.inc');
-    require_once ('classes/WebIndicator.inc');
-    $order = 'priority DESC';
-
+//create one grid per policy group
+require_once 'ossim_db.inc';
+require_once 'classes/Policy.inc';
+$db = new ossim_db();
+$conn = $db->connect();
+$policy_groups = Policy::get_policy_groups($conn);
+$i = 0;
+$refresh = "";
+foreach($policy_groups as $group) {
+    $refresh.= "$(\"#flextable" . $i . "\").flexReload();\n"
 ?>
-
-  <table align="center">
-    <tr>
-      <th> <?php echo gettext("Source"); ?> </th>
-      <th> <?php echo gettext("Dest"); ?> </th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
-            echo ossim_db::get_order("priority", $order);
-          ?>">
-	  <?php echo gettext("Priority"); ?> </a></th>
-      <th> <?php echo gettext("Port Group"); ?> </th>
-      <th> <?php echo gettext("Plugin Group"); ?> </th>
-      <th> <?php echo gettext("Sensors"); ?> </th>
-      <th> <?php echo gettext("Time Range"); ?> </th>
-      <th> <?php echo gettext("Targets"); ?> </th>
-      <th> <?php echo gettext("Description"); ?> </th>
-      <th> <?php echo gettext("Correlate"); ?> </th>
-      <th> <?php echo gettext("Cross Correlate"); ?> </th>
-      <th> <?php echo gettext("Store"); ?> </th>
-      <th> <?php echo gettext("Qualify"); ?> </th>
-      <th> <?php echo gettext("Resend Alarms"); ?> </th>
-      <th> <?php echo gettext("Resend Events"); ?> </th>
-      <th> <?php echo gettext("Action"); ?> </th>
-    </tr>
-
+	<tr><td valign="top" id="group<?php echo $group->get_group_id() ?>">
+		<table id="flextable<?php echo $i++ ?>" style="display:none"></table>
+	</td><tr>
 <?php
+} ?>
+	</table>
 
-    $db = new ossim_db();
-    $conn = $db->connect();
+	<!-- Right Click Menu -->
+	<ul id="myMenu" class="contextMenu">
+	    <li class="insertbefore"><a href="#insertbefore">Add Policy Before</a></li>
+	    <li class="insertafter"><a href="#insertafter">Add Policy After</a></li>
+	    <li class="enabledisable"><a href="#enabledisable">Enable/Disable</a></li>
+	</ul>
+	<style>
+		table, th, tr, td {
+			background:transparent;
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border:none;
+			padding:0px; margin:0px;
+		}
+		input, select {
+			border-radius: 0px;
+			-moz-border-radius: 0px;
+			-webkit-border-radius: 0px;
+			border: 1px solid #8F8FC6;
+			font-size:12px; font-family:arial; vertical-align:middle;
+			padding:0px; margin:0px;
+		}
+	</style>
+	<script>
+	function get_width(id) {
+		if (typeof(document.getElementById(id).offsetWidth)!='undefined') 
+			return document.getElementById(id).offsetWidth-20;
+		else
+			return 700;
+	}
+	function action(com,grid,fg,fp) {
+		var items = $('.trSelected', grid);
+		if (com=='Delete selected') {
+			//Delete host by ajax
+			if (typeof(items[0]) != 'undefined') {
+				var ids='';
+				for (var i=0;i<items.length;i++) {
+					ids = ids + (ids!='' ? ',' : '') + items[i].id.substr(3);
+				}
+				//$('.pPageStat',fg.pDiv).html('Deleting host...');
+				$.ajax({
+						type: "GET",
+						url: "deletepolicy.php?confirm=yes&id="+urlencode(ids),
+						data: "",
+						success: function(msg) {
+							fg.populate();
+						}
+				});
+			}
+			else alert('You must select a policy');
+		}
+		else if (com=='Modify') {
+			if (typeof(items[0]) != 'undefined') document.location.href = 'newpolicyform.php?id='+urlencode(items[0].id.substr(3))
+			else alert('You must select a policy');
+		}
+		else if (com=='Insert new policy') {
+			document.location.href = 'newpolicyform.php?group='+fp.idGroup;
+		}
+		else if (com=='Reload') {
+			document.location.href = '../conf/reload.php?what=policies&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>'
+		}
+		else if (com=='<b>Enable/Disable</b> policy' || com=='enabledisable') {
+			//Activate/Deactivate selected items or all by default via ajax
+			if (typeof(items[0]) == 'undefined') items = $('tbody tr', grid);
+			var ids='';
+			for (var i=0;i<items.length;i++) {
+				ids = ids + (ids!='' ? ',' : '') + items[i].id.substr(3);
+			}
+			$.ajax({
+					type: "GET",
+					url: "deletepolicy.php?activate=change&id="+urlencode(ids),
+					data: "",
+					success: function(msg) {
+						fg.populate();
+					}
+			});
+		}
+	}
+	function save_layout(clayout,fg,stat) {
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name: '<?php echo $name_layout ?>', category: '<?php echo $category ?>', layout:serialize(clayout) },
+				success: function(msg) {}
+		});
+	}
+	function save_state(p,state) {
+		$.ajax({
+				type: "POST",
+				url: "../conf/layout.php",
+				data: { name: 'group'+p.idGroup, category: '<?php echo $category ?>', layout:serialize(state) },
+				success: function(msg) {}
+		});
+	}
+	function toggle_group_order(p,state) {
+		$.ajax({
+				type: "GET",
+				url: "changepolicygroup.php",
+				data: { group: p.idGroup, order: state },
+				success: function(msg) {
+					document.location.reload();
+				}
+		});
+	}
+	function swap_rows(fg) {
+		$.ajax({
+				type: "GET",
+				url: "changepolicy.php",
+				data: { src: fg.drow, dst: fg.hrow },
+				success: function(msg) {
+					fg.populate();
+				}
+		});
+	}
+	function swap_rows_grid(s,d) {
+		$.ajax({
+				type: "GET",
+				url: "changepolicy.php",
+				data: { src: s, dst: d },
+				success: function(msg) {
+					refresh_all();
+				}
+		});
+	}
+	function menu_action(com,id,fg,fp) {
+		if (com=='enabledisable') {
+			//Activate/Deactivate by ajax
+			$.ajax({
+					type: "GET",
+					url: "deletepolicy.php?activate=change&id="+urlencode(id),
+					data: "",
+					success: function(msg) {
+						fg.populate();
+					}
+			});
+		} else if (com=='insertafter') {
+			// new policy after selected
+			document.location.href = "newpolicyform.php?insertafter="+urlencode(id)+'&group='+fp.userdata1;
+		} else if (com=='insertbefore') {
+			// new policy before selected
+			document.location.href = "newpolicyform.php?insertbefore="+urlencode(id)+'&group='+fp.userdata1;
+		}
+	}
 
-    if ($policy_list = Policy::get_list($conn, "ORDER BY $order")) {
-        foreach ($policy_list as $policy) {
-?>
-
-    <tr>
-      <!-- source -->
-      <td>
+	$(document).ready(function() {
+		var h1w = get_width('headerh1');
 <?php
-            if ($source_host_list = $policy->get_hosts ($conn, 'source')) {
-                foreach($source_host_list as $source_host) {
-                    echo Host::ip2hostname($conn, 
-                                           $source_host->get_host_ip()) . 
-                                           '<br/>';
-                }
-            }
-            if ($source_net_list = $policy->get_nets ($conn, 'source')) {
-                foreach($source_net_list as $source_net) {
-                    echo $source_net->get_net_name() . '<br/>';
-                }
-            }
+$i = 0;
+foreach($policy_groups as $group) {
 ?>
-      </td>
-      
-      <!-- dest -->
-      <td>
+	$("#flextable<?php echo $i
+?>").flexigrid({
+		url: 'getpolicy.php?group=<?php echo $group->get_group_id() ?>',
+		dataType: 'xml',
+		colModel : [
+		<?php
+    $default = array(
+        "active" => array(
+            'Act',
+            30,
+            'true',
+            'center',
+            false
+        ) ,
+        "order" => array(
+            'Ord',
+            30,
+            'true',
+            'center',
+            false
+        ) ,
+        "priority" => array(
+            'Priority',
+            40,
+            'true',
+            'center',
+            false
+        ) ,
+        "source" => array(
+            ' <b>Source</b> <img src="../pixmaps/tables/bullet_prev.png" border=0 align=absmiddle>',
+            150,
+            'false',
+            'left',
+            false
+        ) ,
+        "dest" => array(
+            ' <b>Destination</b> <img src="../pixmaps/tables/bullet_next.png" border=0 align=absmiddle>',
+            150,
+            'false',
+            'left',
+            false
+        ) ,
+        "port_group" => array(
+            'Port Group',
+            50,
+            'false',
+            'center',
+            false
+        ) ,
+        "plugin_group" => array(
+            'Plugin Group',
+            90,
+            'false',
+            'center',
+            false
+        ) ,
+        "sensors" => array(
+            'Sensors',
+            80,
+            'false',
+            'center',
+            false
+        ) ,
+        "time_range" => array(
+            'Time Range',
+            100,
+            'false',
+            'center',
+            false
+        ) ,
+        "targets" => array(
+            'Targets',
+            70,
+            'false',
+            'center',
+            false
+        ) ,
+        "desc" => array(
+            'Description',
+            200,
+            'false',
+            'left',
+            true
+        ) ,
+        "correlate" => array(
+            'Correlate',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "cross correlate" => array(
+            'Cross Correlate',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "store" => array(
+            'Store',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "qualify" => array(
+            'Qualify',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "resend_alarms" => array(
+            'Resend Alarms',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "resend_events" => array(
+            'Resend Events',
+            30,
+            'false',
+            'center',
+            false
+        ) ,
+        "SIM" => array(
+            'Sim',
+            25,
+            'false',
+            'center',
+            false
+        ) ,
+        "SEM" => array(
+            'Sem',
+            25,
+            'false',
+            'center',
+            false
+        ) ,
+        "Sign" => array(
+            'Sign',
+            25,
+            'false',
+            'center',
+            false
+        )
+    );
+    list($colModel, $sortname, $sortorder, $height) = print_layout($layout, $default, "order", "asc", 150);
+    echo "$colModel\n";
+?>
+			],
+		buttons : [
+			{name: 'Insert new policy', bclass: 'add', onpress : action},
+			{separator: true},
+			{name: 'Delete selected', bclass: 'delete', onpress : action},
+			{separator: true},
+			{name: 'Modify', bclass: 'modify', onpress : action},
+			{separator: true},
+			{name: 'Reload', bclass: '<?php echo (WebIndicator::is_on("Reload_policies")) ? "reload_red" : "reload" ?>', onpress : action},
+			{separator: true},
+			{name: '<b>Enable/Disable</b> policy', bclass: 'various', onpress : action},
+			{separator: true}
+			],
+		sortname: "<?php echo $sortname ?>",
+		sortorder: "<?php echo $sortorder ?>",
+		usepager: false,
+		title: '<?php echo $group->get_name() . ": <font style=\"font-weight:normal;font-style:italic\">" . $group->get_descr() . "</font>" ?>',
+		idGroup: '<?php echo $group->get_group_id() ?>',
+		nameGroup: '<?php echo $group->get_name() ?>',
+		titleClass: 'mhDiv',
+		contextMenu: 'myMenu',
+		onContextMenuClick: menu_action,
+		pagestat: 'Displaying {from} to {to} of {total} policies',
+		nomsg: 'No policies',
+		useRp: false,
+		showTableToggleBtn: true,
+		<?php
+    // singleSelect: true,
+     ?>
+		width: h1w,
+		height: <?php echo $height ?>,
+		onToggleRow: swap_rows,
+		onToggleGrid: swap_rows_grid,
+		onTableToggle: save_state,
+		<?php
+    if ($group->get_group_id() > 0) { ?>
+		onUpDown: toggle_group_order,
+		uptxt: 'Prioritize policy group: <?php echo $group->get_name() ?>',
+		downtxt: 'De-prioritize policy group: <?php echo $group->get_name() ?>',
+		<?php
+    } ?>
+		onColumnChange: save_layout,
+		onEndResize: save_layout
+	});   
+	
 <?php
-            if ($dest_host_list = $policy->get_hosts ($conn, 'dest')) {
-                foreach($dest_host_list as $dest_host) {
-                    echo Host::ip2hostname($conn, 
-                                           $dest_host->get_host_ip()) . 
-                                           '<br/>';
-                }
-            }
-            if ($dest_net_list = $policy->get_nets ($conn, 'dest')) {
-                foreach($dest_net_list as $dest_net) {
-                    echo $dest_net->get_net_name() . '<br/>';
-                }
-            }
+    // load state from user_config
+    $state = load_layout("group" . $group->get_group_id() , $category);
+    if ($state != "" && !is_array($state)) {
+        if ($state == "close") echo "	$(\"#flextable" . $i . "\").viewTableToggle();\n";
+    } elseif ($i > 0) echo "	$(\"#flextable" . $i . "\").viewTableToggle();\n";
+    $i++;
+}
+$db->close($conn);
 ?>
-      </td>
-
-      <!-- Priority -->
-      <td>
-      <?php 
-      $priority = $policy->get_priority(); 
-
-      if($priority == -1){
-      echo _("Do not change");
-      } else {
-      echo $priority;
-      }
-      ?>
-      </td>
-
-      <!-- port group -->
-      <td>
-<?php
-            if ($port_list = $policy->get_ports ($conn)) {
-                foreach($port_list as $port_group) {
-                    echo $port_group->get_port_group_name() . '<br/>';
-                }
-            }
+	});
+	function refresh_all() {
+		<?php echo $refresh
 ?>
-      </td>
+	}
+	</script>
 
-      <!-- signature group -->
-      <td>
-<?php
-            foreach($policy->get_plugingroups($conn, $policy->get_id()) as $group) {
-                    echo $group['name'] . '<br/>';
-            }
-?>
-      </td>
-      
-      <!-- sensors -->
-      <td>
-<?php
-            if ($sensor_list = $policy->get_sensors ($conn)) {
-                foreach($sensor_list as $sensor) {
-                    echo $sensor->get_sensor_name() . '<br/>';
-                }
-            }
-?>
-      </td>
-
-      <td>
-<?php
-            $policy_time = $policy->get_time($conn);
-            
-            $begin_day = $policy_time->get_begin_day();
-            if     ($begin_day == 1) $begin_day_char = _("Mon");
-            elseif ($begin_day == 2) $begin_day_char = _("Tue");
-            elseif ($begin_day == 3) $begin_day_char = _("Wed");
-            elseif ($begin_day == 4) $begin_day_char = _("Thu");
-            elseif ($begin_day == 5) $begin_day_char = _("Fri");
-            elseif ($begin_day == 6) $begin_day_char = _("Sat");
-            elseif ($begin_day == 7) $begin_day_char = _("Sun");
-            
-            $end_day = $policy_time->get_end_day();
-            if     ($end_day == 1) $end_day_char = _("Mon");
-            elseif ($end_day == 2) $end_day_char = _("Tue");
-            elseif ($end_day == 3) $end_day_char = _("Wed");
-            elseif ($end_day == 4) $end_day_char = _("Thu");
-            elseif ($end_day == 5) $end_day_char = _("Fri");
-            elseif ($end_day == 6) $end_day_char = _("Sat");
-            elseif ($end_day == 7) $end_day_char = _("Sun");
-            
-            echo $begin_day_char . " " .
-                 $policy_time->get_begin_hour() . "h - " .
-                 $end_day_char . " " .
-                 $policy_time->get_end_hour() . "h";
-?>
-      </td>
-
-      <!-- Targets -->
-      <td>
-<?php
-            if ($target_list = $policy->get_targets ($conn)) {
-                foreach($target_list as $target) {
-                    echo $target->get_target_name() . '<br/>';
-                }
-            }
-?>
-      </td>
-
-
-      <td><?php echo $policy->get_descr(); ?></td>
-
-
-
-       <!-- Targets -->
-      
-<?php
-            if ($role_list = $policy->get_role ($conn)) {
-                foreach($role_list as $role) {
-               ?><td><?php 
-									  if ($role->get_correlate() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_correlate() == 0)
-										  echo _("No");
-								?></td>
-               <td><?php 
-									  if ($role->get_cross_correlate() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_cross_correlate() == 0)
-										  echo _("No");
-								?></td>
-               <td><?php 
-									  if ($role->get_store() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_store() == 0)
-										  echo _("No");
-								?></td>
-               <td><?php 
-									  if ($role->get_qualify() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_qualify() == 0)
-										  echo _("No");
-								?></td>
-               <td><?php 
-									  if ($role->get_resend_alarm() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_resend_alarm() == 0)
-										  echo _("No");
-								?></td>
-               <td><?php 
-									  if ($role->get_resend_event() == 1){
-											echo _("Yes"); 
-										}
-										elseif ($role->get_resend_event() == 0)
-										  echo _("No");
-								?></td><?php
-
-                }
-            }
-?>
-      
-
-
-      <td>
-        <a href="modifypolicyform.php?id=<?php
-            echo $policy->get_id()?>">
-	    <?php echo gettext("Modify"); ?> </a>
-        <a href="deletepolicy.php?id=<?php
-            echo $policy->get_id()?>">
-	    <?php echo gettext("Delete"); ?> </a></td>
-      
-    </tr>
-<?php
-        } /* foreach */
-    } /* if */
-
-    $db->close($conn);
-?>
-
-  <tr>
-    <td colspan="16">
-        <a href="newpolicyform.php"> <?php echo gettext("Insert new policy"); ?> </a>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="16"><a href="../conf/reload.php?what=policies&back=<?php echo urlencode($_SERVER["REQUEST_URI"]); ?>"> <?php
-if (WebIndicator::is_on("Reload_policies")) {
-    echo "<font color=red>&gt;&gt;&gt; " . gettext("Reload") . " &lt;&lt;&lt;</color>";
-} else {
-    echo gettext("Reload");
-} ?> </a></td>
-  </tr>
-  </table>
-    
 </body>
 </html>
 

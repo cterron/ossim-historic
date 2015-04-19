@@ -3,11 +3,9 @@ SUBDIRS = src \
 	db \
 	pixmaps \
 	include \
-	mrtg \
 	www \
 	scripts \
 	contrib \
-	agent \
 	locale
 
 update-po:

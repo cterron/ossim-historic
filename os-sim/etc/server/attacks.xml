@@ -1,0 +1,322 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+
+<!-- Possible Successful Attack: Reverse Shell Access to the System
+
+An attacker exploits something -> we detect the shellcode (Level 1), if the shellcode opens a reverse shell we will detect the Microsoft cmd.exe Banner
+
+alert tcp any !21:23 -> any any (msg:"ATTACK-RESPONSES Microsoft cmd.exe banner"; flow:established; content:"Microsoft Windows"; content:"|28|C|29| Copyright 1985-"; distance:0; content:"Microsoft Corp."; distance:0; reference:nessus,11633; classtype:successful-admin; sid:2123; rev:3;)
+
+We had to modify snort signature to detect banner string because Metasploit splits it in two packets to avoid snort detection
+alert tcp any !21:23 -> any any (msg:"ATTACK-RESPONSES Microsoft cmd.exe banner"; flow:established; content:"|28|C|29| Copyright 1985-"; distance:0; content:"Microsoft Corp."; distance:0; reference:nessus,11633; classtype:successful-admin; sid:2123; rev:3;)
+(C) Copyright 1985-2001 Microsoft Corp.....C:\WINDOWS\system32>
+-->
+
+
+<directive id="3010" name="Possible Successful Attack: Reverse Shell Access to the System" priority="3">
+  <rule type="detector" name="Shellcode Detect" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,643,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" protocol="ANY">
+    <rules>
+	<rule type="detector" name="Detected cmd.exe pattern" reliability="+10" occurrence="1"
+                    from="1:DST_IP" to="ANY" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="2123" sticky="true" protocol="ANY" time_out="20"/>
+    </rules>
+    </rule>
+</directive>
+
+<!-- Possible POP3 Bruteforce
+
+We need a snort rule to detect invalid login attempts from pop3 server:
+
+alert ip any 110 -> any any (msg:"POP3 Invalid Login"; content:"[AUTH] Invalid login"; classtype:suspicious-login; sid:5000004; rev:8;)
+insert into plugin_sid values (1001, 5000004, null, null, 3, 1, "POP3 Invalid Login");
+USER PEPE\n
+PASS PEPE
+-->
+
+<directive id="3011" name="Possible POP3 Bruteforce against SRC_IP" priority="3">
+<rule type="detector" name="Bruteforce against " reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="5000004" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Possible POP3 Bruteforce against SRC_IP" reliability="+5" time_out="100" occurrence="5"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="Possible POP3 Bruteforce against SRC_IP" reliability="+7" time_out="300" occurrence="20"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                       <rules>
+                            <rule type="detector" name="Possible POP3 Bruteforce against SRC_IP" reliability="+10" time_out="500" occurrence="50"
+                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<!-- Possible FTP Bruteforce
+
+alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"INFO FTP Bad login"; flow:from_server,established; content:"530 "; pcre:"/^530\s+(Login|User)/smi"; classtype:bad-unknown; sid:491; rev:8;)
+
+We have to change it to support more messages indicating bad login:
+alert tcp $HOME_NET 21 -> $EXTERNAL_NET any (msg:"INFO FTP Bad login"; flow:from_server,established; content:"530 "; pcre:"/^530\s+(Login|User|Authentication failed)/smi"; classtype:bad-unknown; sid:491; rev:8;)
+-->
+
+<directive id="3012" name="Possible FTP Bruteforce against SRC_IP" priority="3">
+<rule type="detector" name="Possible FTP Bruteforce against SRC_IP" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="491" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Possible FTP Bruteforce against SRC_IP" reliability="+5" time_out="100" occurrence="5"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="491" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="Possible FTP Bruteforce against SRC_IP" reliability="+7" time_out="300" occurrence="20"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="491" sticky="true" protocol="ANY">
+                       <rules>
+                            <rule type="detector" name="Possible FTP Bruteforce against SRC_IP" reliability="+10" time_out="500" occurrence="50"
+                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="491" sticky="true" protocol="ANY">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<!--	Microsoft IIS cmd.exe access
+
+This directive detects an attempt of an attacker to execute cmd.exe throught a security hole exploiting web server to access cmd.exe 
+
+- The first level  detects cmd.exe access attempt	(network-snort)
+- The second level detects cmd.exe banner response or directory listing response (network-snort)
+
+alert tcp any any -> any any (msg:"WEB-IIS cmd.exe access"; flow:to_server,established; uricontent:"cmd.exe"; nocase; classtype:web-application-attack; sid:1002; rev:7;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ATTACK-RESPONSES directory listing"; flow:established; content:"Volume Serial Number"; classtype:bad-unknown; sid:1292; rev:9;)
+
+Snort rule modified by alienvault:
+alert tcp any !21:23 -> any any (msg:"ATTACK-RESPONSES Microsoft cmd.exe banner"; flow:established; content:"|28|C|29| Copyright 1985-"; distance:0; content:"Microsoft Corp."; distance:0; reference:nessus,11633; classtype:successful-admin; sid:2123; rev:3;)
+
+-->
+
+<directive id="3013" name="Command execution against webserver on DST_IP" priority="3">
+  <rule type="detector" name="cmd.exe URI detection" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="1002" protocol="ANY">
+    <rules>
+	<rule type="detector" name="Directory Listing Response" reliability="+7" time_out="10"
+		occurrence="1" from="1:DST_IP" to="1:SRC_IP" port_from="ANY"
+		port_to="ANY" plugin_id="1001" plugin_sid="1292" protocol="ANY"/>
+	<rule type="detector" name="cmd.exe Banner response" reliability="+7" time_out="10"
+		occurrence="1" from="1:DST_IP" to="1:SRC_IP" port_from="ANY"
+		port_to="ANY" plugin_id="1001" plugin_sid="2123" protocol="ANY"/>
+    </rules>
+    </rule>
+</directive>
+
+<!-- File /etc/passwd access on $DST_IP
+
+- We detect a connection containing /etc/passwd 
+- We wait the server resposne containing patterns that may indicate the attacker gain access to the file
+
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"WEB-MISC /etc/passwd"; flow:to_server,established; content:"/etc/passwd"; nocase; classtype:attempted-recon; sid:1122; rev:5;)
+FIXME:
+We have to write a better signature to detect a wide range of encoding and requests
+
+alert tcp $HOME_NET $HTTP_PORTS -> any any (msg: "BLEEDING-EDGE ATTACK RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; content:"root\:x\:0\:0\:root\:/root\:/"; nocase; classtype:misc-activity; sid: 2002034; rev:4; )
+alert tcp $HOME_NET $HTTP_PORTS -> any any (msg: "BLEEDING-EDGE ATTACK RESPONSE Possible /etc/passwd via HTTP (BSD style)"; flow:established,from_server; content:"root\:*\:0\:0\:"; nocase; content:"\:/root\:/bin"; nocase; classtype:misc-activity; sid: 2003071; rev:1; )
+
+We have to change these reponse rules because in some circunstances doesnt seem to work properlty:
+#alert tcp any any -> any any (msg: "BLEEDING-EDGE ATTACK RESPONSE Possible /etc/passwd via HTTP (linux style)"; flow:established,from_server; content:"root:x:0:0:root:"; nocase; classtype:misc-activity; sid: 2002034; rev:4; )
+-->
+
+<directive id="3014" name="File /etc/passwd access on DST_IP" priority="3">
+  <rule type="detector" name="/etc/passwd  request" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="1122" protocol="ANY">
+    <rules>
+	<rule type="detector" name="/etc/passwd Response" reliability="+7" time_out="10"
+		occurrence="1" from="1:DST_IP" to="1:SRC_IP" port_from="ANY"
+		port_to="ANY" plugin_id="1001" plugin_sid="2002034" protocol="ANY"/>
+	<rule type="detector" name="/etc/passwd Response" reliability="+7" time_out="10"
+		occurrence="1" from="1:DST_IP" to="1:SRC_IP" port_from="ANY"
+		port_to="ANY" plugin_id="1001" plugin_sid="2003071" protocol="ANY"/>
+    </rules>
+    </rule>
+</directive>
+
+<!-- Sql injection against web server DST_IP
+
+We need snort rules that detect sql injection attampts, and the only way to detect intrusion attempts is to wait for sql server 
+and mysql error messages so when someone try to exploit an sql injection bug usually  get lucky until some attempts
+
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"BLEEDING-EDGE WEB Possible SQL Injection Attempt xx DELETE FROM"; flow:established,to_server; uricontent:"DELETE "; nocase; uricontent:" FROM "; nocase; pcre:"/DELETE.+FROM/Ui"; classtype:web-application-attack; reference:url,en.wikipedia.org/wiki/SQL_injection; sid:2006443; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"BLEEDING-EDGE WEB Possible SQL Injection Attempt xx INSERT INTO"; flow:established,to_server; uricontent:"INSERT "; nocase; uricontent:" INTO "; nocase; pcre:"/INSERT.+INTO/Ui"; classtype:web-application-attack; reference:url,en.wikipedia.org/wiki/SQL_injection; sid:2006444; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"BLEEDING-EDGE WEB Possible SQL Injection Attempt xx SELECT FROM"; flow:established,to_server; uricontent:"SELECT "; nocase; uricontent:" FROM "; nocase; pcre:"/SELECT.+FROM/Ui"; classtype:web-application-attack; reference:url,en.wikipedia.org/wiki/SQL_injection; sid:2006445; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"BLEEDING-EDGE WEB Possible SQL Injection Attempt xx UNION SELECT"; flow:established,to_server; uricontent:"UNION "; nocase; uricontent:" SELECT "; nocase; pcre:"/UNION\s+SELECT/Ui"; classtype:web-application-attack; reference:url,en.wikipedia.org/wiki/SQL_injection; sid:2006446; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"BLEEDING-EDGE WEB Possible SQL Injection Attempt xx UPDATE SET"; flow:established,to_server; uricontent:"UPDATE "; nocase; uricontent:" SET "; nocase; pcre:"/[&\?].*UPDATE.+SET/Ui"; classtype:web-application-attack; reference:url,en.wikipedia.org/wiki/SQL_injection; sid:2006447; rev:4;)
+
+
+Responses (alienvault):
+alert tcp any any -> any any (msg: "ATTACK RESPONSE Possible sql injection error code response xx SQL Server (ODBC)"; flow:established,from_server; content:"Microsoft OLE DB Provider for ODBC Drivers error"; nocase; classtype:misc-activity; sid: 5000006; rev:4; )
+insert into plugin_sid values (1001, 5000006, null, null, 3, 1, "ATTACK RESPONSE Possible sql injection error code response xx SQL Server (ODBC)");
+
+alert tcp any any -> any any (msg: "ATTACK RESPONSE Possible sql injection error code response xx SQL Server (SQL Server)"; flow:established,from_server; content:"Microsoft OLE DB Provider for SQL Server error"; nocase; classtype:misc-activity; sid: 5000007; rev:4; )
+insert into plugin_sid values (1001, 5000008, null, null, 3, 1, "ATTACK RESPONSE Possible sql injection error code response xx SQL Server (SQL Server)");
+
+alert tcp any any -> any any (msg: "ATTACK REPONSE Possible sql injection error code response xx MySql"; content:"You have an error in your SQL syntax"; nocase; classtype:misc-activity; sid: 5000008; rev:4; )
+insert into plugin_sid values (1001, 5000008, null, null, 3, 1, "ATTACK REPONSE Possible sql injection error code response MySQL");
+
+We have to fix some problems with the response signatures
+-->
+
+<directive id="3015" name="Possible SQL injection attempt against DST_IP" priority="3">
+  <rule type="detector" name="Sql injection attacker request" reliability="3" 
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2006443,2006444,2006445,2006446,2006447" protocol="ANY">
+    <rules>
+	<rule type="detector" name="Sql error server response" reliability="+7" time_out="10"
+		occurrence="1" from="1:DST_IP" to="1:SRC_IP" port_from="ANY"
+		port_to="ANY" plugin_id="1001" plugin_sid="5000006,5000007,5000008" protocol="ANY"/>
+    </rules>
+    </rule>
+</directive>
+
+<!-- Symantec Remote Management RTVScan exploit-->
+<directive id="3016" name="Possible attack against DST_IP (Symantec Remote Management RTVScan Exploit)" priority="3">
+  <rule type="detector" name="Symantec Remote Management RTVScan Exploit" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2003250" protocol="ANY">
+   <rules>
+	<rule type="detector" name="Shellcode Detect" reliability="+3" time_out="7"
+	    occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+	    port_to="ANY" plugin_id="1001" plugin_sid="638,639,640,641,642,64,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+		<rules>
+			<rule type="detector" name="cmd.exe Banner" reliability="+6" occurrence="1" time_out="7"
+				    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+				    plugin_id="1001" plugin_sid="2123" sticky="true" protocol="ANY"/>
+		</rules>
+	</rule>
+    </rules>
+   </rule>
+</directive>
+
+<!-- Possible sa account bruteforce against SQL Server 
+688,MS-SQL sa login failed
+-->
+
+<directive id="3017" name="Possible sa account bruteforce against  SRC_IP (SQL Server)" priority="3">
+<rule type="detector" name="Bruteforce attempt" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="688" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Possible sa account bruteforce against SRC_IP (SQL Server)" reliability="+1" time_out="10" occurrence="5"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="Possible sa account bruteforce against SRC_IP (SQL Server)" reliability="+2" time_out="15" occurrence="20"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                       <rules>
+                            <rule type="detector" name="Possible sa account bruteforce against SRC_IP (SQL Server)" reliability="+2" time_out="30" occurrence="50"
+                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<!-- VNC
+
+(2002924) "BLEEDING-EDGE EXPLOIT VNC Server Not Requiring Authentication" 	192.168.1.41:5900/6 	192.168.1.45:2638/6
+(2002922) "BLEEDING-EDGE POLICY VNC Authentication Successful"
+(2002920) "BLEEDING-EDGE POLICY VNC Authentication Failure"
+(2002911) "BLEEDING-EDGE SCAN Potential VNC Scan 5900-5920"
+
+-->
+
+<directive id="3018" name="Possible VNC bruteforce against SRC_IP" priority="3">
+<rule type="detector" name="Bruteforce attempt" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="688" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Possible VNC bruteforce against SRC_IP" reliability="+1" time_out="10" occurrence="5"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="Possible VNC bruteforce against SRC_IP" reliability="+2" time_out="30" occurrence="10"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                       <rules>
+                            <rule type="detector" name="Possible VNC bruteforce against SRC_IP" reliability="+2" time_out="60" occurrence="20"
+                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<!-- MS-08-06 related attacks-->
+<directive id="3019" name="Possible attack against DST_IP (Microsoft Server Service related attack)" priority="3">
+  <rule type="detector" name="IPC Access" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="2465,2466" protocol="ANY">
+   <rules>
+        <rule type="detector" name="Shellcode Detect" reliability="4" time_out="5"
+            occurrence="1" from="1:SRC_IP" to="1:DST_IP" port_from="ANY"
+            port_to="ANY" plugin_id="1001" plugin_sid="22002903,638,639,640,641,642,64,644,645,646,647,648,649,650,651,652,653,1390,1394,1424,2312,2313,2314,5000010,5000011,5000012,5000013,5000014,5000015,5000016,5000017,5000018,5000019,5000020,5000021,5000022,5000023,5000024,5000025,5000026,5000027,5000028,5000029,5000030,5000031" sticky="true" protocol="ANY">
+                <rules>
+                        <rule type="detector" name="cmd.exe Banner" reliability="8" occurrence="1" time_out="5"
+                                    from="1:DST_IP" to="1:SRC_IP" port_from="ANY" port_to="ANY"
+                                    plugin_id="1001" plugin_sid="2123" sticky="true" protocol="ANY"/>
+                </rules>
+        </rule>
+    </rules>
+   </rule>
+</directive>
+
+<directive id="3020" name="Too many Cisco Firewall dropped events with destination DST_IP" priority="2">
+   <rule type="detector" name="Cisco Firewall Drop event" reliability="2"
+   occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+   time_out="3" plugin_id="1514" plugin_sid="106011">
+      <rules>
+         <rule type="detector" name="Cisco Firewall Drop event (3 times)"
+         reliability="+2" occurrence="3" from="ANY" to="1:DST_IP"
+         port_from="ANY" time_out="10" port_to="ANY"
+         plugin_id="1514" plugin_sid="106011">
+            <rules>
+               <rule type="detector" name="Cisco Firewall Drop event (5 times)"
+               reliability="+3" occurrence="5" from="ANY" to="1:DST_IP"
+               port_from="ANY" time_out="20" port_to="ANY"
+               plugin_id="1514" plugin_sid="106011">
+                  <rules>
+                     <rule type="detector" name="Cisco Firewall Drop event (10 times)"
+                     reliability="+3" occurrence="10" from="ANY" to="1:DST_IP"
+                     port_from="ANY" time_out="30" port_to="ANY"
+                     plugin_id="1514" plugin_sid="106011">
+                  </rule>
+               </rules>
+            </rule>
+         </rules>
+      </rule>
+   </rules>
+</rule>
+</directive>
+
