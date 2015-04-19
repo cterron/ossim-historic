@@ -729,7 +729,9 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
 		  return TRUE;
 		}
 		else
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: False");
+		{
+			//g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: False");
+		}
 
 	  node = node->next;
 	}

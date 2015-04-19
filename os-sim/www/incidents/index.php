@@ -62,7 +62,7 @@ function order_img($subject)
     // First time we visit this page, show by default only Open incidents
     // when GET() returns NULL, means that the param is not set
     if (GET('status') === null) $status = 'Open';
-    
+
     $db = new ossim_db();
     $conn = $db->connect();
 
@@ -263,6 +263,7 @@ function order_img($subject)
       <th NOWRAP><a href="?order_by=date<?=$filter?>"><?=_("Created").order_img('date')?></a></th>
       <th NOWRAP><a href="?order_by=life_time<?=$filter?>"><?=_("Life Time").order_img('life_time')?></a></th>
       <th><?=_("In charge") ?></th>
+      <th><?=_("Submitter") ?></th>
       <th><?=_("Type") ?></th>
       <th><?=_("Status") ?></th>
       <th><?=_("Extra") ?></th>
@@ -300,6 +301,7 @@ echo " <font color=\"grey\" size=\"1\">(" . $vulnerability_list[0]->get_ip() . "
       <td NOWRAP><?= $incident->get_date() ?></td>
       <td NOWRAP><?= $incident->get_life_time() ?></td>
       <td><?= $incident->get_in_charge_name($conn) ?></td>
+      <td><?= $incident->get_submitter() ?></td>
       <td><?= $incident->get_type() ?></td>
       <td><? Incident::colorize_status($incident->get_status()) ?></td>
       <td>

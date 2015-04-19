@@ -58,6 +58,10 @@ $data = array();
 if (!$rs = $conn->Execute($sql)) {
     mydie("Error was: ".$conn->ErrorMsg()."\n\nQuery was: ".$sql);
 }
+
+if($rs->EOF)
+	mydie("No data available yet.");
+
 // Check options and use columns or rows as legend.
 
     switch ($options['graph_legend_field']) {

@@ -10,7 +10,8 @@ def isIpInNet(host, net_list):
         if net == 'ANY':
             return True
 
-        if not net.__contains__('/'):
+        if net.count('/') != 1:
+            print __name__, "Don't know what to do with malformed net (%s)" % (net)
             continue
 
         (base, mask) = net.split('/')

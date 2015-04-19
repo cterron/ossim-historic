@@ -37,10 +37,22 @@ $ntop_default = parse_url($conf->get_conf("ntop_link"));
 
 require_once ('classes/Sensor.inc');
 
-/* ntop link */
-$scheme = $ntop_default["scheme"] ? $ntop_default["scheme"] : "http";
-$port = $ntop_default["port"] ? $ntop_default["port"] : "3000";
-$ntop = "$scheme://$sensor:$port";
+
+if (!$conf->get_conf("use_ntop_rewrite")){
+
+    /* ntop link */
+    $scheme = $ntop_default["scheme"] ? $ntop_default["scheme"] : "http";
+    $port = $ntop_default["port"] ? $ntop_default["port"] : "3000";
+    $ntop = "$scheme://$sensor:$port";
+
+} else { //if use_ntop_rewrite is enabled
+
+    $protocol = "http";
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") $protocol = "https";
+    $ntop = "$protocol://".$_SERVER['SERVER_NAME']."/ntop-$sensor";
+}
+
+
 
 ?>
 
@@ -105,12 +117,12 @@ require_once ('classes/SecurityReport.inc');
 
 
 if ($interface){
-$fd = @fopen("http://$sensor:$port/switch.html", "r");
+$fd = @fopen("$ntop/switch.html", "r");
 if($fd != NULL){
 while(!feof($fd)){
 $buffer = fgets($fd, 4096);
 if(ereg ("VALUE=([0-9]+)[^0-9]*$interface.*", $buffer, $regs)){
-$fd2 = @fopen("http://$sensor:$port/switch.html?interface=$regs[1]", "r");
+$fd2 = @fopen("$ntop/switch.html?interface=$regs[1]", "r");
 if($fd2 != NULL) fclose($fd2);
 }
 }

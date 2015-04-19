@@ -61,6 +61,10 @@ classes_DATA = About.inc \
 	Plugin_sid.inc \
 	Plugin_scheduler.inc \
 	Plugin_scheduler_sensor_reference.inc \
+	Plugin_scheduler_netgroup_reference.inc \
+        Plugin_scheduler_hostgroup_reference.inc \
+        Plugin_scheduler_host_reference.inc \
+        Plugin_scheduler_net_reference.inc \
 	Plugingroup.inc \
 	Policy_host_reference.inc \
 	Policy.inc \

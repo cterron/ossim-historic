@@ -29,6 +29,7 @@ class Event:
         "userdata7",
         "userdata8",
         "userdata9",
+        "occurrences",
         "log",
         "data",
         "snort_sid",    # snort specific
@@ -41,10 +42,7 @@ class Event:
 
     def __setitem__(self, key, value):
 
-        if not value:
-            logger.debug("Empty value for event attribute: (%s)" % (key))
-
-        elif key in self.EVENT_ATTRS:
+        if key in self.EVENT_ATTRS:
             self.event[key] = self.sanitize_value(value)
 
         elif key != 'event_type':
@@ -57,7 +55,7 @@ class Event:
     def __repr__(self):
         event = self.EVENT_TYPE
         for attr in self.EVENT_ATTRS:
-            if self[attr] is not None:
+            if self[attr]:
                 event += ' %s="%s"' % (attr, self[attr])
         return event + "\n"
 
@@ -79,6 +77,7 @@ class EventOS(Event):
         "date",
         "plugin_id",
         "plugin_sid",
+        "occurrences",
         "log",
     ]
 
@@ -93,6 +92,7 @@ class EventMac(Event):
         "date",
         "plugin_id",
         "plugin_sid",
+        "occurrences",
         "log",
     ]
 
@@ -109,6 +109,7 @@ class EventService(Event):
         "date",
         "plugin_id",
         "plugin_sid",
+        "occurrences",
         "log",
     ]
 
@@ -137,6 +138,7 @@ class EventHids(Event):
         "userdata7",
         "userdata8",
         "userdata9",
+        "occurrences",
         "log",
     ]
 
@@ -164,7 +166,10 @@ class Snort(Event):
         "interface",
         "gzipdata",
         "unziplen",
-        "event_type"
+        "event_type",
+        "plugin_id",
+        "type",
+        "occurrences"
     ]
 
 # vim:ts=4 sts=4 tw=79 expandtab:

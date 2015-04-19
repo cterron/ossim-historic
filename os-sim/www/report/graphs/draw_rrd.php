@@ -48,10 +48,10 @@ $zoom = GET('zoom') ? GET('zoom') : 1;
 // params validations
 //
 
-if (!in_array($what, array('compromise', 'attack', 'ser_lev'))) {
+if (!in_array($what, array('compromise', 'attack', 'ser_lev', 'bp'))) {
     mydie(sprintf(_("Invalid param '%s' with value '%s'"), 'what', $what));
 }
-if (!in_array($type, array('host', 'net', 'global', 'level'))) {
+if (!in_array($type, array('host', 'net', 'global', 'level', 'bp'))) {
     mydie(sprintf(_("Invalid param '%s' with value '%s'"), 'type', $type));
 }
 ossim_valid($ip,    OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_SCORE, 'illegal:'._('IP'));
@@ -75,6 +75,8 @@ switch ($type) {
         $rrdpath = $conf->get_conf('rrdpath_global'); break;
     case 'level':
         $rrdpath = $conf->get_conf('rrdpath_level'); break;
+    case 'bp':
+        $rrdpath = $conf->get_conf('rrdpath_bps'); break;
 }
 
 //
@@ -101,6 +103,8 @@ if ($what == "compromise") {
     $color2="#0000ff";
 } elseif ($what == "ser_lev") {
     $color1="#24d428";
+} elseif ($what == "bp") {
+    $color1="#ff0000";
 }
 
 //
@@ -129,7 +133,10 @@ if ($what == "compromise") {
 if (!is_file("$rrdpath/$ip.rrd")) {
     mydie(sprintf(_("No RRD available for: '%s' at '%s'"), $ip, $rrdpath));
 }
-if ($type != 'host' && $type != 'net') { // beautify in case of "global_admin"
+if ($type == 'bp') {
+    $hostname = ucfirst(str_replace('-', ' of ', $hostname));
+    $hostname = ucfirst(str_replace('_', ' ', $hostname));
+} elseif ($type != 'host' && $type != 'net') { // beautify in case of "global_admin"
     $hostname = ucfirst(str_replace('_', ' ', $hostname));
 }
 $params = "graph $tmpfile " .
@@ -137,12 +144,12 @@ $params = "graph $tmpfile " .
          "-t '$hostname "._("Metrics")."' " .
          "--font TITLE:12:$font --font AXIS:7:$font " .
          "-r --zoom $zoom ";
-if ($type != 'level') {
+if ($type != 'level' or $type != 'bp') {
     $ymax = (int) 2.5 * $threshold_a;
     $ymin = -1 * (int)(2.5 * $threshold_c);
     $params .= "-u $ymax -l $ymin ";
 }
-if ($what != "ser_lev") {
+if ($what != "ser_lev" and $what != "bp") {
     $params .=
             "DEF:obs=$rrdpath/$ip.rrd:$ds:AVERAGE " .
             "DEF:obs2=$rrdpath/$ip.rrd:ds1:AVERAGE " .
@@ -159,9 +166,16 @@ if ($what != "ser_lev") {
             "DEF:obs2=$rrdpath/$ip.rrd:ds1:AVERAGE " .
             "CDEF:ser_lev=obs,obs2,+,2,/ " .
             "AREA:ser_lev$color1:'" . _("Service level") ."'";
+} elseif ($what = "bp"){
+    $params .=
+            " --vertical-label=" . _("Risk") . 
+            " --upper-limit=10  --lower-limit=0 " .
+            "DEF:obs=$rrdpath/$ip.rrd:ds0:AVERAGE " .
+            "CDEF:bp=obs,obs,+,2,/ " .
+            "AREA:bp$color1:'" . _("Risk") ."'";
 }
 
-         
+
 exec("$rrdtool_bin $params 2>&1", $output, $exit_code);
 if (preg_match('/^ERROR/i', $output[0]) || $exit_code != 0) {
     mydie(sprintf(_("rrdtool cmd failed with error: '%s' (exit code: %s)"), $output[0], $exit_code));

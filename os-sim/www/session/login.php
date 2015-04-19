@@ -72,39 +72,27 @@
         header ("Location: ../index.php");
     }
 
+    $user = REQUEST('user');
+    $pass = REQUEST('pass');
+    $dest = REQUEST('dest');
+
+    ossim_valid($user, OSS_USER, OSS_NULLABLE , 'illegal:'._("User name"));
+    ossim_valid($dest, OSS_ALPHA, OSS_URL, OSS_NULLABLE, 'illegal:'._("Destination"));
+
+    if (ossim_error()) {
+       die(ossim_error());
+    }
+ 
     if (REQUEST('user')) {
 
-        
-        $user = REQUEST('user');
-        $pass = REQUEST('pass');
-        $dest = REQUEST('dest');
-
-        ossim_valid($user, OSS_USER, OSS_NULLABLE , 'illegal:'._("User name"));
-        ossim_valid($dest, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Destination"));
-
-        if (ossim_error()) {
-            die(ossim_error());
-        }
-       
         $session = new Session($user, $pass, "");
         if ($session->login()) {
             require_once 'classes/Log_action.inc';
             $infolog = array(REQUEST('user'));
             Log_action::log(1, $infolog);
  
-        if (REQUEST('dest'))
-            {
-                if (preg_match("/top\.php$/", $dest)) {
-                    header ("Location: ../index.php");
-                    exit;
-                } else {
-                    header ("Location: " . urldecode($dest));
-                    exit;
-                }
-
-            } else {
-                header ("Location: ../control_panel/global_score.php");
-            }
+            header ("Location: ../index.php");
+            exit;
         } else {
             $bad_pass = true;
         }
@@ -146,7 +134,6 @@ if (location.href != top.location.href) top.location.href = location.href;
     </td>
     <td>
 <table align="center" class="noborder">
-  <input type="hidden" name="dest" value="<?php echo REQUEST('dest') ?>">
   <tr>
     <td colspan="2">
       <b>OSSIM (Open Source Security Information Management)</b><br/>

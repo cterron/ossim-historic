@@ -53,9 +53,8 @@ function draw_process($proc_id)
         return $resp;
     }
     $html = '
-        <h2 style="text-align: left">'._("Business Process Details").': '.$proc_data['name'].'</h2>
-        <br/>
-        <table width="70%">
+        <h2>'._("Business Process Details").': <u>'.$proc_data['name'].'</u></h2>
+        <table width="70%" align="center">
         <tr>
             <th width="70%">'._("Assets").'</th>
             <th>'._("Risk").'</th>
@@ -213,13 +212,15 @@ function get_status_details($status)
     return array($fgcolor, $bgcolor, $status_str);
 }
 
-function draw_asset_details($asset_id)
+// show_all_members = False -> show only members with problems
+function draw_asset_details($asset_id, $show_all_members = false)
 {
     global $conn;
     $resp = new xajaxResponse();
     $asset = BP_Asset::get($conn, $asset_id);
     $html = '
-        <table width="60%" align="left">
+        <h2>'._("Asset Details").': <u>'.$asset->get_name().'</u></h2>
+        <table width="70%" align="center">
         <tr>
             <th width="20%">'._("Asset Name").'</th>
             <td style="text-align: left;"><b>'.$asset->get_name().'</b></td>
@@ -229,8 +230,9 @@ function draw_asset_details($asset_id)
             <td style="text-align: left;">'.$asset->get_description().'</td>
         </tr>
         <tr>
-            <th colspan="2">'._("Responsibles").'</th>
-        </tr>';
+            <th>'._("Responsibles").'</th>
+            <td class="noborder">
+              <table width="100%" class="noborder">';
     $times = 0;
     foreach ($asset->get_responsibles() as $responsible) {
         $str = '';
@@ -238,15 +240,27 @@ function draw_asset_details($asset_id)
             $str = '<a href="mailto:'.$responsible['email'].'?subject='.$asset->get_name().'"><img border="0" src="../pixmaps/email_icon.gif"></a>&nbsp;';
         }
         $str .= $responsible['name'] . ' ('.$responsible['login'].')';
-        $html .= '<tr><td colspan="2" style="text-align: left">'.$str.'</td></tr>';
+        $html .= '<tr><td style="text-align: left">'.$str.'</td></tr>';
         $times++;
     }
     if (!$times) {
-        $html .= '<tr><td colspan="2" style="text-align: left"><i>'._("None set").'</i></td></tr>';
+        $html .= '<tr><td style="text-align: left"><i>'._("None set").'</i></td></tr>';
     }
     $html .= '
+      </table>
+    </tr>
     <tr>
-        <th width="30%" colspan="2">'._("Status of Members").'</th>
+        <th width="30%" colspan="2">'._("Status of Members");
+    if ($show_all_members) {
+        $html .= '
+            <a href="#" onClick="javascript: xajax_draw_asset_details('.$asset_id.',0); return false;">('._("Click to show only members with problems").')</a>&nbsp;';
+    } else {
+        $html .= '
+            <a href="#" onClick="javascript: xajax_draw_asset_details('.$asset_id.',1); return false;">('._("Click to show all members").')</a>&nbsp;';
+    }
+
+    $html .= '
+        </th>
     </tr>
     <tr>
         <td colspan="2">
@@ -256,16 +270,72 @@ function draw_asset_details($asset_id)
                     <th>Member</th>
                     <th>Measure type</th>
                     <th>Severity</th>
+                    <th>Problem</th>
+                    <th>History</th>
                 </tr>
             ';
-    foreach ($asset->get_members() as $mem) {
-        $html .= 
-                '<tr valign="center">
-                    <td>'.$mem['type'].'</td>
-                    <td>'.$mem['name'].'</td>
-                    <td>'.BP_Asset::get_measure_type_str($mem['measure_type']).'</td>
-                    <td><b>'.bp_member_status_html($mem['severity']).'</b></td>
-                </tr>';
+    $all_members = $asset->get_members();
+    $members = array();
+    //
+    // list only members with "problems"
+    //
+    foreach ($all_members as $mem) {
+        $mem_id = $mem['name'].'-'.$mem['type'];
+        if ($show_all_members) {
+            $members[$mem_id][] = $mem;
+        } elseif (($mem['severity'] != 0) || ($mem['measure_type'] === null)) {
+            $members[$mem_id][] = $mem;
+        }
+    }
+    /*
+    //
+    // if all the measures from a member were OK, consolidate the data
+    // as "All measures" "OK"
+    //
+    $all_member_ids = array_unique($all_member_ids);
+    $listed_member_ids = array_keys($members);
+    $all_ok_members = ($show_all_members)? 
+        $all_member_ids : array_diff($all_member_ids, $listed_member_ids);
+    foreach ($all_ok_members as $mem_id) {
+        list($name, $type) = explode('-', $mem_id);
+        $members[$mem_id][] = array(
+                                'name' => $name,
+                                'type' => $type,
+                                'measure_type' => 'all',
+                                'severity' => "0"
+                            );
+    }
+    */
+    //
+    // Display members
+    //
+    foreach ($members as $mem_id => $member) {
+        foreach ($member as $mem) {
+            if ($mem['measure_type'] === null) {
+                $link = _('n/a');
+            } else {
+                $link = "../control_panel/" . 
+                    Util::graph_image_link($mem['measure_type']."-".$mem['name'], 
+                                           "bp", "bp",
+                                           "N-1D", "N", 1, "all");
+            }
+            //xajax_debug($mem, $resp);
+
+            $error_msg = "&nbsp;";
+            if ($mem['severity'] >= LOW_PRIORITY)
+                $error_msg = BP_Asset::get_measure_link($mem);
+
+            $html .= 
+                    '<tr valign="center">
+                        <td>'.$mem['type'].'</td>
+                        <td>'.$mem['name'].'</td>
+                        <td>'.BP_Asset::get_measure_type_str($mem['measure_type']).'</td>
+                        <td><b>'.bp_member_status_html($mem['severity']).'</b></td>
+                        <td>'.$error_msg.'</td>
+                        <td><a href="'.$link.'"><img
+                            src="../pixmaps/graph.gif" border="0"/></a></td>
+                    </tr>';
+        }
     }
     $html .= '</table></td></tr></table>';
     $resp->addAssign("asset-info", "style.display", '');
@@ -300,15 +370,16 @@ if ($procs === false) {
 </head>
 <body>
 <div id="form_errors"></div>
-<h2 style="text-align: left"><?=_("Summary")?></h2>
-<div style="width: 60%; text-align: right;">
+<h2><?=_("Bussiness Processes Summary")?></h2>
+<table width="70%" align="center">
+<tr>
+  <td colspan="4" style="text-align: right">
 <? if ($can_edit) { ?>
     <a href="./bp_edit.php?id=0">(<?=_("Create New Process")?>)</a>&nbsp;
 <? } ?>
-<a href="./asset_list.php">(<?=_("Assets Management")?>)</a>
-</div>
-<br>
-<table width="60%">
+    <a href="./asset_list.php">(<?=_("Assets Management")?>)</a>
+  </td>
+</tr>
 <tr>
     <th><?=_("Process Name")?></th>
     <th><?=_("Num. Assets")?></th>
@@ -337,7 +408,7 @@ if ($procs === false) {
 <br>
 
 <div id="process-info" style="display: none"></div>
-<br><br>
+<br>
 
 <div id="asset-info" style="display: none"></div>
 <div id="xajax_debug" style="width: 100%"></div>

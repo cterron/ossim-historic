@@ -8,6 +8,7 @@ class Framework:
         self.__classes = [
                 "ControlPanelRRD",
                 "AcidCache",
+                "OptimizeDB",
                 "Listener",
                 "Scheduler",
                 "SOC",

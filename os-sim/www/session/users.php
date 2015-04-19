@@ -75,7 +75,12 @@ if (empty($order)) $order = "login";
     <tr>
       <td><?php echo $login; ?></td>
       <td><?php echo $name; ?></td>
-      <td><?php echo $email; ?>&nbsp;</td>
+      <td><?php echo $email;
+        if ($email) {?>
+            <a href="mailto:<?=$email?>">
+                <img border="0" src="../pixmaps/email_icon.gif"></a>
+      <?php } ?>
+      </td>
       <td><?php echo $pass; ?></td>
       <td><?php echo $company; ?>&nbsp;</td>
       <td><?php echo $department; ?>&nbsp;</td>

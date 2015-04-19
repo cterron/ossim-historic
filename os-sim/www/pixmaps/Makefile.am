@@ -27,6 +27,7 @@ pixmaps_DATA = arrow.gif \
 	incident.png \
 	logo.png \
 	logo3.jpg \
+	help.png \
 	traffic_light0.gif \
 	traffic_light1.gif \
 	traffic_light2.gif \

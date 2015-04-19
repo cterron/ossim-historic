@@ -1,7 +1,8 @@
 from Config import Conf, Plugin
 from Output import Output
-from Logger import Logger
+from Logger import *
 from Task import Task
+from Stats import Stats
 logger = Logger.logger
 
 import threading, string, time, os, commands, datetime
@@ -60,23 +61,23 @@ class Watchdog(threading.Thread):
             timeout = 5
             start = datetime.datetime.now()
             plugin.start_time = float(time.time())
-            while task.Done() is 0:
+            while not task.Done():
                 time.sleep(0.1)
                 now = datetime.datetime.now()
                 if (now - start).seconds> timeout:
                     task.Kill()
-                    logger.info("Could not start %s, returning after %s second(s) wait time." % (command, timeout))
+                    logger.warning("Could not start %s, returning after %s second(s) wait time." % (command, timeout))
 
         # notify result to server
         if notify:
             if not process:
-                logger.info("plugin (%s) has an unknown state" % (name))
-                Output.plugin_state(self.PLUGIN_UNKNOWN_STATE_MSG % (id))
+                logger.debug("plugin (%s) has an unknown state" % (name))
+                Output.plugin_state(Watchdog.PLUGIN_UNKNOWN_STATE_MSG % (id))
             elif Watchdog.pidof(process) is not None:
-                logger.info("plugin (%s) is running" % (name))
+                logger.info(WATCHDOG_PROCESS_STARTED % (process, id))
                 Output.plugin_state(Watchdog.PLUGIN_START_STATE_MSG % (id))
             else:
-                logger.warning("error starting plugin %s (%s)" % (id, name))
+                logger.warning(WATCHDOG_ERROR_STARTING_PROCESS % (process, id))
     start_process = staticmethod(start_process)
 
     def stop_process(plugin, notify=True):
@@ -93,14 +94,15 @@ class Watchdog(threading.Thread):
 
         # notify result to server
         if notify:
+            time.sleep(1)
             if not process:
-                logger.info("plugin (%s) has an unknown state" % (name))
+                logger.debug("plugin (%s) has an unknown state" % (name))
                 Output.plugin_state(Watchdog.PLUGIN_UNKNOWN_STATE_MSG % (id))
             elif Watchdog.pidof(process) is None:
-                logger.info("plugin (%s) is not running" % (name))
+                logger.info(WATCHDOG_PROCESS_STOPPED % (process, id))
                 Output.plugin_state(Watchdog.PLUGIN_STOP_STATE_MSG % (id))
             else:
-                logger.warning("error stopping plugin %s (%s)" % (id, name))
+                logger.warning(WATCHDOG_ERROR_STOPPING_PROCESS % (process, id))
     stop_process = staticmethod(stop_process)
 
 
@@ -156,12 +158,14 @@ class Watchdog(threading.Thread):
                 plugin.start_time = float(time.time())
             else:
                 if plugin.start_time + restart_interval < current_time:
-                    logger.info("Plugin %s must be restarted" % (name))
+                    logger.debug("Plugin %s must be restarted" % (name))
                     self.stop_process(plugin)
                     self.start_process(plugin)
 
 
     def run(self):
+
+        first_run = True
 
         while 1:
 
@@ -171,17 +175,17 @@ class Watchdog(threading.Thread):
                 process = plugin.get("config", "process")
                 name    = plugin.get("config", "name")
 
-                logger.info("Checking process %s for plugin %s." \
+                logger.debug("Checking process %s for plugin %s." \
                     % (process, name))
 
                 # 1) unknown process to monitoring
                 if not process:
-                    logger.info("plugin (%s) has an unknown state" % (name))
+                    logger.debug("plugin (%s) has an unknown state" % (name))
                     Output.plugin_state(self.PLUGIN_UNKNOWN_STATE_MSG % (id))
 
                 # 2) process is running
                 elif self.pidof(process) is not None:
-                    logger.info("plugin (%s) is running" % (name))
+                    logger.debug("plugin (%s) is running" % (name))
                     Output.plugin_state(self.PLUGIN_START_STATE_MSG % (id))
 
                     # check for for plugin restart
@@ -190,7 +194,7 @@ class Watchdog(threading.Thread):
 
                 # 3) process is not running
                 else:
-                    logger.warning("plugin (%s) is not running" % (name))
+                    logger.debug("plugin (%s) is not running" % (name))
                     Output.plugin_state(self.PLUGIN_STOP_STATE_MSG % (id))
 
                     # restart services (if start=yes in plugin 
@@ -198,17 +202,20 @@ class Watchdog(threading.Thread):
                     if plugin.getboolean("config", "start") and \
                        plugin.getboolean("config", "enable"):
                         self.start_process(plugin)
+                        if self.pidof(process) is not None and not first_run:
+                            Stats.watchdog_restart(process)
 
                 # send plugin enable/disable state
                 if plugin.getboolean("config", "enable"):
-                    logger.info("plugin (%s) is enabled" % (name))
+                    logger.debug("plugin (%s) is enabled" % (name))
                     Output.plugin_state(self.PLUGIN_ENABLE_STATE_MSG % (id))
                 else:
-                    logger.warning("plugin (%s) is disabled" % (name))
+                    logger.debug("plugin (%s) is disabled" % (name))
                     Output.plugin_state(self.PLUGIN_DISABLE_STATE_MSG % (id))
 
 
             time.sleep(float(self.interval))
+            first_run = False
 
 
     def shutdown(self):

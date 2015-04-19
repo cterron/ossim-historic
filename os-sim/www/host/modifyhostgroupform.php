@@ -63,7 +63,8 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
     /* ===== Hosts ==== */
     $i = 1;
-    if ($host_list = Host::get_list($conn)) {
+    if ($host_list = Host::get_list($conn, $where = "", "ORDER by hostname")) {
+
         foreach($host_list as $host) {
             $host_name = $host->get_hostname();
             $host_ips =   $host->get_ip();

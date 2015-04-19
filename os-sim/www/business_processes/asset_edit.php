@@ -356,42 +356,50 @@ if ($id != 0) {
 <? if ($id == 0) { ?>
     <h2><?=_("New Asset wizard")?></h2>
 <? } else { ?>
-    <h2><?=_("Edit Asset")?>: <?=$data['name']?></h2>
+    <h2><?=_("Edit Asset")?>: <u><?=$data['name']?></u></h2>
 <? } ?>
 
 <form id="bp_form">
-<table width="100%"><tr><td style="border-width: 0px">
-<table width="60%" style="border-width: 0px">
+<table width="60%" align="center">
 <tr>
     <th><?=_("Name")?></th>
-    <td style="text-align: left; border-width: 0px"><input type="text" size="40" name="bp_name" value="<?=$bp_name?>"></td>
+    <td style="text-align: left; border-width: 0px"><input type="text" size="50" name="bp_name" value="<?=$bp_name?>"></td>
 </tr>
 <tr>
     <th><?=_("Description")?></th>
     <td style="text-align: left; border-width: 0px">
-        <textarea NAME="bp_desc" COLS="40" ROWS=5 WRAP=HARD><?=$bp_desc?></textarea>
+        <textarea NAME="bp_desc" COLS="48" ROWS=5 WRAP=HARD><?=$bp_desc?></textarea>
     </td>
 </tr>
-</table>
-<br>
+
 <? if ($id == 0) { ?>
-    <center>
+<tr>
+  <td colspan="2" class="noborder">
     <input type="button" value="<?=_("Cancel")?>"
            onClick="javascript: history.go(-1);">&nbsp;
     <input type="button" value="<?=_("Continue")?>"
            onClick="javascript: xajax_edit_asset(xajax.getFormValues('bp_form'))">
-    </center>
+    </td>
+</tr>
+</table>
 <?
 } else {
 ?>
 
-<table width="60%"><tr><th><?=_("Responsibles")?></th></tr></table>
-<div id="responsibles" class="contents">
+</table>
+<br/>
+
+<h2>Edit <u><?=$data['name']?></u>'s Responsibles</h2>
+<table align="center" width="60%"><tr><th><?=_("List of responsibles")?></th></tr>
+<tr><td>
+<div id="responsibles" class="contents" style="width: 100%">
 <!-- Filled by draw_responsibles() -->
 </div>
+</td></tr>
 <script>xajax_draw_responsibles(false)</script>
-<br>
-<div class="row" style="text-align: center; width: 60%">
+<tr><th><?=_("Insert new responsible")?></th></tr>
+<tr><td>
+<div class="row" style="text-align: center; width: 100%">
     <select name="bp_new_responsible">
     <? foreach ($users as $u) { ?>
         <option value="<?=$u[0]?>"><?=$u[1]?> (<?=$u[0]?>)</option>
@@ -399,19 +407,22 @@ if ($id != 0) {
     </select>
     <input type="button" onClick="javascript: xajax_draw_responsibles(xajax.getFormValues('bp_form', true, 'bp_new_responsible'))" value="Add">
 </div>
-<br>
+</td></tr>
+</table>
+<br/>
 
-<table width="60%"><tr><th><?=_("Members")?></th></tr></table>
-<div id="members" class="contents">
+<h2>Edit <u><?=$data['name']?></u>'s Members</h2>
+<table align="center" width="60%"><tr><th colspan="2"><?=_("List of Members")?></th></tr>
+<tr><td colspan="2">
+<div id="members" class="contents" style="width: 100%">
 <!-- Filled by draw_members() -->
 </div>
+</td></tr>
 <script>xajax_draw_members(false)</script>
-<br/>
-<div class="row" style="width: 80%">
-<table width="100%" align="center">
+<div class="row" style="width: 100%">
 <tr><th colspan="2"><?=_("Insert New Member")?></th></tr>
 <tr>
-    <td><?=_("Type")?></td>
+    <td width="40%" style="text-align: right"><?=_("Type")?>&nbsp;&nbsp;</td>
     <td style="text-align: left">
         <select name="member_type"
                 onChange="javascript: $(members_select).innerHTML = '<b><i><?=_("Loading...")?></i></b>'; xajax_draw_members_select(xajax.getFormValues('bp_form', true, 'member_type'));">
@@ -421,20 +432,27 @@ if ($id != 0) {
         <? } ?>
         </select>
     </td>
-</tr><tr>
-    <td><?=_("Name")?></td>
+</tr>
+<tr>
+    <td width="40%" style="text-align: right"><?=_("Name")?>&nbsp;&nbsp;</td>
     <td id="members_select" style="text-align: left"><?=_("Please select a type")?></td>
-</tr><tr>
+</tr>
+<tr>
     <td colspan="2">
     <input type="button" onClick="javascript: xajax_draw_members(xajax.getFormValues('bp_form', true, 'member_'))" value="Add">
     </td>
 </tr>
-</table>
 </div>
-</td><td>
+</table>
+<br/>
+<table width="100%" class="noborder">
+  <tr>
+    <td colspan="2" class="noborder">
 <input type="button" value="<?=_("Continue")?>-&gt;"
        onClick="javascript: xajax_edit_asset(xajax.getFormValues('bp_form'))">
-</tr></table>
+    </td>
+  </tr>
+</table>
 <? } ?>
 </form>
 </body>

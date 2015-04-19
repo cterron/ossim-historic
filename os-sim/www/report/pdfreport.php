@@ -271,6 +271,6 @@ if (POST('submit_security')) {
         $pdf->EventsByRisk($limit, "alarm");
     }
     
-    $pdf->Output("OSSIM-".$date_gen.".pdf");
+    $pdf->Output("OSSIM-".$date_gen.".pdf", "I");
 }
 ?>

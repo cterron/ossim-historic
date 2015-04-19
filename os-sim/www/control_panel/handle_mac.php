@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuControlPanel", "ControlPanelAnomalies");
+Session::logcheck("MenuEvents", "EventsAnomalies");
 ?>
 
 <html>

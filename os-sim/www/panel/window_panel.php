@@ -83,7 +83,11 @@ if (GET('interface') == 'ajax') {
         $opts['plugin_opts'][$key] = $value;
     }
     foreach ($_GET as $key => $value) {
-        $opts['plugin_opts'][$key] = strip($value);
+	// one: strip breaks the array variables...
+	if(is_string($value))
+        	$opts['plugin_opts'][$key] = strip($value);
+	else
+        	$opts['plugin_opts'][$key] = $value;
     }
     $method = GET('ajax_method');
 
@@ -130,7 +134,7 @@ if (GET('interface') == 'ajax') {
 
             $first_comp = $low_threshold - ($low_threshold / 4);
             $second_comp = $low_threshold + ($low_threshold / 4);
-            $third_comp = $high_threshold + ($high_threshold / 4);
+            $third_comp = $high_threshold - ($high_threshold / 4);
             $fourth_comp = $high_threshold + ($high_threshold / 4);
 
             if($metric_value <= $first_comp){
@@ -321,7 +325,7 @@ if (GET('interface') == 'ajax') {
 <br>
 <center>
     <input type="button" value="<?=_("Accept config")?>"
-           onClick="javascript: ajax_save('<?=$id?>'); document.location = 'panel.php';">
+           onClick="javascript: ajax_save('<?=$id?>'); document.location = 'panel.php?panel_id=<?=GET("panel_id")?>';">
     &nbsp;
     <input type="button" name="export" value="<?=_("Export Config")?> -&gt;"
            onClick="javascript: ajax_save('<?=$id?>'); ajax_show(false, 'export');">

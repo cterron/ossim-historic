@@ -50,6 +50,7 @@ class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
 
         if command == "nessus":
             result = re.findall("action=\"([a-z]+)\"", line)
+            action = ''
             if result != []:
                 action = result[0]
             

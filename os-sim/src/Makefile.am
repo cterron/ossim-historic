@@ -42,8 +42,8 @@ ossim_server_SOURCES = \
 		sim-packet.c \
 		main.c
 
-ossim_server_LDADD = $(DEPS_LIBS)
+ossim_server_LDADD = $(LIBGDA_LIBS) $(DEPS_LIBS)
 
-AM_CPPFLAGS = $(DEPS_CFLAGS)
+AM_CPPFLAGS = $(LIBGDA_CFLAGS) $(DEPS_CFLAGS)
 
 DISTCLEANFILES = Makefile.in

@@ -1,5 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
+require_once ('classes/CIDR.inc');
 Session::logcheck("MenuPolicy", "PolicyHosts");
 ?>
 
@@ -20,21 +21,41 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     require_once 'classes/Host_os.inc';
     require_once 'classes/Host_scan.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'classes/CIDR.inc';
     require_once 'classes/Security.inc';
     require_once 'classes/WebIndicator.inc';
 
 
     $order = GET('order');
-    $search = POST('search');
-    ossim_valid($order, OSS_NULLABLE, OSS_SPACE, OSS_PUNC, OSS_SCORE, OSS_ALPHA , 'illegal:'._("order"));
-    ossim_valid($search, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , OSS_PUNC, 'illegal:'._("search"));
+    $search = GET('search');
 
+    if(empty($search))
+        $search = POST('search');
+
+    $lsearch=$search;
+   
+    if(!empty($search))
+    // The CIDR validation is not working...
+    if(preg_match("/^\s*([0-9]{1,3}\.){3}[0-9]{1,3}\/(3[0-2]|[1-2][0-9]|[0-9])\s*$/",$search))
+    {
+        $ip_range=CIDR::expand_CIDR($search,"SHORT","IP");
+        ossim_valid($ip_range[0], OSS_IP_ADDR, 'illegal:'._("search cidr"));
+        ossim_valid($ip_range[1], OSS_IP_ADDR, 'illegal:'._("search cidr"));
+    }else 
+        if(preg_match("/^\s*([0-9]{1,3}\.){3}[0-9]{1,3}\s*$/",$search))
+            $by_ip=true;
+        else 
+            ossim_valid($search, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , OSS_DOT, OSS_DIGIT, 'illegal:'._("search"));
+
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA , OSS_DIGIT, 'illegal:'._("order"));
     if (ossim_error()) {
         die(ossim_error());
     }
-                        
     if (empty($order)) $order = "hostname"; 
-    if (!empty($search)) $search = "WHERE ip like '%$search%' OR hostname like '%$search%'";
+    if(!empty($ip_range)) $search = 'WHERE inet_aton(ip) >= inet_aton("'.$ip_range[0].'") and inet_aton(ip) <= inet_aton("'.$ip_range[1].'")';
+    else
+        if ($by_ip) $search = "WHERE ip like '%$search%'";
+	else if(!empty($search)) $search="WHERE ip like '%$search%' OR hostname like '%$search%'";
 ?>
 
   <table align="center">
@@ -129,7 +150,7 @@ echo gettext("None");
 
 ?>
     </td>
-      <td><?php echo $host->get_descr(); ?></td>
+      <td><?php echo $host->get_descr(); ?>&nbsp;</td>
       <td>
           <a href="modifyhostform.php?ip=<?php echo $ip ?>"> <?php echo gettext("Modify"); ?> </a>
           <a href="deletehost.php?ip=<?php echo $ip ?>"> <?php echo gettext("Delete"); ?> </a>
@@ -161,7 +182,7 @@ if (WebIndicator::is_on("Reload_hosts")) {
   <form action="<?php echo $_SERVER["PHP_SELF"]?>" method="post">
     <tr>
       <th> <?php echo gettext("Search"); ?> </th>
-      <td><input type="text" name="search"></td>
+      <td><input type="text" name="search" value="<?php echo $lsearch; ?>"></td>
     </tr>
     <tr><td colspan="2"><input type="submit" value="OK"></td></tr>
   </form>

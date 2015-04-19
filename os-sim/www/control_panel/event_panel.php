@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
+Session::logcheck("MenuEvents", "EventsRT");
 ?>
 <?php
 require_once 'classes/Xajax.inc';
@@ -106,7 +106,7 @@ function rotate()
 	    $dst_ip  == "0.0.0.0" ? $dst_ip = "N/A" : $dst_ip;
 
             $innerHTML .= "<span
-            class=\"col_plugin_name\">rownumber".$row_num." ale".$_SESSION[$plugin_id_name]."</span>
+            class=\"col_plugin_name\">".$_SESSION[$plugin_id_name]."</span>
                            <span class=\"col_date\">".$aux->fields["timestamp"]."</span>
                            <span class=\"col_sensor\">".$sensor.":".$aux->fields["interface"]."</span>
                            <span class=\"col_source_ip\">".$src_ip.":".$aux->fields["src_port"]."</span>

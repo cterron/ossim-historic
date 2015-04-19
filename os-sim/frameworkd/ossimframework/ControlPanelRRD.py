@@ -79,6 +79,11 @@ class ControlPanelRRD (threading.Thread) :
         query = "SELECT in_charge FROM incident_ticket GROUP BY in_charge;"
         return self.__conn.exec_query(query)
 
+    # get business processes members
+    def __get_bp_members(self):
+
+        query = "SELECT * FROM bp_member_status"
+        return self.__conn.exec_query(query)
 
     # get global c&a as sum of hosts c&a
     def get_global_qualification(self, allowed_nets):
@@ -134,19 +139,23 @@ class ControlPanelRRD (threading.Thread) :
             print __name__, ": Creating %s.." % (rrdfile)
 # This needs some checking, we don't need HWPREDICT here and I got some probs
 # on MacosX (def update_rrd_simple) so I removed aberrant behaviour detection.
-            rrdtool.create(rrdfile,
-                           '-b', str(timestamp-1), '-s300',
-                           'DS:ds0:GAUGE:600:0:1000000',
-                           'DS:ds1:GAUGE:600:0:1000000',
-                           'RRA:AVERAGE:0.5:1:800',
-                           'RRA:HWPREDICT:1440:0.1:0.0035:288',
-                           'RRA:AVERAGE:0.5:6:800',
-                           'RRA:AVERAGE:0.5:24:800',
-                           'RRA:AVERAGE:0.5:288:800',
-                           'RRA:MAX:0.5:1:800',
-                           'RRA:MAX:0.5:6:800',
-                           'RRA:MAX:0.5:24:800',
-                           'RRA:MAX:0.5:288:800')
+            try:
+                rrdtool.create(rrdfile,
+                               '-b', str(timestamp-1), '-s300',
+                               'DS:ds0:GAUGE:600:0:1000000',
+                               'DS:ds1:GAUGE:600:0:1000000',
+                               'RRA:AVERAGE:0.5:1:800',
+                               'RRA:HWPREDICT:1440:0.1:0.0035:288',
+                               'RRA:AVERAGE:0.5:6:800',
+                               'RRA:AVERAGE:0.5:24:800',
+                               'RRA:AVERAGE:0.5:288:800',
+                               'RRA:MAX:0.5:1:800',
+                               'RRA:MAX:0.5:6:800',
+                               'RRA:MAX:0.5:24:800',
+                               'RRA:MAX:0.5:288:800')
+            except Exception, e:
+                print __name__, ": Error creating %s.." % (rrdfile)
+                return
 
         print __name__, ": Updating %s with values (C=%s, A=%s).." \
                 % (rrdfile, compromise, attack)
@@ -451,9 +460,26 @@ class ControlPanelRRD (threading.Thread) :
 
                 #### RRDUpdate ####
 
+                ### business processes
+                try:
+                    rrdpath = self.__conf["rrdpath_bps"] or \
+                        '/var/lib/ossim/rrd/business_processes/'
+                    if not os.path.isdir(rrdpath):
+                        os.mkdir(rrdpath, 0755)
+                    for bp_member in self.__get_bp_members():
+                        filename = os.path.join(rrdpath,
+                                                bp_member['measure_type'] +\
+                                                '-' +\
+                                                bp_member['member'] +\
+                                                '.rrd')
+                        self.update_rrd_simple(filename, bp_member['severity'])
+                except OSError, e:
+                    print __name__, e
+
                 ### incidents
                 try:
-                    rrdpath = self.__conf["rrdpath_incidents"]
+                    rrdpath = self.__conf["rrdpath_incidents"] or \
+                        '/var/lib/ossim/rrd/incidents/'
                     if not os.path.isdir(rrdpath):
                         os.mkdir(rrdpath, 0755)
                     for user in self.__get_incident_users():
@@ -466,7 +492,8 @@ class ControlPanelRRD (threading.Thread) :
 
                 ### hosts
                 try:
-                    rrdpath = self.__conf["rrdpath_host"]
+                    rrdpath = self.__conf["rrdpath_host"] or \
+                        '/var/lib/ossim/rrd/host_qualification/'
                     if not os.path.isdir(rrdpath):
                         os.mkdir(rrdpath, 0755)
                     for host in self.__get_hosts():
@@ -478,7 +505,8 @@ class ControlPanelRRD (threading.Thread) :
 
                 ### nets
                 try:
-                    rrdpath = self.__conf["rrdpath_net"]
+                    rrdpath = self.__conf["rrdpath_net"] or \
+                        '/var/lib/ossim/rrd/net_qualification/'
                     if not os.path.isdir(rrdpath):
                         os.mkdir(rrdpath, 0755)
                     for net in self.__get_nets():
@@ -490,7 +518,8 @@ class ControlPanelRRD (threading.Thread) :
 
                 ### groups
                 try:
-                    rrdpath = self.__conf["rrdpath_net"]
+                    rrdpath = self.__conf["rrdpath_net"] or \
+                        '/var/lib/ossim/rrd/net_qualification/'
                     if not os.path.isdir(rrdpath):
                         os.mkdir(rrdpath, 0755)
                     for group in self.__get_groups():
@@ -502,10 +531,12 @@ class ControlPanelRRD (threading.Thread) :
 
                 ### global & level
                 try:
-                    rrdpath = self.__conf["rrdpath_global"]
+                    rrdpath = self.__conf["rrdpath_global"] or \
+                        '/var/lib/ossim/rrd/global_qualification/'
                     if not os.path.isdir(rrdpath):
                         os.mkdir(rrdpath, 0755)
-                    rrdpath_level = self.__conf["rrdpath_level"]
+                    rrdpath_level = self.__conf["rrdpath_level"] or \
+                        '/var/lib/ossim/rrd/level_qualification/'
                     if not os.path.isdir(rrdpath_level):
                         os.mkdir(rrdpath_level, 0755)
                     for user in self.__get_users():

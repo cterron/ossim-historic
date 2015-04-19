@@ -1035,6 +1035,7 @@ sim_event_sanitize (SimEvent *event)
 	
 	sim_string_substitute_char (event->data, ';', ','); 
 	sim_string_substitute_char (event->log, ';', ','); 
+	sim_string_substitute_char (event->userdata1, ';', ','); 
 		
 }
 

@@ -29,7 +29,7 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
     if ($inctype_list = Incident_type::get_list($conn, "")) {
 ?>
     <tr>
-        <th><?php echo gettext("Id"); ?></th>
+        <th><?php echo gettext("Incident type"); ?></th>
         <th><?php echo gettext("Description"); ?></th>
         <th><?php echo gettext("Actions"); ?></th>
     </tr>    

@@ -12,6 +12,7 @@ $CONFIG = array (
     (
         "title" => gettext("Language"),
         "desc"  => gettext("Configure Internationalization"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "language"          => array
@@ -34,6 +35,7 @@ $CONFIG = array (
     (
         "title" => gettext("Server"),
         "desc"  => gettext("Configure the server's listening address"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "server_address"    => "text",
@@ -45,6 +47,7 @@ $CONFIG = array (
     (
         "title" => gettext("FrameworkD"),
         "desc"  => gettext("Configure the frameworkd's listening address"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "frameworkd_address"        => "text",
@@ -57,6 +60,11 @@ $CONFIG = array (
                     "1" => gettext("Enabled")
                 ),
             "frameworkd_acidcache"          => array
+                (
+                    "0" => gettext("Disabled"),
+                    "1" => gettext("Enabled")
+                ),
+            "frameworkd_optimizedb"          => array
                 (
                     "0" => gettext("Disabled"),
                     "1" => gettext("Enabled")
@@ -95,6 +103,7 @@ $CONFIG = array (
     (
         "title" => gettext("Snort"),
         "desc"  => gettext("Snort database and path configuration") ,
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "snort_path"            => "text",
@@ -113,6 +122,7 @@ $CONFIG = array (
     (
         "title" => gettext("Osvdb"),
         "desc"  => gettext("Open source vulnerability database configuration") ,
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "osvdb_type"            => "text",
@@ -127,6 +137,7 @@ $CONFIG = array (
     (
         "title" => gettext("Metrics"),
         "desc"  => gettext("Configure metric settings"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "recovery"  => "text",
@@ -138,6 +149,7 @@ $CONFIG = array (
     (
         "title" => gettext("Executive Panel"),
         "desc"  => gettext("Configure panel settings"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "panel_plugins_dir"  => "text",
@@ -149,6 +161,7 @@ $CONFIG = array (
     (
         "title" => gettext("phpGACL"),
         "desc"  => gettext("Access control list database configuration") ,
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "phpgacl_path"  => "text",
@@ -164,6 +177,7 @@ $CONFIG = array (
     (
         "title" => gettext("PHP"),
         "desc"  => gettext("PHP Configuration (graphs, acls, database api)"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "adodb_path"        => "text",
@@ -193,6 +207,7 @@ $CONFIG = array (
     (
         "title" => gettext("RRD"),
         "desc"  => gettext("RRD Configuration (graphing)"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "graph_link"            => "text",
@@ -214,11 +229,24 @@ $CONFIG = array (
     (
         "title" => gettext("Links"),
         "desc"  => gettext("Links to other applications"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "ossim_link"    => "text",
             "ntop_link"     => "text",
-            "nagios_link"   => "text"
+            "nagios_link"   => "text",
+            "use_ntop_rewrite"   => array
+                 (
+                     "0" => gettext("No"),
+                     "1" => gettext("Yes")
+                 ),
+            "use_munin"   => array
+                 (
+                     "0" => gettext("No"),
+                     "1" => gettext("Yes")
+                 ),
+             "munin_link"   => "text"
+
         )
     ),
 
@@ -226,6 +254,7 @@ $CONFIG = array (
     (
         "title" => gettext("Backup"),
         "desc"  => gettext("Backup configuration: backup database, directory, interval"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "backup_type"   => "text",
@@ -243,6 +272,7 @@ $CONFIG = array (
     (
         "title" => gettext("Nessus"),
         "desc"  => gettext("Nessus client configuration"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "nessus_user"           => "text", 
@@ -277,6 +307,7 @@ $CONFIG = array (
     (
         "title" => gettext("ACID"),
         "desc"  => gettext("Acid configuration"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "event_viewer" => array
@@ -297,6 +328,7 @@ $CONFIG = array (
     (
         "title" => gettext("External applications"),
         "desc"  => gettext("Path to other applications"),
+        "help"  => gettext(""),
         "conf"  => array 
         (
             "nmap_path"         => "text",
@@ -317,6 +349,7 @@ $CONFIG = array (
    (
        "title" => gettext("User action logging"),
        "desc"  => gettext("User action logging"),
+       "help"  => gettext(""),
        "conf"  => array
        (
         "user_action_log"       => array
@@ -331,6 +364,7 @@ $CONFIG = array (
    (
         "title" => gettext("Real time event viewer"),
         "desc" => gettext("Real time event viewer"),
+        "help"  => gettext(""),
         "conf" => array
         (
          "max_event_tmp" => "text"
@@ -341,6 +375,7 @@ $CONFIG = array (
    (
         "title" => gettext("OSSIM login methods"),
         "desc" => gettext("Setup main login methods"),
+        "help"  => gettext(""),
         "conf" => array
         (
          "login_enforce_existing_user" => array
@@ -360,6 +395,7 @@ $CONFIG = array (
    (
         "title" => gettext("OSSIM login options"),
         "desc" => gettext("Configure various login options"),
+        "help"  => gettext(""),
         "conf" => array
         (
          "login_ldap_server" => "text",

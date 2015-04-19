@@ -9,6 +9,15 @@ Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
   <meta http-equiv="refresh" content="150">
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/style.css"/>
+
+  <script language="javascript">
+    function confirm_delete(url) {
+        if (confirm('<?=_("Are you sure you want to delete this Alarm and all its events?")?>')) {
+            window.location=url;
+        }
+    }
+  </script>
+
 </head>
 
 <body>
@@ -483,20 +492,20 @@ echo " <font color=\"#AAAAAA\" style=\"font-size: 8px;\">(" . $event_count_label
 <?php
         if ($backlog_id == 0) {
 ?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"] . 
+        [<a href="javascript:confirm_delete('<?php echo $_SERVER["PHP_SELF"] .
             "?delete=$event_id" .
             "&sup=" . "$sup" .
             "&inf=" . ($sup-$ROWS) .
-            "&hide_closed=$hide_closed"; ?>">
+            "&hide_closed=$hide_closed"; ?>')">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
         } else {
 ?>
-        [<a href="<?php echo $_SERVER["PHP_SELF"] . 
+        [<a href="javascript:confirm_delete('<?php echo $_SERVER["PHP_SELF"] . 
             "?delete_backlog=" . "$backlog_id-$event_id" . 
             "&sup=" . "$sup" .
             "&inf=" . ($sup-$ROWS) .
-            "&hide_closed=$hide_closed"; ?>">
+            "&hide_closed=$hide_closed"; ?>')">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
         }
@@ -506,6 +515,8 @@ echo " <font color=\"#AAAAAA\" style=\"font-size: 8px;\">(" . $event_count_label
             "title=".urlencode($alarm_name_orig)."&" .
             "priority=$risk&" .
             "src_ips=$src_ip&" .
+            "event_start=$since&" .
+            "event_end=$date&" .
             "src_ports=$src_port&" .
             "dst_ips=$dst_ip&" .
             "dst_ports=$dst_port"  ?>">

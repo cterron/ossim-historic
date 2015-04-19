@@ -23,8 +23,9 @@ require_once ('ossim_acl.inc');
     $networks = GET('networks'); 
     $sensors = GET('sensors');
     $perms = GET('perms');
+    $copy_panels = GET('copy_panels');
 
-
+    ossim_valid($user, OSS_USER, OSS_NULLABLE, 'illegal:'._("User name"));
     ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
     ossim_valid($networks, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("networks"));
     ossim_valid($sensors, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("sensors"));
@@ -67,36 +68,42 @@ require_once ('ossim_acl.inc');
   <input type="hidden" name="user" value="<?php echo $user->get_login() ?>" />
   <tr>
     <th> <?php echo gettext("User login"); ?> </th>
-    <th class="left"><?php echo $user->get_login(); ?></th>
-    <th>&nbsp;</th>
+    <td class="left"><b><?php echo $user->get_login(); ?></b></td>
   </tr>
   <tr>
     <th> <?php echo gettext("User name"); ?> </th>
     <td class="left"><input type="text" name="name"
         value="<?php echo $user->get_name(); ?>" /></td>
-    <td colspan="2" align="center">
-      <input type="submit" value="OK">
-      <input type="reset" value="<?php echo gettext("reset"); ?>">
-    </td>
   </tr>
   <tr>
-    <th> <?php echo gettext("User email"); ?> </th>
+    <th> <?php echo gettext("User email"); ?> <img src="../pixmaps/email_icon.gif"></th>
     <td class="left"><input type="text" name="email"
         value="<?php echo $user->get_email(); ?>" /></td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?php echo gettext("Company"); ?> </th>
     <td class="left"><input type="text" name="company"
         value="<?php echo $user->get_company(); ?>" /></td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?php echo gettext("Department"); ?> </th>
     <td class="left"><input type="text" name="department"
         value="<?php echo $user->get_department(); ?>" /></td>
-    <th>&nbsp;</th>
   </tr>
+<tr>
+<th><?= _("Pre-set executive panels to admin panels") ?></th>
+    <td align="center">
+   <input type="radio" name="copy_panels" value="1" checked> <?= _("Yes"); ?>
+   <input type="radio" name="copy_panels" value="0" > <?= _("No"); ?>
+    </td>
+</tr>
+<tr>
+    <td>&nbsp;</td>
+    <td align="center">
+      <input type="submit" value="OK">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
+    </td>
+</tr>
 </table>
   <br/>
   <table align="center">

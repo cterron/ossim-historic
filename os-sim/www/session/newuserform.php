@@ -41,8 +41,10 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     $networks   = GET('networks');
     $sensors = GET('sensors');
     $perms = GET('perms');
+    $copy_panels = GET('copy_panels');
     
     ossim_valid($user, OSS_USER, OSS_NULLABLE, 'illegal:'._("User name"));
+    ossim_valid($copy_panels, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Copy panels"));
     ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Name"));
     ossim_valid($email, OSS_MAIL_ADDR, OSS_NULLABLE, 'illegal:'._("e-mail"));
     ossim_valid($company, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE, 'illegal:'._("Company"));
@@ -63,23 +65,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     <td class="left">
         <input type="text" id="1" name="user" value="<?=$user?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?= _("User full name").required() ?> </th>
     <td class="left">
         <input type="text" id="2" name="name" value="<?=$name?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
-    <th> <?= _("Email").required() ?> </th>
+    <th> <?= _("Email").required() ?> <img src="../pixmaps/email_icon.gif"></th>
     <td class="left">
         <input type="text" id="3" name="email" value="<?=$email?>" size="30" />
-    </td>
-    <td colspan="2" align="center">
-      <input type="submit" value="OK">
-      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
   <tr>
@@ -87,29 +83,39 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     <td class="left">
         <input type="password" id="4" name="pass1" value="<?=$pass1?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?= _("Re-enter password").required() ?> </th>
     <td class="left">
         <input type="password" id="5" name="pass2" value="<?=$pass2?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?= _("Company") ?> </th>
     <td class="left">
         <input type="text" id="6" name="company" value="<?=$company?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
   <tr>
     <th> <?= _("Department") ?> </th>
     <td class="left">
         <input type="text" id="7" name="department" value="<?=$department?>" size="30" />
     </td>
-    <th>&nbsp;</th>
   </tr>
+<tr>
+<th><?= _("Pre-set executive panels to admin panels") ?></th>
+    <td align="center">
+   <input type="radio" name="copy_panels" value="1" checked> <?= _("Yes"); ?>
+   <input type="radio" name="copy_panels" value="0" > <?= _("No"); ?> 
+    </td>
+</tr>
+<tr>
+  <td>&nbsp;</td>
+  <td align="center">
+    <input type="submit" value="OK">
+    <input type="reset" value="<?php echo gettext("reset"); ?>">
+  </td>
+</tr>
  </table>
   <br/>
   <table align="center">

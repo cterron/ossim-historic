@@ -6,6 +6,7 @@ from Watchdog import Watchdog
 from Logger import Logger
 logger = Logger.logger
 from Output import Output
+from Stats import Stats
 from Conn import ServerConn
 from Exceptions import AgentCritical
 from ParserUnifiedSnort import ParserUnifiedSnort
@@ -48,11 +49,19 @@ class Agent:
         # server connection (only available if output-server is enabled)
         self.conn = None
 
+        self.detector_objs = []
         self.watchdog = None
 
 
     def init_logger(self):
-        Logger.add_file_handler(self.conf.get("log", "file"))
+
+        # open file handlers (main and error logs)
+        if self.conf.has_option("log", "file"):
+            Logger.add_file_handler(self.conf.get("log", "file"))
+        if self.conf.has_option("log", "error"):
+            Logger.add_error_file_handler(self.conf.get("log", "error"))
+
+        # adjust verbose level
         verbose = self.conf.get("log", "verbose")
         if self.options.verbose is not None:
             # -v or -vv command line argument
@@ -61,6 +70,12 @@ class Agent:
             for i in range(self.options.verbose):
                 verbose = Logger.next_verbose_level(verbose)
         Logger.set_verbose(verbose)
+            
+    def init_stats(self):
+        Stats.startup()
+        if self.conf.has_section("log"):
+            if self.conf.has_option("log", "stats"):
+                Stats.set_file(self.conf.get("log", "stats"))
 
     def init_output(self):
 
@@ -99,9 +114,18 @@ class Agent:
 
     # check if there is already a running instance
     def check_pid(self):
-        if self.options.force is None:
-            if os.path.isfile(self.conf.get("daemon", "pid")):
-                raise AgentCritical("There is already a running instance")
+        pidfile = self.conf.get("daemon", "pid")
+
+        # check for other ossim-agent instances when not using --force argument
+        if self.options.force is None and os.path.isfile(pidfile):
+            raise AgentCritical("There is already a running instance")
+
+        # remove ossim-agent.pid file when using --force argument
+        elif os.path.isfile(pidfile):
+            try:
+                os.remove(pidfile)
+            except OSError, e:
+                logger.warning(e)
 
 
     def createDaemon(self):
@@ -186,8 +210,9 @@ class Agent:
 
         if self.conf.getboolean("daemon", "daemon") and \
            self.options.verbose is None:
-            Logger.remove_console_output()
+            Logger.remove_console_handler()
             logger.info("Forking into background..")
+
             try:
                 pid = os.fork()
                 if pid > 0:
@@ -205,9 +230,11 @@ class Agent:
                 if plugin.get("config", "source") == "log":
                     parser = ParserLog(self.conf, plugin)
                     parser.start()
+                    self.detector_objs.append(parser)
                 elif plugin.get("config","source") == "snortlog":
                     parser = ParserUnifiedSnort(self.conf,plugin)
                     parser.start()
+                    self.detector_objs.append(parser)
 
 
     def init_watchdog(self):
@@ -227,15 +254,33 @@ class Agent:
         # Remove the pid file
         pidfile = self.conf.get("daemon", "pid")
         if os.path.exists(pidfile):
+            f = open(pidfile)
+            pid_from_file = f.readline()
+            f.close()
             try:
-                os.remove(pidfile)
+                # don't remove the ossim-agent.pid file if it 
+                # belongs to other ossim-agent process
+                if pid_from_file == str(os.getpid()):
+                    os.remove(pidfile)
             except OSError, e:
                 logger.warning(e)
 
-        # shutdown output plugins
+        # parsers
+        for parser in self.detector_objs:
+            if hasattr(parser, 'stop'):
+                parser.stop()
+
+        # Watchdog
         if self.watchdog:
             self.watchdog.shutdown()
+
+        # output plugins
         Output.shutdown()
+
+        # execution statistics
+        Stats.shutdown()
+        if Stats.dates['startup']:
+            Stats.stats()
 
         # kill program
         pid = os.getpid()
@@ -245,8 +290,13 @@ class Agent:
 
     # Wait for a Control-C and kill all threads
     def waitforever(self):
+        timer = 0
         while 1:
             time.sleep(1)
+            timer += 1
+            if timer > 30:
+                Stats.log_stats()
+                timer = 0
 
 
     def main(self):
@@ -254,6 +304,7 @@ class Agent:
         try:
             self.check_pid()
             self.createDaemon()
+            self.init_stats()
             self.init_logger()
             #self.daemonize()
             thread.start_new_thread(self.connect_server, ())
@@ -263,11 +314,21 @@ class Agent:
             self.waitforever()
         except KeyboardInterrupt:
             self.shutdown()
-#        except OSError, e:
-#            logger.error(e)
         except AgentCritical, e:
             logger.critical(e)
             self.shutdown()
+        except Exception, e:
+            logger.error("Unexpected exception: " + str(e))
+
+            # print trace exception
+            import traceback
+            traceback.print_exc()
+
+            # print to error.log too
+            if self.conf.has_option("log", "error"):
+                fd = open(self.conf.get("log", "error"), 'a+')
+                traceback.print_exc(file = fd)
+                fd.close()
 
 if __name__ == "__main__":
     a = Agent()

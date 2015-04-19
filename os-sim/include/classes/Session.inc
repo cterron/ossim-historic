@@ -232,9 +232,8 @@ class Session {
             $login_location = $ossim_link . '/session/login.php';
         }
 
-        $dest = urlencode($_SERVER["REQUEST_URI"]);
         if ( ! isset($_SESSION["_user"]) ) {
-            header("Location: $login_location?dest=$dest");
+            header("Location: $login_location");
             exit;
         }
 
@@ -270,9 +269,8 @@ class Session {
         	$sess->login();
         }
 
-        $dest = $_SERVER["PHP_SELF"];
         if ( ! isset($_SESSION["_user"]) ) {
-            header("Location: $login_location?dest=$dest");
+            header("Location: $login_location");
             exit;
         }
 

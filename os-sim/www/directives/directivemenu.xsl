@@ -63,7 +63,8 @@
 		</table>
 	</div>
 	<br />
-	<xsl:if test="directive[@id=3000]">
+
+	<xsl:if test="directive[@id >= 3000 and @id &lt; 6000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('attackcor')">
 			<font style="font-size: 10pt;">Attack correlation</font>
@@ -90,7 +91,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=6000]">
+
+	<xsl:if test="directive[@id >= 6000 and @id &lt; 9000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('virus')">
 			<font style="font-size: 10pt;">Virus</font>
@@ -117,7 +119,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=9000]">
+
+	<xsl:if test="directive[@id >= 9000 and @id &lt; 12000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('wattackcor')">
 			<font style="font-size: 10pt;">Web attack correlation</font>
@@ -144,7 +147,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=12000]">
+
+	<xsl:if test="directive[@id >= 12000 and @id &lt; 15000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('dos')">
 			<font style="font-size: 10pt;">Denial of service</font>
@@ -171,7 +175,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=15000]">
+
+	<xsl:if test="directive[@id >= 15000 and @id &lt; 18000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('portscan')">
 			<font style="font-size: 10pt;">Portscan</font>
@@ -198,7 +203,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=18000]">
+
+	<xsl:if test="directive[@id >= 18000 and @id &lt; 21000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('anomalies')">
 			<font style="font-size: 10pt;">Behaviour anomalies</font>
@@ -225,7 +231,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=21000]">
+
+	<xsl:if test="directive[@id >= 21000 and @id &lt; 24000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('abuse')">
 			<font style="font-size: 10pt;">Network abuse and error</font>
@@ -252,7 +259,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=24000]">
+
+	<xsl:if test="directive[@id >= 24000 and @id &lt; 27000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('trojans')">
 			<font style="font-size: 10pt;">Trojans</font>
@@ -279,7 +287,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=27000]">
+
+	<xsl:if test="directive[@id >= 27000 and @id &lt; 35000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('misc')">
 			<font style="font-size: 10pt;">Miscellaneous</font>
@@ -306,7 +315,8 @@
 		</div>
 		<br />
 	</xsl:if>
-	<xsl:if test="directive[@id=500000]">
+
+	<xsl:if test="directive[@id>=500000]">
 		<a style="cursor:hand;" TITLE="To view or hide this type of directives click here." 
 			onclick="Menus('user')">
 			<font style="font-size: 10pt;">User contributed</font>
@@ -323,7 +333,7 @@
 								<xsl:element name="a">
 									<xsl:attribute name="href">directive.php?level=1&amp;directive=<xsl:value-of select="@id" /></xsl:attribute>
 									<xsl:attribute name="target">directives</xsl:attribute>
-									<xsl:value-of select="@name"/>
+								<xsl:value-of select="@name"/>
 								</xsl:element>
 							</td>
 						</tr>
@@ -333,6 +343,9 @@
 		</div>
 		<br />
 	</xsl:if>
+
+
+
 </xsl:template>
 
 </xsl:stylesheet>

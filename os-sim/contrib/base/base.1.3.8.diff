@@ -37,8 +37,8 @@ diff -aurN acidbase-1.3.8.orig/base_conf.php.dist acidbase-1.3.8/base_conf.php.d
 + */
 +$use_ossim_session = 0;
 +$ossim_login_path = "/ossim/session/login.php";
-+$ossim_acid_aco_section = "MenuControlPanel";
-+$ossim_acid_aco = "ControlPanelAlerts";
++$ossim_acid_aco_section = "MenuEvents";
++$ossim_acid_aco = "EventsForensics";
 +$ossim_domain_aco_section = "DomainAccess";
 +$ossim_domain_aco = "Nets";
 +

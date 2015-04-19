@@ -17,6 +17,8 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 <?php
 
     require_once ("classes/Security.inc");
+    require_once ('classes/User_config.inc');
+
 
     $user  = POST('user');
     $pass1 = POST('pass1');
@@ -27,7 +29,10 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     $nsensors = POST('nsensors');
     $company = POST('company');
     $department = POST('department');
+    $copy_panels = POST('copy_panels');
 
+
+    ossim_valid($copy_panels, OSS_DIGIT, 'illegal:'._("Copy Panels"));
     ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
     ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_SPACE, 'illegal:'._("Name"));
     ossim_valid($email, OSS_NULLABLE, OSS_MAIL_ADDR, 'illegal:'._("e-mail"));
@@ -67,6 +72,11 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
         }
         $db = new ossim_db();
         $conn = $db->connect();
+
+        if($copy_panels == 1){
+        User_config::copy_panel($conn,"admin",$user);
+        }
+
 
         $nets = "";
         for ($i = 0; $i < $nnets; $i++)

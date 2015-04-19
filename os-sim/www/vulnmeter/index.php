@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
+Session::logcheck("MenuEvents", "EventsVulnerabilities");
 ?>
 
 
@@ -42,8 +42,8 @@ require_once ('classes/Security.inc');
         $num = 10;
     }
 
-    if(file_exists("last")){
-    $last = basename(readlink("last"));
+    if (file_exists("last") && file_exists("last/index.html")){
+        $last = basename(readlink("last"));
     } else {
     ?>
     <center>

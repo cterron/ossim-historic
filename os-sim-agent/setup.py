@@ -22,7 +22,7 @@ data = etc + doc + man + lib
 
 setup (
     name            = "ossim-agent",
-    version         = "0.9.9rc4",
+    version         = "0.9.9",
     description     = "Open Source Security Information Management (Agent)",
     author          = "Ossim Development Team",
     author_email    = "devel@ossim.net",

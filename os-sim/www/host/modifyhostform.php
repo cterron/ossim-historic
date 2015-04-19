@@ -249,6 +249,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         <option value="BSD/OS" <? match_os("BSD\/OS", $host->get_os($conn)) ?>><?=_("BSD/OS"); ?> </option>
         <option value="SunOS" <? match_os("SunOS", $host->get_os($conn)) ?>><?=_("SunOS"); ?> </option>
         <option value="Plan9" <? match_os("Plan9", $host->get_os($conn)) ?>><?=_("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
+        <option value="IPhone" <? match_os("IPhone", $host->get_os($conn)) ?>><?=_("IPhone"); ?> </option> 
       </select>
     </td>
   </tr>

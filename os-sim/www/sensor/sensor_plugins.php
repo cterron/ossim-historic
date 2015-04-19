@@ -15,6 +15,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
   <h1> <?php echo gettext("Sensors"); ?> </h1>
 
 <?php
+    require_once 'ossim_conf.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Plugin.inc';
@@ -51,6 +52,16 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
 
     if (!$sensor_list && empty($ip_get))
         echo "<p> " . gettext("There aren't any sensors connected to OSSIM server") . " </p>";
+
+$ossim_conf = $GLOBALS["CONF"];
+$use_munin = $ossim_conf->get_conf("use_munin");
+if($use_munin == 1){
+$munin_link = $ossim_conf->get_conf("munin_link");
+?><center><a href="<?= $munin_link; ?>"><img src="../pixmaps/stats.gif" border="0"></a></center>
+<br/>
+<?php
+}
+
 
     foreach ($sensor_list as $sensor)
     {

@@ -487,6 +487,7 @@ CREATE TABLE control_panel (
     a_sec_level     float,
     PRIMARY KEY     (id, rrd_type, time_range)
 );
+CREATE INDEX type_time ON control_panel(rrd_type,time_range);
 
 --
 -- Table: Host Mac.
@@ -716,6 +717,9 @@ CREATE TABLE backlog_event (
 	PRIMARY KEY (backlog_id, event_id)
 );
 
+CREATE INDEX event_idx ON backlog_event(event_id);
+
+
 --
 -- Table: Temporary Event Tables
 --
@@ -928,6 +932,7 @@ CREATE TABLE incident (
     status      ENUM ('Open', 'Closed') NOT NULL DEFAULT 'Open',
     last_update DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
     in_charge 	VARCHAR(64) NOT NULL,
+    submitter   VARCHAR(64) NOT NULL,
     event_start DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
     event_end   DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
     PRIMARY KEY (id)

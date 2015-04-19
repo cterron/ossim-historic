@@ -1,7 +1,7 @@
 -- juniper/netscreen-firewall
 -- plugin_id: 1522
 --
--- $Id: netscreen-firewall.sql,v 1.4 2007/03/30 22:37:21 dmitribel Exp $
+-- $Id: netscreen-firewall.sql,v 1.5 2007/12/20 10:26:13 dvgil Exp $
 --
 DELETE FROM plugin WHERE id = "1522";
 DELETE FROM plugin_sid where plugin_id = "1522";
@@ -10,7 +10,7 @@ DELETE FROM plugin_sid where plugin_id = "1522";
 INSERT INTO plugin (id, type, name, description) VALUES (1522, 1, 'juniper/netscreen-firewall', 'Juniper-Netscreen FW');
 
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 1, 205, NULL, 'juniper/netscreen-fw: Permit');
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 2, 206, NULL, 'juniper/netscreen-fw: Deny');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 2, 206, NULL, 'juniper/netscreen-fw: Deny or Reject');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 3, 108, NULL, 'juniper/netscreen-fw: SYN flood');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 4, 103, NULL, 'juniper/netscreen-fw: Teardrop attack');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1522, 5, 113, NULL, 'juniper/netscreen-fw: Ping of Death');

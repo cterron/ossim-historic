@@ -3,6 +3,7 @@ require_once 'classes/Session.inc';
 require_once 'classes/Security.inc';
 require_once 'classes/Xajax.inc';
 require_once 'classes/Util.inc';
+require_once 'classes/Business_Process.inc';
 Session::logcheck("MenuControlPanel", "BusinessProcesses");
 
 if (Session::menu_perms("MenuControlPanel", "BusinessProcessesEdit")) {
@@ -13,9 +14,20 @@ if (Session::menu_perms("MenuControlPanel", "BusinessProcessesEdit")) {
 
 $xajax = new xajax();
 $xajax->registerFunction("search_assets");
+$xajax->registerFunction("delete_asset");
 
 $db = new ossim_db();
 $conn = $db->connect();
+
+function delete_asset($asset_id, $form_data)
+{
+    global $conn, $can_edit;
+    if (!$can_edit) {
+        return search_assets($form_data);
+    }
+    BP_Asset::delete($conn, $asset_id);
+    return search_assets($form_data);
+}
 
 function search_assets($form_data)
 {
@@ -106,7 +118,8 @@ function search_assets($form_data)
         }
         $html .= '</td>';
         if ($can_edit) {
-            $html .= '<td><a href="./asset_edit.php?id='.$a['asset_id'].'">('._("edit").')</a>';
+            $html .= '<td><a href="./asset_edit.php?id='.$a['asset_id'].'">('._("edit").')</a>&nbsp;';
+            $html .= '<a href="#" onClick="javascript: xajax_delete_asset('.$a['asset_id'].', xajax.getFormValues(\'search\')); return false;">('._("delete").')</a></td>';
         }
         $html .= '</tr>';
     }

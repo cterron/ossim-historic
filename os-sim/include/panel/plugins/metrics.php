@@ -99,6 +99,10 @@ class Plugin_Metrics extends Panel
             $html .= "<br/>" . $tabs[$tab_id]["tab_name"] . $image_string .  "<br/><hr noshade>\n";
             }
             $options = $ajax->loadConfig(null, $configs_dir . "/" . $user . "_" . $tab_id);
+            // TODO: Check out why some config files get written with "_1" behind them
+            if(empty($options)){
+              $options = $ajax->loadConfig(null, $configs_dir . "/" . $user . "_" . $tab_id . "_1");
+            }
             $panel_num = 0;
             if(!empty($options)){
             foreach($options as $panel){

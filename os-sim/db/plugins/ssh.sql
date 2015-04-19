@@ -16,4 +16,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, r
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4003, 7, NULL, NULL, 'SSHd: Login sucessful, Accepted password', 1, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4003, 8, NULL, NULL, 'SSHd: Login sucessful, Accepted publickey', 1, 2);
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4003, 9, NULL, NULL, 'SSHd: Bad protocol version identification', 3, 2);
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (4003, 10, NULL, NULL, 'SSHd: Did not receive identification string');
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4003, 10, NULL, NULL, 'SSHd: Did not receive identification string', 1, 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority, reliability) VALUES (4003, 11, NULL, NULL, 'SSHd: Received disconnect', 1, 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority,reliability) VALUES (4003, 12, NULL, NULL, 'SSHd: Authentication refused: bad ownership or modes', 1, 2);
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority,reliability) VALUES (4003, 13, NULL, NULL, 'SSHd: User not allowed becase account is locked', 1, 2);

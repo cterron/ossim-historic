@@ -1,8 +1,8 @@
-import Const, re, datetime
+import Const, re, datetime, Util
 from OssimDB import OssimDB
 from OssimConf import OssimConf
 from time import strftime
- 
+
 class Vulnerabilities :
 
     def __init__ (self) :
@@ -22,7 +22,7 @@ class Vulnerabilities :
         self.__ticket_default_closed_description = "Automatic closed of the incident"
         self.__ticket_default_open_description = "Automatic open of the incident"
 
-    def process(self, nsr_file, scan_date) :
+    def process(self, nsr_file, scan_date, scan_networks, scan_hosts) :
         self.__debug("Generating Incidents for found vulnerabilities")
         self.__scan_time = strftime('%Y-%m-%d %H:%M:%S')
         try:
@@ -31,7 +31,8 @@ class Vulnerabilities :
             self.__debug("Unable to open file %s: %s" % (nsr_file,e))
             return
         self.__parse_vulns_file()
-        self.__traverse_vulns_incidents(scan_date)
+        self.__debug("Automatic close of vulnerabilities")
+        self.__traverse_vulns_incidents(scan_date, scan_networks, scan_hosts)
         self.__debug("Generating Incidents finished ok")
 
     def __parse_vulns_file(self):
@@ -109,21 +110,21 @@ class Vulnerabilities :
                    self.__conn.exec_query(query)
 
 
-    def __traverse_vulns_incidents(self, scan_date):
-        #This check only the incidents of class Vulnerability that are 'Open' and are mark to be scan by nessus in the definition of the host
-        # DK: Only do this on hosts that have been scanned during the last scan.
-        # FIXME: This ain't perfect, if a host has been removed from the network it's incidents won't be closed.
-        query = "SELECT i.id, i.last_update, i.priority, v.ip, v.nessus_id, v.risk FROM incident i, incident_vulns v, host_scan h, host_vulnerability hv WHERE i.id=v.incident_id and i.ref='Vulnerability' and i.status = 'Open' and inet_aton(v.ip)=h.host_ip and h.plugin_id=3001 and h.host_ip = inet_aton(hv.ip) and hv.scan_date = '%s'" % scan_date
+    def __traverse_vulns_incidents(self, scan_date, scan_networks, scan_hosts):
+        #returns the incidents of class Vulnerability that are 'Open'
+        query = "SELECT i.id, i.last_update, i.priority, v.ip, v.nessus_id, v.risk FROM incident i, incident_vulns v WHERE i.id=v.incident_id and i.ref='Vulnerability' and i.status = 'Open'"
         hash = self.__conn.exec_query(query)
         for row in hash:
-            last_update = str(row["last_update"])
-            if last_update != self.__scan_time:
-                #the vulnerability doesn't appear in the last scan, we close the incident
-                query = "UPDATE incident SET status = 'Closed' WHERE id = '%s'" % row["id"]
-                self.__conn.exec_query(query)
-                ticket_id = self.__genID("incident_ticket_seq")
-                ticket_query = "INSERT INTO incident_ticket (id,incident_id, date, status, priority, users, description) values ('%s','%s','%s','%s','%s','%s','%s')" % (ticket_id, row["id"], self.__scan_time, 'Closed', row["priority"], self.__ticket_default_user, self.__ticket_default_closed_description)
-                self.__conn.exec_query(ticket_query)
+            if ( self.isIpInIpList(row["ip"],scan_hosts) or Util.isIpInNet(row["ip"],scan_networks) ):
+                last_update = str(row["last_update"])
+                if last_update != self.__scan_time:
+                    #the vulnerability doesn't appear in the last scan
+                    self.__debug("Vulnerability closed. Incident Id: %s  IP: %s" % (row["id"],row["ip"]) )
+                    query = "UPDATE incident SET status = 'Closed' WHERE id = '%s'" % row["id"]
+                    self.__conn.exec_query(query)
+                    ticket_id = self.__genID("incident_ticket_seq")
+                    ticket_query = "INSERT INTO incident_ticket (id,incident_id, date, status, priority, users, description) values ('%s','%s','%s','%s','%s','%s','%s')" % (ticket_id, row["id"], self.__scan_time, 'Closed', row["priority"], self.__ticket_default_user, self.__ticket_default_closed_description)
+                    self.__conn.exec_query(ticket_query)
             else:
                 #calc the priority
                 priority = self.__calc_priority(row["risk"], row["ip"], row["nessus_id"])
@@ -131,6 +132,13 @@ class Vulnerabilities :
                     continue
                 query = "UPDATE incident SET priority = '%s' WHERE id = '%s'" % (priority, row["id"])
                 self.__conn.exec_query(query)
+
+
+    def isIpInIpList(self, host, host_list):
+        for h in host_list:
+            if (h == host):
+                return True
+        return False
 
 
     def __calc_risk(self, text, type):
@@ -217,12 +225,7 @@ class Vulnerabilities :
         return hash_last_id[0]["id"]
 
 
-    def test (self):
-        print int(19//1.9)
-
-
 if __name__ == "__main__":
     vulnerabilities = Vulnerabilities()
     # This won't close non-present vulnerabilities, limited testing functionality.
     vulnerabilities.process("../result.nsr", "0000-00-00 00:00:00")
-    #vulnerabilities.test()

@@ -1,35 +1,7 @@
-diff -Naur snort-2.3.3.orig/debian/rules snort-2.3.3/debian/rules
---- snort-2.3.3.orig/debian/rules	2006-03-07 11:14:09.000000000 +0000
-+++ snort-2.3.3/debian/rules	2006-03-07 11:15:43.000000000 +0000
-@@ -32,12 +32,17 @@
- build-indep: build-indep-stamp
- build-indep-stamp:
- 	dh_testdir
--	cd doc && make snort_manual.pdf
-+#	cd doc && make snort_manual.pdf
- 
- build: build-stamp
- build-stamp:
- 	dh_testdir
- 
-+	aclocal
-+	autoheader
-+	autoconf
-+	-automake
-+
- 	./configure $(CONFFLAGS) \
- 		--with-mysql \
- 		--without-postgresql
-@@ -63,7 +68,7 @@
- 
- 	# Add here commands to compile the package.
- 	$(MAKE) 
--	cd doc && $(MAKE) faq.pdf
-+#	cd doc && $(MAKE) faq.pdf
- 	$(MAKE) clean
- 
- 	touch build-stamp
-@@ -116,6 +121,7 @@
+diff -aur snort-2.7.0.orig/debian/rules snort-2.7.0/debian/rules
+--- snort-2.7.0.orig/debian/rules	2007-11-05 11:57:42.000000000 +0100
++++ snort-2.7.0/debian/rules	2007-11-05 11:59:11.000000000 +0100
+@@ -146,6 +146,7 @@
  	install -m 755 -o root -g root `pwd`/debian/snort.cron.daily $(TMP)/snort-common/etc/cron.daily/5snort
  	install -m 755 -o root -g root `pwd`/debian/my/snort-stat $(TMP)/snort-common/usr/sbin/
  	install -m 644 -o root -g root `pwd`/etc/snort.conf $(TMP)/snort-common/etc/snort/
@@ -37,73 +9,24 @@ diff -Naur snort-2.3.3.orig/debian/rules snort-2.3.3/debian/rules
  	install -m 644 -o root -g root `pwd`/etc/unicode.map $(TMP)/snort-common/etc/snort/
  	install -m 644 -o root -g root `pwd`/etc/threshold.conf $(TMP)/snort-common/etc/snort/
  
-diff -Naur snort-2.3.3.orig/debian/snort-doc.docs snort-2.3.3/debian/snort-doc.docs
---- snort-2.3.3.orig/debian/snort-doc.docs	2006-03-07 11:14:09.000000000 +0000
-+++ snort-2.3.3/debian/snort-doc.docs	2006-03-07 11:15:10.000000000 +0000
-@@ -18,8 +18,6 @@
- doc/README.wireless
- doc/RULES.todo
- doc/snort_schema_v106.pdf
--doc/snort_manual.pdf
--doc/faq.pdf
- doc/TODO
- doc/USAGE
- doc/WISHLIST
-diff -Naur snort-2.3.3.orig/etc/snort.conf snort-2.3.3/etc/snort.conf
---- snort-2.3.3.orig/etc/snort.conf	2006-03-07 11:14:08.000000000 +0000
-+++ snort-2.3.3/etc/snort.conf	2006-03-07 11:14:21.000000000 +0000
-@@ -97,6 +97,9 @@
- # Ports you do oracle attacks on
- var ORACLE_PORTS 1521
+diff -aur snort-2.7.0.orig/etc/snort.conf snort-2.7.0/etc/snort.conf
+--- snort-2.7.0.orig/etc/snort.conf	2007-11-05 11:57:42.000000000 +0100
++++ snort-2.7.0/etc/snort.conf	2007-11-05 11:58:16.000000000 +0100
+@@ -810,6 +810,8 @@
+ # </debian>
+ #
  
-+# Ports you want to look for SSH
-+var SSH_PORTS 22
-+
- # other variables
- # 
- # AIM servers.  AOL has a habit of adding new AIM servers, so instead of
-@@ -548,6 +551,9 @@
- # output database: log, mssql, dbname=snort user=snort password=test
- # output database: log, oracle, dbname=snort user=snort password=test
- 
-+# OSSIM output example:
++### OSSIM output database ###
 +#output database: alert, mysql, user=root password=ossim dbname=snort host=localhost sensor_name=replace_with_sensor_ip logfile=alert
-+
+ 
  # unified: Snort unified binary format alerting and logging
  # -------------------------------------------------------------
- # The unified output plugin provides two new formats for logging and generating
-@@ -701,19 +707,23 @@
+@@ -829,6 +831,8 @@
+ # output alert_unified: filename snort.alert, limit 128
+ # output log_unified: filename snort.log, limit 128
  
- include $RULE_PATH/nntp.rules
- include $RULE_PATH/other-ids.rules
--# include $RULE_PATH/web-attacks.rules
--# include $RULE_PATH/backdoor.rules
--# include $RULE_PATH/shellcode.rules
--# include $RULE_PATH/policy.rules
--# include $RULE_PATH/porn.rules
--# include $RULE_PATH/info.rules
--# include $RULE_PATH/icmp-info.rules
--# include $RULE_PATH/virus.rules
--# include $RULE_PATH/chat.rules
--# include $RULE_PATH/multimedia.rules
--# include $RULE_PATH/p2p.rules
-+include $RULE_PATH/web-attacks.rules
-+include $RULE_PATH/backdoor.rules
-+include $RULE_PATH/shellcode.rules
-+include $RULE_PATH/policy.rules
-+include $RULE_PATH/porn.rules
-+include $RULE_PATH/info.rules
-+include $RULE_PATH/icmp-info.rules
-+include $RULE_PATH/virus.rules
-+include $RULE_PATH/chat.rules
-+include $RULE_PATH/multimedia.rules
-+include $RULE_PATH/p2p.rules
- include $RULE_PATH/experimental.rules
++### OSSIM Unified format ###
++#output unified: filename snort_unified, limit 128
  
-+## Bleeding Snort rules
-+## http://www.bleedingsnort.com/bleeding-all.rules
-+# include $RULE_PATH/bleeding-all.rules
-+
- # Include any thresholding or suppression commands. See threshold.conf in the
- # <snort src>/etc directory for details. Commands don't necessarily need to be
- # contained in this conf, but a separate conf makes it easier to maintain them. 
+ # prelude: log to the Prelude Hybrid IDS system
+ # ---------------------------------------------

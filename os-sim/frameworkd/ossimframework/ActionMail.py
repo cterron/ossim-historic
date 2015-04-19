@@ -19,7 +19,12 @@ class ActionMail:
 
         # Send the message via our own SMTP server.
         self.__smtp.connect()
-        self.__smtp.sendmail(sender, recipients, msg.as_string())
+        try:
+            self.__smtp.sendmail(sender, recipients, msg.as_string())
+        except Exception, e:
+            # TODO: Log error message
+            pass
+            
         self.__smtp.close()
 
 if __name__ == "__main__":

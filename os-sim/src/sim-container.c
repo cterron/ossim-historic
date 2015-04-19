@@ -281,7 +281,6 @@ sim_container_new (SimConfig  *config)
 
 	if (sim_database_is_local(ossim.dbossim))
 	{
-
 	  sim_container_db_delete_plugin_sid_directive_ul (container, ossim.dbossim);
 	  sim_container_db_delete_backlogs_ul (container, ossim.dbossim);
 		sim_container_db_load_plugins (container, ossim.dbossim);
@@ -1611,16 +1610,17 @@ sim_container_db_plugin_reference_match (SimContainer  *container,
 
   query = g_strdup_printf ("SELECT plugin_id, plugin_sid FROM plugin_reference WHERE reference_id = %d AND reference_sid = %d",
 													   reference_id, reference_sid);
-	  
+
+
   dm = sim_database_execute_single_command (database, query);
   if (dm)
   {
-    if (gda_data_model_get_n_rows (dm))
-		{
-		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+    {
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
 	  	cmp_plugin_id = gda_value_get_integer (value);
 
-		  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, 0);
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
 	  	cmp_plugin_sid = gda_value_get_integer (value);
 
 			if ((cmp_plugin_id == plugin_id) && (cmp_plugin_sid == plugin_sid))
@@ -1629,12 +1629,12 @@ sim_container_db_plugin_reference_match (SimContainer  *container,
 				g_object_unref(dm);
 				return TRUE;
 			}
-		}
+    }
     g_object_unref(dm);
   }
   else
-    g_message ("PLUGIN_REFERENCE DATA MODEL ERROR");
-  
+    g_message ("OSVDB DATA MODEL ERROR");
+
 	g_free (query);
 	return FALSE;
 

@@ -1641,6 +1641,7 @@ sim_command_connect_scan (SimCommand    *command,
   command->type = SIM_COMMAND_TYPE_CONNECT;
   command->data.connect.username = NULL;
   command->data.connect.password = NULL;
+  command->data.connect.hostname = NULL;
   command->data.connect.type = SIM_SESSION_TYPE_NONE;
 
   g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_CONNECT);
@@ -4811,7 +4812,7 @@ sim_command_host_service_event_scan (SimCommand    *command,
 							command->data.host_service_event.host = g_strdup (scanner->value.v_string);
             else
             {
-              g_message("Error: event incorrect. Please check the sensor issued from the agent: %s", scanner->value.v_string);
+              g_message("Error: event incorrect. Please check the host issued from the agent: %s", scanner->value.v_string);
               return FALSE;
             }
 						break;
@@ -5985,8 +5986,12 @@ sim_command_get_event (SimCommand     *command)
 	else
 		gnet_inetaddr_unref (ia_temp);
 					
-  if (command->data.event.interface) 
+  if (command->data.event.interface)
+	{
     event->interface = g_strdup (command->data.event.interface);
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_command_get_event: Interface: %s", command->data.event.interface);
+		
+	}
 
   if (command->data.event.plugin_id)
     event->plugin_id = command->data.event.plugin_id;
@@ -6013,7 +6018,9 @@ sim_command_get_event (SimCommand     *command)
 		}
 	}
 	else
-		event->protocol = SIM_PROTOCOL_TYPE_OTHER; 
+    //If no protocol is defined use TCP, this allow using port filters in base
+    //forensics console
+		event->protocol = SIM_PROTOCOL_TYPE_TCP; 
   
 	//sanitize the event. An event ALWAYS must have a src_ip. And should have a dst_ip (not mandatory). 
 	//If it's not defined, it will be 0.0.0.0 to avoid problems inside DB and other places.

@@ -19,6 +19,8 @@ class OssimDB:
 
     def connect (self, host, db, user, passwd = ""):
         self.conn = adodb.NewADOConnection(self.conf["ossim_type"])
+        if passwd is None:
+            passwd = ""
         try:
             self.conn.Connect(host, user, passwd, db)
         except Exception, e:

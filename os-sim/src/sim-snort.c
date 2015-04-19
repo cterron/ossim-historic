@@ -68,6 +68,7 @@ gboolean sim_command_snort_event_packet_scan(GScanner *scanner,SimCommand *comma
 		r = TRUE;
 	}
 	g_scanner_set_scope(scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_DATA);
+
 	g_scanner_get_next_token(scanner);
 	/* type */
 	if (r && scanner->token == SIM_COMMAND_SYMBOL_SNORT_EVENT_DATA_TYPE){
@@ -87,7 +88,7 @@ gboolean sim_command_snort_event_packet_scan(GScanner *scanner,SimCommand *comma
 			g_scanner_get_next_token(scanner); /* = */
 			g_scanner_get_next_token(scanner); /* Date */
 			if (scanner->token == G_TOKEN_STRING && 
-			(strptime(scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &t)!=NULL)){
+			((char *)strptime(scanner->value.v_string, "%Y-%m-%d %H:%M:%S", &t) != NULL)){
 					command->data.event.date = g_strdup(scanner->value.v_string);
 					r = TRUE;
 			}
@@ -197,10 +198,14 @@ gboolean sim_command_snort_event_packet_scan(GScanner *scanner,SimCommand *comma
 			}
 		}
 	}
+	
+
 	/* remember, after we insert in the database the event, the snort cid,sid of the event data
 	 * points to the event*/
 	return r;
 }
+
+
 gboolean sim_command_snort_event_packet_icmp_scan(GScanner *scanner,SimCommand *command){
 	gboolean r = FALSE;
 	g_scanner_set_scope(scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_ICMP);
@@ -334,7 +339,7 @@ gboolean sim_command_snort_event_packet_udp_scan(GScanner *scanner,SimCommand *c
 	g_scanner_set_scope(scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_UDP);
 	/* udp_sport */
 	g_scanner_get_next_token(scanner);
-	g_message("udp sport");
+	//g_message("udp sport");
 	if (scanner->token == SIM_COMMAND_SYMBOL_SNORT_EVENT_UDP_SPORT){
 		g_scanner_get_next_token(scanner);
 		g_scanner_get_next_token(scanner);
@@ -351,7 +356,7 @@ gboolean sim_command_snort_event_packet_udp_scan(GScanner *scanner,SimCommand *c
 
 	}
 	/* udp_dport */
-	g_message("udp dport");
+//	g_message("udp dport");
 	if (r){
 		g_scanner_get_next_token(scanner);
 		r = FALSE;
@@ -440,7 +445,7 @@ gboolean sim_command_snort_event_packet_udp_scan(GScanner *scanner,SimCommand *c
 			r = FALSE;
 	}
 	while (scanner->token!=G_TOKEN_EOF);
-	g_message("UDP sport=%u dport=%u csum=%u len=%u",command->packet->hdr.sim_udphdr.uh_sport,command->packet->hdr.sim_udphdr.uh_dport,command->packet->hdr.sim_udphdr.uh_sum,command->packet->hdr.sim_udphdr.uh_ulen);
+	//g_message("UDP sport=%u dport=%u csum=%u len=%u",command->packet->hdr.sim_udphdr.uh_sport,command->packet->hdr.sim_udphdr.uh_dport,command->packet->hdr.sim_udphdr.uh_sum,command->packet->hdr.sim_udphdr.uh_ulen);
 	return r;
 
 
@@ -531,7 +536,7 @@ gboolean sim_command_snort_event_packet_tcp_scan(GScanner *scanner,SimCommand *c
 			{
 				guint32 offset = strtoul(scanner->value.v_string,(char**)NULL,10);
 				if (errno!=ERANGE && errno!=EINVAL && offset<256){
-					g_message("TCP: offset:%04x",offset);
+					//g_message("TCP: offset:%04x",offset);
 					command->packet->hdr.sim_tcphdr.th_off = (offset&0xf0)>>4;
 					command->packet->hdr.sim_tcphdr.th_x2 = offset&0xf;
 					r = TRUE;
@@ -553,7 +558,7 @@ gboolean sim_command_snort_event_packet_tcp_scan(GScanner *scanner,SimCommand *c
 			{
 				guint32 flags = strtoul(scanner->value.v_string,(char**)NULL,10);
 				if (errno!=ERANGE && errno!=EINVAL && flags<256){
-					g_message("TCP: flags:%04x");
+					//g_message("TCP: flags:%04x");
 					command->packet->hdr.sim_tcphdr.th_flags = flags;
 					r = TRUE;
 				}
@@ -654,6 +659,8 @@ gboolean sim_command_snort_event_packet_tcp_scan(GScanner *scanner,SimCommand *c
 	}while(scanner->token!=G_TOKEN_EOF);
 	return r;
 }
+
+
 gboolean sim_command_snort_event_tcp_opt_scan(GScanner *scanner,SimCommand *command){
 	gboolean f = FALSE;
 	int i,j=0;
@@ -1073,19 +1080,19 @@ gboolean sim_command_snort_event_packet_ip_scan(GScanner *scanner,SimCommand *co
 	if (r && command->packet->sim_iphdr.ip_hl>5){
 		r = sim_command_snort_event_ip_opt_scan(scanner,command);
 	}
-	g_message("Scanning packet contecnt");
+	//g_message("Scanning packet contecnt");
 	if (r){
 		switch(command->packet->sim_iphdr.ip_p){
 			case IPPROTO_UDP:
-				g_message("Scanning UDP packet");
+				//g_message("Scanning UDP packet");
 				r = sim_command_snort_event_packet_udp_scan(scanner,command);
 				break;
 			case IPPROTO_TCP:
-				g_message("Scanning TCP packet");
+				//g_message("Scanning TCP packet");
 				r = sim_command_snort_event_packet_tcp_scan(scanner,command);
 				break;
 			case IPPROTO_ICMP:
-				g_message("Scanning ICMP packet");
+				//g_message("Scanning ICMP packet");
 				r = sim_command_snort_event_packet_icmp_scan(scanner,command);
 				break;
 			default:
@@ -1137,10 +1144,92 @@ sim_command_snort_event_scan	(SimCommand	*command,GScanner *scanner)
 	/* from zlib.h */
 	uLongf size;
 	guint lenzip;
+
+	gboolean aux_iface = FALSE;
+	gboolean aux_gzipdata = FALSE;
+	gboolean aux_unziplen = FALSE;
+	gboolean aux_event_type = FALSE;
+
 	command->type = SIM_COMMAND_TYPE_SNORT_EVENT;
 	memset(&command->data,sizeof(command->data),0);
 	memset(&zstr,sizeof(zstr),0);
+
 	g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SNORT_EVENT);
+	do
+	{
+		g_scanner_get_next_token(scanner);
+		switch (scanner->token)
+		{
+			case SIM_COMMAND_SYMBOL_SNORT_EVENT_SENSOR:
+						g_scanner_get_next_token(scanner); /* = */
+						g_scanner_get_next_token(scanner); /* value */
+						if (scanner->token == G_TOKEN_STRING)
+						{
+	            if (gnet_inetaddr_is_canonical (scanner->value.v_string))
+  	            command->data.event.sensor = g_strdup (scanner->value.v_string);
+    	        else
+      	      {
+        	      g_message("Error: sim_command_snort_event_scan: Please check the sensor issued from the agent: %s", scanner->value.v_string);
+          	    return FALSE;
+            	}
+	            break;						
+						}
+
+			case SIM_COMMAND_SYMBOL_SNORT_EVENT_IF:
+						g_scanner_get_next_token(scanner); /* = */
+						g_scanner_get_next_token(scanner); /* value */
+						if (scanner->token == G_TOKEN_STRING)
+						{
+							command->data.event.interface = g_strdup(scanner->value.v_string);
+							aux_iface = TRUE;
+							g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Interface %s",scanner->value.v_string);
+						}
+						break;
+			case SIM_COMMAND_SYMBOL_GZIPDATA:
+						g_scanner_get_next_token(scanner); /* = */
+						g_scanner_get_next_token(scanner); /* value */
+				    if (scanner->token==G_TOKEN_STRING &&
+				       ((command->snort_event.gzipdata = (guint8*)sim_hex2bin(scanner->value.v_string)))!=NULL)
+						{
+							lenzip = strlen(scanner->value.v_string)/2;
+							g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Gzipdata %s",scanner->value.v_string);
+							aux_gzipdata = TRUE;
+						}
+						break;
+
+			case SIM_COMMAND_SYMBOL_UNZIPLEN:
+						g_scanner_get_next_token(scanner); /* = */
+						g_scanner_get_next_token(scanner); /* value */
+			      if (scanner->token== G_TOKEN_STRING &&
+      				  sim_string_is_number(scanner->value.v_string,0))
+						{
+			        guint32 unziplen = strtol(scanner->value.v_string,(char**)NULL,10);
+      			  if (errno!=ERANGE)
+							{
+			          command->snort_event.unziplen = unziplen;
+			          aux_unziplen = TRUE;
+      			  }
+							if (unziplen <=0)
+								aux_unziplen = FALSE;
+							if (unziplen > 32768) //1024 * 32 should be more than enough
+								aux_unziplen = FALSE;
+
+      			}
+						break;
+
+			case SIM_COMMAND_SYMBOL_SNORT_EVENT_TYPE:
+						g_scanner_get_next_token(scanner); /* = */
+						g_scanner_get_next_token(scanner); /* value */
+						if (scanner->token == G_TOKEN_STRING)
+						{
+							aux_event_type = TRUE;
+						}
+						break;
+
+		}
+
+#if 0
+
 	g_scanner_get_next_token(scanner);
 	if (scanner->token == SIM_COMMAND_SYMBOL_SNORT_EVENT_SENSOR){
 		g_scanner_get_next_token(scanner); /* = */
@@ -1158,6 +1247,7 @@ sim_command_snort_event_scan	(SimCommand	*command,GScanner *scanner)
 			g_scanner_get_next_token(scanner);
 			if (scanner->token == G_TOKEN_STRING){
 				command->data.event.interface = g_strdup(scanner->value.v_string);
+				g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Interface %s",scanner->value.v_string);
 				r = TRUE;
 			}
 		}
@@ -1190,6 +1280,10 @@ sim_command_snort_event_scan	(SimCommand	*command,GScanner *scanner)
 					command->snort_event.unziplen = unziplen;
 					r = TRUE;
 				}
+				if (unziplen <=0)
+					r = FALSE;
+				if (unziplen > 32768) //1024 * 32 should be more than enough
+					r = FALSE;
 			
 			}
 
@@ -1208,22 +1302,42 @@ sim_command_snort_event_scan	(SimCommand	*command,GScanner *scanner)
 		}
 
 	}
+#endif
 
+	} 
+  while(scanner->token != G_TOKEN_EOF);
+
+	if (!aux_iface || !aux_gzipdata || !aux_unziplen || !aux_event_type)
+	{
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Bad symbol:");
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"                                 aux_iface: %d", aux_iface);
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"                                 aux_gzipdata: %d", aux_gzipdata);
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"                                 aux_unziplen: %d", aux_unziplen);
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"                                 aux_event_type: %d", aux_event_type);
+
+	}
+/*
 	if (!r){
 			g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Bad symbol %s",scanner->value.v_string);
 			return r;
-	}
+	}*/
+
 	/* OK, know unzip the data and decode it */
 	size = 1024*(1+(command->snort_event.unziplen/1024));
 	int errorzip = 0;
-	gchar *puta;
-	if ((unzipdata =g_new(guchar,size))!=NULL){
-			if ((errorzip = uncompress(unzipdata,( uLongf * )&size,command->snort_event.gzipdata,lenzip)!=Z_OK)){
-					r = FALSE;
-					g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Error inflated data %u",errorzip);
-			}else{
+	gchar *bitch;
+	if ((unzipdata =g_new(guchar,size))!=NULL)
+	{ //uncompress() checks already if there are enough space in the output buffer
+		g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: len/data: %d/%x",lenzip, command->snort_event.gzipdata);
+		if ((errorzip = uncompress(unzipdata,( uLongf * )&size,command->snort_event.gzipdata,lenzip)!=Z_OK))
+		{
+			r = FALSE;
+			g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: Error inflated data %u",errorzip);
+		}
+		else
+		{
 			unzipdata[size]='\0';
-			puta = g_strdup(unzipdata);
+			bitch = g_strdup(unzipdata);
 			g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG,"sim_command_snort_event_scan: gzipdata %s",unzipdata);
 			/* Now, we must parse the event data 
 			 * I think that is better to parse data from binary here and not in the agent, but ....
@@ -1232,10 +1346,10 @@ sim_command_snort_event_scan	(SimCommand	*command,GScanner *scanner)
 			g_scanner_set_scope (scanner,SIM_COMMAND_SCOPE_SNORT_EVENT_DATA);
 			r = sim_command_snort_event_packet_scan(scanner,command);
 			if (!r)
-				printf("PUTO COMANDO: %s\n",puta);
-			}
-			g_free(puta);
-			g_free(unzipdata);
+				g_log(G_LOG_DOMAIN,G_LOG_LEVEL_DEBUG, "FUC**** COMMAND: %s\n",bitch);
+			g_free(bitch);
+		}
+		g_free(unzipdata);
 			
 	}
 	else{
@@ -1288,7 +1402,8 @@ gboolean update_snort_database(SimEvent *event){
 		g_message("Unknown signature %u:%u",event->plugin_id-1000,event->plugin_sid);
 		r = FALSE;
 	}
-	g_message("Attempt to insert event with sensor:%u and cid:%u with %u",sid,cid,sig_id);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,"Attempt to insert event with sensor:%u and cid:%u with %u",sid,cid,sig_id);
+
 	if (sid && r ){
 		r = FALSE;
 		query = g_strdup_printf("INSERT INTO iphdr (sid,cid,ip_src,ip_dst,ip_ver,ip_hlen,ip_tos,ip_len,ip_id,ip_flags,ip_off,ip_ttl,ip_proto,ip_csum) VALUES (%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u)",
@@ -1351,7 +1466,7 @@ gboolean update_snort_database(SimEvent *event){
 				packet->hdr.sim_tcphdr.th_win,
 				packet->hdr.sim_tcphdr.th_sum,
 				packet->hdr.sim_tcphdr.th_urp);
-				g_message("INSERT TCP: %s",query);
+				//g_message("INSERT TCP: %s",query);
 				sim_database_execute_no_query(ossim.dbsnort,query);
 				g_free(query);
 				/* tcp options */
@@ -1390,7 +1505,7 @@ gboolean update_snort_database(SimEvent *event){
 				packet->hdr.sim_udphdr.uh_dport,
 				packet->hdr.sim_udphdr.uh_ulen,
 				packet->hdr.sim_udphdr.uh_sum);
-				g_message("INSERT UDP: %s",query);
+				//g_message("INSERT UDP: %s",query);
 				sim_database_execute_no_query(ossim.dbsnort,query);
 				g_free(query);
 				break;
@@ -1403,7 +1518,7 @@ gboolean update_snort_database(SimEvent *event){
 				packet->hdr.sim_icmphdr.un.echo.id,
 				packet->hdr.sim_icmphdr.un.echo.sequence);
 				sim_database_execute_no_query(ossim.dbsnort,query);
-				g_message("INSERT ICMP: %s",query);
+				//g_message("INSERT ICMP: %s",query);
 				g_free(query);
 				break;
 			default:

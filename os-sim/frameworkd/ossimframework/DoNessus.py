@@ -347,7 +347,8 @@ class DoNessus (threading.Thread) :
         hash = self.__conn.exec_query(query)
         for row in hash:
             temp = []
-            temp.append(row["ips"])
+            for n in row["ips"].split(','):
+                temp.append(n)
             if Util.isIpInNet(ip, temp):
                 host_networks.append(row["name"])
         return host_networks
@@ -635,6 +636,9 @@ class DoNessus (threading.Thread) :
 
         self.__status = 10
 
+        scan_networks = []        
+        scan_hosts = []
+        
         if nessus_distributed == True :
             self.__debug("Entering distributed mode")
             if self.__test_write(self.__dirnames["sensors"]) == False :
@@ -655,7 +659,6 @@ class DoNessus (threading.Thread) :
                 self.__debug("Entering Netgroup/Hostgroup/Net/Host based scan")
                 self.__sensors_scan = []
                 self.__sensors_targets = {}
-                scan_networks = []
                 for net in self.__nets_list:
                     query = "SELECT net.ips,sensor.ip FROM net, net_sensor_reference, sensor WHERE net_sensor_reference.sensor_name = sensor.name and net.name = net_sensor_reference.net_name and net.name = '%s'" % net
                     hash = self.__conn.exec_query(query)
@@ -669,12 +672,14 @@ class DoNessus (threading.Thread) :
                     for row in hash:
                         self.__debug("Adding host %s in sensor %s" % (host, row["ip"]))
                         self.add_ip_to_sensor(host, row["ip"])
+                        scan_hosts.append(host)
                 for hostgroup in self.__hostgroups_list:
                     query = "SELECT sensor.ip, host_ip FROM host_group_reference, host_group_sensor_reference, sensor WHERE host_group_sensor_reference.sensor_name = sensor.name and host_group_reference.host_group_name = host_group_sensor_reference.group_name and host_group_reference.host_group_name = '%s'" % hostgroup
                     hash = self.__conn.exec_query(query)
                     for row in hash:
                         self.__debug("Adding host %s in sensor %s from hostgroup %s" % (row["host_ip"], row["ip"],hostgroup))
                         self.add_ip_to_sensor(row["host_ip"], row["ip"])
+                        scan_hosts.append(row["host_ip"])
                     
                 for sensor in self.__sensors_scan:
                     self.__filenames["targetfile"][sensor] = os.path.join(self.__dirnames["sensors"], sensor + ".targets.txt")
@@ -684,7 +689,6 @@ class DoNessus (threading.Thread) :
                 sensors = self.__sensors_scan
             else:
                 self.__debug("Entering sensor based scan")
-                scan_networks = []
                 if len(self.__sensor_list) > 0:
                     sensors = self.__sensor_list
                 else:
@@ -726,6 +730,7 @@ class DoNessus (threading.Thread) :
                             except KeyError, e:
                                 pass
                             self.__debug("Adding host %s" % row["temporal"])
+                            scan_hosts.append(row["temporal"])
                     sensorfd.close()
 
             pids = Set()
@@ -801,7 +806,6 @@ class DoNessus (threading.Thread) :
             self.__debug("Entering non-distributed mode")
 
             sensorfd = open(self.__filenames["targets"], "w")
-            scan_networks = []
             self.__debug("Adding networks")
             query = "SELECT name,ips FROM net, net_scan WHERE net.name = net_scan.net_name AND net_scan.plugin_id = 3001"
             hash = self.__conn.exec_query(query)
@@ -821,6 +825,7 @@ class DoNessus (threading.Thread) :
                         print "Dup: %s. Please check your config" % row["temporal"]
                     else:
                         self.__debug("Adding host %s" % row["temporal"])
+                        scan_hosts.append(row["temporal"])
                         sensorfd.writelines(row["temporal"] + "\n")
                 except KeyError:
                     pass
@@ -855,10 +860,9 @@ class DoNessus (threading.Thread) :
 
         if os.path.exists(self.__filenames["result_nsr"]) == True :
             self.__update_vulnerability_tables(self.__filenames["result_nsr"], today_date) 
-        # XXX TODO Call to vulnerabilities
             self.__debug("Calling Vulnerabilities from within DoNessus for nsr: %s" % self.__filenames["result_nsr"])
             vuln = Vulnerabilities()
-            vuln.process(self.__filenames["result_nsr"], today_date)
+            vuln.process(self.__filenames["result_nsr"], today_date, scan_networks, scan_hosts)
 
         try:
             if os.stat(self.__filenames["today_nsr"])[stat.ST_SIZE] > 0:

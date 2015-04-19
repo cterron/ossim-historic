@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.11 2007/04/19 08:51:36 dkarg Exp $ #
+# $Id: create_sidmap.pl,v 1.14 2008/01/10 16:48:43 dvgil Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
@@ -59,7 +59,7 @@ my $quiet = 0;
 # Read in all rules from each rules file (*.rules) in each rules dir.
 # into %sidmap.
 foreach my $rulesdir (@rulesdirs) {
-    if($rulesdir =~ /^-e$/){
+    if($rulesdir =~ /^-d$/){
         $dump= 1;
         next;
     }
@@ -362,6 +362,8 @@ sub update_ossim_db()
             my $msg = $sidinfo{$sid}{"msg"};
             if(!defined($msg)){ $msg = "Undefined msg, please check"; }
             $msg =~ s/\'/\\\'/g;
+            $msg =~ s/\\'/\\\\\'/g;
+            $msg =~ s/\-\-/\-/g; # sql comments (s/--/-)
 
             my $query = "INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name, priority) VALUES (1001, $sid, $category_id, $class_id, '$msg', $priority);";
 

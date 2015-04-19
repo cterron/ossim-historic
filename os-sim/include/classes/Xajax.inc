@@ -1,5 +1,6 @@
 <?php
 
+require_once ('ossim_conf.inc');
 $config = $GLOBALS["CONF"];
 
 $xajax_php_path = $config->get_conf("xajax_php_path");

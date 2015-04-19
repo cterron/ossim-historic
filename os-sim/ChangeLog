@@ -1,5 +1,11 @@
 # ChangeLog for OSSIM
 
+        22 Oct 2007 DK <dk@ossim.net> :
+        * ACLs: Created new "Events" tab, changed some permissions.
+
+        04 Oct 2007 DK <dk@ossim.net> :
+        * User Log: Enable "log to syslog" option, which actually may log into apache error log.
+
         08 Aug 2007 DK <dk@ossim.net> :
         * 0.9.9rc5 released.
 

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import struct,string
 def dumphexdata(data):
 	l = len(data)

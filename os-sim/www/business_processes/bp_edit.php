@@ -309,47 +309,73 @@ if ($id != 0) {
 <? if ($id == 0) { ?>
     <h2><?=_("New Business Process wizard")?></h2>
 <? } else { ?>
-    <h2><?=_("Edit Business Process")?>: <?=$proc_data['name']?></h2>
+    <h2><?=_("Edit Business Process")?>: <u><?=$proc_data['name']?></u></h2>
 <? } ?>
-<table width="100%" align="center"><tr><td style="border-width: 0px">
-<table width="70%" style="border-width: 0px">
+<table width="60%" align="center">
+<tr>
+    <th colspan="2"><?=_("BP properties")?></td>
+</tr>
 <tr>
     <th><?=_("Name")?></th>
-    <td style="text-align: left; border-width: 0px"><input type="text" size="40" name="bp_name" value="<?=$proc_data['name']?>"></td>
+    <td style="text-align: left; border-width: 0px"><input type="text" size="50" name="bp_name" value="<?=$proc_data['name']?>"></td>
 </tr>
 <tr>
     <th><?=_("Description")?></th>
     <td style="text-align: left; border-width: 0px">
-        <textarea NAME="bp_desc" COLS="40" ROWS=5 WRAP=HARD><?=$proc_data['description']?></textarea>
+        <textarea NAME="bp_desc" COLS="48" ROWS=5 WRAP=HARD><?=$proc_data['description']?></textarea>
     </td>
 </tr>
-</table>
-<br>
 <? if ($id == 0) { ?>
-    <center>
+<tr>
+  <td colspan="2">
     <input type="button" value="<?=_("Cancel")?>"
            onClick="javascript: history.go(-1);">&nbsp;
     <input type="button" value="<?=_("Continue")?>"
            onClick="javascript: xajax_edit_process(xajax.getFormValues('bp_form'))">
-    </center>
+  </td>
+</tr>
+</table>
 <?
 } else {
 ?>
-<table width="80%"><tr><th><?=_("Assets")?></th></tr></table>
-<div id="assets" class="contents">
+</table>
+<br/>
+
+<h2>Edit <u><?=$proc_data['name']?></u>'s Assets</h2>
+<table width="60%" align="center">
+  <tr>
+    <th><?=_("List of assets")?></th>
+  </tr>
+  <tr>
+    <td>
+<div id="assets" class="contents" style="width: 100%">
 <!-- Filled by draw_responsibles() -->
 </div>
 <script>xajax_draw_assets(false)</script>
-<br>
-<div id="html_assets_select" class="row" style="width: 70%">
+    </td>
+  </tr>
+  <tr>
+    <th><?=_("Add new assets")?></th>
+  </tr>
+  <tr>
+    <td>
+<div id="html_assets_select" class="row" style="width: 100%">
 <!-- Filled by draw_assets(), generated at html_assets_select() -->
 </div>
-<br>
+    </td>
+  </tr>
 </form>
-</td><td style="border-width: 0px">
-<input type="button" value="<?=_("Continue")?>-&gt;"
+</table>
+
+<br/>
+<table align="center" width="60%" class="noborder">
+  <tr>
+    <td style="border-width: 0px">
+      <input type="button" value="<?=_("Continue")?>-&gt;"
        onClick="javascript: xajax_edit_process(xajax.getFormValues('bp_form'))">
-</tr></table>
+    </td>
+  </tr>
+</table>
 <? } ?>
 <br><br>
 <div id="asset-info" style="display: none; text-align: center">

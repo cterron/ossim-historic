@@ -63,7 +63,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     }
 ?>
       </td>
-      <td><?php echo $port_group->get_descr(); ?></td>
+      <td><?php echo $port_group->get_descr(); ?>&nbsp;</td>
       <td>
         <a href="modifyportform.php?portname=<?php 
             echo $port_group->get_name()?>">

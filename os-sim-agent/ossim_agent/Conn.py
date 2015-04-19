@@ -1,8 +1,9 @@
 import thread, time, socket, string, sys, re
 
 from Config import Conf, Plugin
-from Logger import Logger
+from Logger import *
 logger = Logger.logger
+from Stats import Stats
 from Watchdog import Watchdog
 from Event import WatchRule
 from MonitorScheduler import MonitorScheduler
@@ -75,6 +76,7 @@ class ServerConn:
 
         self.close()
         time.sleep(1)
+        Stats.server_reconnect()
         while 1:
             if self.connect(attempts, waittime) is not None:
                 break
@@ -91,7 +93,7 @@ class ServerConn:
             except AttributeError: # self.__conn == None
                 self.reconnect()
             else:
-                logger.debug(msg)
+                logger.debug(msg.rstrip())
                 break
 
 
@@ -105,7 +107,8 @@ class ServerConn:
             logger.debug("Waiting for server..")
             data = self.__conn.recv(1024)
         except socket.error, e:
-            logger.error("Error connecting to server: " + str(e))
+            logger.error(ERROR_CONNECTING_TO_SERVER \
+                % (self.server_ip, str(self.server_port)) + ": " + str(e))
             self.__conn = None
         else:
             if data == 'ok id="' + str(self.sequence) + '"\n':
@@ -177,7 +180,7 @@ class ServerConn:
             try:
                 # receive message from server (line by line)
                 data = self.recv_line()
-                logger.info("Received message from server: " + data)
+                logger.info("Received message from server: " + data.rstrip())
 
                 # 1) type of control messages: plugin management
                 #    (start, stop, enable and disable plugins)

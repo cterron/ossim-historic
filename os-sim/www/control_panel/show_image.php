@@ -37,30 +37,60 @@
 </head>
 
 <body>
-<table align="center" width="100%">
-    <tr><td align="center">
-      [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day&ip=<?php echo
-      "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Day"); ?> </a>]
-      [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=week&ip=<?php echo
-      "$ip&what=$what&start=N-7D&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Week"); ?> </a>]
-      [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=month&ip=<?php echo
-      "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Month"); ?> </a>]
-      [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year&ip=<?php echo
-      "$ip&what=$what&start=N-1Y&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Year"); ?> </a>]
-    </td><td><?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
-    "?range=$range&ip=$ip&what=compromise&start=$start&type=$type&zoom=$zoom"?>">
-    <?php echo gettext("Compromise"); ?> </a>]<BR>
-    <?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
-    "?range=$range&ip=$ip&what=attack&start=$start&type=$type&zoom=$zoom"?>">
-    <?php echo gettext("Attack"); ?> </a>]<BR>
-     <?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
-    "?range=$range&ip=$ip&what=ser_lev&start=$start&type=$type&zoom=$zoom"?>">
-    <?php echo gettext("Service Level"); ?> </a>]
-    </td></tr>
-    <tr><td colspan="2"><HR noshade></td></tr>
-    <tr><td colspan="2" align="center">
+<table align="center">
+  <tr>
+    <td align="center" colspan="2">
+      [<a href="<?= $_SERVER["PHP_SELF"] ?>?range=all&ip=<?=
+      "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>"> <?= _("All"); ?> </a>]
+      [<a href="<?= $_SERVER["PHP_SELF"] ?>?range=day&ip=<?=
+      "$ip&what=$what&start=N-1D&type=$type&zoom=$zoom"?>"> <?= _("Last Day"); ?> </a>]
+      [<a href="<?= $_SERVER["PHP_SELF"] ?>?range=week&ip=<?=
+      "$ip&what=$what&start=N-7D&type=$type&zoom=$zoom"?>"> <?= _("Last Week"); ?> </a>]
+      [<a href="<?= $_SERVER["PHP_SELF"] ?>?range=month&ip=<?=
+      "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>"> <?= _("Last Month"); ?> </a>]
+      [<a href="<?= $_SERVER["PHP_SELF"] ?>?range=year&ip=<?=
+      "$ip&what=$what&start=N-1Y&type=$type&zoom=$zoom"?>"> <?= _("Last Year"); ?> </a>]
+    </td>
+  </tr>
+
+<?php
+    /* range = day, week, month or year. Only display a single graph */
+    if ($range != "all") { 
+?>
+  <tr>
+    <td class="noborder" style="text-align:right">
       <img src="<?php echo "../report/graphs/draw_rrd.php?ip=$ip&what=$what&start=$start&end=N&type=$type"; ?>">
-    </td></tr>
-    </table>
+    </td>
+    <td class="noborder" style="text-align:left">
+       file name: <b><?=$ip?>.rrd</b><br/>
+       date range: <?=$range?><br/>
+       rrd type: <?=$type?><br/>
+    </td>
+  </tr>
+  
+<?php
+    /* range = all, display all graphs */
+    } else {
+        $dates = array ("day"   => "N-1D",
+                       "week"  => "N-7D",
+                       "month" => "N-1M",
+                       "year"  => "N-1Y");
+        foreach ($dates as $date_legend => $date_rrd) {
+?>
+  <tr>
+    <td class="noborder" style="text-align:right">
+      <img src="<?= "../report/graphs/draw_rrd.php?ip=$ip&what=$what&start=$date_rrd&end=N&type=$type"; ?>">
+    </td>
+    <td class="noborder" style="text-align:left">
+       file name: <b><?=$ip?>.rrd</b><br/>
+       date range: <?=$date_legend?><br/>
+       rrd type: <?=$type?><br/>
+    </td>
+  </tr>
+<?php
+        } /* foreach */
+    } /* else */
+?>
+</table>
 </HTML>
 <BODY>

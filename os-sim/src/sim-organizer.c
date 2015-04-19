@@ -249,10 +249,8 @@ SimRule *arule;
     {
       GInetAddr *ia_zero = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
 			if (!gnet_inetaddr_noport_equal(event->dst_ia, ia_zero))
-//				sim_organizer_correlation_plugin (organizer, event);  //Actualize reliability. Also, event -> alarm. 
-
-				sim_organizer_correlation_plugin_new (organizer, event);  //Actualize reliability. Also, event -> alarm. 
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_run AFTER event->reliability: %d", event->reliability);
+				sim_organizer_correlation_plugin (organizer, event);  //Actualize reliability. Also, event -> alarm. 
+	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_run AFTER event->reliability: %d", event->reliability);
       gnet_inetaddr_delete (ia_zero);
     }
 
@@ -598,67 +596,16 @@ config_send_notify_email (SimConfig    *config,
     }
 }
 
+
 /*
  *
  * actualize the reliability of all the plugin_sids of the dst_ia from the event. *
  * also, if the event has plugin_sids associated, the event is transformed into an alarm.
  * this function has sense just with events with a defined dst. and those events has to have some relationship
  * with others (see sim_container_db_host_get_plugin_sids_ul())
- *
  */
 void
 sim_organizer_correlation_plugin (SimOrganizer *organizer, 
-																  SimEvent     *event)
-{
-  GList           *list;
-
-  g_return_if_fail (organizer);
-  g_return_if_fail (SIM_IS_ORGANIZER (organizer));
-  g_return_if_fail (event);
-  g_return_if_fail (SIM_IS_EVENT (event));
-
-  if (!event->dst_ia) return;
-
-  list = sim_container_db_host_get_plugin_sids_ul (ossim.container,
-						   ossim.dbossim,
-						   event->dst_ia,
-						   event->plugin_id,
-						   event->plugin_sid);
-
-  if (!list) //if there aren't any plugin_sid associated with the dst_ia...
-    return;
-
-  // actualize the reliability of all the pluginsids of a specific dst_ia.
-  while (list)
-  {
-		
-    SimPluginSid *plugin_sid = (SimPluginSid *) list->data;
-//    gint  new_priority = sim_plugin_sid_get_priority (plugin_sid);
-
-//    event->priority = (new_priority > event->priority) ? new_priority : event->priority; //takes the greatest priority
-    event->reliability += sim_plugin_sid_get_reliability (plugin_sid); //reliability of the plugin_sid is added to the event reliability
-
-    list = list->next;
-  }
-  g_list_free (list);
-
-  event->alarm = TRUE;
-
-//  if (event->priority > 5)
-//    event->priority = 5;
-  if (event->reliability > 10)
-    event->reliability = 10;
-}
-/*
- *
- * actualize the reliability of all the plugin_sids of the dst_ia from the event. *
- * also, if the event has plugin_sids associated, the event is transformed into an alarm.
- * this function has sense just with events with a defined dst. and those events has to have some relationship
- * with others (see sim_container_db_host_get_plugin_sids_ul())
- *----------------NEW TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- */
-void
-sim_organizer_correlation_plugin_new (SimOrganizer *organizer, 
 																		  SimEvent     *event)
 {
   //GList           *list;
@@ -671,6 +618,7 @@ sim_organizer_correlation_plugin_new (SimOrganizer *organizer,
 	GInetAddr				*ip_temp;
 	gint plugin_id;
 	gboolean	aux_os = FALSE;
+	gboolean	aux_os_tested = FALSE; //this variable is needed if we want to reduce the number of iterations
 	gboolean	aux_nessus = FALSE;
 	gboolean	aux_port = FALSE;
 	gboolean	aux_string = FALSE;
@@ -700,17 +648,20 @@ sim_organizer_correlation_plugin_new (SimOrganizer *organizer,
 																												   ossim.dbossim,
 																												   event->dst_ia);
 	
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Number of entries: %d", g_list_length (list_host));
+
   if (!list_host) //if there aren't any plugin_sid associated with the dst_ia...
     return;
 
   while (list_host)
   {
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Checking host : event->dst_ia: %lu", sim_inetaddr_ntohl (event->dst_ia));
 
     SimPluginSid *plugin_sid = (SimPluginSid *) list_host->data;
 
 		plugin_id = sim_plugin_sid_get_plugin_id (plugin_sid);
 		sid = sim_plugin_sid_get_sid (plugin_sid);
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: %d - %d", plugin_id, sid);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: BBDD: %d - %d *** Evento: %d - %d", plugin_id, sid, event->plugin_id, event->plugin_sid);
 
 		if (plugin_id == sim_container_get_plugin_id_by_name (ossim.container, "nessus")) //match nessus attack
 		{
@@ -721,6 +672,7 @@ sim_organizer_correlation_plugin_new (SimOrganizer *organizer,
 																										plugin_id,
 																										sid))
 			{
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: Match! Nessus vuln found");
 				event->reliability = 10; 
 				event->is_reliability_setted = TRUE;
 				aux_nessus = TRUE;
@@ -735,6 +687,7 @@ sim_organizer_correlation_plugin_new (SimOrganizer *organizer,
 																										plugin_id,	//SO reference_id, probably 5001
 																										event->plugin_id,
 																										event->plugin_sid);
+			aux_os_tested = TRUE; //needed if we want to "stop" the iteration when the OS is found.
 			while (list_OS)
 			{						
 				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: OS, list_OS= %d", GPOINTER_TO_INT (list_OS->data));
@@ -865,9 +818,15 @@ sim_organizer_correlation_plugin_new (SimOrganizer *organizer,
 		}
 
 		if (aux_nessus || aux_generic) //we know that it's a real attack thanks to nessus or generic cross-correlation.
+		{
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: aux_nessus || aux_generic");
 			break;
-		if (!aux_os)	//if the OS doesn't matches, nothing else matters
+		}
+		if ((!aux_os) && aux_os_tested)	//if the OS doesn't matches, nothing else matters
+		{
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation_plugin_new: aux_OS");
 			break;
+		}
 
     list_host = list_host->next;
   }
@@ -945,7 +904,7 @@ sim_organizer_reprioritize (SimOrganizer *organizer,
   // Get the reliability of the plugin sid. There are a reliability inside the directive, but the
 	// reliability from the plugin is more important. So we usually try to get the plugin reliability from DB
 	// and assign it to the event. If the event is prioritized we can't change the Reliability.
-  if ((event->plugin_id != SIM_PLUGIN_ID_DIRECTIVE) && (!event->is_prioritized))
+  if ((event->plugin_id != SIM_PLUGIN_ID_DIRECTIVE) && (!event->is_prioritized) && (!event->is_reliability_setted))
   {
 	  gint aux;
 	  if ( (aux = sim_plugin_sid_get_reliability (plugin_sid)) != -1)

@@ -42,6 +42,36 @@ require_once ("classes/Security.inc");
     socket_write ($socket, $in, strlen ($in));
     $out = socket_read ($socket, 2048);
     if (strncmp($out, 'ok id="1"', 9) != 0) {
+        // If the server is down / unavailable, clear the need to reload
+
+    // Switch off web indicator
+    require_once ('classes/WebIndicator.inc');
+    if ($what == "all") {
+        WebIndicator::set_off("Reload_policies");
+        WebIndicator::set_off("Reload_hosts");
+        WebIndicator::set_off("Reload_nets");
+        WebIndicator::set_off("Reload_sensors");
+        WebIndicator::set_off("Reload_plugins");
+        WebIndicator::set_off("Reload_directives");
+        WebIndicator::set_off("Reload_servers");
+    } else {
+    	WebIndicator::set_off("Reload_" . $what);
+    }
+
+    // Reset main indicator if no more policy reload need   
+    if (!WebIndicator::is_on("Reload_policies") &&
+        !WebIndicator::is_on("Reload_hosts") &&
+        !WebIndicator::is_on("Reload_nets") &&
+        !WebIndicator::is_on("Reload_sensors") &&
+        !WebIndicator::is_on("Reload_plugins") &&
+        !WebIndicator::is_on("Reload_directives") &&
+        !WebIndicator::is_on("Reload_servers")) {
+            WebIndicator::set_off("ReloadPolicy");
+        }
+    
+    // update indicators on top frame
+    $OssimWebIndicator->update_display();
+
         echo gettext("Error connecting to server") . " ...\n";
         exit;
     }

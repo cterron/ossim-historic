@@ -26,7 +26,7 @@ AC_PROG_INSTALL
 
 AC_CANONICAL_HOST
 
-case "$host" in 
+case "$host" in
     *darwin*)
     LDFLAGS="${LDFLAGS} -bind_at_load"
     ;;
@@ -64,9 +64,29 @@ AC_TRY_LINK([ #include <sys/types.h>
   ]
 )
 
-PKG_CHECK_MODULES(DEPS, glib-2.0 >= 2.2 gobject-2.0 >= 2.2 gthread-2.0 >= 2.2 libgda >= 1.0 gnet-2.0 > 2.0)
+PKG_CHECK_MODULES(DEPS, glib-2.0 >= 2.2 gobject-2.0 >= 2.2 gthread-2.0 >= 2.2 gnet-2.0 > 2.0 libxml-2.0)
 
+AC_ARG_WITH(libgda,
+[  --with-libgda=<directory>         path for libgda libs and includes])
 
+if test "x$withval" != "x"; then
+	libgda=$withval
+	AC_MSG_CHECKING(for libgda files)
+	LIBGDA_CFLAGS="-I${libgda}/include/libgda-1.2"
+	LIBGDA_LIBS="-L${libgda}/lib -lgda-2"
+	# XXX check for dirs/files
+    AC_MSG_RESULT($libgda)
+else
+    PKG_CHECK_MODULES(LIBGDA, libgda >= 1.0, ,
+        [
+        AC_MSG_RESULT(no)
+        echo $LIBGDA_PKG_ERRORS
+        exit 1
+        ])
+fi
+
+AC_SUBST(LIBGDA_CFLAGS)
+AC_SUBST(LIBGDA_LIBS)
 AC_SUBST(DEPS_CFLAGS)
 AC_SUBST(DEPS_LIBS)
 

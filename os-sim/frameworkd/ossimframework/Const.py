@@ -1,9 +1,10 @@
 #
-# !!
+# TODO: move this file to a real config file (/etc/ossim/frameworkd/)
+#       and merge necessary variables from framework's ossim.conf
 #
 
 # Ossim framework daemon version
-VERSION = "0.9.9rc4"
+VERSION = "0.9.9rc5"
 
 # default delay between iterations
 # overriden with -s option
@@ -30,5 +31,8 @@ VERBOSE = 0
 # default listener port
 # overriden with -p option
 LISTENER_PORT = 40003
+
+# access to ossim-framework through http:// or https://
+HTTP_SSL = False
 
 # vim:ts=4 sts=4 tw=79 expandtab:

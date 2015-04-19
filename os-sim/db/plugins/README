@@ -6,6 +6,7 @@
  |      1501 | apache             | detector |
  |      1502 | iis                | detector |
  |      1503 | iptables           | detector |
+ |      1504 | fw1ngr60           | detector |
  |      1505 | directive-alert    | detector |
  |      1506 | realsecure         | detector |
  | 1507,1508 | rrd                | detector |
@@ -25,11 +26,19 @@
  |      1523 | heartbeat          | detector |
  |      1524 | spamassassin       | detector |
  |      1525 | nagios             | detector |
+ |      1526 | stonegate          | detector |
+ |      1527 | clurgmgr           | detector |
+ |      1528 | cisco-vpn          | detector |
  | 1530-1550 | gfi                | detector |
+ |      1551 | intrushield	  | detector |
+ |      1552 | tarantella         | detector |
+ |      1553 | squid              | detector |
  |      4001 | osiris             | detector |
  |      4003 | ssh                | detector |
  |      4004 | pam_unix           | detector |
  |      4005 | sudo               | detector |
+ |      4006 | iphone             | detector |
+ |      4007 | syslog             | detector |
  +-----------+--------------------+----------+
  |      2001 | ossim-ca           | monitor  |
  |      2004 | opennms            | monitor  |
@@ -41,5 +50,7 @@
  |      5002 | services           | correl.  | 
  |      5003 | osvdb              | correl.  | 
  +-----------+--------------------+----------+
-
-
+ |      6001 | ossim-agent        |          | 
+ +-----------+--------------------+----------+
+ |      7xxx | ossec plugins      |          | 
+ +-----------+--------------------+----------+

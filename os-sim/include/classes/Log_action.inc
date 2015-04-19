@@ -52,6 +52,14 @@ Class log_action {
 
         $info = Log_action::get_loginfo($conn,$log_code);
         $info = Log_action::log_action_replace($info,$extrainfo);
+
+        $log_syslog = $conf->get_conf("log_syslog",FALSE);
+
+        if($log_syslog){
+          define_syslog_variables();
+          openlog("OSSIM", LOG_PID | LOG_PERROR, LOG_AUTH);
+          syslog(LOG_NOTICE, "User event log [$log_code]: $user from $user_ip: $info");
+        }
                
         $sql = "INSERT INTO log_action (login, ipfrom, date, code, info) VALUES (?, ?, current_timestamp , ?, ?)";
         

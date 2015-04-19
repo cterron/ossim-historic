@@ -194,7 +194,12 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         /* sid == ANY */
         if (!strcmp($sid, "ANY")) {
             echo gettext("ANY");
-        } 
+        }
+        
+        /* sid == X:PLUGIN_SID */
+        elseif (strpos($sid,"PLUGIN_SID")) {
+        	echo gettext("$sid");
+        }
         
         /* get name of plugin_sid */
         elseif ($plugin_list = Plugin_sid::get_list

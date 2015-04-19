@@ -1,0 +1,37 @@
+#!/bin/sh -e
+
+case "$1" in
+    upgrade|configure)
+
+if [ -f /etc/ossim/agent/config.xml ] ; then
+    echo "Moving deprecated configuration files to /etc/ossim/agent/old/ ..."
+
+    if [ ! -d /etc/ossim/agent/old ] ; then
+        mkdir /etc/ossim/agent/old
+    fi
+    mv -f /etc/ossim/agent/config.xml /etc/ossim/agent/old/
+
+    if [ ! -d /etc/ossim/agent/old/plugins ] ; then
+        mkdir /etc/ossim/agent/old/plugins
+    fi
+
+    if [ -f /etc/ossim/agent/plugins/snort.xml ] ; then
+        mv -f /etc/ossim/agent/plugins/*.xml  /etc/ossim/agent/old/plugins/
+    fi
+fi
+
+    ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 0
+    ;;
+esac
+
+
+
+#DEBHELPER#
+
+exit 0
+

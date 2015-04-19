@@ -209,7 +209,7 @@ $labels = array(
 
   <h1><?=_("Incident Email Template")?></h1>
   
-<div id="help" width="70%" style="border: 3px dotted rgb(221, 158, 6); padding: 5px; margin-left: 50px; margin-right: 50px; text-align: center; background-color: rgb(236, 234, 171);">
+<div id="help" class="help" width="70%">
 <i><?=_("Select a TAG to see its meaning")?></i>
 </div>
 <br/>

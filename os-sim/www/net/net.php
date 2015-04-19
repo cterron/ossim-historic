@@ -107,7 +107,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     <tr>
       <td><?php echo $net->get_name(); ?></td>
-      <td><?php echo $net->get_ips(); ?></td>
+      <td><a href="/ossim/host/host.php?search=<? echo $net->get_ips(); ?>"><?php echo $net->get_ips(); ?></a></td>
       <td><?php echo $net->get_asset(); ?></td>
       <td><?php echo $net->get_threshold_c(); ?></td>
       <td><?php echo $net->get_threshold_a(); ?></td>
@@ -158,7 +158,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 ?>
 </td>
 
-      <td><?php echo $net->get_descr(); ?></td>
+      <td><?php echo $net->get_descr(); ?>&nbsp;</td>
       <td><a href="modifynetform.php?name=<?php echo $name ?>"> <?php echo gettext("Modify"); ?> </a>
           <a href="deletenet.php?name=<?php echo $name ?>"> <?php echo gettext("Delete"); ?> </a></td>
     </tr>

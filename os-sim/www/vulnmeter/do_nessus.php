@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
+Session::logcheck("MenuEvents", "EventsVulnerabilities");
 ?>
 
 <?php
@@ -19,21 +19,21 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
   <h1> <?php echo gettext("Update Scan"); ?> </h1>
 
 <?php
-    require_once 'classes/Security.inc';
+require_once 'classes/Security.inc';
 
-    $status = REQUEST('status');
-    $interactive = REQUEST('interactive');
-    $nsensors = REQUEST('nsensors');
-    $sensors = REQUEST('sensors');
-    $scheduler_id = REQUEST('scheduler_id');
+$status = REQUEST('status');
+$interactive = REQUEST('interactive');
+$nsensors = REQUEST('nsensors');
+$sensors = REQUEST('sensors');
+$scheduler_id = REQUEST('scheduler_id');
 
-    ossim_valid($nsensors, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nsensors"));
-    ossim_valid($status, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Status"));
-    ossim_valid($scheduler_id, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Status"));
+ossim_valid($nsensors, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nsensors"));
+ossim_valid($status, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Status"));
+ossim_valid($scheduler_id, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Status"));
 
-    if (ossim_error()) {
-        die(ossim_error());
-    }    
+if (ossim_error()) {
+    die(ossim_error());
+}
 
 require_once ('ossim_acl.inc');
 require_once ('ossim_db.inc');
@@ -71,7 +71,7 @@ $host_group_list = array();
 $hosts_list = array();
 $nets_list = array();
 
-foreach($tmp_sensors as $sensor){
+foreach ($tmp_sensors as $sensor) {
 	if(Sensor::check_plugin_rel($conn, $sensor->get_ip(), NESSUS)){
 	$sensor_index[$sensor->get_name()] = $tmp_index;
 	$tmp_index++;
@@ -108,13 +108,13 @@ foreach($tmp_nets as $ns){
 }
 
 
-    function show_form(){
+function show_form() {
 	global $sensor_list;
 	global $net_group_list;
 	global $host_group_list;
 	global $hosts_list;
 	global $nets_list;
-        global $conn;
+    global $conn;
 	global $sensor_index;
 	global $net_group_index;
 	global $host_group_index;
@@ -186,56 +186,56 @@ echo "var " . $group_scan->get_net_group_name() . " = true;\n";
 echo "</script>\n";
 $sensor_string = "";
 
-foreach($net_group_sensors as $ng_sensor => $name){
-if($sensor_string == ""){
-$sensor_string .= $sensor_index[$name];
-} else {
-$sensor_string .= "," . $sensor_index[$name];
-}
+foreach ($net_group_sensors as $ng_sensor => $name) {
+    if ($sensor_string == "") {
+        $sensor_string .= $sensor_index[$name];
+    } else {
+        $sensor_string .= "," . $sensor_index[$name];
+    }
 }
 
 $nets_string = "";
 $nets = Net_group::get_networks($conn, $group_scan->get_net_group_name(), NESSUS);
 
-foreach($nets as $net){
-$name = $net->get_net_name();
-if($nets_string == ""){
-$nets_string .= $nets_index[$name];
-} else {
-$nets_string .= "," . $nets_index[$name];
-}
+foreach ($nets as $net) {
+    $name = $net->get_net_name();
+    if ($nets_string == "") {
+        $nets_string .= $nets_index[$name];
+    } else {
+        $nets_string .= "," . $nets_index[$name];
+    }
 }
 
 print "<li><a href=\"#\" onClick=\"return selectSomeNets('". $group_scan->get_net_group_name() . "','" . $sensor_string . "','" . $nets_string . "');\">" . $group_scan->get_net_group_name() . "</a>";
 }
 
 $group_scan_list = Host_group_scan::get_list($conn, "WHERE plugin_id = " . NESSUS);
-foreach($group_scan_list as $group_scan){
-$host_group_sensors = Host_group::get_sensors($conn, $group_scan->get_host_group_name());
-echo "\n<script>\n";
-echo "var " . $group_scan->get_host_group_name() . " = true;\n";
-echo "</script>\n";
-$sensor_string = "";
-
-foreach($host_group_sensors as $hg_sensor){
-$name = $hg_sensor->get_sensor_name();
-if($sensor_string == ""){
-$sensor_string .= $sensor_index[$name];
-} else {
-$sensor_string .= "," . $sensor_index[$name];
-}
+foreach ($group_scan_list as $group_scan) {
+    $host_group_sensors = Host_group::get_sensors($conn, $group_scan->get_host_group_name());
+    echo "\n<script>\n";
+    echo "var " . $group_scan->get_host_group_name() . " = true;\n";
+    echo "</script>\n";
+    $sensor_string = "";
+    
+    foreach ($host_group_sensors as $hg_sensor) {
+        $name = $hg_sensor->get_sensor_name();
+        if ($sensor_string == "") {
+            $sensor_string .= $sensor_index[$name];
+        } else {
+            $sensor_string .= "," . $sensor_index[$name];
+        }
 }
 
 $hosts_string = "";
 $hosts = Host_group::get_hosts($conn, $group_scan->get_host_group_name(), NESSUS);
 
-foreach($hosts as $host){
-$name = $host->get_host_name($conn);
-if($hosts_string == ""){
-$hosts_string .= $hosts_index[$name];
-} else {
-$hosts_string .= "," . $hosts_index[$name];
-}
+foreach ($hosts as $host) {
+    $name = $host->get_host_name($conn);
+    if ($hosts_string == "") {
+        $hosts_string .= $hosts_index[$name];
+    } else {
+        $hosts_string .= "," . $hosts_index[$name];
+    }
 }
 
 print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_host_group_name() . "','" . $sensor_string . "','" . $hosts_string . "');\">" . $group_scan->get_host_group_name() . "</a>";
@@ -261,7 +261,7 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
 	<center><a href="#" onClick="return selectAll();"><?= _("Select / Unselect all");?></a></center>
 <br/>
 
-<table width="100%" border="0" align="left"><tr><td>
+<table width="100%" border="0" align="center"><tr><td>
 	<input type="radio" name="groupType" value="sensor" checked onClick="selectGroup('sensor');"> Sensor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	<input type="radio" name="groupType" value="host" onClick="selectGroup('host');"> NetGroup / Nets / HostGroup / Hosts
 </td></tr>
@@ -270,10 +270,10 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
         <table width="100%" align="left" border="0"><tr>
 	<?php
 	
-	for($i=1;$i<=$rows;$i++){
+	for ($i=1;$i<=$rows;$i++) {
 	?>
 	<?php
-	    for($a=0;$a <$cols && $global_i < $num ;$a++){
+	    for ($a=0;$a <$cols && $global_i < $num ;$a++) {
 	        $sensor = $sensor_list[$global_i];
 	    	echo "<td width=\"" . intval(100/$cols) . "%\">";
 	        $all['sensors'][] = "sensor".$global_i;
@@ -299,40 +299,38 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
 	<?php
 
 	$global_ng = 0;
-	for($i=1;$i<=$rows_ng;$i++){
+	for ($i=1;$i<=$rows_ng;$i++) {
 	?>
         <?php
-	    for($a=0;$a <$cols_full && $global_ng < $num_ng ;$a++){
-		$netgroup = $net_group_list[$global_ng];                
-		echo "<td width=\"" . intval(100/$cols_full) . "%\">";
-        	$all['netgroups'][] = "netgroup".$global_ng;
-	        ?>
-                <div align="left">
-                <input align="left" type="checkbox" id="<?= "netgroup".$global_ng ?>" name="netgroupList[]"
-                               value="<?= $netgroup->get_name() ?>" /><?=$netgroup->get_name($conn)?></div></td>
+	    for ($a=0;$a <$cols_full && $global_ng < $num_ng ;$a++) {
+		  $netgroup = $net_group_list[$global_ng];                
+		  echo "<td width=\"" . intval(100/$cols_full) . "%\">";
+          $all['netgroups'][] = "netgroup".$global_ng;
+	      ?>
+            <div align="left">
+            <input align="left" type="checkbox" id="<?= "netgroup".$global_ng ?>" name="netgroupList[]"
+                   value="<?= $netgroup->get_name() ?>" /><?=$netgroup->get_name($conn)?></div></td>
 		 <?php
-                $global_ng++;
-            }
+            $global_ng++;
+        }
 
            echo "</tr>\n";
 	    ?>
             <tr>
-	    <?php
-		}
-            ?>
+    <?php
+	}
+    ?>
 
 	<th colspan="3">HostGroups</th></tr><tr>
 
         <?php
         $global_hg = 0;
-        for($i=1;$i<=$rows_hg;$i++){
-	?>
-        <?php
-            for($a=0;$a <$cols_full && $global_hg < $num_hg ;$a++){
+        for ($i=1;$i<=$rows_hg;$i++) {
+            for ($a=0;$a <$cols_full && $global_hg < $num_hg ;$a++) {
                 $hostgroup = $host_group_list[$global_hg];
                 echo "<td width=\"" . intval(100/$cols_full) . "%\">";
                 $all['hostgroups'][] = "hostgroup".$global_hg;
-		 ?>
+		    ?>
                 <div align="left">
                 <input align="left" type="checkbox" id="<?= "hostgroup".$global_hg ?>" name="hostgroupList[]"
                                value="<?= $hostgroup->get_name() ?>" /><?=$hostgroup->get_name($conn)?></div></td>
@@ -351,10 +349,10 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
         
         <?php
         $global_ns = 0;
-        for($i=1;$i<=$rows_ns;$i++){
+        for ($i=1;$i<=$rows_ns;$i++) {
         ?>
         <?php
-            for($a=0;$a <$cols_full && $global_ns < $num_ns ;$a++){
+            for ($a=0;$a <$cols_full && $global_ns < $num_ns ;$a++) {
                 $nets = $nets_list[$global_ns];
                 echo "<td width=\"" . intval(100/$cols_full) . "%\">";
                 $all['nets'][] = "net".$global_ns;
@@ -377,10 +375,10 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
 
         <?php
         $global_hs = 0;
-        for($i=1;$i<=$rows_hs;$i++){
+        for ($i=1;$i<=$rows_hs;$i++) {
         ?>
         <?php
-            for($a=0;$a <$cols_full && $global_hs < $num_hs ;$a++){
+            for ($a=0;$a <$cols_full && $global_hs < $num_hs ;$a++) {
                 $hosts = $hosts_list[$global_hs];
                 echo "<td width=\"" . intval(100/$cols_full) . "%\">";
                 $all['hosts'][] = "host".$global_hs;
@@ -402,7 +400,7 @@ print "<li><a href=\"#\" onClick=\"return selectSomeHosts('". $group_scan->get_h
         </div>	
 
 </td></tr></table>
-
+<br>
 <center>
 <input type="hidden" name="nsensors" value="<?php echo $global_i ?>" />
 <input type="Submit" value="<?= _("Submit"); ?>">
@@ -510,9 +508,9 @@ scanType = category;
 <?php
     }
 
-    if($interactive == "yes"){
+    if ($interactive == "yes") {
     	show_form();
-	exit();
+	   exit();
     }
 
     $sensors = "";
@@ -585,25 +583,25 @@ scanType = category;
             $error->display("FRAMW_NOTRUN", array($address.":".$port));
     }
 
-    if($status == "reset"){
+    if ($status == "reset") {
         $in = 'nessus action="reset"' . "\n";
         socket_write ($socket, $in, strlen ($in));
 	?>
-	<center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
+	   <center><a href="index.php"> <?php echo gettext("Back"); ?> </a></center>
 	<?php
-	exit();
+	   exit();
     }
-    if(strlen($sensors) == 0){
-	foreach($sensor_list as $sensor){
+    if (strlen($sensors) == 0) {
+	  foreach ($sensor_list as $sensor) {
         if ($sensors == "")
             $sensors = $sensor->get_ip();
         else
             $sensors .= "," . $sensor->get_ip();
 
-	}
+	  }
     }
 
-    if($scheduler_id > 0){
+    if ($scheduler_id > 0) {
         $in = 'nessus action="scan" target_type="schedule" id="' . $scheduler_id . '"' . "\n";
     } else {
         if (POST("groupType") == "sensor"){

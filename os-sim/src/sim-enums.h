@@ -76,7 +76,7 @@ extern "C" {
 #define SIM_DETECTOR_CONST          "DETECTOR"
 #define SIM_MONITOR_CONST           "MONITOR"
 
-#define BUFFER_SIZE                 2048
+#define BUFFER_SIZE                 8192
 #define TIMEBUF_SIZE                26
 
 #define GENERATOR_SPP_SPADE         104

@@ -1,4 +1,4 @@
-# 
+#
 # Replaces and improves the 'etc/cron.daily/ossim-backup' script
 #
 #  -  ossim, phpgacl and snort database backups using mysqldump
@@ -111,12 +111,19 @@ class Backup(threading.Thread):
                     ": database backup [%s] in progress.." % (db_name)
 
                 # mysqldump -h $HOST -u $USER -p$PASS $BASE | gzip -9c > $BACKUP
-                os.system('mysqldump -h %s -u %s -p%s %s > %s' % \
+                if db_properties['pass'] is None:
+                    os.system('mysqldump -h %s -u %s %s > %s' % \
                     (db_properties['host'],
                      db_properties['user'],
-                     db_properties['pass'],
                      db_properties['base'],
                      backup_file))
+                else:
+                    os.system('mysqldump -h %s -u %s -p%s %s > %s' % \
+                        (db_properties['host'],
+                         db_properties['user'],
+                         db_properties['pass'],
+                         db_properties['base'],
+                         backup_file))
 
                 # compress the .sql file
                 self.compress_backup_file(backup_file)

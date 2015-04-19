@@ -191,7 +191,7 @@ Session::logcheck("MenuPolicy", "PolicyServers");
 
 
 
-      <td><?php echo $server->get_descr(); ?></td>
+      <td><?php echo $server->get_descr(); ?>&nbsp;</td>
       <td>
         [ <a href="modifyserverform.php?name=<?php echo $name ?>">
 	<?php echo gettext("Modify"); ?> </a> |

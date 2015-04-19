@@ -76,6 +76,8 @@ void on_signal(int signum)
   switch(signum)
   {
     case SIGHUP: //FIXME: reload directives, policy, and so on.
+	// reopen log file
+	sim_log_reopen();
         break;
     case SIGFPE:
     case SIGILL:

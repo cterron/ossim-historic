@@ -80,8 +80,6 @@ void              sim_organizer_run                             (SimOrganizer  *
 
 void              sim_organizer_correlation_plugin              (SimOrganizer *organizer, 
 																																 SimEvent     *event);
-void              sim_organizer_correlation_plugin_new              (SimOrganizer *organizer, 
-																																 SimEvent     *event);
 
 void              sim_organizer_mac_os_change                   (SimOrganizer *organizer, 
 																																 SimEvent     *event);

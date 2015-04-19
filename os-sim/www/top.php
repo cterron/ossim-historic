@@ -13,6 +13,18 @@ $upgrade = new Upgrade();
 <link rel="stylesheet" type="TEXT/CSS" href="style/top.css">
 </head>
 
+<script LANGUAGE="JavaScript">
+<!--
+var newwindow;
+function new_wind(url,name)
+{
+	newwindow=window.open(url,name,'height=768,width=1024,scrollbars=yes');
+	if (window.focus) {newwindow.focus()}
+}
+ //-->
+</script>
+
+
 <body marginwidth=0 marginweight=0 topmargin=0 leftmargin=0 bgcolor=white>
 
 <table border=0 cellpadding=0 cellspacing=0 width="100%">
@@ -30,6 +42,7 @@ $upgrade = new Upgrade();
 
   $ntop_link = $conf->get_conf("ntop_link");
   $language = $conf->get_conf("language");
+  $uc_languages = array("de_DE", "en_GB", "es_ES", "fr_FR", "pt_BR");
   $sensor_ntop = parse_url($ntop_link);
 
   $nagios_link = $conf->get_conf("nagios_link");
@@ -46,108 +59,52 @@ $upgrade = new Upgrade();
         "url"  => "upgrade/index.php"
     );
   }
-  $placeholder = gettext("Control Panel");
-  $placeholder = gettext("Reports");
-  $placeholder = gettext("Incidents");
+  $placeholder = gettext("Dashboard");
+  $placeholder = gettext("Events");
   $placeholder = gettext("Monitors");
+  $placeholder = gettext("Incidents");
+  $placeholder = gettext("Reports");
   $placeholder = gettext("Policy");
   $placeholder = gettext("Correlation");
   $placeholder = gettext("Configuration");
   $placeholder = gettext("Tools");
   $placeholder = gettext("Logout");
 
+  // Passthrough Vars
+  $status = "Open";
+  if(GET('status') != null) $status = GET('status');
 
-  /* Control Panel */
+  /* Dashboard */
   if (Session::menu_perms("MenuControlPanel", "ControlPanelExecutive"))
-    $menu["Control Panel"][] = array (
+    $menu["Dashboard"][] = array (
       "name" => gettext("Executive Panel"),
       "id" => "Executive Panel",
       "url" => "panel/"
     );
   if (Session::menu_perms("MenuControlPanel", "ControlPanelMetrics"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Metrics"),
+    $menu["Dashboard"][] = array (
+      "name" => gettext("Aggregated Risk"),
       "id" => "Metrics",
       "url" => "control_panel/global_score.php"
     );
   if (Session::menu_perms("MenuControlPanel", "ControlPanelAlarms"))
-    $menu["Control Panel"][] = array (
+    $menu["Dashboard"][] = array (
       "name" => gettext("Alarms"),
       "id" => "Alarms",
       "url" => "control_panel/alarm_console.php?&hide_closed=1"
     );
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Events"),
-      "id" => "Forensics",
-      "url" => $conf->get_conf("acid_link") . "/".$conf->get_conf("event_viewer")."_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"
-    );
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelVulnerabilities"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Vulnerabilities"),
-      "id" => "Vulnerabilities",
-      "url" => "vulnmeter/index.php"
-    );
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelAnomalies"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Anomalies"),
-      "id" => "Anomalies",
-      "url" => "control_panel/anomalies.php"
-    );
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelHids"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Hids"),
-      "id" => "Hids",
-      "url" => "hids/index.php"
-    );
   if (Session::menu_perms("MenuControlPanel", "BusinessProcesses"))
-    $menu["Control Panel"][] = array (
+    $menu["Dashboard"][] = array (
       "name" => gettext("Business Processes"),
       "id" => "Business Processes",
       "url" => "business_processes/index.php"
     );
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("Event Viewer"),
-      "id" => "Events Viewer",
-      "url" => "event_viewer/index.php"
-    );
-/*
-  if (Session::menu_perms("MenuControlPanel", "ControlPanelEvents"))
-    $menu["Control Panel"][] = array (
-      "name" => gettext("RT Events"),
-      "id" => "RT Events",
-      "url" => "control_panel/event_panel.php"
-    );
-*/
 
-
-
-
-  /* Reports */
-  if (Session::menu_perms("MenuReports", "ReportsHostReport"))
-    $menu["Reports"][] = array (
-      "name" => gettext("Host Report"),
-      "id" => "Host Report",
-      "url" => "report/report.php"
-    );
-  if (Session::menu_perms("MenuReports", "ReportsAlarmReport"))
-    $menu["Reports"][] = array (
-      "name" => gettext("Alarm Report"),
-      "id" => "Alarm Report",
-      "url" => "report/sec_report.php?section=all&type=alarm"
-    );
-  if (Session::menu_perms("MenuReports", "ReportsSecurityReport"))
-    $menu["Reports"][] = array (
-      "name" => gettext("Security Report"),
-      "id" => "Security Report",
-      "url" => "report/sec_report.php?section=all"
-    );
-  if (Session::menu_perms("MenuReports", "ReportsPDFReport"))
-    $menu["Reports"][] = array (
-      "name" => gettext("PDF Report"),
-      "id" => "PDF Report",
-      "url" => "report/pdfreportform.php"
+  if (Session::menu_perms("MenuControlPanel", "Help"))
+    $menu["Dashboard"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:control_panel','Dashboard Help');"
     );
 
   /* Incidents */
@@ -155,7 +112,7 @@ $upgrade = new Upgrade();
     $menu["Incidents"][] = array (
       "name" => gettext("Incidents"),
       "id" => "Incidents",
-      "url" => "incidents/index.php?&status=Open"
+      "url" => "incidents/index.php?status=$status"
     );
   if (Session::menu_perms("MenuIncidents", "IncidentsTypes"))
     $menu["Incidents"][] = array (
@@ -175,8 +132,57 @@ $upgrade = new Upgrade();
       "id" => "Report",
       "url" => "report/incidentreport.php"
     );
+  if (Session::menu_perms("MenuIncidents", "Help"))
+    $menu["Incidents"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:incidents','Help');"
+    );
 
-  /* Riskmeter */
+
+	/* Events */
+  if (Session::menu_perms("MenuEvents", "EventsForensics"))
+    $menu["Events"][] = array (
+      "name" => gettext("Forensics"),
+      "id" => "Forensics",
+      "url" => $conf->get_conf("acid_link") . "/".$conf->get_conf("event_viewer")."_qry_main.php?&num_result_rows=-1&submit=Query+DB&current_view=-1&sort_order=time_d"
+    );
+  if (Session::menu_perms("MenuEvents", "EventsVulnerabilities"))
+    $menu["Events"][] = array (
+      "name" => gettext("Vulnerabilities"),
+      "id" => "Vulnerabilities",
+      "url" => "vulnmeter/index.php"
+    );
+  if (Session::menu_perms("MenuEvents", "EventsAnomalies"))
+    $menu["Events"][] = array (
+      "name" => gettext("Anomalies"),
+      "id" => "Anomalies",
+      "url" => "control_panel/anomalies.php"
+    );
+  if (Session::menu_perms("MenuEvents", "EventsRT"))
+    $menu["Events"][] = array (
+      "name" => gettext("RT Events"),
+      "id" => "RT Events",
+      "url" => "control_panel/event_panel.php"
+    );
+  if (Session::menu_perms("MenuEvents", "EventsViewer"))
+    $menu["Events"][] = array (
+      "name" => gettext("Event Viewer"),
+      "id" => "Events Viewer",
+      "url" => "event_viewer/index.php"
+    );
+  if (Session::menu_perms("MenuEvents", "Help Events"))
+    $menu["Events"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:events','Event Help');"
+    );
+
+
+
+
+
+  /* Monitors */
   if (Session::menu_perms("MenuMonitors", "MonitorsRiskmeter"))
     $menu["Monitors"][] = array (
       "name" => gettext("Riskmeter"),
@@ -207,6 +213,46 @@ $upgrade = new Upgrade();
       "id" => "Sensors",
       "url" => "sensor/sensor_plugins.php"
     );
+  if (Session::menu_perms("MenuMonitors", "Help"))
+    $menu["Monitors"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:monitors','Help');"
+    );
+
+
+  /* Reports */
+  if (Session::menu_perms("MenuReports", "ReportsHostReport"))
+    $menu["Reports"][] = array (
+      "name" => gettext("Host Report"),
+      "id" => "Host Report",
+      "url" => "report/report.php"
+    );
+  if (Session::menu_perms("MenuReports", "ReportsAlarmReport"))
+    $menu["Reports"][] = array (
+      "name" => gettext("Alarm Report"),
+      "id" => "Alarm Report",
+      "url" => "report/sec_report.php?section=all&type=alarm"
+    );
+  if (Session::menu_perms("MenuReports", "ReportsSecurityReport"))
+    $menu["Reports"][] = array (
+      "name" => gettext("Security Report"),
+      "id" => "Security Report",
+      "url" => "report/sec_report.php?section=all"
+    );
+  if (Session::menu_perms("MenuReports", "ReportsPDFReport"))
+    $menu["Reports"][] = array (
+      "name" => gettext("PDF Report"),
+      "id" => "PDF Report",
+      "url" => "report/pdfreportform.php"
+    );
+  if (Session::menu_perms("MenuReports", "Help"))
+    $menu["Reports"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:reports','Help');"
+    );
+
 
   /* Policy */
   if (Session::menu_perms("MenuPolicy", "PolicyPolicy"))
@@ -275,6 +321,12 @@ $upgrade = new Upgrade();
       "id" => "Plugin Groups",
       "url" => "policy/plugingroups.php"
     );
+  if (Session::menu_perms("MenuReports", "Help"))
+    $menu["Policy"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:policy','Help');"
+    );
 
   /* Correlation */
   if (Session::menu_perms("MenuCorrelation", "CorrelationDirectives"))
@@ -295,13 +347,19 @@ $upgrade = new Upgrade();
       "id" => "Backlog",
       "url" => "control_panel/backlog.php"
     );
+  if (Session::menu_perms("MenuReports", "Help"))
+    $menu["Correlation"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:correlation','Help');"
+    );
 
   /* Configuration */
   if (Session::menu_perms("MenuConfiguration", "ConfigurationMain"))
     $menu["Configuration"][] = array (
       "name" => gettext("Main"),
       "id" => "Main",
-      "url" => "conf/main.php"
+      "url" => "conf/index.php"
     );
   if (Session::menu_perms("MenuConfiguration", "ConfigurationUsers"))
     $menu["Configuration"][] = array (
@@ -351,6 +409,12 @@ $upgrade = new Upgrade();
       "id" => "Maps",
       "url" => "maps/"
     );
+  if (Session::menu_perms("MenuConfiguration", "Help"))
+    $menu["Configuration"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:configuration','Help');"
+    );
 
   /* Tools */
   if (Session::menu_perms("MenuTools", "ToolsScan"))
@@ -376,6 +440,18 @@ $upgrade = new Upgrade();
       "name" => gettext("User log"),
       "id" => "User log",
       "url" => "userlog/user_action_log.php"
+    );
+  if (Session::menu_perms("MenuTools", "ToolsDownloads"))
+    $menu["Tools"][] = array (
+      "name" => gettext("Downloads"),
+      "id" => "Downloads",
+      "url" => "downloads/index.php"
+    );
+  if (Session::menu_perms("MenuTools", "Help"))
+    $menu["Tools"][] = array (
+      "name" => gettext("Help"),
+      "id" => "Help",
+      "url" => "javascript:new_wind('http://ossim.net/dokuwiki/doku.php?id=user_manual:tools','Help');"
     );
 
   /* Logout */
@@ -408,7 +484,7 @@ $upgrade = new Upgrade();
        <? if ($option==$i) { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/abajo.gif" border=0></td>
        <td class=blue NOWRAP>
-	   <? if($language != "ru_RU.UTF-8") echo htmlentities(strtoupper(html_entity_decode(gettext($name)))); else echo gettext($name); ?>
+	   <? if(in_array($language, $uc_languages)) echo htmlentities(strtoupper(html_entity_decode(gettext($name)))); else echo gettext($name); ?>
 	   </td>
        <? } else { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/dcha.gif" border=0></td>
@@ -434,7 +510,8 @@ if($name == "Policy"){
 <!-- SUBMENU -->
 <tr><td height=24 background="pixmaps/top/azul.gif" valign=bottom style="padding-left:30px">
 
-  <table border=0 cellpadding=0 cellspacing=0><tr>
+  <table border=0 cellpadding=0 cellspacing=0 width="100%"><tr>
+	<table align="left" border=0 cellpadding=0 cellspacing=0><tr>
 <? if (!is_array($menu[$keys[$option]])) {
     // jump to url if not array
     $url = $menu[$keys[$option]];
@@ -442,16 +519,40 @@ if($name == "Policy"){
   else {
     foreach ($menu[$keys[$option]] as $i => $op) {
       if ($soption==$i && !(GET('soption'))) $url = $op["url"];
-    ?>
-    <td>
-      <table border=0 cellpadding=0 cellspacing=0><tr>
+
+	if($op["id"]=="Help")
+	{
+		?></tr></table><table border=0 cellpadding=0 cellspacing=0 align="right"><tr><td width="*"></td>
+		<?
+	}?>
+
+    <td <? if ($op["id"]=="Help") echo ' align="right" '; ?> >
+      <table <? if ($op["id"]=="Help")echo ' align="right"'; ?> border=0 cellpadding=0 cellspacing=0><tr>
         <? if ($soption==$i) { ?>
-        <td><img src="pixmaps/top/li.gif" border=0></td>
+        <td ><img src="pixmaps/top/li.gif" border=0></td>
         <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue
-		href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>">
-<? if($language != "ru_RU.UTF-8") echo htmlentities(strtoupper(html_entity_decode($op["name"]))); else echo $op["name"]; ?></a></td>
+	<?
+		if($op["id"]!="Help")
+		{
+			?>href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>"><?
+		}
+		else
+		{
+			?>href="<? echo $op["url"] ?>"><?
+		}
+		if(in_array($language, $uc_languages)) echo htmlentities(strtoupper(html_entity_decode($op["name"]))); else echo $op["name"]; ?></a></td>
         <? } else { ?>
-        <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo $op["name"]; #echo strtoupper($op["name"]) ?></a></td>
+        <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue  
+<?
+                if($op["id"]!="Help")
+                {
+                        ?>href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><?
+		}
+		else
+		{
+			?>href="<? echo $op["url"] ?>"><?
+		}
+ echo $op["name"]; #echo strtoupper($op["name"]) ?></a></td>
         <? }
 $menu1 = $keys[$option];
 $menu2 = $op["id"];
@@ -483,7 +584,7 @@ if($menu1 == "Policy" && $menu2 == "Servers") {
         <? } ?>
       </tr></table>
     </td>
-    <? if ($i+1!=$soption) { ?> <td><img src="pixmaps/top/sep.gif" border=0></td> <? } ?>
+    <? if ($i+1!=$soption&&$op["id"]!="Help") { ?> <td><img src="pixmaps/top/sep.gif" border=0></td> <? } ?>
 <?  }
    }
 ?> </tr></table>

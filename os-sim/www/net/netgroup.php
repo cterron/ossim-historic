@@ -122,7 +122,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 ?>
 </td>
 
-      <td><?php echo $net_group->get_descr(); ?></td>
+      <td><?php echo $net_group->get_descr(); ?>&nbsp;</td>
       <td><a href="modifynetgroupform.php?name=<?php echo $name ?>"> <?php echo gettext("Modify"); ?> </a>
           <a href="deletenetgroup.php?name=<?php echo $name ?>"> <?php echo gettext("Delete"); ?> </a></td>
     </tr>

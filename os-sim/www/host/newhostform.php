@@ -220,6 +220,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         <option value="BSD/OS"><?=_("BSD/OS"); ?> </option>
         <option value="SunOS"><?=_("SunOS"); ?> </option>
         <option value="Plan9"><?=_("Plan9"); ?> </option> <!-- gdiaz's tribute :) -->
+        <option value="IPhone"><?=_("IPhone"); ?> </option> 
 
       </select>
     </td>

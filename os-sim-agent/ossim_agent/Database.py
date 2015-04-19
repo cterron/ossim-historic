@@ -24,6 +24,9 @@ class DatabaseConn:
         #     logger.error("Database (%s) not supported" % (db_type))
         #     return None
 
+        if password is None:
+            password = ""
+
         try:
             self.__conn.Connect(host, user, password, db_name)
         except Exception, e_message:

@@ -1,0 +1,21 @@
+Template: ossim-agent/sensor
+Type: string
+Default: 127.0.0.1
+Description: What's your OSSIM Agent ip? (Don't use 127.0.0.1 if you want to monitoring this sensor from framework)
+
+Template: ossim-agent/interface
+Type: string
+Default: eth0
+Description: What's your default sensor interface?
+
+Template: ossim-agent/serverip
+Type: string
+Default: 127.0.0.1
+Description: What's your OSSIM Server ip?
+
+Template: ossim-agent/plugins
+Type: multiselect
+Choices: apache, arpwatch, ca, camonitor, ciscoids, ciscopix, ciscorouter, fw1, iis, iptables, netgear, netscreen, ntop, ntsyslog, opennms, osiris, p0f, pads, prelude, realsecure, rrd, snarewindows, snort, syslog, tcptrack
+Default: arpwatch, ntop, p0f, pads, rrd, snort, syslog
+Description: Please select the plugins that OSSIM agent will load.
+

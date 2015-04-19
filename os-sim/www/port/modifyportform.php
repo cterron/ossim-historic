@@ -23,7 +23,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 
     $port_name = GET('portname');
 
-    ossim_valid($port_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Port group name"));
+    ossim_valid($port_name, OSS_ALPHA, OSS_SPACE, 'illegal:'._("Port group name"));
 
     if (ossim_error()) {
        die(ossim_error());

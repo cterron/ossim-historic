@@ -33,6 +33,7 @@ class RuleMatch:
         self.nlines = regexp.count(RuleMatch.NEWLINE) + 1
         self.line_count = 1
         self.matched = False
+        self.log = ""
         self.groups = {}
 
 
@@ -42,20 +43,29 @@ class RuleMatch:
         self.groups = {}
 
         line_index = self.line_count - 1
-        self.lines[line_index]["result"] = \
-            self.lines[line_index]["pattern"].search(line)
+        if len(self.lines) > line_index:
+            self.lines[line_index]["result"] = \
+                self.lines[line_index]["pattern"].search(line)
 
-        if self.line_count == self.nlines:
-            if self.lines[line_index]["result"] is not None: # matched!
-                self.matched = True
-                self.line_count = 1
+            # (logs for multiline rules)
+            # Fill the log attribute with all its lines,
+            # not only with the last one matched
+            if line_index == 0:
+                self.log = ""
+            self.log += line
 
-        else:
-            if self.lines[line_index]["result"] is not None: # matched!
-                self.line_count += 1
+            if self.line_count == self.nlines:
+                if self.lines[line_index]["result"] is not None: # matched!
+                    self.matched = True
+                    self.line_count = 1
+
             else:
-                self.line_count = 1
-
+                if self.lines[line_index]["result"] is not None: # matched!
+                    self.line_count += 1
+                else:
+                    self.line_count = 1
+        else:
+            logger.error("There was an error loading rule [%s]" % (self.name))
 
     def match(self):
         if self.matched:
@@ -82,10 +92,14 @@ class RuleMatch:
                     count += 1
 
                 # group by name (?P<name-of-group>)
-                self.groups.update(line["result"].groupdict())
+                groups = line["result"].groupdict()
+                for key, group in groups.iteritems():
+                    if group is None:
+                        group = '' # convert to '' better than 'None'
+                    self.groups.update({str(key): str(group)})
 
 
-    def generate_event(self, line = ''):
+    def generate_event(self):
 
         if not self.rule.has_key('event_type'):
             logger.error("Event has no type, check plugin configuration!")
@@ -110,8 +124,8 @@ class RuleMatch:
             if key != "regexp":
                 event[key] = self.plugin.get_replace_value(value, self.groups)
 
-        if line:
-            event['log'] = line
+        if self.log:
+            event['log'] = self.log
 
         return event
 
@@ -175,6 +189,8 @@ class ParserLog(Detector):
                 # 'disable' state, so move to the end of file
                 fd.seek(0, 2)
 
+            self._thresholding()
+
             where = fd.tell()
             line = fd.readline()
 
@@ -191,7 +207,7 @@ class ParserLog(Detector):
                     rule.feed(line)
                     if rule.match():
                         logger.debug("Matched rule: [%s]" % (rule.name))
-                        event = rule.generate_event(line)
+                        event = rule.generate_event()
                         if event is not None:
                             self.send_message(event)
 

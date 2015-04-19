@@ -49,14 +49,18 @@ define ('OSS_DOT',    '\.');
 define ('OSS_COLON',  ':');
 define ('OSS_AT',     '@');
 define ('OSS_MAC',    'a-fA-F0-9:');
-define ('OSS_PUNC',   '\'"\.\!#\$%\^&\*_\-\=\+\:;,@\? \\\(\)\/∫™');
+define ('OSS_PUNC_EXT',   '\'"\.\!#\$%\^&\*_\-\=\+\:;,@\? \\\(\)\/∫™');
+// Temporary fix, need to check out each and every OSS_PUNC use throughout the code
+define ('OSS_PUNC',   '\.,:@_\-\/\?&\=');
+define ('OSS_SLASH',   '\/');
+define ('OSS_URL',   '\.\/');
 define ('OSS_ALPHA',  OSS_DIGIT . OSS_LETTER . '¡…Õ”⁄›·ÈÌÛ˙˝¬ Œ‘€‚ÍÓÙ˚¿»Ã“Ÿ‡ËÏÚ˘ƒÀœ÷‹‰ÎÔˆ¸ˇ√„’ı≈Â—Ò«Áﬁ˛∆Ê');
 define ('OSS_CRONTAB',  OSS_DIGIT . OSS_LETTER . '\*\-,\/'); // Somewhat dangerous, if "/" is allowed don't allow spaces, tabs or anything similar.
 define ('OSS_NL',     '\r\n');
 define ('OSS_INPUT',  OSS_ALPHA . OSS_PUNC);          // for most input text fields
 define ('OSS_TEXT',   OSS_ALPHA . OSS_PUNC . OSS_NL); // for most textarea fields
 define ('OSS_USER',   OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT); // for validating logins/users
-
+define ('OSS_NET_NAME', OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT . OSS_COLON); // for network names
 define ('OSS_NOTNULL',   'rule:OSS_NOTNULL');   // default for all vars
 define ('OSS_NULLABLE',  'rule:OSS_NULLABLE');  // value can be null, false, missing
 define ('OSS_IP_ADDR',   'func:valid_ip');
@@ -235,7 +239,7 @@ function valid_ip($ip)
 function valid_cidr($cidr)
 {
     if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)\/(\d+)$/', $cidr, $m) &&
-        $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255 && $m[4] <= 32)
+        $m[1] <= 255 && $m[2] <= 255 && $m[3] <= 255 && $m[4] <= 255 && $m[5] <= 32)
     {
         return true;
     }
@@ -262,7 +266,7 @@ function strip($var)
 
 function required()
 {
-    return '<span class="required" title="'._("Required field").'">*</span>';
+    return '&nbsp;<span class="required" title="'._("Required field").'">*</span>';
 }
 
 /*

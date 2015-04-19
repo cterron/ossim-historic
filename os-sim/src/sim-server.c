@@ -456,7 +456,6 @@ sim_server_session (gpointer data)
     	  g_message ("- Session Sensor: REMOVED");
 		    g_free (ip);
 		  }*/
-			g_object_unref (session);
 		
 		  g_message ("Session Removed");
 			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: After remove session: pid %d. session: %x", getpid(),session);
@@ -510,10 +509,13 @@ sim_server_remove_session (SimServer     *server,
   g_return_val_if_fail (SIM_IS_SERVER (server), 0);
   g_return_val_if_fail (session, 0);
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
-	
-	guint length = g_list_length (server->_priv->sessions);
-  server->_priv->sessions = g_list_remove (server->_priv->sessions, session);
+	  
+	void * tmp = session;
+	g_object_unref (session);//first, remove the data inside the session
 
+	guint length = g_list_length (server->_priv->sessions);
+  server->_priv->sessions = g_list_remove (server->_priv->sessions, tmp);   //and then, the list node itself
+	
 	if (length == g_list_length (server->_priv->sessions)) //if the lenght is the same, we didn't removed anything-> error
 		return 0;
 	else

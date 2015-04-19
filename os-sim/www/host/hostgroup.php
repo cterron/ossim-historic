@@ -126,7 +126,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
                 }
             }
 ?>    </td>
-      <td><?php echo $host_group->get_descr(); ?></td>
+      <td><?php echo $host_group->get_descr(); ?>&nbsp;</td>
       <td><a href="modifyhostgroupform.php?name=<?php echo $name ?>"> <?php echo gettext("Modify"); ?> </a>
           <a href="deletehostgroup.php?name=<?php echo $name ?>"> <?php echo gettext("Delete"); ?> </a></td>
     </tr>

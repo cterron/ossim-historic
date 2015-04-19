@@ -80,6 +80,7 @@ class BPMemberHost(BPMember):
             measure_list['host_incident_metric'],
             measure_list['host_incident_anomaly'],
             measure_list['host_incident_vulns'],
+            measure_list['host_availability'],
         ]
 
         # add net->metric and net->vulnerability alternative measures
@@ -248,6 +249,28 @@ class MeasureList:
                     """ % (self.member),
                     severity_max = 10
                 ),
+            'host_availability': \
+                MeasureDB (
+                    measure_type = 'host_availability',
+                    # nagios plugin_id: 1525
+                    # nagios sids for host availability: 1-6
+                    request = """
+                SELECT userdata1 AS host_availability 
+                    FROM event_tmp 
+                    WHERE plugin_id='1525' AND src_ip=inet_aton("%s")
+                    ORDER BY timestamp LIMIT 1;
+                    """ % (self.member),
+                    severity_max = 100,
+                    translation = {
+                        'host_availability: DOWN': 100,
+                        'host_availability: UP': 0,
+                        'service_availability: CRITICAL': 100,
+                        'service_availability: UNREACHABLE': 60,
+                        'service_availability: WARNING': 60,
+                        'service_availability: UNKNOWN': 20,
+                        'service_availability: OK': 0,
+                    }
+                ),
             ### net measures ###
             'net_metric': \
                 MeasureDB (
@@ -300,10 +323,11 @@ class Measure:
     MAX_SEVERITY = 10
     MIN_SEVERITY = 0
 
-    def __init__(self, measure_type, request, severity_max):
+    def __init__(self, measure_type, request, severity_max, translation = {}):
         self.measure_type = measure_type
         self.request = request
         self.severity_max = severity_max
+        self.translation = translation
         self.alternative_measures = []
 
     # you must redefine this method in child classes
@@ -357,7 +381,10 @@ class MeasureDB(Measure):
             #                     ^^^^^^
             if result[0].has_key(self.measure_type):
                 if result[0][self.measure_type] is not None:
-                    return int(result[0][self.measure_type])
+                    s = self.translation.get(result[0][self.measure_type],
+                                             result[0][self.measure_type])
+                    if type(s) is int: # severity must be integer
+                        return s
         return None
 
 

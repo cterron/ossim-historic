@@ -113,63 +113,63 @@ if ($action == 'editincident') {
     {
         $method = GET('ref') == 'Alarm' ? 'update_alarm' : 'update_event';
         $vars = array(
-            'incident_id', 'title', 'type', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports', 'event_start', 'event_end'
+            'incident_id', 'title', 'type', 'submitter', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports', 'event_start', 'event_end'
         );
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
         
-        Incident::$method($conn, $incident_id, $title, $type, $priority,
+        Incident::$method($conn, $incident_id, $title, $type, $submitter, $priority,
                            $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end);
     }
     /* update metric incident */
     elseif (GET('ref') == 'Metric')
     {
         $vars = array(
-            'incident_id', 'title', 'type', 'priority', 'target', 'metric_type', 'metric_value', 'event_start', 'event_end'
+            'incident_id', 'title', 'type', 'submitter', 'priority', 'target', 'metric_type', 'metric_value', 'event_start', 'event_end'
         );
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
-        Incident::update_metric($conn, $incident_id, $title, $type, $priority,
+        Incident::update_metric($conn, $incident_id, $title, $type, $submitter, $priority,
                             $target, $metric_type, $metric_value, $event_start, $event_end);
     }
     elseif (GET('ref') == 'Anomaly')
     {
         if (GET('anom_type') == 'mac')
         {
-            $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_mac', 'a_mac_o', 'anom_ip', 'a_vend', 'a_vend_o');
+            $vars = array('incident_id','title', 'type', 'submitter', 'priority', 'a_sen', 'a_date', 'a_mac', 'a_mac_o', 'anom_ip', 'a_vend', 'a_vend_o');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_mac_o, $a_vend_o);
             $anom_data_new  = array($a_sen, $a_date, $a_mac, $a_vend);
-            Incident::update_anomaly($conn, $incident_id, $title, $type, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
+            Incident::update_anomaly($conn, $incident_id, $title, $type, $submitter, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
         } elseif (GET('anom_type') == 'service') {
-            $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
+            $vars = array('incident_id','title', 'type', 'submitter', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_port, $a_date, $a_prot_o, $a_ver_o);
             $anom_data_new  = array($a_sen, $a_port, $a_date, $a_prot, $a_ver);
-            Incident::update_anomaly($conn, $incident_id, $title, $type, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
+            Incident::update_anomaly($conn, $incident_id, $title, $type, $submitter, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
         } elseif (GET('anom_type') == 'os') {
-            $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
+            $vars = array('incident_id','title', 'type', 'submitter', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_os_o);
             $anom_data_new  = array($a_sen, $a_date, $a_os);
-            Incident::update_anomaly($conn, $incident_id, $title, $type, $priority, 'os', $anom_ip, $anom_data_orig, $anom_data_new); 
+            Incident::update_anomaly($conn, $incident_id, $title, $type, $submitter, $priority, 'os', $anom_ip, $anom_data_orig, $anom_data_new); 
         } /*elseif os*/
     } /*elseif anomaly*/
   elseif (GET('ref') == 'Vulnerability')
     {
-        $vars = array('incident_id', 'title', 'type', 'priority', 'ip', 'port', 'nessus_id', 'risk', 'description');
+        $vars = array('incident_id', 'title', 'type', 'submitter', 'priority', 'ip', 'port', 'nessus_id', 'risk', 'description');
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
-        Incident::update_vulnerability($conn, $incident_id, $title, $type, $priority, $ip, $port, $nessus_id, $risk, $description);
+        Incident::update_vulnerability($conn, $incident_id, $title, $type, $submitter, $priority, $ip, $port, $nessus_id, $risk, $description);
     } /*elseif vulnerability*/
     if (ossim_error()) die_error();
     header("Location: incident.php?id=$incident_id"); exit;
@@ -184,66 +184,66 @@ if ($action == 'newincident') {
     {
         $method = GET('ref') == 'Alarm' ? 'insert_alarm' : 'insert_event';
         $vars = array(
-            'title', 'type', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports', 'event_start', 'event_end'
+            'title', 'type', 'submitter', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports', 'event_start', 'event_end'
         );
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
         
-        $incident_id = Incident::$method($conn, $title, $type, $priority, 
+        $incident_id = Incident::$method($conn, $title, $type, $submitter, $priority, 
                           $src_ips, $dst_ips, $src_ports, $dst_ports, $event_start, $event_end);
     }
     /* insert new metric incident */
     elseif (GET('ref') == 'Metric')
     {
         $vars = array(
-            'title', 'type', 'priority', 'target', 'metric_type', 'metric_value', 'event_start', 'event_end'
+            'title', 'type', 'submitter', 'priority', 'target', 'metric_type', 'metric_value', 'event_start', 'event_end'
         );
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
-        $incident_id = Incident::insert_metric($conn, $title, $type, $priority, 
+        $incident_id = Incident::insert_metric($conn, $title, $type, $submitter, $priority, 
                        $target, $metric_type, $metric_value, $event_start, $event_end);
     }
     elseif (GET('ref') == 'Anomaly')
     {
         if (GET('anom_type') == 'mac')
         {
-            $vars = array('title', 'type', 'priority', 'a_sen', 'a_date_o',
+            $vars = array('title', 'type', 'submitter', 'priority', 'a_sen', 'a_date_o',
             'a_date', 'a_mac', 'a_mac_o', 'anom_ip', 'a_vend', 'a_vend_o');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_mac_o, $a_vend_o);
             $anom_data_new  = array($a_sen, $a_date, $a_mac, $a_vend);
-            $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
+            $incident_id = Incident::insert_anomaly($conn, $title, $type, $submitter, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
         }  elseif (GET('anom_type') == 'service') {
-            $vars = array('title', 'type', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
+            $vars = array('title', 'type', 'submitter', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_port, $a_prot_o, $a_ver_o);
             $anom_data_new  = array($a_sen, $a_date, $a_port, $a_prot, $a_ver);
-            $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
+            $incident_id = Incident::insert_anomaly($conn, $title, $type, $submitter, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
         } elseif (GET('anom_type') == 'os') {
-            $vars = array('title', 'type', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
+            $vars = array('title', 'type', 'submitter', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
             foreach ($vars as $v) {
                 $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_os_o);
             $anom_data_new  = array($a_sen, $a_date, $a_os);
-            $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'os', $anom_ip, $anom_data_orig, $anom_data_new); 
+            $incident_id = Incident::insert_anomaly($conn, $title, $type, $submitter, $priority, 'os', $anom_ip, $anom_data_orig, $anom_data_new); 
         } /*elseif os*/
 
     } /*elseif anomaly*/
    /* insert new vulnerability incident */
     elseif (GET('ref') == 'Vulnerability')
     {
-        $vars = array('title', 'type', 'priority', 'ip', 'port', 'nessus_id', 'risk', 'description');
+        $vars = array('title', 'type', 'submitter', 'priority', 'ip', 'port', 'nessus_id', 'risk', 'description');
         foreach ($vars as $v) {
             $$v = GET("$v");
         }
-        $incident_id = Incident::insert_vulnerability($conn, $title, $type, $priority, $ip, $port, $nessus_id, $risk, $description);
+        $incident_id = Incident::insert_vulnerability($conn, $title, $type, $submitter, $priority, $ip, $port, $nessus_id, $risk, $description);
     }
 
     

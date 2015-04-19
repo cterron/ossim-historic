@@ -3,12 +3,12 @@ import threading, time
 from Logger import Logger
 logger = Logger.logger
 
-from MonitorList import MonitorList
+from EventList import EventList
 
 class MonitorScheduler(threading.Thread):
 
     def __init__(self):
-        self.monitor_list = MonitorList()
+        self.monitor_list = EventList()
         threading.Thread.__init__(self)
 
     def new_monitor(self, type, plugin, watch_rule):
@@ -39,12 +39,22 @@ class MonitorScheduler(threading.Thread):
          
     def run(self):
         logger.debug("Monitor Scheduler started")
+
         while 1:
+            remove_monitors = []
+
             for monitor in self.monitor_list:
                 # get monitor from monitor list
                 # process watch-rule and remove from list
+
+                # TODO: check if monitor is a Monitor instance
+                # if isinstance(monitor, Monitor)
+
                 if monitor.process():
-                    self.monitor_list.removeRule(monitor)
+                    remove_monitors.append(monitor)
+
+            for m in remove_monitors:
+                self.monitor_list.removeRule(m)
 
             # don't overload agent
             time.sleep(2)

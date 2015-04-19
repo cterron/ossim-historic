@@ -99,6 +99,7 @@ class Plugin(Conf):
 
     TRANSLATION_SECTION = 'translation'
     TRANSLATION_FUNCTION = 'translate'
+    TRANSLATION_DEFAULT = '_DEFAULT_'
     SECTIONS_NOT_RULES = ["config", "info", TRANSLATION_SECTION]
 
     def rules(self):
@@ -189,7 +190,15 @@ class Plugin(Conf):
                         else:
                             logger.warning("Can not translate '%s' value" %\
                                 (groups[var]))
-                            value = groups[var]
+
+                            # It's not possible to translate the value,
+                            # revert to _DEFAULT_ if the entry is present
+                            if self.has_option(Plugin.TRANSLATION_SECTION,
+                                               Plugin.TRANSLATION_DEFAULT):
+                                value = self.get(Plugin.TRANSLATION_SECTION,
+                                                 Plugin.TRANSLATION_DEFAULT)
+                            else:
+                                value = groups[var]
                     else:
                         logger.warning("There is no translation section")
                         value = groups[var]
@@ -305,12 +314,12 @@ def split_variables(string):
 # create an array from a list of sids
 # for example:
 # "1,2,3-6,7" => [1, 2, 3, 4, 5, 6, 7]
-def split_sids(string):
+def split_sids(string, separator=','):
 
     list = list_tmp = []
 
-    # split by ","
-    list = string.split(',')
+    # split by 'separator'
+    list = string.split(separator)
 
     # split by "-"
     for sid in list:
@@ -318,7 +327,7 @@ def split_sids(string):
         if len(a) == 2:
             list.remove(sid)
             for i in range(int(a[0]), int(a[1])+1):
-                list_tmp.append(i)
+                list_tmp.append(str(i))
 
     list.extend(list_tmp)
     return list

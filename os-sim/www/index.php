@@ -1,10 +1,14 @@
 <?php
 require_once ('classes/Session.inc');
+require_once 'classes/Security.inc';
 Session::logcheck("MainMenu", "Index", "session/login.php");
 
 require_once ('ossim_conf.inc');
 $conf = $GLOBALS["CONF"];
 $ossim_link = $conf->get_conf("ossim_link");
+$option = REQUEST("option");
+$soption = REQUEST("soption");
+$url = REQUEST("url");
 ?>
 <html>
 <head>
@@ -14,7 +18,7 @@ $ossim_link = $conf->get_conf("ossim_link");
         type="application/rss+xml">
 </head>
 <frameset rows="130,*" border="0" frameborder="0">
-<frame src="top.php?menu=main" name="top">
+<frame src="top.php?option=<?=$option?>&soption=<?=$soption?>&url=<?=$url?>" name="top">
 <frame src="#" name="main">
 </frameset>
 </html>

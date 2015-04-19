@@ -69,7 +69,74 @@
     </rule>
 </directive>
 
-<!-- directive 3 is deprecated. FIXME: Remove this when you create a new directive with number 3-->
+<directive id="3" name="Recurrent Snort event" priority="3">
+    <rule type="detector" name="Recurrent Snort Event to DST_IP" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="ANY,!468" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Recurrent Snort Event to DST_IP (50)" reliability="+5" time_out="600" occurrence="50"
+            from="ANY" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="SRC_IP">
+                <rules>
+                    <rule type="detector" name="Recurrent Snort Event to DST_IP (200)" reliability="+7" time_out="1200" occurrence="200"
+                    from="ANY" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="SRC_IP">
+                        <rules>
+                            <rule type="detector" name="Recurrent Snort Event to DST_IP (1000)" reliability="+10" time_out="6000" occurrence="1000"
+                            from="ANY" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="SRC_IP">
+                            </rule>
+                        </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+    <rule type="detector" name="Recurrent Snort Event from SRC_IP" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="ANY,!468" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Recurrent Snort Event from SRC_IP (50)" reliability="+5" time_out="600" occurrence="50"
+            from="1:SRC_IP" to="ANY" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="DST_IP">
+                <rules>
+                    <rule type="detector" name="Recurrent Snort Event from SRC_IP (200)" reliability="+7" time_out="1200" occurrence="200"
+                    from="1:SRC_IP" to="ANY" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="DST_IP">
+                       <rules>
+                            <rule type="detector" name="Recurrent Snort Event from SRC_IP (1000)" reliability="+10" time_out="6000" occurrence="1000"
+                            from="1:SRC_IP" to="ANY" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY" sticky_different="DST_IP">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+    <rule type="detector" name="Recurrent Snort Event between SRC_IP:DST_IP" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1001" plugin_sid="ANY,!468" protocol="ANY">
+        <rules>
+            <rule type="detector" name="Recurrent Snort Event between SRC_IP:DST_IP (50)" reliability="+5" time_out="600" occurrence="50"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="Recurrent Snort event between SRC_IP:DST_IP (200)" reliability="+7" time_out="1200" occurrence="200"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                       <rules>
+                            <rule type="detector" name="Recurrent Snort event between SRC_IP:DST_IP (1000)" reliability="+10" time_out="6000" occurrence="1000"
+                            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                            plugin_id="1001" plugin_sid="1:PLUGIN_SID" sticky="true" protocol="ANY">
+                            </rule>
+                       </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
 
 <directive id="4" name="Possible Worm port DST_PORT/PROTOCOL" priority="4">
     <rule type="detector" name="Rare dest connection" reliability="1"
@@ -300,7 +367,7 @@
         <rules>
 			<!-- Match anything except 403 forbidden responses, NETBIOS SMB-DS repeated logon failure
                         WEB-CLIENT ShockwaveFlash.ShockwaveFlash ActiveX CLSID access,
-                        WEB-CLIENT Mozilla bitmap width integer overflow multipacket attempt,
+                        WEB-CLIENT Mozilla bitmap width integPLUGIN_SIDer overflow multipacket attempt,
 			since they don't show a successful intrusion -->
             <rule type="detector" name="Attack response" reliability="+5"
             time_out="10" from="1:DST_IP" to="1:SRC_IP" port_from="1:DST_PORT"
@@ -470,3 +537,108 @@
             plugin_sid="1:PLUGIN_SID" sticky="true"/>
             </rules></rule></rules></rule>
 </directive>
+
+
+<directive id="20" name="Possible SSH brute force login attempt against DST_IP" priority="5">
+  <rule type="detector" name="SSH Authentication failure" reliability="3"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    time_out="10" plugin_id="4003" plugin_sid="1,2,3,4,5,6">
+      <rules>
+        <rule type="detector" name="SSH Authentication failure (3 times)"
+          reliability="+1" occurrence="3" from="1:SRC_IP" to="ANY" 
+          port_from="ANY" time_out="15" port_to="ANY" 
+          plugin_id="4003" plugin_sid="1,2,3,4,5,6" sticky="true">
+          <rules>
+            <rule type="detector" name="SSH Authentication failure (5 times)"
+              reliability="+2" occurrence="5" from="1:SRC_IP" to="ANY" 
+              port_from="ANY" time_out="20" port_to="ANY" 
+              plugin_id="4003" plugin_sid="1,2,3,4,5,6" sticky="true">
+              <rules>
+                <rule type="detector" name="SSH Authentication failure (10 times)"
+                  reliability="+2" occurrence="10" from="1:SRC_IP" to="ANY" 
+                  port_from="ANY" time_out="30" port_to="ANY" 
+                  plugin_id="4003" plugin_sid="1,2,3,4,5,6" sticky="true">
+                </rule>
+              </rules>
+            </rule>
+          </rules>
+        </rule>
+      </rules>
+    </rule>
+</directive>
+
+<directive id="21" name="Too many dropped events from SRC_IP" priority="6">
+  <rule type="detector" name="Firewall Drop event" reliability="2"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    time_out="3" plugin_id="1504" plugin_sid="3">
+      <rules>
+        <rule type="detector" name="Firewall Drop event (3 times)"
+          reliability="+2" occurrence="3" from="1:SRC_IP" to="ANY"
+          port_from="ANY" time_out="10" port_to="ANY"
+          plugin_id="1504" plugin_sid="3" sticky="true">
+          <rules>
+            <rule type="detector" name="Firewall Drop Event (5 times)"
+              reliability="+3" occurrence="5" from="1:SRC_IP" to="ANY"
+              port_from="ANY" time_out="20" port_to="ANY"
+              plugin_id="1504" plugin_sid="3" sticky="true">
+              <rules>
+                <rule type="detector" name="Firewall Drop Events (10 times)"
+                  reliability="+3" occurrence="10" from="1:SRC_IP" to="ANY"
+                  port_from="ANY" time_out="30" port_to="ANY"
+                  plugin_id="1504" plugin_sid="3" sticky="true">
+                </rule>
+              </rules>
+            </rule>
+          </rules>
+        </rule>
+      </rules>
+    </rule>
+</directive>
+
+<directive id="22" name="Too many dropped events with destination DST_IP" priority="6">
+  <rule type="detector" name="Firewall Drop event" reliability="2"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    time_out="3" plugin_id="1504" plugin_sid="3">
+      <rules>
+        <rule type="detector" name="Firewall Drop event (3 times)"
+          reliability="+2" occurrence="3" from="ANY" to="1:DST_IP"
+          port_from="ANY" time_out="10" port_to="ANY"
+          plugin_id="1504" plugin_sid="3" sticky="true">
+          <rules>
+            <rule type="detector" name="Firewall Drop Event (5 times)"
+              reliability="+3" occurrence="5" from="ANY" to="1:DST_IP"
+              port_from="ANY" time_out="20" port_to="ANY"
+              plugin_id="1504" plugin_sid="3" sticky="true">
+              <rules>
+                <rule type="detector" name="Firewall Drop Events (10 times)"
+                  reliability="+3" occurrence="10" from="ANY" to="1:DST_IP"
+                  port_from="ANY" time_out="30" port_to="ANY"
+                  plugin_id="1504" plugin_sid="3" sticky="true">
+                </rule>
+              </rules>
+            </rule>
+          </rules>
+        </rule>
+      </rules>
+    </rule>
+</directive>
+
+<directive id="23" name="HTTP Tunnel through web proxy" priority="3">
+    <rule type="detector" name="Snort: HTTP Tunnel through proxy" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    plugin_id="1001" plugin_sid="2003047,2003048,2006410" protocol="ANY">
+        <rules>
+            <rule type="detector" name="HTTP Tunnel through web proxy (5)" reliability="+2" time_out="60" occurrence="5"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1001" plugin_sid="2003047,2003048,2006410" sticky="true" protocol="ANY">
+                <rules>
+                    <rule type="detector" name="HTTP Tunnel through web proxy (50)" reliability="+3" time_out="600" occurrence="50"
+                    from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+                    plugin_id="1001" plugin_sid="2003047,2003048,2006410" sticky="true" protocol="ANY">
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+

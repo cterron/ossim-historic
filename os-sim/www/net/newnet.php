@@ -28,7 +28,7 @@ $alert = POST('alert');
 $persistence = POST('persistence');
 $rrd_profile = POST('rrd_profile');
 
-ossim_valid($net_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Net name"));
+ossim_valid($net_name, OSS_NET_NAME, 'illegal:'._("Net name"));
 ossim_valid($ips, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Ips"));
 ossim_valid($asset, OSS_DIGIT, 'illegal:'._("Asset"));
 ossim_valid($threshold_a, OSS_DIGIT, 'illegal:'._("threshold_a"));

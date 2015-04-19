@@ -115,6 +115,37 @@ $ACL_MAIN_MENU = array (
                 )
         ),
 
+    "MenuEvents"  => array
+        (
+            "EventsForensics" => array
+                (
+                    "name"          => "Events -> Forensics",
+                    "default_perm"  => true
+                ),
+            "EventsVulnerabilities" => array
+                (
+                    "name"          => "Events -> Vulnerabilities",
+                    "default_perm"  => false
+                ),
+            "EventsAnomalies" => array
+                (
+                    "name"          => "Events -> Anomalies",
+                    "default_perm"  => true
+                ),
+            "EventsRT" => array
+                (
+                    "name"          => "Events -> Real Time Events",
+                    "default_perm"  => true 
+                ),
+            "EventsViewer" => array
+                (
+                    "name"          => "Events -> Events Viewer",
+                    "default_perm"  => false
+                )
+        ),
+
+
+
     "MenuPolicy"    => array
         (
             "PolicyPolicy" => array
@@ -183,6 +214,11 @@ $ACL_MAIN_MENU = array (
             "ReportsPDFReport" => array
                 (
                     "name"          => "Reports -> PDFReport",
+                    "default_perm"  => true
+                ),
+            "ReportsOCSInventory" => array
+                (
+                    "name"          => "Reports -> OCS Inventory",
                     "default_perm"  => true
                 ),
         ),
@@ -328,6 +364,11 @@ $ACL_MAIN_MENU = array (
             "ToolsUserLog" => array
                 (
                     "name"          => "Tools -> User log",
+                    "default_perm"  => true
+                ),
+            "ToolsDownloads" => array
+                (
+                    "name"          => "Tools -> Downloads",
                     "default_perm"  => true
                 )
         )

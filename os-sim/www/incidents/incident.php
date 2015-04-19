@@ -42,8 +42,7 @@ td {
 <table align="center" width="100%">
   <tr>
     <th> <?= _("Ticket") ?> </th>
-    <th width="550px"><?= _("Incident") ?></th>
-    <th> <?= _("In Charge") ?> </th>
+    <th width="600px"><?= _("Incident") ?></th>
     <th> <?= _("Status") ?> </th>
     <th> <?= _("Priority") ?> </th>
     <th> <?= _("Action") ?> </th>
@@ -109,6 +108,14 @@ function format_user($user, $html = true, $show_email = false)
         <?=_("Type")?>: <?=$type?><br/>
         <?=_("Created")?>: <?=$created?> (<?=$life?>)<br/>
         <?=_("Last Update")?>: <?=$updated?><br/>
+        <?php
+            if ($incident->get_status($conn) == "Closed") {
+                echo _("Resolution time").": ".$incident->get_life_time()."<br/>";
+           }
+        ?>
+        <hr/>
+        <?=_("In charge")?>: <b style="color: darkblue"><?= $incident->get_in_charge_name($conn) ?></b><br/>
+        <?=_("Submitter")?>: <b><?= $incident->get_submitter() ?></b>
         <hr/>
         <?=_("Extra")?>: <?=$taghtm?><br/>
         <hr/>
@@ -201,24 +208,24 @@ function format_user($user, $html = true, $show_email = false)
     </td>
     <!-- end incident data -->
 
-    <td><?= $incident->get_in_charge_name($conn) ?></td>
     <td><? Incident::colorize_status($incident->get_status($conn)) ?></td>
     <td><?= Incident::get_priority_in_html($priority) ?></td>
 
     <td>
         <form action="#" method="get">
-        <input type="button" name="submit_edit" value="<?=_("Edit")?>"
+        <input type="button" name="submit_edit" value="<?=_("Edit Incident")?>"
                style="width: 10em;"
                onClick="document.location = 'newincident.php?action=edit&ref=<?=$ref?>&incident_id=<?=$id?>';"
                /><br/>
-        
-        <input type="button" name="add_ticket" value="<?=_("New ticket")?>"
-               style="width: 10em;" onclick="document.location = '#anchor';"/><br/>
-           
-        <input type="button" name="submit_delete" value="<?=_("Delete")?>"
+          
+        <input type="button" name="submit_delete" value="<?=_("Delete Incident")?>"
                style="width: 10em; color: red;"
-               onClick="c = confirm('<?=_("Are you sure?")?>'); if (c) document.location = 'manageincident.php?action=delincident&incident_id=<?=$id?>';"
-               />
+               onClick="c = confirm('<?=_("This action will erase the Incident as well as all the tickets that belongs to it. Are you sure?")?>'); if (c) document.location = 'manageincident.php?action=delincident&incident_id=<?=$id?>';"
+               /><br/>
+
+        <input type="button" name="add_ticket" value="<?=_("New ticket")?>"
+               style="width: 10em;" onclick="document.location = '#anchor';"/>
+ 
         </form>
     </td>
   </tr>

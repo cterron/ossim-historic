@@ -17,8 +17,20 @@ Session::logcheck("MenuControlPanel", "ControlPanelExecutive");
 $panel_id = GET('panel_id') ? GET('panel_id') : 1;
 
 if (Session::menu_perms("MenuControlPanel", "ControlPanelExecutiveEdit")) {
-    $can_edit = GET('edit') ? true : false;
-    $show_edit = true;
+    if(isset($_GET['edit']))
+    {
+        $show_edit = true;
+        $_SESSION['ex_panel_can_edit']= $can_edit = GET('edit') ? true : false;
+        $_SESSION['ex_panel_show_edit']=true;
+    }else if(isset($_SESSION['ex_panel_can_edit'])&&isset($_SESSION['ex_panel_show_edit']))
+    {
+        $can_edit=$_SESSION['ex_panel_can_edit'];
+        $show_edit=$_SESSION['ex_panel_show_edit'];
+    }else
+    {
+        $can_edit = false;
+        $show_edit = true;
+    }
 } else {
     $can_edit = $show_edit = false;
 }
@@ -160,7 +172,7 @@ if (GET('interface') == 'ajax') {
 
             $first_comp = $low_threshold - ($low_threshold / 4);
             $second_comp = $low_threshold + ($low_threshold / 4);
-            $third_comp = $high_threshold + ($high_threshold / 4);
+            $third_comp = $high_threshold - ($high_threshold / 4);
             $fourth_comp = $high_threshold + ($high_threshold / 4);
             
             if($metric_value <= $first_comp){
@@ -177,16 +189,17 @@ if (GET('interface') == 'ajax') {
               $indicator = " <img src=\"../pixmaps/traffic_light0.gif\"/> ";
             }
 
+
             }
             $data['CONTENTS'] = $ajax->showWindowContents($options);
             if (isset($options['window_opts']['title']))
-                $data['TITLE']    = $options['window_opts']['title'] . $indicator;
+                $data['TITLE'] = $options['window_opts']['title'] . $indicator;
             else
-                $data['TITLE']    = "";
+                $data['TITLE'] = "";
             if (isset($options['window_opts']['help']))
-                $data['HELP_MSG']    = $options['window_opts']['help'];
+                $data['HELP_MSG'] =Util::string2js($options['window_opts']['help']);
             else
-                $data['HELP_MSG']    = "";
+                $data['HELP_MSG'] = "";
         } else { // New window
             $data['CONTENTS'] = '';
             $data['TITLE']    = _("New window");
@@ -352,11 +365,12 @@ if (GET('fullscreen') != 1) {
 } 
 ?>
 </td><td align="right"><small>
-<? if ($show_edit && !GET('edit')) { ?>
+
+<? if ($show_edit && !$can_edit ) { ?>
 [<a href="<?=$_SERVER['PHP_SELF']?>?edit=1&panel_id=<?= $panel_id?>"><?php echo gettext("Edit"); ?></a>]
 [<a href="<?=$_SERVER['PHP_SELF']?>?edit_tabs=1&panel_id=<?= $panel_id?>"><?php echo gettext("Edit Tabs"); ?></a>]
-<? } elseif ($show_edit) { ?>
-[<a href="<?=$_SERVER['PHP_SELF']?>?panel_id=<?= $panel_id?>"><?php echo gettext("No Edit"); ?></a>]
+<? } elseif ($show_edit && $can_edit) { ?>
+[<a href="<?=$_SERVER['PHP_SELF']?>?edit=0&panel_id=<?= $panel_id?>"><?php echo gettext("No Edit"); ?></a>]
 [<a href="<?=$_SERVER['PHP_SELF']?>?edit_tabs=1&panel_id=<?= $panel_id?>"><?php echo gettext("Edit Tabs"); ?></a>]
 <? } ?>
 (<a href="<?=$_SERVER['PHP_SELF'] ?>?fullscreen=1&panel_id=<?=$panel_id?>" target="popup" onClick="wopen('<?=$_SERVER['PHP_SELF'] ?>?fullscreen=1&panel_id=<?=$panel_id?>', 'popup', 800, 600); return false;"><?=("Fullscreen")?></a>)

@@ -25,6 +25,7 @@ a:hover {
 
 a.selected {
     color: #e7700c;
+    background: transparent;
     text-decoration: underline;
 }
 
@@ -40,17 +41,24 @@ h1 {
   font-weight: bold;
   font-size: 110%;
   text-align: center;
+  border-radius: 8px;
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
 }
 
 table {
+    background: #fafafa;
     color: black;
     border-style: solid;
-    border-color: #7f7f7f;
+    border-color: #bbbbbb;
     border-width: 1px;
     text-align: center;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
 }
 
-table.noborder {
+.noborder {
     border-width: 0px;
 }
 
@@ -62,7 +70,20 @@ th {
     border-width: 1px;
     font-size: 8pt;
     text-align: center;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 }
+
+/* same colors than <th> */
+.selected {
+    color: #11334f;
+/*    background: #cbcbcb;*/
+    background: #abb7c7;
+    border-color: #7f7f7f;
+    border-width: 1px;
+}
+
 
 td {
     color:black;
@@ -77,10 +98,6 @@ td {
 td.left {
     padding-left: 5px;
     text-align: left;
-}
-
-td.noborder {
-    border-width: 0px;
 }
 
 /* Subtitle header. */
@@ -164,6 +181,17 @@ p.ticket_body {
   text-align: left;
 }
 
+.help {
+  border-width: 3px;
+  border-style: dotted;
+  border-color: rgb(221, 158, 6);
+  padding: 5px;
+  margin-left: 50px;
+  margin-right: 50px;
+  text-align: center;
+  background-color: rgb(236, 234, 171);
+}
+
 /* Style for the popup calendar (see ../js/mattkruse/CalendarPopup.js) */
 
 .CALENDARcpYearNavigation,
@@ -171,7 +199,7 @@ p.ticket_body {
 		{
 		background-color:#abb7c7;
 		text-align:center;
-		vertical-align:center;
+		vertical-align:middle;
 		text-decoration:none;
 		color:#FFFFFF;
 		font-weight:bold;

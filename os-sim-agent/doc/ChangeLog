@@ -1,3 +1,762 @@
+2008-02-05 23:37  nilp0inter
+
+	* ossim_agent/ParserUtil.py:
+	  ParserUtil new function hextoint.
+
+2008-02-01 10:34  dvgil
+
+	* ossim_agent/ParserLog.py: fill log="" attribute with all source
+	  lines in multiline rules
+
+2008-01-29 15:09  dvgil
+
+	* etc/agent/plugins/nagios.cfg: use userdata1 field to store
+	  availibility info
+
+2008-01-18 12:52  dvgil
+
+	* etc/agent/plugins/nagios.cfg: plugin_sid is field $5 instead of
+	  $6 in [nagios-host-alert-syslog]
+
+2008-01-18 12:35  dvgil
+
+	* etc/agent/plugins/nagios.cfg: fix rule name
+
+2008-01-18 12:29  dvgil
+
+	* etc/agent/plugins/nagios.cfg: capture nagios events redirected to
+	  syslog
+
+2008-01-17 11:30  dvgil
+
+	* ossim_agent/ParserSnort.py: fixed typo
+
+2008-01-17 11:08  dvgil
+
+	* ossim_agent/ParserSnort.py: convert all tabs to spaces. All the
+	  other .py files use this convention
+
+2008-01-17 11:04  dvgil
+
+	* ossim_agent/ParserSnort.py: fix tabs/spaces
+
+2008-01-17 11:00  dvgil
+
+	* ossim_agent/Threshold.py: Server is not working properly with the
+	  occurrences field, may be we will use an userdataX field until
+	  this is fixed..
+
+2008-01-17 10:54  dvgil
+
+	* ossim_agent/ParserSnort.py: - Comparisons with True/False are not
+	  necessary and may not work as expected - Comment that would fix
+	  the self._timestamp undeclared variable
+
+2008-01-11 13:33  dvgil
+
+	* ossim_agent/Event.py: missing comma
+
+2008-01-07 11:02  dkarg
+
+	* etc/agent/plugins/snare.cfg: Improve regexp
+
+2007-12-20 23:53  dvgil
+
+	* etc/agent/plugins/stonegate.cfg: new sids (tester notice and
+	  security policy reload) for stonegate plugin
+
+2007-12-20 11:44  dvgil
+
+	* etc/agent/plugins/stonegate.cfg: added a note to disable new
+	  connection messages
+
+2007-12-20 11:40  dvgil
+
+	* etc/agent/plugins/stonegate.cfg: added new sid "related packet"
+	  to stonegate plugin
+
+2007-12-20 11:26  dvgil
+
+	* etc/agent/plugins/netscreen-firewall.cfg: updated netscreen sid 2
+	  (deny) adding reject keyword too
+
+2007-12-20 11:24  dvgil
+
+	* etc/agent/plugins/stonegate.cfg: new sid "related connection" for
+	  stonegate plugin
+
+2007-12-20 11:21  dvgil
+
+	* ossim_agent/PacketUtils.py: error decoding tcp packet, print the
+	  exception instead of only capture it
+
+2007-12-19 18:38  juanmals
+
+	* etc/agent/plugins/stonegate.cfg: one or more spaces, thanks dgil
+
+2007-12-19 10:19  dvgil
+
+	* ossim_agent/: Event.py, ParserUnifiedSnort.py: another try for
+	  extra attributes in parser unified snort
+
+2007-12-18 15:29  juanmals
+
+	* ossim_agent/Event.py: dont send plugin_sid & type , server breaks
+	  connection server-agent if some param is not expected to arrive
+
+2007-12-17 09:35  dvgil
+
+	* ossim_agent/Output.py: same fix for other outputs
+
+2007-12-16 20:30  dvgil
+
+	* ossim_agent/Output.py: trivial fix for not sending messages to
+	  the server after an agent shutdown
+
+2007-12-13 16:18  dvgil
+
+	* ossim_agent/Detector.py: s/threshold.clear()/pass not sure if
+	  clear the threshold buffer when parser stops is useful..
+
+2007-12-13 13:46  juanmals
+
+	* etc/agent/plugins/cisco-vpn.cfg: $1 -> $date
+
+2007-12-13 12:08  cterron
+
+	* ossim_agent/ParserSnort.py:
+	  There is a bug filtering the filenames that snort generates. If
+	  there is some file in the snort directory that isn't a snort
+	  unified file, the parser oops (for example, if the log file is
+	  compressed by gzip). Now, the parser only look for files that
+	  it's prefix_.timestamp
+
+2007-12-12 18:47  dvgil
+
+	* etc/agent/plugins/: cisco-vpn.cfg, clurgmgr.cfg: fix sids
+	  assigned to clurgmgr and cisco-vpn
+
+2007-12-12 18:35  juanmals
+
+	* etc/agent/config.cfg: plugin renamed
+
+2007-12-12 18:35  juanmals
+
+	* etc/agent/plugins/: cisco-vpn.cfg, clurgmgr.cfg, clurmgmr.cfg:
+	  plugin_id changed to 1528, plugin renamed
+
+2007-12-12 18:25  juanmals
+
+	* etc/agent/plugins/clurmgmr.cfg: fix src_ip and exclude link
+	  detected by default
+
+2007-12-12 18:17  dvgil
+
+	* ossim_agent/: Stats.py, Threshold.py: added event consolidation
+	  to the statistics summary
+
+2007-12-12 18:07  dvgil
+
+	* ossim_agent/Event.py: added plugin_id and type attributes for
+	  snortunified events
+
+2007-12-12 17:09  juanmals
+
+	* etc/agent/plugins/pam_unix.cfg: description field not in use
+
+2007-12-12 16:32  juanmals
+
+	* etc/agent/: config.cfg, plugins/cisco-vpn.cfg: new plugin cisco
+	  vpn box
+
+2007-12-12 12:04  juanmals
+
+	* etc/agent/plugins/ssh.cfg: user not allowed because account is
+	  locked
+
+2007-12-12 11:24  juanmals
+
+	* etc/agent/plugins/cisco-pix.cfg: Support CISCO ASA logs
+
+2007-12-11 10:12  dvgil
+
+	* ossim_agent/Threshold.py: enable event consolidation in all
+	  plugins in the testing code
+
+2007-12-11 07:57  dvgil
+
+	* doc/ChangeLog: updated changelog for an incoming cvs snapshot
+
+2007-12-10 17:26  dvgil
+
+	* ossim_agent/ParserUnifiedSnort.py: added plugin_id and type
+	  attributes for snortunified events
+
+2007-12-10 15:39  dvgil
+
+	* ossim_agent/Config.py: improve split_sids() function to work with
+	  other separators than ','
+
+2007-12-10 14:12  dvgil
+
+	* etc/agent/config.cfg: event-consolidation:  
+	  + added sensor filter
+	  + explain possible problems increasing "time" value
+	  + explain that by_* filters are (in current implementation)
+	    managed as OR rules
+
+2007-12-10 14:08  dvgil
+
+	* ossim_agent/Threshold.py: filter by sensor too and group
+	  src_ip&dst_ip&sensor filters code
+
+2007-12-10 11:29  dvgil
+
+	* ossim_agent/: Agent.py, Detector.py, Threshold.py: clear
+	  remaining events from the consolidation queue when a shutdown
+	  signal is received
+
+2007-12-10 10:46  dvgil
+
+	* ossim_agent/Threshold.py: set a maximun time value for event
+	  consolidation in order to prevent memory problems
+
+2007-12-10 10:25  dvgil
+
+	* ossim_agent/Threshold.py: call is_consolidation_enable() only one
+	  time per execution
+
+2007-12-09 14:44  dkarg
+
+	* ossim_agent/ParserUtil.py: Add md5 requirement
+
+2007-12-06 16:38  dkarg
+
+	* etc/agent/plugins/syslog.cfg: Improved syslog plugin
+
+2007-12-06 15:58  dkarg
+
+	* ossim_agent/ParserUtil.py: Checksum function.
+
+2007-12-06 15:55  dkarg
+
+	* etc/agent/: config.cfg, plugins/syslog.cfg: Syslog datamining
+	  plugin
+
+2007-12-06 15:50  dkarg
+
+	* etc/agent/config.cfg: English
+
+2007-12-05 23:09  dvgil
+
+	* ossim_agent/Threshold.py: few TODO notes regarding event
+	  consolidation
+
+2007-12-05 14:56  dvgil
+
+	* ossim_agent/MonitorScheduler.py: fix monitors removal in monitor
+	  scheduler
+
+2007-12-04 16:29  dvgil
+
+	* ossim_agent/: Detector.py, Threshold.py: more and more date&log
+	  control and remove some unused code
+
+2007-12-04 15:59  juanmals
+
+	* ossim_agent/ParserUtil.py: syslog-ng date format
+
+2007-12-04 15:51  dvgil
+
+	* ossim_agent/Threshold.py: more control over date and log event
+	  attributes as they are not used in the event comparasion
+
+2007-12-04 15:16  dvgil
+
+	* etc/agent/config.cfg, ossim_agent/Detector.py,
+	  ossim_agent/Event.py, ossim_agent/Threshold.py: new feature
+	  added: event consolidation
+
+2007-12-04 13:43  juanmals
+
+	* ossim_agent/ParserUtil.py: ibm log date format
+
+2007-12-03 17:26  juanmals
+
+	* etc/agent/: config.cfg, plugins/clurmgmr.cfg: new plugin
+
+2007-12-03 09:48  juanmals
+
+	* ossim_agent/Detector.py: fixed in server , not needed anymore
+
+2007-12-01 19:02  dkarg
+
+	* etc/agent/: config.cfg, plugins/iphone.cfg: iPhone plugin ;-)
+
+2007-11-29 23:46  dvgil
+
+	* ossim_agent/Detector.py: Hopefully fixed BASE port filters
+
+2007-11-28 17:33  dvgil
+
+	* ossim_agent/PacketUtils.py: use the same call for
+	  binascii.hexlify in the file
+
+2007-11-28 17:27  dvgil
+
+	* ossim_agent/PacketUtils.py: fixed a few method calls	
+	  - logger.warning with no Logger import
+	  - binascii.hexlify with no binascci import
+
+2007-11-28 17:17  dvgil
+
+	* ossim_agent/Detector.py: fix last accidental commit (Threshold
+	  class is not already committed)
+
+2007-11-28 16:58  dvgil
+
+	* ossim_agent/: Detector.py, Watchdog.py: Using "is 0" may not
+	  always work
+
+2007-11-28 10:48  dvgil
+
+	* ossim_agent/ParserLog.py: clean 'None' values in name-grouping
+	  values too
+
+2007-11-27 12:49  juanmals
+
+	* etc/agent/aliases.cfg: time alias
+
+2007-11-27 12:39  juanmals
+
+	* etc/agent/aliases.cfg: new alias
+
+2007-11-27 12:38  juanmals
+
+	* etc/agent/plugins/cisco-pix.cfg: New cisco pix rules
+
+2007-11-21 21:40  dkarg
+
+	* etc/agent/plugins/ossec.cfg: Use ossec-ossec instead of
+	  ossec-squid as default
+
+2007-11-21 20:37  dkarg
+
+	* etc/agent/: plugins/ossec.cfg, plugins/ossec_apache.cfg,
+	  plugins/ossec_arpwatch.cfg, plugins/ossec_attack.cfg,
+	  plugins/ossec_cisco-ios.cfg, plugins/ossec_courier.cfg,
+	  plugins/ossec_firewall.cfg, plugins/ossec_ftpd.cfg,
+	  plugins/ossec_hordeimp.cfg, plugins/ossec_ids.cfg,
+	  plugins/ossec_imapd.cfg, plugins/ossec_local.cfg,
+	  plugins/ossec_mailscanner.cfg, plugins/ossec_ms-exchange.cfg,
+	  plugins/ossec_ms_ftpd.cfg, plugins/ossec_msauth.cfg,
+	  plugins/ossec_mysql.cfg, plugins/ossec_named.cfg,
+	  plugins/ossec_netscreenfw.cfg, plugins/ossec_ossec.cfg,
+	  plugins/ossec_pam.cfg, plugins/ossec_pix.cfg,
+	  plugins/ossec_policy.cfg, plugins/ossec_postfix.cfg,
+	  plugins/ossec_postgresql.cfg, plugins/ossec_proftpd.cfg,
+	  plugins/ossec_pure-ftpd.cfg, plugins/ossec_racoon.cfg,
+	  plugins/ossec_sendmail.cfg, plugins/ossec_smbd.cfg,
+	  plugins/ossec_sonicwall.cfg, plugins/ossec_spamd.cfg,
+	  plugins/ossec_squid.cfg, plugins/ossec_sshd.cfg,
+	  plugins/ossec_symantec-av.cfg, plugins/ossec_symantec-ws.cfg,
+	  plugins/ossec_syslog.cfg, plugins/ossec_telnetd.cfg,
+	  plugins/ossec_vpn_concentrator.cfg, plugins/ossec_vpopmail.cfg,
+	  plugins/ossec_vsftpd.cfg, plugins/ossec_web.cfg,
+	  plugins/ossec_zeus.cfg, config.cfg: Unify ossec plugins
+
+2007-11-21 13:10  dkarg
+
+	* etc/agent/plugins/: ossec_apache.cfg, ossec_arpwatch.cfg,
+	  ossec_attack.cfg, ossec_cisco-ios.cfg, ossec_courier.cfg,
+	  ossec_firewall.cfg, ossec_ftpd.cfg, ossec_hordeimp.cfg,
+	  ossec_ids.cfg, ossec_imapd.cfg, ossec_local.cfg,
+	  ossec_mailscanner.cfg, ossec_ms-exchange.cfg, ossec_ms_ftpd.cfg,
+	  ossec_msauth.cfg, ossec_mysql.cfg, ossec_named.cfg,
+	  ossec_netscreenfw.cfg, ossec_ossec.cfg, ossec_pam.cfg,
+	  ossec_pix.cfg, ossec_policy.cfg, ossec_postfix.cfg,
+	  ossec_postgresql.cfg, ossec_proftpd.cfg, ossec_pure-ftpd.cfg,
+	  ossec_racoon.cfg, ossec_sendmail.cfg, ossec_smbd.cfg,
+	  ossec_sonicwall.cfg, ossec_spamd.cfg, ossec_squid.cfg,
+	  ossec_sshd.cfg, ossec_symantec-av.cfg, ossec_symantec-ws.cfg,
+	  ossec_syslog.cfg, ossec_telnetd.cfg, ossec_vpn_concentrator.cfg,
+	  ossec_vpopmail.cfg, ossec_vsftpd.cfg, ossec_web.cfg,
+	  ossec_zeus.cfg: Slightly better sensor regexp
+
+2007-11-21 00:25  dkarg
+
+	* etc/agent/plugins/: nagios.cfg, ossec_apache.cfg,
+	  ossec_arpwatch.cfg, ossec_attack.cfg, ossec_cisco-ios.cfg,
+	  ossec_courier.cfg, ossec_firewall.cfg, ossec_ftpd.cfg,
+	  ossec_hordeimp.cfg, ossec_ids.cfg, ossec_imapd.cfg,
+	  ossec_local.cfg, ossec_mailscanner.cfg, ossec_ms-exchange.cfg,
+	  ossec_ms_ftpd.cfg, ossec_msauth.cfg, ossec_mysql.cfg,
+	  ossec_named.cfg, ossec_netscreenfw.cfg, ossec_ossec.cfg,
+	  ossec_pam.cfg, ossec_pix.cfg, ossec_policy.cfg,
+	  ossec_postfix.cfg, ossec_postgresql.cfg, ossec_proftpd.cfg,
+	  ossec_pure-ftpd.cfg, ossec_racoon.cfg, ossec_sendmail.cfg,
+	  ossec_smbd.cfg, ossec_sonicwall.cfg, ossec_spamd.cfg,
+	  ossec_squid.cfg, ossec_sshd.cfg, ossec_symantec-av.cfg,
+	  ossec_symantec-ws.cfg, ossec_syslog.cfg, ossec_telnetd.cfg,
+	  ossec_vpn_concentrator.cfg, ossec_vpopmail.cfg, ossec_vsftpd.cfg,
+	  ossec_web.cfg, ossec_zeus.cfg: Nagios plugin fix, ossec plugins
+	  fixed.
+
+2007-11-20 16:16  dvgil
+
+	* ossim_agent/Watchdog.py: fix Watchdog constant call
+
+2007-11-20 16:08  dvgil
+
+	* ossim_agent/Logger.py: removed non-existing function from test
+	  code class
+
+2007-11-20 16:06  dvgil
+
+	* ossim_agent/PacketUtils.py: fixed a few statements with no effect
+
+2007-11-20 11:34  dvgil
+
+	* ossim_agent/Config.py: ensure split_sids() function returns str
+	  types
+
+2007-11-20 10:14  dvgil
+
+	* ossim_agent/Stats.py: Using "is not total" may not always work
+
+2007-11-20 09:59  dvgil
+
+	* ossim_agent/MonitorScheduler.py: a few TODO notes
+
+2007-11-20 09:59  dvgil
+
+	* ossim_agent/EventList.py: be a little more generic with debug
+	  messages
+
+2007-11-20 09:17  dvgil
+
+	* ossim_agent/: Detector.py, EventList.py, Monitor.py,
+	  MonitorList.py, MonitorScheduler.py: renamed MonitorList to
+	  EventList.  This list (a lock-protected queue) will be used in
+	  thresholding too.
+
+2007-11-20 09:09  dvgil
+
+	* ossim_agent/: Detector.py, ParserLog.py: a little restructuration
+	  in send_message before implementing thresholding
+
+2007-11-19 19:59  dkarg
+
+	* etc/agent/config.cfg: Some more plugins
+
+2007-11-19 19:58  dkarg
+
+	* etc/agent/plugins/: ossec_apache.cfg, ossec_arpwatch.cfg,
+	  ossec_attack.cfg, ossec_cisco-ios.cfg, ossec_courier.cfg,
+	  ossec_firewall.cfg, ossec_ftpd.cfg, ossec_hordeimp.cfg,
+	  ossec_ids.cfg, ossec_imapd.cfg, ossec_local.cfg,
+	  ossec_mailscanner.cfg, ossec_ms-exchange.cfg, ossec_ms_ftpd.cfg,
+	  ossec_msauth.cfg, ossec_mysql.cfg, ossec_named.cfg,
+	  ossec_netscreenfw.cfg, ossec_ossec.cfg, ossec_pam.cfg,
+	  ossec_pix.cfg, ossec_policy.cfg, ossec_postfix.cfg,
+	  ossec_postgresql.cfg, ossec_proftpd.cfg, ossec_pure-ftpd.cfg,
+	  ossec_racoon.cfg, ossec_sendmail.cfg, ossec_smbd.cfg,
+	  ossec_sonicwall.cfg, ossec_spamd.cfg, ossec_squid.cfg,
+	  ossec_sshd.cfg, ossec_symantec-av.cfg, ossec_symantec-ws.cfg,
+	  ossec_syslog.cfg, ossec_telnetd.cfg, ossec_vpn_concentrator.cfg,
+	  ossec_vpopmail.cfg, ossec_vsftpd.cfg, ossec_web.cfg,
+	  ossec_zeus.cfg: Add ossec plugins to ossim :-)
+
+2007-11-19 18:01  dkarg
+
+	* ossim_agent/ParserUtil.py: OSSEC date format
+
+2007-11-19 16:57  juanmals
+
+	* etc/agent/plugins/: pam_unix.cfg, ssh.cfg: 2 more ssh sids
+
+2007-11-15 13:03  dvgil
+
+	* ossim_agent/ParserLog.py: add a reminder for clean 'None' values
+	  in name-grouping matches
+
+2007-11-14 13:00  juanmals
+
+	* etc/agent/plugins/pam_unix.cfg: missing dst_ip and some aliases
+
+2007-11-14 12:41  juanmals
+
+	* etc/agent/plugins/sudo.cfg: missing dst_ip
+
+2007-11-14 10:42  juanmals
+
+	* etc/agent/plugins/ssh.cfg: add dst_ip
+
+2007-11-13 15:56  dvgil
+
+	* etc/agent/aliases.cfg: improve \SYSLOG_DATE regexp
+
+2007-11-12 10:06  dvgil
+
+	* ossim_agent/: Agent.py, Logger.py: enable console output by
+	  default
+
+2007-11-09 13:18  dvgil
+
+	* ossim_agent/Watchdog.py: don't include initial startup processes
+	  in stats['watchdog_restarts'] since we only want to check hangs
+
+2007-11-08 18:15  dvgil
+
+	* etc/agent/config.cfg, ossim_agent/Agent.py,
+	  ossim_agent/Logger.py: 
+	  - added a new logging file handler for errors 
+	  - logger.error() and logger.critical() messages are now
+	    written into a separate file (configurable via CFG(log,error))
+	  - unexpected code exceptions are now captured and its traceback
+  	    messages logged to stdout and to the new error file handler
+
+2007-11-08 10:17  dvgil
+
+	* etc/agent/: config.cfg, plugins/snortunified.cfg: snortunified
+	  plugin configuration changes
+
+2007-11-07 16:42  dvgil
+
+	* ossim_agent/ParserUnifiedSnort.py: don't mix tabs and spaces, it
+	  would produce syntax errors
+
+2007-11-07 16:23  dkarg
+
+	* etc/agent/plugins/arpwatch.cfg, etc/agent/plugins/p0f.cfg,
+	  etc/agent/plugins/pads.cfg, etc/agent/plugins/snortunified.cfg,
+	  ossim_agent/ParserUnifiedSnort.py: Add interface information to
+	  some plugins so it's easy to duplicate them and change the
+	  interface for multiple instances
+
+2007-11-07 16:19  dkarg
+
+	* etc/agent/: plugins/nessus-monitor.cfg, config.cfg: Adding fake
+	  nessus monitor
+
+2007-11-07 10:50  dvgil
+
+	* ossim_agent/Watchdog.py: wait a second after stopping a process
+	  to notify the correct process state to the server
+
+2007-11-07 10:08  dvgil
+
+	* etc/agent/plugins/ossim-agent.cfg, ossim_agent/Logger.py,
+	  ossim_agent/Watchdog.py: added watchdog messages to ossim-agent
+	  plugin
+
+2007-11-06 16:23  dvgil
+
+	* etc/agent/config.cfg: load ossim-agent plugin in configuration
+
+2007-11-06 16:05  dvgil
+
+	* etc/agent/plugins/ossim-agent.cfg, ossim_agent/Conn.py,
+	  ossim_agent/Logger.py:
+	  ossim-agent plugin:
+	   - better capture error messages than info ones
+	   - use begin and end delimiters in regexp in order to prevent recursion
+
+2007-11-06 15:54  dvgil
+
+	* ossim_agent/Stats.py: check perms opening stats file
+
+2007-11-06 10:09  dvgil
+
+	* etc/agent/plugins/ossim-agent.cfg, ossim_agent/Conn.py,
+	  ossim_agent/Logger.py: example of a working ossim-agent plugin
+
+2007-10-30 14:58  dvgil
+
+	* ossim_agent/: PacketUtils.py, ParserSnort.py, Utils.py: removed
+	  #! sequences that mark interpreted scripts on not executable
+	  files
+
+2007-10-30 10:12  dvgil
+
+	* ossim_agent/ParserLog.py: better control of malformed rules
+
+2007-10-30 10:11  dvgil
+
+	* etc/agent/plugins/sudo.cfg: fix malformed rule: "redefinition of
+	  group name 'user' as group 6; was group 3"
+
+2007-10-30 08:50  dvgil
+
+	* etc/agent/plugins/sudo.cfg: replaced ; by \W in regexps (; are
+	  comments in .ini files)
+
+2007-10-26 08:06  dvgil
+
+	* ossim_agent/Stats.py: count events with no plugin_id
+
+2007-10-26 07:55  dvgil
+
+	* ossim_agent/: Event.py, ParserUnifiedSnort.py: comment out last
+	  change, don't send plugin_id and type attribute as it breaks
+	  unifiedSnort plugin
+
+2007-10-25 16:45  dvgil
+
+	* ossim_agent/: Logger.py, Output.py, Stats.py, Watchdog.py: go
+	  back for old (and ugly) staticmethod declaration style since we
+	  want compatibility with at least python2.3 (function decorator
+	  syntax was added in python2.4)
+
+2007-10-25 15:45  dkarg
+
+	* etc/agent/plugins/snare.cfg: Usernames may have spaces in them
+
+2007-10-25 13:10  dkarg
+
+	* etc/agent/plugins/pam_unix.cfg: Some new rules for sudo.
+
+2007-10-24 17:12  dvgil
+
+	* etc/agent/plugins/stonegate.cfg: fix icmp translation
+
+2007-10-24 16:31  dvgil
+
+	* etc/agent/config.cfg: new stonegate plugin commented out by
+	  default
+
+2007-10-24 16:27  dvgil
+
+	* etc/agent/: config.cfg, plugins/stonegate.cfg: added new
+	  stonegate plugin
+
+2007-10-23 18:48  alberto_r
+
+	* etc/agent/plugins/fw1ngr60.cfg: Process name and startup command
+
+2007-10-23 12:30  dkarg
+
+	* ossim_agent/ParserUtil.py: Fix a bug related to date formatting,
+	  thread would get killed if two seemingly similar dates would
+	  match on different positions (2007/10/23 || 23/10/2007) matching
+	  "%Y/%m/%d" for example.
+
+2007-10-23 11:44  tvvcox
+
+	* ossim-agent.spec: added dep on python-adodb
+
+2007-10-23 11:28  dvgil
+
+	* ossim_agent/: Event.py, ParserUnifiedSnort.py: Added 'plugin_id'
+	  and 'type' event keys to SnortUnified plugin
+
+2007-10-23 11:24  dvgil
+
+	* ossim_agent/Stats.py: check for events with no plugin_id
+
+2007-10-23 09:34  dvgil
+
+	* debian/changelog, doc/ChangeLog: updated changelogs
+
+2007-10-23 08:14  dvgil
+
+	* ossim_agent/: Stats.py, Watchdog.py: added apps restarted by
+	  watchdog to the Stats module
+
+2007-10-22 11:21  dvgil
+
+	* ossim_agent/Agent.py: 
+	  Improvements and fixes in the pid file creation/removal:
+	    + remove pid file at startup in case that --force argument 
+	      is used.
+	    + don't remove the ossim-agent.pid file at shudtown if it belongs 
+	      to other ossim-agent process. In other case it will cause 
+	      multiple ossim-agent instances at once.
+
+2007-10-22 10:12  dvgil
+
+	* ossim_agent/: Agent.py, Stats.py: log a few statistics every 30
+	  seconds
+
+2007-10-18 18:13  dvgil
+
+	* ossim_agent/Database.py: connect's password argument must be
+	  always string
+
+2007-10-10 15:55  tvvcox
+
+	* ossim-agent.spec: - Changed --prefix to --root - Now target arch
+	  is noarch
+
+2007-10-03 17:37  tvvcox
+
+	* ossim-agent.spec: these files aren't really config files
+
+2007-10-02 16:25  tvvcox
+
+	* ossim-agent.spec: Initial .spec release
+
+2007-09-27 09:59  dvgil
+
+	* etc/agent/: plugins/fw1ngr60.cfg, config.cfg: new plugin for fw1
+	  NG R60, thanks jai for the contribution
+
+2007-09-26 16:13  dvgil
+
+	* etc/agent/plugins/ossim-monitor.cfg: expand ossim_dsn variable
+	  from config.cfg in database variable
+
+2007-09-26 16:11  dvgil
+
+	* ossim_agent/Config.py: if it's not possible to translate a value,
+	  revert to default if the entry _DEFAULT_ is present
+
+2007-09-26 09:11  dvgil
+
+	* etc/agent/config.cfg, ossim_agent/Agent.py, ossim_agent/Conn.py,
+	  ossim_agent/Detector.py, ossim_agent/Monitor.py,
+	  ossim_agent/Stats.py: new module for agent statistics:
+	    + startup and shutdown (include hangs) dates
+	    + number of events (total, by detectors, by monitors and by plugins)
+	    + server reconnections attempts
+	    + more are coming..
+
+2007-09-21 20:01  dvgil
+
+	* ossim_agent/: Logger.py, Output.py, Watchdog.py: use decorators
+	  for static methods instead of redeclaring
+
+2007-09-11 09:53  dvgil
+
+	* setup.py: revert last change, dropped debug sentence
+
+2007-09-10 14:22  cterron
+
+	* setup.py: Regression fix :)
+
+2007-09-10 13:51  cterron
+
+	* setup.py:
+	  - Update de version information in setup.py to 0.9.9rc5
+	  - Fix, if you specify python setup.py install --prefix, now all the
+	    files are under the prefix tree, (before the config files are
+	    installed under /etc)
+
+2007-08-27 22:51  alberto_r
+
+	* etc/agent/plugins/snort.cfg: protocol change, should be "OTHER"
+
+2007-08-24 13:43  dkarg
+
+	* etc/agent/plugins/snort.cfg: Server will drop the packet if it
+	  receives "PROTO255" as protocol, let's translate it into icmp for
+	  example
+
+2007-08-07 11:40  dvgil
+
+	* debian/changelog, doc/ChangeLog: updated changelogs for the
+	  incoming release
+
 ========== version 0.9.9rc5 (09-08-2007) ==========
 
 2007-07-25 14:52  cterron
@@ -1555,7 +2314,7 @@
 
 2006-02-10 10:27  dvgil
 
-	* ossim_agent/__init__.py: test with $Date: 2007/08/07 09:40:17 $
+	* ossim_agent/__init__.py: test with $Date: 2008/02/12 09:36:15 $
 
 2006-02-10 10:20  dvgil
 

@@ -42,7 +42,7 @@
 ?>
     <tr>
       <!-- description -->
-      <td><?php echo $response->get_descr(); ?></td>
+      <td><?php echo $response->get_descr(); ?>&nbsp;</td>
       <!-- end description -->
 
       <td>

@@ -59,6 +59,8 @@ while ($file = $dir->read()) {
 	} else {
 		$delete[] = $date;
 	}
+    rsort($insert);
+    rsort($delete);
 }
 
 $dir->close();
@@ -95,9 +97,9 @@ $db->close($conn);
 		<select name="insert[]" size="10" multiple>
 <?php
 if (is_array($insert)) {
-    for ($i=0; $i<count($insert); $i++) {
+    foreach ($insert as $insert_item) {
 ?>
-       <option value="<?=$insert[$i]?>">&nbsp;&nbsp;<?=$insert[$i]?>&nbsp;&nbsp;</option>
+       <option value="<?=$insert_item?>">&nbsp;&nbsp;<?=$insert_item?>&nbsp;&nbsp;</option>
 <?php }
 } else { ?>
 	<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?=_("NONE")?>&nbsp;--&nbsp;&nbsp;</option>
@@ -109,9 +111,9 @@ if (is_array($insert)) {
 		<select name="delete[]" size="10" multiple>
 <?php
 if (is_array($delete)) {
-    for ($i=0; $i<count($delete); $i++) {
+    foreach ($delete as $delete_item) {
 ?>
-		<option size="100" value="<?=$delete[$i]?>">&nbsp;&nbsp;<?=$delete[$i]?>&nbsp;&nbsp;</option>
+		<option size="100" value="<?=$delete_item?>">&nbsp;&nbsp;<?=$delete_item?>&nbsp;&nbsp;</option>
 <?php } 
 } else { ?>
 		<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?=_("NONE")?>&nbsp;--&nbsp;&nbsp;</option>

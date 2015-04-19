@@ -1,7 +1,8 @@
-#!/usr/bin/python
-import socket,struct,sys
+import socket, struct, sys
 from Utils import dumphexdata
 from binascii import hexlify
+from Logger import Logger
+logger = Logger.logger
 
 class UDPPacket:
 	def __init__(self,data):
@@ -101,8 +102,8 @@ class TCPPacket:
 						options=options[2+l:]
 					else:
 						raise Exception, "Error processing TCP Options"
-				except:
-					logger.warning("Can't decode TCP option %02x: Payload:%s" % (c,binascii.hexlify(self.options)))
+				except Exception, e_msg:
+					logger.warning("Can't decode TCP option %02x: Payload:%s (exception: %s)" % (c, hexlify(self.options), str(e_msg)))
 
 	def dump(self):
 		print "TCP Header"
@@ -122,33 +123,33 @@ class TCPPacket:
 		else:
 			st="."
 		if self.flags & 2:
-			st+"E"
+			st+="E"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 4:
-			st+"U"
+			st+="U"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 8:
-			st+"A"
+			st+="A"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 16:
-			st+"P"
+			st+="P"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 32:
-			st+"R"
+			st+="R"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 64:
-			st+"S"
+			st+="S"
 		else:
-			st+"."
+			st+="."
 		if self.flags & 128:
-			st+"F"
+			st+="F"
 		else:
-			st+"."
+			st+="."
 		return st
 	
 def getprotobynumber(n):
@@ -316,7 +317,7 @@ class IPPacket:
 					else:
 						raise Exception, "Error processing IP  options"
 				except:
-					logger.warning("Bad IP option %02x: Not len or data %s" % (c,binascii.hexlify(self.options)))
+					logger.warning("Bad IP option %02x: Not len or data %s" % (c,hexlify(self.options)))
 		
 	def dump(self):
 		"""Dump ip packet"""

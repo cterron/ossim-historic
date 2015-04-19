@@ -30,12 +30,23 @@ Session::logcheck("MenuMonitors", "MonitorsNetwork");
     # /etc/ossim/framework/ossim.conf
     # a better solution ??
     #
-    $url_parsed = parse_url($conf->get_conf("ntop_link"));
-    $port = $url_parsed["port"];
-    $protocol = $url_parsed["scheme"];
+    
+    if (!$conf->get_conf("use_ntop_rewrite")){
 
-    $fr_up = "menu.php?sensor=$sensor&port=$port&proto=$protocol";
-    $fr_down = "$protocol://$sensor:$port/trafficStats.html";
+        $url_parsed = parse_url($conf->get_conf("ntop_link"));
+        $port = $url_parsed["port"];
+        $protocol = $url_parsed["scheme"];
+
+        $fr_up = "menu.php?sensor=$sensor&port=$port&proto=$protocol";
+        $fr_down = "$protocol://$sensor:$port/trafficStats.html";
+    } else { //if use_ntop_rewrite is enabled
+        
+        $protocol = "http";
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") $protocol = "https";
+
+        $fr_up = "menu.php?sensor=$sensor";
+        $fr_down = "$protocol://".$_SERVER['SERVER_NAME']."/ntop-$sensor/";
+    }
 ?>
 <frameset cols="18%,82%" border="0" frameborder="0">
 <frame src="<?php echo $fr_up ?>">

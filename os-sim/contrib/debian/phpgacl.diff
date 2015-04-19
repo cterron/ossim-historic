@@ -1,6 +1,6 @@
-diff -aur phpgacl-3.3.6.orig/debian/apache.conf phpgacl-3.3.6/debian/apache.conf
---- phpgacl-3.3.6.orig/debian/apache.conf	2006-08-30 09:20:02.000000000 +0200
-+++ phpgacl-3.3.6/debian/apache.conf	2006-08-30 09:23:57.000000000 +0200
+diff -aur phpgacl-3.3.7.orig/debian/apache.conf phpgacl-3.3.7/debian/apache.conf
+--- phpgacl-3.3.7.orig/debian/apache.conf	2007-08-11 19:13:28.000000000 +0200
++++ phpgacl-3.3.7/debian/apache.conf	2007-08-11 19:14:36.000000000 +0200
 @@ -3,9 +3,9 @@
  </IfModule>
  
@@ -14,15 +14,15 @@ diff -aur phpgacl-3.3.6.orig/debian/apache.conf phpgacl-3.3.6/debian/apache.conf
      Options Indexes FollowSymLinks MultiViews
  </Location>
  
-diff -aur phpgacl-3.3.6.orig/debian/phpgacl.config phpgacl-3.3.6/debian/phpgacl.config
---- phpgacl-3.3.6.orig/debian/phpgacl.config	2006-08-30 09:20:02.000000000 +0200
-+++ phpgacl-3.3.6/debian/phpgacl.config	2006-08-30 09:23:37.000000000 +0200
+diff -aur phpgacl-3.3.7.orig/debian/phpgacl.config phpgacl-3.3.7/debian/phpgacl.config
+--- phpgacl-3.3.7.orig/debian/phpgacl.config	2007-08-11 19:13:28.000000000 +0200
++++ phpgacl-3.3.7/debian/phpgacl.config	2007-08-11 19:15:35.000000000 +0200
 @@ -5,6 +5,8 @@
  
  # source dbconfig-common stuff
  dbc_dbtypes="mysql, pgsql"
 +dbc_dbuser="root"
 +dbc_dbname="ossim_acl"
- . /usr/share/dbconfig-common/dpkg/config
- dbc_go phpgacl $@
  
+ if [ -f /usr/share/dbconfig-common/dpkg/config ]; then
+     . /usr/share/dbconfig-common/dpkg/config

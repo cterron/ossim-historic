@@ -27,8 +27,14 @@ class ParserUnifiedSnort(Detector):
 					while 1:
 						ev = snort.get_snort_event()
 						event = Snort()
+						event["event_type"] = Snort.EVENT_TYPE
+						if event['interface'] is None:
+							event["interface"] = self._plugin.get("config","interface")
 						(event["unziplen"],event["gzipdata"]) = ev.strgzip()
-						#event["event_type"]=Snort.EVENT_TYPE
+						if event['plugin_id'] is None:
+							event['plugin_id'] = self._plugin.get("config", "plugin_id")
+						if event['type'] is None:
+							event['type'] = self._plugin.get("config", "type")
 						self.send_message(event)
 				
 				

@@ -39,19 +39,23 @@ class OutputPlain(OutputPlugins):
         logger.debug("OutputPlain options: %s" %\
             (self.conf.hitems("output-plain")))
         self.plain = self._open_file(self.conf.get("output-plain", "file"))
+        self.activated = True
 
     def event(self, e):
-        self.plain.write(str(e))
-        self.plain.flush()
+        if self.activated:
+            self.plain.write(str(e))
+            self.plain.flush()
 
     def plugin_state(self, msg):
-        self.plain.write(msg)
-        self.plain.flush()
+        if self.activated:
+            self.plain.write(msg)
+            self.plain.flush()
 
     def shutdown(self):
         logger.info("Closing Plain file..")
         self.plain.flush()
         self.plain.close()
+        self.activated = False
 
 
 class OutputServer(OutputPlugins):
@@ -59,15 +63,19 @@ class OutputServer(OutputPlugins):
     def __init__(self, conn):
         logger.info("Added Server output")
         self.conn = conn
+        self.activated = True
 
     def event(self, e):
-        self.conn.send(str(e))
+        if self.activated:
+            self.conn.send(str(e))
 
     def plugin_state(self, msg):
-        self.conn.send(msg)
+        if self.activated:
+            self.conn.send(msg)
 
     def shutdown(self):
         self.conn.close()
+        self.activated = False
 
 
 class OutputCSV(OutputPlugins):
@@ -83,6 +91,7 @@ class OutputCSV(OutputPlugins):
         self.csv = self._open_file(file)
         if first_creation:
             self.__write_csv_header()
+        self.activated = True
 
 
     def __write_csv_header(self):
@@ -106,14 +115,16 @@ class OutputCSV(OutputPlugins):
 
     def event(self, e):
 
-        if e["event_type"] == "event":
-            self.__write_csv_event(e)
+        if self.activated:
+            if e["event_type"] == "event":
+                self.__write_csv_event(e)
 
 
     def shutdown(self):
         logger.info("Closing CSV file..")
         self.csv.flush()
         self.csv.close()
+        self.activated = False
 
 
 class OutputDB(OutputPlugins):
@@ -134,10 +145,12 @@ class OutputDB(OutputPlugins):
 
         self.conn = OutputDB.DatabaseConn()
         self.conn.connect(type, host, base, user, password)
+        self.activated = True
 
     def event(self, e):
 
-        if self.conn is not None and e["event_type"] == "event":
+        if self.conn is not None and e["event_type"] == "event" \
+           and self.activated:
 
             # build query
             query = 'INSERT INTO event ('
@@ -163,6 +176,7 @@ class OutputDB(OutputPlugins):
     def shutdown(self):
         logger.info("Closing database connection..")
         self.conn.close()
+        self.activated = False
 
 
 # different ways to log ossim events (Event objects)
@@ -196,13 +210,13 @@ class Output:
     add_db_output = staticmethod(add_db_output)
 
     def event(e):
-        logger.info(str(e))
+        logger.info(str(e).rstrip())
         for output in Output._outputs:
             output.event(e)
     event = staticmethod(event)
 
     def plugin_state(msg):
-        logger.info(str(msg))
+        logger.info(str(msg).rstrip())
         for output in Output._outputs:
             output.plugin_state(msg)
     plugin_state = staticmethod(plugin_state)
@@ -210,7 +224,7 @@ class Output:
     def shutdown():
         for output in Output._outputs:
             output.shutdown()
-    shutdown = staticmethod(shutdown)
+    shutdown =  staticmethod(shutdown)
 
 
 if __name__ == "__main__":

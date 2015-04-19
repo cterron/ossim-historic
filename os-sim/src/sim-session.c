@@ -133,10 +133,10 @@ sim_session_impl_finalize (GObject  *gobject)
   if (session->_priv->ia)
     gnet_inetaddr_unref (session->_priv->ia);
 
-  g_free (session->_priv);
-
 	g_cond_free (session->_priv->initial_cond);
 	g_mutex_free (session->_priv->initial_mutex);
+
+  g_free (session->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -359,13 +359,12 @@ sim_session_cmd_connect (SimSession  *session,
 		      break;
   }
 	
-	if (sensor)
-		
-		
 	if (command->data.connect.hostname)
 		sim_session_set_hostname (session, command->data.connect.hostname);
 	else
 		sim_session_set_hostname (session, "");
+
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_connect: hostname: %s", sim_session_get_hostname(session));
 
 	
 	if (session->type != SIM_SESSION_TYPE_NONE)
@@ -828,6 +827,8 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
+		
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensor_plugins: Session : %x", sess);
 			
 			if (for_this_server)	//execute the command in this server
 		  {
@@ -1495,40 +1496,7 @@ sim_session_cmd_event (SimSession	*session,
 		event->from_sensor = FALSE;
 	}
 	*/
-#if 0
-if ((event->plugin_id) && (event->plugin_sid))
-		{
-			plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container,
-																								       event->plugin_id,
-																								       event->plugin_sid);
 
-			if (!plugin_sid)
-			{
-			  g_message("Error: Unable to get plugin id %d and plugin sid %d from DB. Please check that it's inserted.", event->plugin_id, event->plugin_sid);
-				g_object_unref (event);
-				return;
-			}
-
-	    if( (event->priority = sim_plugin_sid_get_priority (plugin_sid)) == -1 )
-		  {
-			  g_message("Error: Unable to fetch priority for plugin id %d, plugin sid %d", event->plugin_id, event->plugin_sid);
-				event->priority = 1;
-	    }      
-		  if( (event->reliability = sim_plugin_sid_get_reliability(plugin_sid)) == -1 )
-			{
-				g_message("Error: Unable to fetch reliability for plugin id %d, plugin sid %d.", event->plugin_id, event->plugin_sid);
-	      event->reliability = 1;
-		  }
-	  }
-		else
-		{
-		  g_message("Error: Plugin_id or plugin_sid from event is wrong: plugin id %d, plugin sid %d", event->plugin_id, event->plugin_sid);
-			g_object_unref (event);
-			return;
-		}
-	}
-#endif
-	
   sim_container_push_event (ossim.container, event); //push the event in the queue
 
 	GInetAddr *sensor = gnet_inetaddr_new_nonblock (command->data.event.sensor, 0);
@@ -3645,6 +3613,7 @@ sim_session_read (SimSession  *session)
 		if (strlen (buffer) <= 2) 
 		{
 	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Buffer <= 2 bytes");
+			memset(buffer, 0, BUFFER_SIZE);
 			continue;
 //			return FALSE; 
 		}
@@ -3694,6 +3663,7 @@ sim_session_read (SimSession  *session)
         g_object_unref (res);
 				return FALSE;
 			}
+			memset(buffer, 0, BUFFER_SIZE);
 			continue; //we only want to listen database answer events.
 		}
 

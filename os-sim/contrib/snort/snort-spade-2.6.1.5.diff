@@ -1262,7 +1262,7 @@ diff -ruN snort-2.6.1.5.orig/etc/snort.conf.orig snort-2.6.1.5.spade/etc/snort.c
 +#   http://www.snort.org     Snort 2.6.1.3 Ruleset
 +#     Contact: snort-sigs@lists.sourceforge.net
 +#--------------------------------------------------
-+# $Id: snort-spade-2.6.1.5.diff,v 1.1 2007/07/10 08:47:40 cterron Exp $
++# $Id: snort-spade-2.6.1.5.diff,v 1.2 2007/10/23 14:21:33 alberto_r Exp $
 +#
 +###################################################
 +# This file contains a sample snort configuration. 
@@ -2290,7 +2290,7 @@ diff -ruN snort-2.6.1.5.orig/etc/spade.conf snort-2.6.1.5.spade/etc/spade.conf
 +# + statefile:  where Spade's persistant data is stored
 +# + logfile:  where Spade will store information about its run
 +# + Xdports,Xdips,Xsips,Xsports: like below but with global application
-+preprocessor spade:  dest=alert logfile=$SPADEDIR/spade.log statefile=$SPADEDIR/spade.rcv
++preprocessor spade:  dest=log logfile=$SPADEDIR/spade.log statefile=$SPADEDIR/spade.rcv
 +
 +# This line sets up your Spade homenet.  Set this to the network that is
 +#   connecting to the larger network at the point Spade is running.

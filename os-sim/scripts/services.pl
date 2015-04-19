@@ -7,6 +7,8 @@ use Sys::Syslog;
 use DBI;
 use ossim_conf;
 
+#NOTE: Deprecated file, please use Tools->Net Scan from the web console to update host_services data
+
 $| = 1;
 
 my $dsn = 'dbi:mysql:'.$ossim_conf::ossim_data->{"ossim_base"}.':'.$ossim_conf::ossim_data->{"ossim_host"}.':'.  $ossim_conf::ossim_data->{"ossim_port"};
@@ -42,7 +44,7 @@ while (my $row = $sth->fetchrow_hashref)
             $service = $1;
             $version = $2;
         
-            my $query = "INSERT INTO host_services 
+            my $query = "INSERT INTO host_services (ip, service, version)
                         VALUES ('$ip', '$service', '$version');";
             my $sth = $dbh->prepare($query);
             $sth->execute();

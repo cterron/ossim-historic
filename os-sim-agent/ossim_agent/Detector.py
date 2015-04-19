@@ -5,6 +5,8 @@ logger = Logger.logger
 from Output import Output
 import Config
 import Event
+from Threshold import EventConsolidation
+from Stats import Stats
 
 class Detector(threading.Thread):
 
@@ -13,6 +15,7 @@ class Detector(threading.Thread):
         self._conf = conf
         self._plugin = plugin
         self.os_hash = {}
+        self.consolidation = EventConsolidation(self._conf)
         logger.info("Starting detector %s (%s).." % \
                     (self._plugin.get("config", "name"),
                      self._plugin.get("config", "plugin_id")))
@@ -52,17 +55,10 @@ class Detector(threading.Thread):
         # - Time based thresholding
         # - Consolidation
         #
-        pass
+        self.consolidation.process()
 
-    def send_message(self, event):
 
-        if self._event_os_cached(event):
-            return
-
-        if self._exclude_event(event):
-            return
-
-        self._thresholding()
+    def _plugin_defaults(self, event):
 
         # get default values from config
         #
@@ -96,7 +92,28 @@ class Detector(threading.Thread):
         if event["type"] is None and 'type' in event.EVENT_ATTRS:
             event["type"] = 'detector'
 
-        Output.event(event)
+        return event
+
+    def send_message(self, event):
+
+        if self._event_os_cached(event):
+            return
+
+        if self._exclude_event(event):
+            return
+    
+        # use default values for some empty attributes
+        event = self._plugin_defaults(event)
+
+        # check for consolidation
+        if not self.consolidation.insert(event):
+            Output.event(event)
+
+        Stats.new_event(event)
+
+    def stop(self):
+        #self.consolidation.clear()
+        pass
 
     # must be overriden in child classes
     def process(self):

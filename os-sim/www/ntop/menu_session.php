@@ -99,7 +99,19 @@ $conf = $GLOBALS["CONF"];
 
 if (preg_match('/\d+\.\d+\.\d+\.\d+/', $sensor)) {
 ?>
-<a href="<?php echo "$proto://$sensor:$port"?>/NetNetstat.html"
+<?php
+if (!$conf->get_conf("use_ntop_rewrite")){
+    $ntop_link = "$proto://$sensor:$port";
+} else { //if use_ntop_rewrite is enabled
+
+    $protocol = "http";
+    if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") $protocol = "https";
+
+    $ntop_link = "$protocol://".$_SERVER['SERVER_NAME']."/ntop-$sensor";
+}
+
+?>
+<a href="<?php echo $ntop_link?>/NetNetstat.html"
        target="ntop">
        <?php echo gettext("Reload"); ?> </a>
 <?php

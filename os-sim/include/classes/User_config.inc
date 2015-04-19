@@ -98,5 +98,39 @@ class User_config
         }
         return true;
     }
+
+    function copy_panel($conn, $from, $to)
+    {
+
+ 	// User should already have been checked but let's sanitize, just in case.
+
+	require_once ('classes/Security.inc');
+	require_once 'ossim_conf.inc';
+
+	ossim_valid($from, OSS_USER, 'illegal:'._("User name"));
+	ossim_valid($to, OSS_USER, 'illegal:'._("User name"));
+	if (ossim_error()) {
+	    print "Unable to copy over panels, returning<br/>";
+	    return false;
+	}
+
+	$conf = $GLOBALS["CONF"];
+        $configs_dir = $conf->get_conf('panel_configs_dir');
+
+	$config = new User_config($conn);
+	$tmp_var = $config->get($from, 'panel_tabs', 'php');
+	$config->set($to, 'panel_tabs', $tmp_var, 'php');
+	$regexp = "/$from" . "_(.*)" . '$/'; 
+
+        if($handle = opendir($configs_dir)){
+	    while (false !== ($file = readdir($handle))) {
+        	if (preg_match($regexp, $file, $results)) {
+		copy("$configs_dir/$from" . "_" . $results[1], "$configs_dir/$to" . "_" . $results[1]);
+        	}
+	    }
+	}	
+
+    }
+
 }
 ?>

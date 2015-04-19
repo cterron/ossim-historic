@@ -80,7 +80,7 @@ fi
 #
 rm -rf ossim-$VERSION
 $RSYNC -av --exclude=/debian/ --exclude=CVS/ --exclude=.* --exclude=*~ --prune-empty-dirs $OSSIM_SRC_DIR/ $OSSIM_TARBALL_NAME-$VERSION/
-tar -czf "$OSSIM_TMP_DIR/$OSSIM_TARBALL_NAME"_"$VERSION".tar.gz $OSSIM_TARBALL_NAME-$VERSION
+tar -czf "$OSSIM_TMP_DIR/$OSSIM_TARBALL_NAME"-"$VERSION".tar.gz $OSSIM_TARBALL_NAME-$VERSION
 echo
 echo "*** Ossim tarball created in $OSSIM_TMP_DIR/"$OSSIM_TARBALL_NAME"_"$VERSION".tar.gz ***"
 

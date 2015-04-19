@@ -28,6 +28,11 @@ class Config {
         }
     }
     
+    function has_conf($key)
+    {
+        return array_key_exists($key, $this->confs);
+    }
+
     function get_conf($key)
     {
         return $this->confs[$key];
@@ -133,12 +138,15 @@ class Config {
         
         /* Links: Links to other applications */
         Config::insert('ntop_link','http://localhost:3000');
+        Config::insert('use_ntop_rewrite','0');
         Config::insert('ossim_link','/ossim/');
         Config::insert('nagios_link','/nagios/');
+        Config::insert('use_munin','0');
+        Config::insert('munin_link','/munin/');
 
         /* Backup: Backup configuration: backup database, directory, interval */
         Config::insert('backup_type','mysql');
-        Config::insert('backup_base','snort_archive');
+        Config::insert('backup_base','snort');
         Config::insert('backup_user','root');
         Config::insert('backup_pass','ossim');
         Config::insert('backup_host','localhost');
@@ -176,6 +184,7 @@ class Config {
 
         /* User action logging*/
         Config::insert('user_action_log', '1'); 
+        Config::insert('log_syslog', '1'); 
 
         /*Real time event viewer*/
         Config::insert('max_event_tmp', '10000'); 

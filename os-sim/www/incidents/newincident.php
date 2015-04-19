@@ -26,6 +26,7 @@ if ($edit) {
     if (count($list) != 1) die("Wrong ID");
     $incident = $list[0];
     $title = $incident->get_title();
+    $submitter = $incident->get_submitter();
     $priority = $incident->get_priority();
     $event_start = $incident->get_event_start();
     $event_end = $incident->get_event_end();
@@ -80,6 +81,7 @@ if ($edit) {
     }
 } else {
     $title = GET('title');
+    $submitter = GET('submitter');
     $priority = GET('priority');
     $type = GET('type');
     $src_ips = GET('src_ips');
@@ -111,6 +113,16 @@ if ($edit) {
     $nessus_id  = GET('nessus_id');
     $risk       = GET('risk');
     $description = GET('description');
+
+    /* get default submitter info */
+    if (!$submitter) {
+        $session_info = Session::get_session_info();
+        $submitter = $session_info['name'];
+        if ($session_info['company'])
+            $submitter .= '/' . $session_info['company'];
+        if ($session_info['department'])
+            $submitter .= '/' . $session_info['department'];
+    }
 }
 ?>
 
@@ -132,8 +144,14 @@ if ($edit) {
 <table align="center">
   <tr>
     <th><?=_("Title")?></th>
-    <td>
+    <td class="left">
       <input type="text" name="title" size="40" value="<?=$title?>" />
+    </td>
+  </tr>
+  <tr>
+    <th><?=_("Submitter")?></th>
+    <td class="left">
+      <input type="text" name="submitter" size="40" value="<?=$submitter?>" />
     </td>
   </tr>
   <tr>

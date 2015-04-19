@@ -457,7 +457,10 @@ sim_get_inets (const gchar *value)
 					   values0[2], from + i);
 
 	      inet = sim_inet_new (ip); 	//is this a host or a network? well, it's the same :)
-	      list = g_list_append (list, inet);
+				if (inet)
+		      list = g_list_append (list, inet);
+				else
+					g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: sim_get_inets: %s", ip);
 
 	      g_free (ip);
 	    }
@@ -470,7 +473,10 @@ sim_get_inets (const gchar *value)
   else
   {
     inet = sim_inet_new (value);
-    list = g_list_append (list, inet);		
+		if (inet)
+      list = g_list_append (list, inet);
+		else
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: sim_get_inets: %s", value);
   }
 
   return list;

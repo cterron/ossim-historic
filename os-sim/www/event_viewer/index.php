@@ -4,7 +4,7 @@ require_once 'classes/User_config.inc';
 require_once 'classes/Plugingroup.inc';
 require_once 'classes/Session.inc';
 require_once 'ossim_db.inc';
-Session::logcheck("MenuControlPanel", "ControlPanelEvents");
+Session::logcheck("MenuEvents", "EventsViewer");
 
 $db = new ossim_db();
 $conn = $db->connect();

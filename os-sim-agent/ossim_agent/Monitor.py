@@ -1,8 +1,7 @@
-
 from Logger import Logger
 logger = Logger.logger
-from MonitorList import MonitorList
 from Output import Output
+from Stats import Stats
 import Config
 
 import re, time
@@ -182,6 +181,7 @@ class Monitor:
                                value = int(self.watch_rule["value"])):
 
             Output.event(self.watch_rule)
+            Stats.new_event(self.watch_rule)
             return True
         else:
             return False

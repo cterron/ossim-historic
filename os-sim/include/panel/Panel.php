@@ -25,7 +25,7 @@ class Panel
         $plugin_opts = array();
         foreach ($this->defaults as $var => $value) {
             if (isset($all_options[$var])) {
-                $plugin_opts[$var] = strip($all_options[$var]);
+                	$plugin_opts[$var] = &$all_options[$var];
             } else {
                 $plugin_opts[$var] = $value;
             }
@@ -34,9 +34,9 @@ class Panel
         $this->params['plugin_opts'] = $plugin_opts;
         $this->params['window_opts'] = $params['window_opts'];
         if (isset($params['metric_opts'])) {
-        $this->params['metric_opts'] = $params['metric_opts'];
+        	$this->params['metric_opts'] = $params['metric_opts'];
         } else {
-        $this->params['metric_opts'] = array();
+        	$this->params['metric_opts'] = array();
         }
     }
     

@@ -24,13 +24,18 @@ class AcidCache (threading.Thread) :
     def run (self) :
 
         # default scheme and ip values
-        acid_scheme = ossim_scheme = "http://"
+        if Const.HTTP_SSL:
+            acid_scheme = ossim_scheme = "https://"
+        else :
+            acid_scheme = ossim_scheme = "http://"
         acid_ip = ossim_ip = "127.0.0.1"
 
         # get ossim and acid links from config
-        acid_link = self.__conf["acid_link"]+"/" or "http://localhost/acid/"
+        acid_link = self.__conf["acid_link"]+"/" or \
+            acid_scheme + "localhost/acid/"
+        ossim_link = self.__conf["ossim_link"] or \
+            ossim_scheme + "localhost/ossim/"
         acid_prefix = self.__conf["event_viewer"] or "acid"
-        ossim_link = self.__conf["ossim_link"] or "http://localhost/ossim/"
 
         self.__urls = { 
             acid_prefix + "_update_db" :      AcidCache.__UPDATE_DB, 
@@ -69,6 +74,8 @@ class AcidCache (threading.Thread) :
             curl.setopt(pycurl.WRITEFUNCTION, contents.write)
             curl.setopt(pycurl.URL, url)
             curl.setopt(pycurl.FOLLOWLOCATION, 1)
+            curl.setopt(pycurl.SSL_VERIFYHOST, 0)
+            curl.setopt(pycurl.SSL_VERIFYPEER, 0)
             curl.setopt(pycurl.COOKIEFILE, "")
             curl.setopt(pycurl.HTTPPOST, [('user',acid_user),
                                           ('pass',acid_pass)])
@@ -77,34 +84,43 @@ class AcidCache (threading.Thread) :
             except Exception, e:
                 print __name__, ":", e
 
-            match = re.search(r".*OSSIM Framework Login.*", contents.getvalue())
-            contents.close()
-            if match is not None:
-                print >>sys.stderr, __name__, ":", "Error : Failed login to web framework"
-            else:
-                for key, url in self.__urls.iteritems():
-                    contents = StringIO.StringIO()
-                    try:
-                        fname = self.__conf["acid_path"] + "/" + key + ".html"
+# TODO: What's the reason to logging to ossim-framework?
+#       I can't get it working with this piece of code :(
+#
+#            match = re.search(r".*OSSIM Framework Login.*", contents.getvalue())
+#            contents.close()
+#            if match is not None:
+#                print >>sys.stderr, __name__, ":", "Error : Failed login to web framework"
+#                continue
 
-                        print __name__, ': Fetching %s from "%s"' % (fname, url)
-    
-                        curl.setopt(pycurl.URL, url)
-                        curl.setopt(pycurl.FOLLOWLOCATION, 1)
-                        curl.setopt(pycurl.WRITEFUNCTION, contents.write)
-                        curl.perform()
+            for key, url in self.__urls.iteritems():
+                contents = StringIO.StringIO()
+                try:
+                    fname = self.__conf["acid_path"] + "/" + key + ".html"
 
-                        fout = open (fname, "w")
-                        fout.writelines(contents.getvalue())
-                        fout.close()
+                    print __name__, ': Fetching %s from "%s"' % (fname, url)
 
-                    except Exception, e:
-                        print __name__, ":", e
+                    curl.setopt(pycurl.URL, url)
+                    curl.setopt(pycurl.FOLLOWLOCATION, 1)
+                    curl.setopt(pycurl.WRITEFUNCTION, contents.write)
+                    curl.perform()
 
-                    contents.close()
+                    fout = open (fname, "w")
+                    fout.writelines(contents.getvalue())
+                    fout.close()
+
+                except Exception, e:
+                    print __name__, ":", e
+
+                contents.close()
  
             curl.close()
             time.sleep(float(Const.SLEEP))
 
+
+if __name__ == "__main__":
+
+    cache = AcidCache()
+    cache.start()
 
 # vim:ts=4 sts=4 tw=79 expandtab:

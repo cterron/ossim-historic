@@ -317,7 +317,10 @@ class Host_os{
                 return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"SunOS\" />";
             } elseif (preg_match('/solaris/i', $os)) {
                 return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"Solaris\" />";
+            } elseif (preg_match('/iphone/i', $os)) {
+                return "<img src=\"$pixmap_dir/os/iphone.png\" alt=\"IPhone\" />";
             }
+
         }
         return "";
     }
@@ -336,6 +339,8 @@ class Host_os{
             return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"SunOS\" />";
         } elseif (preg_match('/solaris/i', $os)) {
             return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"Solaris\" />";
+        } elseif (preg_match('/iphone/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/iphone.png\" alt=\"IPhone\" />";
         }
         return "";
     }

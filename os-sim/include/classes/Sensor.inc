@@ -233,9 +233,23 @@ class Sensor {
         if (!$rs = &$conn->Execute($query, array($host_ip))) {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
+           
+
+        if (!$conf->get_conf("use_ntop_rewrite")){
+
             list($protocol, $ip, $port)  = 
-                split(':', $conf->get_conf("ntop_link"));
+            split(':', $conf->get_conf("ntop_link"));
             $sensor_ip = "$protocol://" . $rs->fields["ip"] . ":$port";
+            
+        } else { //if use_ntop_rewrite is enabled
+
+            $protocol = "http";
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") $protocol = "https";
+
+            $sensor_ip =
+            "$protocol://".$_SERVER['SERVER_NAME']."/ntop-".$rs->fields["ip"];
+        }
+            
             return $sensor_ip;
         } 
 

@@ -15,6 +15,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   <h1> <?php echo gettext("Sensors"); ?> </h1>
 
 <?php
+    require_once 'ossim_conf.inc';
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Plugin.inc';
@@ -45,6 +46,17 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   </tr>
   </table>
   <br/>
+<?php
+$ossim_conf = $GLOBALS["CONF"];
+$use_munin = $ossim_conf->get_conf("use_munin");
+if($use_munin == 1){
+$munin_link = $ossim_conf->get_conf("munin_link");
+?>
+<center><a href="<?= $munin_link; ?>"><img src="../pixmaps/stats.gif" border="0"></a></center>
+<br/>
+<?php
+}
+?>
 
   <table align="center">
     <tr>
@@ -120,7 +132,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
         else echo "NO";
         */
       ?></td>
-      <td><?php echo $sensor->get_descr(); ?></td>
+      <td><?php echo $sensor->get_descr(); ?>&nbsp;</td>
       <td>
 <!--        <a href="editsensor.php?ip=<?php //echo $ip ?>">Remote edit</a>* -->
         [ <a href="modifysensorform.php?name=<?php echo $name ?>">
