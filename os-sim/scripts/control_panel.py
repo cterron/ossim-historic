@@ -89,10 +89,10 @@ def __update_db(st, type, info, rrd_name, range):
         sys.stdout.flush()
 
 
-# get default threshold from db
-def __get_threshold(st):
+# get value from config table
+def get_db_config(st, key):
 
-    query = "SELECT threshold FROM conf"
+    query = "SELECT value FROM config WHERE conf = '%s'" % (key)
     st.execute(query)
     res = st.fetchone()
     return res[0]
@@ -110,7 +110,7 @@ def __sec_update(st, rrdtool_bin, rrd_path):
             rrd_file = os.path.join(rrd_path, rrd_file)
             rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
 
-            threshold = __get_threshold(st)
+            threshold = get_db_config(st, "threshold")
 
 
             # get last value for day level
@@ -346,6 +346,15 @@ def main():
         sys.stdin  = open('/dev/null', 'r')
         sys.stdout = open(os.path.join(LOG_DIR, 'control_panel.log'), 'w')
     
+    # db connect
+    (db, st) = db_connect(conf)
+
+    # get extra config values from config table
+    if not conf.has_key("MRTG_RRD_FILES_PATH"):
+        conf["MRTG_RRD_FILES_PATH"] = get_db_config(st, "mrtg_rrd_files_path")
+    if not conf.has_key("RRDTOOL_PATH"):
+        conf["RRDTOOL_PATH"] = get_db_config(st, "rrdtool_path")
+
     # where are the rrd files?
     rrdtool_bin = RRD_BIN
     if conf.has_key("RRDTOOL_PATH"):
@@ -363,9 +372,6 @@ def main():
         print >>sys.stderr, "Error reading RRD path:"
         print >>sys.stderr, e
         sys.exit()
-
-    # db connect
-    (db, st) = db_connect(conf)
 
     while 1:
 

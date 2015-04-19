@@ -10,12 +10,19 @@
 	<directive filename="/etc/ossim/server/directives.xml"/>
 	<scheduler interval="15"/>
 	<server port="40001"/>
+    
+    <!-- alarm_risks can be low, medium, high or all -->
+<!--
 	<notifies program="/usr/sbin/sendmail">
-		<notify emails="root@localhost" alarm_risks="low" /> <!-- low,medium,high,all -->
+		<notify emails="root@localhost" alarm_risks="low" />
 	</notifies>
-        <!-- Replication Servers -->
+-->
+    <!-- Replication Servers -->
+<!--
 	<rservers>
 		<rserver name="rserver1" ip="192.168.2.174"/>
 		<rserver name="rserver2" ip="192.168.2.97" resend="true"/>
 	</rservers>
+-->
 </config>
+

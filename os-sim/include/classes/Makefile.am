@@ -5,7 +5,7 @@ classes_DATA = Alarm.inc \
 	Backlog_alert.inc \
 	Category.inc \
 	Classification.inc \
-	Conf.inc \
+	Config.inc \
 	Control_panel_host.inc \
 	Control_panel_net.inc \
 	Host.inc \
@@ -29,6 +29,7 @@ classes_DATA = Alarm.inc \
 	Net_qualification.inc \
 	Net_scan.inc \
 	Net_vulnerability.inc \
+	PDF.inc \
 	Plugin.inc \
 	Plugin_reference.inc \
 	Plugin_sid.inc \
@@ -48,6 +49,7 @@ classes_DATA = Alarm.inc \
 	RRD_anomaly.inc \
 	RRD_config.inc \
 	Scan.inc \
+	SecurityReport.inc \
 	Sensor.inc \
 	Session.inc \
 	Signature_group.inc \

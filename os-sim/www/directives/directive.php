@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuConfiguration", "ConfigurationDirectives");
+Session::logcheck("MenuCorrelation", "CorrelationDirectives");
 ?>
 
 <?php
@@ -60,16 +60,14 @@ function findorder($dom, $directive_id)
     return $order;
 }
 
-
-
-function rule_table_header($directive_id)
+function rule_table_header($directive_id, $level)
 {
 ?>
     <!-- rule table -->
     <table align="center">
-      <tr><th colspan="12">Rules (Directive <?php echo $directive_id ?>)</th></tr>
+      <tr><th colspan=<?php echo $level+12; ?>>Rules (Directive <?php echo $directive_id ?>)</th></tr>
       <tr>
-        <td></td>
+        <td colspan=<?php echo $level; ?>></td>
         <th>Name</th>
         <th>Priority</th>
         <th>Reliability</th>
@@ -99,7 +97,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
 {
     global $conn;
 
-    if($directive->has_child_nodes()) 
+    if($directive->has_child_nodes())
 		{
         $rules = $directive->child_nodes();
 
@@ -108,29 +106,33 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
             if (($rule->type == XML_ELEMENT_NODE) && 
                 ($rule->tagname() == 'rule'))
             {
-?>
-    <?php if ($level == 2) { ?>
-      <tr bgcolor="#CCCCCC">
-    <?php } elseif ($level == 3) { ?>
-      <tr bgcolor="#999999">
-    <?php } elseif ($level == 4) { ?>
-      <tr bgcolor="#9999CC">
-    <?php } elseif ($level == 5) { ?>
-      <tr bgcolor="#6699CC">
-    <?php } ?>
+	    if ($ilevel != $level)
+	        $indent = "<td colspan=" . ($ilevel-$level) . ">"; 
+
+            if ($level == 1) { ?>
+      <tr><?php echo $indent; 
+      }     elseif ($level == 2) { ?>
+      <tr bgcolor="#CCCCCC"><?php echo $indent;
+      }     elseif ($level == 3) { ?>
+      <tr bgcolor="#999999"><?php echo $indent;
+      }     elseif ($level == 4) { ?>
+      <tr bgcolor="#9999CC"><?php echo $indent;
+      }     elseif ($level == 5) { ?>
+      <tr bgcolor="#6699CC"><?php echo $indent;
+      } ?>
       
         <!-- expand -->
-        <td class="left">
-    <? if (($level == 1) && ($rule->has_child_nodes())) {
+        <td class="left" colspan=<?php echo $level;?>>
+    <?php if (($level == 1) && ($rule->has_child_nodes())) {
     ?>
             <a href="<?php echo $_server["php_self"] ?>?directive=<?php 
                 echo $directive_id?>&level=<?php echo $ilevel + 1?>"><?php 
                 echo "+" ?></a>
-    <? } elseif ($rule->has_child_nodes()) { ?>
+    <?php } elseif ($rule->has_child_nodes()) { ?>
             <a href="<?php echo $_server["php_self"] ?>?directive=<?php 
                 echo $directive_id?>&level=<?php echo $ilevel-$level+1?>"><?php 
                 echo '-' ?></a>
-    <? } ?>
+    <?php } ?>
         </td>
         <!-- end expand -->
         
@@ -192,7 +194,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
                         $rules = $rule->child_nodes();
                         foreach ($rules as $rule) {
                             rule_table($dom, $directive_id, $rule, 
-                                       $level - 1, $ilevel);
+                                       $level - 1, $ilevel, $depth);
                         }
                     } 
                 }
@@ -217,10 +219,10 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
             $doc = $dom->document_element();
             $doc = $doc->child_nodes();
 	    $directive = $doc[$order * 2 -1];
-
-            if (!$level = $_GET["level"])   $level = 1;
+            
+	    if (!$level = $_GET["level"])   $level = 1;
             $_SESSION["path"] = 0;
-            rule_table_header($directive_id);
+            rule_table_header($directive_id, $level);
 	    rule_table($dom, $directive_id, $directive, $level, $level);
 	    rule_table_foot();
         }

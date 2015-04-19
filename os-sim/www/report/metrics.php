@@ -26,7 +26,6 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 require_once ('ossim_conf.inc');
 require_once ('ossim_db.inc');
-require_once ('classes/Conf.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Control_panel_host.inc');
 require_once ('classes/Host.inc');
@@ -49,8 +48,8 @@ function fontcolor($value, $max)
 }
 
 
-$conf = new ossim_conf();
-$graph_link = $conf->get_conf("graph_link");
+$framework_conf = new ossim_conf();
+$graph_link = $framework_conf->get_conf("graph_link");
 
 $image1 = "$graph_link?ip=$ip&what=compromise&start=N-24h&end=N&type=host&zoom=1";
 $image2 = "$graph_link?ip=$ip&what=compromise&start=N-7D&end=N&type=host&zoom=1";
@@ -66,8 +65,7 @@ if ($list = Host::get_list($conn, "WHERE ip = '$ip'")) {
     $threshold_c = $list[0]->get_threshold_c();
     $threshold_a = $list[0]->get_threshold_a();
 } else {
-    $framework_conf = Conf::get_conf($conn);
-    $threshold_c = $threshold_a = $framework_conf->get_threshold();
+    $threshold_c = $threshold_a = $framework_conf->get_conf("threshold");
 }
 
 /* max C */

@@ -67,7 +67,7 @@ class ParserCA(Parser.Parser):
                 break
 
         # obtain default thresholds
-        st.execute ("""SELECT threshold FROM conf""")
+        st.execute ("""SELECT value as threshold FROM config WHERE conf = 'threshold'""")
         res = st.fetchone()
         default_threshold = int(res[0])
 

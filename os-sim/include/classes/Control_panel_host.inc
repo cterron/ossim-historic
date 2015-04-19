@@ -2,8 +2,8 @@
 
 require_once ('classes/Host.inc');
 require_once ('classes/Net.inc');
-require_once ('classes/Conf.inc');
 require_once ('classes/Session.inc');
+require_once ('ossim_conf.inc');
 
 class Control_panel_host {
 
@@ -89,8 +89,8 @@ class Control_panel_host {
                                                   $rs->fields["id"]);
                 } else {
                     /* defensive programming */
-                    $conf = Conf::get_conf($conn);
-                    $threshold = $conf->get_threshold();
+                    $conf = new ossim_conf();
+                    $threshold = $conf->get_conf("threshold");
                 }
 
                 if (((!strcmp($type, 'compromise')) and 

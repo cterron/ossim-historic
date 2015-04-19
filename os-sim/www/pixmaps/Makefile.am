@@ -21,7 +21,9 @@ pixmaps_DATA = arrow.gif \
 	major-yellow.gif \
 	solid-red.jpg \
 	riskmeter.png \
-	incident.png
+	incident.png \
+	logo.png \
+	logo3.jpg
 
 EXTRA_DIST   = $(pixmaps_DATA)
 

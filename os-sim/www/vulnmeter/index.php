@@ -5,7 +5,7 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 
 <html>
 <head>
-  <title> Vulmeter </title>
+  <title> Vulnmeter </title>
 <!--  <meta http-equiv="refresh" content="3"> -->
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" href="../style/riskmeter.css"/>
@@ -25,7 +25,6 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 <?php
 require_once ('ossim_conf.inc');
 require_once ('ossim_db.inc');
-require_once ('classes/Conf.inc');
 require_once ('classes/Host_vulnerability.inc');
 require_once ('classes/Net_vulnerability.inc');
 require_once ('classes/Host.inc');
@@ -33,9 +32,8 @@ require_once ('classes/Host.inc');
 $db = new ossim_db();
 $conn = $db->connect();
 
-$conf = Conf::get_conf($conn);
-$BAR_LENGTH_LEFT = $conf->get_bar_length_left();
-$BAR_LENGTH_RIGHT = $conf->get_bar_length_right();
+$BAR_LENGTH_LEFT = 300;
+$BAR_LENGTH_RIGHT = 200;
 $BAR_LENGTH = $BAR_LENGTH_LEFT + $BAR_LENGTH_RIGHT;
 
 
@@ -60,25 +58,28 @@ if($mon < 10){ $mon = 0 . $mon; }
 if($mday < 10){ $mday = 0 . $mday; }
 $datedir = $today[year] . $mon . $mday;
 ?> 
-      <td><a href="last/index.html">Last scan</a></td>
-      <td> / <a href="do_nessus.php">Update scan</a></td>
-    </tr>
+<td><a href="last/index.html">Last scan</a></td>
+<td> / <a href="do_nessus.php">Update scan</a></td>
+</tr>
 </table>
+
+<br/>
+
 <table align="center">
+<?php
+if ($net_list) {
+?>
 <tr><th colspan="2">Nets</th></tr>
 <?php
-
-if ($net_list) {
     foreach ($net_list as $stat) {
-    
-        $net = $stat->get_net();
 
-        /* calculate proportional bar width */
-        if(!$max_level) $max_level = 1;
-        $width = ((($vulnerability = $stat->get_vulnerability()) * 
+    $net = $stat->get_net();
+
+    /* calculate proportional bar width */
+    if(!$max_level) $max_level = 1;
+    $width = ((($vulnerability = $stat->get_vulnerability()) * 
                    $BAR_LENGTH) / $max_level);
 ?>
-
     <tr>
       <td align="center">
            <?php echo $net ?>
@@ -88,15 +89,19 @@ if ($net_list) {
         <img src="../pixmaps/solid-blue.jpg" height="8" 
              width="<?php echo $width ?>"
              title="<?php echo $vulnerability ?>">
+
 <?php 
         echo $vulnerability;
     } /* foreach */
-} /* if */
 ?>
+
       </td>
     </tr>
+<br/>
 
 <?php
+} /* if ($net_list) */
+
 
 /* 
  * Hosts
@@ -107,15 +112,12 @@ $ip_list = Host_vulnerability::get_list
 
 $max_level = ossim_db::max_val($conn, "vulnerability", "host_vulnerability");
 
-?>
-<br/>
-<tr><td colspan="2"></td></tr>
-<tr><td colspan="2"></td></tr>
-<tr><td colspan="2"></td></tr>
-<tr><th colspan="2">Hosts</th></tr>
-<?php
-
 if ($ip_list) {
+?>
+
+<tr><th colspan="2">Hosts</th></tr>
+
+<?php
     foreach ($ip_list as $stat) {
     
         $ip = $stat->get_ip();
@@ -140,7 +142,7 @@ if ($ip_list) {
     else
         echo $ip;
 ?>
-        </a>
+         </a>
       </td>
 
       <td>
@@ -156,46 +158,41 @@ if ($ip_list) {
 <?php 
         echo $vulnerability;
     } /* foreach */
-} /* if */
 ?>
       </td>
     </tr>
+<?php
+} /* if ($ip_list) */
+?>
     <!-- end C & A levels for each IP -->
-    
 </table>
 
 <?php 
     if (!$_GET["noimages"]) {
+
+$conf = new ossim_conf();
+$vmeter_dir = $conf->get_conf("base_dir") . "/vulnmeter/last/";
+
+// Show only the non-empty GIF charts reported by Nessus
+
+if ($handle = opendir('last')) {
+    while (false !== ($file = readdir($handle))) {
+   if (($file != ".") && ($file != "..") && (filesize($vmeter_dir.$file) > 0)){
+            if (eregi("(.gif)$",$file)){
+                echo "</br><table align=\"center\">";
+                echo "  <tr>";
+                echo "    <td><img echo \"src=\"last/$file\"></td>";
+                echo "  </tr>";
+                echo "</table>";
+            }
+        }
+    }
+    closedir($handle);
+}
+
+} // if (!$_GET["noimages"])
 ?>
 
-<br/>
-<table align="center">
-  <tr>
-    <td><img
-src="last/chart_dangerous_services.gif"></td>
-  </tr>
-</table>
-<br/>
-<table align="center">
-  <tr>
-    <td><img
-src="last/chart_services_occurences.gif"></td>
-  </tr>
-</table>
-<br/>
-<table align="center">
-  <tr>
-    <td><img src="last/pie_risks.gif"></td>
-  </tr>
-</table>
-<br/>
-<table align="center">
-  <tr>
-    <td><img src="last/pie_most.gif"></td>
-  </tr>
-</table>
-
-<? } ?>
 <br/>
 
 </body>

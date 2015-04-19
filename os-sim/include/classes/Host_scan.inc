@@ -1,7 +1,5 @@
 <?php
 
-require_once ('classes/Conf.inc');
-
 class Host_scan {
 
     var $host_ip;

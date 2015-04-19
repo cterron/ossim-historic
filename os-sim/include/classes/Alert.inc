@@ -1,7 +1,5 @@
 <?php
 
-require_once ('classes/Conf.inc');
-
 class Alert {
 
     var $id;

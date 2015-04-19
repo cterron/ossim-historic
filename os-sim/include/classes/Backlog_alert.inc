@@ -1,7 +1,5 @@
 <?php
 
-require_once ('classes/Conf.inc');
-
 class Backlog_alert {
 
     var $backlog_id;

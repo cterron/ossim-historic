@@ -1,8 +1,5 @@
-import urllib2, os, time, sys
-
+import urllib2, os, time, sys, mutex
 import util
-
-import mutex
 
 m = mutex.mutex()
 
@@ -14,6 +11,9 @@ m = mutex.mutex()
 #
 def get_hostinfo2(url):
 
+    if not os.path.isdir("/var/lib/ossim"):
+        os.mkdir("/var/lib/ossim", 0755)
+
     try:
         util.debug(__name__, "Reading ntop dump data...", "<-", "YELLOW")
         fd = urllib2.urlopen(url)
@@ -21,7 +21,7 @@ def get_hostinfo2(url):
         util.debug (__name__, e, '!!', 'RED');
         return None
 
-    fhost = open('ntop_hostinfo.py', 'w')
+    fhost = open('/var/lib/ossim/ossim_ntop_hostinfo.py', 'w')
     for line in fd.readlines():
         print line
         fhost.write(line)
@@ -30,7 +30,11 @@ def get_hostinfo2(url):
     fd.close()
 
 def get_hostinfo(url):
-    os.system("/usr/bin/wget -O ntop_hostinfo.py %s" % (url))
+
+    if not os.path.isdir("/var/lib/ossim"):
+        os.mkdir("/var/lib/ossim", 0755)
+
+    os.system("/usr/bin/wget -O /var/lib/ossim/ossim_ntop_hostinfo.py %s 2> /dev/null" % (url))
 
 
 def get_value(rule, url):
@@ -46,7 +50,7 @@ def get_value(rule, url):
     #       read actual disc dump data
    
     try:
-        if os.path.getmtime('ntop_hostinfo.py') + 60 <= int(time.time()) \
+        if os.path.getmtime('/var/lib/ossim/ossim_ntop_hostinfo.py') + 60 <= int(time.time()) \
            and m.test() == 0:
             m.lock(get_hostinfo, url)
     except OSError:
@@ -56,18 +60,20 @@ def get_value(rule, url):
     m.unlock()
 
     try:
-        import ntop_hostinfo
+        if sys.path.count("/var/lib/ossim/") == 0:
+            sys.path.append("/var/lib/ossim/")
+        import ossim_ntop_hostinfo
 
         if category != '':
-            return ntop_hostinfo.ntopDict[rule["from"]][proto][category][pattern]
+            return ossim_ntop_hostinfo.ntopDict[rule["from"]][proto][category][pattern]
         elif proto != '':
-            return ntop_hostinfo.ntopDict[rule["from"]][proto][pattern]
+            return ossim_ntop_hostinfo.ntopDict[rule["from"]][proto][pattern]
         else:
-            return ntop_hostinfo.ntopDict[rule["from"]][pattern]
+            return ossim_ntop_hostinfo.ntopDict[rule["from"]][pattern]
 
     except SyntaxError, e:
         util.debug(__name__, e, '!!', 'RED')
-        os.remove('ntop_hostinfo.py')
+        os.remove('/var/lib/ossim/ossim_ntop_hostinfo.py')
         return None
 
     except KeyError:

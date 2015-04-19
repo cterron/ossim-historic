@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuPolicy", "PolicyPriorityReliability");
+Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
 ?>
 
 <html>
@@ -44,7 +44,8 @@ Session::logcheck("MenuPolicy", "PolicyPriorityReliability");
            
             # 1505 => OSSIM directives
             # 2000 - 3000 => Monitors
-            if (($id != 1505) && (($id < 2000) || ($id >= 3000))) 
+#            if (($id != 1505) && (($id < 2000) || ($id >= 3000))) 
+            if ($id != 1505) 
             {
                 $name = $plugin->get_name();
                 $type = $plugin->get_type();

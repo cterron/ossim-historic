@@ -1,0 +1,618 @@
+<?php
+require_once('ossim_conf.inc');
+$path_conf = new ossim_conf();
+$fpdf_path = $path_conf->get_conf("fpdf_path");
+
+define('FPDF_FONTPATH','font/');
+define('DEFAULT_LINE_HEIGTH', 6);
+
+require($fpdf_path . '/fpdf.php');
+
+require_once ('classes/SecurityReport.inc');
+
+class PDF extends FPDF
+{
+    var $ossim_conn;
+    var $snort_conn;
+    var $conf;
+    var $security_report;
+
+    function PDF($title = "OSSIM Report", 
+                 $orientation='P', $unit='mm', $format='A5')
+    {
+        $this->FPDF($orientation, $unit, $format);
+        $this->title = $title;
+
+        /* ossim framework conf */
+        $this->conf = new ossim_conf();
+
+        /* connection to ossim/snort database */
+        $db = new ossim_db();
+        $this->ossim_conn = $db->connect();
+        $this->snort_conn = $db->snort_connect();
+
+        /* security report */
+        $this->security_report = new SecurityReport();
+
+        /* pdf properties */
+        $this->AliasNbPages();
+        $this->SetTitle($title);
+        $this->SetCreator('OSSIM framework');
+        $this->AddPage();
+    }
+
+    function Header()
+    {
+        $www_base = $this->conf->get_conf("base_dir");
+
+        $this->Image($www_base . '/pixmaps/logo3.jpg',0,0,30);
+        $this->SetFont('Arial','B',15);
+        $this->Cell(20);
+        $this->Cell(0,6, $this->title, 'B', 0, 'R');
+        $this->Ln(20);
+    }
+
+    function Footer()
+    {
+        $this->SetY(-15);
+        $this->SetFont('Arial','I',8);
+        $this->Cell(0, 10, strftime("%d-%b-%Y", time()), 0, 0, 'L');
+        $this->Cell(0, 10, 'Page '.$this->PageNo().'/{nb}', 0, 0, 'R');
+    }
+
+    function __WriteBold($text)
+    {
+        $this->SetFont('Arial', 'B', 12);
+        $this->Write(DEFAULT_LINE_HEIGTH, $text);
+        $this->SetFont('Arial', '', 12);
+    }
+
+    function __WriteTitle($title, $color = "blue") 
+    {
+        $this->SetFont('Arial','B',14);
+        if ($color == "blue")
+            $this->SetTextColor(102,102,153);
+        elseif ($color == "red")
+            $this->SetTextColor(130,15,15);
+        $this->MultiCell(125,6,$title);
+        $this->SetTextColor(0);
+        $this->SetFont('','',10);
+        $this->Ln();
+    }
+
+    /*
+        __WriteTable()
+
+        example of use:
+
+          $title   = "TITLE";
+          $length  = array (15, 15);
+          $content = array (
+                        array ("host", "occurrences"),
+                        array ("192.168.0.25", "6"),
+                        array ("192.168.0.26", "9")
+                     );
+
+            TITLE
+            +---------------+---------------+
+            | host          | occurrences   |
+            +---------------+---------------+
+            | 192.168.0.25  | 6             |
+            |---------------+---------------|
+            | 192.168.0.26  | 9             |
+            +---------------+---------------+
+     */
+    function __WriteTable($title, $length, $content, $adjust, $color = "blue")
+    {
+        $fill  = 1;
+        $count = 0;
+
+        $this->__WriteTitle($title, $color);
+
+        if ($color == "blue")
+            $this->SetFillColor(102,102,153);
+        elseif ($color == "red")
+            $this->SetFillColor(130,15,15);
+        $this->SetTextColor(255);
+        $this->SetFont('','B',11);
+
+        foreach ($content as $row)
+        {
+            foreach ($row as $element) {
+                $MaxLength[$count] = max($this->GetStringWidth($element),
+                                         $MaxLength[$count]);
+                $count++;
+            }
+            $count = 0;
+        }
+
+        foreach ($MaxLength as $width)
+        {
+            if ($adjust) {
+                $length[$count] = min($length[$count],($width + 2));
+            } else {
+                $length[$count] = max($length[$count],($width + 2));
+            }
+            $count++;
+        }
+            
+        $count = 0;
+
+        foreach ($content as $row)
+        {
+            foreach ($row as $element)
+            {
+                $this->Cell($length[$count], 5, $element, 1, 0, 'C', $fill);
+                $count++;
+            }
+
+            $this->Ln();
+            if ($color == "blue")
+                $this->SetFillColor(195,195,215);
+            elseif ($color == "red")
+                $this->SetFillColor(255,235,215);
+            $this->SetTextColor(0);
+            $this->SetFont('','',9);
+
+            $fill = !$fill;
+            $count = 0;
+        }
+        $this->Ln(5);
+    }
+
+    function __AttackHosts($title, $ip_target, $limit = 10)
+    {
+        require_once ('classes/Host.inc');
+    
+        $content[] = array("Host", "Occurrences");
+        $length  = array(80, 25);
+
+        $attack = $this->security_report->AttackHost($ip_target, $limit);
+
+        /* resolve ips */
+        for ($i = 0; $i < count($attack); $i++)
+            $attack[$i][0] = 
+                Host::ip2hostname($this->ossim_conn, $attack[$i][0]);
+
+        $content = array_merge($content, $attack);
+
+        $this->__WriteTable($title, $length, $content, 1);
+    }
+
+    function AttackedHosts($limit = 10)
+    {
+        $this->__AttackHosts("Top 10 Attacked Hosts", "ip_dst", $limit);
+    }
+
+    function AttackerHosts($limit = 10)
+    {
+        $this->__AttackHosts("Top 10 Attacker Hosts", "ip_src", $limit);
+    }
+
+    function Alerts($limit = 10)
+    {
+        $content[] = array("Alert", "Occurrences");
+        $length  = array(100, 25);
+        $content = array_merge(
+            $content, $this->security_report->Alerts($limit));
+
+        $this->__WriteTable("Top 10 Alerts", $length, $content, 1);
+    }
+
+    function Ports($limit = 10)
+    {
+        $content[] = array("Port", "Service", "Ocurrences");
+        $length  = array(35, 40, 25);
+        $content = array_merge(
+            $content, $this->security_report->Ports($limit));
+
+        $this->__WriteTable("Top 10 Destination Ports", $length, $content, 1);
+    }
+
+    function AlertsByRisk($limit = 10)
+    {
+        $content[] = array("Alert", "Risk");
+        $length  = array(100, 25);
+        $content = array_merge(
+            $content, $this->security_report->AlertsByRisk($limit));
+
+        $this->__WriteTable("Top 10 Alerts by risk", $length, $content, 1);
+    }
+
+
+
+    function IncidentSummary($show_metrics = True, 
+                             $show_alarms = True)
+    {
+        require_once ('classes/Incident.inc');
+
+        $ids = array();
+
+        /* Generic Data */
+        $this->__WriteTitle("Generic Data");
+        $this->__WriteBold("Date: ");
+        $this->Write(DEFAULT_LINE_HEIGTH, strftime("%d %B %Y", time()));
+        $this->Ln(15);
+        
+        /* last N incidents */
+        $this->__WriteTitle("Last $limit incidents summary");
+        $this->SetFont('Arial', '', 12); 
+
+        $incident_list = Incident::get_list($this->ossim_conn, 
+            "ORDER BY date DESC");
+        if (is_array($incident_list)) {
+            foreach ($incident_list as $incident) {
+                if ( ($incident->get_ref() == "Metric" and $show_metrics) or
+                     ($incident->get_ref() == "Alarm" and $show_alarms) )
+                {
+                    $this->__WriteBold("[" . $incident->get_date() . "] ");
+                    $this->Ln();
+                    $this->Write(DEFAULT_LINE_HEIGTH, $incident->get_title());
+                    $this->Ln();
+                    $ids[] = $incident->get_id();
+                }
+            }
+        }
+        $this->Ln(10);
+        return $ids;
+    }
+
+    function Incident($incident_id)
+    {
+        require_once ('classes/Incident.inc');
+
+        $incident_list = Incident::get_list(
+            $this->ossim_conn, "WHERE incident.id = $incident_id");
+        $incident = $incident_list[0];
+
+        /* title */
+        $this->__WriteTitle($incident->get_title());
+
+        /* type */
+        $this->__WriteBold("Incident type: ");
+        $this->Write(DEFAULT_LINE_HEIGTH, $incident->get_ref());
+        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+
+        /* Alarm or Metric specific data */
+        if ($incident->get_ref() == "Alarm") {
+            if ($alarm_list = $incident->get_alarms($this->ossim_conn)) {
+                foreach ($alarm_list as $alarm) {
+                    $this->__WriteBold("Source ips: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ips());
+                    $this->Ln();
+                    $this->__WriteBold("Destination ips: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_dst_ips());
+                    $this->Ln();
+                    $this->__WriteBold("Source ports: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
+                    $this->Ln();
+                    $this->__WriteBold("Destination ports: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $alarm->get_src_ports());
+                    $this->Ln();
+                }
+            }
+        } elseif ($incident->get_ref() == "Metric") {
+            if ($metric_list = $incident->get_metrics($this->ossim_conn)) {
+                foreach ($metric_list as $metric) {
+                    $this->__WriteBold("Target: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_target());
+                    $this->Ln();
+                    $this->__WriteBold("Metric type: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_type());
+                    $this->Ln();
+                    $this->__WriteBold("Metric value: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $metric->get_metric_value());
+                    $this->Ln();
+                }
+            }
+        }
+
+        /* status */
+        $this->Ln();
+        $this->__WriteBold("In charge: ");
+        $this->Write(DEFAULT_LINE_HEIGTH,
+                     $incident->get_in_charge($this->ossim_conn));
+        $this->Ln();
+        $this->__WriteBold("Status: ");
+        $this->Write(DEFAULT_LINE_HEIGTH, 
+                     $incident->get_status($this->ossim_conn));
+        $this->Ln();
+        $this->__WriteBold("Priority: ");
+        $this->Write(DEFAULT_LINE_HEIGTH,
+                     $incident->get_priority($this->ossim_conn));
+        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+
+        /* tickets */
+        if ($tickets = $incident->get_tickets($this->ossim_conn)) {
+            foreach ($tickets as $ticket) {
+                $this->__WriteBold("[" . $ticket->get_date() . 
+                    " revision] ");
+                $this->Ln();
+                $this->__WriteBold("User: ");
+                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_user());
+                $this->Ln();
+                $this->__WriteBold("Description: ");
+                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_description());
+                $this->Ln();
+                if ($ticket->get_action()) {
+                    $this->__WriteBold("Action: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_action());
+                    $this->Ln();
+                }
+                $this->__WriteBold("Priority: ");
+                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_priority());
+                $this->Ln();
+                $this->__WriteBold("Status: ");
+                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_status());
+                $this->Ln();
+                $this->__WriteBold("In charge: ");
+                $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_in_charge());
+                $this->Ln();
+                if ($ticket->get_transferred) {
+                    $this->__WriteBold("Transferred: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, 
+                                 $ticket->get_transferred());
+                    $this->Ln();
+                }
+                if ($ticket->get_copy()) {
+                    $this->__WriteBold("Copy to: ");
+                    $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_copy());
+                }
+                $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+            }
+        }
+    }
+
+
+    /*
+       PRE:
+         time_range = day, week, month, year
+         type = compromise, attack
+         target = global, net, host
+     */
+    function Metrics($time_range = "week", $type = "attack", $target = "host")
+    {
+        require_once ('classes/Control_panel_host.inc');
+        require_once ('classes/Session.inc');
+        $user = Session::get_session_user();
+        
+        $content = array();
+        $length = array(40, 40, 40);
+
+        /* table header */
+        if ($target == "host")
+            $tmp_array = array("Host", "Max " . $type . " level", "Date");
+        elseif ($target == "net")
+            $tmp_array = array("Net", "Max " . $type . " level", "Date");
+        elseif ($target == "global")
+            $tmp_array = array("Global", "Max " . $type . " level", "Date");
+
+        array_push($content, $tmp_array);
+
+        if ($target == "host") {
+            $hosts = Control_panel_host::get_metric_list($this->ossim_conn, 
+                                                         $time_range, 
+                                                         $type);
+            if (is_array($hosts)) {
+                foreach ($hosts as $host) {
+                    if ($type == "compromise")
+                        $tmp_array = array (
+                            Host::ip2hostname($this->ossim_conn, 
+                                              $host->get_host_ip()), 
+                            $host->get_max_c(),
+                            $host->get_max_c_date());
+                    elseif ($type == "attack")
+                        $tmp_array = array (
+                            Host::ip2hostname($this->ossim_conn, 
+                                              $host->get_host_ip()), 
+                            $host->get_max_a(),
+                            $host->get_max_a_date());
+                    $content[] = $tmp_array;
+                }
+            }
+        } elseif ($target == "net") {
+            $nets = Control_panel_net::get_metric_list($this->ossim_conn, 
+                                                       $time_range, 
+                                                       $type);
+            if (is_array($nets)) {
+                foreach ($nets as $net) {
+                    if ($type == "compromise")
+                        $tmp_array = array ($net->get_net_name(), 
+                                            $net->get_max_c(),
+                                            $net->get_max_c_date());
+                    elseif ($type == "attack")
+                        $tmp_array = array ($net->get_net_name(), 
+                                            $net->get_max_a(),
+                                            $net->get_max_a_date());
+                    $content[] = $tmp_array;
+                }
+            }
+        } elseif ($target == "global") {
+            $query = "SELECT * FROM control_panel
+                WHERE id = 'global_$user' AND time_range = '$time_range';";
+            if (!$rs_global = &$this->ossim_conn->Execute($query))
+                print $conn->ErrorMsg();
+            else {
+                if ($type == "compromise")
+                    $tmp_array = array ("GLOBAL", 
+                                        $rs_global->fields["max_c"],
+                                        $rs_global->fields["max_c_date"]);
+                elseif ($type == "attack")
+                    $tmp_array = array ("GLOBAL", 
+                                        $rs_global->fields["max_a"],
+                                        $rs_global->fields["max_a_date"]);
+                $content[] = $tmp_array;
+            }
+            
+        }
+        
+        if ($type == "compromise")
+            $color = "blue";
+        if ($type == "attack")
+            $color = "red";
+
+        $this->__WriteTable("Metrics last $time_range", 
+                            $length, $content, 0, $color);
+        
+    }
+
+    /* ---------------------------------------------------------------- */
+    /*                                                                  */
+    /*                         Print images                             */
+    /*                                                                  */
+    /* From code by Xavier Nicolay                                      */
+    /* Script 25 on www.fpdf.org                                        */
+    /* (c) Xavier Nicolay                                               */
+    /* V1.0 : 2004-01-17                                                */
+    /*                                                                  */
+    /* ---------------------------------------------------------------- */
+    
+    function _readstr($var, &$pos, $n)
+    {
+        //Read some bytes from string
+        $string = substr($var, $pos, $n);
+        $pos += $n;
+        return $string;
+    }					
+    
+    function _readstr_int($var, &$pos)
+    {
+        //Read a 4-byte integer from string
+        $i = ord($this->_readstr($var, $pos, 1)) << 24;
+        $i += ord($this->_readstr($var, $pos, 1)) << 16;
+        $i += ord($this->_readstr($var, $pos, 1)) << 8;
+        $i += ord($this->_readstr($var, $pos, 1));
+        return $i;
+    }
+
+    function _parsemempng($var)
+    {
+        $pos = 0;
+	$sig = $this->_readstr($var,$pos, 8);
+	if ($sig != chr(137).'PNG'.chr(13).chr(10).chr(26).chr(10))
+	    $this->Error('Not a PNG image');
+
+        //Read header chunk
+	$this->_readstr($var,$pos,4);
+	$ihdr = $this->_readstr($var,$pos,4);
+	if ($ihdr != 'IHDR')
+	    $this->Error('Incorrect PNG Image');
+        $w=$this->_readstr_int($var,$pos);
+        $h=$this->_readstr_int($var,$pos);
+        $bpc=ord($this->_readstr($var,$pos,1));
+        if ($bpc > 8)
+            $this->Error('16-bit depth not supported: '.$file);
+        $ct = ord($this->_readstr($var,$pos,1));
+        if ($ct == 0)
+            $colspace='DeviceGray';
+        elseif ($ct == 2)
+            $colspace='DeviceRGB';
+        elseif ($ct == 3)
+            $colspace='Indexed';
+        else
+            $this->Error('Alpha channel not supported: '.$file);
+        if (ord($this->_readstr($var,$pos,1)) != 0)
+            $this->Error('Unknown compression method: '.$file);
+        if (ord($this->_readstr($var,$pos,1)) != 0)
+            $this->Error('Unknown filter method: '.$file);
+        if (ord($this->_readstr($var,$pos,1)) != 0)
+            $this->Error('Interlacing not supported: '.$file);
+        $this->_readstr($var,$pos,4);
+        $parms = '/DecodeParms <</Predictor 15 /Colors ' . ($ct==2 ? 3 : 1)
+                 . ' /BitsPerComponent ' . $bpc . ' /Columns ' . $w . '>>';
+
+	//Scan chunks looking for palette, transparency and image data
+        $pal = '';
+        $trns = '';
+        $data = '';
+	do
+        {
+            $n = $this->_readstr_int($var,$pos);
+            $type = $this->_readstr($var,$pos,4);
+            if ($type == 'PLTE')
+            {
+                //Read palette
+                $pal = $this->_readstr($var,$pos,$n);
+                $this->_readstr($var,$pos,4);
+            }
+            elseif ($type == 'tRNS')
+            {
+                //Read transparency info
+                $t = $this->_readstr($var,$pos,$n);
+                if ($ct == 0)
+                    $trns = array(ord(substr($t,1,1)));
+                elseif ($ct == 2)
+                    $trns = array(ord(substr($t,1,1)),ord(substr($t,3,1)),ord(substr($t,5,1)));
+                else
+                {
+                    $pos = strpos($t,chr(0));
+                    if (is_int($pos))
+                        $trns = array($pos);
+                }
+                $this->_readstr($var,$pos,4);
+            }
+            elseif($type == 'IDAT')
+            {
+                //Read image data block
+                $data .= $this->_readstr($var,$pos,$n);
+                $this->_readstr($var,$pos,4);
+            }
+            elseif($type == 'IEND')
+                break;
+            else
+                $this->_readstr($var,$pos,$n+4);
+        }
+        while($n);
+	
+	if ($colspace == 'Indexed' and empty($pal))
+            $this->Error('Missing palette in ' . $file);
+        return array('w'     => $w,
+                     'h'     => $h,
+                     'cs'    => $colspace,
+                     'bpc'   => $bpc,
+                     'f'     => 'FlateDecode',
+                     'parms' => $parms,
+                     'pal'   => $pal,
+                     'trns'  => $trns,
+                     'data'  => $data);
+    }
+
+    function MemImage($data, $x, $y, $width=0, $height=0, $link='')
+    {
+    	$id = md5($data);
+	if (!isset($this->images[$id]))
+	{
+	    $info = $this->_parsemempng( $data );
+	    $info['i'] = count($this->images)+1;
+	    $this->images[$id]=$info;
+	}
+	else
+	    $info = $this->images[$id];
+	    
+	// Automatic width and height calculation if needed
+	if ($width == 0 and $height == 0)
+	{
+	    // image at 72 dpi
+	    $width = $info['w'] / $this->k;
+	    $height = $info['h'] / $this->k;
+	}
+	if ($width == 0)
+	    $width = $height * $info['w'] / $info['h'];
+	if ($height == 0)
+	    $height = $width * $info['h'] / $info['w'];
+
+	$this->_out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q',
+	                     $width * $this->k, $height * $this->k, $x * $this->k,
+			     ($this->h-($y+$h))*$this->k, $info['i']));
+    }
+    
+    function GDImage($image, $x, $y, $width=0, $height=0, $link='')
+    {
+	ob_start();
+	imagepng($image);
+	$data = ob_get_contents();
+	ob_end_clean();
+        $this->MemImage($data, $x, $y, $width, $height, $link);
+    }
+}
+?>

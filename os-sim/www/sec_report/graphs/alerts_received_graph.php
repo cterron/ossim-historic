@@ -1,41 +1,21 @@
 <?php
 
-require_once ('ossim_db.inc');
-require_once ('ossim_conf.inc');
-
-require_once ('../sec_util.php');
+require_once ('classes/SecurityReport.inc');
 
 /* hosts to show */
-if (!$NUM_HOSTS = $_GET["hosts"]) {
-    $NUM_HOSTS = 10;
+if (!$limit = $_GET["hosts"]) {
+    $limit = 10;
 }
 
-/* snort db connect */
-$snort_db = new ossim_db();
-$snort_conn = $snort_db->snort_connect();
-
-/* ossim framework conf */
+$security_report = new SecurityReport();
+$list = $security_report->Alerts($limit);
+foreach ($list as $l) {
+    $legend[] = $l[0];
+    $data[]   = $l[1];
+}
+ 
 $conf = new ossim_conf();
 $jpgraph = $conf->get_conf("jpgraph_path");
-
-$query = "SELECT count(sig_name) AS occurrences, sig_name
-    FROM acid_event GROUP BY sig_name
-    ORDER BY occurrences DESC LIMIT $NUM_HOSTS;";
-
-if (!$rs = &$snort_conn->CacheExecute($query)) {
-    print $snort_conn->ErrorMsg();
-} else {
-
-    while (!$rs->EOF) 
-    {
-        $legend [] = $rs->fields["sig_name"];
-        $data [] = $rs->fields["occurrences"];
-        
-        $rs->MoveNext();
-    }
-}
-$snort_db->close($snort_conn);
- 
 
 include ("$jpgraph/jpgraph.php");
 include ("$jpgraph/jpgraph_pie.php");

@@ -20,7 +20,9 @@ class MonitorTcptrack(Monitor.Monitor):
         #
         if not (rule["from"] and rule["port_from"] and \
                 rule["to"] and rule["port_to"]):
-            util.debug(__name__, "Not enougth data", "!!", "YELLOW")
+            util.debug(__name__, "Bad request: " +\
+                "from:port_from to:port_to are mandatory", 
+                "!!", "YELLOW")
             return None
 
 

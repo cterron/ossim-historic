@@ -38,14 +38,7 @@ my $rrdpath = $ossim_conf::ossim_data->{rrdpath_global};
 #
 # get default threshold
 # 
-my $THRESHOLD;
-my $query = "SELECT threshold FROM conf;";
-my $sth = $dbh->prepare($query);
-$sth->execute();
-if ($sth->rows > 0) {
-    my $row = $sth->fetchrow_hashref;
-    $THRESHOLD = $row->{"threshold"}; 
-}
+my $THRESHOLD = $ossim_conf::ossim_data->{"threshold"};
 
 my $C_level = my $A_level = my $count = 0;
 open(INPUT, "$rrdtool fetch $rrdpath/global_$user.rrd AVERAGE -s N-1D -e N|");

@@ -1,14 +1,10 @@
 
 /* ======== config ======== */
-DROP TABLE IF EXISTS conf;
-CREATE TABLE conf (
-    recovery        int NOT NULL,
-    threshold       int NOT NULL,
-    graph_threshold int NOT NULL,
-    bar_length_left int NOT NULL,
-    bar_length_right int NOT NULL,
-    PRIMARY KEY (recovery, threshold, graph_threshold,
-                 bar_length_left, bar_length_right)
+DROP TABLE IF EXISTS config;
+CREATE TABLE config (
+    conf    varchar(255) NOT NULL,
+    value   varchar(255),
+    PRIMARY KEY (conf)
 );
 
 

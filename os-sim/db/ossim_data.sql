@@ -1,8 +1,62 @@
 --
--- Data: Conf
+-- Data: Config
 --
-DELETE FROM conf;
-INSERT INTO conf (recovery, threshold, graph_threshold, bar_length_left, bar_length_right) VALUES (1, 300, 300, 300, 200);
+INSERT INTO config (conf, value) VALUES ('snort_path', '/etc/snort/');
+INSERT INTO config (conf, value) VALUES ('snort_rules_path', '/etc/snort/rules/');
+INSERT INTO config (conf, value) VALUES ('snort_type', 'mysql');
+INSERT INTO config (conf, value) VALUES ('snort_base', 'snort');
+INSERT INTO config (conf, value) VALUES ('snort_user', 'root');
+INSERT INTO config (conf, value) VALUES ('snort_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('snort_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('snort_port', '3306');
+INSERT INTO config (conf, value) VALUES ('server_address', 'localhost');
+INSERT INTO config (conf, value) VALUES ('server_port', '40001');
+INSERT INTO config (conf, value) VALUES ('phpgacl_path', '/var/www/phpgacl/');
+INSERT INTO config (conf, value) VALUES ('graph_link', '/cgi-bin/draw_graph_combined.pl');
+INSERT INTO config (conf, value) VALUES ('rrdtool_lib_path', '/usr/lib/perl5/');
+INSERT INTO config (conf, value) VALUES ('ntop_link', 'http://localhost:3000');
+INSERT INTO config (conf, value) VALUES ('backup_type', 'mysql');
+INSERT INTO config (conf, value) VALUES ('backup_base', 'snort_archive');
+INSERT INTO config (conf, value) VALUES ('backup_user', 'root');
+INSERT INTO config (conf, value) VALUES ('backup_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('backup_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('backup_port', '3306');
+INSERT INTO config (conf, value) VALUES ('backup_dir', '/var/lib/ossim/backup');
+INSERT INTO config (conf, value) VALUES ('backup_day', '5');
+INSERT INTO config (conf, value) VALUES ('nessus_user', 'ossim');
+INSERT INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('nessus_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('nessus_port', '1241');
+INSERT INTO config (conf, value) VALUES ('acid_user', 'ossim');
+INSERT INTO config (conf, value) VALUES ('acid_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('ossim_web_user', 'admin');
+INSERT INTO config (conf, value) VALUES ('ossim_web_pass', 'admin');
+INSERT INTO config (conf, value) VALUES ('jpgraph_path', '/usr/share/jpgraph/');
+INSERT INTO config (conf, value) VALUES ('fpdf_path', '/usr/share/fpdf/');
+INSERT INTO config (conf, value) VALUES ('adodb_path', '/var/www/adodb-411/');
+INSERT INTO config (conf, value) VALUES ('rrdtool_path', '/usr/bin/');
+INSERT INTO config (conf, value) VALUES ('mrtg_path', '/usr/bin/');
+INSERT INTO config (conf, value) VALUES ('mrtg_rrd_files_path', '/var/www/ossim/mrtg/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_host', '/var/www/ossim/mrtg/host_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_net', '/var/www/ossim/mrtg/net_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_global', '/var/www/ossim/mrtg/global_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_level', '/var/www/ossim/mrtg/level_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_ntop', '/usr/share/ntop/rrd/');
+INSERT INTO config (conf, value) VALUES ('font_path', '/usr/share/ossim/fonts/Vera.ttf');
+INSERT INTO config (conf, value) VALUES ('opennms_link', 'http://localhost:8080/opennms/');
+INSERT INTO config (conf, value) VALUES ('nessus_path', '/usr/local/bin/nessus/');
+INSERT INTO config (conf, value) VALUES ('nessus_rpt_path', '/var/www/ossim/vulnmeter/');
+INSERT INTO config (conf, value) VALUES ('acid_link', '/acid/');
+INSERT INTO config (conf, value) VALUES ('acid_path', '/var/www/acid/');
+INSERT INTO config (conf, value) VALUES ('nmap_path', '/usr/bin/nmap');
+INSERT INTO config (conf, value) VALUES ('p0f_path', '/usr/sbin/p0f');
+INSERT INTO config (conf, value) VALUES ('arpwatch_path', '/usr/sbin/arpwatch');
+INSERT INTO config (conf, value) VALUES ('mail_path', '/usr/bin/mail');
+INSERT INTO config (conf, value) VALUES ('touch_path', '/bin/tail');
+INSERT INTO config (conf, value) VALUES ('wget_path', '/usr/bin/wget');
+INSERT INTO config (conf, value) VALUES ('use_resolv', '0');
+INSERT INTO config (conf, value) VALUES ('recovery', '1');
+INSERT INTO config (conf, value) VALUES ('threshold', '300');
 
 --
 -- Data: Port
@@ -5889,7 +5943,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (151
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 173, NULL, NULL, "NTsyslog: 'MSExchangeIS ((298))' The database engine is initiating index cleanup of database 'c:\exchsrvr\mdbdata\priv.edb' as a result of an NT version upgrade to '4.0.1381 SP4'.");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 174, NULL, NULL, "NTsyslog: 'MSExchangeIS ((298))' Database 'c:\exchsrvr\mdbdata\priv.edb': The secondary index '+Q6749+S3001+Q6748 409' of table 'Folder' will be rebuilt as a precautionary measure after the NT version upgrade of this system.");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 175, NULL, NULL, "NTsyslog: Unable to obtain the status of drive \\.\Tape0.");
-INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 177, NULL, NULL, "NTsyslog: MSExchangeDX ((276)) Database '<database>': The secondary index '<index>' of table '<table>' is corrupt. Please defragment the database to rebuild the index.");
+INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 177, NULL, NULL, "NTsyslog: MSExchangeDX ((276)) Database '(database)': The secondary index '(index)' of table '(table)' is corrupt. Please defragment the database to rebuild the index.");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 178, NULL, NULL, "NTsyslog: An error occurred while transferring in message C=US;A= ;P=ACM;L=EXCHANGE-010786143214Z-30 because the directory name could not be expanded to an O/R address. An X.400 API Association (XAPIA) unable-to-transfer reason code and unrecognised-OR-name diagnostic code were returned. [MTA SUBMIT 15 73] (14)");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 179, NULL, NULL, "NTsyslog: MSExchangeIS (341) Online defragmentation is beginning a full pass on database 'd:\exchsrvr\MDBDATA\PUB.EDB'.");
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1517, 180, NULL, NULL, "NTsyslog: MSExchangeIS (341) Online defragmentation has completed a full pass on database 'd:\exchsrvr\MDBDATA\PUB.EDB'.");

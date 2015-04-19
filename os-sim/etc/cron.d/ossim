@@ -1,0 +1,6 @@
+# ossim graphing
+0-59/5 * * * * root /opt/ossim/mrtg/launch-mrtg
+
+# acid backups
+#5 0 * * * $OSSIM_PATH/scripts/backupdb.pl
+

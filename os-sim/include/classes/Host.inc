@@ -1,6 +1,6 @@
 <?php
 
-require_once ('classes/Conf.inc');
+require_once ('ossim_conf.inc');
 require_once ('classes/Host_sensor_reference.inc');
 
 class Host {
@@ -152,11 +152,14 @@ class Host {
         if (!$rs->EOF) {
             return $rs->fields["hostname"]; 
         } else {
-            if(preg_match("/\d+\.\d+\.\d+\.\d+/", $ip)){
-            return gethostbyaddr($ip);
-            } else {
-            return $ip;
-            }
+    
+            require_once ('ossim_conf.inc');
+            $config = new ossim_conf();
+            $use_resolv = $config->get_conf("use_resolv");
+            if ($use_resolv and preg_match("/\d+\.\d+\.\d+\.\d+/", $ip))
+                return gethostbyaddr($ip);
+            else 
+                return $ip;
         }
     }
 
@@ -171,8 +174,8 @@ class Host {
             return $rs->fields["threshold_c"]; 
         else {
             /* ip is not in db, return default threshold */
-            $conf = Conf::get_conf($conn);
-            return $conf->get_threshold();
+            $conf = new ossim_conf();
+            return $conf->get_conf("threshold");
         }
     }
 
@@ -187,8 +190,8 @@ class Host {
             return $rs->fields["threshold_a"]; 
         else {
             /* ip is not in db, return default threshold */
-            $conf = Conf::get_conf($conn);
-            return $conf->get_threshold();
+            $conf = new ossim_conf();
+            return $conf->get_conf("threshold");
         }
     }
 

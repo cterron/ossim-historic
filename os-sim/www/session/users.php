@@ -73,6 +73,9 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     <tr>
       <td colspan="4"><a href="newuserform.php">Insert new user</a></td>
     </tr>
+    <tr>
+      <td colspan="4"><a href="../setup/ossim_acl.php">Reload ACLS</a></td>
+    </tr>
   </table>
 
 <?php

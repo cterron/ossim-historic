@@ -34,11 +34,6 @@ $ACL_MAIN_MENU = array (
                 (
                     "name"          => "Control Panel -> Vulnerabilities",
                     "default_perm"  => True
-                ),
-            "ControlPanelAnomalies" => array
-                (
-                    "name"          => "Control Panel -> Anomalies",
-                    "default_perm"  => True
                 )
         ),
 
@@ -69,11 +64,6 @@ $ACL_MAIN_MENU = array (
                     "name"          => "Policy -> PolicySignatures",
                     "default_perm"  => False
                 ),
-            "PolicyPriorityReliability" => array
-                (
-                    "name"          => "Policy -> Priority & Reliability",
-                    "default_perm"  => False
-                ),
             "PolicyPorts" => array
                 (
                     "name"          => "Policy -> Ports",
@@ -90,6 +80,16 @@ $ACL_MAIN_MENU = array (
             "ReportsSecurityReport" => array
                 (
                     "name"          => "Reports -> SecurityReport",
+                    "default_perm"  => True
+                ),
+            "ReportsPDFReport" => array
+                (
+                    "name"          => "Reports -> PDFReport",
+                    "default_perm"  => True
+                ),
+            "ReportsAnomalies" => array
+                (
+                    "name"          => "Reports -> Anomalies",
                     "default_perm"  => True
                 ),
             "ReportsIncidents" => array
@@ -115,9 +115,32 @@ $ACL_MAIN_MENU = array (
                     "name"          => "Monitors -> Availability",
                     "default_perm"  => True
                 ),
+            "MonitorsSensors" => array
+                (
+                    "name"          => "Monitors -> Sensors",
+                    "default_perm"  => True
+                ),
             "MonitorsRiskmeter" => array
                 (
                     "name"          => "Monitors -> Riskmeter",
+                    "default_perm"  => True
+                )
+        ),
+    "MenuCorrelation" => array
+        (
+            "CorrelationDirectives" => array
+                (
+                    "name"          => "Correlation -> Directives",
+                    "default_perm"  => False
+                ),
+            "CorrelationCrossCorrelation" => array
+                (
+                    "name"          => "Correlation -> Cross Correlation",
+                    "default_perm"  => False
+                ),
+            "CorrelationBacklog" => array
+                (
+                    "name"          => "Correlation -> Backlog",
                     "default_perm"  => True
                 )
         ),
@@ -133,14 +156,9 @@ $ACL_MAIN_MENU = array (
                     "name"          => "Configuration -> Users",
                     "default_perm"  => False
                 ),
-            "ConfigurationDirectives" => array
+            "ConfigurationPlugins" => array
                 (
-                    "name"          => "Configuration -> Directives",
-                    "default_perm"  => False
-                ),
-            "ConfigurationCorrelation" => array
-                (
-                    "name"          => "Configuration -> Correlation",
+                    "name"          => "Configuration -> Plugins",
                     "default_perm"  => False
                 ),
             "ConfigurationRRDConfig" => array
@@ -152,11 +170,6 @@ $ACL_MAIN_MENU = array (
                 (
                     "name"          => "Configuration -> Host Scan",
                     "default_perm"  => False
-                ),
-            "ConfigurationRiskmeter" => array
-                (
-                    "name"          => "Configuration -> Riskmeter",
-                    "default_perm"  => False
                 )
         ),
     "MenuTools"         => array
@@ -164,11 +177,6 @@ $ACL_MAIN_MENU = array (
             "ToolsScan" => array
                 (
                     "name"          => "Tools -> Scan",
-                    "default_perm"  => True
-                ),
-            "ToolsBacklog" => array
-                (
-                    "name"          => "Tools -> Backlog",
                     "default_perm"  => True
                 ),
             "ToolsRuleViewer" => array

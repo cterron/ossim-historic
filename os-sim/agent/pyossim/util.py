@@ -1,6 +1,5 @@
 import string, sys, time, os
 
-VERSION = 'OSSIM (Open Source Security Information Management) - Agent 0.9.7'
 CONFIG  = '/etc/ossim/agent/config.xml'
 RUN_DIR = '/var/run'
 VERBOSE = False  # redefined with -v, --verbose command line options
@@ -32,10 +31,6 @@ def debug(module, message, mark = "", color = ""):
         
     print msg
     sys.stdout.flush()
-
-    if color == 'RED':
-        sys.stderr.write("%s\n" % (msg))
-        sys.stderr.flush()
 
     if VERBOSE:
         sys.__stdout__.write("%s\n" % (msg))

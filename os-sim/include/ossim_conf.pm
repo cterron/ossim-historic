@@ -1,5 +1,6 @@
 package ossim_conf;
 use strict;
+use DBI;
 
 BEGIN {
 
@@ -8,15 +9,44 @@ BEGIN {
     #
     # Read config from /etc/ossim.conf
     #
-    open FILE, "/etc/ossim/framework/ossim.conf" or die "Can't open logfile:  $!";
-        while ($_ = <FILE>) {
-            if(!(/^#/)) {
-                if(/^(.*)=(.*)$/) {
-                    $ossim_conf::ossim_data->{$1} = $2;
-                }
+    open FILE, "/etc/ossim/framework/ossim.conf" 
+        or die "Can't open logfile:  $!";
+
+    while ($_ = <FILE>) {
+        if(!(/^#/)) {
+            if(/^(.*)=(.*)$/) {
+                $ossim_conf::ossim_data->{$1} = $2;
             }
         }
+    }
+
     close(FILE);
+
+    #
+    # Read config from database
+    #
+    my $dsn = "dbi:" .
+        $ossim_conf::ossim_data->{"ossim_type"} . ":" .
+        $ossim_conf::ossim_data->{"ossim_base"} . ":" .
+        $ossim_conf::ossim_data->{"ossim_host"} . ":" .
+        $ossim_conf::ossim_data->{"ossim_port"} . ":";
+
+    my $conn = DBI->connect($dsn, 
+                            $ossim_conf::ossim_data->{"ossim_user"}, 
+                            $ossim_conf::ossim_data->{"ossim_pass"}) 
+        or die "Can't connect to Database\n";
+
+    my $query = "SELECT * FROM config";
+    my $stm = $conn->prepare($query);
+    $stm->execute();
+    
+    while (my $row = $stm->fetchrow_hashref) {
+        if (!$ossim_conf::ossim_data->{$row->{"conf"}}) {
+            $ossim_conf::ossim_data->{$row->{"conf"}} = $row->{"value"};
+        }
+    }
+    $conn->disconnect();
+
 }
 1;
 

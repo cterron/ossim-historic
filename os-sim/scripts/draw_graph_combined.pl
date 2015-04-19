@@ -108,11 +108,7 @@ if($hostname ne ""){
         $threshold = $row->{threshold_a};
     }
 } else {
-    $query = "SELECT threshold FROM conf";
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-    my $row = $sth->fetchrow_hashref;
-    $threshold = $row->{threshold};
+    $threshold = $ossim_conf::ossim_data->{"threshold"};
     $hostname = $ip;
 }
 

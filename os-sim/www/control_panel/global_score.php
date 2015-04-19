@@ -27,12 +27,9 @@ require_once ('classes/Host_os.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
-require_once ('classes/Conf.inc');
 require_once ('acid_funcs.inc');
 require_once ('common.inc');
 
-
-$mrtg_link = $conf->get_conf("mrtg_link");
 
 
 function echo_values($val, $max, $ip, $date, $target) {
@@ -74,20 +71,17 @@ function echo_values($val, $max, $ip, $date, $target) {
     } 
 }
 
-
-$acid_link = $conf->get_conf("acid_link");
-if (!$range = mysql_escape_string($_GET["range"]))  $range = 'day';
-
 /* get conf */
-$conf = new ossim_conf();
-$graph_link = $conf->get_conf("graph_link");
+$framework_conf = new ossim_conf();
+$THRESHOLD = $framework_conf->get_conf("threshold");
+$graph_link = $framework_conf->get_conf("graph_link");
+$acid_link = $framework_conf->get_conf("acid_link");
+
+if (!$range = mysql_escape_string($_GET["range"]))  $range = 'day';
 
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
-
-$framework_conf = Conf::get_conf($conn);
-$THRESHOLD = $framework_conf->get_threshold();
 
 /* get host & net lists */
 $hosts_order_by_c = Control_panel_host::get_metric_list($conn, $range, 'compromise');

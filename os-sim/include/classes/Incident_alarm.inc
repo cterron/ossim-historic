@@ -49,4 +49,3 @@ class Incident_alarm {
 }
 
 ?>
-

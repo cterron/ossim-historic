@@ -49,7 +49,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   </tr>
   <tr>
     <th>Port</th>
-    <td class="left"><input type="text" name="port"></td>
+    <td class="left"><input type="text" value="40001" name="port"></td>
   </tr>
   <tr>
     <th>Description</th>

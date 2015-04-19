@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuTools", "ToolsBacklog");
+Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 ?>
 
 <html>

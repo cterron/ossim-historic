@@ -16,15 +16,15 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <?php
     require_once ('ossim_db.inc');
-    require_once ('classes/Conf.inc');
+    require_once ('ossim_conf.inc');
     require_once ('classes/Sensor.inc');
     require_once ('classes/Net_sensor_reference.inc');
     require_once ('classes/RRD_config.inc');
-                                                                                
+
     $db = new ossim_db();
     $conn = $db->connect();
-    $conf = Conf::get_conf($conn);
-    $threshold = $conf->get_threshold();
+    $conf = new ossim_conf();
+    $threshold = $conf->get_conf("threshold");
 ?>
 
 <form method="post" action="newnet.php">

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Read config from /etc/ossim.conf
+ * Read config from /etc/ossim/framework/ossim.conf
  */
 class ossim_conf {
 
@@ -17,14 +17,14 @@ class ossim_conf {
         }
 
         while (!feof($fd)) {
-            $line = fgets($fd, 1024);
+            $line = fgets($fd, 2048);
             if (strncmp($line, "#", 1)) {
                 $conf = explode('=', $line);
                 $type = $conf[0];
-                if(isset($conf[1])){
-                $value = $conf[1];
+                if (isset($conf[1])) {
+                    $value = $conf[1];
+                    $this->confs["$type"] = trim($value);
                 }
-                $this->confs["$type"] = trim($value);
             }
         }
 
@@ -32,7 +32,27 @@ class ossim_conf {
     }
 
     function get_conf($type) {
-        return $this->confs["$type"];
+
+        if (isset($this->confs["$type"])) {
+            return $this->confs["$type"];
+        }
+
+        else {
+            require_once ('classes/Config.inc');
+    
+            $config = new Config();
+            $value = $config->get_conf("$type");
+            
+            if ($value !== null)
+                return $value;
+        }
+
+        print "<b>Warning</b>: Error reading configuration: <b>$type</b> is not set<br/>\n";
+        return null;
+    }
+
+    function is_in_file($type) {
+        return isset($this->confs["$type"]);
     }
 }
 

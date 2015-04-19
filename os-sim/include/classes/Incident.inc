@@ -321,16 +321,21 @@ class Incident {
         }
     }
 
-    function update_metric ($conn, $incident_id, $title, $target)
+    function update_metric ($conn, $incident_id, $title, $target,
+                            $metric_type, $metric_value)
     {
         $incident_id = intval($incident_id);
         $title = htmlentities($title);
         $target = htmlentities($target);
+        $metric_type = htmlentities($metric_type);
+        $metric_value = htmlentities($metric_value);
 
         $query1 = "UPDATE incident SET title = '$title' 
             WHERE id = $incident_id";
         $query2 = "UPDATE incident_metric 
-            SET target = '$target'
+            SET target = '$target',
+                metric_type = '$metric_type',
+                metric_value = '$metric_value'
             WHERE incident_id = $incident_id";
 
         if ( ($conn->Execute($query1) === false) or

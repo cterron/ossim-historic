@@ -1,20 +1,139 @@
 ALTER TABLE host ADD rrd_profile varchar(64) AFTER nat;
 ALTER TABLE net ADD rrd_profile varchar(64) AFTER persistence;
 ALTER TABLE host_services ADD port varchar(15) NOT NULL AFTER ip;
+
+---
+--- Config
+---
+
 DROP TABLE IF EXISTS rrd_config;
 CREATE TABLE rrd_config (
-     profile     VARCHAR(64) NOT NULL,
+    profile     VARCHAR(64) NOT NULL,
     rrd_attrib  VARCHAR(60) NOT NULL,
     threshold   INTEGER UNSIGNED NOT NULL,
     priority    INTEGER UNSIGNED NOT NULL,
     alpha       FLOAT UNSIGNED  NOT NULL,
     beta        FLOAT UNSIGNED NOT NULL,
     persistence INTEGER UNSIGNED NOT NULL,
-     enable      TINYINT DEFAULT 1,
-     description TEXT,
-     PRIMARY KEY (profile, rrd_attrib)
+    enable      TINYINT DEFAULT 1,
+    description TEXT,
+    PRIMARY KEY (profile, rrd_attrib)
 );
+
+/* old conf table */
+DROP TABLE IF EXISTS conf;
+
+DROP TABLE IF EXISTS config;
+CREATE TABLE config (
+    conf    varchar(255) NOT NULL,
+    value   varchar(255),
+    PRIMARY KEY (conf)
+);
+
+INSERT INTO config (conf, value) VALUES ('snort_path', '/etc/snort/');
+INSERT INTO config (conf, value) VALUES ('snort_rules_path', '/etc/snort/rules/');
+INSERT INTO config (conf, value) VALUES ('snort_type', 'mysql');
+INSERT INTO config (conf, value) VALUES ('snort_base', 'snort');
+INSERT INTO config (conf, value) VALUES ('snort_user', 'root');
+INSERT INTO config (conf, value) VALUES ('snort_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('snort_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('snort_port', '3306');
+INSERT INTO config (conf, value) VALUES ('server_address', 'localhost');
+INSERT INTO config (conf, value) VALUES ('server_port', '40001');
+INSERT INTO config (conf, value) VALUES ('phpgacl_path', '/var/www/phpgacl/');
+INSERT INTO config (conf, value) VALUES ('graph_link', '/cgi-bin/draw_graph_combined.pl');INSERT INTO config (conf, value) VALUES ('rrdtool_lib_path', '/usr/lib/perl5/');
+INSERT INTO config (conf, value) VALUES ('ntop_link', 'http://localhost:3000');
+INSERT INTO config (conf, value) VALUES ('backup_type', 'mysql');
+INSERT INTO config (conf, value) VALUES ('backup_base', 'snort_archive');
+INSERT INTO config (conf, value) VALUES ('backup_user', 'root');
+INSERT INTO config (conf, value) VALUES ('backup_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('backup_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('backup_port', '3306');
+INSERT INTO config (conf, value) VALUES ('backup_dir', '/var/lib/ossim/backup');
+INSERT INTO config (conf, value) VALUES ('backup_day', '5');
+INSERT INTO config (conf, value) VALUES ('nessus_user', 'ossim');
+INSERT INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('nessus_host', 'localhost');
+INSERT INTO config (conf, value) VALUES ('nessus_port', '1241');
+INSERT INTO config (conf, value) VALUES ('acid_user', 'ossim');
+INSERT INTO config (conf, value) VALUES ('acid_pass', 'ossim');
+INSERT INTO config (conf, value) VALUES ('ossim_web_user', 'admin');
+INSERT INTO config (conf, value) VALUES ('ossim_web_pass', 'admin');
+INSERT INTO config (conf, value) VALUES ('jpgraph_path', '/usr/share/jpgraph/');
+INSERT INTO config (conf, value) VALUES ('fpdf_path', '/usr/share/fpdf/');
+INSERT INTO config (conf, value) VALUES ('adodb_path', '/var/www/adodb-411/');
+INSERT INTO config (conf, value) VALUES ('rrdtool_path', '/usr/bin/');
+INSERT INTO config (conf, value) VALUES ('mrtg_path', '/usr/bin/');
+INSERT INTO config (conf, value) VALUES ('mrtg_rrd_files_path', '/var/www/ossim/mrtg/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_host', '/var/www/ossim/mrtg/host_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_net', '/var/www/ossim/mrtg/net_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_global', '/var/www/ossim/mrtg/global_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_level', '/var/www/ossim/mrtg/level_qualification/');
+INSERT INTO config (conf, value) VALUES ('rrdpath_ntop', '/usr/share/ntop/rrd/');
+INSERT INTO config (conf, value) VALUES ('font_path', '/usr/share/ossim/fonts/Vera.ttf');
+INSERT INTO config (conf, value) VALUES ('opennms_link', 'http://localhost:8080/opennms/');
+INSERT INTO config (conf, value) VALUES ('nessus_path', '/usr/local/bin/nessus/');
+INSERT INTO config (conf, value) VALUES ('nessus_rpt_path', '/var/www/ossim/vulnmeter/');
+INSERT INTO config (conf, value) VALUES ('acid_link', '/acid/');
+INSERT INTO config (conf, value) VALUES ('acid_path', '/var/www/acid/');
+INSERT INTO config (conf, value) VALUES ('use_resolv', '0');
+INSERT INTO config (conf, value) VALUES ('recovery', '1');
+INSERT INTO config (conf, value) VALUES ('threshold', '300');
+
+
+
 DELETE FROM rrd_config;
+
+INSERT INTO rrd_config VALUES ('Default','activeHostSendersNum',500,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','arpRarpBytes',50,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','broadcastPkts',500,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','ethernetBytes',300000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','ethernetPkts',1000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','fragmentedIpBytes',100,1,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','icmpBytes',5000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','igmpBytes',100,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','ipBytes',1000000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','ipv6Bytes',500,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','ipxBytes',100,1,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_DHCP-BOOTPBytes',1,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_DNSBytes',10000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_eDonkeyBytes',1000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_FTPBytes',1000000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_GnutellaBytes',1000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_HTTPBytes',100000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_KazaaBytes',1000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_MailBytes',2500,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_MessengerBytes',1000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_NBios-IPBytes',200000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_NFSBytes',100,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_NNTPBytes',100,1,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_SNMPBytes',20,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_SSHBytes',10000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_TelnetBytes',500,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_WinMXBytes',1000,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','IP_X11Bytes',1000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','knownHostsNum',600,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','mail_sessions',1,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','multicastPkts',10,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','nb_sessions',1,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','otherBytes',10000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','otherIpBytes',10000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','stpBytes',500,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','synPktsRcvd',3,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','synPktsSent',4,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','tcpBytes',800000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','totContactedRcvdPeers',1,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','totContactedSentPeers',1,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','udpBytes',200000,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo1024Pkts',40,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo128Pkts',500,1,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo1518Pkts',40,5,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo256Pkts',80,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo512Pkts',80,3,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','upTo64Pkts',500,1,0.1,0.0035,4,1,''); 
+INSERT INTO rrd_config VALUES ('Default','web_sessions',5,5,0.1,0.0035,4,1,''); 
+
+
 INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, persistence) VALUES ("global", 'activeHostSendersNum', 500, 5, 0.1, 0.0035, 4);
 INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, persistence) VALUES ("global", 'arpRarpBytes', 50, 3, 0.1, 0.0035, 4);
 INSERT INTO rrd_config (profile, rrd_attrib, threshold, priority, alpha, beta, persistence) VALUES ("global", 'broadcastPkts', 500, 3, 0.1, 0.0035, 4);

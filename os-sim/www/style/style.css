@@ -115,6 +115,10 @@ input, textarea, select {
     font-size:  8pt;
 }
 
+input.disabled {
+    color: #999;
+}
+
 hr {
     color: #e0e0e0;
     background-color: #fff;

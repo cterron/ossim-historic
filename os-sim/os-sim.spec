@@ -1,6 +1,6 @@
 Summary:   Open Source Security Information Management (OSSIM)
 Name:      os-sim
-Version:   0.9.7rc2
+Version:   0.9.7
 Release:   1
 License:   BSD
 Group:     Applications/Security
@@ -109,6 +109,9 @@ fi
 %defattr(-,root,root,0755)
 %config %{_sysconfdir}/ossim/agent/config.xml
 %{_datadir}/ossim/agent/
+%{_datadir}/ossim/agent/doc/
+%{_datadir}/ossim/agent/pyossim/
+%{_datadir}/ossim/agent/util/
 %attr(0755,root,root) %{_datadir}/ossim/agent/ossim-agent
 /var/log/ossim
 

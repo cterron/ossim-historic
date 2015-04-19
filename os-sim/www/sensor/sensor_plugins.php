@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuPolicy", "PolicySensors");
+Session::logcheck("MenuMonitors", "MonitorsSensors");
 ?>
 
 <html>
@@ -18,65 +18,95 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'get_sensors.php';
     require_once 'get_sensor_plugins.php';
 
-    /* what sensor? */
-    if (!$ip = $_GET["sensor"]) {
-        echo "no sensor selected";
-        exit();
-    }
-
-    if (($cmd = $_GET["cmd"]) && ($id = $_GET["id"])) {
-       
-        /*
-         *  Send message to server
-         *    sensor-plugin-CMD sensor="" plugin_id=""
-         *  where CMD can be (start|stop|enabled|disabled)
-         */
-       
-        require_once ('ossim_conf.inc');
-        $ossim_conf = new ossim_conf();
-
-        /* get the port and IP address of the server */
-        $address = $ossim_conf->get_conf("server_address");
-        $port = $ossim_conf->get_conf("server_port");
-
-        /* create socket */
-        $socket = socket_create (AF_INET, SOCK_STREAM, 0);
-        if ($socket < 0) {
-            echo "socket_create() failed: reason: " . 
-                socket_strerror ($socket) . "\n";
-            exit();
-        }
-
-        /* connect */
-        $result = socket_connect ($socket, $address, $port);
-        if ($result < 0) {
-            echo "socket_connect() failed.\nReason: ($result) " .
-                socket_strerror($result) . "\n\n";
-            exit();
-        }
-       
-        /* send command */
-        $msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"";
-        socket_write($socket, $msg, strlen($msg));
-        socket_close($socket);
-
-        /* wait for 
-         *   framework => server -> agent -> server => framework
-         * messages */
-        sleep(5);
-    }
-
-    echo "<h2 align=\"center\">$ip</h2>";
 
     /* connect to db */
     $db = new ossim_db();
     $conn = $db->connect();
 
-    /* get plugin list for each sensor */
-    $sensor_plugins_list = server_get_sensor_plugins();
-//    print_r($sensor_plugins_list);
+
+    $tmp_list = Sensor::get_list($conn);
+    if (is_array($tmp_list)) {
+        foreach ($tmp_list as $tmp) {
+            $db_sensor_list[] = $tmp->get_ip();
+        }
+    }
+
+    $sensor_list = server_get_sensors();
+
+    /* what sensor? */
+    if (isset($_GET["sensor"]))
+        $ip_get = $_GET["sensor"];
+
+
+    if (!$sensor_list && !$ip_get)
+        echo "<p>There aren't any sensors connected to OSSIM server</p>";
+
+    foreach ($sensor_list as $sensor)
+    {
+        $ip = $sensor["sensor"];
+        $state = $sensor["state"];
+
+        if ((isset($ip_get)) && ($ip_get != $ip))
+            continue;
+
+        if (($cmd = $_GET["cmd"]) && ($id = $_GET["id"])) {
+           
+            /*
+             *  Send message to server
+             *    sensor-plugin-CMD sensor="" plugin_id=""
+             *  where CMD can be (start|stop|enabled|disabled)
+             */
+           
+            require_once ('ossim_conf.inc');
+            $ossim_conf = new ossim_conf();
+
+            /* get the port and IP address of the server */
+            $address = $ossim_conf->get_conf("server_address");
+            $port = $ossim_conf->get_conf("server_port");
+
+            /* create socket */
+            $socket = socket_create (AF_INET, SOCK_STREAM, 0);
+            if ($socket < 0) {
+                echo "socket_create() failed: reason: " . 
+                    socket_strerror ($socket) . "\n";
+                exit();
+            }
+
+            /* connect */
+            $result = socket_connect ($socket, $address, $port);
+            if ($result < 0) {
+                echo "socket_connect() failed.\nReason: ($result) " .
+                    socket_strerror($result) . "\n\n";
+                exit();
+            }
+           
+            /* send command */
+            $msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"";
+            socket_write($socket, $msg, strlen($msg));
+            socket_close($socket);
+
+            /* wait for 
+             *   framework => server -> agent -> server => framework
+             * messages */
+            sleep(5);
+        }
+
+        echo "<h2 align=\"center\">$ip</h2>";
+        if (!in_array($ip, $db_sensor_list)) {
+            echo "<p><b>Warning</b></font>:
+            The sensor is being reported as enabled by
+            the server but isn't configured.<br/>
+            Click <a href=\"newsensorform.php?ip=$ip\">here</a>
+            to configure the sensor.</p>";
+            
+        }
+
+
+        /* get plugin list for each sensor */
+        $sensor_plugins_list = server_get_sensor_plugins();
 
 ?>
   <table align="center">
@@ -144,8 +174,10 @@ Session::logcheck("MenuPolicy", "PolicySensors");
       </td>
     </tr>
   </table>
+  <br/>
 
 <?php
+    }
     $db->close($conn);
 ?>
 

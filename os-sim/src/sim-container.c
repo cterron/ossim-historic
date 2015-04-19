@@ -986,7 +986,7 @@ sim_container_db_get_recovery_ul (SimContainer  *container,
 {
   GdaDataModel  *dm;
   GdaValue      *value;
-  gchar         *query = "SELECT recovery FROM conf";
+  gchar         *query = "SELECT value as recovery FROM config WHERE conf = 'recovery'";
   gint           row;
   gint           recovery = 1;
 
@@ -1001,8 +1001,13 @@ sim_container_db_get_recovery_ul (SimContainer  *container,
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
 	  /* Recovery */
+      gchar *recovery_string;
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  recovery = gda_value_get_integer (value);
+      if (NULL != (recovery_string = gda_value_stringify (value)))
+        {
+    	  recovery = atoi (recovery_string);
+          g_free(recovery_string);
+        }
 	}
       
       g_object_unref(dm);
@@ -1051,7 +1056,7 @@ sim_container_db_get_threshold_ul (SimContainer  *container,
 {
   GdaDataModel  *dm;
   GdaValue      *value;
-  gchar         *query = "SELECT threshold FROM conf";
+  gchar         *query = "SELECT value as threshold FROM config WHERE conf = 'threshold'";
   gint           row;
   gint           threshold = 1;
 
@@ -1066,8 +1071,13 @@ sim_container_db_get_threshold_ul (SimContainer  *container,
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
 	  /* Threshold */
+      gchar *threshold_string;
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  threshold = gda_value_get_integer (value);
+      if (NULL != (threshold_string = gda_value_stringify (value)))
+        {
+	      threshold = atoi (threshold_string);
+          g_free(threshold_string);
+        }
 	}
       
       g_object_unref(dm);

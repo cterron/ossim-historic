@@ -18,13 +18,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     
     require_once ('ossim_db.inc');
     require_once ('ossim_conf.inc');
-    
-    require_once ('classes/Host_qualification.inc');
     require_once ('classes/Host.inc');
     require_once ('classes/Host_os.inc');
 
-    require_once ('sec_util.php');
-
+    require_once ('classes/SecurityReport.inc');
+    $security_report = new SecurityReport();
 
     $server = $_SERVER["SERVER_ADDR"];
     $file   = $_SERVER["REQUEST_URI"];
@@ -39,16 +37,9 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 
 
     ##############################
-    #  Top C & A Risk 
-    ##############################
-    if ($_GET["section"] == 'risk') {
-        ip_max_risk();
-    }
-    
-    ##############################
     # Top attacked hosts
     ##############################
-    elseif ($_GET["section"] == 'attacked') 
+    if ($_GET["section"] == 'attacked') 
     {
         ip_max_occurrences("ip_dst");
     }
@@ -104,8 +95,6 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     }
 
     elseif ($_GET["section"] == 'all') {
-        // ip_max_risk();
-        // echo "<br/>";
         ip_max_occurrences("ip_dst");
         echo "<br/><br/>";
         ip_max_occurrences("ip_src");
@@ -128,41 +117,6 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 
 <?php
 
-    function ip_max_risk() {
-
-        global $conn;
-        global $NUM_HOSTS;
-    
-        if ($risk_list = Host_qualification::get_list
-            ($conn, "", "ORDER BY compromise + attack DESC LIMIT $NUM_HOSTS"))
-        {
-?>
-            <h2>Top <?php echo $NUM_HOSTS ?> Risk Metrics</h2>
-            <table align="center">
-                <tr>
-                  <th>Host</th>
-                  <th>Compromise</th>
-                  <th>Attack</th>
-                </tr>
-<?php
-            foreach ($risk_list as $host) 
-            {
-                $ip = $host->get_host_ip();
-                $hostname = Host::ip2hostname($conn, $ip);
-                $link = "../report/metrics.php?host=$ip";
-                $os = Host_os::get_os_pixmap($conn, $ip);
-?>
-                <tr>
-                  <td><?php echo "<a href=\"$link\">$hostname</a> $os" ?></td>
-                  <td><?php echo $host->get_compromise() ?></td>
-                  <td><?php echo $host->get_attack() ?></td>
-                </tr>
-<?php
-            }
-            echo "</table><br/>\n";
-        }
-    }
-
     /* 
      * return the list of host with max occurrences 
      * as dest or source
@@ -171,27 +125,16 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     function ip_max_occurrences($target)
     {
         global $NUM_HOSTS;
+        global $security_report;
     
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
-
-        /* snort db connect */
-        $snort_db = new ossim_db();
-        $snort_conn = $snort_db->snort_connect();
         
-        $query = "SELECT count($target) AS occurrences, inet_ntoa($target) 
-            FROM acid_event GROUP BY $target
-            ORDER BY occurrences DESC LIMIT $NUM_HOSTS;";
-
-        if (!$rs = &$snort_conn->CacheExecute($query)) {
-            print $snort_conn->ErrorMsg();
-        } else {
-        
-            if (!strcmp($target, "ip_src"))
-                $title = "Attacker hosts";
-            elseif (!strcmp($target, "ip_dst"))
-                $title = "Attacked hosts";
+        if (!strcmp($target, "ip_src"))
+            $title = "Attacker hosts";
+        elseif (!strcmp($target, "ip_dst"))
+            $title = "Attacked hosts";
 ?>
         <h2>Top <?php echo "$NUM_HOSTS $title" ?></h2>
         <table align="center">
@@ -202,12 +145,15 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th>Occurrences</th>
           </tr>
 <?php
-            while (!$rs->EOF) {
+            $list = $security_report->AttackHost($target, $NUM_HOSTS);
+            foreach ($list as $l) {
 
-                $ip = $rs->fields["inet_ntoa($target)"];
-                $hostname = ip2hostname($ip);
-                $os_pixmap = get_os_pixmap($ip);
-                $occurrences = $rs->fields["occurrences"];
+                $ip = $l[0];
+                $occurrences = $l[1];
+                $hostname = Host::ip2hostname(
+                    $security_report->ossim_conn, $ip);
+                $os_pixmap = Host_os::get_os_pixmap(
+                    $security_report->ossim_conn, $ip);
                 $link = "$acid_link/acid_stat_alerts.php?&" . 
                     "num_result_rows=-1&" .
                     "submit=Query+DB&" . 
@@ -227,10 +173,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
-                $rs->MoveNext();
-            }
         }
-        $snort_db->close($snort_conn);
 ?>
         </table>
         </td>
@@ -248,23 +191,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     function alert_max_occurrences()
     {
         global $NUM_HOSTS;
+        global $security_report;
     
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
-        
-        /* snort db connect */
-        $snort_db = new ossim_db();
-        $snort_conn = $snort_db->snort_connect();
-        
-        $query = "SELECT count(sig_name) AS occurrences, sig_name
-            FROM acid_event GROUP BY sig_name
-            ORDER BY occurrences DESC LIMIT $NUM_HOSTS;";
-
-        if (!$rs = &$snort_conn->CacheExecute($query)) {
-            print $snort_conn->ErrorMsg();
-        } else {
-        
 ?>
         <h2>Top <?php echo "$NUM_HOSTS Alerts" ?></h2>
         <table align="center">
@@ -273,9 +204,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th>Occurrences</th>
           </tr>
 <?php
-            while (!$rs->EOF) {
-                $alert = $rs->fields["sig_name"];
-                $occurrences = $rs->fields["occurrences"];
+            $list = $security_report->Alerts();
+            foreach ($list as $l)
+            {
+                $alert = $l[0];
+                $occurrences = $l[1];
 ?>
           <tr>
              <?php
@@ -291,10 +224,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
-                $rs->MoveNext();
-            }
         }
-        $snort_db->close($snort_conn);
 ?>
         <tr>
           <td colspan="2">
@@ -314,20 +244,8 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     function alert_max_risk()
     {
         global $NUM_HOSTS;
-    
-        /* snort db connect */
-        $snort_db = new ossim_db();
-        $snort_conn = $snort_db->snort_connect();
-        
-        $query = "SELECT sig_name, ossim_risk_a 
-            FROM acid_event 
-            GROUP BY sig_name 
-            ORDER BY ossim_risk_a DESC LIMIT $NUM_HOSTS;";
-
-        if (!$rs = &$snort_conn->CacheExecute($query)) {
-            print $snort_conn->ErrorMsg();
-        } else {
-        
+        global $security_report;
+        require_once ('sec_util.php');
 ?>
         <h2>Top <?php echo "$NUM_HOSTS Alerts by Risk" ?></h2>
         <table align="center">
@@ -336,20 +254,21 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th>Risk</th>
           </tr>
 <?php
-            while (!$rs->EOF) {
-                $alert = $rs->fields["sig_name"];
-                $risk  = $rs->fields["ossim_risk_a"];
+            $list = $security_report->AlertsByRisk();
+            foreach ($list as $l) {
+                $alert = $l[0];
+                $risk  = $l[1];
 ?>
           <tr>
             <td><?php echo $alert ?></a></td>
             <?php echo_risk($risk); ?>
           </tr>
 <?php
-                $rs->MoveNext();
-            }
         }
-        $snort_db->close($snort_conn);
-        echo "</table><br/>\n";
+?>
+        </table>
+        <br/>
+<?php
     }
 
     /* 
@@ -358,22 +277,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     function port_max_occurrences()
     {
         global $NUM_HOSTS;
+        global $security_report;
     
         /* ossim framework conf */
         $conf = new ossim_conf();
         $acid_link = $conf->get_conf("acid_link");
-
-        /* snort db connect */
-        $snort_db = new ossim_db();
-        $snort_conn = $snort_db->snort_connect();
-        
-        $query = "SELECT count(layer4_dport) AS occurrences, layer4_dport 
-            FROM acid_event GROUP BY layer4_dport
-            ORDER BY occurrences DESC LIMIT $NUM_HOSTS;";
-
-        if (!$rs = &$snort_conn->CacheExecute($query)) {
-            print $snort_conn->ErrorMsg();
-        } else {
         
 ?>
         <h2>Top <?php echo "$NUM_HOSTS" ?> Used Ports</h2>
@@ -387,10 +295,13 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th>Occurrences</th>
           </tr>
 <?php
-            while (!$rs->EOF) {
+            $list = $security_report->Ports();
+            foreach ($list as $l)
+            {
 
-                $port = $rs->fields["layer4_dport"];
-                $occurrences = $rs->fields["occurrences"];
+                $port = $l[0];
+                $service = $l[1];
+                $occurrences = $l[2];
 ?>
           <tr>
             <td>
@@ -410,20 +321,12 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
                 echo "<a href=\"$link\">$port</a>";
               ?>
             </td>
-            <td>
-              <?php
-                $service = "";
-                if ($port) $service = port2service($port);
-                if ($service) echo "$service";
-               ?>
-            </td>
+            <td><?php echo $service ?></td>
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
-                $rs->MoveNext();
-            }
         }
-        $snort_db->close($snort_conn);
+
         echo "</table>\n";
 ?>
             </td>

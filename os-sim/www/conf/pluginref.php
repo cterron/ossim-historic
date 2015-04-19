@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuConfiguration", "ConfigurationCorrelation");
+Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
 ?>
 
 <html>

@@ -1,6 +1,5 @@
 <?php
 
-require_once ('classes/Conf.inc');
 require_once ('classes/Net.inc');
 
 class Net_scan {

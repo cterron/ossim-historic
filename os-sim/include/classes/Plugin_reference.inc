@@ -1,7 +1,5 @@
 <?php
 
-require_once ('classes/Conf.inc');
-
 class Plugin_reference {
 
     var $plugin_id;

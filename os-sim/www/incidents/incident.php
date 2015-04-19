@@ -299,8 +299,22 @@ Session::logcheck("MenuReports", "ReportsIncidents");
           <tr>
             <th>Target</th>
             <td>
-              <input type="" size="50" name="target"
+              <input type="text" size="50" name="target"
                      value="<?php echo $metrics->get_target() ?>" />
+            </td>
+          </tr>
+          <tr>
+            <th>Metric Type</th>
+            <td>
+              <input type="text" size="50" name="metric_type"
+                     value="<?php echo $metrics->get_metric_type() ?>" />
+            </td>
+          </tr>
+          <tr>
+            <th>Metric Value</th>
+            <td>
+              <input type="text" size="50" name="metric_value"
+                     value="<?php echo $metrics->get_metric_value() ?>" />
             </td>
           </tr>
 <?php
@@ -333,7 +347,9 @@ Session::logcheck("MenuReports", "ReportsIncidents");
             Incident::update_metric ($conn,
                                      $incident_id,
                                      $_POST["title"],
-                                     $_POST["target"]);
+                                     $_POST["target"],
+                                     $_POST["metric_type"],
+                                     $_POST["metric_value"]);
 
         /* re-read from db */
         $incident_list = Incident::get_list($conn, 

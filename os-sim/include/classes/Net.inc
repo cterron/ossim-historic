@@ -133,8 +133,8 @@ class Net {
             return $rs->fields["threshold_c"]; 
         else {
             /* net is not in db, return default threshold */
-            $conf = Conf::get_conf($conn);
-            return $conf->get_threshold();
+            $conf = new ossim_conf();
+            return $conf->get_conf("threshold");
         }
     }
 
@@ -149,8 +149,8 @@ class Net {
             return $rs->fields["threshold_a"]; 
         else {
             /* net is not in db, return default threshold */
-            $conf = Conf::get_conf($conn);
-            return $conf->get_threshold();
+            $conf = new ossim_conf();
+            return $conf->get_conf("threshold");
         }
     }
 

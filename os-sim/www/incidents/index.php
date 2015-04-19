@@ -225,10 +225,10 @@ Session::logcheck("MenuReports", "ReportsIncidents");
                     if ($p < 7) continue;
                 }
                 elseif ($_GET["priority"] == "Medium") {
-                    if (($p < 4) or ($p > 6)) continue;
+                    if (($p < 5) or ($p > 6)) continue;
                 }
                 elseif ($_GET["priority"] == "Low") {
-                    if ($p > 3) continue;
+                    if ($p > 4) continue;
                 }
             }
 ?>
@@ -267,7 +267,10 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 ?>
     <tr>
       <td colspan="7" align="center">
-        <a href="incident.php?insert=1&ref=Alarm&title=new_incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">Insert new Incident</a>
+        Insert new Incident (
+        <a href="incident.php?insert=1&ref=Alarm&title=new_incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">Alarm</a> | 
+        <a href="incident.php?insert=1&ref=Metric&title=Metric threshold&priority=1&target=&metric_type=&metric_value=">Metric</a>
+        )
       </td>
     </tr>
   </table>

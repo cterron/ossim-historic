@@ -1,5 +1,34 @@
 # ChangeLog for OSSIM
 
+	25 Oct 2004 DK <dk@ossim.net> :
+	* 0.9.7 released.
+
+* OSSIM-0.9.7 (25 Oct 2004)
+
+	25 Oct 2004 David Gil <dgil@ossim.net> :
+	* Agents installation using Python Distribution Utilities ("Distutils")
+	* Many bugfixes.
+
+	21 Oct 2004 Stef <gingurz@ossim.net>:
+	* Man pages
+	* INSTALL.Debian in docbook
+	* Adding OpenNMS installation in doc/INSTALL.Debian
+
+	20 Oct 2004 David Gil <dgil@ossim.net> :
+	* Framework menu restructuration
+	* New PDF reports (security, metrics and incidents) using FPDF
+
+	06 Oct 2004 David Gil <dgil@ossim.net> :
+	* New framework configuration panel (with "reset to defaults" feature)
+	* Move recovery and threshold config attributes to configuration panel
+	  Changes on server, scripts, framework and agents (terrible headache!)
+	* Added a link to reload ACLs at user configuration
+	* New sensors status monitor
+
+	06 Oct 2004 Stephane Fournier <gingurz@ossim.net> :
+	* A lot of debian specific stuff at contrib/debian
+	* Debian and Fedora defualt settings for the new configuration panel
+
 	01 Oct 2004 DK <dk@ossim.net> :
 	* 0.9.7rc2 released.
 

@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuPolicy", "PolicyPriorityReliability");
+Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
 ?>
 
 <html>

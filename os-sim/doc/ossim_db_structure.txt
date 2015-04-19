@@ -20,7 +20,7 @@
 | backlog_alert               | alert occurence count                    |
 | category                    | rules category                           |
 | classification              | alerts classification                    |
-| conf                        | web config                               |
+| config                      | ossim config                             |
 | control_panel               | C & A metrics used in control panel      |
 | host                        | host info                                |
 | host_mac                    | hosts-mac info                           |
@@ -156,16 +156,13 @@ classification
 | priority    | int(11)      | YES  |     | NULL    |       |
 +-------------+--------------+------+-----+---------+-------+
 
-conf
-+------------------+---------+------+-----+---------+-------+
-| Field            | Type    | Null | Key | Default | Extra |
-+------------------+---------+------+-----+---------+-------+
-| recovery         | int(11) |      | PRI | 0       |       |
-| threshold        | int(11) |      | PRI | 0       |       |
-| graph_threshold  | int(11) |      | PRI | 0       |       |
-| bar_length_left  | int(11) |      | PRI | 0       |       |
-| bar_length_right | int(11) |      | PRI | 0       |       |
-+------------------+---------+------+-----+---------+-------+
+config
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| conf  | varchar(255) |      | PRI |         |       |
+| value | varchar(255) | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
 
 control_panel
 +-------------+--------------+------+-----+---------+-------+

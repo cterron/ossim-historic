@@ -1,0 +1,26 @@
+
+  You have 2 options for running OSSIM agent
+
+    1) Right from the own directory:
+
+      # ln -sf $OSSIM_PATH/agent/ossim-agent /usr/local/bin/
+ 
+    2) Install it into your system:
+
+      # python setup.py install
+
+
+  If you want to create a .tgz file, just type:
+
+      # python setup.py bdist
+
+  A binary .tgz package will be created under dist/ directory.
+
+  The same for creating a .rpm file, just typing:
+
+      # python setup.py bdist_rpm
+
+  For a list of all available commands type:
+
+    # python setup.py --help-commands
+

@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 OS_SIM_MAJOR_VERSION=0
 OS_SIM_MINOR_VERSION=9
-OS_SIM_MICRO_VERSION=5
+OS_SIM_MICRO_VERSION=7
 OS_SIM_VERSION=$OS_SIM_MAJOR_VERSION.$OS_SIM_MINOR_VERSION.$OS_SIM_MICRO_VERSION
 
 AC_SUBST(OS_SIM_MAJOR_VERSION)
@@ -73,6 +73,9 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 agent/Makefile
+agent/doc/Makefile
+agent/util/Makefile
+agent/pyossim/Makefile
 etc/Makefile
 etc/server/Makefile
 etc/agent/Makefile

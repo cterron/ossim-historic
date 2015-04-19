@@ -145,12 +145,7 @@ sub param_attack_compromise {
          my $row = $sth->fetchrow_hashref;
          $threshold_a = $row->{threshold_a};
    } else {
-      $query = "SELECT threshold FROM conf";
-      my $sth = $dbh->prepare($query);
-      $sth->execute();
-      my $row = $sth->fetchrow_hashref;
-      $threshold_c = $row->{threshold};
-      $threshold_a = $threshold_c;
+      $threshold_c = $threshold_a = $ossim_conf::ossim_data->{"threshold"};
       $hostname = $ip;
    }
 

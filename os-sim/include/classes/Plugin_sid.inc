@@ -26,7 +26,9 @@ class Plugin_sid {
     function get_sid()          { return $this->sid; }
     function get_category_id()  { return $this->category_id; }
     function get_class_id()     { return $this->class_id; }
-    function get_name()         { return $this->name; }
+    function get_name()         { 
+        return ereg_replace("<([^>]*)>", "(\\1)", $this->name);
+    }
     function get_reliability()  { return $this->reliability; }
     function get_priority()     { return $this->priority; }
 

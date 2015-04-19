@@ -2,8 +2,8 @@
 
 export LANG=C
 
+MRTG=/usr/bin/mrtg
 data_dir=`grep ^data_dir /etc/ossim/framework/ossim.conf | cut -d= -f2`
-mrtg_path=`grep ^mrtg_path /etc/ossim/framework/ossim.conf | cut -d= -f2`
 
 cd $data_dir/mrtg/hosts
 ./create_cfg.pl
@@ -17,6 +17,5 @@ cd $data_dir/mrtg/global
 cd $data_dir/mrtg/level
 ./create_cfg.pl
 
-#`$mrtg_path/mrtg /etc/ossim/framework/mrtg.cfg`
-`$mrtg_path/mrtg /etc/ossim/framework/mrtg-rrd.cfg`
+`$MRTG /etc/ossim/framework/mrtg-rrd.cfg`
 

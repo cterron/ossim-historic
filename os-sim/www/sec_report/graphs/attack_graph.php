@@ -1,61 +1,37 @@
 <?php
 
-require_once ('ossim_db.inc');
-require_once ('ossim_conf.inc');
-
-require_once ('../sec_util.php');
+require_once ('classes/SecurityReport.inc');
 
 /* hosts to show */
-if (!$NUM_HOSTS = $_GET["hosts"]) {
-    $NUM_HOSTS = 10;
+if (!$limit = $_GET["hosts"]) {
+    $limit = 10;
 }
 
 /* target must be ip_src or ip_dst */
 if (!$target = $_GET["target"]) exit;
 
-/* ossim framework conf */
+$security_report = new SecurityReport();
+
+if (!strcmp($target, "ip_src")) {
+    $title = "TOP ATTACKER";
+    $color = "navy";
+    $color2 = "lightsteelblue";
+    $titlecolor = "darkblue";
+} elseif (!strcmp($target, "ip_dst")) {
+    $title = "TOP ATTACKED";
+    $color = "darkred";
+    $color2 = "lightred";
+    $titlecolor = "darkred";
+}
+
+$list = $security_report->AttackHost($target, $limit);
+foreach ($list as $l) {
+    $datax[] = Host::ip2hostname($security_report->ossim_conn, $l[0]);
+    $datay[] = $l[1];
+}
+
 $conf = new ossim_conf();
 $jpgraph = $conf->get_conf("jpgraph_path");
-
-/* snort db connect */
-$snort_db = new ossim_db();
-$snort_conn = $snort_db->snort_connect();
-
-$query = "SELECT count($target) AS occurrences, inet_ntoa($target) 
-    FROM acid_event GROUP BY $target
-    ORDER BY occurrences DESC LIMIT $NUM_HOSTS;";
-
-if (!$rs = &$snort_conn->CacheExecute($query)) {
-    print $snort_conn->ErrorMsg();
-} else {
-
-    if (!strcmp($target, "ip_src")) {
-        $title = "TOP ATTACKER";
-        $color = "navy";
-        $color2 = "lightsteelblue";
-        $titlecolor = "darkblue";
-    } elseif (!strcmp($target, "ip_dst")) {
-        $title = "TOP ATTACKED";
-        $color = "darkred";
-        $color2 = "lightred";
-        $titlecolor = "darkred";
-    }
-    $background = "#f1f1f1";
-
-    while (!$rs->EOF) {
-
-        $ip = $rs->fields["inet_ntoa($target)"];
-        $occurrences = $rs->fields["occurrences"];
-
-        $datax [] = ip2hostname($ip);
-        $datay [] = $occurrences;
-
-        $rs->MoveNext();
-    }
-}
-$snort_db->close($snort_conn);
-
-
 
 include ("$jpgraph/jpgraph.php");
 include ("$jpgraph/jpgraph_bar.php");

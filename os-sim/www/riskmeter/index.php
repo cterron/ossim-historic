@@ -18,26 +18,21 @@ Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
 <?php
 require_once ('ossim_conf.inc');
 require_once ('ossim_db.inc');
-require_once ('classes/Conf.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Host_os.inc');
 
-$ossim_conf = new ossim_conf();
-$mrtg_link = $ossim_conf->get_conf("mrtg_link");
-
 $db = new ossim_db();
 $conn = $db->connect();
 
 /* conf */
-$conf = Conf::get_conf($conn);
+$conf = new ossim_conf();
 
-$THRESHOLD_DEFAULT = $conf->get_threshold();
-$THRESHOLD_GRAPH_DEFAULT = $conf->get_graph_threshold();
-$BAR_LENGTH_LEFT = $conf->get_bar_length_left();
-$BAR_LENGTH_RIGHT = $conf->get_bar_length_right();
+$THRESHOLD_DEFAULT = $conf->get_conf("threshold");
+$BAR_LENGTH_LEFT = 300;
+$BAR_LENGTH_RIGHT = 200;
 $BAR_LENGTH = $BAR_LENGTH_LEFT + $BAR_LENGTH_RIGHT;
 
 /*
@@ -198,7 +193,6 @@ if($net_stats)
       </td>
       <td align="center">
         <a href="<?php 
-        // echo "$mrtg_link/net_qualification/" . strtolower($net) . ".html" 
         echo "../control_panel/show_image.php?range=day&ip=" .
         strtolower($net) . "&what=compromise&start=N-1D&type=net&zoom=1"
         ?>" 
@@ -377,7 +371,6 @@ if ($ip_stats) {
       </td>
       <td align="center">
         <a href="<?php 
-//        echo $mrtg_link . "host_qualification/$ip.html"
         echo "../control_panel/show_image.php?range=day&ip=$ip&what=compromise&start=N-1D&type=host&zoom=1"
         ?>" target="new">
         &nbsp;<img src="../pixmaps/graph.gif" border="0"/>&nbsp;</a>

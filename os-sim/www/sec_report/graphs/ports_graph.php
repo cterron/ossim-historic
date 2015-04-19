@@ -1,37 +1,21 @@
 <?php
 
-require_once ('ossim_db.inc');
-require_once ('ossim_conf.inc');
+require_once ('classes/SecurityReport.inc');
 
 /* hosts to show */
-if (!$PORTS = $_GET["ports"]) {
-    $PORTS = 10;
+if (!$limit = $_GET["ports"]) {
+    $limit = 10;
 }
 
-/* ossim framework conf */
+$security_report = new SecurityReport();
+$list = $security_report->Ports($limit);
+foreach ($list as $l) {
+    $datax[] = $l[0];
+    $datay[] = $l[2];
+}
+
 $conf = new ossim_conf();
 $jpgraph = $conf->get_conf("jpgraph_path");
-
-/* snort db connect */
-$snort_db = new ossim_db();
-$snort_conn = $snort_db->snort_connect();
-
-$query = "SELECT count(layer4_dport) AS occurrences, layer4_dport 
-    FROM acid_event GROUP BY layer4_dport
-    ORDER BY occurrences DESC LIMIT $PORTS;";
-
-if (!$rs = &$snort_conn->CacheExecute($query)) {
-    print $snort_conn->ErrorMsg();
-} else {
-
-    while (!$rs->EOF) {
-
-        $datay [] = $rs->fields["occurrences"];
-        $datax [] = $rs->fields["layer4_dport"];
-        $rs->MoveNext();
-    }
-}
-$snort_db->close($snort_conn);
 
 include ("$jpgraph/jpgraph.php");
 include ("$jpgraph/jpgraph_bar.php");
@@ -41,7 +25,6 @@ $color = "darkorange";
 $color2 = "lightyellow";
 $background = "#f1f1f1";
 $title = "DESTINATION PORTS";
-
 
 // Setup the graph.
 $graph = new Graph(400,250,"auto");    

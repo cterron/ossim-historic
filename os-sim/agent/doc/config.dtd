@@ -10,7 +10,7 @@
 <!ELEMENT plugins (plugin+)>
 <!ELEMENT plugin (startup?, shutdown?, interface, sensor, location)>
 <!ATTLIST plugin 
-    id ID #REQUIRED
+    id NMTOKEN #REQUIRED
     process CDATA #IMPLIED
     type (detector | monitor) #REQUIRED
     start (yes | no) #REQUIRED

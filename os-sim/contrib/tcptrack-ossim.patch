@@ -1,26 +1,6 @@
-diff -rNu tcptrack-1.1.3/src/Makefile.am tcptrack-1.1.3-ossim/src/Makefile.am
---- tcptrack-1.1.3/src/Makefile.am	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/Makefile.am	2004-09-27 14:47:31.000000000 +0200
-@@ -1,6 +1,6 @@
- bin_PROGRAMS = tcptrack
- 
--tcptrack_SOURCES = Collector.cc main.cc TCContainer.cc \
-+tcptrack_SOURCES = TCPListener.cc TCPPersist.cc Collector.cc main.cc TCContainer.cc \
-                  TextUI.cc  PacketBuffer.cc \
-                  Sniffer.cc TCPConnection.cc util.cc \
-                  SortedIterator.cc IPv4Packet.cc IPv4Address.cc \
-@@ -9,7 +9,7 @@
-                  TCPTrack.cc SocketPair4.cc \
-                  AppError.cc PcapError.cc GenericError.cc Guesser.cc
- 
--noinst_HEADERS = Collector.h PacketBuffer.h TextUI.h \
-+noinst_HEADERS = TCPListener.h TCPPersist.h Collector.h PacketBuffer.h TextUI.h \
- 	defs.h Sniffer.h headers.h \
- 	SortedIterator.h util.h TCContainer.h \
- 	TCPConnection.h Guesser.h \
-diff -rNu tcptrack-1.1.3/src/Makefile.in tcptrack-1.1.3-ossim/src/Makefile.in
---- tcptrack-1.1.3/src/Makefile.in	2004-08-17 06:53:41.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/Makefile.in	2004-09-27 14:47:31.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/Makefile.in tcptrack-1.1.4-ossim/src/Makefile.in
+--- tcptrack-1.1.4/src/Makefile.in	2004-10-06 01:30:44.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/Makefile.in	2004-10-19 12:26:04.000000000 +0200
 @@ -51,7 +51,7 @@
  am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
  binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -48,10 +28,10 @@ diff -rNu tcptrack-1.1.3/src/Makefile.in tcptrack-1.1.3-ossim/src/Makefile.in
  	defs.h Sniffer.h headers.h \
  	SortedIterator.h util.h TCContainer.h \
  	TCPConnection.h Guesser.h \
-diff -rNu tcptrack-1.1.3/src/TCPConnection.cc tcptrack-1.1.3-ossim/src/TCPConnection.cc
---- tcptrack-1.1.3/src/TCPConnection.cc	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/TCPConnection.cc	2004-09-27 14:47:32.000000000 +0200
-@@ -110,6 +110,8 @@
+diff -Naur tcptrack-1.1.4/src/TCPConnection.cc tcptrack-1.1.4-ossim/src/TCPConnection.cc
+--- tcptrack-1.1.4/src/TCPConnection.cc	2004-10-06 01:29:38.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/TCPConnection.cc	2004-10-19 12:32:27.000000000 +0200
+@@ -111,6 +111,8 @@
  	all_bytes_last_second = 0;
  
  	last_pkt_ts = time(NULL);
@@ -60,7 +40,7 @@ diff -rNu tcptrack-1.1.3/src/TCPConnection.cc tcptrack-1.1.3-ossim/src/TCPConnec
  	activity_toggle=false;
  	
  	/*
-@@ -273,6 +275,10 @@
+@@ -274,6 +276,10 @@
  	  || match(p.ipv4().dstAddr(), p.ipv4().srcAddr(), p.ipv4().tcp().dstPort(), p.ipv4().tcp().srcPort()) )
  	{
  		++packet_count;
@@ -71,10 +51,11 @@ diff -rNu tcptrack-1.1.3/src/TCPConnection.cc tcptrack-1.1.3-ossim/src/TCPConnec
  		activity_toggle=true;
  
  		// recalculate packets/bytes per second counters
-@@ -383,3 +389,18 @@
+@@ -384,3 +390,19 @@
  {
  	return *endpts;
  }
++
 +
 +int	TCPConnection::getDuration()
 +{
@@ -90,9 +71,9 @@ diff -rNu tcptrack-1.1.3/src/TCPConnection.cc tcptrack-1.1.3-ossim/src/TCPConnec
 +{
 +  return (this->packet_out);
 +}
-diff -rNu tcptrack-1.1.3/src/TCPConnection.h tcptrack-1.1.3-ossim/src/TCPConnection.h
---- tcptrack-1.1.3/src/TCPConnection.h	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/TCPConnection.h	2004-09-27 14:47:32.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/TCPConnection.h tcptrack-1.1.4-ossim/src/TCPConnection.h
+--- tcptrack-1.1.4/src/TCPConnection.h	2004-10-06 01:29:00.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/TCPConnection.h	2004-10-19 12:29:52.000000000 +0200
 @@ -115,6 +115,12 @@
  	// a SocketPair4 is two IPv4Addresses and two TCP port numbers.
  	// The pair of each represents this connections src/dst addrs & ports.
@@ -117,10 +98,10 @@ diff -rNu tcptrack-1.1.3/src/TCPConnection.h tcptrack-1.1.3-ossim/src/TCPConnect
  };
  
  #endif
-diff -rNu tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener.cc
---- tcptrack-1.1.3/src/TCPListener.cc	1970-01-01 01:00:00.000000000 +0100
-+++ tcptrack-1.1.3-ossim/src/TCPListener.cc	2004-09-30 15:18:05.000000000 +0200
-@@ -0,0 +1,154 @@
+diff -Naur tcptrack-1.1.4/src/TCPListener.cc tcptrack-1.1.4-ossim/src/TCPListener.cc
+--- tcptrack-1.1.4/src/TCPListener.cc	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.4-ossim/src/TCPListener.cc	2004-10-21 13:24:29.000000000 +0200
+@@ -0,0 +1,146 @@
 +#include <sys/types.h>
 +#include <signal.h>
 +#include <sys/wait.h>
@@ -187,16 +168,21 @@ diff -rNu tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener
 +
 +static int	forkNb = 0;
 +
-+// sucio
-+void		antishm(int)
++// a child as terminated we can fork once more, guai !
++void		child_signal_handler(int sig)
 +{
++  int pid, status;
++
 +  forkNb--;
++  while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
 +}
 +
 +// infinite loop accepting connections
 +void		TCPListener::waitConnection()
 +{
-+  signal(SIGUSR1, antishm);
++  int		pid;
++
++  signal(SIGCHLD, child_signal_handler);
 +  for (;;)
 +    {
 +      if ((this->sockClient = accept(sockServ, NULL, NULL)) < 0)
@@ -204,56 +190,31 @@ diff -rNu tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener
 +	  perror("accept() call failure in TCPListener::waitConnection");
 +	  continue;
 +	}
-+      this->doClient();
++      if (forkNb == this->maxFork)
++	{
++	  write(this->sockClient, "-1 -1 -1\r\n", 10);
++	  close(this->sockClient);
++	  continue;
++	}
++      if ((pid = fork()) == -1)
++	{
++	  perror("fork(). call failed in TCPListener::doClient()");
++	  exit(-1);
++	}
++      if (!pid)
++	{
++	  int ret;
++	  
++	  ret = client_fork_func(this);
++	  exit (ret);
++	}
++      else
++	{
++	  forkNb++;
++	  close(this->sockClient);
++	}
 +    }
 +}
-+
-+void		TCPListener::init()
-+{
-+  pthread_attr_t attr;
-+
-+  if(pthread_attr_init(&attr) != 0)
-+    throw GenericError("pthread_attr_init() failed");
-+  pthread_attr_setstacksize(&attr, SS_TCC);
-+  if(pthread_create(&maint_thread_tid, &attr, server_thread_func, this) != 0)
-+    throw GenericError("pthread_create() failed.");
-+}
-+
-+// sockpair --> IPv4 addra--> struct in_addr.s_addr = unsigned short inet_addr("ipet")
-+// 	---> ushort porta
-+// 	 --> IPv4 addrb--> struct in_addr.s_addr = unsigned short inet_addr("ipet")
-+// 	---> ushort portb
-+
-+// ---------- private stuff
-+
-+void		TCPListener::doClient()
-+{
-+  int		pid;
-+  int		ret;
-+
-+  if (forkNb == this->maxFork)
-+    {
-+      write(this->sockClient, "-1 -1 -1\r\n", 10);
-+      close(this->sockClient);
-+      return;
-+    }
-+  if ((pid = fork()) == -1)
-+    {
-+      perror("fork(). call failed in TCPListener::doClient()");
-+      exit(-1);
-+    }
-+  forkNb++;
-+  if (!pid)
-+    {
-+      ret = client_fork_func(this);
-+      kill(getppid(), SIGUSR1);
-+      exit(ret);
-+    }
-+  else
-+    close(this->sockClient);
-+}
-+
-+// ---------- thread wrapper
 +
 +static int	client_fork_func(void* arg)
 +{
@@ -268,6 +229,18 @@ diff -rNu tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener
 +  return (ret);
 +}
 +
++void		TCPListener::init()
++{
++  pthread_attr_t attr;
++
++  if(pthread_attr_init(&attr) != 0)
++    throw GenericError("pthread_attr_init() failed");
++  pthread_attr_setstacksize(&attr, SS_TCC);
++  if(pthread_create(&maint_thread_tid, &attr, server_thread_func, this) != 0)
++    throw GenericError("pthread_create() failed.");
++}
++
++// ---------- thread wrapper
 +static void*	server_thread_func(void* arg)
 +{
 +  TCPListener*	l;
@@ -275,10 +248,10 @@ diff -rNu tcptrack-1.1.3/src/TCPListener.cc tcptrack-1.1.3-ossim/src/TCPListener
 +  l = (TCPListener*) arg;
 +  l->waitConnection();
 +}
-diff -rNu tcptrack-1.1.3/src/TCPListener.h tcptrack-1.1.3-ossim/src/TCPListener.h
---- tcptrack-1.1.3/src/TCPListener.h	1970-01-01 01:00:00.000000000 +0100
-+++ tcptrack-1.1.3-ossim/src/TCPListener.h	2004-09-29 14:33:40.000000000 +0200
-@@ -0,0 +1,30 @@
+diff -Naur tcptrack-1.1.4/src/TCPListener.h tcptrack-1.1.4-ossim/src/TCPListener.h
+--- tcptrack-1.1.4/src/TCPListener.h	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.4-ossim/src/TCPListener.h	2004-10-21 08:41:37.000000000 +0200
+@@ -0,0 +1,29 @@
 +#ifndef			TCPLISTENER_H_
 +# define		TCPLISTENER_H_
 +
@@ -305,13 +278,12 @@ diff -rNu tcptrack-1.1.3/src/TCPListener.h tcptrack-1.1.3-ossim/src/TCPListener.
 +  int			maxFork;
 +  pthread_t		maint_thread_tid;
 +
-+  void			doClient();
 +};
 +
 +#endif			/* !TCPLISTENER_H_ */
-diff -rNu tcptrack-1.1.3/src/TCPPersist.cc tcptrack-1.1.3-ossim/src/TCPPersist.cc
---- tcptrack-1.1.3/src/TCPPersist.cc	1970-01-01 01:00:00.000000000 +0100
-+++ tcptrack-1.1.3-ossim/src/TCPPersist.cc	2004-09-29 15:29:25.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/TCPPersist.cc tcptrack-1.1.4-ossim/src/TCPPersist.cc
+--- tcptrack-1.1.4/src/TCPPersist.cc	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.4-ossim/src/TCPPersist.cc	2004-10-21 13:24:38.000000000 +0200
 @@ -0,0 +1,179 @@
 +#include <sys/types.h>
 +#include <sys/ioctl.h>
@@ -492,9 +464,9 @@ diff -rNu tcptrack-1.1.3/src/TCPPersist.cc tcptrack-1.1.3-ossim/src/TCPPersist.c
 +    write(this->sockClient, "0 0 0\r\n", 7);
 +  this->container->unlock();
 +}
-diff -rNu tcptrack-1.1.3/src/TCPPersist.h tcptrack-1.1.3-ossim/src/TCPPersist.h
---- tcptrack-1.1.3/src/TCPPersist.h	1970-01-01 01:00:00.000000000 +0100
-+++ tcptrack-1.1.3-ossim/src/TCPPersist.h	2004-09-29 15:14:49.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/TCPPersist.h tcptrack-1.1.4-ossim/src/TCPPersist.h
+--- tcptrack-1.1.4/src/TCPPersist.h	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.4-ossim/src/TCPPersist.h	2004-10-19 12:21:03.000000000 +0200
 @@ -0,0 +1,40 @@
 +#include <string>
 +
@@ -536,11 +508,10 @@ diff -rNu tcptrack-1.1.3/src/TCPPersist.h tcptrack-1.1.3-ossim/src/TCPPersist.h
 +  void		unlock();
 +};
 +
-diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
---- tcptrack-1.1.3/src/TCPTrack.cc	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/TCPTrack.cc	2004-09-29 15:04:25.000000000 +0200
-@@ -1,6 +1,8 @@
-+
+diff -Naur tcptrack-1.1.4/src/TCPTrack.cc tcptrack-1.1.4-ossim/src/TCPTrack.cc
+--- tcptrack-1.1.4/src/TCPTrack.cc	2004-10-06 01:29:00.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/TCPTrack.cc	2004-10-21 13:35:18.000000000 +0200
+@@ -1,6 +1,7 @@
  #include <cassert>
  #include <pthread.h>
  #include <iostream>
@@ -548,7 +519,7 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  #include "TCPTrack.h"
  #include "AppError.h"
  #include "PcapError.h"
-@@ -33,7 +35,15 @@
+@@ -33,7 +34,15 @@
  	c = new TCContainer();
  	pb = new PacketBuffer();
  	s = new Sniffer();
@@ -556,16 +527,16 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
 +	listener = new TCPListener(cf.port, c, cf.maxFork);
 +	if (cf.daemon == false)
 +	  ui = new TextUI(c);
-+// 	else
-+// 	  if (daemon(0, 0))
-+// 	    {
-+// 	      perror("daemon() call failed");
-+// 	      exit(-42);
-+// 	    }
++	else
++	  if (daemon(0, 0))
++	    {
++	      perror("daemon() call failed");
++	      exit(-42);
++	    }
  
  	try 
  	{
-@@ -42,7 +52,9 @@
+@@ -42,7 +51,9 @@
  		
  		// init() on these objects performs constructor-like actions,
  		// only they may throw exceptions. Constructors don't.
@@ -576,7 +547,7 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  		s->init(cf.iface,cf.fexp);
  		pb->init();
  
-@@ -62,7 +74,8 @@
+@@ -62,7 +73,8 @@
  			throw GenericError(ferr);
  	
  		// shut everything down cleanly.
@@ -586,7 +557,7 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  		s->dest();
  		pb->dest();
  		c->stop();
-@@ -77,7 +90,9 @@
+@@ -77,7 +89,9 @@
  		s->dest();
  		pb->dest();
  		
@@ -597,16 +568,16 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  		delete s;
  		delete pb;
  		delete c;
-@@ -118,7 +133,7 @@
+@@ -118,7 +132,7 @@
  
  void printusage(int argc,char **argv)
  {
 -	printf("Usage: %s [-dfhvp] [-r <seconds>] -i <interface> [<filter expression>]\n",argv[0]);
-+	printf("Usage: %s [-dDfhvp] [-r <seconds>] [-P <port>] [-F <maxFork>] -i <interface> [<filter expression>]\n",argv[0]);
++  printf("Usage: %s [-dDfhvp] [-r <seconds>] [-P <port>] [-F <maxFork>] -i <interface> [<filter expression>]\n",argv[0]);
  }
  
  struct config parseopts(int argc, char **argv)
-@@ -132,9 +147,12 @@
+@@ -132,9 +146,12 @@
  	cf.fastmode=false;
  	cf.promisc=true;
  	cf.detect=true;
@@ -620,7 +591,7 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  	{
  		if( o=='h' )
  		{
-@@ -159,6 +177,12 @@
+@@ -159,6 +176,12 @@
  			cf.detect=false;
  		if( o=='p' ) 
  			cf.promisc=false;
@@ -633,9 +604,9 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.cc tcptrack-1.1.3-ossim/src/TCPTrack.cc
  	}
  	
  	if( ! got_iface ) {
-diff -rNu tcptrack-1.1.3/src/TCPTrack.h tcptrack-1.1.3-ossim/src/TCPTrack.h
---- tcptrack-1.1.3/src/TCPTrack.h	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/TCPTrack.h	2004-09-27 14:47:32.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/TCPTrack.h tcptrack-1.1.4-ossim/src/TCPTrack.h
+--- tcptrack-1.1.4/src/TCPTrack.h	2004-10-06 01:29:00.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/TCPTrack.h	2004-10-19 12:41:38.000000000 +0200
 @@ -8,6 +8,7 @@
  #include "TextUI.h"
  #include "PacketBuffer.h"
@@ -652,9 +623,14 @@ diff -rNu tcptrack-1.1.3/src/TCPTrack.h tcptrack-1.1.3-ossim/src/TCPTrack.h
  	
  	string ferr; // fatal error message sent from another thread
  	pthread_mutex_t ferr_lock;
-diff -rNu tcptrack-1.1.3/src/util.h tcptrack-1.1.3-ossim/src/util.h
---- tcptrack-1.1.3/src/util.h	2004-08-13 18:44:17.000000000 +0200
-+++ tcptrack-1.1.3-ossim/src/util.h	2004-09-29 14:31:21.000000000 +0200
+diff -Naur tcptrack-1.1.4/src/toto tcptrack-1.1.4-ossim/src/toto
+--- tcptrack-1.1.4/src/toto	1970-01-01 01:00:00.000000000 +0100
++++ tcptrack-1.1.4-ossim/src/toto	2004-10-21 12:29:02.000000000 +0200
+@@ -0,0 +1 @@
++INcrement forkNb: 1
+diff -Naur tcptrack-1.1.4/src/util.h tcptrack-1.1.4-ossim/src/util.h
+--- tcptrack-1.1.4/src/util.h	2004-10-06 01:29:00.000000000 +0200
++++ tcptrack-1.1.4-ossim/src/util.h	2004-10-19 12:35:22.000000000 +0200
 @@ -48,6 +48,9 @@
  	char *iface; // interface to listen on
  	char *fexp;  // filter expression

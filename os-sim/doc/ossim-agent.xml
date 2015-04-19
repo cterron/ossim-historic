@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+                       "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+		    
+<refentry>
+
+<!-- Header information -->
+<refmeta>
+<refentrytitle>ossim-agent</refentrytitle>
+<manvolnum>8</manvolnum>
+</refmeta>
+
+<refnamediv>
+<refname>ossim-agent</refname>
+<refpurpose>OS-SIM sensors manager</refpurpose>
+</refnamediv>
+
+<!-- Body -->
+<refsynopsisdiv>
+<cmdsynopsis>
+<command>ossim-server</command>
+ <arg>--version</arg>
+ <arg>-h</arg>
+ <arg>-v</arg>
+ <arg>-q</arg>
+ <arg>-d</arg>
+ <arg>-f</arg>
+ <arg>-c <replaceable>file</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+    <para><emphasis>
+This Man page explains the use of <command>ossim-agent</command>
+command line and its options. An agent in OS-SIM is set of python
+script that gathers and sends the output of the different plugin
+or tool to the correlation engine for further process.
+    </emphasis></para>
+</refsect1>
+
+<refsect1><title>Options</title>
+    <para>Here's a description of each options :</para>
+    <variablelist>
+    <varlistentry>
+        <term><option>--version</option></term>
+        <listitem>
+        <para>Show program's version number and exit</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><option>-h</option></term>
+        <term><option>--help</option></term>
+        <listitem>
+        <para>Show the list of arguments of the command and exit</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><option>-v</option></term>
+        <term><option>--verbose</option></term>
+        <listitem>
+        <para>Make lots of noise</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><option>-q</option></term>
+        <term><option>--quiet</option></term>
+        <listitem>
+        <para>don't show debug messages [default]</para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><option>-f</option></term>
+        <term><option>--force</option></term>
+        <listitem>
+        <para>Force startup overriding pidfile</para>
+        </listitem>
+        </varlistentry>
+    <varlistentry>
+        <term><option>-c</option><replaceable>file</replaceable></term>
+        <term><option>--config=</option><replaceable>file</replaceable></term>
+        <listitem>
+        <para>read config from file. By default the file should be in
+/etc/ossim/agent/config.xml. Read it for more infos the configuration.</para>
+        </listitem>
+    </varlistentry>
+    </variablelist>
+<para>&hellip;</para>
+</refsect1>
+</refentry>
