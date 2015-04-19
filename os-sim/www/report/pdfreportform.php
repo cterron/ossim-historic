@@ -14,10 +14,17 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
   <h1> <?php echo gettext("PDF reports"); ?> </h1>
 
 <?php
-    $report_type = "security";
-    if (isset($_GET["report_type"])) {
-        $report_type = validateVar($_GET["report_type"], OSS_ALPHA);
+    require_once 'classes/Security.inc';
+
+    $report_type = GET('report_type');
+
+    ossim_valid($report_type, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Report Type"));
+
+    if (ossim_error()) {
+            die(ossim_error());
     }
+    
+    if (empty($report_type)) $report_type = "security";
 
     require_once('ossim_conf.inc');
     $path_conf = $GLOBALS["CONF"];

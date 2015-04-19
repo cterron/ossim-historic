@@ -170,16 +170,18 @@ class Window_Panel_Ajax
                 if (!$plugin = &$this->getPlugin($options)) {
                     return _("Please select a category first");
                 }
-                $data[$window_id] = $plugin->get();
+                $data[$window_id] = $plugin->save();
                 $data[$window_id]['window_opts']['id'] = $window_id;
             }
         }
         $filename = $this->getConfigFile();
         $save = serialize($data);
         if (!$fd = fopen($filename, 'w')) {
-            die(_("Could not save config in file").": '$filename'");
+            die(_("Could not save config in file, invalid perms?").": '$filename'");
         }
-        fwrite($fd, $save);
+        if (!fwrite($fd, $save)) {
+            die(_("Could not write to file, disk full?").": '$filename'");
+        }
         fclose($fd);
     }
         
@@ -196,10 +198,11 @@ class Window_Panel_Ajax
     {
         $plugin = isset($options['plugin']) ? $options['plugin'] : false;
         $title  = isset($options['window_opts']['title']) ? $options['window_opts']['title'] : '';
+        $help   = isset($options['window_opts']['help'])  ? $options['window_opts']['help']  : '';
         $html = '';
         // Window title
         $html .= _("Window Title");
-        $html .= ' <input type="text" name="window_title"
+        $html .= ': <input type="text" name="window_title"
                     value="'.$title.'"><br/><br/>';
         // Category/Plugin list
         foreach ($this->plugins as $plug) {
@@ -213,6 +216,8 @@ class Window_Panel_Ajax
             $html .= '<input type="radio" name="plugin" value="'.$plug['class']."\" $checked>".$plug['cat'];
             $html .= '<br/>';
         }
+        $html .= '<br/>'._("HTML Window Help Message").':<br/>';
+        $html .= "<textarea name='window_help' rows='10' cols='35' wrap='on'>$help</textarea>";
         return $html;
     }
     
@@ -223,7 +228,6 @@ class Window_Panel_Ajax
         }
         $plugin = $options['plugin'];
         $plugin = &$this->plugins[$plugin]['obj'];
-        
         $plugin->setup($options);
         return $plugin;
     }

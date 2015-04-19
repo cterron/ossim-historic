@@ -336,12 +336,13 @@ $upgrade = new Upgrade();
   /* Logout */
   $menu["Logout"] = "session/login.php?action=logout"; // Plain url if no array entry
 
-  $option=0;
-  $soption=0;
-  $url = "";
-  if (isset($_GET["option"])) $option=validateVar($_GET["option"]);
-  if (isset($_GET["soption"])) $soption=validateVar($_GET["soption"]);
-  if (isset($_GET["url"])) $url=validateVar($_GET["url"]);
+  $option = GET('option');
+  $soption = GET('soption');
+  $url = GET('url');
+    
+    if (empty($option)) $option = 0;
+    if (empty($soption)) $soption = 0;
+    
   $keys=array_keys($menu);
 ?>
 
@@ -386,7 +387,7 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
     }
   else {     
     foreach ($menu[$keys[$option]] as $i => $op) { 
-      if ($soption==$i && !isset($_GET["soption"])) $url = $op["url"];
+      if ($soption==$i && !(GET('soption'))) $url = $op["url"];
     ?>
     <td>
       <table border=0 cellpadding=0 cellspacing=0><tr>

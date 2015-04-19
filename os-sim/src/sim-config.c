@@ -100,9 +100,9 @@ sim_config_class_init (SimConfigClass * class)
 static void
 sim_config_instance_init (SimConfig *config)
 {
-  config->sensor.name = NULL;
+  /*config->sensor.name = NULL;
   config->sensor.ip = NULL;
-  config->sensor.interface = NULL;
+  config->sensor.interface = NULL;*/
 
   config->log.filename = NULL;
 
@@ -117,6 +117,8 @@ sim_config_instance_init (SimConfig *config)
   config->scheduler.interval = 0;
 
   config->server.port = 0;
+  config->server.name = NULL;
+  config->server.ip = NULL;
 
   config->smtp.host = NULL;
   config->smtp.port = 0;

@@ -118,7 +118,7 @@ class Scan {
 
     function __get_command_output($cmd)
     {
-        $output = shell_exec($cmd);
+        $output = shell_exec(escapeshellcmd($cmd));
         return split("\n", $output);
     }
 

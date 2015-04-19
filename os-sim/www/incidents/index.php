@@ -46,7 +46,7 @@ function order_img($subject)
                   'tag'        => OSS_DIGIT);
     
     foreach ($vars as $var => $validate) {
-        $$var = isset($_GET[$var]) ? $_GET[$var] : '';
+        $$var = GET("$var");
         if (!ossim_valid($$var, array($validate, OSS_NULLABLE))) {
             echo "Var '$var' not valid<br>";
             die(ossim_error());
@@ -60,7 +60,7 @@ function order_img($subject)
     }
 
     // First time we visit this page, show by default only Open incidents
-    if (!isset($_GET['status'])) $status = 'Open';
+    if (!GET('status')) $status = 'Open';
     
     $db = new ossim_db();
     $conn = $db->connect();
@@ -313,13 +313,13 @@ function order_img($subject)
         Insert new Incident (
         <a href="newincident.php?ref=Alarm&title=New+Alarm+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Alarm"); ?> </a> | 
-        <?php echo gettext("Anomaly ["); ?> 
+        <?php echo gettext("Anomaly"); ?> [ 
     <a  href="newincident.php?ref=Anomaly&title=New+Mac+Anomaly+Incident&priority=1&anom_type=mac">
-	<?php echo gettext("Mac, "); ?> </a>
+	<?php echo gettext("Mac"); ?></a> ,
      <a href="newincident.php?ref=Anomaly&title=New+OS+Anomaly+Incident&priority=1&anom_type=os">
-	<?php echo gettext("OS"); ?> </a>
+	<?php echo gettext("OS"); ?></a> ,
      <a href="newincident.php?ref=Anomaly&title=New+Service+Anomaly+Incident&priority=1&anom_type=service">
-	<?php echo gettext(", Services ] "); ?> </a> 
+	<?php echo gettext("Services"); ?></a> ] 
     | 
         <a href="newincident.php?ref=Event&title=New+Event+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Event"); ?> </a> | 

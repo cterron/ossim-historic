@@ -49,6 +49,7 @@ BEGIN {
             $ossim_conf::ossim_data->{$row->{"conf"}} = $row->{"value"};
         }
     }
+    $stm->finish();
     $conn->disconnect();
 
 }

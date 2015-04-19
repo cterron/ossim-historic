@@ -2,13 +2,16 @@
 /*
  * TODO:
  * - Add options for Window contents update frecuency
- * - Export/import plugin for easily exchange config
+ * - Unify stuff used by both panel.php and window_panel.php
+ * - Browser interoperatibility tests (currently only tested under Firefox) -
+ * Better design
  */
 
 require_once 'classes/Security.inc';
 require_once 'classes/Session.inc';
 require_once 'ossim_db.inc';
 require_once 'panel/Ajax_Panel.php';
+require_once 'classes/Util.inc';
 Session::logcheck("MenuControlPanel", "ControlPanelExecutive");
 
 if (Session::menu_perms("MenuControlPanel", "ControlPanelExecutiveEdit")) {
@@ -27,12 +30,15 @@ if (GET('interface') == 'ajax') {
         
         $ajax = &new Window_Panel_Ajax();
         $options = $ajax->loadConfig(GET('id'));
+        $data['HELP_LABEL'] = _("help");
         if (count($options)) {
             $data['CONTENTS'] = $ajax->showWindowContents($options);
             $data['TITLE']    = $options['window_opts']['title'];
+            $data['HELP_MSG'] = Util::string2js($options['window_opts']['help']);
         } else { // New window
             $data['CONTENTS'] = '';
             $data['TITLE']    = _("New window");
+            $data['HELP_MSG'] = '';
         }
         if ($can_edit) {
             $data['CONFIG']   = '[<a href="window_panel.php?id='.GET('id').'" title="config">config</a>]';
@@ -112,6 +118,17 @@ if (GET('interface') == 'ajax') {
       background-color: #AC0606;
       color: white;
   }
+  .help {
+      position: fixed;
+      top: 5px;
+      right: 5px;
+      border: 1px;
+      width: 300px;
+      background-color: #F9F9F9;
+      border: 1px dotted rgb(33,78,93);
+      padding: 3px;
+      z-index: 1001;
+  }
 </style>
   
 </head>
@@ -145,6 +162,8 @@ if (GET('interface') == 'ajax') {
 <!-- displays saveConfig errors -->
 <div id="container" style="margin: 0px; padding: 0px"></div>
 <div id="loading" class="loading"></div>
+<div id="help" class="help"></div>
+<script>Element.hide('help');</script>
 
 <div id="placehere">
 Ossim Panel Loading...
@@ -253,7 +272,8 @@ function panel_load(rows, cols)
     }
 }
 
-panel_load(<?=$rows?>, <?=$cols?>)
+panel_load(<?=$rows?>, <?=$cols?>);
+Control.Tip.use = 'help';
 </script>
 
 </body></html>

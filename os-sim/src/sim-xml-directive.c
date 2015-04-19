@@ -77,6 +77,18 @@ struct _SimXmlDirectivePrivate {
 #define PROPERTY_PLUGIN_ID			"plugin_id"
 #define PROPERTY_PLUGIN_SID			"plugin_sid"
 #define PROPERTY_SENSOR					"sensor"
+#define PROPERTY_FILENAME				"filename"
+#define PROPERTY_USERNAME				"username"	//the following variables won't be used by every sensor
+#define PROPERTY_PASSWORD				"password"
+#define PROPERTY_USERDATA1			"userdata1"
+#define PROPERTY_USERDATA2			"userdata2"
+#define PROPERTY_USERDATA3			"userdata3"
+#define PROPERTY_USERDATA4			"userdata4"
+#define PROPERTY_USERDATA5			"userdata5"
+#define PROPERTY_USERDATA6			"userdata6"
+#define PROPERTY_USERDATA7			"userdata7"
+#define PROPERTY_USERDATA8			"userdata8"
+#define PROPERTY_USERDATA9			"userdata9"
 
 #define OBJECT_GROUPS			"groups"
 #define OBJECT_GROUP			"group"
@@ -172,6 +184,43 @@ sim_xml_directive_get_type (void)
   }
   return type;
 }
+
+/*
+ * Used to get the variable type from properties in the directive
+ */
+SimRuleVarType
+sim_xml_directive_get_rule_var_from_property (const gchar *var)
+{
+
+  if (!strcmp (var, PROPERTY_FILENAME))
+    return SIM_RULE_VAR_FILENAME;
+  else if (!strcmp (var, PROPERTY_USERNAME))
+    return SIM_RULE_VAR_USERNAME;
+  else if (!strcmp (var, PROPERTY_PASSWORD))
+    return SIM_RULE_VAR_PASSWORD;
+  else if (!strcmp (var, PROPERTY_USERDATA1))
+    return SIM_RULE_VAR_USERDATA1;
+  else if (!strcmp (var, PROPERTY_USERDATA2))
+    return SIM_RULE_VAR_USERDATA2;
+  else if (!strcmp (var, PROPERTY_USERDATA3))
+    return SIM_RULE_VAR_USERDATA3;
+  else if (!strcmp (var, PROPERTY_USERDATA4))
+    return SIM_RULE_VAR_USERDATA4;
+  else if (!strcmp (var, PROPERTY_USERDATA5))
+    return SIM_RULE_VAR_USERDATA5;
+  else if (!strcmp (var, PROPERTY_USERDATA6))
+    return SIM_RULE_VAR_USERDATA6;
+  else if (!strcmp (var, PROPERTY_USERDATA7))
+    return SIM_RULE_VAR_USERDATA7;
+  else if (!strcmp (var, PROPERTY_USERDATA8))
+    return SIM_RULE_VAR_USERDATA8;
+  else if (!strcmp (var, PROPERTY_USERDATA9))
+    return SIM_RULE_VAR_USERDATA9;
+
+  return SIM_RULE_VAR_NONE;
+}
+
+
 
 /*
  *
@@ -538,6 +587,91 @@ sim_xml_directive_new_action_from_node (SimXmlDirective *xmldirect,
 }
 
 /*
+ *	We will group the following keywords in this function:
+ *  filename, username, password, userdata1, userdata2.....userdata9
+ */
+static gboolean
+sim_xml_directive_set_rule_generic (SimRule          *rule,
+																		gchar            *value,
+																		gchar						*field_type) // field_type =PROPERTY_FILENAME, PROPERTY_SRC_IP.... 
+{
+  gchar     **values;
+  gchar     **level;
+  gint        i;
+	gboolean		field_neg = FALSE; 
+  gchar		    *token_value; //this will be each one of the strings, between "," and "," from value.
+
+  g_return_val_if_fail (rule != NULL, FALSE);
+  g_return_val_if_fail (SIM_IS_RULE (rule), FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  values = g_strsplit (value, SIM_DELIMITER_LIST, 0);		
+  for (i = 0; values[i] != NULL; i++)
+  {
+    if (values[i][0] == '!')													
+    {
+      field_neg = TRUE;
+      token_value = values[i]+1;															//removing the "!"...
+    }
+    else
+    {
+      field_neg = FALSE;
+      token_value = values[i];
+    }
+
+    if (strstr (token_value, SIM_DELIMITER_LEVEL))            //if this token doesn't refers to the 1st rule level...
+		{
+		  SimRuleVar *var = g_new0 (SimRuleVar, 1);							
+
+			level = g_strsplit (token_value, SIM_DELIMITER_LEVEL, 0);	//separate into 2 tokens
+
+		  var->type = sim_get_rule_var_from_char (level[1]);			
+			var->attr = sim_xml_directive_get_rule_var_from_property (field_type);
+			if (var->attr == SIM_RULE_VAR_NONE)
+				return FALSE;
+			if (sim_string_is_number (level[0]))
+				var->level = atoi(level[0]);
+			else
+			{
+				g_strfreev (level);
+				g_strfreev (values);
+				g_free (var);				
+				return FALSE;
+			}				
+	 
+      if (field_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+ 
+		  sim_rule_append_var (rule, var);												
+		  g_strfreev (level);																			
+		}																													
+    else																							
+		if (!strcmp (token_value, SIM_IN_ADDR_ANY_CONST)) 
+		{
+      if (field_neg) //we can't negate "ANY" 
+      {
+        g_strfreev (values);
+        return FALSE;
+      }
+			//this "generic" function is valid only for the keywords filename, username, userdata1...userdata9
+			sim_rule_append_generic (rule, token_value, sim_xml_directive_get_rule_var_from_property (field_type));
+		}
+    else																											// this token IS the 1st level
+		{
+    	if (field_neg)
+	      sim_rule_append_generic_not (rule, token_value, sim_xml_directive_get_rule_var_from_property (field_type));
+      else
+		    sim_rule_append_generic (rule, token_value, sim_xml_directive_get_rule_var_from_property (field_type));
+		}
+  }
+
+	return TRUE;
+}
+
+
+/*
  * Checks all the plugin_sids from a "rule" statment in a directive, and store it in a list in rule->_priv->plugin_sids
  *
  * Returns FALSE on error
@@ -591,7 +725,12 @@ sim_xml_directive_set_rule_plugin_sids (SimXmlDirective  *xmldirect, //FIXME: xm
 				g_free (var);				
 				return FALSE;
 			}				
-	  
+	 
+      if (pluginsid_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+ 
 		  sim_rule_append_var (rule, var);												//we don't need to call to sim_rule_append_plugin_sid()
 		  g_strfreev (level);																			//because we aren't going to store nothing as we will read
 		}																													//the plugin_sid from other level.
@@ -683,7 +822,12 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,	//FIXME: xmldir
         g_free (var);
         return FALSE;
       }
-	  
+	
+      if (addr_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+  
 		  sim_rule_append_var (rule, var);
 
 			g_strfreev (level);
@@ -824,7 +968,12 @@ sim_xml_directive_set_rule_dst_ips (SimXmlDirective  *xmldirect,
         g_free (var);
         return FALSE;
       }
-	  
+	
+      if (addr_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+  
 		  sim_rule_append_var (rule, var);
 	  	g_strfreev (level);
 		}
@@ -967,6 +1116,11 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
         return FALSE;
       }
 
+      if (port_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+
 		  sim_rule_append_var (rule, var);
 
 	  	g_strfreev (level);
@@ -1088,7 +1242,17 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
         g_strfreev (values);
         return FALSE;
       }
-	  
+			
+			if (port_neg)
+				var->negated = TRUE;
+			else
+				var->negated = FALSE;
+	
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_directive_set_rule_dst_ports: rule name: %s",sim_rule_get_name(rule));
+		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_directive_set_rule_dst_ports: type: %d",var->type);
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_directive_set_rule_dst_ports: attr: %d",var->attr);
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_directive_set_rule_dst_ports: negated: %d",var->negated);
+			
 		  sim_rule_append_var (rule, var);
 
 		  g_strfreev (level);
@@ -1202,7 +1366,12 @@ sim_xml_directive_set_rule_protocol (SimXmlDirective  *xmldirect,		//FIXME: xmld
         g_free (var);
         return FALSE;
       }
-	  
+	 
+      if (proto_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+ 
 		  sim_rule_append_var (rule, var);
 
 	  	g_strfreev (level);
@@ -1304,7 +1473,12 @@ sim_xml_directive_set_rule_sensors (SimContainer	  *container,
         g_free (var);
         return FALSE;
       }
-	  
+	 
+      if (sensor_neg)
+        var->negated = TRUE;
+      else
+        var->negated = FALSE;
+ 
 		  sim_rule_append_var (rule, var);
 
 			g_strfreev (level);
@@ -1362,6 +1536,11 @@ sim_xml_directive_set_rule_sensors (SimContainer	  *container,
  *
  * GNode *root: first  time this should be called with NULL. after that, recursively 
  * it will pass the pointer to the node.
+ *
+ * FIXME: I don't like this (an other) function(s). Each time I want to add a new keyword is necessary to modify
+ * lots of thins. This could be done with some kind of table where is just needed to add a new keyword and 
+ * it's type to get it inserted in directives. The major absurdity is the needed to use 9 (9!!!) functions to 
+ * store the values from userdata1, userdata2... instead a single function and table where it points to the right variable.
  */
 GNode*
 sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
@@ -1393,6 +1572,18 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   gint           occurrence = 1;
   gint           plugin = 0;
   gint           tplugin = 0;
+	gchar					*filename = NULL;
+	gchar					*username = NULL;
+	gchar					*password = NULL;
+	gchar					*userdata1 = NULL;
+	gchar					*userdata2 = NULL;
+	gchar					*userdata3 = NULL;
+	gchar					*userdata4 = NULL;
+	gchar					*userdata5 = NULL;
+	gchar					*userdata6 = NULL;
+	gchar					*userdata7 = NULL;
+	gchar					*userdata8 = NULL;
+	gchar					*userdata9 = NULL;
 
   g_return_val_if_fail (xmldirect != NULL, NULL);
   g_return_val_if_fail (SIM_IS_XML_DIRECTIVE (xmldirect), NULL);
@@ -1583,7 +1774,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   sim_rule_set_time_out (rule, time_out);
   sim_rule_set_occurrence (rule, occurrence);
   sim_rule_set_plugin_id (rule, plugin);
-
+	
 	//at this moment, "rule" variable has some properties, and we continue filling it.
 	//Now, we have to fill the properties that can handle multiple variables, like sids, or src_ips ie.
 	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PLUGIN_SID)))
@@ -1618,7 +1809,6 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_SRC_PORT)))
   {
-			g_message("VALUE SRC_PORTS: %s",value);
     if (sim_xml_directive_set_rule_src_ports (xmldirect, rule, value))
 		  xmlFree(value);
 		else
@@ -1630,7 +1820,6 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_DST_PORT)))
   {
-			g_message("VALUE DST_PORTS: %s",value);
     if (sim_xml_directive_set_rule_dst_ports (xmldirect, rule, value))
 	    xmlFree(value);		
 		else
@@ -1639,10 +1828,10 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 		  return NULL;				
 		}
   }
-			g_message("---------------------");
+/*			g_message("---------------------");
   sim_rule_print(rule);
 			g_message("---------------------");
-
+*/
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PROTOCOL)))
   {
     if (sim_xml_directive_set_rule_protocol (xmldirect, rule, value))
@@ -1665,6 +1854,148 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 		}
   }
 	
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FILENAME)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_FILENAME)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error: there are a problem in the Filename field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERNAME)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERNAME)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error: there are a problem in the Username field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PASSWORD)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_PASSWORD)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Password field");
+      return NULL;
+    }
+  }
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA1)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA1)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata1 field");
+      return NULL;
+    }
+  }
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA2)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA2)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata2 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA3)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA3)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata3 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA4)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA4)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata4 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA5)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA5)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata5 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA6)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA6)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata6 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA7)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA7)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata7 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA8)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA8)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata8 field");
+      return NULL;
+    }
+  }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_USERDATA9)))
+  {
+    if (sim_xml_directive_set_rule_generic (rule, value, PROPERTY_USERDATA9)) 
+      xmlFree(value);
+    else
+    {
+      xmlFree(value);
+      g_message("Error. there are a problem in the Userdata9 field");
+      return NULL;
+    }
+  }
+
   if (!root)												//ok, this is the first  rule, the root node...
     rule_node = g_node_new (rule);	//..so we have to create the first GNode. 
   else
@@ -1825,4 +2156,7 @@ sim_xml_directive_new_groups_from_node (SimXmlDirective	*xmldirect,
   }
 
 }
+
+
+
 // vim: set tabstop=2:

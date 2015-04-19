@@ -13,20 +13,26 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 <body>
 
 <?php 
-if (!$ip = validateVar($_GET["host"])) { 
-        echo "<p>Wrong ip</p>";
-        exit;
-    }
+
+require_once 'classes/Security.inc';
+
+$host = GET('host');
+
+ossim_valid($host, OSS_IP_ADDR, 'illegal:'._("Host"));
+
+if (ossim_error()) {
+        die(ossim_error());
+}
+
 ?>
 
-<h1>Inventory - <?php echo $ip ?></h1>
+<h1>Inventory - <?php echo $host ?></h1>
 
 <?php
 
     require_once 'ossim_db.inc';
     require_once 'ossim_conf.inc';
     require_once 'classes/Host.inc';
-    
     require_once 'classes/Host_os.inc';
     require_once 'classes/Host_mac.inc';
     require_once 'classes/Host_services.inc';
@@ -37,15 +43,14 @@ if (!$ip = validateVar($_GET["host"])) {
     $conn = $db->connect();
 
     /* services update */
-    if ($_GET["origin"] == 'active' && $_GET["update"] == 'services') 
+    if (GET('origin') == 'active' && GET('update') == 'services') 
     {
         $conf = $GLOBALS["CONF"];
         $nmap = $conf->get_conf("nmap_path");
 
-        $ip = escapeshellcmd($ip);
-        $services = shell_exec("$nmap -sV -P0 $ip");
+        $services = shell_exec("$nmap -sV -P0 $host");
         $lines = split("[\n\r]", $services);
-        Host_services::delete($conn, $ip);
+        
         foreach ($lines as $line) {
             preg_match ('/(\S+)\s+open\s+([\w\-\_\?]+)(\s+)?(.*)$/', $line, $regs);
             if ($regs[0]) {
@@ -60,8 +65,8 @@ if (!$ip = validateVar($_GET["host"])) {
                 $version = $regs[4];
                 $origin = 1;
                 $date = strftime("%Y-%m-%d %H:%M:%S");
-                Host_services::insert($conn, $ip, $port, $date,
-                $_SERVER["SERVER_ADDR"], $protocol, $service, $service_type, $version, $origin); // origin = 0 (pads), origin = 1 (nmap)
+                Host_services::insert($conn, $host, $port, $date, $_SERVER["SERVER_ADDR"], $protocol, 
+                                      $service, $service_type, $version, $origin); // origin = 0 (pads), origin = 1 (nmap)
             }
         }
     }
@@ -71,14 +76,14 @@ if (!$ip = validateVar($_GET["host"])) {
       <tr><th colspan="2"> <?php echo gettext("Host Info"); ?> </th></tr>
 <?php
 
-    if ($host_list = Host::get_list($conn, "WHERE ip = '$ip'")) {
-        $host = $host_list[0];
-
-        $sensor_list = $host->get_sensors($conn);
+    $sensor_list = array();
+    if ($host_list = Host::get_list($conn, "WHERE ip = '$host'")) {
+        $host_aux = $host_list[0];
+        $sensor_list = $host_aux->get_sensors($conn);
 ?>
       <tr>
         <th> <?php echo gettext("Name"); ?> </th>
-        <td><?php echo $host->hostname ?></td>
+        <td><?php echo $host_aux->hostname ?></td>
       </tr>
 
 <?php
@@ -86,17 +91,17 @@ if (!$ip = validateVar($_GET["host"])) {
 ?>
       <tr>
         <th>Ip</th>
-        <td><b><?php echo $ip ?></b></td>
+        <td><b><?php echo $host ?></b></td>
       </tr>
 <?php
-    if ($os = Host_os::get_ip_data($conn, $ip)) {
+    if ($os = Host_os::get_ip_data($conn, $host)) {
 ?>
       <tr>
         <th> <?php echo gettext("Operating System"); ?> </th>
         <td>
 <?php 
             echo $os["os"]; 
-            echo Host_os::get_os_pixmap($conn, $ip); 
+            echo Host_os::get_os_pixmap($conn, $host); 
 ?>
         </td>
       </tr>
@@ -106,7 +111,7 @@ if (!$ip = validateVar($_GET["host"])) {
 
 <?php
 
-    if ($mac = Host_mac::get_ip_data($conn, $ip)) {
+    if ($mac = Host_mac::get_ip_data($conn, $host)) {
 ?>
       <tr>
         <th>MAC</th>
@@ -118,7 +123,7 @@ if (!$ip = validateVar($_GET["host"])) {
     
       
 <?php    
-    if ($netbios_list = Host_netbios::get_list($conn, "WHERE ip = '$ip'")) {
+    if ($netbios_list = Host_netbios::get_list($conn, "WHERE ip = '$host'")) {
         $netbios = $netbios_list[0];
 ?>
       <tr>
@@ -140,7 +145,7 @@ if (!$ip = validateVar($_GET["host"])) {
     if ($net_list = Net::get_list($conn))
     {
         foreach ($net_list as $net) {
-            if (Net::isIpInNet($ip, $net->get_ips())) {
+            if (Net::isIpInNet($host, $net->get_ips())) {
 ?>
       <tr>
         <th>Net</th>
@@ -167,18 +172,18 @@ if (!$ip = validateVar($_GET["host"])) {
       <tr><td colspan="2"></td></tr>
       <tr><td colspan="2"></td></tr>
       <tr><th colspan="2"> <?php echo gettext("Port / Service information"); ?> 
-      <?php if($_GET["origin"] == 'active'){
+      <?php if(GET('origin') == 'active'){
       ?>
-      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=passive">
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $host?>&origin=passive">
       <?php echo gettext("Active"); ?> </A>)
       [ <a href="<?php 
         echo $_SERVER["PHP_SELF"]?>?host=<?php 
-        echo $ip ?>&update=services&origin=active">
+        echo $host ?>&update=services&origin=active">
 	<?php echo gettext("update"); ?> </a> ]
         </th></h2>
       </tr>
         <?php } else { ?>
-      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $ip?>&origin=active">
+      (<A HREF="<?php echo $_SERVER["PHP_SELF"]?>?host=<?php echo $host?>&origin=active">
       <?php echo gettext("Passive"); ?> </A>)
         </th></h2>
         <?php } ?>
@@ -191,8 +196,8 @@ if (!$ip = validateVar($_GET["host"])) {
         <th> <?php echo gettext("Date"); ?> </th>
       </tr>
 <?php
-    if($_GET["origin"] == 'active'){
-    if ($services_list = Host_services::get_ip_data($conn, $ip, '1')) {
+    if(GET('origin') == 'active'){
+    if ($services_list = Host_services::get_ip_data($conn, $host, '1')) {
         foreach ($services_list as $services) {
 ?>
       <tr>
@@ -205,8 +210,8 @@ if (!$ip = validateVar($_GET["host"])) {
 <?php
         }
     }
-    } elseif ($_GET["origin"] == 'passive') {
-    if ($services_list = Host_services::get_ip_data($conn, $ip,'0')) {
+    } elseif (GET('origin') == 'passive') {
+    if ($services_list = Host_services::get_ip_data($conn, $host,'0')) {
         foreach ($services_list as $services) {
 ?>
       <tr>

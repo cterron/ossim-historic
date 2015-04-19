@@ -20,7 +20,7 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
     
     $inctype_id = GET('inctype_id');
 
-    ossim_valid($inctype_id, OSS_ALPHA, 'illegal:'._("Incident ID"));
+    ossim_valid($inctype_id, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Incident ID"));
 
     if (ossim_error()) {
         die(ossim_error());

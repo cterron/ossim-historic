@@ -15,7 +15,7 @@
 
     $action_id = GET('id');
     
-    ossim_valid($action_id, OSS_DIGIT, 'ilegal:'._("Action id"));
+    ossim_valid($action_id, OSS_DIGIT, 'illegal:'._("Action id"));
 
     if (ossim_error()) {
         die(ossim_error());

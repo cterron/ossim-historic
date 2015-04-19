@@ -16,17 +16,29 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <h1> <?php echo gettext("New policy"); ?> </h1>
 
 <?php
+require_once 'classes/Security.inc';
 
-if (isset($_POST["insert"])) {
+$priority   = POST('priority');
+$begin_hour = POST('begin_hour');
+$end_hour   = POST('end_hour');
+$begin_day  = POST('begin_day');
+$end_day    = POST('end_day');
+$descr      = POST('descr');
+$store      = POST('store');
 
-    $priority   = validateVar($_POST["priority"]);
-    $begin_hour = validateVar($_POST["begin_hour"]);
-    $end_hour   = validateVar($_POST["end_hour"]);
-    $begin_day  = validateVar($_POST["begin_day"]);
-    $end_day    = validateVar($_POST["end_day"]);
-    $descr      = validateVar($_POST["descr"], OSS_ALPHA . OSS_PUNC . OSS_SCORE
-    . OSS_AT);
-    $store      = validateVar($_POST["store"]);
+ossim_valid($priority, OSS_NULLABLE, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Priority"));
+ossim_valid($begin_hour, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Begin hour"));
+ossim_valid($begin_day, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Begin day"));
+ossim_valid($end_day, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("End day"));
+ossim_valid($end_hour, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("End hour"));
+ossim_valid($descr, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("Description"));
+ossim_valid($store, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("Store"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+if (POST('insert')) {
 
     /*
      *  Check correct range of dates
@@ -44,20 +56,37 @@ if (isset($_POST["insert"])) {
 
     /* source ips */
     $source_ips = array();
-    for ($i = 1; $i <= validateVar($_POST["sourcenips"]); $i++) {
+    for ($i = 1; $i <= POST('sourcenips'); $i++) {
         $name = "sourcemboxi" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $source_ips[] = validateVar($_POST[$name]);
+        
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $source_ips[] = POST("$name");
         }
     }
     
     /* source nets */
     $source_nets = array();
-    for ($i = 1; $i <= validateVar($_POST["sourcengrps"]); $i++) {
+    for ($i = 1; $i <= POST('sourcengrps'); $i++) {
         $name = "sourcemboxg" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $source_nets[] = validateVar($_POST[$name]);
+        
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
         }
+
+        if (!empty($aux_name)) {
+            $source_nets[] = POST("$name");
+        }
+
     }
     if (!count($source_ips) && !count($source_nets)) {
         die(ossim_error(_("At least one Source IP or Net required")));
@@ -65,19 +94,35 @@ if (isset($_POST["insert"])) {
     
     /* dest ips */
     $dest_ips = array();
-    for ($i = 1; $i <= validateVar($_POST["destnips"]); $i++) {
+    for ($i = 1; $i <= POST('destnips'); $i++) {
         $name = "destmboxi" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $dest_ips[] = validateVar($_POST[$name]);
+        
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $dest_ips[] = POST("$name");
         }
     }
                                                                                                                                                                 
     /* dest nets */
     $dest_nets = array();
-    for ($i = 1; $i <= validateVar($_POST["destngrps"]); $i++) {
+    for ($i = 1; $i <= POST('destngrps'); $i++) {
         $name = "destmboxg" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $dest_nets[] = validateVar($_POST[$name]);
+        
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $dest_nets[] = POST("$name");
         }
     }
     if (!count($dest_ips) && !count($dest_nets)) {
@@ -86,10 +131,18 @@ if (isset($_POST["insert"])) {
                                                                                 
     /* ports */
     $ports = array();
-    for ($i = 1; $i <= validateVar($_POST["nprts"]); $i++) {
+    for ($i = 1; $i <= POST('nprts'); $i++) {
         $name = "mboxp" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $ports[] = validateVar($_POST[$name]);
+    
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
+        }
+
+        if (!empty($aux_name)) {
+            $ports[] = POST("$name");
         }
     }
     if (!count($ports)) {
@@ -98,9 +151,12 @@ if (isset($_POST["insert"])) {
 
     /* plugin groups */
     $plug_groups = array();
-    foreach (POST('plugins') as $group_id => $on) {
-        ossim_valid($group_id, OSS_DIGIT, 'illegal:'._("Plugin Group ID"));
-        $plug_groups[] = $group_id;
+    $plugins = POST('plugins');
+    if ($plugins) {
+        foreach ($plugins as $group_id => $on) {
+            ossim_valid($group_id, OSS_DIGIT, 'illegal:'._("Plugin Group ID"));
+            $plug_groups[] = $group_id;
+        }
     }
     if (!count($plug_groups)) {
         die(ossim_error(_("At least one plugin group required")));
@@ -111,11 +167,20 @@ if (isset($_POST["insert"])) {
     
     /* sensors */
     $sensors = array();
-    for ($i = 1; $i <= validateVar($_POST["nsens"]); $i++) {
+    for ($i = 1; $i <= POST('nsens'); $i++) {
         $name = "mboxs" . $i;
-        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
-            $sensors[] = validateVar($_POST[$name]);
+        
+        $aux_name = POST("$name");
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_AT, OSS_NULLABLE, 'illegal:'._("$name"));
+
+        if (ossim_error()) {
+            die(ossim_error());
         }
+
+        if (!empty($aux_name)) {
+            $sensors[] = POST("$name");
+        }
+
     }
     if (!count($sensors)) {
         die(ossim_error("At least one Sensor required"));

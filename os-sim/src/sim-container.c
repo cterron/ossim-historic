@@ -392,10 +392,10 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
 /*
  *
  * Provided the ia, port, and protocol, this function
- * returns the service name (ssh, telnet..).The variable that it returns is called "application" 
- * but in the DB its called "version"
+ * returns the service name (ssh, telnet..) as well as the service (apache, IIS...)
+ * The variable that it returns is called "application"  but in the DB its called "version"
  */
-gchar*
+gchar**
 sim_container_db_get_host_service_ul (SimContainer  *container,
 				      SimDatabase   *database,
 				      GInetAddr     *ia,
@@ -407,6 +407,7 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
   GdaValue      *value;
   gchar         *query;
   gchar         *version = NULL;
+	gchar					**v_and_s;
   gint           row;
   
   g_return_val_if_fail (container, NULL);
@@ -416,22 +417,35 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
   g_return_val_if_fail (ia, NULL);
 
   /* origin = 0 (pads). origin = 1 would be nmap. */
-  query = g_strdup_printf ("SELECT version FROM host_services WHERE ip = %lu and port = %u and protocol = %u and origin = 0 and sensor = %lu ORDER BY date DESC LIMIT 1", 
+  query = g_strdup_printf ("SELECT version, service FROM host_services WHERE ip = %lu and port = %u and protocol = %u and origin = 0 and sensor = %lu ORDER BY date DESC LIMIT 1", 
 			   sim_inetaddr_ntohl (ia), port, protocol, sim_inetaddr_ntohl (sensor));
 
   dm = sim_database_execute_single_command (database, query);
+	
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_service_ul: %s", query);
+	 
   if (dm)
   {
+		v_and_s = g_new0 (gchar*, 2);
+		
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-
     if (gda_data_model_get_n_rows(dm) !=0) 
     {
       if (!gda_value_is_null (value))
-        version = gda_value_stringify (value);
+        v_and_s[0] = gda_value_stringify (value);	//application (apache, iis...)
     }
     else
-      version=NULL;
+      v_and_s[0]=NULL;
 
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 1, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) 
+    {
+      if (!gda_value_is_null (value))
+        v_and_s[1] = gda_value_stringify (value);	//service (http, ssh...)
+    }
+    else
+      v_and_s[1]=NULL;
+		
     g_object_unref(dm);
   }
   else
@@ -440,7 +454,8 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
   }
   g_free (query);
 
-  return version;
+  //return version;
+  return v_and_s;
 }
 
 
@@ -597,41 +612,49 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
  */
 void
 sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
-					 SimDatabase   *database,
-					 GInetAddr     *ia,
-					 gchar         *date,
-					 gchar         *hostname,
-					 gchar         *event_type,
-					 gchar         *target,
-					 gchar         *what,
-					 gchar         *extra_data,
-					 gchar         *sensor,
-					 gint           sid)
+																						SimDatabase  *dbossim,
+																						SimDatabase  *dbsnort,
+																						SimEvent	   *event,
+																						gchar        *timestamp,
+																						gint					sid,
+																						gulong				cid,
+																						gint					sig_id)
 {
   gchar			*query;
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (ia);
-  g_return_if_fail (date);
-  g_return_if_fail (hostname);
-  g_return_if_fail (event_type);
-  g_return_if_fail (target);
-  g_return_if_fail (what);
-  g_return_if_fail (extra_data);
-  g_return_if_fail (sid);
-  g_return_if_fail (sensor);
+  g_return_if_fail (dbossim);
+  g_return_if_fail (SIM_IS_DATABASE (dbossim));
+  g_return_if_fail (dbsnort);
+  g_return_if_fail (SIM_IS_DATABASE (dbsnort));
+  g_return_if_fail (timestamp);
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
 
-  query = g_strdup_printf ("INSERT INTO host_ids (ip, date, hostname, sensor, sid, event_type, what, target, extra_data) VALUES (%lu, '%s', '%s', '%s', %u, '%s', '%s', '%s', '%s')",
-  sim_inetaddr_ntohl (ia), date, hostname, sensor, sid, event_type, what, target, extra_data);
+  sim_organizer_snort_event_sidcid_insert (dbsnort, event, sid, cid, sig_id);
+
+
+  query = g_strdup_printf ("INSERT INTO host_ids (ip, date, hostname, sensor, plugin_sid, event_type, what, target, extra_data, sid, cid) VALUES (%lu, '%s', '%s', '%s', %u, '%s', '%s', '%s', '%s', '%d', '%d')",
+										  sim_inetaddr_ntohl (event->src_ia), 
+											timestamp,
+											event->data_storage[0],//hostname
+											event->sensor,
+											event->plugin_sid,
+											event->data_storage[1], //event_type
+											event->data_storage[3], //what
+											event->data_storage[2], //target
+											event->data_storage[4], //extra_data (nothing to do with extra_data table)
+											sid,
+											cid); 
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_insert_host_ids_event_ul query: %s",query);
 
-  sim_database_execute_no_query (database, query);
-  
+  sim_database_execute_no_query (dbossim, query);
   g_free (query);
+
+	sim_organizer_snort_extra_data_insert(dbsnort, event, sid, cid);
+		
 }
 
 
@@ -2223,12 +2246,13 @@ sim_container_get_sensor_by_name_ul (SimContainer  *container,
 /*
  *
  * Check every sensor defined previously (they're inside the container) 
- * to see if the ia (internet address) belongs to it.
+ * to see if the ia (internet address) matches with it. Then returns the sensor
+ * as an object.
  *
  */
 SimSensor*
 sim_container_get_sensor_by_ia_ul (SimContainer  *container,
-				   GInetAddr     *ia)
+																   GInetAddr     *ia)
 {
   SimSensor  *sensor;
   GList      *list;
@@ -2240,17 +2264,17 @@ sim_container_get_sensor_by_ia_ul (SimContainer  *container,
 
   list = container->_priv->sensors;
   while (list)
-    {
-      sensor = (SimSensor *) list->data;
+  {
+    sensor = (SimSensor *) list->data;
 
-      if (gnet_inetaddr_noport_equal (sim_sensor_get_ia (sensor), ia))
-	{
-	  found = TRUE;
-	  break;
-	}
+    if (gnet_inetaddr_noport_equal (sim_sensor_get_ia (sensor), ia))
+		{
+		  found = TRUE;
+			break;
+		}
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   if (!found)
     return NULL;
@@ -2406,7 +2430,7 @@ sim_container_get_sensor_by_name (SimContainer  *container,
  */
 SimSensor*
 sim_container_get_sensor_by_ia (SimContainer  *container,
-				GInetAddr     *ia)
+																GInetAddr     *ia)
 {
   SimSensor   *sensor;
 

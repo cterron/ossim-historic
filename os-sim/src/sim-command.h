@@ -187,6 +187,20 @@ struct _SimCommand {
       gboolean					 alarm;
 
       SimEvent          *event;
+
+			gchar							*filename;	//this variables are duplicated, here and inside the above "event" object
+			gchar							*username;
+			gchar							*password;
+			gchar							*userdata1;
+			gchar							*userdata2;
+			gchar							*userdata3;
+			gchar							*userdata4;
+			gchar							*userdata5;
+			gchar							*userdata6;
+			gchar							*userdata7;
+			gchar							*userdata8;
+			gchar							*userdata9;
+
     } event;
 
     struct {
@@ -252,6 +266,19 @@ struct _SimCommand {
       gint               plugin_sid;
 
       gchar             *log;
+
+			gchar							*filename;	//this variables are duplicated, here and inside the above "event" object
+			gchar							*username;
+			gchar							*password;
+			gchar							*userdata1;
+			gchar							*userdata2;
+			gchar							*userdata3;
+			gchar							*userdata4;
+			gchar							*userdata5;
+			gchar							*userdata6;
+			gchar							*userdata7;
+			gchar							*userdata8;
+			gchar							*userdata9;
     } host_ids_event;
 
     struct {

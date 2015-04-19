@@ -310,3 +310,16 @@ Control.ColorPalette = {
     registerOnColorClick: function(color) {
     }
 }
+
+Control.Tip = {
+    use: 'help',
+    show: function(msg) {
+        if (msg) {
+            Element.show($(this.use));
+            $(this.use).innerHTML = msg;
+        }
+    },
+    hide: function() {
+        Element.hide($(this.use));
+    }
+}

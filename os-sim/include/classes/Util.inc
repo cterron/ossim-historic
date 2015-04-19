@@ -413,6 +413,14 @@ class Util {
         return "$acid_link/".$acid_prefix."_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=2&ip_addr%5B0%5D%5B0%5D=+&ip_addr%5B0%5D%5B1%5D=ip_src&ip_addr%5B0%5D%5B2%5D=%3D&ip_addr%5B0%5D%5B3%5D=$ip&ip_addr%5B0%5D%5B8%5D=+&ip_addr%5B0%5D%5B9%5D=OR&ip_addr%5B1%5D%5B0%5D=+&ip_addr%5B1%5D%5B1%5D=ip_dst&ip_addr%5B1%5D%5B2%5D=%3D&ip_addr%5B1%5D%5B3%5D=$ip&ip_addr%5B1%5D%5B8%5D=+&ip_addr%5B1%5D%5B9%5D=+&sort_order=time_d";
     }
 
+    function string2js($str) {
+        $str = str_replace("'", "\'", $str);
+        $str = str_replace('"', '', $str); // XXX fix that
+        // escape break lines
+        $str = preg_replace("/(\r)|(\r?\n)/", '\n', $str);
+        return $str;
+    }
+
 }
 
 ?>

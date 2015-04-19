@@ -2,15 +2,15 @@
 
 <config>
 	<log filename="/var/log/ossim/server.log"/>
-	<sensor name="server" ip="127.0.0.1" interface="eth0"/>
-    <framework name="server" ip="127.0.0.1" port="40003"/>
+  <framework name="server" ip="127.0.0.1" port="40003"/>
 	<datasources>
 		<datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=ossim;HOST=localhost"/>
 		<datasource name="snortDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=snort;HOST=localhost"/>
 	</datasources>
 	<directive filename="/etc/ossim/server/directives.xml"/>
 	<scheduler interval="15"/>
-	<server port="40001"/>
+  <server port="40001" name="server" ip="0.0.0.0"/>
+		
     
     <!-- Replication Servers -->
 <!--

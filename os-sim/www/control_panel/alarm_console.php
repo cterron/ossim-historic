@@ -31,7 +31,6 @@ $ROWS = 50;
 $db = new ossim_db();
 $conn = $db->connect();
 
-
 $delete = GET('delete');
 $close  = GET('close');
 $delete_day = GET('delete_day');
@@ -52,21 +51,17 @@ ossim_valid($inf, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("inf"));
 ossim_valid($sup, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("order"));
 ossim_valid($hide_closed, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("hide_closed"));
 
-
 if (ossim_error()) {
     die(ossim_error());
 }
                     
-
 if (!empty($delete)) {
     Alarm::delete($conn, $delete);
 }
 
-
 if (!empty($close)) {
     Alarm::close($conn, $close);
 }
-
 
 if ($list = GET('delete_backlog')) {
     if (!strcmp($list, "all"))
@@ -83,7 +78,6 @@ if (!empty($delete_day)) {
 if (GET('purge')) {
     Alarm::purge($conn);
 }
-
 
 if (empty($order)) $order = " timestamp DESC";
 

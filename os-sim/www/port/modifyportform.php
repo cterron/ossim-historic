@@ -19,14 +19,18 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     require_once 'classes/Port.inc';
     require_once 'classes/Port_group_reference.inc';
     require_once 'ossim_db.inc';
+    require_once 'classes/Security.inc';
+
+    $port_name = GET('portname');
+
+    ossim_valid($port_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Port group name"));
+
+    if (ossim_error()) {
+       die(ossim_error());
+    }
+
     $db = new ossim_db();
     $conn = $db->connect();
-
-    if (!$port_name = validateVar($_GET["portname"])) {
-      require_once("ossim_error.inc");
-      $error = new OssimError();
-      $error->display("WRONG_PORTNAME");
-    }
 
     if ($port_group_list = Port_group::get_list
             ($conn, "WHERE name = '$port_name'")) {

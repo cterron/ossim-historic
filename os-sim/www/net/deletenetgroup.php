@@ -15,21 +15,23 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
   <h1> <?php echo gettext("Delete network group"); ?> </h1>
 
 <?php 
-    if (!$_GET["name"]) { 
-        require_once("ossim_error.inc");
-        $error = new OssimError();
-        $error->display("WRONG_NET");
-    }
+require_once 'classes/Security.inc';
 
-$name = validateVar($_GET["name"], OSS_ALPHA . OSS_SCORE . OSS_PUNC);
+$name = GET('name');
 
-if (!$_GET["confirm"]) {
+ossim_valid($name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("name"));
+
+if (ossim_error()) {
+       die(ossim_error());
+}
+
+if (!GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a 
       href="<?php echo $_SERVER["PHP_SELF"]."?name=$name&confirm=yes"; ?>">
       <?php echo gettext("Yes"); ?> </a>
-      &nbsp;&nbsp;&nbsp;<a href="net.php">
+      &nbsp;&nbsp;&nbsp;<a href="netgroup.php">
       <?php echo gettext("No"); ?> </a>
     </p>
 <?php

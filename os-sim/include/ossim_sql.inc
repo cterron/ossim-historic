@@ -15,40 +15,6 @@ if (!defined('OSS_MAIL'))   define ('OSS_MAIL', OSS_AT . OSS_ALPHA . OSS_DOT . O
 if (!defined('OSS_USER'))   define ('OSS_USER', OSS_LETTER . OSS_DIGIT . OSS_SCORE . OSS_DOT); // for validating logins/users
 
 /*
- * Check for not valid characters
- * (Only accept valid data rather than trying to prevent invalid data)
- *
- * Usage:
- *   $name = validateVar($_POST["name"], OSS_DIGIT . OSS_SPACE);
- */
-function validateVar($input, $validChars = "")
-{
-    if ($input == "")
-        return $input;
-        
-    if ($validChars == "")
-        return scapeSql($input);
-
-    $regexp = "/[^$validChars]/";
-
-    /*** DEBUG, will be removed ***/
-    if (1) {
-        if (preg_match_all($regexp, $input, $regs))
-        {
-            $tmp = preg_replace($regexp, "", $input);
-            require_once ('ossim_error.inc');
-            $error = new ossimWarn();
-            $error->display("STRING_NOT_VALID");
-        }
-    }
-    /*** end DEBUG ***/
-
-    $input = preg_replace($regexp, "", $input);
-    return scapeSql($input);
-}
-
-
-/*
  * Escapes special characters in a SQL statement
  */
 function scapeSql($sql)

@@ -265,6 +265,9 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (200
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (2002, 5, NULL, NULL, 'arp_watch: Mac Event unknown');
 
 
+
+
+
 -- Alert -> Event migration
 ALTER TABLE incident change COLUMN ref ref ENUM ('Alarm', 'Event', 'Metric') NOT NULL DEFAULT 'Alarm' after date;
 UPDATE incident SET ref='Event', date=date WHERE ref='';
@@ -476,11 +479,8 @@ INSERT INTO plugin (id, type, name, description) VALUES (2007, 2, 'nagios', 'Nag
 -- New configuration options for panel
 --
 INSERT INTO config (conf, value) VALUES ('panel_plugins_dir', '');
-INSERT INTO config (conf, value) VALUES ('panel_configs_dir', '/usr/share/ossim/files/panel/configs');
+INSERT INTO config (conf, value) VALUES ('panel_configs_dir', '/etc/ossim/framework/panel/configs');
 
 -- WARN! Keep this at the end of this file
---- this is in case the user didn't have the ossim_schema_version entry in the table
-INSERT INTO config (conf, value) VALUES ('ossim_schema_version', '0.9.9rc1');
---- this is in case the user already had the entry
-UPDATE config SET value = '0.9.9rc1' WHERE conf = 'ossim_schema_version';
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '0.9.9rc1');
 -- vim:ts=4 sts=4 tw=79 expandtab: 

@@ -241,7 +241,10 @@ class Agent:
                   plugin_id, plugin_sid, priority, protocol, 
                   src_ip, src_port, dst_ip, dst_port, log = "",
                   snort_cid="", snort_sid="",
-                  data="", condition="", value=""):
+                  data="", condition="", value="", username="", 
+                  password="", filename="", userdata1="", userdata2="",
+                  userdata3="", userdata4="", userdata5="", 
+                  userdata6="", userdata7="", userdata8="", userdata9=""):
 
         s = self.sanitize
 
@@ -268,6 +271,22 @@ class Agent:
         # Monitors specific
         if condition:   message +=  'condition="'   + s(condition)    + '" '
         if value:       message +=  'value="'       + s(value)        + '" '
+
+        # Users & misc data
+        if username:    message +=  'username="'    + s(username)     + '" '
+        if password:    message +=  'password="'    + s(password)     + '" '
+        if filename:    message +=  'filename="'    + s(filename)     + '" '
+        if userdata1:   message +=  'userdata1="'   + s(userdata1)    + '" '
+        if userdata2:   message +=  'userdata2="'   + s(userdata2)    + '" '
+        if userdata3:   message +=  'userdata3="'   + s(userdata3)    + '" '
+        if userdata4:   message +=  'userdata4="'   + s(userdata4)    + '" '
+        if userdata5:   message +=  'userdata5="'   + s(userdata5)    + '" '
+        if userdata6:   message +=  'userdata6="'   + s(userdata6)    + '" '
+        if userdata7:   message +=  'userdata7="'   + s(userdata7)    + '" '
+        if userdata8:   message +=  'userdata8="'   + s(userdata8)    + '" '
+        if userdata9:   message +=  'userdata9="'   + s(userdata9)    + '" '
+
+
 
         if priority > 0 :
             self.sendMessage(message)
@@ -321,7 +340,12 @@ class Agent:
 
         self.sendMessage(message)
 
-    def sendHidsEvent(self, host, hostname, event_type, target, what, extra_data, sensor, date, plugin_id, plugin_sid, log):
+    def sendHidsEvent(self, host, hostname, event_type, target, what, extra_data, 
+                  sensor, date, plugin_id, plugin_sid, log, username="",
+                  password="", filename="", userdata1="", userdata2="",
+                  userdata3="", userdata4="", userdata5="", 
+                  userdata6="", userdata7="", userdata8="", userdata9=""):
+
 
         message = 'host-ids-event ' +\
             'host="'        + str(host)         + '" ' +\
@@ -335,5 +359,18 @@ class Agent:
             'plugin_id="'   + str(plugin_id)    + '" ' +\
             'plugin_sid="'  + str(plugin_sid)   + '" ' +\
             'log="' + log.rstrip().replace("\"", "\\\"") + '" '
+        # Users & misc data
+        if username:    message +=  'username="'    + s(username)     + '" '
+        if password:    message +=  'password="'    + s(password)     + '" '
+        if filename:    message +=  'filename="'    + s(filename)     + '" '
+        if userdata1:   message +=  'userdata1="'   + s(userdata1)    + '" '
+        if userdata2:   message +=  'userdata2="'   + s(userdata2)    + '" '
+        if userdata3:   message +=  'userdata3="'   + s(userdata3)    + '" '
+        if userdata4:   message +=  'userdata4="'   + s(userdata4)    + '" '
+        if userdata5:   message +=  'userdata5="'   + s(userdata5)    + '" '
+        if userdata6:   message +=  'userdata6="'   + s(userdata6)    + '" '
+        if userdata7:   message +=  'userdata7="'   + s(userdata7)    + '" '
+        if userdata8:   message +=  'userdata8="'   + s(userdata8)    + '" '
+        if userdata9:   message +=  'userdata9="'   + s(userdata9)    + '" '
 
         self.sendMessage(message)

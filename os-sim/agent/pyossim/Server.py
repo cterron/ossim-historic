@@ -76,7 +76,7 @@ class Server(threading.Thread):
                 time.sleep(10)
                 conn = self.agent.reconnect()
             except AttributeError:
-                util.debug (__name__, 'Error receiving from server',
+                util.debug (__name__,  'Error receiving from server', 
                             '!!', 'RED')
                 time.sleep(10)
                 conn = self.agent.reconnect()

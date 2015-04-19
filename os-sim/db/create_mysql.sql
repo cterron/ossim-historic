@@ -595,6 +595,7 @@ CREATE TABLE event (
         snort_cid       INTEGER UNSIGNED,
         PRIMARY KEY (id)
 );
+CREATE INDEX event_idx ON event (id);
 
 --
 -- Table: Backlog
@@ -897,14 +898,15 @@ CREATE TABLE host_ids(
     date            DATETIME NOT NULL,
     hostname        VARCHAR(255) NOT NULL,
     sensor          VARCHAR(255) NOT NULL,
-    sid             INTEGER UNSIGNED NOT NULL,
+    plugin_sid             INTEGER UNSIGNED NOT NULL,
     event_type      VARCHAR(255) NOT NULL,
     what            VARCHAR(255) NOT NULL,
     target          VARCHAR(255) NOT NULL,
     extra_data      VARCHAR(255) NOT NULL,
-    PRIMARY KEY     (ip,target,sid,date)
+    cid             INTEGER UNSIGNED NOT NULL,
+    sid             INTEGER UNSIGNED NOT NULL,
+    PRIMARY KEY     (ip,target,plugin_sid,date)
 );
-
 
 --
 -- User action logging

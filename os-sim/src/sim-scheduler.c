@@ -466,10 +466,7 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 	      new_event = sim_event_new ();
 	      new_event->type = SIM_EVENT_TYPE_DETECTOR;
 	      new_event->alarm = FALSE;
-	      if (config->sensor.ip)
-					new_event->sensor = g_strdup (config->sensor.ip);
-	      if (config->sensor.interface)
-					new_event->interface = g_strdup (config->sensor.interface);
+				new_event->sensor = gnet_inetaddr_get_canonical_name (sim_rule_get_sensor(rule_root));
 
 	      new_event->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
 	      new_event->plugin_sid = sim_directive_get_id (backlog);
@@ -510,12 +507,12 @@ sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
 		      
 		    	  if (rule->type == SIM_RULE_TYPE_MONITOR)
 						{	
-						  SimCommand *cmd = sim_command_new_from_rule (rule);
+					//	  SimCommand *cmd = sim_command_new_from_rule (rule);
 						  sim_server_push_session_plugin_command (ossim.server, 
 																										  SIM_SESSION_TYPE_SENSOR, 
 																										  sim_rule_get_plugin_id (rule),
-																										  cmd);
-						  g_object_unref (cmd);
+																										  rule);
+						//  g_object_unref (cmd);
 											
 						}
 		      

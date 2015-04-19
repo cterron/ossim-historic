@@ -21,16 +21,19 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Sensor.inc';
     require_once 'classes/Net_sensor_reference.inc';
     require_once 'classes/RRD_config.inc';
+    require_once 'classes/Security.inc';
+
+    $name = GET('name');
+
+    ossim_valid($name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_SPACE, 'illegal:'._("Net name"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
     $db = new ossim_db();
     $conn = $db->connect();
-
-    if (!$name = validateVar($_GET["name"], OSS_ALPHA . OSS_SCORE . OSS_PUNC)) {
-      require_once("ossim_error.inc");
-      $error = new OssimError();
-      $error->display("WRONG_NET");
-    }
-    
+   
     if ($net_list = Net::get_list($conn, "WHERE name = '$name'")) {
         $net = $net_list[0];
     }

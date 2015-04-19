@@ -175,8 +175,8 @@ if ($options['graph_type'] == 'pie') {
     }
 
     if (!empty($options['graph_show_values'])) {
-        if (!method_exists($plot->value, 'show')) {
-            mydie("This JPGraph version does not support 'Show values', please update it.");
+        if (!isset($plot->value) || !method_exists($plot->value, 'show')) {
+            mydie("This JPGraph version does not support 'Show values'");
         }
         $plot->value->Show();
     }

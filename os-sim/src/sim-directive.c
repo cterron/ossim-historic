@@ -693,7 +693,7 @@ sim_directive_backlog_match_by_event (SimDirective  *directive,
 									//wich is called from sim_organizer_correlation).
   {
     SimRule *rule = (SimRule *) node->data;
-
+    
     if (sim_rule_match_by_event (rule, event))
 		{
 		  GTime time_last = time (NULL);
@@ -813,6 +813,7 @@ sim_directive_set_rule_vars (SimDirective     *directive,
   gint        port;
   gint        sid;
   SimProtocolType  protocol;
+	gchar				*aux = NULL;
 
   g_return_if_fail (directive);
   g_return_if_fail (SIM_IS_DIRECTIVE (directive));
@@ -836,21 +837,33 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 
 		rule_up = (SimRule *) node_up->data;
 
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_vars: rule name: %s",sim_rule_get_name(rule));					
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_vars: type: %d",var->type);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_vars: attr: %d",var->attr);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_vars: negated: %d",var->negated);
+		
+		
 		//"node" function parameter is a children node. We need to add to that node the src_ip, port, etc from the
-		//node whose level is referencec. ie. if this is the children2 in root_node->children1->children2, and we
+		//node whose level is referenced. ie. if this is the children2 in root_node->children1->children2, and we
 		//have something like 1:PLUGIN_SID in children2, we have to add the plugin_sid from root_node to children2
 		switch (var->type)
 		{
 			case SIM_RULE_VAR_SRC_IA:
 						ia = sim_rule_get_src_ia (rule_up);
 
-					  switch (var->attr)
-				    {
+					  switch (var->attr)	
+				    {										
 					    case SIM_RULE_VAR_SRC_IA:
-								    sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr (ia));
+										if (var->negated)
+									    sim_rule_append_src_inet_not (rule, sim_inet_new_from_ginetaddr (ia));
+										else
+									    sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr (ia));
 							      break;
 					    case SIM_RULE_VAR_DST_IA:
-							      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr (ia));
+										if (var->negated)
+											sim_rule_append_dst_inet_not (rule, sim_inet_new_from_ginetaddr (ia));
+										else
+											sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr (ia));
 							      break;
 					    default:
 							      break;
@@ -863,10 +876,16 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 						switch (var->attr)
 						{
 							case SIM_RULE_VAR_SRC_IA:
-										sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr  (ia));
+										if (var->negated)																				
+											sim_rule_append_src_inet_not (rule, sim_inet_new_from_ginetaddr  (ia));
+										else
+											sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr  (ia));
 										break;
 							case SIM_RULE_VAR_DST_IA:
-										sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr  (ia));
+										if (var->negated)																					
+											sim_rule_append_dst_inet_not (rule, sim_inet_new_from_ginetaddr  (ia));
+										else
+											sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr  (ia));
 										break;
 							default:
 										break;
@@ -879,47 +898,176 @@ sim_directive_set_rule_vars (SimDirective     *directive,
 						switch (var->attr)
 						{
 							case SIM_RULE_VAR_SRC_PORT:
-										sim_rule_append_src_port (rule, port);
+	                  if (var->negated)																			
+											sim_rule_append_src_port_not (rule, port);
+										else
+											sim_rule_append_src_port (rule, port);
 										break;
 							case SIM_RULE_VAR_DST_PORT:
-										sim_rule_append_dst_port (rule, port);
+                    if (var->negated)
+											sim_rule_append_dst_port_not (rule, port);
+										else											
+											sim_rule_append_dst_port (rule, port);
 										break;
 							default:
 										break;
 						}
 						break;
-
+	
 			case SIM_RULE_VAR_DST_PORT:
 						port = sim_rule_get_dst_port (rule_up);
-
+						
+/*-------------
+g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_var1");
+sim_rule_print(rule);
+						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_vars: negated: %d",var->negated);
+-------------*/
+			
 						switch (var->attr)
 						{
 							case SIM_RULE_VAR_SRC_PORT:
-										sim_rule_append_src_port (rule, port);
+                    if (var->negated)
+											sim_rule_append_src_port_not (rule, port);
+										else
+											sim_rule_append_src_port (rule, port);
 										break;
 							case SIM_RULE_VAR_DST_PORT:
-										sim_rule_append_dst_port (rule, port);
+                    if (var->negated)
+											sim_rule_append_dst_port_not (rule, port);
+										else											
+											sim_rule_append_dst_port (rule, port);
 										break;
 							default:
 										break;
 						}
 						break;
 
+/*-------------
+g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_set_rule_var2");
+sim_rule_print(rule);
+-------------*/
+	
 			case SIM_RULE_VAR_PLUGIN_SID:
 						sid = sim_rule_get_plugin_sid (rule_up);
-						sim_rule_append_plugin_sid (rule, sid);
+            if (var->negated)
+							sim_rule_append_plugin_sid_not (rule, sid);
+						else
+							sim_rule_append_plugin_sid (rule, sid);
 						break;
 
 			case SIM_RULE_VAR_PROTOCOL:
 						protocol = sim_rule_get_protocol (rule_up);
-						sim_rule_append_protocol (rule, protocol);
+            if (var->negated)
+							sim_rule_append_protocol_not (rule, protocol);
+						else
+							sim_rule_append_protocol (rule, protocol);
 						break;
 
       case SIM_RULE_VAR_SENSOR:
             sensor = sim_rule_get_sensor (rule_up);
-						gchar *aux = gnet_inetaddr_get_canonical_name (sensor);
-            sim_rule_append_sensor (rule, sim_sensor_new_from_hostname(aux));
+						aux = gnet_inetaddr_get_canonical_name (sensor);
+            if (var->negated)
+							sim_rule_append_sensor_not (rule, sim_sensor_new_from_hostname(aux));
+						else
+							sim_rule_append_sensor (rule, sim_sensor_new_from_hostname(aux));
             break;
+
+			case SIM_RULE_VAR_FILENAME:
+            aux = g_strdup (sim_rule_get_filename (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_FILENAME);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_FILENAME);
+            break;
+						
+			case SIM_RULE_VAR_USERNAME:
+            aux = g_strdup (sim_rule_get_username (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERNAME);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERNAME);
+            break;
+
+			case SIM_RULE_VAR_PASSWORD:
+            aux = g_strdup (sim_rule_get_password (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_PASSWORD);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_PASSWORD);
+            break;
+
+			case SIM_RULE_VAR_USERDATA1:
+            aux = g_strdup (sim_rule_get_userdata1 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA1);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA1);
+            break;
+
+			case SIM_RULE_VAR_USERDATA2:
+            aux = g_strdup (sim_rule_get_userdata2 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA2);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA2);
+            break;
+
+			case SIM_RULE_VAR_USERDATA3:
+            aux = g_strdup (sim_rule_get_userdata3 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA3);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA3);
+            break;
+
+			case SIM_RULE_VAR_USERDATA4:
+            aux = g_strdup (sim_rule_get_userdata4 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA4);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA4);
+            break;
+
+			case SIM_RULE_VAR_USERDATA5:
+            aux = g_strdup (sim_rule_get_userdata5 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA5);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA5);
+            break;
+
+			case SIM_RULE_VAR_USERDATA6:
+            aux = g_strdup (sim_rule_get_userdata6 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA6);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA6);
+            break;
+
+			case SIM_RULE_VAR_USERDATA7:
+            aux = g_strdup (sim_rule_get_userdata7 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA7);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA7);
+            break;
+
+			case SIM_RULE_VAR_USERDATA8:
+            aux = g_strdup (sim_rule_get_userdata8 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA8);
+						else
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA8);
+            break;
+
+			case SIM_RULE_VAR_USERDATA9:
+            aux = g_strdup (sim_rule_get_userdata9 (rule_up));												
+            if (var->negated)
+							sim_rule_append_generic_not (rule, aux, SIM_RULE_VAR_USERDATA9);
+						else	
+							sim_rule_append_generic (rule, aux, SIM_RULE_VAR_USERDATA9);
+            break;
+
 
 			default:
 						break;

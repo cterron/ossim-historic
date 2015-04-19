@@ -105,10 +105,6 @@ if ($event_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
     if($rrd_list_temp = RRD_config::get_list($conn, "WHERE profile = \"global\"")) {
     $rrd_temp = $rrd_list_temp[0];
     }
-/*    if(($event->get_count() / $perl_interval) <
-    ($rrd_temp->get_col($event->get_what(), "persistence")) && $_GET["acked"] != -1) {
-    continue;
-    } */
 ?>
 <tr>
 <th> 

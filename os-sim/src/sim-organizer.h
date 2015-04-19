@@ -90,6 +90,20 @@ void              sim_organizer_correlation                     (SimOrganizer  *
 /* Correlate Function */
 void              sim_organizer_snort                           (SimOrganizer  *organizer,
 																																 SimEvent      *event);
+gint							sim_organizer_snort_signature_get_id					(SimDatabase  *db_snort,
+																																	gchar        *name);
+
+void							sim_organizer_snort_extra_data_insert 				(SimDatabase  *db_snort,
+                  													                     SimEvent     *event,
+													                                       gint          sid,
+                          													             gulong        cid);
+
+void							sim_organizer_snort_event_sidcid_insert				(SimDatabase  *db_snort,
+																																	SimEvent      *event,
+												                                          gint          sid,
+												                                          gulong        cid,
+																																	gint					sig_id);
+
 /* RRD anomaly Function */
 void              sim_organizer_rrd           	                (SimOrganizer  *organizer,
 																																 SimEvent      *event);

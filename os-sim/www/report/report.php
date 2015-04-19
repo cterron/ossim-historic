@@ -21,7 +21,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     require_once 'classes/Host_os.inc';
 
     $order = GET('order') ? GET('order') : 'hostname';
-    if (!ossim_valid($order, OSS_ALPHA . OSS_SPACE . OSS_PUNC, 'ilegal:'._("Order"))) {
+    if (!ossim_valid($order, OSS_ALPHA . OSS_SPACE . OSS_PUNC, 'illegal:'._("Order"))) {
         die(ossim_error());
     }
 ?>

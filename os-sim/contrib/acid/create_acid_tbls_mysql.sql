@@ -28,6 +28,11 @@
 #   TABLE acid_ag_alert: stores the IDs of the alerts in an Alert Group (AG)
 #
 #   TABLE acid_ip_cache: caches DNS and whois information
+#
+#   TABLE base_roles: Stores the User roles available for the
+#                     Authentication System
+#
+#   TABLE base_users: Stores the user names and passwords
 
 CREATE TABLE acid_event   ( sid                 INT UNSIGNED NOT NULL,
                             cid                 INT UNSIGNED NOT NULL,     
@@ -83,6 +88,29 @@ CREATE TABLE acid_ip_cache( ipc_ip                  INT           UNSIGNED NOT N
                             INDEX               (ipc_ip) );
 
 --
+-- BASE tables
+--
+CREATE TABLE `base_roles` ( `role_id`           int(11)         NOT NULL,
+                            `role_name`         varchar(20)     NOT NULL,
+                            `role_desc`         varchar(75)     NOT NULL,
+                            PRIMARY KEY         (`role_id`));
+CREATE TABLE `base_users` ( `usr_id`            int(11)         NOT NULL,
+                            `usr_login`         varchar(25)     NOT NULL,
+                            `usr_pwd`           varchar(32)     NOT NULL,
+                            `usr_name`          varchar(75)     NOT NULL,
+                            `role_id`           int(11)         NOT NULL,
+                            `usr_enabled`       int(11)         NOT NULL,
+                            PRIMARY KEY         (`usr_id`),
+                            INDEX               (`usr_login`));
+
+INSERT INTO `base_roles` (`role_id`, `role_name`, `role_desc`) VALUES (1, 'Admin', 'Administrator'),
+(10, 'User', 'Authenticated User'),
+(10000, 'Anonymous', 'Anonymous User'),
+(50, 'ag_editor', 'Alert Group Editor');
+
+
+
+--
 -- OSSIM Patch
 --
 
@@ -109,6 +137,30 @@ CREATE TABLE ossim_event (
         INDEX           (risk_c),
         INDEX           (risk_a)
 );
+
+DROP TABLE IF EXISTS extra_data;
+CREATE TABLE extra_data (
+        sid             INT8 NOT NULL,
+        cid             INT8 NOT NULL,
+        filename        varchar(255),
+        username        varchar(255),
+        password        varchar(255),
+        userdata1       varchar(255),
+        userdata2       varchar(255),
+        userdata3       varchar(255),
+        userdata4       varchar(255),
+        userdata5       varchar(255),
+        userdata6       varchar(255),
+        userdata7       varchar(255),
+        userdata8       varchar(255),
+        userdata9       varchar(255),
+				PRIMARY KEY (sid, cid)
+);
+
+
+
+
+
 
 --
 -- Alter Tables acid_event

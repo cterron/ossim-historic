@@ -44,7 +44,6 @@ ossim_valid($ex_servs, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_servs"));
 ossim_valid($ex_servp, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("ex_servp"));
 ossim_valid($num, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("num"));
 
-
 if (ossim_error()) {
     die(ossim_error());
 }
@@ -169,9 +168,9 @@ else
 <th><?php echo "Host"; ?></th>
 <th><?php echo gettext("Sensor [interface]"); ?> </th>
 <th><?php echo gettext("Port"); ?></th>
-<th><?php echo gettext("Protocol [Version]"); ?> </th>
+<th><?php echo gettext("Service [Version]"); ?> </th>
 <th><?php echo gettext("Date"); ?></th>
-<th><?php echo gettext("Previous Protocol [Version]"); ?> </th>
+<th><?php echo gettext("Previous Service [Version]"); ?> </th>
 <th><?php echo gettext("Previous Date"); ?> </th>
 <th><?php echo gettext("Delta"); ?> </th>
 <th><?php echo gettext("Ack"); ?> </th>
@@ -188,7 +187,8 @@ if ($Host_services_list) {
     foreach($Host_services_list as $Host_services) {
 ?>
 
-<tr <?php  if ($Host_services["service"] != $Host_services["old_service"]) echo 'bgcolor="#f7a099"';
+<tr <?php  if (($Host_services["service"] != $Host_services["old_service"])||
+               ($Host_services["version"] != $Host_services["old_version"])) echo 'bgcolor="#f7a099"';
 		else echo 'bgcolor="#bbcadd"';
 ?>>
 <?php
@@ -214,9 +214,9 @@ if ($show_anom == "1") echo "&show_anom=1"; ?>"><img src="../pixmaps/arrow2.gif"
 <td><?php echo $Host_services["ip"];?></td>
 <td><?php echo $Host_services["sensor"]."[".$Host_services["interface"]."]";?>&nbsp;</td>
 <td><?php echo $Host_services["port"];?>&nbsp;</td>
-<td><?php echo getprotobynumber($Host_services["protocol"])." [".$Host_services["version"]."]";?>&nbsp;</td>
+<td><?php echo $Host_services["service"]."/".getprotobynumber($Host_services["protocol"])." [".$Host_services["version"]."]";?>&nbsp;</td>
 <td><?php echo $Host_services["date"];?>&nbsp;</td>
-<td><?php echo getprotobynumber($Host_services["old_protocol"])." [".$Host_services["old_version"]."]";?>&nbsp;</td>
+<td><?php echo $Host_services["old_service"]."/".getprotobynumber($Host_services["old_protocol"])." [".$Host_services["old_version"]."]";?>&nbsp;</td>
 <td><?php echo $Host_services["old_date"]?>&nbsp;</td>
 <td><?php echo $delta;?>&nbsp;</td>
 <td>
@@ -246,14 +246,16 @@ if ($Host_services_ip_list = Host_services::get_ip_list($conn, $Host_services["i
 	  <td><?php echo $Host_services_ip["ip"];?></td>
 	  <td><?php echo $Host_services_ip["sensor"]."[".$Host_services_ip["interface"]."]";?></td>
 	  <td><?php echo $Host_services_ip["port"];?>&nbsp;</td>
-      <td><?php echo getprotobynumber($Host_services_ip["protocol"])." [".$Host_services_ip["version"]."]";?>&nbsp;</td>
+      <td><?php echo $Host_services_ip["service"]."/".getprotobynumber($Host_services_ip["protocol"])." [".$Host_services_ip["version"]."]";?>&nbsp;</td>
       <td><?php echo $Host_services_ip["date"];?>&nbsp;</td>
-      <td><?php echo getprotobynumber($Host_services_ip["old_protocol"])." [".$Host_services_ip["old_version"]."]";?>&nbsp;</td>
+      <td><?php echo $Host_services_ip["old_service"]."/".getprotobynumber($Host_services_ip["old_protocol"])." [".$Host_services_ip["old_version"]."]";?>&nbsp;</td>
 	  <td><?php echo $Host_services_ip["old_date"]?>&nbsp;</td>
 
 <?php //comprobación protocol version?>
-      <td <?php if ($Host_services_ip["services"] != $Host_services_ip["old_services"]) echo
-'bgcolor="#f7a099"';?>><?php echo $delta; ?>
+    
+      <td <?php if (($Host_services_ip["service"] != $Host_services_ip["old_service"]) ||
+                    ($Host_services_ip["version"] != $Host_services_ip["old_version"]))
+                echo 'bgcolor="#f7a099"';?>><?php echo $delta; ?>
       </td>
 <td>
 <input type="checkbox" name="ip,<?php echo $Host_services_ip["ip"];?>,<?php echo $Host_services_ip["sensor"];?>,<?php

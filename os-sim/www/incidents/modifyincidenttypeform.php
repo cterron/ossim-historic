@@ -15,13 +15,15 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
   <h1> <?php echo gettext("Modify Incident Type"); ?> </h1>
 
 <?php
-    /* check user arg */
-    if (!$inctype_id = validateVar($_GET["id"],OSS_ALPHA . OSS_SCORE .
-        OSS_SPACE)) {
-         require_once("ossim_error.inc");
-         $error = new OssimError();
-         $error->display("WRONG_INCIDENT_ID");
-     }
+    require_once 'classes/Security.inc';
+
+    $inctype_id = GET('id');
+    
+    ossim_valid($inctype_id, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Incident type"));
+
+    if (ossim_error()) {
+           die(ossim_error());
+    }
 
     require_once ('ossim_db.inc');
     require_once ("classes/Incident_type.inc");

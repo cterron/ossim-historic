@@ -76,9 +76,10 @@ struct _SimRuleClass {
 };
 
 struct _SimRuleVar {
-  SimRuleVarType   type;
-  SimRuleVarType   attr;
+  SimRuleVarType   type;	//ie.: in the "from" in directives, you can put n:SRC_IP or n:DST_IP. This variable stores wich one is the right
+  SimRuleVarType   attr;	//this is used to know wich field is referenced in directives ("from", "to", "src_ip"...)
   gint             level;
+  gboolean					negated;	//if this is YES, then the field referenced will be stored in the negated fields (ie. src_ports_not, plugin_sids_not...) 
 };
 
 GType             sim_rule_get_type                        (void);
@@ -124,38 +125,38 @@ gboolean					sim_rule_is_time_out										(SimRule      *rule);
 	
 gint              sim_rule_get_occurrence                  (SimRule     *rule);
 void              sim_rule_set_occurrence                  (SimRule     *rule,
-							    gint         occurrence);
+																												    gint         occurrence);
 gint              sim_rule_get_count                       (SimRule     *rule);
 void              sim_rule_set_count                       (SimRule     *rule,
-							    gint         count);
+																												    gint         count);
 
 SimConditionType  sim_rule_get_condition                   (SimRule     *rule);
 void              sim_rule_set_condition                   (SimRule           *rule,
-							    SimConditionType   condition);
+																												    SimConditionType   condition);
 gchar*            sim_rule_get_value                       (SimRule     *rule);
 void              sim_rule_set_value                       (SimRule     *rule,
-							    const gchar *value);
+																												    const gchar *value);
 gint              sim_rule_get_interval                    (SimRule     *rule);
 void              sim_rule_set_interval                    (SimRule     *rule,
-							    gint         interval);
+																												    gint         interval);
 gboolean          sim_rule_get_absolute                    (SimRule     *rule);
 void              sim_rule_set_absolute                    (SimRule     *rule,
 							    gboolean     absolute);
 
 gint              sim_rule_get_plugin_id                   (SimRule     *rule);
 void              sim_rule_set_plugin_id                   (SimRule     *rule,
-							    gint         plugin_id);
+																												    gint         plugin_id);
 gint              sim_rule_get_plugin_sid                  (SimRule     *rule);
 void              sim_rule_set_plugin_sid                  (SimRule     *rule,
-							    gint         plugin_sid);
+																												    gint         plugin_sid);
 void							sim_rule_set_not_data											(SimRule      *rule);
 	
 GInetAddr*        sim_rule_get_src_ia                      (SimRule     *rule);
 void              sim_rule_set_src_ia                      (SimRule     *rule,
-							    GInetAddr   *ia);
+																												    GInetAddr   *ia);
 GInetAddr*        sim_rule_get_dst_ia                      (SimRule     *rule);
 void              sim_rule_set_dst_ia                      (SimRule     *rule,
-							    GInetAddr   *ia);
+																												    GInetAddr   *ia);
 
 GInetAddr*        sim_rule_get_sensor                      (SimRule     *rule);
 void              sim_rule_set_sensor                      (SimRule     *rule,
@@ -163,47 +164,47 @@ void              sim_rule_set_sensor                      (SimRule     *rule,
 
 gint              sim_rule_get_src_port                    (SimRule     *rule);
 void              sim_rule_set_src_port                    (SimRule     *rule,
-							    gint         src_port);
+																												    gint         src_port);
 gint              sim_rule_get_dst_port                    (SimRule     *rule);
 void              sim_rule_set_dst_port                    (SimRule     *rule,
-							    gint         dst_port);
+																												    gint         dst_port);
 
 void              sim_rule_append_plugin_sid               (SimRule     *rule,
-							    gint         plugin_sid);
+																												    gint         plugin_sid);
 void              sim_rule_remove_plugin_sid               (SimRule     *rule,
-							    gint         plugin_sid);
+																												    gint         plugin_sid);
 GList*            sim_rule_get_plugin_sids                 (SimRule     *rule);
 
 
 void              sim_rule_append_src_inet                 (SimRule     *rule,
-							    SimInet     *inet);
+																												    SimInet     *inet);
 void              sim_rule_remove_src_inet                 (SimRule     *rule,
-							    SimInet     *inet);
+																												    SimInet     *inet);
 GList*            sim_rule_get_src_inets                   (SimRule     *rule);
 
 void              sim_rule_append_dst_inet                 (SimRule     *rule,
-							    SimInet     *inet);
+																												    SimInet     *inet);
 void              sim_rule_remove_dst_inet                 (SimRule     *rule,
-							    SimInet     *inet);
+																												    SimInet     *inet);
 GList*            sim_rule_get_dst_inets                   (SimRule     *rule);
 
 
 void              sim_rule_append_src_port                 (SimRule     *rule,
-							    gint         src_port);
+																													  gint         src_port);
 void              sim_rule_remove_src_port                 (SimRule     *rule,
-							    gint         src_port);
+																												    gint         src_port);
 GList*            sim_rule_get_src_ports                   (SimRule     *rule);
 
 void              sim_rule_append_dst_port                 (SimRule     *rule,
-							    gint         dst_port);
+																												    gint         dst_port);
 void              sim_rule_remove_dst_port                 (SimRule     *rule,
-							    gint         dst_port);
+																												    gint         dst_port);
 GList*            sim_rule_get_dst_ports                   (SimRule     *rule);
 
 void              sim_rule_append_protocol                 (SimRule     *rule,
-							    SimProtocolType  protocol);
+																												    SimProtocolType  protocol);
 void              sim_rule_remove_protocol                 (SimRule     *rule,
-							    SimProtocolType  protocol);
+																												    SimProtocolType  protocol);
 GList*            sim_rule_get_protocols                   (SimRule     *rule);
 
 void              sim_rule_append_sensor    	             (SimRule     *rule,
@@ -212,7 +213,43 @@ void              sim_rule_remove_sensor    	             (SimRule     *rule,
 																												    SimSensor		*sensor);
 GList*            sim_rule_get_sensors 	          	       (SimRule     *rule);
 
-
+gchar*						sim_rule_get_filename											(SimRule   *rule);
+void							sim_rule_set_filename											(SimRule   *rule,
+																															gchar			*filename);
+gchar*						sim_rule_get_username											(SimRule   *rule);
+void							sim_rule_set_username											(SimRule   *rule,
+																															gchar			*username);
+gchar*						sim_rule_get_password											(SimRule   *rule);
+void							sim_rule_set_password											(SimRule   *rule,
+																															gchar			*password);
+gchar*						sim_rule_get_userdata1										(SimRule   *rule);
+void							sim_rule_set_userdata1										(SimRule   *rule,
+																															gchar			*userdata1);
+gchar*						sim_rule_get_userdata2										(SimRule   *rule);
+void							sim_rule_set_userdata2										(SimRule   *rule,
+																															gchar			*userdata2);
+gchar*						sim_rule_get_userdata3										(SimRule   *rule);
+void							sim_rule_set_userdata3										(SimRule   *rule,
+																															gchar			*userdata3);
+gchar*						sim_rule_get_userdata4										(SimRule   *rule);
+void							sim_rule_set_userdata4										(SimRule   *rule,
+																															gchar			*userdata4);
+gchar*						sim_rule_get_userdata5										(SimRule   *rule);
+void							sim_rule_set_userdata5										(SimRule   *rule,
+																															gchar			*userdata5);
+gchar*						sim_rule_get_userdata6										(SimRule   *rule);
+void							sim_rule_set_userdata6										(SimRule   *rule,
+																															gchar			*userdata6);
+gchar*						sim_rule_get_userdata7										(SimRule   *rule);
+void							sim_rule_set_userdata7										(SimRule   *rule,
+																															gchar			*userdata7);
+gchar*						sim_rule_get_userdata8										(SimRule   *rule);
+void							sim_rule_set_userdata8										(SimRule   *rule,
+																															gchar			*userdata8);
+gchar*						sim_rule_get_userdata9										(SimRule   *rule);
+void							sim_rule_set_userdata9										(SimRule   *rule,
+																															gchar			*userdata9);
+	
 
 void              sim_rule_append_var                      (SimRule     *rule,
 							    SimRuleVar  *var);

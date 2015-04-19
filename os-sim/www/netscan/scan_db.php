@@ -27,10 +27,11 @@
 
     function update_db($global_info, $scan)
     {
-        require_once ('ossim_db.inc');
-        require_once ('classes/Host.inc');
-        require_once ('classes/Host_scan.inc');
-        require_once ('classes/Host_services.inc');
+        require_once 'ossim_db.inc';
+        require_once 'classes/Host.inc';
+        require_once 'classes/Host_scan.inc';
+        require_once 'classes/Host_services.inc';
+        require_once 'classes/Security.inc';
 
         $db = new ossim_db();
         $conn = $db->connect();
@@ -47,9 +48,14 @@
                 $sensors = array();
                 for ($j = 1; $j <= $global_info["nsens"]; $j++) {
                     $name = "mboxs" . $j;
-                    if (validateVar($global_info[$name])) {
-                        $sensors[] = validateVar($global_info[$name]);
+                    ossim_valid($global_info[$name], OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,
+                    OSS_SPACE, 'illegal:'._("Policy id"));
+
+                    if (ossim_error()) {
+                            die(ossim_error());
                     }
+                    if (!empty($global_info[$name]))
+                        $sensors[] = $global_info[$name];
                 }
 
 
@@ -104,17 +110,17 @@
                 }
             
                 /* services */
-                Host_services::delete($conn, $ip);
                 foreach ($scan[$ip]["services"] as $port_proto => $service)
                 {
                     Host_services::insert($conn,
                                           $ip,
                                           $service["port"],
+                                          strftime("%Y-%m-%d %H:%M:%S"),
+                                          $_SERVER["SERVER_ADDR"],
                                           $service["proto"],
                                           $service["service"],
                                           $service["service"],
                                           $service["version"],
-                                          strftime("%Y-%m-%d %H:%M:%S"),
                                           1);
                 }
             

@@ -24,7 +24,7 @@ class Net_group_scan {
     function get_list($conn, $args = "") 
     {
         $query = OssimQuery("SELECT * FROM net_group_scan $args");
-
+        $list = array();
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {

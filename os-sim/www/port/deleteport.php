@@ -15,13 +15,19 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
   <h1> <?php echo gettext("Delete port group"); ?> </h1>
 
 <?php 
-    if (!$port_name = validateVar($_GET["portname"])) { 
-      require_once("ossim_error.inc");
-      $error = new OssimError();
-      $error->display("WRONG_PORTNAME");
-    }
 
-if (!$_GET["confirm"]) {
+require_once 'classes/Security.inc';
+
+$port_name = GET('portname');
+
+ossim_valid($port_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Port group name"));
+
+if (ossim_error()) {
+   die(ossim_error());
+}
+
+
+if (!GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a href="<?php echo $_SERVER["PHP_SELF"]."?portname=$port_name&confirm=yes"; ?>">
@@ -48,4 +54,3 @@ if (!$_GET["confirm"]) {
 
 </body>
 </html>
-

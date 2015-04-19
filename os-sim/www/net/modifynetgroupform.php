@@ -21,15 +21,19 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'ossim_db.inc';
     require_once 'classes/Net_group_reference.inc';
     require_once 'classes/RRD_config.inc';
+    require_once 'classes/Security.inc';
+
+    $name = GET('name');
+
+    ossim_valid($name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("name"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$name = validateVar($_GET["name"], OSS_ALPHA . OSS_PUNC . OSS_SCORE)) {
-         require_once("ossim_error.inc");
-         $error = new OssimError();
-         $error->display("WRONG_NET");
-    }
     if ($net_group_list = Net_group::get_list($conn, "WHERE name = '$name'")) {
         $net_group = $net_group_list[0];
     }
@@ -137,7 +141,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     <td class="left">
     <input type="checkbox" 
     <?php
-    $name = validateVar($net_group->get_name());
+    $name = $net_group->get_name();
     if(Net_group_scan::in_net_group_scan($conn, $name, 3001)){
         echo " CHECKED ";
     }

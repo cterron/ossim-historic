@@ -118,6 +118,20 @@ struct _SimEvent {
 	gchar							**data_storage; // This variable must be used ONLY to pass data between the sim-session and 
 																		//sim-organizer, where the event is stored in DB.
 	gboolean					store_in_DB;		//variable used to know if this specific event should be stored in DB or not.
+
+	/* additional data (not necessary used) */
+	gchar							*filename;
+	gchar							*username;
+	gchar							*password;
+	gchar							*userdata1;
+	gchar							*userdata2;
+	gchar							*userdata3;
+	gchar							*userdata4;
+	gchar							*userdata5;
+	gchar							*userdata6;
+	gchar							*userdata7;
+	gchar							*userdata8;
+	gchar							*userdata9;
 	
 };
 

@@ -224,7 +224,8 @@ function valid_ip($ip)
     {
         return true;
     }
-    ossim_set_error(_("Invalid IP address. Format allowed: nnn.nnn.nnn.nnn"));
+    ossim_set_error(_("Invalid IP address. Format allowed: nnn.nnn.nnn.nnn") .
+                    "<br>Introduced ip: '<b>$ip</b>'");
     return false;
 }
 
@@ -270,7 +271,18 @@ function GET($param)
  */
 function POST($param)
 {
-    return isset($_POST[$param]) ? strip($_POST[$param]) : null;
+    if (isset($_POST[$param])) {
+        if (!is_array($_POST[$param])) {
+            return strip($_POST[$param]);
+        } else {
+            $ret = array();
+            foreach ($_POST[$param] as $k => $v) {
+                $ret[$k] = strip($v);
+            }
+            return $ret;
+        }
+    }
+    return null;
 }
 
 /*

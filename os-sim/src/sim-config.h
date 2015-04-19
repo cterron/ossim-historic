@@ -73,12 +73,12 @@ struct _SimConfig {
     gchar    *filename;
   } log;
 
-  struct {
+/*  struct {
     gchar    *name;
     gchar    *ip;
     gchar    *interface;
   } sensor;
-
+*/
   struct {
     gchar    *filename;
   } directive;
@@ -88,6 +88,9 @@ struct _SimConfig {
   } scheduler;
 
   struct {
+		gchar			*name;
+		gchar			*ip;
+//		gchar			*interface;
     gint      port;
   } server;
 

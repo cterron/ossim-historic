@@ -95,7 +95,7 @@ void              sim_server_push_session_command          (SimServer       *ser
 void              sim_server_push_session_plugin_command   (SimServer       *server,
 																												    SimSessionType   session_type,
 																												    gint             plugin_id,
-																												    SimCommand      *command);
+																												    SimRule					*rule);
 static gpointer		sim_server_thread_monitor_requests				(gpointer data);
 	
 SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,

@@ -45,8 +45,10 @@ ossim_valid($ex_oss, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_oss"));
 ossim_valid($ex_mac, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_mac"));
 ossim_valid($ex_macs, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_macs"));
 ossim_valid($ex_serv, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_serv"));
+
+
 ossim_valid($ex_servs, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_servs"));
-ossim_valid($ex_servp, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ex_servp"));
+ossim_valid($ex_servp, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("ex_servp"));
 
 if (ossim_error()) {
     die(ossim_error());
@@ -132,10 +134,6 @@ if ($event_list_global = RRD_anomaly_global::get_list($conn, $where_clause,
     if($rrd_list_temp = RRD_config::get_list($conn, "WHERE profile = \"global\"")) {
     $rrd_temp = $rrd_list_temp[0];
     }
-/*    if(($event->get_count() / $perl_interval) <
-    ($rrd_temp->get_col($event->get_what(), "persistence")) && $_GET["acked"] != -1) {
-    continue;
-    } */
 ?>
 <tr>
 <th> 
@@ -180,19 +178,6 @@ if ($event_list = RRD_anomaly::get_list($conn, $where_clause, "order by
 anomaly_time desc","0","10")) {
     foreach($event_list as $event) {
     $ip = $event->get_ip();
-
-    /*
-    if($rrd_list_temp = RRD_config::get_list($conn, 
-                                             "where ip = inet_ntoa('$ip')"))
-    {
-        $rrd_temp = $rrd_list_temp[0];
-    }
-    if(($event->get_count() / $perl_interval) < ($rrd_temp->get_col($event->get_what(), "persistence")) && $_GET["acked"] != -1) {
-    continue;
-    }
-    */
-
-
 ?>
 <tr>
 <th>
@@ -477,8 +462,8 @@ echo gettext("Get full list"); ?> </a> ]
    	    <th> <?php echo gettext("Host"); ?> </th>
 	    <th> <?php echo gettext("Sensor"); ?> </th>
 	    <th> <?php echo gettext("Port"); ?> </th>
-	    <th> <?php echo gettext("Protocol [Version]"); ?> </th>
-	    <th> <?php echo gettext("Previous Protocol [Version]"); ?> </th>
+	    <th> <?php echo gettext("Service [Version]"); ?> </th>
+	    <th> <?php echo gettext("Previous Service [Version]"); ?> </th>
 	    <th> <?php echo gettext("When"); ?> </th>
 	    <th> <?php echo gettext("Ack"); ?> </th>
 	    <th> <?php echo gettext("Ignore"); ?> </th>
@@ -509,8 +494,8 @@ echo $ip;?>">
 <td colspan="1"><?php echo $anom_services["sensor"];?></td>
 <td colspan="1"><?php echo $anom_services["port"];?></td>
 <td colspan="1"><font color="red"><?php echo
-getprotobynumber($anom_services["protocol"])." [".$anom_services["version"]."]";?></font></td>
-<td colspan="1"><?php echo getprotobynumber($anom_services["old_protocol"])." [".$anom_services["old_version"]."]";?></td>
+$anom_services["service"]."/".getprotobynumber($anom_services["protocol"])."[".$anom_services["version"]."]";?></font></td>
+<td colspan="1"><?php echo $anom_services["old_service"]."/".getprotobynumber($anom_services["old_protocol"])." [".$anom_services["old_version"]."]";?></td>
 <td colspan="1"><?php echo $anom_services["date"];?></td>
 <td>
 <input type="checkbox" name="ip,<?php echo $anom_services["ip"];?>,<?php echo $anom_services["sensor"];?>,<?php
@@ -546,9 +531,8 @@ if (($ex_serv == $anom_services["ip"]) && ($ex_servs == $anom_services["sensor"]
 	</td>
     <td colspan="1"><?php echo $anom_services_ip["sensor"];?></td>
     <td colspan="1"><?php echo $anom_services_ip["port"];?></td>
-    <td colspan="1"><font color="red"><?php echo
-    getprotobynumber($anom_services_ip["protocol"])." [".$anom_services_ip["version"]."]";?></font></td>
-    <td colspan="1"><?php echo getprotobynumber($anom_services_ip["old_protocol"])." [".$anom_services_ip["old_version"]."]";?></td>
+    <td colspan="1"><font color="red"><?php echo $anom_services_ip["service"]."/".getprotobynumber($anom_services_ip["protocol"])." [".$anom_services_ip["version"]."]";?></font></td>
+    <td colspan="1"><?php echo $anom_services_ip["service"]."/".getprotobynumber($anom_services_ip["old_protocol"])." [".$anom_services_ip["old_version"]."]";?></td>
     <td colspan="1"><?php echo $anom_services_ip["date"];?></td>
     <td>
         <input type="checkbox" name="ip,<?php echo

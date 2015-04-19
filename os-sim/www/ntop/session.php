@@ -16,7 +16,7 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
 
     $sensor = GET('sensor');
 
-    ossim_valid($sensor, OSS_IP_ADDR, 'illegal:'._("Sensor"));
+    ossim_valid($sensor, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Sensor"));
 
     if (ossim_error()) {
             die(ossim_error());

@@ -1,0 +1,14 @@
+Template: ossim-framework/webserver
+Type: select
+Choices: Apache, Apache2, Apache-SSL, All, None
+Default: ${webserver}
+Description: Which web server would you like to reconfigure automatically?
+ Ossim requires a few things to be set up in your web server configuration
+ in order for the front end to function properly.
+ .
+ The Debian packaged version can usually automatically configure apache by
+ dropping a symlink into the /etc/APACHE-SERVER/conf.d directory.
+ Would you like me to do this? Say no if you aren't running apache or
+ you would prefer to set up the web server yourself. If you say yes
+ here, all configuration changes will also be removed when the packages
+ is purged.

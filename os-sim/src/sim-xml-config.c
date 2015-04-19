@@ -347,7 +347,7 @@ sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
  *
  *
  *
- */
+ *
 void
 sim_xml_config_set_config_sensor (SimXmlConfig  *xmlconfig,
 				  SimConfig     *config,
@@ -383,7 +383,7 @@ sim_xml_config_set_config_sensor (SimXmlConfig  *xmlconfig,
       xmlFree(value);      
     }
 }
-
+*/
 /*
  *
  *
@@ -608,6 +608,25 @@ sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
       config->server.port = strtol (value, (char **) NULL, 10);
       xmlFree(value);      
     }
+
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
+    {
+      config->server.name = g_strdup (value);
+      xmlFree(value);
+    }
+
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
+    {
+      config->server.ip = g_strdup (value);
+      xmlFree(value);
+    }
+
+/*  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERFACE)))
+    {
+      config->server.interface = g_strdup (value);
+      xmlFree(value);
+    }
+	*/
 }
 
 /*
@@ -850,7 +869,7 @@ sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
  */
 SimConfig*
 sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
-				     xmlNodePtr     node)
+																     xmlNodePtr     node)
 {
   SimConfig     *config;
   SimAction     *action;
@@ -862,55 +881,37 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
   g_return_val_if_fail (node != NULL, NULL);
   
   if (strcmp ((gchar *) node->name, OBJECT_CONFIG))
-    {
-      g_message ("Invalid config node %s", node->name);
-      return NULL;
-    }
+  {
+    g_message ("Invalid config node %s", node->name);
+    return NULL;
+  }
   
   config = sim_config_new ();
 
   children = node->xmlChildrenNode;
-  while (children) {
+  while (children) 
+	{
     if (!strcmp ((gchar *) children->name, OBJECT_LOG))
-      {
-	sim_xml_config_set_config_log (xmlconfig, config, children);
-      }
-    if (!strcmp ((gchar *) children->name, OBJECT_SENSOR))
-      {
-	sim_xml_config_set_config_sensor (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_log (xmlconfig, config, children);
+/*    if (!strcmp ((gchar *) children->name, OBJECT_SENSOR))
+			sim_xml_config_set_config_sensor (xmlconfig, config, children);*/
     if (!strcmp ((gchar *) children->name, OBJECT_DATASOURCES))
-      {
-	sim_xml_config_set_config_datasources (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_datasources (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_DIRECTIVE))
-      {
-	sim_xml_config_set_config_directive (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_directive (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_SCHEDULER))
-      {
-	sim_xml_config_set_config_scheduler (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_scheduler (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_SERVER))
-      {
-	sim_xml_config_set_config_server (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_server (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_SMTP))
-      {
-	sim_xml_config_set_config_smtp (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_smtp (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_NOTIFIES))
-      {
-	sim_xml_config_set_config_notifies (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_notifies (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_RSERVERS))
-      {
-	sim_xml_config_set_config_rservers (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_rservers (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_FRAMEWORK))
-      {
-	sim_xml_config_set_config_framework (xmlconfig, config, children);
-      }
+			sim_xml_config_set_config_framework (xmlconfig, config, children);
+		
     children = children->next;
   }
 

@@ -15,16 +15,17 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
   <h1> <?php echo gettext("Delete net"); ?> </h1>
 
 <?php 
-    if (!$_GET["name"]) { 
-     require_once("ossim_error.inc");
-     $error = new OssimError();
-     $error->display("WRONG_NET");
-     }
+require_once 'classes/Security.inc';
 
+$name = GET('name');
 
-$name = validateVar($_GET["name"], OSS_ALPHA . OSS_PUNC . OSS_SCORE);
+ossim_valid($name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_SPACE, 'illegal:'._("Net name"));
 
-if (!$_GET["confirm"]) {
+if (ossim_error()) {
+       die(ossim_error());
+}
+
+if (GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a 

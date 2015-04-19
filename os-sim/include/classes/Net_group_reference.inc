@@ -18,9 +18,9 @@ class Net_group_reference {
     
     function get_list($conn, $net) 
     {
-        $query = OssimQuery("SELECT * FROM net_group_reference WHERE
-        net_group_name = '$net'");
-        if (!$rs = &$conn->Execute($query)) {
+        $list = array();
+        $sql = "SELECT * FROM net_group_reference WHERE net_group_name = ?";
+        if (!$rs = &$conn->Execute($sql, array($net))) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

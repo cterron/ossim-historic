@@ -19,36 +19,47 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Net.inc';
     require_once 'classes/Net_scan.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'classes/Security.inc';
 
+    $nessus_action = GET('nessus');
+    $nagios_action = GET('nagios');
+    $net_name = GET('net_name');
+    $order = GET('order');
 
-    if (($nessus_action = validateVar($_GET["nessus"])) AND ($net_name =
-        validateVar($_GET["net_name"]))) 
+    ossim_valid($nagios_action, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Nagios action"));
+    ossim_valid($nessus_action, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Nessus action"));
+    ossim_valid($net_name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Net name"));
+    ossim_valid($order, OSS_ALPHA, OSS_SCORE, OSS_NULLABLE, OSS_SPACE, 'illegal:'._("Order"));
+
+    if (ossim_error()) {
+       die(ossim_error());
+    }
+
+    if ((!empty($nessus_action)) AND (!empty($net_name))) 
     {
         $db = new ossim_db();
         $conn = $db->connect();
         if ($nessus_action == "enable") {
             Net::enable_plugin($conn, $net_name, 3001);
-        } elseif ($nessus_action = "disable") {
+        } elseif ($nessus_action == "disable") {
             Net::disable_plugin($conn, $net_name, 3001);
         }
         $db->close($conn);
     }
-    if (($nagios_action = validateVar($_GET["nagios"])) AND ($net_name =
-        validateVar($_GET["net_name"]))) 
+    
+    if ((!empty($nagios_action)) AND (!empty($net_name))) 
     {
         $db = new ossim_db();
         $conn = $db->connect();
         if ($nagios_action == "enable") {
             Net::enable_plugin($conn, $net_name, 2007);
-        } elseif ($nagios_action = "disable") {
+        } elseif ($nagios_action == "disable") {
             Net::disable_plugin($conn, $net_name, 2007);
         }
         $db->close($conn);
     }
 
-
-
-    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_ALPHA . OSS_SPACE)) $order = "name";
+    if (empty($order)) $order = "name";
 ?>
 
   <table align="center">

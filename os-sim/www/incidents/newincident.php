@@ -12,14 +12,15 @@ require_once 'classes/Incident_anomaly.inc';
 $db = new ossim_db();
 $conn = $db->connect();
 
-$edit = isset($_GET['action']) && $_GET['action'] == 'edit' ? true : false;
-$ref  = !ossim_valid(@$_GET['ref'], OSS_LETTER) ? die("Ref required") : $_GET['ref']; 
+$edit = GET('action') && GET('action') == 'edit' ? true : false;
+
+$ref  = !ossim_valid(GET('ref'), OSS_LETTER) ? die("Ref required") : GET('ref'); 
 
 if ($edit) {
-    if (!ossim_valid(@$_GET['incident_id'], OSS_DIGIT)) {
+    if (!ossim_valid(GET('incident_id'), OSS_DIGIT)) {
         die("Wrong ID");
     }
-    $incident_id = $_GET['incident_id'];
+    $incident_id = GET('incident_id');
     $list = Incident::get_list($conn, "WHERE incident.id=$incident_id");
     if (count($list) != 1) die("Wrong ID");
     $incident = $list[0];

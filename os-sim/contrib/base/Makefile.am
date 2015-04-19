@@ -3,6 +3,7 @@ base_DATA = base.1.0.2.diff \
 	base.1.0.diff \
 	base.1.1.diff \
 	base.1.1.2.diff \
-	base.spec \
-	base-debian-build.tgz
+	base.1.2.2.diff \
+	base.1.2.5.diff \
+	base.spec
 EXTRA_DIST = $(base_DATA)

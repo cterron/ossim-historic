@@ -19,7 +19,7 @@ $sensor = GET('sensor');
 $interface = GET('interface');
 $proto = GET('proto');
 
-ossim_valid($sensor, OSS_IP_ADDR, 'illegal:'._("Sensor"));
+ossim_valid($sensor, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Sensor"));
 ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("interface"));
 ossim_valid($proto, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("proto"));
 

@@ -1,5 +1,113 @@
 # ChangeLog for OSSIM
 
+        26 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New feature for Executive panel: help labels
+        * Moved panel configs dir out from the doc root
+        * Fix export plugin not exporting window data like: help or title
+        * DB performance: new index for table "events"
+		
+        19 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Prepared the upgrade system for 0.9.9rc2
+        * Rewrote the draw_graph.pl (now draw_rrd.php) for best integration
+          into the framework
+		
+        14 Jun 2006 Alberto <alberto@ossim.net> : 
+        * Multiple servers: Now you can have each server in the same port if
+          you have multiple interfaces. Added to the server configuration "ip" and
+          "name". If you want, you can specify an IP to bind. By default, the IP to bind will be
+          "0.0.0.0" (all interfaces)
+        * Command Line:  Additionally, you can specify with command line the following new things
+          -explained with examples-. The command line has precedence over the config.xml file:
+												 
+            -i 192.168.1.1   <-- IP to bind
+            -p 7654          <-- port to listen to
+        * Keywords: Removes "sensor" keyword from server config.xml
+
+        09 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New tag for ticket email templates: TICKET_HISTORY, which will show
+          the whole list of past tickets related to the incident
+        * Behaviour change: now only the user herself and the admin are allowed
+          to change a user's password
+
+        08 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New tag for ticket email templates: EXTRA_INFO (valid for all kind of
+          incidents: events, metrics, alarms and anomalies)
+        * Some other fixes for the incidenst system
+
+        7 Jun 2006 Alberto <alberto@ossim.net> : 
+        * Directives: The following keywords has been added to directives.
+          They can be used with normal events as well as HIDS events. Other
+          events (MAC, OS, Service) will discard it.
+          - filename
+          - username
+          - password
+          - userdata1
+          - userdata2
+          - userdata3
+          - userdata4
+          - userdata5
+          - userdata6
+          - userdata7
+          - userdata8
+          - userdata9
+
+        07 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * POST() now supports arrays (was causing problems in for Plugin Groups)
+
+        05 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+		* New panel plugin: import/export panel configurations. This allows
+		  user to easily exchange custom graphs and window layouts.
+
+        31 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New configuration options:
+	        - configs_dir (where to store the configurations of user panels)
+			- plugins_dir (where to add new custom plugins for the panel)
+		* More HTML style and fixes detected in the panel
+
+        29 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Prepared the upgrade system for the new upcomming 0.9.9rc1 release
+
+        26 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Security: disallow non-manip SQl statements in the Executive panel
+        * Several fixes and improvements for the panel
+
+        24 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Enhanced error messages detected in user input
+        * Fixes for bugs detected in Configuration -> Users
+		* Added new perms for user: Show Executive Panel & Edit Executive Panel
+		* Changed default perms for:
+			Incidents -> Incidents to allow
+			Incidents -> Report to allow
+			Tools -> RuleViewer to deny
+			Tools -> Backup to deny
+
+        12 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Corrected several typos recently introduced
+        * Added the "Loading.." label in Executive panel
+
+        08 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Unveiled the Upgrade system (now visible at Configuration -> Upgrade)
+        * More Executive panel works
+
+        03 May 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * More works on Executive panel
+        * Security.inc: new constants OSS_USER and OSS_INPUT
+        * Minor fixes in incidents system
+        * Improved sensor stats
+
+        26 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+		* Security.inc: new function REQUEST()
+		* Security.inc: fixes for nullable+mail and ip addres validations
+		* Attachments for incident tickets working again
+		* Graphs now show errors as a graph instead of a broken image
+
+        20 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Continued the work in the Executive panel (new plugins, improvements,
+          fixes, etc)
+
+        13 Apr 2006 DK <dk@ossim.net> :
+        * Nessus scan improvements, everything but restoring should work now.
+				
         12 Apr 2006 Alberto <alberto@ossim.net> : 
         * C & A: If an event has a plugin_sid with a 0 priority, it won't affect to the C & A.
         * Directives: Now is possible to negate individual elements in them. This is based on a Dmitri (thx) patch
@@ -13,18 +121,38 @@
     
           The formats accepted are shown in Correlation->directives.
 
-        13 Apr 2006 DK <dk@ossim.net> :
-        * Nessus scan improvements, everything but restoring should work now.
+        12 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New Feature: Customizable executive control panel
 
         12 Apr 2006 Alberto <alberto@ossim.net> : 
         * ossim-server now understands "SENSOR" in directives. The multiple
           formats accepted are shown in Correlation->directives.
 
+        10 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Security: don't allow access to incident graphs if not logged in
+        * Minor coding style fixes
+
         05 Apr 2006 DK <dk@ossim.net> :
         * Agent: enable new Juniper Netscreen FW, might need some testing. Thanks to Dmitri Belotchkine again.
 
+        05 Apr 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * New feature: Plugin Groups (replaces Signature Groups)
+        * Revised files related to policy handling
+        * New functions for Security.inc: POST() and GET() for safe retrieving
+          vars from the globals $_GET and _$POST.
+        * Commited the prototype.js file to the CVS
+
         29 Mar 2006 DK <dk@ossim.net> : 
         * Policy->Policy: Add store (yes/no) option, add priority -1 meaning "Do not alter priority".
+
+        29 Mar 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Fixes for session handling and control panel
+        * Performance: caching the phpgacl object to avoid redundant queries
+          and call to the filesystem
+
+        22 Mar 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Several UI minor improvements
+        * New function required() in Security.inc
 
         20 Mar 2006 DK <dk@ossim.net> : 
         * Ntop 3.2 aberrant behaviour patch, rrdPlugin.c partially rewritten: contributed again by Igor N. Indick.
@@ -40,6 +168,10 @@
           agent if it has some field incorrect. Now, the server won't accept any
           event if it has some rare field.                
         * Fixed race condition
+
+        1 Mar 2006 Tomas V.V.cox <tvvcox@ossim.net> :
+        * Fixes for the upgrade system and incident
+        * Changed validation constants from VAR_ to OSS_
 
         24 Feb 2006 DK <dk@ossim.net> : 
         * Ntop 3.2 aberrant behaviour patch: contributed by Igor N. Indick.

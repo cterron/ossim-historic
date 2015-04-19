@@ -387,15 +387,32 @@ class Host_services{
 
     function insert($conn, $host, $port, $date, $sensor, $protocol, $service, $service_type, $version, $origin)
     {
-        $sql = "INSERT INTO host_services (ip, port, protocol, service,
-                service_type, origin, date, sensor, version, anom) VALUES 
-                (inet_aton(?), ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, inet_aton(?),
-                ?,'0')";
-        $params = array($host, $port, $protocol, $service, $service_type,
-                        $origin, $sensor, $version);
-        if ($conn->Execute($sql, $params) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        $sql = "SELECT *, inet_ntoa(ip) as ip_addr, inet_ntoa(sensor) as
+                ip_sensor from host_services where ip= inet_aton(?) 
+                and port = ? and sensor=inet_aton(?)";
+        $params = array($host, $port, $sensor);
+        if (!$aux = &$conn->Execute($sql, $params)) {
+            print $conn->ErrorMsg();
+        } else {
+            $protocol_aux = $aux->fields["protocol"];
+            $version_aux = $aux->fields["version"];
+            $service_aux = $aux->fields["service"];
+            $service_type_aux = $aux->fields["service_type"];
+        }    
+        
+        if (($protocol_aux != $protocol) || ($version_aux != $version) ||
+            ($service_aux != $service) || ($service_type_aux != $service_type))
+        {
+            $sql = "INSERT INTO host_services (ip, port, protocol, service,
+                    service_type, origin, date, sensor, version, anom) VALUES 
+                    (inet_aton(?), ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, inet_aton(?),
+                    ?,'0')";
+            $params = array($host, $port, $protocol, $service, $service_type,
+                            $origin, $sensor, $version);
+            if ($conn->Execute($sql, $params) === false) {
+                print 'error inserting: '.$conn->ErrorMsg().'<BR>';
+                exit;
+            }
         }
     }
 

@@ -178,52 +178,65 @@ options (int argc, char **argv)
   simCmdArgs.config = NULL;
   simCmdArgs.daemon = FALSE;
   simCmdArgs.debug = 4;
+  simCmdArgs.ip = NULL;
+  simCmdArgs.port = 0;
 
   while (TRUE)
-    {
-      int this_option_optind = optind ? optind : 1;
-      int option_index = 0;
-      static struct option options[] =
-	{
-	  {"config", 1, 0, 'c'},
-	  {"daemon", 0, 0, 'd'},
-	  {"debug", 0, 0, 'D'},
-	  {0, 0, 0, 0}
-	};
+  {
+    int this_option_optind = optind ? optind : 1;
+    int option_index = 0;
+    static struct option options[] =
+		{
+		  {"config", 1, 0, 'c'}, //name, has_arg, flag, letter
+		  {"daemon", 0, 0, 'd'},
+		  {"debug", 0, 0, 'D'},
+		  {"interfaceip", 1, 0, 'i'},	
+		  {"port", 1, 0, 'p'},	
+			{0, 0, 0, 0}
+		};
       
-      c = getopt_long (argc, argv, "dc:D:", options, &option_index);
-      if (c == -1)
-	break;
+		c = getopt_long (argc, argv, "dc:D:i:p:", options, &option_index);
 
-      switch (c)
-	{
-	case 'c':
-	  simCmdArgs.config = g_strdup (optarg);
-	  break;
+		if (c == -1)
+			break;
 
-	case 'd':
-	  simCmdArgs.daemon = TRUE;
-	  break;
+	  switch (c)
+		{
+			case 'c':
+				simCmdArgs.config = g_strdup (optarg);
+				break;
+
+			case 'd':
+			  simCmdArgs.daemon = TRUE;
+				break;
 	  
-	case 'D':
-	  simCmdArgs.debug = strtol (optarg, (char **)NULL, 10);
-	  break;
+			case 'D':
+				if (sim_string_is_number (optarg))									
+					simCmdArgs.debug = strtol (optarg, (char **)NULL, 10);
+				break;
+	
+			case 'i':
+	      simCmdArgs.ip = g_strdup (optarg);
+
+			case 'p':
+				if (sim_string_is_number (optarg))
+					simCmdArgs.port = strtol (optarg, (char **)NULL, 10);				
+					 
+			case '?':
+				break;
 	  
-	case '?':
-	  break;
-	  
-	default:
-	  g_print ("?\? getopt() return the caracter %c ?\?\n", c);
+			default:
+			  g_print ("?\? getopt() return the caracter %c ?\?\n", c);
+		}
 	}
-    }
 
   if (optind < argc)
-    {
-      g_print ("Elements from ARGV are not option: ");
-      while (optind < argc)
-	g_print ("%s ", argv[optind++]);
-      g_print ("\n");
-    }
+  {
+    g_print ("Elements from ARGV are not option: ");
+    while (optind < argc)
+			g_print ("%s ", argv[optind++]);
+	  g_print ("\n");
+  }
 
   if ((simCmdArgs.config) && !g_file_test (simCmdArgs.config, G_FILE_TEST_EXISTS))
     g_error ("Config XML File %s: Don't exists", simCmdArgs.config);
@@ -232,12 +245,12 @@ options (int argc, char **argv)
     g_error ("Debug level %d: Is invalid", simCmdArgs.debug);
 
   if (simCmdArgs.daemon) 
-    {
-      if (fork ())
-	exit (0);
-      else
-	;
-    }
+  {
+    if (fork ())
+			exit (0);
+    else
+			;
+  }
 }
 
 /*
@@ -300,7 +313,7 @@ main (int argc, char *argv[])
   gnet_ipv6_set_policy (GIPV6_POLICY_IPV4_ONLY);
   
   /* GDA Init */
-  gda_init ("OSSIM", "0.9.8", argc, argv);
+  gda_init ("OSSIM", "0.9.9rc1_", argc, argv);
 
   /* Catch system signals */
   init_signals();
@@ -367,11 +380,11 @@ main (int argc, char *argv[])
   thread = g_thread_create (sim_thread_server, NULL, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
-
-/* Main Loop */
+	
+	/* Main Loop */
   g_main_loop_run (loop);
 
-/* Log Free */
+	/* Log Free */
   sim_log_free ();
  
   exit (EXIT_SUCCESS);

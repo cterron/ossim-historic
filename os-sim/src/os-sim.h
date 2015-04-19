@@ -72,9 +72,11 @@ extern SimMain	ossim;
 
 typedef struct 
 {
-  gchar          *config;
+  gchar			      *config;
   gboolean        daemon;
   gint            debug;
+  gchar						*ip;
+  gint            port;
 } SimCmdArgs;
 
 SimCmdArgs simCmdArgs;

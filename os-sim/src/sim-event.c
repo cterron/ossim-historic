@@ -78,6 +78,19 @@ sim_event_impl_finalize (GObject  *gobject)
   if (event->data)
     g_free (event->data);
 
+	g_free (event->filename);//no needed to check, g_free will just return if "filename" is NULL
+	g_free (event->username);
+	g_free (event->password);
+	g_free (event->userdata1);
+	g_free (event->userdata2);
+	g_free (event->userdata3);
+	g_free (event->userdata4);
+	g_free (event->userdata5);
+	g_free (event->userdata6);
+	g_free (event->userdata7);
+	g_free (event->userdata8);
+	g_free (event->userdata9);
+
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
@@ -145,6 +158,19 @@ sim_event_instance_init (SimEvent *event)
   event->store_in_DB = TRUE; //we want to store everything by default
 
 	event->data_storage = NULL;
+
+	event->filename = NULL;
+	event->username = NULL;
+	event->password = NULL;
+	event->userdata1 = NULL;
+	event->userdata2 = NULL;
+	event->userdata3 = NULL;
+	event->userdata4 = NULL;
+	event->userdata5 = NULL;
+	event->userdata6 = NULL;
+	event->userdata7 = NULL;
+	event->userdata8 = NULL;
+	event->userdata9 = NULL;	
 	
 }
 
@@ -279,6 +305,19 @@ sim_event_clone (SimEvent       *event)
 
   new_event->log = event->log;
 
+	(event->filename) ? new_event->filename = g_strdup (event->filename) : NULL;
+	(event->username) ? new_event->username = g_strdup (event->username) : NULL;
+	(event->password) ? new_event->password = g_strdup (event->password) : NULL;
+	(event->userdata1) ? new_event->userdata1 = g_strdup (event->userdata1) : NULL;
+	(event->userdata2) ? new_event->userdata2 = g_strdup (event->userdata2) : NULL;
+	(event->userdata3) ? new_event->userdata3 = g_strdup (event->userdata3) : NULL;
+	(event->userdata4) ? new_event->userdata4 = g_strdup (event->userdata4) : NULL;
+	(event->userdata5) ? new_event->userdata5 = g_strdup (event->userdata5) : NULL;
+	(event->userdata6) ? new_event->userdata6 = g_strdup (event->userdata6) : NULL;
+	(event->userdata7) ? new_event->userdata7 = g_strdup (event->userdata7) : NULL;
+	(event->userdata8) ? new_event->userdata8 = g_strdup (event->userdata8) : NULL;
+	(event->userdata9) ? new_event->userdata9 = g_strdup (event->userdata9) : NULL;
+
   return new_event;
 }
 
@@ -380,6 +419,42 @@ sim_event_print (SimEvent   *event)
 
   if (event->data)
       g_print (" data=\"%s\"", event->data);
+
+	if (event->filename)
+      g_print (" filename=\"%s\"", event->filename);
+		
+	if (event->username)
+      g_print (" username=\"%s\"", event->username);
+		
+	if (event->password)
+      g_print (" username=\"%s\"", event->password);
+
+	if (event->userdata1)
+      g_print (" username1=\"%s\"", event->userdata1);
+
+	if (event->userdata2)
+      g_print (" username2=\"%s\"", event->userdata2);
+
+	if (event->userdata3)
+      g_print (" username3=\"%s\"", event->userdata3);
+
+	if (event->userdata4)
+      g_print (" username4=\"%s\"", event->userdata4);
+
+	if (event->userdata5)
+      g_print (" username5=\"%s\"", event->userdata5);
+
+	if (event->userdata6)
+      g_print (" username6=\"%s\"", event->userdata6);
+
+	if (event->userdata7)
+      g_print (" username7=\"%s\"", event->userdata7);
+
+	if (event->userdata8)
+      g_print (" username8=\"%s\"", event->userdata8);
+
+	if (event->userdata9)
+      g_print (" username9=\"%s\"", event->userdata9);
 
   g_print ("\n");
 }
@@ -734,7 +809,7 @@ sim_event_to_string (SimEvent	*event)
   if (event->protocol)
     {
       gchar *value = sim_protocol_get_str_from_type (event->protocol);
-      g_string_append_printf (str, "protocol=\"%s\" ", value);
+      g_string_append_printf (str, "protocol=\"%s\" ->%d ", value, (gint) event->protocol);
       g_free (value);
     }
 

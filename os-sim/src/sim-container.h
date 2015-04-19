@@ -148,7 +148,7 @@ void              sim_container_db_update_host_mac_ul           (SimContainer  *
 								 gchar         *vendor,
 								 GInetAddr     *sensor);
 
-gchar*		sim_container_db_get_host_service_ul		(SimContainer  *container,
+gchar**		sim_container_db_get_host_service_ul		(SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gint           port,
@@ -175,16 +175,13 @@ void		sim_container_db_update_host_service_ul		(SimContainer  *container,
 								 GInetAddr     *sensor);
 
 void		sim_container_db_insert_host_ids_event_ul 	(SimContainer  *container,
-								 SimDatabase   *database,
-								 GInetAddr     *ia,
-								 gchar         *date,
-								 gchar         *hostname,
-								 gchar         *event_type,
-								 gchar         *target,
-								 gchar         *what,
-								 gchar         *extra_data,
-								 gchar         *sensor,
-								 gint           sid);
+																											SimDatabase   *dbossim,
+																											SimDatabase   *dbsnort,
+																											SimEvent			*event,
+																											gchar         *timestamp,
+																											gint          sid,
+																											gulong				cid,
+																											gint					sig_id);
 
 
 /* Recovery Function */

@@ -15,24 +15,22 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
   <h1> <?php echo gettext("New Incident type"); ?> </h1>
 
 <?php
-
-    if (($_POST["insert"]) &&
-        (!$_POST["id"]  || !$_POST["descr"]))
-    {
-        require_once ("ossim_error.inc");
-        $error = new OssimError();
-        $error->display("FORM_MISSING_FIELDS");
+    require_once 'classes/Security.inc';
+    
+    $inctype_id = POST('id');
+    $inctype_descr = POST('descr');
+    
+    ossim_valid($inctype_descr, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Description"));
+    ossim_valid($inctype_id, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("id"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
     }
 
-    elseif (validateVar($_POST["insert"], OSS_ALPHA)) {
+    if (POST('insert')) {
 
         require_once ('ossim_db.inc');
         require_once ('classes/Incident_type.inc');
-
-        $inctype_id  = validateVar($_POST["id"], OSS_ALPHA . OSS_SPACE .
-        OSS_SCORE);
-        $inctype_descr  = validateVar($_POST["descr"], OSS_ALPHA .
-        OSS_SPACE . OSS_SCORE);
 
         $db = new ossim_db();
         $conn = $db->connect();

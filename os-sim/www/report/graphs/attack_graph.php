@@ -1,17 +1,29 @@
 <?php
+require_once 'classes/SecurityReport.inc';
+require_once 'classes/Security.inc';
+Session::logcheck("MenuReports", "ReportsSecurityReport");
 
-require_once ('classes/SecurityReport.inc');
+$limit = GET('hosts');
+$target = GET('target');
+$type = GET('type');
+
+
+ossim_valid($limit, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Limit"));
+ossim_valid($type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Report type"));
+ossim_valid($target, OSS_ALPHA, OSS_SPACE, OSS_SCORE, 'illegal:'._("Target"));
+
+if (ossim_error()) {
+       die(ossim_error());
+}
+
 
 /* hosts to show */
-if (!$limit = $_GET["hosts"]) {
+if (empty($limit)) {
     $limit = 10;
 }
 
-/* target must be ip_src or ip_dst */
-if (!$target = $_GET["target"]) exit;
-    
 
-if (!$type = $_GET["type"]) {
+if (empty($type)) {
     $type = "event";
 } 
 

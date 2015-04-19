@@ -20,19 +20,23 @@ function die_error($msg = null, $append = null)
 $db = new ossim_db();
 $conn = $db->connect();
 
-$id = isset($_GET['incident_id']) ? $_GET['incident_id'] : null;
-$action = isset($_GET['action']) ? $_GET['action'] : ''; 
+$id = GET('incident_id');
+$action = GET('action'); 
 
 //
 // Subscriptions management
 //
-if ($action == 'subscrip' && isset($_POST['login'])) {
-    if (!ossim_valid($id, OSS_DIGIT)) die_error("Wrong ID"); 
-    if (ossim_valid($_POST['login'], OSS_LETTER)) {
-        if (isset($_POST['subscribe'])) {
-            Incident::insert_subscription($conn, $id, $_POST['login']);
-        } elseif (isset($_POST['unsubscribe'])) {
-            Incident::delete_subscriptions($conn, $id, $_POST['login']);
+if ($action == 'subscrip') {
+    if (POST('login')) {
+        if (!ossim_valid($id, OSS_DIGIT)) {
+            die_error("Wrong ID");
+        }
+        if (ossim_valid(POST('login'), OSS_LETTER)) {
+            if (POST('subscribe')) {
+                Incident::insert_subscription($conn, $id, $_POST['login']);
+            } elseif (POST('unsubscribe')) {
+                Incident::delete_subscriptions($conn, $id, $_POST['login']);
+            }
         }
     }
     header("Location: incident.php?id=$id"); exit;
@@ -53,9 +57,9 @@ if ($action == 'newticket') {
         'transferred',
         );
     foreach ($vals as $var) {
-        $$var = isset($_POST[$var]) ? strip($_POST[$var]) : null;
+        $$var = POST("$var");
     }
-    if (isset($_FILES['attachment'])) {
+    if (isset($_FILES['attachment']) && $_FILES['attachment']['tmp_name']) {
         $attachment = $_FILES['attachment'];
         $attachment['content'] = file_get_contents($attachment['tmp_name']);
     } else {
@@ -68,7 +72,7 @@ if ($action == 'newticket') {
     }
     $login = $user->get_login();
     
-    $tags = isset($_POST['tags']) ? $_POST['tags'] : array();
+    $tags = POST('tags') ? POST('tags') : array();
     
     Incident_ticket::insert(
                      $conn, $id, $status, $priority, 
@@ -85,10 +89,10 @@ if ($action == 'newticket') {
 // Ticket deletetion
 //
 if ($action == 'delticket') {
-    if (!isset($_GET['ticket_id'])) {
+    if (!GET('ticket_id')) {
         die("Invalid Ticket ID");
     }
-    Incident_ticket::delete($conn, $_GET['ticket_id']);
+    Incident_ticket::delete($conn, GET('ticket_id'));
     header("Location: incident.php?id=$id"); exit;
 }
 
@@ -105,54 +109,54 @@ if ($action == 'delincident') {
 //
 if ($action == 'editincident') {
     /* update alarm|event incident */
-    if ($_GET["ref"] == 'Alarm' or $_GET["ref"] == 'Event')
+    if (GET('ref') == 'Alarm' or GET('ref') == 'Event')
     {
-        $method = $_GET['ref'] == 'Alarm' ? 'update_alarm' : 'update_event';
+        $method = GET('ref') == 'Alarm' ? 'update_alarm' : 'update_event';
         $vars = array(
             'incident_id', 'title', 'type', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports'
         );
         foreach ($vars as $v) {
-            $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+            $$v = GET("$v");
         }
         
         Incident::$method($conn, $incident_id, $title, $type, $priority,
                            $src_ips, $dst_ips, $src_ports, $dst_ports);
     }
     /* update metric incident */
-    elseif ($_GET["ref"] == 'Metric')
+    elseif (GET('ref') == 'Metric')
     {
         $vars = array(
             'incident_id', 'title', 'type', 'priority', 'target', 'metric_type', 'metric_value'
         );
         foreach ($vars as $v) {
-            $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+            $$v = GET("$v");
         }
         Incident::update_metric($conn, $incident_id, $title, $type, $priority,
                             $target, $metric_type, $metric_value);
     }
-    elseif ($_GET["ref"] == 'Anomaly')
+    elseif (GET('ref') == 'Anomaly')
     {
-        if ($_GET["anom_type"] == 'mac')
+        if (GET('anom_type') == 'mac')
         {
             $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_mac', 'a_mac_o', 'anom_ip', 'a_vend', 'a_vend_o');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_mac_o, $a_vend_o);
             $anom_data_new  = array($a_sen, $a_date, $a_mac, $a_vend);
             Incident::update_anomaly($conn, $incident_id, $title, $type, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
-        } elseif ($_GET["anom_type"] == 'service') {
+        } elseif (GET('anom_type') == 'service') {
             $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_port, $a_date, $a_prot_o, $a_ver_o);
             $anom_data_new  = array($a_sen, $a_port, $a_date, $a_prot, $a_ver);
             Incident::update_anomaly($conn, $incident_id, $title, $type, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
-        } elseif ($_GET["anom_type"] == 'os') {
+        } elseif (GET('anom_type') == 'os') {
             $vars = array('incident_id','title', 'type', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_os_o);
             $anom_data_new  = array($a_sen, $a_date, $a_os);
@@ -171,55 +175,55 @@ if ($action == 'editincident') {
 //
 if ($action == 'newincident') {
     /* insert new alarm|event incident */
-    if ($_GET["ref"] == 'Alarm' or $_GET["ref"] == 'Event')
+    if (GET('ref') == 'Alarm' or GET('ref') == 'Event')
     {
-        $method = $_GET['ref'] == 'Alarm' ? 'insert_alarm' : 'insert_event';
+        $method = GET('ref') == 'Alarm' ? 'insert_alarm' : 'insert_event';
         $vars = array(
             'title', 'type', 'priority', 'src_ips', 'dst_ips', 'src_ports', 'dst_ports'
         );
         foreach ($vars as $v) {
-            $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+            $$v = GET("$v");
         }
         
         $incident_id = Incident::$method($conn, $title, $type, $priority, 
                           $src_ips, $dst_ips, $src_ports, $dst_ports);
     }
     /* insert new metric incident */
-    elseif ($_GET["ref"] == 'Metric')
+    elseif (GET('ref') == 'Metric')
     {
         $vars = array(
             'title', 'type', 'priority', 'target', 'metric_type', 'metric_value'
         );
         foreach ($vars as $v) {
-            $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+            $$v = GET("$v");
         }
         $incident_id = Incident::insert_metric($conn, $title, $type, $priority, 
                        $target, $metric_type, $metric_value);
     }
-    elseif ($_GET["ref"] == 'Anomaly')
+    elseif (GET('ref') == 'Anomaly')
     {
-        if ($_GET["anom_type"] == 'mac')
+        if (GET('anom_type') == 'mac')
         {
             $vars = array('title', 'type', 'priority', 'a_sen', 'a_date_o',
             'a_date', 'a_mac', 'a_mac_o', 'anom_ip', 'a_vend', 'a_vend_o');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_mac_o, $a_vend_o);
             $anom_data_new  = array($a_sen, $a_date, $a_mac, $a_vend);
             $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'mac', $anom_ip, $anom_data_orig, $anom_data_new); 
-        }  elseif ($_GET["anom_type"] == 'service') {
+        }  elseif (GET('anom_type') == 'service') {
             $vars = array('title', 'type', 'priority', 'a_sen', 'a_date', 'a_port', 'a_prot_o', 'a_prot', 'anom_ip', 'a_ver', 'a_ver_o');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_port, $a_prot_o, $a_ver_o);
             $anom_data_new  = array($a_sen, $a_date, $a_port, $a_prot, $a_ver);
             $incident_id = Incident::insert_anomaly($conn, $title, $type, $priority, 'service', $anom_ip, $anom_data_orig, $anom_data_new); 
-        } elseif ($_GET["anom_type"] == 'os') {
+        } elseif (GET('anom_type')) {
             $vars = array('title', 'type', 'priority', 'a_sen', 'a_date', 'a_os', 'a_os_o', 'anom_ip');
             foreach ($vars as $v) {
-                $$v = isset($_GET[$v]) ? strip($_GET[$v]) : '';
+                $$v = GET("$v");
             }
             $anom_data_orig = array($a_sen, $a_date, $a_os_o);
             $anom_data_new  = array($a_sen, $a_date, $a_os);

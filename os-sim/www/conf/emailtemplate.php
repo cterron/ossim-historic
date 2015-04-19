@@ -45,21 +45,12 @@ $labels = array(
                         'help' => _("The incident resume"),
                         'sample' => _("Detected MAC change in DMZ")
                      ),
-    'SRC_IP' => array(
-                        'help' => _("The incident provoking host's source IP"),
-                        'sample' => '192.168.3.67'
-                     ),
-    'DST_IP' => array(
-                        'help' => _("The affected host's destination IP"),
-                        'sample' => '192.168.3.128'
-                     ),
-    'SRC_PORT' => array(
-                        'help' => _("The source port of the host provoking the incident"),
-                        'sample' => '23450'
-                     ),
-    'DST_PORT' => array(
-                        'help' => _("The destination port of the host affected by the incident"),
-                        'sample' => '22, 110, 636'
+    'EXTRA_INFO'     => array(
+                        'help' => _("Related incident information"),
+                        'sample' => "Source IPs: 10.10.10.10\n".
+                                    "Source Ports: 2267\n".
+                                    "Dest. IPs: 10.10.10.11\n".
+                                    "Dest. Ports: 22\n"
                      ),
     'IN_CHARGE_NAME' => array(
                         'help' => _("The person currently in charge of solving the incident"),
@@ -140,6 +131,10 @@ $labels = array(
     'TICKET_EMAIL_CC'  => array(
                         'help' => _("Who (Name and Email) received this email too"),
                         'sample' => "\"John Smith\" <jsmith@example.com>\n\"Sam Max\" <smax@example.com>"
+                     ),
+    'TICKET_HISTORY' => array(
+                        'help' => _("The complete list of tickets related to this incident"),
+                        'sample' => '-- Here goes the list of tickets --'
                      )
 );
 
@@ -219,7 +214,7 @@ $labels = array(
 
 <tr valign="top">
     <td>
-    TAGs<br/>
+    <?=_("Template Labels")?><br/>
     <select name="tags" size="21" onChange="javascript: show_help(this);">
         <?
         $i = 0;

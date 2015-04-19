@@ -241,9 +241,70 @@ sim_get_rule_var_from_char (const gchar *var)
     return SIM_RULE_VAR_PLUGIN_SID;
   else if (!strcmp (var, SIM_SENSOR_CONST))
     return SIM_RULE_VAR_SENSOR;
-
+  else if (!strcmp (var, SIM_FILENAME_CONST))
+    return SIM_RULE_VAR_FILENAME;
+  else if (!strcmp (var, SIM_USERNAME_CONST))
+    return SIM_RULE_VAR_USERNAME;
+  else if (!strcmp (var, SIM_PASSWORD_CONST))
+    return SIM_RULE_VAR_PASSWORD;
+  else if (!strcmp (var, SIM_USERDATA1_CONST))
+    return SIM_RULE_VAR_USERDATA1;
+  else if (!strcmp (var, SIM_USERDATA2_CONST))
+    return SIM_RULE_VAR_USERDATA2;
+  else if (!strcmp (var, SIM_USERDATA3_CONST))
+    return SIM_RULE_VAR_USERDATA3;
+  else if (!strcmp (var, SIM_USERDATA4_CONST))
+    return SIM_RULE_VAR_USERDATA4;
+  else if (!strcmp (var, SIM_USERDATA5_CONST))
+    return SIM_RULE_VAR_USERDATA5;
+  else if (!strcmp (var, SIM_USERDATA6_CONST))
+    return SIM_RULE_VAR_USERDATA6;
+  else if (!strcmp (var, SIM_USERDATA7_CONST))
+    return SIM_RULE_VAR_USERDATA7;
+  else if (!strcmp (var, SIM_USERDATA8_CONST))
+    return SIM_RULE_VAR_USERDATA8;
+  else if (!strcmp (var, SIM_USERDATA9_CONST))
+    return SIM_RULE_VAR_USERDATA9;
+	
   return SIM_RULE_VAR_NONE;
 }
+
+/*
+ * Used to get the variable type from properties in the directive
+ */
+/*
+SimRuleVarType
+sim_get_rule_var_from_property (const gchar *var)
+{
+
+  if (!strcmp (var, PROPERTY_FILENAME))
+    return SIM_RULE_VAR_FILENAME;
+  else if (!strcmp (var, PROPERTY_USERNAME))
+    return SIM_RULE_VAR_USERNAME;
+  else if (!strcmp (var, PROPERTY_PASSWORD))
+    return SIM_RULE_VAR_PASSWORD;
+  else if (!strcmp (var, PROPERTY_USERDATA1))
+    return SIM_RULE_VAR_USERDATA1;
+  else if (!strcmp (var, PROPERTY_USERDATA2))
+    return SIM_RULE_VAR_USERDATA2;
+  else if (!strcmp (var, PROPERTY_USERDATA3))
+    return SIM_RULE_VAR_USERDATA3;
+  else if (!strcmp (var, PROPERTY_USERDATA4))
+    return SIM_RULE_VAR_USERDATA4;
+  else if (!strcmp (var, PROPERTY_USERDATA5))
+    return SIM_RULE_VAR_USERDATA5;
+  else if (!strcmp (var, PROPERTY_USERDATA6))
+    return SIM_RULE_VAR_USERDATA6;
+  else if (!strcmp (var, PROPERTY_USERDATA7))
+    return SIM_RULE_VAR_USERDATA7;
+  else if (!strcmp (var, PROPERTY_USERDATA8))
+    return SIM_RULE_VAR_USERDATA8;
+  else if (!strcmp (var, PROPERTY_USERDATA9))
+    return SIM_RULE_VAR_USERDATA9;
+	
+  return SIM_RULE_VAR_NONE;
+}
+*/
 
 /*
  *
@@ -579,6 +640,9 @@ sim_string_is_number (gchar *string)
 	int n;
 	gboolean ok = FALSE;
 
+	if (!string)
+		return FALSE;
+
 	for (n=0; n < strlen(string); n++)
 	{
 	  if (g_ascii_isdigit (string[n]))
@@ -700,6 +764,32 @@ void sim_gda_value_extract_type(GdaValue *value)
 						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: GDA_VALUE_TYPE Desconocido");									
 	}
 
+}
+
+/*
+ * Arguments:
+ * GList: list of gchar*
+ * string: string to check.
+ *
+ * this function will take a glist and will check if the string is any of the strings inside the GList
+ * Warning: Please, use this function just to check gchar's. Any other use will be very probably a segfault.
+ */
+gboolean
+sim_cmp_list_gchar (GList *list, gchar *string)
+{
+	if (!string)
+		return FALSE;
+
+	gchar *cmp;
+	while (list)
+	{
+		cmp = (gchar *) list->data;
+		if (!strcmp (cmp, string))
+			return TRUE;							//found!
+		list = list->next;
+	}
+	return FALSE;
+	
 }
 
 

@@ -21,7 +21,7 @@ require_once 'ossim_db.inc';
 require_once 'classes/Incident_tag.inc';
 
 // Avoid the browser resubmit POST data stuff
-if (isset($_GET['redirect'])) {
+if (GET('redirect')) {
     header('Location: ' . $_SERVER['PHP_SELF']); exit;
 }
 
@@ -34,10 +34,10 @@ $vals = array(
                 'name'  => array(OSS_LETTER, OSS_PUNC, 'error:'._("<b>Name</b> required, should be only letters and underscores")),
                 'descr' => array(OSS_TEXT, 'error:'._("<b>Description</b> required and should contain valid characters")) 
              );
-$action = !empty($_GET['action']) ? $_GET['action'] : 'list';
-$id     = !empty($_GET['id'])     ? $_GET['id']     : null;
-$name   = !empty($_POST['name'])  ? $_POST['name']  : null;
-$descr  = !empty($_POST['descr']) ? strip($_POST['descr']) : null;
+$action = GET('action') ? GET('action') : 'list';
+$id     = GET('id');
+$name   = POST('name');
+$descr  = POST('descr');
 
 if (in_array($action, array('new2step', 'delete', 'mod2step'))) {
 

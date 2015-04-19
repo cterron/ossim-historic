@@ -447,8 +447,24 @@ Take one example. A straight-ahead port-scanning rule. Fix destination with the 
 In our worm rule the most important var is the DST_IP because as the number increases the reliable increases as well. Which host is going to do thousands of connections for the same port against different hosts??<br/>
 <h3 style="text-align: left;">Groups</h3>
 As sticky but involving more than one directive. If an event matches against a directive defined within a group and the groups is set as &quot;sticky&quot; it won.t match any other directive.
+<br><br>
+<h3 style="text-align: left;">Username, password, filename, userdata1, userdata2, userdata3, userdata4, userdata5, userdata6, userdata7, userdata8, userdata9</h3>
+This keywords are optional. They can be used to store special data from agents. Obviously, this only will work if the event has this modificators. The following things are accpeted:<br>You can insert any string to match here. If you want that this matches with any keyword, you can not to put this keywords, or use ANY as the value. <br/>
+<ol>
+<li> ANY <br> Just that, this will match with any word. You can also avoid this keyword, and it will match too.
+<li> Comma separated <br> You can use any number of words separated by commas
+<li> Relative <br> This is used to reference kwywords from previous levels, for example:<br>
+1:FILENAME -> Means use the filename referenced in the first rule level
+2_USERDATA5 -> Means use the filename referenced in the second rule level
+<li> Negated: You can also use negated keywords, i.e: <br>
+"!johndoe,foobar".<br>
+This will match with foobar, but not johndoe
+</ol>
+Here you can see an example of what can de done: <br>
 
-
+username="one,two,three,!four4444,five" filename="1:FILENAME,/etc/password,!/etc/shadow" userdata5="el cocherito lere me dijo anoche lere,!2:USERDATA5"
+<br>
+<br>
 <hr/><h2 style="text-align: left;">Risk</h2>
 The main formula for risk calculation would look like this:<br/>
 

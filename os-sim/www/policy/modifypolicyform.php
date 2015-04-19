@@ -16,21 +16,24 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
 <?php
     
-    require_once ('classes/Policy.inc');
-    require_once ('classes/Host.inc');
-    require_once ('classes/Net.inc');
-    require_once ('classes/Port_group.inc');
-    require_once ('classes/Sensor.inc');
-    require_once ('ossim_db.inc');
+    require_once 'classes/Policy.inc';
+    require_once 'classes/Host.inc';
+    require_once 'classes/Net.inc';
+    require_once 'classes/Port_group.inc';
+    require_once 'classes/Sensor.inc';
+    require_once 'ossim_db.inc';
+    require_once 'classes/Security.inc';
+
+    $id = GET('id');
+
+    ossim_valid($id, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Policy id"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
     $db = new ossim_db();
     $conn = $db->connect();
-
-
-    if (!$id = validateVar($_GET["id"])) {
-      require_once("ossim_error.inc");
-      $error = new OssimError();
-      $error->display("WRONG_POLICY_ID");
-    }
 
     settype($id, "int");
     

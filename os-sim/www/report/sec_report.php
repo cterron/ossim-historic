@@ -12,7 +12,9 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 </head>
 <body>
 <?php
-    if (isset($_GET["type"]) &&  $_GET["type"] == 'alarm') {
+    require_once 'classes/Security.inc';
+
+    if (GET('type') == 'alarm') {
     ?>
         <h1> <?php echo gettext("Alarm Security report"); ?> </h1>
     <?php
@@ -58,7 +60,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     ##############################
     # Top attacked hosts
     ##############################
-    if ($_GET["section"] == 'attacked') 
+    if (GET('section') == 'attacked') 
     {
         ip_max_occurrences("ip_dst");
     }
@@ -66,54 +68,54 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     ##############################
     # Top attacker hosts
     ##############################
-    elseif ($_GET["section"] == 'attacker') {
+    elseif (GET('section') == 'attacker') {
         ip_max_occurrences("ip_src");
     }
 
     ##############################
     # Top events received
     ##############################
-    elseif ($_GET["section"] == 'events_recv') {
+    elseif (GET('section') == 'events_recv') {
         event_max_occurrences();
     }
 
     ##############################
     # Top events risk
     ##############################
-    elseif ($_GET["section"] == 'events_risk') {
+    elseif (GET('section') == 'events_risk') {
         event_max_risk();
     }
 
     ##############################
     # Top used destination ports
     ##############################
-    elseif ($_GET["section"] == 'dest_ports') {
+    elseif (GET('section') == 'dest_ports') {
         port_max_occurrences();
     }
 
     /* Top data traffic */
-    elseif ($_GET["section"] == 'traffic') {
+    elseif (GET('section') == 'traffic') {
         echo "Working on...";
     }
 
     /* Top throughput */
-    elseif ($_GET["section"] == 'throughput') {
+    elseif (GET('section') == 'throughput') {
         echo "Working on...";
     }
 
     /* Top used services */
-    elseif ($_GET["section"] == 'services') {
+    elseif (GET('section') == 'services') {
         echo "Working on...";
     }
 
     ###############################
     # Top less stable services 
     ###############################
-    elseif ($_GET["section"] == 'availability') {
+    elseif (GET('section') == 'availability') {
         less_stable_services();
     }
 
-    elseif ($_GET["section"] == 'all') {
+    elseif (GET('section') == 'all') {
         ip_max_occurrences("ip_dst");
         echo "<br/><br/>";
         ip_max_occurrences("ip_src");

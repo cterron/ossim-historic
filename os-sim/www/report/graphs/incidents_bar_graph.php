@@ -5,12 +5,15 @@ require_once 'ossim_db.inc';
 
 Session::logcheck("MenuIncidents", "IncidentsReport");
 
-if (!$by = $_GET["by"]) {
-    require_once 'ossim_error.inc';
-    $error = new OssimError();
-    $error->display("FORM_MISSING_FIELDS");
-}
+require_once 'classes/Security.inc';
 
+$by = GET('by');
+
+ossim_valid($by, OSS_ALPHA, OSS_SPACE, OSS_SCORE, 'illegal:'._("Target"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
 
 $conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
@@ -35,9 +38,11 @@ if ($by == "monthly_by_status") {
            "date_format(last_update, '%Y-%m') as month, " .
            "date_format(last_update, '%b-%y') as label " .
            "FROM incident " .
-           "WHERE status='Closed' AND last_update >= '$year_ago_date' " .
+           "WHERE status='Closed' AND last_update >= ? " .
            "GROUP BY month";
-    if (!$rs = $conn->Execute($sql)) die ($conn->ErrorMsg());
+    $params = array($year_ago_date);
+
+    if (!$rs = $conn->Execute($sql, $params)) die ($conn->ErrorMsg());
     
     while (!$rs->EOF) {
         $num_inc = $rs->fields['num_incidents'];

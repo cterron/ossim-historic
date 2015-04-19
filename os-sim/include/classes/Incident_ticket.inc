@@ -319,7 +319,8 @@ class Incident_ticket {
         // Ticket data
         //
         list($ticket) = Incident_ticket::get_list($conn, "WHERE incident_ticket.id = $ticket_id");
-        $values['ID'] = $ticket->get_incident_id();
+        $incident_id = $ticket->get_incident_id();
+        $values['ID'] = $incident_id;
         $values['TICKET_DESCRIPTION']  = $ticket->get_description();
         $values['TICKET_ACTION']       = $ticket->get_action();
         //
@@ -331,7 +332,22 @@ class Incident_ticket {
         $values['TICKET_AUTHOR_EMAIL']   = $author->get_email();
         $values['TICKET_AUTHOR_DPTO']    = $author->get_department();
         $values['TICKET_AUTHOR_COMPANY'] = $author->get_company();
-        
+        //
+        // Ticket history
+        //
+        $history = '';
+        $list = Incident_ticket::get_list($conn, "WHERE incident_ticket.incident_id = $incident_id ORDER BY incident_ticket.date");
+        foreach ($list as $ticket) {
+            $login = $ticket->get_user();
+            list($author) = Session::get_list($conn, "WHERE login = '$login'");
+            $history .= $ticket->get_date().' '.$author->get_name().' <'.$author->get_email().">\n".
+                        "------------------------------------------------------\n".
+                        _("Description").":\n".
+                        $ticket->get_description()."\n\n".
+                        _("Action").":\n".
+                        $ticket->get_action()."\n\n";
+        }
+        $values['TICKET_HISTORY'] = $history;
         //
         // Incident data
         //
@@ -357,16 +373,34 @@ class Incident_ticket {
         }
         $values['TAGS'] = implode(", ", $tags);
         //
-        // Event - Alert data
+        // Extra incident info
         //
-        if (in_array($values['CLASS'], array('Event', 'Alarm'))) {
-            $method = $values['CLASS'] == 'Event' ? 'get_events' : 'get_alarms';
-            list($obj) = $incident->$method($conn); 
-            $values['SRC_IP']   = $obj->get_src_ips();
-            $values['SRC_PORT'] = $obj->get_src_ports();
-            $values['DST_IP']   = $obj->get_dst_ips();
-            $values['DST_PORT'] = $obj->get_dst_ports();
+        $info = '';
+        switch($values['CLASS']) {
+            case 'Event':
+            case 'Alarm':
+                $method = $values['CLASS'] == 'Event' ? 'get_events' : 'get_alarms';
+                list($obj) = $incident->$method($conn); 
+                $info = _('Source IPs').': '. $obj->get_src_ips()."\n".
+                        _('Source Ports').': '.$obj->get_src_ports()."\n".
+                        _('Dest. IPs').': '.$obj->get_dst_ips()."\n".
+                        _('Dest. Ports').': '.$obj->get_dst_ports();
+                break;
+            case 'Metric':
+                list($obj) = $incident->get_metrics($conn);
+                $info = _('Target').': '.$obj->get_target()."\n".
+                        _('Metric Type').': '.$obj->get_metric_type()."\n".
+                        _('Metric Value').': '.$obj->get_metric_value();
+                break;
+            case 'Anomaly':
+                list($obj) = $incident->get_anomalies($conn);
+                $info = _('Anomaly type').': '.strtoupper($obj->get_anom_type())."\n".
+                        _('IP').': '.$obj->get_ip()."\n".
+                        _('Previous').': '.$obj->get_data_orig()."\n".
+                        _('New').': '.$obj->get_data_new()."\n";
+                break;
         }
+        $values['EXTRA_INFO'] = $info;
         //
         // In charge details
         //
@@ -377,7 +411,7 @@ class Incident_ticket {
         $values['IN_CHARGE_EMAIL']   = $in_charge->get_email();
         $values['IN_CHARGE_DPTO']    = $in_charge->get_department();
         $values['IN_CHARGE_COMPANY'] = $in_charge->get_company();
-        
+
         return $values;
     }
 
@@ -393,7 +427,10 @@ class Incident_ticket {
   Priority: PRIORITY_NUM (PRIORITY_STR)
  In charge: IN_CHARGE_NAME <IN_CHARGE_EMAIL>
    Created: CREATION_DATE (LIFE_TIME ago)
-Extra info: TAGS
+      Tags: TAGS
+
+Extra info:
+EXTRA_INFO
 
 Ticket details
 ------------------------------------------------
@@ -403,7 +440,12 @@ TICKET_DESCRIPTION
 
 Actions:
 
-TICKET_ACTION';
+TICKET_ACTION
+
+Past tickets:
+
+TICKET_HISTORY
+';
         
         require_once 'ossim_conf.inc';
         $conf = $GLOBALS["CONF"];

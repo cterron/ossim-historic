@@ -15,34 +15,41 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
   <h1> <?php echo gettext("Update network group"); ?> </h1>
 
 <?php
+require_once 'classes/Security.inc';
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["name"] || !$_POST["threshold_c"] || 
-         !$_POST["threshold_a"] || 
-         !$_POST["nnets"] || !$_POST["descr"])) 
-    {
-        require_once("ossim_error.inc");
-        $error = new OssimError();
-        $error->display("FORM_MISSING_FIELDS");
+$net_group_name = POST('name');
+$threshold_a = POST('threshold_a');
+$threshold_c = POST('threshold_c');
+$rrd_profile = POST('rrd_profile');
+$nnets = POST('nnets');
+$descr = POST('descr');
 
+ossim_valid($net_group_name, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_SPACE, 'illegal:'._("Net name"));
+ossim_valid($threshold_a, OSS_DIGIT, 'illegal:'._("threshold_a"));
+ossim_valid($threshold_c, OSS_DIGIT, 'illegal:'._("threshold_c"));
+ossim_valid($nnets, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("nnets"));
+ossim_valid($rrd_profile, OSS_ALPHA, OSS_NULLABLE, OSS_SPACE, OSS_PUNC, 'illegal:'._("Net name"));
+ossim_valid($descr, OSS_ALPHA, OSS_NULLABLE, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Description"));
 
-/* check OK, insert into BD */
-} elseif($_POST["insert"]) {
+if (ossim_error()) {
+    die(ossim_error());
+}
 
-    $net_group_name    = validateVar($_POST["name"], OSS_ALPHA . OSS_PUNC .
-    OSS_SCORE);
-    $threshold_c = validateVar($_POST["threshold_c"], OSS_DIGIT);
-    $threshold_a = validateVar($_POST["threshold_a"], OSS_DIGIT);
-    $rrd_profile = validateVar($_POST["rrd_profile"]);
-    $descr       = validateVar($_POST["descr"], OSS_ALPHA . OSS_SCORE .
-    OSS_PUNC . OSS_AT);
-    
-    for ($i = 1; $i <= validateVar($_POST["nnets"], OSS_DIGIT); $i++) {
+if(POST('insert')) {
+
+    for ($i = 1; $i <= $nnets; $i++) {
         $name = "mboxs" . $i;
-        if (validateVar($_POST[$name])) {
-            $networks[] = validateVar($_POST[$name]);
-        }
+        
+        ossim_valid(POST("$name"), OSS_ALPHA, OSS_NULLABLE, OSS_PUNC, OSS_SPACE, 'illegal:'._("$name"));
+        
+        if (ossim_error()) {
+            die(ossim_error());
+        }   
+
+        $name_aux = POST("$name");
+        
+        if (!empty($name_aux))
+            $networks[] = POST("$name");
     }
 
     require_once 'ossim_db.inc';
@@ -53,7 +60,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     
     Net_group::update ($conn, $net_group_name, $threshold_c, $threshold_a, $rrd_profile, $networks, $descr);
     Net_group_scan::delete ($conn, $net_group_name, 3001);
-    if($_POST["nessus"]){
+    if(POST('nessus')){
         Net_group_scan::insert ($conn, $net_group_name, 3001, 0);
     }
 

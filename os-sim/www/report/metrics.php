@@ -13,14 +13,19 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 <body>
 
 <?php 
-    /* get host */
-    if (!$ip = validateVar($_GET["host"], OSS_IP)) {
-        echo "<p>Wrong ip</p>";
-        exit;
-    }
+require_once 'classes/Security.inc';
+
+$host = GET('host');
+
+ossim_valid($host, OSS_IP_ADDR, 'illegal:'._("Host"));
+
+if (ossim_error()) {
+        die(ossim_error());
+}
+
 ?>
 
-<h1>Metrics - <?php echo $ip ?></h1>
+<h1>Metrics - <?php echo $host ?></h1>
 
 <?php
 
@@ -51,17 +56,17 @@ function fontcolor($value, $max)
 $framework_conf = $GLOBALS["CONF"];
 $graph_link = $framework_conf->get_conf("graph_link");
 
-$image1 = "$graph_link?ip=$ip&what=compromise&start=N-24h&end=N&type=host&zoom=1";
-$image2 = "$graph_link?ip=$ip&what=compromise&start=N-7D&end=N&type=host&zoom=1";
-$image3 = "$graph_link?ip=$ip&what=compromise&start=N-1M&end=N&type=host&zoom=1";
-$image4 = "$graph_link?ip=$ip&what=compromise&start=N-1Y&end=N&type=host&zoom=1";
+$image1 = "$graph_link?ip=$host&what=compromise&start=N-24h&end=N&type=host&zoom=1";
+$image2 = "$graph_link?ip=$host&what=compromise&start=N-7D&end=N&type=host&zoom=1";
+$image3 = "$graph_link?ip=$host&what=compromise&start=N-1M&end=N&type=host&zoom=1";
+$image4 = "$graph_link?ip=$host&what=compromise&start=N-1Y&end=N&type=host&zoom=1";
 
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
 
 /* get thresholds */
-if ($list = Host::get_list($conn, "WHERE ip = '$ip'")) {
+if ($list = Host::get_list($conn, "WHERE ip = '$host'")) {
     $threshold_c = $list[0]->get_threshold_c();
     $threshold_a = $list[0]->get_threshold_a();
 } else {
@@ -70,7 +75,7 @@ if ($list = Host::get_list($conn, "WHERE ip = '$ip'")) {
 
 /* max C */
 $list = Control_panel_host::get_list($conn,
-    "WHERE id = '$ip' ORDER BY time_range", 3);
+    "WHERE id = '$host' ORDER BY time_range", 3);
     
 if ($list[0]) {
     $max_c["day"]   = $list[0]->get_max_c();
@@ -87,7 +92,7 @@ if ($list[2]) {
 
 /* max A */
 $list = Control_panel_host::get_list($conn, 
-    "WHERE id = '$ip' ORDER BY time_range", 3);
+    "WHERE id = '$host' ORDER BY time_range", 3);
 if ($list[0]) {
     $max_a["day"]   = $list[0]->get_max_a();
     $max_a_date["day"]   = $list[0]->get_max_a_date();
@@ -102,10 +107,10 @@ if ($list[2]) {
 }
 
 /* current C */
-$current_c = Host_qualification::get_ip_compromise($conn, $ip);
+$current_c = Host_qualification::get_ip_compromise($conn, $host);
 
 /* current A */
-$current_a = Host_qualification::get_ip_attack($conn, $ip);
+$current_a = Host_qualification::get_ip_attack($conn, $host);
 
 ?>
 

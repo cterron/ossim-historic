@@ -19,10 +19,23 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Net_group.inc';
     require_once 'classes/Net_group_scan.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'classes/Security.inc';
 
+    $nessus_action = GET('nessus');
+    $nagios_action = GET('nagios_action');
+    $net_group_name = GET('net_group_name');
+    $order = GET('order');
 
-    if (($nessus_action = validateVar($_GET["nessus"])) AND ($net_group_name =
-        validateVar($_GET["net_group_name"]))) 
+    ossim_valid($nagios_action, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Nagios action"));
+    ossim_valid($nessus_action, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Nessus action"));
+    ossim_valid($net_group_name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Net group name"));
+    ossim_valid($order, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Order"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+    
+    if ((!empty($nessus_action)) AND (!empty($net_group_name))) 
     {
         $db = new ossim_db();
         $conn = $db->connect();
@@ -34,7 +47,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
         $db->close($conn);
     }
 
-    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_ALPHA . OSS_SPACE)) $order = "name";
+    if (empty($order)) $order = "name";
 ?>
 
   <table align="center">
@@ -92,7 +105,6 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     <td>
 <?php
-    $name = validateVar($name);
     if($scan_list = Net_group_scan::get_list($conn, 
         "WHERE net_group_name = '$name' AND plugin_id = 3001"))
     {

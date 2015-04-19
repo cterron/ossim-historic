@@ -10,6 +10,11 @@ class Panel
         return;
     }
     
+    function getCategoryName()
+    {
+        return _("Category Name not configured");
+    }
+    
     function setup($params)
     {
         if (!isset($params['plugin_opts'])) {
@@ -30,16 +35,23 @@ class Panel
         $this->params['window_opts'] = $params['window_opts'];
     }
     
+    // This method is called from $ajax->saveConfig(), in case the plugin
+    // needs to modify data at save time (ex. the import plugin)
+    function save()
+    {
+        return $this->get();
+    }
+    
     function get($param = null, $category = 'plugin_opts')
     {
-    	// if $param is null, return all params
-    	if ($param === null) {
+        // if $param is null, return all params
+        if ($param === null) {
     		return $this->params;
     	}
         if (isset($this->params[$category][$param])) {
             $ret = stripslashes($this->params[$category][$param]);
         } else {
-            echo "Warning, not defined var, shouldn't occur, please report";
+            echo "Warning, not defined var '$param', shouldn't occur, please report<br>";
             $ret = null;
         }
         return $ret;

@@ -81,7 +81,7 @@ function validate_post_params($name, $descr, $sids)
     return array($name, $descr, $plugins);
 }
 
-if (isset($_GET['interface']) && isset($_GET['method'])) {
+if (GET('interface') && GET('method')) {
     list($valid, $data) = validate_sids_str($_GET['sids_str']);
     if (!$valid) {
         echo $data;

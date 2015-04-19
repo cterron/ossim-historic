@@ -127,7 +127,7 @@ foreach ($list as $k => $v) {
         <br/><i><center><?=_("No upgrades")?></center></i>
     <? continue; }  ?>
     <form>
-    <table align="center" width="70%" border=1>
+    <table align="center" width="85%" border=1>
         <tr><th>Version</th><th>Required</th></tr>
         <? foreach ($v['upgrades'] as $version => $actions) { ?>
             <tr>
@@ -146,11 +146,11 @@ foreach ($list as $k => $v) {
                     echo "<br/>{$pos}º ";
                     print_upgrade_link($php, 'php_pre', 'PHP script: PRE', $version, $v['required']);
                 }
-                if ($sql && $pos++) {
+                if ($sql && ++$pos) {
                     echo "<br/>{$pos}º ";
                     print_upgrade_link($sql, 'sql', 'SQL schema update', $version, $v['required']);
                 }
-                if ($php && $pos++) {
+                if ($php && ++$pos) {
                     echo "<br/>{$pos}º ";
                     print_upgrade_link($php, 'php_post', 'PHP script: POST', $version, $v['required']);
                 }

@@ -25,8 +25,8 @@ Session::logcheck("MenuPolicy", "PolicyActions");
 ?>
     <table align="center">
       <tr>
-        <th> <?php echo gettext("Description"); ?> </th>
-        <th> <?php echo gettext("Action"); ?> </th>
+        <th> <?php echo gettext("Description"); ?>&nbsp;</th>
+        <th> <?php echo gettext("Action"); ?>&nbsp;</th>
       </tr>
 <?php
         foreach ($action_list as $action) {

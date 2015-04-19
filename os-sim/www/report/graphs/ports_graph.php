@@ -2,12 +2,26 @@
 
 require_once ('classes/SecurityReport.inc');
 
+
+require_once 'classes/Security.inc';
+
+$limit = GET('ports');
+$type = GET('type');
+
+ossim_valid($limit, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Limit"));
+ossim_valid($type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Report type"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+
 /* hosts to show */
-if (!$limit = $_GET["ports"]) {
+if (empty($limit)) {
     $limit = 10;
 }
 
-if (!$type = $_GET["type"]) {
+if (empty($type)) {
     $type = "event";
 }
 

@@ -15,22 +15,23 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
   <h1> <?php echo gettext("New port"); ?> </h1>
 
 <?php
+require_once 'classes/Security.inc';
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["port"] || !$_POST["protocol"] || 
-        !$_POST["service"] || !$_POST["descr"]))
-    {
-        require_once("ossim_error.inc");
-        $error = new OssimError();
-        $error->display("FORM_MISSING_FIELDS");
-} elseif($_POST["insert"]) {
+$port = POST('port');
+$protocol = POST('protocol');
+$service = POST('service');
+$descr = POST('descr');
 
-    $port     = validateVar($_POST["port"], OSS_DIGIT);
-    $protocol = validateVar($_POST["protocol"]);
-    $service  = validateVar($_POST["service"]);
-    $descr    = validateVar($_POST["descr"], OSS_ALPHA . OSS_PUNC . OSS_SCORE);
+ossim_valid($port, OSS_DIGIT, 'illegal:'._("Action id"));
+ossim_valid($protocol, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Protocol"));
+ossim_valid($service, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Service"));
+ossim_valid($descr, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Description"));
 
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+if(POST('insert')) {
     require_once 'ossim_db.inc';
     require_once 'classes/Port.inc';
     $db = new ossim_db();
@@ -47,4 +48,3 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 
 </body>
 </html>
-

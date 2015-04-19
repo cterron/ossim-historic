@@ -2,6 +2,8 @@
 require_once 'classes/Security.inc';
 require_once 'classes/Session.inc';
 require_once 'panel/Ajax_Panel.php';
+require_once 'classes/Util.inc';
+
 Session::logcheck("MenuControlPanel", "ControlPanelExecutiveEdit");
 
 /*
@@ -60,7 +62,9 @@ if (GET('interface') == 'ajax') {
     if (count($options) || GET('plugin')) {
         $opts['plugin'] = GET('plugin') ? GET('plugin') : $options['plugin'];
         $title = isset($options['window_opts']['title']) ? $options['window_opts']['title'] : '';
+        $help  = isset($options['window_opts']['help'])  ? $options['window_opts']['help'] : '';
         $opts['window_opts']['title'] = GET('window_title') ? GET('window_title') : $title;
+        $opts['window_opts']['help']  = GET('window_help') ? GET('window_help') : $help;
     }
     if (!isset($options['plugin_opts'])) {
         $options['plugin_opts'] = array();
@@ -80,14 +84,36 @@ if (GET('interface') == 'ajax') {
         // XXX This should save the options as temp.. so the user
         //     will be able to revert the settings
         $opts = $ajax->loadConfig($id);
-        //printr($opts);
         $data['CONTENTS'] = $ajax->showWindowContents($opts);
-        $data['TITLE']    = GET('window_title');
+        $data['TITLE']    = $opts['window_opts']['title'];
+        $data['HELP_LABEL'] = _("help");
+        $data['HELP_MSG'] = Util::string2js($opts['window_opts']['help']);
         $data['CONFIG']   = '';
         $data['ID']       = $id;
         echo $ajax->parseTemplate('./window_tpl.htm', $data);
 	
+    } elseif ($method == 'showExportText') {
+        $opts = $ajax->loadConfig($id);
+        if ($opts['plugin'] != 'plugin_config_exchange') {
+            $opts['plugin_opts']['exported_plugin'] = $opts['plugin'];
+            $opts['plugin'] = 'plugin_config_exchange';
+            $plugin = $ajax->getPlugin($opts);
+            $data['CONTENTS'] = nl2br($plugin->encode(($opts)));
+        // In case user hit the export button and the plugin is
+        // already import (avoid encode twice)
+        } else {
+            $data['CONTENTS'] = nl2br($opts['plugin_opts']['import_text']);
+        }
+        
+        $data['TITLE']    = _("Exported text");
+        $data['HELP_LABEL'] = _("help");
+        $data['HELP_MSG'] = '';
+        $data['CONFIG']   = '';
+        $data['ID']       = $id;
+        echo $ajax->parseTemplate('./window_tpl.htm', $data);
+    
     } else {
+        //printr($opts);
         // security check: only allow calling valid methods of Window_Panel_Ajax
         $allowed = array('showCategoriesHTML', 'showSubCategoryHTML',
                          'showSettingsHTML');
@@ -164,10 +190,24 @@ if (GET('interface') == 'ajax') {
       background-color: #AC0606;
       color: white;
   }
+  .help {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      border: 1px;
+      width: 300px;
+      background-color: #F9F9F9;
+      border: 1px dotted rgb(33,78,93);
+      padding: 3px;
+      z-index: 1001;
+  }
     </style>
 </head>
 <body>
 <div id="loading" class="loading">Loading..</div>
+<div id="help" class="help"></div>
+<script>Element.hide('help');</script>
+
 <form id="panel" method="POST">
 <table width="100%" align="center">
 <tr>
@@ -202,13 +242,16 @@ if (GET('interface') == 'ajax') {
 </div>
 <br>
 <center>
+    <input type="button" name="export" value="<?=_("Export Config")?> -&gt;"
+           onClick="javascript: ajax_save('<?=$id?>'); ajax_show(false, 'export');">
+    &nbsp;
     <input type="button" name="update" value="<?=_("Update Output")?> -&gt;"
            onClick="javascript: ajax_save('<?=$id?>'); ajax_show(false, 'output');">
 </center>
 </td>
 <td>
 <center><h3><?=_("Config for window position").": $id"?></h3>
-<div id="debug" style="width: 520px;"></div>
+<div id="debug" style="width: 520px; text-align: left;"></div>
 <div id="output" style="border-width:0px; height: 400px; width: 520px; text-align: left;"></div>
 </center>
 <br>
@@ -250,6 +293,10 @@ function ajax_show(tab, window)
     }
     if (id == 'output') {
         method = 'showWindowContents';
+        refresh = 'output';
+    }
+    if (id == 'export') {
+        method = 'showExportText';
         refresh = 'output';
     }
     ajax_url = '<?=$_SERVER['PHP_SELF']?>?interface=ajax&ajax_method='+method+'&id=<?=$id?>';
@@ -312,6 +359,7 @@ function colorSelected(color)
     Element.hide('palette');
 }
 Control.ColorPalette.registerOnColorClick = colorSelected;
+Control.Tip.use = 'help';
 </script>
 
 

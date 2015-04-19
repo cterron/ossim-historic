@@ -112,7 +112,7 @@ class Config {
         Config::insert('jpgraph_path', '/usr/share/jpgraph/');
 
         /* RRD: RRD Configuration (graphing) */
-        Config::insert('graph_link', '/cgi-bin/draw_graph.pl');
+        Config::insert('graph_link', '../report/graphs/draw_rrd.php');
         Config::insert('rrdtool_lib_path', '/usr/lib/perl5/');
         Config::insert('rrdtool_path', '/usr/bin/');
         Config::insert('mrtg_path', '/usr/bin/');

@@ -1,6 +1,7 @@
 import threading, socket, re, sys, time
 
 from xmlrpclib import ServerProxy, Transport
+from sets import Set
 
 import Const
 from OssimDB import OssimDB
@@ -199,6 +200,8 @@ class Services:
 
     def _get_agents(self):
 
+        sensor_set = Set()
+
         # get total agents from sensor table
         query = "SELECT count(*) AS agents FROM sensor"
         result = _DB.exec_query(query)
@@ -215,9 +218,14 @@ class Services:
                     if data.startswith("ok"):
                         break
                     result = re.findall(self.GET_SENSORS_REPLY, data)
-                    self.info['agents']['up'] += 1
+                    try:
+                        (sensor_temp, sensor_temp_status) = result[0]
+                        sensor_set.add(sensor_temp)
+                    except IndexError:
+                        pass
                 except socket.error, e:
                     print e
+            self.info['agents']['up'] = len(sensor_set)
 
         else:
             self.info['agents']['up'] = 0
@@ -233,8 +241,10 @@ class Services:
 
     def _get_sensor_plugins(self):
         
-        self.info['snorts']['total'] = self.info['agents']['total']
-        self.info['ntops']['total'] = self.info['agents']['total']
+        snort_set = Set()
+	snort_total_set = Set()
+        ntop_set = Set()
+	ntop_total_set = Set()
         
         if self.conn is None:
             return
@@ -250,14 +260,22 @@ class Services:
                 if result != []:
                     (sensor_ip, plugin_id, state, enabled) = result[0]
 
-                    if int(plugin_id) < 1500 and state == "start":
-                        self.info['snorts']['up'] += 1
-                    if int(plugin_id) == 2005 and state == "start":
-                        self.info['ntops']['up'] += 1
+
+                    if int(plugin_id) < 1500: 
+                        snort_total_set.add(sensor_ip)
+                        if state == "start":
+                            snort_set.add(sensor_ip)
+                    if int(plugin_id) == 2005: 
+                        ntop_total_set.add(sensor_ip)
+                        if state == "start":
+                            ntop_set.add(sensor_ip)
 
         except socket.error, e:
             print e
-
+        self.info['ntops']['up'] = len(ntop_set)
+        self.info['snorts']['up'] = len(snort_set)
+        self.info['snorts']['total'] = self.info['agents']['total']
+        self.info['ntops']['total'] = self.info['agents']['total']
 
     def recv_line(self, conn):
         char = data = ''
@@ -342,25 +360,34 @@ class SOC(threading.Thread):
         except Exception, e:
             print e
         self.services = None
-    
+
+
+    def send_all_info(self):
+
+        print __name__, ": Sending status info to SOC.."
+        self.send_status()
+
+        print __name__, ": Sending incidents info to SOC.."
+        self.send_incidents()
+
+        print __name__, ": Sending services info to SOC.."
+        self.send_services()
+
 
     def run(self):
 
+        self.send_all_info()
+        print __name__, ": Sleeping 180 seconds in order to let other threads run before this one.."
+        time.sleep(float(180))
+
         while 1:
-
-            print __name__, ": Sending status info to SOC.."
-            self.send_status()
-
-            print __name__, ": Sending incidents info to SOC.."
-            self.send_incidents()
-
-            print __name__, ": Sending services info to SOC.."
-            self.send_services()
-
+            self.send_all_info()
             time.sleep(float(Const.SLEEP))
-    
+
 
 if __name__ == '__main__':
     soc = SOC()
     soc.start()
 
+
+# vim:ts=4 sts=4 tw=79 expandtab:

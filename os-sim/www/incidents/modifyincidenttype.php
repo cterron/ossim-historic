@@ -15,10 +15,18 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
   <h1> <?php echo gettext("Modify Action type"); ?> </h1>
 
 <?php
-    $inctype_id = validateVar($_POST["id"]);
+    require_once 'classes/Security.inc';
 
-    $inctype_descr = validateVar($_POST["descr"]);
-    
+    $inctype_id = POST('id');
+    $inctype_descr = POST('descr');
+
+    ossim_valid($inctype_descr, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_AT, 'illegal:'._("Description"));
+    ossim_valid($inctype_id, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("id"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
     if( !Session::am_i_admin() )
     {
       require_once("ossim_error.inc");

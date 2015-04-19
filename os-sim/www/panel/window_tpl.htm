@@ -44,7 +44,11 @@
                 ondblclick="return minimize('%ID%');">%TITLE%</h1>
         </td>
         <td width="1%" valign="top" align="right" class="hb t1" NOWRAP>
-            <small>%CONFIG%&nbsp;</small>
+            <small>[<a href="#"
+                      onmouseover="javascript: Control.Tip.show('%HELP_MSG%');"
+                      onmouseout="javascript:  Control.Tip.hide()";>%HELP_LABEL%</a>]
+            </small>
+            <small>%CONFIG%</small>&nbsp;
             <!--
             <a href="#" onClick="javascript: return Control.Panel.destroyWindow(this);" title="Cerrar">
                 <img src="../pixmaps/panel/window_close.gif" width=17 height=13 border=0 alt="Cerrar" hspace=2>
@@ -68,5 +72,4 @@
 </div>
 
 </div></div></div>
-
 <!-- /Window -->

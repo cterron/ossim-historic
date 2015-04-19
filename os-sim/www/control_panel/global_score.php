@@ -499,7 +499,7 @@ if (!$rs_global = &$conn->Execute("$query"))
 <?php
     if ($nets_order_by_c)
     foreach ($nets_order_by_c as $net) {
-        if (!Net_group::isNetInGroup($conn, @$_GET["expand"], $net->get_net_name()))
+        if (!Net_group::isNetInGroup($conn, $expand, $net->get_net_name()))
         if (($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
         && ($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
         && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}
@@ -559,7 +559,7 @@ if (!$rs_global = &$conn->Execute("$query"))
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
-        if (!Net_group::isNetInGroup($conn, @$_GET["expand"], $net->get_net_name()))
+        if (!Net_group::isNetInGroup($conn, $expand, $net->get_net_name()))
         if (($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
         && ($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
         && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}

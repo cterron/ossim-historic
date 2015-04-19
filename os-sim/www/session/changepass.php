@@ -71,9 +71,16 @@ if (ossim_error()) {
         $error->display("PASSWORDS_MISMATCH");
     }
 
+    /* only the user himself or the admin can change passwords */
+	if ((POST('user') != $_SESSION["_user"]) &&
+        ($_SESSION["_user"] != ACL_DEFAULT_OSSIM_ADMIN))
+    {
+        die(ossim_error(_("To change the password for other user is not allowed")));
+    }
+    
     /* check OK, insert into DB */
     if (POST('update')) {
-
+        
         Session::changepass ($conn, $user, $pass1);
 
 ?>

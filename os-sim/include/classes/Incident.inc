@@ -695,7 +695,7 @@ class Incident {
         $date = date('Y-m-d H:i:s');
         $params = array($title, $type, $ref, $priority,
                         $user, 'Open', $date, $date);
-        if ($conn->Execute(OssimQuery($query), $params) === false) {
+        if ($conn->Execute($query, $params) === false) {
             die('error inserting incident: '.$conn->ErrorMsg());
         }
 

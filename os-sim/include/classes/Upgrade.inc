@@ -117,9 +117,11 @@ class Upgrade
              $type = $m[2];
              if ($type == 'sql') {
                 list($version, $dbtype) = explode('_', $name);
-             } else {
+             } elseif ($type == 'php') {
                 $version = $name;
                 $dbtype  = null;
+             } else {
+                 continue;
              }
              $file = $this->upgrades_path . DIRECTORY_SEPARATOR . $file;
              $upgrades[$version][$type] = array('file' => $file,
@@ -141,10 +143,8 @@ class Upgrade
         $oss_schm = $this->ossim_schema_version;
         $oss_dbtype = $this->ossim_dbtype;
         $db_req_upgrade = array();
-        //$all_upgrades = $this->get_all();
         
         foreach ($this->get_all() as $version => $data) {
-            //printr($data); exit;
             foreach ($data as $type => $options) {
                 $file   = $options['file'];
                 $dbtype = $options['dbtype'];

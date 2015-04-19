@@ -38,7 +38,7 @@
 #include <config.h>
 
 int
-sim_connect_send_alarm(SimConfig *config,SimEvent *event) {
+sim_connect_send_alarm(SimConfig *config, SimEvent *event) 
 {
   GInetAddr* addr;
   GTcpSocket* socket;
@@ -57,68 +57,67 @@ sim_connect_send_alarm(SimConfig *config,SimEvent *event) {
   hostname = g_strdup(config->framework.host);
 
   if (!hostname)
-    {
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Hostname error"); 	
+  {
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Hostname error"); 	
     return 1;
-    }
+  }
    
   port = config->framework.port;
     
  
   addr = gnet_inetaddr_new_nonblock (hostname, port);
   if (!addr)
-   {
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating the address");   
+  {
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating the address");   
     return 1;
-    }
+  }
 
 
   socket = gnet_tcp_socket_new (addr);
   gnet_inetaddr_delete (addr);
   if (!socket)
-    {
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating socket");
-      return 1;
-     }
-
-/* String to be sent */
-strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
-
-buffer=g_strdup_printf("event date=\"%s\" plugin_id=\"%d\" plugin_sid=\"%d\" risk=\"%d\" priority=\"%d\" reliability=\"%d\" event_id=\"%d\" backlog_id=\"%d\" src_ip=\"%s\" src_port=\"%d\" dst_ip=\"%s\" dst_port=\"%d\" protocol=\"%d\" sensor=\"%s\"\n", timestamp, event->plugin_id, event->plugin_sid, risk, event->priority, event->reliability, event->id, event->backlog_id, gnet_inetaddr_get_canonical_name (event->src_ia), event->src_port, gnet_inetaddr_get_canonical_name (event->dst_ia), event->dst_port, event->protocol, event->sensor);
-
-if (!buffer)
-  { 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message error");
-	return 1;
-   }
-	
-iochannel = gnet_tcp_socket_get_io_channel (socket);
-
-g_assert (iochannel != NULL);
-
-n = strlen(buffer);
-
-error = gnet_io_channel_writen (iochannel, buffer, n, &n);
-//error = gnet_io_channel_readn (iochannel, buffer, n, &n);
-
-//fwrite(buffer, n, 1, stdout);
-
-
-if (error != G_IO_ERROR_NONE)
-   { 
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message could not be sent"); 
-    free(buffer);
-    free (hostname);
+  {
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error creating socket");
     return 1;
    }
 
-gnet_tcp_socket_delete (socket);
-free(buffer);
-free(hostname);
-g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message sent succesfully");
-return 0;
+	/* String to be sent */
+	strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 
+	buffer=g_strdup_printf("event date=\"%s\" plugin_id=\"%d\" plugin_sid=\"%d\" risk=\"%d\" priority=\"%d\" reliability=\"%d\" event_id=\"%d\" backlog_id=\"%d\" src_ip=\"%s\" src_port=\"%d\" dst_ip=\"%s\" dst_port=\"%d\" protocol=\"%d\" sensor=\"%s\"\n", timestamp, event->plugin_id, event->plugin_sid, risk, event->priority, event->reliability, event->id, event->backlog_id, gnet_inetaddr_get_canonical_name (event->src_ia), event->src_port, gnet_inetaddr_get_canonical_name (event->dst_ia), event->dst_port, event->protocol, event->sensor);
+
+	if (!buffer)
+  { 
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message error");
+		return 1;
   }
+	
+	iochannel = gnet_tcp_socket_get_io_channel (socket);
+
+	g_assert (iochannel != NULL);
+
+	n = strlen(buffer);
+
+	error = gnet_io_channel_writen (iochannel, buffer, n, &n);
+	//error = gnet_io_channel_readn (iochannel, buffer, n, &n);
+
+	//fwrite(buffer, n, 1, stdout);
+
+
+	if (error != G_IO_ERROR_NONE)
+  { 
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message could not be sent"); 
+    free(buffer);
+    free (hostname);
+    return 1;
+  }
+
+	gnet_tcp_socket_delete (socket);
+	free(buffer);
+	free(hostname);
+	g_log(G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "message sent succesfully");
+	return 0;
+  
 }
 
 // vim: set tabstop=2:

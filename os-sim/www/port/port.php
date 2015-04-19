@@ -17,8 +17,17 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/Port_group.inc';
-    
-    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_SPACE . OSS_ALPHA)) $order = "name";
+    require_once 'classes/Security.inc';
+
+    $order = GET('order');
+
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("Order"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
+    if (empty($order)) $order = "name";
 ?>
 
   <table align="center">

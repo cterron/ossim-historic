@@ -5,10 +5,14 @@ require_once 'ossim_db.inc';
 
 Session::logcheck("MenuIncidents", "IncidentsReport");
 
-if (!$by = $_GET["by"]) {
-    require_once ('ossim_error.inc');
-    $error = new OssimError();
-    $error->display("FORM_MISSING_FIELDS");
+require_once 'classes/Security.inc';
+
+$by = GET('by');
+
+ossim_valid($by, OSS_ALPHA, OSS_SPACE, OSS_SCORE, 'illegal:'._("Target"));
+
+if (ossim_error()) {
+        die(ossim_error());
 }
 
 $conf = $GLOBALS["CONF"];

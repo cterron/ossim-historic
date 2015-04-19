@@ -170,9 +170,24 @@ sim_organizer_new (SimConfig	*config)
 void
 sim_organizer_run (SimOrganizer *organizer)
 {
+
+/****************
+GList *alist;
+GNode *anode;
+SimRule *arule;
+  g_mutex_lock (ossim.mutex_directives);
+  alist = sim_container_get_directives_ul (ossim.container);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "99999999999999999999999999999999999999999999");
+    SimDirective *adirective = (SimDirective *) alist->data;
+ 		anode = sim_directive_get_root_node (adirective);
+	  GNode *achildren = anode->children;
+          arule = achildren->data;
+				sim_rule_print(arule);
+  g_mutex_unlock (ossim.mutex_directives);
+******************/
+	
   SimEvent *event = NULL;
   SimCommand *cmd = NULL;
-  gchar    *query;
   gchar		*str;
 
   g_return_if_fail (organizer != NULL);
@@ -231,7 +246,9 @@ sim_organizer_run (SimOrganizer *organizer)
 /*
  *
  * This is usefull only if the event has the "Alarm" flag.
- * We also assign here an event->id (if it hasn't got anyone, like the first time the event arrives)
+ * We also assign here an event->id (if it hasn't got anyone, like the first time the event arrives).
+ * event->id is just needed to know if that event belongs to a specific backlog_id (a directive), so if
+ * an event is not an alarm, it hasn't got any sense to fill event->id.
  *
  */
 void
@@ -751,10 +768,9 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		  new_event->type = SIM_EVENT_TYPE_DETECTOR;
 		  new_event->time = time (NULL);
 
-	  	if (config->sensor.ip)
-	    	new_event->sensor = g_strdup (config->sensor.ip);
-			if (config->sensor.interface)
-		    new_event->interface = g_strdup (config->sensor.interface);
+    	new_event->sensor = g_strdup (event->sensor);
+			if (event->interface)
+		    new_event->interface = g_strdup (event->interface);
 	  
 			new_event->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
 			new_event->plugin_sid = sim_directive_get_id (backlog);
@@ -770,6 +786,8 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 			if ((ia = sim_rule_get_sensor (rule_root))) 
 				new_event->sensor = gnet_inetaddr_get_canonical_name (ia);
 
+			//FIXME: Is needed here to add filename, username, userdata, data, etc, to the new_event???
+			
 			new_event->alarm = FALSE;
 			new_event->level = event->level;
 
@@ -810,12 +828,12 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 				  if (rule->type == SIM_RULE_TYPE_MONITOR)
 				  {
 						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: Monitor rule");
-			    	SimCommand *cmd = sim_command_new_from_rule (rule);
+//			    	SimCommand *cmd = sim_command_new_from_rule (rule);
 				    sim_server_push_session_plugin_command (ossim.server, 
 																							      SIM_SESSION_TYPE_SENSOR, 
 																							      sim_rule_get_plugin_id (rule),
-																							      cmd);
-	    		  g_object_unref (cmd);
+																							      rule);
+//	    		  g_object_unref (cmd);
 			    }
 		  
 				  children = children->next;
@@ -962,15 +980,15 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
 				  if (rule->type == SIM_RULE_TYPE_MONITOR)
 			    {
-			      SimCommand *cmd = sim_command_new_from_rule (rule);
+//			      SimCommand *cmd = sim_command_new_from_rule (rule);
 		  			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "MONITOR rule");
 						sim_server_debug_print_sessions (ossim.server);
 								
-			      sim_server_push_session_plugin_command (ossim.server,									//FIXME: make this non-blocking 
+			      sim_server_push_session_plugin_command (ossim.server,								//non-blocking call	
 																							      SIM_SESSION_TYPE_SENSOR, 
 																							      sim_rule_get_plugin_id (rule),
-																							      cmd);
-			      g_object_unref (cmd);
+																							      rule);
+//			      g_object_unref (cmd);
 			    }
 
 			  	children = children->next;
@@ -991,15 +1009,9 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	      new_event->time = time (NULL);
 	      new_event->backlog_id = sim_directive_get_backlog_id (backlog);
 	  
-/*
-	      if (config->sensor.ip)
-					new_event->sensor = g_strdup (config->sensor.ip);
-	      if (config->sensor.interface)
-					new_event->interface = g_strdup (config->sensor.interface);
-*/
 				new_event->sensor = gnet_inetaddr_get_canonical_name (sim_rule_get_sensor (rule_root));
-	      if (config->sensor.interface)											//FIXME: I think this is wrong
-					new_event->interface = g_strdup (config->sensor.interface);
+	      if (event->interface)											
+					new_event->interface = g_strdup (event->interface);
 
 	      new_event->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
 	      new_event->plugin_sid = sim_directive_get_id (backlog);
@@ -1085,6 +1097,9 @@ sim_organizer_snort_ossim_event_insert (SimDatabase  *db_snort,
 
   sim_database_execute_no_query (db_snort, insert);
   g_free (insert);
+
+	sim_organizer_snort_extra_data_insert (db_snort, event, sid, cid);
+		
 }
 
 /*
@@ -1199,19 +1214,47 @@ sim_organizer_snort_event_get_max_cid (SimDatabase  *db_snort,
   return last_cid;
 }
 
+/* With each event, we must insert his cid&sid into the snort DB to be able to identify
+ * that events individually
+ *
+ * Also, here is needed to pass the sig_id. The sig_id is the only way to acid/base 
+ * to know the name of the event. In the signature table, the field sig_id is the same than here,
+ * so acid can extract the name of the event.
+ */
+void 
+sim_organizer_snort_event_sidcid_insert (SimDatabase  *db_snort,
+																					SimEvent		*event,
+																					gint					sid,
+																					gulong				cid,
+																					gint					sig_id) 
+{
+	g_return_if_fail (db_snort);
+	g_return_if_fail (SIM_IS_DATABASE (db_snort));
+			 
+	gchar timestamp[TIMEBUF_SIZE];
+	gchar *query;
+		 
+	strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+
+  query = g_strdup_printf ("INSERT INTO event (sid, cid, signature, timestamp) VALUES (%u, %u, %u, '%s')", sid, cid, sig_id, timestamp);
+
+  sim_database_execute_no_query (db_snort, query);
+  g_free (query);
+}
 
 /*
  *
- * This calls to sim_organizer_snort_ossim_event_insert, so the events are stored in the snort DB
+ * This calls to sim_organizer_snort_ossim_event_insert, so the events are stored in the snort DB.
+ * This inserts into event and into ossim_event.
  *
  */
 void
 sim_organizer_snort_event_insert (SimDatabase  *db_snort,
 																  SimEvent     *event,
 																  gint          sid,
-																  gulong        cid)
+																  gulong        cid,
+																	gint					sig_id)
 {
-  gchar timestamp[TIMEBUF_SIZE];
   gchar *query;
 
   g_return_if_fail (db_snort);
@@ -1221,15 +1264,7 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
   g_return_if_fail (sid > 0);
   g_return_if_fail (cid > 0);
 
-  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
-
-  query = g_strdup_printf ("INSERT INTO event (sid, cid, timestamp) "
-			   "VALUES (%u, %u, '%s')",
-			   sid, cid, timestamp);
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_event_insert: query1: %s",query);
-		
-  sim_database_execute_no_query (db_snort, query);
-  g_free (query);
+	sim_organizer_snort_event_sidcid_insert (db_snort, event, sid, cid, sig_id); 
 
   query = g_strdup_printf ("INSERT INTO iphdr (sid, cid, ip_src, ip_dst, ip_proto) "
 			   "VALUES (%u, %u, %lu, %lu, %d)",
@@ -1277,18 +1312,88 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
       g_free (query);
     }
 
+//	sim_organizer_snort_extra_data_insert(db_snort, event, sid, cid);	
+
+	
   sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
 }
+
+void
+sim_organizer_snort_extra_data_insert (SimDatabase  *db_snort,
+																				SimEvent     *event,
+																				gint          sid,
+																				gulong        cid)
+{
+  gchar         *insert;
+
+  g_return_if_fail (db_snort);
+  g_return_if_fail (SIM_IS_DATABASE (db_snort));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
+  g_return_if_fail (sid > 0);
+  g_return_if_fail (cid > 0);
+
+  event->snort_sid = sid;
+  event->snort_cid = cid;
+
+/*	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->filename: %s", event->filename);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->username: %s", event->username);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->password: %s", event->password);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata1: %s", event->userdata1);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata2: %s", event->userdata2);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata3: %s", event->userdata3);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata4: %s", event->userdata4);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata5: %s", event->userdata5);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata6: %s", event->userdata6);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata7: %s", event->userdata7);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata8: %s", event->userdata8);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: event->userdata9: %s", event->userdata9);
+*/
+	// hmm this is so ugly..
+	if ((event->filename) ||
+			(event->username) ||
+			(event->password) ||
+			(event->userdata1) ||
+			(event->userdata2) ||
+			(event->userdata3) ||
+			(event->userdata4) ||
+			(event->userdata5) ||
+			(event->userdata6) ||
+			(event->userdata7) ||
+			(event->userdata8) ||
+			(event->userdata9))
+	{
+	  insert = g_strdup_printf ("INSERT INTO extra_data (sid, cid, filename, username, password, userdata1, userdata2, userdata3, userdata4, userdata5, userdata6, userdata7, userdata8, userdata9) "
+			    "VALUES (%u, %u, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", sid, cid,
+			    event->filename, event->username, event->password, event->userdata1, event->userdata2, event->userdata3, event->userdata4, event->userdata5, event->userdata6, event->userdata7, event->userdata8, event->userdata9);
+
+ 		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: YES");
+	
+		sim_database_execute_no_query (db_snort, insert);
+	  g_free (insert);
+	}
+	else
+ 		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_extra_data_insert: NO");
+}
+
+
+
+
+
+
+
+
 
 /*
  *
  * Inserts an event in the snort DB in the table ossim_event. 
- *
+ * This doesn't inserts an event into the "event" table because that fields
+ * are stored by snort directly to DB.
  */
 void
 sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
-					      SimEvent     *event,
-					      gint          sid)
+																				      SimEvent     *event,
+																				      gint          sid)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -1322,28 +1427,28 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
   g_string_append_printf (where, " AND ip_proto = %d", event->protocol);
 
   switch (event->protocol)
-    {
+  {
     case SIM_PROTOCOL_TYPE_ICMP:
-      break;
+		      break;
     case SIM_PROTOCOL_TYPE_TCP:
-      g_string_append (select, " LEFT JOIN tcphdr ON (event.sid = tcphdr.sid AND event.cid = tcphdr.cid)");
+				  g_string_append (select, " LEFT JOIN tcphdr ON (event.sid = tcphdr.sid AND event.cid = tcphdr.cid)");
 
-      if (event->src_port)
-	g_string_append_printf (where, " AND tcp_sport = %d", event->src_port);
-      if (event->dst_port)
-	g_string_append_printf (where, " AND tcp_dport = %d", event->dst_port);
-      break;
+		      if (event->src_port)
+						g_string_append_printf (where, " AND tcp_sport = %d", event->src_port);
+			    if (event->dst_port)
+						g_string_append_printf (where, " AND tcp_dport = %d", event->dst_port);
+		    break;
     case SIM_PROTOCOL_TYPE_UDP:
-      g_string_append (select, " LEFT JOIN udphdr ON (event.sid = udphdr.sid AND event.cid = udphdr.cid)");
+				  g_string_append (select, " LEFT JOIN udphdr ON (event.sid = udphdr.sid AND event.cid = udphdr.cid)");
 
-      if (event->src_port)
-	g_string_append_printf (where, " AND udp_sport = %d ", event->src_port);
-      if (event->dst_port)
-	g_string_append_printf (where, " AND udp_dport = %d ", event->dst_port);
-      break;
+		      if (event->src_port)
+						g_string_append_printf (where, " AND udp_sport = %d ", event->src_port);
+		      if (event->dst_port)
+						g_string_append_printf (where, " AND udp_dport = %d ", event->dst_port);
+	      break;
     default:
-      break;
-    }
+		    break;
+  }
 
   g_string_append (select, where->str);
 
@@ -1351,22 +1456,80 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
 
   dm = sim_database_execute_single_command (db_snort, select->str);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  cid = value->value.v_uinteger;
-	  sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
-	}
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+			cid = value->value.v_uinteger;
+		  sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
+		}
 
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
     {
       g_message ("EVENTS ID DATA MODEL ERROR");
     }
 
+	sim_organizer_snort_extra_data_insert (db_snort, event, sid, cid);	
+	
   g_string_free (select, TRUE);
+}
+
+/*
+ * This function returns the number (sig_id) associated with each event kind. When a new
+ * event arrives here, we have to insert it's name into "signature" table. Then we can recurse and get the sig_id
+ * assigned to the name (this happens thanks to auto_increment in DB).
+ *
+ */
+gint
+sim_organizer_snort_signature_get_id (SimDatabase  *db_snort,
+                                      gchar        *name)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gint           sig_id;
+  gchar         *query;
+  gchar         *insert;
+  gint           row;
+  gint           ret;
+
+  g_return_val_if_fail (db_snort, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (db_snort), 0);
+  g_return_val_if_fail (name, 0);
+
+  /* SID */
+  query = g_strdup_printf ("SELECT sig_id FROM signature WHERE sig_name = '%s'", name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_signature_get_id: Query: %s",query);
+  dm = sim_database_execute_single_command (db_snort, query);
+  if (dm)
+  {
+    if (gda_data_model_get_n_rows (dm)) //if the name of the plugin_sid is in database, get its sig_id (signature id).
+    {
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+      sig_id = gda_value_get_uinteger (value);
+    }
+    else
+    {
+      insert = g_strdup_printf ("INSERT INTO signature (sig_name, sig_class_id) " "VALUES ('%s', 0)", name);
+
+      ret = sim_database_execute_no_query (db_snort, insert);
+      g_free (insert);
+
+      if (ret < 0)
+        g_critical ("ERROR: CANT INSERT INTO SNORT DB");
+
+      sig_id = sim_organizer_snort_signature_get_id (db_snort, name);
+    }
+
+    g_object_unref(dm);
+  }
+  else
+    g_message ("SIG ID DATA MODEL ERROR");
+
+  g_free (query);
+
+  return sig_id;
 }
 
 /*
@@ -1386,6 +1549,7 @@ sim_organizer_snort (SimOrganizer	*organizer,
   gulong	 cid;
   GList		*events = NULL;
   GList		*list = NULL;
+	gint		sig_id;
 
   g_return_if_fail (organizer);
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
@@ -1396,7 +1560,31 @@ sim_organizer_snort (SimOrganizer	*organizer,
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort Start: event->sid: %d ; event->cid: %lu",event->snort_sid,event->snort_cid);
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->sensor: %s ; event->interface: %s",event->sensor, event->interface);
-  // if there are snort_sid (wich snort is running) and snort_cid (number of
+ 
+	event->data = g_strdup(event->log);
+	
+	//Copy all the extra data to the payload before insert it.
+	//FIXME: This should be viewed each field in a separate place in ACID. We should replace ACID or something like that..
+	//May be that we have to copy some fields to data. this is a bad way to do things..
+	gchar *new_data_aux;
+	new_data_aux = g_strdup_printf ("%s %s %s %s %s %s %s %s %s %s %s %s %s",  
+																	(event->data)? event->data: " ",
+																	(event->filename)? event->filename: " ",
+																	(event->username)? event->username: " ",
+																	(event->password)? event->password: " ",
+																	(event->userdata1)? event->userdata1: " ",
+																	(event->userdata2)? event->userdata2: " ",
+																	(event->userdata3)? event->userdata3: " ",
+																	(event->userdata4)? event->userdata4: " ",
+																	(event->userdata5)? event->userdata5: " ",
+																	(event->userdata6)? event->userdata6: " ",
+																	(event->userdata7)? event->userdata7: " ",
+																	(event->userdata8)? event->userdata8: " ",
+																	(event->userdata9)? event->userdata9: " ");
+	g_free(event->data);
+	event->data = new_data_aux;
+	
+	// if there are snort_sid (wich snort is running) and snort_cid (number of
   // event inside snort) inside the event received, insert it directly in the snort DB.
   if (event->snort_sid && event->snort_cid && event->store_in_DB) 
   {
@@ -1415,7 +1603,11 @@ sim_organizer_snort (SimOrganizer	*organizer,
   }
   sim_plugin_sid_print_internal_data (plugin_sid);
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort: event->store_in_DB: %d", event->store_in_DB);
-										
+
+  //Get the id from the signature name
+  sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort, sim_plugin_sid_get_name (plugin_sid));
+	
+	
   /* Events SNORT */
   if ((event->plugin_id >= 1001) && (event->plugin_id < 1500) && event->store_in_DB)
   {
@@ -1502,16 +1694,14 @@ sim_organizer_snort (SimOrganizer	*organizer,
 									{
 										strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 										sim_container_db_insert_host_ids_event_ul (ossim.container,
-																																ossim.dbossim,
-																																event->src_ia,
+																																ossim.dbossim,																															
+																																ossim.dbsnort,
+																																event,
 																																timestamp,
-																								                event->data_storage[0], //hostname
-																								                event->data_storage[1], //event_type
-																								                event->data_storage[2], //target
-																								                event->data_storage[3], //what
-																								                event->data_storage[4], //extra_data
-																								                event->sensor,
-																								                event->plugin_sid);	
+																																sid,
+																																++cid,
+																																sig_id);	
+
 										g_strfreev (event->data_storage);
 									}
 									else
@@ -1519,8 +1709,7 @@ sim_organizer_snort (SimOrganizer	*organizer,
 			
 							break;
 				default:
-									event->data = g_strdup(event->log);
-									sim_organizer_snort_event_insert (ossim.dbsnort, event, sid, ++cid);
+									sim_organizer_snort_event_insert (ossim.dbsnort, event, sid, ++cid, sig_id);
 							break;
 
 			}

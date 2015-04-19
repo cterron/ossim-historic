@@ -130,19 +130,19 @@ class Action(threading.Thread):
                 continue
 
             # source ports
-            if self.__request['src_port'] not in port_source_list and \
+            if int(self.__request['src_port']) not in port_source_list and \
               0 not in port_source_list:
                 match = 0
                 continue
 
             # dest ports
-            if self.__request['dst_port'] not in port_dest_list and \
+            if int(self.__request['dst_port']) not in port_dest_list and \
               0 not in port_dest_list:
                 match = 0
                 continue
 
             # plugins
-            if self.__request['plugin_id'] not in plugin_list and \
+            if int(self.__request['plugin_id']) not in plugin_list and \
               0 not in plugin_list:
                 match = 0
                 continue
@@ -177,6 +177,9 @@ class Action(threading.Thread):
                 response[item] = self.__db.exec_query(
                     "SELECT * FROM response_%s WHERE response_id = %d" %\
                         (item, response["id"]))
+            # ensure int datatype for plugin ids and ports
+            for item in ("plugin", "port"):
+                response[item] = int(response[item])
 
         return responses
 

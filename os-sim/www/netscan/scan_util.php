@@ -31,8 +31,8 @@
             $html .= "<td>" . $host['ip']   . "</td>\n";
             $html .= "<td>" . $host['mac'];
             $html .= "&nbsp;" . $host['mac_vendor'] . "</td>\n";
-            $html .= "<td>" . $host['os'] . " ";
-            $html .= __os2pixmap($host['os']) . "</td>\n";
+            $html .= "<td>" . $host['os'] . "&nbsp;";
+            $html .= __os2pixmap($host['os']) . "&nbsp;</td>\n";
             $html .= "<td>";
             foreach ($host["services"] as $service) {
                 $title = $service["port"] . "/" . 
@@ -42,7 +42,7 @@
                 $html .= $service["service"];
                 $html .= "</span>&nbsp;";
             }
-            $html .= "</td>\n";
+            $html .= "&nbsp</td>\n";
             $html .= "<td><input CHECKED type=\"checkbox\" 
                 value=\"". $host['ip'] . "\" name=\"ip_$count\"/></td>\n";
             $html .= "</tr>";

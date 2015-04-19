@@ -253,7 +253,6 @@ class Host_os{
             print $conn->ErrorMsg();
         } else {
             $os = $aux->fields["os"];
-            $vendor = $aux->fields["vendor"];
             $iface = $aux->fields["interface"];
         }    
         

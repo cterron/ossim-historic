@@ -66,7 +66,7 @@ struct _SimRulePrivate {
 
   gint        count_occu;
 
-  gint        plugin_id;
+  gint        plugin_id;		//store data from event in this variables
   gint        plugin_sid;
   GInetAddr  *src_ia;
   GInetAddr  *dst_ia;
@@ -74,7 +74,23 @@ struct _SimRulePrivate {
   gint        dst_port;
   SimProtocolType    protocol;
   GInetAddr  *sensor;
+	
+	//I call this ev_filename because call to the GLists "userdatas1" doesn't likes to me. 
+	//This variables are the event one's inside the rule.
+	gchar				*ev_filename;
+	gchar				*ev_username;
+	gchar				*ev_password;
+	gchar				*ev_userdata1;
+	gchar				*ev_userdata2;
+	gchar				*ev_userdata3;
+	gchar				*ev_userdata4;
+	gchar				*ev_userdata5;
+	gchar				*ev_userdata6;
+	gchar				*ev_userdata7;
+	gchar				*ev_userdata8;
+	gchar				*ev_userdata9;
 
+	
   gboolean         sticky;
   SimRuleVarType   sticky_different;
   GList           *stickys;
@@ -90,14 +106,40 @@ struct _SimRulePrivate {
 	GList				*protocols_not;	//gint
 	GList				*sensors_not;		//SimSensor
 
-	GList      *vars;										
-  GList      *plugin_sids;
-  GList      *src_inets; //SimInet 
-  GList      *dst_inets;
-  GList      *src_ports;
-  GList      *dst_ports;
-  GList      *protocols;
-  GList      *sensors;	//SimSensor
+	GList				*vars;										
+  GList				*plugin_sids;
+  GList				*src_inets; //SimInet 
+  GList				*dst_inets;
+  GList				*src_ports;
+  GList				*dst_ports;
+  GList				*protocols;
+  GList				*sensors;	//SimSensor
+
+	//additional keywords list. The keywords can be negated also (negated in a list, and non-negated in other list)
+	GList				*filename;
+	GList				*username;
+	GList				*password;
+	GList				*userdata1;
+	GList				*userdata2;
+	GList				*userdata3;
+	GList				*userdata4;
+	GList				*userdata5;
+	GList				*userdata6;
+	GList				*userdata7;
+	GList				*userdata8;
+	GList				*userdata9;
+	GList				*filename_not;
+	GList				*username_not;
+	GList				*password_not;
+	GList				*userdata1_not;
+	GList				*userdata2_not;
+	GList				*userdata3_not;
+	GList				*userdata4_not;
+	GList				*userdata5_not;
+	GList				*userdata6_not;
+	GList				*userdata7_not;
+	GList				*userdata8_not;
+	GList				*userdata9_not;
 };
 
 static gpointer parent_class = NULL;
@@ -120,7 +162,7 @@ sim_rule_impl_finalize (GObject  *gobject)
   GList   *list;
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_impl_finalize: Name %s, Level %d", rule->_priv->name, rule->_priv->level);
-//    sim_rule_print(rule);
+    sim_rule_print(rule);
 
   if (rule->_priv->name)
     g_free (rule->_priv->name);
@@ -191,6 +233,129 @@ sim_rule_impl_finalize (GObject  *gobject)
   /* stickys */
   g_list_free (rule->_priv->stickys);
 
+	// filename
+	list = rule->_priv->filename; 
+	while (list) 
+	{ 
+		gchar *filename = (gchar *) list->data; 
+		g_free (filename); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->filename); 
+
+	// username
+	list = rule->_priv->username; 
+	while (list) 
+	{ 
+		gchar *username = (gchar *) list->data; 
+		g_free (username); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->username); 
+
+	// password
+	list = rule->_priv->password; 
+	while (list) 
+	{ 
+		gchar *password = (gchar *) list->data; 
+		g_free (password); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->password); 
+
+	gchar *userdata = NULL;	//aux variable
+	
+	// userdata1
+	list = rule->_priv->userdata1; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata1); 
+
+	// userdata2
+	list = rule->_priv->userdata2; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata2); 
+
+	// userdata3
+	list = rule->_priv->userdata3; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata3); 
+
+	// userdata4
+	list = rule->_priv->userdata4; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata4); 
+
+	// userdata5
+	list = rule->_priv->userdata5; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata5); 
+
+	// userdata6
+	list = rule->_priv->userdata6; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata6); 
+
+	// userdata7
+	list = rule->_priv->userdata7; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata7); 
+
+	// userdata8
+	list = rule->_priv->userdata8; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata8); 
+
+	// userdata9
+	list = rule->_priv->userdata9; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata9); 
+
+
 	//not's:
 	// !src ips 
 	list = rule->_priv->src_inets_not; 
@@ -213,43 +378,16 @@ sim_rule_impl_finalize (GObject  *gobject)
 	g_list_free (rule->_priv->dst_inets_not); 
 
 	// !plugin_sids 
-	list = rule->_priv->plugin_sids_not; 
-	while (list) 
-	{ 
-		gint *plugin_sid = (int *) list->data; 
-		g_free (plugin_sid); 
-		list = list->next; 
-	} 
 	g_list_free (rule->_priv->plugin_sids_not); 
  
 	// !src ports
-	list = rule->_priv->src_ports_not; 
-	while (list) 
-	{ 
-		gint *port = (int *) list->data; 
-		g_free (port); 
-		list = list->next; 
-	} 
 	g_list_free (rule->_priv->src_ports_not); 
  
  	// !dst ports
-	list = rule->_priv->dst_ports_not; 
-	while (list) 
-	{ 
-		gint *port = (int *) list->data; 
-		g_free (port); 
-		list = list->next; 
-	} 
 	g_list_free (rule->_priv->dst_ports_not); 
 
  	// !protocols
 	list = rule->_priv->protocols_not; 
-	while (list) 
-	{ 
-		gint *protocol = (int *) list->data; 
-		g_free (protocol); 
-		list = list->next; 
-	} 
 	g_list_free (rule->_priv->sensors_not); 
  
 	// !sensors
@@ -261,7 +399,139 @@ sim_rule_impl_finalize (GObject  *gobject)
 		list = list->next; 
 	} 
 	g_list_free (rule->_priv->sensors_not); 
- 
+
+	// !filename
+	list = rule->_priv->filename_not; 
+	while (list) 
+	{ 
+		gchar *filename = (gchar *) list->data; 
+		g_free (filename); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->filename_not); 
+
+	// !username
+	list = rule->_priv->username_not; 
+	while (list) 
+	{ 
+		gchar *username = (gchar *) list->data; 
+		g_free (username); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->username_not); 
+
+	// !password
+	list = rule->_priv->password_not; 
+	while (list) 
+	{ 
+		gchar *password = (gchar *) list->data; 
+		g_free (password); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->password_not); 
+
+	// !userdata1
+	list = rule->_priv->userdata1_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata1_not); 
+
+	// !userdata2
+	list = rule->_priv->userdata2_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata2_not); 
+
+	// !userdata3
+	list = rule->_priv->userdata3_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata3_not); 
+
+	// !userdata4
+	list = rule->_priv->userdata4_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata4_not); 
+
+	// !userdata5
+	list = rule->_priv->userdata5_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata5_not); 
+
+	// !userdata6
+	list = rule->_priv->userdata6_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata6_not); 
+
+	// !userdata7
+	list = rule->_priv->userdata7_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata7_not); 
+
+	// !userdata8
+	list = rule->_priv->userdata8_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata8_not); 
+
+	// !userdata9
+	list = rule->_priv->userdata9_not; 
+	while (list) 
+	{ 
+		userdata = (gchar *) list->data; 
+		g_free (userdata); 
+		list = list->next; 
+	} 
+	g_list_free (rule->_priv->userdata9_not); 
+
+	g_free (rule->_priv->ev_filename);
+	g_free (rule->_priv->ev_username);
+	g_free (rule->_priv->ev_password);
+	g_free (rule->_priv->ev_userdata1);
+	g_free (rule->_priv->ev_userdata2);
+	g_free (rule->_priv->ev_userdata3);
+	g_free (rule->_priv->ev_userdata4);
+	g_free (rule->_priv->ev_userdata5);
+	g_free (rule->_priv->ev_userdata6);
+	g_free (rule->_priv->ev_userdata7);
+	g_free (rule->_priv->ev_userdata8);
+	g_free (rule->_priv->ev_userdata9);
 
   g_free (rule->_priv);
 
@@ -336,6 +606,36 @@ sim_rule_instance_init (SimRule *rule)
   rule->_priv->dst_ports = NULL;
   rule->_priv->protocols = NULL;
   rule->_priv->sensors = NULL;
+
+	//GList *
+	rule->_priv->filename = NULL;
+	rule->_priv->username = NULL;
+	rule->_priv->password = NULL;
+	rule->_priv->userdata1 = NULL;
+	rule->_priv->userdata2 = NULL;
+	rule->_priv->userdata3 = NULL;
+	rule->_priv->userdata4 = NULL;
+	rule->_priv->userdata5 = NULL;
+	rule->_priv->userdata6 = NULL;
+	rule->_priv->userdata7 = NULL;
+	rule->_priv->userdata8 = NULL;
+	rule->_priv->userdata9 = NULL;
+
+	//gchar *
+	rule->_priv->ev_filename = NULL;
+	rule->_priv->ev_username = NULL;
+	rule->_priv->ev_password = NULL;
+	rule->_priv->ev_userdata1 = NULL;
+	rule->_priv->ev_userdata2 = NULL;
+	rule->_priv->ev_userdata3 = NULL;
+	rule->_priv->ev_userdata4 = NULL;
+	rule->_priv->ev_userdata5 = NULL;
+	rule->_priv->ev_userdata6 = NULL;
+	rule->_priv->ev_userdata7 = NULL;
+	rule->_priv->ev_userdata8 = NULL;
+	rule->_priv->ev_userdata9 = NULL;
+	
+		
 }
 
 /* Public Methods */
@@ -996,7 +1296,7 @@ sim_rule_get_plugin_sid (SimRule   *rule)
  */
 void
 sim_rule_set_plugin_sid (SimRule   *rule,
-			 gint       plugin_sid)
+												gint       plugin_sid)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1004,6 +1304,285 @@ sim_rule_set_plugin_sid (SimRule   *rule,
 
   rule->_priv->plugin_sid = plugin_sid;
 }
+
+
+void
+sim_rule_set_filename (SimRule		*rule,
+												gchar			*filename)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (filename);
+
+  if (rule->_priv->ev_filename)
+    g_free (rule->_priv->ev_filename);
+
+  rule->_priv->ev_filename = g_strdup (filename);
+}
+
+void
+sim_rule_set_username (SimRule		*rule,
+												gchar			*username)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (username);
+
+  if (rule->_priv->ev_username)
+    g_free (rule->_priv->ev_username);
+
+  rule->_priv->ev_username = g_strdup (username);
+}
+
+void
+sim_rule_set_password (SimRule		*rule,
+												gchar			*password)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (password);
+
+  if (rule->_priv->ev_password)
+    g_free (rule->_priv->ev_password);
+
+  rule->_priv->ev_password = g_strdup (password);
+}
+
+void
+sim_rule_set_userdata1 (SimRule		*rule,
+												gchar			*userdata1)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata1);
+
+  if (rule->_priv->ev_userdata1)
+    g_free (rule->_priv->ev_userdata1);
+
+  rule->_priv->ev_userdata1 = g_strdup (userdata1);
+}
+
+void
+sim_rule_set_userdata2 (SimRule		*rule,
+												gchar			*userdata2)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata2);
+
+  if (rule->_priv->ev_userdata2)
+    g_free (rule->_priv->ev_userdata2);
+
+  rule->_priv->ev_userdata2 = g_strdup (userdata2);
+}
+
+void
+sim_rule_set_userdata3 (SimRule		*rule,
+												gchar			*userdata3)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata3);
+
+  if (rule->_priv->ev_userdata3)
+    g_free (rule->_priv->ev_userdata3);
+
+  rule->_priv->ev_userdata3 = g_strdup (userdata3);
+}
+
+void
+sim_rule_set_userdata4 (SimRule		*rule,
+												gchar			*userdata4)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata4);
+
+  if (rule->_priv->ev_userdata4)
+    g_free (rule->_priv->ev_userdata4);
+
+  rule->_priv->ev_userdata4 = g_strdup (userdata4);
+}
+
+void
+sim_rule_set_userdata5 (SimRule		*rule,
+												gchar			*userdata5)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata5);
+
+  if (rule->_priv->ev_userdata5)
+    g_free (rule->_priv->ev_userdata5);
+
+  rule->_priv->ev_userdata5 = g_strdup (userdata5);
+}
+
+void
+sim_rule_set_userdata6 (SimRule		*rule,
+												gchar			*userdata6)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata6);
+
+  if (rule->_priv->ev_userdata6)
+    g_free (rule->_priv->ev_userdata6);
+
+  rule->_priv->ev_userdata6 = g_strdup (userdata6);
+}
+
+void
+sim_rule_set_userdata7 (SimRule		*rule,
+												gchar			*userdata7)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata7);
+
+  if (rule->_priv->ev_userdata7)
+    g_free (rule->_priv->ev_userdata7);
+
+  rule->_priv->ev_userdata7 = g_strdup (userdata7);
+}
+
+void
+sim_rule_set_userdata8 (SimRule		*rule,
+												gchar			*userdata8)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata8);
+
+  if (rule->_priv->ev_userdata8)
+    g_free (rule->_priv->ev_userdata8);
+
+  rule->_priv->ev_userdata8 = g_strdup (userdata8);
+}
+
+void
+sim_rule_set_userdata9 (SimRule		*rule,
+												gchar			*userdata9)
+{
+  g_return_if_fail (rule);
+  g_return_if_fail (SIM_IS_RULE (rule));
+  g_return_if_fail (userdata9);
+
+  if (rule->_priv->ev_userdata9)
+    g_free (rule->_priv->ev_userdata9);
+
+  rule->_priv->ev_userdata9 = g_strdup (userdata9);
+}
+
+gchar*
+sim_rule_get_filename (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_filename;
+}
+
+gchar*
+sim_rule_get_username (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_username;
+}
+
+gchar*
+sim_rule_get_password (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_password;
+}
+
+gchar*
+sim_rule_get_userdata1 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata1;
+}
+
+gchar*
+sim_rule_get_userdata2 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata2;
+}
+
+gchar*
+sim_rule_get_userdata3 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata3;
+}
+
+gchar*
+sim_rule_get_userdata4 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata4;
+}
+
+gchar*
+sim_rule_get_userdata5 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata5;
+}
+
+gchar*
+sim_rule_get_userdata6 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata6;
+}
+
+gchar*
+sim_rule_get_userdata7 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata7;
+}
+
+gchar*
+sim_rule_get_userdata8 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata8;
+}
+
+gchar*
+sim_rule_get_userdata9 (SimRule   *rule)
+{
+  g_return_val_if_fail (rule, NULL);
+  g_return_val_if_fail (SIM_IS_RULE (rule), NULL);
+
+  return rule->_priv->ev_userdata9;
+}
+
+
 
 /*
  *
@@ -1272,7 +1851,7 @@ sim_rule_get_src_inets (SimRule   *rule)
  */
 void
 sim_rule_append_dst_inet (SimRule    *rule,
-			  SimInet    *inet)
+												  SimInet    *inet)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1323,7 +1902,7 @@ sim_rule_get_dst_inets (SimRule   *rule)
  */
 void
 sim_rule_append_src_port (SimRule   *rule,
-			  gint       src_port)
+												  gint       src_port)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1372,7 +1951,7 @@ sim_rule_get_src_ports (SimRule   *rule)
  */
 void
 sim_rule_append_dst_port (SimRule   *rule,
-			  gint       dst_port)
+												  gint       dst_port)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1518,7 +2097,7 @@ sim_rule_get_sensors (SimRule   *rule)
  */
 void
 sim_rule_append_var (SimRule         *rule,
-		     SimRuleVar      *var)
+								     SimRuleVar      *var)
 {
   g_return_if_fail (rule);
   g_return_if_fail (SIM_IS_RULE (rule));
@@ -1541,6 +2120,161 @@ sim_rule_get_vars (SimRule     *rule)
 
   return rule->_priv->vars;		//SimRuleVar
 }
+
+/*
+ * Here we will group some keywords: its a pain to have multiple functions that do exactly the same.
+ * //FIXME: In OSSIM v2, I'll change all this with a hash table where the insertion of new keywords
+ * will be as easy as define them somewhere
+ */
+void
+sim_rule_append_generic	(SimRule				*rule, 
+												gchar						*data,
+												SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_append_generic: %s", data);
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						rule->_priv->filename = g_list_append (rule->_priv->filename, data);
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						rule->_priv->username = g_list_append (rule->_priv->username, data);
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						rule->_priv->password = g_list_append (rule->_priv->password, data);
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_append_generic: password: %s", data);
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						rule->_priv->userdata1 = g_list_append (rule->_priv->userdata1, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						rule->_priv->userdata2 = g_list_append (rule->_priv->userdata2, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						rule->_priv->userdata3 = g_list_append (rule->_priv->userdata3, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+					  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_append_generic: userdata4: %s", data);
+						rule->_priv->userdata4 = g_list_append (rule->_priv->userdata4, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						rule->_priv->userdata5 = g_list_append (rule->_priv->userdata5, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						rule->_priv->userdata6 = g_list_append (rule->_priv->userdata6, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						rule->_priv->userdata7 = g_list_append (rule->_priv->userdata7, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						rule->_priv->userdata8 = g_list_append (rule->_priv->userdata8, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						rule->_priv->userdata9 = g_list_append (rule->_priv->userdata9, data);
+						break;
+	}
+}
+			
+void
+sim_rule_remove_generic	(SimRule				*rule, 
+												gchar						*data,
+												SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						rule->_priv->filename = g_list_remove (rule->_priv->filename, data);
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						rule->_priv->username = g_list_remove (rule->_priv->username, data);
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						rule->_priv->password = g_list_remove (rule->_priv->password, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						rule->_priv->userdata1 = g_list_remove (rule->_priv->userdata1, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						rule->_priv->userdata2 = g_list_remove (rule->_priv->userdata2, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						rule->_priv->userdata3 = g_list_remove (rule->_priv->userdata3, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+						rule->_priv->userdata4 = g_list_remove (rule->_priv->userdata4, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						rule->_priv->userdata5 = g_list_remove (rule->_priv->userdata5, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						rule->_priv->userdata6 = g_list_remove (rule->_priv->userdata6, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						rule->_priv->userdata7 = g_list_remove (rule->_priv->userdata7, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						rule->_priv->userdata8 = g_list_remove (rule->_priv->userdata8, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						rule->_priv->userdata9 = g_list_remove (rule->_priv->userdata9, data);
+						break;
+	}
+}
+
+GList *
+sim_rule_get_generic	(SimRule				*rule, 
+											SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						return rule->_priv->filename;
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						return rule->_priv->username;
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						return rule->_priv->password;
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						return rule->_priv->userdata1;
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						return rule->_priv->userdata2;
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						return rule->_priv->userdata3;
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+						return rule->_priv->userdata4;
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						return rule->_priv->userdata5;
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						return rule->_priv->userdata6;
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						return rule->_priv->userdata7;
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						return rule->_priv->userdata8;
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						return rule->_priv->userdata9;
+						break;
+	}
+}
+	
 
 
 //Append all the Not elements (defined with "!") into GList's in the rule
@@ -1579,13 +2313,13 @@ sim_rule_append_dst_inet_not (SimRule *rule,
  */
 void 
 sim_rule_append_src_port_not (SimRule *rule, 
-															gint	*src_port) 
+															gint	src_port) 
 {
 	g_return_if_fail (rule); 
 	g_return_if_fail (SIM_IS_RULE (rule)); 
 	g_return_if_fail (src_port); 
 
-	rule->_priv->src_ports_not = g_list_append (rule->_priv->src_ports_not, src_port); 
+	rule->_priv->src_ports_not = g_list_append (rule->_priv->src_ports_not, GINT_TO_POINTER (src_port)); 
 }
 
 /*
@@ -1593,13 +2327,13 @@ sim_rule_append_src_port_not (SimRule *rule,
  */
 void 
 sim_rule_append_dst_port_not (SimRule *rule, 
-															gint	*dst_port) 
+															gint	dst_port) 
 {
 	g_return_if_fail (rule); 
 	g_return_if_fail (SIM_IS_RULE (rule)); 
 	g_return_if_fail (dst_port); 
 
-	rule->_priv->dst_ports_not = g_list_append (rule->_priv->dst_ports_not, dst_port); 
+	rule->_priv->dst_ports_not = g_list_append (rule->_priv->dst_ports_not, GINT_TO_POINTER (dst_port)); 
 }
 
 /*
@@ -1620,13 +2354,13 @@ sim_rule_append_plugin_sid_not (SimRule *rule,
  */
 void 
 sim_rule_append_protocol_not (SimRule *rule, 
-															gint *protocol) 
+															gint protocol) 
 {
 	g_return_if_fail (rule); 
 	g_return_if_fail (SIM_IS_RULE (rule)); 
 	g_return_if_fail (protocol); 
 
-	rule->_priv->protocols_not = g_list_append (rule->_priv->protocols_not, protocol); 
+	rule->_priv->protocols_not = g_list_append (rule->_priv->protocols_not, GINT_TO_POINTER (protocol)); 
 }
 /*
  * 
@@ -1829,6 +2563,153 @@ sim_rule_get_sensors_not (SimRule *rule)
  return rule->_priv->sensors_not; 
 }
 
+void
+sim_rule_append_generic_not	(SimRule				*rule, 
+														gchar						*data,
+														SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						rule->_priv->filename_not = g_list_append (rule->_priv->filename_not, data);
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						rule->_priv->username_not = g_list_append (rule->_priv->username_not, data);
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						rule->_priv->password_not = g_list_append (rule->_priv->password_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						rule->_priv->userdata1_not = g_list_append (rule->_priv->userdata1_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						rule->_priv->userdata2_not = g_list_append (rule->_priv->userdata2_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						rule->_priv->userdata3_not = g_list_append (rule->_priv->userdata3_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+						rule->_priv->userdata4_not = g_list_append (rule->_priv->userdata4_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						rule->_priv->userdata5_not = g_list_append (rule->_priv->userdata5_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						rule->_priv->userdata6_not = g_list_append (rule->_priv->userdata6_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						rule->_priv->userdata7_not = g_list_append (rule->_priv->userdata7_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						rule->_priv->userdata8_not = g_list_append (rule->_priv->userdata8_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						rule->_priv->userdata9_not = g_list_append (rule->_priv->userdata9_not, data);
+						break;
+	}
+}
+			
+void
+sim_rule_remove_generic_not	(SimRule				*rule, 
+														gchar						*data,
+														SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						rule->_priv->filename_not = g_list_remove (rule->_priv->filename_not, data);
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						rule->_priv->username_not = g_list_remove (rule->_priv->username_not, data);
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						rule->_priv->password_not = g_list_remove (rule->_priv->password_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						rule->_priv->userdata1_not = g_list_remove (rule->_priv->userdata1_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						rule->_priv->userdata2_not = g_list_remove (rule->_priv->userdata2_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						rule->_priv->userdata3_not = g_list_remove (rule->_priv->userdata3_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+						rule->_priv->userdata4_not = g_list_remove (rule->_priv->userdata4_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						rule->_priv->userdata5_not = g_list_remove (rule->_priv->userdata5_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						rule->_priv->userdata6_not = g_list_remove (rule->_priv->userdata6_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						rule->_priv->userdata7_not = g_list_remove (rule->_priv->userdata7_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						rule->_priv->userdata8_not = g_list_remove (rule->_priv->userdata8_not, data);
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						rule->_priv->userdata9_not = g_list_remove (rule->_priv->userdata9_not, data);
+						break;
+	}
+}
+
+GList *
+sim_rule_get_generic_not	(SimRule				*rule, 
+													SimRuleVarType	field_type)
+{
+	g_return_if_fail (rule);
+	g_return_if_fail (SIM_IS_RULE (rule));
+			
+	switch (field_type)
+	{
+		case	SIM_RULE_VAR_FILENAME:
+						return rule->_priv->filename_not;
+						break;
+		case	SIM_RULE_VAR_USERNAME:
+						return rule->_priv->username_not;
+						break;
+		case	SIM_RULE_VAR_PASSWORD:
+						return rule->_priv->password_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA1:
+						return rule->_priv->userdata1_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA2:
+						return rule->_priv->userdata2_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA3:
+						return rule->_priv->userdata3_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA4:
+						return rule->_priv->userdata4_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA5:
+						return rule->_priv->userdata5_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA6:
+						return rule->_priv->userdata6_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA7:
+						return rule->_priv->userdata7_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA8:
+						return rule->_priv->userdata8_not;
+						break;
+		case	SIM_RULE_VAR_USERDATA9:
+						return rule->_priv->userdata9_not;
+						break;
+	}
+}
+	
+
 /*
  *
  *
@@ -1871,9 +2752,23 @@ sim_rule_clone (SimRule     *rule)
   new_rule->_priv->sensor = (rule->_priv->sensor) ? gnet_inetaddr_clone (rule->_priv->sensor) : NULL;
 
   new_rule->_priv->condition = rule->_priv->condition;
-  new_rule->_priv->value = (rule->_priv->value) ? g_strdup (rule->_priv->value) : NULL;
+  new_rule->_priv->value = g_strdup (rule->_priv->value);
   new_rule->_priv->interval = rule->_priv->interval;
-
+	/*
+	new_rule->_priv->filename = g_strdup (rule->_priv->filename);
+	new_rule->_priv->username = g_strdup (rule->_priv->username);
+	new_rule->_priv->password = g_strdup (rule->_priv->password);
+	new_rule->_priv->userdata1 = g_strdup (rule->_priv->userdata1);
+	new_rule->_priv->userdata2 = g_strdup (rule->_priv->userdata2);
+	new_rule->_priv->userdata3 = g_strdup (rule->_priv->userdata3);
+	new_rule->_priv->userdata4 = g_strdup (rule->_priv->userdata4);
+	new_rule->_priv->userdata5 = g_strdup (rule->_priv->userdata5);
+	new_rule->_priv->userdata6 = g_strdup (rule->_priv->userdata6);
+	new_rule->_priv->userdata7 = g_strdup (rule->_priv->userdata7);
+	new_rule->_priv->userdata8 = g_strdup (rule->_priv->userdata8);
+	new_rule->_priv->userdata9 = g_strdup (rule->_priv->userdata9);
+*/
+	
   /* vars */
   list = rule->_priv->vars;
   while (list)
@@ -1884,6 +2779,7 @@ sim_rule_clone (SimRule     *rule)
       new_rule_var->type = rule_var->type;
       new_rule_var->attr = rule_var->attr;
       new_rule_var->level = rule_var->level;
+      new_rule_var->negated = rule_var->negated;
 
       new_rule->_priv->vars = g_list_append (new_rule->_priv->vars, new_rule_var);
       list = list->next;
@@ -1952,6 +2848,111 @@ sim_rule_clone (SimRule     *rule)
       list = list->next;
     }
 
+	/* filename */
+  list = rule->_priv->filename;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->filename = g_list_append (new_rule->_priv->filename, aux);
+    list = list->next;
+  }
+	
+	/* username */
+  list = rule->_priv->username;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->username = g_list_append (new_rule->_priv->username, aux);
+    list = list->next;
+  }
+	
+	/* password */
+  list = rule->_priv->password;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->password = g_list_append (new_rule->_priv->password, aux);
+    list = list->next;
+  }
+
+	/* userdata1 */
+  list = rule->_priv->userdata1;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata1 = g_list_append (new_rule->_priv->userdata1, aux);
+    list = list->next;
+  }
+
+	/* userdata2 */
+  list = rule->_priv->userdata2;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata2 = g_list_append (new_rule->_priv->userdata2, aux);
+    list = list->next;
+  }
+	/* userdata3 */
+  list = rule->_priv->userdata3;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata3 = g_list_append (new_rule->_priv->userdata3, aux);
+    list = list->next;
+  }
+	/* userdata4 */
+  list = rule->_priv->userdata4;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata4 = g_list_append (new_rule->_priv->userdata4, aux);
+    list = list->next;
+  }
+	/* userdata5 */
+  list = rule->_priv->userdata5;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata5 = g_list_append (new_rule->_priv->userdata5, aux);
+    list = list->next;
+  }
+	/* userdata6 */
+  list = rule->_priv->userdata6;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata6 = g_list_append (new_rule->_priv->userdata6, aux);
+    list = list->next;
+  }
+	/* userdata7 */
+  list = rule->_priv->userdata7;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata7 = g_list_append (new_rule->_priv->userdata7, aux);
+    list = list->next;
+  }
+	/* userdata8 */
+  list = rule->_priv->userdata8;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata8 = g_list_append (new_rule->_priv->userdata8, aux);
+    list = list->next;
+  }
+	/* userdata9 */
+  list = rule->_priv->userdata9;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata9 = g_list_append (new_rule->_priv->userdata9, aux);
+    list = list->next;
+  }
+
+
+
+
+
 	//"Not" elements:
 
  // src ips not 
@@ -2016,6 +3017,108 @@ sim_rule_clone (SimRule     *rule)
 		list = list->next; 
 	} 
 
+	/* filename not */
+  list = rule->_priv->filename_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->filename_not = g_list_append (new_rule->_priv->filename_not, aux);
+    list = list->next;
+  }
+	
+	/* username not */
+  list = rule->_priv->username_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->username_not = g_list_append (new_rule->_priv->username_not, aux);
+    list = list->next;
+  }
+	
+	/* password not */
+  list = rule->_priv->password_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->password_not = g_list_append (new_rule->_priv->password_not, aux);
+    list = list->next;
+  }
+
+	/* userdata1 not */
+  list = rule->_priv->userdata1_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata1_not = g_list_append (new_rule->_priv->userdata1_not, aux);
+    list = list->next;
+  }
+
+	/* userdata2 not */
+  list = rule->_priv->userdata2_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata2_not = g_list_append (new_rule->_priv->userdata2_not, aux);
+    list = list->next;
+  }
+	/* userdata3 not */
+  list = rule->_priv->userdata3_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata3_not = g_list_append (new_rule->_priv->userdata3_not, aux);
+    list = list->next;
+  }
+	/* userdata4 not */
+  list = rule->_priv->userdata4_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata4_not = g_list_append (new_rule->_priv->userdata4_not, aux);
+    list = list->next;
+  }
+	/* userdata5 not */
+  list = rule->_priv->userdata5_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata5_not = g_list_append (new_rule->_priv->userdata5_not, aux);
+    list = list->next;
+  }
+	/* userdata6 not */
+  list = rule->_priv->userdata6_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata6_not = g_list_append (new_rule->_priv->userdata6_not, aux);
+    list = list->next;
+  }
+	/* userdata7 not */
+  list = rule->_priv->userdata7_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata7_not = g_list_append (new_rule->_priv->userdata7_not, aux);
+    list = list->next;
+  }
+	/* userdata8 not */
+  list = rule->_priv->userdata8_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata8_not = g_list_append (new_rule->_priv->userdata8_not, aux);
+    list = list->next;
+  }
+	/* userdata9 not */
+  list = rule->_priv->userdata9_not;
+  while (list)
+  {
+		gchar *aux = g_strdup ((gchar *) list->data);
+		new_rule->_priv->userdata9_not = g_list_append (new_rule->_priv->userdata9_not, aux);
+    list = list->next;
+  }
+
+
   return new_rule;
 }
 
@@ -2044,7 +3147,7 @@ sim_rule_get_reliability_relative (GNode   *rule_node)
 }
 
 /*
- *
+ * This is my favourite function, Thanks fabio!
  * returns TRUE if the "not_invalid" inside the rule is not active;
  * :) Traduction: if the rule has a "not" in it, not invalid will be put to not in the 
  */
@@ -2145,8 +3248,8 @@ sim_rule_match_by_event (SimRule      *rule,
   g_return_val_if_fail (event->plugin_sid > 0, FALSE);
   g_return_val_if_fail (event->src_ia, FALSE);
 
-//	sim_rule_print (rule);
-	gchar *lala = sim_event_to_string(event);
+	sim_rule_print (rule);
+	gchar *lala = sim_event_to_string (event);
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: printing event: %s",lala);
 			
 	match = TRUE;
@@ -2271,7 +3374,69 @@ sim_rule_match_by_event (SimRule      *rule,
     }
     g_object_unref (sensor_ia);
   }
- 
+
+ 	/* Match other things like !filename, !username, 1userdata1...*/
+	if (rule->_priv->filename_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->filename_not, event->filename))
+			return FALSE;
+	}
+	if (rule->_priv->username_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->username_not, event->username))
+			return FALSE;
+	}
+	if (rule->_priv->password_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->password_not, event->password))
+			return FALSE;
+	}
+	if (rule->_priv->userdata1_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata1_not, event->userdata1))
+			return FALSE;
+	}
+	if (rule->_priv->userdata2_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata2_not, event->userdata2))
+			return FALSE;
+	}
+	if (rule->_priv->userdata3_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata3_not, event->userdata3))
+			return FALSE;
+	}
+	if (rule->_priv->userdata4_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata4_not, event->userdata4))
+			return FALSE;
+	}
+	if (rule->_priv->userdata5_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata5_not, event->userdata5))
+			return FALSE;
+	}
+	if (rule->_priv->userdata6_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata6_not, event->userdata6))
+			return FALSE;
+	}
+	if (rule->_priv->userdata7_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata7_not, event->userdata7))
+			return FALSE;
+	}
+	if (rule->_priv->userdata8_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata8_not, event->userdata8))
+			return FALSE;
+	}
+	if (rule->_priv->userdata9_not)
+	{
+		if (sim_cmp_list_gchar (rule->_priv->userdata9_not, event->userdata9))
+			return FALSE;
+	}
+
 	//match the non-negated elements.
 	
   /* Match Plugin SIDs */
@@ -2430,8 +3595,68 @@ sim_rule_match_by_event (SimRule      *rule,
 	if (!match)
 		return FALSE;
 
+	/* Match other things like filename, username, userdata1...*/
+	if (rule->_priv->filename)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->filename, event->filename))
+			return FALSE;
+	}
+	if (rule->_priv->username)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->username, event->username))
+			return FALSE;
+	}
+	if (rule->_priv->password)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->password, event->password))
+			return FALSE;
+	}
+	if (rule->_priv->userdata1)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata1, event->userdata1))
+			return FALSE;
+	}
+	if (rule->_priv->userdata2)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata2, event->userdata2))
+			return FALSE;
+	}
+	if (rule->_priv->userdata3)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata3, event->userdata3))
+			return FALSE;
+	}
+	if (rule->_priv->userdata4)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata4, event->userdata4))
+			return FALSE;
+	}
+	if (rule->_priv->userdata5)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata5, event->userdata5))
+			return FALSE;
+	}
+	if (rule->_priv->userdata6)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata6, event->userdata6))
+			return FALSE;
+	}
+	if (rule->_priv->userdata7)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata7, event->userdata7))
+			return FALSE;
+	}
+	if (rule->_priv->userdata8)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata8, event->userdata8))
+			return FALSE;
+	}
+	if (rule->_priv->userdata9)
+	{
+		if (!sim_cmp_list_gchar (rule->_priv->userdata9, event->userdata9))
+			return FALSE;
+	}
 
-	
   /* Match Condition (Only monitor events)*/
   if ((rule->_priv->condition != SIM_CONDITION_TYPE_NONE) &&
       (event->condition != SIM_CONDITION_TYPE_NONE))
@@ -2445,7 +3670,7 @@ sim_rule_match_by_event (SimRule      *rule,
 			//The event->value must be the same than rule->_priv->value to match. When we ask to
 			//an agent a watch_rule, is the agent who compares and test if it's the real value.
 			//Then, the agent will return to us an event with the same value that we send to him
-			//so we know them that our question has matched
+			//so we know then that our question has matched
 		  if (g_ascii_strcasecmp (rule->_priv->value, event->value))
 	  	  return FALSE;
 		}
@@ -2548,8 +3773,6 @@ sim_rule_match_by_event (SimRule      *rule,
 /*
  *
  *
- *
- *
  */
 void
 sim_rule_set_event_data (SimRule      *rule,
@@ -2559,8 +3782,6 @@ sim_rule_set_event_data (SimRule      *rule,
   g_return_if_fail (SIM_IS_RULE (rule));
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
-
-  rule->_priv->plugin_sid = event->plugin_sid;
 
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: src_ia: %s", gnet_inetaddr_get_canonical_name(event->src_ia));
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_set_event_data: dst_ia: %s", gnet_inetaddr_get_canonical_name(event->dst_ia));
@@ -2573,7 +3794,20 @@ sim_rule_set_event_data (SimRule      *rule,
     rule->_priv->src_port = event->src_port;
     rule->_priv->dst_port = event->dst_port;
     rule->_priv->protocol = event->protocol;
+		rule->_priv->plugin_sid = event->plugin_sid;
     rule->_priv->sensor = (event->sensor) ? gnet_inetaddr_new_nonblock (event->sensor, 0) : NULL;
+    rule->_priv->ev_filename = (event->filename) ? g_strdup (event->filename) : NULL;
+    rule->_priv->ev_username = (event->username) ? g_strdup (event->username) : NULL;
+    rule->_priv->ev_password = (event->password) ? g_strdup (event->password) : NULL;
+    rule->_priv->ev_userdata1 = (event->userdata1) ? g_strdup (event->userdata1) : NULL;
+    rule->_priv->ev_userdata2 = (event->userdata2) ? g_strdup (event->userdata2) : NULL;
+    rule->_priv->ev_userdata3 = (event->userdata3) ? g_strdup (event->userdata3) : NULL;
+    rule->_priv->ev_userdata4 = (event->userdata4) ? g_strdup (event->userdata4) : NULL;
+    rule->_priv->ev_userdata5 = (event->userdata5) ? g_strdup (event->userdata5) : NULL;
+    rule->_priv->ev_userdata6 = (event->userdata6) ? g_strdup (event->userdata6) : NULL;
+    rule->_priv->ev_userdata7 = (event->userdata7) ? g_strdup (event->userdata7) : NULL;
+    rule->_priv->ev_userdata8 = (event->userdata8) ? g_strdup (event->userdata8) : NULL;
+    rule->_priv->ev_userdata9 = (event->userdata9) ? g_strdup (event->userdata9) : NULL;
   }
   else
     g_message("Error: The src or dst of an event is wrong");
@@ -2581,7 +3815,7 @@ sim_rule_set_event_data (SimRule      *rule,
 
 /*
  *
- *
+ *	
  *
  *
  */
@@ -2680,7 +3914,29 @@ sim_rule_print (SimRule      *rule)
       g_message (" %s ", sim_sensor_get_name(sensor));
       list = list->next;
     }
- g_message ("vars=%d ", g_list_length (rule->_priv->vars));
+
+	g_message ("protocols=%d ", g_list_length (rule->_priv->protocols));
+	list = rule->_priv->protocols;
+  while (list)
+    {
+      g_message (" %d ", GPOINTER_TO_INT (list->data));
+      list = list->next;
+    }
+
+
+	g_message ("vars=%d ", g_list_length (rule->_priv->vars));
+	list = rule->_priv->vars;
+	while (list)
+	{
+		SimRuleVar *var = (SimRuleVar *) list->data;
+    g_message ("    rule name: %s",sim_rule_get_name(rule));
+    g_message ("    type: %d",var->type);
+    g_message ("    attr: %d",var->attr);
+    g_message ("    negated: %d",var->negated);
+		list = list->next;
+	}
+
+ 
   if (rule->_priv->src_ia)
     {
       ip = gnet_inetaddr_get_canonical_name (rule->_priv->src_ia);
@@ -2732,7 +3988,6 @@ sim_rule_print (SimRule      *rule)
       list = list->next;
     }
 
-	g_message ("sAAAAAAAAAAAAA");
 	g_message ("dst_ports_not=%d ", g_list_length (rule->_priv->dst_ports_not));
 	list = rule->_priv->dst_ports_not;
   while (list)
@@ -2768,7 +4023,96 @@ sim_rule_print (SimRule      *rule)
       list = list->next;
     }
 
-  g_message ("\n");
+	g_message ("filename=%d ", g_list_length (rule->_priv->filename));
+	list = rule->_priv->filename;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+
+	g_message ("username=%d ", g_list_length (rule->_priv->username));
+	list = rule->_priv->username;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+
+	g_message ("password=%d ", g_list_length (rule->_priv->password));
+	list = rule->_priv->password;
+  while (list)
+  {
+		gchar *lala = (gchar *)(list->data);
+    g_message (" -%s- ", lala);
+    list = list->next;
+  }
+	g_message ("userdata1=%d ", g_list_length (rule->_priv->userdata1));
+	list = rule->_priv->userdata1;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata2=%d ", g_list_length (rule->_priv->userdata2));
+	list = rule->_priv->userdata2;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata3=%d ", g_list_length (rule->_priv->userdata3));
+	list = rule->_priv->userdata3;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata4=%d ", g_list_length (rule->_priv->userdata4));
+	list = rule->_priv->userdata4;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata5=%d ", g_list_length (rule->_priv->userdata5));
+	list = rule->_priv->userdata5;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata6=%d ", g_list_length (rule->_priv->userdata6));
+	list = rule->_priv->userdata6;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata7=%d ", g_list_length (rule->_priv->userdata7));
+	list = rule->_priv->userdata7;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata8=%d ", g_list_length (rule->_priv->userdata8));
+	list = rule->_priv->userdata8;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+	g_message ("userdata9=%d ", g_list_length (rule->_priv->userdata9));
+	list = rule->_priv->userdata9;
+  while (list)
+  {
+    g_message (" %s ", (gchar *) (list->data));
+    list = list->next;
+  }
+
+  
+	g_message ("\n");
 }
 
 /*
