@@ -43,9 +43,7 @@ extern "C" {
 #include <sim-inet.h>
 #include <sim-config.h>
 #include <sim-database.h>
-#include <sim-alert.h>
-#include <sim-category.h>
-#include <sim-classification.h>
+#include <sim-event.h>
 #include <sim-plugin.h>
 #include <sim-plugin-sid.h>
 #include <sim-sensor.h>
@@ -58,6 +56,7 @@ extern "C" {
 #include <sim-rule.h>
 #include <sim-directive.h>
 #include <sim-container.h>
+#include "sim-log.h"
 
 #ifdef __cplusplus
 }

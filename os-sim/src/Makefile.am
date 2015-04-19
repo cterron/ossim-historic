@@ -11,7 +11,7 @@ ossim_server_SOURCES = \
 		sim-smtp.c \
 		sim-config.c \
 		sim-database.c \
-		sim-alert.c \
+		sim-event.c \
 		sim-category.c \
 		sim-classification.c \
 		sim-plugin.c \
@@ -34,6 +34,8 @@ ossim_server_SOURCES = \
 		sim-session.c \
 		sim-scheduler.c \
 		sim-organizer.c \
+		sim-connect.c \
+		sim-log.c \
 		sim-server.c \
 		main.c
 

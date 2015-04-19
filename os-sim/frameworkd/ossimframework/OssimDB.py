@@ -1,33 +1,55 @@
 import sys
-import MySQLdb
+import OssimConf
+import Const
+
+try:
+    from adodb import adodb
+except ImportError:
+    try:
+        import adodb
+    except ImportError:
+        print "You need python adodb module installed"
+        sys.exit()
 
 class OssimDB:
 
     def __init__ (self) :
-        self.__db = None
         self.conn = None
+        self.conf = OssimConf.OssimConf(Const.CONFIG_FILE, complete = False)
 
     def connect (self, host, db, user, passwd = ""):
+        self.conn = adodb.NewADOConnection(self.conf["ossim_type"])
         try:
-            self.__db = MySQLdb.connect(host, user, passwd, db)
-        except MySQLdb.OperationalError, e:
+            self.conn.Connect(host, user, passwd, db)
+        except Exception, e:
             print e
             sys.exit()
-        self.conn = self.__db.cursor (cursorclass = MySQLdb.cursors.DictCursor)
 
     # execute query and return the result in a hash
     def exec_query (self, query) :
-        self.conn.execute(query)
-        return self.conn.fetchall()
+
+        arr = []
+        try:
+            cursor = self.conn.Execute(query)
+        except Exception, e:
+            print __name__, ": Error executing query (%s)" % (e)
+            return []
+        while not cursor.EOF:
+            arr.append(cursor.GetRowAssoc(0))
+            cursor.MoveNext()
+        self.conn.CommitTrans()
+        cursor.Close()
+        return arr
 
     def close (self):
-        self.__db.close()
+        self.conn.Close()
 
 
 if __name__ == "__main__" :
     db = OssimDB()
-    db.connect("localhost", "ossim", "root", "ossim")
+    db.connect(host="localhost", db="ossim", user="root", passwd="temporal")
     hash = db.exec_query("SELECT * FROM config")
     for row in hash: print row
     db.close()
 
+# vim:ts=4 sts=4 tw=79 expandtab:

@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-                       "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
-		    
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Process this file with docbook-to-man to generate an nroff manual
+     page: `docbook-to-man manpage.sgml > manpage.1'.  You may view
+     the manual page with: `docbook-to-man manpage.sgml | nroff -man |
+     less'.
+-->
+
+    <!ENTITY dhpackage   "ossim-agent">
+]>
+
 <refentry>
 
 <!-- Header information -->
 <refmeta>
-<refentrytitle>ossim-agent</refentrytitle>
+<refentrytitle>&dhpackage;</refentrytitle>
 <manvolnum>8</manvolnum>
 </refmeta>
 
 <refnamediv>
-<refname>ossim-agent</refname>
-<refpurpose>OS-SIM sensors manager</refpurpose>
+<refname>&dhpackage;</refname>
+<refpurpose>OSSIM sensors manager</refpurpose>
 </refnamediv>
 
 <!-- Body -->
 <refsynopsisdiv>
 <cmdsynopsis>
-<command>ossim-agent</command>
+<command>&dhpackage;</command>
  <arg>--version</arg>
  <arg>-h</arg>
  <arg>-v</arg>
@@ -32,8 +40,8 @@
 
 <refsect1><title>Description</title>
     <para><emphasis>
-This Man page explains the use of <command>ossim-agent</command>
-command line and its options. An agent in OS-SIM is set of python
+This Man page explains the use of <command>&dhpackage;</command>
+command line and its options. An agent in OSSIM is set of python
 script that gathers and sends the output of the different plugin
 or tool to the correlation engine for further process.
     </emphasis></para>

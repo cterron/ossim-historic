@@ -185,7 +185,7 @@ class ParserRRD(Parser.Parser):
                     date = time.strftime('%Y-%m-%d %H:%M:%S', 
                                          time.localtime(float(time_alert)))
 
-                    self.agent.sendAlert  (type = 'detector',
+                    self.agent.sendEvent  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = interface,

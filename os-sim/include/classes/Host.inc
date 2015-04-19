@@ -1,9 +1,12 @@
 <?php
-
 require_once ('ossim_conf.inc');
 require_once ('classes/Host_sensor_reference.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Host_mac.inc');
+require_once ('classes/Net.inc');
+require_once ('classes/Session.inc');
+require_once ('classes/Log_action.inc');
+require_once ("ossim_db.inc");
 
 class Host {
 
@@ -46,30 +49,27 @@ class Host {
 
     function get_os($conn)
     {
-        if ($host_os_list = Host_os::get_list($conn, 
-                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        if ($os = Host_os::get_ip_data($conn,$this->ip))
         {
-            return $host_os_list[0]->get_os();
+            return $os["os"];
         }
         return "unknown";
     }
 
     function get_mac_address($conn)
     {
-        if ($host_mac_list = Host_mac::get_list($conn, 
-                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        if ($mac = Host_mac::get_ip_data($conn, $this->ip))
         {
-            return $host_mac_list[0]->get_mac();
+            return $mac["mac"];
         }
         return "";
     }
 
     function get_mac_vendor($conn)
     {
-        if ($host_mac_list = Host_mac::get_list($conn, 
-                "WHERE ip = inet_aton('" . $this->ip . "')"))
+        if ($mac = Host_mac::get_ip_data($conn, $this->ip))
         {
-            return $host_mac_list[0]->get_vendor();
+            return $mac["vendor"];
         }
         return "";
     }
@@ -80,24 +80,29 @@ class Host {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        mysql_real_escape_string($where);
-        mysql_real_escape_string($order);
+        mysql_escape_string($where);
+        mysql_escape_string($order);
 
-        $query = "SELECT * FROM host $where $order";
+        $query = OssimQuery("SELECT * FROM host $where $order");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
-                $list[] = new Host ($rs->fields["ip"],
-                                    $rs->fields["hostname"],
-                                    $rs->fields["asset"],
-                                    $rs->fields["threshold_c"],
-                                    $rs->fields["threshold_a"],
-                                    $rs->fields["rrd_profile"],
-                                    $rs->fields["alert"],
-                                    $rs->fields["persistence"],
-                                    $rs->fields["nat"],
-                                    $rs->fields["descr"]);
+
+                if (Session::hostAllowed($conn, $rs->fields["ip"]))
+                {
+                    $list[] = new Host ($rs->fields["ip"],
+                                        $rs->fields["hostname"],
+                                        $rs->fields["asset"],
+                                        $rs->fields["threshold_c"],
+                                        $rs->fields["threshold_a"],
+                                        $rs->fields["rrd_profile"],
+                                        $rs->fields["alert"],
+                                        $rs->fields["persistence"],
+                                        $rs->fields["nat"],
+                                        $rs->fields["descr"]);
+                }
                 $rs->MoveNext();
             }
         }
@@ -113,70 +118,62 @@ class Host {
         settype($threshold_a, "int");
         settype($alert, "int");
         settype($persistence, "int");
-        $ip = htmlentities($ip);
-        $hostname = htmlentities($hostname);
-        $rrd_profile = htmlentities($rrd_profile);
-        $alert = htmlentities($alert);
-        $nat = htmlentities($nat);
-        $descr = htmlentities($descr);
-        $os = htmlentities($os);
-        $mac = htmlentities($mac);
-        $mac_vendor = htmlentities($mac_vendor);
 
-        $query = "INSERT INTO host (
-            ip, hostname, asset, threshold_c, threshold_a, rrd_profile, 
-            alert, persistence, nat, descr) VALUES 
-            ('$ip', '$hostname', $asset, $threshold_c,
-             $threshold_a, '$rrd_profile', '$alert', '$persistence', 
-             '$nat', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO host (ip, hostname, asset, threshold_c, threshold_a, rrd_profile, 
+                alert, persistence, nat, descr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $params = array($ip, $hostname, $asset, $threshold_c, $threshold_a, 
+                        $rrd_profile, $alert, $persistence, $nat, $descr);
+       
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting host: '.$conn->ErrorMsg().'<BR>';
             exit;
         } else {
             Host_sensor_reference::insert($conn, $ip, $sensors);
         }
+        
+        require_once 'classes/Sensor.inc';
+        $sensor_list = Sensor::get_list($conn);
+        if (is_array($sensor_list)) {
+            foreach ($sensor_list as $aux) {
+                $db_sensor_list[$aux->get_name()] = $aux->get_ip();
+            }
+        }
 
-        /* insert os info, don't check error messages.. */
-        $query = "DELETE FROM host_os WHERE ip = inet_aton('$ip');";
-        $conn->Execute($query);
-        $query = "INSERT INTO host_os (ip, os, previous, date, anom) 
-          VALUES (inet_aton('$ip'), '$os', '$os', curdate(), 0);";
-        $conn->Execute($query);
+        foreach ($sensors as $sensor) {
+            $sql = "INSERT INTO host_os (ip, os, date, anom, sensor)
+                    VALUES (inet_aton(?), ?, CURRENT_TIMESTAMP, '0', inet_aton(?))";
+            $params = array($ip, $os, $db_sensor_list[$sensor]);
+            $conn->Execute($sql, $params);
+            
+            $sql = "INSERT INTO host_mac (ip, mac, date, vendor, anom, sensor) 
+                    VALUES (inet_aton(?), ?, CURRENT_TIMESTAMP, ?, '0', inet_aton(?))";
+            
+            $params = array($ip, $mac, $mac_vendor, $db_sensor_list[$sensor]);
+            $conn->Execute($sql, $params);
+        }
 
-        /* insert mac info, don't check error messages.. */
-        $query = "DELETE FROM host_mac WHERE ip = inet_aton('$ip');";
-        $conn->Execute($query);
-        $query = "INSERT INTO host_mac (ip, mac, previous, date, vendor, anom)
-          VALUES (inet_aton('$ip'), '$mac', '$mac', curdate(), '$mac_vendor', 0);";
-        $conn->Execute($query);
+        $infolog = array($hostname,"[".$ip."]");
+        Log_action::log(24,$infolog);
+   
     }
 
     function update($conn, $ip, $hostname, $asset, $threshold_c, $threshold_a, 
                     $rrd_profile, $alert, $persistence, $nat, $sensors,
-                    $descr, $os = "unknow", $mac = "", $mac_vendor = "")
+                    $descr, $os = "unknown", $mac = "", $mac_vendor = "")
     {
         settype($asset, "int");
         settype($threshold_c, "int");
         settype($threshold_a, "int");
         settype($alert, "int");
         settype($persistence, "int");
-        $ip = htmlentities($ip);
-        $hostname = htmlentities($hostname);
-        $rrd_profile = htmlentities($rrd_profile);
-        $alert = htmlentities($alert);
-        $nat = htmlentities($nat);
-        $descr = htmlentities($descr);
-        $os = htmlentities($os);
-        $mac = htmlentities($mac);
-        $mac_vendor = htmlentities($mac_vendor);
 
-        $query = "UPDATE host SET hostname = '$hostname', 
-            ip = '$ip', asset = $asset, 
-            threshold_c = $threshold_c, threshold_a = $threshold_a,
-            rrd_profile = '$rrd_profile',
-            alert = $alert, persistence = $persistence, nat = '$nat',
-            descr = '$descr' WHERE ip = '$ip';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE host SET hostname = ?, ip = ?, asset = ?, threshold_c = ?,
+                threshold_a = ?, rrd_profile = ?, alert = ?, persistence = ?, nat = ?,
+                descr = ? WHERE ip = ?";
+        $params = array($hostname, $ip, $asset, $threshold_c, $threshold_a,
+                        $rrd_profile, $alert, $persistence, $nat, $descr, $ip);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -184,43 +181,60 @@ class Host {
         /* update sensor info */
         Host_sensor_reference::delete($conn, $ip);
         Host_sensor_reference::insert($conn, $ip, $sensors);
+        
 
-        /* update os and mac info */
-        if ($os != "unkown") {
-            $query = "UPDATE host_os SET os = '$os'
-                WHERE inet_ntoa(ip) = '$ip'";
-            if ($conn->Execute($query) === false) {
-                print 'error updating: '.$conn->ErrorMsg().'<BR>';
-                exit;
+ 
+        require_once 'classes/Sensor.inc';
+        $sensor_list = Sensor::get_list($conn);
+        if (is_array($sensor_list)) {
+            foreach ($sensor_list as $aux) {
+                $db_sensor_list[$aux->get_name()] = $aux->get_ip();
             }
         }
-        if ($mac != "unkown") {
-            $query = "UPDATE host_mac SET mac = '$mac', vendor = '$mac_vendor'
-                WHERE inet_ntoa(ip) = '$ip'";
-            if ($conn->Execute($query) === false) {
-                print 'error updating: '.$conn->ErrorMsg().'<BR>';
-                exit;
+
+        foreach ($sensors as $sensor) {
+            if ($os != "unknown") {
+                $sql = "INSERT INTO host_os (ip, os, date, anom, sensor) VALUES 
+                        (inet_aton(?), ?, CURRENT_TIMESTAMP, '1', inet_aton(?))";
+                $params = array($ip, $os, $db_sensor_list[$sensor]);
+                $conn->Execute($sql, $params);
+            }
+            if ($mac != "unknown") {
+                $sql = "INSERT INTO host_mac (ip, mac, date, vendor, anom, sensor) VALUES
+                        (inet_aton(?), ?, CURRENT_TIMESTAMP, ?, '1', inet_aton(?))";
+                $params = array($ip, $mac, $mac_vendor, $db_sensor_list[$sensor]);
+                $conn->Execute($sql, $params);
             }
         }
+
+    $infolog = array($hostname,"[".$ip."]");
+    Log_action::log(26,$infolog);
     }
 
     function delete($conn, $ip) {
-        $ip = mysql_real_escape_string($ip);
-        $query = "DELETE FROM host WHERE ip = '$ip';";
-        if ($conn->Execute($query) === false) {
+        
+        $sql = "DELETE FROM host WHERE ip = ?";
+        $params = array($ip);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         } else {
-            Host_sensor_reference::delete($conn, $ip);
+        /* WORK IN PROGRESS	
+	    Host_sensor_reference::delete($conn, $ip);
             Host_os::delete($conn, $ip);
-            Host_mac::delete($conn, $ip);
+            Host_mac::delete($conn, $ip,NULL);
+	*/
         }
+    $infolog = array($ip);
+    Log_action::log(25,$infolog);
+        
     }
 
     function ip2hostname($conn, $ip) {
-        $ip = mysql_real_escape_string($ip);
-        $query = "SELECT * FROM host WHERE ip = '$ip';";
-        if (!$rs = $conn->Execute($query)) {
+        $sql = "SELECT * FROM host WHERE ip = ?";
+        $params = array($ip);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -229,7 +243,7 @@ class Host {
         } else {
     
             require_once ('ossim_conf.inc');
-            $config = new ossim_conf();
+            $config = $GLOBALS["CONF"];
             $use_resolv = $config->get_conf("use_resolv");
             if ($use_resolv and preg_match("/\d+\.\d+\.\d+\.\d+/", $ip))
                 return gethostbyaddr($ip);
@@ -239,9 +253,9 @@ class Host {
     }
 
     function ipthresh_c($conn, $ip) {
-        $ip = mysql_real_escape_string($ip);
-        $query = "SELECT * FROM host WHERE ip = '$ip';";
-        if (!$rs = $conn->Execute($query)) {
+        $sql = "SELECT * FROM host WHERE ip = ?";
+        $params = array($ip);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -249,15 +263,15 @@ class Host {
             return $rs->fields["threshold_c"]; 
         else {
             /* ip is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
 
     function ipthresh_a($conn, $ip) {
-        $ip = mysql_real_escape_string($ip);
-        $query = "SELECT * FROM host WHERE ip = '$ip';";
-        if (!$rs = $conn->Execute($query)) {
+        $sql = "SELECT * FROM host WHERE ip = ?";
+        $params = array($ip);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -265,17 +279,60 @@ class Host {
             return $rs->fields["threshold_a"]; 
         else {
             /* ip is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
 
     function in_host($conn, $ip) {
-        $ip = mysql_real_escape_string($ip);
-        if (!$rs = &$conn->Execute("SELECT * FROM host WHERE ip = '$ip'")) {
+        $sql = "SELECT * FROM host WHERE ip = ?";
+        $params = array($ip);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
+    }
+
+
+    function get_related_sensors($conn, $ip)
+    {
+        $sensors = array();
+       
+        /* read from HOST table */
+        $sql = "SELECT sensor.ip AS sensor FROM sensor, host_sensor_reference
+                WHERE host_sensor_reference.host_ip = ? AND
+                sensor.name = host_sensor_reference.sensor_name";
+        $params = array($ip);
+        if (!$rs = &$conn->Execute($sql, $params)) {
+            print $conn->ErrorMsg();
+        } elseif (!$rs->EOF) {
+            $sensors[] = $rs->fields["sensor"];
+        }
+
+        /* read from NET table */
+        if ($net_list = Net::get_list($conn))
+        {
+            foreach ($net_list as $net)
+            {
+                $net_name = $net->get_name();
+                $ips = $net->get_ips();
+
+                if (Net::isIpInNet($ip, $ips))
+                {
+                    $sql = "SELECT sensor.ip AS sensor 
+                        FROM sensor, net_sensor_reference
+                        WHERE name = sensor_name AND net_name = ?'";
+                    $params = array($net_name);
+                    if (!$rs = &$conn->Execute($sql, $params)) {
+                        print $conn->ErrorMsg();
+                    } elseif (!$rs->EOF) {
+                        $sensors[] = $rs->fields["sensor"];
+                    }
+                }
+            }
+        }
+
+        return $sensors;
     }
 
 }

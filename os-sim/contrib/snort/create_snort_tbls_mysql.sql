@@ -20,10 +20,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-CREATE TABLE schema ( vseq        INT      UNSIGNED NOT NULL,
+CREATE TABLE `schema` ( vseq        INT      UNSIGNED NOT NULL,
                       ctime       DATETIME NOT NULL,
                       PRIMARY KEY (vseq));
-INSERT INTO schema  (vseq, ctime) VALUES ('106', now());       
+INSERT INTO `schema`  (vseq, ctime) VALUES ('106', now());       
 
 CREATE TABLE event  ( sid 	  INT 	   UNSIGNED NOT NULL,
                       cid 	  INT 	   UNSIGNED NOT NULL,

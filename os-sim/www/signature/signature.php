@@ -17,8 +17,17 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 <?php
     require_once 'ossim_db.inc';
     require_once 'classes/Signature_group.inc';
+    require_once 'classes/Security.inc';
+
+    $order = GET('order');
+
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
     
-    if (!$order = $_GET["order"]) $order = "name";
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+   
+    if (empty($order)) $order = "name";
 ?>
 
   <table align="center">

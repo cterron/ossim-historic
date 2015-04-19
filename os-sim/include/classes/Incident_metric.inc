@@ -1,4 +1,6 @@
 <?php
+require_once("ossim_db.inc");
+
 
 class Incident_metric {
 
@@ -26,7 +28,8 @@ class Incident_metric {
 
     function get_list ($conn, $args)
     {
-        $query = "SELECT * FROM incident_metric $args";
+        $list = array();
+        $query = OssimQuery("SELECT * FROM incident_metric $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {

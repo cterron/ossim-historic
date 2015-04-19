@@ -3,6 +3,7 @@ reportdir = $(datadir)/ossim/www/report
 report_DATA = index.php \
 	anomalies.php \
 	inventory.php \
+	incidentreport.php \
 	menu.php \
 	metrics.php \
 	report.php \

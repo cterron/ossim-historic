@@ -18,14 +18,20 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
     require_once 'classes/Signature_group.inc';
     require_once 'classes/Signature.inc';
     require_once 'classes/Signature_group_reference.inc';
+    require_once 'classes/Security.inc';
     require_once 'ossim_db.inc';
+
+    
+    $sig_name = GET('signame');
+
+    ossim_valid($sig_name, OSS_PUNC, OSS_ALPHA, 'illegal:'._("Signature name"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+    
     $db = new ossim_db();
     $conn = $db->connect();
-
-    if (!$sig_name = mysql_escape_string($_GET["signame"])) {
-        echo "<p>Wrong signature name</p>";
-        exit;
-    }
 
     if ($signature_group_list = Signature_group::get_list
             ($conn, "WHERE name = '$sig_name'")) {

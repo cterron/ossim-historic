@@ -75,8 +75,6 @@ GType           sim_database_get_type                        (void);
 SimDatabase*    sim_database_new                             (SimConfigDS  *config);
 gint            sim_database_execute_no_query                (SimDatabase  *database,
 							      const gchar  *buffer);
-GList*          sim_database_execute_command                 (SimDatabase  *database,
-							      const gchar  *buffer);
 GdaDataModel*   sim_database_execute_single_command          (SimDatabase  *database,
 							      const gchar  *buffer);
 
@@ -87,3 +85,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_DATABASE_H__ */
+
+// vim: set tabstop=2:
+

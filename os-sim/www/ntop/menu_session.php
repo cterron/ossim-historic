@@ -1,3 +1,9 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuMonitors", "MonitorsNetwork");
+?>
+
+
 <html>
 <head>
   <title> <?php echo gettext("OSSIM Framework"); ?> </title>
@@ -8,14 +14,19 @@
 <body>
 
 <?php
-if (!$sensor = $_GET["sensor"])
-{
-    echo "<p align=\"center\">Argument missing</p>";
-    exit();
+
+require_once ("classes/Security.inc");
+
+$sensor = GET('sensor');
+
+ossim_valid($sensor, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Sensor"));
+
+if (ossim_error()) {
+    die(ossim_error());
 }
 
 require_once ('ossim_conf.inc');
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 
 #
 # get ntop proto and port from default ntop entry at
@@ -41,8 +52,21 @@ $conn = $db->connect();
 Sensor:&nbsp;
 <select name="sensor" onChange="submit()">
 <?php
+
+    /* Get highest priority sensor first */
+    $tmp = Sensor::get_list($conn, "ORDER BY priority DESC LIMIT 1");
+    if (is_array($tmp)) {
+        $first_sensor = $tmp[0];
+        $option  = "<option value='". $first_sensor->get_ip() ."'>";
+        $option .= "Sensor: " .$first_sensor->get_name() . "</option>";
+        print $option;
+    }
+
 if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
     foreach ($sensor_list as $s) {
+
+        /*  don't show highest priority sensor again.. */
+        if ($s->get_ip() != $first_sensor->get_ip()) {
 ?>
   <option 
 <?php 
@@ -51,6 +75,7 @@ if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
     value="<?php echo $s->get_ip() ?>"><?php 
         echo "Sensor: " . $s->get_name() ?></option>
 <?php
+        }
     }
 }
 
@@ -70,7 +95,7 @@ if ($net_list = Net::get_list($conn)) {
 </select>
 <?php
 require_once ('ossim_conf.inc');
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 
 if (preg_match('/\d+\.\d+\.\d+\.\d+/', $sensor)) {
 ?>
@@ -89,6 +114,9 @@ if (preg_match('/\d+\.\d+\.\d+\.\d+/', $sensor)) {
        <?php echo gettext("Reload"); ?> </a>
 <?php
 }
+
+$db->close($conn);
+
 ?>
 </td></tr>
 </form>

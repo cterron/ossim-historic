@@ -87,3 +87,4 @@ SimConfig*       sim_xml_config_get_config (SimXmlConfig  *xmlconfig);
 G_END_DECLS
 
 #endif
+// vim: set tabstop=2:

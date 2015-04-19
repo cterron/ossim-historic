@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Net_sensor_reference {
 
     var $net_name;
@@ -16,10 +18,12 @@ class Net_sensor_reference {
     
     function get_list($conn, $net) 
     {
-        $query = "SELECT * FROM net_sensor_reference WHERE net_name = '$net'";
+        $query = OssimQuery("SELECT * FROM net_sensor_reference WHERE net_name
+        = '$net'");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Net_sensor_reference 
                                                 ($rs->fields["net_name"],
@@ -33,31 +37,20 @@ class Net_sensor_reference {
     function insert($conn, $net_name, $sensors)
     {
         foreach ($sensors as $sensor_name) {
-            $query = "INSERT INTO net_sensor_reference VALUES 
-                    ('$net_name', '$sensor_name');";
-            if ($conn->Execute($query) === false) {
+            $sql = "INSERT INTO net_sensor_reference VALUES (?, ?)";
+            $params = array($net_name, $sensor_name);
+            if ($conn->Execute($sql, $params) === false) {
                 print 'error inserting: '.$conn->ErrorMsg().'<BR>';
                 exit;
             }
         }
     }
 
-/*
-    function update($conn, $sensor_name, $net_name)
+   function delete($conn, $net_name, $sensor_name = "%") 
     {
-        $query = "UPDATE net_sensor_reference SET net_name = '$net_name', 
-            sensor_name = '$sensor_name' WHERE sensor_name = '$sensor_name'";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-*/
-    function delete($conn, $net_name, $sensor_name = "%") 
-    {
-        $query = "DELETE FROM net_sensor_reference 
-                    WHERE net_name = '$net_name' AND sensor_name LIKE '$sensor_name'";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_sensor_reference WHERE net_name = ? AND sensor_name LIKE ?";
+        $params = array($net_name, $sensor_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -65,19 +58,19 @@ class Net_sensor_reference {
 
     function in_net_sensor_reference($conn, $net, $sensor_name)
     {
-                                                                                
-        $query = "SELECT * FROM net_sensor_reference
-                    WHERE net_name = '$net' AND sensor_name='$sensor_name';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM net_sensor_reference WHERE net_name = ? AND sensor_name = ?";
+        $params = array($net, $sensor_name);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
     function check_orphan($conn)
     {
-        $query =  "SELECT * FROM net_sensor_reference LEFT JOIN sensor ON sensor.name = net_sensor_reference.sensor_name WHERE name IS NULL";
+        $sql = "SELECT * FROM net_sensor_reference LEFT JOIN sensor ON sensor.name
+                = net_sensor_reference.sensor_name WHERE name IS NULL";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else { 
             while (!$rs->EOF) {

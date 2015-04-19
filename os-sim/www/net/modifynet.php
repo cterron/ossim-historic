@@ -24,30 +24,28 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
          // !$_POST["persistence"] || 
          !$_POST["nsens"] || !$_POST["descr"])) 
     {
-?>
-
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
-
-<?php
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("FORM_MISSING_FIELDS");
 
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $net_name    = mysql_escape_string($_POST["name"]);
-    $ips         = mysql_escape_string($_POST["ips"]);
-    $priority    = mysql_escape_string($_POST["priority"]);
-    $threshold_c = mysql_escape_string($_POST["threshold_c"]);
-    $threshold_a = mysql_escape_string($_POST["threshold_a"]);
-    $rrd_profile = mysql_escape_string($_POST["rrd_profile"]);
-    $alert       = mysql_escape_string($_POST["alert"]);
-    $persistence = mysql_escape_string($_POST["persistence"]);
-    $descr       = mysql_escape_string($_POST["descr"]);
+    $net_name    = validateVar($_POST["name"], OSS_ALPHA . OSS_PUNC . OSS_SCORE
+    );
+    $ips         = validateVar($_POST["ips"]);
+    $priority    = validateVar($_POST["priority"]);
+    $threshold_c = validateVar($_POST["threshold_c"], OSS_DIGIT);
+    $threshold_a = validateVar($_POST["threshold_a"], OSS_DIGIT);
+    $rrd_profile = validateVar($_POST["rrd_profile"]);
+    $alert       = validateVar($_POST["alert"]);
+    $persistence = validateVar($_POST["persistence"]);
+    $descr       = validateVar($_POST["descr"]);
     
-    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
+    for ($i = 1; $i <= validateVar($_POST["nsens"], OSS_DIGIT); $i++) {
         $name = "mboxs" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $sensors[] = mysql_escape_string($_POST[$name]);
+        if (validateVar($_POST[$name])) {
+            $sensors[] = validateVar($_POST[$name]);
         }
     }
 
@@ -56,14 +54,17 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Net_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-    
+   
     Net::update ($conn, $net_name, $ips, $priority, $threshold_c, $threshold_a, 
                  $rrd_profile, $alert, $persistence, $sensors, $descr);
     Net_scan::delete ($conn, $net_name, 3001);
+    Net_scan::delete ($conn, $net_name, 2007);
     if($_POST["nessus"]){
         Net_scan::insert ($conn, $net_name, 3001, 0);
     }
-
+    if($_POST["nagios"]){
+        Net_scan::insert ($conn, $net_name, 2007, 0);
+    }
 
     $db->close($conn);
 }

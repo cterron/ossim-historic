@@ -1,8 +1,30 @@
 <?php
-require_once ('classes/Session.inc');
-Session::logcheck("MenuReports", "ReportsIncidents");
-?>
+require_once 'classes/Session.inc';
+require_once 'classes/Security.inc';
+Session::logcheck("MenuIncidents", "IncidentsIncidents");
+require_once 'ossim_db.inc';
+require_once 'classes/Incident.inc';
+require_once 'classes/Incident_ticket.inc';
+require_once 'classes/Incident_tag.inc';
 
+
+$id = GET('id');
+
+ossim_valid($id, OSS_ALPHA, 'illegal:'._("Incident ID"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+$db = new ossim_db();
+$conn = $db->connect();
+
+$incident_list = Incident::search($conn, array('incident_id' => $id));
+if (count($incident_list) != 1) {
+    die("Invalid incident ID or insufficient permission on incident");
+}
+$incident = $incident_list[0];
+?>
 <html>
 <head>
   <title> <?php echo gettext("OSSIM Framework"); ?> </title>
@@ -10,786 +32,427 @@ Session::logcheck("MenuReports", "ReportsIncidents");
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 <style>
-div.hidden{
-  display: none;
+td {
+    border-width: 0px;
 }
-div.error{
-  display: inline;
-  color: black;
-  background-color: pink;
-}
+
 </style>
-<script>
-<?php
-$proto = "http";
-if ($_SERVER[HTTPS] == "on")
-    $proto = "https";
-require_once("ossim_conf.inc");
-$ossim_conf = new ossim_conf();
-$ossim_link = $ossim_conf->get_conf("ossim_link");
-$url_check = "'$proto://$_SERVER[SERVER_ADDR]:$_SERVER[SERVER_PORT]/$ossim_link/incidents/check.php?q='";
-
-?>
-
-
-function checkName(input, response)
-{
-    if(input != ''){
-    url  = <?php echo $url_check; ?> + input;
-    loadXMLDoc(url);
-    }
-}
-
-function rellena(valor)
-{
-      formulario = document.getElementById(11);
-      formulario.value = valor;
-}
-
-function processReqChange() 
-{
-    // only if req shows "complete"
-    if (req.readyState == 4) {
-        // only if "OK"
-        if (req.status == 200) {
-            // ...processing statements go here...
-
-      response  = req.responseXML.documentElement;
-
-      method    = response.getElementsByTagName('method')[0].firstChild.data;
-
-      message   = document.getElementById(10);
-      formulario = document.getElementById(11);
-      cadena = formulario.value;
-
-      if(method != 0){
-        message.className = 'error';
-        message.innerHTML = '<h3><ul>';
-        for(var i=0; i < method; i++){
-        result    = response.getElementsByTagName('result')[i].firstChild.data;
-        comienzo = result.indexOf(cadena) - 10;
-        final2 = comienzo + cadena.length + 10;
-        if(comienzo < 0) {
-        message.innerHTML += '<li><a href="javascript:rellena(\'' + result + '\')"><b>' + result + '</b> ...</a>';
-        } else {
-        message.innerHTML += '<li><a href="javascript:rellena(\'' + result + '\')">... <b>' + result + '</b> ...</a>';
-        }
-        }
-        message.innerHTML += '</ul>';
-      } else {
-        message.className = 'hidden';
-      }
-
-        } else {
-            alert("There was a problem retrieving the XML data:\n" + req.statusText);
-        }
-    }
-}
-
-var req;
-
-function loadXMLDoc(url) 
-{
-    // branch for native XMLHttpRequest object
-    if (window.XMLHttpRequest) {
-        req = new XMLHttpRequest();
-        req.onreadystatechange = processReqChange;
-        req.open("GET", url, true);
-        req.send(null);
-    // branch for IE/Windows ActiveX version
-    } else if (window.ActiveXObject) {
-        req = new ActiveXObject("Microsoft.XMLHTTP");
-        if (req) {
-            req.onreadystatechange = processReqChange;
-            req.open("GET", url, true);
-            req.send();
-        }
-    }
-}
-</script>
 </head>
 <body>
-
-  <!-- <h1>Incidents</h1> -->
-
-<?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Incident.inc';
-    require_once 'classes/Incident_ticket.inc';
-
-    /* admin privileges needed */
-    function admin_error()
-    {
-        echo "
-        <p align=\"center\"><font color=\"red\">
-          Sorry, only admin user can do that.
-        </font></p>
-        ";
-    }
-
-    /* check email address */
-    function check_copy_email($copy)
-    {
-        if ($copy) {
-            if (!ereg("^[^@]+@[^@]+\.[^@]+$", $copy))
-            {
-                echo "
-                <p align=\"center\"><font color=\"red\">
-                  Copy mail address mal-formed
-                </font></p>
-                ";
-                return False;
-            }
-        }
-        return True;
-    }
-
-    /* copy to: */
-    function send_action_mail($email, $descr, $action)
-    {
-        $msg = "
-            $title
-            
-            $action
-        ";
-
-        if (mail($email, $descr, $msg) === false)
-        {            
-            echo "
-            <p align=\"center\"><font color=\"red\">
-              Error sending copy.
-            </font></p>
-            ";
-        }
-    }
-
-    $db = new ossim_db();
-    $conn = $db->connect();
-
-
-    /* insert new incident and get its id */
-    if ($_GET["insert"])
-    {
-        
-        /* insert new alarm incident */
-        if ($_GET["ref"] == 'Alarm')
-        {
-            if (!isset($_GET["title"]) or !isset($_GET["priority"]) or
-                !isset($_GET["src_ips"]) or !isset($_GET["src_ports"]) or
-                !isset($_GET["dst_ips"]) or !isset($_GET["dst_ports"]))
-            {
-                echo "<p align=\"center\">";
-                printf(gettext("Error trying to insert new alarm ticket (argument missing)"));
-                echo "</p>";
-                exit;
-            } else {
-                $incident_id = Incident::insert_alarm (
-                                    $conn, $_GET["title"], $_GET["priority"],
-                                    $_GET["src_ips"], $_GET["dst_ips"],
-                                    $_GET["src_ports"], $_GET["dst_ports"]);
-            }
-        } 
-
-        /* insert new metric incident */
-        elseif ($_GET["ref"] == 'Metric')
-        {
-            if (!isset($_GET["title"]) or !isset($_GET["priority"]) or
-                !isset($_GET["target"]) or !isset($_GET["metric_type"]) or 
-                !isset($_GET["metric_value"]))
-            {
-                echo "
-                <p align=\"center\">
-                  Error trying to insert new metric ticket (argument missing)
-                </p>
-                ";
-                exit;
-            } else {
-                $incident_id = Incident::insert_metric (
-                    $conn, $_GET["title"], $_GET["priority"],
-                    $_GET["target"], $_GET["metric_type"], 
-                    $_GET["metric_value"]);
-            }
-
-        } elseif ($_GET["ref"] == 'Hardware') { 
-            if (!isset($_GET["title"]) or !isset($_GET["priority"]))
-            {
-                echo "<p align=\"center\">";
-                printf(gettext("Error trying to insert new hardware ticket (argument missing)"));
-                echo "</p>";
-                exit;
-            } else {
-                $incident_id = Incident::insert_hardware (
-                                $conn, $_GET["title"], $_GET["priority"]);
-            }
-
-        } elseif ($_GET["ref"] == 'Install') { 
-            if (!isset($_GET["title"]) or !isset($_GET["priority"]))
-            {
-                echo "<p align=\"center\">";
-                printf(gettext("Error trying to insert new install ticket (argument missing)"));
-                echo "</p>";
-                exit;
-            } else {
-                $incident_id = Incident::insert_install (
-                                $conn, $_GET["title"], $_GET["priority"]);
-            }
-        }
-    }
-    
-    /* get incident id to show */
-    elseif (!$incident_id = $_GET["id"]) {
-        echo "<b>Unknown incident</b>";
-        exit;
-    }
-
-    $incident_list = Incident::get_list($conn, 
-                                        "WHERE incident.id = $incident_id");
-    $incident = $incident_list[0];
-
-    /* insert new ticket */
-    if ($_POST["insert_ticket"]) 
-    {
-        $valid_copy = check_copy_email($_POST["copy"]);
-
-        /* read attachment */
-        if (isset($_FILES["file"]))
-        {
-            $file = $_FILES["file"]["tmp_name"];
-
-            $attachment = array (
-                "name"    => $_FILES["file"]["name"],
-                "size"    => $_FILES["file"]["size"],
-                "type"    => $_FILES["file"]["type"],
-                "content" => ""
-            );
-
-            
-            if ($file)
-            {
-                $fd = fopen($file, "rb");
-                $attachment["content"] = fread($fd, $attachment["size"]);
-                $attachment["content"] = addslashes($attachment["content"]);
-                fclose($fd);
-            }
-        }
-        
-        if ($_POST["description"] and $_POST["action"])
-        {
-            if ($valid_copy)
-            {
-                Incident_ticket::insert($conn,
-                                        $incident_id,
-                                        $_POST["status"],
-                                        $_POST["priority"],
-                                        Session::get_session_user(),
-                                        $_POST["description"],
-                                        $_POST["action"],
-                                        $_POST["in_charge"],
-                                        $_POST["transferred"],
-                                        $_POST["copy"],
-                                        $attachment);
-                if ($_POST["copy"])
-                    send_action_mail($_POST["copy"], 
-                                     $_POST["description"],
-                                     $_POST["action"]);
-            }
-        } else {
-            echo "
-            <p align=\"center\"><font color=\"red\">
-              " . gettext("Description and Action fields are required") . "
-            </font></p>
-            ";
-        }
-    } 
-    
-    /* delete ticket (admin) */
-    elseif ($_POST["submit_delete_ticket"])
-    {
-        if (Session::am_i_admin())
-            Incident_ticket::delete($conn, $_POST["ticket_id"], $incident_id);
-        else
-            admin_error();
-    } 
-    
-    /* increase priority (admin) */
-    elseif ($_POST["submit_increase_priority"])
-    {
-        if (Session::am_i_admin())
-        {
-            $priority = $_POST["priority"];
-            $priority = ($priority < 10)? $priority + 1 : $priority;
-            Incident_ticket::update_priority (
-                $conn, $_POST["ticket_id"], $incident_id, $priority);
-        } else {
-            admin_error();
-        }
-    }
-
-    /* decrease priority (admin) */
-    elseif ($_POST["submit_decrease_priority"])
-    {
-        if (Session::am_i_admin())
-        {
-            $priority = $_POST["priority"];
-            $priority = ($priority > 0)? $priority - 1 : $priority;
-            Incident_ticket::update_priority (
-                $conn, $_POST["ticket_id"], $incident_id, $priority);
-        } else {
-            admin_error();
-        }
-    }
-
-    /* open/close ticket (admin) */
-    elseif ($_POST["submit_change_status"])
-    {
-        if (Session::am_i_admin())
-            Incident_ticket::change_status($conn, $_POST["ticket_id"]);
-        else
-            admin_error();
-    } 
-    
-    /* delete ticket (admin) */
-    elseif ($_POST["submit_delete"])
-    {
-        if (Session::am_i_admin()) {
-            Incident::delete($conn, $incident_id);
-            echo "<p align=\"center\">Incident succesfully deleted</p>";
-            echo "<p align=\"center\"><a href=\"index.php\">Back</a></p>";
-            exit();
-        } else {
-            admin_error();
-        }
-    }
-
-    /* edit incident */
-    elseif ($_POST["submit_edit"])
-    {
-?>
-        <form method="POST" 
-              action="<?php echo $_SERVER["PHP_SELF"] . "?id=$incident_id" ?>">
-        <table align="center">
-          <tr>
-            <th> <?php echo gettext("Name"); ?> </th>
-            <td><input type="text" size="50" name="title"
-                       value="<?php echo $incident->get_title(); ?>" />
-            </td>
-          </tr>
-<?php
-        if ($incident->get_ref() == "Alarm")
-        {
-            $alarms_list = $incident->get_alarms($conn);
-            $alarms = $alarms_list[0];
-?>
-          <tr>
-            <th> <?php echo gettext("Source"); ?> </th>
-            <td>
-              <input type="" size="50" name="src_ips"
-                     value="<?php echo $alarms->get_src_ips() ?>" />
-            </td>
-          </tr>
-          <tr>
-            <th> <?php echo gettext("Destination"); ?> </th>
-            <td>
-              <input type="" size="50" name="dst_ips"
-                     value="<?php echo $alarms->get_dst_ips() ?>" />
-            </td>
-          </tr>
-          <tr>
-            <th> <?php echo gettext("Src Ports"); ?> </th>
-            <td>
-              <input type="" size="50" name="src_ports"
-                     value="<?php echo $alarms->get_src_ports() ?>" />
-            </td>
-          </tr>
-          <tr>
-            <th> <?php echo gettext("Dst Ports"); ?> </th>
-            <td>
-              <input type="" size="50" name="dst_ports"
-                     value="<?php echo $alarms->get_dst_ports() ?>" />
-            </td>
-          </tr>
-<?php
-        } 
-        
-        elseif ($incident->get_ref() == "Metric") 
-        {
-            $metrics_list = $incident->get_metrics($conn);
-            $metrics = $metrics_list[0];
-?>
-          <tr>
-            <th> <?php echo gettext("Target"); ?> </th>
-            <td>
-              <input type="text" size="50" name="target"
-                     value="<?php echo $metrics->get_target() ?>" />
-            </td>
-          </tr>
-          <tr>
-            <th> <?php echo gettext("Metric Type"); ?> </th>
-            <td>
-              <input type="text" size="50" name="metric_type"
-                     value="<?php echo $metrics->get_metric_type() ?>" />
-            </td>
-          </tr>
-          <tr>
-            <th> <?php echo gettext("Metric Value"); ?> </th>
-            <td>
-              <input type="text" size="50" name="metric_value"
-                     value="<?php echo $metrics->get_metric_value() ?>" />
-            </td>
-          </tr>
-<?php
-        }
-?>
-          <tr>
-            <td colspan="2">
-              <input type="submit" name="submit_edit_confirm" value="Edit" />
-            </td>
-          </tr>
-        </table>
-        </form>
-<?php
-        exit;
-    }
-
-
-    elseif ($_POST["submit_edit_confirm"])
-    {
-        if ($incident->get_ref() == "Alarm")
-            Incident::update_alarm ($conn, 
-                                    $incident_id,
-                                    $_POST["title"],
-                                    $_POST["src_ips"],
-                                    $_POST["dst_ips"],
-                                    $_POST["src_ports"],
-                                    $_POST["dst_ports"]);
-
-        elseif ($incident->get_ref() == "Metric")
-            Incident::update_metric ($conn,
-                                     $incident_id,
-                                     $_POST["title"],
-                                     $_POST["target"],
-                                     $_POST["metric_type"],
-                                     $_POST["metric_value"]);
-
-        elseif ($incident->get_ref() == "Hardware")
-            Incident::update_hardware ($conn,
-                                       $incident_id,
-                                       $_POST["title"]);
-
-        elseif ($incident->get_ref() == "Install")
-            Incident::update_install ($conn,
-                                      $incident_id,
-                                      $_POST["title"]);
-            
-
-        /* re-read from db */
-        $incident_list = Incident::get_list($conn, 
-                                            "WHERE incident.id = $incident_id");
-        $incident = $incident_list[0];
-    }
-
-    if ($incident) {
-?>
-
-
-<!-- incident summary -->
-<form method="post" action="<?php echo $_SERVER["PHP_SELF"] .
-      "?id=" . $incident->get_id(); ?>">
 <table align="center" width="100%">
   <tr>
-    <th> <?php echo gettext("Ticket"); ?> </th>
-    <th width="550px">
-    <?php echo gettext("Incident"); ?> </th>
-    <th> <?php echo gettext("In Charge"); ?> </th>
-    <th> <?php echo gettext("Status"); ?> </th>
-    <th> <?php echo gettext("Priority"); ?> </th>
-    <th> <?php echo gettext("Action"); ?> </th>
+    <th> <?= _("Ticket") ?> </th>
+    <th width="550px"><?= _("Incident") ?></th>
+    <th> <?= _("In Charge") ?> </th>
+    <th> <?= _("Status") ?> </th>
+    <th> <?= _("Priority") ?> </th>
+    <th> <?= _("Action") ?> </th>
   </tr>
   <tr>
-    <td><b><?php echo $incident->get_ticket() ?></b></td>
+<?php
 
-    <!-- incident data -->
+function format_user($user, $html = true, $show_email = false)
+{
+    if (is_a($user, 'Session')) {
+        $login = $user->get_login();
+        $name  = $user->get_name();
+        $depto = $user->get_department();
+        $company = $user->get_company();
+        $mail  = $user->get_email();
+    } elseif (is_array($user)) {
+        $login = $user['login'];
+        $name  = $user['name'];
+        $depto = $user['department'];
+        $company = $user['company'];
+        $mail  = $user['email'];
+    } else {
+        return '';
+    }
+    $ret = $name;
+    if ($depto && $company) $ret .= " / $depto / $company";
+    if ($mail && $show_email) $ret = "$ret &lt;$mail&gt;"; 
+    if ($login) $ret = "<label title=\"Login: $login\">$ret</label>";
+    if ($mail) {
+        $ret = '<a href="mailto:'.$mail.'">'.$ret.'</a>';
+    } else {
+        $ret = "$ret <font size=small color=red><i>(No email)</i></font>";
+    }
+
+    return $html ? $ret : strip_tags($ret);
+}
+
+    $name  = $incident->get_ticket();
+    $title = $incident->get_title();
+    $ref   = $incident->get_ref();
+    $type  = $incident->get_type();
+    $created = $incident->get_date();
+    $life  = $incident->get_life_time();
+    $updated = $incident->get_last_modification();
+    $priority = $incident->get_priority();
+    $incident_status    = $incident->get_status();
+    $incident_in_charge = $incident->get_in_charge();
+    $users = Session::get_list($conn);
+    
+    $incident_tags  = $incident->get_tags();
+    $incident_tag  = new Incident_tag($conn);
+    $taga = array();
+    foreach ($incident_tags as $tag_id) {
+        $taga[] = $incident_tag->get_html_tag($tag_id); 
+    }
+    $taghtm = count($taga) ? implode(' - ', $taga) : _("n/a");
+?>
+
+    <td><b><?=$name?></b></td>
     <td class="left">
+        Name: <b><?=$title?> </b><br/>
+        Class: <?=$ref?><br/>
+        Type: <?=$type?><br/>
+        Created: <?=$created?> (<?=$life?>)<br/>
+        Last Update: <?=$updated?><br/>
+        <hr/>
+        Extra: <?=$taghtm?><br/>
+        <hr/>
     <?php
-        $title = $incident->get_title();
-        $ref = $incident->get_ref();
-        echo "
-          Name: <b>$title</b><br/>
-          Type: $ref<br/><hr/>
-        ";
-        if ($ref == 'Alarm')
-        {
-            if ($alarm_list = $incident->get_alarms($conn))
-            {
-                foreach ($alarm_list as $alarm_data)
-                {
-                    echo 
-                        "Source Ips: <b>" . 
-                            $alarm_data->get_src_ips() . "</b> - " .
-                        "Dest Ips: <b>" . 
-                            $alarm_data->get_dst_ips() . "</b> - " .
-                        "Source Ports: <b>" . 
-                            $alarm_data->get_src_ports() . "</b> - " .
-                        "Dest Ports: <b>" .
-                            $alarm_data->get_dst_ports() . "</b>";
-                }
+        if ($ref == 'Alarm' or $ref == 'Event') {
+            if ($ref == 'Alarm') {
+                $alarm_list = $incident->get_alarms($conn);
+            } else {
+                $alarm_list = $incident->get_events($conn);
             }
-        }
-        elseif ($ref == 'Metric')
-        {
-            if ($metric_list = $incident->get_metrics($conn))
-            {
-                foreach ($metric_list as $metric_data)
-                {
-                    echo 
-                        "Target: <b>" .
-                            $metric_data->get_target() . "</b> - " .
-                        "Metric Type: <b>" . 
-                            $metric_data->get_metric_type() . "</b> - " .
-                        "Metric Value: <b>" . 
-                            $metric_data->get_metric_value() . "</b>";
+            foreach ($alarm_list as $alarm_data) {
+                echo 
+                    "Source Ips: <b>" . 
+                        $alarm_data->get_src_ips() . "</b> - " .
+                    "Source Ports: <b>" . 
+                        $alarm_data->get_src_ports() . "</b><br/>" .                    
+                    "Dest Ips: <b>" . 
+                        $alarm_data->get_dst_ips() . "</b> - " .
+                    "Dest Ports: <b>" .
+                        $alarm_data->get_dst_ports() . "</b>";
+            }
+        } elseif ($ref == 'Metric') {
+            $metric_list = $incident->get_metrics($conn);
+            foreach ($metric_list as $metric_data) {
+                echo 
+                    "Target: <b>" .
+                        $metric_data->get_target() . "</b> - " .
+                    "Metric Type: <b>" . 
+                        $metric_data->get_metric_type() . "</b> - " .
+                    "Metric Value: <b>" . 
+                        $metric_data->get_metric_value() . "</b>";
+            }
+        } elseif ($ref == 'Anomaly') {
+            $anom_list = $incident->get_anomalies($conn);
+            foreach ($anom_list as $anom_data) {
+                $anom_type = $anom_data->get_anom_type();
+                $anom_ip = $anom_data->get_ip();        
+                $anom_info_o = $anom_data->get_data_orig();        
+                $anom_info   = $anom_data->get_data_new();
+                if ($anom_type == 'mac') {
+                    list($a_sen, $a_date_o, $a_mac_o, $a_vend_o) = explode(",", $anom_info_o);
+                    list($a_sen, $a_date, $a_mac, $a_vend) = explode(",", $anom_info);
+                    echo
+                        "Host: <b>" . $anom_ip . "</b><br>" .
+                        "Previous Mac: <b>". $a_mac_o . "(" . $a_vend_o . ")</b><br>" .
+                        "New Mac: <b>". $a_mac . "(" . $a_vend . ")</b><br>";
+                } elseif ($anom_type == 'service') {
+                    list($a_sen, $a_date, $a_port, $a_prot_o, $a_ver_o) = explode(",", $anom_info_o);
+                    list($a_sen, $a_date, $a_port, $a_prot, $a_ver) = explode(",", $anom_info);
+                    echo
+                        "Host: <b>" . $anom_ip . "</b><br>" .
+                        "Port: <b>" . $a_port . "</b><br>" .
+                        "Previous Protocol [Version]: <b>". $a_prot_o . " [" . $a_ver_o . "]</b><br>" .
+                        "New Protocol [Version]: <b>". $a_prot . " [" . $a_ver . "]</b><br>";
+                                  
+                } elseif ($anom_type == 'os') {
+                    list($a_sen, $a_date, $a_os_o) = explode(",", $anom_info_o);
+                    list($a_sen, $a_date, $a_os) = explode(",", $anom_info);
+                    echo
+                        "Host: <b>" . $anom_ip . "</b><br>" .
+                        "Previous OS: <b>". $a_os_o . "</b><br>" .
+                        "New OS: <b>". $a_os . "</b><br>";
+               
                 }
+                
             }
         }
     ?>
     </td>
     <!-- end incident data -->
 
-    <td><?php echo $incident->get_in_charge($conn) ?></td>
-    <td><?php Incident::colorize_status($incident->get_status($conn)) ?></td>
-
-    <!-- priority -->
-    <?php
-        $priority = $incident->get_priority($conn);
-        Incident::print_td_priority(
-            $priority,
-            Incident::get_priority_bgcolor($priority),
-            Incident::get_priority_fgcolor($priority));
-    ?>
-    <!-- end priority -->
+    <td><?= $incident->get_in_charge_name($conn) ?></td>
+    <td><? Incident::colorize_status($incident->get_status($conn)) ?></td>
+    <td><?= Incident::get_priority_in_html($priority) ?></td>
 
     <td>
-        <input type="submit" name="submit_edit" value="Edit"
-               style="width: 10em;" /><br/>
-        <input type="submit" name="submit_delete" value="Delete"
-               style="width: 10em; color: red; text-decoration: bold" />
+        <form action="#" method="get">
+        <input type="button" name="submit_edit" value="<?=_("Edit")?>"
+               style="width: 10em;"
+               onClick="document.location = 'newincident.php?action=edit&ref=<?=$ref?>&incident_id=<?=$id?>';"
+               /><br/>
+        
+        <input type="button" name="add_ticket" value="<?=_("New ticket")?>"
+               style="width: 10em;" onclick="document.location = '#anchor';"/><br/>
+           
+        <input type="button" name="submit_delete" value="<?=_("Delete")?>"
+               style="width: 10em; color: red;"
+               onClick="document.location = 'manageincident.php?action=delincident&incident_id=<?=$id?>';"
+               />
+        </form>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="6" style="text-align: left;"><hr/><b><?=_("Email changes to:")?></b><br/>
+    <form action="manageincident.php?action=subscrip&incident_id=<?=$id?>" method="POST">
+        <table width="100%" style="border-width: 0px;">
+        <tr><td>&nbsp;</td>
+        <td width="45%" style="text-align: left;">
+        <?
+        foreach ($incident->get_subscribed_users($conn, $id) as $u) {
+            echo format_user($u, true, true) . '<br/>';
+        }
+        ?>
+        </td><td style="text-align: right;" NOWRAP>
+          <select name="login">
+            <option value=""></option>
+            <? foreach ($users as $u) { ?>
+                <option value="<?=$u->get_login()?>"><?=format_user($u, false)?></option>
+            <? } ?>
+          </select>
+          <input type="submit" name="subscribe" value="Subscribe">&nbsp;
+          <input type="submit" name="unsubscribe" value="Unsubscribe">
+        </td></tr></table>
+    </form>
     </td>
   </tr>
 </table>
-</form>
+
 <!-- end incident summary -->
 
-
-<!-- list of tickets tickets -->
-<br/><br/>
-<table align="center" width="100%">
-  <tr>
-    <th> <?php echo gettext("Date"); ?> </th>
-    <th> <?php echo gettext("User / Description / Action"); ?> </th>
-    <th> <?php echo gettext("Priority"); ?> </th>
-    <th> <?php echo gettext("Status"); ?> </th>
-    <th> <?php echo gettext("In Charge"); ?> </th>
-    <th> <?php echo gettext("Transferred"); ?> </th>
-    <th> <?php echo gettext("Copy"); ?> </th>
-    <th> <?php echo gettext("Action"); ?> </th>
-  </tr>
-
+<br>
+<!-- incident ticket list-->
 <?php
-    if ($incident_tickets = $incident->get_tickets($conn))
-    {
-        foreach ($incident_tickets as $incident_ticket)
-        {
+$tickets_list = $incident->get_tickets($conn);
+for ($i = 0; $i < count($tickets_list); $i++) {
+    $ticket = $tickets_list[$i];
+    $ticket_id = $ticket->get_id();
+    $date = $ticket->get_date();
+    $life_time = Util::date_diff($date, $created);
+
+    // Resolve users
+    // XXX improve performance
+    $creator = $ticket->get_user();
+    $in_charge = $ticket->get_in_charge();
+    $transferred = $ticket->get_transferred();    
+    $creator = Session::get_list($conn, "WHERE login='$creator'");
+    $creator = count($creator) == 1 ? $creator[0] : false;
+    $in_charge = Session::get_list($conn, "WHERE login='$in_charge'");
+    $in_charge = count($in_charge) == 1 ? $in_charge[0] : false;
+    $transferred = Session::get_list($conn, "WHERE login='$transferred'");
+    $transferred = count($transferred) == 1 ? $transferred[0] : false;
+
+    $descrip = $ticket->get_description();
+    $action  = $ticket->get_action();
+    $status = $ticket->get_status();
+    $prio = $ticket->get_priority();
+    $prio_str = Incident::get_priority_string($prio);
+    $prio_box = Incident::get_priority_in_html($prio);
+    if ($attach = $ticket->get_attachment($conn)) {
+        $file_id   = $attach->get_id();
+        $file_name = $attach->get_name();
+        $file_type = $attach->get_type();
+    }
+    
 ?>
-  <tr>
-    <form method="post" action="<?php echo $_SERVER["PHP_SELF"] .
-      "?id=" . $incident->get_id(); ?>">
-    <input type="hidden" name="ticket_id"
-           value="<?php echo $incident_ticket->get_id(); ?>" />
-    <td><?php echo $incident_ticket->get_date(); ?></td>
-    <td class="left">
-      <b> <?php echo gettext("User"); ?> </b>:
-      <?php echo $incident_ticket->get_user(); ?><br/><hr/>
-      <b> <?php echo gettext("Description"); ?> </b>:
-      <?php echo $incident_ticket->get_description(); ?><br/><hr/>
-      <b> <?php echo gettext("Action"); ?> </b>:
-      <?php echo $incident_ticket->get_action(); ?>
+    <table width="95%" border=1 cellspacing="0" align="center">
+    <!-- ticket head -->
+    <tr><td widht="90%" class="ticket" style="background: #ABB7C7;" nowrap>
+        <b><?=format_user($creator)?></b> - <?=$date?>
+        </td>
+        <td style="background: #ABB7C7;">
+            <?
+            //
+            // Allow the ticket creator and the admin delete the last ticket
+            //
+            if (($i == count($tickets_list) - 1) &&
+                (Session::am_i_admin() ||
+                 $creator == Session::get_session_user())
+               )
+            {
+            ?>
+            <input type="button" name="deleteticket"
+                   value="<?=_("Delete Ticket")?>"
+                   onclick="javascript: document.location = 'manageincident.php?action=delticket&ticket_id=<?=$ticket_id?>&incident_id=<?=$id?>'"
+            >
+            <? } ?>
+        &nbsp;
+        </td>
+    </tr>
+    <!-- end ticket head -->
+    <tr>
+        <!-- ticket contents -->
+        <td style="width: 600px" valign="top">
+            <table style="border-width: 0px;"><tr><td class="ticket_body" >
+                
+                <? if ($attach) { ?>
+                    <b><?=_("Attachment")?>: </b>
+                    <a href="attachment.php?id=<?=$file_id?>"><?=htm($file_name)?></a>
+                    &nbsp;<i>(<?=$file_type?>)</i><br/>
+                <? } ?>
+                <b><?=_("Description")?></b><p class="ticket_body"><?=htm($descrip)?></p>
+                <? if ($action) { ?>
+                    <b><?=_("Action")?></b><p class="ticket_body"><?=htm($action)?></p>
+                <? } ?>
+            </td></tr></table>
+        </td>
+        <!-- end ticket contents -->
+        <!-- ticket summary -->
+        <td class="ticket" style="border-top-width: 0px; width: 230px" valign="top">
+            <table style="border-width: 0px;">
+            <tr><td class="ticket">
+                <b><?=_("Status")?>: </b><?Incident::colorize_status($status)?>
+            </td></tr>
+            <tr valign="middle"><td>
+                <table cellspacing="0" style="border-width: 0px;"><tr>
+                    <td class="ticket"><b><?=_("Priority");?>: </b>
+                    <td class="ticket"> <?=$prio_box?></td>
+                    <td class="ticket"> - <?=$prio_str?></td>
+                </tr></table>
+            </td></tr>
+            <? if (!$transferred) { ?>
+            <tr><td class="ticket">
+                <b><?=_("In charge")?>: </b><?=format_user($in_charge)?>
+            </td></tr>
+            <? } else { ?>
+            <tr><td class="ticket">
+                <b><?=_("Transferred To")?>: </b><?=format_user($transferred)?>
+            </td></tr>
+            <? } ?>
+            <tr><td class="ticket" NOWRAP>
+                <b><?=_("Since Creation")?>: </b><?=$life_time?>
+            </td></tr>
+            </table>
+        </td>
+        <!-- end ticket summary -->
+    </table>
+<? } ?>
+<!-- end incident ticket list-->
+<br>
 
-<?php
-    /* attachment */
-    if ($attachment = $incident_ticket->get_attachment($conn))
+<!-- form for new ticket -->
+<script language="JavaScript" type="text/javascript">
+    function chg_prio_str()
     {
-        $file_id      = $attachment->get_id();
-        $file_name    = $attachment->get_name();
-        $file_content = $attachment->get_content();
-        $file_type    = $attachment->get_type();
+        prio_num = document.newticket.priority;
+        index = prio_num.selectedIndex;
+        prio = prio_num.options[index].value;
+        if (prio > 7) {
+            document.newticket.prio_str.selectedIndex = 2;
+        } else if (prio > 4) {
+            document.newticket.prio_str.selectedIndex = 1;
+        } else {
+            document.newticket.prio_str.selectedIndex = 0;
+        }
+    }
+    
+    function chg_prio_num()
+    {
+        prio_str = document.newticket.prio_str;
+        index = prio_str.selectedIndex;
+        prio = prio_str.options[index].value;
+        if (prio == 'High') {
+            document.newticket.priority.selectedIndex = 7;
+        } else if (prio == 'Medium') {
+            document.newticket.priority.selectedIndex = 4;
+        } else {
+            document.newticket.priority.selectedIndex = 2;
+        }
+    }
         
-        echo "<br/><hr/><b>Attachment</b>:&nbsp;";
-        echo "<a href=\"attachment.php?id=$file_id\">" . 
-            $attachment->get_name() . "</a>";
-    }
-?>
+</script>
+  
+<form name="newticket" method="POST"
+      action="manageincident.php?action=newticket&incident_id=<?=$id?>"
+      ENCTYPE="multipart/form-data">
+<table align="center" width="1%" style="border-width: 0px" cellspacing="5">
+<tr><td valign="top">
 
-    </td>
-    <?php 
-        // NOTE: priority is used in insert form
-        $priority = $incident_ticket->get_priority($conn);
-        Incident::print_td_priority(
-            $priority,
-            Incident::get_priority_bgcolor($priority),
-            Incident::get_priority_fgcolor($priority));
-    ?>
-      <input type="hidden" name="priority" value="<?php echo $priority ?>">
-    <td>
-    <?php
-        // NOTE: status and status_action are used in insert form
-        $status = $incident_ticket->get_status();
-        if ($status == 'Open')
-            $status_action = 'Close';
-        elseif ($status == 'Closed')
-            $status_action = 'Open';
-        Incident::colorize_status($status);
-    ?>
-    </td>
-    <td>
-        <?php
-            // NOTE: in_charge is used in insert form
-            $in_charge = $incident_ticket->get_in_charge();
-            echo $in_charge; 
-        ?>
-    </td>
-    <td>
-        <?php
-            $transferred = $incident_ticket->get_transferred();
-            if ($transferred)
-                echo $transferred;
-            else
-                echo "-";
-        ?>
-    </td>
-    <td>
-        <?php
-            $copy = $incident_ticket->get_copy();
-            if ($copy)
-                echo $copy;
-            else
-                echo "-";
-        ?>
-    </td>
-    <td nowrap>
-      <input type="submit" name="submit_increase_priority" 
-             value="Increase Priority" style="width: 10em;" /><br/>
-      <input type="submit" name="submit_decrease_priority" 
-             value="Decrease Priority" style="width: 10em;" /><br/>
-<?php
-        if (isset($status_action)) {
-?>
-      <input type="submit" name="submit_change_status" 
-             value="<?php echo $status_action ?>" 
-             style="width: 10em; color: #17457c" /><br/>
-<?php
-        }
-?>
-      <input type="submit" name="submit_delete_ticket" 
-             value="Delete" style="width: 10em; color: red;" />
-    </td>
-    </form>
-  </tr>
-<?php
-        }
-    }
-?>
-  <tr><td colspan="8"></td></tr>
-  <tr><td colspan="8"></td></tr>
-  <form enctype="multipart/form-data" method="post"
-        action="<?php echo $_SERVER["PHP_SELF"] .
-        "?id=" . $incident->get_id(); ?>">
-  <tr>
-    <td><?php echo strftime("%A %d-%b-%Y", time()) ?></td>
-    <td>
-       <?php echo gettext("Description"); ?> <br/>
-      <textarea id="11" name="description" rows="6" autocomplete="off" onKeyUp="checkName(this.value,'')" cols="40"></textarea><br/>
-       <?php echo gettext("Action"); ?> <br/>
-      <textarea name="action" rows="6" cols="40"></textarea><br/>
-       <?php echo gettext("Attachment"); ?> <br/>
-      <input type="file" name="file" />
-    </td>
-    <td colspan="2">
-      <?php echo gettext("Priority"); ?> <br/>
-      <select name="priority">
-        <option value="1" 
-            <?php if ($priority == 1) echo "SELECTED" ?>>
-	    <?php echo gettext("1"); ?> </option>
-        <option value="2"
-            <?php if ($priority == 2) echo "SELECTED" ?>>
-	    <?php echo gettext("2"); ?> </option>
-        <option value="3"
-            <?php if ($priority == 3) echo "SELECTED" ?>>
-	    <?php echo gettext("3"); ?> </option>
-        <option value="4"
-            <?php if ($priority == 4) echo "SELECTED" ?>>
-	    <?php echo gettext("4"); ?> </option>
-        <option value="5"
-            <?php if ($priority == 5) echo "SELECTED" ?>>
-	    <?php echo gettext("5"); ?> </option>
-        <option value="6"
-            <?php if ($priority == 6) echo "SELECTED" ?>>
-	    <?php echo gettext("6"); ?> </option>
-        <option value="7"
-            <?php if ($priority == 7) echo "SELECTED" ?>>
-	    <?php echo gettext("7"); ?> </option>
-        <option value="8"
-            <?php if ($priority == 8) echo "SELECTED" ?>>
-	    <?php echo gettext("8"); ?> </option>
-        <option value="9"
-            <?php if ($priority == 9) echo "SELECTED" ?>>
-	    <?php echo gettext("9"); ?> </option>
-        <option value="10"
-            <?php if ($priority == 10) echo "SELECTED" ?>>
-	    <?php echo gettext("10"); ?> </option>
-      </select><br/><br/>
-      <?php echo gettext("status"); ?> <br/>
-      <select name="status">
-        <option value="Open"
-            <?php if ($status == 'Open') echo "SELECTED" ?>>
-	    <?php echo gettext("Open"); ?> </option>
-        <option value="Closed"
-            <?php if ($status == 'Closed') echo "SELECTED" ?>>
-	    <?php echo gettext("Closed"); ?> </option>
-      </select>
-    </td>
-    <td colspan="3">
-      <?php echo gettext("In charge"); ?> :<br/>
-      <b>
-        <?php
-            if ($transferred) 
-                $in_charge = $transferred;
-            if (!$in_charge) // first action
-                $in_charge = Session::get_session_user();
+    <table style="text-align: left" id="anchor" align="left" width="1%" style="border-width: 1px">
+    <tr>
+        <th><?=_("Status")?></th>
+        <td style="text-align: left">
+          <select name="status">
+            <option value="Open" <? if ($incident_status == 'Open') echo 'SELECTED'?>><?=_("Open")?></option>
+            <option value="Closed" <? if ($incident_status == 'Closed') echo 'SELECTED'?>><?=_("Closed")?></option>
+          </select>
+        </td>
+    </tr>
+    <tr>
+        <th><?=_("Priority")?></th>
+        <td style="text-align: left">
+          <select name="priority" onChange="chg_prio_str();">
+            <? for ($i=1; $i<=10; $i++) { ?>
+                <? $selected = $priority == $i ? 'SELECTED' : ''; ?>
+                <option value="<?=$i?>" <?=$selected?>><?=$i?></option>
+            <? } ?>
+          </select>
+          -&gt;
+          <select name="prio_str" onChange="chg_prio_num();">
+            <option value="Low"><?=_("Low")?></option>
+            <option value="Medium"><?=_("Medium")?></option>
+            <option value="High"><?=_("High")?></option>
+         </td>
+    </tr>
+    <tr>
+        <th><?=_("Transfer To")?></th>
+        <td style="text-align: left">
+          <select name="transferred">
+            <option value=""></option>
+            <? foreach ($users as $u) { ?>
+                <? if ($u->get_login() == $incident_in_charge) continue; // Don't add current in charge?>
+                <option value="<?=$u->get_login()?>"><?=format_user($u, false)?></option>
+            <? } ?>
+          </select>
+        </td>
+        <script>chg_prio_str();</script>
+    </tr>
+    <tr>
+        <th><?=_("Attachment")?></th>
+        <td style="text-align: left"><input type="file" name="attachment" /></td>
+    </tr>
+    <tr>
+        <th ><?=_("Description")?></th>
+        <td style="border-width: 0px;">
+        <textarea name="description" rows="10" cols="80" WRAP=HARD></textarea>
+    </td></tr>
+    <tr>
+        <th><?=_("Action")?></th>
+        <td style="border-width: 0px;">
+        <textarea name="action" rows="10" cols="80" WRAP=HARD></textarea>
+    </td></tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td align="center" style="text-align: center">
+        <input type="submit" name="add_ticket" value="<?=_("Add ticket")?>"/>
+    </td></tr>
+    </table>
 
-            echo $in_charge; 
-        ?>
-      </b>
-      <br/><br/>
-      <input type="hidden" name="in_charge" 
-             value="<?php echo $in_charge ?>" />
-      <?php echo gettext("Transfer"); ?> <br/>
-      <input type="text" name="transferred" /><br/>
-      <?php echo gettext("Copy (e-mail)"); ?> <br/>
-      <input type="text" name="copy" />
-    </td>
-    <td><input type="submit" name="insert_ticket" value="Add" /></td>
-  </tr>
-  </form>
+</td>
+<td valign="top">
+<table style="text-align: left">
+    <tr><th><?=_("Tags")?></th></tr>
+    <? foreach ($incident_tag->get_list() as $t) { ?>
+    <tr>
+        <td style="text-align: left" NOWRAP>
+            <? $checked = in_array($t['id'], $incident_tags) ? 'checked' : ''?>
+            <input type="checkbox" name="tags[]" value="<?=$t['id']?>" <?=$checked?>>
+            <label title="<?=$t['descr']?>"><?=$t['name']?></label><br/>
+        </td>
+    </tr>
+    <? } ?>
 </table>
-<!-- end list of incidents -->
-<div id="10">
-</div>
-
-<?php
-    } /* if incident */
-    $db->close($conn);
-?>
-
-</body>
-</html>
-
+</td>
+</tr>
+</table>
+</form>
+</body></html>

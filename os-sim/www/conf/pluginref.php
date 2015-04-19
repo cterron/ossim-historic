@@ -5,7 +5,7 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
 
 <html>
 <head>
-  <title> <?php echo gettext("Riskmeter"); ?> </title>
+  <title> <?php echo gettext("Plugin reference"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
@@ -15,19 +15,32 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
 
 <?php
     require_once 'ossim_db.inc';
+    require_once 'classes/Security.inc';
+
+    $order = GET('order');
+    $inf = GET('inf');
+    $sup = GET('sup');
     
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, 'illegal:'._("order"));
+    ossim_valid($sup, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("sup"));
+    ossim_valid($inf, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("inf"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+                               
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if (!$order = $_GET["order"]) $order = "plugin_id";
+    if (empty($order)) $order = "plugin_id";
     
     require_once 'classes/Plugin_reference.inc';
     require_once 'classes/Plugin.inc';
     require_once 'classes/Plugin_sid.inc';
     
-    if (!$inf = $_GET["inf"])
+    if (empty($inf))
         $inf = 0;
-    if (!$sup = $_GET["sup"])
+    if (empty($sup))
         $sup = 25;
 
 ?>
@@ -116,6 +129,8 @@ Session::logcheck("MenuCorrelation", "CorrelationCrossCorrelation");
                 "WHERE plugin_id = $ref_id AND sid = $ref_sid")) 
             {
                 $plugin_ref_sid_name = $plugin_sid_list[0]->get_name();
+            } else {
+                $plugin_ref_sid_name = $ref_sid;
             }
 ?>
       <tr>

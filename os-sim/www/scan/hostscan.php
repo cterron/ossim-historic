@@ -15,8 +15,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
   <h1> <?php echo gettext("Host scan configuration"); ?> </h1>
 
 <?php
-     if (!$order = $_GET["order"]) 
-        $order = "inet_aton(host_ip)";
+    require_once 'classes/Security.inc';
+    
+    $order = GET('order');
+    
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+    
+    if (ossim_error()) {
+            die(ossim_error());
+    }
+    
+    if (empty($order)) $order = "inet_aton(host_ip)";
         
     require_once ('ossim_db.inc');
     

@@ -99,3 +99,4 @@ GList*           sim_xml_directive_get_directives (SimXmlDirective *xmldirect);
 G_END_DECLS
 
 #endif
+// vim: set tabstop=2:

@@ -1,18 +1,25 @@
-SUBDIRS= backup \
+SUBDIRS= action \
+	backup \
 	conf \
 	control_panel \
 	directives \
 	editor \
-    hids \
+	feed \
+	hids \
 	host \
 	incidents \
-    java \
+	java \
+	js \
+	nagios \
 	net \
+	netscan \
 	ntop \
+	panel \
 	pixmaps \
 	policy \
 	port \
 	report \
+	response \
 	riskmeter \
 	rrd_conf \
 	scan \
@@ -21,8 +28,9 @@ SUBDIRS= backup \
 	setup \
 	signature \
 	style \
-	vulnmeter \
-	netscan
+	upgrade \
+	userlog \
+	vulnmeter 
 	
 wwwdir = $(datadir)/ossim/www
 www_DATA = index.php \

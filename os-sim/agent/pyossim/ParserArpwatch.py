@@ -41,7 +41,7 @@ class ParserArpwatch(Parser.Parser):
         # Move to the end of file
         fd.seek(0, 2)
 
-        ip = addr = vendor = timestamp = ""
+        sensor = ip = addr = vendor = timestamp = ""
 
         while 1:
 
@@ -74,22 +74,26 @@ class ParserArpwatch(Parser.Parser):
                         return None
 
             else:
-
+                
                 result_ip = re.findall('ip address: (\S+)', line)
-                result_addr = re.findall('ethernet address: (.*)', line)
-                result_vendor = re.findall('ethernet vendor: (.*)', line)
-                result_timestamp = re.findall('timestamp: ([^\+|\-]*)', line)
+                result_iface = re.findall('interface: (\S+)', line)
+                result_addr = re.findall('^\s*ethernet address: (.*)', line)
+                result_vendor = re.findall('^\s*ethernet vendor: (.*)', line)
+                result_timestamp = re.findall('^\s*timestamp: ([^\+|\-]*)', line)
 
                 if result_ip != []:
-                    ip = addr = vendor = timestamp = ""
+                    ip = iface = addr = vendor = date = ""
                     ip = result_ip[0]
-                    lines = line
+                    lines = line.rstrip()
+                elif result_iface != []:
+                    iface = result_iface[0]
+                    lines += line.rstrip()
                 elif result_addr != []:
                     addr = result_addr[0]
-                    lines += line
+                    lines += line.rstrip()
                 elif result_vendor != []:
                     vendor = result_vendor[0]
-                    lines += line
+                    lines += line.rstrip()
                 elif result_timestamp != []:
                     # timestamp
                     # Monday, March 15, 2004 15:39:19 +0000
@@ -97,17 +101,17 @@ class ParserArpwatch(Parser.Parser):
                         time.strptime(util.normalizeWhitespace(result_timestamp[0]), 
                                   "%A, %B %d, %Y %H:%M:%S")
                     date = time.strftime('%Y-%m-%d %H:%M:%S', timestamp)
+                    lines += line.rstrip()
 
-                    lines += line
-
-                    self.agent.sendMacChange (
+                    self.agent.sendMacEvent (
                          host       = ip,
+                         iface      = iface,
                          mac        = addr,
                          vendor     = vendor,
                          date       = date,
+                         sensor     = self.plugin["sensor"],
                          plugin_id  = self.plugin["id"],
                          plugin_sid = 1,
                          log        = lines)
 
         fd.close()
-

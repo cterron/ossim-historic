@@ -7,14 +7,20 @@ if (!$limit = $_GET["ports"]) {
     $limit = 10;
 }
 
+if (!$type = $_GET["type"]) {
+    $type = "event";
+}
+
+
+
 $security_report = new SecurityReport();
-$list = $security_report->Ports($limit);
+$list = $security_report->Ports($limit, $type);
 foreach ($list as $l) {
     $datax[] = $l[0];
     $datay[] = $l[2];
 }
 
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
 
 include ("$jpgraph/jpgraph.php");

@@ -1,10 +1,20 @@
 <?php
+require_once ("classes/Session.inc");
+require_once ("classes/Security.inc");
+
+    $what = GET('what');
+
+    ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("What"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
     /* what to reload... */
-    if (!$what = $_GET["what"]) $what = 'all';
+    if (empty($what))  $what = 'all';
 
     require_once ('ossim_conf.inc');
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
 
     /* get the port and IP address of the server */
     $address = $ossim_conf->get_conf("server_address");

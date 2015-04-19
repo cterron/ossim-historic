@@ -5,7 +5,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 <?php
     require_once ('ossim_conf.inc');
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
     $base_dir = $ossim_conf->get_conf("base_dir");
     
     $REMOTE_PATH = "/etc";      # where to get and insert config files
@@ -19,6 +19,18 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     $SNORT_FILE_DEFAULT = "$DEFAULT_PATH/snort.conf.sample";
     $OSSIM_FILE_DEFAULT = "$DEFAULT_PATH/ossim.conf.sample";
     $SPADE_FILE_DEFAULT = "$DEFAULT_PATH/spade.conf.sample";
+
+
+    require_once 'classes/Security.inc';
+    
+    $ip = REQUEST('ip');
+
+    ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("IP address"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
 ?>
 
 <html>
@@ -29,23 +41,24 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 </head>
 <body>
                                                                                 
-  <h1> <?php echo gettext("Edit sensor"); ?> <?php echo $_REQUEST["ip"] ?> 
+  <h1> <?php echo gettext("Edit sensor"); ?> <?php echo $ip ?> 
   <?php echo gettext("properties"); ?> </h1>
 
 <?php
 
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
-
+    
+    
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!($_REQUEST["snort"] || $_REQUEST["spade"] ||
-          $_REQUEST["ossim"] || $_REQUEST["ntop"] ||
-          $_REQUEST["snortwrite"] || $_REQUEST["spadewrite"] ||
-          $_REQUEST["ossimwrite"] || $_REQUEST["ntopwrite"] )) {
+    if (!(REQUEST('snort') || REQUEST('spade') ||
+          REQUEST('ossim') || REQUEST('ntop') ||
+          REQUEST('snortwrite') || REQUEST('spadewrite') ||
+          REQUEST('ossimwrite') || REQUEST('ntopwrite') )) {
 
-        if (!$ip = $_REQUEST["ip"]) {
+        if (empty($ip)) {
         
         
             echo "<p> " . gettext("What sensor do you want to edit") . " ?</p>\n";
@@ -99,7 +112,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     /* 
      * S N O R T 
      */
-    if ($_REQUEST["snort"]) {
+    if (REQUEST('snort')) {
 
         if (!$fd = @fopen($SNORT_FILE, 'r+')) {
             echo gettext("Error opening") . " $SNORT_FILE " . gettext("file") . " \n";
@@ -217,7 +230,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 <?php
 
-    } elseif($_POST["snortwrite"]) {
+    } elseif(POST('snortwrite')) {
     
         $buff = file_get_contents($SNORT_FILE);
         $location = "$SNORT_FILE";
@@ -263,7 +276,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
         system("scp $SNORT_FILE root@$ip:$REMOTE_PATH/snort.conf");
     }
 
-    elseif($_POST["snortload"]) {
+    elseif(POST('snortload')) {
         system("scp $SNORT_FILE_DEFAULT root@$ip:$REMOTE_PATH/snort.conf");
         system("cp $SNORT_FILE_DEFAULT $SNORT_FILE");
         echo "<p>Default values loaded</p>\n";
@@ -273,7 +286,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     /*
      * O S S I M
      */
-    elseif($_REQUEST["ossim"]) {
+    elseif(REQUEST('ossim')) {
     
         if (!$fd = fopen($OSSIM_FILE, 'r+')) {
             echo gettext("Error opening") . " $OSSIM_FILE " . gettext("file") . " \n";
@@ -554,7 +567,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     </form>
     </table>
 <?php
-    } elseif($_POST["ossimwrite"]) {
+    } elseif(POST('ossimwrite')) {
     
         $buff = file_get_contents($OSSIM_FILE);
         $location = "$OSSIM_FILE";
@@ -675,7 +688,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     }
 
 
-    elseif($_POST["ossimload"]) {
+    elseif(POST('ossimload')) {
         system("scp $OSSIM_FILE_DEFAULT root@$ip:$REMOTE_PATH/ossim.conf");
         system("cp $OSSIM_FILE_DEFAULT $OSSIM_FILE");
         echo "<p> " . gettext("Default values loaded") . " </p>\n";
@@ -684,7 +697,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     /*
      * S P A D E
      */
-    elseif($_REQUEST["spade"]) {
+    elseif(REQUEST('spade')) {
     
         if (!$fd = fopen($SPADE_FILE, 'r+')) {
             echo gettext("Error opening") . " $SPADE_FILE " . gettext("file") . " \n";
@@ -769,7 +782,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     </table>
 
 <?php
-    } elseif($_POST["spadewrite"]) {
+    } elseif(POST('spadewrite')) {
 
         $buff = file_get_contents($SPADE_FILE);
         $location = "$SPADE_FILE";
@@ -798,7 +811,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
     }
     
-    elseif($_POST["spadeload"]) {
+    elseif(POST('spadeload')) {
         system("scp $SPADE_FILE_DEFAULT root@$ip:$REMOTE_PATH/spade.conf");
         system("cp $SPADE_FILE_DEFAULT $SPADE_FILE");
         echo "<p> " . gettext("Default values loaded") . " </p>\n";
@@ -807,4 +820,3 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 </body>
 </html>
-

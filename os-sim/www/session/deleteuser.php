@@ -1,11 +1,7 @@
 <?php
 require_once ('classes/Session.inc');
 Session::logcheck("MenuConfiguration", "ConfigurationUsers");
-?>
-
-<?php
-    session_start();
-    $loguser = $_SESSION["_user"];
+$loguser = Session::get_session_user();
 ?>
 
 <html>
@@ -20,21 +16,33 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
   <h1> <?php echo gettext("Delete user"); ?> </h1>
 
 <?php
-    if (!$_GET["user"]) {
-        echo "<p align=\"center\">Wrong user</p>";
-        exit;
+    require_once ("classes/Security.inc");
+
+    $user = GET('user');
+    
+    ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
+    
+    if (ossim_error()) {
+            die(ossim_error());
     }
 
-    $user = $_GET["user"];
 
-if (!$_GET["confirm"]) {
+    if ( !Session::am_i_admin() )
+    {
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("ONLY_ADMIN");
+    }
+
+
+if (!GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> </p>
     <p><a
       href="<?php echo $_SERVER["PHP_SELF"].
         "?user=$user&confirm=yes"; ?>"> 
 	<?php echo gettext("Yes"); ?> </a>
-        &nbsp;&nbsp;&nbsp;<a href="host.php"> <?php echo gettext("No"); ?> </a>
+        &nbsp;&nbsp;&nbsp;<a href="users.php"> <?php echo gettext("No"); ?> </a>
     </p>
 <?php
     exit();
@@ -42,9 +50,9 @@ if (!$_GET["confirm"]) {
 
 
     if ($loguser == $user) {
-        echo "<p align=\"center\">You can't remove yourself!</p>";
-        echo "<p><a href=\"users.php\">Back</a></p>";
-        exit;
+         require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("USER_CANT_REMOVE");
     }
 
     require_once 'ossim_db.inc';

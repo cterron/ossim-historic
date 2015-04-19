@@ -1,6 +1,7 @@
 <?php
 
 require_once ('ossim_db.inc');
+require_once ('classes/Log_action.inc');
 
 class SecurityReport
 {
@@ -14,39 +15,90 @@ class SecurityReport
         $this->snort_conn = $db->snort_connect();
     }
 
-    function AttackHost($ip_target, $limit = 10)
+    function AttackHost($conn, $ip_target, $limit = 10, $type = "event")
     {
         require_once ('classes/Host.inc');
+        require_once ('classes/Net.inc');
+        require_once ('classes/Session.inc');
 
         $list = array();
+        $temp_conn = $this->snort_conn;
 
-        $query = "SELECT count($ip_target) AS occurrences,
-                  inet_ntoa($ip_target) as ip
-                  FROM acid_event
-                  GROUP BY $ip_target
-                  ORDER BY occurrences DESC LIMIT $limit;";
-        if (!$rs = &$this->snort_conn->Execute($query)) {
-            print $this->snort_conn->ErrorMsg();
+        if (!strcmp($ip_target, "ip_src")){
+            if ($type == "alarm") $target = "src_ip";
+            $title = "Attacker hosts";
+        } elseif (!strcmp($ip_target, "ip_dst")){
+            if ($type == "alarm") $target = "dst_ip";
+            $title = "Attacked hosts";
+        }
+
+        switch($type){
+            case "alarm":
+                  if (!strcmp($ip_target, "ip_src")) {
+                        $ip_target = "src_ip";
+                  }
+                  if (!strcmp($ip_target, "ip_dst")) {
+                        $ip_target = "dst_ip";
+                  }
+                  $query = OssimQuery("SELECT count($ip_target) AS occurrences,
+                  inet_ntoa($ip_target) as ip FROM alarm
+                  GROUP BY $ip_target ORDER BY occurrences DESC");
+                  $temp_conn = $this->ossim_conn;
+                  break;
+            case "event":
+            default:
+                  $query = OssimQuery("SELECT count($ip_target) AS occurrences,
+                  inet_ntoa($ip_target) as ip FROM acid_event
+                  GROUP BY $ip_target ORDER BY occurrences DESC");
+                  $temp_conn = $this->snort_conn;
+        }
+
+        if (!$rs = &$temp_conn->Execute($query)) {
+            print $temp_conn->ErrorMsg();
         } else {
+            $i = 0;
             while (!$rs->EOF) {
-                $tmp_array = array ($rs->fields["ip"], 
-                                    $rs->fields["occurrences"]);
-                array_push($list, $tmp_array);
+                if (Session::hostAllowed($conn, $rs->fields["ip"]))
+                {
+                    $tmp_array = array ($rs->fields["ip"], 
+                                        $rs->fields["occurrences"]);
+                    array_push($list, $tmp_array);
+                    $i += 1;
+                }
                 $rs->MoveNext();
+
+                /* check limit */
+                if ($i >= $limit) {
+                    $rs->EOF = true;
+                }
             }
         }
         return $list;
     }
     
-    function Alerts($limit = 10)
+    function Events($limit = 10, $type = "event")
     {
         $list = array();
+        $temp_conn = $this->snort_conn;
 
-        $query = "SELECT count(sig_name) AS occurrences, sig_name
+        switch($type){
+            case "alarm":
+                  $query = OssimQuery("SELECT count(name) AS occurrences, name as sig_name
+                  from alarm, plugin_sid WHERE plugin_sid.plugin_id = alarm.plugin_id
+                  AND plugin_sid.sid = alarm.plugin_sid GROUP BY name ORDER BY occurrences 
+                  DESC LIMIT $limit");
+                  $temp_conn = $this->ossim_conn;
+                  break;
+            case "event":
+            default:
+                  $query = OssimQuery("SELECT count(sig_name) AS occurrences, sig_name
                   FROM acid_event GROUP BY sig_name
-                  ORDER BY occurrences DESC LIMIT $limit;";
-        if (!$rs = &$this->snort_conn->Execute($query)) {
-            print $this->snort_conn->ErrorMsg();
+                  ORDER BY occurrences DESC LIMIT $limit");
+                  $temp_conn = $this->snort_conn;
+        }
+
+        if (!$rs = &$temp_conn->Execute($query)) {
+            print $temp_conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
                 $tmp_array = array ($rs->fields["sig_name"], 
@@ -59,18 +111,31 @@ class SecurityReport
     }
 
 
-    function Ports($limit = 10)
+    function Ports($limit = 10, $type = "event")
     {
         require_once ('classes/Port.inc');
    
         $list = array();
+        $temp_conn = $this->snort_conn;
 
-        $query = "SELECT count(layer4_dport) AS occurrences, layer4_dport
+        switch($type){
+            case "alarm":
+                  $query = OssimQuery("SELECT count(dst_port) AS occurrences, dst_port as layer4_dport
+                  FROM alarm GROUP BY dst_port ORDER BY occurrences DESC LIMIT $limit");
+                  $temp_conn = $this->ossim_conn;
+                  break;
+            case "event":
+            default:
+                  $query = OssimQuery("SELECT count(layer4_dport) AS occurrences, layer4_dport
                   FROM acid_event 
                   GROUP BY layer4_dport
-                  ORDER BY occurrences DESC LIMIT $limit;";
-        if (!$rs = &$this->snort_conn->Execute($query)) {
-            print $this->snort_conn->ErrorMsg();
+                  ORDER BY occurrences DESC LIMIT $limit");
+                  $temp_conn = $this->snort_conn;
+        }
+
+
+        if (!$rs = &$temp_conn->Execute($query)) {
+            print $temp_conn->ErrorMsg();
         } else {
             while (!$rs->EOF) 
             {
@@ -94,15 +159,29 @@ class SecurityReport
         return $list;
    }
 
-   function AlertsByRisk($limit = 10)
+   function EventsByRisk($limit = 10, $type = "event")
    {
         $list = array();
+        $temp_conn = $this->snort_conn;
 
-        $query = "SELECT sig_name, ossim_risk_a
+        switch($type){
+            case "alarm":
+                  $query = OssimQuery("SELECT name as sig_name, risk as ossim_risk_a from alarm, plugin_sid
+                  WHERE plugin_sid.plugin_id = alarm.plugin_id AND plugin_sid.sid = alarm.plugin_sid
+                  GROUP BY name ORDER BY risk DESC LIMIT $limit");
+                  $temp_conn = $this->ossim_conn;
+                  break;
+            case "event":
+            default:
+                  $query = OssimQuery("SELECT sig_name, ossim_risk_a
                   FROM acid_event GROUP BY sig_name
-                  ORDER BY ossim_risk_a DESC LIMIT $limit;";
-        if (!$rs = &$this->snort_conn->Execute($query)) {
-            print $this->snort_conn->ErrorMsg();
+                  ORDER BY ossim_risk_a DESC LIMIT $limit");
+                  $temp_conn = $this->snort_conn;
+        }
+
+
+        if (!$rs = &$temp_conn->Execute($query)) {
+            print $temp_conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
                 $tmp_array = array ($rs->fields["sig_name"], 

@@ -9,17 +9,23 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
      * net argument in nmap format:
      * example: ?net=192.168.1.1-255
      */
-    if (!$net = escapeshellcmd($_GET["net"])) {
-        echo "No net selected";
-        exit;
-    }
 
+
+    require_once ("classes/Security.inc");
+
+    $net = GET('net');
+
+    ossim_valid($net, OSS_ALPHA, OSS_PUNC, 'illegal:'._("net"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
     /* 
      * get conf 
      * needed to get nmap path
      */
     require_once ('ossim_conf.inc');
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $nmap = $conf->get_conf("nmap_path");
     
     /*
@@ -80,7 +86,7 @@ Session::logcheck("MenuMonitors", "MonitorsSession");
   <HEAD>
     <TITLE> 
 EOF;    
-    <?php echo gettext("Active TCP Sessions"); ?> 
+    echo gettext("Active TCP Sessions");
 echo <<<EOF
     </TITLE>
     <LINK REL=stylesheet HREF="$ntop_link/style.css" type="text/css">

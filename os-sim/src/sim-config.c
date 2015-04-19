@@ -32,11 +32,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 #include <gnet.h>
 #include <stdlib.h>
 
 #include "sim-config.h"
+#include <config.h>
 
 enum
 {
@@ -120,6 +120,10 @@ sim_config_instance_init (SimConfig *config)
 
   config->smtp.host = NULL;
   config->smtp.port = 0;
+
+  config->framework.name = NULL;
+  config->framework.host = NULL;
+  config->framework.port = 0;
 }
 
 /* Public Methods */
@@ -317,3 +321,6 @@ sim_config_rserver_free (SimConfigRServer *rserver)
 
   g_free (rserver);
 }
+
+// vim: set tabstop=2:
+

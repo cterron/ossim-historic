@@ -47,8 +47,8 @@
                 $sensors = array();
                 for ($j = 1; $j <= $global_info["nsens"]; $j++) {
                     $name = "mboxs" . $j;
-                    if (mysql_escape_string($global_info[$name])) {
-                        $sensors[] = mysql_escape_string($global_info[$name]);
+                    if (validateVar($global_info[$name])) {
+                        $sensors[] = validateVar($global_info[$name]);
                     }
                 }
 

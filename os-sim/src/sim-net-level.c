@@ -32,11 +32,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-net-level.h"
 
 #include <math.h>
+#include <config.h>
 
 enum 
 {
@@ -398,3 +398,4 @@ sim_net_level_get_delete_clause (SimNetLevel  *net_level)
 
   return query;
 }
+// vim: set tabstop=2:

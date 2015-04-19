@@ -23,7 +23,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     $db = new ossim_db();
     $conn = $db->connect();
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $threshold = $conf->get_conf("threshold");
 ?>
 
@@ -121,7 +121,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
                                                                                 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -147,8 +147,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     <tr>
     <th> <?php echo gettext("Scan options"); ?> </th>
     <td class="left">
-        <input type="checkbox" name="nessus" value="1">
-	<?php echo gettext("Enable nessus scan"); ?> </input>
+        <input type="checkbox" name="nessus" value="1"> <?php echo gettext("Enable nessus scan"); ?> </input><br>
+        <input type="checkbox" name="nagios" value="1"> <?php echo gettext("Enable nagios"); ?> </input>
     </td> 
   </tr>
 

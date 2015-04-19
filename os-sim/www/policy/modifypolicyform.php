@@ -20,16 +20,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     require_once ('classes/Host.inc');
     require_once ('classes/Net.inc');
     require_once ('classes/Port_group.inc');
-    require_once ('classes/Signature_group.inc');
     require_once ('classes/Sensor.inc');
     require_once ('ossim_db.inc');
     $db = new ossim_db();
     $conn = $db->connect();
 
 
-    if (!$id = $_GET["id"]) {
-        echo "<p>Wrong policy id</p>";
-        exit;
+    if (!$id = validateVar($_GET["id"])) {
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("WRONG_POLICY_ID");
     }
 
     settype($id, "int");
@@ -41,17 +41,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
 </p>
 
-<form method="post" action="modifypolicy.php">
+<form method="post" action="modifypolicy.php?id=<?=$id?>">
 <table align="center">
   <input type="hidden" name="insert" value="insert">
-  <input type="hidden" name="id" value="<?php echo $id ?>">
   <tr>
     <th> <?php echo gettext("Source"); ?> <br/>
         <font size="-2">
-          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
+          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
+          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -88,13 +87,13 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     }
 ?>
 
-
+<hr noshade>
 
 <?php
 
     /* ===== source hosts ===== */
     $i = 1;
-    if ($host_list = Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY hostname")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -143,10 +142,10 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <tr>
     <th> <?php echo gettext("Dest"); ?> <br/>
         <font size="-2">
-          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
+          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php"> <?php echo gettext("Insert new net"); ?> ?</a>
+          <a href="../host/newhostform.php"> <?php echo gettext("Insert new host"); ?> ?</a>
         </font><br/>
     </th>
     <td class="left">
@@ -183,12 +182,13 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     }
 ?>
 
+<hr noshade>
 
 <?php
 
     /* ===== dest hosts ===== */
     $i = 1;
-    if ($host_list = Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY hostname")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -282,6 +282,9 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     <td class="left">
       <select name="priority">
         <option
+        <?php if ($policy->get_priority() == -1) echo " SELECTED "; ?>
+            value="-1"><?= _("Do not change"); ?></option>
+        <option
         <?php if ($policy->get_priority() == 0) echo " SELECTED "; ?>
             value="0">0</option>
         <option
@@ -304,46 +307,21 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th> <?php echo gettext("Signatures"); ?> <br/>
+    <th> <?php echo gettext("Plugin Groups"); ?> <br/>
         <font size="-2">
-          <a href="../signature/newsignatureform.php">
-	  <?php echo gettext("Insert new signature group"); ?>
+          <a href="../policy/modifyplugingroups.php">
+	  <?php echo gettext("Insert new plugin group"); ?>
 	  ?</a>
         </font><br/>
     </th>
     <td class="left">
-<?php
-
-    /* ===== signatures ==== */
-    $i = 1;
-    if ($sig_group_list = Signature_group::get_list($conn, "ORDER BY name")) {
-        foreach($sig_group_list as $sig_group) {
-            $sig_group_name = $sig_group->get_name();
-            if ($i == 1) {
+<?
+    /* ===== plugin groups ==== */
+    foreach ($policy->get_plugingroups($conn, $id, true) as $group) {
+        $checked = $group['policy_id'] ? 'checked' : ''; 
 ?>
-        <input type="hidden" name="<?php echo "nsigs"; ?>"
-            value="<?php echo count($sig_group_list); ?>">
-<?php
-            }
-            $name = "mboxsg" . $i;
-?>
-        <input type="checkbox" 
-<?php
-            if (Policy_sig_reference::in_policy_sig_reference
-                                         ($conn, $id, $sig_group_name))
-            {
-                echo " CHECKED ";
-            }
-?>
-            name="<?php echo $name;?>"
-            value="<?php echo $sig_group_name; ?>">
-            <?php echo $sig_group_name . "<br>";?>
-        </input>
-<?php
-            $i++;
-        }
-    }
-?>
+    <input type="checkbox" name="plugins[<?=$group['id']?>]" <?=$checked?>> <?=$group['name']?><br/>
+<? } ?>
     </td>
   </tr>
 
@@ -359,7 +337,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn, "ORDER BY inet_aton(ip)")) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -388,6 +366,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
         }
     }
 ?>
+    <input type="checkbox" 
+<?php
+            if (Policy_sensor_reference::in_policy_sensor_reference
+                                                    ($conn, $id, 'any'))
+            {
+                echo " CHECKED ";
+            }
+?>
+           name="<?php echo $name; ?>"
+           value="any"><b> <?php echo gettext("ANY"); ?> </b><br></input>
     </td>
   </tr>
 
@@ -614,6 +602,15 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
             cols="20"><?php echo $policy->get_descr(); ?></textarea>
     </td>
   </tr>
+  <tr>
+    <th> <?php echo gettext("Store events"); ?> </th>
+    <td class="left">
+    <input type="radio" name="store" value="1" <?php if($policy->get_store() == 1) echo " checked "; ?>> <?= _("Yes"); ?> 
+    <input type="radio" name="store" value="0" <?php if($policy->get_store() == 0) echo " checked "; ?>> <?= _("No"); ?>
+    </td>
+  </tr>
+
+
 
 <?php
     $db->close($conn);

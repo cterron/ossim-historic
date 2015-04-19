@@ -32,7 +32,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 #include <gnet.h>
 
 #include "os-sim.h"
@@ -40,6 +39,7 @@
 #include "sim-server.h"
 #include "sim-sensor.h"
 #include <signal.h>
+#include <config.h>
 
 extern SimMain    ossim;
 
@@ -86,6 +86,7 @@ sim_server_impl_finalize (GObject  *gobject)
   g_free (server->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
+
 }
 
 static void
@@ -159,28 +160,31 @@ sim_server_new (SimConfig  *config)
   server = SIM_SERVER (g_object_new (SIM_TYPE_SERVER, NULL));
   server->_priv->config = config;
 
-  if (config->server.port > 0)
+  if (config->server.port > 0) //anti-moron sanity check
     server->_priv->port = config->server.port;
 
   return server;
 }
 
 /*
- *
+ * FIXME: We have to create a signal handler more robust
  *
  */
 static void
 async_sig_int (int signum)
 {
   //gnet_tcp_socket_delete (async_server);
-  exit (EXIT_FAILURE);
+  //if ( unlink("/var/run/ossim-server.pid") < 0)
+  //  g_message("there's a problem deleting ossim-server.pid file");
+  //else
+    exit (EXIT_FAILURE);
 }
 
 
 /*
- *
- *
- *
+ * Main loop wich accept connections from agents.
+ * BTW, why isn't this "sim_server_async_accept"?
+ * FIXME: Not used anymore. 
  */
 static void
 async_accept (GTcpSocket* serversock, GTcpSocket* client, gpointer data)
@@ -189,38 +193,43 @@ async_accept (GTcpSocket* serversock, GTcpSocket* client, gpointer data)
   GError *error;
 
   if (client)
-    {
-      SimSession		*session;
-      SimSensor		*sensor;
-      SimSessionData	*session_data;
-      GThread		*thread;
-      GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (client);
-      sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
-      if (sensor)
-	{
-	  session = sim_server_get_session_by_sensor (server, sensor);
-	  if (session)
-	    sim_session_close (session);
-	}
-      gnet_inetaddr_unref (ia);
+  {
+    SimSession		*session;
+    SimSensor		*sensor;
+    SimSessionData	*session_data;
+    GThread		*thread;
+    GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (client);
+    sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
+    if (sensor) 	//allways true except when a not defined sensor do the conn.
+		{
+		  session = sim_server_get_session_by_sensor (server, sensor);
+	  	//if the sensor has any session established, please close it.FIXME?: Could be interesting to allow multiple agents?
+//FIXME: little memory leak to avoid some crashes.. :( fix ASAP!
+//		  if (session)
+//		    sim_session_close (session);
+		}
+    gnet_inetaddr_unref (ia);
       
-      session_data = g_new0 (SimSessionData, 1);
-      session_data->config = server->_priv->config;
-      session_data->server = server;
-      session_data->socket = client;
+    session_data = g_new0 (SimSessionData, 1);
+    session_data->config = server->_priv->config;
+    session_data->server = server;
+    session_data->socket = client;
 
-      /* Session Thread */
-      thread = g_thread_create(sim_server_session, session_data, TRUE, &error);
-      if (thread == NULL)
-	{
-	  g_message ("threadsdd error %d: %s", error->code, error->message);
-	}
-    }
+    /* Session Thread */
+    thread = g_thread_create(sim_server_session, session_data, FALSE, &error); 
+      
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "After session thread g_thread_create");
+
+    if (thread == NULL)
+		{
+	  	g_message ("thread error %d: %s", error->code, error->message);
+		}
+  }
   else
-    {
-      g_message ("server  error");
-      exit (EXIT_FAILURE);
-    }
+  {
+    g_message ("FATAL: async_accept error");
+    exit (EXIT_FAILURE);
+  }
 }
 
 /*
@@ -234,50 +243,69 @@ void
 sim_server_run (SimServer *server)
 {
   SimSession		*session;
-  SimSensor		*sensor;
+  SimSensor			*sensor;
   SimSessionData	*session_data;
   GTcpSocket		*socket;
-  GThread		*thread;
+  GThread				*thread;
+	GError 				*error;
   
   g_return_if_fail (server);
   g_return_if_fail (SIM_IS_SERVER (server));
 
   g_message ("Waiting for connections...");
-  server->_priv->socket = gnet_tcp_socket_server_new_with_port (server->_priv->port);
+  server->_priv->socket = gnet_tcp_socket_server_new_with_port (server->_priv->port);//bind on _all_ interfaces. TODO: obvious.
+  
+  if (!server->_priv->socket)
+  {
+    printf("Error in bind; may be another app is running in port %d?",server->_priv->port); //the log file may be in use.
+    g_log(G_LOG_DOMAIN,G_LOG_LEVEL_ERROR,"Error in bind; may be another app is running in port %d?",server->_priv->port);
+    exit (EXIT_FAILURE);   
+  }
 
-  signal (SIGINT, async_sig_int);
+//  signal (SIGINT, async_sig_int);
 
-  gnet_tcp_socket_server_accept_async (server->_priv->socket, async_accept, server);
+/******/
+//All the comments with a: //ASYNC*** belongs to the former implementation with async conns.
 
+/*ASYNC  gnet_tcp_socket_server_accept_async (server->_priv->socket, async_accept, server); //lest's do the callback!
+
+  //FIXME
   while (1)
   {
     usleep(100);
   }
 
   g_message ("SERVERE  ERRRROORES");
-
-/*
-  while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
-    {
-      GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
-      sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
-      if (sensor)
-	{
-	  session = sim_server_get_session_by_sensor (server, sensor);
-	  if (session)
-	    sim_session_close (session);
-	}
-      gnet_inetaddr_unref (ia);
-
-      session_data = g_new0 (SimSessionData, 1);
-      session_data->config = server->_priv->config;
-      session_data->server = server;
-      session_data->socket = socket;
-
-      thread = g_thread_create(sim_server_session, session_data, TRUE, NULL);
-      if (thread != NULL) continue;
-    }
 */
+
+  while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
+  {
+    GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+    sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
+    if (sensor)
+		{
+		  session = sim_server_get_session_by_sensor (server, sensor);
+		//FIXME: little memory leak to avoid some crashes.. :( fix ASAP!
+		      if (session)
+		        sim_session_close (session);		
+		}
+    gnet_inetaddr_unref (ia);
+
+    session_data = g_new0 (SimSessionData, 1);
+    session_data->config = server->_priv->config;
+    session_data->server = server;
+    session_data->socket = socket;
+    
+		/* Session Thread */		
+    thread = g_thread_create(sim_server_session, session_data, FALSE, &error);
+		
+	  if (thread == NULL)
+			g_message ("thread error %d: %s", error->code, error->message);
+		else
+			continue;
+										 
+  }
+
 }
 
 /*
@@ -302,26 +330,38 @@ sim_server_session (gpointer data)
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
   g_return_val_if_fail (socket, NULL);
 
-  g_message ("New session");
-
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: Trying to do a sim_session_new: pid %d. Session: %x", getpid(), session);
+ 
   session = sim_session_new (G_OBJECT (server), config, socket);
+  
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: New Session: pid %d; session address: %x", getpid(), session);
+  g_message ("New session");
+  
   sim_server_append_session (server, session);
 
-  g_message ("SESSION APPEND");
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: Session Append: pid %d; session address: %x", getpid(), session);
+  g_message ("Session Append");
 
 
-//  sim_session_read (session);
+  sim_session_read (session);
 
-  while (!sim_session_is_close(session))
+/*ASYNC
+  while (!sim_session_is_close(session)) //waiting for the session ending...
   {
     usleep(100);
   }
-
-  g_message ("Remove Session");
-  sim_server_remove_session (server, session);
-
-  g_object_unref (session);
-  g_free (session_data);
+*/
+  if (sim_server_remove_session (server, session))
+	{
+  	g_object_unref (session);
+		
+	  g_message ("Session Removed");
+  	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: After remove session: pid %d. session: %x", getpid(),session);
+	}
+	else
+  	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: Error removing session: %x", session);
+  
+	g_free (session_data);
      
   return NULL;
 }
@@ -352,16 +392,18 @@ sim_server_append_session (SimServer     *server,
  *
  *
  */
-void
+gint
 sim_server_remove_session (SimServer     *server,
-			   SimSession    *session)
+												   SimSession    *session)
 {
-  g_return_if_fail (server);
-  g_return_if_fail (SIM_IS_SERVER (server));
-  g_return_if_fail (session);
-  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_val_if_fail (server, 0);
+  g_return_val_if_fail (SIM_IS_SERVER (server), 0);
+  g_return_val_if_fail (session, 0);
+  g_return_val_if_fail (SIM_IS_SESSION (session), 0);
 
   server->_priv->sessions = g_list_remove (server->_priv->sessions, session);
+
+	return 1;
 }
 
 /*
@@ -401,17 +443,15 @@ sim_server_push_session_command (SimServer       *server,
 
   list = server->_priv->sessions;
   while (list)
-    {
-      SimSession *session = (SimSession *) list->data;
+  {
+    SimSession *session = (SimSession *) list->data;
 
-      if (session_type == SIM_SESSION_TYPE_ALL || 
-	  session_type == session->type)
-	{
-	    sim_session_write (session, command); 
-	}
+    if ((session != NULL) && SIM_IS_SESSION(session))
+      if (session_type == SIM_SESSION_TYPE_ALL || session_type == session->type)
+	sim_session_write (session, command); 
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 }
 
 /*
@@ -423,33 +463,60 @@ sim_server_push_session_command (SimServer       *server,
  */
 void
 sim_server_push_session_plugin_command (SimServer       *server,
-					SimSessionType   session_type,
-					gint             plugin_id,
-					SimCommand      *command)
+																				SimSessionType   session_type,
+																				gint             plugin_id,
+																				SimCommand      *command)
 {
   GList *list;
-
+					
   g_return_if_fail (server);
   g_return_if_fail (SIM_IS_SERVER (server));
   g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
-
+		
   list = server->_priv->sessions;
   while (list)
-    {
-      SimSession *session = (SimSession *) list->data;
-      if(session == NULL || !SIM_IS_SESSION(session)) continue;
-
-      if (session_type == SIM_SESSION_TYPE_ALL ||
-	  session_type == session->type)
-	{
-	  if (sim_session_has_plugin_id (session, plugin_id))
-	    sim_session_write (session, command); 
-	}
-
-      list = list->next;
-    }
+  {
+    SimSession *session = (SimSession *) list->data;
+      
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_push_session_plugin_command");
+    if ((session != NULL) && SIM_IS_SESSION(session))
+		{
+      if (session_type == SIM_SESSION_TYPE_ALL || session_type == session->type)
+      {
+        if (sim_session_has_plugin_id (session, plugin_id))
+				{
+					monitor_requests	*data;
+					GError						*error;	
+					GThread *thread;
+					
+					data->session = session;
+					data->command = command;
+				  thread = g_thread_create (sim_server_thread_monitor_requests, data, FALSE, &error);
+			    if (thread == NULL)
+			      g_message ("thread error %d: %s", error->code, error->message);										
+				}
+      }
+		}
+		else
+		{			
+		 //avoiding race condition; this happens when the agent disconnect from the server and there aren't any established session. FIXME: this will broke the correlation procedure in this event, I've to check this ASAP.
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_push_session_plugin_command: Error, session %x is invalid!!", session);
+			break;
+		}
+      
+    list = list->next;
+  }
 }
+
+static gpointer 
+sim_server_thread_monitor_requests(gpointer data)
+{
+	monitor_requests  *request = (monitor_requests *) data;
+
+	sim_session_write (request->session, request->command);	
+}
+
 
 /*
  *
@@ -471,7 +538,8 @@ sim_server_reload (SimServer       *server)
     {
       SimSession *session = (SimSession *) list->data;
 
-      sim_session_reload (session);
+      if ((session != NULL) && SIM_IS_SESSION(session))
+        sim_session_reload (session);
 
       list = list->next;
     }
@@ -479,7 +547,7 @@ sim_server_reload (SimServer       *server)
 
 /*
  *
- *
+ * We want to know wich is the session wich belongs to a specific sensor
  *
  *
  */
@@ -496,16 +564,16 @@ sim_server_get_session_by_sensor (SimServer   *server,
 
   list = server->_priv->sessions;
   while (list)
-    {
-      SimSession *session = (SimSession *) list->data;
-
+  {
+    SimSession *session = (SimSession *) list->data;
+    if ((session != NULL) && SIM_IS_SESSION(session))
       if (sim_session_get_sensor (session) == sensor)
 	return session;
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
-  return NULL;
+  return NULL; //no sessions established
 }
 
 
@@ -528,19 +596,47 @@ sim_server_get_session_by_ia (SimServer       *server,
 
   list = server->_priv->sessions;
   while (list)
-    {
-      SimSession *session = (SimSession *) list->data;
+  {
+    SimSession *session = (SimSession *) list->data;
+    if ((session != NULL) && SIM_IS_SESSION(session))
+      if (session_type == SIM_SESSION_TYPE_ALL || session_type == session->type)
+      {
+        GInetAddr *tmp = sim_session_get_ia (session);
+        if (gnet_inetaddr_noport_equal (tmp, ia))
+          return session;
+      }
 
-      if (session_type == SIM_SESSION_TYPE_ALL ||
-	  session_type == session->type)
-	{
-	  GInetAddr *tmp = sim_session_get_ia (session);
-	  if (gnet_inetaddr_noport_equal (tmp, ia))
-	    return session;
-	}
-
-      list = list->next;
-    }
-
+    list = list->next;
+  }
   return NULL;
 }
+
+/*
+ *
+ * Debug function: print the server sessions 
+ *
+ *
+ */
+
+void sim_server_debug_print_sessions (SimServer *server)
+{
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_debug_print_sessions:");
+	GList *list;
+	int a=0;
+	
+	list = server->_priv->sessions;
+	while (list)
+  {
+    SimSession *session = (SimSession *) list->data;
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "session %d: %x", a, session);
+		a++;		
+		list = list->next;
+	}							
+
+}
+
+
+
+
+
+// vim: set tabstop=2:

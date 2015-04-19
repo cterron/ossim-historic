@@ -20,12 +20,23 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
     require_once 'classes/Plugin.inc';
     require_once 'get_sensors.php';
     require_once 'get_sensor_plugins.php';
+    require_once 'classes/Security.inc';
+    
+    $ip_get = GET('sensor');
+    $cmd    = GET('cmd');
+    $id     = GET('id');
 
+    ossim_valid($ip_get, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("Sensor"));
+    ossim_valid($cmd, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("Cmd"));
+    ossim_valid($id, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("Id"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    } 
 
     /* connect to db */
     $db = new ossim_db();
     $conn = $db->connect();
-
 
     $tmp_list = Sensor::get_list($conn);
     if (is_array($tmp_list)) {
@@ -35,26 +46,23 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
         }
     }
 
-    $sensor_list = server_get_sensors();
+    $sensor_list = server_get_sensors($conn);
 
-    /* what sensor? */
-    if (isset($_GET["sensor"]))
-        $ip_get = $_GET["sensor"];
-
-
-    if (!$sensor_list && !$ip_get)
+    if (!$sensor_list && empty($ip_get))
         echo "<p> " . gettext("There aren't any sensors connected to OSSIM server") . " </p>";
 
     foreach ($sensor_list as $sensor)
     {
         $ip = $sensor["sensor"];
-        $name = $db_sensor_rel[$ip];
+
+        if (isset($db_sensor_rel[$ip]))
+            $name = $db_sensor_rel[$ip];
         $state = $sensor["state"];
 
         if ((isset($ip_get)) && ($ip_get != $ip))
             continue;
 
-        if (($cmd = $_GET["cmd"]) && ($id = $_GET["id"])) {
+        if ( (!empty($cmd)) && (!empty($id)) ) {
            
             /*
              *  Send message to server
@@ -63,7 +71,7 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
              */
            
             require_once ('ossim_conf.inc');
-            $ossim_conf = new ossim_conf();
+            $ossim_conf = $GLOBALS["CONF"];
 
             /* get the port and IP address of the server */
             $address = $ossim_conf->get_conf("server_address");
@@ -96,7 +104,14 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
             sleep(5);
         }
 
-        echo "<h2 align=\"center\">$ip [ $name ]</h2>";
+        /* 
+         *  show sensor ip (and sensor name if available) 
+         *  at the top of the table  
+         */
+        echo "<h2 align=\"center\">$ip";
+        if (isset($name)) echo " [ $name ]";
+        echo "</h2>";
+
         if (is_array($db_sensor_list)) {
             if (!in_array($ip, $db_sensor_list)) {
                 echo "<p><b>Warning</b></font>:

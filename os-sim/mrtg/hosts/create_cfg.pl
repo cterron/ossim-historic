@@ -77,7 +77,9 @@ if ($sth->rows > 0) {
     {
         my $host_ip = $row->{"host_ip"};
 
-        if (in_net($host_ip) or in_host($host_ip)) {
+        # frameworkd removes unused .rrd files, so
+        # let's try to generate all the rrds we can
+#        if (in_net($host_ip) or in_host($host_ip)) {
         
 
             print CFG <<"EOF";
@@ -101,7 +103,7 @@ LegendI[$host_ip]: Compromise level:
 LegendO[$host_ip]: Attack level:
 
 EOF
-        }
+#        } # if (in_net($host_ip) or in_host($host_ip))
     }
 }
 

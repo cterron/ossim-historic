@@ -15,15 +15,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
   <h1> <?php echo gettext("Delete RRD Conf"); ?> </h1>
 
 <?php 
+require_once 'classes/Security.inc';
 
-if (!$_GET["profile"]) { 
-    echo "<p align=\"center\">Wrong profile</p>";
-    exit;
+$profile = GET('profile');
+
+ossim_valid($profile, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_SCORE, 'illegal:'._("RRD profile"));
+
+if (ossim_error()) {
+    die(ossim_error());
 }
 
-$profile = mysql_escape_string($_GET["profile"]);
-
-if (!$_GET["confirm"]) {
+if (!GET('confirm')) {
 ?>
     <p>Are you sure?</p>
     <p><a href="<?php echo $_SERVER["PHP_SELF"].

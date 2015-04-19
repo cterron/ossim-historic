@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
  
 #include "sim-classification.h"
+#include <config.h>
 
 enum
 {
@@ -325,3 +325,6 @@ sim_classification_set_priority (SimClassification  *classification,
   
   classification->_priv->priority = priority;
 }
+
+// vim: set tabstop=2:
+

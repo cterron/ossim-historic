@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding='UTF-8' ?>
+
+<!--
+    Postfix mailer
+-->
+<plugin id="1521" process="postmaster" type="detector" start="yes" enable="yes">
+
+    <!-- debian users should use sysklogd instead of syslog -->
+    <startup>/etc/init.d/postfix start</startup>
+    <shutdown>/etc/init.d/postfix stop</shutdown>
+
+    <source>syslog</source>
+    <interface>&interface;</interface>
+    <sensor>&sensor;</sensor>
+    <location>/var/log/maillog</location>
+</plugin>
+

@@ -14,24 +14,26 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 <?php
 
-    /* check params */
-    if (($_GET["submit"]) &&
-        (!$_GET["sensor"] || !$_GET["interface"] || !$_GET["name"])) 
-    {
-?>
+$sensor = GET('sensor');
+$interface = GET('interface');
+$name = GET('name');
+$main = GET('main');
+$submit = GET('submit');
 
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
 
-<?php
+ossim_valid($sensor, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Sensor"));
+ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Interface"));
+ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Sensor Name"));
+ossim_valid($submit, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Submit"));
+ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Interface"));
 
-/* check OK, insert into DB */
-} elseif($_GET["submit"]) {
+if (ossim_error()) {
+    die(ossim_error());
+}
 
-    $sensor      = mysql_escape_string($_GET["sensor"]);
-    $interface   = mysql_escape_string($_GET["interface"]);
-    $name        = mysql_escape_string($_GET["name"]);
-    $main        = mysql_escape_string($_GET["main"]);
+
+if(GET('submit')) {
+
     $temp_msg    = "inserted.";
 
     require_once 'ossim_db.inc';
@@ -39,12 +41,12 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     require_once 'classes/Sensor_interfaces.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-    if($_GET["submit"] == "Insert"){
+    if($submit == "Insert"){
     Sensor_interfaces::insert_interfaces($conn,$sensor,$interface,$name,$main);
-    } elseif ($_GET["submit"] == "Update"){
+    } elseif ($submit == "Update"){
     $temp_msg = gettext("updated") . " .";
     Sensor_interfaces::update_interfaces($conn,$sensor,$interface,$name,$main);
-    } elseif ($_GET["submit"] == "Delete"){
+    } elseif ($submit == "Delete"){
     Sensor_interfaces::delete_interfaces($conn,$sensor,$interface);
     $temp_msg = gettext("deleted") . " .";
     }
@@ -64,12 +66,11 @@ require_once ('ossim_db.inc');
 require_once ('classes/Sensor.inc');
 require_once ('classes/Sensor_interfaces.inc');
 require_once ('classes/SecurityReport.inc');
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 $db = new ossim_db();
 $conn = $db->connect();
 
 $updating = 0;
-$sensor = $_GET["sensor"];
 
 if($sensor_interface_list = Sensor_interfaces::get_list($conn, $sensor)){
 $updating = 1;

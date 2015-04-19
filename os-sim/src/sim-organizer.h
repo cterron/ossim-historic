@@ -41,7 +41,7 @@
 
 #include "sim-container.h"
 #include "sim-config.h"
-#include "sim-alert.h"
+#include "sim-event.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,27 +76,27 @@ SimOrganizer*     sim_organizer_new                             (SimConfig     *
 void              sim_organizer_run                             (SimOrganizer  *organizer);
 
 void              sim_organizer_correlation_plugin              (SimOrganizer *organizer, 
-								 SimAlert     *alert);
+																																 SimEvent     *event);
 
 void              sim_organizer_mac_os_change                   (SimOrganizer *organizer, 
-								 SimAlert     *alert);
+																																 SimEvent     *event);
 /* Correlate Function */
 void              sim_organizer_calificate                      (SimOrganizer  *organizer,
-								 SimAlert      *alert);
+																																 SimEvent      *event);
 
 /* Correlate Function */
 void              sim_organizer_correlation                     (SimOrganizer  *organizer,
-								 SimAlert      *alert);
+																																 SimEvent      *event);
 /* Correlate Function */
 void              sim_organizer_snort                           (SimOrganizer  *organizer,
-								 SimAlert      *alert);
+																																 SimEvent      *event);
 /* RRD anomaly Function */
-void              sim_organizer_rrd                           (SimOrganizer  *organizer,
-								 SimAlert      *alert);
+void              sim_organizer_rrd           	                (SimOrganizer  *organizer,
+																																 SimEvent      *event);
 /* Util Function */
 void              sim_organizer_backlog_match                   (SimDatabase   *db_ossim,
-								 SimDirective  *backlog,
-								 SimAlert      *alert);
+																																 SimDirective  *backlog,
+																																 SimEvent      *event);
 
 G_END_DECLS
 
@@ -105,3 +105,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_ORGANIZER_H__ */
+// vim: set tabstop=2:

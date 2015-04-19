@@ -1,16 +1,22 @@
 classesdir   = $(datadir)/ossim/include/classes
 classes_DATA = About.inc \
-    Alarm.inc \
-	Alert.inc \
+	Action.inc \
+	Action_type.inc \
+	Action_exec.inc \
+	Action_email.inc \
+	Alarm.inc \
 	Backlog.inc \
-	Backlog_alert.inc \
+	Backlog_event.inc \
+	Backup.inc \
 	Category.inc \
 	CIDR.inc \
 	Classification.inc \
 	Config.inc \
 	Control_panel_host.inc \
 	Control_panel_net.inc \
+	Event.inc \
 	Host.inc \
+	Host_ids.inc \
 	Host_mac.inc \
 	Host_netbios.inc \
 	Host_os.inc \
@@ -22,11 +28,16 @@ classes_DATA = About.inc \
 	Host_vulnerability.inc \
 	Incident.inc \
 	Incident_alarm.inc \
+	Incident_anomaly.inc \
+	Incident_event.inc \
 	Incident_metric.inc \
 	Incident_ticket.inc \
 	Incident_file.inc \
-	Link.inc \
+	Incident_tag.inc \
+	Incident_type.inc \
 	Locale.inc \
+	Log_config.inc \
+	Log_action.inc \
 	Net_group.inc \
 	Net_group_reference.inc \
 	Net_group_scan.inc \
@@ -51,10 +62,17 @@ classes_DATA = About.inc \
 	Port_group_reference.inc \
 	Port.inc \
 	Protocol.inc \
+	Response_action.inc \
+	Response_host.inc \
+	Response.inc \
+	Response_net.inc \
+	Response_plugin.inc \
+	Response_port.inc \
 	RRD_anomaly_global.inc \
 	RRD_anomaly.inc \
 	RRD_config.inc \
 	Scan.inc \
+	Security.inc \
 	SecurityReport.inc \
 	Sensor.inc \
 	Sensor_interfaces.inc \
@@ -62,6 +80,8 @@ classes_DATA = About.inc \
 	Signature_group.inc \
 	Signature_group_reference.inc \
 	Signature.inc \
+	Upgrade.inc \
+	Upgrade_base.inc \
 	Util.inc
 
 EXTRA_DIST   = $(classes_DATA)

@@ -4,6 +4,7 @@ require_once ('classes/Host.inc');
 require_once ('classes/Net.inc');
 require_once ('classes/Session.inc');
 require_once ('ossim_conf.inc');
+require_once ("ossim_db.inc");
 
 class Control_panel_host {
 
@@ -35,11 +36,12 @@ class Control_panel_host {
 
     function get_list($conn, $args, $limit)
     {
-        $query = "SELECT * FROM control_panel $args LIMIT $limit;";
+        $query = OssimQuery("SELECT * FROM control_panel $args LIMIT $limit");
         if (!$rs = &$conn->Execute("$query")) 
         {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
 
                 $list[] = new Control_panel_host ($rs->fields["id"],
@@ -60,21 +62,22 @@ class Control_panel_host {
      */
     function get_metric_list($conn, $time_range, $type) 
     {
-        $allowed_nets = Session::allowedNets();
-
+        $list = array();
         if ($type == 'compromise') {
-            $query = "SELECT * FROM control_panel 
+            $sql = "SELECT * FROM control_panel 
                 WHERE rrd_type = 'host' AND 
-                    time_range = '$time_range' AND max_c > 0
+                    time_range = ? AND max_c > 0
                 ORDER BY max_c_date DESC";
+            $params = array($time_range);
         } elseif($type == 'attack') {
-            $query = "SELECT * FROM control_panel 
+            $sql = "SELECT * FROM control_panel 
                 WHERE rrd_type = 'host' AND 
-                    time_range = '$time_range' AND max_a > 0
+                    time_range = ? AND max_a > 0
                 ORDER BY max_a_date DESC";
+            $params = array($time_range);
         }
         
-        if (!$rs = &$conn->Execute("$query")) 
+        if (!$rs = &$conn->Execute($sql, $params)) 
         {
             print $conn->ErrorMsg();
         } else {
@@ -89,7 +92,7 @@ class Control_panel_host {
                                                   $rs->fields["id"]);
                 } else {
                     /* defensive programming */
-                    $conf = new ossim_conf();
+                    $conf = $GLOBALS["CONF"];
                     $threshold = $conf->get_conf("threshold");
                 }
 
@@ -98,9 +101,7 @@ class Control_panel_host {
                     ((!strcmp($type, 'attack')) and 
                         ($rs->fields["max_a"] > $threshold))) 
                 {
-                    if ((Net::isIpInNet($rs->fields["id"],
-                                        $allowed_nets)) or
-                        (!$allowed_nets))
+                    if (Session::hostAllowed($conn, $rs->fields["id"]))
                     {
                         $list[] = new Control_panel_host (
                                                 $rs->fields["id"],

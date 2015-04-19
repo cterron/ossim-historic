@@ -66,7 +66,7 @@ class ControlPanel (threading.Thread) :
 
             self.__conn.exec_query(query)
 
-            print "updating %s (%s):    \tC=%f, A=%f" % \
+            print __name__, ": Updating %s (%s):    \tC=%f, A=%f" % \
                 (rrd_name, range, info["max_c"], info["max_a"])
             sys.stdout.flush()
 
@@ -150,7 +150,7 @@ class ControlPanel (threading.Thread) :
 
         for rrd_file in os.listdir(self.__rrd_path["level"]):
 
-            result = re.findall("level_(\w+)\.rrd", rrd_file)
+            result = re.findall("level_(\w+)\.rrd$", rrd_file)
             if result != []:
 
                 user = result[0]
@@ -160,24 +160,8 @@ class ControlPanel (threading.Thread) :
 
                 threshold = self.__conf["threshold"]
 
-
-                # get last value for day level
-                rrd_info = self.__get_rrd_value("N-15m", "N", rrd_file)
-
-                query = """
-            UPDATE control_panel
-                SET c_sec_level = %f, a_sec_level = %f
-                WHERE id = 'global_%s' and time_range = 'day'
-            """ % (rrd_info["max_c"], rrd_info["max_a"], user)
-
-                print "updating level (day):  C=%s%%, A=%s%%" % \
-                    (rrd_info["max_c"], rrd_info["max_a"])
-
-                self.__conn.exec_query(query)
-
-
-                # calculate average for week, month and year levels
-                for range in ["week", "month", "year"]:
+                # calculate average for day, week, month and year levels
+                for range in ["day", "week", "month", "year"]:
 
                     range2date = {
                         "day"  : "N-1D",
@@ -210,6 +194,9 @@ class ControlPanel (threading.Thread) :
                                 WHERE id = 'global_%s' and time_range = '%s'
                         """ % (user, range)
 
+                        print __name__, ": Updating %s (%s):  C=0%%, A=0%%" % \
+                            (rrd_name, range )
+
                     else:
                         query = """
                             UPDATE control_panel 
@@ -217,7 +204,7 @@ class ControlPanel (threading.Thread) :
                                 WHERE id = 'global_%s' and time_range = '%s'
                         """ % (C_level / count, A_level / count, user, range)
 
-                        print "updating %s (%s):  C=%s%%, A=%s%%" % \
+                        print __name__, ": Updating %s (%s):  C=%s%%, A=%s%%" % \
                             (rrd_name, range, C_level / count, A_level / count)
 
                     self.__conn.exec_query(query)
@@ -228,32 +215,43 @@ class ControlPanel (threading.Thread) :
 
         for rrd_file in os.listdir(self.__rrd_path[type]):
             
-            if rrd_file.rfind(".rrd") != -1:
+            if rrd_file.endswith(".rrd"):
             
-                rrd_file = os.path.join(self.__rrd_path[type], rrd_file)
-                rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
-                
-                rrd_info_day   = self.__get_rrd_value("N-1D", "N", rrd_file)
-                rrd_info_week  = self.__get_rrd_value("N-7D", "N", rrd_file)
-                rrd_info_month = self.__get_rrd_value("N-1M", "N", rrd_file)
-                rrd_info_year  = self.__get_rrd_value("N-1Y", "N", rrd_file)
+                try:
+                    rrd_file = os.path.join(self.__rrd_path[type], rrd_file)
+                    rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
+                    
+                    rrd_info_day   = self.__get_rrd_value("N-1D", "N", rrd_file)
+                    rrd_info_week  = self.__get_rrd_value("N-7D", "N", rrd_file)
+                    rrd_info_month = self.__get_rrd_value("N-1M", "N", rrd_file)
+                    rrd_info_year  = self.__get_rrd_value("N-1Y", "N", rrd_file)
 
-                if rrd_info_day["max_c"] == rrd_info_day["max_a"] == \
-                    rrd_info_week["max_c"] == rrd_info_week["max_a"] == \
-                    rrd_info_month["max_c"] == rrd_info_month["max_a"] == \
-                    rrd_info_year["max_c"] == rrd_info_year["max_a"] == 0:
+                    if rrd_info_day["max_c"] == rrd_info_day["max_a"] == \
+                        rrd_info_week["max_c"] == rrd_info_week["max_a"] == \
+                        rrd_info_month["max_c"] == rrd_info_month["max_a"] == \
+                        rrd_info_year["max_c"] == rrd_info_year["max_a"] == 0 \
+                        and type != "net":
 
-                    print "Removing unused rrd file (%s).." % (rrd_file)
-                    try:
-                        os.remove(rrd_file)
-                    except OSError, e:
-                        print e
+                        # Only remove rrd files with ctime older than 1 day
+                        if int(time.time()) - \
+                           int(os.path.getctime(rrd_file)) > int(24*60*60):
 
-                else:
-                    self.__update_db(type, rrd_info_day,   rrd_name, 'day')
-                    self.__update_db(type, rrd_info_week,  rrd_name, 'week')
-                    self.__update_db(type, rrd_info_month, rrd_name, 'month')
-                    self.__update_db(type, rrd_info_year,  rrd_name, 'year')
+                            print __name__, \
+                                ": Removing unused rrd file (%s).." \
+                                % (rrd_file)
+                            try:
+                                os.remove(rrd_file)
+                            except OSError, e:
+                                print e
+
+                    else:
+                        self.__update_db(type, rrd_info_day,   rrd_name, 'day')
+                        self.__update_db(type, rrd_info_week,  rrd_name, 'week')
+                        self.__update_db(type, rrd_info_month, rrd_name, 'month')
+                        self.__update_db(type, rrd_info_year,  rrd_name, 'year')
+
+                except Exception, e:
+                    print >> sys.stderr, "Unexpected exception:", e
 
 
     def run (self) :
@@ -269,10 +267,11 @@ class ControlPanel (threading.Thread) :
                 self.__sec_update()
 
                 # sleep to next iteration
-                print "\nControl panel update finished at %s" % \
+                print __name__, ": ** Update finished at %s **" % \
                     time.strftime('%Y-%m-%d %H:%M:%S', 
                                   time.localtime(time.time()))
-                print "Next iteration in %d seconds...\n\n"%(int(Const.SLEEP))
+                print __name__, ": Next iteration in %d seconds...\n\n" % \
+                    (int(Const.SLEEP))
                 sys.stdout.flush()
 
                 time.sleep(float(Const.SLEEP))
@@ -280,10 +279,8 @@ class ControlPanel (threading.Thread) :
             except KeyboardInterrupt:
                 sys.exit()
 
-            except Exception, e:
-                print >> sys.stderr, "Unexpected exception:", e
-
 
         # never reached..
         self.__cleanup()
 
+# vim:ts=4 sts=4 tw=79 expandtab:

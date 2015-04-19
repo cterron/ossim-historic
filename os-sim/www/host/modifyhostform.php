@@ -20,14 +20,18 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/RRD_config.inc';
+    require_once 'classes/Security.inc';
+    
+
+    $ip = GET('ip');
+    ossim_valid($ip, OSS_IP_ADDR, 'illegal:'._("ip"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
     $db = new ossim_db();
     $conn = $db->connect();
-
-    if (!$ip = $_GET["ip"]) {
-        echo "<p>Wrong ip</p>";
-        exit;
-    }
 
     if ($host_list = Host::get_list($conn, "WHERE ip = '$ip'")) {
         $host = $host_list[0];
@@ -172,7 +176,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -213,7 +217,16 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         }
         ?>
         name="nessus" value="1">
-	<?php echo gettext("Enable nessus scan"); ?> </input>
+	<?php echo gettext("Enable nessus scan"); ?> </input><br>
+        <input type="checkbox"
+        <?php
+        if(Host_scan::in_host_scan($conn, $host->get_ip(), 2007)){
+            echo " CHECKED ";
+        }
+        ?>
+        name="nagios" value="1">
+	<?php echo gettext("Enable nagios"); ?> </input>
+
     </td>
     </tr>
   <tr>

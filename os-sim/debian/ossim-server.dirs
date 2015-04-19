@@ -1,5 +1,0 @@
-usr/bin/
-usr/share/man/man8
-etc/ossim/server/
-etc/logrotate.d/
-var/log/ossim/

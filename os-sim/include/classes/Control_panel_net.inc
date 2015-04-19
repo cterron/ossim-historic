@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Control_panel_net {
 
     var $net_name;
@@ -32,16 +34,20 @@ class Control_panel_net {
     {
         $count = 0;
         
-        if (!$rs = &$conn->Execute("SELECT * FROM control_panel $args")) 
+        $query = OssimQuery("SELECT * FROM control_panel $args");
+        
+        if (!$rs = &$conn->Execute($query)) 
         {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
 
                 // only insert in list if net exists in net_qualification
-                if (!$rs2 = &$conn->Execute("SELECT * FROM net_qualification
+                $query = OssimQuery("SELECT * FROM net_qualification
                                              WHERE net_name = '" .
-                                             $rs->fields["id"] . "';"))
+                                             $rs->fields["id"] . "'");
+                if (!$rs2 = &$conn->Execute($query))
                 {
                     print $conn->ErrorMsg();
                 }
@@ -63,8 +69,9 @@ class Control_panel_net {
     }
 
     function delete($conn, $net_name) {
-        $query = "DELETE FROM control_panel WHERE id = '$net_name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM control_panel WHERE id = ?";
+        $params = array($net_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -74,32 +81,28 @@ class Control_panel_net {
      * get a list of nets that exceed his threshold 
      * ordered by compromise or attack 
      */
-    function get_metric_list($conn, $time_range, $type) {
-
-        $allowed_nets = Session::allowedNets();
-
+    function get_metric_list($conn, $time_range, $type)
+    {
         if ($type == 'compromise') {
-            $query = "SELECT * FROM control_panel
-                WHERE rrd_type = 'net' AND
-                    time_range = '$time_range' 
-                ORDER BY max_c_date DESC";
+            $sql = "SELECT * FROM control_panel WHERE rrd_type = 'net' AND
+                    time_range = ? ORDER BY max_c_date DESC";
+            $params = array($time_range);
         } elseif($type == 'attack') {
-            $query = "SELECT * FROM control_panel
-                WHERE rrd_type = 'net' AND
-                    time_range = '$time_range' 
-                ORDER BY max_a_date DESC";
+            $sql = "SELECT * FROM control_panel WHERE rrd_type = 'net' AND
+                    time_range = ? ORDER BY max_a_date DESC";
+            $params = array($time_range);
         }
 
-        if (!$rs = &$conn->Execute("$query")) 
+        if (!$rs = &$conn->Execute($sql, $params)) 
         {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
 
                 // only insert in list if net exists in net_qualification
-                if (!$rs2 = &$conn->Execute("SELECT * FROM net_qualification
-                                             WHERE net_name = '" .
-                                             $rs->fields["id"] . "';"))
+                $sql = "SELECT * FROM net_qualification  WHERE net_name = ?";
+                $params = array($rs->fields["id"]);
+                if (!$rs2 = &$conn->Execute($sql, $params))
                 {
                     print $conn->ErrorMsg();
                 }
@@ -108,9 +111,7 @@ class Control_panel_net {
                     if ($net_list = Net::get_list($conn,
                         "WHERE name = '" . $rs->fields["id"] . "'"))
                     {
-                        if ((false !== strpos($allowed_nets,
-                                              $net_list[0]->get_ips()))
-                            or (!$allowed_nets))
+                        if (Session::netAllowed($conn, $net_list[0]->get_name()))
                         {
 
                             $list[] = new Control_panel_net (

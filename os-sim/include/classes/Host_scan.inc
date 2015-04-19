@@ -1,4 +1,6 @@
 <?php
+require_once('classes/Log_action.inc');
+require_once ("ossim_db.inc");
 
 class Host_scan {
 
@@ -20,11 +22,13 @@ class Host_scan {
     function get_list($conn, $args = "") 
     {
 
-        $query = "SELECT *, inet_ntoa(host_ip) FROM host_scan $args";
+        $query = OssimQuery("SELECT *, inet_ntoa(host_ip) FROM host_scan
+        $args");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Host_scan ($rs->fields["inet_ntoa(host_ip)"],
                                          $rs->fields["plugin_id"], 
@@ -40,12 +44,15 @@ class Host_scan {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
 
-        $query = "INSERT INTO host_scan VALUES 
-            (inet_aton('$host_ip'), $plugin_id, $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO host_scan VALUES (inet_aton(?), ?, ?)";
+        $params = array($host_ip, $plugin_id, $plugin_sid);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+        $infolog = array($host_ip . ":". $plugin_id);
+        Log_action::log(10,$infolog);
     }
     
     function update($conn, $host, $plugin_id, $plugin_sid = 0)
@@ -53,27 +60,27 @@ class Host_scan {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
 
-        $query = "UPDATE host_scan SET inet_ntoa(host) = '$host', 
-            plugin_id = $plugin_id, plugin_sid = $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE host_scan SET inet_ntoa(host) = ?, plugin_id = ?,  plugin_sid = ?";
+        $params = array($host, $plugin_id, $plugin_sid);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     
     function delete($conn, $host, $plugin_id) {
-        $query = "DELETE FROM host_scan WHERE inet_ntoa(host_ip) = '$host' 
-                    AND plugin_id = $plugin_id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM host_scan WHERE inet_ntoa(host_ip) = ? AND plugin_id = ?";
+        $params = array($host, $plugin_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     function in_host_scan($conn, $host, $plugin_id) {
-        $query = "SELECT * FROM host_scan WHERE inet_ntoa(host_ip) = '$host' AND plugin_id=$plugin_id;";
-        echo $query;
+        $sql = "SELECT * FROM host_scan WHERE inet_ntoa(host_ip) = ? AND plugin_id = ?";
+        $params = array($host, $plugin_id);
         
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];

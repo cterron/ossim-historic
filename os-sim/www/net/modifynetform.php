@@ -25,9 +25,10 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$name = mysql_escape_string($_GET["name"])) {
-        echo "<p>Wrong net</p>";
-        exit;
+    if (!$name = validateVar($_GET["name"], OSS_ALPHA . OSS_SCORE . OSS_PUNC)) {
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("WRONG_NET");
     }
     
     if ($net_list = Net::get_list($conn, "WHERE name = '$name'")) {
@@ -150,7 +151,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
                                                                                 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -190,7 +191,15 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
         echo " CHECKED ";
     }
     ?>
-    name="nessus" value="1"> Enable nessus scan </input>
+    name="nessus" value="1"> Enable nessus scan </input><br>
+    <input type="checkbox" 
+    <?php
+    if(Net_scan::in_net_scan($conn, $net->get_name(), 2007)){
+        echo " CHECKED ";
+    }
+    ?>
+    name="nagios" value="1"> Enable nagios</input>
+
 </td>
 </tr>
 

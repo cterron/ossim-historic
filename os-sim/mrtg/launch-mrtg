@@ -1,5 +1,14 @@
 #!/bin/bash
 
+#
+# WARNING!
+#
+# Generate ossim's rrd files via mrtg is deprecated.
+# You should remove this script from you crontab
+#
+# Use frameworkd (ossim-framework daemon) instead.
+#
+
 export LANG=C
 
 MRTG=/usr/bin/mrtg

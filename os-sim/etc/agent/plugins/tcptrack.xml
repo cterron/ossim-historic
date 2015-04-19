@@ -11,7 +11,7 @@
     <startup>tcptrack -i &interface; -P 40010 -D</startup>
     <shutdown>killall -9 tcptrack</shutdown>
     <source>socket</source>
-    <location>&sensor;:40003</location>
+    <location>&sensor;:40010</location>
     <interface>&interface;</interface>
     <sensor>&sensor;</sensor>
 </plugin>

@@ -9,9 +9,9 @@ if [ "`id -u`" != "0" ]; then
 fi
 
 if [ "$1" != "" ]; then
-    CHECKOUT="cvs -d:ext:$1@cvs.sf.net:/cvsroot/os-sim co os-sim"
+    CHECKOUT="cvs -d:ext:$1@os-sim.cvs.sourceforge.net:/cvsroot/os-sim co os-sim"
 else
-    CHECKOUT="cvs -d:pserver:anonymous@cvs.sf.net:/cvsroot/os-sim co os-sim"
+    CHECKOUT="cvs -d:pserver:anonymous@os-sim.cvs.sourceforge.net:/cvsroot/os-sim co os-sim"
 fi
 
 

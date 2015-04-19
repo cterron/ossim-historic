@@ -15,42 +15,60 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
   <h1> <?php echo gettext("New User"); ?> </h1>
 
 <?php
+    require_once ('classes/Security.inc');
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["user"]  || !$_POST["name"] ||
-         !$_POST["pass1"] || !$_POST["pass2"]))
+    $user  = POST('user');
+    $pass1 = POST('pass1');
+    $pass2 = POST('pass2');
+    $name  = POST('name');
+    $email = POST('email');
+    $nnets = POST('nnets');
+    $nsensors = POST('nsensors');
+    $company = POST('company');
+    $department = POST('department');
+    
+    
+    ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
+    ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_SPACE, 'illegal:'._("Name"));
+    ossim_valid($email, OSS_MAIL_ADDR, OSS_NULLABLE, 'illegal:'._("e-mail"));
+    ossim_valid($nnets, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nnets"));
+    ossim_valid($nsensors, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("nsensors"));
+    ossim_valid($company, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE, 'illegal:'._("Company"));
+    ossim_valid($department, OSS_ALPHA, OSS_PUNC, OSS_AT, OSS_NULLABLE,  'illegal:'._("Department"));
+
+    if (ossim_error()) {
+            die(ossim_error());
+    }
+    
+    if( !Session::am_i_admin() )
     {
-        echo "<p align=\"center\">Please, complete all the fields</p>";
-        exit();
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("ONLY_ADMIN");
     }
 
     /* check passwords */
-    elseif (0 != strcmp($_POST["pass1"], $_POST["pass2"])) {
-        echo "<p align=\"center\">Password mismatch</p>";
-        exit();
+    elseif (0 != strcmp($pass1, $pass2)) {
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("PASSWORDS_MISMATCH");
     }
 
     /* check OK, insert into DB */
-    elseif ($_POST["insert"]) {
+    elseif (POST("insert")) {
 
         require_once ('ossim_db.inc');
         require_once ('ossim_acl.inc');
         require_once ('classes/Session.inc');
         require_once ('classes/Net.inc');
 
-        $user  = $_POST["user"];
-        $pass  = $_POST["pass1"];
-        $name  = $_POST["name"];
-        $nnets = $_POST["nnets"];
-
         $perms = Array();
         foreach ($ACL_MAIN_MENU as $menus) {
             foreach ($menus as $key => $menu) {
-                if ($_POST[$key] == "on")
-                    $perms[$key] = True;
+                if (POST($key) == "on")
+                    $perms[$key] = true;
                 else
-                    $perms[$key] = False;
+                    $perms[$key] = false;
             }
         }
 
@@ -60,12 +78,15 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
         $nets = "";
         for ($i = 0; $i < $nnets; $i++)
         {
-            $net_name = $_POST["net$i"];
+            $net_name = POST("net$i");
+            ossim_valid($net_name, OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_NULLABLE, 'illegal:'._("net$i"));
+            if (ossim_error()) { die(ossim_error()); }
+            
             if ($net_list = Net::get_list($conn, "WHERE name = '$net_name'")) 
             {
                 foreach ($net_list as $net)
                 {
-                    if (!$nets)
+                    if ($nets == "")
                         $nets = $net->get_ips();
                     else
                         $nets .= "," . $net->get_ips();
@@ -73,7 +94,18 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
             }
         }
 
-        Session::insert ($conn, $user, $pass, $name, $perms, $nets);
+        $sensors = "";
+        for ($i = 0; $i < $nsensors; $i++) {
+            ossim_valid(POST("sensor$i"), OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_NULLABLE, 'illegal:'._("sensor$i"));
+            if (ossim_error()) { die(ossim_error()); }
+            if ($sensors == "")
+                $sensors = POST("sensor$i");
+            else
+                $sensors .= "," . POST("sensor$i");
+        }
+
+        Session::insert ($conn, $user, $pass1, $name, $email, $perms, $nets,
+        $sensors, $company, $department);
 
         $db->close($conn);
 ?>

@@ -1,5 +1,6 @@
 <?php
-include ('classes/Locale.inc');
+require_once ('classes/Locale.inc');
+require_once('classes/Security.inc');
 ?>
 <html>
 <head>
@@ -11,17 +12,22 @@ include ('classes/Locale.inc');
 <body>
 
 <?php
-    if (!$backlog_id = $_GET["backlog_id"]) {
-        echo gettext("Backlog ID required");
-        exit();
-    }
+
+$backlog_id = GET('backlog_id');
+
+ossim_valid($backlog_id, OSS_DIGIT, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("backlog_id"));
+
+if (ossim_error()) {
+            die(ossim_error());
+}
+
 
 $proto = "http";
 if ($_SERVER[HTTPS] == "on")
     $proto = "https";
 
 require_once("ossim_conf.inc");
-$ossim_conf = new ossim_conf();
+$ossim_conf = $GLOBALS["CONF"];
 $datapath = $ossim_conf->get_conf("ossim_link") . "/tmp/";
 $javapath = $ossim_conf->get_conf("ossim_link") . "/java/";
 $origpath = $ossim_conf->get_conf("ossim_link") . "/java/";

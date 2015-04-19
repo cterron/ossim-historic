@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Plugin_sid {
 
     var $plugin_id;
@@ -34,10 +36,11 @@ class Plugin_sid {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM plugin_sid $args";
+        $query = OssimQuery("SELECT * FROM plugin_sid $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Plugin_sid ($rs->fields["plugin_id"],
                                           $rs->fields["sid"],
@@ -57,14 +60,13 @@ class Plugin_sid {
         settype($priority, "int");
         settype($reliability, "int");
 
-        $query = "UPDATE plugin_sid SET priority = $priority, 
-                    reliability = $reliability  WHERE plugin_id = $id AND 
-                    sid = $sid;";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "UPDATE plugin_sid SET priority = ?, reliability = ? WHERE plugin_id = ? AND sid = ?";
+        $params = array($priority, $reliability, $id, $sid);
+        
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
     }
 }
 
 ?>
-

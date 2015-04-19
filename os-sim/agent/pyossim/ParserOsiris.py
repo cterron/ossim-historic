@@ -38,7 +38,7 @@ class ParserOsiris(Parser.Parser):
                 fd = open(conffile + "host.conf", 'r')
             except IOError, e:
                 util.debug(__name__, e, '!!', 'RED')
-                self.agent.sendAlert  (type = 'detector',
+                self.agent.sendEvent  (type = 'detector',
                     date       = date,
                     sensor     = self.plugin["sensor"],
                     interface  = self.plugin["interface"],
@@ -78,7 +78,7 @@ class ParserOsiris(Parser.Parser):
             fd = open(location, 'r')
         except IOError, e:
             util.debug(__name__, e, '!!', 'RED')
-            self.agent.sendAlert  (type = 'detector',
+            self.agent.sendEvent  (type = 'detector',
                 date       = date,
                 sensor     = self.plugin["sensor"],
                 interface  = self.plugin["interface"],
@@ -93,7 +93,7 @@ class ParserOsiris(Parser.Parser):
                 log = line)
             return
 
-        self.agent.sendAlert  (type = 'detector',
+        self.agent.sendEvent  (type = 'detector',
             date       = date,
             sensor     = self.plugin["sensor"],
             interface  = self.plugin["interface"],
@@ -141,7 +141,7 @@ class ParserOsiris(Parser.Parser):
 
 
 
-#                    self.agent.sendAlert  (type = 'detector',
+#                    self.agent.sendEvent  (type = 'detector',
 #                                     date       = date,
 #                                     sensor     = self.plugin["sensor"],
 #                                     interface  = self.plugin["interface"],
@@ -172,6 +172,8 @@ class ParserOsiris(Parser.Parser):
         except IOError, e:
             util.debug(__name__, e, '!!', 'RED')
             sys.exit()
+
+        start_time = time.time()
             
         # Move to the end of file
         fd.seek(0, 2)

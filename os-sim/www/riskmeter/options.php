@@ -8,16 +8,20 @@
 
 <?php
 
-    if (!$_GET["ip"]) {
-        echo "No Ip to show! Wrong params.\n";
-        exit();
+    require_once 'classes/Security.inc';
+
+    $ip = GET('ip');
+    
+    ossim_valid($ip, OSS_IP_ADDR, 'illegal:'._("IP address"));
+
+    if (ossim_error()) {
+        die(ossim_error());
     }
-    $ip = $_GET["ip"];
 
     require_once "ossim_conf.inc";
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $acid_link = $conf->get_conf("acid_link");
-    $acid_prefix = $conf->get_conf("alert_viewer");
+    $acid_prefix = $conf->get_conf("event_viewer");
     $ntop_link = $conf->get_conf("ntop_link");
     $mrtg_link = $conf->get_conf("mrtg_link");
 
@@ -32,7 +36,7 @@
   <b><?php echo $ip ?></b><br/>
 
 [ <a href="<?php echo "$acid_link/".$acid_prefix."_stat_ipaddr.php?ip=$ip&netmask=32"?>"
-     target="main"> <?php echo gettext("Alerts"); ?> </a> ] 
+     target="main"> <?php echo gettext("Events"); ?> </a> ] 
 [ <a href="<?php 
 //        echo "$mrtg_link/host_qualification/$ip.html" 
         echo "../control_panel/show_image.php?range=day&ip=$ip&what=compromise&start=N-1D&type=host&zoom=1"

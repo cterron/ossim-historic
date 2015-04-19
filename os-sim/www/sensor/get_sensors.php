@@ -1,9 +1,12 @@
 <?php
 
-function server_get_sensors() {
+require_once ('classes/Session.inc');
+require_once ('classes/Util.inc');
+
+function server_get_sensors($conn) {
 
     require_once ('ossim_conf.inc');
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
 
     /* get the port and IP address of the server */
     $address = $ossim_conf->get_conf("server_address");
@@ -35,16 +38,21 @@ function server_get_sensors() {
     {
         if (preg_match($pattern, $out, $regs)) 
         {
-            $s["sensor"]    = $regs[1];
-            $s["state"]     = $regs[2];
-            $list[] = $s;
+            if (Session::hostAllowed($conn, $regs[1]))
+            {
+                $s["sensor"]    = $regs[1];
+                $s["state"]     = $regs[2];
+
+                ## This should be checked in the server TODO FIXME
+                if (!in_array($s, $list))
+                    $list[] = $s;
+            }
         } elseif (!strncmp($out, "ok id=", 4)) {
             break;
         }
     }
     
     socket_close ($socket);
-
     return $list;
 }
 

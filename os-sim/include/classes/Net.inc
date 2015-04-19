@@ -5,8 +5,10 @@ require_once 'classes/Net_vulnerability.inc';
 require_once 'classes/Net_sensor_reference.inc';
 require_once 'classes/Net_group.inc';
 require_once 'classes/Control_panel_net.inc';
+require_once 'classes/Session.inc';
 require_once 'ossim_conf.inc';
-
+require_once 'classes/Log_action.inc';
+require_once ("ossim_db.inc");
 
 class Net {
 
@@ -52,21 +54,49 @@ class Net {
 
     function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM net $args")) {
+        $list = array();
+        $query = OssimQuery("SELECT * FROM net $args");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new Net  ($rs->fields["name"],
-                                    $rs->fields["ips"],
-                                    $rs->fields["priority"],
-                                    $rs->fields["threshold_c"],
-                                    $rs->fields["threshold_a"],
-                                    $rs->fields["rrd_profile"],
-                                    $rs->fields["alert"],
-                                    $rs->fields["persistence"],
-                                    $rs->fields["descr"]);
+                if (Session::netAllowed($conn, $rs->fields["name"]))
+                {
+                    $list[] = new Net  ($rs->fields["name"],
+                                        $rs->fields["ips"],
+                                        $rs->fields["priority"],
+                                        $rs->fields["threshold_c"],
+                                        $rs->fields["threshold_a"],
+                                        $rs->fields["rrd_profile"],
+                                        $rs->fields["alert"],
+                                        $rs->fields["persistence"],
+                                        $rs->fields["descr"]);
+                }
                 $rs->MoveNext();
             }
+        }
+
+        return $list;
+    }
+
+    function get_all($conn)
+    {
+        $list = array();
+        $sql = "SELECT * FROM net ORDER BY name ASC";
+        if (!$rs = $conn->Execute($sql)) {
+            die($conn->ErrorMsg());
+        }
+        while (!$rs->EOF) {
+            $list[] = new Net  ($rs->fields["name"],
+                                $rs->fields["ips"],
+                                $rs->fields["priority"],
+                                $rs->fields["threshold_c"],
+                                $rs->fields["threshold_a"],
+                                $rs->fields["rrd_profile"],
+                                $rs->fields["alert"],
+                                $rs->fields["persistence"],
+                                $rs->fields["descr"]);
+            $rs->MoveNext();
         }
         return $list;
     }
@@ -79,55 +109,63 @@ class Net {
         settype($threshold_a, "int");
         settype($alert, "int");
         settype($persistence, "int");
-        $name = mysql_escape_string($name);
         $rrd_profile = htmlentities($rrd_profile);
         $persistence = htmlentities($descr);
 
         $name = str_replace(" ", "_", $name);
         $ips = str_replace(" ", "", $ips);
 
-        $query = "INSERT INTO net (
-            name, ips, priority, threshold_c, threshold_a, 
-            rrd_profile, alert, persistence, descr) VALUES
-            ('$name', '$ips', $priority, $threshold_c, $threshold_a, 
-             '$rrd_profile', '$alert', '$persistence', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net (name, ips, priority, threshold_c, threshold_a, rrd_profile, alert, persistence, descr) VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $params = array($name, $ips, $priority, $threshold_c, $threshold_a, $rrd_profile, $alert, $persistence, $descr);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
-
         Net_qualification::insert($conn, $name, 1, 1);
         Net_vulnerability::insert($conn, $name, 1);
         Net_sensor_reference::insert($conn, $name, $sensors);
+       
+        $infolog = array($name);
+        Log_action::log(27,$infolog);
     }
 
     function update($conn, $name, $ips, $priority, $threshold_c, $threshold_a, 
                     $rrd_profile, $alert, $persistence, $sensors, $descr)
     {
-        Net::delete($conn, $name);
+        $skip_group_update = 1;
+        Net::delete($conn, $name, $skip_group_update );
         Net::insert($conn, $name, $ips, $priority,
                     $threshold_c, $threshold_a, $rrd_profile,
                     $alert, $persistence, $sensors, $descr);
+      
+        $infolog = array($name);
+        Log_action::log(28,$infolog);
     }
 
-    function delete($conn, $name) {
-        $name = mysql_real_escape_string($name);
-        $query = "DELETE FROM net WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+    function delete($conn, $name, $skip_group_update = 0) {
+        $sql = "DELETE FROM net WHERE name = ?";
+        $params = array($name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         Control_panel_net::delete($conn, $name);
         Net_qualification::delete($conn, $name);
         Net_vulnerability::delete($conn, $name);
-        Net_group_reference::check_orphan($conn, $name);
+        if($skip_group_update != 1){
+            Net_group_reference::check_orphan($conn, $name);
+        }
         Net_sensor_reference::delete($conn, $name);
+        
+        $infolog = array($name);
+        Log_action::log(29,$infolog);
     }
 
     function netthresh_c($conn, $name) {
-        $name = mysql_real_escape_string($name);
-        $query = "SELECT * FROM net WHERE name = '$name';";
-        if (!$rs = $conn->Execute($query)) {
+        $sql = "SELECT * FROM net WHERE name = ?";
+        $params = array($name);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -135,15 +173,17 @@ class Net {
             return $rs->fields["threshold_c"]; 
         else {
             /* net is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
 
     function netthresh_a($conn, $name) {
-        $name = mysql_real_escape_string($name);
-        $query = "SELECT * FROM net WHERE name = '$name';";
-        if (!$rs = $conn->Execute($query)) {
+        
+        $sql = "SELECT * FROM net WHERE name = ?";
+        $params = array($name);
+        
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -151,7 +191,7 @@ class Net {
             return $rs->fields["threshold_a"]; 
         else {
             /* net is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
@@ -163,11 +203,10 @@ class Net {
      */
     function isIpInNet($ip, $nets)
     {
-
         $net_list = explode(",", $nets);
 
         if (!is_array($net_list = explode (",", $nets)))
-              return False;
+              return false;
 
         foreach ($net_list as $n) 
         {
@@ -177,10 +216,10 @@ class Net {
             $val2 = ip2long($net);
 
             if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask)))
-                return True;
+                return true;
         }
 
-        return False;
+        return false;
     }
 
     function expand_CIDR($nets)
@@ -200,32 +239,31 @@ class Net {
         return $ip_range;
     }
 
-    function enable_nessus($conn, $net_name)
+    function enable_plugin($conn, $net_name, $plugin)
     {
-        $net_name = mysql_real_escape_string($net_name);
-        $query = "INSERT INTO net_scan (net_name, plugin_id, plugin_sid) 
-            VALUES ('$net_name', 3001, 0)";
-        if ($conn->Execute($query) === false) {
+        $plugin = intval($plugin);
+        $sql = "INSERT INTO net_scan (net_name, plugin_id, plugin_sid) VALUES (?, ?, 0)";
+        $params = array($net_name, $plugin);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
-    function disable_nessus($conn, $net_name)
+    function disable_plugin($conn, $net_name, $plugin)
     {
-        $net_name = mysql_real_escape_string($net_name);
-        $query = "DELETE FROM net_scan 
-            WHERE net_name = '$net_name' AND plugin_id = 3001";
-        if ($conn->Execute($query) === false) {
+        $plugin = intval($plugin);
+        $sql = "DELETE FROM net_scan WHERE net_name = ? AND plugin_id = ?";
+        $params = array($net_name, $plugin);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     function isIpInAnyNet($conn, $ip)
     {
-
         $net_list = Net::get_list($conn);
         if (is_array($net_list))
-            return False;
+            return false;
         foreach ($net_list as $n) 
         {
             list($net, $mask) = split("/", $n);
@@ -234,17 +272,18 @@ class Net {
             $val2 = ip2long($net);
 
             if (($val1 >> (32 - $mask)) == ($val2 >> (32 - $mask)))
-                return True;
+                return true;
         }
 
-        return False;
+        return false;
     }
 
     function check_orphan($conn)
     {
-        $query =  "SELECT * FROM net_group_reference LEFT JOIN net ON net.name = net_group_reference.net_name WHERE descr IS NULL";
+        $sql = "SELECT * FROM net_group_reference LEFT JOIN net
+                ON net.name = net_group_reference.net_name WHERE descr IS NULL";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
@@ -253,6 +292,25 @@ class Net {
             }
         }
     }
+
+    function get_related_sensors($conn, $net)
+    {
+        $sensors = array();
+
+        /* read from net table */
+        $sql = "SELECT sensor.ip AS sensor FROM sensor, net_sensor_reference
+                WHERE net_sensor_reference.net_name = ? AND
+                sensor.name = net_sensor_reference.sensor_name";
+        $params = array($net);
+        if (!$rs = &$conn->Execute($sql, $params)) {
+            print $conn->ErrorMsg();
+        } elseif (!$rs->EOF) {
+            $sensors[] = $rs->fields["sensor"];
+        }
+
+        return $sensors;
+    }
+    
 }
 
 ?>

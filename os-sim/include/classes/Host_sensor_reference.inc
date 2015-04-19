@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Host_sensor_reference {
 
     var $host_ip;
@@ -16,10 +18,13 @@ class Host_sensor_reference {
     
     function get_list($conn, $ip) 
     {
-        $query = "SELECT * FROM host_sensor_reference WHERE host_ip = '$ip'";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM host_sensor_reference WHERE host_ip = ?";
+        $params = array($ip);
+
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Host_sensor_reference 
                                                 ($rs->fields["host_ip"],
@@ -33,31 +38,20 @@ class Host_sensor_reference {
     function insert($conn, $host_ip, $sensors)
     {
         foreach ($sensors as $sensor_name) {
-            $query = "INSERT INTO host_sensor_reference VALUES 
-                    ('$host_ip', '$sensor_name');";
-            if ($conn->Execute($query) === false) {
+            $sql = "INSERT INTO host_sensor_reference VALUES (?, ?)";
+            $params = array($host_ip, $sensor_name);
+            if ($conn->Execute($sql, $params) === false) {
                 print 'error inserting: '.$conn->ErrorMsg().'<BR>';
                 exit;
             }
         }
     }
 
-/*
-    function update($conn, $sensor_name, $host_ip)
-    {
-        $query = "UPDATE host_sensor_reference SET host_ip = '$host_ip', 
-            sensor_name = '$sensor_name' WHERE sensor_name = '$sensor_name'";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-*/
     function delete($conn, $host_ip, $sensor_name = "%") 
     {
-        $query = "DELETE FROM host_sensor_reference 
-                    WHERE host_ip = '$host_ip' AND sensor_name LIKE '$sensor_name'";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM host_sensor_reference WHERE host_ip = ? AND sensor_name LIKE ?";
+        $params = array($host_ip, $sensor_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -66,18 +60,19 @@ class Host_sensor_reference {
     function in_host_sensor_reference($conn, $ip, $sensor_name)
     {
                                                                                 
-        $query = "SELECT * FROM host_sensor_reference
-                    WHERE host_ip = '$ip' AND sensor_name='$sensor_name';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM host_sensor_reference WHERE host_ip = ? AND sensor_name = ?";
+        $params = array($ip, $sensor_name);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
     function check_orphan($conn)
     {
-        $query =  "SELECT * FROM host_sensor_reference LEFT JOIN sensor ON sensor.name = host_sensor_reference.sensor_name WHERE descr IS NULL";
+        $sql = "SELECT * FROM host_sensor_reference LEFT JOIN sensor ON
+                sensor.name = host_sensor_reference.sensor_name WHERE descr IS NULL";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

@@ -1,9 +1,17 @@
 <?php
+    require_once ("classes/Security.inc");
+    $ip = GET('ip');
+    
+    ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("IP"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+    
     require_once ('ossim_conf.inc');
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $acid_link = $conf->get_conf("acid_link");
-    $acid_prefix = $conf->get_conf("alert_viewer");
-    $ip = $_GET["ip"];
+    $acid_prefix = $conf->get_conf("event_viewer");
 ?>
 <html>
 <frameset rows="15%,85%" border="0" frameborder="0">

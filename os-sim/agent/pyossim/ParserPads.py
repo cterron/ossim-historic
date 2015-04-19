@@ -88,6 +88,8 @@ class ParserPads(Parser.Parser):
                         proto       = proto,
                         service     = service,
                         application = application,
+			            sensor      = self.plugin["sensor"],
+                        iface       = self.plugin["interface"],
                         date        = date,
                         plugin_id   = self.plugin["id"],
                         plugin_sid  = 1,

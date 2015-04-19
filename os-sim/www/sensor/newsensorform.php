@@ -15,7 +15,17 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   <h1> <?php echo gettext("Insert new sensor"); ?> </h1>
 
 <?php
-    $ip = $_GET["ip"];
+
+require_once 'classes/Security.inc';
+
+$ip = GET('ip');
+
+ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("Sensor name"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
 ?>
 
 <form method="post" action="newsensor.php">

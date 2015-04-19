@@ -36,7 +36,6 @@
 #define __SIM_INET_H__ 1
 
 #include <config.h>
-
 #include <glib.h>
 #include <glib-object.h>
 #include <gnet.h>
@@ -68,6 +67,8 @@ struct sockaddr_storage {
 
 G_BEGIN_DECLS
 
+//A SimInet object defines a single network object. It can be a host or a network.
+
 typedef struct _SimInet        SimInet;
 typedef struct _SimInetClass   SimInetClass;
 typedef struct _SimInetPrivate SimInetPrivate;
@@ -84,7 +85,7 @@ struct _SimInetClass {
 
 GType             sim_inet_get_type                        (void);
 
-SimInet*          sim_inet_new                             (const gchar      *hostname);
+SimInet*          sim_inet_new                             (const gchar      *hostname_ip);
 SimInet*          sim_inet_new_from_ginetaddr              (const GInetAddr  *ia);
 
 SimInet*          sim_inet_clone                           (SimInet          *inet);
@@ -106,3 +107,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_INET_H__ */
+// vim: set tabstop=2:

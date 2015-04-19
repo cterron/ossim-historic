@@ -32,7 +32,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #define _GNU_SOURCE
 #include <getopt.h>
@@ -41,6 +40,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <signal.h>
 
 #include <libgda/libgda.h>
 #include <os-sim.h>
@@ -50,71 +51,60 @@
 #include "sim-session.h"
 #include "sim-server.h"
 #include "sim-xml-config.h"
+#include "sim-log.h"
 
-typedef struct {
-  gchar          *config;
-  gboolean        daemon;
-  gint            debug;
-} SimCmdArgs;
+#include <config.h>
 
-/* Globals Variables */
+/* Global Variables */
 SimMain        ossim;
 
-SimCmdArgs simCmdArgs;
-
-/*
- *
- *
- *
- *
- */
-static void
-sim_log_handler (const gchar     *log_domain,
-		 GLogLevelFlags   log_level,
-		 const gchar     *message,
-		 gpointer         data)
+void sim_terminate(int mode)
 {
-  gchar   *msg;
+  unlink("/var/run/ossim-server.pid");
+  
+  if (mode == 1)
+    abort(); //core file rulez
+	else
+	if (mode == 0)
+		exit(EXIT_SUCCESS);
+}
 
-  g_return_if_fail (message);
-  g_return_if_fail (ossim.log.fd);
+void on_signal(int signum)
+{
+  switch(signum)
+  {
+    case SIGHUP: //FIXME: reload directives, policy, and so on.
+        break;
+    case SIGFPE:
+    case SIGILL:
+    case SIGSEGV:
+    case SIGABRT: 
+    case SIGQUIT:
+        sim_terminate(1);
+        break;
+    case SIGTERM:
+    case SIGINT:
+        sim_terminate(0);
+        break;
+    case SIGBUS:
+      break;
+  }
 
-  if (ossim.log.level < log_level)
-    return;
+}
 
-  switch (log_level)
-    {
-      case G_LOG_LEVEL_ERROR:
-	msg = g_strdup_printf ("%s-Error: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-      case G_LOG_LEVEL_CRITICAL:
-	msg = g_strdup_printf ("%s-Critical: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-      case G_LOG_LEVEL_WARNING:
-	msg = g_strdup_printf ("%s-Warning: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-      case G_LOG_LEVEL_MESSAGE:
-	msg = g_strdup_printf ("%s-Message: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-      case G_LOG_LEVEL_INFO:
-	msg = g_strdup_printf ("%s-Info: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-      case G_LOG_LEVEL_DEBUG:
-	msg = g_strdup_printf ("%s-Debug: %s\n", log_domain, message);
-	write (ossim.log.fd, msg, strlen(msg));
-	g_free (msg);
-	break;
-    }
+//System signal handlers
+void init_signals(void)
+{
+  signal (SIGINT, on_signal);
+  signal (SIGHUP, on_signal);
+  signal (SIGQUIT, on_signal);
+  signal (SIGABRT, on_signal);
+  signal (SIGILL, on_signal);
+  signal (SIGBUS, on_signal);
+  signal (SIGFPE, on_signal);
+  signal (SIGSEGV, on_signal);
+  signal (SIGTERM, on_signal);
+
 }
 
 /*
@@ -252,79 +242,29 @@ options (int argc, char **argv)
 
 /*
  *
- *
+ * Saves the pid in a hardcoded (brr) place
  *
  */
-sim_log_init (void)
+
+void
+sim_pid_init(void)
 {
-  /* Init */
-  ossim.log.filename = NULL;
-  ossim.log.fd = 0;
-  ossim.log.level = G_LOG_LEVEL_MESSAGE;
-
-  /* File Logs */
-
-  if (ossim.config->log.filename)
-    {
-      ossim.log.filename = g_strdup (ossim.config->log.filename);
-    }
+  int fd_pid;
+  if ((fd_pid = open ("/var/run/ossim-server.pid", O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)) < 0)
+      g_message ("Can't create /var/run/ossim-server.pid");
   else
+  {
+    char pid_str[16];
+    if (lockf(fd_pid,F_TLOCK,0) < 0 )
+      g_message ("Can't lock pid file; may be that another server process is running?");
+    else
     {
-      /* Verify Directory */
-      if (!g_file_test (OS_SIM_LOG_DIR, G_FILE_TEST_IS_DIR))
-	g_error ("Log Directory %s: Is invalid", OS_SIM_LOG_DIR);
-      
-      ossim.log.filename = g_strdup_printf ("%s/%s", OS_SIM_LOG_DIR, SIM_LOG_FILE);
+      sprintf (pid_str,"%d\n", getpid());
+      write (fd_pid, pid_str, strlen(pid_str));
+      close(fd_pid);
     }
+  }
 
-  if ((ossim.log.fd = creat (ossim.log.filename, S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH)) < 0)
-    g_error ("Log File %s: Can't create", ossim.log.filename);
-  
-  switch (simCmdArgs.debug)
-    {
-    case 0:
-      ossim.log.level = 0;
-      break;
-    case 1:
-      ossim.log.level = G_LOG_LEVEL_ERROR;
-      break;
-    case 2:
-      ossim.log.level = G_LOG_LEVEL_CRITICAL;
-      break;
-    case 3:
-      ossim.log.level = G_LOG_LEVEL_WARNING;
-      break;
-    case 4:
-      ossim.log.level = G_LOG_LEVEL_MESSAGE;
-      break;
-    case 5:
-      ossim.log.level = G_LOG_LEVEL_INFO;
-      break;
-    case 6:
-      ossim.log.level = G_LOG_LEVEL_DEBUG;
-      break;
-    }
-
-  /* Log Handler */
-  g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
-		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
-
-  g_log_set_handler ("GLib", G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
-		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
-
-  g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
-		     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
-}
-
-/*
- *
- *
- *
- */
-sim_log_free (void)
-{
-  g_free (ossim.log.filename);
-  close (ossim.log.fd);
 }
 
 /*
@@ -339,6 +279,7 @@ main (int argc, char *argv[])
   GMainLoop	*loop;
   GThread	*thread;
   SimConfigDS	*ds;
+  
 
   /* Global variable OSSIM Init */
   ossim.config = NULL;
@@ -354,29 +295,36 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
+  /*GNET Init */
+  gnet_init();
+  gnet_ipv6_set_policy (GIPV6_POLICY_IPV4_ONLY);
+  
   /* GDA Init */
-  gda_init (NULL, "0.9.6", argc, argv);
+  gda_init ("OSSIM", "0.9.8", argc, argv);
+
+  /* Catch system signals */
+  init_signals();
 
   /* Config Init */
   if (simCmdArgs.config)
-    {
-      if (!(xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config)))
-	g_error ("Config XML File %s is invalid", simCmdArgs.config);
+  {
+    if (!(xmlconfig = sim_xml_config_new_from_file (simCmdArgs.config)))
+			g_error ("Config XML File %s is invalid", simCmdArgs.config);
       
-      if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
-	g_error ("Config is %s invalid", simCmdArgs.config);
-    }
+    if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
+			g_error ("Config is %s invalid", simCmdArgs.config);
+  }
   else
-    {
-      if (!g_file_test (OS_SIM_GLOBAL_CONFIG_FILE, G_FILE_TEST_EXISTS))
-	g_error ("Config XML File %s: Not Exists", OS_SIM_GLOBAL_CONFIG_FILE);
+  {
+    if (!g_file_test (OS_SIM_GLOBAL_CONFIG_FILE, G_FILE_TEST_EXISTS))
+			g_error ("Config XML File %s: Not Exists", OS_SIM_GLOBAL_CONFIG_FILE);
       
-      if (!(xmlconfig = sim_xml_config_new_from_file (OS_SIM_GLOBAL_CONFIG_FILE)))
-	g_error ("Config XML File %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+    if (!(xmlconfig = sim_xml_config_new_from_file (OS_SIM_GLOBAL_CONFIG_FILE)))
+			g_error ("Config XML File %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
       
-      if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
-	g_error ("Config %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
-    }
+    if (!(ossim.config = sim_xml_config_get_config (xmlconfig)))
+			g_error ("Config %s is invalid", OS_SIM_GLOBAL_CONFIG_FILE);
+  }
 
   /* Database Options */
   ds = sim_config_get_ds_by_name (ossim.config, SIM_DS_OSSIM);
@@ -389,36 +337,46 @@ main (int argc, char *argv[])
     g_error ("SNORT DB XML Config");
   ossim.dbsnort = sim_database_new (ds);
 
-  ossim.mutex_directives = g_mutex_new ();
-  ossim.mutex_backlogs = g_mutex_new ();
-
   /* Log Init */
   sim_log_init ();
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Starting OSSIM server debug with process id: %d",getpid());
+
+  /* pid init */
+  sim_pid_init();
+
+  ossim.mutex_directives = g_mutex_new ();
+  ossim.mutex_backlogs = g_mutex_new ();
+  
+  /* Create the main loop before any socket is open. It seems that this fixes some errors.*/
+  loop = g_main_loop_new (NULL, FALSE);
 
   /* Container init */
   ossim.container = sim_container_new (ossim.config);
 
   /* Scheduler Thread */
-  thread = g_thread_create (sim_thread_scheduler, NULL, TRUE, NULL);
+  thread = g_thread_create (sim_thread_scheduler, NULL, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
   /* Organizer Thread */
-  thread = g_thread_create (sim_thread_organizer, NULL, TRUE, NULL);
+  thread = g_thread_create (sim_thread_organizer, NULL, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
   /* Server Thread */
-  thread = g_thread_create (sim_thread_server, NULL, TRUE, NULL);
+  thread = g_thread_create (sim_thread_server, NULL, FALSE, NULL);
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
-  /* Main Loop */
-  loop = g_main_loop_new (NULL, FALSE);
+/* Main Loop */
   g_main_loop_run (loop);
 
-  /* Log Free */
+/* Log Free */
   sim_log_free ();
-
+ 
+  exit (EXIT_SUCCESS);
   return 0;
 }
+
+// vim: set tabstop=2:
+

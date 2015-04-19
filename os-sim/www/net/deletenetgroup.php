@@ -16,13 +16,12 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <?php 
     if (!$_GET["name"]) { 
-?>
-    <p> <?php echo gettext("Wrong name"); ?> </p>
-<?php 
-        exit;
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("WRONG_NET");
     }
 
-$name = $_GET["name"];
+$name = validateVar($_GET["name"], OSS_ALPHA . OSS_SCORE . OSS_PUNC);
 
 if (!$_GET["confirm"]) {
 ?>

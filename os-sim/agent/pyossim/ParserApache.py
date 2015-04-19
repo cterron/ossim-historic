@@ -10,7 +10,7 @@ class ParserApache(Parser.Parser):
     def process(self):
 
         if self.plugin["source"] == 'common':
-            while 1: self.__processSyslog()
+            while 1: self.__processCommon()
             
         else:
             util.debug (__name__,  "log type " + self.plugin["source"] +\
@@ -18,9 +18,9 @@ class ParserApache(Parser.Parser):
             sys.exit()
 
 
-    def __processSyslog(self):
+    def __processCommon(self):
         
-        util.debug ('ParserApache', 'plugin started (syslog)...', '--')
+        util.debug ('ParserApache', 'plugin started (common)...', '--')
 
         start_time = time.time()
         
@@ -80,7 +80,7 @@ class ParserApache(Parser.Parser):
                                                        "%Y %b %d %H %M %S"))
 
                     # TODO: adjust priority depending of the result ?
-                    self.agent.sendAlert (type = 'detector',
+                    self.agent.sendEvent (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

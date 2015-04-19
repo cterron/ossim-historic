@@ -80,6 +80,339 @@ class Util {
             return $timestamp;
         }
     }
+
+    /* feed xml timestamp format */
+    function timestamp2RFC1459($timestamp)
+    {
+        if (!$timestamp)
+            return "";
+ 
+        $num = "[0-9]";
+
+        if (preg_match("/^$num{14}$/", $timestamp))
+    
+            return (substr($timestamp, 0, 4)  . '-' .  # YYYY
+                    substr($timestamp, 4, 2)  . '-' .  # MM
+                    substr($timestamp, 6, 2)  . 'T' .  # DD
+                    substr($timestamp, 8, 2)  . ':' .  # HH
+                    substr($timestamp, 10, 2) . ':' .  # MM
+                    substr($timestamp, 12, 2) . 'Z');
+
+        elseif (preg_match
+                ("/$num{4}\-$num{2}\-$num{2} $num{2}\:$num{2}\:$num{2}/",
+                                           $timestamp))
+
+            return $timestamp;
+
+        else
+
+            return $timestamp;
+    }
+
+
+    /* 
+     * Format the difference of two dates into human readable
+     * 
+     * @param $dt1 A time string or unix timestamp
+     * @param $dt2 A time string or unix timestamp
+     * @param $format What to include, accepts:
+     *               - "y" show years
+     *               - "M" show months
+     *               - "w" weeks
+     *               - "d" days
+     *               - "h" hours, "m" minutes, "s" seconds
+     *               ie: "dhm" will return the diff only in
+     *                   days, hours and minutes as: 4 Days 18:30
+     *                   if days is 0, it won't be shown 
+     */
+    function date_diff($dt1, $dt2, $format='yMdhm')
+    {
+        $date1 = (strtotime($dt1) != -1) ? strtotime($dt1) : $dt1;
+        $date2 = (strtotime($dt2) != -1) ? strtotime($dt2) : $dt2;
+
+        $diff = $date1 - $date2;
+        
+        $min   = 60;
+        $hour  = 60*$min;
+        $day   = 24*$hour;
+        $week  = 7*$day;
+        $month = 30*$day;
+        $year  = 365*$day;
+         
+        $y = $mo = $w = $d = $h = $m = $s = null;
+        if ($diff > $year && (strpos($format, 'y') !== false)) {
+            $y = intval($diff/$year);
+            $diff = $diff - ($y * $year);
+        }
+        if ($diff > $month && (strpos($format, 'M') !== false)) {
+            $mo = intval($diff/$month);
+            $diff = $diff - ($mo * $month);
+        }
+        if ($diff > $week && (strpos($format, 'w') !== false)) {
+            $w = intval($diff/$week);
+            $diff = $diff - ($w * $week);
+        }
+        if ($diff > $day && (strpos($format, 'd') !== false)) {
+            $d = intval($diff/$day);
+            $diff = $diff - ($d * $day);
+        }
+        if (strpos($format, 'h') !== false) {
+            $h = ($diff > $hour) ? intval($diff/$hour) : 0;
+            $diff = $diff - ($h * $hour);
+        }
+        if (strpos($format, 'm') !== false) {
+            $m = ($diff > $min) ? intval($diff/$min) : 0;
+            $diff = $diff - ($m * $min);
+        }
+        if (strpos($format, 's') !== false) {
+            $s = $diff;
+        }
+
+        $dt = $tm = $diff_arr = array();
+        if ($y) {
+            $str  = ($y > 1) ? _("Years") : _("Year");
+            $dt[] = "$y $str";
+        }
+        if ($mo) {
+            $str  = ($mo > 1) ? _("Months") : _("Month");
+            $dt[] = "$mo $str";
+        }
+        if ($w)  {
+            $str  = ($w > 1) ? _("Weeks") : _("Week");
+            $dt[] = "$w $str";
+        }
+        if ($d) {
+            $str  = ($d > 1) ? _("Days") : _("Day");
+            $dt[] = "$d $str";
+        }
+        
+        if (!is_null($h)) $tm[] = sprintf('%02d', $h);
+        if (!is_null($m)) $tm[] = sprintf('%02d', $m);
+        if (!is_null($s)) $tm[] = sprintf('%02d', $s);
+        
+        if (count($dt)) $diff_arr[] = implode(", ", $dt);
+        if (count($tm)) $diff_arr[] = implode(":", $tm);
+        
+        return implode(" ", $diff_arr);
+    }
+
+    /*
+     *  PRE: $date must be in format YYYY-MM-DD HH-MM
+     *       $target must be ip_src or ip_dst
+     */
+    function get_acid_date_link($date, $ip = "", $target = "")
+    {
+
+        require_once ('ossim_conf.inc');
+        $conf = $GLOBALS["CONF"];
+        $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
+        
+        $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+)/";
+        
+        /*
+         * regs[1] => year
+         * regs[2] => month
+         * regs[3] => day
+         * regs[4] => hour
+         * regs[5] => minute
+         */
+        preg_match($pattern, $date, $regs);
+
+        /* 10 minutes before */
+        if ($regs[5] >= 10) {            // 3:45 -> 3:35
+            $regs[5] -= 10;
+        } else {
+            $regs[5] = 60 - (10 - $regs[5]);
+            if ($regs[4] > 0) {         // 3:06 -> 2:56
+                $regs[4] -= 1;
+            } else {                    // 0:07 -> 23:57
+                $regs[4] = 23;
+            }
+        }
+
+        $link = "$acid_link" . "/" . $acid_prefix .
+            "_qry_main.php?new=1&time[0][1]=>=&time[0][2]=" . $regs[2] .
+            "&time[0][3]=" . $regs[3] .
+            "&time[0][4]=" . $regs[1] .
+            "&time[0][5]=" . $regs[4] .
+            "&time[0][6]=" . $regs[5];
+            
+        if ($target) {
+            $link .= "&ip_addr[0][1]=$target&ip_addr[0][2]==&ip_addr[0][3]=$ip&";
+        }
+
+        $link .= "&sort_order=time_a&".
+                 "submit=Query+DB&num_result_rows=-1&time_cnt=1&ip_addr_cnt=1";
+
+        return $link;
+    }
+
+    /*
+     *  PRE: $date must be in format YYYY-MM-DD HH-MM
+     *       
+     */
+    function get_acid_pair_link($date, $ip = "", $ip2 = "")
+    {
+
+        require_once ('ossim_conf.inc');
+        $conf = $GLOBALS["CONF"];
+        $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
+
+        $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+)/";
+
+        /*
+         * regs[1] => year
+         * regs[2] => month
+         * regs[3] => day
+         * regs[4] => hour
+         * regs[5] => minute
+         */
+        preg_match($pattern, $date, $regs);
+
+        /* 10 minutes before */
+        if ($regs[5] >= 10) {            // 3:45 -> 3:35
+            $regs[5] -= 10;
+        } else {
+            $regs[5] = 60 - (10 - $regs[5]);
+            if ($regs[4] > 0) {         // 3:06 -> 2:56
+                $regs[4] -= 1;
+            } else {                    // 0:07 -> 23:57
+                $regs[4] = 23;
+            }
+        }
+        $link = "$acid_link" . "/" . $acid_prefix .
+            "_qry_main.php?new=1&time[0][1]=>=&time[0][2]=" . $regs[2] .
+            "&time[0][3]=" . $regs[3] .
+            "&time[0][4]=" . $regs[1] .
+            "&time[0][5]=" . $regs[4] .
+            "&time[0][6]=" . $regs[5];
+
+        $link .= "&ip_addr[0][1]=ip_src&ip_addr[0][2]==&ip_addr[0][3]=$ip&ip_addr[0][9]=AND";
+        $link .= "&ip_addr[1][1]=ip_dst&ip_addr[1][2]==&ip_addr[1][3]=$ip2";
+
+        $link .= "&sort_order=time_a&".
+                 "submit=Query+DB&num_result_rows=-1&time_cnt=1&ip_addr_cnt=2";
+
+        return $link;
+    }
+
+    /*
+     *  PRE: 
+     *     $since and $last must be in format YYYY-MM-DD HH-MM-SS
+     *     $desc must be "time_d" or "time_a"
+     */
+    function get_acid_events_link($since, $last, $order = "time_d")
+    {
+
+        require_once ('ossim_conf.inc');
+        $conf = $GLOBALS["CONF"];
+        $acid_link = $conf->get_conf("acid_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
+        
+        $pattern = "/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/";
+        
+        /*
+         * regs[1] => year
+         * regs[2] => month
+         * regs[3] => day
+         * regs[4] => hour
+         * regs[5] => minute
+         * regs[6] => secs
+         */
+        preg_match($pattern, $since, $regs_since);
+        preg_match($pattern, $last, $regs_last);
+
+        $link = "$acid_link" . "/" . $acid_prefix .
+            "_qry_main.php?new=1" . 
+            "&time[0][0]=(" .
+            "&time[0][1]=>=" . 
+            "&time[0][2]=" . $regs_since[2] .
+            "&time[0][3]=" . $regs_since[3] .
+            "&time[0][4]=" . $regs_since[1] .
+            "&time[0][5]=" . $regs_since[4] .
+            "&time[0][6]=" . $regs_since[5] .
+            "&time[0][7]=" . $regs_since[6] .
+            "&time[0][8]=)" . 
+            "&time[0][9]=AND" .
+            "&time[1][0]=(" .
+            "&time[1][1]=<=" . 
+            "&time[1][2]=" . $regs_last[2] .
+            "&time[1][3]=" . $regs_last[3] .
+            "&time[1][4]=" . $regs_last[1] .
+            "&time[1][5]=" . $regs_last[4] .
+            "&time[1][6]=" . $regs_last[5] .
+            "&time[1][7]=" . $regs_last[6] .
+            "&time[1][8]=)";
+
+        $link .= "&sort_order=$order&".
+                 "submit=Query+DB&num_result_rows=-1&time_cnt=2&ip_addr_cnt=1";
+
+        return $link;
+    }
+
+
+    function graph_image_link($ip, $type, $what, $start, $end, $zoom, $range) {
+        $cgi_link = "show_image.php";
+        return "$cgi_link?range=$range&ip=$ip&what=$what&start=$start&end=$end&type=$type&zoom=$zoom";
+    }
+
+    function get_caption($ip, $type, $what, $range) {
+        $ip = escapeshellcmd($ip);
+        $type = escapeshellcmd($type);
+        $what = escapeshellcmd($what);
+        $range = escapeshellcmd($range);
+        if($range == "day"){$range = "1D";}
+        if($range == "month"){$range = "1M";}
+        if($range == "year"){$range = "1Y";}
+        $result = "";
+        $data_dir = $conf->get_conf("data_dir");
+
+        $result = shell_exec("$data_dir/scripts/get_date.pl $ip $range $what $type");
+        return date("l dS of F Y h:i:s A",$result);
+    }
+
+
+    function echocolor ($val, $max, $image)
+    {
+        if ($val / $max > 5) {
+            echo "<td bgcolor=\"red\"><a href=\"" . $image . "\"><font color=\"white\"><b>" .  $val .  "</b></font></a></td>";
+        } elseif ($val / $max > 3) {
+            echo "<td bgcolor=\"orange\"><a href=\"" . $image . "\"><font color=\"black\"><b>" .  $val .  "</b></font></a></td>";
+        } elseif ($val / $max > 1) {
+            echo "<td bgcolor=\"green\"><a href=\"" . $image . "\"><font color=\"white\"><b>" .  $val .  "</b></font></a></td>";
+        } else {
+            echo "<td><a href=\"" . $image . "\"><font color=\"black\"><b>" .  $val . "</b></font></a></td>";
+        }
+    }
+    
+    // ÂNot been use anymore?
+    function acidIP2long($IP_str)
+    {
+        $tmp_long = ip2long($IP_str);
+        if ( $tmp_long < 0 )
+            $tmp_long = 4294967296 - abs($tmp_long);
+        return $tmp_long;
+    }
+
+    // Not been used anymore??
+    function acidLong2IP($long_IP)
+    {
+        $tmp_IP = $long_IP;
+        if ( $long_IP > 2147483647 )
+        {
+            $tmp_IP = 4294967296 -  $tmp_IP;
+            $tmp_IP = $tmp_IP * (-1);
+        }
+        $tmp_IP = long2ip($tmp_IP);
+        return $tmp_IP;
+    }
+
+    function get_acid_info($ip, $acid_link, $acid_prefix) {
+        return "$acid_link/".$acid_prefix."_qry_main.php?new=2&num_result_rows=-1&submit=Query+DB&current_view=-1&ip_addr_cnt=2&ip_addr%5B0%5D%5B0%5D=+&ip_addr%5B0%5D%5B1%5D=ip_src&ip_addr%5B0%5D%5B2%5D=%3D&ip_addr%5B0%5D%5B3%5D=$ip&ip_addr%5B0%5D%5B8%5D=+&ip_addr%5B0%5D%5B9%5D=OR&ip_addr%5B1%5D%5B0%5D=+&ip_addr%5B1%5D%5B1%5D=ip_dst&ip_addr%5B1%5D%5B2%5D=%3D&ip_addr%5B1%5D%5B3%5D=$ip&ip_addr%5B1%5D%5B8%5D=+&ip_addr%5B1%5D%5B9%5D=+&sort_order=time_d";
+    }
+
 }
 
 ?>

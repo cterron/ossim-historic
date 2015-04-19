@@ -5,6 +5,16 @@ Session::logcheck("MenuTools", "ToolsRuleViewer");
 
 <?php
 
+require_once ('classes/Security.inc');
+
+$rule_name = GET('name');
+
+ossim_valid ($rule_name, OSS_ALPHA, OSS_SCORE, OSS_DOT, 'illegal:'._("name"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
 function getOptions($option, $line) 
 {
     $pattern = "/$option:\s*([^;]+);/";
@@ -41,7 +51,7 @@ function isSetOption($option, $line) {
 
 <html>
 <head>
-  <title> <?php echo gettext("OSSIM Framework"); ?> </title>
+  <title> <?php echo gettext("Rule editor"); ?> </title>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
@@ -53,18 +63,13 @@ function isSetOption($option, $line) {
   <h2> <?php echo gettext("Rule editor"); ?> </h2>
 
 <?php
-    if (!$_GET["name"]) {
-        echo "(Wrong argument)<br>\n";
-        exit();
-    }
 
-    $rule_name = $_GET["name"];
 
     require_once ('ossim_conf.inc');
     require_once ('dir.php');
     require_once ('options.php');
 
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
     $snort_rules_path = $ossim_conf->get_conf("snort_rules_path");
 ?>
 

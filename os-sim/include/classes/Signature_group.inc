@@ -2,6 +2,8 @@
 
 //require_once 'classes/Signature.inc';
 require_once 'classes/Signature_group_reference.inc';
+require_once 'classes/Log_action.inc';
+require_once ("ossim_db.inc");
 
 class Signature_group {
 
@@ -24,9 +26,11 @@ class Signature_group {
 
     function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM signature_group $args")) {
+        $query = OssimQuery("SELECT * FROM signature_group $args");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Signature_group  ($rs->fields["name"],
                                                 $rs->fields["descr"]);
@@ -38,33 +42,43 @@ class Signature_group {
 
     function insert($conn, $name, $signature_list, $descr)
     {
-        $query = "INSERT INTO signature_group VALUES 
-            ('$name', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO signature_group VALUES  (?, ?)";
+        $params = array($name, $descr);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         Signature_group_reference::insert($conn, $name, $signature_list);
+    
+        $infolog = array($name);
+        Log_action::log(36,$infolog);
     }
 
     function update($conn, $name, $signature_list, $descr)
     {
-        $query = "UPDATE signature_group SET name = '$name',  
-            descr = '$descr' WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE signature_group SET name = ?, descr = ? WHERE name = ?";
+        $params = array($name, $descr, $name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         Signature_group_reference::update($conn, $name, $signature_list); 
+    
+        $infolog = array($name);
+        Log_action::log(37,$infolog);
     }
 
     function delete($conn, $name) {
-        $query = "DELETE FROM signature_group WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM signature_group WHERE name = ?";
+        $params = array($name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         Signature_group_reference::delete($conn, $name); 
+        
+        $infolog = array($name);
+        Log_action::log(38,$infolog);
     }
 }
 

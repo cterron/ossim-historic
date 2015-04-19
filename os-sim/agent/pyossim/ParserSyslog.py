@@ -16,6 +16,7 @@ class ParserSyslog(Parser.Parser):
             "pattern": re.compile (
                     "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
                     "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
+                    "(?P<sensor>[^\s]*)" +\
                     ".*?\(pam_unix\) authentication failure" +\
                     ".*?rhost=(?P<src>\S*)" +\
                     ".*?user=(?P<user>\S*)" +\
@@ -32,7 +33,8 @@ class ParserSyslog(Parser.Parser):
             "pattern": re.compile (
                     "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
                     "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
-                    ".*?\(pam_unix\) 2 more authentication failures" +\
+                    "(?P<sensor>[^\s]*)" +\
+                    ".*?\(pam_unix\) \d+ more authentication failures" +\
                     ".*?rhost=(?P<src>\S*)" +\
                     ".*?user=(?P<user>\S*)" +\
                     "(?P<sport>)(?P<dport>)",
@@ -48,6 +50,7 @@ class ParserSyslog(Parser.Parser):
             "pattern": re.compile (
                     "(?P<month>\S+)\s+(?P<day>\d+)\s+" +\
                     "(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)\s+" +\
+                    "(?P<sensor>[^\s]*)" +\
                     ".*?ssh.*?Failed password for (?P<user>\S+)\s+" + \
                     ".*?(?P<src>\d+.\d+.\d+.\d+)" +\
                     ".*?port\s+(?P<sport>\d+)\s+(?P<dport>\S+)",
@@ -147,12 +150,21 @@ class ParserSyslog(Parser.Parser):
                         if hash.has_key("sport"):   sport = hash["sport"]
                         if hash.has_key("dport"):   dport = hash["dport"]
                         if sid["sid"] == 3:  dport = 22 # ssh
-                            
 
-                        self.agent.sendAlert (
+                        # sensor
+                        try:
+                            if hash.has_key("sensor"):
+                                sensor = socket.gethostbyname(hash["sensor"])
+                            else:
+                                sensor = self.plugin["sensor"]
+                        except socket.error:
+                            sensor = self.plugin["sensor"]
+
+
+                        self.agent.sendEvent (
                                     type = 'detector',
                                     date       = date,
-                                    sensor     = self.plugin["sensor"],
+                                    sensor     = sensor,
                                     interface  = self.plugin["interface"],
                                     plugin_id  = self.plugin["id"],
                                     plugin_sid = sid["sid"],

@@ -15,14 +15,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <h1> <?php echo gettext("Delete policy"); ?> </h1>
 
 <?php 
-    if (!$id = mysql_escape_string($_GET["id"])) { 
-?>
-    <p> <?php echo gettext("Wrong policy id"); ?> </p>
-<?php 
-        exit;
+    require_once 'classes/Security.inc';
+   
+    $id = GET('id');
+    ossim_valid($id, OSS_ALPHA, 'illegal:'._("Policy id"));
+
+    if (ossim_error()) {
+            die(ossim_error());
     }
 
-if (!$_GET["confirm"]) {
+if (!GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a href="<?php echo $_SERVER["PHP_SELF"]."?id=$id&confirm=yes"; ?>">

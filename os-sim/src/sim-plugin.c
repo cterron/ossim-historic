@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-plugin.h"
+#include <config.h>
 
 enum
 {
@@ -49,7 +49,7 @@ struct _SimPluginPrivate {
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+static gint sim_plugin_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
@@ -298,3 +298,4 @@ sim_plugin_set_description (SimPlugin  *plugin,
 
   plugin->_priv->description = description;
 }
+// vim: set tabstop=2:

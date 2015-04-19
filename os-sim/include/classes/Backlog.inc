@@ -1,5 +1,8 @@
 <?php
 
+require_once('classes/Log_action.inc');
+require_once("ossim_db.inc");
+
 class Backlog {
 
     var $id;
@@ -22,8 +25,8 @@ class Backlog {
 
     function get_count($conn) 
     {
-        $query = "SELECT count(*) FROM backlog;";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT count(*) FROM backlog";
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             return $rs->fields["count(*)"];
@@ -34,10 +37,11 @@ class Backlog {
     {
         $i = 0;
 
-        $query = "SELECT * FROM backlog $args";
+        $query = OssimQuery("SELECT * FROM backlog $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 if (($i++ >= $inf) && ($inf++ <= $sup)) {
                     $list[] = new Backlog ($rs->fields["id"],
@@ -55,14 +59,19 @@ class Backlog {
 
     function delete($conn, $id) {
         if (!strcmp($id, "all")) {
-            $query = "DELETE FROM backlog;";
+            $sql = "DELETE FROM backlog";
+            $params = array();
         } else {
-            $query = "DELETE FROM backlog WHERE id = '$id';";
+            $sql = "DELETE FROM backlog WHERE id = ?";
+            $params = array($id);
         }
-        if ($conn->Execute($query) === false) {
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+        
+        $infolog = array($id);
+        Log_action::log(42,$infolog);
     }
 
 }

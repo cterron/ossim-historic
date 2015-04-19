@@ -1,5 +1,7 @@
 <?php
 
+require_once ("ossim_db.inc");
+
 class Incident_alarm {
 
     var $id;
@@ -29,7 +31,8 @@ class Incident_alarm {
 
     function get_list ($conn, $args)
     {
-        $query = "SELECT * FROM incident_alarm $args";
+        $list = array();
+        $query = OssimQuery("SELECT * FROM incident_alarm $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {

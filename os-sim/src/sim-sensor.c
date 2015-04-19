@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-sensor.h"
+#include <config.h>
 
 enum
 {
@@ -52,11 +52,14 @@ struct _SimSensorPrivate {
   gboolean     compress;
   gboolean     ssl;
 
-  GHashTable  *plugins;
+  GHashTable  *plugins; //SimPlugin
+
+	event_kind	event_number;
+	
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+static gint sim_inet_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
@@ -116,6 +119,13 @@ sim_sensor_instance_init (SimSensor *sensor)
   sensor->_priv->ssl = FALSE;
 
   sensor->_priv->plugins = g_hash_table_new (NULL, NULL);
+
+	sensor->_priv->event_number.events = 0;
+	sensor->_priv->event_number.host_os_events = 0;
+	sensor->_priv->event_number.host_mac_events = 0;
+	sensor->_priv->event_number.host_ids_events = 0;
+	sensor->_priv->event_number.host_service_events = 0;
+
 }
 
 /* Public Methods */
@@ -163,6 +173,24 @@ sim_sensor_new (void)
 
   return sensor;
 }
+
+/*
+ * We can choose between create a sensor with or without ip defined.
+ *
+ */
+SimSensor*
+sim_sensor_new_from_hostname (gchar *sensor_ip)
+{
+  SimSensor *sensor = NULL;
+
+  sensor = SIM_SENSOR (g_object_new (SIM_TYPE_SENSOR, NULL));
+	
+	if (sensor->_priv->ia = gnet_inetaddr_new_nonblock (sensor_ip, 0))
+		return sensor;
+	else
+		return NULL;
+}
+
 
 /*
  *
@@ -552,3 +580,55 @@ sim_sensor_has_plugin_by_type (SimSensor       *sensor,
 
   return found;
 }
+
+/*
+ * Functions used to store in the sensor how many events occur each 5 minutes thanks 
+ * to sim_container_set_sensor_event_number(). Inline to try to spped this a bit.
+ */
+inline void
+sim_sensor_add_number_events                (SimSensor  *sensor)
+{
+	sensor->_priv->event_number.events++;
+}
+
+inline void
+sim_sensor_add_number_host_os_events        (SimSensor  *sensor)
+{
+	sensor->_priv->event_number.host_os_events++;
+}
+
+inline void
+sim_sensor_add_number_host_mac_events       (SimSensor  *sensor)
+{
+	sensor->_priv->event_number.host_mac_events++;
+}
+
+inline void
+sim_sensor_add_number_host_service_events   (SimSensor  *sensor)
+{
+	sensor->_priv->event_number.host_service_events++;
+}
+
+inline void
+sim_sensor_add_number_host_ids_events       (SimSensor  *sensor)
+{
+	sensor->_priv->event_number.host_ids_events++;
+}
+
+event_kind
+sim_sensor_get_events_number (SimSensor	*sensor)
+{
+	return sensor->_priv->event_number;	
+}
+
+void
+sim_sensor_reset_events_number(SimSensor	*sensor)
+{
+	sensor->_priv->event_number.events = 0;
+	sensor->_priv->event_number.host_mac_events = 0;
+	sensor->_priv->event_number.host_os_events = 0;
+	sensor->_priv->event_number.host_service_events = 0;
+	sensor->_priv->event_number.host_ids_events = 0;
+}
+
+// vim: set tabstop=2:

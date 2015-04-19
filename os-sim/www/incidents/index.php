@@ -1,6 +1,20 @@
 <?php
-require_once ('classes/Session.inc');
-Session::logcheck("MenuReports", "ReportsIncidents");
+require_once 'classes/Security.inc';
+require_once 'classes/Session.inc';
+require_once 'ossim_db.inc';
+require_once 'classes/Incident.inc';
+require_once 'classes/Incident_tag.inc';
+require_once 'classes/Incident_type.inc';
+    
+Session::logcheck("MenuIncidents", "IncidentsIncidents");
+
+function order_img($subject)
+{
+    global $order_by, $order_mode;
+    if ($order_by != $subject) return '';
+    $img = $order_mode == 'DESC' ? 'abajo.gif' : 'arriba.gif';
+    return '<img src="../pixmaps/top/'.$img.'" border=0>';
+}
 ?>
 
 <html>
@@ -12,200 +26,202 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 </head>
 <body>
 
-  <h1> <?php echo gettext("Incidents"); ?> </h1>
+  <h1><?=_("Incidents")?></h1>
 
 <?php
-    require_once 'ossim_db.inc';
-    require_once 'classes/Incident.inc';
 
-    if (!$order = $_GET["order"]) $order = "id DESC";
+    $vars = array('order_by'      => OSS_LETTER . OSS_SCORE,
+                  'order_mode' => OSS_LETTER,
+                  'ref'        => OSS_LETTER,
+                  'type'       => OSS_ALPHA . OSS_SPACE,
+                  'title'      => OSS_ALPHA . OSS_SCORE . OSS_PUNC,
+                  'related_to_user' => OSS_LETTER,
+                  'with_text'  => OSS_ALPHA . OSS_PUNC . OSS_SCORE . OSS_SPACE,
+                  'action'     => OSS_ALPHA . OSS_PUNC . OSS_SCORE . OSS_SPACE,
+                  'attachment' => OSS_ALPHA . OSS_SPACE . OSS_PUNC,
+                  'advanced_search' => OSS_DIGIT,
+                  'priority'   => OSS_LETTER,
+                  'in_charge'  => OSS_ALPHA . OSS_SCORE . OSS_PUNC . OSS_SPACE,
+                  'status'     => OSS_LETTER,
+                  'tag'        => OSS_DIGIT);
+    
+    foreach ($vars as $var => $validate) {
+        $$var = isset($_GET[$var]) ? $_GET[$var] : '';
+        if (!ossim_valid($$var, array($validate, OSS_NULLABLE))) {
+            echo "Var '$var' not valid<br>";
+            die(ossim_error());
+        }
+    }
+    
+    
+    if (!$order_by) {
+        $order_by = 'life_time';
+        $order_mode = 'ASC';
+    }
 
+    // First time we visit this page, show by default only Open incidents
+    if (!isset($_GET['status'])) $status = 'Open';
+    
     $db = new ossim_db();
     $conn = $db->connect();
 
-    /* filter */
-    $where = "";
-
-    $type        = mysql_real_escape_string($_GET["type"]);
-    $title       = mysql_real_escape_string($_GET["title"]);
-    $user        = mysql_real_escape_string($_GET["user"]);
-    $description = mysql_real_escape_string($_GET["description"]);
-    $action      = mysql_real_escape_string($_GET["action"]);
-    $attachment  = mysql_real_escape_string($_GET["attachment"]);
-    $copyto      = mysql_real_escape_string($_GET["copyto"]);
-   
-    if (!$family = $_GET["family"]) $family = "OSSIM";
-    $where .= "incident.family = '$family' ";
- 
-    if ($_GET["type"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident.ref = '$type' ";
-    }
-    if ($_GET["title"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident.title LIKE '%$title%'";
-    }
-    if ($_GET["user"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident_ticket.users LIKE '%$user%'";
-    }
-    if ($_GET["description"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident_ticket.description LIKE '%$description%'";
-    }
-    if ($_GET["action"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident_ticket.action LIKE '%$action%'";
-    }
-    if ($_GET["attachment"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident_file.name LIKE '%$attachment%'";
-    }
-    if ($_GET["copyto"]) {
-        if ($where) $where .= "AND ";
-        $where .= "incident_ticket.copy LIKE '%$copyto%'";
-    }
-    if ($where) $where = "WHERE " . $where;
-
+    $criteria = array(
+            'ref' => $ref,
+            'type' => $type,
+            'title' => $title,
+            'in_charge' => $in_charge,
+            'with_text' => $with_text,
+            'status' => $status,
+            'priority_str' => $priority,
+            'attach_name' => $attachment,
+            'related_to_user' => $related_to_user,
+            'tag' => $tag
+        );
+    $incident_tag = new Incident_tag($conn);
 ?>
 
   <!-- filter -->
-  <form name="filter" method="GET" action="<?php echo $_SERVER["PHP_SELF"] ?>">
-    <?php if (isset($_GET["advanced_search"])) { ?>
-    <input type="hidden" name="advanced_search" 
-           value="<?php echo $_GET["advanced_search"] ?>">
-    <?php } ?>
-  <table align="center">
+  <form name="filter" method="GET" action="<?= $_SERVER["PHP_SELF"] ?>">
+    <? if ($advanced_search) { ?>
+        <input type="hidden" name="advanced_search" 
+               value="1">
+    <? } ?>
+  <table align="center" width="100%">
     <tr>
       <th colspan="7">
-      <?php echo gettext("Filter"); ?> 
 <?php
-
-        if (isset($_GET["advanced_search"])) {
-            echo "[<a href=\"" . 
+        echo _("Filter");
+        $change_to = _("change to ");
+        if ($advanced_search) {
+            $label  = _("Advanced");
+            $change_to .= ' '._("Simple");
+            echo " $label [<a href=\"" . 
                 $_SERVER["PHP_SELF"] ."\"
-                title=\"Click to change to simple filter\">Advanced</a>]";
+                title=\"$change_to $\">$change_to</a>]";
         } else {
-            echo "[<a href=\"" . 
+            $label  = _("Simple");
+            $change_to .= ' '._("Advanced");            
+            echo " $label [<a href=\"" . 
                 $_SERVER["PHP_SELF"] ."?advanced_search=1\"
-                title=\"Click to change to advanced filter\">Simple</a>]";
+                title=\"$change_to $\">$change_to</a>]";
         }
 ?>
       </th>
     </tr>
-    <tr>
-      <td> <?php echo gettext("Family") ?> </td>
-      <td> <?php echo gettext("Type"); ?> </td>
-      <td> <?php echo gettext("Title"); ?> </td>
-      <td> <?php echo gettext("In charge"); ?> </td>
-      <td> <?php echo gettext("Status"); ?> </td>
-      <td> <?php echo gettext("Priority"); ?> </td>
-      <td> <?php echo gettext("Action"); ?> </td>
-    </tr>
-    <tr>
-      <td>
-        <select name="family" onChange="document.forms['filter'].submit()">
-          <option 
-            <?php if ($family == "OSSIM") echo " selected " ?>
-            value="OSSIM">OSSIM</option>
-          <option 
-            <?php if ($family == "Hardware") echo " selected " ?>
-            value="Hardware">Hardware</option>
-          <option 
-            <?php if ($family == "Install") echo " selected " ?>
-            value="Install">Install</option>
-        </select>
-      </td>
-      <td>
-        <select name="type" onChange="document.forms['filter'].submit()">
-          <option value="">
-        <?php echo gettext("ALL"); ?> </option>
-
-<?php if ($family == 'OSSIM') { ?>
-
-          <option <?php if ($_GET["type"] == "Alarm") echo " selected " ?>
-            value="Alarm">
-	    <?php echo gettext("Alarm"); ?> </option>
-
-
-          <option <?php if ($_GET["type"] == "Metric") echo " selected " ?>
-            value="Metric">
-	    <?php echo gettext("Metric"); ?> </option>
-
-<?php } elseif ($family == 'Hardware') { ?>
-
-          <option <?php if ($_GET["type"] == "Hardware") echo " selected " ?>
-            value="Hardware">
-	    <?php echo gettext("Hardware"); ?> </option>
-
-<?php } elseif ($family == 'Install') { ?>
-
-          <option <?php if ($_GET["type"] == "Install") echo " selected " ?>
-            value="Hardware">
-	    <?php echo gettext("Install"); ?> </option>
-
-<?php } ?>
-
-        </select>
-      </td>
-      <td><input type="text" name="title" 
-                 value="<?php echo $_GET["title"] ?>" /></td>
-      <td><input type="text" name="in_charge" 
-                 value="<?php echo $_GET["in_charge"] ?>" /></td>
-      <td>
-        <select name="status" onChange="document.forms['filter'].submit()">
-          <option value="">
-	  <?php echo gettext("ALL"); ?> </option>
-          <option <?php if ($_GET["status"] == "Open") echo " selected " ?>
-            value="Open">
-	    <?php echo gettext("Open"); ?> </option>
-          <option <?php if ($_GET["status"] == "Closed") echo " selected " ?>
-            value="Closed">
-	    <?php echo gettext("Closed"); ?> </option>
-        </select>
-      </td>
-      <td>
-        <select name="priority" onChange="document.forms['filter'].submit()">
-          <option value="">
-	  <?php echo gettext("ALL"); ?> </option>
-          <option <?php if ($_GET["priority"] == "High") echo " selected " ?>
-            value="High">
-	    <?php echo gettext("High"); ?> </option>
-          <option <?php if ($_GET["priority"] == "Medium") echo " selected " ?>
-            value="Medium">
-	    <?php echo gettext("Medium"); ?> </option>
-          <option <?php if ($_GET["priority"] == "Low") echo " selected " ?>
-            value="Low">
-	    <?php echo gettext("Low"); ?> </option>
-        </select>
-      </td>
-      <td nowrap>
-        <input type="submit" name="filter" value="OK" />
-      </td>
-    </tr>
+    <tr><td colspan="7" style="border-width: 0px;">
+      <table width="100%" align="center" style="border-width: 0px;">
+          <td> <?php echo gettext("Class");  /* ref */  ?> </td>
+          <td> <?php echo gettext("Type"); /* type */ ?> </td>
+          <td> <?php echo gettext("Search text in all fields"); ?> </td>
+          <td> <?php echo gettext("In charge"); ?> </td>
+          <td> <?php echo gettext("Status"); ?> </td>
+          <td> <?php echo gettext("Priority"); ?> </td>
+          <td> <?php echo gettext("Action"); ?> </td>
+        </tr>
+        <tr>
+          <td style="border-width: 0px;">
+            <select name="ref" onChange="document.forms['filter'].submit()">
+              <option value="">
+                <?php echo gettext("ALL"); ?>
+              </option>
+              <option <? if ($ref == "Alarm") echo "selected" ?> value="Alarm">
+    	        <?php echo gettext("Alarm"); ?>
+              </option>
+              <option <? if ($ref == "Event") echo "selected" ?> value="Event">
+    	        <?php echo gettext("Event"); ?>
+              </option>
+              <option <? if ($ref == "Metric") echo "selected" ?> value="Metric">
+    	        <?php echo gettext("Metric"); ?>
+              </option>
+              <option <? if ($ref == "Anomaly") echo "selected" ?> value="Anomaly">
+    	        <?php echo gettext("Anomaly"); ?>
+              </option>
+            </select>
+          </td>
+          <td style="border-width: 0px;">
+            <select name="type" onChange="document.forms['filter'].submit()">
+              <option value="" <? if (!$type) echo "selected" ?>>
+                <?php echo gettext("ALL"); ?>
+              </option>
+              <? foreach (Incident_type::get_list($conn) as $itype) {
+                  $id = $itype->get_id();
+              ?>
+                  <option <? if ($type == $id) echo "selected" ?> value="<?=$id?>">
+                    <?= $id ?>
+                  </option>
+              <? } ?>
+            </select>
+          </td>
+          <td style="border-width: 0px;">
+            <input type="text" name="with_text" value="<?= $with_text ?>" /></td>
+          <td style="border-width: 0px;">
+            <input type="text" name="in_charge" value="<?= $in_charge ?>" /></td>
+          <td style="border-width: 0px;">
+            <select name="status" onChange="document.forms['filter'].submit()">
+              <option value="">
+                <?php echo gettext("ALL"); ?>
+              </option>
+              <option <? if ($status == "Open") echo "selected" ?>
+                value="Open">
+    	        <?php echo gettext("Open"); ?>
+              </option>
+              <option <? if ($status == "Closed") echo "selected" ?> value="Closed">
+    	        <?php echo gettext("Closed"); ?>
+              </option>
+            </select>
+          </td>
+          <td style="border-width: 0px;">
+            <select name="priority" onChange="document.forms['filter'].submit()">
+              <option value="">
+    	        <?php echo gettext("ALL"); ?>
+              </option>
+              <option <? if ($priority == "High") echo "selected" ?> value="High">
+    	        <?php echo gettext("High"); ?>
+              </option>
+              <option <? if ($priority == "Medium") echo "selected" ?> value="Medium">
+    	        <?php echo gettext("Medium"); ?>
+              </option>
+              <option <? if ($priority == "Low") echo "selected"  ?> value="Low">
+    	        <?php echo gettext("Low"); ?>
+              </option>
+            </select>
+          </td>
+          <td nowrap style="border-width: 0px;">
+            <input type="submit" name="filter" value="OK" />
+          </td>
+        </tr>
+      </tr>
+      </table>
+    </td></tr>
 <?php
-    if (isset($_GET["advanced_search"])) {
+    if ($advanced_search) {
 ?>
-    <tr>
-      <td> <?php echo gettext("with User"); ?> </td>
-      <td> <?php echo gettext("with Description"); ?> </td>
-      <td> <?php echo gettext("with Action"); ?> </td>
-      <td> <?php echo gettext("with Attachment"); ?> </td>
-      <td> <?php echo gettext("with Copy to"); ?> </td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><input type="text" name="user"
-                 value="<?php echo $_GET["user"] ?>" /></td>
-      <td><input type="text" name="description"
-                 value="<?php echo $_GET["description"] ?>" /></td>
-      <td><input type="text" name="action"
-                 value="<?php echo $_GET["action"] ?>" /></td>
-      <td><input type="text" name="attachment"
-                 value="<?php echo $_GET["attachment"] ?>" /></td>
-      <td><input type="text" name="copyto"
-                 value="<?php echo $_GET["copyto"] ?>" /></td>
-    </tr>
+    <tr><td colspan="7" style="border-width: 0px;">
+      <table width="100%" align="center" style="border-width: 0px;">
+      <tr>
+          <td><?=_("with User")?></td>
+          <td><?=_("with Title")?></td>
+          <td><?=_("with Attachment Name")?></td>
+          <td><?=_("with Tag")?></td>
+      </tr><tr>
+          <td style="border-width: 0px;">
+            <input type="text" name="related_to_user" value="<?=$related_to_user?>" /></td>
+          <td style="border-width: 0px;">
+            <input type="text" name="title" value="<?=$title?>" /></td>
+          <td style="border-width: 0px;">
+            <input type="text" name="attachment" value="<?=$attachment?>" /></td>
+          <td style="border-width: 0px;">
+          <select name="tag">
+                <option value=""></option>
+            <? foreach ($incident_tag->get_list() as $t) { ?>
+                <? $selected = $tag == $t['id'] ? 'SELECTED' : ''; ?>
+                <option value="<?=$t['id']?>" <?=$selected?>><?=$t['name']?></option>
+            <? } ?>
+          </select>
+          </td>
+      </tr>
+      </table>
+    </td></tr>
 <?php
     }
 ?>
@@ -216,98 +232,70 @@ Session::logcheck("MenuReports", "ReportsIncidents");
 
   <table align="center" width="100%">
 <?php
-    if ($incident_list = Incident::get_list($conn, 
-        "$where ORDER BY " . mysql_real_escape_string($order))) {
-
-        $filter = "&type="        . $_GET["type"] .
-                  "&title="       . $_GET["title"] .
-                  "&in_charge="   . $_GET["in_charge"] .
-                  "&status="      . $_GET["status"] .
-                  "&priority="    . $_GET["priority"] .
-                  "&user="        . $_GET["user"] .
-                  "&description=" . $_GET["description"] .
-                  "&action="      . $_GET["action"] .
-                  "&attachment="  . $_GET["attachment"] .
-                  "&copyto="      . $_GET["copyto"];
-        if (isset($_GET["advanced_search"]))
-            $filter .= $_GET["advanced_search"];
+    $incident_list = Incident::search($conn, $criteria, $order_by, $order_mode);
+    if (count($incident_list))
+    {
+        $filter = '';
+        foreach ($criteria as $key => $value) {
+            $filter .= "&$key=".urlencode($value);
+        }
+        
+        if ($advanced_search) {
+            $filter .= "&advanced_search=" . urlencode($advanced_search);
+        }
+        // Next time reverse the order of the column
+        // XXX it reverses the order of all columns, should only
+        //     reverse the order of the column previously sorted
+        if ($order_mode) {
+            $order_mode = $order_mode == 'DESC' ? 'ASC' : 'DESC';
+            $filter .= "&order_mode=$order_mode";
+        }
 ?>
 
     <tr>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?order=" . ossim_db::get_order("id", $order) . "$filter" ?>"
-          >
-	  <?php echo gettext("Ticket"); ?> </a></th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?order=" . ossim_db::get_order("date", $order) ."$filter" ?>"
-          >
-	  <?php echo gettext("Date"); ?> </a></th>
-      <th> <?php echo gettext("Last Modification"); ?> </th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?order=" . ossim_db::get_order("title", $order) . "$filter" ?>"
-          >
-	  <?php echo gettext("Title"); ?> </a></th>
-      <th> <?php echo gettext("In Charge"); ?> </th>
-      <th> <?php echo gettext("Status"); ?> </th>
-      <th><a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?order=" . ossim_db::get_order("priority", $order) . "$filter" ?>"
-          >
-	  <?php echo gettext("Priority"); ?> </a></th>
+      <th NOWRAP><a href="?order_by=id<?=$filter?>"><?=_("Ticket").order_img('id')?></a></th>
+      <th NOWRAP><a href="?order_by=title<?=$filter?>"><?=_("Title").order_img('title')?></a></th>
+      <th NOWRAP><a href="?order_by=priority<?=$filter?>"><?=_("Priority").order_img('priority')?></a></th>
+      <th NOWRAP><a href="?order_by=life_time<?=$filter?>"><?=_("Life Time").order_img('life_time')?></a></th>
+      <th><?=_("In charge") ?></th>
+      <th><?=_("Type") ?></th>
+      <th><?=_("Status") ?></th>
+      <th><?=_("Extra") ?></th>
     </tr>
 
 <?php
+        $row = 0;
         foreach ($incident_list as $incident) 
         {
-            /* filter */
-            if ($_GET["in_charge"]) 
-            {
-                if (false === stristr($incident->get_in_charge($conn),
-                                      $_GET["in_charge"]))
-                    continue;
-            }
-
-            if ($_GET["status"])
-            {
-                if ($incident->get_status($conn) != $_GET["status"])
-                    continue;
-            }
-
-            if ($_GET["priority"])
-            {
-                $p = $incident->get_priority($conn);
-                if ($_GET["priority"] == "High") {
-                    if ($p < 7) continue;
-                }
-                elseif ($_GET["priority"] == "Medium") {
-                    if (($p < 5) or ($p > 6)) continue;
-                }
-                elseif ($_GET["priority"] == "Low") {
-                    if ($p > 4) continue;
-                }
-            }
 ?>
 
-    <tr>
-      <td><?php echo $incident->get_ticket(); ?></td>
-      <td><?php echo $incident->get_date(); ?></td>
-      <td><?php echo $incident->get_last_modification($conn); ?></td>
-      <td><b><a href="incident.php?id=<?php echo $incident->get_id() ?>"><?php
-        echo $incident->get_title(); ?></a></b>
-      </td>
-      <td><?php echo $incident->get_in_charge($conn); ?></td>
+    <tr <? if ($row++ % 2) echo 'bgcolor="#EFEFEF"'; ?> valign="center">
       <td>
-        <?php 
-            $status = $incident->get_status($conn);
-            Incident::colorize_status($status);
-        ?>
+        <a href="incident.php?id=<?= $incident->get_id() ?>">
+        <?= $incident->get_ticket(); ?></a>
+      </td>
+      <td><b>
+        <a href="incident.php?id=<?= $incident->get_id() ?>">
+            <?= $incident->get_title(); ?></a></b>
       </td>
       <?php 
-        $priority = $incident->get_priority($conn);
-        Incident::print_td_priority(
-            $priority,
-            Incident::get_priority_bgcolor($priority),
-            Incident::get_priority_fgcolor($priority));
+        $priority = $incident->get_priority();
       ?>
+      <td><?=Incident::get_priority_in_html($priority)?></td>
+      <td NOWRAP><?= $incident->get_life_time() ?></td>
+      <td><?= $incident->get_in_charge_name($conn) ?></td>
+      <td><?= $incident->get_type() ?></td>
+      <td><? Incident::colorize_status($incident->get_status()) ?></td>
+      <td>
+        <?
+        $rows = 0;
+        foreach ($incident->get_tags() as $tag_id) {
+            echo $incident_tag->get_html_tag($tag_id) . "<br/>\n";
+            $rows++;
+        }
+        if (!$rows) echo "&nbsp;";
+        ?>
+      </td>
     </tr>
 
 <?php
@@ -320,32 +308,24 @@ Session::logcheck("MenuReports", "ReportsIncidents");
     $db->close($conn);
 ?>
     <tr>
-      <td colspan="7" align="center">
-<?php
-    if ($family == "OSSIM") {
-?>
+      <td colspan="8" align="center">
+
         Insert new Incident (
-        <a href="incident.php?insert=1&ref=Alarm&title=New Alarm incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
+        <a href="newincident.php?ref=Alarm&title=New+Alarm+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Alarm"); ?> </a> | 
-        <a href="incident.php?insert=1&ref=Metric&title=New Metric incident&priority=1&target=&metric_type=&metric_value=">
+        <?php echo gettext("Anomaly ["); ?> 
+    <a  href="newincident.php?ref=Anomaly&title=New+Mac+Anomaly+Incident&priority=1&anom_type=mac">
+	<?php echo gettext("Mac, "); ?> </a>
+     <a href="newincident.php?ref=Anomaly&title=New+OS+Anomaly+Incident&priority=1&anom_type=os">
+	<?php echo gettext("OS"); ?> </a>
+     <a href="newincident.php?ref=Anomaly&title=New+Service+Anomaly+Incident&priority=1&anom_type=service">
+	<?php echo gettext(", Services ] "); ?> </a> 
+    | 
+        <a href="newincident.php?ref=Event&title=New+Event+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
+	<?php echo gettext("Event"); ?> </a> | 
+        <a href="newincident.php?ref=Metric&title=New+Metric+incident&priority=1&target=&metric_type=&metric_value=0">
 	<?php echo gettext("Metric"); ?> </a> )
     
-
-<?php   } elseif ($family == "Hardware") {  ?>
-
-
-        <a href="incident.php?insert=1&ref=Hardware&title=New Hardware incident&priority=1">
-	<?php echo gettext("Install new hardware incident"); ?> </a>
-
-
-<?php   } elseif ($family == "Install") {   ?>
-
-
-        <a href="incident.php?insert=1&ref=Install&title=New Installation incident&priority=1">
-	<?php echo gettext("Insert new installation incident"); ?> </a>
-
-<?php   }   ?>
-
       </td>
     </tr>
   </table>

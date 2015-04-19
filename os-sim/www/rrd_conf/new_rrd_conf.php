@@ -16,12 +16,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 
 <?php
 
-    /* check params */
-    if (!mysql_escape_string($_POST["profile"]))
-    {
-        echo "<p align=\"center\">Please, complete all the fields</p>";
-        exit();
+    require_once 'classes/Security.inc';
+    
+    $profile = REQUEST('profile');
+
+    ossim_valid($profile, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Profile"));
+
+    if (ossim_error()) {
+        die(ossim_error());
     }
+
+
 
     require_once ('classes/RRD_config.inc');
     require_once ('ossim_db.inc');
@@ -35,21 +40,32 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
         {
             $attrib = $rrd->get_rrd_attrib();
 
-            if (isset($_POST["$attrib#rrd_attrib"]))
+            if (POST("$attrib#rrd_attrib"))
             {
-                if ($_POST["$attrib#enable"] == "on")
+                if (POST("$attrib#enable") == "on")
                     $enable = 1;
                 else
                     $enable = 0;
 
+                ossim_valid(POST("$attrib#rrd_attrib"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#rrd_attrib"));
+                ossim_valid(POST("$attrib#threshold"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#threshold"));
+                ossim_valid(POST("$attrib#priority"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#priority"));
+                ossim_valid(POST("$attrib#alpha"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#alpha"));
+                ossim_valid(POST("$attrib#beta"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#beta"));
+                ossim_valid(POST("$attrib#persistence"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#persistence"));
+
+                if (ossim_error()) {
+                    die(ossim_error());
+                }
+
                 RRD_Config::insert ($conn,
-                                    $_POST["profile"],
-                                    $_POST["$attrib#rrd_attrib"],
-                                    $_POST["$attrib#threshold"],
-                                    $_POST["$attrib#priority"],
-                                    $_POST["$attrib#alpha"],
-                                    $_POST["$attrib#beta"],
-                                    $_POST["$attrib#persistence"],
+                                    $profile,
+                                    POST("$attrib#rrd_attrib"),
+                                    POST("$attrib#threshold"),
+                                    POST("$attrib#priority"),
+                                    POST("$attrib#alpha"),
+                                    POST("$attrib#beta"),
+                                    POST("$attrib#persistence"),
                                     $enable);
             }
         }

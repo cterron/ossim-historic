@@ -1,0 +1,11 @@
+diff -auNr phpgacl-3.3.4/debian/phpgacl.templates phpgacl-3.3.4.ossim/debian/phpgacl.templates
+--- phpgacl-3.3.4/debian/phpgacl.templates	2005-08-10 08:56:38.414883256 +0200
++++ phpgacl-3.3.4.ossim/debian/phpgacl.templates	2005-08-10 08:57:53.646446320 +0200
+@@ -1,6 +1,6 @@
+ Template: phpgacl/name
+ Type: string
+-Default: phpgacl
++Default: ossim_acl
+ Description: Please enter the name of the database to use
+ 
+ Template: phpgacl/host

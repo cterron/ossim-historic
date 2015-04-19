@@ -35,7 +35,7 @@ class Monitor:
                                arg1  = self.vfirst,
                                arg2  = self.vlast,
                                value = int(self.data["value"])):
-            self.sendAlert()
+            self.sendEvent()
             return True
 
         else:
@@ -103,7 +103,7 @@ class Monitor:
             return False
 
 
-    def sendAlert(self):
+    def sendEvent(self):
         plugin_id = self.data["plugin_id"]
 
         sensor = self.plugins[plugin_id]['sensor']
@@ -113,7 +113,7 @@ class Monitor:
         
         util.debug(__name__, "watch-rule matched!", "=>", "GREEN")
 
-        self.agent.sendAlert  (type         = 'monitor', 
+        self.agent.sendEvent  (type         = 'monitor', 
                                date         = date, 
                                sensor       = sensor, 
                                interface    = interface,

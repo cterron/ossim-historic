@@ -8,7 +8,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 function server_get_sensor_plugins() {
 
     require_once ('ossim_conf.inc');
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
 
     /* get the port and IP address of the server */
     $address = $ossim_conf->get_conf("server_address");
@@ -45,7 +45,8 @@ function server_get_sensor_plugins() {
             $s["plugin_id"] = $regs[2];
             $s["state"]     = $regs[3];
             $s["enabled"]   = $regs[4];
-            $list[] = $s;
+            if (!in_array($s, $list)) 
+                $list[] = $s;
         } elseif (!strncmp($out, "ok id=", 4)) {
             break;
         }
@@ -62,5 +63,3 @@ function server_get_sensor_plugins() {
 #
 
 ?>
-
-

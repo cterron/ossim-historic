@@ -1,5 +1,7 @@
 <?php
 
+require_once ("ossim_db.inc");
+
 class Signature {
 
     var $name;
@@ -13,9 +15,11 @@ class Signature {
 
     function get_list($conn, $where = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM signature $where")) {
+        $query = OssimQuery("SELECT * FROM signature $where");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Signature ($rs->fields["name"]);
                 $rs->MoveNext();
@@ -26,8 +30,9 @@ class Signature {
 
     function insert($conn, $name)
     {
-        $query = "INSERT INTO signature VALUES ('$name');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO signature VALUES (?)";
+        $params = array($name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -36,16 +41,18 @@ class Signature {
     function update($conn, $name, $ips, $priority, $threshold_c, 
                     $threshold_a, $descr)
     {
-        $query = "UPDATE signature SET name = '$name' WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE signature SET name = ? WHERE name = ?";
+        $params = array($name, $name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
 
     function delete($conn, $name) {
-        $query = "DELETE FROM signature WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM signature WHERE name = ?'";
+        $params = array($name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

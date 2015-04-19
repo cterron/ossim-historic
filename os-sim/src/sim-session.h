@@ -56,6 +56,22 @@ extern "C" {
 #define SIM_IS_SESSION_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_SESSION))
 #define SIM_SESSION_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_SESSION, SimSessionClass))
 
+//this define's are usefull for sim_container_set_sensor_event_number(), wich is called when
+//an event is issued from the agent
+#define SIM_EVENT_EVENT								1
+#define SIM_EVENT_HOST_OS_EVENT				2
+#define SIM_EVENT_HOST_MAC_EVENT			3
+#define SIM_EVENT_HOST_SERVICE_EVENT	4
+#define SIM_EVENT_HOST_IDS_EVENT			5
+
+//plugin sids to store MAC changes, OS fingerprinting, etc. This plugin_sids are only used from some plugins, and
+//they're needed because when the message arrives, we don't know yet the plugin_sid and we have to deduce it.
+#define EVENT_NEW     1
+#define EVENT_CHANGE  2
+#define EVENT_DELETED 3
+#define EVENT_SAME    4
+#define EVENT_UNKNOWN 5
+	
 G_BEGIN_DECLS
 
 typedef struct _SimSession        SimSession;
@@ -99,3 +115,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_SESSION_H__ */
+// vim: set tabstop=2:

@@ -4,8 +4,23 @@ Session::logcheck("MenuMonitors", "MonitorsRiskmeter");
 
 /* get refresh page value */
 $REFRESH_INTERVAL = 5;
-if (!$refresh = $_GET["refresh"]) 
-    $refresh = 10;
+
+
+require_once 'classes/Security.inc';
+
+$refresh = GET('refresh');
+$net_name = GET('net');
+$expand = GET('expand');
+
+ossim_valid($refresh, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Refresh interval"));
+ossim_valid($net_name, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Net name"));
+ossim_valid($expand, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Net name"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+                            
+if (empty($refresh)) $refresh = 10;
 ?>
 
 <html>
@@ -34,7 +49,7 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 /* conf */
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 
 $THRESHOLD_DEFAULT = $conf->get_conf("threshold");
 $BAR_LENGTH_LEFT = 300;
@@ -52,25 +67,27 @@ $max_level = max(ossim_db::max_val($conn, "compromise", "net_qualification"),
 $net_groups = Net_group::get_list($conn);
 
 if (is_array($net_stats)) {
-foreach($net_stats as $temp_net){
-    $net_name = $temp_net->get_net_name();
-    if($net_groups){
-    foreach($net_groups as $net_group){
-        $ng_name = $net_group->get_name();
-        $net_group_array[$ng_name]["name"] = $ng_name;
-        $net_group_array[$ng_name]["threshold_c"] = Net_group::netthresh_c($conn, $ng_name);
-        $net_group_array[$ng_name]["threshold_a"] = Net_group::netthresh_a($conn, $ng_name);
-        if(Net_group::isNetInGroup($conn, $ng_name, $net_name)){
-            $net_group_array[$ng_name]["compromise"] += $temp_net->get_compromise();
-            $net_group_array[$ng_name]["attack"] += $temp_net->get_attack();
+    foreach($net_stats as $temp_net) {
+        $net_name = $temp_net->get_net_name();
+        foreach ($net_groups as $net_group) {
+            $ng_name = $net_group->get_name();
+            $net_group_array[$ng_name]["name"] = $ng_name;
+            $net_group_array[$ng_name]["threshold_c"] = Net_group::netthresh_c($conn, $ng_name);
+            $net_group_array[$ng_name]["threshold_a"] = Net_group::netthresh_a($conn, $ng_name);
+            if (Net_group::isNetInGroup($conn, $ng_name, $net_name)) {
+                if (!isset($net_group_array[$ng_name]["compromise"])) {
+                    $net_group_array[$ng_name]["compromise"] = 0;
+                    $net_group_array[$ng_name]["attack"] = 0;
+                }
+                $net_group_array[$ng_name]["compromise"] += $temp_net->get_compromise();
+                $net_group_array[$ng_name]["attack"] += $temp_net->get_attack();
+            }
         }
     }
-    }
-}
 }
 
 function ordenar($a, $b){
-     return (($a["max_c"] + $a["max_a"]) < ($b["max_c"] + $b["max_a"])) ? True : False;
+     return (($a["max_c"] + $a["max_a"]) < ($b["max_c"] + $b["max_a"])) ? true : false;
 }
 
 ?>
@@ -224,7 +241,7 @@ usort($net_group_array,"ordenar");
     while($temporary){
 
         $group_name = $temporary["name"];
-
+	
         /* calculate proportional bar width */
         $width_c = ((($compromise = $temporary["compromise"]) / 
                     $threshold_c = $temporary["threshold_c"]) * $BAR_LENGTH_LEFT);
@@ -234,7 +251,7 @@ usort($net_group_array,"ordenar");
     <!-- C & A levels for each group -->
     <tr>
       <td align="center">
-            <?php if($_GET["expand"] && $_GET["expand"] == $group_name){ ?>
+            <?php if(!empty($expand) && $expand == $group_name){ ?>
             <a href="<?php echo $_SERVER["PHP_SELF"]?>"><?php echo
             Util::beautify($group_name); ?></a>
             <?php } else { ?>
@@ -347,7 +364,7 @@ if($net_stats)
 
         $net = $stat->get_net_name();
 
-        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net))
+        if (!Net_group::isNetInGroup($conn, $expand, $net))
         if (($stat->get_compromise() < Net::netthresh_c($conn, $net))
         && ($stat->get_attack() < Net::netthresh_a($conn, $net))
         && (Net_group::isNetInAnyGroup($conn, $net))){continue;}
@@ -370,10 +387,10 @@ if($net_stats)
     <!-- C & A levels for each net -->
     <tr>
       <td align="center">
-      <?php if($_GET["expand"]){ ?>
+      <?php if(GET('expand')){ ?>
 
         <a href="<?php echo $_SERVER["PHP_SELF"] . 
-                       "?expand=" . $_GET["expand"] .
+                       "?expand=" . $expand .
                        "&net=$net" ?>"><?php echo Util::beautify($net) ?></a>
      <?php } else { ?>
         <a href="<?php echo $_SERVER["PHP_SELF"] . 
@@ -471,9 +488,8 @@ if($net_stats)
 /*
  * If click on a net, only show hosts of this net
  */
-if ($_GET["net"]) {
+if (GET('net')) {
 
-    $net_name = $_GET["net"];
     
     if ($net_list = Net::get_list($conn, "WHERE name = '$net_name'"))
     {
@@ -645,3 +661,6 @@ if ($ip_stats) {
 </body>
 </html>
 
+<?php
+    $db->close($conn);
+?>

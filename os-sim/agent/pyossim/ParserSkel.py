@@ -87,7 +87,7 @@ class ParserSkel(Parser.Parser):
                     (date, sid, src, dst, sport, dport, proto, priority) = \
                         result.groups()
 
-                    self.agent.sendAlert (
+                    self.agent.sendEvent (
                             type       = 'detector',
                             date       = date,
                             sensor     = self.plugin["sensor"],

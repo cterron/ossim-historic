@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Policy_net_reference {
 
     var $policy_id;
@@ -19,9 +21,10 @@ class Policy_net_reference {
     
     function get_list($conn, $policy_id, $direction) 
     {
+        $list = array();
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_net_reference 
-                    WHERE policy_id = $policy_id AND direction = '$direction'";
+        $query = OssimQuery("SELECT * FROM policy_net_reference 
+                    WHERE policy_id = $policy_id AND direction = '$direction'");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -35,20 +38,14 @@ class Policy_net_reference {
         return $list;
     }
 
-    function insert($conn, $net_list, $direction, $policy_id = "")
+    function insert($conn, $net_list, $direction, $policy_id)
     {
         foreach($net_list as $net_name)
         {
-            if ($policy_id != "") {
-                $query = "INSERT INTO policy_net_reference VALUES 
-                    ($policy_id, '$net_name', '$direction');";
-            } else {
-                $query = "INSERT INTO policy_net_reference VALUES 
-                    (LAST_INSERT_ID(), '$net_name', '$direction');";
-            }
-            if ($conn->Execute($query) === false) {
-                print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-                exit;
+            $sql = "INSERT INTO policy_net_reference VALUES (?, ?, ?)";
+            $params = array($policy_id, $net_name, $direction);
+            if (!$conn->Execute($sql, $params)) {
+                die($conn->ErrorMsg());
             }
         }
     }
@@ -56,33 +53,20 @@ class Policy_net_reference {
     function in_policy_net_reference($conn, $policy_id, $net_name, $direction)
     {
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_net_reference 
-                    WHERE policy_id = $policy_id and net_name = '$net_name'
-                    and direction = '$direction';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM policy_net_reference WHERE policy_id = ? and net_name = ? and direction = ?";
+        $params = array($policy_id, $net_name, $direction);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
 
-/*
-    function update($conn, $policy_id, $net_name, $direction)
-    {
-        $query = "UPDATE policy_net_reference SET policy_id = policy_id, 
-            net_name = '$net_name', direction = $direction WHERE policy_id =
-            $policy_id AND net_name = '$net_name' AND direction = $direction;";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-*/
-
     function delete($conn, $policy_id) {
         $policy_id = intval($policy_id);
-        $query = "DELETE FROM policy_net_reference 
-                    WHERE policy_id = $policy_id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM policy_net_reference 
+                    WHERE policy_id = ?";
+        $params = array($policy_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

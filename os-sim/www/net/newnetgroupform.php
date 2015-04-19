@@ -24,7 +24,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     $db = new ossim_db();
     $conn = $db->connect();
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $threshold = $conf->get_conf("threshold");
 ?>
 

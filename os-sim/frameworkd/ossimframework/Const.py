@@ -28,3 +28,4 @@ VERBOSE = 0
 # overriden with -p option
 LISTENER_PORT = 40003
 
+# vim:ts=4 sts=4 tw=79 expandtab:

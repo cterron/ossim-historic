@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Policy_port_reference {
 
     var $policy_id;
@@ -16,9 +18,10 @@ class Policy_port_reference {
     
     function get_list($conn, $policy_id) 
     {
+        $list = array();
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_port_reference 
-                    WHERE policy_id = $policy_id";
+        $query = OssimQuery("SELECT * FROM policy_port_reference 
+                    WHERE policy_id = $policy_id");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -32,20 +35,13 @@ class Policy_port_reference {
         return $list;
     }
 
-    function insert($conn, $port_list, $policy_id = "")
+    function insert($conn, $port_list, $policy_id)
     {
-
         foreach ($port_list as $port_group_name) {
-            if ($policy_id != "") {
-                $query = "INSERT INTO policy_port_reference 
-                            VALUES ($policy_id, '$port_group_name');";
-            } else {
-                $query = "INSERT INTO policy_port_reference 
-                            VALUES (LAST_INSERT_ID(), '$port_group_name');";
-            }
-            if ($conn->Execute($query) === false) {
-                print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-                exit;
+            $sql = "INSERT INTO policy_port_reference VALUES (?, ?)";
+            $params = array($policy_id, $port_group_name);
+            if (!$conn->Execute($sql, $params)) {
+                die($conn->ErrorMsg());
             }
         }
     }
@@ -53,33 +49,22 @@ class Policy_port_reference {
     function in_policy_port_reference($conn, $policy_id, $port_group_name)
     {
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_port_reference 
-                    WHERE policy_id = $policy_id AND 
-                          port_group_name = '$port_group_name';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM policy_port_reference 
+                    WHERE policy_id = ? AND 
+                          port_group_name = ?";
+        $params = array($policy_id, $port_group_name);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
 
-/*
-    function update($conn, $policy_id, $port_group_name)
-    {
-        $query = "UPDATE policy_port_reference SET policy_id = $policy_id, 
-            port_group_name = '$port_group_name' WHERE policy_id = $policy_id 
-            AND port_group_name = '$port_group_name';";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-*/
-
     function delete($conn, $policy_id) {
         $policy_id = intval($policy_id);
-        $query = "DELETE FROM policy_port_reference 
-                    WHERE policy_id = $policy_id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM policy_port_reference 
+                    WHERE policy_id = ?";
+        $params = array($policy_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

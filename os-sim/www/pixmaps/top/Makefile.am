@@ -9,7 +9,8 @@ top_DATA = abajo.gif \
 	ld.gif		\
 	li.gif		\
 	naranja.gif	\
-	sep.gif
+	sep.gif     \
+	arriba.gif
 
 EXTRA_DIST   = $(top_DATA)
 

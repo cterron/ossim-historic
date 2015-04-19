@@ -14,6 +14,15 @@
 
     $db->close($conn);
 
+    require_once 'ossim_conf.inc';
+    $conf = $GLOBALS["CONF"];
+    $nmap_path = $conf->get_conf("nmap_path");
+    if (file_exists($nmap_path)) {
+        $nmap_exists = 1;
+    } else {
+        $nmap_exists = 0;
+    }
+    
 ?>
 
 
@@ -41,7 +50,13 @@
 <body>
   <h1> <?php echo gettext("Net Scan") ?> </h1>
 
-
+<?php
+if (!$nmap_exists){
+    require_once ("ossim_error.inc");
+    $error = new OssimError();
+    $error->display("NMAP_PATH");
+}
+?>
   <!-- net selector form -->
   <form name="net_form" method="GET" action="do_scan.php">
   <table align="center">
@@ -72,7 +87,7 @@
       </td>
       <td><input type="text" value="<?php echo $first_net ?>" 
                  name="net_input" disabled /></td>
-      <td><input type="submit" value="<?php echo gettext("Scan") ?>" /></td>
+      <td><input type="submit" value="<?php echo gettext("Scan") ?>" <?= (!$nmap_exists) ? "disabled" : "" ?> /></td>
     </tr>
   </table>
   </form>
@@ -91,8 +106,7 @@
         echo gettext("NOTE: This tool is a nmap frontend. In order to use all
             nmap funcionality, you need root privileges.");
         echo "<br/>";
-        echo gettext("For this purpose you can use suphp, or set suid 
-            to nmap binary (chmod 4755 /usr/bin/nmap)");
+        echo gettext("For this purpose you can use suphp, or set suid to nmap binary (chmod 4750 /usr/bin/nmap) changing the group to the one of the web-user (chgrp www /usr/bin/nmap).");
         echo "</p>";
     }
 

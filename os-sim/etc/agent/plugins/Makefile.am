@@ -10,6 +10,8 @@ plugins_DATA = apache.xml \
 	iis.xml \
 	iptables.xml \
 	netgear.xml \
+	netscreen.xml \
+	juniperfw.xml \
 	ntop.xml \
 	ntsyslog.xml \
 	opennms.xml \

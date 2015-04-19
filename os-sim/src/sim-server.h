@@ -43,6 +43,14 @@
 #include "sim-session.h"
 #include "sim-command.h"
 
+typedef struct _monitor_requests monitor_requests;
+struct _monitor_requests //this struct will be used to permit the threaded use
+												//of monitor requests from sim_server_push_session_plugin_command
+{
+	SimSession	*session;
+	SimCommand	*command;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -76,21 +84,24 @@ SimServer*        sim_server_new                           (SimConfig       *con
 void              sim_server_run                           (SimServer       *server);
 
 void              sim_server_append_session                (SimServer       *server,
-							    SimSession      *session);
-void              sim_server_remove_session                (SimServer       *server,
-							    SimSession      *session);
+																												    SimSession      *session);
+gint              sim_server_remove_session                (SimServer       *server,
+																												    SimSession      *session);
 GList*            sim_server_get_sessions                  (SimServer       *server);
 
 void              sim_server_push_session_command          (SimServer       *server,
-							    SimSessionType   type,
-							    SimCommand      *command);
+																												    SimSessionType   type,
+																												    SimCommand      *command);
 void              sim_server_push_session_plugin_command   (SimServer       *server,
-							    SimSessionType   session_type,
-							    gint             plugin_id,
-							    SimCommand      *command);
-
+																												    SimSessionType   session_type,
+																												    gint             plugin_id,
+																												    SimCommand      *command);
+static gpointer		sim_server_thread_monitor_requests				(gpointer data);
+	
 SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,
-							    SimSensor   *sensor);
+																												    SimSensor   *sensor);
+
+void              sim_server_debug_print_sessions           (SimServer    *server); //debug function
 
 G_END_DECLS
 
@@ -99,3 +110,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_SERVER_H__ */
+// vim: set tabstop=2:

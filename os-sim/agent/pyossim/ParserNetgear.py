@@ -107,7 +107,7 @@ class ParserNetgear(Parser.Parser):
 
                     try:
                         pass
-                        self.agent.sendAlert (
+                        self.agent.sendEvent (
                                 type       = 'detector',
                                 date       = date + " " + time_,
                                 sensor     = self.plugin["sensor"],

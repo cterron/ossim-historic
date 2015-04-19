@@ -111,7 +111,7 @@ class ParserCisco(Parser.Parser):
                     # src_ip and dst_ip
 
                     try:
-                        self.agent.sendAlert (
+                        self.agent.sendEvent (
                             type       = 'detector',
                             date       = date,
                             sensor     = self.plugin["sensor"],

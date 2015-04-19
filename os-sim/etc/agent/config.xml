@@ -29,16 +29,19 @@
     <!ENTITY    iis         SYSTEM '/etc/ossim/agent/plugins/iis.xml'>
     <!ENTITY    iptables    SYSTEM '/etc/ossim/agent/plugins/iptables.xml'>
     <!ENTITY    netgear     SYSTEM '/etc/ossim/agent/plugins/netgear.xml'>
+    <!ENTITY    netscreen   SYSTEM '/etc/ossim/agent/plugins/netscreen.xml'>
     <!ENTITY    ntop        SYSTEM '/etc/ossim/agent/plugins/ntop.xml'>
     <!ENTITY    ntsyslog    SYSTEM '/etc/ossim/agent/plugins/ntsyslog.xml'>
     <!ENTITY    opennms     SYSTEM '/etc/ossim/agent/plugins/opennms.xml'>
     <!ENTITY    osiris      SYSTEM '/etc/ossim/agent/plugins/osiris.xml'>
     <!ENTITY    p0f         SYSTEM '/etc/ossim/agent/plugins/p0f.xml'>
     <!ENTITY    pads        SYSTEM '/etc/ossim/agent/plugins/pads.xml'>
+    <!ENTITY    postfix     SYSTEM '/etc/ossim/agent/plugins/postfix.xml'>
     <!ENTITY    prelude     SYSTEM '/etc/ossim/agent/plugins/prelude.xml'>
     <!ENTITY    realsecure  SYSTEM '/etc/ossim/agent/plugins/realsecure.xml'>
     <!ENTITY    rrd         SYSTEM '/etc/ossim/agent/plugins/rrd.xml'>
     <!ENTITY    snarewindows SYSTEM '/etc/ossim/agent/plugins/snarewindows.xml'>
+    <!ENTITY    juniperfw   SYSTEM '/etc/ossim/agent/plugins/juniperfw.xml'>
     <!ENTITY    snort       SYSTEM '/etc/ossim/agent/plugins/snort.xml'>
     <!ENTITY    syslog      SYSTEM '/etc/ossim/agent/plugins/syslog.xml'>
     <!ENTITY    tcptrack    SYSTEM '/etc/ossim/agent/plugins/tcptrack.xml'>
@@ -65,7 +68,7 @@
     <logdir>&logdir;</logdir>
 
     <!-- restart plugins every hour -->
-    <plugin-restart enable="yes" interval="600"/>
+    <plugin-restart enable="yes" interval="3600"/>
 
     <plugins>
     
@@ -80,16 +83,19 @@
 <!-- &iis; -->
 <!-- &iptables; -->
 <!-- &netgear; -->
+<!-- &netscreen; -->
 &ntop;
 <!-- &ntsyslog; -->
 <!-- &opennms; -->
 <!-- &osiris; -->
 &p0f;
 &pads;
+<!-- &postfix; -->
 <!-- &prelude; -->
 <!-- &realsecure; -->
 &rrd;
 <!-- &snarewindows; -->
+<!-- &juniperfw; -->
 &snort;
 &syslog;
 <!-- &tcptrack; -->

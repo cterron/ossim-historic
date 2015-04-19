@@ -77,6 +77,11 @@ void              sim_scheduler_run                             (SimScheduler  *
 /* Backlogs Time Out */
 void              sim_scheduler_backlogs_time_out               (SimScheduler  *scheduler);
 
+void		sim_scheduler_task_execute_at_interval									(SimScheduler  *scheduler,
+																																	gpointer       data);				    
+void 		sim_scheduler_task_GDAErrorHandling											(void);
+void		sim_scheduler_task_store_event_number_at_5min						(SimScheduler  *scheduler);
+	
 G_END_DECLS
 
 #ifdef __cplusplus
@@ -84,3 +89,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_SCHEDULER_H__ */
+// vim: set tabstop=2:

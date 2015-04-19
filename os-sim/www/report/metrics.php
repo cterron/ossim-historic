@@ -14,7 +14,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <?php 
     /* get host */
-    if (!$ip = $_GET["host"]) {
+    if (!$ip = validateVar($_GET["host"], OSS_IP)) {
         echo "<p>Wrong ip</p>";
         exit;
     }
@@ -48,7 +48,7 @@ function fontcolor($value, $max)
 }
 
 
-$framework_conf = new ossim_conf();
+$framework_conf = $GLOBALS["CONF"];
 $graph_link = $framework_conf->get_conf("graph_link");
 
 $image1 = "$graph_link?ip=$ip&what=compromise&start=N-24h&end=N&type=host&zoom=1";

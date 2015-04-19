@@ -29,6 +29,20 @@ diff -urNb acid/acid_common.php acid-ossim/acid_common.php
  function GetSensorIDs($db)
  {
     $result = $db->acidExecute("SELECT sid FROM sensor;");
+@@ -39,6 +45,13 @@
+     }
+     $tmp_result->acidFreeRows();
+ 
++    $num="(\*|[0-9]{1,3}|^1?\d\d$|2[0-4]\d|25[0-5])";
++
++    if(preg_match("/($num\.$num\.$num\.$num)(.*)/",$name,$matches)){
++        $name = gethostbyaddr($matches[1]);
++        $name = $name . $matches[6];
++    }
++
+     return $name;
+ }
+
 diff -urNb acid/acid_conf.php acid-ossim/acid_conf.php
 --- acid/acid_conf.php	Tue Mar 15 15:53:43 2005
 +++ acid-ossim/acid_conf.php	Tue Mar 15 15:55:13 2005

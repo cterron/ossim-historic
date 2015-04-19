@@ -1,3 +1,8 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuMonitors", "MonitorsNetwork");
+?>
+
 <html>
 <head>
   <title> <?php echo gettext("OSSIM Framework"); ?> </title>
@@ -8,32 +13,96 @@
 <body>
 
 <?php
-if (!$sensor = $_GET["sensor"])
-{
-    echo "<p align=\"center\">Argument missing</p>";
-    exit();
+require_once ("classes/Security.inc");
+
+$sensor = GET('sensor');
+$interface = GET('interface');
+$proto = GET('proto');
+
+ossim_valid($sensor, OSS_IP_ADDR, 'illegal:'._("Sensor"));
+ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("interface"));
+ossim_valid($proto, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("proto"));
+
+if (ossim_error()) {
+    die(ossim_error());
 }
 
-require_once ('ossim_conf.inc');
-$conf = new ossim_conf();
-
-#
-# get ntop port from default ntop entry at
-# /etc/ossim/framework/ossim.conf
-# a better solution ??
-#
-$url_parsed = parse_url($conf->get_conf("ntop_link"));
-$port = $url_parsed["port"];
-$proto = $url_parsed["scheme"];
-
 require_once ('ossim_db.inc');
+$db = new ossim_db();
+$conn = $db->connect();
+
+require_once ('ossim_conf.inc');
+$conf = $GLOBALS["CONF"];
+$ntop_default = parse_url($conf->get_conf("ntop_link"));
+
 require_once ('classes/Sensor.inc');
+
+/* ntop link */
+$scheme = $ntop_default["scheme"] ? $ntop_default["scheme"] : "http";
+$port = $ntop_default["port"] ? $ntop_default["port"] : "3000";
+$ntop = "$scheme://$sensor:$port";
+
+?>
+
+<!-- change sensor -->
+<form method="GET" action="menu.php">
+Sensor:&nbsp;
+<select name="sensor" onChange="submit()">
+
+<?php
+    /*
+     * default option (ntop_link at configuration)
+     */
+/*
+    $option = "<option ";
+    if ($sensor == $ntop_default["host"])
+        $option .= " SELECTED ";
+    $option .= ' value="'. $ntop_default["host"] . '">default</option>';
+    print "$option\n";
+*/
+
+    /* Get highest priority sensor first */
+    $tmp = Sensor::get_list($conn, "ORDER BY priority DESC LIMIT 1");
+    if (is_array($tmp)) {
+        $first_sensor = $tmp[0];
+        $option  = "<option value='". $first_sensor->get_ip() ."'>";
+        $option .= $first_sensor->get_name() . "</option>";
+        print $option;
+    }
+
+
+    $sensor_list = Sensor::get_list($conn, "ORDER BY name");
+    if (is_array($sensor_list)) {
+        foreach ($sensor_list as $s) {
+
+            /* don't show highest priority sensor again.. */
+            if ($s->get_ip() != $first_sensor->get_ip()) {
+
+                /*
+                 * one more option for each sensor (at policy->sensors)
+                 */
+                $option = "<option ";
+                if ($sensor == $s->get_ip())
+                    $option .= " SELECTED ";
+                $option .= ' value="'. $s->get_ip() . '">'. $s->get_name() .
+                    '</option>';
+                print "$option\n";
+            }
+        }
+    }
+?>
+</select>
+</form>
+<!-- end change sensor -->
+
+
+
+<!-- interface selector -->
+<?php
+
 require_once ('classes/Sensor_interfaces.inc');
 require_once ('classes/SecurityReport.inc');
 
-$db = new ossim_db();
-$conn = $db->connect();
-$interface = $_GET["interface"];
 
 if ($interface){
 $fd = @fopen("http://$sensor:$port/switch.html", "r");
@@ -49,29 +118,6 @@ fclose($fd);
 }
 }
 ?>
-
-
-<form method="GET" action="menu.php">
-<input type="hidden" name="proto" value="<?php echo $proto ?>"/>
-<input type="hidden" name="port" value="<?php echo $port ?>"/>
-Sensor:&nbsp;
-<select name="sensor" onChange="submit()">
-<?php
-if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
-    foreach ($sensor_list as $s) {
-?>
-  <option 
-<?php 
-    if ($sensor == $s->get_ip()) echo " SELECTED ";
-?>
-    value="<?php echo $s->get_ip() ?>"><?php 
-        echo $s->get_name() ?></option>
-<?php
-    }
-}
-?>
-</select>
-</form>
 
 <form method="GET" action="menu.php">
 Interface:&nbsp;
@@ -103,94 +149,77 @@ SecurityReport::Truncate($s_int->get_name(),30,"..."); ?></option>
         }
     }
 }
+
+$db->close($conn);
+
 ?>
 
 </select>
 </form>
+<!-- end interface selector -->
 
 
 
-<?php
-require_once ('ossim_conf.inc');
-$conf = new ossim_conf();
-?>
+<a href="<?php echo "$ntop/trafficStats.html" ?>" 
+   target="ntop"><?php echo gettext("Global"); ?></a><br/>
+<a href="<?php echo "$ntop/sortDataProtos.html"?>"
+   target="ntop"><?php echo gettext("Protocols"); ?> </a><br/><br/>
 
-<a href="<?php echo "$proto://$sensor:$port"?>/trafficStats.html"
-       target="ntop">
-       <?php echo gettext("Global"); ?> </a></br>
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataProtos.html"
-       target="ntop">
-       <?php echo gettext("Protocols"); ?> </a><br/><br/>
-
-<b> <?php echo gettext("Services"); ?> </b><br/><br/>
+<b> <?php echo gettext("Services"); ?> </b><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=0"
-   target="ntop">
-   <?php echo gettext("By host: Total"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataIP.html?showL=0" ?>"
+   target="ntop"><?php echo gettext("By host: Total"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=1"
-   target="ntop">
-   <?php echo gettext("By host: Sent"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataIP.html?showL=1" ?>"
+   target="ntop"><?php echo gettext("By host: Sent"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataIP.html?showL=2"
-   target="ntop">
-   <?php echo gettext("By host: Recv"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataIP.html?showL=2" ?>"
+   target="ntop"><?php echo gettext("By host: Recv"); ?></a><br/>
    
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/ipProtoDistrib.html"
-  target="ntop">
-  <?php echo gettext("Service statistic"); ?> </a><br/>
+<a href="<?php echo "$ntop/ipProtoDistrib.html" ?>"
+   target="ntop"><?php echo gettext("Service statistic"); ?></a><br/>
 
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/ipProtoUsage.html"
-  target="ntop">
-  <?php echo gettext("By client-server"); ?> </a><br/><br/>
+<a href="<?php echo "$ntop/ipProtoUsage.html" ?>"
+   target="ntop"><?php echo gettext("By client-server"); ?></a><br/><br/>
 
-<b> <?php echo gettext("Throughput"); ?> </b><br/><br/>
+<b><?php echo gettext("Throughput"); ?></b><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=0"
-   target="ntop">
-   <?php echo gettext("By host: Total"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataThpt.html?col=1&showL=0" ?>"
+   target="ntop"><?php echo gettext("By host: Total"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=1"
-   target="ntop">
-   <?php echo gettext("By host: Sent"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataThpt.html?col=1&showL=1" ?>"
+   target="ntop"><?php echo gettext("By host: Sent"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/sortDataThpt.html?col=1&showL=2"
-   target="ntop">
-   <?php echo gettext("By host: Recv"); ?> </a><br/>
+<a href="<?php echo "$ntop/sortDataThpt.html?col=1&showL=2" ?>"
+   target="ntop"><?php echo gettext("By host: Recv"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/thptStats.html?col=1"
-   target="ntop">
-   <?php echo gettext("Total (Graph)"); ?> </a><br/><br/>
+<a href="<?php echo "$ntop/thptStats.html?col=1" ?>"
+   target="ntop"><?php echo gettext("Total (Graph)"); ?></a><br/><br/>
 
-<b> <?php echo gettext("Matrix"); ?> </b><br/><br/>
+<b> <?php echo gettext("Matrix"); ?> </b><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/ipTrafficMatrix.html"
-   target="ntop">
-   <?php echo gettext("Data Matrix"); ?> </a><br/>
+<a href="<?php echo "$ntop/ipTrafficMatrix.html" ?>"
+   target="ntop"><?php echo gettext("Data Matrix"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/dataHostTraffic.html"
+<a href="<?php echo "$ntop/dataHostTraffic.html" ?>"
    target="ntop">
    <?php echo gettext("Time Matrix"); ?> </a><br/><br/>
    
-<b> <?php echo gettext("Gateways, VLANs"); ?> </b><br/><br/>
+<b> <?php echo gettext("Gateways, VLANs"); ?> </b><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/localRoutersList.html"
-   target="ntop">
-   <?php echo gettext("Gateways"); ?> </a><br/>
+<a href="<?php echo "$ntop/localRoutersList.html" ?>"
+   target="ntop"><?php echo gettext("Gateways"); ?></a><br/>
 &nbsp;&nbsp;&nbsp;
-<a href="<?php echo "$proto://$sensor:$port"?>/vlanList.html"
-   target="ntop">
-   <?php echo gettext("VLANs"); ?> </a><br/><br/>
+<a href="<?php echo "$ntop/vlanList.html" ?>"
+   target="ntop"><?php echo gettext("VLANs"); ?></a><br/><br/>
 
-<a href="<?php echo "$proto://$sensor:$port"?>/localHostsFingerprint.html"
-target="ntop">
-<?php echo gettext("OS and Users"); ?> </a><br/>
+<a href="<?php echo "$ntop/localHostsFingerprint.html" ?>"
+   target="ntop"><?php echo gettext("OS and Users"); ?></a><br/>
 
-<a href="<?php echo "$proto://$sensor:$port"?>/domainStats.html"
-target="ntop">
-<?php echo gettext("Domains"); ?> </a><br/>
+<a href="<?php echo "$ntop/domainStats.html" ?>"
+   target="ntop"><?php echo gettext("Domains"); ?></a><br/>
 
 
 </body>

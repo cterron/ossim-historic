@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 OS_SIM_MAJOR_VERSION=0
 OS_SIM_MINOR_VERSION=9
-OS_SIM_MICRO_VERSION=8
+OS_SIM_MICRO_VERSION=9
 OS_SIM_VERSION=$OS_SIM_MAJOR_VERSION.$OS_SIM_MINOR_VERSION.$OS_SIM_MICRO_VERSION
 
 AC_SUBST(OS_SIM_MAJOR_VERSION)
@@ -89,18 +89,26 @@ db/Makefile
 pixmaps/Makefile
 include/Makefile
 include/classes/Makefile
+include/upgrades/Makefile
+include/panel/Makefile
+include/panel/plugins/Makefile
 www/Makefile
+www/action/Makefile
 www/conf/Makefile
 www/control_panel/Makefile
 www/directives/Makefile
+www/feed/Makefile
 www/editor/Makefile
 www/hids/Makefile
 www/host/Makefile
 www/incidents/Makefile
+www/nagios/Makefile
 www/net/Makefile
 www/ntop/Makefile
+www/panel/Makefile
 www/pixmaps/Makefile
 www/pixmaps/os/Makefile
+www/pixmaps/panel/Makefile
 www/pixmaps/top/Makefile
 www/policy/Makefile
 www/port/Makefile
@@ -119,7 +127,13 @@ www/vulnmeter/Makefile
 www/backup/Makefile
 www/java/Makefile
 www/java/images/Makefile
+www/js/Makefile
+www/js/rico/Makefile
+www/js/scriptaculous/Makefile
 www/netscan/Makefile
+www/response/Makefile
+www/upgrade/Makefile
+www/userlog/Makefile
 mrtg/Makefile
 mrtg/level/Makefile
 mrtg/global/Makefile
@@ -138,6 +152,8 @@ contrib/debian/agent/Makefile
 contrib/debian/framework/Makefile
 contrib/debian/httpd/Makefile
 contrib/debian/init.d/Makefile
+contrib/fedora/Makefile
+contrib/fedora/init.d/Makefile
 contrib/oinkmaster/Makefile
 contrib/spade/Makefile
 contrib/snort/Makefile

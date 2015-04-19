@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Category {
 
     var $id;
@@ -16,10 +18,11 @@ class Category {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM category $args";
+        $query = OssimQuery("SELECT * FROM category $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Category ($rs->fields["id"],
                                       $rs->fields["name"]);

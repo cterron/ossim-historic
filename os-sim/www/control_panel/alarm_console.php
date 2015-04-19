@@ -15,7 +15,6 @@ Session::logcheck("MenuControlPanel", "ControlPanelAlarms");
 
 <?php
 require_once ('ossim_db.inc');
-require_once ('common.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Host_os.inc');
 require_once ('classes/Alarm.inc');
@@ -23,71 +22,91 @@ require_once ('classes/Plugin.inc');
 require_once ('classes/Plugin_sid.inc');
 require_once ('classes/Port.inc');
 require_once ('classes/Util.inc');
+require_once ('classes/Security.inc');
 
-/* number of alerts by page */
+/* number of events by page */
 $ROWS = 50;
 
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
 
-if ($id = $_GET["delete"]) {
-    /*
-    if(Session::is_expert()){
-        Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
-    }
-    */
-    Alarm::delete($conn, $id);
+
+$delete = GET('delete');
+$close  = GET('close');
+$delete_day = GET('delete_day');
+$order = GET('order');
+$src_ip = GET('src_ip');
+$dst_ip = GET('dst_ip');
+$inf = GET('inf');
+$sup = GET('sup');
+$hide_closed = GET('hide_closed');
+
+ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+ossim_valid($delete, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("delete"));
+ossim_valid($close, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("close"));
+ossim_valid($delete_day, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("delete_day"));
+ossim_valid($src_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
+ossim_valid($dst_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
+ossim_valid($inf, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("inf"));
+ossim_valid($sup, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("order"));
+ossim_valid($hide_closed, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("hide_closed"));
+
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+                    
+
+if (!empty($delete)) {
+    Alarm::delete($conn, $delete);
 }
 
-if ($id = $_GET["close"]) {
-    Alarm::close($conn, $id);
+
+if (!empty($close)) {
+    Alarm::close($conn, $close);
 }
 
-if ($list = $_GET["delete_backlog"]) {
+
+if ($list = GET('delete_backlog')) {
     if (!strcmp($list, "all"))
         $backlog_id = $list;
     else
         list($backlog_id, $id) = split("-", $list);
-    /*
-    if(Session::is_expert()){
-        Session::logcheck_ext("Actions", "Delete","MenuControlPanel","ControlPanelAlarms");
-    }
-    */
     Alarm::delete_from_backlog($conn, $backlog_id, $id);
 }
 
-if ($date = $_GET["delete_day"]) {
-    Alarm::delete_day($conn, $date);
+if (!empty($delete_day)) {
+    Alarm::delete_day($conn, $delete_day);
 }
 
-if ($_GET["purge"]) {
+if (GET('purge')) {
     Alarm::purge($conn);
 }
 
 
-if (!$order = $_GET["order"]) $order = "timestamp DESC";
+if (empty($order)) $order = " timestamp DESC";
 
-if (($src_ip = $_GET["src_ip"]) && ($dst_ip = $_GET["dst_ip"])) {
+if ((!empty($src_ip)) && (!empty($dst_ip))) {
     $where = "WHERE inet_ntoa(src_ip) = '$src_ip' 
                      OR inet_ntoa(dst_ip) = '$dst_ip'";
-} elseif ($src_ip = $_GET["src_ip"]) {
+} elseif (!empty($src_ip)) {
     $where = "WHERE inet_ntoa(src_ip) = '$src_ip'";
-} elseif ($dst_ip = $_GET["dst_ip"]) {
+} elseif (!empty($dst_ip)) {
     $where = "WHERE inet_ntoa(dst_ip) = '$dst_ip'";
 } else {
     $where = '';
 }
 
-if (!$inf = $_GET["inf"])
+if (empty($inf))
     $inf = 0;
-if (!$sup = $_GET["sup"])
+if (!$sup)
     $sup = $ROWS;
 
 ?>
 
     <?php
-        $hide_closed = $_REQUEST["hide_closed"] == 1? 1 : 0;
+        $hide_closed  == 1? 1 : 0;
         $not_hide_closed = !$hide_closed;
     ?>
     <input type="checkbox" 
@@ -96,7 +115,7 @@ if (!$sup = $_GET["sup"])
             "?order=$order&inf=$inf&sup=$sup&src_ip=$src_ip&dst_ip=$dst_ip" .
             "&hide_closed=$not_hide_closed" ?>'"
         <?php if ($hide_closed) echo " checked " ?> 
-    />Hide closed alarms<br/>
+    /><?php echo gettext("Hide closed alarms"); ?><br/>
 
     <table width="100%">
       <tr>
@@ -188,7 +207,7 @@ if (!$sup = $_GET["sup"])
 
             /* hide closed alarmas */
             if (($alarm->get_status() == "closed") and
-                ($_REQUEST["hide_closed"] == 1))
+                ($hide_closed == 1))
                 continue;
 
             $id  = $alarm->get_plugin_id();
@@ -229,7 +248,7 @@ if (!$sup = $_GET["sup"])
                 $link_delete = "
                     <a href=\"" . 
                         $_SERVER["PHP_SELF"] . "?delete_day=" . 
-                        $alarm->get_timestamp() . "&hide_closed=$hided_closed\"> Delete </a>
+                        $alarm->get_timestamp() . "&hide_closed=$hide_closed\"> Delete </a>
                 ";
                 echo "
                 <tr>
@@ -249,20 +268,21 @@ if (!$sup = $_GET["sup"])
         <td><?php echo ++$inf ?></td>
         <td><b>
 <?php
-            $alarm_name = ereg_replace("directive_alert: ", "", $sid_name);
+            $alarm_name = ereg_replace("directive_event: ", "", $sid_name);
             $alarm_name = Util::translate_alarm($conn, $alarm_name, $alarm);
             $alarm_name_orig = $alarm_name;
             if ($backlog_id != 0) 
             {
-                $alerts_link = "alerts.php?backlog_id=$backlog_id";
+                $events_link = "events.php?backlog_id=$backlog_id";
                 $alarm_name = "
-                <a href=\"$alerts_link\">
+                <a href=\"$events_link\">
                   $alarm_name
                 </a>
                 ";
             } else {
-                $alerts_link = $_SERVER["PHP_SELF"];
-                $alarm_link = get_acid_pair_link($date, $alarm->get_src_ip(), $alarm->get_dst_ip());
+                $events_link = $_SERVER["PHP_SELF"];
+                $alarm_link = Util::get_acid_pair_link($date, 
+                    $alarm->get_src_ip(), $alarm->get_dst_ip());
                 $alarm_name = "<a href=\"" . $alarm_link .  "\">$alarm_name</a>";
             }
             echo $alarm_name;
@@ -282,7 +302,7 @@ if (!$sup = $_GET["sup"])
             echo "
             <td bgcolor=\"red\">
               <b>
-                <a href=\"$alerts_link\">
+                <a href=\"$events_link\">
                   <font color=\"white\">$risk</font>
                 </a>
               </b>
@@ -292,7 +312,7 @@ if (!$sup = $_GET["sup"])
             echo "
             <td bgcolor=\"orange\">
               <b>
-                <a href=\"$alerts_link\">
+                <a href=\"$events_link\">
                   <font color=\"black\">$risk</font>
                 </a>
               </b>
@@ -302,7 +322,7 @@ if (!$sup = $_GET["sup"])
             echo "
             <td bgcolor=\"green\">
               <b>
-                <a href=\"$alerts_link\">
+                <a href=\"$events_link\">
                   <font color=\"white\">$risk</font>
                 </a>
               </b>
@@ -310,7 +330,7 @@ if (!$sup = $_GET["sup"])
             ";
         } else {
             echo "
-            <td><a href=\"$alerts_link\">$risk</a></td>
+            <td><a href=\"$events_link\">$risk</a></td>
             ";
         }
 ?>
@@ -337,7 +357,7 @@ if (!$sup = $_GET["sup"])
 
         <td nowrap>
         <?php
-            $acid_link = get_acid_alerts_link($since, $date, "time_a");
+            $acid_link = Util::get_acid_events_link($since, $date, "time_a");
             echo "
             <a href=\"$acid_link\">
               <font color=\"black\">$since</font>
@@ -347,7 +367,7 @@ if (!$sup = $_GET["sup"])
         </td>
         <td nowrap>
         <?php
-            $acid_link = get_acid_alerts_link($since, $date, "time_d");
+            $acid_link = Util::get_acid_events_link($since, $date, "time_d");
             echo "
             <a href=\"$acid_link\">
               <font color=\"black\">$date</font></a>
@@ -356,8 +376,8 @@ if (!$sup = $_GET["sup"])
         </td>
         
 <?php
-    $src_link = "../report/index.php?host=$src_ip&section=alerts";
-    $dst_link = "../report/index.php?host=$dst_ip&section=alerts";
+    $src_link = "../report/index.php?host=$src_ip&section=events";
+    $dst_link = "../report/index.php?host=$dst_ip&section=events";
     $src_name = Host::ip2hostname($conn, $src_ip);
     $dst_name = Host::ip2hostname($conn, $dst_ip);
     $src_img  = Host_os::get_os_pixmap($conn, $src_ip);
@@ -374,11 +394,11 @@ if (!$sup = $_GET["sup"])
         <td nowrap>
 <?php
 
-    $alert_id = $alarm->get_alert_id();
+    $event_id = $alarm->get_event_id();
 
     if ( ($status = $alarm->get_status()) == "open") {
-        echo "<a title='Click here to close alarm #$alert_id' " .
-             "href=\"" . $_SERVER['PHP_SELF'] . "?close=$alert_id" . 
+        echo "<a title='Click here to close alarm #$event_id' " .
+             "href=\"" . $_SERVER['PHP_SELF'] . "?close=$event_id" . 
              "&hide_closed=$hide_closed\"" .
              ">$status</a>";
     } else {
@@ -392,19 +412,19 @@ if (!$sup = $_GET["sup"])
         if ($backlog_id == 0) {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?delete=$alert_id&hide_closed=$hide_closed"?>">
+            "?delete=$event_id&hide_closed=$hide_closed"?>">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
         } else {
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] . 
-            "?delete_backlog=" . "$backlog_id-$alert_id" . 
+            "?delete_backlog=" . "$backlog_id-$event_id" . 
             "&hide_closed=$hide_closed"; ?>">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
         }
 ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Alarm&"  .
             "title=$alarm_name_orig&" .
             "priority=$risk&" .
@@ -425,7 +445,7 @@ if (!$sup = $_GET["sup"])
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?delete_backlog=all"><?php
             echo gettext("Delete ALL alarms"); ?></a> &nbsp;|&nbsp;
         <a href="<?php echo $_SERVER["PHP_SELF"] ?>?purge=1"><?php
-            echo gettext("Purge orphaned alerts"); ?></a>
+            echo gettext("Purge orphaned events"); ?></a>
         </td>
       </tr>
 <?php

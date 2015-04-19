@@ -15,9 +15,9 @@ diff -a -u -r1.78 rules
  	# (let's dh_installcron do the job)
  	cp etc/cron.d/ossim-framework debian/ossim-framework.cron.d
 -	cp etc/cron.daily/ossim-backup.sh debian/ossim-framework.cron.daily
--	cp etc/cron.daily/acid-backup.pl $(TMP)/ossim-framework/etc/cron.daily
+-	cp etc/cron.daily/acid-backup $(TMP)/ossim-framework/etc/cron.daily
 +	cp etc/cron.daily/ossim-backup.sh  debian/ossim-framework.cron.daily
-+	cp etc/cron.daily/acid-backup.pl $(TMP)/ossim-utils/usr/share/ossim/scripts/
++	cp etc/cron.daily/acid-backup $(TMP)/ossim-utils/usr/share/ossim/scripts/
  	
  	install -m644 etc/logrotate.d/ossim-framework $(TMP)/ossim-framework/etc/logrotate.d/
  
@@ -37,7 +37,7 @@ diff -a -u -r1.2 ossim-framework
 -0-59/5 * * * * root /usr/share/ossim/mrtg/launch-mrtg
 +0-59/5 * * * * root /usr/share/ossim/mrtg/launch-mrtg ossim.conf
 +*      6 * * * root /usr/share/ossim/backup/launch-backup ossim.conf
-+*      6 * * * root /usr/share/ossim/scripts/acid-backup.pl ossim.conf
++*      6 * * * root /usr/share/ossim/scripts/acid-backup ossim.conf
  
  
 diff -a -u -r1.3 ossim-backup.sh
@@ -752,9 +752,9 @@ diff -Naur ossim_mrtg.pm
 +
 +
 
-diff -u acid-backup.pl 
---- etc/cron.daily/acid-backup.pl	2005-04-08 12:31:44.000000000 +0100
-+++ etc/cron.daily/acid-backup.pl	2005-05-10 17:47:31.000000000 +0100
+diff -u acid-backup 
+--- etc/cron.daily/acid-backup	2005-04-08 12:31:44.000000000 +0100
++++ etc/cron.daily/acid-backup	2005-05-10 17:47:31.000000000 +0100
 @@ -4,7 +4,7 @@
  #
  # 2004-02-11 Fabio Ospitia Trujillo <fot@ossim.net>

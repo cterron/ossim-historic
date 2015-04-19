@@ -9,28 +9,42 @@ if (!$limit = $_GET["hosts"]) {
 
 /* target must be ip_src or ip_dst */
 if (!$target = $_GET["target"]) exit;
+    
+
+if (!$type = $_GET["type"]) {
+    $type = "event";
+} 
+
+if (!$type == "event") {
+    if($target == "ip_dst") $target = "dst_ip";
+    if($target == "ip_src") $target = "src_ip";
+}
+
+
 
 $security_report = new SecurityReport();
 
-if (!strcmp($target, "ip_src")) {
+if (!strcmp($target, "ip_src") || !strcmp($target, "src_ip")) {
     $title = "TOP ATTACKER";
     $color = "navy";
     $color2 = "lightsteelblue";
     $titlecolor = "darkblue";
-} elseif (!strcmp($target, "ip_dst")) {
+} elseif (!strcmp($target, "ip_dst") || !strcmp($target, "dst_ip")) {
     $title = "TOP ATTACKED";
     $color = "darkred";
     $color2 = "lightred";
     $titlecolor = "darkred";
 }
 
-$list = $security_report->AttackHost($target, $limit);
+$list = $security_report->AttackHost($security_report->ossim_conn,
+                                     $target, $limit, $type);
 foreach ($list as $l) {
     $datax[] = Host::ip2hostname($security_report->ossim_conn, $l[0]);
     $datay[] = $l[1];
 }
 
-$conf = new ossim_conf();
+require_once ('ossim_conf.inc');
+$conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
 
 include ("$jpgraph/jpgraph.php");
@@ -40,7 +54,7 @@ include ("$jpgraph/jpgraph_bar.php");
 $graph = new Graph(400,250,"auto");    
 $graph->img->SetMargin(60,20,30,100);
 $graph->SetScale("textlin");
-$graph->SetMarginColor("$background");
+$graph->SetMarginColor("white");
 $graph->SetShadow();
 
 // Set up the title for the graph

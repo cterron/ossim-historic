@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Policy_host_reference {
 
     var $policy_id;
@@ -19,10 +21,11 @@ class Policy_host_reference {
     
     function get_list($conn, $policy_id, $direction) 
     {
+        $list = array();
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_host_reference 
+        $query = OssimQuery("SELECT * FROM policy_host_reference 
                     WHERE policy_id = $policy_id 
-                    AND direction = '$direction';";
+                    AND direction = '$direction'");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -36,20 +39,13 @@ class Policy_host_reference {
         return $list;
     }
 
-    function insert($conn, $host_list, $direction, $policy_id = "")
+    function insert($conn, $host_list, $direction, $policy_id)
     {
         foreach($host_list as $host_ip)
         {
-            if ($policy_id != "") {
-                $query = "INSERT INTO policy_host_reference VALUES 
-                    ($policy_id, '$host_ip', '$direction');";
-            } else {
-                $query = "INSERT INTO policy_host_reference VALUES 
-                    (LAST_INSERT_ID(), '$host_ip', '$direction');";
-            }
-            if ($conn->Execute($query) === false) {
-                print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-                exit;
+            $sql = "INSERT INTO policy_host_reference VALUES (?, ?, ?)";
+            if (!$conn->Execute($sql, array($policy_id, $host_ip, $direction))) {
+                die($conn->ErrorMsg());
             }
         }
     }
@@ -57,33 +53,20 @@ class Policy_host_reference {
     function in_policy_host_reference($conn, $policy_id, $host_ip, $direction)
     {
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_host_reference 
+        $query = OssimQuery("SELECT * FROM policy_host_reference 
                     WHERE policy_id = $policy_id and host_ip = '$host_ip' and
-                    direction = '$direction';";
+                    direction = '$direction'");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
 
-/*
-    function update($conn, $policy_id, $host_ip, $direction)
-    {
-        $query = "UPDATE policy_host_reference SET policy_id = policy_id, 
-            host_ip = '$host_ip', direction = $direction WHERE policy_id =
-            $policy_id AND host_ip = '$host_ip' AND direction = $direction;";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
-    }
-*/
-
     function delete($conn, $policy_id) 
     {
         $policy_id = intval($policy_id);
-        $query = "DELETE FROM policy_host_reference 
-                    WHERE policy_id = $policy_id;";
+        $query = OssimQuery("DELETE FROM policy_host_reference 
+                    WHERE policy_id = $policy_id");
         if ($conn->Execute($query) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;

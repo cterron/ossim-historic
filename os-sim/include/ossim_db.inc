@@ -4,11 +4,18 @@
  ** Common functions to DB management
  **/
 
+require_once ('ossim_error.inc');
 require_once "ossim_conf.inc";
-$conf = new ossim_conf();
+$conf = new ossim_conf($read_db=false);
 
 $adodb_path = $conf->get_conf("adodb_path");
+if (!is_readable($adodb_path)) {
+    $error = new OssimError();
+    $error->display("ADODB_PATH");
+}
 require_once ("$adodb_path/adodb.inc.php");
+
+require_once ('ossim_sql.inc');
 
 class ossim_db {
 
@@ -22,7 +29,7 @@ class ossim_db {
     function ossim_db() 
     {
         require_once ('ossim_conf.inc');
-        $this->conf = new ossim_conf();
+        $this->conf = new ossim_conf($read_db=false);
 
         $adodb_path = $this->conf->get_conf("adodb_path");
         require_once ("$adodb_path/adodb.inc.php");
@@ -31,25 +38,36 @@ class ossim_db {
     }
      
     function connect () { 
+        return $this->nconnect();
+    }
 
-        $base = $this->conf->get_conf("ossim_base");
-        $user = $this->conf->get_conf("ossim_user");
-        $pass = $this->conf->get_conf("ossim_pass");
-        $host = $this->conf->get_conf("ossim_host");
-        $type = $this->conf->get_conf("ossim_type");
-
-        $this->conn = &ADONewConnection($type);
-        $this->conn->NConnect($host, $user, $pass, $base);
+    function pconnect() {
+        $this->conn = &ADONewConnection($this->conf->get_conf("ossim_type"));
+        $this->conn->PConnect($this->conf->get_conf("ossim_host"),
+                              $this->conf->get_conf("ossim_user"),
+                              $this->conf->get_conf("ossim_pass"),
+                              $this->conf->get_conf("ossim_base"));
         return $this->conn;
     }
 
+    function nconnect() {
+        $this->conn = &ADONewConnection($this->conf->get_conf("ossim_type"));
+        $this->conn->NConnect($this->conf->get_conf("ossim_host"),
+                              $this->conf->get_conf("ossim_user"),
+                              $this->conf->get_conf("ossim_pass"),
+                              $this->conf->get_conf("ossim_base"));
+        return $this->conn;
+    }
+    
     function snort_connect() {
 
-        $base = $this->conf->get_conf("snort_base");
-        $user = $this->conf->get_conf("snort_user");
-        $pass = $this->conf->get_conf("snort_pass");
-        $host = $this->conf->get_conf("snort_host");
-        $type = $this->conf->get_conf("snort_type");
+        $conf = $GLOBALS["CONF"];
+
+        $base = $conf->get_conf("snort_base");
+        $user = $conf->get_conf("snort_user");
+        $pass = $conf->get_conf("snort_pass");
+        $host = $conf->get_conf("snort_host");
+        $type = $conf->get_conf("snort_type");
 
         $this->conn = &ADONewConnection($type);
         $this->conn->NConnect($host, $user, $pass, $base);
@@ -58,11 +76,13 @@ class ossim_db {
 
     function opennms_connect() {
 
-        $base = $this->conf->get_conf("opennms_base");
-        $user = $this->conf->get_conf("opennms_user");
-        $pass = $this->conf->get_conf("opennms_pass");
-        $host = $this->conf->get_conf("opennms_host");
-        $type = $this->conf->get_conf("opennms_type");
+        $conf = $GLOBALS["CONF"];
+
+        $base = $conf->get_conf("opennms_base");
+        $user = $conf->get_conf("opennms_user");
+        $pass = $conf->get_conf("opennms_pass");
+        $host = $conf->get_conf("opennms_host");
+        $type = $conf->get_conf("opennms_type");
 
         $this->conn = &ADONewConnection($type);
         $this->conn->NConnect($host, $user, $pass, $base);
@@ -71,11 +91,13 @@ class ossim_db {
 
     function phpgacl_connect() {
 
-        $base = $this->conf->get_conf("phpgacl_base");
-        $user = $this->conf->get_conf("phpgacl_user");
-        $pass = $this->conf->get_conf("phpgacl_pass");
-        $host = $this->conf->get_conf("phpgacl_host");
-        $type = $this->conf->get_conf("phpgacl_type");
+        $conf = $GLOBALS["CONF"];
+
+        $base = $conf->get_conf("phpgacl_base");
+        $user = $conf->get_conf("phpgacl_user");
+        $pass = $conf->get_conf("phpgacl_pass");
+        $host = $conf->get_conf("phpgacl_host");
+        $type = $conf->get_conf("phpgacl_type");
 
         $this->conn = &ADONewConnection($type);
         if ($this->conn->NConnect($host, $user, $pass, $base))
@@ -92,9 +114,9 @@ class ossim_db {
     /*
      *  Common functions
      */
-    function max_val($conn, $column, $table) {
+    function max_val($conn, $column, $table, $where = "") {
     
-        $query = "SELECT max($column) FROM $table;";
+        $query = "SELECT max($column) FROM $table $where;";
         
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();

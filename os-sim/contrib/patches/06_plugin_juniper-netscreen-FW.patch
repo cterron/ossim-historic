@@ -1,0 +1,873 @@
+diff -Naur ossim/agent/pyossim/Agent.py ossim-cvs/agent/pyossim/Agent.py
+--- ossim/agent/pyossim/Agent.py	2005-05-05 15:18:21.000000000 +0200
++++ ossim-cvs/agent/pyossim/Agent.py	2005-06-20 10:11:45.454118704 +0200
+@@ -156,6 +156,7 @@
+             ParserNTsyslog, \
+             ParserSnareWindows, \
+             ParserOsiris, \
++	    ParserJuniperFW, \
+             ParserSyslog
+ 
+         parsers = {
+@@ -178,6 +179,7 @@
+             "1517":     ParserNTsyslog.ParserNTsyslog,
+             "1518":     ParserSnareWindows.ParserSnareWindows,
+             "1519":     ParserNetgear.ParserNetgear,    # TODO: more db sids
++	    "1520":	ParserJuniperFW.ParserJuniperFW,
+             "4001":     ParserOsiris.ParserOsiris,
+             "4002":     ParserSyslog.ParserSyslog,
+         }
+diff -Naur ossim/agent/pyossim/Makefile.am ossim-cvs/agent/pyossim/Makefile.am
+--- ossim/agent/pyossim/Makefile.am	2005-06-09 12:09:42.000000000 +0200
++++ ossim-cvs/agent/pyossim/Makefile.am	2005-06-20 10:11:45.465117032 +0200
+@@ -29,6 +29,7 @@
+ 	ParserNetgear.py \
+ 	ParserSnareWindows.py \
+ 	ParserSnort.py \
++	ParserJuniperFW.py \
+ 	MonitorCA.py \
+ 	MonitorNtop.py \
+ 	MonitorNtopHostinfo.py \
+diff -Naur ossim/agent/pyossim/ParserJuniperFW.py ossim-cvs/agent/pyossim/ParserJuniperFW.py
+--- ossim/agent/pyossim/ParserJuniperFW.py	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/agent/pyossim/ParserJuniperFW.py	2005-06-20 10:37:10.269311560 +0200
+@@ -0,0 +1,477 @@
++import re
++import sys
++import time
++
++import Parser
++import util
++
++class ParserJuniperFW(Parser.Parser):
++
++    eventCodes = [
++	'Permit',
++	'Deny',
++	'SYN flood',
++	'Teardrop attack',
++	'Ping of Death',
++	'WinNuke attack',
++	'IP spoofing',
++	'Source Route IP option',
++	'Land attack',
++	'ICMP flood',
++	'UDP flood',
++	'Port scan',
++	'Address sweep',
++	'Malicious URL',
++	'Src IP session limit',
++	'SYN fragment',
++	'No TCP flag',
++	'Unknown protocol',
++	'Bad IP option',
++	'Dst IP session limit',
++	'ZIP file blocked',
++	'Java applet blocked',
++	'EXE file blocked',
++	'ActiveX control blocked',
++	'ICMP fragment',
++	'Large ICMP packet',
++	'SYN and FIN bits',
++	'FIN but no ACK bit',
++	'SYN-ACK-ACK Proxy DoS',
++	'Fragmented traffic',
++	'DNS:EXPLOIT:CLASS-UNKNOWN attack',
++	'DNS:EXPLOIT:EMPTY-UDP-MSG attack',
++	'DNS:EXPLOIT:EXPLOIT-BIND9-RT attack',
++	'DNS:EXPLOIT:POINTER-LOOP attack',
++	'DNS:EXPLOIT:REQUEST-SHORT-MSG attack',
++	'DNS:EXPLOIT:TYPE-AXFR attack',
++	'DNS:EXPLOIT:TYPE-UNKNOWN attack',
++	'DNS:HEADERERROR:INVALID-OPCODE attack',
++	'DNS:OVERFLOW:BIN attack',
++	'DNS:OVERFLOW:INVALID-LABEL-LEN attack',
++	'DNS:OVERFLOW:INVALID-POINTER attack',
++	'DNS:OVERFLOW:NAME-TOO-LONG attack',
++	'DNS:OVERFLOW:OVERSIZED-UDP-MSG attack',
++	'DNS:OVERFLOW:TOO-LONG-TCP-MSG attack',
++	'DNS:REPERR:QCLASS-UNEXP attack',
++	'DNS:REPERR:REP-MISMATCHING-AN attack',
++	'DNS:REPERR:REP-MISMATCHING-QD attack',
++	'DNS:REPERR:REP-QTYPE-UNEXPECTED attack',
++	'DNS:REPERR:REP-S2C-QUERY attack',
++	'DNS:REPERR:REQ-INVALID-HDR-RD attack',
++	'DNS:REQERR:REQ-ANSWERS-IN-QUERY attack',
++	'DNS:REQERR:REQ-C2S-RESPONSE attack',
++	'DOS:NETDEV:IOS-HTTPD-DOS attack',
++	'DOS:NETDEV:NETWORK-3COM-DOS attack',
++	'FTP:COMMAND:PLATFTP-CD-DOS attack',
++	'FTP:COMMAND:SITE-EXEC attack',
++	'FTP:DIRECTORY:DOT-DOT attack',
++	'FTP:DIRECTORY:DOT-PCT-20-DOT attack',
++	'FTP:EXPLOIT:BOUNCE-ATTACK attack',
++	'FTP:EXPLOIT:ILLEGAL-PORT attack',
++	'FTP:EXPLOIT:SYNTAX-ERROR attack',
++	'FTP:MS-FTP:ASTERISK attack',
++	'FTP:MS-FTP:STAT-GLOB attack',
++	'FTP:OVERFLOW:BSD-FTPD-MKD-OF attack',
++	'FTP:OVERFLOW:FREEBSD-FTPD-GLOB attack',
++	'FTP:OVERFLOW:LINE_TOO_LONG attack',
++	'FTP:OVERFLOW:OPENBSD-X86 attack',
++	'FTP:OVERFLOW:PASS_TOO_LONG attack',
++	'FTP:OVERFLOW:PATH-LINUX-X86-1 attack',
++	'FTP:OVERFLOW:PATH-LINUX-X86-2 attack',
++	'FTP:OVERFLOW:PATH-LINUX-X86-3 attack',
++	'FTP:OVERFLOW:PATH-TOO-LONG attack',
++	'FTP:OVERFLOW:SITESTRING-2-LONG attack',
++	'FTP:OVERFLOW:USERNAME-2-LONG attack',
++	'FTP:OVERFLOW:WFTPD-MKD-OVERFLOW attack',
++	'FTP:OVERFLOW:WUBSD-SE-RACE attack',
++	'FTP:PABLO-FTP:FORMAT-STRING attack',
++	'FTP:PASSWORD:4DGIFTS attack',
++	'FTP:PASSWORD:H0TB0X attack',
++	'FTP:PASSWORD:LRKR0X attack',
++	'FTP:PASSWORD:SATORI attack',
++	'FTP:PASSWORD:WH00T attack',
++	'FTP:PROFTP:LOGXFR-OF1 attack',
++	'FTP:PROFTP:MKD-OVERFLOW attack',
++	'FTP:PROFTP:OVERFLOW1 attack',
++	'FTP:PROFTP:PPC-FS1 attack',
++	'FTP:PROFTP:PPC-FS2 attack',
++	'FTP:PROFTP:SIZE-DOS2 attack',
++	'FTP:PROFTP:USER-DOS attack',
++	'FTP:REQERR:LOGIN-FAILED attack',
++	'FTP:REQERR:REQ-INVALID-CMD-SEQ attack',
++	'FTP:REQERR:REQ-MISSING-ARGS attack',
++	'FTP:REQERR:REQ-NESTED-REQUEST attack',
++	'FTP:REQERR:REQ-UNKNOWN-CMD attack',
++	'FTP:RPLERR:REP-NESTED-REPLY attack',
++	'FTP:WS-FTP:CPWD attack',
++	'FTP:WU-FTP:DELE-OF attack',
++	'FTP:WU-FTP:FTPD-BSD-X86 attack',
++	'FTP:WU-FTP:GLOBARG attack',
++	'FTP:WU-FTP:IREPLY-FS attack',
++	'FTP:WU-FTP:LINUX-OF attack',
++	'FTP:WU-FTP:REALPATH-OF attack',
++	'FTP:WU-FTP:REALPATH-OF2 attack',
++	'HTTP:APACHE:NOSEJOB attack',
++	'HTTP:APACHE:PHP-INVALID-HDR attack',
++	'HTTP:APACHE:SCALP attack',
++	'HTTP:BIGBROTHER:DIR-TRAVERSAL attack',
++	'HTTP:CGI:ALTAVISTA-TRAVERSAL attack',
++	'HTTP:CGI:APPLE-QT-FILEDISC1 attack',
++	'HTTP:CGI:BNB-SURVEY-REMOTE-EXEC attack',
++	'HTTP:CGI:BUGZILLA-SEMICOLON attack',
++	'HTTP:CGI:DCFORUM-AZ-EXEC attack',
++	'HTTP:CGI:FORMMAIL-ENV-VAR attack',
++	'HTTP:CGI:HASSAN-DIR-TRAVERSAL attack',
++	'HTTP:CGI:HTDIG-INCLUSION attack',
++	'HTTP:CGI:HYPERSEEK-DIR-TRAVERSL attack',
++	'HTTP:CGI:INFOSRCH-REMOTE-EXEC attack',
++	'HTTP:CGI:MOREOVER-CACHE-FEED attack',
++	'HTTP:CGI:TECHNOTE-PRINT-DSCLSR attack',
++	'HTTP:CGI:W3-MSQL-CGI attack',
++	'HTTP:CGI:WEBPALS-EXEC attack',
++	'HTTP:CGI:WEBSPEED-WSMADMIN attack',
++	'HTTP:CGI:WEBSPIRS-FILE-DISCLSR attack',
++	'HTTP:CGI:YABB-DIR-TRAVERSAL attack',
++	'HTTP:CHKP-FW1-PROXY attack',
++	'HTTP:CISCO:IOS-ADMIN-ACCESS attack',
++	'HTTP:CISCO:VOIP:PORT-INFO-DOS attack',
++	'HTTP:CISCO:VOIP:STREAM-ID-DOS attack',
++	'HTTP:COLDFUSION:EXPRCALC-OPNFIL attack',
++	'HTTP:DIR:TRAVERSE-DIRECTORY attack',
++	'HTTP:EXPLOIT:AMBIG-CONTENT-LEN attack',
++	'HTTP:EXPLOIT:BLAZIX-JSPVIEW attack',
++	'HTTP:FRONTPAGE:ADMIN.PWD-REQ attack',
++	'HTTP:FRONTPAGE:FOURDOTS attack',
++	'HTTP:FRONTPAGE:SERVICE.PWD-REQ attack',
++	'HTTP:HOSTCTRL:BROWSE-ASP attack',
++	'HTTP:IIS:AD-SERVER-CONFIG attack',
++	'HTTP:IIS:ASP-CODEBROWSER-EXAIR attack',
++	'HTTP:IIS:BAT-& attack',
++	'HTTP:IIS:COMMAND-EXEC attack',
++	'HTTP:IIS:COMMAND-EXEC-2 attack',
++	'HTTP:IIS:DATA-DISCLOSURE attack',
++	'HTTP:IIS:DOUBLE-ENCODE attack',
++	'HTTP:IIS:FACTO-CMS-SQL-INJ attack',
++	'HTTP:IIS:HEADER-HOST-DOS attack',
++	'HTTP:IIS:ISAPI-IDQ-OVERFLOW attack',
++	'HTTP:IIS:ISAPI-PRINTER-OVERFLOW attack',
++	'HTTP:IIS:MDAC-RDS attack',
++	'HTTP:IIS:MDAC-RDS-2 attack',
++	'HTTP:IIS:NEWDSN-FILE-CREATION attack',
++	'HTTP:IIS:OUTLOOK-WEB-DOS attack',
++	'HTTP:IIS:WEBDAV:MALFORMED-REQ1 attack',
++	'HTTP:IIS:WEBDAV:MALFORMED-REQ2 attack',
++	'HTTP:INFO-LEAK:VIGNETTE-LEAK attack',
++	'HTTP:INFO-LEAK:WEB-INF-DOT attack',
++	'HTTP:IRIX:CGI-BIN-WRAP attack',
++	'HTTP:MISC:HP-PROCURVE-RESET attack',
++	'HTTP:MISC:HTACCESS-ATTEMPT attack',
++	'HTTP:NOVELL:NETWARE-CONVERT.BAS attack',
++	'HTTP:OREILLY:WIN-C-SMPLE-OVFLOW attack',
++	'HTTP:OVERFLOW:CHUNK-LEN-OFLOW attack',
++	'HTTP:OVERFLOW:CHUNK-OVERFLOW attack',
++	'HTTP:OVERFLOW:CONTENT-OVERFLOW attack',
++	'HTTP:OVERFLOW:HEADER attack',
++	'HTTP:OVERFLOW:INV-CHUNK-LEN attack',
++	'HTTP:OVERFLOW:PI3WEB-SLASH-OF attack',
++	'HTTP:OVERFLOW:URL-OVERFLOW attack',
++	'HTTP:PHP:ACHIEVO-EXEC attack',
++	'HTTP:PHP:DFORUM-PHP-INC attack',
++	'HTTP:PHP:DOTPROJECT-USERCOOKIE attack',
++	'HTTP:PHP:FI-DIR-TRAVERSAL attack',
++	'HTTP:PHP:GALLERY-MAL-INCLUDE attack',
++	'HTTP:PHP:MANTIS-ARB-EXEC1 attack',
++	'HTTP:PHP:MANTIS-ARB-EXEC2 attack',
++	'HTTP:PHP:MLOG-SCREEN attack',
++	'HTTP:PHP:PHORUM:ADMIN-PW-CHG attack',
++	'HTTP:PHP:PHORUM:READ-ACCESS attack',
++	'HTTP:PHP:PHORUM:REMOTE-EXEC attack',
++	'HTTP:PHP:PHPLIB-REMOTE-EXE attack',
++	'HTTP:PHP:PHPNUKE:MODULES-DOS attack',
++	'HTTP:PHP:PHPWEB-REMOTE-FILE attack',
++	'HTTP:PHP:PMACHINE-INCLUDE attack',
++	'HTTP:PHP:POSTNUKE-SQL-EXEC attack',
++	'HTTP:PHP:REDHAT-PIRANHA-PASSWD attack',
++	'HTTP:PHP:VBULL-CAL-EXEC attack',
++	'HTTP:PHP:WOLTAB-SQL-INJ attack',
++	'HTTP:PHP:YABBSE-PKG-EXEC attack',
++	'HTTP:PHP:YABBSE-SSI-INCLUDE attack',
++	'HTTP:PHP:ZENTRACK-CMD-EXEC attack',
++	'HTTP:PKG:ALLAIRE-JRUN-DOS attack',
++	'HTTP:PKG:DB4WEB-FILE-ACCESS-LIN attack',
++	'HTTP:PKG:EWAVE-SERVLET-DOS attack',
++	'HTTP:PKG:MOUNTAIN-ORDR-DSCLSR attack',
++	'HTTP:PKG:WEBGAIS-REMOTE-EXEC attack',
++	'HTTP:REQERR:REQ-INVALID-FORMAT attack',
++	'HTTP:REQERR:REQ-LONG-UTF8CODE attack',
++	'HTTP:REQERR:REQ-MALFORMED-URL attack',
++	'HTTP:TOMCAT:JSP-AS-HTML attack',
++	'HTTP:TOMCAT:SERVLET-DEVICE-DOS attack',
++	'HTTP:WASD:CONF-ACCESS attack',
++	'HTTP:WASD:DIR-TRAV attack',
++	'HTTP:WEBLOGIC:URL-REVEAL-SRC attack',
++	'HTTP:WEBLOGIC:WEBROOT attack',
++	'HTTP:WEBPLUS:DIR-TRAVERSAL attack',
++	'HTTP:WIN-CMD:WIN-RGUEST attack',
++	'HTTP:WIN-CMD:WIN-WGUEST attack',
++	'IMAP:OVERFLOW:COMMAND attack',
++	'IMAP:OVERFLOW:FLAG attack',
++	'IMAP:OVERFLOW:IMAP4-LSUB-OF attack',
++	'IMAP:OVERFLOW:LINE attack',
++	'IMAP:OVERFLOW:MAILBOX attack',
++	'IMAP:OVERFLOW:PASS attack',
++	'IMAP:OVERFLOW:REFERENCE attack',
++	'IMAP:OVERFLOW:TAG attack',
++	'IMAP:OVERFLOW:USER attack',
++	'IMAP:REQERR:LOGIN-FAILED attack',
++	'IMAP:REQERR:REQ-INVALID-STATE attack',
++	'IMAP:REQERR:REQ-INVALID-TAG attack',
++	'IMAP:REQERR:REQ-UNEXPECTED-ARG attack',
++	'POP3:DOS:MDAEMON-POP-DOS attack',
++	'POP3:OVERFLOW:APOP attack',
++	'POP3:OVERFLOW:COMMAND attack',
++	'POP3:OVERFLOW:LINE attack',
++	'POP3:OVERFLOW:PASS attack',
++	'POP3:OVERFLOW:QPOP-OF1 attack',
++	'POP3:OVERFLOW:QPOP-OF2 attack',
++	'POP3:OVERFLOW:QPOP-OF3 attack',
++	'POP3:OVERFLOW:QPOP-OF4 attack',
++	'POP3:OVERFLOW:USER attack',
++	'POP3:REQERR:LOGIN-FAILED attack',
++	'POP3:REQERR:REQ-INVALID-STATE attack',
++	'POP3:REQERR:REQ-MESSAGE-NUMBER attack',
++	'POP3:REQERR:REQ-NESTED-REQUEST attack',
++	'POP3:REQERR:REQ-SYNTAX-ERROR attack',
++	'POP3:REQERR:REQ-UNKNOWN-CMD attack',
++	'SHELLCODE:AIX:NOOP-PKT attack',
++	'SHELLCODE:BSDX86:GEN-1-PKT attack',
++	'SHELLCODE:BSDX86:GEN-2-PKT attack',
++	'SHELLCODE:DIGITAL:NOOP-PKT attack',
++	'SHELLCODE:HP-UX:HP-NOOP-1-PKT attack',
++	'SHELLCODE:HP-UX:HP-NOOP-2-PKT attack',
++	'SMTP:COMMAND:DEBUG attack',
++	'SMTP:COMMAND:ETRN attack',
++	'SMTP:COMMAND:EXPN attack',
++	'SMTP:COMMAND:SMTP-VRFY-CMD attack',
++	'SMTP:COMMAND:TURN attack',
++	'SMTP:COMMAND:VRFY attack',
++	'SMTP:COMMAND:WIZ attack',
++	'SMTP:EMAIL:HEADER-FROM-PIPE attack',
++	'SMTP:EMAIL:HEADER-TO-PIPE attack',
++	'SMTP:EMAIL:MAIL-FROM-PIPE attack',
++	'SMTP:EMAIL:RCPT-TO-DECODE attack',
++	'SMTP:EMAIL:RCPT-TO-PIPE attack',
++	'SMTP:EMAIL:REPLY-TO-PIPE attack',
++	'SMTP:EXCHANGE:DOS attack',
++	'SMTP:MAJORDOMO:COMMAND-EXEC attack',
++	'SMTP:MSSQL-WORM-EMAIL attack',
++	'SMTP:OVERFLOW:COMMAND-LINE attack',
++	'SMTP:OVERFLOW:EMAIL-ADDRESS attack',
++	'SMTP:OVERFLOW:EMAIL-DOMAIN attack',
++	'SMTP:OVERFLOW:EMAIL-USERNAME attack',
++	'SMTP:OVERFLOW:OUTLOOK-CERT-OF attack',
++	'SMTP:OVERFLOW:REPLY-LINE attack',
++	'SMTP:OVERFLOW:SENDMAIL-CMT-OF1 attack',
++	'SMTP:OVERFLOW:SENDMAIL-CMT-OF2 attack',
++	'SMTP:OVERFLOW:TOO-MANY-RCPT attack',
++	'SMTP:REPERR:REP-INVALID-REPLY attack',
++	'SMTP:REPERR:REP-NESTED-REPLY attack',
++	'SMTP:REQERR:REQ-INVALID-CMD-SEQ attack',
++	'SMTP:REQERR:REQ-NESTED-REQUEST attack',
++	'SMTP:REQERR:REQ-SYNTAX-ERROR attack',
++	'SMTP:REQERR:REQ-UNKNOWN-CMD attack',
++	'SMTP:RESPONSE:PIPE-FAILED attack',
++	'SMTP:SENDMAIL:ADDR-PRESCAN-ATK attack',
++	'SMTP:SENDMAIL:SENDMAIL-FF-OF attack',
++	'TROJAN:QAZ:TCP25-CALLING-HOME attack',
++	'WORM:CODERED-2:CMD-BACKDOOR attack',
++	'WORM:CODERED-2:INFECT-ATTEMPT attack',
++	'WORM:CODERED-2:ROOT-BACKDOOR attack',
++	'WORM:NIMDA:BIN-255-CMD attack',
++	'WORM:NIMDA:MSADC-ROOT attack',
++	'WORM:NIMDA:SCRIPTS-C11C-CMD attack',
++	'WORM:NIMDA:SCRIPTS-CMD attack',
++	'WORM:NIMDA:SCRIPTS-ROOT attack',
++	'Unknown',	]
++
++    def process(self):
++        
++        if self.plugin["source"] == 'syslog':
++            self.__processSyslog()
++            
++        else:
++            util.debug (__name__, "log type " + self.plugin["source"] +\
++                        " unknown for Juniper FW...", '!!', 'RED')
++            sys.exit()
++
++
++    def __processSyslog(self):
++        
++        util.debug (__name__, 'plugin started (syslog)...', '--')
++
++	pattern_type = '\[.*\]system\-(\w+\-\d+)'
++        
++        location = self.plugin["location"]
++        try:
++            fd = open(location, 'r')
++        except IOError, e:
++            util.debug(__name__, e, '!!', 'RED')
++            sys.exit()
++            
++        # Move to the end of file
++        fd.seek(0, 2)
++            
++        while 1:
++            
++            if self.plugin["enable"] == 'no':
++
++                # plugin disabled, wait for enabled
++                util.debug (__name__, 'plugin disabled', '**', 'YELLOW')
++                while self.plugin["enable"] == 'no':
++                    time.sleep(1)
++                    
++                # lets parse again
++                util.debug (__name__, 'plugin enabled', '**', 'GREEN')
++                fd.seek(0, 2)
++
++
++            where = fd.tell()
++            line = fd.readline()
++            if not line: # EOF reached
++                time.sleep(1)
++                fd.seek(where)
++            else:
++                result = re.findall(str(pattern_type), line)
++		try:
++		    self.eventFuncs[result[0]](self, line)
++		except IndexError:
++		    continue
++		except KeyError:
++		    continue
++        fd.close()
++
++    # Function to handle traffic (Permit, Deny)
++    def traffic(self, line):
++
++	pattern_traffic = '(\w+)\s+(\d{1,2})\s(\d\d:\d\d:\d\d)\s\d+\.\d+\.\d+\.\d+\s.+:\sNetScreen\sdevice\_id\=.+\s+\[.+\]system\-\w+\-\d+\(traffic\):.+proto=(\d+)\s.+action=(\w+)\s.+src=(\d+\.\d+\.\d+\.\d+)\sdst=(\d+\.\d+\.\d+\.\d+)\ssrc_port=(\d+)\sdst_port=(\d+)'
++
++	result = re.findall(str(pattern_traffic), line)
++
++	try:
++	    (month, day, datetime, proto, action,
++	    src, dst, s_port, d_port) = result[0]
++
++	    year = time.strftime('%Y', time.localtime(time.time()))
++	    datestring = "%s %s %s %s" % (year, month, day, datetime)
++	    date = time.strftime('%Y-%m-%d %H:%M:%S',
++			time.strptime(datestring,
++			"%Y %b %d %H:%M:%S"))
++	    try:
++	        plugin_sid = self.eventCodes.index(action)+1
++	    except ValueError:
++	        plugin_sid = len(self.eventCodes)
++                util.debug (__name__, 'Unknown event ' + action, '**', 'YELLOW')
++
++	    self.agent.sendAlert  (type = 'detector',
++			date		= date,
++			sensor		= self.plugin["sensor"],
++			interface	= self.plugin["interface"],
++			plugin_id	= self.plugin["id"],
++			plugin_sid	= plugin_sid,
++			priority	= 1,
++			protocol	= proto,
++			src_ip		= src,
++			src_port	= s_port,
++			dst_ip		= dst,
++			dst_port	= d_port,
++			log		= line)
++
++	except IndexError:
++	    pass
++
++    # Function to handle attacks messages
++    def attacks(self, line):
++
++	pattern = '(\w+)\s+(\d{1,2})\s(\d\d:\d\d:\d\d)\s\d+\.\d+\.\d+\.\d+\s.+:\sNetScreen\sdevice\_id\=.+\s+\[.+\]system\-(\w+)\-(\d+):\s(.+)\!\sFrom\s(\d+\.\d+\.\d+\.\d+):(\d+)\sto\s(\d+\.\d+\.\d+\.\d+):(\d+)\,\sproto\s(\w+).+'
++
++	result = re.findall(str(pattern), line)
++
++        try: 
++	    (month, day, datetime, prio, nsid, message,
++            src, s_port, dst, d_port, proto) = result[0]
++
++            year = time.strftime('%Y', time.localtime(time.time()))
++            datestring = "%s %s %s %s" % (year, month, day, datetime)
++            date = time.strftime('%Y-%m-%d %H:%M:%S',
++                          time.strptime(datestring, 
++                           "%Y %b %d %H:%M:%S"))
++
++	    # Set priority: alert = 4, critical = 3, warning = 2
++	    if prio == 'alert' or prio == 'emergency':
++	    	priority = 4
++	    elif prio == 'critical':
++	    	priority = 3
++	    elif prio == 'warning':
++	    	priority = 2
++	    else:
++	    	priority = 1
++
++	    try:
++	    	plugin_sid = self.eventCodes.index(message)+1
++	    except ValueError:
++	    	plugin_sid = len(self.eventCodes)
++                util.debug (__name__, 'Unknown event ' + message, '**', 'YELLOW')
++ 
++            self.agent.sendAlert  (type = 'detector',
++                  date       = date,
++                  sensor     = self.plugin["sensor"],
++                  interface  = self.plugin["interface"],
++                  plugin_id  = self.plugin["id"],
++                  plugin_sid = plugin_sid,
++                  priority   = priority,
++                  protocol   = proto,
++                  src_ip     = src,
++                  src_port   = s_port,
++                  dst_ip     = dst,
++                  dst_port   = d_port,
++                  log        = line)
++
++	except IndexError: 
++	    pass
++
++    eventFuncs = {
++	'notification-00257' : traffic,
++	'emergency-00005' : attacks,
++	'emergency-00006' : attacks,
++        'emergency-00007' : attacks,
++        'alert-00004' : attacks,
++        'alert-00008' : attacks,
++        'alert-00009' : attacks,
++	'alert-00010' : attacks,
++        'alert-00011' : attacks,
++        'alert-00012' : attacks,
++        'alert-00016' : attacks,
++        'alert-00017' : attacks,
++        'critical-00032' : attacks,
++        'critical-00033' : attacks,
++        'critical-00412' : attacks,
++        'critical-00413' : attacks,
++        'critical-00414' : attacks,
++        'critical-00415' : attacks,
++        'critical-00430' : attacks,
++        'critical-00431' : attacks,
++        'critical-00432' : attacks,
++        'critical-00433' : attacks,
++        'critical-00434' : attacks,
++        'critical-00435' : attacks,
++        'critical-00436' : attacks,
++        'critical-00437' : attacks,
++        'critical-00438' : attacks,
++        'critical-00439' : attacks,
++        'critical-00440' : attacks,
++        'critical-00601' : attacks,
++        'error-00601' : attacks,
++        'warning-00601' : attacks,
++        'notification-00601' : attacks,
++        'information-00601' : attacks, }
++
+diff -Naur ossim/db/ossim_data.sql ossim-cvs/db/ossim_data.sql
+--- ossim/db/ossim_data.sql	2005-04-07 12:51:31.000000000 +0200
++++ ossim-cvs/db/ossim_data.sql	2005-06-20 10:18:13.915063664 +0200
+@@ -2572,10 +2572,16 @@
+ INSERT INTO category (id, name) VALUES (146, 'web-misc');
+ INSERT INTO category (id, name) VALUES (147, 'web-php');
+ INSERT INTO category (id, name) VALUES (148, 'x11');
++INSERT INTO category (id, name) VALUES (149, 'web-apache');
++INSERT INTO category (id, name) VALUES (150, 'web-cisco');
++INSERT INTO category (id, name) VALUES (151, 'web-tomcat');
++INSERT INTO category (id, name) VALUES (152, 'web-weblogic');
+ INSERT INTO category (id, name) VALUES (201, 'spade');
+ INSERT INTO category (id, name) VALUES (202, 'fw1-accept');
+ INSERT INTO category (id, name) VALUES (203, 'fw1-drop');
+ INSERT INTO category (id, name) VALUES (204, 'fw1-reject');
++INSERT INTO category (id, name) VALUES (205, 'fw-permit');
++INSERT INTO category (id, name) VALUES (206, 'fw-deny');
+ 
+ --
+ -- Data: Classification
+@@ -2663,6 +2669,8 @@
+ INSERT INTO plugin (id, type, name, description) VALUES (1516, 1, 'pads', 'Passive Asset Detection System');
+ INSERT INTO plugin (id, type, name, description) VALUES (1517, 1, 'ntsyslog', 'Windows NT/2000/XP syslog service');
+ INSERT INTO plugin (id, type, name, description) VALUES (1518, 1, 'snarewindows', 'Snare Agent for Windows');
++INSERT INTO plugin (id, type, name, description) VALUES (1520, 1, 'juniperfw', 'Juniper-Netscreen FW');
++
+ 
+ INSERT INTO plugin (id, type, name, description) VALUES (2001, 2, 'ossim', 'OS-SIM');
+ INSERT INTO plugin (id, type, name, description) VALUES (2002, 2, 'arp_watch', 'Arpwatch');
+@@ -7782,6 +7790,294 @@
+ 
+ 
+ --
++-- Juniper Firewall sids
++--
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 1, 205, NULL, 'juniperfw: Permit');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 2, 206, NULL, 'juniperfw: Deny');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 3, 108, NULL, 'juniperfw: SYN flood');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 4, 103, NULL, 'juniperfw: Teardrop attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 5, 113, NULL, 'juniperfw: Ping of Death');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 6, 108, NULL, 'juniperfw: WinNuke attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 7, 103, NULL, 'juniperfw: IP spoofing');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 8, 103, NULL, 'juniperfw: Source Route IP option');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 9, 108, NULL, 'juniperfw: Land attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 10, 108, NULL, 'juniperfw: ICMP flood');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 11, 108, NULL, 'juniperfw: UDP flood');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 12, 132, NULL, 'juniperfw: Port scan');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 13, 103, NULL, 'juniperfw: Address sweep');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 14, 142, NULL, 'juniperfw: Malicious URL');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 15, 126, NULL, 'juniperfw: Src IP session limit');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 16, 103, NULL, 'juniperfw: SYN fragment');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 17, 103, NULL, 'juniperfw: No TCP flag');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 18, 103, NULL, 'juniperfw: Unknown protocol');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 19, 103, NULL, 'juniperfw: Bad IP option');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 20, 126, NULL, 'juniperfw: Dst IP session limit');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 21, 126, NULL, 'juniperfw: ZIP file blocked');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 22, 126, NULL, 'juniperfw: Java applet blocked');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 23, 126, NULL, 'juniperfw: EXE file blocked');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 24, 126, NULL, 'juniperfw: ActiveX control blocked');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 25, 103, NULL, 'juniperfw: ICMP fragment');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 26, 113, NULL, 'juniperfw: Large ICMP packet');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 27, 103, NULL, 'juniperfw: SYN and FIN bits');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 28, 103, NULL, 'juniperfw: FIN but no ACK bit');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 29, 108, NULL, 'juniperfw: SYN-ACK-ACK Proxy DoS');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 30, 103, NULL, 'juniperfw: Fragmented traffic');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 31, 107, NULL, 'juniperfw: DNS:EXPLOIT:CLASS-UNKNOWN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 32, 107, NULL, 'juniperfw: DNS:EXPLOIT:EMPTY-UDP-MSG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 33, 107, NULL, 'juniperfw: DNS:EXPLOIT:EXPLOIT-BIND9-RT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 34, 107, NULL, 'juniperfw: DNS:EXPLOIT:POINTER-LOOP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 35, 107, NULL, 'juniperfw: DNS:EXPLOIT:REQUEST-SHORT-MSG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 36, 107, NULL, 'juniperfw: DNS:EXPLOIT:TYPE-AXFR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 37, 107, NULL, 'juniperfw: DNS:EXPLOIT:TYPE-UNKNOWN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 38, 107, NULL, 'juniperfw: DNS:HEADERERROR:INVALID-OPCODE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 39, 107, NULL, 'juniperfw: DNS:OVERFLOW:BIN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 40, 107, NULL, 'juniperfw: DNS:OVERFLOW:INVALID-LABEL-LEN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 41, 107, NULL, 'juniperfw: DNS:OVERFLOW:INVALID-POINTER attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 42, 107, NULL, 'juniperfw: DNS:OVERFLOW:NAME-TOO-LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 43, 107, NULL, 'juniperfw: DNS:OVERFLOW:OVERSIZED-UDP-MSG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 44, 107, NULL, 'juniperfw: DNS:OVERFLOW:TOO-LONG-TCP-MSG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 45, 107, NULL, 'juniperfw: DNS:REPERR:QCLASS-UNEXP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 46, 107, NULL, 'juniperfw: DNS:REPERR:REP-MISMATCHING-AN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 47, 107, NULL, 'juniperfw: DNS:REPERR:REP-MISMATCHING-QD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 48, 107, NULL, 'juniperfw: DNS:REPERR:REP-QTYPE-UNEXPECTED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 49, 107, NULL, 'juniperfw: DNS:REPERR:REP-S2C-QUERY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 50, 107, NULL, 'juniperfw: DNS:REPERR:REQ-INVALID-HDR-RD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 51, 107, NULL, 'juniperfw: DNS:REQERR:REQ-ANSWERS-IN-QUERY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 52, 107, NULL, 'juniperfw: DNS:REQERR:REQ-C2S-RESPONSE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 53, 107, NULL, 'juniperfw: DOS:NETDEV:IOS-HTTPD-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 54, 107, NULL, 'juniperfw: DOS:NETDEV:NETWORK-3COM-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 55, 112, NULL, 'juniperfw: FTP:COMMAND:PLATFTP-CD-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 56, 112, NULL, 'juniperfw: FTP:COMMAND:SITE-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 57, 112, NULL, 'juniperfw: FTP:DIRECTORY:DOT-DOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 58, 112, NULL, 'juniperfw: FTP:DIRECTORY:DOT-PCT-20-DOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 59, 112, NULL, 'juniperfw: FTP:EXPLOIT:BOUNCE-ATTACK attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 60, 112, NULL, 'juniperfw: FTP:EXPLOIT:ILLEGAL-PORT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 61, 112, NULL, 'juniperfw: FTP:EXPLOIT:SYNTAX-ERROR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 62, 112, NULL, 'juniperfw: FTP:MS-FTP:ASTERISK attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 63, 112, NULL, 'juniperfw: FTP:MS-FTP:STAT-GLOB attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 64, 112, NULL, 'juniperfw: FTP:OVERFLOW:BSD-FTPD-MKD-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 65, 112, NULL, 'juniperfw: FTP:OVERFLOW:FREEBSD-FTPD-GLOB attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 66, 112, NULL, 'juniperfw: FTP:OVERFLOW:LINE_TOO_LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 67, 112, NULL, 'juniperfw: FTP:OVERFLOW:OPENBSD-X86 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 68, 112, NULL, 'juniperfw: FTP:OVERFLOW:PASS_TOO_LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 69, 112, NULL, 'juniperfw: FTP:OVERFLOW:PATH-LINUX-X86-1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 70, 112, NULL, 'juniperfw: FTP:OVERFLOW:PATH-LINUX-X86-2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 71, 112, NULL, 'juniperfw: FTP:OVERFLOW:PATH-LINUX-X86-3 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 72, 112, NULL, 'juniperfw: FTP:OVERFLOW:PATH-TOO-LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 73, 112, NULL, 'juniperfw: FTP:OVERFLOW:SITESTRING-2-LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 74, 112, NULL, 'juniperfw: FTP:OVERFLOW:USERNAME-2-LONG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 75, 112, NULL, 'juniperfw: FTP:OVERFLOW:WFTPD-MKD-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 76, 112, NULL, 'juniperfw: FTP:OVERFLOW:WUBSD-SE-RACE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 77, 112, NULL, 'juniperfw: FTP:PABLO-FTP:FORMAT-STRING attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 78, 112, NULL, 'juniperfw: FTP:PASSWORD:4DGIFTS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 79, 112, NULL, 'juniperfw: FTP:PASSWORD:H0TB0X attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 80, 112, NULL, 'juniperfw: FTP:PASSWORD:LRKR0X attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 81, 112, NULL, 'juniperfw: FTP:PASSWORD:SATORI attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 82, 112, NULL, 'juniperfw: FTP:PASSWORD:WH00T attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 83, 112, NULL, 'juniperfw: FTP:PROFTP:LOGXFR-OF1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 84, 112, NULL, 'juniperfw: FTP:PROFTP:MKD-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 85, 112, NULL, 'juniperfw: FTP:PROFTP:OVERFLOW1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 86, 112, NULL, 'juniperfw: FTP:PROFTP:PPC-FS1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 87, 112, NULL, 'juniperfw: FTP:PROFTP:PPC-FS2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 88, 112, NULL, 'juniperfw: FTP:PROFTP:SIZE-DOS2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 89, 112, NULL, 'juniperfw: FTP:PROFTP:USER-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 90, 112, NULL, 'juniperfw: FTP:REQERR:LOGIN-FAILED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 91, 112, NULL, 'juniperfw: FTP:REQERR:REQ-INVALID-CMD-SEQ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 92, 112, NULL, 'juniperfw: FTP:REQERR:REQ-MISSING-ARGS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 93, 112, NULL, 'juniperfw: FTP:REQERR:REQ-NESTED-REQUEST attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 94, 112, NULL, 'juniperfw: FTP:REQERR:REQ-UNKNOWN-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 95, 112, NULL, 'juniperfw: FTP:RPLERR:REP-NESTED-REPLY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 96, 112, NULL, 'juniperfw: FTP:WS-FTP:CPWD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 97, 112, NULL, 'juniperfw: FTP:WU-FTP:DELE-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 98, 112, NULL, 'juniperfw: FTP:WU-FTP:FTPD-BSD-X86 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 99, 112, NULL, 'juniperfw: FTP:WU-FTP:GLOBARG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 100, 112, NULL, 'juniperfw: FTP:WU-FTP:IREPLY-FS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 101, 112, NULL, 'juniperfw: FTP:WU-FTP:LINUX-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 102, 112, NULL, 'juniperfw: FTP:WU-FTP:REALPATH-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 103, 112, NULL, 'juniperfw: FTP:WU-FTP:REALPATH-OF2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 104, 149, NULL, 'juniperfw: HTTP:APACHE:NOSEJOB attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 105, 149, NULL, 'juniperfw: HTTP:APACHE:PHP-INVALID-HDR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 106, 149, NULL, 'juniperfw: HTTP:APACHE:SCALP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 107, 140, NULL, 'juniperfw: HTTP:BIGBROTHER:DIR-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 108, 141, NULL, 'juniperfw: HTTP:CGI:ALTAVISTA-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 109, 141, NULL, 'juniperfw: HTTP:CGI:APPLE-QT-FILEDISC1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 110, 141, NULL, 'juniperfw: HTTP:CGI:BNB-SURVEY-REMOTE-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 111, 141, NULL, 'juniperfw: HTTP:CGI:BUGZILLA-SEMICOLON attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 112, 141, NULL, 'juniperfw: HTTP:CGI:DCFORUM-AZ-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 113, 141, NULL, 'juniperfw: HTTP:CGI:FORMMAIL-ENV-VAR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 114, 141, NULL, 'juniperfw: HTTP:CGI:HASSAN-DIR-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 115, 141, NULL, 'juniperfw: HTTP:CGI:HTDIG-INCLUSION attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 116, 141, NULL, 'juniperfw: HTTP:CGI:HYPERSEEK-DIR-TRAVERSL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 117, 141, NULL, 'juniperfw: HTTP:CGI:INFOSRCH-REMOTE-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 118, 141, NULL, 'juniperfw: HTTP:CGI:MOREOVER-CACHE-FEED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 119, 141, NULL, 'juniperfw: HTTP:CGI:TECHNOTE-PRINT-DSCLSR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 120, 141, NULL, 'juniperfw: HTTP:CGI:W3-MSQL-CGI attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 121, 141, NULL, 'juniperfw: HTTP:CGI:WEBPALS-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 122, 141, NULL, 'juniperfw: HTTP:CGI:WEBSPEED-WSMADMIN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 123, 141, NULL, 'juniperfw: HTTP:CGI:WEBSPIRS-FILE-DISCLSR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 124, 141, NULL, 'juniperfw: HTTP:CGI:YABB-DIR-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 125, 140, NULL, 'juniperfw: HTTP:CHKP-FW1-PROXY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 126, 150, NULL, 'juniperfw: HTTP:CISCO:IOS-ADMIN-ACCESS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 127, 150, NULL, 'juniperfw: HTTP:CISCO:VOIP:PORT-INFO-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 128, 150, NULL, 'juniperfw: HTTP:CISCO:VOIP:STREAM-ID-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 129, 143, NULL, 'juniperfw: HTTP:COLDFUSION:EXPRCALC-OPNFIL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 130, 140, NULL, 'juniperfw: HTTP:DIR:TRAVERSE-DIRECTORY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 131, 140, NULL, 'juniperfw: HTTP:EXPLOIT:AMBIG-CONTENT-LEN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 132, 140, NULL, 'juniperfw: HTTP:EXPLOIT:BLAZIX-JSPVIEW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 133, 144, NULL, 'juniperfw: HTTP:FRONTPAGE:ADMIN.PWD-REQ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 134, 144, NULL, 'juniperfw: HTTP:FRONTPAGE:FOURDOTS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 135, 144, NULL, 'juniperfw: HTTP:FRONTPAGE:SERVICE.PWD-REQ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 136, 140, NULL, 'juniperfw: HTTP:HOSTCTRL:BROWSE-ASP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 137, 145, NULL, 'juniperfw: HTTP:IIS:AD-SERVER-CONFIG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 138, 145, NULL, 'juniperfw: HTTP:IIS:ASP-CODEBROWSER-EXAIR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 139, 145, NULL, 'juniperfw: HTTP:IIS:BAT-& attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 140, 145, NULL, 'juniperfw: HTTP:IIS:COMMAND-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 141, 145, NULL, 'juniperfw: HTTP:IIS:COMMAND-EXEC-2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 142, 145, NULL, 'juniperfw: HTTP:IIS:DATA-DISCLOSURE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 143, 145, NULL, 'juniperfw: HTTP:IIS:DOUBLE-ENCODE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 144, 145, NULL, 'juniperfw: HTTP:IIS:FACTO-CMS-SQL-INJ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 145, 145, NULL, 'juniperfw: HTTP:IIS:HEADER-HOST-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 146, 145, NULL, 'juniperfw: HTTP:IIS:ISAPI-IDQ-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 147, 145, NULL, 'juniperfw: HTTP:IIS:ISAPI-PRINTER-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 148, 145, NULL, 'juniperfw: HTTP:IIS:MDAC-RDS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 149, 145, NULL, 'juniperfw: HTTP:IIS:MDAC-RDS-2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 150, 145, NULL, 'juniperfw: HTTP:IIS:NEWDSN-FILE-CREATION attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 151, 145, NULL, 'juniperfw: HTTP:IIS:OUTLOOK-WEB-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 152, 145, NULL, 'juniperfw: HTTP:IIS:WEBDAV:MALFORMED-REQ1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 153, 145, NULL, 'juniperfw: HTTP:IIS:WEBDAV:MALFORMED-REQ2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 154, 146, NULL, 'juniperfw: HTTP:INFO-LEAK:VIGNETTE-LEAK attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 155, , 146, 'juniperfw: HTTP:INFO-LEAK:WEB-INF-DOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 156, 141, NULL, 'juniperfw: HTTP:IRIX:CGI-BIN-WRAP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 157, 146, NULL, 'juniperfw: HTTP:MISC:HP-PROCURVE-RESET attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 158, 146, NULL, 'juniperfw: HTTP:MISC:HTACCESS-ATTEMPT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 159, 140, NULL, 'juniperfw: HTTP:NOVELL:NETWARE-CONVERT.BAS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 160, 140, NULL, 'juniperfw: HTTP:OREILLY:WIN-C-SMPLE-OVFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 161, 140, NULL, 'juniperfw: HTTP:OVERFLOW:CHUNK-LEN-OFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 162, 140, NULL, 'juniperfw: HTTP:OVERFLOW:CHUNK-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 163, 140, NULL, 'juniperfw: HTTP:OVERFLOW:CONTENT-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 164, 140, NULL, 'juniperfw: HTTP:OVERFLOW:HEADER attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 165, 140, NULL, 'juniperfw: HTTP:OVERFLOW:INV-CHUNK-LEN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 166, 140, NULL, 'juniperfw: HTTP:OVERFLOW:PI3WEB-SLASH-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 167, 140, NULL, 'juniperfw: HTTP:OVERFLOW:URL-OVERFLOW attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 168, 147, NULL, 'juniperfw: HTTP:PHP:ACHIEVO-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 169, 147, NULL, 'juniperfw: HTTP:PHP:DFORUM-PHP-INC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 170, 147, NULL, 'juniperfw: HTTP:PHP:DOTPROJECT-USERCOOKIE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 171, 147, NULL, 'juniperfw: HTTP:PHP:FI-DIR-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 172, 147, NULL, 'juniperfw: HTTP:PHP:GALLERY-MAL-INCLUDE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 173, 147, NULL, 'juniperfw: HTTP:PHP:MANTIS-ARB-EXEC1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 174, 147, NULL, 'juniperfw: HTTP:PHP:MANTIS-ARB-EXEC2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 175, 147, NULL, 'juniperfw: HTTP:PHP:MLOG-SCREEN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 176, 147, NULL, 'juniperfw: HTTP:PHP:PHORUM:ADMIN-PW-CHG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 177, 147, NULL, 'juniperfw: HTTP:PHP:PHORUM:READ-ACCESS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 178, 147, NULL, 'juniperfw: HTTP:PHP:PHORUM:REMOTE-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 179, 147, NULL, 'juniperfw: HTTP:PHP:PHPLIB-REMOTE-EXE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 180, 147, NULL, 'juniperfw: HTTP:PHP:PHPNUKE:MODULES-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 181, 147, NULL, 'juniperfw: HTTP:PHP:PHPWEB-REMOTE-FILE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 182, 147, NULL, 'juniperfw: HTTP:PHP:PMACHINE-INCLUDE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 183, 147, NULL, 'juniperfw: HTTP:PHP:POSTNUKE-SQL-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 184, 147, NULL, 'juniperfw: HTTP:PHP:REDHAT-PIRANHA-PASSWD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 185, 147, NULL, 'juniperfw: HTTP:PHP:VBULL-CAL-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 186, 147, NULL, 'juniperfw: HTTP:PHP:WOLTAB-SQL-INJ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 187, 147, NULL, 'juniperfw: HTTP:PHP:YABBSE-PKG-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 188, 147, NULL, 'juniperfw: HTTP:PHP:YABBSE-SSI-INCLUDE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 189, 147, NULL, 'juniperfw: HTTP:PHP:ZENTRACK-CMD-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 190, 146, NULL, 'juniperfw: HTTP:PKG:ALLAIRE-JRUN-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 191, 146, NULL, 'juniperfw: HTTP:PKG:DB4WEB-FILE-ACCESS-LIN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 192, 146, NULL, 'juniperfw: HTTP:PKG:EWAVE-SERVLET-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 193, 146, NULL, 'juniperfw: HTTP:PKG:MOUNTAIN-ORDR-DSCLSR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 194, 146, NULL, 'juniperfw: HTTP:PKG:WEBGAIS-REMOTE-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 195, 142, NULL, 'juniperfw: HTTP:REQERR:REQ-INVALID-FORMAT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 196, 142, NULL, 'juniperfw: HTTP:REQERR:REQ-LONG-UTF8CODE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 197, 142, NULL, 'juniperfw: HTTP:REQERR:REQ-MALFORMED-URL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 198, 151, NULL, 'juniperfw: HTTP:TOMCAT:JSP-AS-HTML attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 199, 151, NULL, 'juniperfw: HTTP:TOMCAT:SERVLET-DEVICE-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 200, 140, NULL, 'juniperfw: HTTP:WASD:CONF-ACCESS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 201, 140, NULL, 'juniperfw: HTTP:WASD:DIR-TRAV attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 202, 152, NULL, 'juniperfw: HTTP:WEBLOGIC:URL-REVEAL-SRC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 203, 152, NULL, 'juniperfw: HTTP:WEBLOGIC:WEBROOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 204, 140, NULL, 'juniperfw: HTTP:WEBPLUS:DIR-TRAVERSAL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 205, 140, NULL, 'juniperfw: HTTP:WIN-CMD:WIN-RGUEST attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 206, 140, NULL, 'juniperfw: HTTP:WIN-CMD:WIN-WGUEST attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 207, 115, NULL, 'juniperfw: IMAP:OVERFLOW:COMMAND attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 208, 115, NULL, 'juniperfw: IMAP:OVERFLOW:FLAG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 209, 115, NULL, 'juniperfw: IMAP:OVERFLOW:IMAP4-LSUB-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 210, 115, NULL, 'juniperfw: IMAP:OVERFLOW:LINE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 211, 115, NULL, 'juniperfw: IMAP:OVERFLOW:MAILBOX attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 212, 115, NULL, 'juniperfw: IMAP:OVERFLOW:PASS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 213, 115, NULL, 'juniperfw: IMAP:OVERFLOW:REFERENCE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 214, 115, NULL, 'juniperfw: IMAP:OVERFLOW:TAG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 215, 115, NULL, 'juniperfw: IMAP:OVERFLOW:USER attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 216, 115, NULL, 'juniperfw: IMAP:REQERR:LOGIN-FAILED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 217, 115, NULL, 'juniperfw: IMAP:REQERR:REQ-INVALID-STATE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 218, 115, NULL, 'juniperfw: IMAP:REQERR:REQ-INVALID-TAG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 219, 115, NULL, 'juniperfw: IMAP:REQERR:REQ-UNEXPECTED-ARG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 220, 128, NULL, 'juniperfw: POP3:DOS:MDAEMON-POP-DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 221, 128, NULL, 'juniperfw: POP3:OVERFLOW:APOP attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 222, 128, NULL, 'juniperfw: POP3:OVERFLOW:COMMAND attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 223, 128, NULL, 'juniperfw: POP3:OVERFLOW:LINE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 224, 128, NULL, 'juniperfw: POP3:OVERFLOW:PASS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 225, 128, NULL, 'juniperfw: POP3:OVERFLOW:QPOP-OF1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 226, 128, NULL, 'juniperfw: POP3:OVERFLOW:QPOP-OF2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 227, 128, NULL, 'juniperfw: POP3:OVERFLOW:QPOP-OF3 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 228, 128, NULL, 'juniperfw: POP3:OVERFLOW:QPOP-OF4 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 229, 128, NULL, 'juniperfw: POP3:OVERFLOW:USER attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 230, 128, NULL, 'juniperfw: POP3:REQERR:LOGIN-FAILED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 231, 128, NULL, 'juniperfw: POP3:REQERR:REQ-INVALID-STATE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 232, 128, NULL, 'juniperfw: POP3:REQERR:REQ-MESSAGE-NUMBER attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 233, 128, NULL, 'juniperfw: POP3:REQERR:REQ-NESTED-REQUEST attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 234, 128, NULL, 'juniperfw: POP3:REQERR:REQ-SYNTAX-ERROR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 235, 128, NULL, 'juniperfw: POP3:REQERR:REQ-UNKNOWN-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 236, 133, NULL, 'juniperfw: SHELLCODE:AIX:NOOP-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 237, 133, NULL, 'juniperfw: SHELLCODE:BSDX86:GEN-1-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 238, 133, NULL, 'juniperfw: SHELLCODE:BSDX86:GEN-2-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 239, 133, NULL, 'juniperfw: SHELLCODE:DIGITAL:NOOP-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 240, 133, NULL, 'juniperfw: SHELLCODE:HP-UX:HP-NOOP-1-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 241, 133, NULL, 'juniperfw: SHELLCODE:HP-UX:HP-NOOP-2-PKT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 242, 134, NULL, 'juniperfw: SMTP:COMMAND:DEBUG attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 243, 134, NULL, 'juniperfw: SMTP:COMMAND:ETRN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 244, 134, NULL, 'juniperfw: SMTP:COMMAND:EXPN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 245, 134, NULL, 'juniperfw: SMTP:COMMAND:SMTP-VRFY-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 246, 134, NULL, 'juniperfw: SMTP:COMMAND:TURN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 247, 134, NULL, 'juniperfw: SMTP:COMMAND:VRFY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 248, 134, NULL, 'juniperfw: SMTP:COMMAND:WIZ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 249, 134, NULL, 'juniperfw: SMTP:EMAIL:HEADER-FROM-PIPE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 250, 134, NULL, 'juniperfw: SMTP:EMAIL:HEADER-TO-PIPE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 251, 134, NULL, 'juniperfw: SMTP:EMAIL:MAIL-FROM-PIPE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 252, 134, NULL, 'juniperfw: SMTP:EMAIL:RCPT-TO-DECODE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 253, 134, NULL, 'juniperfw: SMTP:EMAIL:RCPT-TO-PIPE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 254, 134, NULL, 'juniperfw: SMTP:EMAIL:REPLY-TO-PIPE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 255, 134, NULL, 'juniperfw: SMTP:EXCHANGE:DOS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 256, 134, NULL, 'juniperfw: SMTP:MAJORDOMO:COMMAND-EXEC attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 257, 134, NULL, 'juniperfw: SMTP:MSSQL-WORM-EMAIL attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 258, 134, NULL, 'juniperfw: SMTP:OVERFLOW:COMMAND-LINE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 259, 134, NULL, 'juniperfw: SMTP:OVERFLOW:EMAIL-ADDRESS attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 260, 134, NULL, 'juniperfw: SMTP:OVERFLOW:EMAIL-DOMAIN attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 261, 134, NULL, 'juniperfw: SMTP:OVERFLOW:EMAIL-USERNAME attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 262, 134, NULL, 'juniperfw: SMTP:OVERFLOW:OUTLOOK-CERT-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 263, 134, NULL, 'juniperfw: SMTP:OVERFLOW:REPLY-LINE attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 264, 134, NULL, 'juniperfw: SMTP:OVERFLOW:SENDMAIL-CMT-OF1 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 265, 134, NULL, 'juniperfw: SMTP:OVERFLOW:SENDMAIL-CMT-OF2 attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 266, 134, NULL, 'juniperfw: SMTP:OVERFLOW:TOO-MANY-RCPT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 267, 134, NULL, 'juniperfw: SMTP:REPERR:REP-INVALID-REPLY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 268, 134, NULL, 'juniperfw: SMTP:REPERR:REP-NESTED-REPLY attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 269, 134, NULL, 'juniperfw: SMTP:REQERR:REQ-INVALID-CMD-SEQ attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 270, 134, NULL, 'juniperfw: SMTP:REQERR:REQ-NESTED-REQUEST attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 271, 134, NULL, 'juniperfw: SMTP:REQERR:REQ-SYNTAX-ERROR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 272, 134, NULL, 'juniperfw: SMTP:REQERR:REQ-UNKNOWN-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 273, 134, NULL, 'juniperfw: SMTP:RESPONSE:PIPE-FAILED attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 274, 134, NULL, 'juniperfw: SMTP:SENDMAIL:ADDR-PRESCAN-ATK attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 275, 134, NULL, 'juniperfw: SMTP:SENDMAIL:SENDMAIL-FF-OF attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 276, 139, NULL, 'juniperfw: TROJAN:QAZ:TCP25-CALLING-HOME attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 277, 139, NULL, 'juniperfw: WORM:CODERED-2:CMD-BACKDOOR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 278, 139, NULL, 'juniperfw: WORM:CODERED-2:INFECT-ATTEMPT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 279, 139, NULL, 'juniperfw: WORM:CODERED-2:ROOT-BACKDOOR attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 280, 139, NULL, 'juniperfw: WORM:NIMDA:BIN-255-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 281, 139, NULL, 'juniperfw: WORM:NIMDA:MSADC-ROOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 282, 139, NULL, 'juniperfw: WORM:NIMDA:SCRIPTS-C11C-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 283, 139, NULL, 'juniperfw: WORM:NIMDA:SCRIPTS-CMD attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 284, 139, NULL, 'juniperfw: WORM:NIMDA:SCRIPTS-ROOT attack');
++INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1520, 285, NULL, NULL, 'juniperfw: unknown');
++--
+ -- Monitors Sids
+ --
+ 
+diff -Naur ossim/etc/agent/config.xml ossim-cvs/etc/agent/config.xml
+--- ossim/etc/agent/config.xml	2005-05-05 15:18:22.000000000 +0200
++++ ossim-cvs/etc/agent/config.xml	2005-06-20 10:28:18.394168872 +0200
+@@ -39,6 +39,7 @@
+     <!ENTITY    realsecure  SYSTEM '/etc/ossim/agent/plugins/realsecure.xml'>
+     <!ENTITY    rrd         SYSTEM '/etc/ossim/agent/plugins/rrd.xml'>
+     <!ENTITY    snarewindows SYSTEM '/etc/ossim/agent/plugins/snarewindows.xml'>
++    <!ENTITY    juniperfw   SYSTEM '/etc/ossim/agent/plugins/juniperfw.xml'>
+     <!ENTITY    snort       SYSTEM '/etc/ossim/agent/plugins/snort.xml'>
+     <!ENTITY    syslog      SYSTEM '/etc/ossim/agent/plugins/syslog.xml'>
+     <!ENTITY    tcptrack    SYSTEM '/etc/ossim/agent/plugins/tcptrack.xml'>
+@@ -90,6 +91,7 @@
+ <!-- &realsecure; -->
+ &rrd;
+ <!-- &snarewindows; -->
++<!-- &juniperfw; -->
+ &snort;
+ &syslog;
+ <!-- &tcptrack; -->
+diff -Naur ossim/etc/agent/plugins/juniperfw.xml ossim-cvs/etc/agent/plugins/juniperfw.xml
+--- ossim/etc/agent/plugins/juniperfw.xml	1970-01-01 01:00:00.000000000 +0100
++++ ossim-cvs/etc/agent/plugins/juniperfw.xml	2005-06-20 10:40:23.734900320 +0200
+@@ -0,0 +1,14 @@
++<?xml version="1.0" encoding='UTF-8' ?>
++
++<!-- 
++     Juniper Netscreen Firewall
++-->
++<plugin id="1520" process="" type="detector" start="no" enable="yes">
++    <startup></startup>
++    <shutdown></shutdown>
++    <source>syslog</source>
++    <interface>&interface;</interface>
++    <sensor>&sensor;</sensor>
++    <location>/tmp/juniperfw.log</location>
++</plugin>
++
+

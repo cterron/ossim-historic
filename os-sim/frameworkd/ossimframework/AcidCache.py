@@ -28,7 +28,7 @@ class AcidCache (threading.Thread) :
 
         # get ossim and acid links from config
         acid_link = self.__conf["acid_link"]+"/" or "http://localhost/acid/"
-        acid_prefix = self.__conf["alert_viewer"] or "acid"
+        acid_prefix = self.__conf["event_viewer"] or "acid"
         ossim_link = self.__conf["ossim_link"] or "http://localhost/ossim/"
 
         self.__urls = { 
@@ -72,7 +72,7 @@ class AcidCache (threading.Thread) :
                 try:
                     fname = self.__conf["acid_path"] + "/" + key + ".html"
                     # TODO: hid the passwords!
-                    print 'Fetching %s from "%s"' % (fname, url)
+                    print __name__, ': Fetching %s from "%s"' % (fname, url)
 
                     fin = urllib.urlopen(url)
                     fout = open (fname, "w")
@@ -81,8 +81,9 @@ class AcidCache (threading.Thread) :
                     fout.close()
 
                 except Exception, e:
-                    print e
+                    print __name__, ":", e
  
             time.sleep(float(Const.SLEEP))
 
 
+# vim:ts=4 sts=4 tw=79 expandtab:

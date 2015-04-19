@@ -1,6 +1,7 @@
-<?
+<?php
 
-class CIDR {
+class CIDR
+{
 
 // Expands a CIDR notation address into ranges.
 //
@@ -65,25 +66,21 @@ function expand_CIDR($ip, $return_type="SHORT", $return_format="LONG")
             switch($return_format)
             {
                 case 'LONG':
-                    for($i=0;$i<=$num_hosts;$i++)
-                    {
+                    for ($i=0; $i<=$num_hosts; $i++) {
                         $ip_range[] = $ip_start+$i;
                     }
-                break;
+                    break;
 
                 case 'IP':
-                    for($i=0;$i<=$num_hosts;$i++)
-                    {
+                    for ($i=0; $i<=$num_hosts; $i++) {
                         $ip_range[] = long2ip($ip_start+$i);
                     }
-                break;
+                    break;
 
                 default:
                     return "Unknown return format: $return_format\n";
-                break;
             }
-
-        break;
+            break;
 
         case "SHORT":
             switch($return_format)
@@ -91,22 +88,20 @@ function expand_CIDR($ip, $return_type="SHORT", $return_format="LONG")
                 case 'LONG':
                     $ip_range[]=$ip_start;
                     $ip_range[]=$ip_end;
-                break;
+                    break;
 
                 case 'IP':
                     $ip_range[]=long2ip($ip_start);
                     $ip_range[]=long2ip($ip_end);
-                break;
+                    break;
 
                 default:
                     return "Unknown return format: $return_format\n";
-                break;
             }
-        break;
+            break;
 
         default:
             return "Unknown return type: $return_type\n";
-        break;
     }
 
     return $ip_range;

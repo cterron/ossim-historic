@@ -55,6 +55,10 @@ extern "C" {
 
 G_BEGIN_DECLS
 
+/* 
+ * SimNet is one of the strings in the DB, table net, column ips (Policy -> networks)
+ * It could contain multiple networks, thanks to the SimInet Objects that it stores in _priv->inets
+ */
 typedef struct _SimNet          SimNet;
 typedef struct _SimNetClass     SimNetClass;
 typedef struct _SimNetPrivate   SimNetPrivate;
@@ -103,3 +107,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_NET_H__ */
+// vim: set tabstop=2:

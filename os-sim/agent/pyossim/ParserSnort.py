@@ -88,7 +88,7 @@ class ParserSnort(Parser.Parser):
                     date = time.strftime('%Y-%m-%d %H:%M:%S', 
                                      time.localtime(time.time()))
                     
-                    self.agent.sendAlert  (
+                    self.agent.sendEvent  (
                                     type        = 'detector',
                                     date        = date,
                                     sensor      = sensor,
@@ -186,7 +186,7 @@ class ParserSnort(Parser.Parser):
 
                     year = time.strftime('%Y', time.localtime(time.time()))
                     date = year + '-' + month + '-' + day + ' ' + date
-                    self.agent.sendAlert  (type = 'detector',
+                    self.agent.sendEvent  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

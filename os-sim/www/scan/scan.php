@@ -26,8 +26,17 @@ Session::logcheck("MenuTools", "ToolsScan");
     require_once 'ossim_db.inc';
     require_once 'classes/Host.inc';
     require_once 'classes/Scan.inc';
+    require_once 'classes/Security.inc';
 
-    if (!$order = $_GET["order"]) $order = "inet_aton(ip)";
+    $order = GET('order');
+    
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
+    if (empty($order))  $order = "inet_aton(ip)";
 ?>
 
   <table align="center">

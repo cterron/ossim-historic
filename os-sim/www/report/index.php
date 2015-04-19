@@ -9,29 +9,29 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 </head>
 
 <frameset cols="18%,82%" border="0" frameborder="0">
-<frame src="menu.php?host=<?php echo $_GET["host"] ?>">
+<frame src="menu.php?host=<?php echo validateVar($_GET["host"], OSS_IP) ?>">
 
 <?php 
 
     /* inventory */
     if (!strcmp($_GET["section"], 'inventory')) {
-        echo "<frame src=\"inventory.php?host=" . $_GET["host"] . "\" name=\"report\">";
+        echo "<frame src=\"inventory.php?host=" . validateVar($_GET["host"], OSS_IP) . "\" name=\"report\">";
     }
     
     /* metrics */
     elseif (!strcmp($_GET["section"], 'metrics')) {
-        echo "<frame src=\"metrics.php?host=" . $_GET["host"] . "\" name=\"report\">";
+        echo "<frame src=\"metrics.php?host=" . validateVar($_GET["host"], OSS_IP) . "\" name=\"report\">";
     }
 
-    /* alerts */
-    elseif (!strcmp($_GET["section"], 'alerts')) {
+    /* events */
+    elseif (!strcmp($_GET["section"], 'events')) {
         require_once ('ossim_conf.inc');
 
-        $conf = new ossim_conf();
-        $ip = $_GET["host"];
+        $conf = $GLOBALS["CONF"];
+        $ip = validateVar($_GET["host"], OSS_IP);
 
         $acid_link = $conf->get_conf("acid_link");
-        $acid_prefix = $conf->get_conf("alert_viewer");
+        $acid_prefix = $conf->get_conf("event_viewer");
         $acid_main_link = $conf->get_conf("acid_link") . $acid_prefix . "_stat_ipaddr.php?ip=$ip&netmask=32";
 
         echo "<frame src=\"". $acid_main_link . "\" name=\"report\">";
@@ -44,21 +44,21 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         require_once ('classes/Sensor.inc');
         $db = new ossim_db();
         $conn = $db->connect();
-        $ntop_link = Sensor::get_sensor_link($conn, $_GET["host"]);
+        $ntop_link = Sensor::get_sensor_link($conn, validateVar($_GET["host"]));
         $db->close($conn);
         
-        echo "<frame src=\"$ntop_link/" . $_GET["host"] . 
+        echo "<frame src=\"$ntop_link/" . validateVar($_GET["host"]) . 
             ".html\" name=\"report\">";
     }
     
 
     /* default */
     else {
-        echo "<frame src=\"inventory.php?host=" . $_GET["host"] . "\" name=\"report\">";
+        echo "<frame src=\"inventory.php?host=" . validateVar($_GET["host"]) . "\" name=\"report\">";
     }
 ?>
 
-<frame src="inventory.php?host=<?php echo $_GET["host"] ?>" name="report">
+<frame src="inventory.php?host=<?php echo validateVar($_GET["host"]) ?>" name="report">
 <body>
 </body>
 </html>

@@ -1,6 +1,30 @@
---  config 
+-- Functions inet_ntoa and inet_aton for Postgres
+CREATE OR REPLACE FUNCTION inet_ntoa(bigint) RETURNS text AS '
+       SELECT
+       ($1/(256*256*256))::text
+                ||''.''||
+       ($1/(256*256) - $1/(256*256*256)*256)::text
+                ||''.''||
+       ($1/256 - $1/(256*256)*256)::text
+                ||''.''||
+       ($1 - $1/256*256)::text;
+    ' LANGUAGE SQL;
 
-DROP TABLE IF EXISTS config;
+CREATE OR REPLACE FUNCTION inet_aton(text) RETURNS bigint AS '
+    SELECT
+        split_part($1,''.'',1)::int8*(256*256*256)+
+        split_part($1,''.'',2)::int8*(256*256)+
+        split_part($1,''.'',3)::int8*256+
+        split_part($1,''.'',4)::int8;
+    ' LANGUAGE SQL;
+
+-- Function curdate() for Postgres
+CREATE or REPLACE FUNCTION curdate() RETURNS date AS '
+    SELECT current_date;'
+LANGUAGE SQL;
+
+--  config
+DROP TABLE config;
 CREATE TABLE config (
     conf    varchar(255) NOT NULL,
     value   varchar(255),
@@ -8,7 +32,7 @@ CREATE TABLE config (
 );
 
 
---  hosts & nets 
+--  hosts 
 DROP TABLE host;
 CREATE TABLE host (
   ip                varchar(15) UNIQUE NOT NULL, 
@@ -24,13 +48,8 @@ CREATE TABLE host (
   PRIMARY KEY (ip)
 );
 
-DROP TABLE scan;
-CREATE TABLE scan (
-    ip              varchar(15) UNIQUE NOT NULL,
-    active          int NOT NULL,
-    PRIMARY KEY     (ip)
-);
 
+-- net
 DROP TABLE net;
 CREATE TABLE net (
   name              varchar(128) UNIQUE NOT NULL,
@@ -38,14 +57,40 @@ CREATE TABLE net (
   priority          int NOT NULL,
   threshold_c       int NOT NULL,
   threshold_a       int NOT NULL,
-  alert             int NOT NULL,
-  persistence       int NOT NULL,
+  alert             int NOT NULL DEFAULT 0,
+  persistence       int NOT NULL DEFAULT 0,
   rrd_profile       varchar(64),
   descr             varchar(255),
   PRIMARY KEY       (name)
 );
 
+-- net_group
+DROP TABLE net_group;
+CREATE TABLE net_group (
+  name              varchar(128) UNIQUE NOT NULL,
+  threshold_c       int NOT NULL,
+  threshold_a       int NOT NULL,
+  rrd_profile       varchar(64),
+  descr             varchar(255),
+  PRIMARY KEY       (name)
+);
 
+--net_group_scan
+DROP TABLE net_group_scan;
+CREATE TABLE net_group_scan (
+   net_group_name  varchar(128) NOT NULL,
+   plugin_id       INTEGER NOT NULL,
+   plugin_sid      INTEGER NOT NULL,
+   PRIMARY KEY (net_group_name, plugin_id, plugin_sid)
+);        
+
+--net_group_reference
+DROP TABLE net_group_reference;
+CREATE TABLE net_group_reference (
+   net_group_name       varchar(128) NOT NULL,
+   net_name		varchar(128) NOT NULL,
+   PRIMARY KEY (net_group_name, net_name)
+);
 
 
 -- /* ======== signatures ======== */
@@ -130,7 +175,7 @@ CREATE TABLE sensor_interfaces (
     sensor  varchar(64) NOT NULL,
     interface varchar(64) NOT NULL,
     name    varchar(255) NOT NULL,
-    main    BOOLEAN NOT NULL,
+    main    int NOT NULL,
     PRIMARY KEY (sensor, interface)
 );
 
@@ -169,7 +214,7 @@ DROP TABLE policy_host_reference;
 CREATE TABLE policy_host_reference (
     policy_id       int NOT NULL,
     host_ip         varchar(15) NOT NULL,
-    direction       varchar(10) NOT NULL,
+    direction       varchar(7) check (direction in ('source', 'dest')) NOT NULL,
     PRIMARY KEY (policy_id, host_ip, direction)
 );
 
@@ -177,7 +222,7 @@ DROP TABLE policy_net_reference;
 CREATE TABLE policy_net_reference (
     policy_id       int NOT NULL,
     net_name        varchar(64) NOT NULL,
-    direction       varchar(10) NOT NULL,
+    direction       varchar(7) check (direction in ('source', 'dest')) NOT NULL,
     PRIMARY KEY (policy_id, net_name, direction)
 );
 
@@ -203,6 +248,129 @@ CREATE TABLE policy_time (
     begin_day       smallint NOT NULL,
     end_day         smallint NOT NULL,
     PRIMARY KEY     (policy_id)
+);
+
+
+DROP TABLE policy_plugin_reference;
+CREATE TABLE policy_plugin_reference (
+    policy_id       int NOT NULL,
+    plugin_id		INTEGER NOT NULL,
+    PRIMARY KEY     (policy_id, plugin_id)
+);
+
+DROP TABLE policy_plugin_sid_reference;
+CREATE TABLE policy_plugin_sid_reference (
+    policy_id       int NOT NULL,
+    plugin_sid      INTEGER NOT NULL,
+    PRIMARY KEY     (policy_id, plugin_sid)
+);
+
+
+
+/* ======== actions ======== */
+DROP SEQUENCE action_id_seq;
+CREATE SEQUENCE action_id_seq;
+
+DROP TABLE action;
+CREATE TABLE action (
+    id              BIGINT DEFAULT nextval('action_id_seq') NOT NULL, 
+    action_type     varchar(100) NOT NULL,
+    descr           varchar(255) NOT NULL,
+    PRIMARY KEY     (id)
+);
+
+DROP TABLE action_type;
+CREATE TABLE action_type (
+    _type            varchar (100) NOT NULL,
+    descr           varchar (255) NOT NULL,
+    PRIMARY KEY     (_type)
+);
+
+INSERT INTO action_type (_type, descr) VALUES ('email', 'send an email message');
+INSERT INTO action_type (_type, descr) VALUES ('exec', 'execute an external program');
+
+
+DROP TABLE action_email;
+CREATE TABLE action_email (
+   action_id       int NOT NULL,
+   _from           varchar(100) NOT NULL,
+   _to             varchar(100) NOT NULL,
+   subject         varchar(255) NOT NULL,
+   message         varchar(255) NOT NULL,
+   PRIMARY KEY     (action_id)
+);
+
+DROP TABLE action_exec;
+CREATE TABLE action_exec (
+   action_id       int NOT NULL,
+   command         varchar(255) NOT NULL,
+   PRIMARY KEY     (action_id)
+);
+
+/* ======== response ========== */
+DROP SEQUENCE response_id_seq;
+CREATE SEQUENCE response_id_seq;
+
+DROP TABLE response;
+CREATE TABLE response (
+    id          BIGINT DEFAULT nextval('response_id_seq') NOT NULL,
+    descr       varchar(255),
+    PRIMARY KEY (id)
+);
+
+
+--
+-- Table: response_host
+--
+DROP TABLE response_host;
+CREATE TABLE response_host (
+    response_id int NOT NULL,
+    host        varchar(15),
+    _type       VARCHAR(6) check (_type in ('source', 'dest', 'sensor')) NOT NULL DEFAULT 'source',
+    PRIMARY KEY (response_id, host, _type)
+);
+
+--
+-- Table: response_net
+--
+DROP TABLE response_net;
+CREATE TABLE response_net (
+    response_id int NOT NULL,
+    net         varchar(255),
+    _type       VARCHAR(6) check (_type in ('source', 'dest')) NOT NULL DEFAULT 'source',
+    PRIMARY KEY (response_id, net, _type)
+);
+
+
+--
+-- Table: response_action
+--
+DROP TABLE response_action;
+CREATE TABLE response_action (
+	response_id		INTEGER NOT NULL,
+     	action_id		INTEGER NOT NULL,
+	PRIMARY KEY (response_id, action_id)
+);
+
+--
+-- Table: response_plugin
+--
+DROP TABLE response_plugin;
+CREATE TABLE response_plugin (
+	response_id	INTEGER NOT NULL,
+	plugin_id	INTEGER NOT NULL,
+	PRIMARY KEY (response_id, plugin_id)
+);
+
+--
+-- Table: response_port
+--
+DROP TABLE response_port;
+CREATE TABLE response_port (
+	response_id	INTEGER NOT NULL,
+	port		INTEGER NOT NULL,
+	_type		VARCHAR(6) check (_type in ('source', 'dest')) NOT NULL DEFAULT 'source',
+	PRIMARY KEY (response_id, port, _type)
 );
 
 
@@ -260,7 +428,7 @@ CREATE TABLE host_mac (
 	previous	VARCHAR(255) NOT NULL,
 	date            TIMESTAMP NOT NULL,
 	vendor		VARCHAR(255),
-    anom        int NOT NULL DEFAULT 0,
+        anom        	int NOT NULL DEFAULT 0,
 	PRIMARY KEY     (ip)
 );
 
@@ -273,13 +441,13 @@ CREATE TABLE host_os (
 	os		VARCHAR(255) NOT NULL,
 	previous	VARCHAR(255) NOT NULL,
 	date		TIMESTAMP NOT NULL,
-    anom        int NOT NULL DEFAULT 0,
+    	anom        int NOT NULL DEFAULT 0,
 	PRIMARY KEY	(ip)
 );
 
 DROP TABLE host_services;
 CREATE TABLE host_services (
-	ip		INT8 NOT NULL,
+    ip		INT8 NOT NULL,
     port    int NOT NULL,
     protocol   int NOT NULL,
     service varchar(128),
@@ -402,7 +570,7 @@ CREATE TABLE alert (
 	dst_ip		INT8,
 	src_port	INTEGER,
 	dst_port	INTEGER,
-	condition	INTEGER,
+	alert_condition	INTEGER,
 	value		TEXT,
 	time_interval	INTEGER,
 	absolute	BOOLEAN,
@@ -423,7 +591,7 @@ CREATE TABLE alert (
 DROP SEQUENCE backlog_id_seq;
 CREATE SEQUENCE backlog_id_seq;
 
-DROP TABLE  backlog;
+DROP TABLE backlog;
 CREATE TABLE backlog (
 	id		BIGINT PRIMARY KEY DEFAULT nextval('backlog_id_seq'),
 	directive_id	INTEGER NOT NULL,
@@ -436,8 +604,8 @@ CREATE TABLE backlog (
 --
 DROP TABLE backlog_alert;
 CREATE TABLE backlog_alert (
-	backlog_id	BIGINT,
-	alert_id	BIGINT,
+	backlog_id	BIGINT NOT NULL,
+	alert_id	BIGINT NOT NULL,
 	time_out	INTEGER,
 	occurrence	INTEGER,
 	rule_level	INTEGER,
@@ -448,11 +616,13 @@ CREATE TABLE backlog_alert (
 --
 -- Table: Alarm
 --
+
 DROP TABLE alarm;
 CREATE TABLE alarm (
-	backlog_id	BIGINT,
-	alert_id	BIGINT,
+	backlog_id	BIGINT NOT NULL,
+	alert_id	BIGINT NOT NULL,
 	timestamp	TIMESTAMP NOT NULL,
+	status		VARCHAR(7) check (status in ('open', 'closed')) DEFAULT 'open', 
 	plugin_id	INTEGER NOT NULL,
 	plugin_sid	INTEGER NOT NULL,
 	protocol	INTEGER,
@@ -517,10 +687,11 @@ CREATE TABLE net_scan (
 ---
 DROP TABLE users;
 CREATE TABLE users (
-    login   VARCHAR(64)  NOT NULL,
-    name    VARCHAR(128) NOT NULL,
-    pass    VARCHAR(41)  NOT NULL,
-    allowed_nets    varchar(255) NOT NULL,
+    login		VARCHAR(64)  NOT NULL,
+    name		VARCHAR(128) NOT NULL,
+    pass    		VARCHAR(41)  NOT NULL,
+    allowed_nets	VARCHAR(255) NOT NULL,
+    email		VARCHAR(64),	
     PRIMARY KEY (login)
 );
 
@@ -539,8 +710,9 @@ DROP TABLE incident;
 CREATE TABLE incident (
     id          BIGINT DEFAULT nextval('incident_id_seq'),
     title       VARCHAR(128) NOT NULL,
-    date        TIMESTAMP NOT NULL,
-    ref         VARCHAR(8) NOT NULL DEFAULT 'Alarm',
+    date        TIMESTAMP DEFAULT now() NOT NULL,
+    ref         VARCHAR(9) check (ref in ('Alarm', 'Alert', 'Metric', 'Hardware', 'Install')) NOT NULL DEFAULT 'Alarm',
+    family      VARCHAR(9) check (family in ('OSSIM', 'Hardware', 'Install')) NOT NULL DEFAULT 'OSSIM',
     priority    INTEGER NOT NULL,
     PRIMARY KEY (id)
 );
@@ -551,12 +723,12 @@ CREATE SEQUENCE incident_ticket_id_seq;
 --
 -- Table: incident ticket
 --
-DROP TABLE  incident_ticket;
+DROP TABLE incident_ticket;
 CREATE TABLE incident_ticket (
     id              BIGINT DEFAULT nextval('incident_ticket_id_seq'),
     incident_id     INTEGER NOT NULL,
-    date            TIMESTAMP NOT NULL,
-    status          VARCHAR(8) NOT NULL DEFAULT 'Open',
+    date            TIMESTAMP DEFAULT now() NOT NULL,
+    status          VARCHAR(8) check (status in ('Open', 'Closed')) NOT NULL DEFAULT 'Open',
     priority        INTEGER NOT NULL,
     users           VARCHAR(64) NOT NULL,
     description     VARCHAR(255),
@@ -595,10 +767,46 @@ CREATE TABLE incident_metric (
     id              BIGINT DEFAULT nextval('incident_metric_id_seq'),
     incident_id     INTEGER NOT NULL,
     target          VARCHAR(255) NOT NULL,
-    metric_type     VARCHAR(16) NOT NULL DEFAULT 'Compromise',
+    metric_type     VARCHAR(16) check (metric_type in ('Compromise', 'Attack')) NOT NULL DEFAULT 'Compromise',
     metric_value    INTEGER NOT NULL,
     PRIMARY KEY (id, incident_id)
 );
+
+DROP SEQUENCE incident_file_id_seq;
+CREATE SEQUENCE incident_file_id_seq;
+
+--
+-- Table: incident_file
+--
+DROP TABLE incident_file;
+CREATE TABLE incident_file (
+	id		BIGINT DEFAULT nextval('incident_file_id_seq'),
+	incident_id	INTEGER NOT NULL,
+	incident_ticket	INTEGER NOT NULL,
+	name		VARCHAR(50),
+	type		VARCHAR(50),
+	content		bytea, /* 16Mb */		
+	PRIMARY KEY (id, incident_id, incident_ticket)
+);
+
+DROP SEQUENCE incident_alert_id_seq;
+CREATE SEQUENCE incident_alert_id_seq;
+
+--
+-- Table: incident_alert
+--
+DROP TABLE incident_alert;
+CREATE TABLE incident_alert (
+	id		BIGINT DEFAULT nextval('incident_alert_id_seq'),
+	incident_id	INTEGER NOT NULL,
+	src_ips		VARCHAR(255) NOT NULL,
+	src_ports	VARCHAR(255) NOT NULL,
+	dst_ips		VARCHAR(255) NOT NULL,
+	dst_ports	VARCHAR(255) NOT NULL,
+	PRIMARY KEY (id, incident_id)
+);
+
+
 
 DROP SEQUENCE restoredb_log_id_seq;
 CREATE SEQUENCE restoredb_log_id_seq;
@@ -608,7 +816,7 @@ CREATE SEQUENCE restoredb_log_id_seq;
 --
 DROP TABLE restoredb_log;
 CREATE TABLE restoredb_log (
-    id              BIGINT DEFAULT nextval('restoredb_log_id_seq'),
+	id              BIGINT DEFAULT nextval('restoredb_log_id_seq'),
 	date		TIMESTAMP,
 	pid		INTEGER,
 	users		VARCHAR(64),

@@ -1,4 +1,3 @@
 frameworkdir = $(sysconfdir)/ossim/framework
-framework_DATA = ossim.conf \
-	mrtg-rrd.cfg
-EXTRA_DIST   = $(framework_DATA)
+framework_DATA = mrtg-rrd.cfg \
+				ossim.conf

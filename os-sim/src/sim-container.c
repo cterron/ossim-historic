@@ -32,12 +32,28 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 #include <netdb.h>
 
 #include "os-sim.h"
 #include "sim-container.h"
+//#include "sim-policy.h"
 #include "sim-xml-directive.h"
+#include <config.h>
+#include "sim-sensor.h"
+
+static GTime       last_time = 0;
+
+/*****debug*****/
+struct _SimInetPrivate
+{
+  guchar    bits;
+  struct sockaddr_storage sa;
+};
+
+		
+/*****debug*****/
+
+
 
 extern SimMain  ossim;
 
@@ -48,24 +64,22 @@ enum
 };
 
 struct _SimContainerPrivate {
-  GList        *categories;
-  GList        *classifications;;
   GList        *plugins;
   GList        *plugin_sids;
   GList        *sensors;
   GList        *hosts;
-  GList        *nets;
-  GList        *policies;
-  GList        *directives;
+  GList        *nets;				//SimNet Objects
+  GList        *policies; 	//SimPolicy objects
+  GList        *directives; //SimDirective
 
   GList        *host_levels;
   GList        *net_levels;
-  GList        *backlogs;
+  GList        *backlogs; 	//SimDirective
 
-  GQueue       *alerts;
+  GQueue       *events;
 
-  GCond        *cond_alerts;
-  GMutex       *mutex_alerts;
+  GCond        *cond_events;
+  GMutex       *mutex_events;
 };
 
 static gpointer parent_class = NULL;
@@ -84,8 +98,6 @@ sim_container_impl_finalize (GObject  *gobject)
 {
   SimContainer  *container = SIM_CONTAINER (gobject);
 
-  sim_container_free_categories_ul (container);
-  sim_container_free_classifications_ul (container);
   sim_container_free_plugins_ul (container);
   sim_container_free_plugin_sids_ul (container);
   sim_container_free_sensors_ul (container);
@@ -96,10 +108,10 @@ sim_container_impl_finalize (GObject  *gobject)
   sim_container_free_host_levels_ul (container);
   sim_container_free_net_levels_ul (container);
   sim_container_free_backlogs_ul (container);
-  sim_container_free_alerts (container);
+  sim_container_free_events (container);
 
-  g_cond_free (container->_priv->cond_alerts);
-  g_mutex_free (container->_priv->mutex_alerts);
+  g_cond_free (container->_priv->cond_events);
+  g_mutex_free (container->_priv->mutex_events);
 
   g_free (container->_priv);
 
@@ -122,8 +134,6 @@ sim_container_instance_init (SimContainer *container)
 {
   container->_priv = g_new0 (SimContainerPrivate, 1);
 
-  container->_priv->categories = NULL;
-  container->_priv->classifications = NULL;
   container->_priv->plugins = NULL;
   container->_priv->plugin_sids = NULL;
   container->_priv->sensors = NULL;
@@ -137,11 +147,11 @@ sim_container_instance_init (SimContainer *container)
   container->_priv->net_levels = NULL;
   container->_priv->backlogs = NULL;
 
-  container->_priv->alerts = g_queue_new ();
+  container->_priv->events = g_queue_new ();
 
-  /* Mutex Alerts Init */
-  container->_priv->cond_alerts = g_cond_new ();
-  container->_priv->mutex_alerts = g_mutex_new ();
+  /* Mutex Events Init */
+  container->_priv->cond_events = g_cond_new ();
+  container->_priv->mutex_events = g_mutex_new ();
 }
 
 /* Public Methods */
@@ -191,8 +201,6 @@ sim_container_new (SimConfig  *config)
   container = SIM_CONTAINER (g_object_new (SIM_TYPE_CONTAINER, NULL));
   sim_container_db_delete_plugin_sid_directive_ul (container, ossim.dbossim);
   sim_container_db_delete_backlogs_ul (container, ossim.dbossim);
-  sim_container_db_load_categories (container, ossim.dbossim);
-  sim_container_db_load_classifications (container, ossim.dbossim);
   sim_container_db_load_plugins (container, ossim.dbossim);
   sim_container_db_load_plugin_sids (container, ossim.dbossim);
   sim_container_db_load_sensors (container, ossim.dbossim);
@@ -218,7 +226,8 @@ sim_container_new (SimConfig  *config)
 gchar*
 sim_container_db_get_host_os_ul (SimContainer  *container,
 				 SimDatabase   *database,
-				 GInetAddr     *ia)
+				 GInetAddr     *ia,
+				 GInetAddr     *sensor)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -226,29 +235,30 @@ sim_container_db_get_host_os_ul (SimContainer  *container,
   gchar         *os = NULL;
   gint           row;
 
-  g_return_if_fail (container != NULL);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database != NULL);
-  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_val_if_fail (container != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (database != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
 
-  query = g_strdup_printf ("SELECT os FROM host_os WHERE ip = %lu",
-			   sim_inetaddr_ntohl (ia));
+  query = g_strdup_printf ("SELECT os FROM host_os WHERE ip = %lu AND sensor = %lu ORDER BY date DESC LIMIT 1",
+			   sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));
   dm = sim_database_execute_single_command (database, query);
   if (dm)
+  {
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical first time
     {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  if (!gda_value_is_null (value))
-	    os = gda_value_stringify (value);
-	}
-      
-      g_object_unref(dm);
+      if (!gda_value_is_null (value))
+        os = gda_value_stringify (value);
     }
+    else
+      os=NULL;
+
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST OS DATA MODEL ERROR");
-    }
+    g_message ("HOST OS DATA MODEL ERROR");
+		
   g_free (query);
 
   return os;
@@ -265,6 +275,8 @@ sim_container_db_insert_host_os_ul (SimContainer  *container,
 				    SimDatabase   *database,
 				    GInetAddr     *ia,
 				    gchar         *date,
+				    gchar				  *sensor,
+						gchar					*interface,
 				    gchar         *os)
 {
   gchar         *query;
@@ -277,12 +289,12 @@ sim_container_db_insert_host_os_ul (SimContainer  *container,
   g_return_if_fail (date);
   g_return_if_fail (os);
 
-  if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
-  return;
+	//we want to insert only the hosts defined in Policy->hosts or inside a network from policy->networks
+	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+		return;
   
-
-  query = g_strdup_printf ("INSERT INTO host_os (ip, date, previous, os) VALUES (%lu, '%s', '%s', '%s')",
-			   sim_inetaddr_ntohl (ia), date, os, os);
+  query = g_strdup_printf ("INSERT INTO host_os (ip, date, os, sensor, interface) VALUES (%lu, '%s', '%s', '%lu', '%s')",
+			   sim_inetaddr_ntohl (ia), date, os, sim_ipchar_2_ulong (sensor), interface);
 
   sim_database_execute_no_query (database, query);
 
@@ -292,7 +304,7 @@ sim_container_db_insert_host_os_ul (SimContainer  *container,
 /*
  *
  *
- *
+ * This function is not called from anywhere at this time. Its not needed.
  *
  */
 void
@@ -301,7 +313,8 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
 				    GInetAddr     *ia,
 				    gchar         *date,
 				    gchar         *curr_os,
-				    gchar         *prev_os)
+				    gchar         *prev_os,
+				    GInetAddr     *sensor)
 {
   gchar         *query;
 
@@ -317,8 +330,8 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
   if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
   return;
  
-  query = g_strdup_printf ("UPDATE host_os SET date='%s', os='%s', previous='%s', anom = 1 WHERE ip = %lu",
-			   date, curr_os, prev_os, sim_inetaddr_ntohl (ia));
+  query = g_strdup_printf ("UPDATE host_os SET date='%s', os='%s', previous='%s', anom = 1 WHERE ip = %lu and sensor = %lu",
+			   date, curr_os, prev_os, sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));
 
   sim_database_execute_no_query (database, query);
 
@@ -327,14 +340,15 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
 
 /*
  *
- *
- *
+ * Returns from the db the host mac (NULL on error), provided an ip and the sensor to wich belongs that ip.
+ * It returns the mac associated with the last time it was modified (if any)
  *
  */
 gchar*
 sim_container_db_get_host_mac_ul (SimContainer  *container,
-				  SimDatabase   *database,
-				  GInetAddr     *ia)
+																  SimDatabase   *database,
+																  GInetAddr     *ia,
+																  GInetAddr     *sensor)
 {
   GdaDataModel	*dm;
   GdaValue	*value;
@@ -342,29 +356,34 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
   gchar		*mac = NULL;
   gint		row;
 
-  g_return_if_fail (container != NULL);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database != NULL);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  query = g_strdup_printf ("SELECT mac FROM host_mac WHERE ip = %lu",
-			   sim_inetaddr_ntohl (ia));
+  g_return_val_if_fail (container != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (database != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+  g_return_val_if_fail (ia, NULL);
+  g_return_val_if_fail (sensor, NULL);
+    
+  query = g_strdup_printf ("SELECT mac FROM host_mac WHERE ip = %lu and sensor = %lu ORDER BY date DESC LIMIT 1",
+                           sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor)); //we want the last
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_ul query: %s",query);
+				
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  if (!gda_value_is_null (value))
-	    mac = gda_value_stringify (value);
-	}
-      
-      g_object_unref(dm);
-    }
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical: gda_value_is_null: assertion `value != NULL' failed
+		{																				//this happens the first time that an event is inserted
+			if (!gda_value_is_null (value))
+				mac = gda_value_stringify (value);
+		}
+		else
+			mac=NULL;
+		
+		g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST MAC DATA MODEL ERROR");
-    }
+    g_message ("HOST MAC DATA MODEL ERROR");
+			
   g_free (query);
 
   return mac;
@@ -372,16 +391,17 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
 
 /*
  *
- *
- *
- *
+ * Provided the ia, port, and protocol, this function
+ * returns the service name (ssh, telnet..).The variable that it returns is called "application" 
+ * but in the DB its called "version"
  */
 gchar*
 sim_container_db_get_host_service_ul (SimContainer  *container,
 				      SimDatabase   *database,
 				      GInetAddr     *ia,
 				      gint           port,
-				      gint           protocol)
+				      gint           protocol,
+				      GInetAddr	    *sensor)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -389,32 +409,35 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
   gchar         *version = NULL;
   gint           row;
   
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (ia);
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (database, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+  g_return_val_if_fail (ia, NULL);
 
   /* origin = 0 (pads). origin = 1 would be nmap. */
-  query = g_strdup_printf ("SELECT version FROM host_services WHERE ip = %lu and port = %u and protocol = %u and origin = 0", 
-			   sim_inetaddr_ntohl (ia), port, protocol);
+  query = g_strdup_printf ("SELECT version FROM host_services WHERE ip = %lu and port = %u and protocol = %u and origin = 0 and sensor = %lu ORDER BY date DESC LIMIT 1", 
+			   sim_inetaddr_ntohl (ia), port, protocol, sim_inetaddr_ntohl (sensor));
 
   dm = sim_database_execute_single_command (database, query);
   if (dm)
+  {
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+
+    if (gda_data_model_get_n_rows(dm) !=0) 
     {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  if (!gda_value_is_null (value))
-	    version = gda_value_stringify (value);
-	}
-      
-      g_object_unref(dm);
+      if (!gda_value_is_null (value))
+        version = gda_value_stringify (value);
     }
+    else
+      version=NULL;
+
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST SERVICE DATA MODEL ERROR");
-    }
+  {
+    g_message ("HOST SERVICE DATA MODEL ERROR");
+  }
   g_free (query);
 
   return version;
@@ -425,13 +448,14 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
 /*
  *
  *
- *
+ * FIXME: this function is not called anymore. Its not needed.
  *
  */
 gchar*
 sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
 					 SimDatabase   *database,
-					 GInetAddr     *ia)
+					 GInetAddr     *ia,
+					 GInetAddr     *sensor)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -444,9 +468,10 @@ sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
   g_return_if_fail (database);
   g_return_if_fail (SIM_IS_DATABASE (database));
   g_return_if_fail (ia);
+  g_return_if_fail (sensor);
 
-  query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu",
-			   sim_inetaddr_ntohl (ia));
+  query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu and sensor = %lu",
+                           sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));			     
   dm = sim_database_execute_single_command (database, query);
   if (dm)
     {
@@ -470,7 +495,7 @@ sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
 
 /*
  *
- *
+ * 
  *
  *
  */
@@ -480,7 +505,9 @@ sim_container_db_insert_host_mac_ul (SimContainer  *container,
 				     GInetAddr     *ia,
 				     gchar         *date,
 				     gchar         *mac,
-				     gchar         *vendor)
+				     gchar         *vendor,
+				     gchar         *interface,
+				     gchar		     *sensor)
 {
   gchar         *query;
 
@@ -491,9 +518,17 @@ sim_container_db_insert_host_mac_ul (SimContainer  *container,
   g_return_if_fail (ia);
   g_return_if_fail (date);
   g_return_if_fail (mac);
+  g_return_if_fail (interface);
+  g_return_if_fail (sensor);
+   
+	//we want to insert only the hosts defined in Policy->hosts or inside a network from policy->networks
+	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+		return;
 
-  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, previous, vendor) VALUES (%lu, '%s', '%s', '%s', '%s')",
-			   sim_inetaddr_ntohl (ia), date, mac, mac, (vendor) ? vendor : "");
+	 //  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor, sensor, interface) VALUES (%lu, '%s', '%s', '%s', %lu, '%s')", sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (sensor), interface);
+  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor, sensor, interface) VALUES (%lu, '%s', '%s', '%s', %lu, '%s')", sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "", sim_ipchar_2_ulong (sensor), interface);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "query: %s",query);
+				
 
   sim_database_execute_no_query (database, query);
 
@@ -513,6 +548,8 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
 					 gchar         *date,
 					 gint           port,
 					 gint           protocol,
+					 gchar			   *sensor,
+					 gchar				 *interface,
 					 gchar         *service,
 					 gchar         *application)
 {
@@ -528,6 +565,7 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
   g_return_if_fail (date);
   g_return_if_fail (port); /* Needed for ints */
   g_return_if_fail (protocol);
+  g_return_if_fail (sensor);
   g_return_if_fail (service);
   g_return_if_fail (application);
 
@@ -542,8 +580,10 @@ sim_container_db_insert_host_service_ul (SimContainer  *container,
   
   temp_serv = getservbyport(port, temp_proto->p_name);
 
-  query = g_strdup_printf ("INSERT INTO host_services (ip, date, port, protocol, service, service_type, version, origin) VALUES (%lu, '%s', %u, %u, '%s', '%s', '%s', 0)", sim_inetaddr_ntohl (ia), date, port, protocol, (temp_serv != NULL) ? temp_serv->s_name : "unknown", service, application);
+  query = g_strdup_printf ("INSERT INTO host_services (ip, date, port, protocol, service, service_type, version, origin, sensor, interface) VALUES (%lu, '%s', %u, %u, '%s', '%s', '%s', 0, '%lu', '%s')", sim_inetaddr_ntohl (ia), date, port, protocol, (temp_serv != NULL) ? temp_serv->s_name : "unknown", service, application, sim_ipchar_2_ulong (sensor), interface);
   
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_insert_host_service_ul: query: %s",query);
+				
   sim_database_execute_no_query (database, query);
   
   g_free (query);
@@ -587,6 +627,8 @@ sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
   query = g_strdup_printf ("INSERT INTO host_ids (ip, date, hostname, sensor, sid, event_type, what, target, extra_data) VALUES (%lu, '%s', '%s', '%s', %u, '%s', '%s', '%s', '%s')",
   sim_inetaddr_ntohl (ia), date, hostname, sensor, sid, event_type, what, target, extra_data);
 
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_insert_host_ids_event_ul query: %s",query);
+
   sim_database_execute_no_query (database, query);
   
   g_free (query);
@@ -596,7 +638,7 @@ sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
 
 /*
  *
- *
+ * As now we don't modify entries, this function is not used anymore.
  *
  *
  */
@@ -607,7 +649,8 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
 				     gchar         *date,
 				     gchar         *curr_mac,
 				     gchar         *prev_mac,
-				     gchar         *vendor)
+				     gchar         *vendor,
+				     GInetAddr     *sensor)
 {
   gchar         *query;
 
@@ -619,10 +662,10 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
   g_return_if_fail (date);
   g_return_if_fail (curr_mac);
   g_return_if_fail (prev_mac);
+  g_return_if_fail (sensor);
 
-  query = g_strdup_printf ("UPDATE host_mac SET date='%s', mac='%s', previous='%s', vendor='%s', anom = 1 WHERE ip = %lu",
-			   date, curr_mac, prev_mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (ia));
-
+  query = g_strdup_printf ("UPDATE host_mac SET date='%s', mac='%s', previous='%s', vendor='%s', anom = 1 WHERE ip = %lu and sensor = %lu", date, curr_mac, prev_mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));
+  
   sim_database_execute_no_query (database, query);
 
   g_free (query);
@@ -630,8 +673,7 @@ sim_container_db_update_host_mac_ul (SimContainer  *container,
 
 /*
  *
- *
- *
+ * As now we don't modify entries, this function is not used anymore.
  *
  */
 void
@@ -642,7 +684,8 @@ sim_container_db_update_host_service_ul (SimContainer  *container,
 					 gint           port,
 					 gint           protocol,
 					 gchar         *service,
-					 gchar         *application)
+					 gchar         *application,
+					 GInetAddr     *sensor)
 {
   gchar         *query;
   
@@ -657,8 +700,7 @@ sim_container_db_update_host_service_ul (SimContainer  *container,
   g_return_if_fail (service);
   g_return_if_fail (application);
 
-  query = g_strdup_printf ("UPDATE host_services SET date='%s', port=%u, protocol=%u, service_type='%s', version='%s' WHERE ip = %lu AND origin = 0", 
-			   date, port, protocol, service, application, sim_inetaddr_ntohl (ia));
+  query = g_strdup_printf ("UPDATE host_services SET date='%s', port=%u, protocol=%u, service_type='%s', version='%s' WHERE ip = %lu AND origin = 0 AND sensor = %lu", date, port, protocol, service, application, sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));
 
   sim_database_execute_no_query (database, query);
 
@@ -674,9 +716,9 @@ sim_container_db_update_host_service_ul (SimContainer  *container,
  *
  */
 void
-sim_container_db_insert_alert_ul (SimContainer  *container,
-				  SimDatabase   *database,
-				  SimAlert      *alert)
+sim_container_db_insert_event_ul (SimContainer  *container, //FIXME: container is not used here.
+																  SimDatabase   *database,
+																  SimEvent      *event)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -686,40 +728,39 @@ sim_container_db_insert_alert_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database != NULL);
   g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (alert != NULL);
-  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (SIM_IS_EVENT (event));
   
-  query = sim_alert_get_insert_clause (alert);
+  query = sim_event_get_insert_clause (event);
   sim_database_execute_no_query (database, query);
   g_free (query);
 
   query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-      if (!gda_value_is_null (value))
-	alert->id = gda_value_get_bigint (value);
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (!gda_value_is_null (value))
+			event->id = gda_value_get_bigint (value);	//get the id of the event so the event into the Container knows it
       
-      g_object_unref(dm);
-    }
-  else
-    {
-      g_message ("BACKLOG INSERT DATA MODEL ERROR");
-    }
+    g_object_unref(dm);
+  }
+	else
+    g_message ("BACKLOG INSERT DATA MODEL ERROR");
+			
   g_free (query);
 }
 
 /*
  *
- *
+ * Update the DB with the event. May be something has changed, like C & A or...
  *
  *
  */
 void
-sim_container_db_update_alert_ul (SimContainer  *container,
+sim_container_db_update_event_ul (SimContainer  *container,
 				  SimDatabase   *database,
-				  SimAlert      *alert)
+				  SimEvent      *event)
 {
   gchar         *query;
 
@@ -727,10 +768,10 @@ sim_container_db_update_alert_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (database);
   g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (alert);
-  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
   
-  query = sim_alert_get_update_clause (alert);
+  query = sim_event_get_update_clause (event);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }
@@ -744,48 +785,54 @@ void
 sim_container_db_delete_backlog_by_id_ul (guint32	backlog_id)
 {
   GdaDataModel	*dm;
-  GdaDataModel	*dm1;
+  GdaDataModel	*dm1=NULL;
   GdaValue	*value;
   gchar		*query0;
   gchar		*query1;
   gchar		*query2;
-  guint32	alert_id;
+  guint32	event_id;
   gint		row, count;
 
-  query0 =  g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE backlog_id = %lu",
+  query0 =  g_strdup_printf ("SELECT event_id FROM backlog_event WHERE backlog_id = %lu",
 			     backlog_id);
   dm = sim_database_execute_single_command (ossim.dbossim, query0);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  alert_id = gda_value_get_bigint (value);
-
-	  query1 = g_strdup_printf ("SELECT COUNT(alert_id) FROM backlog_alert WHERE alert_id = %lu",
-				    alert_id);
-	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
-	  if (dm1)
-	    {
-	      value = (GdaValue *) gda_data_model_get_value_at (dm1, 0, 0);
-	      count = gda_value_get_integer (value);
-
-	      if (count == 1)
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 		{
-		  query2 = g_strdup_printf ("DELETE FROM alert WHERE id = %lu", alert_id);
-		  sim_database_execute_no_query (ossim.dbossim, query2);
-		  g_free (query2);
-		}
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+		  event_id = gda_value_get_bigint (value);
+
+	  	query1 = g_strdup_printf ("SELECT COUNT(event_id) FROM backlog_event WHERE event_id = %lu", event_id);
+		  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_delete_backlog_by_id_ul: event_id= %lu",event_id);
+		  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
+	  	if (dm1)
+		  {
+	      //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "query1: %s",query1);
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm1, 0, 0);						
+	      count = gda_value_get_bigint (value);
+
+	      //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "count: %d",count);
+	  
+	      if (count == 1)
+				{
+		  		query2 = g_strdup_printf ("DELETE FROM event WHERE id = %lu", event_id);
+				  sim_database_execute_no_query (ossim.dbossim, query2);
+				  g_free (query2);
+				}
 
 	      g_object_unref(dm1);
-	    }
-	  g_free (query1);
-	}
-       g_object_unref(dm);
-    }
+		  }
+		  else
+	  	  g_message("Error: problem executing the following command in the DB: %s",query1);
+		  g_free (query1);
+		}
+    g_object_unref(dm);
+  }
   g_free (query0);
 
-  query0 = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id = %lu", backlog_id);
+  query0 = g_strdup_printf ("DELETE FROM backlog_event WHERE backlog_id = %lu", backlog_id);
   sim_database_execute_no_query (ossim.dbossim, query0);
   g_free (query0);
   
@@ -811,7 +858,7 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
   gchar		*query1;
   gchar		*query2;
   guint32	backlog_id;
-  guint32	alert_id;
+  guint32	event_id;
   gint		row;
 
   g_return_if_fail (container != NULL);
@@ -853,9 +900,9 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
     }
   g_free (query0);
   */
-  /* Search Backlogs lost in backlog_alert table */
+  /* Search Backlogs lost in backlog_event table */
   /*
-  query0 =  g_strdup_printf ("SELECT DISTINCT backlog_id FROM backlog_alert");
+  query0 =  g_strdup_printf ("SELECT DISTINCT backlog_id FROM backlog_event");
   dm = sim_database_execute_single_command (ossim.dbossim, query0);
   if (dm)
     {
@@ -875,7 +922,7 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
 	    }
 	  else
 	    {
-	      g_message ("BACKLOG ALERT SELECT DATA MODEL ERROR");
+	      g_message ("BACKLOG EVENT SELECT DATA MODEL ERROR");
 	    }
 	  g_free (query1);
 	}
@@ -883,28 +930,28 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
     }
   else
     {
-      g_message ("BACKLOG ALERT DELETE DATA MODEL ERROR");
+      g_message ("BACKLOG EVENT DELETE DATA MODEL ERROR");
     }
   g_free (query0);
   */
-  /* Search Alerts lost in alert table */
+  /* Search Events lost in event table */
   /*
-  query0 =  g_strdup_printf ("SELECT id FROM alert");
+  query0 =  g_strdup_printf ("SELECT id FROM event");
   dm = sim_database_execute_single_command (ossim.dbossim, query0);
   if (dm)
     {
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
 	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  alert_id = gda_value_get_bigint (value);
+	  event_id = gda_value_get_bigint (value);
 	  
-	  query1 = g_strdup_printf ("SELECT alert_id FROM backlog_alert WHERE alert_id = %lu", alert_id);
+	  query1 = g_strdup_printf ("SELECT event_id FROM backlog_event WHERE event_id = %lu", event_id);
 	  dm1 = sim_database_execute_single_command (ossim.dbossim, query1);
 	  if (dm1)
 	    {
 	      if (!gda_data_model_get_n_rows (dm1))
 		{
-		  query2 = g_strdup_printf ("DELETE FROM alert WHERE id = %lu", alert_id);
+		  query2 = g_strdup_printf ("DELETE FROM event WHERE id = %lu", event_id);
 		  sim_database_execute_no_query (ossim.dbossim, query2);
 		  g_free (query2);
 		}
@@ -913,7 +960,7 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
 	    }
 	  else
 	    {
-	      g_message ("ALERT SELECT DATA MODEL ERROR");
+	      g_message ("EVENT SELECT DATA MODEL ERROR");
 	    }
 	  g_free (query1);
 	}
@@ -921,7 +968,7 @@ sim_container_db_delete_backlogs_ul (SimContainer  *container,
     }
   else
     {
-      g_message ("ALERT DATA MODEL ERROR");
+      g_message ("EVENT DATA MODEL ERROR");
     }
   g_free (query0);
   */
@@ -948,17 +995,21 @@ sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,
 }
 
 /*
+ * Table "host_plugin_sid" stores if some host has some event associated. For example, 
+ * the host 192.168.1.1 has a vulnerability identified with the Nessus plugin 12123. then
+ * a row will be: "192.168.1.1, 3001, 12123". This table is filled with the DoNessus.py plugin.
+ * Table "plugin_reference" has the relationships between some plugins and another.
  *
- *
- *
+ * This function returns a SimPluginSid list with all of the plugin_sids associated with the destination
+ * GInetAddr specified in the event.
  *
  */
 GList*
 sim_container_db_host_get_plugin_sids_ul (SimContainer  *container,
-					 SimDatabase   *database,
-					 GInetAddr     *ia,
-					 gint           plugin_id,
-					 gint           plugin_sid)
+																				 SimDatabase   *database,
+																				 GInetAddr     *ia,
+																				 gint           plugin_id,
+																				 gint           plugin_sid)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -984,34 +1035,34 @@ sim_container_db_host_get_plugin_sids_ul (SimContainer  *container,
 			   "AND plugin_reference.plugin_id = %d "
 			   "AND plugin_reference.plugin_sid = %d",
 			   sim_inetaddr_ntohl (ia), plugin_id, plugin_sid);
-
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_host_get_plugin_sids_ul. Query: -%s-", query);
+	  
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  SimPluginSid *sid;
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
+		  SimPluginSid *sid;
 
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  reference_id = gda_value_get_integer (value);
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
-	  reference_sid = gda_value_get_integer (value);
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+	  	reference_id = gda_value_get_integer (value);
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+		  reference_sid = gda_value_get_integer (value);
 
-	  sid = sim_container_get_plugin_sid_by_pky (container,
-						     reference_id,
-						     reference_sid);
+	  	sid = sim_container_get_plugin_sid_by_pky (container,
+																						     reference_id,
+																						     reference_sid);
 
-	  if (sid)
-	    list = g_list_append (list, sid);
-	}
+		  if (sid)
+		    list = g_list_append (list, sid); //append to a glist all of SimPluginSid objects wich a specific host has.
+		}
       
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST PLUGIN SID DATA MODEL ERROR");
-    }
-  g_free (query);
+    g_message ("HOST PLUGIN SID DATA MODEL ERROR");
+  
+	g_free (query);
 
   return list;
 }
@@ -1038,7 +1089,7 @@ sim_container_db_get_recovery_ul (SimContainer  *container,
   g_return_val_if_fail (database != NULL, 0);
   g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
   
-  dm = sim_database_execute_single_command (database, query);
+  dm = sim_database_execute_single_command (database, query); //well... just execute the upper query and returns DataModel
   if (dm)
     {
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
@@ -1065,7 +1116,7 @@ sim_container_db_get_recovery_ul (SimContainer  *container,
 
 /*
  *
- *
+ * gets the recovery level of the SIM.
  *
  *
  */
@@ -1081,7 +1132,7 @@ sim_container_db_get_recovery (SimContainer  *container,
   g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
 
   G_LOCK (s_mutex_config);
-  recovery = sim_container_db_get_recovery_ul (container, database);
+  recovery = sim_container_db_get_recovery_ul (container, database); 
   G_UNLOCK (s_mutex_config);
 
   return recovery;
@@ -1230,756 +1281,6 @@ sim_container_db_get_max_plugin_sid (SimContainer  *container,
   G_UNLOCK (s_mutex_plugin_sids);
 
   return max_sid;
-}
-
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_db_load_categories_ul (SimContainer  *container,
-				SimDatabase   *database)
-{
-  SimCategory       *category;
-  GdaDataModel  *dm;
-  gint           row;
-  gchar         *query = "SELECT id, name FROM category";
-
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  dm = sim_database_execute_single_command (database, query);
-  if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  category  = sim_category_new_from_dm (dm, row);
-	  container->_priv->categories = g_list_append (container->_priv->categories, category);
-	}
-
-      g_object_unref(dm);
-    }
-  else
-    {
-      g_message ("CATEGORIES DATA MODEL ERROR");
-    }
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_append_category_ul (SimContainer  *container,
-			      SimCategory       *category)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (category);
-  g_return_if_fail (SIM_IS_CATEGORY (category));
-
-  container->_priv->categories = g_list_append (container->_priv->categories, category);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_remove_category_ul (SimContainer  *container,
-			      SimCategory       *category)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (category);
-  g_return_if_fail (SIM_IS_CATEGORY (category));
-
-  container->_priv->categories = g_list_remove (container->_priv->categories, category);
-}
-
-/*
- *
- *
- *
- *
- */
-GList*
-sim_container_get_categories_ul (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-
-  list = g_list_copy (container->_priv->categories);
-
-  return list;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_set_categories_ul (SimContainer  *container,
-			    GList         *categories)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (categories);
-
-  container->_priv->categories = g_list_concat (container->_priv->categories, categories);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_free_categories_ul (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-
-  list = container->_priv->categories;
-  while (list)
-    {
-      SimCategory *category = (SimCategory *) list->data;
-      g_object_unref (category);
-
-      list = list->next;
-    }
-  g_list_free (container->_priv->categories);
-  container->_priv->categories = NULL;
-}
-
-/*
- *
- *
- *
- *
- */
-SimCategory*
-sim_container_get_category_by_id_ul (SimContainer  *container,
-				   gint           id)
-{
-  SimCategory   *category;
-  GList     *list;
-  gboolean   found = FALSE;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (id > 0, NULL);
-
-  list = container->_priv->categories;
-  while (list)
-    {
-      category = (SimCategory *) list->data;
-
-      if (sim_category_get_id (category) == id)
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
-
-  if (!found)
-    return NULL;
-
-  return category;
-}
-
-/*
- *
- *
- *
- *
- */
-SimCategory*
-sim_container_get_category_by_name_ul (SimContainer  *container,
-				       const gchar   *name)
-{
-  SimCategory   *category;
-  GList         *list;
-  gboolean       found = FALSE;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (name, NULL);
-
-  list = container->_priv->categories;
-  while (list)
-    {
-      category = (SimCategory *) list->data;
-
-      if (!g_ascii_strcasecmp (sim_category_get_name (category), name))
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
-
-  if (!found)
-    return NULL;
-
-  return category;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_db_load_categories (SimContainer  *container,
-			     SimDatabase   *database)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  G_LOCK (s_mutex_categories);
-  sim_container_db_load_categories_ul (container, database);
-  G_UNLOCK (s_mutex_categories);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_append_category (SimContainer  *container,
-			   SimCategory       *category)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (category);
-  g_return_if_fail (SIM_IS_CATEGORY (category));
-
-  G_LOCK (s_mutex_categories);
-  sim_container_append_category_ul (container, category);
-  G_UNLOCK (s_mutex_categories);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_remove_category (SimContainer  *container,
-			   SimCategory       *category)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (category);
-  g_return_if_fail (SIM_IS_CATEGORY (category));
-
-  G_LOCK (s_mutex_categories);
-  sim_container_remove_category_ul (container, category);
-  G_UNLOCK (s_mutex_categories);
-}
-
-/*
- *
- *
- *
- *
- */
-GList*
-sim_container_get_categories (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-
-  G_LOCK (s_mutex_categories);
-  list = sim_container_get_categories_ul (container);
-  G_UNLOCK (s_mutex_categories);
-
-  return list;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_set_categories (SimContainer  *container,
-			 GList         *categories)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (categories);
-
-  G_LOCK (s_mutex_categories);
-  sim_container_set_categories_ul (container, categories);
-  G_UNLOCK (s_mutex_categories);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_free_categories (SimContainer  *container)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-
-  G_LOCK (s_mutex_categories);
-  sim_container_free_categories_ul (container);
-  G_UNLOCK (s_mutex_categories);
-}
-
-/*
- *
- *
- *
- *
- */
-SimCategory*
-sim_container_get_category_by_id (SimContainer  *container,
-				  gint           id)
-{
-  SimCategory   *category;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (id > 0, NULL);
-
-  G_LOCK (s_mutex_categories);
-  category = sim_container_get_category_by_id_ul (container, id);
-  G_UNLOCK (s_mutex_categories);
-
-  return category;
-}
-
-/*
- *
- *
- *
- *
- */
-SimCategory*
-sim_container_get_category_by_name (SimContainer  *container,
-				    const gchar   *name)
-{
-  SimCategory   *category;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (name, NULL);
-
-  G_LOCK (s_mutex_categories);
-  category = sim_container_get_category_by_name_ul (container, name);
-  G_UNLOCK (s_mutex_categories);
-
-  return category;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_db_load_classifications_ul (SimContainer  *container,
-				SimDatabase   *database)
-{
-  SimClassification       *classification;
-  GdaDataModel  *dm;
-  gint           row;
-  gchar         *query = "SELECT id, name, description, priority FROM classification";
-
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  dm = sim_database_execute_single_command (database, query);
-  if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  classification  = sim_classification_new_from_dm (dm, row);
-	  container->_priv->classifications = g_list_append (container->_priv->classifications, classification);
-	}
-
-      g_object_unref(dm);
-    }
-  else
-    {
-      g_message ("CLASSIFICATIONS DATA MODEL ERROR");
-    }
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_append_classification_ul (SimContainer  *container,
-			      SimClassification       *classification)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classification);
-  g_return_if_fail (SIM_IS_CLASSIFICATION (classification));
-
-  container->_priv->classifications = g_list_append (container->_priv->classifications, classification);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_remove_classification_ul (SimContainer  *container,
-			      SimClassification       *classification)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classification);
-  g_return_if_fail (SIM_IS_CLASSIFICATION (classification));
-
-  container->_priv->classifications = g_list_remove (container->_priv->classifications, classification);
-}
-
-/*
- *
- *
- *
- *
- */
-GList*
-sim_container_get_classifications_ul (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-
-  list = g_list_copy (container->_priv->classifications);
-
-  return list;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_set_classifications_ul (SimContainer  *container,
-			    GList         *classifications)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classifications);
-
-  container->_priv->classifications = g_list_concat (container->_priv->classifications, classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_free_classifications_ul (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-
-  list = container->_priv->classifications;
-  while (list)
-    {
-      SimClassification *classification = (SimClassification *) list->data;
-      g_object_unref (classification);
-
-      list = list->next;
-    }
-  g_list_free (container->_priv->classifications);
-  container->_priv->classifications = NULL;
-}
-
-/*
- *
- *
- *
- *
- */
-SimClassification*
-sim_container_get_classification_by_id_ul (SimContainer  *container,
-				   gint           id)
-{
-  SimClassification   *classification;
-  GList     *list;
-  gboolean   found = FALSE;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (id > 0, NULL);
-
-  list = container->_priv->classifications;
-  while (list)
-    {
-      classification = (SimClassification *) list->data;
-
-      if (sim_classification_get_id (classification) == id)
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
-
-  if (!found)
-    return NULL;
-
-  return classification;
-}
-
-/*
- *
- *
- *
- *
- */
-SimClassification*
-sim_container_get_classification_by_name_ul (SimContainer  *container,
-					     const gchar   *name)
-{
-  SimClassification   *classification;
-  GList     *list;
-  gboolean   found = FALSE;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (name, NULL);
-
-  list = container->_priv->classifications;
-  while (list)
-    {
-      classification = (SimClassification *) list->data;
-
-      if (!g_ascii_strcasecmp (sim_classification_get_name (classification), name))
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
-
-  if (!found)
-    return NULL;
-
-  return classification;
-}
-
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_db_load_classifications (SimContainer  *container,
-			     SimDatabase   *database)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  G_LOCK (s_mutex_classifications);
-  sim_container_db_load_classifications_ul (container, database);
-  G_UNLOCK (s_mutex_classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_append_classification (SimContainer  *container,
-			   SimClassification       *classification)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classification);
-  g_return_if_fail (SIM_IS_CLASSIFICATION (classification));
-
-  G_LOCK (s_mutex_classifications);
-  sim_container_append_classification_ul (container, classification);
-  G_UNLOCK (s_mutex_classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_remove_classification (SimContainer  *container,
-			   SimClassification       *classification)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classification);
-  g_return_if_fail (SIM_IS_CLASSIFICATION (classification));
-
-  G_LOCK (s_mutex_classifications);
-  sim_container_remove_classification_ul (container, classification);
-  G_UNLOCK (s_mutex_classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-GList*
-sim_container_get_classifications (SimContainer  *container)
-{
-  GList *list;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-
-  G_LOCK (s_mutex_classifications);
-  list = sim_container_get_classifications_ul (container);
-  G_UNLOCK (s_mutex_classifications);
-
-  return list;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_set_classifications (SimContainer  *container,
-			 GList         *classifications)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (classifications);
-
-  G_LOCK (s_mutex_classifications);
-  sim_container_set_classifications_ul (container, classifications);
-  G_UNLOCK (s_mutex_classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_free_classifications (SimContainer  *container)
-{
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-
-  G_LOCK (s_mutex_classifications);
-  sim_container_free_classifications_ul (container);
-  G_UNLOCK (s_mutex_classifications);
-}
-
-/*
- *
- *
- *
- *
- */
-SimClassification*
-sim_container_get_classification_by_id (SimContainer  *container,
-				gint           id)
-{
-  SimClassification   *classification;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (id > 0, NULL);
-
-  G_LOCK (s_mutex_classifications);
-  classification = sim_container_get_classification_by_id_ul (container, id);
-  G_UNLOCK (s_mutex_classifications);
-
-  return classification;
-}
-
-/*
- *
- *
- *
- *
- */
-SimClassification*
-sim_container_get_classification_by_name (SimContainer  *container,
-					const gchar   *name)
-{
-  SimClassification   *classification;
-
-  g_return_val_if_fail (container, NULL);
-  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
-  g_return_val_if_fail (name, NULL);
-
-  G_LOCK (s_mutex_classifications);
-  classification = sim_container_get_classification_by_name_ul (container, name);
-  G_UNLOCK (s_mutex_classifications);
-
-  return classification;
 }
 
 /*
@@ -2303,12 +1604,12 @@ sim_container_get_plugin_by_id (SimContainer  *container,
  */
 void
 sim_container_db_load_plugin_sids_ul (SimContainer  *container,
-				      SimDatabase   *database)
+																      SimDatabase   *database)
 {
   SimPluginSid  *plugin_sid;
   GdaDataModel  *dm;
   gint           row;
-  gchar         *query = "SELECT plugin_id, sid, category_id, class_id, reliability, priority, name FROM plugin_sid";
+  gchar         *query = "SELECT plugin_id, sid, reliability, priority, name FROM plugin_sid";
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -2317,19 +1618,19 @@ sim_container_db_load_plugin_sids_ul (SimContainer  *container,
 
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  plugin_sid  = sim_plugin_sid_new_from_dm (dm, row);
-	  container->_priv->plugin_sids = g_list_append (container->_priv->plugin_sids, plugin_sid);
-	}
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
+		  plugin_sid  = sim_plugin_sid_new_from_dm (dm, row);
+			container->_priv->plugin_sids = g_list_append (container->_priv->plugin_sids, plugin_sid);
+		}
 
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("PLUGINS DATA MODEL ERROR");
-    }
+  {
+    g_message ("PLUGINS DATA MODEL ERROR");
+  }
 }
 
 /*
@@ -2431,16 +1732,81 @@ sim_container_free_plugin_sids_ul (SimContainer  *container)
 }
 
 /*
+ *  Given the name of a plugin, this function returns the plugin_id. 
+ *  Returns -1 on error.
  *
+ */
+
+inline gint
+sim_container_get_plugin_id_by_name (SimContainer  *container,	
+                                    gchar           *name)
+{
+  gint   plugin_id;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (name);
+
+  G_LOCK (s_mutex_plugins);
+  plugin_id = sim_container_get_plugin_id_by_name_ul (container, name);
+  G_UNLOCK (s_mutex_plugins);
+
+  return plugin_id;
+}
+
+/*
+ * 
  *
+ */
+
+inline gint
+sim_container_get_plugin_id_by_name_ul (SimContainer  *container,
+										                    gchar           *name)
+{
+  GList         *list;
+  gboolean      found = FALSE;
+  gchar         *query;
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gint          plugin_id = -1;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (name);
+
+  query = g_strdup_printf("SELECT id FROM plugin WHERE name='%s'",name);
+  
+  dm = sim_database_execute_single_command (ossim.dbossim, query);
+  if (dm)
+  {
+    if (gda_data_model_get_n_rows (dm))
+    {
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+      plugin_id = gda_value_get_integer (value);                
+    }
+    g_object_unref(dm);      
+  }
+  else
+    g_message ("PLUGIN ID DATA MODEL ERROR");
+  
+  g_free (query);
+  return plugin_id;
+        
+}
+
+
+
+/*
  *
+ * Returns the SimPluginSid object (plugin_sid) associated with the plugin_id and plugin_sid 
+ * from the event issued.
  *
  */
 SimPluginSid*
 sim_container_get_plugin_sid_by_pky_ul (SimContainer  *container,
-					 gint           plugin_id,
-					 gint           sid)
-{
+																				gint           plugin_id,
+																				gint           sid)
+{	
   SimPluginSid   *plugin_sid;
   GList     *list;
   gboolean   found = FALSE;
@@ -2452,18 +1818,18 @@ sim_container_get_plugin_sid_by_pky_ul (SimContainer  *container,
 
   list = container->_priv->plugin_sids;
   while (list)
-    {
-      plugin_sid = (SimPluginSid *) list->data;
+  {
+    plugin_sid = (SimPluginSid *) list->data;
 
-      if ((sim_plugin_sid_get_plugin_id (plugin_sid) == plugin_id) && 
-	  (sim_plugin_sid_get_sid (plugin_sid) == sid))
-	{
-	  found = TRUE;
-	  break;
-	}
+    if ((sim_plugin_sid_get_plugin_id (plugin_sid) == plugin_id) && //if the plugin id of the plugin sid provided match,
+			  (sim_plugin_sid_get_sid (plugin_sid) == sid))               //and if the plugin sid matches, we return it.
+		{
+		  found = TRUE;
+		  break;
+		}
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   if (!found)
     return NULL;
@@ -2479,8 +1845,8 @@ sim_container_get_plugin_sid_by_pky_ul (SimContainer  *container,
  */
 SimPluginSid*
 sim_container_get_plugin_sid_by_name_ul (SimContainer  *container,
-					 gint           plugin_id,
-					 const gchar   *name)
+																				 gint           plugin_id,
+																				 const gchar   *name)
 {
   SimPluginSid   *plugin_sid;
   GList     *list;
@@ -2493,18 +1859,18 @@ sim_container_get_plugin_sid_by_name_ul (SimContainer  *container,
 
   list = container->_priv->plugin_sids;
   while (list)
-    {
-      plugin_sid = (SimPluginSid *) list->data;
+  {
+    plugin_sid = (SimPluginSid *) list->data;
 
-      if ((sim_plugin_sid_get_plugin_id (plugin_sid) == plugin_id) && 
-	  (!strcmp (name, sim_plugin_sid_get_name (plugin_sid))))
-	{
-	  found = TRUE;
-	  break;
-	}
+    if ((sim_plugin_sid_get_plugin_id (plugin_sid) == plugin_id) && 
+			  (!strcmp (name, sim_plugin_sid_get_name (plugin_sid))))
+		{
+		  found = TRUE;
+			break;
+		}
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   if (!found)
     return NULL;
@@ -2631,14 +1997,14 @@ sim_container_free_plugin_sids (SimContainer  *container)
 
 /*
  *
- *
- *
+ * Returns the SimPluginSid object (plugin_sid) associated with the plugin_id and plugin_sid
+ * from the event issued.
  *
  */
 SimPluginSid*
 sim_container_get_plugin_sid_by_pky (SimContainer  *container,
-				      gint           plugin_id,
-				      gint            sid)
+																      gint          plugin_id,
+																      gint          sid)
 {
   SimPluginSid   *plugin_sid;
 
@@ -2662,8 +2028,8 @@ sim_container_get_plugin_sid_by_pky (SimContainer  *container,
  */
 SimPluginSid*
 sim_container_get_plugin_sid_by_name (SimContainer  *container,
-				      gint           plugin_id,
-				      const gchar   *name)
+																      gint           plugin_id,
+																      const gchar   *name)
 {
   SimPluginSid   *plugin_sid;
 
@@ -2673,7 +2039,7 @@ sim_container_get_plugin_sid_by_name (SimContainer  *container,
   g_return_val_if_fail (name, NULL);
 
   G_LOCK (s_mutex_plugin_sids);
-  plugin_sid = sim_container_get_plugin_sid_by_name_ul (container, plugin_id, name);
+	plugin_sid = sim_container_get_plugin_sid_by_name_ul (container, plugin_id, name);
   G_UNLOCK (s_mutex_plugin_sids);
 
   return plugin_sid;
@@ -2701,19 +2067,19 @@ sim_container_db_load_sensors_ul (SimContainer  *container,
 
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  sensor  = sim_sensor_new_from_dm (dm, row);
-	  container->_priv->sensors = g_list_append (container->_priv->sensors, sensor);
-	}
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
+		  sensor  = sim_sensor_new_from_dm (dm, row);
+			container->_priv->sensors = g_list_append (container->_priv->sensors, sensor);
+		}
 
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("SENSORS DATA MODEL ERROR");
-    }
+  {
+    g_message ("SENSORS DATA MODEL ERROR");
+  }
 }
 
 /*
@@ -2823,7 +2189,7 @@ sim_container_free_sensors_ul (SimContainer  *container)
  */
 SimSensor*
 sim_container_get_sensor_by_name_ul (SimContainer  *container,
-				     gchar         *name)
+																     gchar         *name)
 {
   SimSensor   *sensor;
   GList     *list;
@@ -2835,17 +2201,17 @@ sim_container_get_sensor_by_name_ul (SimContainer  *container,
 
   list = container->_priv->sensors;
   while (list)
-    {
-      sensor = (SimSensor *) list->data;
+  {
+    sensor = (SimSensor *) list->data;
 
-      if (!g_ascii_strcasecmp (sim_sensor_get_name (sensor), name))
-	{
-	  found = TRUE;
-	  break;
-	}
+    if (!g_ascii_strcasecmp (sim_sensor_get_name (sensor), name))
+		{
+		  found = TRUE;
+			break;
+		}
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   if (!found)
     return NULL;
@@ -2856,8 +2222,8 @@ sim_container_get_sensor_by_name_ul (SimContainer  *container,
 
 /*
  *
- *
- *
+ * Check every sensor defined previously (they're inside the container) 
+ * to see if the ia (internet address) belongs to it.
  *
  */
 SimSensor*
@@ -3055,6 +2421,92 @@ sim_container_get_sensor_by_ia (SimContainer  *container,
   return sensor;
 }
 
+/*
+ * Stores in memory the number of events of each sensor. The number of events are stored each 5 minutes 
+ * thanks to sim_scheduler_task_store_event_number_at_5min()
+ *
+ */
+void sim_container_set_sensor_event_number (SimContainer *container, gint event_kind, GInetAddr *sensor_ia)
+{
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+
+  GList *list;
+
+  G_LOCK (s_mutex_sensors); //FIXME: time consuming :/ I'm thinking in doing something to avoid this
+
+  list = container->_priv->sensors;
+  SimSensor *sensor;
+  while (list)
+  {
+    sensor = (SimSensor *) list->data;
+    if (gnet_inetaddr_noport_equal (sim_sensor_get_ia(sensor), sensor_ia) == 0) //if match
+    {
+        switch (event_kind)
+        {
+          case SIM_EVENT_EVENT:
+								sim_sensor_add_number_events (sensor);
+                break;
+          case SIM_EVENT_HOST_OS_EVENT:
+                sim_sensor_add_number_host_os_events (sensor);
+                break;
+          case SIM_EVENT_HOST_MAC_EVENT:
+                sim_sensor_add_number_host_mac_events (sensor);
+                break;
+          case SIM_EVENT_HOST_SERVICE_EVENT:
+                sim_sensor_add_number_host_service_events (sensor);
+                break;
+          case SIM_EVENT_HOST_IDS_EVENT:
+                sim_sensor_add_number_host_ids_events (sensor);
+                break;
+        }
+ 			
+      	break;
+    }
+    list = list->next;
+  }
+  G_UNLOCK (s_mutex_sensors);
+
+}
+
+/*
+ *
+ * Store in DB the number of events of each sensor
+ */
+void
+sim_container_db_update_sensor_events_number (SimContainer *container, SimDatabase   *database, SimSensor *sensor)
+{
+  event_kind event_number;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (sensor);
+  g_return_if_fail (SIM_IS_SENSOR (sensor));
+
+	event_number = sim_sensor_get_events_number (sensor);
+
+  gchar *query;
+  query = g_strdup_printf ("UPDATE sensor_stats SET events='%d', os_events='%d', mac_events='%d', service_events='%d', ids_events='%d' WHERE name='%s'", event_number.events,
+                              event_number.host_os_events,
+                              event_number.host_mac_events,
+                              event_number.host_service_events,
+                              event_number.host_ids_events,
+                              sim_sensor_get_name(sensor));
+
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_update_sensor_events_number QUERY: %s", query);
+  sim_database_execute_no_query (database, query);
+	 
+  g_free (query);
+
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_update_sensor_events_number: %s, %d %d %d %d %d", sim_sensor_get_name(sensor),
+                                                                          event_number.events,
+                                                                          event_number.host_os_events,
+                                                                          event_number.host_mac_events,
+                                                                          event_number.host_service_events,
+                                                                          event_number.host_ids_events);
+}
 
 /*
  *
@@ -3193,7 +2645,7 @@ sim_container_free_hosts_ul (SimContainer  *container)
 
 /*
  *
- *
+ * Check if the IA is in Policy->Hosts, and returns the object.
  *
  *
  */
@@ -3214,11 +2666,16 @@ sim_container_get_host_by_ia_ul (SimContainer  *container,
     {
       host = (SimHost *) list->data;
 
-      if (gnet_inetaddr_noport_equal (sim_host_get_ia (host), ia))
-	{
-	  found = TRUE;
-	  break;
-	}
+      if (gnet_inetaddr_get_canonical_name(sim_host_get_ia(host)))
+      {
+        if (gnet_inetaddr_noport_equal (sim_host_get_ia (host), ia))
+        {
+	      found = TRUE;
+	      break;
+	    }
+      }
+      else
+        g_message("Error: Some host is bad-defined in Policy->Hosts. Please check it!!");
 
       list = list->next;
     }
@@ -3371,7 +2828,7 @@ sim_container_get_host_by_ia (SimContainer  *container,
 
 /*
  *
- *
+ * Load the networks from the DB into the Container. 
  *
  *
  */
@@ -3399,7 +2856,7 @@ sim_container_db_load_nets_ul (SimContainer  *container,
     {
       for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
 	{
-	  net  = sim_net_new_from_dm (dm, row);
+	  net  = sim_net_new_from_dm (dm, row); //creates a new SimNet object to store network(s) under the same name in policy
 
 	  /*
 	  query2 = g_strdup_printf ("SELECT host_ip FROM net_host_reference WHERE net_name = '%s'",
@@ -3561,16 +3018,22 @@ sim_container_get_nets_has_ia_ul (SimContainer  *container,
 
   list = container->_priv->nets;
   while (list)
+  {
+    SimNet *net = (SimNet *) list->data;
+    
+    // check if some of the SimInet objects inside "net" (net is Policy->networks), match with the SimInet
+    // "inet" object
+    if (sim_net_has_inet (net, inet)) 
     {
-      SimNet *net = (SimNet *) list->data;
-
-      if (sim_net_has_inet (net, inet))
-	{
-	  nets = g_list_append (nets, net);
-	}
-
-      list = list->next;
+      nets = g_list_append (nets, net);
+ //     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_get_nets_has_ia_ul: COINCIDE");
+		  
     }
+  //  else
+  //    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_get_nets_has_ia_ul: NO COINCIDE");
+      
+    list = list->next;
+  }
 
   g_object_unref (inet);
 
@@ -3780,23 +3243,94 @@ sim_container_get_net_by_name (SimContainer  *container,
 
 /*
  *
+ * Helper function called from sim_container_db_load_policies_ul. This function executes the query 
+ * provided, loads all the host or nets (depending the SrcOrDst), and stores it in the policy. 
  *
+ */
+gboolean
+sim_container_db_load_src_or_dst (SimDatabase *database, gchar *query, SimPolicy *policy, int src_or_dst)
+{
+  GdaDataModel  *dm;
+  gint 					row;
+  GdaValue      *value;
+	GList 				*list;
+  
+//	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_src_or_dst. Query: %s", query);
+		
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+    {
+      gchar *SrcOrDst; //this can contain multiple hosts or networks.
+
+      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+      SrcOrDst = gda_value_stringify (value);
+//  		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_src_or_dst. String: %s", SrcOrDst);
+	
+			list = sim_get_SimInet_from_string (SrcOrDst);
+
+			while(list)
+			{
+				SimInet *HostOrNet = (SimInet *)list->data; 
+
+/*****debug****
+	    struct sockaddr_in* sa_in1 = (struct sockaddr_in*) &HostOrNet->_priv->sa;
+
+      guint32 val1 = ntohl (sa_in1->sin_addr.s_addr);
+
+      gchar *temp = g_strdup_printf ("%d.%d.%d.%d",
+                             (val1 >> 24) & 0xFF,
+                             (val1 >> 16) & 0xFF,
+                             (val1 >> 8) & 0xFF,
+                             (val1) & 0xFF);
+
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Adding src or dst: %d bits: %s",HostOrNet->_priv->bits, temp);
+      g_free(temp);
+/*********/
+		
+			  if (src_or_dst == SIM_SRC)
+			  	 sim_policy_append_src (policy, HostOrNet);
+ 			  else
+ 			  if (src_or_dst == SIM_DST)
+ 			 	  sim_policy_append_dst (policy, HostOrNet);
+
+				list = list->next;
+		  }
+     	g_free (SrcOrDst);
+						
+    }
+    g_object_unref(dm);
+  }
+	else
+  	return 0; //meeecs, error!.
+		
+	return 1;
+}
+
+
+/*
  *
+ * Loads the policy in the database to memory
  *
  */
 void
 sim_container_db_load_policies_ul (SimContainer  *container,
-				   SimDatabase   *database)
+																   SimDatabase   *database)
 {
   SimPolicy     *policy;
   GdaDataModel  *dm;
   GdaDataModel  *dm2;
   GdaValue      *value;
+  GdaValue      *value2;
   GInetAddr     *ia;
   gint           row;
   gint           row2;
+  gint           row3;
   gchar         *query = "SELECT policy.id, policy.priority, policy.descr, policy_time.begin_hour, policy_time.end_hour, policy_time.begin_day, policy_time.end_day FROM policy, policy_time WHERE policy.id = policy_time.policy_id;";
   gchar         *query2;
+  gchar         *query3;
+  gchar				 	*temp;
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -3805,197 +3339,260 @@ sim_container_db_load_policies_ul (SimContainer  *container,
 
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+  	{
 	  policy  = sim_policy_new_from_dm (dm, row);
 
 	  /* Host Source Inet Address */
-	  query2 = g_strdup_printf ("SELECT host_ip FROM  policy_host_reference WHERE policy_id = %d AND direction = 'source'",
-				    sim_policy_get_id (policy));
-	  dm2 = sim_database_execute_single_command (database, query2);
-	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  gchar *src_ip;
+	  query2 = g_strdup_printf ("SELECT host_ip FROM  policy_host_reference WHERE policy_id = %d AND direction = 'source'",  sim_policy_get_id (policy));
 
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  src_ip = gda_value_stringify (value);
+		if (!sim_container_db_load_src_or_dst(database, query2, policy, SIM_SRC))
+	    g_message ("POLICY HOST SOURCE REFERENCES DATA MODEL ERROR");
+	  g_free(query2);
 
-		  if (!g_ascii_strncasecmp (src_ip, SIM_IN_ADDR_ANY_CONST, 3))
-		    ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-		  else
-		    ia = gnet_inetaddr_new_nonblock (src_ip, 0);
-
-		  sim_policy_append_src_ia (policy, ia);
-
-		  g_free (src_ip);
-		}
-	      g_object_unref(dm2);
-	    }
-	  else
-	    {
-	      g_message ("POLICY HOST SOURCE REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
 
 	  /* Host Destination Inet Address */
-	  query2 = g_strdup_printf ("SELECT host_ip FROM  policy_host_reference WHERE policy_id = %d AND direction = 'dest'",
-				    sim_policy_get_id (policy));
-	  dm2 = sim_database_execute_single_command (database, query2);
-	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  gchar *dst_ip;
-
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  dst_ip = gda_value_stringify (value);
-
-		  if (!g_ascii_strncasecmp (dst_ip, SIM_IN_ADDR_ANY_CONST, 3))
-		    ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-		  else
-		    ia = gnet_inetaddr_new_nonblock (dst_ip, 0);
-
-		  sim_policy_append_dst_ia (policy, ia);
-
-		  g_free (dst_ip);
-		}
-	      g_object_unref(dm2);
-	    }
-	  else
-	    {
-	      g_message ("POLICY HOST DEST REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
+	  query2 = g_strdup_printf ("SELECT host_ip FROM  policy_host_reference WHERE policy_id = %d AND direction = 'dest'", sim_policy_get_id (policy));
+		if (!sim_container_db_load_src_or_dst(database, query2, policy, SIM_DST))
+		  g_message ("POLICY HOST DESTINATION REFERENCES DATA MODEL ERROR");
+	  g_free(query2);
 
 
 	  /* Net Source Inet Address */
-	  query2 = g_strdup_printf ("SELECT host_ip FROM policy_net_reference, net_host_reference WHERE policy_net_reference.net_name = net_host_reference.net_name AND policy_net_reference.direction = 'source' AND policy_id = %d",
-				    sim_policy_get_id (policy));
-	  dm2 = sim_database_execute_single_command (database, query2);
-	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  gchar *src_ip;
+	  query2 = g_strdup_printf ("SELECT ips FROM policy_net_reference,net WHERE policy_net_reference.net_name = net.name AND policy_net_reference.direction = 'source' AND policy_id = %d", sim_policy_get_id (policy));
 
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  src_ip = gda_value_stringify (value);
-
-		  if (!g_ascii_strncasecmp (src_ip, SIM_IN_ADDR_ANY_CONST, 3))
-		    ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-		  else
-		    ia = gnet_inetaddr_new_nonblock (src_ip, 0);
-
-		  sim_policy_append_src_ia (policy, ia);
-
-		  g_free (src_ip);
-		}
-	      g_object_unref(dm2);
-	    }
-	  else
-	    {
-	      g_message ("POLICY NET SOURCE REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
+    if (!sim_container_db_load_src_or_dst(database, query2, policy, SIM_SRC))
+	    g_message ("POLICY NET SOURCE REFERENCES DATA MODEL ERROR");									 
+	  g_free(query2);
 
 
 	  /* Net Destination Inet Address */
-	  query2 = g_strdup_printf ("SELECT host_ip FROM policy_net_reference, net_host_reference WHERE policy_net_reference.net_name = net_host_reference.net_name AND policy_net_reference.direction = 'dest' AND policy_id = %d",
-				    sim_policy_get_id (policy));
-	  dm2 = sim_database_execute_single_command (database, query2);
-	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  gchar *dst_ip;
+	  query2 = g_strdup_printf ("SELECT ips FROM policy_net_reference,net WHERE policy_net_reference.net_name = net.name AND policy_net_reference.direction = 'dest' AND policy_id = %d", sim_policy_get_id (policy));
 
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  dst_ip = gda_value_stringify (value);
-
-		  if (!g_ascii_strncasecmp (dst_ip, SIM_IN_ADDR_ANY_CONST, 3))
-		    ia = gnet_inetaddr_new_nonblock (SIM_IN_ADDR_ANY_IP_STR, 0);
-		  else
-		    ia = gnet_inetaddr_new_nonblock (dst_ip, 0);
-
-		  sim_policy_append_dst_ia (policy, ia);
-
-		  g_free (dst_ip);
-		}
-	      g_object_unref(dm2);
-	    }
-	  else
-	    {
-	      g_message ("POLICY NET DEST REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
-
+		if (!sim_container_db_load_src_or_dst(database, query2, policy, SIM_DST))
+      g_message ("POLICY NET DESTINATION SOURCE REFERENCES DATA MODEL ERROR");
+	  g_free(query2);
+		
+		
 	  /* Ports */
-	  query2 = g_strdup_printf ("SELECT port_number, protocol_name  FROM policy_port_reference, port_group_reference WHERE policy_port_reference.port_group_name = port_group_reference.port_group_name AND policy_port_reference.policy_id = %d",
-				    sim_policy_get_id (policy));
+	  query2 = g_strdup_printf ("SELECT port_number, protocol_name  FROM policy_port_reference, port_group_reference WHERE policy_port_reference.port_group_name = port_group_reference.port_group_name AND policy_port_reference.policy_id = %d", sim_policy_get_id (policy));
 	  dm2 = sim_database_execute_single_command (database, query2);
 	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  SimPortProtocol  *pp;
-		  SimProtocolType   proto_type;
-		  gint              port_num;
-		  gchar            *proto_name;
+	  {
+      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
+    	{
+		    SimPortProtocol  *pp;
+		    SimProtocolType   proto_type;
+  		  gint              port_num;
+	  	  gchar            *proto_name;
 
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  port_num = gda_value_get_integer (value);
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 1, row2);
-		  proto_name = gda_value_stringify (value);
+		    value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
 
-		  proto_type = sim_protocol_get_type_from_str (proto_name);
+        gchar *str_port;
+        str_port = gda_value_stringify (value); //ok, probably it'll be a number, but we have to check if its "any"
+        //if str_port is "ANY", we will store a "0", so later we will use it at sim_policy_match to match ANY ports
+        if ( g_strstr_len (str_port, strlen(str_port), SIM_IN_ADDR_ANY_CONST) ||
+             g_strstr_len (str_port, strlen(str_port), "any"))
+        {
+          port_num = 0;
+        }
+        else
+          port_num = gda_value_get_integer (value);
 
-		  pp = sim_port_protocol_new (port_num, proto_type);
-
-		  sim_policy_append_port (policy, pp);
-		  g_free (proto_name);
-		}
-	      g_object_unref(dm2);
-	    }
+  		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 1, row2);
+	  	  proto_name = gda_value_stringify (value);
+		    proto_type = sim_protocol_get_type_from_str (proto_name);
+		    pp = sim_port_protocol_new (port_num, proto_type);
+				
+  		  sim_policy_append_port (policy, pp);
+	  	  g_free (proto_name);
+		  }
+	    g_object_unref(dm2);
+	  }
 	  else
-	    {
-	      g_message ("POLICY CATEGORY REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
+	    g_message ("POLICY CATEGORY REFERENCES DATA MODEL ERROR");
+	  
+		g_free (query2);
 
-	  /* Categories */
-	  query2 = g_strdup_printf ("SELECT sig_name FROM policy_sig_reference, signature_group_reference WHERE policy_sig_reference.sig_group_name = signature_group_reference.sig_group_name AND policy_sig_reference.policy_id = %d",
-				    sim_policy_get_id (policy));
-	  dm2 = sim_database_execute_single_command (database, query2);
-	  if (dm2)
-	    {
-	      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
-		{
-		  gchar *category;
-
-		  value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
-		  category = gda_value_stringify (value);
-
-		  sim_policy_append_category (policy, category);
-		}
-	      g_object_unref(dm2);
-	    }
-	  else
-	    {
-	      g_message ("POLICY CATEGORY REFERENCES DATA MODEL ERROR");
-	    }
-	  g_free (query2);
-
-	  container->_priv->policies = g_list_append (container->_priv->policies, policy);
-	}
-      g_object_unref(dm);
-    }
-  else
+		
+    /* Sensors */
+    query2 = g_strdup_printf ("SELECT ip FROM sensor,policy_sensor_reference WHERE policy_id = %d and policy_sensor_reference.sensor_name=sensor.name;", sim_policy_get_id (policy));
+    dm2 = sim_database_execute_single_command (database, query2);
+    if (dm2)
     {
-      g_message ("POLICY DATA MODEL ERROR");
+      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
+      {
+        gchar *sensor;
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
+        sensor = gda_value_stringify (value);
+        
+				if ( g_strstr_len (sensor, strlen(sensor), SIM_IN_ADDR_ANY_CONST) ||
+             g_strstr_len (sensor, strlen(sensor), "any"))
+        {
+					g_free (sensor);
+					sensor = g_strdup_printf("0"); //okay, this should be something like "0.0.0.0", but I prefer speed in matches
+        }
+				
+        sim_policy_append_sensor (policy, sensor); //append the string with the sensor's ip  (i.e. "1.1.1.1" or "0" if ANY)
+      }
+			//May be that the sensor is "ANY", so the last query won't return nothing, as the sensor ANY hasn't got an IP.
+			//We've to check if this is the case
+			if (gda_data_model_get_n_rows (dm2) == 0)
+			{
+				gchar *query3 = g_strdup_printf("SELECT sensor_name FROM policy_sensor_reference WHERE policy_id = %d", sim_policy_get_id (policy));
+				GdaDataModel  *dm3;
+				dm3 = sim_database_execute_single_command (database, query3);
+				if (dm3)
+				{
+ 		    	for (row2 = 0; row2 < gda_data_model_get_n_rows (dm3); row2++)
+		      {
+    		    gchar *sensor;
+		        value = (GdaValue *) gda_data_model_get_value_at (dm3, 0, row2);
+		        sensor = gda_value_stringify (value);
+
+    		    if ( g_strstr_len (sensor, strlen(sensor), SIM_IN_ADDR_ANY_CONST) ||
+        		     g_strstr_len (sensor, strlen(sensor), "any"))
+		        {
+    		      g_free (sensor);
+        		  sensor = g_strdup_printf("0"); //okay, this should be something like "0.0.0.0", but I prefer speed in matches
+		        }
+    		    sim_policy_append_sensor (policy, sensor); //append the string with the sensor's ip  (i.e. "1.1.1.1" or "0" if ANY)
+		      }
+      		g_object_unref(dm3);
+				}
+				else
+					g_message ("POLICY SENSOR REFERENCE DATA MODEL ERROR");
+				g_free (query3);
+			}
+			
+      g_object_unref(dm2);
     }
+    else
+      g_message ("POLICY SENSOR REFERENCES DATA MODEL ERROR");
+    g_free (query2);
+	
+		
+		/*Plugin_id/sid groups*/
+		query2 = g_strdup_printf ("SELECT group_id FROM policy_plugin_group_reference WHERE policy_id = %d", sim_policy_get_id (policy));
+    dm2 = sim_database_execute_single_command (database, query2);
+    if (dm2)
+    {
+      for (row2 = 0; row2 < gda_data_model_get_n_rows (dm2); row2++)
+      {
+        gint plugin_group_id;
+				
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, row2);
+				plugin_group_id = gda_value_get_integer (value);		
+					
+			//	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul plugin_id: %d", plugin_group->plugin);
+
+				query3 = g_strdup_printf ("SELECT plugin_id, plugin_sid FROM plugin_group WHERE group_id = %d", plugin_group_id);
+	      GdaDataModel  *dm3;
+        dm3 = sim_database_execute_single_command (database, query3);
+        if (dm3)
+        {
+          for (row3 = 0; row3 < gda_data_model_get_n_rows (dm3); row3++)
+          {
+	      		Plugin_PluginSid *plugin_group = g_new0 (Plugin_PluginSid, 1);
+						gchar *str_plugin_sids;
+
+						value2 = (GdaValue *) gda_data_model_get_value_at (dm3, 0, row3); //plugin_id
+	          plugin_group->plugin_id = gda_value_get_integer (value2);
+						value2 = (GdaValue *) gda_data_model_get_value_at (dm3, 1, row3); //plugin_sid
+	          str_plugin_sids = gda_value_stringify (value2);
+						
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul str_plugin_sids: %s", str_plugin_sids);
+				
+						//at this moment we have all the plugin_sid's from a specific plugin_id. they can have the following format:
+						// "101,102,103-107" We've to separate it into individual *gint so we can store it inside 
+						//the plugin_group struct.
+						gchar **uniq_plugin_ids = g_strsplit (str_plugin_sids, ",", 0);
+						gint i,ii;
+								
+						for (i=0; i < sim_g_strv_length(uniq_plugin_ids); i++)
+						{
+							gchar *multiple =NULL;
+							multiple = strchr (uniq_plugin_ids[i], '-'); 
+							if (multiple) //"103-107"
+							{
+								gint from,to;
+								gchar *end;								
+								gchar **individual_plugin_ids;
+
+								individual_plugin_ids = g_strsplit (uniq_plugin_ids[i], "-", 0);
+				
+								from = strtol (individual_plugin_ids[0], (char **) NULL, 10);
+								to = strtol (individual_plugin_ids[1], (char **) NULL, 10);
+
+								for (ii = 0; ii <= (to - from); ii++)  //transform every plugin_sid into a number to store it.
+								{
+									gint *uniq = g_new0 (gint, 1);
+									*uniq = from + ii;
+									plugin_group->plugin_sid = g_list_append (plugin_group->plugin_sid, uniq);																
+								}
+								g_strfreev (individual_plugin_ids);
+							}
+							else //"101"
+							{
+								gint *uniq = g_new0 (gint, 1);
+								*uniq = strtol (uniq_plugin_ids[i], NULL, 10);
+								plugin_group->plugin_sid = g_list_append (plugin_group->plugin_sid, uniq);		
+							}				
+						}
+						sim_policy_append_plugin_group (policy, plugin_group); //appends the plugin_group.
+						g_strfreev (uniq_plugin_ids);
+					}	
+					g_object_unref(dm3);
+				}
+				else
+					g_message ("POLICY PLUGIN_GROUP DATA MODEL ERROR");
+				
+				g_free (query3);
+      }			
+      g_object_unref(dm2);
+    }
+    else
+      g_message ("POLICY PLUGIN_ID REFERENCES DATA MODEL ERROR");
+
+    g_free (query2);
+
+    /* Store events in this policy in DB or not? */
+    query2 = g_strdup_printf ("SELECT store FROM policy WHERE id = %d", sim_policy_get_id (policy));
+    dm2 = sim_database_execute_single_command (database, query2);
+    if (dm2)
+    {
+      if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical first time
+      {
+        gboolean store;
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, 0);
+        store = gda_value_get_tinyint (value);  //this should be boolean, but GDA is... is.... gggggg
+        sim_policy_set_store (policy, store);              
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul Store: %d", store);
+
+      }
+      else
+        g_message("Error: May be that there are a problem in policy table; store column failed!");
+
+      g_object_unref(dm2);
+    }
+    else
+      g_message ("POLICY STORE DATA MODEL ERROR");
+
+    g_free (query2);
+
+	
+		//Add the policy wich we have filled to the policies list.
+	  container->_priv->policies = g_list_append (container->_priv->policies, policy);
+		sim_policy_debug_print_policy(policy);
+				
+	  }
+    g_object_unref(dm);
+  }
+  else
+    g_message ("POLICY DATA MODEL ERROR");
+
 }
 
 /*
@@ -4103,11 +3700,13 @@ sim_container_free_policies_ul (SimContainer  *container)
  */
 SimPolicy*
 sim_container_get_policy_match_ul (SimContainer     *container,
-				   gint              date,
-				   GInetAddr        *src_ip,
-				   GInetAddr        *dst_ip,
-				   SimPortProtocol  *port,
-				   const gchar      *category)
+																   gint              date,
+																   GInetAddr        *src_ip,
+																   GInetAddr        *dst_ip,
+																   SimPortProtocol  *pp,
+																	 gchar						*sensor,
+																	 guint						plugin_id,
+																	 guint						plugin_sid)
 {
   SimPolicy  *policy;
   GList      *list;
@@ -4117,22 +3716,22 @@ sim_container_get_policy_match_ul (SimContainer     *container,
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (src_ip != NULL, NULL);
   g_return_val_if_fail (dst_ip != NULL, NULL);
-  g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (category != NULL, NULL);
+  g_return_val_if_fail (pp != NULL, NULL);
+  g_return_val_if_fail (sensor != NULL, NULL);
 
   list = container->_priv->policies;
   while (list)
-    {
-      policy = (SimPolicy *) list->data;
+  {
+    policy = (SimPolicy *) list->data;
+		//sim_policy_debug_print_policy(policy);
+    if (sim_policy_match (policy, date, src_ip, dst_ip, pp, sensor, plugin_id, plugin_sid))
+		{
+		  found = TRUE;
+	  	break;
+		}	
 
-      if (sim_policy_match (policy, date, src_ip, dst_ip, port, category))
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   if (!found)
     return FALSE;
@@ -4264,11 +3863,13 @@ sim_container_free_policies (SimContainer  *container)
  */
 SimPolicy*
 sim_container_get_policy_match (SimContainer     *container,
-				gint              date,
-				GInetAddr        *src_ip,
-				GInetAddr        *dst_ip,
-				SimPortProtocol  *port,
-				const gchar      *category)
+																gint              date,
+																GInetAddr        *src_ip,
+																GInetAddr        *dst_ip,
+																SimPortProtocol  *pp,
+																gchar							*sensor,
+																guint							plugin_id,
+																guint							plugin_sid)
 {
   SimPolicy  *policy;
 
@@ -4276,11 +3877,11 @@ sim_container_get_policy_match (SimContainer     *container,
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
   g_return_val_if_fail (src_ip != NULL, NULL);
   g_return_val_if_fail (dst_ip != NULL, NULL);
-  g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (category != NULL, NULL);
+  g_return_val_if_fail (pp != NULL, NULL);
+  g_return_val_if_fail (sensor != NULL, NULL);
 
   G_LOCK (s_mutex_policies);
-  policy = sim_container_get_policy_match_ul (container, date, src_ip, dst_ip, port, category);
+  policy = sim_container_get_policy_match_ul (container, date, src_ip, dst_ip, pp, sensor, plugin_id, plugin_sid);
   G_UNLOCK (s_mutex_policies);
 
   return policy;
@@ -4294,8 +3895,8 @@ sim_container_get_policy_match (SimContainer     *container,
  */
 void
 sim_container_load_directives_from_file_ul (SimContainer  *container,
-					    SimDatabase   *db_ossim,
-					    const gchar   *filename)
+																				    SimDatabase   *db_ossim,
+																				    const gchar   *filename)
 {
   SimXmlDirective *xml_directive;
   GList           *list = NULL;
@@ -4308,42 +3909,43 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_CONTAINER (container));
   g_return_if_fail (filename);
 
-  previous = xmlSubstituteEntitiesDefault(1);
+  previous = xmlSubstituteEntitiesDefault(1); //....
 
   xml_directive = sim_xml_directive_new_from_file (container, filename);
   container->_priv->directives = sim_xml_directive_get_directives (xml_directive);
 
-  max_sid = sim_container_db_get_max_plugin_sid (container, db_ossim,
-						 SIM_PLUGIN_ID_DIRECTIVE);
+	//FIXME: This is _really_ needed? I don't think so. /me, plz remove when sure.
+	max_sid = sim_container_db_get_max_plugin_sid (container, db_ossim,			//plugin_sid in directives is it's "id".
+																								 SIM_PLUGIN_ID_DIRECTIVE);
 
-  list = container->_priv->directives;
+	//This loop check if the directive sids (the "id") is stored in Db or not. If there are new directives, it will
+	//be stored	
+	list = container->_priv->directives;
   while (list)
-    {
-      SimDirective *directive = (SimDirective *) list->data;
+  {
+    SimDirective *directive = (SimDirective *) list->data;
 
-      plugin_sid = sim_container_get_plugin_sid_by_name (container, 
-							 SIM_PLUGIN_ID_DIRECTIVE,
-							 sim_directive_get_name (directive));
+    plugin_sid = sim_container_get_plugin_sid_by_name (container, 
+																											 SIM_PLUGIN_ID_DIRECTIVE,
+																											 sim_directive_get_name (directive));
 
-      if (!plugin_sid)
-	{
-	  plugin_sid = sim_plugin_sid_new_from_data (SIM_PLUGIN_ID_DIRECTIVE,
-						     sim_directive_get_id (directive),
-						     0,
-						     0,
-						     1,
-						     sim_directive_get_priority (directive),
-						     sim_directive_get_name (directive));
-	  sim_container_append_plugin_sid (container, plugin_sid);
+    if (!plugin_sid)
+		{
+		  plugin_sid = sim_plugin_sid_new_from_data (SIM_PLUGIN_ID_DIRECTIVE,
+																						     sim_directive_get_id (directive),
+																						     1,
+																						     sim_directive_get_priority (directive),
+																						     sim_directive_get_name (directive));
+		  sim_container_append_plugin_sid (container, plugin_sid);
 	  
-	  query = sim_plugin_sid_get_insert_clause (plugin_sid);
-	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", query);
-	  sim_database_execute_no_query (db_ossim, query); 
-	  g_free (query);
-	}
+		  query = sim_plugin_sid_get_insert_clause (plugin_sid);
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", query);
+		  sim_database_execute_no_query (db_ossim, query); 
+		  g_free (query);
+		}
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 
   xmlSubstituteEntitiesDefault(previous);
 
@@ -4584,20 +4186,17 @@ sim_container_db_load_host_levels_ul (SimContainer  *container,
 
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  host_level  = sim_host_level_new_from_dm (dm, row);
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
+		  host_level  = sim_host_level_new_from_dm (dm, row);
+		  container->_priv->host_levels = g_list_append (container->_priv->host_levels, host_level);
+		}
 
-	  container->_priv->host_levels = g_list_append (container->_priv->host_levels, host_level);
-	}
-
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST LEVELS DATA MODEL ERROR");
-    }
+    g_message ("HOST LEVELS DATA MODEL ERROR");
 }
 
 /*
@@ -4620,9 +4219,13 @@ sim_container_db_insert_host_level_ul (SimContainer  *container,
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
 
-  query = sim_host_level_get_insert_clause (host_level);
-  sim_database_execute_no_query (database, query);
-  g_free (query);
+  if (query = sim_host_level_get_insert_clause (host_level))
+	{
+	  sim_database_execute_no_query (database, query);
+  	g_free (query);
+	}
+	else
+	  g_message("There's a problem trying to insert a hosts level. Please check Policy->Hosts to see if there are any mistake"); 
 }
 
 /*
@@ -4633,8 +4236,8 @@ sim_container_db_insert_host_level_ul (SimContainer  *container,
  */
 void 
 sim_container_db_update_host_level_ul (SimContainer  *container,
-				       SimDatabase   *database,
-				       SimHostLevel  *host_level)
+																       SimDatabase   *database,
+																       SimHostLevel  *host_level)
 {
   gchar *query;
 
@@ -4645,9 +4248,14 @@ sim_container_db_update_host_level_ul (SimContainer  *container,
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
 
-  query = sim_host_level_get_update_clause (host_level);
-  sim_database_execute_no_query (database, query);
-  g_free (query);
+  if(query = sim_host_level_get_update_clause (host_level))
+	{
+	  sim_database_execute_no_query (database, query);
+  	g_free (query);
+	}
+	else
+    g_message("There's a problem trying to update a hosts level. Please check Policy->Hosts to see if there are any mistake");
+		
 }
 
 /*
@@ -4670,9 +4278,14 @@ sim_container_db_delete_host_level_ul (SimContainer  *container,
   g_return_if_fail (host_level);
   g_return_if_fail (SIM_IS_HOST_LEVEL (host_level));
 
-  query = sim_host_level_get_delete_clause (host_level);
-  sim_database_execute_no_query (database, query);
-  g_free (query);
+  if (query = sim_host_level_get_delete_clause (host_level))
+	{
+	  sim_database_execute_no_query (database, query);
+  	g_free (query);
+	}
+	else
+	  g_message("There's a problem trying to delete a hosts level. Please check Policy->Hosts to see if there are any mistake");
+				
 }
 
 /*
@@ -4781,9 +4394,9 @@ sim_container_free_host_levels_ul (SimContainer  *container)
  */
 SimHostLevel*
 sim_container_get_host_level_by_ia_ul (SimContainer  *container,
-				       GInetAddr     *ia)
+																       GInetAddr     *ia)
 {
-  SimHostLevel  *host_level;
+  SimHostLevel  *host_level=NULL;
   GList         *list;
   gboolean       found = FALSE;
   GInetAddr     *cmp = NULL;
@@ -4794,24 +4407,24 @@ sim_container_get_host_level_by_ia_ul (SimContainer  *container,
   
   list = container->_priv->host_levels;
   while (list)
-    {
-      host_level = (SimHostLevel *) list->data;
-      cmp = sim_host_level_get_ia (host_level);
+  {
+    host_level = (SimHostLevel *) list->data;
+    cmp = sim_host_level_get_ia (host_level);
 
-      if (!cmp)
-	{
-	  list = list->next;	
-	  continue;
-	}
+    if (!cmp)
+		{
+		  list = list->next;	
+	  	continue;
+		}
 
-      if (gnet_inetaddr_noport_equal (cmp, ia))
-	{
-	  found = TRUE;
-	  break;
-	}
+    if (gnet_inetaddr_noport_equal (cmp, ia))
+		{
+	  	found = TRUE;
+		  break;
+		}
       
-      list = list->next;
-    }
+    list = list->next;
+  }
   
   if (!found)
     return NULL;
@@ -4859,8 +4472,11 @@ sim_container_set_host_levels_recovery_ul (SimContainer  *container,
       else
 	{
 	  gchar *query = sim_host_level_get_update_clause (host_level);
-	  sim_database_execute_no_query (database, query);
-	  g_free (query);
+	  if (query)
+      {
+        sim_database_execute_no_query (database, query);
+	    g_free (query);
+      }
 	}
 
       list = list->next;
@@ -5651,8 +5267,8 @@ sim_container_set_net_levels_recovery (SimContainer  *container,
  */
 void
 sim_container_db_insert_backlog_ul (SimContainer  *container,
-				    SimDatabase   *database,
-				    SimDirective  *backlog)
+																    SimDatabase   *database,
+																    SimDirective  *backlog)
 {
   GdaDataModel  *dm;
   GdaValue      *value;
@@ -5673,32 +5289,32 @@ sim_container_db_insert_backlog_ul (SimContainer  *container,
   query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-      if (!gda_value_is_null (value))
-	backlog_id = gda_value_get_bigint (value);
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (!gda_value_is_null (value))
+			backlog_id = gda_value_get_bigint (value);
       
-      sim_directive_set_backlog_id (backlog, backlog_id);
+    sim_directive_set_backlog_id (backlog, backlog_id);
       
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
+  {
       g_message ("BACKLOG INSERT DATA MODEL ERROR");
-    }
+  }
   g_free (query);
 }
 
 /*
  *
- *
- *
+ * Update if a specific backlog entry (a SimDirective) has matched or not 
+  *
  *
  */
 void 
 sim_container_db_update_backlog_ul (SimContainer  *container,
-				    SimDatabase   *database,
-				    SimDirective   *backlog)
+																    SimDatabase   *database,
+																    SimDirective   *backlog)
 {
   gchar *query;
 
@@ -5722,8 +5338,8 @@ sim_container_db_update_backlog_ul (SimContainer  *container,
  */
 void 
 sim_container_db_delete_backlog_ul (SimContainer  *container,
-				    SimDatabase   *database,
-				    SimDirective   *backlog)
+																    SimDatabase   *database,
+																    SimDirective   *backlog)
 {
   GdaDataModel	*dm;
   gchar         *query;
@@ -5740,16 +5356,15 @@ sim_container_db_delete_backlog_ul (SimContainer  *container,
   query = g_strdup_printf ("SELECT backlog_id FROM alarm WHERE backlog_id = %lu", backlog_id);
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      if (!gda_data_model_get_n_rows (dm))
-	sim_container_db_delete_backlog_by_id_ul (backlog_id);
+  {
+    if (!gda_data_model_get_n_rows (dm))
+			sim_container_db_delete_backlog_by_id_ul (backlog_id);
       
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("BACKLOG DELETE DATA MODEL ERROR");
-    }
+    g_message ("BACKLOG DELETE DATA MODEL ERROR");
+			
   g_free (query);
 }
 
@@ -5760,10 +5375,10 @@ sim_container_db_delete_backlog_ul (SimContainer  *container,
  *
  */
 void 
-sim_container_db_insert_backlog_alert_ul (SimContainer  *container,
+sim_container_db_insert_backlog_event_ul (SimContainer  *container,
 					  SimDatabase   *database,
 					  SimDirective  *backlog,
-					  SimAlert      *alert)
+					  SimEvent      *event)
 {
   gchar *query;
 
@@ -5773,10 +5388,10 @@ sim_container_db_insert_backlog_alert_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_DATABASE (database));
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
-  g_return_if_fail (alert);
-  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
 
-  query = sim_directive_backlog_alert_get_insert_clause (backlog, alert);
+  query = sim_directive_backlog_event_get_insert_clause (backlog, event);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }
@@ -5789,7 +5404,7 @@ sim_container_db_insert_backlog_alert_ul (SimContainer  *container,
  */
 void
 sim_container_append_backlog_ul (SimContainer  *container,
-				 SimDirective  *backlog)
+																 SimDirective  *backlog)
 {
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -5819,7 +5434,7 @@ sim_container_remove_backlog_ul (SimContainer  *container,
 
 /*
  *
- *
+ * This returns a SimDirective list.
  *
  *
  */
@@ -5835,8 +5450,8 @@ sim_container_get_backlogs_ul (SimContainer  *container)
 }
 
 /*
- *
- *
+ * FIXME: The function wich call to this function is not called anymore.
+ * So this function is never executed :)
  *
  *
  */
@@ -5953,10 +5568,10 @@ sim_container_db_delete_backlog (SimContainer  *container,
  *
  */
 void 
-sim_container_db_insert_backlog_alert (SimContainer  *container,
+sim_container_db_insert_backlog_event (SimContainer  *container,
 				       SimDatabase   *database,
 				       SimDirective  *backlog,
-				       SimAlert      *alert)
+				       SimEvent      *event)
 {
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -5964,11 +5579,11 @@ sim_container_db_insert_backlog_alert (SimContainer  *container,
   g_return_if_fail (SIM_IS_DATABASE (database));
   g_return_if_fail (backlog);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
-  g_return_if_fail (alert);
-  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
 
   g_mutex_lock (ossim.mutex_backlogs);
-  sim_container_db_insert_backlog_alert_ul (container, database, backlog, alert);
+  sim_container_db_insert_backlog_event_ul (container, database, backlog, event);
   g_mutex_unlock (ossim.mutex_backlogs);
 }
 
@@ -6035,7 +5650,7 @@ sim_container_get_backlogs (SimContainer  *container)
 
 /*
  *
- *
+ * FIXME: This function is not called anymore
  *
  *
  */
@@ -6076,18 +5691,18 @@ sim_container_free_backlogs (SimContainer  *container)
  *
  */
 void
-sim_container_push_alert (SimContainer  *container,
-			    SimAlert    *alert)
+sim_container_push_event (SimContainer  *container,
+													SimEvent    *event)
 {
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (alert);
-  g_return_if_fail (SIM_IS_ALERT (alert));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
 
-  g_mutex_lock (container->_priv->mutex_alerts);
-  g_queue_push_head (container->_priv->alerts, alert);
-  g_cond_signal (container->_priv->cond_alerts);
-  g_mutex_unlock (container->_priv->mutex_alerts);
+  g_mutex_lock (container->_priv->mutex_events);
+  g_queue_push_head (container->_priv->events, event);
+  g_cond_signal (container->_priv->cond_events);
+  g_mutex_unlock (container->_priv->mutex_events);
 }
 
 /*
@@ -6096,28 +5711,30 @@ sim_container_push_alert (SimContainer  *container,
  *
  *
  */
-SimAlert*
-sim_container_pop_alert (SimContainer  *container)
+SimEvent*
+sim_container_pop_event (SimContainer  *container)
 {
-  SimAlert *alert;
+  SimEvent *event;
 
   g_return_val_if_fail (container, NULL);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
 
-  g_mutex_lock (container->_priv->mutex_alerts);
+  g_mutex_lock (container->_priv->mutex_events);
 
-  while (!g_queue_peek_tail (container->_priv->alerts))
-    g_cond_wait (container->_priv->cond_alerts, container->_priv->mutex_alerts);
+  while (!g_queue_peek_tail (container->_priv->events)) //We stops until some element appears in the event queue.
+    g_cond_wait (container->_priv->cond_events, container->_priv->mutex_events);
 
-  alert = (SimAlert *) g_queue_pop_tail (container->_priv->alerts);
-  if (!g_queue_peek_tail (container->_priv->alerts))
+  event = (SimEvent *) g_queue_pop_tail (container->_priv->events);
+
+  //FIXXME: Is really needed this 'if' clause?
+  if (!g_queue_peek_tail (container->_priv->events)) //if there are more events in the queue, don't do nothing
     {
-      g_cond_free (container->_priv->cond_alerts);
-      container->_priv->cond_alerts = g_cond_new ();
+      g_cond_free (container->_priv->cond_events);
+      container->_priv->cond_events = g_cond_new (); 
     }
-  g_mutex_unlock (container->_priv->mutex_alerts);
+  g_mutex_unlock (container->_priv->mutex_events);
 
-  return alert;
+  return event;
 }
 
 /*
@@ -6127,20 +5744,20 @@ sim_container_pop_alert (SimContainer  *container)
  *
  */
 void
-sim_container_free_alerts (SimContainer  *container)
+sim_container_free_events (SimContainer  *container)
 {
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
 
-  g_mutex_lock (container->_priv->mutex_alerts);
-  while (!g_queue_is_empty (container->_priv->alerts))
+  g_mutex_lock (container->_priv->mutex_events);
+  while (!g_queue_is_empty (container->_priv->events))
     {
-      SimAlert *alert = (SimAlert *) g_queue_pop_head (container->_priv->alerts);
-      g_object_unref (alert);
+      SimEvent *event = (SimEvent *) g_queue_pop_head (container->_priv->events);
+      g_object_unref (event);
     }
-  g_queue_free (container->_priv->alerts);
-  container->_priv->alerts = g_queue_new ();
-  g_mutex_unlock (container->_priv->mutex_alerts);
+  g_queue_free (container->_priv->events);
+  container->_priv->events = g_queue_new ();
+  g_mutex_unlock (container->_priv->mutex_events);
 }
 
 /*
@@ -6150,16 +5767,16 @@ sim_container_free_alerts (SimContainer  *container)
  *
  */
 gboolean
-sim_container_is_empty_alerts (SimContainer  *container)
+sim_container_is_empty_events (SimContainer  *container)
 {
   gboolean empty;
 
   g_return_val_if_fail (container, TRUE);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), TRUE);
 
-  g_mutex_lock (container->_priv->mutex_alerts);
-  empty = g_queue_is_empty (container->_priv->alerts);
-  g_mutex_unlock (container->_priv->mutex_alerts);
+  g_mutex_lock (container->_priv->mutex_events);
+  empty = g_queue_is_empty (container->_priv->events);
+  g_mutex_unlock (container->_priv->mutex_events);
 
   return empty;
 }
@@ -6171,16 +5788,20 @@ sim_container_is_empty_alerts (SimContainer  *container)
  *
  */
 gint
-sim_container_length_alerts (SimContainer  *container)
+sim_container_length_events (SimContainer  *container)
 {
   gint length;
 
   g_return_val_if_fail (container, 0);
   g_return_val_if_fail (SIM_IS_CONTAINER (container), 0);
 
-  g_mutex_lock (container->_priv->mutex_alerts);
-  length = container->_priv->alerts->length;
-  g_mutex_unlock (container->_priv->mutex_alerts);
+  g_mutex_lock (container->_priv->mutex_events);
+  length = container->_priv->events->length;
+  g_mutex_unlock (container->_priv->mutex_events);
 
   return length;
 }
+
+
+// vim: set tabstop=2:
+

@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Host_netbios {
 
     var $ip;
@@ -19,14 +21,20 @@ class Host_netbios {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM host_netbios $args";
+        require_once ('classes/Session.inc');
+    
+        $query = OssimQuery("SELECT * FROM host_netbios $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
-                $list[] = new Host_netbios ( $rs->fields["ip"],
-                                             $rs->fields["name"],
-                                             $rs->fields["wgroup"]);
+                if (Session::hostAllowed($conn, $rs->fields["ip"]))
+                {
+                    $list[] = new Host_netbios ( $rs->fields["ip"],
+                                                 $rs->fields["name"],
+                                                 $rs->fields["wgroup"]);
+                }
                 $rs->MoveNext();
             }
         }

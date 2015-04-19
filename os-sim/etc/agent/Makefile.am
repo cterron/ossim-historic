@@ -1,4 +1,4 @@
 SUBDIRS = plugins
-agentdir = $(sysconfdir)/ossim/agent
-agent_DATA = config.xml
-EXTRA_DIST = $(agent_DATA)
+
+install-data-local:
+	$(INSTALL) -m 640 ./config.xml $(DESTDIR)$(sysconfdir)/ossim/agent/config.xml

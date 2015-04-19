@@ -47,6 +47,7 @@
 #include <limits.h>
 
 #include "sim-inet.h"
+#include "sim-database.h"
 
 struct _SimPortProtocol {
   gint              port;
@@ -69,12 +70,21 @@ sim_protocol_get_type_from_str (const gchar  *str)
     return SIM_PROTOCOL_TYPE_UDP;
   else if (!g_ascii_strcasecmp (str, "TCP"))
     return SIM_PROTOCOL_TYPE_TCP;
-
+  else if (!g_ascii_strcasecmp (str, "Host_ARP_Event"))
+    return SIM_PROTOCOL_TYPE_HOST_ARP_EVENT;
+  else if (!g_ascii_strcasecmp (str, "Host_OS_Event"))
+    return SIM_PROTOCOL_TYPE_HOST_OS_EVENT;
+  else if (!g_ascii_strcasecmp (str, "Host_Service_Event"))
+    return SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT;
+  else if (!g_ascii_strcasecmp (str, "Host_IDS_Event"))
+    return SIM_PROTOCOL_TYPE_HOST_IDS_EVENT;
+  else if (!g_ascii_strcasecmp (str, "Information_Event"))
+    return SIM_PROTOCOL_TYPE_INFORMATION_EVENT;
+ 
   return SIM_PROTOCOL_TYPE_NONE;
 }
 
 /*
- *
  *
  *
  */
@@ -89,8 +99,18 @@ sim_protocol_get_str_from_type (SimProtocolType type)
       return g_strdup ("UDP");
     case SIM_PROTOCOL_TYPE_TCP:
       return g_strdup ("TCP");
+    case SIM_PROTOCOL_TYPE_HOST_ARP_EVENT:
+      return g_strdup ("Host_ARP_Event");
+    case SIM_PROTOCOL_TYPE_HOST_OS_EVENT:
+      return g_strdup ("Host_OS_Event");
+    case SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT:
+      return g_strdup ("Host_Service_Event");
+    case SIM_PROTOCOL_TYPE_HOST_IDS_EVENT:
+      return g_strdup ("Host_IDS_Event");
+    case SIM_PROTOCOL_TYPE_INFORMATION_EVENT:
+      return g_strdup ("Information_Event");
     default:
-      return NULL;
+      return g_strdup ("OTHER");
     }
 }
 
@@ -154,12 +174,12 @@ sim_condition_get_str_from_type (SimConditionType  type)
  */
 SimPortProtocol*
 sim_port_protocol_new (gint              port,
-		       SimProtocolType   protocol)
+								       SimProtocolType   protocol)
 {
   SimPortProtocol  *pp;
 
   g_return_val_if_fail (port >= 0, NULL);
-  g_return_val_if_fail (protocol >= 0, NULL);
+  g_return_val_if_fail (protocol >= -1, NULL);
 
   pp = g_new0 (SimPortProtocol, 1);
   pp->port = port;
@@ -175,12 +195,15 @@ sim_port_protocol_new (gint              port,
  */
 gboolean
 sim_port_protocol_equal (SimPortProtocol  *pp1,
-			 SimPortProtocol  *pp2)
+												 SimPortProtocol  *pp2)
 {
   g_return_val_if_fail (pp1, FALSE);  
   g_return_val_if_fail (pp2, FALSE);  
 
-  if (pp1->port == 0)
+//      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Policy port: %d , protocol: %d", pp1->port, pp1->protocol);
+//      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       port: %d , protocol: %d", pp2->port, pp2->protocol);
+      
+  if (pp1->port == 0)	//if the port defined in policy is "0", its like ANY and all the ports will match
     return TRUE;    
 
   if ((pp1->port == pp2->port) && (pp1->protocol == pp2->protocol))
@@ -189,9 +212,14 @@ sim_port_protocol_equal (SimPortProtocol  *pp1,
   return FALSE;
 }
 
+
+
+
+
 /*
  *
- *
+ * FIXME:I think that this function is useless until we make a "sim_xml_directive_set_rule_*" function.  
+ * This returns the var type of the n level in a rule from a directive
  *
  */
 SimRuleVarType
@@ -211,6 +239,8 @@ sim_get_rule_var_from_char (const gchar *var)
     return SIM_RULE_VAR_PROTOCOL;
   else if (!strcmp (var, SIM_PLUGIN_SID_CONST))
     return SIM_RULE_VAR_PLUGIN_SID;
+  else if (!strcmp (var, SIM_SENSOR_CONST))
+    return SIM_RULE_VAR_SENSOR;
 
   return SIM_RULE_VAR_NONE;
 }
@@ -277,8 +307,9 @@ sim_get_ias (const gchar *value)
 
 /*
  *
- *
- *
+ * Given a string with network(s) or hosts, it returns a GList of SimInet objects (one network or host each object).
+ * The format can be only: "192.168.1.1-40" or  "192.168.1.0/24" or "192.168.1.1".
+ * This function doesn't accepts multiple hosts or nets.
  */
 GList*
 sim_get_inets (const gchar *value)
@@ -293,43 +324,99 @@ sim_get_inets (const gchar *value)
 
   g_return_val_if_fail (value != NULL, NULL);
 
-  /* Look for a range */
+  /* Look for a range: 192.168.0.1-20. This kind of network is stored in memory using hosts with 32 bit network mask */
   slash = strchr (value, '-');
   if (slash)
-    {
-      gchar **values0 = g_strsplit(value, ".", 0);
-      if (values0[3])
-	{
-	  gchar **values1 = g_strsplit(values0[3], "-", 0);
+  {
+    gchar **values0 = g_strsplit(value, ".", 0);
+    if (values0[3])
+  	{
+	    gchar **values1 = g_strsplit(values0[3], "-", 0);
 
-	  from = strtol (values1[0], &endptr, 10);
-	  to = strtol (values1[1], &endptr, 10);
+	  	from = strtol (values1[0], &endptr, 10);
+		  to = strtol (values1[1], &endptr, 10);	
 
-	  for (i = 0; i <= (to - from); i++)
+		  for (i = 0; i <= (to - from); i++)  //transform every IP into a host SimInet object and store into it
 	    {
 	      gchar *ip = g_strdup_printf ("%s.%s.%s.%d/32",
 					   values0[0], values0[1],
 					   values0[2], from + i);
 
-	      inet = sim_inet_new (ip);
+	      inet = sim_inet_new (ip); 	//is this a host or a network? well, it's the same :)
 	      list = g_list_append (list, inet);
 
 	      g_free (ip);
 	    }
 
-	  g_strfreev (values1);
-	}
+	  	g_strfreev (values1);
+		}
 
-      g_strfreev (values0);
-    }
+    g_strfreev (values0);
+  }
   else
-    {
-      inet = sim_inet_new (value);
-      list = g_list_append (list, inet);
-    }
+  {
+    inet = sim_inet_new (value);
+    list = g_list_append (list, inet);		
+  }
 
   return list;
 }
+
+/*
+ *
+ * Takes any string like "192.168.1.0-40,192.168.1.0/24,192.168.5.6", transform everything into SimInet objects
+ * and put them into a GList. If the string has some "ANY", every other ip or network is removed. Then, inside the
+ * GList wich is returned just will be one SimInet object wich contains "0.0.0.0".
+ */
+GList*
+sim_get_SimInet_from_string (const gchar *value)
+{
+  SimInet    *inet;
+  GList      *list = NULL;
+  GList      *list_temp = NULL;
+	gint i;
+
+  g_return_val_if_fail (value != NULL, NULL);
+
+  if ( g_strstr_len (value, strlen(value), SIM_IN_ADDR_ANY_CONST) ||
+			 g_strstr_len (value, strlen(value), "any")) //if appears "ANY" anywhere in the string
+  {
+    inet = sim_inet_new(SIM_IN_ADDR_ANY_IP_STR);
+    list = g_list_append(list, inet);
+		return list;
+  }
+
+  if (strchr (value, ','))  		//multiple networks or hosts
+  {
+    gchar **values = g_strsplit (value, ",", 0);
+    for (i = 0; values[i] != NULL; i++)
+		{
+			//g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_get_SimInet_from_string: values[%d] = %s", i, values[i]);
+		  list_temp = sim_get_inets(values[i]);
+			while (list_temp)
+			{
+				inet = (SimInet *) list_temp->data;
+				list = g_list_append (list, inet);
+				
+				list_temp = list_temp->next;
+			}
+		}
+		g_strfreev (values);
+  }
+  else 													//uh, just one network or one host.
+	{
+    list_temp = sim_get_inets (value);
+    while (list_temp)
+    {
+      inet = (SimInet *) list_temp->data;
+      list = g_list_append (list, inet);
+			list_temp = list->next;
+    }
+	}
+
+  return list;
+}
+
 
 /* function called by g_hash_table_foreach to add items to a GList */
 static void
@@ -443,11 +530,11 @@ sim_inetaddr_aton (GInetAddr     *ia)
 /**
  *
  *
- *
+ * Transforms a GInetAddr into an unsigned long.
  *
  *
  */
-gulong
+inline gulong
 sim_inetaddr_ntohl (GInetAddr     *ia)
 {
   struct   in_addr in;
@@ -459,9 +546,168 @@ sim_inetaddr_ntohl (GInetAddr     *ia)
   if (!(ip = gnet_inetaddr_get_canonical_name (ia)))
     return -1;
 
-  if (inet_aton (ip, &in)) val = g_ntohl (in.s_addr);
+  if (inet_aton (ip, &in))
+		val = g_ntohl (in.s_addr);
 
   g_free (ip);
 
   return val;
 }
+
+/*
+ * Transforms a gchar * (i.e. 192.168.1.1) into an unsigned long
+ */
+inline gulong
+sim_ipchar_2_ulong (gchar     *ip)
+{
+  struct   in_addr in;
+  gulong   val = -1;
+
+  if (inet_aton (ip, &in))
+		val = g_ntohl (in.s_addr);
+
+  return val;
+}
+
+/*
+ * Check if all the characters in the given string are numbers, so we can transform
+ * that string into a number if we want, or whatever.
+ */
+inline gboolean
+sim_string_is_number (gchar *string)
+{
+	int n;
+	gboolean ok = FALSE;
+
+	for (n=0; n < strlen(string); n++)
+	{
+	  if (g_ascii_isdigit (string[n]))
+	    ok=TRUE;
+	  else
+	  {
+	    ok = FALSE;
+	    break;
+	  }
+	}
+	return ok;
+}
+
+/*
+ * Substitute for g_strv_length() as it's just supported in some environments
+ */
+guint 
+sim_g_strv_length (gchar **str_array)
+{
+	  guint i = 0;
+	  g_return_val_if_fail (str_array != NULL, 0);
+
+	  while (str_array[i])
+	    ++i;
+
+	  return i;
+}
+
+
+/*
+ * 
+ * Used to debug wich is the value from a GdaValue to know the right function to call.
+ * 
+ */
+void sim_gda_value_extract_type(GdaValue *value)
+{
+	GdaValueType lala;
+	lala = gda_value_get_type(value);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_gda_value_extract_type");
+						
+	switch (lala)
+	{
+		case GDA_VALUE_TYPE_NULL:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_NULL");
+						break;
+		case GDA_VALUE_TYPE_BIGINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_BIGINT");
+						break;
+		case GDA_VALUE_TYPE_BIGUINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_BIGUINT");
+						break;
+		case GDA_VALUE_TYPE_BINARY:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_BINARY");
+						break;
+		case GDA_VALUE_TYPE_BLOB:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_BLOB");
+						break;
+		case GDA_VALUE_TYPE_BOOLEAN:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_BOOLEAN");
+						break;
+		case GDA_VALUE_TYPE_DATE:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_DATE");
+						break;
+		case GDA_VALUE_TYPE_DOUBLE:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_DOUBLE");
+						break;
+		case GDA_VALUE_TYPE_GEOMETRIC_POINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_GEOMETRIC_POINT");
+						break;
+		case GDA_VALUE_TYPE_GOBJECT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_GOBJECT");
+						break;
+		case GDA_VALUE_TYPE_INTEGER:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_INTEGER");
+						break;
+		case GDA_VALUE_TYPE_LIST:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_LIST");
+						break;
+		case GDA_VALUE_TYPE_MONEY:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_MONEY");
+						break;
+		case GDA_VALUE_TYPE_NUMERIC:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_NUMERIC");
+						break;
+		case GDA_VALUE_TYPE_SINGLE:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_SINGLE");
+						break;
+		case GDA_VALUE_TYPE_SMALLINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_SMALLINT");
+						break;
+		case GDA_VALUE_TYPE_SMALLUINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_SMALLUINT");
+						break;
+		case GDA_VALUE_TYPE_STRING:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_STRING");
+						break;
+		case GDA_VALUE_TYPE_TIME:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_TIME");
+						break;
+		case GDA_VALUE_TYPE_TIMESTAMP:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_TIMESTAMP");
+						break;
+		case GDA_VALUE_TYPE_TINYINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_TINYINT");
+						break;
+		case GDA_VALUE_TYPE_TINYUINT:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_TINYUINT");
+						break;
+		case GDA_VALUE_TYPE_TYPE:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_TYPE");
+						break;
+		case GDA_VALUE_TYPE_UINTEGER:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_UINTEGER");
+						break;
+		case GDA_VALUE_TYPE_UNKNOWN:
+			      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "GDA_VALUE_TYPE_UNKNOWN");
+						break;
+		default:
+						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: GDA_VALUE_TYPE Desconocido");									
+	}
+
+}
+
+
+/*
+ *
+ * 
+ *
+ *dentro de hostmac:
+ * sim_event_counter(event->time, SIM_COMMAND_SYMBOL_HOST_MAC_EVENT, event->sensor);
+ */
+

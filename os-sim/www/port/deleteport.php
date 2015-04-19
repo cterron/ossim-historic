@@ -15,11 +15,10 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
   <h1> <?php echo gettext("Delete port group"); ?> </h1>
 
 <?php 
-    if (!$port_name = mysql_escape_string($_GET["portname"])) { 
-?>
-    <p> <?php echo gettext("Wrong port name"); ?> </p>
-<?php 
-        exit;
+    if (!$port_name = validateVar($_GET["portname"])) { 
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("WRONG_PORTNAME");
     }
 
 if (!$_GET["confirm"]) {

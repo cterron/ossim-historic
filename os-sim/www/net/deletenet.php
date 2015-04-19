@@ -16,14 +16,13 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
 <?php 
     if (!$_GET["name"]) { 
-?>
-    <p> <?php echo gettext("Wrong name"); ?> </p>
-<?php 
-        exit;
-    }
+     require_once("ossim_error.inc");
+     $error = new OssimError();
+     $error->display("WRONG_NET");
+     }
 
 
-$name = mysql_escape_string($_GET["name"]);
+$name = validateVar($_GET["name"], OSS_ALPHA . OSS_PUNC . OSS_SCORE);
 
 if (!$_GET["confirm"]) {
 ?>
@@ -46,6 +45,7 @@ if (!$_GET["confirm"]) {
     $conn = $db->connect();
     Net::delete($conn, $name);
     Net_scan::delete($conn, $name, 3001);
+    Net_scan::delete($conn, $name, 2007);
     $db->close($conn);
 
 ?>

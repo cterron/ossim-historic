@@ -83,7 +83,7 @@ class ParserSnareWindows(Parser.Parser):
                     except Exception:
                         pass
 
-                    self.agent.sendAlert  (
+                    self.agent.sendEvent  (
                                      type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],

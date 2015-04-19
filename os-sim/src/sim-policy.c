@@ -32,10 +32,25 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-policy.h"
- 
+#include "sim-sensor.h"
+#include "sim-inet.h"
+/*****/
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#ifdef BSD
+#define KERNEL
+#include <netinet/in.h>
+#endif
+/*****/
+#include <config.h>
+
 enum 
 {
   DESTROY,
@@ -51,12 +66,16 @@ struct _SimPolicyPrivate {
   gint    end_hour;
   gint    begin_day;
   gint    end_day;
+  gboolean    store_in_DB; //will be stored in database the events in this policy?
 
-  GList  *src_ias;
-  GList  *dst_ias;
-  GList  *ports;
+  GList  *src;  				// SimInet objects
+  GList  *dst;
+  GList  *ports;				//port & protocol list, SimPortProtocol object.
   GList  *categories;
-  GList  *sensors;
+  GList  *sensors; 			//gchar* sensor's ip (i.e. "1.1.1.1")
+  GList  *plugin_ids; 	//(guint *) list with each one of the plugin_id's
+  GList  *plugin_sids;	//
+  GList  *plugin_groups;	// *Plugin_PluginSid structs
 };
 
 static gpointer parent_class = NULL;
@@ -78,11 +97,11 @@ sim_policy_impl_finalize (GObject  *gobject)
   if (policy->_priv->description)
     g_free (policy->_priv->description);
 
-  sim_policy_free_src_ias (policy);
-  sim_policy_free_dst_ias (policy);
+  sim_policy_free_src (policy);
+  sim_policy_free_dst (policy);
   sim_policy_free_ports (policy);
-  sim_policy_free_categories (policy);
   sim_policy_free_sensors (policy);
+	//FIXME: sim_policy_free_plugin_id y sid.
 
   g_free (policy->_priv);
 
@@ -114,11 +133,14 @@ sim_policy_instance_init (SimPolicy *policy)
   policy->_priv->begin_day = 0;
   policy->_priv->end_day = 0;
 
-  policy->_priv->src_ias = NULL;
-  policy->_priv->dst_ias = NULL;
+  policy->_priv->src = NULL;
+  policy->_priv->dst = NULL;
   policy->_priv->ports = NULL;
   policy->_priv->categories = NULL;
   policy->_priv->sensors = NULL;
+  policy->_priv->plugin_ids = NULL;
+  policy->_priv->plugin_sids = NULL;
+  policy->_priv->plugin_groups = NULL;
 }
 
 /* Public Methods */
@@ -248,7 +270,7 @@ sim_policy_get_priority (SimPolicy* policy)
   g_return_val_if_fail (policy, 0);
   g_return_val_if_fail (SIM_IS_POLICY (policy), 0);
 
-  if (policy->_priv->priority < 0)
+  if (policy->_priv->priority < -1) //-1 means "don't change priority"
     return 0;
   if (policy->_priv->priority > 5)
     return 5;
@@ -392,19 +414,43 @@ sim_policy_set_end_hour (SimPolicy* policy,
 }
 
 /*
+ * This set, tells if the events that match in the policy must be stored in database
+ * or not.
+ */
+void
+sim_policy_set_store (SimPolicy *policy, gboolean store)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+  policy->_priv->store_in_DB = store;  
+}
+
+/*
+ * Get if the events that match in the policy must be stored.
+ */
+gboolean
+sim_policy_get_store (SimPolicy *policy)
+{
+  g_return_val_if_fail (policy, FALSE);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
+
+  return policy->_priv->store_in_DB;
+}
+/*
  *
  *
  *
  */
 void
-sim_policy_append_src_ia (SimPolicy        *policy,
-			  GInetAddr        *ia)
+sim_policy_append_src (SimPolicy     *policy,
+								       SimInet        *src) //SimInet objects can store hosts or networks, so we'll use it in the policy
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (ia);
+  g_return_if_fail (src);
 
-  policy->_priv->src_ias = g_list_append (policy->_priv->src_ias, ia);
+  policy->_priv->src = g_list_append (policy->_priv->src, src); //FIXME: I'll probably change it with g_list_prepend to increase efficiency
 }
 
 /*
@@ -413,28 +459,28 @@ sim_policy_append_src_ia (SimPolicy        *policy,
  *
  */
 void
-sim_policy_remove_src_ia (SimPolicy        *policy,
-			  GInetAddr        *ia)
+sim_policy_remove_src (SimPolicy        *policy,
+		       SimInet           *src)
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (ia);
+  g_return_if_fail (src);
 
-  policy->_priv->src_ias = g_list_remove (policy->_priv->src_ias, ia);
+  policy->_priv->src = g_list_remove (policy->_priv->src, src);
 }
 
 /*
  *
- *
+ * Returns all the src's from a policy
  *
  */
 GList*
-sim_policy_get_src_ias (SimPolicy* policy)
+sim_policy_get_src (SimPolicy* policy)
 {
   g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
-  return policy->_priv->src_ias;
+  return policy->_priv->src;
 }
 
 /*
@@ -443,20 +489,20 @@ sim_policy_get_src_ias (SimPolicy* policy)
  *
  */
 void
-sim_policy_free_src_ias (SimPolicy* policy)
+sim_policy_free_src (SimPolicy* policy)
 {
   GList   *list;
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
-  list = policy->_priv->src_ias;
+  list = policy->_priv->src;
   while (list)
     {
-      GInetAddr *ia = (GInetAddr *) list->data;
-      gnet_inetaddr_unref (ia);
+      SimInet *src = (SimInet *) list->data;
+      g_object_unref(src);
       list = list->next;
     }
-  g_list_free (policy->_priv->src_ias);
+  g_list_free (policy->_priv->src);
 }
 
 /*
@@ -465,14 +511,14 @@ sim_policy_free_src_ias (SimPolicy* policy)
  *
  */
 void
-sim_policy_append_dst_ia (SimPolicy        *policy,
-			  GInetAddr        *ia)
+sim_policy_append_dst (SimPolicy        *policy,
+		       SimInet        	*dst)
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (ia);
+  g_return_if_fail (dst);
 
-  policy->_priv->dst_ias = g_list_append (policy->_priv->dst_ias, ia);
+  policy->_priv->dst = g_list_append (policy->_priv->dst, dst);
 }
 
 /*
@@ -481,28 +527,28 @@ sim_policy_append_dst_ia (SimPolicy        *policy,
  *
  */
 void
-sim_policy_remove_dst_ia (SimPolicy        *policy,
-			  GInetAddr        *ia)
+sim_policy_remove_dst (SimPolicy        *policy,
+		       SimInet 	    	*dst)
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (ia);
+  g_return_if_fail (dst);
 
-  policy->_priv->dst_ias = g_list_remove (policy->_priv->dst_ias, ia);
+  policy->_priv->dst = g_list_remove (policy->_priv->dst, dst);
 }
 
 /*
  *
- *
+ * Returns a SimNet object with all the hosts and/or networks in a specific policy rule.
  *
  */
 GList*
-sim_policy_get_dst_ias (SimPolicy* policy)
+sim_policy_get_dst (SimPolicy* policy)
 {
   g_return_val_if_fail (policy, NULL);
   g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
 
-  return policy->_priv->dst_ias;
+  return policy->_priv->dst;
 }
 
 /*
@@ -511,20 +557,20 @@ sim_policy_get_dst_ias (SimPolicy* policy)
  *
  */
 void
-sim_policy_free_dst_ias (SimPolicy* policy)
+sim_policy_free_dst (SimPolicy* policy)
 {
   GList   *list;
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
-  list = policy->_priv->dst_ias;
+  list = policy->_priv->dst;
   while (list)
     {
-      GInetAddr *ia = (GInetAddr *) list->data;
-      gnet_inetaddr_unref (ia);
+      SimInet *dst = (SimInet *) list->data;
+      g_object_unref (dst);
       list = list->next;
     }
-  g_list_free (policy->_priv->dst_ias);
+  g_list_free (policy->_priv->dst);
 }
 
 /*
@@ -595,21 +641,7 @@ sim_policy_free_ports (SimPolicy* policy)
   g_list_free (policy->_priv->ports);
 }
 
-/*
- *
- *
- *
- */
-void
-sim_policy_append_category (SimPolicy        *policy,
-			     gchar            *category)
-{
-  g_return_if_fail (policy);
-  g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (category);
 
-  policy->_priv->categories = g_list_append (policy->_priv->categories, category);
-}
 
 /*
  *
@@ -617,28 +649,14 @@ sim_policy_append_category (SimPolicy        *policy,
  *
  */
 void
-sim_policy_remove_category (SimPolicy        *policy,
-			     gchar            *category)
+sim_policy_append_sensor (SimPolicy        *policy,
+								          gchar            *sensor)
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
-  g_return_if_fail (category);
+  g_return_if_fail (sensor);
 
-  policy->_priv->categories = g_list_remove (policy->_priv->categories, category);
-}
-
-/*
- *
- *
- *
- */
-GList*
-sim_policy_get_categories (SimPolicy* policy)
-{
-  g_return_val_if_fail (policy, NULL);
-  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
-
-  return policy->_priv->categories;
+  policy->_priv->sensors = g_list_append (policy->_priv->sensors, sensor);
 }
 
 /*
@@ -647,22 +665,16 @@ sim_policy_get_categories (SimPolicy* policy)
  *
  */
 void
-sim_policy_free_categories (SimPolicy* policy)
+sim_policy_remove_sensor (SimPolicy        *policy,
+								           gchar            *sensor)
 {
-  GList   *list;
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (sensor);
 
-  list = policy->_priv->categories;
-  while (list)
-    {
-      gchar *category = (gchar *) list->data;
-      g_free (category);
-      list = list->next;
-    }
-  g_list_free (policy->_priv->categories);
-  policy->_priv->categories = NULL;
+  policy->_priv->sensors = g_list_remove (policy->_priv->sensors, sensor);
 }
+
 
 /*
  *
@@ -692,13 +704,210 @@ sim_policy_free_sensors (SimPolicy* policy)
 
   list = policy->_priv->sensors;
   while (list)
-    {
-      gchar *sensor = (gchar *) list->data;
-      g_free (sensor);
-      list = list->next;
-    }
+  {
+    gchar *sensor = (gchar *) list->data;
+    g_free (sensor);
+    list = list->next;
+  }
   g_list_free (policy->_priv->sensors);
 }
+
+
+/*
+ *
+ */
+void
+sim_policy_append_plugin_id (SimPolicy        *policy,
+		                         guint            *plugin_id)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_id);
+	
+  policy->_priv->plugin_ids = g_list_append (policy->_priv->plugin_ids, plugin_id);
+}
+
+/*
+ * 
+ */
+void
+sim_policy_remove_plugin_id (SimPolicy        *policy,
+                             guint            *plugin_id)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_id);
+
+  policy->_priv->plugin_ids = g_list_remove (policy->_priv->plugin_ids, plugin_id);
+}
+
+/*
+ *
+ */
+GList*
+sim_policy_get_plugin_ids (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+
+  return policy->_priv->plugin_ids;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_free_plugin_ids (SimPolicy* policy)
+{
+  GList   *list;
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+  list = policy->_priv->plugin_ids;
+  while (list)
+  {
+    guint *plugin_id = (guint *) list->data;
+    g_free (plugin_id);
+    list = list->next;
+  }
+  g_list_free (policy->_priv->plugin_ids);
+}
+
+
+/*
+ *
+ */
+void
+sim_policy_append_plugin_sid (SimPolicy        *policy,
+		                      		guint            *plugin_sid)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_sid);
+
+  policy->_priv->plugin_sids = g_list_append (policy->_priv->plugin_sids, plugin_sid);
+}
+
+/*
+ * 
+ */
+void
+sim_policy_remove_plugin_sid (SimPolicy        *policy,
+	                            guint            *plugin_sid)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_sid);
+
+  policy->_priv->plugin_sids = g_list_remove (policy->_priv->plugin_sids, plugin_sid);
+}
+
+/*
+ *
+ */
+GList*
+sim_policy_get_plugin_sids (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+
+  return policy->_priv->plugin_sids;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_free_plugin_sids (SimPolicy* policy)
+{
+  GList   *list;
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+  list = policy->_priv->plugin_sids;
+  while (list)
+  {
+    guint *plugin_sid = (guint *) list->data;
+    g_free (plugin_sid);
+    list = list->next;
+  }
+  g_list_free (policy->_priv->plugin_sids);
+}
+
+/*
+ *
+ */
+void
+sim_policy_append_plugin_group (SimPolicy					 *policy,
+																Plugin_PluginSid   *plugin_group)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_group);
+	
+  policy->_priv->plugin_groups = g_list_append (policy->_priv->plugin_groups, plugin_group);
+}
+
+/*
+ * 
+ */
+void
+sim_policy_remove_plugin_group (SimPolicy        *policy,
+																Plugin_PluginSid   *plugin_group)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (plugin_group);
+
+  policy->_priv->plugin_groups = g_list_remove (policy->_priv->plugin_groups, plugin_group);
+}
+
+/*
+ *
+ */
+GList*
+sim_policy_get_plugin_groups (SimPolicy* policy)
+{
+  g_return_val_if_fail (policy, NULL);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), NULL);
+
+  return policy->_priv->plugin_groups;
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_policy_free_plugin_groups (SimPolicy* policy)
+{
+  GList   *list;
+  GList   *list2;
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+  list = policy->_priv->plugin_groups;
+  while (list)
+  {
+    Plugin_PluginSid *plugin_group = (Plugin_PluginSid *) list->data;
+		list2 = plugin_group->plugin_sid;
+		while (list2)
+		{
+			gint *plugin_sid = (gint *) list2->data;
+			g_free (plugin_sid);
+			list2 = list2->next;
+		}			
+    g_free (plugin_group);
+    list = list->next;
+  }
+  g_list_free (policy->_priv->plugin_groups);
+}
+
 
 /*
  *
@@ -707,11 +916,13 @@ sim_policy_free_sensors (SimPolicy* policy)
  */
 gboolean
 sim_policy_match (SimPolicy        *policy,
-		  gint              date,
-		  GInetAddr        *src_ia,
-		  GInetAddr        *dst_ia,
-		  SimPortProtocol  *pp,
-		  const gchar      *category)
+								  gint              date,
+								  GInetAddr        *src_ia,
+								  GInetAddr        *dst_ia,
+								  SimPortProtocol  *pp,
+									gchar							*sensor,
+									guint							plugin_id,
+									guint							plugin_sid)
 {
   GList     *list;
   gboolean   found = FALSE;
@@ -722,81 +933,213 @@ sim_policy_match (SimPolicy        *policy,
   g_return_val_if_fail (src_ia, FALSE);
   g_return_val_if_fail (dst_ia, FALSE);
   g_return_val_if_fail (pp, FALSE);
-  g_return_val_if_fail (category, FALSE);
+  g_return_val_if_fail (sensor, FALSE);
+    
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_match, Policy ID: %d", policy->_priv->id);
 
-  start = ((policy->_priv->begin_day - 1) * 7 + policy->_priv->begin_hour);
-  end = ((policy->_priv->end_day - 1) * 7 + policy->_priv->end_hour);
+  start = ((policy->_priv->begin_day - 1) * 24 + policy->_priv->begin_hour);
+  end = ((policy->_priv->end_day - 1) * 24 + policy->_priv->end_hour);
   
   if ((start > date) || (end < date))
+	{
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_match: Not match: BAD DATE");
     return FALSE;
-
+	}
+//	else
+//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "DATE OK");
+			
+	
   /* Find source ip*/
   found = FALSE;
-  list = policy->_priv->src_ias;
+  list = policy->_priv->src;
+
+	if (!list)
+	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_match: NO POLICY!!!");
+			
   while (list)
-    {
-      GInetAddr *cmp = (GInetAddr *) list->data;
+  {
+    SimInet *cmp = (SimInet *) list->data;
 
-      if ((gnet_inetaddr_is_reserved (cmp)) || (gnet_inetaddr_noport_equal (cmp, src_ia)))
+//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s", gnet_inetaddr_get_canonical_name(src_ia));
+
+		if (sim_inet_is_reserved(cmp)) //check if "any" is the source
+ 	  {
+	    found = TRUE;
+		  break;
+	  }
+		
+	  SimInet *src = sim_inet_new_from_ginetaddr(src_ia); //a bit speed improve separating both checks...
+		if (sim_inet_has_inet(cmp, src))  //check if src belongs to cmp.
+		{
+			found=TRUE;
+			break;
+		}
+
+    list = list->next;
+  }
+	
+  if (!found)
 	{
-	  found = TRUE;
-	  break;
+//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s Doesn't matches with any", gnet_inetaddr_get_canonical_name(src_ia));
+		return FALSE;
 	}
-
-      list = list->next;
-    }
-  if (!found) return FALSE;
+//	else
+//	  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       src_ip: %s OK!; Match with policy: %d", gnet_inetaddr_get_canonical_name(src_ia),policy->_priv->id);
 
   /* Find destination ip */
   found = FALSE;
-  list = policy->_priv->dst_ias;
+  list = policy->_priv->dst;
   while (list)
-    {
-      GInetAddr *cmp = (GInetAddr *) list->data;
-      
-      if ((gnet_inetaddr_is_reserved (cmp)) || (gnet_inetaddr_noport_equal (cmp, dst_ia)))
-	{
-	  found = TRUE;
-	  break;
-	}
+  {
+    SimInet *cmp = (SimInet *) list->data;
+	
+		/**********DEBUG**************
+    //struct sockaddr_in* sa_in = (struct sockaddr_in*) &cmp->_priv->sa;
+    struct sockaddr_in* sa_in = (struct sockaddr_storage*) &cmp->_priv->sa;
 
-      list = list->next;
+    guint32 val1 = ntohl (sa_in->sin_addr.s_addr);
+
+    gchar *temp = g_strdup_printf ("%d.%d.%d.%d",
+                             (val1 >> 24) & 0xFF,
+                             (val1 >> 16) & 0xFF,
+                             (val1 >> 8) & 0xFF,
+                             (val1) & 0xFF);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Policy dst: %d bits: %s",cmp->_priv->bits, temp);*/
+//    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       dst_ip: %s", gnet_inetaddr_get_canonical_name(dst_ia));
+//		g_free(temp);
+
+		/**************end debug**************/
+	
+    if (sim_inet_is_reserved(cmp))
+    {
+      found = TRUE;
+      break;
     }
+
+    SimInet *dst = sim_inet_new_from_ginetaddr(dst_ia);
+    if (sim_inet_has_inet(cmp, dst)) 
+ 	  {
+ 	    found=TRUE;
+	    break;
+    }
+    
+		list = list->next;
+  }
+	
   if (!found) return FALSE;
 
-  /* Find port */
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       dst_ip MATCH");
+	
+  /* Find port & protocol */
   found = FALSE;
   list = policy->_priv->ports;
   while (list)
-    {
-      SimPortProtocol *cmp = (SimPortProtocol *) list->data;
+  {
+    SimPortProtocol *cmp = (SimPortProtocol *) list->data;
       
-      if (sim_port_protocol_equal (cmp, pp))
-	{
-	  found = TRUE;
-	  break;
-	}
-
-      list = list->next;
-    }
+    if (sim_port_protocol_equal (cmp, pp))
+		{
+		  found = TRUE;
+		//	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       port MATCH");
+	  	break;
+		}
+    list = list->next;
+  }
   if (!found) return FALSE;
 
-  /* Find category subgroups  */
+	/* Find sensor */
   found = FALSE;
-  list = policy->_priv->categories;
+  list = policy->_priv->sensors;
   while (list)
-    {
-      gchar *cmp = (gchar *) list->data;
-      
-      if (!strcmp (cmp, category))
+  {
+    gchar *cmp = (gchar *) list->data;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       event sensor: -%s-",sensor);
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       policy sensor:-%s-",cmp);
+		
+    if (!strcmp (sensor, cmp) || !strcmp (cmp, "0")) //if match
+		{
+		  found = TRUE;
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       sensor MATCH");
+	  	break;
+		}
+    list = list->next;
+  }
+  if (!found)
 	{
-	  found = TRUE;
-	  break;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       sensor NOT MATCH");
+		return FALSE;
 	}
-
-      list = list->next;
+	
+  /* Find plugin_groups */
+	
+  found = FALSE;
+  list = policy->_priv->plugin_groups;
+  while (list)
+  {
+    Plugin_PluginSid *plugin_group = (Plugin_PluginSid *) list->data;
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_id: %d",plugin_group->plugin_id);
+		gint cmp = plugin_group->plugin_id;
+		if (plugin_id == 0) //if match (0 is ANY)
+    {
+      found = TRUE;
+      break;
     }
+		if (plugin_id == cmp) //if match
+		{
+	    GList *list2 = plugin_group->plugin_sid;
+  	  while (list2)
+  	 	{
+	      gint *aux_plugin_sid = (gint *) list2->data;
+				if ((*aux_plugin_sid == plugin_sid) || (*aux_plugin_sid == 0)) //match!
+				{
+					found = TRUE;
+					break;
+				}
+      	list2 = list2->next;
+	    }
+		}
+  	list = list->next;
+  }
   if (!found) return FALSE;
 
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       plugin group MATCH");
+	
   return TRUE;
 }
+
+void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
+{
+
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_policy_debug_print_policy: id: %d",policy->_priv->id);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               description: %s",policy->_priv->description);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               begin_hour:  %s",policy->_priv->begin_hour);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               src:         %x",policy->_priv->src);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               dst:         %x",policy->_priv->dst);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               ports:       %x",policy->_priv->ports);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               categories:  %x",policy->_priv->categories);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               sensors:     %x",policy->_priv->sensors);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_groups: %x",policy->_priv->plugin_groups);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               priority: %d",policy->_priv->priority);
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               store_in_DB: %d",policy->_priv->store_in_DB);
+//	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_ids:  %x",policy->_priv->plugin_ids);
+//	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_sids: %x",policy->_priv->plugin_sids);
+
+	GList *list = policy->_priv->plugin_groups;
+  while (list)
+  {
+    Plugin_PluginSid *plugin_group = (Plugin_PluginSid *) list->data;
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_id: %d",plugin_group->plugin_id);
+    GList *list2 = plugin_group->plugin_sid;
+    while (list2)
+    {
+      gint *plugin_sid = (gint *) list2->data;
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_ids: %d",*plugin_sid);
+      list2 = list2->next;
+    }
+    list = list->next;
+	}
+
+}
+
+
+// vim: set tabstop=2:

@@ -92,7 +92,7 @@ my @links = (
 "graph_ntop",
 "ntop_link",
 "ntop_link_ext",
-"opennms_link",
+"nagios_link",
 "ossim_link"
 );
 

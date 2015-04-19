@@ -96,6 +96,12 @@ struct _SimConfig {
     gint      port;
   } smtp;
 
+  struct {
+    gchar    *name;
+    gchar    *host;
+    gint      port;
+  } framework;
+
 };
 
 struct _SimConfigClass {
@@ -141,3 +147,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_CONFIG_H__ */
+
+// vim: set tabstop=2:
+

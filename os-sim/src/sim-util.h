@@ -42,6 +42,15 @@
 
 G_BEGIN_DECLS
 
+//this struct is valid just for the Policy groups.
+typedef struct _Plugin_PluginSid            Plugin_PluginSid;
+
+struct _Plugin_PluginSid
+{
+  gint  plugin_id;
+  GList *plugin_sid; // *gint list
+};
+
 typedef struct _SimPortProtocol    SimPortProtocol;
 
 SimPortProtocol* sim_port_protocol_new (gint              port,
@@ -63,6 +72,7 @@ SimAlarmRiskType sim_get_alarm_risk_from_risk (gint risk);
 
 GList       *sim_get_ias (const gchar *value);
 GList       *sim_get_inets (const gchar *value);
+GList       *sim_get_SimInet_from_string (const gchar *value);
 
 GList       *sim_string_hash_to_list (GHashTable *hash_table);
 
@@ -73,9 +83,13 @@ GList       *sim_string_hash_to_list (GHashTable *hash_table);
 gchar    *sim_file_load (const gchar *filename);
 gboolean  sim_file_save (const gchar *filename, const gchar *buffer, gint len);
 
-gulong    sim_inetaddr_aton (GInetAddr     *ia);
-gulong    sim_inetaddr_ntohl (GInetAddr     *ia);
-
+gulong						sim_inetaddr_aton			(GInetAddr		*ia);
+inline gulong			sim_inetaddr_ntohl		(GInetAddr		*ia);
+inline gulong			sim_ipchar_2_ulong		(gchar				*ip);
+inline gboolean		sim_string_is_number	(gchar				*string);
+guint							sim_g_strv_length			(gchar				**str_array);
+	
 G_END_DECLS
 
 #endif
+// vim: set tabstop=2:

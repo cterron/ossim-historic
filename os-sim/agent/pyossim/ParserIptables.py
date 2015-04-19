@@ -99,7 +99,7 @@ class ParserIptables(Parser.Parser):
                     else:
                         plugin_sid = 1 # ??
 
-                    self.agent.sendAlert  (type = 'detector',
+                    self.agent.sendEvent  (type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],

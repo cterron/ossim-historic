@@ -21,20 +21,15 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
         (!$_POST["port"] || !$_POST["protocol"] || 
         !$_POST["service"] || !$_POST["descr"]))
     {
-?>
-
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
-
-<?php
-
-/* check OK, insert into BD */
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("FORM_MISSING_FIELDS");
 } elseif($_POST["insert"]) {
 
-    $port     = mysql_escape_string($_POST["port"]);
-    $protocol = mysql_escape_string($_POST["protocol"]);
-    $service  = mysql_escape_string($_POST["service"]);
-    $descr    = mysql_escape_string($_POST["descr"]);
+    $port     = validateVar($_POST["port"], OSS_DIGIT);
+    $protocol = validateVar($_POST["protocol"]);
+    $service  = validateVar($_POST["service"]);
+    $descr    = validateVar($_POST["descr"], OSS_ALPHA . OSS_PUNC . OSS_SCORE);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Port.inc';

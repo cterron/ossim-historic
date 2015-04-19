@@ -2,6 +2,10 @@
 
 require_once 'classes/Net_sensor_reference.inc';
 require_once 'classes/Host_sensor_reference.inc';
+require_once 'classes/Sensor.inc';
+require_once 'classes/Net.inc';
+require_once 'classes/Log_action.inc';
+require_once ("ossim_db.inc");
 
 class Sensor {
 
@@ -31,51 +35,95 @@ class Sensor {
 
     function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM sensor $args")) {
+        $query = OssimQuery("SELECT * FROM sensor $args");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                $list[] = new Sensor ($rs->fields["name"],
-                                      $rs->fields["ip"],
-                                      $rs->fields["priority"],
-                                      $rs->fields["port"],
-                                      $rs->fields["connect"],
-                                      $rs->fields["descr"]);
+
+                if (Session::hostAllowed($conn, $rs->fields["ip"]))
+                {
+                    $list[] = new Sensor ($rs->fields["name"],
+                                          $rs->fields["ip"],
+                                          $rs->fields["priority"],
+                                          $rs->fields["port"],
+                                          $rs->fields["connect"],
+                                          $rs->fields["descr"]);
+                }
                 $rs->MoveNext();
             }
         }
         return $list;
     }
 
+    function get_all($conn)
+    {
+        $list = array();
+        $sql = "SELECT * FROM sensor ORDER BY name ASC";
+        if (!$rs = $conn->Execute($sql)) {
+            die($conn->ErrorMsg());
+        }
+        while (!$rs->EOF) {
+            $list[] = new Sensor ($rs->fields["name"],
+                                  $rs->fields["ip"],
+                                  $rs->fields["priority"],
+                                  $rs->fields["port"],
+                                  $rs->fields["connect"],
+                                  $rs->fields["descr"]);
+            $rs->MoveNext();
+        }
+        return $list;
+    }
+
     function insert($conn, $name, $ip, $priority, $port, $descr)
     {
-        $query = "INSERT INTO sensor (name, ip, priority, port, descr)
-            VALUES ('$name', '$ip', '$priority', '$port', '$descr');";
-        if ($conn->Execute($query) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        $sql = "INSERT INTO sensor (name, ip, priority, port, connect, descr)
+                VALUES (?, ?, ?, ?, 0, ?)";
+        $params = array($name, $ip, $priority, $port, $descr);
+        if (!$conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
         }
+        $sql = "INSERT INTO sensor_stats (name) VALUES (?)";
+        if (!$conn->Execute($sql, array($name))) {
+            die($conn->ErrorMsg());
+        }
+        $infolog = array($name,"[".$ip."]");
+        Log_action::log(33,$infolog);
     }
 
     function update($conn, $name, $ip, $priority, $port, $descr)
     {
-        $query = "UPDATE sensor SET name = '$name', ip = '$ip', 
-            priority = '$priority', port = '$port', descr = '$descr' 
-            WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
-            print 'error updating: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        $sql = "UPDATE sensor SET name = ?, ip = ?, 
+                priority = ?, port = ?, descr = ? 
+                WHERE name = ?";
+        $params = array($name, $ip, $priority, $port, $descr, $name);
+        if (!$conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
         }
+        $sql = "UPDATE sensor_stats SET name = ? WHERE name = ?";
+        if (!$conn->Execute($sql, array($name, $name))) {
+            die($conn->ErrorMsg());
+        }
+        $infolog = array($name,"[".$ip."]");
+        Log_action::log(34,$infolog);
+ 
     }
 
-    function delete($conn, $name) {
-        $query = "DELETE FROM sensor WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
-            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
-            exit;
+    function delete($conn, $name)
+    {
+        $sql = "DELETE FROM sensor WHERE name = ?";
+        if (!$conn->Execute($sql, array($name))) {
+            die($conn->ErrorMsg());
+        }
+        $sql = "DELETE FROM sensor_stats WHERE name = ?";
+        if (!$conn->Execute($sql, array($name))) {
+            die($conn->ErrorMsg());
         }
         Net_sensor_reference::check_orphan($conn);
         Host_sensor_reference::check_orphan($conn);
+       
+       $infolog = array($name);
+       Log_action::log(35,$infolog);
     }
 
     /*
@@ -90,15 +138,15 @@ class Sensor {
     {
         require_once "classes/Net.inc";
         require_once "ossim_conf.inc";
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
 
         $sensor_ip = '';
 
         /* read from host table */
-        $query = "SELECT sensor.ip FROM host_sensor_reference, sensor 
+        $query = OssimQuery("SELECT sensor.ip FROM host_sensor_reference, sensor 
             WHERE host_sensor_reference.host_ip = '$host_ip' AND 
             sensor.name = host_sensor_reference.sensor_name 
-            ORDER BY sensor.priority DESC LIMIT 1;";
+            ORDER BY sensor.priority DESC LIMIT 1");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -120,8 +168,8 @@ class Sensor {
     
                 if (Net::isIpInNet($host_ip, $ips)) 
                 {
-                    $query = "SELECT ip FROM sensor, net_sensor_reference 
-                        WHERE name = sensor_name AND net_name = '$net_name'";
+                    $query = OssimQuery("SELECT ip FROM sensor, net_sensor_reference 
+                        WHERE name = sensor_name AND net_name = '$net_name'");
 
                     if (!$rs = &$conn->Execute($query)) {
                         print $conn->ErrorMsg();
@@ -160,16 +208,16 @@ class Sensor {
     {
         require_once "classes/Net.inc";
         require_once "ossim_conf.inc";
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
 
         $sensor_interface_name = '';
 
         /* read from host table */
-        $query = "SELECT sensor_interfaces.interface FROM
+        $query = OssimQuery("SELECT sensor_interfaces.interface FROM
         host_sensor_reference, sensor, sensor_interfaces
             WHERE host_sensor_reference.host_ip = '$host_ip' AND 
             sensor.name = host_sensor_reference.sensor_name AND
-            sensor_interfaces.main = 1 ORDER BY sensor.priority DESC LIMIT 1;";
+            sensor_interfaces.main = 1 ORDER BY sensor.priority DESC LIMIT 1");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -188,8 +236,10 @@ class Sensor {
     
                 if (Net::isIpInNet($host_ip, $ips)) 
                 {
-                    $query = "SELECT sensor_interfaces.interface FROM sensor,
-                    net_sensor_reference, sensor_interfaces WHERE sensor_interfaces.name = sensor.name AND net_name = '$net_name' AND sensor_interfaces.main = 1";
+                    $query = OssimQuery("SELECT sensor_interfaces.interface FROM sensor,
+                    net_sensor_reference, sensor_interfaces WHERE
+                    sensor_interfaces.name = sensor.name AND net_name =
+                    '$net_name' AND sensor_interfaces.main = 1");
 
                     if (!$rs = &$conn->Execute($query)) {
                         print $conn->ErrorMsg();

@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Classification {
 
     var $id;
@@ -22,10 +24,11 @@ class Classification {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM classification $args";
+        $query = OssimQuery("SELECT * FROM classification $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Classification ($rs->fields["id"],
                                       $rs->fields["name"],

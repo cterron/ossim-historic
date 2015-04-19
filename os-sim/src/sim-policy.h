@@ -42,6 +42,7 @@
 
 #include "sim-enums.h"
 #include "sim-util.h"
+#include "sim-inet.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,7 @@ extern "C" {
 
 G_BEGIN_DECLS
 
+//SimPolicy is each one of the "lines" in the policy. It has one or more sources, one or more destinations, a time range, and so on.
 typedef struct _SimPolicy        SimPolicy;
 typedef struct _SimPolicyClass   SimPolicyClass;
 typedef struct _SimPolicyPrivate SimPolicyPrivate;
@@ -101,21 +103,24 @@ gint              sim_policy_get_end_hour                    (SimPolicy        *
 void              sim_policy_set_end_hour                    (SimPolicy        *policy,
 							      gint              end_hour);
 
+gboolean          sim_policy_get_store                       (SimPolicy        *policy);
+void              sim_policy_set_store                       (SimPolicy        *policy, gboolean store);
+
 /* Sources Inet Address */
-void              sim_policy_append_src_ia                   (SimPolicy        *policy,
-							      GInetAddr        *ia);
-void              sim_policy_remove_src_ia                   (SimPolicy        *policy,
-							      GInetAddr        *ia);
-GList*            sim_policy_get_src_ias                     (SimPolicy        *policy);
-void              sim_policy_free_src_ias                    (SimPolicy        *policy);
+void              sim_policy_append_src                   (SimPolicy        *policy,
+																		 								       SimInet	        *src);
+void              sim_policy_remove_src                   (SimPolicy        *policy,
+																											     SimInet  	      *src);
+GList*            sim_policy_get_src    	                (SimPolicy        *policy);
+void              sim_policy_free_src 		                (SimPolicy        *policy);
 
 /* Destination Inet Address */
-void              sim_policy_append_dst_ia                   (SimPolicy        *policy,
-							      GInetAddr        *ia);
-void              sim_policy_remove_dst_ia                   (SimPolicy        *policy,
-							      GInetAddr        *ia);
-GList*            sim_policy_get_dst_ias                     (SimPolicy        *policy);
-void              sim_policy_free_dst_ias                    (SimPolicy        *policy);
+void              sim_policy_append_dst                   (SimPolicy        *policy,
+																										       SimInet  	      *dst);
+void              sim_policy_remove_dst                   (SimPolicy        *policy,
+																										       SimInet	        *dst);
+GList*            sim_policy_get_dst                     	(SimPolicy        *policy);
+void              sim_policy_free_dst                    	(SimPolicy        *policy);
 
 /* Ports */
 void              sim_policy_append_port                     (SimPolicy        *policy,
@@ -125,24 +130,48 @@ void              sim_policy_remove_port                     (SimPolicy        *
 GList*            sim_policy_get_ports                       (SimPolicy        *policy);
 void              sim_policy_free_ports                      (SimPolicy        *policy);
 
-/* Categories */
-void              sim_policy_append_category                 (SimPolicy        *policy,
-							      gchar            *category);
-void              sim_policy_remove_category                 (SimPolicy        *policy,
-							      gchar            *category);
-GList*            sim_policy_get_categories                  (SimPolicy        *policy);
-void              sim_policy_free_categories                 (SimPolicy        *policy);
-
 /* Sensors */
 GList*            sim_policy_get_sensors                     (SimPolicy        *policy);
 void              sim_policy_free_sensors                    (SimPolicy        *policy);
 
 gboolean          sim_policy_match                           (SimPolicy        *policy,
-							      gint              date,
-							      GInetAddr        *src_ia,
-							      GInetAddr        *dst_ia,
-							      SimPortProtocol  *pp,
-							      const gchar      *category);
+																												      gint              date,
+																												      GInetAddr        *src_ia,
+																												      GInetAddr        *dst_ia,
+																												      SimPortProtocol  *pp,
+																															gchar							*sensor,
+																															guint							plugin_id,
+																															guint							plugin_sid);
+
+/* Plugin_ids */
+void              sim_policy_append_plugin_id							     (SimPolicy        *policy,
+																													     guint            *plugin_id);
+void              sim_policy_remove_plugin_id								   (SimPolicy        *policy,
+																													     guint            *plugin_id);
+GList*            sim_policy_get_plugin_ids										 (SimPolicy        *policy);
+void              sim_policy_free_plugin_ids		               (SimPolicy        *policy);
+
+/* Plugin_sids */
+void              sim_policy_append_plugin_sid							   (SimPolicy        *policy,
+																													     guint            *plugin_sid);
+void              sim_policy_remove_plugin_sid                 (SimPolicy        *policy,
+																													     guint            *plugin_sid);
+GList*            sim_policy_get_plugin_sids			             (SimPolicy        *policy);
+void              sim_policy_free_plugin_sids				           (SimPolicy        *policy);
+
+
+/* Plugin groups */
+void              sim_policy_append_plugin_group	             (SimPolicy        *policy,
+																														    Plugin_PluginSid	*plugin_group);
+void              sim_policy_remove_plugin_group               (SimPolicy        *policy,
+																														    Plugin_PluginSid	*plugin_group);
+GList*            sim_policy_get_plugin_groups                 (SimPolicy        *policy);
+void              sim_policy_free_plugin_groups                (SimPolicy        *policy);
+
+
+void							sim_policy_debug_print_policy								(SimPolicy				*policy);
+
+
 
 G_END_DECLS
 
@@ -151,3 +180,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_POLICY_H__ */
+// vim: set tabstop=2:

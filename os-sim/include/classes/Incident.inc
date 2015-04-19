@@ -1,4 +1,8 @@
 <?php
+require_once 'classes/Security.inc';
+require_once 'classes/Util.inc';
+require_once 'classes/Log_action.inc';
+require_once 'ossim_db.inc';
 
 class Incident {
 
@@ -6,106 +10,97 @@ class Incident {
     var $title;
     var $date;
     var $ref;
-    var $family;
+    var $type;
     var $priority;
-
-    function Incident ($id, $title, $date, $ref, $family, $priority)
+    var $in_charge;
+    var $status;
+    var $last_update;
+    /*
+     * array of TAG IDs related to this incident
+     */
+    var $tags;
+    var $_life_time_diff;
+    
+    function Incident ($id, $title, $date, $ref, $type, $priority,
+                       $in_charge, $status, $last_update, $tags, 
+                       $life_time_diff = null)
     {
         $this->id       = intval($id);
-        $this->title    = htmlentities($title);
-        $this->date     = htmlentities($date);
-        $this->ref      = htmlentities($ref);
-        $this->family   = htmlentities($family);
-        $this->priority = intval($priority);
+        $this->title    = $title;
+        $this->date     = $date;
+        $this->ref      = $ref;
+        $this->type     = $type;
+        $this->priority = $priority;
+        $this->in_charge = $in_charge;
+        $this->status   = $status;
+        $this->last_update = $last_update;
+        $this->tags     = $tags;
+        $this->_life_time_diff = $life_time_diff; /* Private property */
     }
 
     function get_id()       { return intval($this->id); }
     function get_title()    { return $this->title;      }
     function get_ref()      { return $this->ref;        }
-    function get_family()   { return $this->family;     }
+    function get_type()     { return $this->type;       }
+    function get_priority()  { return $this->priority;  }
+    function get_status()    { return $this->status;    }
+    function get_in_charge() { return $this->in_charge; }
+    function get_tags()      { return $this->tags;      }
 
-    function get_priority($conn)
+    function get_in_charge_name($conn)
     {
-        $query = "SELECT priority FROM incident_ticket
-            WHERE incident_id = " . intval($this->id) . " ORDER BY id DESC LIMIT 1";
-        if (!$rs = &$conn->Execute($query)) {
+        $in_charge_login = Incident::get_in_charge($conn);
+        $sql = "SELECT name FROM users WHERE login = ?";
+        $params = array($in_charge_login);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
             exit;
         }
-
-        if ($rs->EOF)
-            return intval($this->priority);
-        else
-            return intval($rs->fields["priority"]);
-    }
-
-    
-    function get_status($conn)
-    {
-        $query = "SELECT status FROM incident_ticket
-            WHERE incident_id = " . intval($this->id) . " ORDER BY id DESC LIMIT 1";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-            exit;
-        }
-        if ($rs->EOF)
-            return "Unknown";
-        else
-            return $rs->fields["status"];
-    }
-
-    function get_in_charge($conn)
-    {
-        $query = "SELECT in_charge, transferred FROM incident_ticket
-            WHERE incident_id = " . $this->id . " ORDER BY id DESC LIMIT 1";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-            exit;
-        }
-
         if ($rs->EOF) {
-            return "Unknown";
+            $in_charge_name = $in_charge_login;
         } else {
-            $in_charge   = $rs->fields["in_charge"];
-            $transferred = $rs->fields["transferred"];
-            if ($transferred)
-                return $transferred;
-            else
-                return $in_charge;
+            $in_charge_name = $rs->fields["name"];
         }
+        return $in_charge_name;
     }
 
-    function get_last_modification($conn)
+    function get_last_modification()
     {
-        $query = "SELECT date FROM incident_ticket
-            WHERE incident_id = " . $this->id . " ORDER BY id DESC LIMIT 1";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-            exit;
-        }
-        
-        if ($rs->EOF) {
-            return "Unknown";
-        } else {
-            return (substr($rs->fields["date"], 0, 4) . '-' .
-                substr($rs->fields["date"], 4, 2) . '-' .
-                substr($rs->fields["date"], 6, 2) . ' ' .
-                substr($rs->fields["date"], 8, 2) . ':' .
-                substr($rs->fields["date"], 10, 2) . ':' .
-                substr($rs->fields["date"], 12, 2));
-        }
+        return Util::date_diff(time(), $this->last_update);
     }
 
     function get_date()
     {
-        return (substr($this->date, 0, 4) . '-' .
-                substr($this->date, 4, 2) . '-' .
-                substr($this->date, 6, 2) . ' ' .
-                substr($this->date, 8, 2) . ':' .
-                substr($this->date, 10, 2) . ':' .
-                substr($this->date, 12, 2));
+        return Util::timestamp2date($this->date);
     }
 
+    /*
+     * Returns the life time of an incident
+     * 
+     * If the status is:
+     * 
+     *  - Closed: Life time is the difference between incident creation date
+     *            and the last time it was modified
+     *  - Open: Life time is the difference between incident date and now
+     */
+    function get_life_time($format='yMdhm')
+    {
+        $id  = $this->id;
+        $status = $this->status;
+        $start_date = $this->date;
+        $last_update = $this->last_update;
+        
+        if ($status == 'Closed') {
+            $end_date = $last_update;
+        } else {
+            $end_date = time();
+        }
+        return  Util::date_diff($end_date, $start_date, $format);
+    }
+
+    /*
+     * @deprecated
+     */
     function get_ticket()
     {
         $id = ($this->id > 10)? $this->id : "0" . $this->id;
@@ -120,6 +115,8 @@ class Incident {
             return "orange";
         elseif ($priority > 1)
             return "green";
+        else
+            return "white";
     }
 
     function get_priority_fgcolor($priority)
@@ -130,7 +127,71 @@ class Incident {
             return "black";
         elseif ($priority > 1)
             return "white";
+        else
+            return "black";
     }
+
+    function get_priority_string($priority)
+    {
+        if ($priority > 7)
+            return "High";
+        elseif ($priority > 4)
+            return "Medium";
+        else
+            return "Low";
+    }
+
+    /*
+     * Static function
+     */
+    function get_priority_in_html($priority)
+    {
+        $bgcolor = Incident::get_priority_bgcolor($priority);
+        $fgcolor = Incident::get_priority_fgcolor($priority);
+        $html = '
+          <table align="center" bgcolor="'.$bgcolor.'" fgcolor="'.$fgcolor.'">
+            <tr>
+              <td bgcolor="'.$bgcolor.'" fgcolor="'.$fgcolor.'" style="border-width: 0px;">
+                <b>&nbsp;<font color="'.$fgcolor.'">'.$priority.'</font>&nbsp;</b>
+              </td>
+            </tr>
+          </table>';
+        return $html;
+    }
+
+    /*
+     * @static
+     */
+    function get_validations($type)
+    {
+        $incident = array(
+            'title' => array(OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Title")), 
+            'type'  => array(OSS_LETTER, OSS_SPACE, 'illegal:'._("Type")),
+            'priority' => array(OSS_DIGIT, 'illegal:'._("Priority")),
+        );
+        $incident_insert = array(
+            'ref' => array(OSS_LETTER, 'illegal:'._("Incident Ref"))
+        );
+        $incident_update = array(
+            'incident_id' => array(OSS_DIGIT)
+        );
+        $event = array(
+            'src_ips'   => array(OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Source Ips")),
+            'dst_ips'   => array(OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Dest Ips")),
+            'src_ports' => array(OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Source Ports")),
+            'dst_ports' => array(OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Dest Ports"))
+        );
+        $metric = array(
+            'target' => array(OSS_PUNC, OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Target")),
+            'metric_type'  => array(OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Metric type")),
+            'metric_value' => array(OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Metric value"))
+        );
+        if ($type == 'incident_insert') return array_merge($incident, $incident_insert);
+        if ($type == 'incident_update') return array_merge($incident, $incident_update);
+        if ($type == 'event')    return $event;
+        if ($type == 'metric')   return $metric;
+    }
+        
 
     function colorize_status($status)
     {
@@ -138,50 +199,290 @@ class Incident {
         if ($status == 'Open')
             echo "<font color=\"red\"><b>Open</b></font>";
         elseif ($status == 'Closed')
-            echo "<b>Closed</b>";
+            echo "<font color=\"blue\"><b>Closed</b></font>";
+        elseif ($status == 'False')
+            echo "<b>Closed (False)</b>";
         else
             echo "<b>$status</b>";
     }
 
     function get_list ($conn, $args = "")
     {
-        $query = "SELECT DISTINCT incident.id as id,
-                incident.title as title,
-                incident.date as date,
-                incident.ref as ref,
-                incident.family as family,
-                incident.priority as priority
-            FROM incident LEFT JOIN incident_ticket 
-                ON incident.id = incident_ticket.incident_id 
-                LEFT JOIN incident_file 
-                    ON incident.id = incident_file.incident_id $args";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
+        require_once ('classes/Session.inc');
+    
+        $user = Session::get_session_user();
+        $list = array();
+        $sql = "SELECT incident.id," .
+               "incident.title," .
+               "incident.date, " .
+               "incident.ref, " .
+               "incident.type_id as type, " .
+               "incident.priority, " .
+               "incident.in_charge, " .
+               "incident.status, " .
+               "incident.last_update " .
+               "FROM incident $args";
+        
+        if (!$rs = &$conn->Execute(OssimQuery($sql))) {
+            die($conn->ErrorMsg());
         } else {
             while (!$rs->EOF) {
-                $list[] = new Incident ($rs->fields["id"],
-                                        $rs->fields["title"],
-                                        $rs->fields["date"],
-                                        $rs->fields["ref"],
-                                        $rs->fields["family"],
-                                        $rs->fields["priority"]);
+                // XXX This should be improved, this is doing 2 queries
+                //     per record
+                $allowed = Incident::get_users_list($conn, $rs->fields["id"]);
+                if (in_array($user, $allowed))
+                {
+                    $list[] = new Incident ($rs->fields["id"],
+                                            $rs->fields["title"],
+                                            $rs->fields["date"],
+                                            $rs->fields["ref"],
+                                            $rs->fields["type"],
+                                            $rs->fields["priority"],
+                                            $rs->fields["in_charge"],
+                                            $rs->fields["status"],
+                                            array(),
+                                            $rs->fields["last_update"]);
+                }
                 $rs->MoveNext();
             }
         }
         return $list;
     }
 
+    function search($conn, $search_criteria,
+                    $order_by = 'life_time',
+                    $order_mode = 'DESC')
+    {
+        $search_opts = array(
+            'incident_id',
+            'ref',
+            'type',
+            'title',
+            'with_text',
+            'status',
+            'priority_str',
+            'attach_name',
+            'in_charge',
+            'related_to_user',
+            'tag'
+        );
+        foreach ($search_opts as $o) {
+            $opts[$o] = isset($search_criteria[$o]) ? $search_criteria[$o] : null; 
+        }
+        
+        $sql = "SELECT incident.* ";
+                
+        $where = $parms = array();
+        if ($opts['incident_id']) {
+            $where[] = "incident.id = ?";
+            $parms[] = $opts['incident_id'];
+        }
+        if ($opts['ref']) {
+            $where[] = "incident.ref = ?";
+            $parms[] = $opts['ref'];
+        }
+        if ($opts['type']) {
+            $where[] = "incident.type_id = ?";
+            $parms[] = $opts['type'];
+        }
+        if ($opts['title']) {
+            $where[] = "UPPER(incident.title) LIKE ?";
+            // XXX use that strange trick to overpass Adodb quoting limitations
+            $parms[] = '%'.strtoupper($opts['title']).'%';
+        }
+        if ($opts['status']) {
+            $where[] = "incident.status = ?";
+            $parms[] = $opts['status'];
+        }
+        if ($opts['priority_str']) {
+            $p = $opts['priority_str'];
+            if ($p == 'High') {
+                $where[] = "incident.priority > 7";
+            } elseif ($p == 'Medium') {
+                $where[] = "incident.priority < 7 AND incident.priority > 4";
+            } else {
+                $where[] = "incident.priority <= 4";
+            }
+        }
+        if ($opts['attach_name']) {
+            $where[] = "UPPER(incident_file.name) LIKE ? " .
+                       "AND incident_file.incident_id=incident.id";
+            $parms[] = '%'.strtoupper($opts['attach_name']).'%';
+        }
+        if ($opts['in_charge']) {
+            $where[] = "incident.in_charge = ?";
+            $parms[] = $opts['in_charge'];
+        } 
+        if ($opts['tag']) {
+            $where[] = "incident_tag.tag_id=? AND incident_tag.incident_id = incident.id";
+            $parms[] = $opts['tag']; 
+        }
+        // Big brother search
+        if ($opts['with_text']) {
+            $text = '%'.strtoupper($opts['with_text']).'%';
+            $tmp_w = $where;
+            $all_parms = array();
+            //
+            // Search over tickets description and action
+            //
+            $t  = "(UPPER(incident_ticket.description) LIKE ?) ".
+                  "OR (UPPER(incident_ticket.action) LIKE ?)";
+            $all_parms = array_merge($all_parms, $parms, array($text, $text));
+            // search also inside the title if the user didn't specified
+            // other specific title search
+            if (!$opts['title']) {
+                $t .= " OR (UPPER(incident.title) LIKE ?)";
+                $all_parms = array_merge($all_parms, array($text));
+            }
+            $tmp_w[] = "($t) AND incident_ticket.incident_id = incident.id";
+            $sqls[] = Incident::_build_sql($sql, $tmp_w);
+            //
+            // search over the IPs in event
+            //
+            $tmp_w = $where;
+            $tmp_w[] = "(UPPER(incident_event.src_ips) LIKE ? " .
+                       "OR UPPER(incident_event.dst_ips) LIKE ?) " .
+                       "AND incident_event.incident_id = incident.id";
+            $sqls[] = Incident::_build_sql($sql, $tmp_w);
+            $all_parms = array_merge($all_parms, $parms, array($text, $text));
+            //
+            // search over the IPs in alarm
+            //
+            $tmp_w = $where;
+            $tmp_w[] = "(UPPER(incident_alarm.src_ips) LIKE ? " .
+                       "OR UPPER(incident_alarm.dst_ips) LIKE ?) " .
+                       "AND incident_alarm.incident_id = incident.id";
+            $sqls[] = Incident::_build_sql($sql, $tmp_w);
+            $all_parms = array_merge($all_parms, $parms, array($text, $text));
+            //
+            // search over the IPs in alarm
+            //
+            $tmp_w = $where;
+            $tmp_w[] = "(UPPER(incident_metric.target) LIKE ?) " .
+                       "AND incident_metric.incident_id = incident.id";
+            $sqls[] = Incident::_build_sql($sql, $tmp_w);
+            $all_parms = array_merge($all_parms, $parms, array($text));
+            //
+            // Build the final big UNION SQL and params
+            // 
+            $sql = implode("\nUNION\n", $sqls);
+            $parms = $all_parms;
+            //printr($parms);
+        } else {
+            $sql = Incident::_build_sql($sql, $where);
+        }
+        
+        if ($order_by != 'life_time') {
+            $order_by = "\nORDER BY incident.$order_by $order_mode";
+            $sql .= $order_by;
+        }
+        // Gets tags
+        $tags = array();
+        $t_sql = "SELECT incident_tag.tag_id, incident_tag.incident_id " .
+               "FROM incident_tag";
+        if (!$rs = $conn->Execute($t_sql)) die($conn->ErrorMsg());
+        while (!$rs->EOF) {
+            $tags[$rs->fields["incident_id"]][] = $rs->fields["tag_id"];
+            $rs->MoveNext();
+        }
+        //printr($sql);
+        //$conn->debug = true;
+        if (!$rs = $conn->Execute($sql, $parms)) {
+            die($conn->ErrorMsg());
+        }
+        // Build the resultant list of incidents
+        $user = Session::get_session_user();
+        $list = array();
+        while (!$rs->EOF) {
+                // XXX This should be improved
+                $related = Incident::get_users_list($conn, $rs->fields["id"]);
+                if (in_array($user, $related))
+                {
+                    // XXX Poor man user search, should be improved++
+                    if ($opts['related_to_user'] &&
+                        !in_array($opts['related_to_user'], $related))
+                    {
+                        $rs->MoveNext(); continue;
+                    }
+                    // Life Time calculations:
+                    if ($rs->fields["status"] == 'Open') {
+                        $life_time_diff = time() - strtotime($rs->fields["date"]);
+                    } else {
+                        $life_time_diff = strtotime($rs->fields["date"]) - strtotime($rs->fields["last_update"]);
+                    }
+                    $itags = (isset($tags[$rs->fields["id"]])) ? $tags[$rs->fields["id"]] : array();
+                    $list[] = new Incident ($rs->fields["id"],
+                                            $rs->fields["title"],
+                                            $rs->fields["date"],
+                                            $rs->fields["ref"],
+                                            $rs->fields["type_id"],
+                                            $rs->fields["priority"],
+                                            $rs->fields["in_charge"],
+                                            $rs->fields["status"],
+                                            $rs->fields["last_update"],
+                                            $itags,
+                                            $life_time_diff
+                                            );
+                }
+                $rs->MoveNext();
+        }
+        if ($order_by == 'life_time') {
+            usort($list, array('Incident', '_sort_by_life_time'));
+            if ($order_mode == 'DESC') {
+                $list = array_reverse($list);
+            }
+        }
+        return $list;
+    }
+
+    function _build_sql($start_sql, $where)
+    {
+        $w = implode("\nAND ", $where);
+        $from = '';
+        // scan needed tables
+        if (count($where)) {
+            if (preg_match_all('/([a-z_]+)\./', $w, $m)) {
+                $from = implode(', ', array_unique($m[1]));
+            }
+        }
+        if (!$from) $from = 'incident';
+        $sql = $start_sql . "\nFROM $from";
+        if (count($where)) $sql .= "\nWHERE $w";
+        return $sql;
+    }
+
+    /*
+     * Used by the search() function
+     */
+    function _sort_by_life_time($a, $b)
+    {
+        $diff1 = $a->_life_time_diff;
+        $diff2 = $b->_life_time_diff;
+        if ($diff1 == $diff2) return 0;
+        return ($diff1 > $diff2) ? 1 : -1;
+    }
+
+    /*
+     * @deprecated
+     */
     function get_tickets ($conn)
     {
         require_once ('classes/Incident_ticket.inc');
-        return Incident_ticket::get_list($conn, 
-            "WHERE incident_id = " . $this->id . " ORDER BY id");
+        return Incident_ticket::get_list($conn,
+            "WHERE incident_id = " . $this->id . " ORDER BY date");
     }
 
     function get_alarms ($conn)
     {
         require_once ('classes/Incident_alarm.inc');
         return Incident_alarm::get_list($conn, 
+            "WHERE incident_id = " . $this->id . " ORDER BY id");
+    }
+
+    function get_events ($conn)
+    {
+        require_once ('classes/Incident_event.inc');
+        return Incident_event::get_list($conn, 
             "WHERE incident_id = " . $this->id . " ORDER BY id");
     }
 
@@ -192,6 +493,140 @@ class Incident {
             "WHERE incident_id = " . $this->id . " ORDER BY id");
     }
 
+    function get_anomalies ($conn)
+    {
+        require_once ('classes/Incident_anomaly.inc');
+        return Incident_anomaly::get_list($conn, 
+            "WHERE incident_id = " . $this->id . " ORDER BY id");
+    }
+
+
+    /* get users that are part of an incident (the main Admin included)
+     * (user, in_charge, transferred and subscribed to incidents)
+     */
+    function get_users_list($conn, $incident_id)
+    {
+        $list = array();
+    
+        $query = OssimQuery("SELECT users, in_charge, transferred " .
+                            "FROM incident_ticket " .
+                            "WHERE incident_id = " . $incident_id);
+
+        if (!$rs = &$conn->Execute($query)) {
+            die($conn->ErrorMsg());
+        } else {
+            while (!$rs->EOF) {
+
+                if (($rs->fields["users"]) and 
+                    !in_array($rs->fields["users"], $list))
+                    $list[] = $rs->fields["users"];
+                if (($rs->fields["in_charge"]) and
+                    !in_array($rs->fields["in_charge"], $list))
+                    $list[] = $rs->fields["in_charge"];
+                if (($rs->fields["transferred"]) and
+                    !in_array($rs->fields["transferred"], $list))
+                    $list[] = $rs->fields["transferred"];
+
+                $rs->MoveNext();
+            }
+        }
+        $suscrib = Incident::get_subscribed_users($conn, $incident_id);
+        foreach ($suscrib as $s) {
+            if (!in_array($s['login'], $list)) {
+                $list[] = $s['login'];
+            }
+        }
+        if (!in_array(ACL_DEFAULT_OSSIM_ADMIN, $list)) {
+            $list[] = ACL_DEFAULT_OSSIM_ADMIN;
+        }
+        return $list;
+    }
+
+    /*
+     * @return array in the form:
+     *              array(0 => array('login' => 'foo',
+     *                               'name' => 'bar',
+     *                               'email' => XXX,
+     *                               'company' => XXX,
+     *                               'department' => XXX))
+     */
+    function get_subscribed_users($conn, $incident_id)
+    {
+        $list = array();
+        $sql = "SELECT u.login, u.name, u.email," .
+                "      u.company, u.department " .
+                "FROM users u, incident_subscrip s " .
+                "WHERE s.incident_id = ? AND u.login = s.login " .
+                "ORDER BY u.name";
+
+        if (!$rs = &$conn->Execute($sql, $incident_id)) {
+            print $conn->ErrorMsg();
+        } else {
+            while (!$rs->EOF) {
+                $list[] = $rs->fields;
+                $rs->MoveNext();
+            }
+        }
+        return $list;
+    }
+                        
+
+    /*
+     * @deprecated
+     */
+    /* returns True if user is admin or is in charge
+     * of the incident, instead returns False
+     */
+    function user_incident_perms ($conn, $user, $incident_id)
+    {
+        require_once 'ossim_acl.inc';
+
+        if ($user == ACL_DEFAULT_OSSIM_ADMIN)
+            return true;
+
+        if (is_array( $incident_list = 
+                Incident::get_list($conn, 
+                    "WHERE incident.id = $incident_id") ))
+        {
+            $incident = $incident_list[0];
+
+            if ($user == $incident->get_in_charge($conn))
+                return true;
+        }
+
+        return false;
+    }
+
+    /*
+     * @deprecated
+     */
+    /* returns True if user is admin or is in charge
+     * of the ticket, instead returns False
+     */
+    function user_ticket_perms ($conn, $user, $ticket_id)
+    {
+        require_once ('ossim_acl.inc');
+
+        if ($user == ACL_DEFAULT_OSSIM_ADMIN)
+            return true;
+        
+        $query = OssimQuery("SELECT in_charge FROM incident_ticket WHERE id =
+        $ticket_id");
+        if (!$rs = &$conn->Execute($query)) {
+            print $conn->ErrorMsg();
+            return false;
+        } elseif (!$rs->EOF) {
+            if ($rs->fields["in_charge"] == $user)
+                return true;
+        }
+
+        return false;
+    }
+
+
+    /*
+     * @deprecated
+     */
     function print_td_priority($priority, $bgcolor, $fgcolor)
     {
     $priority = intval($priority);
@@ -217,175 +652,459 @@ class Incident {
         echo $priority_td;
     }
 
-    function __insert($conn, $title, $priority, $ref, $family)
+    function print_td_incident_type($conn, $selected = "")
     {
-        $title = htmlentities($title);
-        $priority = intval($priority);
+        require_once ('classes/Incident_type.inc');
+
+        $output = '<td class="left"><select name="type">';
+
+        if ($list = Incident_type::get_list($conn))
+        {
+            foreach ($list as $type)
+            {
+                if ($type->get_id() != "")
+                {
+                    $output .= "<option ";
+                    if ($selected == $type->get_id())
+                        $output .= " selected ";
+                    $output .= " value=\"" . $type->get_id() . "\">";
+                    $output .= $type->get_id();
+                    $output .= "</option>";
+                }
+            }
+        }
+
+        $output .= '</select></td>';
+        print $output;
+    }
+
+
+    function __insert($conn, $title, $type, $priority, $ref)
+    {
+        foreach (Incident::get_validations('incident_insert') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
+        }
 
         require_once ('classes/Session.inc');
         $user = Session::get_session_user();
 
-        $query = "INSERT INTO incident (title, ref, family, priority)
-            VALUES ('$title', '$ref', '$family', $priority);";
-        if ($conn->Execute($query) === false)
-        {
-            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        $query = "INSERT INTO incident " .
+                 "(title, type_id, ref, priority, " .
+                 "in_charge, status, date, last_update) " .
+                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $date = date('Y-m-d H:i:s');
+        $params = array($title, $type, $ref, $priority,
+                        $user, 'Open', $date, $date);
+        if ($conn->Execute(OssimQuery($query), $params) === false) {
+            die('error inserting incident: '.$conn->ErrorMsg());
         }
 
         /* get last inserted id */
-        $query = "SELECT LAST_INSERT_ID() as id FROM incident";
+
+        $query = OssimQuery("SELECT LAST_INSERT_ID() as id FROM incident");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
             exit;
         }
         $last_id =  $rs->fields["id"];
-
-        $query2 = "INSERT INTO incident_ticket 
-            (incident_id, priority, users, description, action, in_charge)
-            VALUES ($last_id, $priority, '$user', '$title', '', '$user')";
-
-        if ($conn->Execute($query2) === false)
-        {
-            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
-        }
+        
+        // Automatically subscribe incident creator
+        Incident::insert_subscription($conn, $last_id, $user);
 
         return $last_id;
+        
     }
 
-    function insert_alarm($conn, $title, $priority, 
+    function insert_alarm($conn, $title, $type, $priority, 
                           $src_ips, $dst_ips, $src_ports, $dst_ports)
     {
-        
-        $last_id = Incident::__insert($conn, $title, $priority, 
-                                      "Alarm", "OSSIM");
-        
-        $query = "INSERT INTO incident_alarm
-            (incident_id, src_ips, dst_ips, src_ports, dst_ports)
-            VALUES ($last_id, '$src_ips', '$dst_ips', '$src_ports', '$dst_ports');";
-
-        if ($conn->Execute($query) === false) {
-            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        foreach (Incident::get_validations('event') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
         }
+        $last_id = Incident::__insert($conn, $title, $type, $priority, 
+                                      "Alarm", "OSSIM");
+        if (ossim_error()) return false;
+        $sql = "INSERT INTO incident_alarm
+                (incident_id, src_ips, dst_ips, src_ports, dst_ports)
+                VALUES (?, ?, ? ,?, ?)";
+        $params = array($last_id, $src_ips, $dst_ips, $src_ports, $dst_ports);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
 
         return $last_id;
     }
 
-    function insert_metric($conn, $title, $priority, 
+    function insert_event($conn, $title, $type, $priority, 
+                          $src_ips, $dst_ips, $src_ports, $dst_ports)
+    {
+        foreach (Incident::get_validations('event') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
+        }
+        $last_id = Incident::__insert($conn, $title, $type, $priority, 
+                                      "Event", "OSSIM");
+        if (ossim_error()) return false;
+        $sql = "INSERT INTO incident_event
+                (incident_id, src_ips, dst_ips, src_ports, dst_ports)
+                VALUES (?, ?, ? ,?, ?)";
+        $params = array($last_id, $src_ips, $dst_ips, $src_ports, $dst_ports);
+        //$conn->debug = true;
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+
+        return $last_id;
+    }
+
+    function insert_anomaly($conn, $title, $type, $priority, $anom_type, $ip, $data_orig, $data_new)
+    {
+        $s_data_orig = implode(",", $data_orig);
+        $s_data_new = implode(",", $data_new);
+        $last_id = Incident::__insert($conn, $title, $type, $priority, 
+                                      "Anomaly", "OSSIM");
+        if (ossim_error()) return false;
+        $sql = "INSERT INTO incident_anomaly
+                (incident_id, anom_type, ip, data_orig, data_new)
+                VALUES (?, ?, ?, ?, ?)";
+        $params = array($last_id, $anom_type, $ip, $s_data_orig, $s_data_new);
+        //$conn->debug = true;
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+
+        return $last_id;
+    }
+ 
+
+
+
+    /*
+     * @static
+     */
+    function insert_metric($conn, $title, $type, $priority, 
                            $target, $metric_type, $metric_value)
     {
-        $last_id = Incident::__insert($conn, $title, $priority, 
-                                      "Metric", "OSSIM");
-
-        $query = "INSERT INTO incident_metric
-            (incident_id, target, metric_type, metric_value)
-            VALUES ($last_id, '$target', '$metric_type', '$metric_value');";
-
-        if ($conn->Execute($query) === false) {
-            print 'error inserting incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        foreach (Incident::get_validations('metric') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
         }
-
+        $last_id = Incident::__insert($conn, $title, $type, $priority, 
+                                      "Metric", "OSSIM");
+        if (ossim_error()) return false;
+        // XXX move to sequences
+        $sql = "INSERT INTO incident_metric " .
+                "(incident_id, target, metric_type, metric_value) " .
+                "VALUES (?, ?, ?, ?)";
+        $params = array($last_id, $target, $metric_type, $metric_value);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+        
         return $last_id;
     }
 
-    function insert_hardware($conn, $title, $priority)
+    function insert_subscription($conn, $incident_id, $login)
     {
-        return Incident::__insert($conn, $title, $priority, 
-                                  "Hardware", "Hardware");
-    }
-    
-    function insert_install($conn, $title, $priority)
-    {
-        return Incident::__insert($conn, $title, $priority, 
-                                  "Install", "Install");
-    }
-
-
-    function __update($conn, $incident_id, $title)
-    {
-        $query = "UPDATE incident SET title = '$title' 
-            WHERE id = $incident_id";
-        if ($conn->Execute($query) === false) {
-            print 'error updating incident: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        ossim_valid($incident_id, OSS_DIGIT, 'illegal:'._("ID"));
+        ossim_valid($login, OSS_USER, 'illegal:'._("Login"));
+        if (ossim_error()) {
+            die(ossim_error());
         }
+        // Check if he's already subscribed
+        $sql = "SELECT login FROM incident_subscrip WHERE login=? AND incident_id=?";
+        if (!$rs = $conn->Execute($sql, array($login, $incident_id))) {
+            die($conn->ErrorMsg());
+        }
+        if (!$rs->EOF) return false;
+        
+        $sql = "INSERT INTO incident_subscrip VALUES (?, ?)";
+        if (!$conn->Execute($sql, array($login, $incident_id))) {
+            die($conn->ErrorMsg());
+        }
+        return true;
     }
 
-    function update_alarm ($conn, $incident_id, $title,
+    function __update($conn, $incident_id, $title, $type, $priority)
+    {
+        foreach (Incident::get_validations('incident_update') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
+        }
+        $sql = "UPDATE incident SET " .
+               "title = ?, type_id = ?, priority = ?, date = date " .
+               "WHERE id = ?";
+        $params = array($title, $type, $priority, $incident_id);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+
+        // XXX would be nice to add here a ticket telling that
+        // incident fields were updated by someone
+        
+        $infolog = array($title);
+        Log_action::log(15,$infolog);
+    }
+
+    function update_alarm ($conn, $incident_id, $title, $type, $priority,
                            $src_ips, $dst_ips, $src_ports, $dst_ports)
     {
-        $incident_id = intval($incident_id);
-        $title = htmlentities($title);
+        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        if (ossim_error()) return false;
 
-        Incident::__update($conn, $incident_id, $title);
-
-        $query = "UPDATE incident_alarm 
-            SET src_ips = '$src_ips', dst_ips = '$dst_ips',
-                src_ports = '$src_ports', dst_ports = '$dst_ports'
-            WHERE incident_id = $incident_id";
-
-        if ($conn->Execute($query) === false) {
-            print 'error updating incident (alarm): '.$conn->ErrorMsg().'<BR>';
-            exit;
+        foreach (Incident::get_validations('event') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
         }
+        $sql = "UPDATE incident_alarm " .
+               "SET src_ips = ?, dst_ips = ?, src_ports = ?, dst_ports = ? " .
+               "WHERE incident_id = ?";
+        $params = array($src_ips, $dst_ips, $src_ports, $dst_ports, $incident_id);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+        return true;
     }
 
-    function update_metric ($conn, $incident_id, $title, $target,
-                            $metric_type, $metric_value)
+    function update_event ($conn, $incident_id, $title, $type, $priority,
+                           $src_ips, $dst_ips, $src_ports, $dst_ports)
     {
-        $incident_id = intval($incident_id);
-        $title = htmlentities($title);
-        $target = htmlentities($target);
-        $metric_type = htmlentities($metric_type);
-        $metric_value = htmlentities($metric_value);
+        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        if (ossim_error()) return false;
 
-        Incident::__update($conn, $incident_id, $title);
-
-        $query = "UPDATE incident_metric 
-            SET target = '$target',
-                metric_type = '$metric_type',
-                metric_value = '$metric_value'
-            WHERE incident_id = $incident_id";
-
-        if ($conn->Execute($query) === false) {
-            print 'error updating incident (metric): '.$conn->ErrorMsg().'<BR>';
-            exit;
+        foreach (Incident::get_validations('event') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
         }
+        $sql = "UPDATE incident_event " .
+               "SET src_ips = ?, dst_ips = ?, src_ports = ?, dst_ports = ? " .
+               "WHERE incident_id = ?";
+        $params = array($src_ips, $dst_ips, $src_ports, $dst_ports, $incident_id);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+        return true;
     }
 
-    function update_hardware($conn, $incident_id, $title)
+    function update_metric ($conn, $incident_id, $title, $type, $priority,
+                            $target, $metric_type, $metric_value)
     {
-        $incident_id = intval($incident_id);
-        $title = htmlentities($title);
-        Incident::__update($conn, $incident_id, $title);
+        foreach (Incident::get_validations('metric') as $var => $rule) {
+            if (!ossim_valid($$var, $rule)) return false;
+        }
+
+        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        if (ossim_error()) return false;
+
+        $sql = "UPDATE incident_metric " .
+               "SET target = ?, metric_type = ?, metric_value = ? " .
+               "WHERE incident_id = ?";
+        $params = array($target, $metric_type, $metric_value, $incident_id);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+        return true;
     }
 
-    function update_install($conn, $incident_id, $title)
+    function update_anomaly ($conn, $incident_id, $title, $type, $priority,
+                            $anom_type, $ip, $data_orig, $data_new)
     {
-        $incident_id = intval($incident_id);
-        $title = htmlentities($title);
-        Incident::__update($conn, $incident_id, $title);
+        $s_data_orig = implode(",", $data_orig);
+        $s_data_new = implode(",", $data_new);
+                   
+        Incident::__update($conn, $incident_id, $title, $type, $priority);
+        if (ossim_error()) return false;
+
+        $sql = "UPDATE incident_anomaly " .
+               "SET anom_type = ?, ip = ?, data_orig = ?, data_new = ? " .
+               "WHERE incident_id = ?";
+        $params = array($anom_type, $ip, $s_data_orig, $s_data_new, $incident_id);
+        if (!$conn->Execute($sql, $params)) die($conn->ErrorMsg());
+        return true;
     }
 
-    function delete ($conn, $id)
+
+
+    function delete($conn, $id)
     {
-        $id = intval($id);
-        $query1 = "DELETE FROM incident WHERE id = $id";
-        $query2 = "DELETE FROM incident_ticket WHERE incident_id = $id";
-        $query3 = "DELETE FROM incident_alarm  WHERE incident_id = $id";
-        $query4 = "DELETE FROM incident_metric WHERE incident_id = $id";
-        if ( ($conn->Execute($query1) === false) or
-             ($conn->Execute($query2) === false) or 
-             ($conn->Execute($query3) === false) or 
-             ($conn->Execute($query4) === false)) 
+        if (!ossim_valid($id, OSS_DIGIT)) {
+            die("invalid ID");
+        }
+        $conn->StartTrans();
+        $conn->Execute("DELETE FROM incident_ticket WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_alarm  WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_event  WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_file   WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_subscrip  WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident_tag    WHERE incident_id=$id");
+        $conn->Execute("DELETE FROM incident WHERE id=$id");
+        $conn->CompleteTrans();
+        if ($conn->HasFailedTrans()) {
+            die('error deleting: '.$conn->ErrorMsg());
+        }
+        $infolog = array($id);
+        Log_action::log(16, $infolog);
+    }
+
+    /*
+     * Deletes all the subscriptions associated with an Incident Id.
+     * If you supply the $login, only that subscription will be removed
+     */
+    function delete_subscriptions($conn, $incident_id, $login = '')
+    {
+        $params[] = $incident_id;
+        $sql = "DELETE FROM incident_subscrip WHERE incident_id=?";
+        if ($login) {
+            $sql .= " AND login=?";
+            $params[] = $login;
+        }
+        if (!$conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
+        }
+        return true;
+    }
+
+    /*
+     * @deprecated
+     */
+    function incident_search ($conn, $query_string){
+
+        $search_array = array (
+            "incident_ticket" => array (
+                "return_column" => "incident_id",
+                "check_columns" => array (
+                    "date",
+                    "users",
+                    "description",
+                    "action",
+                    "in_charge",
+                    "transferred",
+                    "copy"
+                    )
+            ),
+            "incident" => array (
+                "return_column" => "id",
+                "check_columns" => array (
+                    "title",
+                    "date",
+                    "ref",
+                    "type_id"
+                    )
+            ),
+            "incident_alarm" => array (
+                "return_column" => "incident_id",
+                "check_columns" => array (
+                    "src_ips",
+                    "dst_ips",
+                    "src_ports",
+                    "dst_ports"
+                    )
+            ),
+            "incident_event" => array (
+                "return_column" => "incident_id",
+                "check_columns" => array (
+                    "src_ips",
+                    "dst_ips",
+                    "src_ports",
+                    "dst_ports"
+                    )
+            )
+        );
+
+
+        $qs = $query_string; //shorter
+
+        foreach (array_keys($search_array) as $table){
+            $query = "SELECT " . $search_array[$table]["return_column"] . " FROM " . $table .  " WHERE ";
+            foreach ($search_array[$table]["check_columns"] as $column){
+                $query .= $column . " LIKE \"%" . $qs . "%\" OR ";
+            }
+            // chop last " OR " and sanitize
+            $query = OssimQuery(substr($query, 0, strlen($query) - 4));
+            if (!$rs = &$conn->Execute($query)) {
+                print $conn->ErrorMsg();
+            } else {
+                while (!$rs->EOF) {
+                    $list[] = $rs->fields[$search_array[$table]["return_column"]];
+                    $rs->MoveNext();
+                }
+            }
+        }
+        
+
+        if(is_array($list)){
+            // Avoid duplicates, nice trick found on the array_unique() manual
+            // page
+            $list = array_flip(array_flip($list));
+            $where = "WHERE incident.id = " . array_pop($list) . " ";
+            foreach($list as $incident_id){
+                $where .= "OR incident.id = \"$incident_id\" ";
+            }
+            $incident_list = Incident::get_list($conn, $where);
+        }
+        return $incident_list;
+    }
+
+    /* 
+       incident statistics 
+     */
+    function incidents_by_type($conn)
+    {
+        $list = array();
+        $type = array();
+        
+        if ($incident_list = Incident::get_list($conn))
         {
-            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
-            exit;
+            foreach ($incident_list as $incident)
+            {
+                $tmp = $incident->get_type();
+                if (array_key_exists($tmp, $type))
+                    $type[$tmp] += 1;
+                else
+                    $type[$tmp] = 1;
+            }
         }
+        
+        foreach ($type as $key=>$value)
+        {
+            array_push($list, array ($key, $value));
+        }
+
+        return $list;
     }
+
+    function incidents_by_status($conn)
+    {
+        $list = array();
+        $status = array();
+        
+        if ($incident_list = Incident::get_list($conn))
+        {
+            foreach ($incident_list as $incident)
+            {
+                $tmp = $incident->get_status($conn);
+                if (array_key_exists($tmp, $status))
+                    $status[$tmp] += 1;
+                else
+                    $status[$tmp] = 1;
+            }
+        }
+       
+        foreach ($status as $key=>$value)
+        {
+            array_push($list, array ($key, $value));
+        }
+        return $list;
+    }
+
+    function incidents_by_user($conn)
+    {
+        $list = array();
+        $status = array();
+        
+        if ($incident_list = Incident::get_list($conn))
+        {
+            foreach ($incident_list as $incident)
+            {
+                $tmp = $incident->get_in_charge($conn);
+                if (array_key_exists($tmp, $status))
+                    $status[$tmp] += 1;
+                else
+                    $status[$tmp] = 1;
+            }
+        }
+       
+        foreach ($status as $key=>$value)
+        {
+            array_push($list, array ($key, $value));
+        }
+        return $list;
+    }
+
+    function chk_status($status)
+    {
+        return in_array((string)$status, array('Open', 'Closed'));
+    }
+
 }
 
 

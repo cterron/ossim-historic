@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Port_group_reference {
 
     var $port_group_name;
@@ -20,11 +22,13 @@ class Port_group_reference {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM port_group_reference 
-                                   $where $order"))
+        $query = OssimQuery("SELECT * FROM port_group_reference $where
+        $order");
+        if (!$rs = &$conn->Execute($query))
         {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Port_group_reference 
                                    ($rs->fields["port_group_name"],
@@ -50,9 +54,10 @@ class Port_group_reference {
 
             settype($port_number, "int");
 
-            $query = "INSERT INTO port_group_reference VALUES 
-                ('$port_group_name', $port_number, '$protocol_name');";
-            if ($conn->Execute($query) === false) {
+            $sql = "INSERT INTO port_group_reference VALUES (?, ?, ?)";
+            $params = array($port_group_name, $port_number, $protocol_name);
+            
+            if ($conn->Execute($sql, $params) === false) {
                 print 'error inserting: '.$conn->ErrorMsg().'<BR>';
                 exit;
             }
@@ -60,9 +65,11 @@ class Port_group_reference {
     }
 
     function delete($conn, $port_group_name) {
-        $query = "DELETE FROM port_group_reference WHERE 
-                    port_group_name = '$port_group_name';";
-        if ($conn->Execute($query) === false) {
+        
+        $sql = "DELETE FROM port_group_reference WHERE port_group_name = ?";
+        $params = array($port_group_name);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -73,10 +80,10 @@ class Port_group_reference {
     {
         settype($port_number, "int");
 
-        $query = "SELECT * FROM port_group_reference WHERE
-            port_group_name = '$port_group_name' AND 
-            port_number = $port_number AND protocol_name = '$protocol_name';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM port_group_reference WHERE port_group_name = ? AND port_number = ? AND protocol_name = ?";
+        $params = array($port_group_name, $port_number, $protocol_name);
+        
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];

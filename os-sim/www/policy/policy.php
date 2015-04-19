@@ -18,8 +18,8 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     require_once ('classes/Policy.inc');
     require_once ('classes/Host.inc');
     require_once ('ossim_db.inc');
+    $order = 'priority DESC';
 
-    if (!$order = $_GET["order"]) $order = "priority DESC";
 ?>
 
   <table align="center">
@@ -31,10 +31,11 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
           ?>">
 	  <?php echo gettext("Priority"); ?> </a></th>
       <th> <?php echo gettext("Port Group"); ?> </th>
-      <th> <?php echo gettext("Sig Group"); ?> </th>
+      <th> <?php echo gettext("Plugin Group"); ?> </th>
       <th> <?php echo gettext("Sensors"); ?> </th>
       <th> <?php echo gettext("Time Range"); ?> </th>
       <th> <?php echo gettext("Description"); ?> </th>
+      <th> <?php echo gettext("Store"); ?> </th>
       <th> <?php echo gettext("Action"); ?> </th>
     </tr>
 
@@ -84,8 +85,18 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
       </td>
 
-      <!-- asset -->
-      <td><?php echo $policy->get_priority(); ?></td>
+      <!-- Priority -->
+      <td>
+      <?php 
+      $priority = $policy->get_priority(); 
+
+      if($priority == -1){
+      echo _("Do not change");
+      } else {
+      echo $priority;
+      }
+      ?>
+      </td>
 
       <!-- port group -->
       <td>
@@ -101,10 +112,8 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
       <!-- signature group -->
       <td>
 <?php
-            if ($sig_list = $policy->get_signatures ($conn)) {
-                foreach($sig_list as $sig_group) {
-                    echo $sig_group->get_sig_group_name() . '<br/>';
-                }
+            foreach($policy->get_plugingroups($conn, $policy->get_id()) as $group) {
+                    echo $group['name'] . '<br/>';
             }
 ?>
       </td>
@@ -150,6 +159,11 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
       </td>
 
       <td><?php echo $policy->get_descr(); ?></td>
+      <td><?php if($policy->get_store() == 1){
+      echo _("Yes");
+      } elseif ($policy->get_store() == 0){
+      echo _("No");
+      }?></td>
 
       <td>
         <a href="modifypolicyform.php?id=<?php
@@ -168,12 +182,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
 
   <tr>
-    <td colspan="9">
+    <td colspan="10">
         <a href="newpolicyform.php"> <?php echo gettext("Insert new policy"); ?> </a>
     </td>
   </tr>
   <tr>
-    <td colspan="9"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
+    <td colspan="10"><a href="../conf/reload.php?what=policies"> <?php echo gettext("Reload"); ?> </a></td>
   </tr>
   </table>
     

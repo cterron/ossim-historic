@@ -8,7 +8,11 @@
     # postrotate script will only be run once, not once 
     # for each log which is rotated
     sharedscripts
+    prerotate
+        /etc/init.d/ossim-framework stop > /dev/null 2>&1
+    endscript
     postrotate
-        /etc/init.d/ossim-framework restart > /dev/null 2>&1
+        /etc/init.d/ossim-framework start > /dev/null 2>&1
     endscript
 }
+

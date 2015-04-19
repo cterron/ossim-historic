@@ -19,9 +19,17 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     require_once ('ossim_db.inc');
     require_once ('classes/Session.inc');
     require_once ('ossim_acl.inc');
+    require_once ('classes/Security.inc');
 
-    if (!$order = $_GET["order"]) $order = "login";
+$order = GET('order');
 
+ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+if (empty($order)) $order = "login";
 ?>
 
   <table align="center">
@@ -34,7 +42,19 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
             echo ossim_db::get_order("name", $order);
           ?>"> 
 	  <?php echo gettext("Name"); ?> </a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("email", $order);
+          ?>">
+	  <?php echo gettext("Email"); ?> </a></th>
       <th> <?php echo gettext("Password"); ?> </th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("company", $order);
+          ?>">
+      <?php echo gettext("Company"); ?> </a></th>
+      <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php
+            echo ossim_db::get_order("department", $order);
+          ?>">
+	  <?php echo gettext("Department"); ?> </a></th>
       <th> <?php echo gettext("Actions"); ?> </th>
     </tr>
 
@@ -47,13 +67,19 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
         foreach ($session_list as $session) {
             $login = $session->get_login();
             $name  = $session->get_name();
-            $pass  = "XXX";
+            $email = $session->get_email();
+            $pass  = "...";
+            $company = $session->get_company();
+            $department = $session->get_department();
 ?>
     <tr>
       <td><?php echo $login; ?></td>
       <td><?php echo $name; ?></td>
+      <td><?php echo $email; ?>&nbsp;</td>
       <td><?php echo $pass; ?></td>
-      <td>
+      <td><?php echo $company; ?>&nbsp;</td>
+      <td><?php echo $department; ?>&nbsp;</td>
+       <td>
       [<a href="changepassform.php?user=<?php echo $login ?>">
       <?php echo gettext("Change Password"); ?> </a>]
 <?php
@@ -63,6 +89,11 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
       <?php echo gettext("Update"); ?> </a>]
       [<a href="deleteuser.php?user=<?php echo $login ?>"> 
       <?php echo gettext("Delete"); ?> </a>]
+<?php
+    } elseif ($login == ACL_DEFAULT_OSSIM_ADMIN) {
+?>
+      [<a href="modifyuserform.php?user=<?php echo $login ?>"> 
+      <?php echo gettext("Update"); ?> </a>]
 <?php
     }
 ?>
@@ -76,10 +107,10 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
 
 ?>
     <tr>
-      <td colspan="4"><a href="newuserform.php"> <?php echo gettext("Insert new user"); ?> </a></td>
+      <td colspan="7"><a href="newuserform.php"> <?php echo gettext("Insert new user"); ?> </a></td>
     </tr>
     <tr>
-      <td colspan="4"><a href="../setup/ossim_acl.php"> <?php echo gettext("Reload ACLS"); ?> </a></td>
+      <td colspan="7"><a href="../setup/ossim_acl.php"> <?php echo gettext("Reload ACLS"); ?> </a></td>
     </tr>
   </table>
 

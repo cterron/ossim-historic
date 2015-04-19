@@ -1,5 +1,0 @@
-/etc/ossim/server/config.xml
-/etc/ossim/server/directives.xml
-/etc/ossim/server/generic.xml
-/etc/ossim/server/trojans.xml
-/etc/init.d/ossim-server

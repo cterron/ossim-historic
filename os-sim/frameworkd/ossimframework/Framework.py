@@ -1,12 +1,17 @@
 import os, sys, time, signal
-from OssimDB import OssimDB
 from optparse import OptionParser
 import Const
 
 class Framework:
 
     def __init__ (self):
-        self.__classes = [ "ControlPanel", "AcidCache" ]
+        self.__classes = [
+                "ControlPanel",
+                "AcidCache",
+                "RRDUpdate",
+                "Listener",
+#                "SOC",
+            ]
 
 
     def __parse_options(self):
@@ -62,7 +67,7 @@ class Framework:
             Const.CONFIG_FILE = options.config_file
 
         if options.sleep is not None:
-            Const.SLEEP = options.sleep
+            Const.SLEEP = float(options.sleep)
         
         if options.listener_port is not None:
             Const.LISTENER_PORT = options.listener_port
@@ -99,3 +104,4 @@ if __name__ == "__main__" :
     f.main()
     f.waitforever()
 
+# vim:ts=4 sts=4 tw=79 expandtab:

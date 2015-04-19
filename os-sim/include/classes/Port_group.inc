@@ -1,6 +1,8 @@
 <?php
 
 require_once 'Port_group_reference.inc';
+require_once ('classes/Log_action.inc');
+require_once ("ossim_db.inc");
 
 class Port_group {
 
@@ -24,9 +26,11 @@ class Port_group {
 
     function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM port_group $args")) {
+        $query = OssimQuery("SELECT * FROM port_group $args");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Port_group ($rs->fields["name"],
                                           $rs->fields["descr"]);
@@ -38,29 +42,44 @@ class Port_group {
 
     function insert($conn, $name, $port_list, $descr)
     {
-        $query = "INSERT INTO port_group VALUES 
-            ('$name', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO port_group VALUES (?, ?)";
+        $params = array($name, $descr);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+        
         Port_group_reference::insert($conn, $name, $port_list);
+
+        $infolog = array($name,"(".$descr.")");
+        Log_action::log(30,$infolog);
     }
 
     function update($conn, $name, $port_list, $descr)
     {
         Port_group::delete($conn, $name);
         Port_group::insert($conn, $name, $port_list, $descr);
+        
+        $infolog = array($name,"(".$descr.")");
+        Log_action::log(31,$infolog);
+ 
     }
 
     function delete($conn, $name) {
-        $query = "DELETE FROM port_group WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
-            print 'error deleting: '.$conn->ErrorMsg().'<BR>';
+        
+        $sql = "DELETE FROM port_group WHERE name = ?";
+        $params = array($name);
+        
+        if ($conn->Execute($sql, $params) === false) {
+       
+        print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         Port_group_reference::delete($conn, $name);
+ 
+        $infolog = array($name);
+        Log_action::log(32,$infolog);}
     }
-}
 
 ?>

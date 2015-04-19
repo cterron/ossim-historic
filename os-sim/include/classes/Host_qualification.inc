@@ -2,6 +2,7 @@
 
 require_once ('classes/Net.inc');
 require_once ('classes/Session.inc');
+require_once ("ossim_db.inc");
 
 class Host_qualification {
 
@@ -21,7 +22,9 @@ class Host_qualification {
     function get_attack()            { return $this->attack; }
 
     function get_ip_attack($conn, $ip){
-        if (!$rs = &$conn->Execute("SELECT * FROM host_qualification WHERE host_ip = '$ip'")){
+        $sql = "SELECT * FROM host_qualification WHERE host_ip = ?";
+        $params = array($ip);
+        if (!$rs = &$conn->Execute($sql, $params)){
             print $conn->ErrorMsg();
         } else {
             if (!$rs->EOF)
@@ -34,7 +37,9 @@ class Host_qualification {
     }
 
     function get_ip_compromise($conn, $ip){
-        if (!$rs = &$conn->Execute("SELECT * FROM host_qualification WHERE host_ip = '$ip'")){
+        $sql = OssimQuery("SELECT * FROM host_qualification WHERE host_ip = ?");
+        $params = array($ip);
+    if (!$rs = &$conn->Execute($sql, $params)){
             print $conn->ErrorMsg();
         } else {
             if (!$rs->EOF)
@@ -51,17 +56,16 @@ class Host_qualification {
         if (($type != 'compromise') and ($type != 'attack'))
             return -1;
 
-        $allowed_nets = Session::allowedNets();
         $global = 0;
 
-        $query = "SELECT $type FROM host_qualification;";
-
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT ?, host_ip FROM host_qualification";
+        $params = array($type);
+        
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                if ((Net::isIpInNet($rs->fields["host_ip"], $allowed_nets)) or
-                     (!$allowed_nets))
+                if (Session::hostAllowed($conn, $rs->fields["host_ip"]))
                 {
                     $global += $rs->fields["$type"];
                 }
@@ -85,16 +89,14 @@ class Host_qualification {
 
     function get_list($conn, $where = "", $order = "")
     {
-
-        $allowed_nets = Session::allowedNets();
-
-        if (!$rs = &$conn->Execute("SELECT * FROM host_qualification $where
-        $order")) {
+        $query = OssimQuery("SELECT * FROM host_qualification $where
+        $order");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
-                if ((Net::isIpInNet($rs->fields["host_ip"], $allowed_nets)) or
-                     (!$allowed_nets))
+                if (Session::hostAllowed($conn, $rs->fields["host_ip"]))
                 {
                     $list[] = new Host_qualification (
                                                 $rs->fields["host_ip"],
@@ -112,9 +114,9 @@ class Host_qualification {
         $compromise = intval($compromise);
         $attack = intval($attack);
 
-        $query = "INSERT INTO host_qualification VALUES 
-            ('$host_ip', $compromise, $attack);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO host_qualification VALUES (?, ?, ?)";
+        $params = array($host_ip, $compromise, $attack);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -125,18 +127,20 @@ class Host_qualification {
         $compromise = intval($compromise);
         $attack = intval($attack);
 
-        $query = "UPDATE host_qualification SET host_ip = '$host_ip', 
-            compromise = $compromise, attack = $attack WHERE host_ip =
-            '$host_ip';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE host_qualification SET host_ip = ?, compromise = ?, attack = ? WHERE host_ip = ?";
+        $params = array($host_ip, $compromise, $attack, $host_ip);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
 
     function delete($conn, $host_ip) {
-        $query = "DELETE FROM host_qualification WHERE host_ip = '$host_ip';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM host_qualification WHERE host_ip = ?";
+        $params = array($host_ip);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

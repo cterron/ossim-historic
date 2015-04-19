@@ -21,7 +21,8 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Plugin.inc';
 
 
-    if (($nessus_action = $_GET["nessus"]) AND ($net_group_name = $_GET["net_group_name"])) 
+    if (($nessus_action = validateVar($_GET["nessus"])) AND ($net_group_name =
+        validateVar($_GET["net_group_name"]))) 
     {
         $db = new ossim_db();
         $conn = $db->connect();
@@ -33,7 +34,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
         $db->close($conn);
     }
 
-    if (!$order = $_GET["order"]) $order = "name";
+    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_ALPHA . OSS_SPACE)) $order = "name";
 ?>
 
   <table align="center">
@@ -91,7 +92,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     <td>
 <?php
-    $name = mysql_real_escape_string($name);
+    $name = validateVar($name);
     if($scan_list = Net_group_scan::get_list($conn, 
         "WHERE net_group_name = '$name' AND plugin_id = 3001"))
     {

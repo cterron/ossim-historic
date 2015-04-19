@@ -7,8 +7,12 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
     /* TODO: define internal net */
     $DEFAULT_TARGET = "192.168.0.0/24";
+    
+    require_once 'classes/Security.inc';
+    
+    $scan = POST('scan');
 
-    if ($_POST["scan"]) {
+    if (POST('scan')) {
 
         require_once('classes/Scan.inc');
         require_once 'ossim_db.inc';
@@ -17,9 +21,14 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
         $db = new ossim_db();
         $conn = $db->connect();
 
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
     
-        $target = $_POST["target"];
+        $target = POST('target');
+        
+        ossim_valid($confirm, OSS_ALPHA, OSS_PUNC , 'illegal:'._("Scan target"));
+
+        if (ossim_error()) { die(ossim_error()); }
+        
         $target = escapeshellcmd($target);
        	$nmap = $conf->get_conf("nmap_path");
         $ips = shell_exec("$nmap -sP -v -n $target");

@@ -1,11 +1,12 @@
 <?php
 require_once ('classes/Session.inc');
 Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
+require_once ('classes/Security.inc');
 ?>
 
 <html>
 <head>
-  <title> <?php echo gettext("Riskmeter"); ?> </title>
+  <title> <?php echo gettext("Priority and Reliability configuration"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
@@ -18,8 +19,16 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
     
     $db = new ossim_db();
     $conn = $db->connect();
+   
+
+    $order = GET('order');
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA, 'illegal:'._("order"));
     
-    if (!$order = $_GET["order"]) $order = "id";    
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+    
+    if (empty($order)) $order = "id";    
 ?>
 
     <table align="center">

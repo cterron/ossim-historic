@@ -15,19 +15,22 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
   <h1> <?php echo gettext("Delete signature group"); ?> </h1>
 
 <?php 
-    if (!$sig_name = mysql_escape_string($_GET["signame"])) { 
-?>
-    <p> <?php echo gettext("Wrong signature name"); ?> </p>
-<?php 
-        exit;
-    }
+require_once ("classes/Security.inc");
 
-if (!$_GET["confirm"]) {
+$sig_name = GET('signame');
+
+ossim_valid($sig_name, OSS_PUNC, OSS_ALPHA, 'illegal:'._("Signature name"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+
+if (GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?>? </p>
     <p><a href="<?php echo $_SERVER["PHP_SELF"]."?signame=$sig_name&confirm=yes"; ?>"> 
     <?php echo gettext("Yes"); ?> </a>&nbsp;&nbsp;&nbsp;<a href="signature.php"> 
-    <?php echo gettext("No"); ?>< /a>
+    <?php echo gettext("No"); ?></a>
     </p>
 <?php
     exit();

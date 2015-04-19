@@ -79,6 +79,10 @@ td.left {
     text-align: left;
 }
 
+td.noborder {
+    border-width: 0px;
+}
+
 /* Subtitle header. */
 h2 {
   font-weight: bold;
@@ -118,9 +122,45 @@ input.disabled {
     color: #999;
 }
 
+.required {
+	font-size: 5pt;
+	/* color: red; */
+	cursor: help;
+}
+
 hr {
     color: #e0e0e0;
     background-color: #fff;
     height: 1px;
     border-style: solid;
 }
+
+label {
+	border-bottom-width: thin;
+	border-bottom-style: dashed;
+	cursor: help;
+}
+
+/* Incident tickets related styles */
+
+td.ticket {
+    border-width: 0px;
+    background: #EEEEEE;
+    text-align: left;
+    border-top-style: solid;
+    border-top-color: #7f7f7f;
+    border-top-width: 0px;
+}
+
+td.ticket_body {
+    text-align: left;
+    
+}
+
+p.ticket_body {
+  margin: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  text-align: left;
+}
+

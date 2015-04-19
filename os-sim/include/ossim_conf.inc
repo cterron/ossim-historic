@@ -1,20 +1,30 @@
 <?php
 
-/*
- * Read config from /etc/ossim/framework/ossim.conf
- */
+define ('CONF_FILE', "/etc/ossim/framework/ossim.conf");
+
+if (!isset($GLOBALS["CONF"]))
+    $GLOBALS["CONF"] = new ossim_conf();
+
 class ossim_conf {
 
-    var $confs;
+    var $conf;
+    var $db_conf;
 
-    function ossim_conf() {
+    function ossim_conf($read_db = True)
+    {
+        $this->conf = ossim_conf::get_conf_from_file(CONF_FILE);
+        if ($read_db)
+            $this->db_conf = ossim_conf::get_conf_from_db();
+    }
 
-        if (!$fd = fopen("/etc/ossim/framework/ossim.conf", "r")) {
-            if (!$fd = fopen("/usr/local/etc/ossim/framework/ossim.conf", "r")) {
-                echo "Can't open config file\n";
-                exit();
-            }
+    function get_conf_from_file($conffile)
+    {
+        if (!$fd = fopen($conffile, "r")) {
+            echo "Can't open config file ($conffile)\n<br/>";
+            exit();
         }
+
+        $configuration = NULL;
 
         while (!feof($fd)) {
             $line = fgets($fd, 2048);
@@ -24,43 +34,42 @@ class ossim_conf {
                 $type = trim($conf[0]);
                 if (isset($conf[1])) {
                     $value = trim($conf[1]);
-                    $this->confs["$type"] = $value;
+                    $configuration["$type"] = $value;
                 }
             }
         }
-
         fclose($fd);
+
+        return $configuration;
     }
 
-    function get_conf($type, $debug = TRUE) {
+    function get_conf_from_db()
+    {
+        require_once ("classes/Config.inc");
+        $configuration = new Config();
+        return $configuration->get_list();
+    }
 
-        if (isset($this->confs["$type"])) {
-            return $this->confs["$type"];
-        }
+    function get_conf($type, $debug = true)
+    {
+        if (isset($this->conf[$type]))
+            return $this->conf[$type];
+        elseif (isset($this->db_conf[$type]))
+            return $this->db_conf[$type];
 
-        else {
-            require_once ('classes/Config.inc');
-    
-            $config = new Config();
-            $value = $config->get_conf("$type");
-            
-            if ($value !== null)
-                return $value;
-        }
-
-       /* 
+       /*
         * $debug == FALSE
-        * don't start output, session cache limiter problem 
-        */ 
+        * don't start output, session cache limiter problem
+        */
         if ($debug) {
             print "<b>Warning</b>: Error reading configuration: ";
             print "<b>$type</b> is not set<br/>\n";
         }
-        return null;
+        return NULL;
     }
 
     function is_in_file($type) {
-        return isset($this->confs["$type"]);
+        return isset($this->conf[$type]);
     }
 }
 

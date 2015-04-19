@@ -41,19 +41,18 @@
 
 #include "sim-enums.h"
 #include "sim-database.h"
-#include "sim-category.h"
-#include "sim-classification.h"
 #include "sim-plugin.h"
 #include "sim-plugin-sid.h"
 #include "sim-sensor.h"
 #include "sim-host.h"
 #include "sim-net.h"
-#include "sim-alert.h"
+#include "sim-event.h"
 #include "sim-policy.h"
 #include "sim-directive.h"
 #include "sim-host-level.h"
 #include "sim-net-level.h"
 #include "sim-config.h"
+#include "sim-command.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +66,7 @@ extern "C" {
 #define SIM_CONTAINER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_CONTAINER, SimContainerClass))
 
 G_BEGIN_DECLS
-
+	
 typedef struct _SimContainer         SimContainer;
 typedef struct _SimContainerClass    SimContainerClass;
 typedef struct _SimContainerPrivate  SimContainerPrivate;
@@ -83,8 +82,6 @@ struct _SimContainerClass {
 };
 
 G_LOCK_DEFINE_STATIC (s_mutex_config);
-G_LOCK_DEFINE_STATIC (s_mutex_categories);
-G_LOCK_DEFINE_STATIC (s_mutex_classifications);
 G_LOCK_DEFINE_STATIC (s_mutex_plugins);
 G_LOCK_DEFINE_STATIC (s_mutex_plugin_sids);
 G_LOCK_DEFINE_STATIC (s_mutex_sensors);
@@ -93,7 +90,7 @@ G_LOCK_DEFINE_STATIC (s_mutex_nets);
 G_LOCK_DEFINE_STATIC (s_mutex_policies);
 G_LOCK_DEFINE_STATIC (s_mutex_host_levels);
 G_LOCK_DEFINE_STATIC (s_mutex_net_levels);
-G_LOCK_DEFINE_STATIC (s_mutex_alerts);
+G_LOCK_DEFINE_STATIC (s_mutex_events);
 
 GType             sim_container_get_type                        (void);
 SimContainer*     sim_container_new                             (SimConfig     *config);
@@ -109,50 +106,62 @@ GList*            sim_container_db_host_get_plugin_sids_ul      (SimContainer  *
 
 gchar*            sim_container_db_get_host_os_ul               (SimContainer  *container,
 								 SimDatabase   *database,
-								 GInetAddr     *ia);
+								 GInetAddr     *ia,
+								 GInetAddr     *sensor);
 void              sim_container_db_insert_host_os_ul            (SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
+								 gchar		     *sensor,
+								 gchar     		 *interface,
 								 gchar         *os);
 void              sim_container_db_update_host_os_ul            (SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
 								 gchar         *curr_os,
-								 gchar         *prev_os);
+								 gchar         *prev_os,
+								 GInetAddr     *sensor);
 
 gchar*            sim_container_db_get_host_mac_ul              (SimContainer  *container,
 								 SimDatabase   *database,
-								 GInetAddr     *ia);
+								 GInetAddr     *ia,
+								 GInetAddr     *sensor);
 gchar*            sim_container_db_get_host_mac_vendor_ul       (SimContainer  *container,
 								 SimDatabase   *database,
-								 GInetAddr     *ia);
+								 GInetAddr     *ia,
+								 GInetAddr     *sensor);
 void              sim_container_db_insert_host_mac_ul           (SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
 								 gchar         *mac,
-								 gchar         *vendor);
+								 gchar         *vendor,
+								 gchar         *interface,
+								 gchar		     *sensor);
 void              sim_container_db_update_host_mac_ul           (SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
 								 gchar         *curr_mac,
 								 gchar         *prev_mac,
-								 gchar         *vendor);
+								 gchar         *vendor,
+								 GInetAddr     *sensor);
 
 gchar*		sim_container_db_get_host_service_ul		(SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gint           port,
-								 gint           protocol);
+								 gint           protocol,
+								 GInetAddr     *sensor);
 void		sim_container_db_insert_host_service_ul		(SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
 								 gint           port,
 								 gint           protocol,
+								 gchar		     *sensor,
+								 gchar				 *interface,
 								 gchar         *service,
 								 gchar         *application);
 void		sim_container_db_update_host_service_ul		(SimContainer  *container,
@@ -162,9 +171,10 @@ void		sim_container_db_update_host_service_ul		(SimContainer  *container,
 								 gint           port,
 								 gint           protocol,
 								 gchar         *service,
-								 gchar         *application);
+								 gchar         *application,
+								 GInetAddr     *sensor);
 
-void		sim_container_db_insert_host_ids_event_ul		(SimContainer  *container,
+void		sim_container_db_insert_host_ids_event_ul 	(SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 gchar         *date,
@@ -193,74 +203,6 @@ gint              sim_container_db_get_threshold_ul             (SimContainer  *
 								 SimDatabase   *database);
 gint              sim_container_db_get_threshold                (SimContainer  *container,
 								 SimDatabase   *database);
-
-/* Categories Functions */
-
-void              sim_container_db_load_categories_ul           (SimContainer  *container,
-								 SimDatabase   *database);
-void              sim_container_append_category_ul              (SimContainer  *container,
-								 SimCategory     *category);
-void              sim_container_remove_category_ul              (SimContainer  *container,
-								 SimCategory     *category);
-GList*            sim_container_get_categories_ul               (SimContainer  *container);
-void              sim_container_set_categories_ul               (SimContainer  *container,
-								 GList         *categories);
-void              sim_container_free_categories_ul              (SimContainer  *container);
-
-SimCategory*      sim_container_get_category_by_id_ul           (SimContainer  *container,
-								 gint           id);
-SimCategory*      sim_container_get_category_by_name_ul         (SimContainer  *container,
-								 const gchar   *name);
-
-void              sim_container_db_load_categories              (SimContainer  *container,
-								 SimDatabase   *database);
-void              sim_container_append_category                 (SimContainer  *container,
-								 SimCategory     *category);
-void              sim_container_remove_category                 (SimContainer  *container,
-								 SimCategory     *category);
-GList*            sim_container_get_categories                  (SimContainer  *container);
-void              sim_container_set_categories                  (SimContainer  *container,
-								 GList         *categories);
-void              sim_container_free_categories                 (SimContainer  *container);
-
-SimCategory*      sim_container_get_category_by_id              (SimContainer  *container,
-								 gint           id);
-SimCategory*      sim_container_get_category_by_name            (SimContainer  *container,
-								 const gchar   *name);
-
-/* Classifications Functions */
-
-void              sim_container_db_load_classifications_ul      (SimContainer  *container,
-								 SimDatabase   *database);
-void              sim_container_append_classification_ul        (SimContainer  *container,
-								 SimClassification     *classification);
-void              sim_container_remove_classification_ul        (SimContainer  *container,
-								 SimClassification     *classification);
-GList*            sim_container_get_classifications_ul          (SimContainer  *container);
-void              sim_container_set_classifications_ul          (SimContainer  *container,
-								 GList         *classifications);
-void              sim_container_free_classifications_ul         (SimContainer  *container);
-
-SimClassification* sim_container_get_classification_by_id_ul    (SimContainer  *container,
-								 gint           id);
-SimClassification* sim_container_get_classification_by_name_ul  (SimContainer  *container,
-								 const gchar   *name);
-
-void              sim_container_db_load_classifications         (SimContainer  *container,
-								 SimDatabase   *database);
-void              sim_container_append_classification           (SimContainer  *container,
-								 SimClassification     *classification);
-void              sim_container_remove_classification           (SimContainer  *container,
-								 SimClassification     *classification);
-GList*            sim_container_get_classifications             (SimContainer  *container);
-void              sim_container_set_classifications             (SimContainer  *container,
-								 GList         *classifications);
-void              sim_container_free_classifications            (SimContainer  *container);
-
-SimClassification* sim_container_get_classification_by_id       (SimContainer  *container,
-								 gint           id);
-SimClassification* sim_container_get_classification_by_name     (SimContainer  *container,
-								 const gchar   *name);
 
 /* Plugins Functions */
 
@@ -330,6 +272,13 @@ SimPluginSid*     sim_container_get_plugin_sid_by_name          (SimContainer  *
 								 gint           plugin_id,
 								 const gchar   *name);
 
+inline 
+gint              sim_container_get_plugin_id_by_name 		(SimContainer  *container,
+																													gchar           *name);
+inline												     
+gint              sim_container_get_plugin_id_by_name_ul 	(SimContainer  *container,
+										                                       gchar           *name);
+					
 /* Sensors Functions */
 
 void              sim_container_db_load_sensors_ul              (SimContainer  *container,
@@ -364,6 +313,13 @@ SimSensor*        sim_container_get_sensor_by_name              (SimContainer  *
 SimSensor*        sim_container_get_sensor_by_ia                (SimContainer  *container,
 								 GInetAddr     *ia);
 
+void							sim_container_set_sensor_event_number					(SimContainer *container,
+																																	gint event_kind, 
+																																	GInetAddr *sensor_ia);
+void							sim_container_db_update_sensor_events_number (SimContainer	*container, 
+																																SimDatabase   *database,
+																																SimSensor			*sensor);
+	
 /* Hosts Functions */
 
 void              sim_container_db_load_hosts_ul                (SimContainer  *container,
@@ -432,20 +388,22 @@ SimNet*           sim_container_get_net_by_name                 (SimContainer  *
 void              sim_container_db_load_policies_ul             (SimContainer  *container,
 								 SimDatabase   *database);
 void              sim_container_append_policy_ul                (SimContainer  *container,
-								 SimPolicy     *policy);
+																																 SimPolicy     *policy);
 void              sim_container_remove_policy_ul                (SimContainer  *container,
-								 SimPolicy     *policy);
+																																 SimPolicy     *policy);
 GList*            sim_container_get_policies_ul                 (SimContainer  *container);
 void              sim_container_set_policies_ul                 (SimContainer  *container,
-								 GList         *policies);
+																																 GList         *policies);
 void              sim_container_free_policies_ul                (SimContainer  *container);
 
 SimPolicy*        sim_container_get_policy_match_ul             (SimContainer     *container,
-								 gint              date,
-								 GInetAddr        *src_ip,
-								 GInetAddr        *dst_ip,
-								 SimPortProtocol  *port,
-								 const gchar      *category);
+																																 gint              date,
+																																 GInetAddr        *src_ip,
+																																 GInetAddr        *dst_ip,
+																																 SimPortProtocol  *port,
+																																 gchar						*sensor,
+																																 guint						plugin_id,
+																																 guint						plugin_sid);
 
 void              sim_container_db_load_policies                (SimContainer  *container,
 								 SimDatabase   *database);
@@ -459,11 +417,18 @@ void              sim_container_set_policies                    (SimContainer  *
 void              sim_container_free_policies                   (SimContainer  *container);
 
 SimPolicy*        sim_container_get_policy_match                (SimContainer     *container,
-								 gint              date,
-								 GInetAddr        *src_ip,
-								 GInetAddr        *dst_ip,
-								 SimPortProtocol  *port,
-								 const gchar      *category);
+																																 gint              date,
+																																 GInetAddr        *src_ip,
+																																 GInetAddr        *dst_ip,
+																																 SimPortProtocol  *port,
+																																 gchar						*sensor,
+																																 guint						plugin_id,
+																																 guint						plugin_sid);
+
+gboolean				 sim_container_db_load_src_or_dst								 (SimDatabase *database,
+																																	gchar 			*query,
+																																	SimPolicy 	*policy,
+																																	int 				src_or_dst);
 
 /* Directives Functions */
 
@@ -636,14 +601,14 @@ void              sim_container_set_backlogs                    (SimContainer  *
 								 GList         *backlogs);
 void              sim_container_free_backlogs                   (SimContainer  *container);
 
-/* Alerts Functions */
-void              sim_container_push_alert                      (SimContainer  *container,
-								 SimAlert      *alert);
-SimAlert*         sim_container_pop_alert                       (SimContainer  *container);
-void              sim_container_free_alerts                     (SimContainer  *container);
+/* Events Functions */
+void              sim_container_push_event                      (SimContainer  *container,
+								 SimEvent      *event);
+SimEvent*         sim_container_pop_event                       (SimContainer  *container);
+void              sim_container_free_events                     (SimContainer  *container);
 
-gboolean          sim_container_is_empty_alerts                 (SimContainer  *container);
-gint              sim_container_length_alerts                   (SimContainer  *container);
+gboolean          sim_container_is_empty_events                 (SimContainer  *container);
+gint              sim_container_length_events                   (SimContainer  *container);
 
 
 G_END_DECLS
@@ -653,3 +618,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_CONTAINER_H__ */
+
+// vim: set tabstop=2:
+

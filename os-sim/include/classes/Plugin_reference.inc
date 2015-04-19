@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Plugin_reference {
 
     var $plugin_id;
@@ -23,8 +25,8 @@ class Plugin_reference {
 
     function get_count($conn) 
     {
-        $query = "SELECT count(*) FROM plugin_reference;";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT count(*) FROM plugin_reference";
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             return $rs->fields["count(*)"];
@@ -35,10 +37,11 @@ class Plugin_reference {
     {
         $i = 0;
 
-        $query = "SELECT * FROM plugin_reference $args";
+        $query = OssimQuery("SELECT * FROM plugin_reference $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 if (($i++ >= $inf) && ($inf++ <= $sup)) {
                     $list[] = new Plugin_reference ($rs->fields["plugin_id"], 

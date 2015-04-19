@@ -1,16 +1,16 @@
 <?php
 
-$pathtoxml = dirname($_SERVER[REQUEST_URI]);
+$pathtoxml = dirname($_SERVER['REQUEST_URI']);
 
 define("MAX_HOSTNAME_LEN", 30);
 define("MAX_ALERTNAME_LEN", 30);
 
 $proto = "http";
-if ($_SERVER[HTTPS] == "on")
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on")
     $proto = "https";
 
 require_once("ossim_conf.inc");
-$ossim_conf = new ossim_conf();
+$ossim_conf = $GLOBALS["CONF"];
 $datapath = $ossim_conf->get_conf("ossim_link") . "/tmp/";
 $base_dir = $ossim_conf->get_conf("base_dir");
 
@@ -98,20 +98,20 @@ function	jgraph_ports_graph($type = "Bar3D", $width = 400, $height = 250)
 ";
 }
 
-function	jgraph_nbalerts_graph($type = "Pie3D", $width = 600, $height = 300)
+function	jgraph_nbevents_graph($type = "Pie3D", $width = 600, $height = 300)
 {
   global	$security_report;
   global	$datapath;
   global    $base_dir;
 
-  if (!$fp = @fopen("$base_dir/tmp/nbalerts.xml", "w")) {
+  if (!$fp = @fopen("$base_dir/tmp/nbevents.xml", "w")) {
         print "Error: <b>$datapath</b> directory must exists and be <br/>\n";
         print "writable by the user the webserver runs as";
         exit();
   }
   fwrite($fp, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n".
 	 "<PieDataset>\n");
-  $list = $security_report->Alerts();  
+  $list = $security_report->Events();  
   foreach ($list as $l)
     {
       if(strlen($l[0]) > MAX_ALERTNAME_LEN) $l[0] = substr($l[0],0,MAX_ALERTNAME_LEN) . "...";
@@ -123,7 +123,7 @@ function	jgraph_nbalerts_graph($type = "Pie3D", $width = 600, $height = 300)
   echo "
 <applet archive=\"../java/jcommon-0.9.5.jar,../java/jfreechart-0.9.20.jar,../java/jossim-graph.jar\" code=\"net.ossim.graph.applet.OssimGraphApplet\" width=\"$width\" height=\"$height\" alt=\"You should see an applet, not this text.\">
     <param name=\"graphType\" value=\"$type\">
-    <param name=\"xmlDataUrl\" value=\"$datapath/nbalerts.xml\">
+    <param name=\"xmlDataUrl\" value=\"$datapath/nbevents.xml\">
     <param name=\"alpha\" value=\"0.9f\">
     <param name=\"legend\" value=\"false\">
     <param name=\"tooltips\" value=\"false\">
@@ -133,20 +133,20 @@ function	jgraph_nbalerts_graph($type = "Pie3D", $width = 600, $height = 300)
 ";
 }
 
-function	jgraph_riskalerts_graph($type = "Bar3D", $width = 400, $height = 250)
+function	jgraph_riskevents_graph($type = "Bar3D", $width = 400, $height = 250)
 {
   global	$security_report;
   global	$datapath;
   global    $base_dir;
   
-  if (!$fp = @fopen("$base_dir/tmp/riskalerts.xml", "w")) {
+  if (!$fp = @fopen("$base_dir/tmp/riskevents.xml", "w")) {
         print "Error: <b>jgraphs</b> directory must be writable<br/>\n";
         print "by the user the webserver runs as";
         exit();
   }
   fwrite($fp, "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n".
-	 "<CategoryDataset>\n  <Series name=\"alert by risk\">\n");
-  $list = $security_report->AlertsByRisk();
+	 "<CategoryDataset>\n  <Series name=\"event by risk\">\n");
+  $list = $security_report->EventsByRisk();
   foreach ($list as $l)
     {
       fwrite($fp, "    <Item>\n      <Key>$l[1] ($l[0])</Key>\n      <Value>$l[2]</Value>\n    </Item>\n");
@@ -157,7 +157,7 @@ function	jgraph_riskalerts_graph($type = "Bar3D", $width = 400, $height = 250)
   echo "
 <applet archive=\"../java/jcommon-0.9.5.jar,../java/jfreechart-0.9.20.jar,../java/jossim-graph.jar\" code=\"net.ossim.graph.applet.OssimGraphApplet\" width=\"$width\" height=\"$height\" alt=\"You should see an applet, not this text.\">
     <param name=\"graphType\" value=\"$type\">
-    <param name=\"xmlDataUrl\" value=\"$datapath/riskalerts.xml\">
+    <param name=\"xmlDataUrl\" value=\"$datapath/riskevents.xml\">
     <param name=\"alpha\" value=\"0.42f\">
     <param name=\"legend\" value=\"false\">
     <param name=\"tooltips\" value=\"false\">

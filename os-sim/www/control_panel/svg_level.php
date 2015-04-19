@@ -1,11 +1,22 @@
 <?php
     require_once('classes/Session.inc');
+    require_once('classes/Security.inc');
 //    Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
 //    $user = Session::get_session_user();
 
+    $sl = GET('sl');
+    $scale = GET('scale');
+
+    ossim_valid($sl, OSS_DIGIT, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("sl"));
+    ossim_valid($scale, OSS_DIGIT, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("scale"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
     header("Content-Type: image/svg+xml");
     
-    $sec_level = $_GET["sl"];
+    $sec_level = $sl;
     if ($sec_level >= 95) {
         $color = "excellent";
     } elseif ($sec_level >= 90) {
@@ -22,8 +33,8 @@
 
 
 // yscale set the height of the thermometer
-    if (isset($_GET["scale"])) {
-        $yscale = $_GET["scale"];
+    if (!empty($scale)) {
+        $yscale = $scale;
     } else {
         $yscale = 1;
     }

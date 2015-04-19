@@ -25,11 +25,15 @@ BEGIN {
     #
     # Read config from database
     #
-    my $dsn = "dbi:" .
-        $ossim_conf::ossim_data->{"ossim_type"} . ":" .
-        $ossim_conf::ossim_data->{"ossim_base"} . ":" .
-        $ossim_conf::ossim_data->{"ossim_host"} . ":" .
-        $ossim_conf::ossim_data->{"ossim_port"} . ":";
+    my $ossim_type = $ossim_conf::ossim_data->{"ossim_type"};
+    if ($ossim_type =~ /^postgres|^pg/i) {
+        $ossim_type = "Pg";
+    }
+
+    my $dsn = "dbi:$ossim_type:" .
+        "dbname=" . $ossim_conf::ossim_data->{"ossim_base"} . ";" .
+        "host="   . $ossim_conf::ossim_data->{"ossim_host"} . ";" .
+        "port="   . $ossim_conf::ossim_data->{"ossim_port"};
 
     my $conn = DBI->connect($dsn, 
                             $ossim_conf::ossim_data->{"ossim_user"}, 

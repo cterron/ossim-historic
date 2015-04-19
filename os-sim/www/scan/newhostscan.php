@@ -15,18 +15,18 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
   <h1> <?php echo gettext("New host scan configuration"); ?> </h1>
 
 <?php
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["host_ip"] || !$_POST["plugin_id"])) {
-        echo "<p align=\"center\">Please, complete all the fields</p>";
-        exit();
-    }
-    
-    /* check OK, insert into BD */
-    elseif($_POST["insert"]) {
+    require_once ('classes/Security.inc');
 
-        $host_ip    = mysql_escape_string($_POST["host_ip"]);
-        $plugin_id  = mysql_escape_string($_POST["plugin_id"]);
+    $insert = POST('insert');
+    $host_ip = POST('host_ip'); 
+    $plugin_id = POST('plugin_id');
+
+    ossim_valid($insert, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("insert"));
+    ossim_valid($host_ip, OSS_IP_ADDR, 'illegal:'._("host IP"));
+    ossim_valid($plugin_id, OSS_DIGIT, 'illegal:'._("Plugin Id"));
+
+    if (ossim_error()) {
+        die(ossim_error());
     }
 
     require_once ('ossim_db.inc');

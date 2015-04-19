@@ -87,3 +87,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_CATEGORY_H__ */
+
+// vim: set tabstop=2:
+

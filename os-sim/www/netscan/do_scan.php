@@ -14,13 +14,19 @@
 <body>
 
 <?php
+    require_once 'classes/Security.inc';
+    
+    $net = GET('net');
+    $net_input = GET('net_input');
+    
+    ossim_valid($net, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Net"));
+    ossim_valid($net_input, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Net"));
 
-    if (!$net = $_GET["net"]) {
-        if (!$net = $_GET["net_input"]) {
-            echo gettext ("Missing net argument..");
-            exit;
-        }
+    if (ossim_error()) {
+        die(ossim_error());
     }
+
+    if (empty($net)) $net = $net_input;
 
     require_once ('classes/Scan.inc');
     $scan = new Scan($net);

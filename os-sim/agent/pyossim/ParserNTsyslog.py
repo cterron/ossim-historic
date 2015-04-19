@@ -78,7 +78,7 @@ class ParserNTsyslog(Parser.Parser):
                                          time.strptime(datestring, 
                                                        "%Y %b %d %H:%M:%S"))
 
-                    self.agent.sendAlert  (
+                    self.agent.sendEvent  (
                                      type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],

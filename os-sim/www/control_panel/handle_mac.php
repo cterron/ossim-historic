@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuReports", "ReportsAnomalies");
+Session::logcheck("MenuControlPanel", "ControlPanelAnomalies");
 ?>
 
 <html>
@@ -26,26 +26,28 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 while (list($key,$val) = each($_GET)) {
-    list($place_holder, $ip) = split (",", $key, 2);
-    $mac = base64_decode($val);
-    if(preg_match("/ack/i", $mac)){
-        $ip = mysql_escape_string($ip);
-        $mac = mysql_escape_string($mac);
-        $mac = ereg_replace("ack","",$mac);
-        if(ereg(" or ", $mac)){
-            $mac = ereg_replace(" or ","|",$mac);
-        }
+    list($place_holder, $ip, $sensor, $date) = split (",", $key, 4);
+    $ip = $val;
+    if(preg_match("/ack/i", $ip)){
+        $sensor = validateVar($sensor);
+        $ip = ereg_replace("ack","",$ip);
         $ip = ereg_replace ("_",".",$ip);
-        Host_mac::ack($conn,$ip,$mac);
-    } elseif(preg_match("/ignore/i", $mac)){
-        $ip = mysql_escape_string($ip);
-        $mac = mysql_escape_string($mac);
-        $mac = ereg_replace("ignore","",$mac);
-        if(ereg(" or ", $mac)){
-            $mac = ereg_replace(" or ","|",$mac);
-        }
+        $sensor = ereg_replace ("_",".",$sensor);
+        $date = ereg_replace ("_"," ",$date);
+        $ip = validateVar($ip, OSS_IP);
+        $date = validateVar($date);
+        print "Ack: $ip $date $sensor<br>";
+        Host_mac::ack_ign($conn, $ip, $date, $sensor);
+    } elseif(preg_match("/ignore/i", $ip)){
+        $sensor = validateVar($sensor);
+        $ip = ereg_replace("ignore","",$ip);
         $ip = ereg_replace ("_",".",$ip);
-        Host_mac::ignore($conn,$ip,$mac);
+        $sensor = ereg_replace ("_",".",$sensor);
+        $ip = validateVar($ip, OSS_IP);
+        $date = ereg_replace ("_"," ",$date);
+        $date = validateVar($date);
+        print "Ignore: $ip $date $sensor<br>";
+        Host_mac::ack_ign($conn, $ip, $date, $sensor);
     }
 }
 

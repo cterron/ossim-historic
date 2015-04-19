@@ -20,12 +20,20 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     require_once 'classes/Host_os.inc';
     require_once 'classes/Host_scan.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'classes/Security.inc';
 
-    if (!$order = $_GET["order"]) $order = "hostname"; 
-    if (!$search = $_POST["search"]) 
-        $search = "";
-    else 
-        $search = "WHERE ip like '%$search%' OR hostname like '%$search%'";
+
+    $order = GET('order');
+    $search = POST('search');
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , 'illegal:'._("order"));
+    ossim_valid($search, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , OSS_PUNC, 'illegal:'._("search"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+                        
+    if (empty($order)) $order = "hostname"; 
+    if (!empty($search)) $search = "WHERE ip like '%$search%' OR hostname like '%$search%'";
 ?>
 
   <table align="center">
@@ -109,9 +117,9 @@ if($scan_list = Host_scan::get_list($conn, "WHERE host_ip = inet_aton('$ip')")){
     $plugin_name = "";
     if ($plugin_list = Plugin::get_list($conn, "WHERE id = $id")) {
         $plugin_name = $plugin_list[0]->get_name();
-        echo "$plugin_name<BR>";
+        echo ucfirst($plugin_name) . "<BR>";
     } else {
-        echo $id;
+        echo "$id<BR>";
     }
 }
 } else {

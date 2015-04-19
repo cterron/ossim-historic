@@ -3,19 +3,20 @@
 include ('ossim_conf.inc');
 include ('ossim_acl.inc');
 
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 $phpgacl = $conf->get_conf("phpgacl_path");
 
-include ("$phpgacl/gacl.class.php");
-include ("$phpgacl/gacl_api.class.php");
+require_once ("$phpgacl/gacl.class.php");
+require_once ("$phpgacl/gacl_api.class.php");
 
-$gacl_api = new gacl_api();
+$gacl_api = new gacl_api($ACL_OPTIONS);
 
 /* Domain access */
-echo "Setting up domain access...<br/><br/>";
+echo "Setting up domain access...<br/>";
 $gacl_api->add_object_section (ACL_DEFAULT_DOMAIN_SECTION,
                                ACL_DEFAULT_DOMAIN_SECTION,
                                1, 0, 'ACO');
+echo "  * Users...<br/>";
 $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_ALL,
                        ACL_DEFAULT_DOMAIN_ALL,
@@ -24,15 +25,23 @@ $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_LOGIN,
                        ACL_DEFAULT_DOMAIN_LOGIN,
                        2, 0, 'ACO');
+echo "  * Networks...<br/>";
 $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_NETS,
                        ACL_DEFAULT_DOMAIN_NETS,
                        3, 0, 'ACO');
+echo "  * Sensors...<br/><br/>";
+$gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
+                       ACL_DEFAULT_DOMAIN_SENSORS,
+                       ACL_DEFAULT_DOMAIN_SENSORS,
+                       4, 0, 'ACO');
 
 /* Menu access */
 $menu_count = 10;
 $submenu_count = 1;
 
+
+echo "Setting up Menu access...<br/>";
 foreach ($ACL_MAIN_MENU as $menu_name => $menu)
 {
 
@@ -44,7 +53,7 @@ foreach ($ACL_MAIN_MENU as $menu_name => $menu)
 
     foreach ($menu as $submenu_name => $submenu)
     {
-        print "Setting up " . $submenu["name"] . " ...<br/>";
+        echo "  * " . $submenu["name"] . " ...<br/>";
 
         $gacl_api->add_object ($menu_name,
                                $submenu_name,
@@ -86,4 +95,12 @@ $gacl_api->add_acl (
     array (ACL_DEFAULT_USER_SECTION => array (ACL_DEFAULT_OSSIM_ADMIN))
 );
 
-?><a href="<?php echo $_SERVER['HTTP_REFERER'];?>"> Back </a>
+?>
+<?
+// The upgrade system at include/classes/Upgrade_base.inc includes
+// that file like: include 'http://foo/setup/ossim_acl.php'
+// In this case, there is not HTTP_REFERER and btw we don't want to show
+// this "go back" link.
+if (isset($_SERVER['HTTP_REFERER'])) { ?>
+<a href="<?php echo $_SERVER['HTTP_REFERER'];?>"> Back </a>
+<? } ?>

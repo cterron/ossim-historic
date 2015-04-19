@@ -2,7 +2,9 @@
 
 require_once 'classes/Net_group_reference.inc';
 require_once 'ossim_conf.inc';
-
+require_once 'classes/Log_action.inc';
+require_once 'classes/Session.inc';
+require_once ("ossim_db.inc");
 
 class Net_group {
 
@@ -39,15 +41,20 @@ class Net_group {
 
     function get_list($conn, $args = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM net_group $args")) {
+        $query = OssimQuery("SELECT * FROM net_group $args");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
+	    	if (Session::groupAllowed($conn, stripslashes($rs->fields["name"])))
+		{
                 $list[] = new Net_group  (stripslashes($rs->fields["name"]),
                                     $rs->fields["threshold_c"],
                                     $rs->fields["threshold_a"],
                                     stripslashes($rs->fields["rrd_profile"]),
                                     stripslashes($rs->fields["descr"]));
+		}
                 $rs->MoveNext();
             }
         }
@@ -57,8 +64,6 @@ class Net_group {
     function get_compromise($conn, $name){
         $compromise = 0;
         $networks = Net_group::get_networks($conn, $name);
-        $name = stripslashes($name);
-        $name = mysql_real_escape_string($name);
 
         foreach($networks as $network){
             $name = $network->get_net_name();
@@ -76,8 +81,6 @@ class Net_group {
     function get_attack($conn, $name){
         $attack = 0;
         $networks = Net_group::get_networks($conn, $name);
-        $name = stripslashes($name);
-        $name = mysql_real_escape_string($name);
 
         foreach($networks as $network){
             $name = $network->get_net_name();
@@ -99,47 +102,51 @@ class Net_group {
     {
         settype($threshold_c, "int");
         settype($threshold_a, "int");
-        $name =stripslashes($name);
-        $name = mysql_escape_string($name);
-        $descr = stripslashes($descr);
-        $descr = mysql_escape_string($descr);
         $rrd_profile = htmlentities($rrd_profile);
 
         $name = str_replace(" ", "_", $name);
 
-        $query = "INSERT INTO net_group ( name, threshold_c, threshold_a, rrd_profile, descr) 
-        VALUES ('$name', $threshold_c, $threshold_a, '$rrd_profile', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net_group ( name, threshold_c, threshold_a, rrd_profile, descr) VALUES (?, ?, ?, ?,?)";
+        $params = array($name, $threshold_c, $threshold_a, $rrd_profile, $descr);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
         }
-        $name = stripslashes($name);
-        $descr = stripslashes($name);
         Net_group_reference::insert($conn, $name, $nets);
+       
+        $infolog = array($name);
+        Log_action::log(30,$infolog);
+            
     }
 
     function update($conn, $name, $threshold_c, $threshold_a, $rrd_profile, $nets, $descr)
     {
         Net_group::delete($conn, $name);
         Net_group::insert($conn, $name, $threshold_c, $threshold_a, $rrd_profile, $nets, $descr);
+        
+        $infolog = array($name);
+        Log_action::log(31,$infolog);
     }
 
     function delete($conn, $name) {
-        $name = stripslashes($name);
-        $name = mysql_real_escape_string($name);
-        $query = "DELETE FROM net_group WHERE name = '$name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_group WHERE name = ?";
+        $params = array($name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
         $name = stripslashes($name);
         Net_group_reference::delete($conn, $name);
+       
+        $infolog = array($name);
+        Log_action::log(32,$infolog);
+                        
     }
 
     function netthresh_c($conn, $name) {
-        $name = stripslashes($name);
-        $name = mysql_real_escape_string($name);
-        $query = "SELECT * FROM net_group WHERE name = '$name';";
-        if (!$rs = $conn->Execute($query)) {
+        $sql = "SELECT * FROM net_group WHERE name = ?";
+        $params = array($name);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -147,16 +154,16 @@ class Net_group {
             return $rs->fields["threshold_c"]; 
         else {
             /* network group is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
 
     function netthresh_a($conn, $name) {
-        $name = stripslashes($name);
-        $name = mysql_real_escape_string($name);
-        $query = "SELECT * FROM net_group WHERE name = '$name';";
-        if (!$rs = $conn->Execute($query)) {
+        
+        $sql = "SELECT * FROM net_group WHERE name = ?";
+        $params = array($name);
+        if (!$rs = $conn->Execute($sql, $params)) {
             print 'error: '.$conn->ErrorMsg().'<BR>';
             exit;
         } 
@@ -164,46 +171,37 @@ class Net_group {
             return $rs->fields["threshold_a"]; 
         else {
             /* network group is not in db, return default threshold */
-            $conf = new ossim_conf();
+            $conf = $GLOBALS["CONF"];
             return $conf->get_conf("threshold");
         }
     }
 
     function isNetInGroup($conn, $group, $net)
     {
-        $group = stripslashes($group);
-        $group = mysql_real_escape_string($group);
-        $net = stripslashes($net);
-        $net = mysql_real_escape_string($net);
+        $sql = "SELECT * from net_group_reference where net_group_name = ? AND net_name = ?";
+        $params = array($group, $net);
 
-        $query = "SELECT * from net_group_reference where net_group_name =
-        '" . $group . "' AND net_name = '". $net ."'";
-
-        if ($rs = &$conn->Execute($query) && (!$rs->EOF)){
-            return True;
+        if ($rs = &$conn->Execute($sql, $params) && (!$rs->EOF)){
+            return true;
         } 
 
-        return False;
+        return false;
     }
 
     function enable_nessus($conn, $net_group_name)
     {
-        $net_group_name = stripslashes($net_group_name);
-        $net_group_name = mysql_real_escape_string($net_group_name);
-        $query = "INSERT INTO net_group_scan (net_group_name, plugin_id, plugin_sid) 
-            VALUES ('$net_group_name', 3001, 0)";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net_group_scan (net_group_name, plugin_id, plugin_sid) VALUES (?, 3001, 0)";
+        $params = array($net_group_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     function disable_nessus($conn, $net_group_name)
     {
-        $net_group_name = stripslashes($net_group_name);
-        $net_group_name = mysql_real_escape_string($net_group_name);
-        $query = "DELETE FROM net_group_scan 
-            WHERE net_group_name = '$net_group_name' AND plugin_id = 3001";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_group_scan WHERE net_group_name = ? AND plugin_id = 3001";
+        $params = array($net_group_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -211,29 +209,26 @@ class Net_group {
 
     function isNetInAnyGroup($conn, $net)
     {
-        $group = stripslashes($group);
-        $group = mysql_real_escape_string($group);
-        $net = stripslashes($net);
-        $net = mysql_real_escape_string($net);
+        $sql = "SELECT * from net_group_reference where net_name = ?";
+        $params = array($net);
 
-        $query = "SELECT * from net_group_reference where net_name = '". $net ."'";
-
-        if ($rs = &$conn->Execute($query) && (!$rs->EOF)){
-            return True;
+        if ($rs = &$conn->Execute($sql, $params) && (!$rs->EOF)){
+            return true;
         } 
 
-        return False;
+        return false;
     }
 
     function check_orphan($conn)
     {
-        $query =  "SELECT * FROOM net_sensor_reference LEFT JOIN sensor ON sensor.name = net_sensor_reference.sensor_name WHERE name IS NULL";
+        $sql =  "SELECT * FROOM net_sensor_reference LEFT JOIN  sensor ON
+                 sensor.name = net_sensor_reference.sensor_name WHERE name IS NULL";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                Net_sensor_rerefence::delete($conn, $rs->fields["alert_id"]);
+                Net_sensor_rerefence::delete($conn, $rs->fields["event_id"]);
                 $rs->MoveNext();
             }
         }

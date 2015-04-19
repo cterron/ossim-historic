@@ -1,4 +1,5 @@
 <?php
+require_once 'classes/Security.inc';
 require_once ('classes/Session.inc');
 Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
@@ -19,7 +20,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     require_once ('classes/Host.inc');
     require_once ('classes/Net.inc');
     require_once ('classes/Port_group.inc');
-    require_once ('classes/Signature_group.inc');
+    require_once ('classes/Plugingroup.inc');
     require_once ('classes/Sensor.inc');
     require_once ('ossim_db.inc');
     $db = new ossim_db();
@@ -32,12 +33,12 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 <table align="center">
   <input type="hidden" name="insert" value="insert">
   <tr>
-    <th>Source<br/>
+    <th><?=_("Source").required()?><br/>
         <font size="-2">
-          <a href="../host/newhostform.php">Insert new host?</a>
+          <a href="../net/newnetform.php"><?=_("Insert new net?")?></a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php">Insert new net?</a>
+          <a href="../host/newhostform.php"><?=_("Insert new host?")?></a>
         </font><br/>
     </th>
     <td class="left">
@@ -65,12 +66,13 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     }
 ?>
 
+<hr noshade>
 
 <?php
 
     /* ===== source hosts ===== */
     $i = 1;
-    if ($host_list = Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
+    if ($host_list = Host::get_list($conn, "", "ORDER BY hostname")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -93,19 +95,19 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     $name = "sourcemboxi".$i;
 ?>
     <input type="checkbox" name="<?php echo $name; ?>"
-           value="any">&nbsp;<b>ANY</b><br></input>
+           value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
 
 
 
     </td>
   </tr>
   <tr>
-    <th>Dest<br/>
+    <th><?=_("Dest").required()?><br/>
         <font size="-2">
-          <a href="../host/newhostform.php">Insert new host?</a>
+          <a href="../net/newnetform.php"><?=_("Insert new net?")?></a>
         </font><br/>
         <font size="-2">
-          <a href="../net/newnetform.php">Insert new net?</a>
+          <a href="../host/newhostform.php"><?=_("Insert new host?")?></a>
         </font><br/>
     </th>
     <td class="left">
@@ -133,12 +135,13 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     }
 ?>
 
+<hr noshade>
 
 <?php
 
-    /* ===== source hosts ===== */
+    /* ===== dest hosts ===== */
     $i = 1;
-    if ($host_list =  Host::get_list($conn, "", "ORDER BY inet_aton(ip)")) {
+    if ($host_list =  Host::get_list($conn, "", "ORDER BY hostname")) {
         foreach ($host_list as $host) {
             $ip       = $host->get_ip();
             $hostname = $host->get_hostname();
@@ -161,16 +164,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     $name = "destmboxi".$i;
 ?>
     <input type="checkbox" name="<?php echo $name; ?>"
-           value="any">&nbsp;<b>ANY</b><br></input>
+           value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
 
 
     </td>
   </tr>
 
   <tr>
-    <th>Ports<br/>
+    <th><?=_("Ports").required()?><br/>
         <font size="-2">
-          <a href="../port/newportform.php">Insert new port group?</a>
+          <a href="../port/newportform.php"><?=_("Insert new port group?")?></a>
         </font><br/>
     </th>
     <td class="left">
@@ -202,9 +205,10 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Priority</th>
+    <th><?=_("Priority").required()?></th>
     <td class="left">
       <select name="priority">
+        <option value="-1"><?= _("Do not change"); ?></option>
         <option value="0">0</option>
         <option value="1">1</option>
         <option selected value="2">2</option>
@@ -216,44 +220,27 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   </tr>
 
   <tr>
-    <th>Signatures<br/>
+    <th> <?= _("Plugin Groups").required() ?> <br/>
         <font size="-2">
-          <a href="../signature/newsignatureform.php">Insert new signature
-          group?</a>
+          <a href="../policy/modifyplugingroups.php">
+      <?php echo gettext("Insert new plugin group"); ?>?
         </font><br/>
     </th>
     <td class="left">
-<?php
+<?
+    /* ===== plugin groups ==== */
+    foreach (Plugingroup::get_list($conn) as $g) {
+?>
+    <input type="checkbox" name="plugins[<?=$g->get_id()?>]"> <?=$g->get_name()?><br/>
+<? } ?>
 
-    /* ===== signatures ==== */
-    $i = 1;
-    if ($sig_group_list = Signature_group::get_list($conn, "ORDER BY name")) {
-        foreach($sig_group_list as $sig_group) {
-            $sig_group_name = $sig_group->get_name();
-            if ($i == 1) {
-?>
-        <input type="hidden" name="<?php echo "nsigs"; ?>"
-            value="<?php echo count($sig_group_list); ?>">
-<?php
-            }
-            $name = "mboxsg" . $i;
-?>
-        <input type="checkbox" name="<?php echo $name;?>"
-            value="<?php echo $sig_group_name; ?>">
-            <?php echo $sig_group_name . "<br>";?>
-        </input>
-<?php
-            $i++;
-        }
-    }
-?>
     </td>
   </tr>
 
   <tr>
-    <th>Sensors<br/>
+    <th><?=_("Sensors").required()?><br/>
         <font size="-2">
-          <a href="../sensor/newsensorform.php">Insert new sensor?</a>
+          <a href="../sensor/newsensorform.php"><?=_("Insert new sensor?")?></a>
         </font><br/>
     </th>
     <td class="left">
@@ -261,7 +248,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn, "ORDER BY inet_aton(ip)")) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -281,28 +268,30 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
             $i++;
         }
     }
+
 ?>
+    <input type="checkbox" name="<?php echo $name; ?>"
+           value="any">&nbsp;<b><?=_("ANY")?></b><br></input>
     </td>
   </tr>
 
   <tr>
-    <th>Time Range
-    </th>
+    <th><?= _("Time Range").required()?></th>
     <td>
       <table>
         <tr>
-          <td>Begin</td><td></td><td>End</td>
+          <td><?=_("Begin")?></td><td></td><td><?=_("End")?></td>
         </tr>
         <tr>
           <td>
             <select name="begin_day">
-              <option selected value="1">Mon</option>
-              <option value="2">Tue</option>
-              <option value="3">Wed</option>
-              <option value="4">Thu</option>
-              <option value="5">Fri</option>
-              <option value="6">Sat</option>
-              <option value="7">Sun</option>
+              <option selected value="1"><?=_("Mon");?></option>
+              <option value="2"><?=_("Tue");?></option>
+              <option value="3"><?=_("Wed");?></option>
+              <option value="4"><?=_("Thu");?></option>
+              <option value="5"><?=_("Fri");?></option>
+              <option value="6"><?=_("Sat");?></option>
+              <option value="7"><?=_("Sun");?></option>
             </select>
             <select name="begin_hour">
               <option selected value="0">0h</option>
@@ -334,13 +323,13 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
           <td>-</td>
           <td>
             <select name="end_day">
-              <option value="1">Mon</option>
-              <option value="2">Tue</option>
-              <option value="3">Wed</option>
-              <option value="4">Thu</option>
-              <option value="5">Fri</option>
-              <option value="6">Sat</option>
-              <option selected value="7">Sun</option>
+              <option value="1"><?=_("Mon");?></option>
+              <option value="2"><?=_("Tue");?></option>
+              <option value="3"><?=_("Wed");?></option>
+              <option value="4"><?=_("Thu");?></option>
+              <option value="5"><?=_("Fri");?></option>
+              <option value="6"><?=_("Sat");?></option>
+              <option selected value="7"><?=_("Sun");?></option>
             </select>
             <select name="end_hour">
               <option value="0">0h</option>
@@ -373,10 +362,16 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
       </table>
     </td>
   </tr>
-
+  <tr>
+    <th> <?= _("Store events").required() ?> </th>
+    <td class="left">
+    <input type="radio" name="store" value="1" checked> <?= _("Yes"); ?>
+    <input type="radio" name="store" value="0" > <?= _("No"); ?>
+    </td>
+  </tr>
 
   <tr>
-    <th>Description</th>
+    <th><?= _("Description").required() ?></th>
     <td class="left">
         <textarea name="descr" rows="2" cols="20"></textarea>
     </td>

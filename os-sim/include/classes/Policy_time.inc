@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Policy_time {
 
     var $policy_id;
@@ -26,12 +28,14 @@ class Policy_time {
     
     function get_list($conn, $policy_id) 
     {
+        $list = array();
         $policy_id = intval($policy_id);
-        $query = "SELECT * FROM policy_time 
-                    WHERE policy_id = $policy_id";
+        $query = OssimQuery("SELECT * FROM policy_time 
+                    WHERE policy_id = $policy_id");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list   = new Policy_time
                                 ($rs->fields["policy_id"],
@@ -45,23 +49,23 @@ class Policy_time {
         return $list;
     }
 
-    function insert($conn, $begin_hour, $end_hour, $begin_day, $end_day)
+    function insert($conn, $begin_hour, $end_hour, $begin_day, $end_day, $policy_id)
     {
-
-        $query = "INSERT INTO policy_time 
-                    VALUES (LAST_INSERT_ID(), $begin_hour, $end_hour, 
-                            $begin_day, $end_day);";
-        if ($conn->Execute($query) === false) {
-            print 'error inserting: '.$conn->ErrorMsg().'<BR>';
-            exit;
+        $sql = "INSERT INTO policy_time VALUES (?, ?, ?, ?, ?)";
+        $params = array($policy_id, $begin_hour, $end_hour, $begin_day, $end_day);
+        if (!$conn->Execute($sql, $params)) {
+            die($conn->ErrorMsg());
         }
     }
 
 
     function delete($conn, $policy_id) {
         $policy_id = intval($policy_id);
-        $query = "DELETE FROM policy_time WHERE policy_id = $policy_id;";
-        if ($conn->Execute($query) === false) {
+        
+        $sql = "DELETE FROM policy_time WHERE policy_id = ?";
+        $params = array($policy_id);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

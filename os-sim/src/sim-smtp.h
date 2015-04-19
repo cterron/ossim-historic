@@ -35,7 +35,6 @@
 #ifndef __SIM_SMTP_H__
 #define __SIM_SMTP_H__ 1
 
-#include <config.h>
 
 #include <glib.h>
 #include <glib-object.h>
@@ -82,3 +81,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_SMTP_H__ */
+// vim: set tabstop=2:

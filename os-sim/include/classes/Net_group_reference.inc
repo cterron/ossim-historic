@@ -1,5 +1,7 @@
 <?php
 
+require_once ("ossim_db.inc");
+
 class Net_group_reference {
 
     var $net_group_name;
@@ -16,9 +18,8 @@ class Net_group_reference {
     
     function get_list($conn, $net) 
     {
-        $net = stripslashes($net);
-        $net = mysql_escape_string($net);
-        $query = "SELECT * FROM net_group_reference WHERE net_group_name = '$net'";
+        $query = OssimQuery("SELECT * FROM net_group_reference WHERE
+        net_group_name = '$net'");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -34,14 +35,12 @@ class Net_group_reference {
 
     function insert($conn, $net_group_name, $nets)
     {
-        $net_group_name = stripslashes($net_group_name);
-        $net_group_name = mysql_real_escape_string($net_group_name);
         foreach ($nets as $net_name) {
-            $net_name = stripslashes($net_name);
-            $net_name = mysql_real_escape_string($net_name);
-            $query = "INSERT INTO net_group_reference VALUES 
-                    ('$net_group_name', '$net_name');";
-            if ($conn->Execute($query) === false) {
+            
+            $sql = "INSERT INTO net_group_reference VALUES (?, ?)";
+            $params = array($net_group_name, $net_name);
+            
+            if ($conn->Execute($sql, $params) === false) {
                 print 'error inserting: '.$conn->ErrorMsg().'<BR>';
                 exit;
             }
@@ -50,13 +49,9 @@ class Net_group_reference {
 
     function delete($conn, $net_group_name, $net_name = "%") 
     {
-        $net_group_name = stripslashes($net_group_name);
-        $net_group_name = mysql_real_escape_string($net_group_name);
-        $net_name = stripslashes($net_name);
-        $net_name = mysql_real_escape_string($net_name);
-        $query = "DELETE FROM net_group_reference 
-                    WHERE net_group_name = '$net_group_name' AND net_name LIKE '$net_name'";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_group_reference WHERE net_group_name = ? AND net_name LIKE ?";
+        $params = array($net_group_name, $net_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -64,20 +59,19 @@ class Net_group_reference {
 
     function in_net_group_reference($conn, $net, $net_name)
     {
-        $net = mysql_real_escape_string($net);
-        $net_name = mysql_real_escape_string($net_name);
-                                                                                
-        $query = "SELECT * FROM net_group_reference WHERE net_group_name = '$net' AND net_name='$net_name';";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM net_group_reference WHERE net_group_name = ? AND net_name = ?";
+        $params = array($net, $net_name);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];
     }
+    
     function check_orphan($conn)
     {
-        $query =  "SELECT * FROM net_group_reference LEFT JOIN net ON net.name = net_group_reference.net_name WHERE descr IS NULL";
+        $sql = "SELECT * FROM net_group_reference LEFT JOIN net ON net.name = net_group_reference.net_name WHERE descr IS NULL";
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {

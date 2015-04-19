@@ -82,7 +82,7 @@ class ParserCiscoIDS(Parser.Parser):
                     date = "%s-%s-%s %s" % \
                         (year_local, month_local, day_local, hour_local)
 
-                    self.agent.sendAlert  (
+                    self.agent.sendEvent  (
                                      type = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],

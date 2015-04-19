@@ -72,8 +72,6 @@ GType             sim_plugin_sid_get_type                        (void);
 SimPluginSid*     sim_plugin_sid_new                             (void);
 SimPluginSid*     sim_plugin_sid_new_from_data                   (gint           plugin_id,
 								  gint           sid,
-								  gint           category_id,
-								  gint           class_id,
 								  gint           reliability,
 								  gint           priority,
 								  const gchar   *name);
@@ -85,12 +83,6 @@ void              sim_plugin_sid_set_plugin_id                   (SimPluginSid  
 gint              sim_plugin_sid_get_sid                         (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_sid                         (SimPluginSid  *plugin_sid,
 								  gint           sid);
-gint              sim_plugin_sid_get_category_id                 (SimPluginSid  *plugin_sid);
-void              sim_plugin_sid_set_category_id                 (SimPluginSid  *plugin_sid,
-								  gint           category_id);
-gint              sim_plugin_sid_get_class_id                    (SimPluginSid  *plugin_sid);
-void              sim_plugin_sid_set_class_id                    (SimPluginSid  *plugin_sid,
-								  gint           class_id);
 gint              sim_plugin_sid_get_reliability                 (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_reliability                 (SimPluginSid  *plugin_sid,
 								  gint           reliability);
@@ -100,6 +92,7 @@ void              sim_plugin_sid_set_priority                    (SimPluginSid  
 gchar*            sim_plugin_sid_get_name                        (SimPluginSid  *plugin_sid);
 void              sim_plugin_sid_set_name                        (SimPluginSid  *plugin_sid,
 								  gchar         *name);
+void							sim_plugin_sid_print_internal_data 						 (SimPluginSid  *plugin_sid); //debug function
 
 gchar*            sim_plugin_sid_get_insert_clause               (SimPluginSid  *plugin_sid);
 
@@ -110,3 +103,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_PLUGIN_SID_H__ */
+// vim: set tabstop=2:

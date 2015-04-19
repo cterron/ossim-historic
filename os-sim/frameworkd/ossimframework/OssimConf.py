@@ -1,21 +1,23 @@
 import sys, re
-from OssimDB import OssimDB
 import Const
 
 class OssimConf :
 
-    def __init__ (self, config_file) :
+    def __init__ (self, config_file, complete = True) :
         self.__conf = {}
         self.__get_conf(config_file)
+
+        # complete = False => get config only from ossim.conf file
+        #                     (for example, when you only need database access)
+        # complete = True  => complete config info from OssimDB
+        if complete:
+            self.__get_db_conf()
 
     def __setitem__ (self, key, item) :
         self.__conf[key] = item
 
     def __getitem__ (self, key) :
-        if key in self.__conf:
-            return self.__conf[key]
-        else:
-            return None
+        return self.__conf.get(key, None)
 
     def __repr__ (self):
         repr = ""
@@ -44,8 +46,12 @@ class OssimConf :
        
         config.close()
 
+    
+    def __get_db_conf(self):
+
         # Now, complete config info from Ossim database
         #
+        from OssimDB import OssimDB
         db = OssimDB()
         db.connect(self["ossim_host"], 
                    self["ossim_base"], 
@@ -64,3 +70,4 @@ if __name__ == "__main__":
     print c
 
 
+# vim:ts=4 sts=4 tw=79 expandtab:

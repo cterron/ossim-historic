@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class RRD_anomaly_global {
 
     var $what;
@@ -27,9 +29,13 @@ class RRD_anomaly_global {
     function get_over()             { return $this->over; }
     function get_acked()            { return $this->acked; }
 
-    function get_list($conn, $where = "", $order = "") 
+    function get_list($conn, $where = "", $order = "", $inf, $sup) 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM rrd_anomalies_global $where $order")) {
+        $list = array();
+        $nanoms = $sup - $inf;
+        $query = OssimQuery("SELECT * FROM rrd_anomalies_global $where
+        $order LIMIT $nanoms OFFSET $inf");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
@@ -47,21 +53,32 @@ class RRD_anomaly_global {
 
     function ack($conn, $what)
     {
-        $query = "UPDATE rrd_anomalies_global SET acked = 1 where what = '$what';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE rrd_anomalies_global SET acked = 1 where what = ?";
+        $params = array($what);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error acking: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
 
     function delete($conn, $what) {
-        $query = "DELETE FROM rrd_anomalies_global WHERE what = '$what';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM rrd_anomalies_global WHERE what = ?";
+        $params = array($what);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
+    
+    function get_list_count($conn) {
+        $sql = "SELECT count(*) FROM rrd_anomalies_global";
 
+        if (!$rs = &$conn->Execute($sql)) {
+            print $conn->ErrorMsg();
+        } else {
+            return $rs->fields["count(*)"];
+        }
+    }
 }
 
 

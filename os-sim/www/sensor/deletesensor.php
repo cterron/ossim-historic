@@ -15,17 +15,19 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   <h1> <?php echo gettext("Delete sensor"); ?> </h1>
 
 <?php 
-    if (!$_GET["name"]) { 
-?>
-    <p> <?php echo gettext("Wrong sensor"); ?> </p>
-<?php 
-        exit;
-    }
 
+require_once 'classes/Security.inc';
 
-$name = mysql_escape_string($_GET["name"]);
+$name = GET('name');
 
-if (!$_GET["confirm"]) {
+ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_SCORE, 'illegal:'._("Sensor name"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
+                    
+
+if (GET('confirm')) {
 ?>
     <p> <?php echo gettext("Are you sure?"); ?> </p>
     <p><a 

@@ -1,5 +1,10 @@
 <?php
 
+require_once("ossim_db.inc");
+
+/*
+ * @deprecated class/file
+ */
 class Policy_ports_reference {
 
     var $policy_id;
@@ -19,9 +24,12 @@ class Policy_ports_reference {
     
     function get_list($conn, $where = "", $order = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM policy_ports_reference $where $order")) {
+        $query = OssimQuery("SELECT * FROM policy_ports_reference $where
+        $order");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Policy_ports_reference ($rs->fields["policy_id"], 
                                                       $rs->fields["port_number"],
@@ -36,9 +44,10 @@ class Policy_ports_reference {
     {
         $policy_id = intval($policy_id);
         $port_number = intval($port_number);
-        $query = "INSERT INTO policy_ports_reference VALUES 
-            ($policy_id, $port_number, '$port_protocol');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO policy_ports_reference VALUES (?, ?, ?)";
+        $params = array($policy_id, $port_number, $port_protocol);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -49,10 +58,10 @@ class Policy_ports_reference {
         $policy_id = intval($policy_id);
         $port_number = intval($port_number);
 
-        $query = "UPDATE policy_ports_reference SET policy_id = $policy_id, 
-            port_number = $port_number, port_protocol = '$port_protocol' WHERE policy_id =
-            $policy_id AND port_number = $port_number AND port_protocol = '$protocol';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE policy_ports_reference SET policy_id = ?, port_number  = ?,
+                port_protocol = ? WHERE policy_id = ? AND port_number = ? AND port_protocol = ?";
+        $params = array($policy_id, $port_number, $port_protocol, $policy_id, $port_number, $port_protocol);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -62,10 +71,9 @@ class Policy_ports_reference {
         $policy_id = intval($policy_id);
         $port_number = intval($port_number);
 
-        $query = "DELETE FROM policy_ports_reference WHERE policy_id =
-        $policy_id AND port_number = $port_number AND port_protocol =
-        '$port_protocol';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM policy_ports_reference WHERE policy_id = ? AND port_number = ? AND port_protocol = ?";
+        $params = array($policy_id, $port_number, $port_protocol);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

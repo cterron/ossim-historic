@@ -25,7 +25,7 @@ class Watchdog(threading.Thread):
                     util.debug_watchlog (msg, '--', 'YELLOW')
 
                     # unknown plugin state
-                    msg = "plugin-unknown plugin_id=\"%s\"\n" % id
+                    msg = "plugin-unknown-state plugin_id=\"%s\"\n" % id
                     self.agent.sendMessage(msg)
 
 

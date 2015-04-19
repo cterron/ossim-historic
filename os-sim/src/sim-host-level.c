@@ -32,11 +32,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-host-level.h"
  
 #include <math.h>
+#include <config.h>
 
 enum 
 {
@@ -142,11 +142,15 @@ sim_host_level_new (const GInetAddr     *ia,
   if (a < 1) a = 1;
 
   host_level = SIM_HOST_LEVEL (g_object_new (SIM_TYPE_HOST_LEVEL, NULL));
-  host_level->_priv->ia = gnet_inetaddr_clone (ia);
-  host_level->_priv->c = c;
-  host_level->_priv->a = a;  
-
-  return host_level;
+  if (gnet_inetaddr_get_canonical_name(ia))
+  {        
+    host_level->_priv->ia = gnet_inetaddr_clone (ia);
+    host_level->_priv->c = c;
+    host_level->_priv->a = a;  
+    return host_level;
+  }
+  else
+    return NULL;
 }
 
 /*
@@ -329,13 +333,13 @@ sim_host_level_set_recovery (SimHostLevel  *host_level,
 
 /*
  *
- *
+ * Insert the level of a host into host_qualification table. Returns NULL on error.
  *
  */
 gchar*
 sim_host_level_get_insert_clause (SimHostLevel  *host_level)
 {
-  gchar *query;
+  gchar *query=NULL;
   gchar *name;
   gint   c = 0;
   gint   a = 0;
@@ -347,11 +351,12 @@ sim_host_level_get_insert_clause (SimHostLevel  *host_level)
   c = rint (host_level->_priv->c);
   a = rint (host_level->_priv->a);
 
-  name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
-  query = g_strdup_printf ("INSERT INTO host_qualification VALUES ('%s', %d, %d)",
+  if (name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia))
+  {
+    query = g_strdup_printf ("INSERT INTO host_qualification VALUES ('%s', %d, %d)",
 			   name, c, a);
-
-  g_free (name);
+    g_free (name);
+  }
 
   return query;
 }
@@ -364,8 +369,8 @@ sim_host_level_get_insert_clause (SimHostLevel  *host_level)
 gchar*
 sim_host_level_get_update_clause (SimHostLevel  *host_level)
 {
-  gchar *query;
-  gchar *name;
+  gchar *query = NULL;
+  gchar *name = NULL;
   gint   c = 0;
   gint   a = 0;
 
@@ -376,13 +381,19 @@ sim_host_level_get_update_clause (SimHostLevel  *host_level)
   c = rint (host_level->_priv->c);
   a = rint (host_level->_priv->a);
 
-  name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
-  query = g_strdup_printf ("UPDATE host_qualification SET compromise = %d, attack = %d WHERE host_ip = '%s'",
+  if (gnet_inetaddr_is_ipv4(host_level->_priv->ia))
+    name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
+  
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_host_level_get_update_clause: name: -%s-",name);
+  if (name)
+  { 
+    query = g_strdup_printf ("UPDATE host_qualification SET compromise = %d, attack = %d WHERE host_ip = '%s'",
 			   c, a, name);
 
-  g_free (name);
-
-  return query;
+    g_free (name);
+  }
+  
+	return query;
 }
 
 /*
@@ -393,16 +404,18 @@ sim_host_level_get_update_clause (SimHostLevel  *host_level)
 gchar*
 sim_host_level_get_delete_clause (SimHostLevel  *host_level)
 {
-  gchar *query;
+  gchar *query=NULL;
   gchar *name;
 
   g_return_val_if_fail (host_level, NULL);
   g_return_val_if_fail (SIM_IS_HOST_LEVEL (host_level), NULL);
   g_return_val_if_fail (host_level->_priv->ia, NULL);
 
-  name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia);
-  query = g_strdup_printf ("DELETE FROM host_qualification WHERE host_ip = '%s'", name);
-  g_free (name);
+  if (name = gnet_inetaddr_get_canonical_name (host_level->_priv->ia))
+	{
+   query = g_strdup_printf ("DELETE FROM host_qualification WHERE host_ip = '%s'", name);
+   g_free (name);
+	}
 
   return query;
 }

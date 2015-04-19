@@ -16,36 +16,36 @@ Session::logcheck("MenuPolicy", "PolicySignatures");
 
 <?php
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["name"] || !$_POST["nsigs"] || !$_POST["descr"]))
-    {
-?>
+$insert = POST('insert');
+$name   = POST('name');
+$nsigs  = POST('nsigs');
+$descr  = POST('descr');
 
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
+ossim_valid($insert, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("insert"));
+ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("name"));
+ossim_valid($nsigs, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("nsigs"));
+ossim_valid($descr, OSS_SPACE, OSS_PUNC, OSS_ALPHA, OSS_NULLABLE, OSS_AT, 'illegal:'._("descr"));
 
-<?php
+if (ossim_error()) {
+            die(ossim_error());
+}
 
-/* check OK, insert into BD */
-} elseif($_POST["insert"]) {
-
-    $name  = mysql_escape_string($_POST["name"]);
-    $nsigs = mysql_escape_string($_POST["nsigs"]);
-    $descr = mysql_escape_string($_POST["descr"]);
+if (POST('insert')) {
 
     require_once 'ossim_db.inc';
     require_once 'classes/Signature_group.inc';
     $db = new ossim_db();
     $conn = $db->connect();
 
-    for ($i = 1; $i <= $_POST["nsigs"]; $i++) {
+    for ($i = 1; $i <= $nsigs; $i++) {
         $mboxname = "mbox" . $i;
-        if ($_POST[$mboxname]) {
-            $signature_list[] = mysql_escape_string($_POST[$mboxname]);
+        if (POST("$mboxname")) {
+            ossim_valid(POST("$mboxname"), OSS_ALPHA, OSS_NULLABLE, OSS_PUNC, 'illegal:'._("mboxname"));
+            if (ossim_error()) { die(ossim_error()); }
+            $signature_list[] = POST("$mboxname");
         }
     }
-   
+ 
     Signature_group::insert ($conn, $name, $signature_list, $descr);
 
     $db->close ($conn);

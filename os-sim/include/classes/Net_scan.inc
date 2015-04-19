@@ -1,6 +1,7 @@
 <?php
 
 require_once ('classes/Net.inc');
+require_once ("ossim_db.inc");
 
 class Net_scan {
 
@@ -22,11 +23,12 @@ class Net_scan {
     function get_list($conn, $args = "") 
     {
 
-        $query = "SELECT * FROM net_scan $args";
+        $query = OssimQuery("SELECT * FROM net_scan $args");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Net_scan ($rs->fields["net_name"],
                                          $rs->fields["plugin_id"], 
@@ -42,9 +44,9 @@ class Net_scan {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
 
-        $query = "INSERT INTO net_scan VALUES 
-            ('$net_name', $plugin_id, $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net_scan VALUES (?, ?, ?)";
+        $params = array($net_name, $plugin_id, $plugin_sid);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -55,27 +57,26 @@ class Net_scan {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
 
-        $query = "UPDATE net_scan SET net = '$net', 
-            plugin_id = $plugin_id, plugin_sid = $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE net_scan SET net = ?, plugin_id = ?, plugin_sid = ?";
+        $params = array($net, $plugin_id, $plugin_sid);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     
     function delete($conn, $net, $plugin_id) {
-        $query = "DELETE FROM net_scan WHERE net_name = '$net' 
-                    AND plugin_id = $plugin_id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_scan WHERE net_name = ? AND plugin_id = ?";
+        $params = array($net, $plugin_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     function in_net_scan($conn, $net, $plugin_id) {
-        $query = "SELECT * FROM net_scan WHERE net_name = '$net' AND plugin_id=$plugin_id;";
-        echo $query;
-        
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM net_scan WHERE net_name = ? AND plugin_id = ?";
+        $params = array($net, $plugin_id);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];

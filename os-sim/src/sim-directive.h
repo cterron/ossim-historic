@@ -39,7 +39,7 @@
 #include <glib-object.h>
 
 #include "sim-enums.h"
-#include "sim-alert.h"
+#include "sim-event.h"
 #include "sim-action.h"
 #include "sim-rule.h"
 #include "sim-directive-group.h"
@@ -124,10 +124,10 @@ void              sim_directive_free_actions                    (SimDirective   
 
 gint              sim_directive_get_level                       (SimDirective     *directive);
 
-gboolean          sim_directive_match_by_alert                  (SimDirective     *directive,
-								 SimAlert         *alert);
-gboolean          sim_directive_backlog_match_by_alert          (SimDirective     *directive,
-								 SimAlert         *alert);
+gboolean          sim_directive_match_by_event                  (SimDirective     *directive,
+								 SimEvent         *event);
+gboolean          sim_directive_backlog_match_by_event          (SimDirective     *directive,
+								 SimEvent         *event);
 void              sim_directive_set_rule_vars                   (SimDirective     *directive,
 								 GNode            *node);
 
@@ -147,8 +147,8 @@ gchar*            sim_directive_backlog_get_update_clause       (SimDirective   
 gchar*            sim_directive_backlog_get_delete_clause       (SimDirective     *directive);
 gchar*            sim_directive_backlog_to_string               (SimDirective     *directive);
 
-gchar*            sim_directive_backlog_alert_get_insert_clause (SimDirective     *directive,
-								 SimAlert         *alert);
+gchar*            sim_directive_backlog_event_get_insert_clause (SimDirective     *directive,
+								 SimEvent         *event);
 G_END_DECLS
 
 #ifdef __cplusplus
@@ -156,3 +156,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_DIRECTIVE_H__ */
+
+// vim: set tabstop=2:
+

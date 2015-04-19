@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Incident_file {
 
     var $id;
@@ -30,7 +32,8 @@ class Incident_file {
 
     function get_list ($conn, $args)
     {
-        $query = "SELECT * FROM incident_file $args";
+        $list = array();
+        $query = OssimQuery("SELECT * FROM incident_file $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -54,11 +57,11 @@ class Incident_file {
         $incident_id     = intval($incident_id);
         $incident_ticket = intval($incident_ticket);
 
-        $query = "INSERT into incident_file (
-            incident_id, incident_ticket, name, type, content) VALUES
-            ($incident_id, $incident_ticket, '$name', '$type', '$content');";
+        $sql = "INSERT into incident_file (incident_id, incident_ticket, name, type, content)
+                VALUES (?, ?, ?, ?, ?)";
+        $params = array($incident_id, $incident_ticket, $name, $type, $content);
 
-        if ($conn->Execute($query) === false)
+        if ($conn->Execute($sql, $params) === false)
         {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
@@ -71,10 +74,9 @@ class Incident_file {
         $incident_id = intval($incident_id);
         $incident_ticket = intval($incident_ticket);
 
-        $query = "DELETE FROM incident_file 
-            WHERE id = $id AND incident_id = $incident_id AND 
-                incident_ticket = $incident_ticket";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM incident_file WHERE id = ? AND incident_id = ? AND incident_ticket = ?";
+        $params = array($id, $incident_id, $incident_ticket);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

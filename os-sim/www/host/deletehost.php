@@ -15,17 +15,22 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <h1> <?php echo gettext("Delete host"); ?> </h1>
 
 <?php
-    if (!$_GET["ip"]) {
-?>
-    <p> <?php echo gettext("Wrong ip"); ?> </p>
-<?php
-        exit;
+    require_once ('classes/Security.inc');
+
+    $ip = GET('ip');
+    $confirm = GET('confirm');    
+    
+    ossim_valid($ip, OSS_IP_ADDR , 'illegal:'._("ip"));
+    ossim_valid($confirm, OSS_ALPHA, OSS_NULLABLE , 'illegal:'._("confirm"));
+    
+    if (ossim_error()) {
+        die(ossim_error());
     }
+                            
 
 
-$ip = $_GET["ip"];
-
-if (!$_GET["confirm"]) {
+    
+if (!empty($confirm)) {
 ?>
     <p> <?php echo gettext("Are you sure"); ?> ?</p>
     <p><a
@@ -45,6 +50,7 @@ if (!$_GET["confirm"]) {
     $conn = $db->connect();
     Host::delete($conn, $ip);
     Host_scan::delete($conn, $ip, 3001);
+    Host_scan::delete($conn, $ip, 2007);
     $db->close($conn);
 
 ?>

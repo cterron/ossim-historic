@@ -4,7 +4,9 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 ?>
 
 <?php
-    if ($_POST["delete"]) {
+require_once ('classes/Security.inc');
+
+    if (POST('delete')) {
 
         require_once('classes/Scan.inc');
         require_once 'ossim_db.inc';

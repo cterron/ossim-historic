@@ -52,7 +52,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 <?php
 
     if ($rrd_global_list = RRD_Config::get_list($conn,
-                                                "WHERE profile = 'global'"))
+                                                "WHERE profile = 'Default'"))
     {
         foreach ($rrd_global_list as $global)
         {

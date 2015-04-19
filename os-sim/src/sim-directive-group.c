@@ -32,10 +32,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-directive-group.h"
- 
+#include <config.h>
+
 enum 
 {
   DESTROY,
@@ -258,3 +258,6 @@ sim_directive_group_get_ids (SimDirectiveGroup	*dg)
 
   return dg->_priv->ids;
 }
+
+// vim: set tabstop=2:
+

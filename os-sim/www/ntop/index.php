@@ -12,15 +12,18 @@ Session::logcheck("MenuMonitors", "MonitorsNetwork");
 </head>
 
 <?php
+    require_once ("classes/Security.inc");
+
+    $sensor = GET('sensor');
+
+    ossim_valid($sensor, OSS_IP_ADDR, 'illegal:'._("Sensor"));
+
+    if (ossim_error()) {
+            die(ossim_error());
+    }
 
     require_once ('ossim_conf.inc');
-    $conf = new ossim_conf();
-
-    if (!$sensor = $_GET["sensor"]) 
-    {
-        echo "<p align=\"center\">Please select a sensor</a>";
-        exit;
-    }
+    $conf = $GLOBALS["CONF"];
     
     #
     # get ntop proto and port from default ntop entry at

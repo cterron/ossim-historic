@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
  
 #include "sim-category.h"
+#include <config.h>
 
 enum
 {
@@ -247,4 +247,6 @@ sim_category_set_name (SimCategory       *category,
 
   category->_priv->name = g_strdup (name);
 }
+
+// vim: set tabstop=2:
 

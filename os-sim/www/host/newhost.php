@@ -15,70 +15,91 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <h1> <?php echo gettext("New Host"); ?> </h1>
 
 <?php
+    require_once('classes/Security.inc');
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["hostname"] || !$_POST["ip"] ||
-         !$_POST["threshold_c"] || !$_POST["threshold_a"] || 
-         // !$_POST["persistence"] || 
-         !$_POST["nsens"])) 
-    {
-?>
+    $insert = POST('insert');
+    $hostname = POST('hostname');
+    $ip = POST('ip');
+    $id = POST('id');
+    $threshold_c = POST('threshold_c');
+    $threshold_a = POST('threshold_a');
+    $nsens = POST('nsens');
+    $asset = POST('asset');
+    $alert = POST('alert');
+    $persistence = POST('persistence');
+    $nat = POST('nat');
+    $descr = POST('descr');
+    $os = POST('os');
+    $mac = POST('mac');
+    $mac_vendor = POST('mac_vendor');
+    $nessus = POST('nessus');
+    $nagios = POST('nagios');
+    $sensor_name = POST('name');
+    $rrd_profile = POST('rrd_profile');
 
-  <p align="center">
-  <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
+    ossim_valid($insert, OSS_NULLABLE, OSS_ALPHA, 'illegal:'._("insert"));
+    ossim_valid($hostname, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA, OSS_PUNC, 'illegal:'._("hostname"));
+    ossim_valid($ip, OSS_IP_ADDR, 'illegal:'._("ip"));
+    ossim_valid($id, OSS_NULLABLE, OSS_ALPHA, OSS_SCORE, 'illegal:'._("id"));
+    ossim_valid($threshold_a, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("threshold_a"));
+    ossim_valid($threshold_c, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("threshold_c"));
+    ossim_valid($nsens, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("nsens"));
+    ossim_valid($asset, OSS_NULLABLE, OSS_DIGIT, 'illegal:'._("asset"));
+    ossim_valid($alert, OSS_NULLABLE, OSS_ALPHA, 'illegal:'._("alert"));
+    ossim_valid($persistence, OSS_NULLABLE, OSS_ALPHA, 'illegal:'._("persistence"));
+    ossim_valid($nat, OSS_NULLABLE, OSS_IP_ADDR, 'illegal:'._("nat"));
+    ossim_valid($descr, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, OSS_AT, 'illegal:'._("descr"));
+    ossim_valid($rrd_profile, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, OSS_AT, 'illegal:'._("rrd_profile"));
+    ossim_valid($os, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, OSS_AT, 'illegal:'._("os"));
+    ossim_valid($mac_vendor, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, OSS_AT, 'illegal:'._("mac_vendor"));
+    ossim_valid($mac, OSS_NULLABLE, OSS_ALPHA, OSS_PUNC, 'illegal:'._("mac"));
+    ossim_valid($nessus, OSS_NULLABLE, OSS_ALPHA , 'illegal:'._("nesus"));
+    ossim_valid($nagios, OSS_NULLABLE, OSS_ALPHA , 'illegal:'._("nagios"));
+    ossim_valid($sensor_name, OSS_NULLABLE, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, 'illegal:'._("Sensor name"));
 
-<?php
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
-/* check OK, insert into BD */
-} elseif($_POST["insert"]) {
+    if(!empty($insert)) {
 
-    $hostname    = mysql_escape_string($_POST["hostname"]);
-    $ip          = mysql_escape_string($_POST["ip"]);
-    $asset       = mysql_escape_string($_POST["asset"]);
-    $threshold_c = mysql_escape_string($_POST["threshold_c"]);
-    $threshold_a = mysql_escape_string($_POST["threshold_a"]);
-    $rrd_profile = mysql_escape_string($_POST["rrd_profile"]);
-    $alert       = mysql_escape_string($_POST["alert"]);
-    $persistence = mysql_escape_string($_POST["persistence"]);
-    $nat         = mysql_escape_string($_POST["nat"]);
-    $descr       = mysql_escape_string($_POST["descr"]);
-    $os          = mysql_escape_string($_POST["os"]);
-    $mac         = mysql_escape_string($_POST["mac"]);
-    $mac_vendor  = mysql_escape_string($_POST["mac_vendor"]);
-    $num_sens    = 0;
-
-    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
+    $num_sens = 0;
+    for ($i = 1; $i <= $nsens; $i++) {
         $name = "mboxs" . $i;
-        if (mysql_escape_string($_POST[$name])) {
+        if (POST("$name")) {
             $num_sens ++;
-            $sensors[] = mysql_escape_string($_POST[$name]);
+            ossim_valid(POST("$name"), OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT);
+            if (ossim_error()) {
+                die(ossim_error());
+            }
+            $sensors[] = POST("$name");
         }
     }
-    if ($num_sens == 0) {
-?>
-      <p align="center">
-      <?php echo gettext("Sorry, no sensor selected"); ?> </p>
-<?php
-        exit();
+    if (!isset($sensors)){
+        ?>
+        <p> <?php echo gettext("You Need to select at least one sensor"); ?> </p>
+        <p><a href="newhostform.php">
+        <?php echo gettext("Back"); ?> </a></p>
+        <? 
+        die();
     }
 
     require_once 'ossim_db.inc';
-    require_once 'ossim_conf.inc';
     require_once 'classes/Host.inc';
     require_once 'classes/Host_scan.inc';
     $db = new ossim_db();
     $conn = $db->connect();
-    $conf = new ossim_conf();
 
     if (! Host::in_host($conn, $ip)) {
         Host::insert ($conn, $ip, $hostname, $asset, 
                       $threshold_c, $threshold_a, $rrd_profile, $alert, 
                       $persistence, $nat, $sensors, $descr, 
                       $os, $mac, $mac_vendor);
-        if($_POST["nessus"]) {
+        if (!empty($nessus)) {
             Host_scan::insert ($conn, $ip, 3001, 0);
+        }
+        if (!empty($nessus)) {
+            Host_scan::insert ($conn, $ip, 2007, 0);
         }
     } else {
         Host::update ($conn, $ip, $hostname, $asset,

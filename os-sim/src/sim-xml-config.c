@@ -32,8 +32,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
 #include <sim-util.h>
 #include <sim-xml-config.h>
+#include <config.h>
 
 struct _SimXmlConfigPrivate {
   SimConfig     *config;
@@ -52,6 +54,7 @@ struct _SimXmlConfigPrivate {
 #define OBJECT_NOTIFIES         "notifies"
 #define OBJECT_NOTIFY           "notify"
 #define OBJECT_SMTP             "smtp"
+#define OBJECT_FRAMEWORK	"framework"
 
 #define PROPERTY_NAME           "name"
 #define PROPERTY_IP             "ip"
@@ -199,8 +202,9 @@ sim_xml_config_new_from_file (const gchar *file)
 
   /* parse the file */
   root = xmlDocGetRootElement (doc);
-  if (strcmp (root->name, OBJECT_CONFIG)) {
-    g_message ("Invalid XML config file '%s'", file);
+  if (strcmp ((char *) root->name, OBJECT_CONFIG)) 
+	{
+		g_message ("Invalid XML config file '%s'", file);
     g_object_unref (G_OBJECT (xmlconfig));
     return NULL;
   }
@@ -288,8 +292,8 @@ sim_xml_config_to_string (SimXmlConfig *xmlconfig)
   g_return_val_if_fail (SIM_IS_XML_CONFIG (xmlconfig), NULL);
   
   /* create the top node */
-  doc = xmlNewDoc ("1.0");
-  root = xmlNewDocNode (doc, NULL, OBJECT_CONFIG, NULL);
+  doc = xmlNewDoc ((xmlChar *) "1.0");	//xmlChar is a typedef to unsigned char. Needed to avoid stupid warnings
+  root = xmlNewDocNode (doc, NULL, (xmlChar *) OBJECT_CONFIG, NULL);
   xmlDocSetRootElement (doc, root);
   
   /* save to memory */
@@ -300,7 +304,7 @@ sim_xml_config_to_string (SimXmlConfig *xmlconfig)
     return NULL;
   }
   
-  retval = g_strdup (xml);
+  retval = g_strdup ((gchar *)xml);
   free (xml);
   
   return retval;
@@ -314,8 +318,8 @@ sim_xml_config_to_string (SimXmlConfig *xmlconfig)
  */
 void
 sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
-			       SimConfig     *config,
-			       xmlNodePtr     node)
+												       SimConfig     *config,
+												       xmlNodePtr     node)
 {
   gchar  *value;
 
@@ -325,13 +329,13 @@ sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_LOG))
+  if (strcmp ((gchar *) node->name, OBJECT_LOG))
     {
       g_message ("Invalid config log node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_FILENAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FILENAME)))
     {
       config->log.filename = g_strdup (value);
       xmlFree(value);      
@@ -357,28 +361,71 @@ sim_xml_config_set_config_sensor (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_SENSOR))
+  if (strcmp ((gchar *) node->name, OBJECT_SENSOR))
     {
       g_message ("Invalid sensor log node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_NAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
     {
       config->sensor.name = g_strdup (value);
       xmlFree(value);      
     }
-  if ((value = xmlGetProp (node, PROPERTY_IP)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
     {
       config->sensor.ip = g_strdup (value);
       xmlFree(value);      
     }
-  if ((value = xmlGetProp (node, PROPERTY_INTERFACE)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERFACE)))
     {
       config->sensor.interface = g_strdup (value);
       xmlFree(value);      
     }
 }
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
+sim_xml_config_set_config_framework (SimXmlConfig  *xmlconfig,
+				  SimConfig     *config,
+				  xmlNodePtr     node)
+{
+  gchar  *value;
+  
+  g_return_if_fail (xmlconfig);
+  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
+  g_return_if_fail (config);
+  g_return_if_fail (SIM_IS_CONFIG (config));
+  g_return_if_fail (node);
+
+  if (strcmp ((gchar *) node->name, OBJECT_FRAMEWORK))
+    {
+      g_message ("Invalid sensor log node %s", node->name);
+      return;
+    }
+
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
+    {
+      config->framework.name = g_strdup (value);
+      xmlFree(value);      
+    }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
+    {
+      config->framework.host = g_strdup (value);
+      xmlFree(value);      
+    }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
+    {
+      config->framework.port = strtol (value, (char **) NULL, 10);
+      xmlFree(value);      
+    }
+}
+
 
 /*
  *
@@ -400,24 +447,24 @@ sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_DATASOURCE))
+  if (strcmp ((gchar *) node->name, OBJECT_DATASOURCE))
     {
       g_message ("Invalid config datasource node %s", node->name);
       return;
     }
 
   ds = sim_config_ds_new ();
-  if ((value = xmlGetProp (node, PROPERTY_NAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
     {
       ds->name = g_strdup (value);
       xmlFree(value);      
     }
-  if ((value = xmlGetProp (node, PROPERTY_PROVIDER)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PROVIDER)))
     {
       ds->provider = g_strdup (value);
       xmlFree(value);      
     }
-  if ((value = xmlGetProp (node, PROPERTY_DSN)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_DSN)))
     {
       ds->dsn = g_strdup (value);
       xmlFree(value);      
@@ -445,7 +492,7 @@ sim_xml_config_set_config_datasources (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_DATASOURCES))
+  if (strcmp ((gchar *) node->name, OBJECT_DATASOURCES))
     {
       g_message ("Invalid config datasources node %s", node->name);
       return;
@@ -453,7 +500,7 @@ sim_xml_config_set_config_datasources (SimXmlConfig  *xmlconfig,
 
   children = node->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, OBJECT_DATASOURCE))
+    if (!strcmp ((gchar *) children->name, OBJECT_DATASOURCE))
       {
 	sim_xml_config_set_config_datasource (xmlconfig, config, children);
       }
@@ -482,13 +529,13 @@ sim_xml_config_set_config_directive (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_DIRECTIVE))
+  if (strcmp ((gchar *) node->name, OBJECT_DIRECTIVE))
     {
       g_message ("Invalid config directive node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_FILENAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FILENAME)))
     {
       config->directive.filename = g_strdup (value);
       xmlFree(value);      
@@ -518,13 +565,13 @@ sim_xml_config_set_config_scheduler (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_SCHEDULER))
+  if (strcmp ((gchar *) node->name, OBJECT_SCHEDULER))
     {
       g_message ("Invalid config scheduler node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_INTERVAL)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERVAL)))
     {
       config->scheduler.interval = strtol (value, (char **) NULL, 10);
       xmlFree(value);      
@@ -550,13 +597,13 @@ sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_SERVER))
+  if (strcmp ((gchar *) node->name, OBJECT_SERVER))
     {
       g_message ("Invalid config server node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_PORT)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
     {
       config->server.port = strtol (value, (char **) NULL, 10);
       xmlFree(value);      
@@ -586,14 +633,14 @@ sim_xml_config_set_config_notify (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_NOTIFY))
+  if (strcmp ((gchar *) node->name, OBJECT_NOTIFY))
     {
       g_message ("Invalid config notify node %s", node->name);
       return;
     }
 
-  emails = xmlGetProp (node, PROPERTY_EMAILS);
-  levels = xmlGetProp (node, PROPERTY_ALARM_RISKS);
+  emails = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_EMAILS);
+  levels = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_ALARM_RISKS);
 
   if (!emails || !levels)
     {
@@ -639,13 +686,13 @@ sim_xml_config_set_config_notifies (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_NOTIFIES))
+  if (strcmp ((gchar *) node->name, OBJECT_NOTIFIES))
     {
       g_message ("Invalid config notifies node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_PROGRAM)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PROGRAM)))
     {
       config->notify_prog = g_strdup (value);
       xmlFree(value);      
@@ -653,7 +700,7 @@ sim_xml_config_set_config_notifies (SimXmlConfig  *xmlconfig,
 
   children = node->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, OBJECT_NOTIFY))
+    if (!strcmp ((gchar *) children->name, OBJECT_NOTIFY))
       {
 	sim_xml_config_set_config_notify (xmlconfig, config, children);
       }
@@ -682,18 +729,18 @@ sim_xml_config_set_config_smtp (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_SMTP))
+  if (strcmp ((gchar *) node->name, OBJECT_SMTP))
     {
       g_message ("Invalid config smtp node %s", node->name);
       return;
     }
 
-  if ((value = xmlGetProp (node, PROPERTY_HOST)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_HOST)))
     {
       config->smtp.host = g_strdup (value);
       xmlFree(value);      
     }
-  if ((value = xmlGetProp (node, PROPERTY_PORT)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
     {
       config->smtp.port = strtol (value, (char **) NULL, 10);
       xmlFree(value);      
@@ -720,7 +767,7 @@ sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_RSERVER))
+  if (strcmp ((gchar *) node->name, OBJECT_RSERVER))
     {
       g_message ("Invalid config rserver node %s", node->name);
       return;
@@ -729,23 +776,23 @@ sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
   rserver = sim_config_rserver_new ();
   rserver->port = 40001;
 
-  if ((value = xmlGetProp (node, PROPERTY_NAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
     {
       rserver->name = g_strdup (value);
       xmlFree(value);
     }
-  if ((value = xmlGetProp (node, PROPERTY_IP)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
     {
       rserver->ip = g_strdup (value);
       rserver->ia = gnet_inetaddr_new_nonblock (value, 0);
       xmlFree(value);
     }
-  if ((value = xmlGetProp (node, PROPERTY_PORT)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
     {
       rserver->port = strtol (value, (char **) NULL, 10);
       xmlFree(value);
     }
-  if ((value = xmlGetProp (node, PROPERTY_RESEND)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_RESEND)))
     {
       if (!g_ascii_strcasecmp (value, "TRUE"))
 	rserver->resend = TRUE;
@@ -777,7 +824,7 @@ sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp (node->name, OBJECT_RSERVERS))
+  if (strcmp ((gchar *) node->name, OBJECT_RSERVERS))
     {
       g_message ("Invalid config rservers node %s", node->name);
       return;
@@ -785,7 +832,7 @@ sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
 
   children = node->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, OBJECT_RSERVER))
+    if (!strcmp ((gchar *) children->name, OBJECT_RSERVER))
       {
 	sim_xml_config_set_config_rserver (xmlconfig, config, children);
       }
@@ -814,7 +861,7 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
   g_return_val_if_fail (SIM_IS_XML_CONFIG (xmlconfig), NULL);
   g_return_val_if_fail (node != NULL, NULL);
   
-  if (strcmp (node->name, OBJECT_CONFIG))
+  if (strcmp ((gchar *) node->name, OBJECT_CONFIG))
     {
       g_message ("Invalid config node %s", node->name);
       return NULL;
@@ -824,43 +871,46 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
 
   children = node->xmlChildrenNode;
   while (children) {
-    if (!strcmp (children->name, OBJECT_LOG))
+    if (!strcmp ((gchar *) children->name, OBJECT_LOG))
       {
 	sim_xml_config_set_config_log (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_SENSOR))
+    if (!strcmp ((gchar *) children->name, OBJECT_SENSOR))
       {
 	sim_xml_config_set_config_sensor (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_DATASOURCES))
+    if (!strcmp ((gchar *) children->name, OBJECT_DATASOURCES))
       {
 	sim_xml_config_set_config_datasources (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_DIRECTIVE))
+    if (!strcmp ((gchar *) children->name, OBJECT_DIRECTIVE))
       {
 	sim_xml_config_set_config_directive (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_SCHEDULER))
+    if (!strcmp ((gchar *) children->name, OBJECT_SCHEDULER))
       {
 	sim_xml_config_set_config_scheduler (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_SERVER))
+    if (!strcmp ((gchar *) children->name, OBJECT_SERVER))
       {
 	sim_xml_config_set_config_server (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_SMTP))
+    if (!strcmp ((gchar *) children->name, OBJECT_SMTP))
       {
 	sim_xml_config_set_config_smtp (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_NOTIFIES))
+    if (!strcmp ((gchar *) children->name, OBJECT_NOTIFIES))
       {
 	sim_xml_config_set_config_notifies (xmlconfig, config, children);
       }
-    if (!strcmp (children->name, OBJECT_RSERVERS))
+    if (!strcmp ((gchar *) children->name, OBJECT_RSERVERS))
       {
 	sim_xml_config_set_config_rservers (xmlconfig, config, children);
       }
-
+    if (!strcmp ((gchar *) children->name, OBJECT_FRAMEWORK))
+      {
+	sim_xml_config_set_config_framework (xmlconfig, config, children);
+      }
     children = children->next;
   }
 
@@ -881,3 +931,4 @@ sim_xml_config_get_config (SimXmlConfig  *xmlconfig)
 
   return xmlconfig->_priv->config;
 }
+// vim: set tabstop=2:

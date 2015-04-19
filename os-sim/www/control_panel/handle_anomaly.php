@@ -1,6 +1,6 @@
 <?php
 require_once ('classes/Session.inc');
-Session::logcheck("MenuReports", "ReportsAnomalies");
+Session::logcheck("MenuControlPanel", "ControlPanelAnomalies");
 ?>
 
 <html>
@@ -28,9 +28,6 @@ $db = new ossim_db();
 $conn = $db->connect();
 while (list($key,$val) = each($_GET)) {
 list($action, $ip, $what) = split (",", $key, 3);
-$action = mysql_escape_string($action);
-$ip = mysql_escape_string($ip);
-$what = mysql_escape_string($what);
 $what = ereg_replace("_"," ",$what);
 $what = ereg_replace("rrd anomaly","rrd_anomaly",$what);
 if($ip == "Global"){

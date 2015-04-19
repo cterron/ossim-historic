@@ -18,10 +18,20 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     require_once 'classes/Plugin.inc';
+    require_once 'classes/Security.inc';
     require_once 'get_sensor_plugins.php';
     require_once 'get_sensors.php';
-
-    if (!$order = $_GET["order"]) $order = "name";
+    
+    $order = GET('order');
+    
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+  
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+  
+    if (empty($order))
+         $order = "name";
 ?>
 
   <table align="center">
@@ -68,7 +78,7 @@ Session::logcheck("MenuPolicy", "PolicySensors");
     $db = new ossim_db();
     $conn = $db->connect();
 
-    $sensor_list = server_get_sensors();
+    $sensor_list = server_get_sensors($conn);
     $sensor_stack = array();
     $sensor_configured_stack = array();
     if($sensor_list){

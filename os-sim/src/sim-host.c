@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-host.h"
+#include <config.h>
 
 enum
 {
@@ -281,3 +281,5 @@ sim_host_set_asset (SimHost  *host,
     host->_priv->asset = 5;
   else host->_priv->asset = asset;
 }
+
+// vim: set tabstop=2:

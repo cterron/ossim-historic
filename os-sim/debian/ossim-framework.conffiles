@@ -1,7 +1,0 @@
-/etc/ossim/framework/mrtg-rrd.cfg
-/etc/apache-ssl/conf.d/ossim.conf
-/etc/apache/conf.d/ossim.conf
-/etc/apache2/conf.d/ossim.conf
-/etc/cron.d/ossim-framework
-/etc/cron.daily/ossim-framework
-/etc/init.d/ossim-framework

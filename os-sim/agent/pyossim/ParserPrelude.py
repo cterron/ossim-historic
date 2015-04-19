@@ -18,7 +18,7 @@ class PreludeHandler(xml.sax.handler.ContentHandler):
         self.alert  = { 'dst_ip': [] }
 
         self.agent = agent
-        self.sendAlert  = agent.sendAlert
+        self.sendEvent  = agent.sendEvent
         self.plugin = plugin
 
         xml.sax.handler.ContentHandler.__init__(self)
@@ -85,7 +85,7 @@ class PreludeHandler(xml.sax.handler.ContentHandler):
     def send(self):
         for dst_ip in self.alert["dst_ip"]:
 
-            self.sendAlert(
+            self.sendEvent(
                     type        = "detector",
                     date        = self.alert["date"],
                     sensor      = self.plugin["sensor"],

@@ -84,7 +84,7 @@ class ParserIIS(Parser.Parser):
 
                     # TODO: adjust priority depending of the result ?
                     
-                    self.agent.sendAlert  (type     = 'detector',
+                    self.agent.sendEvent  (type     = 'detector',
                                      date       = date,
                                      sensor     = self.plugin["sensor"],
                                      interface  = self.plugin["interface"],
@@ -164,7 +164,7 @@ class ParserIIS(Parser.Parser):
 
                     (date, src, dport, dst, sid) = result.groups()
 
-                    self.agent.sendAlert (
+                    self.agent.sendEvent (
                             type       = 'detector',
                             date       = date,
                             sensor     = self.plugin["sensor"],

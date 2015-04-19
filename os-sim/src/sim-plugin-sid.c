@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-plugin-sid.h"
+#include <config.h>
 
 enum
 {
@@ -45,15 +45,13 @@ enum
 struct _SimPluginSidPrivate {
   gint     plugin_id;
   gint     sid;
-  gint     category_id;
-  gint     class_id;
   gint     reliability;
   gint     priority;
   gchar   *name;
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+static gint sim_plugin_sid_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
@@ -94,8 +92,6 @@ sim_plugin_sid_instance_init (SimPluginSid *plugin)
 
   plugin->_priv->plugin_id = 0;
   plugin->_priv->sid = 0;
-  plugin->_priv->category_id = 0;
-  plugin->_priv->class_id = 0;
   plugin->_priv->reliability = 1;
   plugin->_priv->priority = 1;
   plugin->_priv->name = NULL;
@@ -155,20 +151,16 @@ sim_plugin_sid_new (void)
  */
 SimPluginSid*
 sim_plugin_sid_new_from_data (gint          plugin_id,
-			      gint          sid,
-			      gint          category_id,
-			      gint          class_id,
-			      gint          reliability,
-			      gint          priority,
-			      const gchar  *name)
+												      gint          sid,
+												      gint          reliability,
+												      gint          priority,
+												      const gchar  *name)
 {
   SimPluginSid *plugin_sid = NULL;
 
   plugin_sid = SIM_PLUGIN_SID (g_object_new (SIM_TYPE_PLUGIN_SID, NULL));
   plugin_sid->_priv->plugin_id = plugin_id;
   plugin_sid->_priv->sid = sid;
-  plugin_sid->_priv->category_id = category_id;
-  plugin_sid->_priv->class_id = class_id;
   plugin_sid->_priv->reliability = reliability;
   plugin_sid->_priv->priority = priority;
   plugin_sid->_priv->name = g_strdup (name);  
@@ -183,7 +175,7 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
  */
 SimPluginSid*
 sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
-			    gint           row)
+												    gint           row)
 {
   SimPluginSid  *plugin_sid;
   GdaValue      *value;
@@ -203,21 +195,13 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
   if (!gda_value_is_null (value))
-    plugin_sid->_priv->category_id = gda_value_get_integer (value);
+    plugin_sid->_priv->reliability = gda_value_get_integer (value);
   
   value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row);
   if (!gda_value_is_null (value))
-    plugin_sid->_priv->class_id = gda_value_get_integer (value);
-  
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
-  if (!gda_value_is_null (value))
-    plugin_sid->_priv->reliability = gda_value_get_integer (value);
-  
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 5, row);
-  if (!gda_value_is_null (value))
     plugin_sid->_priv->priority = gda_value_get_integer (value);
   
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 6, row);
+  value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
   if (!gda_value_is_null (value))
     plugin_sid->_priv->name = gda_value_stringify (value);
 
@@ -226,7 +210,7 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
 
 /*
  *
- *
+ * Returns the plugin id wich is the "owner" of the plugin_sid given.
  *
  *
  */
@@ -258,7 +242,7 @@ sim_plugin_sid_set_plugin_id (SimPluginSid  *plugin_sid,
 
 /*
  *
- *
+ * gets the sid from the object plugin_sid
  *
  *
  */
@@ -295,74 +279,10 @@ sim_plugin_sid_set_sid (SimPluginSid  *plugin_sid,
  *
  */
 gint
-sim_plugin_sid_get_category_id (SimPluginSid  *plugin_sid)
-{
-  g_return_val_if_fail (plugin_sid, 0);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
-
-  return plugin_sid->_priv->category_id;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_plugin_sid_set_category_id (SimPluginSid  *plugin_sid,
-			      gint           category_id)
-{
-  g_return_if_fail (plugin_sid);
-  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
-  g_return_if_fail (category_id > 0);
-
-  plugin_sid->_priv->category_id = category_id;
-}
-
-/*
- *
- *
- *
- *
- */
-gint
-sim_plugin_sid_get_class_id (SimPluginSid  *plugin_sid)
-{
-  g_return_val_if_fail (plugin_sid, 0);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
-
-  return plugin_sid->_priv->class_id;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_plugin_sid_set_class_id (SimPluginSid  *plugin_sid,
-			      gint           class_id)
-{
-  g_return_if_fail (plugin_sid);
-  g_return_if_fail (SIM_IS_PLUGIN_SID (plugin_sid));
-  g_return_if_fail (class_id > 0);
-
-  plugin_sid->_priv->class_id = class_id;
-}
-
-/*
- *
- *
- *
- *
- */
-gint
 sim_plugin_sid_get_reliability (SimPluginSid  *plugin_sid)
 {
-  g_return_val_if_fail (plugin_sid, 0);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
+  g_return_val_if_fail (plugin_sid, -1);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), -1);
 
   return plugin_sid->_priv->reliability;
 }
@@ -393,8 +313,8 @@ sim_plugin_sid_set_reliability (SimPluginSid  *plugin_sid,
 gint
 sim_plugin_sid_get_priority (SimPluginSid  *plugin_sid)
 {
-  g_return_val_if_fail (plugin_sid, 0);
-  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
+  g_return_val_if_fail (plugin_sid, -1);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), -1);
 
   return plugin_sid->_priv->priority;
 }
@@ -479,18 +399,6 @@ sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
   g_string_append (insert, ", sid");
   g_string_append_printf (values, ", %d", plugin_sid->_priv->sid);
 
-  if (plugin_sid->_priv->category_id > 0)
-    {
-      g_string_append (insert, ", category_id");
-      g_string_append_printf (values, ", %d", plugin_sid->_priv->category_id);
-    }
-
-  if (plugin_sid->_priv->class_id > 0)
-    {
-      g_string_append (insert, ", class_id");
-      g_string_append_printf (values, ", %d", plugin_sid->_priv->class_id);
-    }
-
   if (plugin_sid->_priv->reliability > 0)
     {
       g_string_append (insert, ", reliability");
@@ -512,3 +420,27 @@ sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
 
   return g_string_free (insert, FALSE);
 }
+
+/*
+ *
+ * Debug function
+ *
+ *
+ */
+void
+sim_plugin_sid_print_internal_data (SimPluginSid  *plugin_sid)
+{
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_plugin_sid_print_internal_data:");
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Name: %s", plugin_sid->_priv->name);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "plugin_id: %d", plugin_sid->_priv->plugin_id);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sid: %d", plugin_sid->_priv->sid);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "reliability: %d", plugin_sid->_priv->reliability);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "priority: %d", plugin_sid->_priv->priority);
+
+
+
+}
+
+// vim: set tabstop=2:

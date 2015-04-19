@@ -17,36 +17,56 @@ Session::logcheck("MenuCorrelation", "CorrelationBacklog");
 
 <?php
 require_once ('ossim_db.inc');
-require_once ('common.inc');
 require_once ('classes/Host.inc');
 require_once ('classes/Backlog.inc');
 require_once ('classes/Plugin_sid.inc');
 require_once ('classes/Util.inc');
+require_once ('classes/Security.inc');
 
+
+
+$delete = GET('delete');
+$order = GET('order');
+$src_ip = GET('src_ip');
+$dst_ip = GET('dst_ip');
+$inf = GET('inf');
+$sup = GET('sup');
+
+ossim_valid($delete, OSS_ALPHA, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("delete"));
+ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("order"));
+ossim_valid($src_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("src_ip"));
+ossim_valid($dst_ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("dst_ip"));
+ossim_valid($inf, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("inf"));
+ossim_valid($sup, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("order"));
+
+if (ossim_error()) {
+        die(ossim_error());
+}
 
 /* connect to db */
 $db = new ossim_db();
 $conn = $db->connect();
 
-if ($id = $_GET["delete"]) {
-    Backlog::delete($conn, $id);
+if (!empty($delete)) {
+    Backlog::delete($conn, $delete);
 }
 
-if (!$order = $_GET["order"]) $order = "id";
+if (empty($order)) 
+    $order = "id";
 
-if (($src_ip = $_GET["src_ip"]) && ($dst_ip = $_GET["dst_ip"])) {
+if ( (!empty($src_ip)) && (!empty($dst_ip)) ) {
     $where = "WHERE inet_ntoa(src_ip) = '$src_ip' OR inet_ntoa(dst_ip) = '$dst_ip'";
-} elseif ($src_ip = $_GET["src_ip"]) {
+} elseif (!empty($src_ip)) {
     $where = "WHERE inet_ntoa(src_ip) = '$src_ip'";
-} elseif ($dst_ip = $_GET["dst_ip"]) {
+} elseif (!empty($dst_ip)) {
     $where = "WHERE inet_ntoa(dst_ip) = '$dst_ip'";
 } else {
     $where = '';
 }
 
-if (!$inf = $_GET["inf"])
+if (empty($inf))
     $inf = 0;
-if (!$sup = $_GET["sup"])
+if (empty($sup))
     $sup = 25;
 
 ?>
@@ -119,7 +139,7 @@ if (!$sup = $_GET["sup"])
       <tr>
       <td bgcolor="#eeeeee"><?php echo $backlog->get_id(); ?></td>
       <td nowrap><?php echo Util::timestamp2date ($backlog->get_timestamp()) ?></td>
-      <td><?php echo ereg_replace("directive_alert: ", "", $sid_name) . 
+      <td><?php echo ereg_replace("directive_event: ", "", $sid_name) . 
                 " (" . $backlog->get_directive_id() . ") "; ?></td>
       <td><?php 
         if ($backlog->get_matched() == 0) {

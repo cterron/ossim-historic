@@ -13,8 +13,15 @@ if (!$locale_dir = $conf->get_conf("locale_dir", FALSE))
     $locale_dir = $DEFAULT_LOCALE_DIR;
 
 // I18N support information here
-putenv("LANG=$language"); 
-setlocale(LC_ALL, $language);
+
+// try out some locale options:
+// 1) For debian works @euro
+// 2) Mac OS X needs putenv()
+list($lang, $country) = explode("_", $language);
+$envlang = setlocale(LC_ALL, $language, "{$language}@euro", $lang);
+if ($envlang) {
+    putenv("LANG=$envlang");
+}
 
 // Set the text domain as 'ossim'
 // Localization files must be called ossim.po & ossim.mo

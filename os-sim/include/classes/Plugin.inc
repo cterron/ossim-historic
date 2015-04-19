@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Plugin {
 
     var $id;
@@ -22,10 +24,11 @@ class Plugin {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM plugin $args";
+        $query = OssimQuery("SELECT * FROM plugin $args");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Plugin ($rs->fields["id"],
                                       $rs->fields["type"],

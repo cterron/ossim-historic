@@ -25,16 +25,14 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$name = mysql_escape_string($_GET["name"])) {
-        echo "<p>Wrong network group</p>";
-        exit;
+    if (!$name = validateVar($_GET["name"], OSS_ALPHA . OSS_PUNC . OSS_SCORE)) {
+         require_once("ossim_error.inc");
+         $error = new OssimError();
+         $error->display("WRONG_NET");
     }
-    $name = stripslashes($name);
-    $name = mysql_real_escape_string($name);
     if ($net_group_list = Net_group::get_list($conn, "WHERE name = '$name'")) {
         $net_group = $net_group_list[0];
     }
-    $name = stripslashes($name);
 
 ?>
 
@@ -139,7 +137,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     <td class="left">
     <input type="checkbox" 
     <?php
-    $name = mysql_real_escape_string($net_group->get_name());
+    $name = validateVar($net_group->get_name());
     if(Net_group_scan::in_net_group_scan($conn, $name, 3001)){
         echo " CHECKED ";
     }

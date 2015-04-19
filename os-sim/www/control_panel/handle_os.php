@@ -26,32 +26,34 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 while (list($key,$val) = each($_GET)) {
-    list($place_holder, $ip) = split (",", $key, 2);
-    $os = base64_decode($val);
-    if(preg_match("/ack/i", $os)){
-        $ip = mysql_escape_string($ip);
-        $os = mysql_escape_string($os);
-        $os = ereg_replace("ack","",$os);
-        if(ereg(" or ", $os)){
-            $os = ereg_replace(" or ","|",$os);
-        }
+    list($place_holder, $ip, $sensor, $date) = split (",", $key, 4);
+    $ip = $val;
+    if(preg_match("/ack/i", $ip)){
+        $sensor = validateVar($sensor);
+        $ip = ereg_replace("ack","",$ip);
         $ip = ereg_replace ("_",".",$ip);
-        Host_os::ack($conn,$ip,$os);
-    } elseif (preg_match("/ignore/i", $os)){
-        $ip = mysql_escape_string($ip);
-        $os = mysql_escape_string($os);
-        $os = ereg_replace("ignore","",$os);
-        if(ereg(" or ", $os)){
-            $os = ereg_replace(" or ","|",$os);
-        }
+        $sensor = ereg_replace ("_",".",$sensor);
+        $date = ereg_replace ("_"," ",$date);
+        $ip = validateVar($ip, OSS_IP);
+        $date = validateVar($date);
+        print "Ack: $ip $date $sensor<br>";
+        Host_os::ack_ign($conn, $ip, $date, $sensor);
+    } elseif(preg_match("/ignore/i", $ip)){
+        $sensor = validateVar($sensor);
+        $ip = ereg_replace("ignore","",$ip);
         $ip = ereg_replace ("_",".",$ip);
-        Host_os::ignore($conn,$ip,$os);
+        $sensor = ereg_replace ("_",".",$sensor);
+        $ip = validateVar($ip, OSS_IP);
+        $date = ereg_replace ("_"," ",$date);
+        $date = validateVar($date);
+        print "Ignore: $ip $date $sensor<br>";
+        Host_os::ack_ign($conn, $ip, $date, $sensor);
     }
 }
 
     $db->close($conn);
 ?>
-    <p> <?php echo gettext("Successfully Acked/Deleted/Ignored"); ?> </p>
+    <p> <?php echo gettext("Successfully Acked/Deleted"); ?> </p>
     <p><a href="anomalies.php"> <?php echo gettext("Back"); ?> </a></p>
 
 </body>

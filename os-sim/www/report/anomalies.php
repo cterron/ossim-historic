@@ -21,18 +21,18 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     require_once ('classes/Sensor.inc');
 
   /* get conf */
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $graph_ntop = $conf->get_conf("graph_link");
  
-    $tune=$_GET[tune];
-    $ip=$_GET[host];
-    $end=$_GET[end];
-    $start=$_GET[start];
+    $tune=  validateVar($_GET['tune']);
+    $ip	 =  validateVar($_GET['host'], OSS_IP);
+    $end =  validateVar($_GET['end']);
+    $start= validateVar($_GET['start']);
     $zoom=1;
 
     if ($tune) {
-       $hwparam=$_GET[hwparam];
-       $hwvalue=$_GET[hwvalue];
+       $hwparam= validateVar($_GET['hwparam']);
+       $hwvalue= validateVar($_GET['hwvalue']);
        $what="tune&hwparam=$hwparam&hwvalue=$hwvalue";
     } else {
        $what="anomaly";

@@ -40,9 +40,10 @@
 #include <gnet.h>
 
 #include "sim-enums.h"
-#include "sim-alert.h"
+#include "sim-event.h"
 #include "sim-action.h"
 #include "sim-inet.h"
+#include "sim-sensor.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -117,6 +118,10 @@ void              sim_rule_set_rel_abs                     (SimRule     *rule,
 GTime             sim_rule_get_time_out                    (SimRule     *rule);
 void              sim_rule_set_time_out                    (SimRule     *rule,
 							    GTime        time_out);
+void							sim_rule_set_time_last									(SimRule   *rule,
+																				                    GTime      time_last);
+gboolean					sim_rule_is_time_out										(SimRule      *rule);
+	
 gint              sim_rule_get_occurrence                  (SimRule     *rule);
 void              sim_rule_set_occurrence                  (SimRule     *rule,
 							    gint         occurrence);
@@ -143,13 +148,18 @@ void              sim_rule_set_plugin_id                   (SimRule     *rule,
 gint              sim_rule_get_plugin_sid                  (SimRule     *rule);
 void              sim_rule_set_plugin_sid                  (SimRule     *rule,
 							    gint         plugin_sid);
-
+void							sim_rule_set_not_data											(SimRule      *rule);
+	
 GInetAddr*        sim_rule_get_src_ia                      (SimRule     *rule);
 void              sim_rule_set_src_ia                      (SimRule     *rule,
 							    GInetAddr   *ia);
 GInetAddr*        sim_rule_get_dst_ia                      (SimRule     *rule);
 void              sim_rule_set_dst_ia                      (SimRule     *rule,
 							    GInetAddr   *ia);
+
+GInetAddr*        sim_rule_get_sensor                      (SimRule     *rule);
+void              sim_rule_set_sensor                      (SimRule     *rule,
+																												    GInetAddr   *ia);
 
 gint              sim_rule_get_src_port                    (SimRule     *rule);
 void              sim_rule_set_src_port                    (SimRule     *rule,
@@ -196,6 +206,13 @@ void              sim_rule_remove_protocol                 (SimRule     *rule,
 							    SimProtocolType  protocol);
 GList*            sim_rule_get_protocols                   (SimRule     *rule);
 
+void              sim_rule_append_sensor    	             (SimRule     *rule,
+																												    SimSensor		*sensor);
+void              sim_rule_remove_sensor    	             (SimRule     *rule,
+																												    SimSensor		*sensor);
+GList*            sim_rule_get_sensors 	          	       (SimRule     *rule);
+
+
 
 void              sim_rule_append_var                      (SimRule     *rule,
 							    SimRuleVar  *var);
@@ -203,15 +220,17 @@ GList*            sim_rule_get_vars                        (SimRule     *rule);
 
 SimRule*          sim_rule_clone                           (SimRule     *rule);
 
-void              sim_rule_set_alert_data                  (SimRule     *rule,
-							    SimAlert    *alert);
-gboolean          sim_rule_match_by_alert                  (SimRule     *rule,
-							    SimAlert    *alert);
+void              sim_rule_set_event_data                  (SimRule     *rule,
+																												    SimEvent    *event);
+gboolean          sim_rule_match_by_event                  (SimRule     *rule,
+																												    SimEvent    *event);
 
 void              sim_rule_print                           (SimRule     *rule);
 
 gchar*            sim_rule_to_string                       (SimRule     *rule);
 
+gboolean					sim_rule_is_not_invalid										(SimRule      *rule);
+	
 G_END_DECLS
 
 #ifdef __cplusplus
@@ -219,3 +238,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_RULE_H__ */
+// vim: set tabstop=2:

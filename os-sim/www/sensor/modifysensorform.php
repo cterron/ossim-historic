@@ -17,14 +17,19 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 <?php
     require_once 'classes/Sensor.inc';
     require_once 'ossim_db.inc';
+    require_once 'classes/Security.inc';
+
+    $name = GET('name');
+
+    ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_SCORE, 'illegal:'._("Sensor name"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$name = mysql_escape_string($_GET["name"])) {
-        echo "<p>Wrong sensor</p>";
-        exit;
-    }
-    
     if ($sensor_list = Sensor::get_list($conn, "WHERE name = '$name'")) {
         $sensor = $sensor_list[0];
     }

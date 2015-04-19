@@ -11,15 +11,22 @@ sharedscripts
 
 /var/log/ossim/agent.log /var/log/ossim/agent_error.log /var/log/ossim agent_watch.log {
     daily
+    prerotate
+        /etc/init.d/ossim-agent stop > /dev/null 2>&1
+    endscript
     postrotate
-        /etc/init.d/ossim-agent restart > /dev/null 2>&1
+        /etc/init.d/ossim-agent start > /dev/null 2>&1
     endscript
 }
 
 /var/log/ossim/p0f.log /var/log/ossim/arpwatch.log /var/log/ossim/pads.log /var/log/ossim/rrd_plugin.log {
     size=100M
+    prerotate
+        /etc/init.d/ossim-agent stop > /dev/null 2>&1
+        killall -9 p0f arpwatch pads rrd_plugin.pl > /dev/null 2>&1
+    endscript
     postrotate
-        /etc/init.d/ossim-agent restart > /dev/null 2>&1
+        /etc/init.d/ossim-agent start > /dev/null 2>&1
     endscript
 }
 

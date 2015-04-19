@@ -24,12 +24,13 @@ class ParserCiscoPIX(Parser.Parser):
         start_time = time.time()
 
         pattern = '(\S+) (\d+) (\d\d):(\d\d):(\d\d) \S+ %PIX-(\d)-(\d+):'
+        pattern_sensor = '\S+ \d+ \d\d:\d\d:\d\d (\S+) (\S+) (\d+) (\d+) (\d\d):(\d\d):(\d\d): %PIX-(\d)-(\d+):'
         
         pattern_from = 'from\s+\(?(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\)?'
-        pattern_from2 = '(src|for)\s+(inside|outside)\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\/(\d+)'
+        pattern_from2 = '(src|for)\s+(inside|outside|[^\s]*)\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\/(\d+)'
         
         pattern_to = 'to\s+\(?(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\)?'
-        pattern_to2 = '(dst|to)\s+(inside|outside)\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\/(\d+)'
+        pattern_to2 = '(dst|to)\s+(inside|outside|[^\s]*)\s*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3})\/(\d+)'
             
         location = self.plugin["location"]
         try:
@@ -72,15 +73,20 @@ class ParserCiscoPIX(Parser.Parser):
                         return None
 
             else:
-                result = re.findall(str(pattern), line)
+                result = re.findall(str(pattern_sensor), line)
                 
                 # no match
-                if result == []: continue
-
-                (monthmmm, day, hour, minute, second, priority, \
-                 sid) = result[0]
+                if result == []: 
+                    result = re.findall(str(pattern), line)
+                    if result == []: 
+                        continue
+                    else:
+                        (monthmmm, day, hour, minute, second, priority, sid) = result[0]
+                        sensor     = self.plugin["sensor"]
+                        year = time.strftime('%Y', time.localtime(time.time()))
+                else:
+                    (sensor, monthmmm, day, year, hour, minute, second, priority, sid) = result[0]
                 
-                year = time.strftime('%Y', time.localtime(time.time()))
                 datestring = "%s %s %s %s %s %s" % \
                     (year, monthmmm, day, hour, minute, second)
                 
@@ -110,10 +116,10 @@ class ParserCiscoPIX(Parser.Parser):
                         dst_ip = result_to2[0][2]
                         dst_port = result_to2[0][3]
 
-                self.agent.sendAlert (
+                self.agent.sendEvent (
                                 type = 'detector',
                                  date       = date,
-                                 sensor     = self.plugin["sensor"],
+                                 sensor     = sensor,
                                  interface  = self.plugin["interface"],
                                  plugin_id  = self.plugin["id"],
                                  plugin_sid = sid,
@@ -125,4 +131,3 @@ class ParserCiscoPIX(Parser.Parser):
                                  dst_port   = dst_port,
                                  log        = line)
         fd.close()
-

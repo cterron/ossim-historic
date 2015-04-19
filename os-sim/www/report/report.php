@@ -1,5 +1,6 @@
 <?php
-require_once ('classes/Session.inc');
+require_once 'classes/Security.inc';
+require_once 'classes/Session.inc';
 Session::logcheck("MenuReports", "ReportsHostReport");
 ?>
 
@@ -19,7 +20,10 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     require_once 'classes/Host.inc';
     require_once 'classes/Host_os.inc';
 
-    if (!$order = $_GET["order"]) $order = "hostname"; 
+    $order = GET('order') ? GET('order') : 'hostname';
+    if (!ossim_valid($order, OSS_ALPHA . OSS_SPACE . OSS_PUNC, 'ilegal:'._("Order"))) {
+        die(ossim_error());
+    }
 ?>
 
   <table align="center">
@@ -44,14 +48,12 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($host_list = Host::get_list($conn, "$search", "ORDER BY $order")) {
+    if ($host_list = Host::get_list($conn, '', "ORDER BY $order")) {
         foreach($host_list as $host) {
             $ip = $host->get_ip();
 
-            if ($os_list = Host_os::get_list($conn, 
-                                             "WHERE ip = inet_aton('$ip')")) {
-                $os = $os_list[0]->get_os();
-                $os_prev = $os_list[0]->get_previous();
+            if ($os_data = Host_os::get_ip_data($conn,$ip)) {
+                $os = $os_data["os"];
             } else {
                 $os = "";
             }
@@ -66,9 +68,6 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         <?php 
         echo "$os ";
         echo Host_os::get_os_pixmap($conn, $host->get_ip());
-        if (strcmp($os, $os_prev) && ($os)) {
-            echo "&nbsp;<img src=\"../pixmaps/major.gif\"/>";
-        }
         ?>
       </td>
 

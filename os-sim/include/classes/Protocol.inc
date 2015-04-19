@@ -1,5 +1,7 @@
 <?php
 
+require_once("ossim_db.inc");
+
 class Protocol {
 
     var $id;
@@ -22,9 +24,11 @@ class Protocol {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        if (!$rs = &$conn->Execute("SELECT * FROM protocol $where $order")) {
+        $query = OssimQuery("SELECT * FROM protocol $where $order");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new protocol ($rs->fields["id"],
                                         $rs->fields["name"],
@@ -40,9 +44,9 @@ class Protocol {
     {
         settype($id, "int");
 
-        $query = "INSERT INTO protocol VALUES 
-            (NULL, $id, '$name', '$alias', '$descr');";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO protocol VALUES (NULL, ?, ?, ?, ?)";
+        $params = array($id, $name, $alias, $descr);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -52,9 +56,9 @@ class Protocol {
     {
         settype($id, "int");
 
-        $query = "UPDATE protocol SET id = $id, name = '$name', 
-            alias = '$alias', descr = '$descr' WHERE id = $id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE protocol SET id = ?, name = ?, alias = ?, descr = ? WHERE id = ?";
+        $params = array($id, $name, $alias, $descr, $id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -63,8 +67,9 @@ class Protocol {
     function delete($conn, $id) {
         settype($id, "int");
 
-        $query = "DELETE FROM protocol WHERE id = $id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM protocol WHERE id = ?";
+        $params = array($id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

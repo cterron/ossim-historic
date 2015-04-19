@@ -20,6 +20,7 @@ define ('NMAP_SERVICE_REGEXP',
 
 
 require_once ('ossim_conf.inc');
+require_once ('classes/Log_action.inc');
 
 class Scan {
 
@@ -39,9 +40,13 @@ class Scan {
             $this->scan = array ();
 
         /* nmap */
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
         $this->nmap = $conf->get_conf("nmap_path");
-    }
+
+        /* User action logging */
+        $infolog = array($network);
+        Log_action::log(43,$infolog);
+   }
 
     function do_scan ()
     {
@@ -94,24 +99,19 @@ class Scan {
             if (preg_match(NMAP_MAC_ADDRESS_REGEXP, $line, $regs)) {
                 $this->scan[$ip]["mac"] = $regs[1];
                 $this->scan[$ip]["mac_vendor"] = $regs[2];
-                next;
-            }
             
             /* os */
-            if (preg_match(NMAP_OS_REGEXP, $line, $regs)) {
+            } elseif (preg_match(NMAP_OS_REGEXP, $line, $regs)) {
                 $this->scan[$ip]["os"] = $regs[1];
-                next;
-            }
             
             /* services */
-            if (preg_match(NMAP_SERVICE_REGEXP, $line, $regs)) {
+            } elseif (preg_match(NMAP_SERVICE_REGEXP, $line, $regs)) {
                 $this->scan[$ip]["services"][$regs[1]."/".$regs[2]] = array (
                     "port"      => $regs[1],
                     "proto"     => $regs[2],
                     "state"     => $regs[3],
                     "service"   => $regs[4],
                     "version"   => $regs[5]);
-                next;
             }
         }
     }
@@ -132,14 +132,14 @@ class Scan {
 
     function save_scan()
     {
-        session_start();
         $_SESSION["_scan"] = $this->scan;
     }
 
     function get_scan()
     {
-        session_start();
-        return $_SESSION["_scan"];
+        if (isset($_SESSION["_scan"])) {
+            return $_SESSION["_scan"];
+        }
     }
 
 }

@@ -1,4 +1,5 @@
 <?php
+require_once ("ossim_db.inc");
 
 class Sensor_interfaces {
 
@@ -22,10 +23,12 @@ class Sensor_interfaces {
 
     function get_list($conn, $sensor) 
     {
-        $sensor = mysql_real_escape_string($sensor);
-        if (!$rs = &$conn->Execute("SELECT * FROM sensor_interfaces where sensor = '$sensor' ORDER BY MAIN DESC")) {
+        $query = OssimQuery("SELECT * FROM sensor_interfaces where sensor =
+        '$sensor' ORDER BY MAIN DESC");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Sensor_interfaces ($rs->fields["sensor"],
                                                 $rs->fields["interface"],
@@ -39,13 +42,10 @@ class Sensor_interfaces {
 
     function insert_interfaces($conn, $sensor, $interface, $name, $main)
     {
-        $sensor = mysql_real_escape_string($sensor);
-        $interface = mysql_real_escape_string($interface);
-        $name = mysql_real_escape_string($name);
         $main = intval($main);
-        $query = "INSERT INTO sensor_interfaces (sensor, interface, name, main)
-            VALUES ('$sensor', '$interface', '$name', $main);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO sensor_interfaces (sensor, interface, name, main) VALUES (?, ?, ?, ?)";
+        $params = array($sensor, $interface, $name, $main);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -54,13 +54,10 @@ class Sensor_interfaces {
 
     function update_interfaces($conn, $sensor, $interface, $name, $main)
     {
-        $sensor = mysql_real_escape_string($sensor);
-        $interface = mysql_real_escape_string($interface);
-        $name = mysql_real_escape_string($name);
         $main = intval($main);
-        $query = "UPDATE sensor_interfaces SET name = '$name', main = $main
-        WHERE sensor = '$sensor' and interface = '$interface'";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE sensor_interfaces SET name = ?, main = ? WHERE sensor = ? and interface = ?";
+        $params = array($name, $main, $sensor, $interface);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -68,10 +65,9 @@ class Sensor_interfaces {
 
     function delete_interfaces($conn, $sensor, $interface)
     {
-        $sensor = mysql_real_escape_string($sensor);
-        $interface = mysql_real_escape_string($interface);
-        $query = "DELETE FROM sensor_interfaces WHERE sensor = '$sensor' and interface = '$interface'";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM sensor_interfaces WHERE sensor = ? and interface = ?";
+        $params = array($sensor, $interface);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

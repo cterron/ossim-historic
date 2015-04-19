@@ -11,13 +11,31 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
-
-  <h1> <?php echo gettext("Security report"); ?> </h1>
-
 <?php
-    
+    if (isset($_GET["type"]) &&  $_GET["type"] == 'alarm') {
+    ?>
+        <h1> <?php echo gettext("Alarm Security report"); ?> </h1>
+    <?php
+        $report_type = "alarm";
+    } else {
+        $report_type = "event";
+    ?>
+        <h1> <?php echo gettext("Security report"); ?> </h1>
+    <?php
+
+    }
+
+    require_once('ossim_conf.inc');
+    $path_conf = $GLOBALS["CONF"];
+    $jpgraph_path = $path_conf->get_conf("jpgraph_path");
+
+    if (!is_readable($jpgraph_path)) {
+            $error = new OssimError();
+            $error->display("JPGRAPH_PATH");
+    }
+
+
     require_once ('ossim_db.inc');
-    require_once ('ossim_conf.inc');
     require_once ('classes/Host.inc');
     require_once ('classes/Host_os.inc');
     require_once ('jgraphs/jgraphs.php');
@@ -53,17 +71,17 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     }
 
     ##############################
-    # Top alerts received
+    # Top events received
     ##############################
-    elseif ($_GET["section"] == 'alerts_recv') {
-        alert_max_occurrences();
+    elseif ($_GET["section"] == 'events_recv') {
+        event_max_occurrences();
     }
 
     ##############################
-    # Top alerts risk
+    # Top events risk
     ##############################
-    elseif ($_GET["section"] == 'alerts_risk') {
-        alert_max_risk();
+    elseif ($_GET["section"] == 'events_risk') {
+        event_max_risk();
     }
 
     ##############################
@@ -102,9 +120,9 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         echo "<br/><br/>";
         port_max_occurrences();
         echo "<br/><br/>";
-        alert_max_occurrences();
+        event_max_occurrences();
         echo "<br/><br/>";
-        alert_max_risk();
+        event_max_risk();
         // echo "<br/>";
         // less_stable_services();
     }
@@ -129,17 +147,22 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     {
         global $NUM_HOSTS;
         global $security_report;
+        global $report_type;
     
         /* ossim framework conf */
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
         $acid_link = $conf->get_conf("acid_link");
-        $acid_prefix = $conf->get_conf("alert_viewer");
+        $ossim_link = $conf->get_conf("ossim_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
         
-        if (!strcmp($target, "ip_src"))
+        if (!strcmp($target, "ip_src")){
+            if($report_type == "alarm") $target = "src_ip";
             $title = "Attacker hosts";
-        elseif (!strcmp($target, "ip_dst"))
+        } elseif (!strcmp($target, "ip_dst")){
+            if($report_type == "alarm") $target = "dst_ip";
             $title = "Attacked hosts";
+        }
 ?>
         <h2>Top <?php echo "$NUM_HOSTS $title" ?></h2>
         <table align="center">
@@ -150,7 +173,8 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th> <?php echo gettext("Occurrences"); ?> </th>
           </tr>
 <?php
-            $list = $security_report->AttackHost($target, $NUM_HOSTS);
+            $list = $security_report->AttackHost($security_report->ossim_conn, 
+                                                 $target, $NUM_HOSTS, $report_type);
             foreach ($list as $l) {
 
                 $ip = $l[0];
@@ -159,6 +183,15 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
                     $security_report->ossim_conn, $ip);
                 $os_pixmap = Host_os::get_os_pixmap(
                     $security_report->ossim_conn, $ip);
+                if($report_type == "alarm"){
+                    if($target == "ip_src"){
+                        $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip; 
+                    } elseif($target == "ip_dst"){
+                        $link = "$ossim_link/control_panel/alarm_console.php?dst_ip=" . $ip; 
+                    } else {
+                        $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip . "&dst_ip=" . $ip; 
+                    }
+                } else {
                 $link = "$acid_link/".$acid_prefix."_stat_alerts.php?&" . 
                     "num_result_rows=-1&" .
                     "submit=Query+DB&" . 
@@ -168,6 +201,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
                     "ip_addr[0][3]=$ip&" . 
                     "ip_addr_cnt=1&" . 
                     "sort_order=time_d";
+                }
 ?>
           <tr>
             <td>
@@ -189,7 +223,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         } else {
 ?>
         <img src="graphs/attack_graph.php?target=<?php 
-                 echo $target ?>&hosts=<?php echo $NUM_HOSTS ?>" 
+                 echo $target ?>&hosts=<?php echo $NUM_HOSTS ?>&type=<?php echo $report_type ?>" 
                  alt="attack_graph"/>
 <?php
         }
@@ -201,44 +235,60 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     }
 
     /* 
-     * return the alert with max occurrences
+     * return the event with max occurrences
      */
-    function alert_max_occurrences()
+    function event_max_occurrences()
     {
         global $NUM_HOSTS;
         global $security_report;
+        global $report_type;
     
         /* ossim framework conf */
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
         $acid_link = $conf->get_conf("acid_link");
-        $acid_prefix = $conf->get_conf("alert_viewer");
+        $ossim_link = $conf->get_conf("ossim_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
 ?>
-        <h2>Top <?php echo "$NUM_HOSTS Alerts" ?></h2>
+        <?php if($report_type == "alarm") { ?>
+        <h2>Top <?php echo "$NUM_HOSTS Alarms" ?></h2>
+        <?php } else { ?>
+        <h2>Top <?php echo "$NUM_HOSTS Events" ?></h2>
+        <?php } ?>
         <table align="center">
           <tr>
-            <th> <?php echo gettext("Alert"); ?> </th>
+            <?php if($report_type == "alarm") { ?>
+            <th> <?php echo gettext("Alarm"); ?> </th>
+            <?php } else { ?>
+            <th> <?php echo gettext("Event"); ?> </th>
+            <?php } ?>
             <th> <?php echo gettext("Occurrences"); ?> </th>
           </tr>
 <?php
-            $list = $security_report->Alerts();
+            $list = $security_report->Events($NUM_HOSTS, $report_type);
             foreach ($list as $l)
             {
-                $alert = $l[0];
-                $short_alert = SecurityReport::Truncate($alert,60);
+                $event = $l[0];
+                $short_event = SecurityReport::Truncate($event,60);
                 $occurrences = number_format($l[1], 0, ",", ".");
 ?>
           <tr>
              <?php
-               $link = "$acid_link/".$acid_prefix."_qry_main.php?new=1&" . 
+                if($report_type == "alarm"){
+                    // XXX $ip is missing, are we using this type of report?
+                    $link = "$ossim_link/control_panel/alarm_console.php?src_ip=" . $ip . "&dst_ip=" . $ip; 
+                } else {
+                    $link = "$acid_link/".$acid_prefix."_qry_main.php?new=1&" . 
                     "sig[0]==&" . 
-                    "sig[1]=$alert&" . 
+                    "sig[1]=".urlencode($event)."&" . 
                     "sig[2]==&" . 
                     "submit=Query+DB&" . 
                     "num_result_rows=-1&" . 
                     "sort_order=time_d";
+                }
+
              ?>
-            <td><a href="<?php echo $link ?>"><?php echo $short_alert ?></a></td>
+            <td><a href="<?php echo $link ?>"><?php echo $short_event ?></a></td>
             <td><?php echo $occurrences ?></td>
           </tr>
 <?php
@@ -249,11 +299,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <br/>
 <?php
         if ($report_graph_type == "applets") {
-            jgraph_nbalerts_graph();
+            jgraph_nbevents_graph();
         } else {
 ?>
-            <img src="graphs/alerts_received_graph.php?hosts=<?php 
-                 echo $NUM_HOSTS ?>" alt="alerts graph"/>
+            <img src="graphs/events_received_graph.php?hosts=<?php 
+                 echo $NUM_HOSTS ?>&type=<?php echo $report_type ?>" alt="events graph"/>
 <?php
         }
 ?>
@@ -265,28 +315,38 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
 
     
     /* 
-     * return a list of alerts ordered by risk
+     * return a list of events ordered by risk
      */
-    function alert_max_risk()
+    function event_max_risk()
     {
         global $NUM_HOSTS;
         global $security_report;
+        global $report_type;
         require_once ('sec_util.php');
 ?>
-        <h2>Top <?php echo "$NUM_HOSTS Alerts by Risk" ?></h2>
+        <?php if($report_type == "alarm") { ?>
+        <h2>Top <?php echo "$NUM_HOSTS Alarms by Risk" ?></h2>
+        <?php } else { ?>
+        <h2>Top <?php echo "$NUM_HOSTS Events by Risk" ?></h2>
+        <?php } ?>
+
         <table align="center">
           <tr>
-            <th>Alert</th>
-            <th>Risk</th>
+            <?php if($report_type == "alarm") { ?>
+            <th> <?php echo gettext("Alarm"); ?> </th>
+            <?php } else { ?>
+            <th> <?php echo gettext("Event"); ?> </th>
+            <?php } ?>
+            <th> <?php echo gettext("Risk"); ?> </th>
           </tr>
 <?php
-            $list = $security_report->AlertsByRisk();
+            $list = $security_report->EventsByRisk($NUM_HOSTS, $report_type);
             foreach ($list as $l) {
-                $alert = $l[0];
+                $event = $l[0];
                 $risk  = $l[1];
 ?>
           <tr>
-            <td><?php echo $alert ?></a></td>
+            <td><?php echo $event ?></a></td>
             <?php echo_risk($risk); ?>
           </tr>
 <?php
@@ -304,11 +364,13 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
     {
         global $NUM_HOSTS;
         global $security_report;
+        global $report_type;
     
         /* ossim framework conf */
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
         $acid_link = $conf->get_conf("acid_link");
-        $acid_prefix = $conf->get_conf("alert_viewer");
+        $ossim_link = $conf->get_conf("ossim_link");
+        $acid_prefix = $conf->get_conf("event_viewer");
         $report_graph_type = $conf->get_conf("report_graph_type");
         
 ?>
@@ -323,7 +385,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
             <th>Occurrences</th>
           </tr>
 <?php
-            $list = $security_report->Ports();
+            $list = $security_report->Ports($NUM_HOSTS, $report_type);
             foreach ($list as $l)
             {
 
@@ -365,7 +427,7 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         } else {
 ?>
               <img src="graphs/ports_graph.php?ports=<?php 
-                   echo $NUM_HOSTS ?>"/>
+                   echo $NUM_HOSTS ?>&type=<?php echo $report_type ?>"/>
 <?php
         }
 ?>
@@ -388,11 +450,11 @@ Session::logcheck("MenuReports", "ReportsSecurityReport");
         $opennms_db = new ossim_db();
         $opennms_conn = $opennms_db->opennms_connect();
 
-        $query = "SELECT servicename, count(servicename) 
+        $query = OssimQuery("SELECT servicename, count(servicename) 
             FROM ifservices ifs, service s 
             WHERE ifs.serviceid = s.serviceid AND ifs.status = 'D' 
             GROUP BY servicename ORDER BY count(servicename) DESC 
-            LIMIT $NUM_HOSTS;";
+            LIMIT $NUM_HOSTS");
 
         $rs = &$opennms_conn->Execute($query);
         

@@ -2,6 +2,7 @@
 
 require_once ('classes/Net.inc');
 require_once ('classes/Session.inc');
+require_once ("ossim_db.inc");
 
 class Net_qualification {
 
@@ -22,27 +23,18 @@ class Net_qualification {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        $allowed_nets = Session::allowedNets();
-
-        if (!$rs = &$conn->Execute("SELECT * FROM net_qualification $where
-        $order")) {
+        $query = OssimQuery("SELECT * FROM net_qualification $where $order");
+        if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
-            while (!$rs->EOF) {
-
-                $net_list = Net::get_list($conn,
-                    "WHERE name = '" . $rs->fields["net_name"] . "'");
-                if ($net_list) {
-                    if ((false !== strpos($allowed_nets, 
-                                          $net_list[0]->get_ips()))
-                        or (!$allowed_nets))
-                    {
-
-                        $list[] = new Net_qualification (
-                                            $rs->fields["net_name"],
-                                            $rs->fields["compromise"],
-                                            $rs->fields["attack"]);
-                    }
+            while (!$rs->EOF)
+            {
+                if (Session::netAllowed($conn, $rs->fields["net_name"]))
+                {
+                    $list[] = new Net_qualification (
+                                        $rs->fields["net_name"],
+                                        $rs->fields["compromise"],
+                                        $rs->fields["attack"]);
                 }
                 $rs->MoveNext();
             }
@@ -55,9 +47,10 @@ class Net_qualification {
         $compromise = intval($compromise);
         $attack = intval($attack);
 
-        $query = "INSERT INTO net_qualification VALUES 
-            ('$net_name', $compromise, $attack);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net_qualification VALUES (?, ?, ?)"; 
+        $params = array($net_name, $compromise, $attack);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -68,18 +61,20 @@ class Net_qualification {
         $compromise = intval($compromise);
         $attack = intval($attack);
 
-        $query = "UPDATE net_qualification SET net_name = '$net_name', 
-            compromise = $compromise, attack = $attack WHERE net_name =
-            '$net_name';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE net_qualification SET net_name = ?, compromise = ?, attack = ? WHERE net_name = ?";
+        $params = array($net_name, $compromise, $attack, $net_name);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
 
     function delete($conn, $net_name) {
-        $query = "DELETE FROM net_qualification WHERE net_name = '$net_name';";
-        if ($conn->Execute($query) === false) {
+        
+        $sql = "DELETE FROM net_qualification WHERE net_name = ?";
+        $params = array($net_name);
+        
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

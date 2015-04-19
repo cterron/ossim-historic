@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-smtp.h"
+#include <config.h>
 
 #define SMTP_CONNECT   "220 "
 #define SMTP_OK        "250 "
@@ -150,3 +150,4 @@ sim_smtp_new (const gchar  *hostname,
 
   return smtp;
 }
+// vim: set tabstop=2:

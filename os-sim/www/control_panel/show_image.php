@@ -1,24 +1,43 @@
-<HTML>
-<HEAD>
-<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-</HEAD>
-<BODY>
-
 <?php
-require_once ('ossim_conf.inc');
+    require_once ('classes/Session.inc');
+    Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
 
-$conf = new ossim_conf();
+    require_once ('ossim_conf.inc');
+    require_once ("ossim_db.inc");
+    require_once ('classes/Security.inc');
+    $conf = $GLOBALS["CONF"];
 
+    
+    $range  = GET('range');
+    $ip     = GET('ip');
+    $what   = GET('what');
+    $start  = GET('start');
+    $type   = GET('type');
+    $zoom   = GET('zoom');
 
- $ip = mysql_escape_string($_GET["ip"]);
- $what = mysql_escape_string($_GET["what"]);
- $start = mysql_escape_string($_GET["start"]);
- $type = mysql_escape_string($_GET["type"]);
- $zoom = mysql_escape_string($_GET["zoom"]);
- $graph_link = $conf->get_conf("graph_link");
+    ossim_valid($range, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("range"));
+    ossim_valid($ip, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("ip"));
+    ossim_valid($what, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("what"));
+    ossim_valid($start, OSS_ALPHA, OSS_PUNC, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("start"));
+    ossim_valid($type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("type"));
+    ossim_valid($zoom, OSS_DIGIT, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("zoom"));
 
- ?>
+    if (ossim_error()) {
+        die(ossim_error());
+    }
 
+    $graph_link = $conf->get_conf("graph_link");
+?>
+
+<html>
+<head>
+  <title> <?php echo "$ip " . gettext("graph"); ?> </title>
+  <meta http-equiv="refresh" content="150">
+  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+  <link rel="stylesheet" href="../style/style.css"/>
+</head>
+
+<body>
 <table align="center" width="100%">
     <tr><td align="center">
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=day&ip=<?php echo

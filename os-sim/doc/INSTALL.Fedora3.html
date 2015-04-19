@@ -1,0 +1,395 @@
+<html><head><title>Install OSSIM on Fedora Core 3</title>
+
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+  <style type="text/css">
+  <!--
+    body {
+        font: verdana;
+        color: #444;
+        width: 600px;
+        margin-top: 40;
+        margin-left: 100;
+        margin-right: 120;
+        margin-bottom: 40;
+    }
+    h1, h2, h3 {
+        font: verdana;
+        color: #31527c;
+    }
+    h1 { text-align: center; }
+    h2, h3 { text-align: left; }
+    p {
+        font: verdana;
+        text-align: justify;
+    }
+    hr {
+        color: #31527c;
+        border-style: solid;
+        border-width: 1px;
+    }
+    a {
+        background: transparent;
+        color: #17457c;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    a:hover {
+        background: transparent;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
+    pre {
+      border-style: dotted;
+      border-width: 1px;
+      border-color: #31527c;
+      margin-left: 20px;
+      margin-right: 10px;
+      padding: 5px;
+    }
+
+    pre.codelisting {
+      background-color: #e5eef9;
+    }
+
+    pre.filelisting {
+      background-color: #eee;
+    }
+
+    tt, code {
+      color: black; 
+    }
+  -->
+  </style></head>
+
+<H1>OSSIM Install Guide for Fedora Core 3</H1>
+
+<P><BR><BR>
+</P>
+<P>Open Source Security Information Management (OSSIM)<BR>Document
+updated: Wed<B>, 13 Apr 2005 10:00:07 GMT</B><BR>Authors: <A HREF="mailto:dgil_at_ossim_dot_net">David
+Gil</A> and <A HREF="mailto:juanma_at_ossim_net"> Juan Manuel Lorenzo</A>  
+</P>
+<P><BR><BR>
+</P>
+<H2>Index:</H2>
+<HR>
+<P><A HREF="#section0">0. Before installing OSSIM</A><BR><A HREF="#section1">1.
+ossim-mysql</A><BR><A HREF="#section2">2. ossim-server</A><BR><A HREF="#section3">3.
+ossim-agent</A><BR><A HREF="#section4">4. ossim-framework</A><BR><A HREF="#section5">5.
+ossim-utils</A><BR><A HREF="#section6">6. ossim-contrib</A><BR><A HREF="#section7">7.
+Post OSSIM installation</A><BR><A HREF="#section8">8. TODO</A><BR><A HREF="#sectionA">A.
+Plugins</A> 
+</P>
+<P><A NAME="section0"></A><BR><BR>
+</P>
+<H2>0. Before installing OSSIM</H2>
+<HR>
+<H3>0.1 Installing Fedora Core 3</H3>
+<P>If you have Fedora Core 3 installed on you system you can ommit
+this section, but please make sure you use the package version
+provided in the ossim rpm Fedora Core 3 repositories, some of the
+utils such as ntop, pads, have been patched in order to work
+propertly with OSSIM.</P>
+<P>If Fedora Core 3 is not installed or you want to reinstall Fedora
+Core 3 you can download the DVD or the cd set from the <A HREF="http://fedora.redhat.com/download/">Fedora
+Project download section</A>. 
+</P>
+<H3>0.2 Apt configuration 
+</H3>
+<P>To follow the installation guide you will have to install apt in
+your machinne, this will make installing and updating easier, so just
+download the rpm package from <A HREF="http://apt.freshrpms.net/">http://apt.freshrpms.net</A>
+and install it using the following command:</P>
+<PRE class=codelisting># rpm -i apt*.rpm</PRE><P>
+Edit the file <TT>/etc/apt/sources.list</TT> to set the repository of
+OSSIM, we do also recommend you to use freshrpms and DAG repository:
+</P>
+<PRE class=filelisting>[ -- /etc/apt/sources.list -- ]
+
+#OSSIM rpm repository
+rpm http://www.ossim.net/ download/fedora fc3
+#Freshrpms.net repository
+rpm http://ayo.freshrpms.net fedora/linux/3/i386 core updates freshrpms
+#DAG reposotory
+rpm http://apt.sw.be fedora/3/en/i386 dag</PRE><P>
+Update the avaliable package list info with: 
+</P>
+<PRE class=codelisting># apt-get update</PRE><P>
+Create a <TT>/etc/apt/preferences</TT> file like this: 
+</P>
+<PRE class=filelisting>[ -- /etc/apt/preferences -- ]
+Package: *
+Pin: release o=ossim
+Pin-Priority: 995</PRE><P>
+This way apt will assign a higher priority to OSSIM packages and
+their dependencies. This is very important, because many of the
+dependencies of OSSIM have been patched in order to work correctly
+with OSSIM. 
+</P>
+<H3><A NAME="section1"></A>1. Install ossim-mysql</H3>
+<HR>
+<P>Install it: 
+</P>
+<PRE class=codelisting># apt-get install ossim-mysql</PRE><P>
+Start Mysql daemon:</P>
+<PRE class=codelisting># /etc/init.d/mysqld start</PRE><P>
+Set a root password for your database: 
+</P>
+<PRE class=codelisting># mysqladmin -u root password your_secret_password</PRE><P>
+Create the following databases: 
+</P>
+<PRE class=codelisting># mysql -u root -p
+
+mysql&gt; create database ossim;
+mysql&gt; create database ossim_acl;
+mysql&gt; create database snort;
+mysql&gt; exit;</PRE><P>
+Then load the tables in the databases: 
+</P>
+<PRE class=codelisting># cat /usr/share/ossim/db/create_mysql.sql \
+    /usr/share/ossim/db/ossim_config.sql \
+    /usr/share/ossim/db/ossim_data.sql \
+    /usr/share/ossim/db/realsecure.sql | \
+    mysql -u root ossim -p
+
+
+# cat /usr/share/ossim/db/create_snort_tbls_mysql.sql \
+    /usr/share/ossim/db/create_acid_tbls_mysql.sql \
+    | mysql -u root snort -p</PRE>
+Start Mysql server:
+<PRE class=codelisting># /etc/init.d/mysqld start</PRE>
+<P>Set mysql to run at startup</P>
+<PRE class=codelisting># chkconfig mysqld on</PRE>
+<P><BR><BR>
+</P>
+<H2><A NAME="section2"></A>2. Install OSSIM Server</H2>
+<HR>
+<P>Install ossim-server rpm using this command 
+</P>
+<PRE class=codelisting> # apt-get install ossim-server</PRE><P>
+Edit /etc/ossim/server/config.xml to set you network properties and
+the database properties:</P>
+<PRE class=filelisting><TT>[ -- /etc/ossim/server/config.xml -- ]</TT>
+..
+&lt;sensor name=&quot;here_goes_your_sensor_name&quot; ip=&quot;sensor_ip&quot; interface=&quot;eth0&quot;/&gt;
+..
+&lt;datasource name=&quot;ossimDS&quot; provider=&quot;MySQL&quot;<BR> dsn=&quot;PORT=3306;USER=root;PASSWORD=yourpassword;DATABASE=ossim;HOST=localhost&quot;/&gt;
+&lt;datasource name=&quot;snortDS&quot; provider=&quot;MySQL&quot;<BR> dsn=&quot;PORT=3306;USER=root;PASSWORD=yourpassword;DATABASE=snort;HOST=localhost&quot;/&gt;
+..
+ &lt;notify emails=&quot;heregoes@youremail.com&quot; alarm_risks=&quot;low&quot; /&gt;</PRE><P>
+Start OSSIM server:</P>
+<PRE class=codelisting># ossim-server -d -c /etc/ossim/server/config.xml</PRE>
+<P><BR><BR>
+</P>
+<H2><A NAME="section3"></A>3. Install OSSIM Agent</H2>
+<HR>
+<P>Install the plugins you want to use with OSSIM (see <A HREF="#sectionA">appendix
+A</A>) 
+</P>
+<P>Install ossim-agent: 
+</P>
+<PRE class=codelisting># apt-get install ossim-agent</PRE><P>
+Now it is time to update the sensor configuration. The file
+<TT>/etc/ossim/agent/config.xml</TT>  must be edited by hand:</P>
+<PRE class=filelisting><TT>[ -- /etc/ossim/agent/config.xml -- ]</TT><BR>
+&lt;!-- Replace 127.0.0.1 with your sensor Ip --&gt;
+&lt;!ENTITY   sensor     &quot;127.0.0.1&quot; &gt;
+
+&lt;!-- Default network interface --&gt;
+&lt;!ENTITY    interface  &quot;eth0&quot; &gt;
+
+&lt;!-- Default OSSIM database connection (db:host:dbname:user:pass) --&gt;
+&lt;!ENTITY    ossim_db   &quot;mysql:localhost:ossim:root:yourossimdbpass&quot; &gt;
+
+&lt;!-- Replace localhost with your server Ip --&gt;
+&lt;!ENTITY    serverip   &quot;localhost&quot; &gt;
+</PRE><P>
+Start OSSIM agent:</P>
+<PRE class=codelisting># ossim-agent -d -c /etc/ossim/agent/config.xml</PRE>
+<P><BR><BR>
+</P>
+<H2><A NAME="section4"></A>4. Install OSSIM Framework</H2>
+<HR>
+<P>Install phpgacl package: 
+</P>
+<PRE class=codelisting># apt-get install phpgacl</PRE><P>
+Edit <TT>phpgacl/gacl.class.php</TT> 
+</P>
+<PRE class=filelisting>
+<TT>[ -- /usr/share/phpgacl/gacl.class.php -- ]</TT>
+..
+var $_db_type = 'mysql';
+..
+var $_db_user = 'root';
+..
+var $_db_password = 'yourdbpassword;
+..
+var $_db_name = 'ossim_acl'; 
+..
+var $_db_table_prefix = '';
+</PRE>
+</P>
+Now edit <TT>/usr/share/phpgacl/admin/gacl_admin.inc.php</TT>:
+<PRE class=filelisting>
+<TT>[ -- /usr/share/phpgacl/admin/gacl_admin.inc.php -- ]</TT>
+.. 
+'db_type' =&gt; 'mysql',
+'db_host' =&gt; 'localhost',
+'db_user' =&gt; 'root',
+'db_password' =&gt; 'yourdbpassword',
+'db_name' =&gt; 'ossim_acl',
+</PRE>
+</P>
+Start httpd:
+<PRE class=codelisting># /etc/init.d/httpd start</PRE>
+To run httpd server at startup:</P>
+<PRE class=codelisting># chkconfig httpd on</PRE>
+<P>Go to <A HREF="http://yourhost/phpgacl/setup.php">http://yourhost/phpgacl/setup.php</A>
+to check if you have a correct configuration.</P>
+<P>Create phpgacl/admin/templates_c directory and make it writable by
+the user the webserver run as:</P>
+<PRE class=codelisting># mkdir /usr/share/phpgacl/admin/templates_c <BR># chown -R apache:apache /usr/share/phpgacl/admin/templates_c</PRE>
+</P>
+<P>Install ossim-framework and all its dependencies: 
+</P>
+<PRE class=codelisting># apt-get install ossim-framework</PRE><P>
+<P>Set the framework configuration editing the file
+<TT>/etc/ossim/framework/ossim.conf:</TT></P>
+<PRE class=filelisting>
+<TT>[ -- /etc/ossim/framework/ossim.conf -- ]</TT> 
+..
+ossim_pass=ossimdbpass
+..
+phpgacl_pass=phpgaclpass
+</PRE>
+<P>Edit the
+file <TT>/var/www/acid/acid_conf.php</TT>:</P>
+<PRE class=filelisting><TT>[ -- /var/www/acid/acid_conf.php -- ]</TT>
+..
+DBlib_path = &quot;/var/www/adodb/&quot;;
+..
+$DBtype = &quot;mysql&quot;;
+..
+$alert_dbname = &quot;snort&quot;;
+$alert_host = &quot;localhost&quot;;
+$alert_port = &quot;&quot;;
+$alert_user = &quot;root&quot;;
+$alert_password = &quot;yourpassword&quot;;
+</PRE>
+<P>Edit <TT>/etc/php.ini</TT> and set the include_path,set also what kind of errors will be displayed:</P>
+<PRE class=filelisting><TT>[ -- /etc/php.ini -- ]</TT>
+..
+include_path = &quot;/usr/share/ossim/include&quot;
+..
+error_reporting = E_ALL & ~E_NOTICE
+..
+;error_reporting  =  E_ALL
+</PRE>
+</P>
+<P>Start ossim-framework:</P>
+<PRE class=codelisting># ossim-framework -d</PRE><P>
+<P>Access the framework [ <TT>http://yourhost/ossim/</TT> ] and go to
+configuration menu Configuration-&gt;Main. 
+</P>
+It is also recommended to activate the displaying of errors in php.ini, at least until everything it is working fine. 
+This will help to discover where do errors come from. This can be donde editting the file <TT>/etc/php.ini</TT>
+<PRE class=filelisting>
+<TT>[ -- /etc/php.ini -- ]</TT>
+..
+display_errors = On
+..
+</PRE>
+<H2><A NAME="section5"></A>5. Install OSSIM utils</H2>
+<HR>
+<P>The ossim-framework package depends on the ossim-utils one, so you
+if you have installed ossim-framework you must have it installed. If
+you want to install it on another host: 
+</P>
+<PRE class=codelisting># apt-get install ossim-utils</PRE><BR>
+<H2><A NAME="section6"></A>6. Install OSSIM contrib (optional)</H2>
+<HR>
+<P>The package ossim-contrib contains a set of patches, examples and
+configuration files used by the ossim distribution. This package is
+only useful for development purposes. If you still want to install
+it:</P>
+<PRE class=codelisting># apt-get install ossim-contrib</PRE><P>
+</P>
+<H2><A NAME="section7"></A>7. Post OSSIM installation</H2>
+<HR>
+<P>The package ossim is a meta-package which depends on the the other
+ones. 
+</P>
+<PRE class=codelisting># apt-get install ossim</PRE><H2>
+
+<a name="section8"></a>
+<h2>8. TODO</h2>
+<hr>
+
+<ul>
+  <li>Nessus integration</li>
+  <li>OpenNMS integration</li>
+</ul>
+
+<H2><A NAME="sectionA"></A>A. Install Plugins</H2>
+<HR>
+<H3>A.1 Snort</H3>
+<P>Install snort: 
+</P>
+<PRE class=codelisting># apt-get install snort-mysql</PRE><P>
+Don't configure snort database via debconf, it's better that you edit
+the file <TT>/etc/snort/snort.conf</TT> by hand: 
+</P>
+<PRE class=filelisting>[ -- /etc/snort/snort.conf --]
+..
+var HOME_NET [192.168.0.0/16]
+var EXTERNAL_NET !$HOME_NET
+..
+# splitted in two lines for readability
+output database: alert, mysql, user=root password=yourdbpass dbname=snort 
+host=yourdbhost sensor_name=your_sensor_ip logfile=fast.log
+..
+#  if you want spade support obtain a valid spade.conf file 
+#  (for example from ossim source or from ossim-contrib package)
+include spade.conf</PRE><P>
+Comment the line containing <B>ALERTMODE= fast </B>in the file
+<TT>/etc/sysconfig/snort</TT></P>
+<P>Check out <A HREF="http://www.bleedingsnort.com/">Bleeding Edgeg
+of Snort web page</A> for up-to-date, bleeding edge snort rules. The
+false positive rate is extremely low for little tested signatures and
+they are being very useful to us: 
+</P>
+<PRE class=codelisting># cd /etc/snort/rules/
+# wget http://www.bleedingsnort.com/bleeding-all.rules
+# echo &quot;include \$RULE_PATH/bleeding-all.rules&quot; &gt;&gt; /etc/snort/snort.conf</PRE><P>
+Update OSSIM database with the rules of your system: 
+</P>
+<PRE class=codelisting># /usr/share/ossim/scripts/create_sidmap.pl /etc/snort/rules | \
+     mysql -u root ossim -p</PRE>
+Start snort:
+<PRE class=codelisting># /etc/init.d/snortd start</PRE>
+<H3>A.2 Ntop</H3>
+<P>Install Ntop: 
+</P>
+<PRE class=codelisting># apt-get install ntop</PRE><P>
+Define the password for the admin user: 
+</P>
+<PRE class=codelisting># ntop -u ntop
+&gt;&gt; Please enter the password for the admin user:
+# ^C
+# /etc/init.d/ntop start</PRE><P>
+Go to <TT>http://yourhost:3000/</TT> to see Ntop in action. Activate
+the rrdPlugin at Admin-&gt;plugins. Click on Host at Data Dump and
+specify your netmask at Hosts Filter. 
+</P>
+<H3>A.3 Other plugins</H3>
+<P>As simple as: 
+</P>
+<PRE class=codelisting># apt-get install p0f arpwatch pads tcptrack</PRE><P>
+Don't run arpwatch on boot, let ossim-agent do the job: 
+</P>
+<PRE class=codelisting># chkconfig arpwatch off</PRE>
+</BODY>
+</HTML>

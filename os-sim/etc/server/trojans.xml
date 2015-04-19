@@ -2215,7 +2215,7 @@
         <rules>
             <rule type="monitor" name="More than 10 secs persistence"
             reliability="3" from="1:SRC_IP" to="1:DST_IP"
-            port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="1025,1441"
+            port_from="1:SRC_PORT" port_to="1:DST_PORT" plugin_id="2005"
             plugin_sid="008" condition="ge" value="10" interval="15"
             time_out="30" absolute="true">
                 <rules>

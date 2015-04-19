@@ -1,0 +1,1942 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book>
+  <title>OSSIM RPM INSTALL 0.9.8.1 on FC3</title>
+
+  <bookinfo>
+    <author>
+      <surname>Ken Gregoire &lt;ken at gordiandata dot net&gt;</surname>
+    </author>
+
+    <date>July 5, 2005</date>
+
+    <productname>OSSIM 0.9.8.1</productname>
+
+    <abstract>
+      <para>Installation Time: &lt; 4 hour</para>
+
+      <para>Tested: Yes</para>
+
+      <para>This is a very extensive and a long installation process, so be
+      patient. I had to put it into a more managable format so it was easier
+      to navigate, the plain text file was getting too long - so here it is in
+      docbook format.</para>
+
+      <para>OSSIM aims to unify network monitoring, security, correlation and
+      qualification in one single tool. Using Snort, Acid, mrtg, NTOP,
+      OpenNMS, nmap, nessus and rrdtool we want the user to have full control
+      over every network or security aspect.</para>
+
+      <para>Many thanks to the following:</para>
+
+      <para>Gilles Chung &lt;gilleschung at myway dot com&gt;, Dominique Karg
+      &lt;dk at ossim dot net&gt;, Fabio Ospitia Trujillo &lt;fot at ossim dot
+      net&gt;, Diego Gonzalez Gomez &lt;donzalez at ossim dot net&gt;, David
+      Gil &lt;dgil at ossim dot net&gt;, Juan Manuel Lorenzo &lt;juanma at
+      ossim dot net&gt;</para>
+    </abstract>
+
+    <copyright>
+      <year>GNU Free Document License <ulink
+      url="http://www.gnu.org/licenses/fdl.txt">http://www.gnu.org/licenses/fdl.txt</ulink></year>
+    </copyright>
+  </bookinfo>
+
+  <chapter>
+    <title>Overview</title>
+
+    <para>Hopefully this will help you install OSSIM and all the related
+    products. It can be a very complicated installation process so to to
+    eliminate problems read very carfully, especially the results of each
+    step. Make sure that there are no errors.</para>
+
+    <para>The most common problems:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Permissions for MySql - If you use webmin are mysqladmin - use
+        these tools to go and check the permissions. If in doubt with
+        permissions - give user snort ALL, you can always go back and change
+        it after you get OSSIM up and running.</para>
+      </listitem>
+
+      <listitem>
+        <para>OSSIM -Server - if you get errors when this is started up - go
+        back and check that you have installed ALL the modules and any related
+        dependencies, or you will spending 2+ days trying to sort errors out
+        (trust me on this one - I have been there).</para>
+      </listitem>
+
+      <listitem>
+        <para>Errors related to not using the OSSIM modules. The OSSIM modules
+        have been customized to work with OSSIM, so make sure you use them.
+        You may have to uninstall some modules and then install the customized
+        OSSIM modules (again, trust me on this one).</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>This was tested on a somewhat fresh installation of Fedora Core 3
+    with MySql 4. Features:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>MySql tuning for Snort.</para>
+      </listitem>
+
+      <listitem>
+        <para>Steps to test and troubleshoot Snort and ACID.</para>
+      </listitem>
+
+      <listitem>
+        <para>Added Oinkmaster - automatically updates Snort rules.</para>
+      </listitem>
+
+      <listitem>
+        <para>All web access now https</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Still to do: Would like to get inline snort or snortsam working -
+    anyone have any ideas on this? This document explains how to install OSSIM
+    and its dependencies with apt-get on a Fedora Core 3 for version 0.9.8
+    with MySQL 4. Some package versions may change, please check the versions
+    if wget downloads fail. OSSIM does not work with MySql 3 so you will have
+    to install MySQL 4, follow the instructions for MySql 4: <ulink
+    url="http://www.mybizguard.com/linux/mysql/mysql4.txt">http://www.mybizguard.com/linux/mysql/mysql4.txt</ulink></para>
+
+    <para>So lets start! This installation assumes:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Internet connection is eth0</para>
+      </listitem>
+    </itemizedlist>
+
+    <itemizedlist>
+      <listitem>
+        <para>Internal LAN connection is eth1</para>
+      </listitem>
+
+      <listitem>
+        <para>MySQL 4 - for MySQL 4 you must have the compatiblity module
+        installed - MySQL-shared-compat-4.0.20-0.i386.rpm It is available at
+        <ulink url="???"><ulink
+        url="http://dev.mysql.com/downloads/mysql/4.0.html">http://dev.mysql.com/downloads/mysql/4.0.html</ulink></ulink></para>
+      </listitem>
+
+      <listitem>
+        <para>MySQL</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>username: <emphasis role="bold">ossim</emphasis></para>
+          </listitem>
+
+          <listitem>
+            <para>password: <emphasis
+            role="bold">YOURPASSWORD</emphasis></para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </itemizedlist>
+
+    <para>Cheers! Ken</para>
+
+    <para>_____________________________________________</para>
+
+    <para>In Windows - click on the .exe and follow the instructions.</para>
+
+    <para>In Linux - first you have to find the instructions!</para>
+  </chapter>
+
+  <chapter>
+    <title>Installation</title>
+
+    <section>
+      <title>APT</title>
+
+      <para>The OSSIM Team has done a great job in making installation of
+      0.9.8 easier using apt. Install apt:<programlisting>yum install apt</programlisting>
+      Add ossim and other repositories to apt:<programlisting>vi /etc/apt/sources.list</programlisting>Add:<programlisting>#OSSIM rpm repository
+rpm http://www.ossim.net/ download/fedora fc3
+#Freshrpms.net repository
+rpm http://ayo.freshrpms.net fedora/linux/3/i386 core updates freshrpms
+#DAG repository
+rpm http://apt.sw.be fedora/3/en/i386 dag
+#ATrpms
+rpm http://apt.atrpms.net fedora/3/en/i386 at-stable</programlisting> Setup
+      ossim as a high priority to update and get packages:<programlisting>vi /etc/apt/preferences</programlisting>Add:<programlisting>Explanation: OSSIM
+Package: *
+Pin: release o=ossim
+Pin-Priority: 997</programlisting> Remove the signature checking since some
+      ossim packages are not signed:<programlisting>vi /etc/apt/apt.conf</programlisting>Uncomment
+      (line 6) like below:<programlisting>GPG-Check "false";</programlisting>
+      Update apt to find ossim:<programlisting>apt-get update</programlisting>
+      And update all you packages (just in case):<programlisting>apt-get upgrade</programlisting></para>
+    </section>
+
+    <section>
+      <title>Yum</title>
+
+      <para>Edit the yum repository directory:<programlisting>vi /etc/yum.conf</programlisting>I
+      took the OSSIM apt repository and made a yum repository. This made it
+      easier to make sure that the appropriate OSSIM rpms got installed. So
+      you need to modify your yum.conf like below. They are Freshrpms, DAG,
+      ATrpms and the newly added OSSIM. Add OSSIM and find the following and
+      uncomment and activate them out like below:<programlisting>###########
+## OSSIM ##
+###########
+
+[ossim]
+name=OSSIM Mirror Repository fedora $releasever - $basearch - stable
+
+baseurl=http://www.ossim.net/download/fedora/RPMS.fc3/
+  http://www.mybizguard.com/fedora/$releasever/$basearch/stable 
+enabled=1
+#gpgcheck=0
+
+[freshrpms]
+name=FreshRPMs
+mirrorlist=http://ayo.freshrpms.net/fedora/linux/$releasever/mirrors-freshrpms
+enabled=1
+#gpgcheck=1
+
+[dag]
+name=Dag APT Repository
+baseurl=http://dag.freshrpms.net/fedora/$releasever/en/$basearch/dag/
+  http://dag.atrpms.net/fedora/$releasever/en/$basearch/dag/
+  http://ftp.heanet.ie/pub/freshrpms/pub/dag/fedora/$releasever/en/$basearch/dag/
+enabled=1
+#gpgcheck=1
+
+[dries]
+name=Dries APT/YUM Repository
+baseurl=http://ftp.freshrpms.net/pub/dag/dries/fedora/linux/$releasever/$basearch/dries/RPMS/
+  http://mirrors.ircam.fr/pub/dag/dries/fedora/linux/$releasever/$basearch/dries/RPMS/
+  http://apt.sw.be/dries/fedora/linux/$releasever/$basearch/dries/RPMS/
+  http://dries.studentenweb.org/yum/fedora/linux/$releasever/$basearch/dries/RPMS/
+enabled=1
+#gpgcheck=1
+
+[atrpms]
+name=ATrpms - Stable
+baseurl=http://apt.atrpms.net/fedora/$releasever/en/$basearch/at-stable
+  http://ftp-stud.fht-esslingen.de/atrpms/download.atrpms.net/fedora/$releasever/en/$basearch/at-stable
+  http://wftp.tu-chemnitz.de/pub/linux/ATrpms/fedora/$releasever/en/$basearch/at-stable
+enabled=1
+#gpgcheck=1</programlisting></para>
+
+      <para>Save and close this file.</para>
+
+      <para>Update yum<programlisting>yum update</programlisting>Upgrade
+      yum<programlisting>yum upgrade</programlisting></para>
+
+      <para>Yum is now setup to get OSSIM and OSSIM components.</para>
+    </section>
+
+    <section>
+      <title>Install Components</title>
+
+      <para>Sign in as root. Open a Super User window:<programlisting>Redhat--&gt;System Tools--&gt;More System Tools--&gt;Terminal Program - Super User Mode
+Password:</programlisting> Dependencies:<programlisting>apt-get install MySQL-python perl-Compress-Zlib libxslt libxslt-devel libgda \
+libgda-devel gda-odbc gda-mysql gnet2 gnet2-devel tcpdump php-domxml \
+libxslt1 nmap nmap-frontend libdbi-dbd-mysql freeradius-mysql php-mysql MySQL-python \
+mod_auth_mysql qt-MySQL perl-DBD-MySQL glib2 glib2-devel libxml2 libxml2-devel \
+libxml2-python perl-Archive-Zip perl-DBI perl-Apache-DBI perl-DBD-Pg</programlisting>Install
+      OSSIM, SNORT, and related dependencies. We want to make sure that we
+      install the appropriate modified rpms for OSSIM so we will disable the
+      dag repository:<programlisting>yum --disablerepo dag install arpwatch cgilib-devel cgilib fpdf gnet2 libpcap \
+mrtg ntop ossim ossim-agent ossim-contrib ossim-framework ossim-mysql ossim-server ossim-utils \
+p0f pads php-acid php-adodb phpgacl php-jpgraph phplot rrdtool-devel rrdtool rrdtool-perl \
+snort-mysql snort tcptrack</programlisting></para>
+
+      <para>Make sure that only the ossim repository is used. Results should
+      be like this and say yes:</para>
+
+      <para><programlisting>Dependencies Resolved
+Transaction Listing:
+  Install: arpwatch.i386 14:2.1a13-8.FC3 - ossim
+  Install: cgilib.i386 0:0.5-1 - ossim
+  Install: fpdf.i386 0:1.53.ossim-1 - ossim
+  Install: mrtg.i386 0:2.10.5-3 - ossim
+  Install: ntop.i386 0:3.1.ossim-1.rf - ossim
+  Install: ossim.i386 0:0.9.8-1 - ossim
+  Install: ossim-agent.i386 0:0.9.8-1 - ossim
+  Install: ossim-contrib.i386 0:0.9.8-1 - ossim
+  Install: ossim-framework.i386 0:0.9.8-1 - ossim
+  Install: ossim-mysql.i386 0:0.9.8-1 - ossim
+  Install: ossim-server.i386 0:0.9.8-1 - ossim
+  Install: ossim-utils.i386 0:0.9.8-1 - ossim
+  Install: p0f.i386 0:2.0.5-1.1.fc3.rf - ossim
+  Install: pads.i386 0:1.1.3-1 - ossim
+  Install: php-acid.noarch 0:0.9.6b22.ossim-1.dag - ossim
+  Install: php-adodb.noarch 0:4.60-1.1.fc3.rf - ossim
+  Install: php-jpgraph.noarch 0:1.16-1.1.fc3.rf - ossim
+  Install: phpgacl.i386 0:3.3.4.ossim-1 - ossim
+  Install: rrdtool.i386 0:1.1.0-20040610 - ossim
+  Install: rrdtool-devel.i386 0:1.1.0-20040610 - ossim
+  Install: rrdtool-perl.i386 0:1.1.0-20040610 - ossim
+  Install: snort.i386 0:2.3.2.ossim-0.fdr.1 - ossim
+  Install: snort-mysql.i386 0:2.3.2.ossim-0.fdr.1 - ossim
+  Install: tcptrack.i386 0:1.1.4.ossim-1 - ossim
+Total download size: 14 M
+Is this ok [y/N]:</programlisting></para>
+
+      <para>There is a potential that when yum updates and it finds a newer
+      Snort, it will overwrite the OSSIM Snort and Snort will stop working. To
+      prevent this, we will put snort in the exclusion list. This way the
+      OSSIM snort will always be left in tacked.</para>
+
+      <para>Edit yum.conf</para>
+
+      <para><programlisting>vi /etc/yum.conf</programlisting></para>
+
+      <para>At line 64 add this to exclude:<programlisting>exclude=snort snort-mysql tcptrack</programlisting></para>
+
+      <para>If you have problems you may want to try this, or you may have to
+      remove some packages and install again:<programlisting>apt-get --fix-broken install</programlisting></para>
+    </section>
+
+    <section>
+      <title>MySQL Databases</title>
+
+      <para>Create ossim databases, you need to be root:<programlisting>mysql -h localhost -u root -p
+Password:</programlisting> Create the databases:<programlisting>mysql&gt; create database ossim; \
+create database ossim_acl; \
+create database snort; \
+create database snort_archive;</programlisting> Grant permissions to user
+      ossim password YOURPASSWORD:<programlisting>mysql&gt; grant all privileges on ossim.* to ossim@localhost identified by 'YOURPASSWORD'; \
+grant all privileges on ossim_acl.* to ossim@localhost identified by 'YOURPASSWORD'; \
+grant all privileges on snort.* to ossim@localhost identified by 'YOURPASSWORD'; \
+grant all privileges on snort_archive.* to ossim@localhost identified by 'YOURPASSWORD'; </programlisting>
+      Setup users:<programlisting>mysql&gt; grant CREATE, INSERT, SELECT, DELETE, UPDATE on ossim.* to ossim; \
+grant CREATE, INSERT, SELECT, DELETE, UPDATE on ossim_acl.* to ossim; \
+grant CREATE, INSERT, SELECT, DELETE, UPDATE on snort.* to ossim; \
+grant CREATE, INSERT, SELECT, DELETE, UPDATE on snort_archive.* to ossim;</programlisting>
+      Set old password format (or you will not be able to connect to the
+      databases:<programlisting>mysql&gt; SET PASSWORD FOR 'ossim'@'localhost' = OLD_PASSWORD('YOURPASSWORD');
+mysql&gt; exit</programlisting> Load the tables in the
+      databases:<programlisting>cat /usr/share/ossim/db/create_mysql.sql \
+    /usr/share/ossim/db/ossim_config.sql \
+    /usr/share/ossim/db/ossim_data.sql \
+    /usr/share/ossim/db/realsecure.sql | \
+    mysql -u ossim ossim -p
+Enter password:</programlisting><programlisting>cat /usr/share/ossim/db/create_snort_tbls_mysql.sql \
+    /usr/share/ossim/db/create_acid_tbls_mysql.sql \
+    | mysql -u ossim snort -p
+Enter password:</programlisting><programlisting>cat /usr/share/ossim/db/create_snort_tbls_mysql.sql \
+    /usr/share/ossim/db/create_acid_tbls_mysql.sql \
+    | mysql -u ossim snort_archive -p
+Enter password:</programlisting> Restart Mysql server:<programlisting>service mysql restart</programlisting>
+      Set mysql to run at startup:<programlisting>chkconfig mysql on</programlisting></para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Configure Components</title>
+
+    <para>The next steps are to configure each component. If you any errors it
+    is likely best to correct that component before proceeding. It is best if
+    you configure the components in the following order.</para>
+
+    <section>
+      <title>Snort</title>
+
+      <para>Edit snort: (remember the assumption is that your Internet is on
+      eth0 - if different you will also have to change INTERFACE=eth0 to
+      INTERFACE=eth1. if want to find out what your network connects
+      are.</para>
+
+      <para>List networks:<programlisting>ifconfig</programlisting></para>
+
+      <para>Edit this file:<programlisting>vi /etc/sysconfig/snort</programlisting>And
+      check to make sure the INTERFACE is correct (line 15) in this case
+      eth0:<programlisting>INTERFACE=eth0</programlisting>Comment out the
+      following (line 69) like below:<programlisting>#ALERTMODE=fast</programlisting>Exit
+      this file.</para>
+
+      <para></para>
+
+      <para>Edit snort.conf:<programlisting>vi /etc/snort/snort.conf</programlisting>
+      Find (line 44) Confirm set as below:<programlisting>var HOME_NET any</programlisting><note>
+          <para>Set this way, snort will listen on all network cards and
+          addresses. After you have OSSIM and Snort properly installed it is
+          best to go back and setup what network cards and addresses you want
+          to listen on. Or you can set for your internal network, an example
+          below:</para>
+        </note><programlisting>var HOME_NET [192.168.0.0/16]</programlisting>Find
+      (line 47):<programlisting>var EXTERNAL_NET any</programlisting>And
+      change to:<programlisting>var EXTERNAL_NET !$HOME_NET</programlisting>Find
+      (line 532):</para>
+
+      <para><programlisting># output database: log, mysql, user=root password=test dbname=db host=localhost</programlisting>Uncomment
+      and change to the following.<note>
+          <para>splitted in two lines for readability and must all be on the
+          same one line:</para>
+        </note> <programlisting>output database: alert, mysql, user=ossim password=YOURPASSWORD dbname=snort host=localhost
+ sensor_name=127.0.0.1 logfile=fast.log</programlisting></para>
+
+      <para>Uncomment the following rules like below starting at line
+      691<programlisting>include $RULE_PATH/web-attacks.rules
+include $RULE_PATH/backdoor.rules
+include $RULE_PATH/shellcode.rules
+include $RULE_PATH/policy.rules
+include $RULE_PATH/porn.rules
+include $RULE_PATH/info.rules
+include $RULE_PATH/icmp-info.rules
+include $RULE_PATH/virus.rules
+include $RULE_PATH/chat.rules
+include $RULE_PATH/multimedia.rules
+include $RULE_PATH/p2p.rules</programlisting></para>
+
+      <para>Save and close this file.</para>
+
+      <para></para>
+
+      <para>Now we will add bleeding snort rules to snort.conf. The false
+      positive rate is extremely low for little tested signatures and they are
+      being very useful:<programlisting>cd /etc/snort/rules/
+wget http://www.bleedingsnort.com/bleeding-all.rules
+echo "include \$RULE_PATH/bleeding-all.rules" &gt;&gt; /etc/snort/snort.conf</programlisting>
+      Start snort<programlisting>service snortd start</programlisting> Make
+      Snort start on startup:<programlisting>chkconfig snortd on</programlisting>Check
+      to make snort is running:<programlisting>service snortd status</programlisting>Should
+      result in:<programlisting>snort (pid 7682) is running...</programlisting>If
+      you get this then you have a problem, likely database password, name or
+      user is set wrong. Or, you have installed the wrong Snort, the OSSIM one
+      must be installed:<programlisting>snort dead but subsys locked</programlisting></para>
+
+      <para>Snort should be running using MySQL.</para>
+
+      <section>
+        <title>Tuning the Snort Database</title>
+
+        <para>The OSSIM Team has already implemented indexing on Snort
+        Database to speed up Snort when it is looking for data.</para>
+
+        <section>
+          <title>Improving MySql Performance by increasing buffer
+          sizes.</title>
+
+          <para>The main parameters that can improve the performance of MySql
+          are key_buffer_size and table_cache However you need to have
+          adequate memory to do this. This assumes that you have at least
+          512MB. To do this we need to create an option file call
+          /var/lib/mysql/my.cnf The main config file for mysql is
+          /etc/init.d/mysql and will use options setup in
+          my.cnf<programlisting>mysql -h localhost -u root -p
+Password:</programlisting> To get a list of the options set in
+          MySql:<programlisting>mysql&gt; show variables;</programlisting>Look
+          for:<programlisting>| key_buffer_size                 | 8388600
+| table_cache                     | 64</programlisting><programlisting>mysql&gt; exit</programlisting>
+          Now we will create a options config file for MySql and change the
+          two above parameters.<programlisting>vi /var/lib/mysql/my.cnf</programlisting>Insert:<programlisting># The following values assume you have at least 512MB of ram
+# This changes the following variables in MySql
+# Hopefully to improve the performance of OSSIM
+# You may want to play with various settings depending on your specific configuration
+[mysqld]
+set-variable = key_buffer_size=96M
+set-variable = table_cache=128</programlisting> Restart MySql:<programlisting>service mysql restart</programlisting>
+          Go back and check if the variables have changed:<programlisting>mysql -h localhost -u root -p
+Password:</programlisting>To get a list of the options set in
+          MySql:<programlisting>mysql&gt; show variables;</programlisting>Look
+          for:<programlisting>| key_buffer_size                 | 100663296
+| table_cache                     | 128</programlisting><programlisting>mysql&gt; exit</programlisting>You
+          may want to see what the performance is and tune them accordingly.
+          Reference this site for a detailed explanation of tuning
+          MySql:</para>
+
+          <para><link linkend="???"><ulink
+          url="http://dev.mysql.com/doc/mysql/en/Server_parameters.html">http://dev.mysql.com/doc/mysql/en/Server_parameters.html</ulink></link></para>
+
+          <para></para>
+        </section>
+      </section>
+
+      <section>
+        <title>Checking Snort</title>
+
+        <para>Run this command to test that Snort is logging to
+        fast.log:<programlisting>telnet &lt;OSSIM_host IP address&gt; 80
+GET /cmd.exe HTTP/1.1</programlisting> Then check if logged:<programlisting>tail -10 /var/log/snort/fast.log</programlisting>Should
+        see:<programlisting>10/31-09:26:23.866885  [**] [119:4:1] (http_inspect) BARE BYTE UNICODE ENCODING</programlisting>
+        We want to make sure that Snort is logging data in the database: From
+        another computer ping your snort box where XXX.XXX.XXX.XXX is the IP
+        address of the snort box:<programlisting>ping -n 1 -f XXX.XXX.XXX.XXX</programlisting>And:<programlisting>ping -n 1 -j XXX.XXX.XXX.XXX XXX.XXX.XXX.XXX</programlisting>
+        Now lets go look in the snort database:<programlisting>mysql -h localhost -u root -p
+Enter password:</programlisting><programlisting>mysql&gt; use snort;
+Database changed</programlisting><programlisting>mysql&gt; select * from sig_class;</programlisting>Should
+        result in:<programlisting>+--------------+-------------------------+
+|            1 | attempted-admin         |
+|            2 | protocol-command-decode |
+|            3 | misc-activity           |
++--------------+-------------------------+
+3 rows in set (0.00 sec)</programlisting> And check this:<programlisting>mysql&gt; select * from signature;</programlisting>You
+        should see these two ping entries (and if your on the Internet -
+        likely alot more):<programlisting>+--------+-------------------+--------------+--------------+---------+---------+
+| sig_id | sig_name          | sig_class_id | sig_priority | sig_rev | sig_sid |
++--------+-------------------+--------------+--------------+---------+---------+
+|      1 | ICMP PING         |            1 |            3 |       5 |     384 |
+|      2 | ICMP Echo Reply   |            1 |            3 |       5 |     408 |
+|      3 | ICMP PING Windows |            1 |            3 |       7 |     382 |
++--------+-------------------+--------------+--------------+---------+---------+
+3 rows in set (0.00 sec)</programlisting><programlisting>mysql&gt; exit</programlisting></para>
+
+        <para>So here Snort is working properly with MySql.
+        Congradulations!</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Acid</title>
+
+      <para>We already created the database tables for ACID in the above
+      steps. Edit acid.conf<programlisting>vi  /var/www/acid/acid_conf.php</programlisting>
+      Find (line 12):<programlisting>$DBlib_path = "";</programlisting>Change
+      to:<programlisting>$DBlib_path = "/var/www/adodb";</programlisting> Find
+      (line 32):<programlisting>$alert_dbname   = "snort_log";
+$alert_host     = "localhost";
+$alert_port     = "";
+$alert_user     = "root";
+$alert_password = "mypassword";</programlisting>Change to:<programlisting>$alert_dbname   = "snort";
+$alert_host     = "localhost";
+$alert_port     = "";
+$alert_user     = "ossim";
+$alert_password = "YOURPASSWORD";</programlisting> Find (line
+      39):<programlisting>$archive_dbname   = "snort_archive";
+$archive_host     = "localhost";
+$archive_port     = "";
+$archive_user     = "root";
+$archive_password = "mypassword";</programlisting>Change to:<programlisting>$archive_dbname   = "snort_archive";
+$archive_host     = "localhost";
+$archive_port     = "";
+$archive_user     = "ossim";
+$archive_password = "YOURPASSWORD";</programlisting> Find (line
+      81):<programlisting>$ChartLib_path = "";</programlisting>Change
+      to:<programlisting>$ChartLib_path = "/var/www/jpgraph-1.16";</programlisting>Save
+      and close this file.</para>
+
+      <para>Edit the jpgraph configuration to activate cache and point to
+      right truetype font file.<programlisting>vi /var/www/jpgraph-1.16/jpg-config.inc</programlisting>Find
+      (line 39) and uncomment like below:<programlisting>DEFINE("CACHE_DIR","/tmp/jpgraph_cache/");
+DEFINE("TTF_DIR","/usr/X11R6/lib/X11/fonts/truetype/");</programlisting><note>
+          <para>You true type fonts may be at /usr/X11R6/lib/X11/fonts/TTF/ so
+          may have to change line 40 like below, but check first:</para>
+        </note><programlisting>DEFINE("TTF_DIR","/usr/X11R6/lib/X11/fonts/TTF/");</programlisting>Save
+      and close this file. Now we will make a tmp directory for jpgraph and
+      give access to Apache:<programlisting>mkdir /tmp/jpgraph_cache
+chown apache /tmp/jpgraph_cache
+chmod 1711 /tmp/jpgraph_cache</programlisting> Now setup Apache to restrict
+      access:<programlisting>htpasswd  /var/www/acid-users ACID
+New password: YOURPASSWORD</programlisting><programlisting>cd /var/www
+chown apache acid-users
+chmod 400 acid-users</programlisting> Edit acid.conf for
+      apache:<programlisting>vi /etc/httpd/conf.d/acid.conf</programlisting>Add
+      or modify to look like the following (Notice Alias and Directory are
+      changed):<programlisting>Alias /acid "/var/www/acid"
+&lt;Directory /var/www/acid&gt;
+  AuthType Basic
+  AuthName ACID
+  AuthUserFile /var/www/acid-users
+  Require valid-user
+  AllowOverride None
+&lt;/Directory&gt;</programlisting>Save and close this file.</para>
+
+      <para>Give ownership to Apache:</para>
+
+      <para><programlisting>chown -R apache.apache /var/www/acid/</programlisting></para>
+
+      <para>Restart Apache<programlisting>service httpd restart</programlisting>
+      Now got to:<programlisting>http://localhost/acid/acid_main.php
+Enter username: ACID
+password: YOURPASSWORD</programlisting>You should see the Analysis Console for
+      Intrusion Databases webpage.<note>
+          <para>If you do not see any red lines or all numbers are zero then
+          likely ACID is not able to access the snort database. Likely the
+          problem is the setup of access to the snort database. ACID does not
+          give you any errors if it cannot access the databases, just blank
+          data. If you have this problem, go back and review your installation
+          procedure since OSSIM is very dependant on Snort and ACID working
+          properly.</para>
+        </note>You now have a fully functional Snort with ACID system.</para>
+    </section>
+
+    <section>
+      <title>NTop</title>
+
+      <para>Your have to edit ntop.conf and then set the NTop password. All
+      the parameters should be okay, but let's check:<programlisting>vi /etc/ntop.conf</programlisting>
+      If you want NTop to monitor more than eth0 then you can change this
+      setting: NOTE: If you do not have two NIC's then don't put two here -
+      NTop will not work. Find (line 28) and uncomment and add your NIC's like
+      below:<programlisting>--interface eth0,eth1</programlisting>Save and
+      close this file.</para>
+
+      <para>Execute the following command in order to enter the admin password
+      and follow the instructions:<programlisting>ntop /etc/ntop.conf -A</programlisting>Should
+      result in:<programlisting>Fri May 27 09:34:38 2005  Initializing gdbm databases
+Please enter the password for the admin user: YOURPASSWORD
+Please enter the password again: YOURPASSWORD
+Fri May 27 09:34:50 2005  Admin user password has been set</programlisting>
+      Now change ntop.conf back to run in daemon mode.<programlisting>vi /etc/ntop.conf</programlisting>Find
+      (line 58) and uncomment like below:<programlisting>--daemon</programlisting></para>
+
+      <para>Start NTop:<programlisting>service ntop start</programlisting>
+      Check Setup that ntop is set to start on startup:<programlisting>chkconfig ntop on</programlisting>
+      And check the status:<programlisting>service ntop status</programlisting>
+      Which should return:<programlisting>ntop (pid 25233) is running...</programlisting>
+      Now go to<programlisting> http://localhost:3000/</programlisting>You
+      should see the Welcome to ntop! webpage.</para>
+
+      <para>This should take you to the ntop administration webpage. We now
+      want to limit all from anonymous access.<programlisting>Click on Admin --&gt; Configure --&gt; Protect URLS
+enter username: admin
+password: YOURPASSWORD
+ --&gt; Add URLS (leaving the field above blank)</programlisting>Now only the
+      admin user can login and view ntop data. Now restart
+      ntop<programlisting>service ntop restart</programlisting>And setup start
+      on reboot:<programlisting>chkconfig ntop on</programlisting> So far so
+      good!</para>
+    </section>
+
+    <section>
+      <title>OSSIM Server</title>
+
+      <para>Edit this file:<programlisting>vi /etc/ossim/server/config.xml</programlisting>Find
+      line 5 and make sure that your inteface is correct:<programlisting>&lt;sensor name="server" ip="127.0.0.1" interface="eth0"/&gt;</programlisting>Find
+      line 7 and change like below:<programlisting>&lt;datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=ossim;PASSWORD=YOURPASSWORD;DATABASE=ossim;HOST=localhost"/&gt;</programlisting>Find
+      line 8 and change like below:<programlisting>&lt;datasource name="snortDS" provider="MySQL" dsn="PORT=3306;USER=ossim;PASSWORD=YOURPASSWORD;DATABASE=snort;HOST=localhost"</programlisting></para>
+
+      <para>You can also set to notify you by email on line 17, also uncomment
+      this section by removing the &lt;!--- before and the --&gt; after this
+      section.</para>
+
+      <para>Save and close this file.</para>
+
+      <para>Start the OSSIM Server to test:<programlisting>ossim-server -c /etc/ossim/server/config.xml</programlisting>Results
+      should be no errors, if you get errors, go back and check your settings.
+      We will setup this up to automatically start in daemon mode
+      later.<programlisting>Control C to exit.</programlisting> Now start it
+      to run in daemon mode:<programlisting>ossim-server -d -c /etc/ossim/server/config.xml</programlisting>The
+      OSSIM Server is now running. Later we will setup this up to start
+      automatically.</para>
+    </section>
+
+    <section>
+      <title>OSSIM Agent</title>
+
+      <para>This will install the OSSIM Agent on the OSSIM Server. You need
+      this sensor to remotely monitor networks and hosts. The OSSIM Agent can
+      be installed on other systems that you also want to monitor. This file
+      also allows you to select and activate plugins. Edit this
+      file:<programlisting>vi  /etc/ossim/agent/config.xml </programlisting>
+      Find line 9 and make sure that your interface is
+      correct:<programlisting>    &lt;!ENTITY    interface  "eth0" &gt;</programlisting>
+      Find line 12 and change like below:<programlisting>    &lt;!ENTITY    ossim_db   "mysql:localhost:ossim:ossim:YOURPASSWORD" &gt;</programlisting>Save
+      and close this file.</para>
+
+      <para>Edit this file to correct the problem with snort:<programlisting>vi /etc/ossim/agent/plugins/snort.xml</programlisting></para>
+
+      <para>Find line 11 - 12 and change like below - snort to snortd:
+      <programlisting>    &lt;startup&gt;/etc/init.d/snortd start&lt;/startup&gt;
+    &lt;shutdown&gt;/etc/init.d/snortd stop&lt;/shutdown&gt;</programlisting>Save
+      and close this file.</para>
+
+      <para></para>
+
+      <para>Edit this file:<programlisting>vi /etc/ossim/framework/ossim.conf</programlisting>
+      Line 7, check to make sure the interface is correct:<programlisting>ossim_interface=eth0</programlisting>
+      Line 12 and change db configuration like below:<programlisting># OSSIM db configuration
+#################################################
+ossim_type=mysql
+ossim_base=ossim
+ossim_user=ossim
+ossim_pass=YOURPASSWORD
+ossim_host=localhost
+ossim_port=3306</programlisting> Line 22 and change the db configuration for
+      phpGACL like below:<programlisting># OSSIM control access list configuration (phpGACL)
+##################################################
+phpgacl_path=/usr/share/phpgacl/
+phpgacl_type=mysql
+phpgacl_host=localhost
+phpgacl_base=ossim_acl
+phpgacl_user=ossim
+phpgacl_pass=YOURPASSWORD</programlisting>Save and close this file. Start
+      OSSIM agent:<programlisting>ossim-agent -c /etc/ossim/agent/config.xml</programlisting>Results
+      should be:<programlisting> (-&gt;)  pyossim.Agent (2005-06-07 14:23:18):     Waiting for server...
+ (&lt;-)  pyossim.Agent (2005-06-07 14:23:18):     Server connected
+
+/usr/share/ossim/scripts/rrd_plugin.pl: forking into background...
+pads - Passive Asset Detection System
+v1.1.3 - 09/30/04
+Matt Shelton &lt;matt@mattshelton.com&gt;
+
+[-] Daemonizing...
+p0f - passive os fingerprinting utility, version 2.0.5
+(C) M. Zalewski &lt;lcamtuf@dione.cc&gt;, W. Stearns &lt;wstearns@pobox.com&gt;
+p0f: listening (SYN) on 'eth0', 231 sigs (13 generic), rule: 'all'.
+pads - Passive Asset Detection System
+v1.1.3 - 09/30/04
+Matt Shelton &lt;matt@mattshelton.com&gt;
+
+[-] Daemonizing...</programlisting><programlisting>Control C to exit.</programlisting>
+      Now start the OSSIM Agent in daemon mode:<programlisting>ossim-agent -d -c /etc/ossim/agent/config.xml</programlisting>
+      So the OSSIM Agent and OSSIM Server should both be running. To
+      check:<programlisting>ps -A |grep ossim</programlisting></para>
+
+      <para>Should result in:<programlisting>22663 pts/4    00:00:03 ossim-server
+23052 pts/4    00:00:05 ossim-agent</programlisting>If not, then either the
+      ossim server or ossim agent are not running. You should troubleshoot
+      what the problem is.</para>
+    </section>
+
+    <section>
+      <title>PHPGACL Installation Summary</title>
+
+      <para>Provides granular access control for OSSIM. We will use the ossim
+      database that has been loaded with the phpgacl tables and the following
+      installs and configures phpgacl that ossim will use. Edit this
+      file.<programlisting>vi /usr/share/phpgacl/gacl.class.php</programlisting>
+      Find line 70 and change like below:<programlisting>var $_db_user = 'ossim';</programlisting>
+      Find line 73 and insert your db password:<programlisting>var $_db_password = 'YOURPASSWORD;</programlisting>
+      Find line 76 and change like below:<programlisting>var $_db_name = 'ossim_acl';</programlisting>Save
+      and close this file.</para>
+
+      <para>Edit this file:<programlisting>vi /usr/share/phpgacl/admin/gacl_admin.inc.php</programlisting>
+      Find line 42-44 and change like below:<programlisting>'db_user' =&gt; 'ossim',
+'db_password' =&gt; 'YOURPASSWORD',
+'db_name' =&gt; 'ossim_acl',</programlisting>Save and close this file.</para>
+
+      <para>Create phpgacl/admin/templates_c directory and make it accessible
+      to apache:<programlisting>mkdir /usr/share/phpgacl/admin/templates_c
+chown -R apache:apache /usr/share/phpgacl/admin/templates_c</programlisting>
+      Restart Apache:<programlisting>service httpd restart</programlisting>
+      Setup Apache to restart on reboot and startup:<programlisting>chkconfig httpd on</programlisting>
+      Go to the following and follow the instructions:<programlisting>http://localhost/phpgacl/setup.php </programlisting>
+      When you get the admim page. Select ACL Test. If you get a blank page
+      then you have a problem. Go back and check the ossim database
+      installation and the phpgacl installation procedures.</para>
+
+      <para><note>
+          <para>This web interface will no longer work AFTER you load the
+          phpgacl information with the OSSIM initialization script.</para>
+        </note>Success! Congradulations!</para>
+    </section>
+
+    <section>
+      <title>OSSIM Framework</title>
+
+      <para>Update OSSIM database with the rules of your
+      system:<programlisting>/usr/share/ossim/scripts/create_sidmap.pl /etc/snort/rules | \
+mysql -u root ossim -p
+Password:</programlisting>Make these directories. If you don't when you reboot
+      you will fill your disk with error messages from
+      ossim-framework:<programlisting>mkdir /usr/share/ossim/mrtg/host_qualification 
+mkdir /usr/share/ossim/mrtg/net_qualification 
+mkdir /usr/share/ossim/mrtg/global_qualification 
+mkdir /usr/share/ossim/mrtg/level_qualification</programlisting></para>
+
+      <para>Edit this file:<programlisting>vi /etc/httpd/conf.d/ossim.conf</programlisting>
+      Comment out line 7 like below since if you have other settings in
+      php.ini this will create conflicts and you will not be able to access
+      the web pages.<programlisting>#    php_value include_path .:/usr/share/ossim/include/</programlisting>Save
+      and close this file. Edit php.ini:<programlisting>vi /etc/php.ini</programlisting>
+      Find (line 426) and change like below. Notice there are two include
+      paths in this case and they must be setup all on one line.
+      <programlisting>include_path = ".:/usr/share/pear.:/usr/share/ossim/include/"</programlisting>Save
+      and exit this file.</para>
+
+      <para>Restart Apache</para>
+
+      <para><programlisting>service httpd restart</programlisting>Start the
+      framework:<programlisting>ossim-framework</programlisting> Results
+      should be:<programlisting>Fetching /var/www/acid//acid_update_db.html from "http://ossim:ossim@127.0.0.1/ossim//session/login.php?dest=/acid//acid_update_db.php&amp;user=admin&amp;pass=admin"
+Fetching /var/www/acid//acid_stat_ports2.html from "http://ossim:ossim@127.0.0.1/ossim//session/login.php?dest=/acid//acid_stat_ports.php?port_type=2%26proto=-1%26sort_order=dip_d&amp;user=admin&amp;pass=admin"
+Fetching /var/www/acid//acid_stat_uaddr1.html from "http://ossim:ossim@127.0.0.1/ossim//session/login.php?dest=/acid//acid_stat_uaddr.php?addr_type=1%26sort_order=occur_d&amp;user=admin&amp;pass=admin"
+Fetching /var/www/acid//acid_stat_alerts.html from "http://ossim:ossim@127.0.0.1/ossim//session/login.php?dest=/acid//acid_stat_alerts.php?sort_order=occur_d&amp;user=admin&amp;pass=admin"
+Fetching /var/www/acid//acid_stat_uaddr2.html from "http://ossim:ossim@127.0.0.1/ossim//session/login.php?dest=/acid//acid_stat_uaddr.php?addr_type=2%26sort_order=occur_d&amp;user=admin&amp;pass=admin"
+updating gdi (day):     C=0.000000, A=0.000000
+updating gdi (week):            C=1.000000, A=1.000000
+updating gdi (month):           C=1.000000, A=1.000000
+updating gdi (year):            C=0.000000, A=0.000000
+updating global_admin (day):            C=1.000000, A=1.000000
+updating global_admin (week):           C=1.000000, A=1.000000
+updating global_admin (month):          C=1.000000, A=1.000000
+updating global_admin (year):           C=1.000000, A=1.000000
+updating global_kennyg (day):           C=0.000000, A=0.000000
+updating global_kennyg (week):          C=1.000000, A=1.000000
+updating global_kennyg (month):         C=1.000000, A=1.000000
+updating global_kennyg (year):          C=1.000000, A=1.000000
+updating global_ken (day):      C=0.000000, A=0.000000
+updating global_ken (week):     C=1.000000, A=1.000000
+updating global_ken (month):            C=1.000000, A=1.000000
+updating global_ken (year):     C=1.000000, A=1.000000
+updating level (day):  C=100.0%, A=100.0%
+updating level_admin (week):  C=99.9385858586%, A=99.9385858586%
+updating level_admin (month):  C=100.0%, A=100.0%
+updating level_admin (year):  C=100.0%, A=100.0%
+updating level (day):  C=0%, A=0%
+updating level_ken (week):  C=99.8573446328%, A=99.8573446328%
+updating level_ken (month):  C=99.8858757062%, A=99.8858757062%
+updating level_ken (year):  C=100.0%, A=100.0%
+updating level (day):  C=0%, A=0%
+updating level_kennyg (week):  C=99.9992907801%, A=99.9992907801%
+updating level_kennyg (month):  C=99.8683181226%, A=99.8683181226%
+updating level_kennyg (year):  C=100.0%, A=100.0%
+
+Control panel update finished at 2005-06-07 14:42:26
+Next iteration in 300 seconds...</programlisting><programlisting>Control C to stop.</programlisting>
+      And now start in daemon mode:<programlisting>ossim-framework -d</programlisting>
+      See if all the ossim components are running:<programlisting>ps -A |grep ossim</programlisting>
+      Results should be:<programlisting>22663 pts/4    00:00:03 ossim-server
+23052 pts/4    00:00:05 ossim-agent
+24668 pts/6    00:00:00 ossim-framework</programlisting> To stop any of the
+      above:<programlisting>kill &lt;job#&gt;</programlisting> Go
+      to:<programlisting>http://localhost/ossim</programlisting> Follow the
+      instructions and then login as:<programlisting>username: admin
+password: admin</programlisting> If you see the pretty OSSIM home page: Wow!
+      Now this is very important. If you run phpgacl setup again, you will
+      loose access to ossim and will have redo the ossim_acl
+      database.<programlisting>chown 000 /usr/share/phpgacl/setup.php</programlisting></para>
+    </section>
+
+    <section>
+      <title>OSSIM Variables</title>
+
+      <para>Here you can set the variables so they are static and can't be
+      changed. The other way is trough the Configuration page in the OSSIM web
+      interface. But I would rather do it this way.<programlisting>vi /etc/ossim/framework/ossim.conf</programlisting>
+      And set like below (line 37). Uncomment the ones that you want to be
+      changed to the static setting. Or easier just cut out the section in
+      ossim.conf and paste in this one:<programlisting>#
+# 
+# The following variables are managed via web interface by default (recommended)
+# The values declared here override the web ones.
+# 
+#
+#
+# #################################################
+# # SNORT db configuration
+# # (look at snort.conf)
+# #################################################
+#
+snort_type=mysql
+snort_base=snort
+snort_user=ossim
+snort_pass=YOURPASSWORD
+snort_host=localhost
+snort_port=3306
+#
+# #################################################
+# # OpenNMS db configuration
+# #################################################
+# opennms_type=postgres
+# opennms_base=
+# opennms_user=
+# opennms_pass=
+# opennms_host=
+# opennms_port=
+#
+# #################################################
+# # Backup db
+# # (look at snort.conf)
+# #################################################
+#
+backup_type=mysql
+backup_base=snort_archive
+backup_user=ossim
+backup_pass=YOURPASSWORD
+backup_host=localhost
+backup_port=3306
+backup_dir=/var/lib/ossim/backup
+backup_day=5
+#
+# #################################################
+# #################################################
+# # Nessus Configuration
+# #################################################
+#
+nessus_user=ossim
+nessus_pass=YOURPASSWORD
+nessus_host=localhost
+nessus_port=1241
+nessus_path=/usr/bin/nessus
+nessus_rpt_path=/usr/share/ossim/www/vulnmeter
+# Whether to ignore nessus_host &amp; distribute the scans between sensors (1 = YES, 0 = NO)
+nessus_distributed=0
+#
+# #################################################
+# # Server
+# #################################################
+server_address=localhost
+server_port=40001
+#
+#
+# #################################################
+# # Paths
+# #################################################
+#
+snort_path=/etc/snort/
+snort_rules_path=/etc/snort/rules/
+rrdtool_path=/usr/bin/
+rrdtool_lib_path=/usr/lib/perl5/
+mrtg_path=/usr/bin/
+jpgraph_path=/var/www/jpgraph-1.16/
+fpdf_path=/usr/share/fpdf/
+mrtg_rrd_files_path=/usr/share/ossim/mrtg/
+nmap_path=/usr/bin/nmap
+p0f_path=/usr/sbin/p0f
+arpwatch_path=/usr/sbin/arpwatch
+mail_path=/usr/sbin/sendmail
+touch_path=/usr/bin/tail
+wget_path=/usr/bin/wget
+rrdpath_host=/var/lib/ossim/rrd/host_qualification/
+rrdpath_net=/var/lib/ossim/rrd/net_qualification/
+rrdpath_global=/var/lib/ossim/rrd/global_qualification/
+rrdpath_level=/var/lib/ossim/rrd/level_qualification/
+rrdpath_ntop=/var/ntop/rrd
+font_path=/usr/share/ossim/fonts/Vera.ttf
+#
+# #################################################
+# # Links to other applications
+# #################################################
+#
+ntop_link=http://&lt;www.yourwebserver.com&gt;:3000
+# ntop_link_ext=
+opennms_link=http://&lt;www.yourwebserver.com&gt;:8080/opennms/
+graph_link=/cgi-bin/draw_graph.pl
+acid_link=http://&lt;www.yourwebserver.com&gt;/acid/
+acid_user=ACID
+acid_pass=YOURPASSWORD
+acid_path=/var/www/acid
+ossim_web_user=admin
+ossim_web_pass=YOURPASSWORD
+#</programlisting> Save and exit this file.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Firewalls and Ports</title>
+
+    <para>Add port 40001 to /etc/services:<programlisting>vi /etc/services</programlisting>
+    Add to the bottom or in numeric order so you can find it again (after asp
+    27374/udp - line 587):<programlisting>ossim-agent     40001/tcp                       #ossim-agent
+ossim-agent     40001/udp                       #ossim-agent</programlisting>Close
+    and exit this file. Restart xinetd<programlisting>/etc/rc.d/init.d/xinetd restart</programlisting>
+    Open port 40001 for the ossim-agent to work. The easiest way way is to go
+    to:<programlisting>System Settings --&gt; Security Level and add 40001:tcp to the Other ports: box</programlisting>And
+    lets add remote access to ntop while we are here:</para>
+
+    <para>Add:<programlisting>3000:tcp</programlisting> So mine looks like
+    this (notice the comma between each port):<programlisting>443:tcp, 40001:tcp, 3000:tcp</programlisting>
+    If you run another firewall; you will have to configure it accordingly. I
+    run shorewall so for shorewall: Add this port to the
+    /etc/shorewall/rules<programlisting>vi /etc/shorewall/rules</programlisting>
+    Add well before the last line (somewhere where these rules already are so
+    you can find them all later):<programlisting>#
+#       Accept OSSIM-Agent connections
+ACCEPT          loc             fw              tcp     40001
+#
+#To allow remote access to Ntop add this to rules also:
+#
+#Ntop remote access from Internet and local lan
+#
+ACCEPT  net     $FW     tcp      3000   -       -       -       -
+ACCEPT  loc     $FW     tcp      3000   -       -       -       -</programlisting>Save
+    and exit this file. Check shorewall:<programlisting>shorewall check</programlisting>Should
+    see:<programlisting>Rule "ACCEPT net fw tcp 40001 - - - -" added.</programlisting>
+    Restart shorewall:<programlisting>service shorewall restart</programlisting>
+    That's it!</para>
+  </chapter>
+
+  <chapter>
+    <title>Other Applications</title>
+
+    <para>The following are other applications that have linked and/or
+    integrated into OSSIM.</para>
+
+    <section>
+      <title>Scanmap3D</title>
+
+      <para>Scanmap is a 3d Visualisation for Snort alerts. It requires two
+      components, Java3D and Scanmap3d. You must have Java 1.4 or above
+      installed for this to work. Java3D SDK<programlisting>cd /usr/java/jdk1.5.0_03
+wget http://ftp.tux.org/pub/java/java3d/1.3.1/i386/fcs/java3d-sdk-1.3.1-linux-i386.bin</programlisting>Unpack
+      and install:<programlisting>cd /usr/java/jdk1.5.0_03
+sh java3d-sdk-1.3.1-linux-i386.bin</programlisting> Run the demo program to
+      see if it working:<programlisting>cd /usr/java/jdk1.5.0_03/demo/java3d/HelloUniverse
+java HelloUniverse</programlisting>You should see a 3D spinning box. If not -
+      well?</para>
+
+      <para>Scanmap3D</para>
+
+      <para><programlisting>cd /usr/share
+wget  http://unc.dl.sourceforge.net/sourceforge/scanmap3d/scanmap3d-3.0.tar.gz
+tar -xvzf scanmap3d-3.0.tar.gz</programlisting> Now edit the scanmap3d.conf
+      file to reflect your network and database settings.<programlisting>vi /usr/share/scanmap3d-3.0/scanmap3d.conf</programlisting>And
+      enter the snort database settings like below and you network
+      settings:<programlisting>#
+# Information for mysql connection
+dbname=snort
+username=ossim
+password=YOURPASSWORD
+host=127.0.0.1
+# Information for network layout
+# These four values define internal networks,
+# they must be defined using /mask notation
+# with either /32,/24,/16,/8.
+#
+inside1=192.168.0.0/16
+inside2=10.245.0.0/16
+inside3=10.244.0.0/16
+inside4=10.168.3.0/24
+# The next four IP Addresses appear on the firewall
+# they can also be defined with /* netmasks.
+gateway1=192.168.0.1
+gateway2=192.168.10.0
+gateway3=192.168.12.1
+gateway4=192.168.13.1</programlisting><note>
+          <para>You cannot comment out any of the network settings or change
+          the number of networks. If you do, the program will not work.</para>
+        </note>Run<programlisting>java -cp mm.mysql-2.0.14-bin.jar:. scanmap3d</programlisting>You
+      should at least get a picture of a brick wall.</para>
+
+      <para>I have only got this to work once, now I get this error:</para>
+
+      <para><programlisting>Exception in thread "main" java.lang.NoClassDefFoundError: scanmap3d</programlisting></para>
+
+      <para>In OSSIM, scanmap3D is setup in the Configuration Section.
+      However, I have no idea how it works or is accessed in OSSIM.</para>
+    </section>
+
+    <section>
+      <title>Self Signed Server Certificate</title>
+
+      <para>The following procedure will create a self-signed server
+      certificate so you can run https since all access to OSSIM will be
+      https. NOTE: ONLY DO THIS IS YOU DO NOT HAVE A CERTIFICATE FOR YOUR WEB
+      SERVER. Self Signed Server Certificate Generation This will generate a
+      self signed certificate for your webserver.<programlisting>cd /etc/httpd/conf</programlisting>Remove
+      current certificates:<programlisting>rm ssl.key/server.key ssl.crt/server.crt</programlisting>Create
+      server key:<programlisting>/usr/bin/openssl genrsa 1024 &gt; ssl.key/server.key</programlisting>Make
+      readable and writable only by root:<programlisting>chmod 600 ssl.key/server.key</programlisting>
+      Change the Makefile to make certificates that are good for 10
+      years:<programlisting>vi Makefile</programlisting>Find (line
+      33):<programlisting>/usr/bin/openssl req -newkey rsa:1024 -keyout $$PEM1 -nodes -x509 -days 365 -out $$PEM2 ; \</programlisting>Change
+      to: <programlisting>/usr/bin/openssl req -newkey rsa:1024 -keyout $$PEM1 -nodes -x509 -days 3650 -out $$PEM2 ; \</programlisting>
+      Find (line 49):<programlisting>/usr/bin/openssl req -new -key $^ -x509 -days 365 -out $@</programlisting>Change
+      to:<programlisting>
+/usr/bin/openssl req -new -key $^ -x509 -days 3650 -out $@</programlisting>
+      Find (line 65):<programlisting>/usr/bin/openssl req -new -key $(KEY) -x509 -days 365 -out $(CRT)</programlisting>Change
+      to:<programlisting>/usr/bin/openssl req -new -key $(KEY) -x509 -days 3650 -out $(CRT)</programlisting>Close
+      and save this file. Make certificate - answer the
+      questions:<programlisting>make testcert</programlisting> Remove
+      certificate password:<programlisting>cd /etc/httpd/conf/ssl.key
+/usr/bin/openssl rsa -in server.key -out server.key</programlisting> Restart
+      Apache<programlisting>service httpd restart</programlisting></para>
+
+      <para>Now you should be able to setup https access.</para>
+    </section>
+
+    <section>
+      <title>Acid Addons</title>
+
+      <para>These must be added after all the above has been done.</para>
+
+      <section>
+        <title>Acid Cache Auto Update</title>
+
+        <para>We already setup a database for acid cache, snort_archive. This
+        will cache snort data every 5 days (which is setup in OSSIM). OSSIM
+        also lets you load archived databases.</para>
+
+        <para>In order to auto-update the acid cache:<programlisting>vi /var/www/acid/acid_conf.php</programlisting>Find
+        (line 205):<programlisting>$event_cache_auto_update = 1;</programlisting>Change
+        to:<programlisting>$event_cache_auto_update = 0;</programlisting>Save
+        and close this file.</para>
+
+        <para>Execute the following script, that auto updates the acid cache,
+        it should run with no errors:<programlisting>/usr/share/ossim/scripts/acid_cache.pl</programlisting>We
+        will add this to /etc/rc.local in future steps.</para>
+      </section>
+
+      <section>
+        <title>Oinkmaster Installation Procedure</title>
+
+        <para>Oinkmaster provides automatic updating of Snort rules. Download
+        Oinkmaster to /downloads/ossim from:<programlisting>http://oinkmaster.sourceforge.net/download.shtml</programlisting><programlisting>cd /downloads/ossim
+tar -zxvf oinkmaster-1.2.tar.gz
+cd /downloads/ossim/oinkmaster-1.2</programlisting> Install in /etc/snort
+        directory<programlisting>cp /downloads/ossim/oinkmaster-1.2/oinkmaster.pl /etc/snort/
+cp /downloads/ossim/oinkmaster-1.2/oinkmaster.conf /etc/snort/</programlisting>
+        Edit <programlisting>vi /etc/snort/oinkmaster.pl</programlisting>Find
+        (line 133-4):<programlisting>/etc/oinkmaster.conf
+/usr/local/etc/oinkmaster.conf</programlisting>Change line 133 to the
+        following and delete line 134 like below:<programlisting>/etc/snort/oinkmaster.conf</programlisting>Save
+        and close this file.</para>
+
+        <para>Go to snort.org and register to get an oinkcode. This code is
+        now requirearded to use oinkmaster. &lt;oinkcode&gt; (This one will
+        not work - okay) 223434a91602b5021567c4576lkl98i4e6326 Edit
+        oinkmaster.conf<programlisting>vi /etc/snort/oinkmaster.conf</programlisting>
+        Find and make sure uncommented like this (line 61) and paste in your
+        oinkcode where indicated:<programlisting># Example for Snort 2.3
+url = http://www.snort.org/pub-bin/oinkmaster.cgi/&lt;oinkcode&gt;/snortrules-snapshot-2.3.tar.gz</programlisting>So
+        it look like this:</para>
+
+        <para><programlisting># Example for Snort 2.3
+url = http://www.snort.org/pub-bin/oinkmaster.cgi/223434a91602b5021567c4576lkl98i4e6326/snortrules-snapshot-2.3.tar.gz</programlisting>Save
+        and close this file. Try running it:<programlisting>/etc/snort/oinkmaster.pl -o /etc/snort/rules/</programlisting>
+        And restart snort:<programlisting>service snortd start</programlisting>
+        And check if running. If it is not, you may have loaded rules that
+        were not for the version of snort that you are
+        running:<programlisting>service snortd status</programlisting> Should
+        be:<programlisting>snort (pid 8086) is running...</programlisting> Add
+        to crontab:<programlisting>crontab -e</programlisting>
+        Add:<programlisting># Oinkmaster for Snort Rules Updates
+0 1 * * * /etc/snort/oinkmaster.pl -o /etc/snort/rules/</programlisting>Save
+        and close this file. So far all is okay.</para>
+      </section>
+
+      <section>
+        <title></title>
+
+        <para></para>
+      </section>
+    </section>
+
+    <section>
+      <title>NESSUS Installation</title>
+
+      <para>Nessus is not provided with OSSIM. You will have to download and
+      install Nessus seperately, then link it into OSSIM. There two Nessus
+      components, server and client. The server does the monitoring and the
+      client provides access to a Nessus server. We will install both. Install
+      Nessus Server &amp; Client<programlisting>apt-get install nessus nessus-server</programlisting>
+      Make Nessus Server certificate - follow the prompts:<programlisting>nessus-mkcert</programlisting>
+      Start the nessus service:<programlisting>service nessusd start</programlisting>
+      Check to see if in setup:<programlisting>chkconfig nessusd on</programlisting>
+      Check see if running:<programlisting>service nessusd status</programlisting>
+      Should return:<programlisting>nessusd (pid 2092) is running...</programlisting>
+      Create a Nessus user (Will add rules later so for the last step hit
+      Ctl-D)<programlisting>nessus-adduser</programlisting><programlisting>Using /var/tmp as a temporary file holder
+Add a new nessusd user
+----------------------
+Login : ossim
+Authentication (pass/cert) [pass] :
+Login password : YOURPASSWORD
+Login password (again) : YOURPASSWORD
+User rules
+----------
+nessusd has a rules system which allows you to restrict the hosts
+that nessus has the right to test. For instance, you may want
+him to be able to scan his own host only.
+Please see the nessus-adduser(8) man page for the rules syntax
+Enter the rules for this user, and hit ctrl-D once you are done :
+(the user can have an empty rules set)
+ctrl-D
+
+Login             : nessus
+Password          : ********
+DN                :
+Rules             :
+Is that ok ? (y/n) [y] y
+user added.</programlisting> If you want to remove a user from nessus, if you
+      want to change the password or for what ever reason:<programlisting>nessus-rmuser</programlisting>
+      Run the Nessus client gui using:<programlisting>nessus</programlisting><programlisting>Login: ossim 
+Password: YOURPASSWORD (this is required to initial load and read the certificate)
+Accept the certificate</programlisting>You can also run it from a link at
+      Redhat --&gt; Internet --&gt; Nessus Client:</para>
+
+      <para>That's it for Nessus, next is to integrate it into OSSIM.</para>
+
+      <section>
+        <title>Nessus in OSSIM</title>
+
+        <para>Configure Nessus in ossim.conf:<programlisting>vi /etc/ossim/framework/ossim.conf</programlisting>
+        Find (line 84) uncomment and insert the following like below. (This is
+        the username and password you created with Nessus
+        above):<programlisting>nessus_user=ossim
+nessus_pass=YOURPASSWORD
+nessus_host=localhost
+nessus_port=1241
+nessus_path=/usr/bin/nessus
+nessus_rpt_path=/usr/share/ossim/www/vulnmeter</programlisting> Find (line 91)
+        Make sure this line is set to 0 or you will not be able to do any
+        scans from this system:<programlisting>nessus_distributed=0</programlisting>Save
+        and close this file (by the way Insert allows you to edit, esc takes
+        you out of edit mode, then Shift-ZZ (double Z) saves and closes the
+        file). Edit this file:<programlisting>vi /usr/share/ossim/scripts/do_nessus.pl</programlisting>Find
+        (line 73):<programlisting>my $nessus_tmp = $nessus_rpt_path . "/tmp/";</programlisting>Change
+        to (removed the /):<programlisting>my $nessus_tmp = $nessus_rpt_path . "/tmp";</programlisting>Save
+        and close this file.</para>
+
+        <para>Run the Nessus setup scripts (This will load the nessus
+        rules):<programlisting>/usr/share/ossim/scripts/update_nessus_ids.pl</programlisting>
+        Setup the above scripts to start automatically:<programlisting>vi /etc/rc.local</programlisting>
+        Add:<programlisting>/usr/share/ossim/scripts/update_nessus_ids.pl</programlisting><programlisting>chown -R apache:apache /usr/share/ossim/www/vulnmeter</programlisting>
+        Run this script:<programlisting>/usr/share/ossim/scripts/do_nessus.pl</programlisting>It
+        should say this since there are no hosts to scan (Nessus scans take
+        along time to do):<programlisting>touch: cannot touch `/usr/share/ossim/www/vulnmeter/tmp/.nessusrc': No such file or directory
+Creating todays scan result dir
+No temp dir, creating
+The plugins that have the ability to crash remote services or hosts
+have been disabled. You should activate them if you want your security
+audit to be complete
+Deleting todays scan result dir
+Did you see the rm -rf within this code ? I hope you're scared by now.</programlisting><note>
+            <para>Nessus scan does not start from the web pages so you will
+            have run this script after you have installed some hosts to be
+            scanned. The results will show in the web pages.</para>
+          </note> The reports can be viewed from the main
+        interface:<programlisting>Control Panel -&gt; Vulnerabilites</programlisting>
+        You can add hosts to the host_scan table from the main
+        interface:<programlisting>Policy-&gt;Hosts</programlisting> If you got
+        this far with no errors, you have successfully installed alot of neat
+        stuff. I would reboot your system to make sure all is working and all
+        the components start.</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Nagios &amp; NagiosQL</title>
+
+      <para>Nagios is a system and network monitoring application. It is quite
+      complicated and difficult to configure but very extensive. There is a
+      program that we will also install that will simplify the configuration
+      of Nagios, NagiosQL. We will also link it into OSSIM.</para>
+
+      <section>
+        <title>Nagios</title>
+
+        <para>The rpms are from dag. Download Nagios:<programlisting>mkdir /downloads/nagios
+cd /downloads/nagios
+wget http://dag.wieers.com/packages/nagios/nagios-2.0-0.b3.1.1.fc3.test.i386.rpm
+wget http://dag.wieers.com/packages/nagios/nagios-devel-2.0-0.b3.1.1.fc3.test.i386.rpm</programlisting>
+        Install dependencies:<programlisting>apt-get install gd zlib libpng libjpeg gcc gcc34-java gtkglext </programlisting>
+        CPAN install the following:<programlisting>cpan
+cpan&gt; install DBI Net::SNMP CGI Apache::DBI
+
+cpan&gt; quit</programlisting> To get the 3-D Site Map to work you need vrml
+        for your Mozilla:<programlisting>cd /downloads/nagios
+wget ftp://ftp.pbone.net/mirror/ftp.gwdg.de/pub/linux/misc/packman/fedora/3/i386/openvrml-devel-0.15.6-0.pm.0.fc3.i386.rpm
+wget ftp://ftp.pbone.net/mirror/ftp.gwdg.de/pub/linux/misc/packman/fedora/3/i386/openvrml-gl-0.15.6-0.pm.0.fc3.i386.rpm
+wget ftp://ftp.pbone.net/mirror/ftp.gwdg.de/pub/linux/misc/packman/fedora/3/i386/openvrml-mozilla-plugin-0.15.6-0.pm.0.fc3.i386.rpm
+wget ftp://ftp.pbone.net/mirror/ftp.gwdg.de/pub/linux/misc/packman/fedora/3/i386/openvrml-0.15.6-0.pm.0.fc3.i386.rpm</programlisting>
+        Install the vrml components:<programlisting>rpm -Uvh openvrml-devel-0.15.6-0.pm.0.fc3.i386.rpm \
+openvrml-gl-0.15.6-0.pm.0.fc3.i386.rpm \
+openvrml-mozilla-plugin-0.15.6-0.pm.0.fc3.i386.rpm \
+openvrml-0.15.6-0.pm.0.fc3.i386.rpm </programlisting> Install
+        Nagios:<programlisting>cd /downloads/nagios
+rpm -Uvh nagios-2.0-0.b3.1.1.fc3.test.i386.rpm nagios-devel-2.0-0.b3.1.1.fc3.test.i386.rpm</programlisting>
+        Install nagios plugins with apt, requires dag
+        repository:<programlisting>apt-get install nagios-plugins</programlisting></para>
+
+        <para><emphasis role="bold">Configure Nagios</emphasis></para>
+
+        <para>Nagios is a daemon that must be running for any of the cgi
+        scripts on the web pages to function. So we will first get the nagios
+        daemon runnning. It uses the config files in /etc/nagios to run. Edit
+        this file. It is the minimal config file for Nagios and should bet
+        Nagios to at least start successfully: This version of Nagios has a
+        bad minimal.cfg file so we have to correct it by doing the
+        following:<programlisting>vi /etc/nagios/minimal.cfg</programlisting>Comment
+        out like below Line 59 - 62:<programlisting>#define command{
+#     command_name    notify-by-email
+#     command_line    /usr/bin/printf "%b" "***** Nagios  *****\n\nNotification Type: $NOTIFICATIONTYPE$\n\nService: $SERVICEDESC$\nHost: $HOSTALIAS$\nAddress: $HOSTADDRESS$\nState: $SERVICESTATE$\n\nDate/Time: $LONGDATETIME$\n\nAdditional Info:\n\n$OUTPUT$" | /bin/mail -s "** $NOTIFICATIONTYPE$ alert - $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ **" $CONTACTEMAIL$
+#     }</programlisting>Comment out like below Line 68 - 71:<programlisting>#define command{
+#     command_name    host-notify-by-email
+#     command_line    /usr/bin/printf "%b" "***** Nagios  *****\n\nNotification Type: $NOTIFICATIONTYPE$\nHost: $HOSTNAME$\nState: $HOSTSTATE$\nAddress: $HOSTADDRESS$\nInfo: $OUTPUT$\n\nDate/Time: $LONGDATETIME$\n" | /bin/mail -s "Host $HOSTSTATE$ alert for $HOSTNAME$!" $CONTACTEMAIL$
+#     }</programlisting>Comment out like below Line 76 - 79:<programlisting>#define command{
+#        command_name    check-host-alive
+#        command_line    $USER1$/check_ping -H $HOSTADDRESS$ -w 99,99% -c 100,100% -p 1
+#        }</programlisting>Comment out like below Line 84 -
+        87:<programlisting>#define command{
+#     command_name    check_ping
+#     command_line    $USER1$/check_ping -H $HOSTADDRESS$ -w $ARG1$ -c $ARG2$ -p 5
+#     }</programlisting>Comment out like below Line 92 - 95:<programlisting>#define command{
+#     command_name    check_local_disk
+#     command_line    $USER1$/check_disk -w $ARG1$ -c $ARG2$ -p $ARG3$
+#     }</programlisting>Comment out like below Line 101 - 104:<programlisting>#define command{
+#     command_name    check_local_users
+#     command_line    $USER1$/check_users -w $ARG1$ -c $ARG2$
+#     }</programlisting>Comment out like below Line 109 - 112:<programlisting>#define command{
+#     command_name    check_local_procs
+#     command_line    $USER1$/check_procs -w $ARG1$ -c $ARG2$
+#     }</programlisting>Comment out like below Line 117 - 120:<programlisting>#define command{
+#     command_name    check_local_load
+#     command_line    $USER1$/check_load -w $ARG1$ -c $ARG2$
+#     }</programlisting>Save and close this file.</para>
+
+        <para>Now will remove the authentication requirement for now so we can
+        see if Nagios is working. Edit this file:<programlisting>vi /etc/nagios/cgi.cfg</programlisting>Find
+        line 86 and change like below:<programlisting>use_authentication=0</programlisting>Save
+        and close this file.</para>
+
+        <para>Set File Ownership for Apache &amp; Nagios (Don't worry if you
+        get some errors, some of these files may not be
+        there):<programlisting>chmod -R 6755 /etc/nagios/
+chown -R apache.apache /etc/nagios
+
+chmod 644 /etc/nagios/*.cfg
+chmod 644 /etc/nagios/hosts/*.cfg
+chmod 644 /etc/nagios/services/*.cfg
+
+chown nagios.nagios /usr/bin/nagios
+chmod 750 /usr/bin/nagios
+ 
+chown -R apache.nagios /var/log/nagios/
+chmod 2770 /var/log/nagios/</programlisting> Check nagios
+        config:<programlisting>/usr/bin/nagios -v /etc/nagios/nagios.cfg</programlisting>Results
+        should be:<programlisting>Total Warnings: 0
+Total Errors:   0
+Things look okay - No serious problems were detected during the pre-flight check</programlisting>If
+        not, correct the problems that are identified. Start the nagios
+        daemon:<programlisting>service nagios start</programlisting> Set to
+        start on reboot:<programlisting>chkconfig nagios on</programlisting>See
+        if running:<programlisting>service nagios status</programlisting>Results
+        should be:<programlisting>  PID TTY          TIME CMD
+ 5590 ?        00:00:00 nagios</programlisting> If nagios is not running -
+        nothing else will work, so correct any errors before proceeding.
+        Restart Apache:<programlisting>service httpd restart</programlisting>
+        Go to:<programlisting>http://localhost/nagios/</programlisting>You
+        should at least see some data on the localhost.</para>
+
+        <para></para>
+
+        <para><emphasis role="bold">Registering Authenticated
+        Users</emphasis></para>
+
+        <para>We will block access to the Nagios website by providing httpd
+        password access and we will setup users that have admin and view
+        access to Nagios. Access is controlled through .httaccess in Apache
+        and through the cgi.cfg file. This file MUST be in the cgi
+        directory:<programlisting>vi /usr/lib/nagios/cgi/.htaccess</programlisting>Add:<programlisting>AuthName "Nagios Access"
+AuthType Basic
+AuthUserFile /usr/lib/nagios/htpasswd.users
+require valid-user</programlisting>Save and close this file.</para>
+
+        <para>This file MUST be in the web directory:<programlisting>vi /usr/share/nagios/.htaccess</programlisting>Add:<programlisting>AuthName "Nagios Access"
+AuthType Basic
+AuthUserFile /usr/lib/nagios/htpasswd.users
+require valid-user</programlisting> Let's add some users - first
+        nagiosadmin:<programlisting>htpasswd -c /usr/lib/nagios/htpasswd.users nagiosadmin
+New password: YOURPASSWORD</programlisting> And we will add nagios - notice no
+        -c since we are adding a user this file:<programlisting>htpasswd /usr/lib/nagios/htpasswd.users nagios
+New password: YOURPASSWORD</programlisting> Now let's setup who has admin
+        rights:<programlisting>vi /etc/nagios/cgi.cfg</programlisting>Find
+        line 86 and change back to 1 like below:<programlisting>use_authentication=1</programlisting>Find
+        line 116, uncomment and change like below:<programlisting>authorized_for_system_information=nagiosadmin,nagios</programlisting>Find
+        line 128, uncomment and change like below:<programlisting>authorized_for_configuration_information=nagiosadmin,nagios</programlisting>Find
+        line 141, uncomment and change like below:<programlisting>authorized_for_system_commands=nagiosadmin</programlisting>Find
+        line 154-5, uncomment and change like below:<programlisting>authorized_for_all_services=nagiosadmin,nagios
+authorized_for_all_hosts=nagiosadmin,nagios</programlisting>Find line 168-9,
+        uncomment and change like below:<programlisting>authorized_for_all_service_commands=nagiosadmin
+authorized_for_all_host_commands=nagiosadmin</programlisting>Save and close
+        this file. So now user nagios can view and user nagiosadmin can view
+        and modify entries. Restart Apache and Nagios:<programlisting>service httpd restart
+service nagios restart</programlisting> Go to:<programlisting>http://localhost/nagios</programlisting>Login
+        as:<programlisting>Username: nagios
+Password: YOURPASSWORD</programlisting>And then try:<programlisting>Username: nagiosadmin
+Password: YOURPASSWORD</programlisting> Congradulations!</para>
+
+        <para>Nagios installed with User Authentication!</para>
+
+        <para><emphasis role="bold"></emphasis></para>
+
+        <para><emphasis role="bold">File Locations</emphasis></para>
+
+        <para>Root directories<programlisting>/usr/include/nagios
+/usr/lib/nagios
+/usr/lib/nagios/cgi
+/usr/lib/nagios/plugins</programlisting>Web site location <programlisting>/usr/share/nagios</programlisting>Configuration
+        files<programlisting>/etc/nagios</programlisting>Logs<programlisting>/var/log/nagios</programlisting>Apache
+        Configuration<programlisting>/etc/httpd/conf.d/nagios.conf
+vi /usr/lib/nagios/cgi/.htaccess
+vi /usr/share/nagios/.htaccess</programlisting>Documentation<programlisting>/usr/share/nagios/docs</programlisting></para>
+
+        <para><emphasis role="bold">Uninstall </emphasis><programlisting>rpm -e nagios-devel-2.0-0.b3.1.1.fc3.test nagios-plugins-1.4-2.1.fc3.rf nagios-2.0-0.b3.1.1.fc3.test
+
+rm -rf /etc/nagios
+rm -rf /var/log/nagios
+rm -f /etc/httpd/conf.d/nagios.conf
+rm -rf /usr/share/nagios
+rm -rf /usr/lib/nagios
+rm -rf /var/log/nagios
+rm -rf /home/nagios</programlisting></para>
+
+        <para><emphasis role="bold">References</emphasis></para>
+
+        <para>Install Procedure:
+        http://www.clarkson.edu/projects/itl/mpX52/sp2005/longca/install.html</para>
+      </section>
+
+      <section>
+        <title>NagiosQL 2005</title>
+
+        <para>NagiosQL 2005 is a GUI that allows you to configure Nagios
+        configuration files.</para>
+
+        <para>Download from sourceforge to /downloads/nagios:<programlisting>http://sourceforge.net/projects/nagiosql</programlisting></para>
+
+        <para>Install NagiosQL:<programlisting>cd /downloads/nagios
+cp nagiosql-1.0RC2.tar.gz /var/www/
+cd /var/www
+tar -zxvf nagiosql-1.0RC2.tar.gz</programlisting> Install
+        dependencies:<programlisting>pear install HTML_Template_IT </programlisting>
+        Edit php.ini to include pear:<programlisting>vi /etc/php.ini</programlisting>Find
+        line 428 and uncomment like below:<programlisting>include_path = ".:/usr/share/pear/"</programlisting>Save
+        and close this file.</para>
+
+        <para>Create the datbase:<programlisting>mysql -uroot -p &lt; /var/www/nagiosQL/config/nagiosql_40.sql
+Password:</programlisting> Change the password for nagiosqlusr to
+        YOURPASSWORD:<programlisting>mysql -h localhost -u root -p
+Password:
+
+mysql&gt; SET PASSWORD FOR 'nagiosqlusr'@'localhost' = OLD_PASSWORD('YOURPASSWORD');
+
+mysql&gt; exit</programlisting> Make the configuration directories with the
+        following structure:<programlisting>mkdir -p /etc/nagios/hosts
+mkdir -p /etc/nagios/services
+mkdir -p /etc/nagios/backup/hosts
+mkdir -p /etc/nagios/backup/services</programlisting> Setup the config
+        file:<programlisting>vi /var/www/nagiosQL/config/settings.ini </programlisting></para>
+
+        <para>Find line 27 and change to the following:<programlisting>physical        = /var/www/nagiosQL/</programlisting>Find
+        line 29 and change like below:<programlisting>protocol        = https</programlisting>Find
+        line 37 and change to the following (unless you want this in
+        German):<programlisting>lang            = lang_en.ini</programlisting>Find
+        line 44 and change to the following:<programlisting>password        = YOURPASSWORD</programlisting>Find
+        line 60 and change like below:<programlisting>binary          = "/usr/bin/nagios"</programlisting>Save
+        and close this file. Setup the nagios main configuration file. This
+        tells nagios where to find the configuration files:<programlisting>vi /etc/nagios/nagios.cfg</programlisting>Find
+        line 48 - 55 and uncomment like below:<programlisting>cfg_file=/etc/nagios/contactgroups.cfg
+cfg_file=/etc/nagios/contacts.cfg
+#cfg_file=/etc/nagios/dependencies.cfg
+#cfg_file=/etc/nagios/escalations.cfg
+cfg_file=/etc/nagios/hostgroups.cfg
+cfg_file=/etc/nagios/hosts.cfg
+cfg_file=/etc/nagios/services.cfg
+cfg_file=/etc/nagios/timeperiods.cfg</programlisting>After line 55 add the
+        following:<programlisting>cfg_file=/etc/nagios/servicegroups.cfg
+cfg_dir=/etc/nagios/hosts
+cfg_dir=/etc/nagios/services</programlisting>Save and close this file.</para>
+
+        <para>Create these files so nagios will start:<programlisting>touch /etc/nagios/contactgroups.cfg
+touch /etc/nagios/contacts.cfg
+touch /etc/nagios/hostgroups.cfg
+touch /etc/nagios/hosts.cfg
+touch /etc/nagios/services.cfg
+touch /etc/nagios/timeperiods.cfg
+touch /etc/nagios/servicegroups.cfg</programlisting> Now setup Apache to
+        restrict access:<programlisting>mkdir /usr/lib/apache
+htpasswd -c /usr/lib/apache/nagiosQL nagiosQL
+New password: YOURPASSWORD</programlisting><programlisting>cd /usr/lib/apache
+chown apache nagiosQL
+chmod 400 nagiosQL</programlisting> Make nagiosql.conf for
+        apache:<programlisting>vi /etc/httpd/conf.d/nagiosQL.conf</programlisting>Add
+        or modify to look like the following:<programlisting>Alias /nagiosQL "/var/www/nagiosQL"
+&lt;Directory "/var/www/nagiosQL"&gt;
+  AuthType Basic
+  AuthName nagiosQL
+  AuthUserFile /usr/lib/apache/nagiosQL
+  Require user nagiosQL
+  AllowOverride None
+  SSLRequireSSL
+&lt;/Directory&gt;</programlisting>Save and close this file.</para>
+
+        <para></para>
+
+        <para><emphasis role="bold">Setup Access Rights</emphasis></para>
+
+        <para>Assumption apache user.group=apache.apache Assumption nagios
+        user.group=nagios.nagios Assumption apache is a member of
+        group=nagios<programlisting>chmod -R 6755 /etc/nagios/
+chown -R apache.apache /etc/nagios
+
+chmod 644 /etc/nagios/*.cfg
+chmod 644 /etc/nagios/hosts/*.cfg
+chmod 644 /etc/nagios/services/*.cfg
+
+chown nagios.nagios /usr/bin/nagios
+chmod 750 /usr/bin/nagios
+ 
+chown -R apache.nagios /var/log/nagios/
+chmod 2770 /var/log/nagios/
+ 
+chown -R apache.apache /var/www/nagiosQL/</programlisting> Restart
+        Apache:<programlisting>service httpd restart</programlisting> Go to:
+        <programlisting>https://localhost/nagiosQL/index.php</programlisting>Login
+        as:<programlisting>Username: nagiosQL
+Password: YOURPASSWORD</programlisting>tHEN Login as:<programlisting>Username: admin
+Password: admin</programlisting>And change the admin passord.</para>
+
+        <para>Now you have an easier to use configurator for Nagios.
+        References: http://www.secretdoor.ch/nagiosqlsupport</para>
+      </section>
+
+      <section>
+        <title>Nagios &amp; OSSIM</title>
+
+        <para>OSSIM I believe replaces OpenNMS and is not integrated with
+        OSSIM.</para>
+      </section>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Finalizing OSSIM</title>
+
+    <para>OSSIM runs with a combination of services, scripts and daemons. So
+    let's go through them to make sure all are okay and running
+    properly.</para>
+
+    <section>
+      <title>Scripts</title>
+
+      <para>There are many perl scripts in OSSIM. So let's test them and add
+      the appropriate ones to crontab:</para>
+
+      <para>Run this script, which is the rrdtool:<programlisting>/usr/share/ossim/scripts/rrd_plugin.pl</programlisting>Results
+      should be:<programlisting>/usr/share/ossim/scripts/rrd_plugin.pl: forking into background...
+Ctrl C (to exit)</programlisting> Run this script, which is the multi-router
+      traffic grapher script:<programlisting>/usr/share/ossim/mrtg/launch-mrtg</programlisting>
+      Run this script, which caches acid data:<programlisting>/usr/share/ossim/scripts/acid_cache.pl</programlisting></para>
+
+      <para>Add to the cron the following line:</para>
+
+      <para><programlisting>crontab -e</programlisting> Add:<programlisting>#
+#OSSIM
+0-59/5 * * * * /usr/share/ossim/mrtg/launch-mrtg</programlisting> Setup the
+      above scripts to start automatically:<programlisting>vi /etc/rc.local</programlisting>Add:<programlisting>#
+# OSSIM
+ossim-server -d -c /etc/ossim/server/config.xml
+ossim-framework -d
+/usr/share/ossim/scripts/rrd_plugin.pl
+/usr/share/ossim/scripts/acid_cache.pl
+#
+# Make sure ossim-server is up before starting ossim-agent
+#
+server_up=1
+while [[ $server_up != 0 ]]
+do
+        sleep 5
+        ossim-agent -d -c /etc/ossim/agent/config.xml
+        server_up=$?
+done
+#
+/usr/share/ossim/scripts/update_nessus_ids.pl</programlisting>Save and close
+      this file.</para>
+
+      <para>Restart xinetd:<programlisting>/etc/rc.d/init.d/xinetd restart</programlisting>
+      Run the ossim server and client scripts to see what kind of errors you
+      get - if any. If so thats fine for now. I have found that sometimes I
+      had to reboot the system to eliminate OSSIM Server errors. Something to
+      try if you have problems. Close and exit this file.</para>
+    </section>
+
+    <section>
+      <title>Finalizing OSSIM</title>
+
+      <para>Check to make sure all these services are running:<programlisting>service arpwatch start
+service netplugd start
+service p0f start
+service ntop start
+service snortd start
+service nessusd start</programlisting><phrase></phrase></para>
+
+      <para>Make sure they are running, all should respond with &lt;XXXX&gt;
+      is running...<programlisting>service arpwatch status
+service netplugd status
+service p0f status
+service ntop status
+service snortd status
+service nessusd status</programlisting></para>
+
+      <para>Make them start on reboot:</para>
+
+      <para><programlisting>chkconfig arpwatch off
+chkconfig netplugd on
+chkconfig p0f on
+chkconfig ntop on
+chkconfig snortd on
+chkconfig nessusd on</programlisting></para>
+
+      <para>Check to make sure that all processes are running.<programlisting>ps -A | grep ossim
+
+Should result in:
+22663 pts/4    00:00:03 ossim-server
+23052 pts/4    00:00:05 ossim-agent
+24668 pts/6    00:00:00 ossim-framework</programlisting></para>
+
+      <para>Hopefully all okay!</para>
+    </section>
+
+    <section>
+      <title>IN CONCLUSION</title>
+
+      <para>You have:<programlisting>Databases          User         Password
+snort            ossim        YOURPASSWORD
+snort_archive    ossim        YOURPASSWORD
+ossim            ossim        YOURPASSWORD
+ossim_acl        ossim        YOURPASSWORD
+db_nagiosQL      nagiosqlusr  YOURPASSWORD
+
+Links      Link                User                   Password
+ACID     localhost/acid       ACID                  YOURPASSWORD
+NTop     localhost:3000       admin                 YOURPASSWORD
+OSSIM    localhost/ossim      ossim                 YOURPASSWORD
+phpgacl  localhost/phpgacl    phpgacl               YOURPASSWORD
+nagiosQL localhost/nagiosQL   nagiosQL              YOURPASSWORD
+nagios   localhost/nagios     nagios, nagiosadmin   YOURPASSWORD
+
+GUI      Start        User     Password
+Nessus  nessus       nessus   YOURPASSWORD
+	
+
+OSSIM Website    User      Password
+localhost/ossim admin       admin
+
+
+Website passwords that can be changed at:
+ACID         htpasswd /usr/lib/apache/acid admin
+OSSIM        htpasswd /var/www/ossim-users ossim
+PHPGACL      htpasswd /usr/lib/apache/phpgacl phpgacl
+nagiosQL     htpasswd /usr/lib/apache/nagiosQL nagiosQL
+nagiosadmin  htpasswd /usr/lib/nagios/htpasswd.users nagiosadmin
+nagios       htpasswd /usr/lib/nagios/htpasswd.users nagios</programlisting>
+      Make sure you check the postmaster@ and networks@ emails frequently for
+      cron errors and alerts. You can get alot of mail if you have errors!
+      Known Problems in OSSIM 0.9.8.1 Have fun! Cheers! Ken</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Sensors</title>
+
+    <para>TBD - Looking for any input experiences people have had.</para>
+  </chapter>
+
+  <chapter>
+    <title>Problems &amp; FAQ's</title>
+
+    <para>Here is some common problems and troubleshooting aids.</para>
+
+    <section>
+      <title>Blank web pages</title>
+
+      <para>Likely problem with includes directories in /etc/php.ini, either
+      you have duplicate entries or entered wrong. To troubleshoot web pages
+      you can turn these two things on:<programlisting>vi /etc/php.ini</programlisting>Find
+      around Line 292 and set both settings like below:<programlisting>display_errors = On
+display_startup_errors = On</programlisting></para>
+    </section>
+
+    <section>
+      <title>No graphs</title>
+
+      <para>I changed the installation procedures to hopefully eliminate this
+      problem so you might want to go back and review the steps related to
+      jpgraph. You may have a problem with jpgraph. Jpgraph also requires gd
+      to be present; to check if it is: Check to see if in
+      php:<programlisting>php -m</programlisting> Result should be a list,
+      make sure gd is in the list. If not, the following should install
+      gd:<programlisting>yum install gd</programlisting> Go back and
+      check:<programlisting>php -m</programlisting> If you want to test gd,
+      here is a small program that will test gd:<programlisting>vi /var/www/html/button.php</programlisting>Copy
+      the following text to the created file button.php:<programlisting>&lt;?
+$ButtonWidth = 100;
+$ButtonHeight = 30;
+$ButtonLabel = "Testing";
+$ButtonFont = 5;
+$image = imagecreate($ButtonWidth, $ButtonHeight);
+$colorBody = imagecolorallocate($image, 0x99, 0x99, 0x99);
+$colorShadow = imagecolorallocate($image, 0x33, 0x33, 0x33);
+$colorHighlight = imagecolorallocate($image, 0xCC, 0xCC, 0xCC);
+imagefilledrectangle($image, 1, 1, $ButtonWidth-2, $ButtonHeight-2, $colorBody);
+
+//determine label size
+$ButtonLabelHeight = imagefontheight($ButtonFont);
+$ButtonLabelWidth = imagefontwidth($ButtonFont) * strlen($ButtonLabel);
+//determine label upper left corner
+$ButtonLabelX = ($ButtonWidth - $ButtonLabelWidth)/2;
+$ButtonLabelY = ($ButtonHeight - $ButtonLabelHeight)/2;
+//draw label shadow
+imagestring($image, $ButtonFont, $ButtonLabelX+1, $ButtonLabelY+1, $ButtonLabel, $colorShadow);
+//draw label
+imagestring($image, $ButtonFont, $ButtonLabelX, $ButtonLabelY, $ButtonLabel, $colorHighlight);
+//output image
+header("Content-type: image/png");
+imagepng($image);
+?&gt;</programlisting> Now open your web browser and go to:<programlisting> http://localhost/button.php</programlisting>You
+      should see a square with Testing in the middle. If not, you have a gd
+      problem (sorry, you will have to fix this first). To test if jpgraph is
+      okay:<programlisting>vi /var/www/html/example20.php</programlisting>
+      Copy the following into the open file example20.php<programlisting>&lt;?php
+
+include ("/var/www/jpgraph-1.16/jpgraph.php");
+include ("/var/www/jpgraph-1.16/jpgraph_bar.php");
+
+$datay=array(12,8,19,3,10,5);
+
+// Create the graph. These two calls are always required
+$graph = new Graph(300,200,"auto");	
+$graph-&gt;SetScale("textlin");
+
+// Add a drop shadow
+$graph-&gt;SetShadow();
+
+// Adjust the margin a bit to make more room for titles
+$graph-&gt;img-&gt;SetMargin(40,30,20,40);
+
+// Create a bar pot
+$bplot = new BarPlot($datay);
+
+// Adjust fill color
+$bplot-&gt;SetFillColor('orange');
+$bplot-&gt;SetWidth(1.0);
+$graph-&gt;Add($bplot);
+
+// Setup the titles
+$graph-&gt;title-&gt;Set("Bar graph");
+$graph-&gt;xaxis-&gt;title-&gt;Set("X-title");
+$graph-&gt;yaxis-&gt;title-&gt;Set("Y-title");
+
+$graph-&gt;title-&gt;SetFont(FF_FONT1,FS_BOLD);
+$graph-&gt;yaxis-&gt;title-&gt;SetFont(FF_FONT1,FS_BOLD);
+$graph-&gt;xaxis-&gt;title-&gt;SetFont(FF_FONT1,FS_BOLD);
+// Display the graph
+$graph-&gt;Stroke();
+?&gt;</programlisting>Close this file. Open your web browser and go
+      to:<programlisting>http://localhost/example20.php</programlisting>You
+      should see a bar graph. If not you will have to fix this problem before
+      proceeding. Check your setting in ossim.conf - the path for jpgraph and
+      that you do have jpgraph installed properly.</para>
+    </section>
+
+    <section>
+      <title>Perl Scripts don't run - Can't locate Config.pm in @INC</title>
+
+      <para>The problem is that if you upgraded the operating system from
+      /usr/local/lib/perl5 in FC2 to /usr/lib/perl5 in FC3 the location of
+      perl was changed. Thus you may have more than one version of perl
+      installed. So the scripts sometimes cannot find the some files. The
+      location of the files are defined in perl function called @INC. This is
+      not a file that you can edit. You can add and remove file locations to
+      it but I thought it was better to just uninstall perl and re-install it.
+      The error messages related to this are: <programlisting>Can't locate Config.pm in @INC ....</programlisting>
+      I will try to provide as detailed as possible the steps to uninstall
+      perl. First make sure you have apt installed. Once you uninstall perl,
+      yum will not work. Check the steps to install APT. Find out all your
+      perl modules:<programlisting>rpm -qa |grep perl</programlisting> Should
+      produce a list, that you can cut and paste into a file to create an
+      remove command: Here is mine that I made (Note - yours will likely be
+      different):<programlisting>rpm -e --nodeps perl-Socket6-0.18-1.1.fc3.rf perl-HTML-Parser-3.36-0_2.rhfc3.at \
+perl-DBD-MySQL-2.9003-5 perl-XML-Dumper-0.71-2 perl-Module-Load-0.10-1.1.fc3.rf \
+perl-CPAN-DistnameInfo-0.06-1.1.fc3.rf perl-XML-Parser-2.34-5_2.rhfc3.at \
+perl-DBI-1.40-5 perl-Filter-1.30-6 perl-Parse-Syslog-1.03-1.1.fc3.rf perl-Net-SSLeay-1.26-1 \
+perl-Tk-804.027-8.rhfc3.at perl-Term-UI-0.05-1.1.fc3.rf perl-Digest-SHA1-2.10-1.1.fc3.rf \
+perl-DateManip-5.42a-3 perl-Authen-PAM-0.15-1.1.fc3.rf perl-SGMLSpm-1.03ii-14 \
+perl-IO-Socket-SSL-0.96-3 perl-Locale-Maketext-Simple-0.12-1.1.fc3.rf \
+perl-Object-Accessor-0.03-1.1.fc3.rf perl-Digest-HMAC-1.01-13 \
+perl-Convert-BER-1.31.01-1.1.fc3.rf perl-HTML-Tagset-3.03-30 perl-URI-1.30-4 \
+perl-Compress-Zlib-1.34-1.1.fc3.rf perl-Net-DNS-0.48-1.1.fc3.rf perl-Time-HiRes-1.55-3 \
+rrdtool-perl-1.1.0-20040610 perl-Params-Check-0.23-1.1.fc3.rf \
+perl-Archive-Extract-0.07-1.1.fc3.rf perl-Module-Build-0.2608-1.1.fc3.rf \
+perl-MD5-2.03-1.1.fc3.rf perl-5.8.5-12.FC3 perl-Crypt-DES-2.03-5.rhfc3.at \
+perl-libwww-perl-5.79-5 perl-Net-SNMP-5.0.1-1.1.fc3.rf perl-File-Fetch-0.07-1.1.fc3.rf \
+perl-IO-Socket-INET6-2.51-1.1.fc3.rf perl-libxml-enno-1.02-31 \
+perl-Module-Load-Conditional-0.08-1.1.fc3.rf perl-CPANPLUS-0.053-2.1.fc3.rf \
+perl-XML-Encoding-1.01-26 perl-Parse-Yapp-1.05-32 perl-Mon-0.11-2.1.fc3.rf \
+perl-libxml-perl-0.07-30 perl-IPC-Cmd-0.24-1.1.fc3.rf perl-Log-Message-0.01-1.1.fc3.rf \</programlisting>
+      Now let's delete all perl related directories and programs. Here is mine
+      that I deleted:<programlisting>rm -rf /usr/local/lib/perl5
+rm -rf /usr/lib/perl5 
+rm -rf /usr/lib/swig1.3/perl5
+rm /usr/local/bin/find2perl
+rm /usr/local/bin/perldoc
+rm /usr/local/bin/perlbug
+rm /usr/local/bin/perlcc
+rm /usr/local/bin/perlivp
+rm /usr/local/bin/perl5.8.5
+rm /usr/local/bin/perl</programlisting> To make sure update your
+      database:<programlisting>updatedb</programlisting> Then do search for
+      perl, the manuals are fine:<programlisting>locate perl</programlisting>
+      If you do not have any more perl modules you should be able to
+      re-install perl and should only have one copy and the @INC should
+      automatically get created and updated properly. Okay install perl again,
+      this is the easiest way to install perl and all the
+      dependencies:<programlisting>apt-get --fix-broken install</programlisting></para>
+
+      <para>If you want to find out what is in @INC:<programlisting>perl -e "print @INC";</programlisting></para>
+
+      <para>So now you should have only one version of perl installed and your
+      scripts should work correctly, at least be able to find the related perl
+      files. That is no "Can't locate Config.pm in @INC ...." errors.</para>
+    </section>
+
+    <section>
+      <title>Lost admin password</title>
+
+      <para>With phpgacl it is sometimes possible to somehow screw up the
+      admin password. Here is an easy way to change it back to admin or to
+      anything you want. If you want to change to something else use
+      this:<programlisting>md5sum --string YOURPASSWORD</programlisting>Will
+      result in:<programlisting>39512c2c20b0d2b8f7343a888fcb7801  "YOURPASSWORD"</programlisting>
+      Open a new window and login into mysql:<programlisting>mysql -h localhost -u root -p
+Enter password:
+
+mysql&gt; use ossim;
+
+This will set the password to admin:
+mysql&gt; UPDATE users SET pass='21232f297a57a5a743894a0e4a801fc3' WHERE login='admin';
+
+Or if you want to change to something else:
+mysql&gt; UPDATE users SET pass='&lt;value generated by md5sum&gt;' WHERE login='admin';</programlisting>
+      And to display the values in table users:<programlisting>mysql&gt; select * from users;
++--------+-------------+----------------------------------+--------------+
+| login  | name        | pass                             | allowed_nets |
++--------+-------------+----------------------------------+--------------+
+| admin  | OSSIM admin | 21232f297a57a5a743894a0e4a801fc3 |              |
++--------+-------------+----------------------------------+--------------+</programlisting>If
+      this doesn't work you likely will have to redo phpgacl installation
+      section and reload the ossim_acl database.</para>
+    </section>
+
+    <section>
+      <title>OSSIM Agent Does Not Run</title>
+
+      <para>There seems to be a problem sometimes with getting the ossim-agent
+      to run. It is related to the way the config.xml file is edited, python
+      does not like tabs in the xml file. The errors are
+      usually:<programlisting>File "/usr/bin/ossim-agent", line 10, in ? 
+pyossim.agent.main() 
+File "/usr/share/ossim-agent/pyossim/agent.py", line 37, in main 
+agent.parseConfig(options.config_file) 
+File "/usr/share/ossim-agent/pyossim/Agent.py", line 37, in parseConfig 
+configParser.parse(config_file) 
+File "/usr/lib/python2.3/site-packages/_xmlplus/sax/expatreader.py", line 109, in parse 
+xmlreader.IncrementalParser.parse(self, source) 
+File "/usr/lib/python2.3/site-packages/_xmlplus/sax/xmlreader.py", line 123, in parse 
+self.feed(buffer) 
+File "/usr/lib/python2.3/site-packages/_xmlplus/sax/expatreader.py", line 220, in feed 
+self._err_handler.fatalError(exc) 
+File "/usr/lib/python2.3/site-packages/_xmlplus/sax/handler.py", line 38, in fatalError 
+raise exception 
+xml.sax._exceptions.SAXParseException: /etc/ossim/agent/config.xml:16:4: syntax error </programlisting></para>
+
+      <para>The fix is to un-install the ossim-agent, re-install it and go
+      through the configuration and setup of the ossim-agent section. This can
+      be done quite quickly. Steps are:<programlisting>rpm -e --nodeps ossim-agent
+
+
+Then re-install ossim-agent:
+apt-get install ossim-agent
+
+Go back to the Configure Components --&gt; OSSIM-Agent </programlisting></para>
+
+      <para>That should fix it.</para>
+
+      <para>However, if you have trouble trying to start the ossim-agent while
+      you are troubleshooting, and get the following:<programlisting>(**)  pyossim.agent (2005-06-04 17:38:30):     There is already a running instance (/var/run/ossim_agent.pid)</programlisting></para>
+
+      <para>Delete the pid file like below: <programlisting>rm /var/run/ossim_agent.pid
+rm: remove regular file `/var/run/ossim_agent.pid'? y</programlisting></para>
+    </section>
+
+    <section>
+      <title>ERROR: the RRD does not contain an RRA matching the chosen
+      CF</title>
+
+      <para>This error indicates that there is some data sets that have
+      incomplete data and they cannot be properly graphed with rrdtool,
+      specifically aberrant behaviour. To fix this problem we will delete the
+      data sets, restart the launch_mrtg script and then restart the rrdtool
+      script. First find the rrd process and stop it.<programlisting>ps -A |grep rdd</programlisting>Should
+      result in the following if it is running:<programlisting>26046 pts/4    00:00:00 rrd_plugin.pl</programlisting>Kill
+      the process, in this case the process number is 26046:<programlisting>kill 26046</programlisting>
+      Then delete all the old rrd files:<programlisting>cd /var/ntop/rrd/interfaces/eth0
+rm -f *.rrd</programlisting>You may to also delete the *.rrd files in
+      /var/ntop/rrd/interfaces/eth0/domains and
+      /var/ntop/rrd/interfaces/eth0/hosts. There may be many numbered
+      directories and it might be easier to delete the
+      directories:<programlisting>cd /var/ntop/rrd/interfaces/eth0/domains
+rm -rf 1*
+cd /var/ntop/rrd/interfaces/eth0/hosts
+rm -rf 1*</programlisting> Then run this script:<programlisting>/usr/share/ossim/mrtg/launch-mrtg</programlisting>then
+      run the rrd script:<programlisting>/usr/share/ossim/scripts/rrd_plugin.pl</programlisting>
+      Should result in the following and your ERROR should be
+      gone:<programlisting>/usr/share/ossim/scripts/rrd_plugin.pl: forking into background...</programlisting>
+      Problem should be fixed.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Uninstall</title>
+
+    <para>Stop these services:<programlisting>service arpwatch stop
+service netplugd stop
+service p0f stop
+service ntop stop
+service snortd stop
+service nessusd stop</programlisting></para>
+
+    <para>Kill these processes (Note the first number is the process to
+    kill):<programlisting>ps -A |grep ossim
+
+22663 pts/4    00:00:03 ossim-server
+23052 pts/4    00:00:05 ossim-agent
+24668 pts/6    00:00:00 ossim-framework
+
+
+kill 22663
+kill 23052
+kill 24668</programlisting></para>
+
+    <para>Uninstall the rpms:<programlisting>rpm -e cgilib ossim-agent ossim-contrib ossim-framework ossim-server php-acid \
+phpgacl rrdtool rrdtool-perl rrdtool arpwatch ntop mrtg \
+ossim ossim-agent ossim-contrib ossim-framework ossim-mysql ossim-server ossim-utils \
+p0f pads php-acid php-jpgraph phpgacl rrdtool-perl rrdtool-devel\
+snort snort-mysql tcptrack fpdf php-adodb</programlisting></para>
+
+    <para>Delete related files and directories.<programlisting>rm -rf /etc/ossim
+rm -rf /var/log/ossim
+rm -rf /var/log/snort
+rm -rf /usr/share/ossim
+rm -rf /etc/snort
+rm -rf /usr/share/ossim-framework
+rm -rf /usr/share/ossim-agent
+rm -rf /usr/share/ossim
+rm -f /etc/httpd/conf.d/ossim.conf*
+rm -f /etc/httpd/conf.d/acid*
+rm -f /var/www/ossim-users
+rm -rf /var/www/acid</programlisting></para>
+
+    <para>Delete the databases:<programlisting>mysql -h localhost -u root -p
+Password:
+
+mysql&gt; drop database ossim; \
+drop database ossim_acl; \
+drop database snort; \
+drop database snort_archive;
+
+mysql&gt; exit</programlisting></para>
+
+    <para>OSSIM and related components should be uninstalled.</para>
+  </chapter>
+
+  <chapter>
+    <title>References</title>
+
+    <para>Source Forge:</para>
+
+    <para><ulink
+    url="http://sourceforge.net/projects/os-sim/">http://sourceforge.net/projects/os-sim/</ulink></para>
+
+    <para>OSSIM Website</para>
+
+    <para><ulink
+    url="http://www.ossim.net">http://www.ossim.net</ulink></para>
+  </chapter>
+</book>

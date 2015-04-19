@@ -2,66 +2,26 @@
 require_once ('classes/Session.inc');
 Session::logcheck("MenuTools", "ToolsBackup");
 
-$user = Session::get_session_user();
-
+require_once 'classes/Util.inc';
 require_once 'ossim_db.inc';
+require_once ('classes/Backup.inc');
 
-function str2date($str) {
-	list($year, $month, $day) = sscanf($str, "%4s%2s%2s");
-	return "$year-$month-$day";
-}
-function str2timestamp($str) {
-	list($year, $month, $day, $hour, $min, $sec) = sscanf($str, "%4s%2s%2s%2s%2s%2s");
-	return "$year-$month-$day $hour:$min:$sec";
-}
-
-function array2str ($arr) {
-	$str = "";
-    if(is_array($arr)){
-	while (list($key, $value) = each ($arr)) {
-		if ($str == "")
-   		$str = $value;
-   	else
-   		$str .= "," . $value;
-   }}
-   return $str;
-}
-
-$conf = new ossim_conf();
+$conf = $GLOBALS["CONF"];
 $data_dir = $conf->get_conf("data_dir");
 $backup_dir = $conf->get_conf("backup_dir");
 
-if (file_exists ("/tmp/ossim-restoredb.pid")) {
-	$isDisabled = 1;
-} else {
-	$isDisabled = 0;
-}
+$isDisabled = Backup::running_restoredb();
 
 $perform = $_POST["perform"];
 
 if (!$isDisabled) {
 	if ($perform == "insert") {
-		$insert = $_POST["insert"];
-		$files = array2str ($insert);
-		
-		if ($files != "") {
-            $files = escapeshellcmd($files);
-            $user = escapeshellcmd($user);
-			$res = popen("$data_dir/scripts/restoredb.pl insert $files $user &", "r");
-			$isDisabled = 1;
-		}
-	} elseif ($perform == "delete") {
-		$delete = $_POST["delete"];
-		$files = array2str ($delete);
-
-		if ($files != "") {
-            $files = escapeshellcmd($files);
-            $user = escapeshellcmd($user);
-			$res = popen("$data_dir/scripts/restoredb.pl delete $files $user &", "r");
-			$isDisabled = 1;
-		}
+    		$insert = $_POST["insert"];
+	        Backup::Insert($insert);
+    }  elseif ($perform == "delete") {
+	    	$delete = $_POST["delete"];
+	    	Backup::Delete($delete);
 	}
-	sleep(3);
 	unset($_POST["perform"]);
 }
 
@@ -83,8 +43,9 @@ while ($file = $dir->read()) {
 		continue;
    }
 
-	$date = str2date(substr($file, 7, 8));
-	$query = "SELECT timestamp FROM acid_event WHERE timestamp > '$date 00:00:00' AND timestamp < '$date 23:59:59' LIMIT 1";
+	$date = Backup::str2date(substr($file, 7, 8));
+	$query = OssimQuery("SELECT timestamp FROM acid_event WHERE timestamp >
+    '$date 00:00:00' AND timestamp < '$date 23:59:59' LIMIT 1");
 	if (!$rs = $conn->Execute($query)) {
   		print 'error: '.$conn->ErrorMsg().'<BR>';
   		exit;
@@ -176,7 +137,7 @@ for ($i=0; $i<count($delete); $i++) { ?>
 <?php
 $db1 = new ossim_db();
 $conn1 = $db1->connect();
-$query = "SELECT * FROM restoredb_log ORDER BY id DESC LIMIT 10";
+$query = OssimQuery("SELECT * FROM restoredb_log ORDER BY id DESC LIMIT 10");
 if (!$rs1 = $conn1->Execute($query)) {
 	print 'error: '.$conn1->ErrorMsg().'<BR>';
 	exit;
@@ -185,7 +146,7 @@ while (!$rs1->EOF) {
 ?>
 			<tr>
 				<td><?= $rs1->fields["users"] ?></td>
-				<td><?= str2timestamp($rs1->fields["date"]) ?></td>
+				<td><?= Util::timestamp2date($rs1->fields["date"]) ?></td>
 				<td><?= $rs1->fields["data"] ?></td>
 	<?php if ($rs1->fields["status"] == 1) { ?>
 				<td><font color="orange"><b>Running</b></font></td>

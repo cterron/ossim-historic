@@ -1,0 +1,255 @@
+/* Copyright (c) 2003 ossim.net
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission
+ *    from the author.
+ *
+ * 4. Products derived from this software may not be called "Os-sim" nor
+ *    may "Os-sim" appear in their names without specific prior written
+ *    permission from the author.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <glib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+/****debug****/
+#include <stdio.h>
+/****debug****/
+
+#include "sim-util.h"
+#include "sim-log.h"
+#include "os-sim.h"
+#include <config.h>
+
+/*
+ * This function is useful if its needed to reopen the log file (logrotate and so on)
+ */
+guint
+sim_log_reopen(void)
+{
+  gboolean ok=TRUE;
+
+  if (ossim.log.level == G_LOG_LEVEL_DEBUG)
+  {
+    if ((ossim.log.fd = open (ossim.log.filename, O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)) < 0)
+    {
+      ok=FALSE;
+			gchar *msg = g_strdup_printf ("Log File %s: Can't create", ossim.log.filename);
+			g_log_default_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION, msg, NULL);	//show this in stdout
+			g_free(msg);
+    }
+  }
+  else
+  if ((ossim.log.fd = open (ossim.log.filename, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH))< 0)
+  {
+    ok=FALSE;
+		gchar *msg = g_strdup_printf ("Log File %s: Can't create", ossim.log.filename);
+		g_log_default_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION, msg, NULL);
+		g_free(msg);
+  }
+
+	return ok;
+}
+
+/*
+ * Helper function to sim_log_handler. Try to write in the log.
+ */
+inline void
+sim_log_write(gchar *msg, const gchar *log_domain)
+{
+  struct stat tmp;
+	
+  if (stat(ossim.log.filename, &tmp) == 0)  // check if the file log exists or not.
+    write (ossim.log.fd, msg, strlen(msg));
+  else
+  {
+		if (sim_log_reopen())
+	    write (ossim.log.fd, msg, strlen(msg));
+
+
+/*    if ( !sim_log_reopen()               //check if its possible to reopen the log file
+         && (ossim.log.handler[0] != 0)  //check if the log handler has been created or not.
+         && (ossim.log.handler[1] != 0)
+         && (ossim.log.handler[2] != 0) )
+    {
+      g_log_remove_handler(log_domain, ossim.log.handler[0]);
+      g_log_remove_handler(log_domain, ossim.log.handler[1]);
+      g_log_remove_handler(log_domain, ossim.log.handler[2]);
+    }*/
+  }
+  g_free (msg); 
+}
+
+/*
+ *
+ * Log handler called each time an event occurs.
+ *
+ *
+ */
+static void
+sim_log_handler (const gchar     *log_domain,
+                 GLogLevelFlags   log_level,
+                 const gchar     *message,
+                 gpointer         data)
+{
+  gchar   *msg;
+
+  g_return_if_fail (message);
+  g_return_if_fail (ossim.log.fd);
+
+  if (ossim.log.level < log_level)
+    return;
+
+  switch (log_level)
+    {
+      case G_LOG_LEVEL_ERROR: /*A G_LOG_LEVEL_ERROR is always a FATAL error. FIXME?.  */
+        msg = g_strdup_printf ("%s-Error: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+      case G_LOG_LEVEL_CRITICAL:
+        msg = g_strdup_printf ("%s-Critical: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+      case G_LOG_LEVEL_WARNING:
+        msg = g_strdup_printf ("%s-Warning: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+      case G_LOG_LEVEL_MESSAGE:
+        msg = g_strdup_printf ("%s-Message: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+      case G_LOG_LEVEL_INFO:
+        msg = g_strdup_printf ("%s-Info: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+      case G_LOG_LEVEL_DEBUG:
+//					fprintf(stdout, "--%s--\n", message); fflush(stdout);
+        msg = g_strdup_printf ("%s-Debug: %s\n", log_domain, message);
+        sim_log_write(msg,log_domain);
+        break;
+    }
+}
+
+
+/*
+ *
+ *  Starts logging and pass all the messages from the Glib (thanks to G_LOG_LEVEL_MASK)
+ *      to the ossim logger.
+ *
+ */
+void 
+sim_log_init (void)
+{
+  /* Init */
+  ossim.log.filename = NULL;
+  ossim.log.fd = 0;
+  ossim.log.handler[0] = 0;
+  ossim.log.handler[1] = 0;
+  ossim.log.handler[2] = 0;
+  ossim.log.level = G_LOG_LEVEL_MESSAGE;
+
+  /* File Logs */
+  if (ossim.config->log.filename)
+  {
+    ossim.log.filename = g_strdup (ossim.config->log.filename);
+  }
+  else
+  {
+    /* Verify Directory */
+    if (!g_file_test (OS_SIM_LOG_DIR, G_FILE_TEST_IS_DIR))
+      g_error ("Log Directory %s: Is invalid", OS_SIM_LOG_DIR);
+
+    ossim.log.filename = g_strdup_printf ("%s/%s", OS_SIM_LOG_DIR, SIM_LOG_FILE);
+  }
+
+  switch (simCmdArgs.debug)
+  {
+    case 0:
+      ossim.log.level = 0;
+      break;
+    case 1:
+      ossim.log.level = G_LOG_LEVEL_ERROR;
+      break;
+    case 2:
+      ossim.log.level = G_LOG_LEVEL_CRITICAL;
+      break;
+    case 3:
+      ossim.log.level = G_LOG_LEVEL_WARNING;
+      break;
+    case 4:
+      ossim.log.level = G_LOG_LEVEL_MESSAGE;
+      break;
+    case 5:
+      ossim.log.level = G_LOG_LEVEL_INFO;
+      break;
+    case 6:
+      ossim.log.level = G_LOG_LEVEL_DEBUG;
+      break;
+    default:
+      ossim.log.level = 0;
+      break;
+  }
+  sim_log_reopen(); //well, in this case this is not a reopen, just an open :)
+
+	sim_log_set_handlers(); //set the handlers
+
+}
+
+/*
+ *
+ *
+ *
+ */
+void
+sim_log_free (void)
+{
+  g_free (ossim.log.filename);
+  close (ossim.log.fd);
+}
+
+/*
+ *
+ */
+void 
+sim_log_set_handlers()
+{
+ /* Log Handler. We store it so we can do a g_log_remove_handler in case the logging fails sometime.*/
+  ossim.log.handler[0] = g_log_set_handler (NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+                     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+
+  ossim.log.handler[1] = g_log_set_handler ("GLib", G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+                     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+
+  ossim.log.handler[2] = g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+                     | G_LOG_FLAG_RECURSION, sim_log_handler, NULL);
+
+}
+
+
+
+// vim: set tabstop=2:

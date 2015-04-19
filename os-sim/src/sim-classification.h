@@ -95,3 +95,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_CLASSIFICATION_H__ */
+
+// vim: set tabstop=2:
+

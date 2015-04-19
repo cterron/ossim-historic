@@ -18,7 +18,7 @@ Session::logcheck("MenuTools", "ToolsRuleViewer");
     require_once ('ossim_conf.inc');
     require_once ('dir.php');
 
-    $ossim_conf = new ossim_conf();
+    $ossim_conf = $GLOBALS["CONF"];
     $snort_rules_path = $ossim_conf->get_conf("snort_rules_path");
 ?>
 
@@ -28,9 +28,9 @@ Session::logcheck("MenuTools", "ToolsRuleViewer");
 
     /* local snort rule directory */
     if ($files == NULL) {
-        printf(gettext("Sorry, can't locate snort rules at <b>%s</b>"), 
-               $snort_rules_path);
-        exit;
+          require_once("ossim_error.inc");
+          $error = new OssimError();
+          $error->display("RULES_NOT_FOUND", array($snort_rules_path));
     }
 
     foreach ($files as $file) {

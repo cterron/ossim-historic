@@ -30,15 +30,24 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     require_once 'ossim_db.inc';
 
 
-    if (!$order = $_GET["order"]) $order = "rrd_attrib";
+    $order = GET('order');
+    $profile = REQUEST('profile');
 
-    $profile = $_REQUEST["profile"];
+    ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, 'illegal:'._("order"));
+    ossim_valid($profile, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Profile"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
+    if (empty($order))
+         $order = "rrd_attrib";
 
     $db = new ossim_db();
     $conn = $db->connect();
 
 
-    if (($_POST["profile"]) && ($_POST["insert"]))
+    if ( (!empty($profile)) && (POST('insert')) )
     {
         $rrd_list = RRD_Config::get_list($conn,
             "WHERE profile = '$profile'");
@@ -49,21 +58,33 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
             {
                 $attrib = $rrd->get_rrd_attrib();
                 
-                if ($_POST["$attrib#enable"] == "on")
+                if (POST("$attrib#enable") == "on")
                     $enable = 1;
                 else
                     $enable = 0;
 
-                if (isset($_POST["$attrib#rrd_attrib"]))
+                if (POST("$attrib#rrd_attrib"))
                 {
+                    ossim_valid(POST("$attrib#rrd_attrib"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#rrd_attrib"));
+                    ossim_valid(POST("$attrib#threshold"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#threshold"));
+                    ossim_valid(POST("$attrib#priority"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#priority"));
+                    ossim_valid(POST("$attrib#alpha"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#alpha"));
+                    ossim_valid(POST("$attrib#beta"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#beta"));
+                    ossim_valid(POST("$attrib#persistence"), OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("$attrib#persistence"));
+                    
+                    if (ossim_error()) {
+                        die(ossim_error());
+                    }
+
+                     
                     RRD_Config::update ($conn,
-                                        $_POST["profile"],
-                                        $_POST["$attrib#rrd_attrib"],
-                                        $_POST["$attrib#threshold"],
-                                        $_POST["$attrib#priority"],
-                                        $_POST["$attrib#alpha"],
-                                        $_POST["$attrib#beta"],
-                                        $_POST["$attrib#persistence"],
+                                        $profile,
+                                        POST("$attrib#rrd_attrib"),
+                                        POST("$attrib#threshold"),
+                                        POST("$attrib#priority"),
+                                        POST("$attrib#alpha"),
+                                        POST("$attrib#beta"),
+                                        POST("$attrib#persistence"),
                                         $enable);
                 }
             }

@@ -12,7 +12,9 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 </head>
 <body>
                                                                                 <?php 
-    if ($_REQUEST["scan"]) {
+    
+    require_once ('classes/Security.inc');
+    if (REQUEST('scan')) {
         echo "<h1>" . gettext("Insert new scan") . "</h1>";
         echo "<p>";
         echo gettext("Please, fill these global properties about the hosts you've scaned");
@@ -28,16 +30,27 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
     require_once ('classes/Sensor.inc');
     require_once ('classes/RRD_config.inc');
 
+    $ip = REQUEST('ip');
+    $ips = REQUEST('ips');
+    $scan = REQUEST('scan');
+   
+    ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("ip"));
+    ossim_valid($ips, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("ips"));
+    ossim_valid($scan, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("scan"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+
     $db = new ossim_db();
     $conn = $db->connect();
-    $conf = new ossim_conf();
+    $conf = $GLOBALS["CONF"];
     $threshold = $conf->get_conf("threshold");
 
     $action = "newhost.php";
-    if ($_REQUEST["ip"]) {
-        $ip = $_REQUEST["ip"];
-    } elseif ($_REQUEST["scan"]) {
-        $ip = $_REQUEST["target"];
+    
+    if (REQUEST('scan')) {
+        $ip = REQUEST('target');
         $action = "../netscan/scan_db.php";
     }
 ?>
@@ -47,7 +60,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
       <input type="hidden" name="insert" value="insert">
 
 <?php
-    if (!$_REQUEST["scan"]) {
+    if (empty($scan)) {
 ?>
   <tr>
     <th> <?php echo gettext("Hostname"); ?> (*)</th>
@@ -154,7 +167,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
                                                                                 
     /* ===== sensors ==== */
     $i = 1;
-    if ($sensor_list = Sensor::get_list($conn)) {
+    if ($sensor_list = Sensor::get_list($conn, "ORDER BY name")) {
         foreach($sensor_list as $sensor) {
             $sensor_name = $sensor->get_name();
             $sensor_ip =   $sensor->get_ip();
@@ -180,12 +193,12 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <tr>
     <th> <?php echo gettext("Scan options"); ?> </th>
     <td class="left">
-      <input type="checkbox" name="nessus" value="1">
-      <?php echo gettext("Enable nessus scan"); ?> </input>
+      <input type="checkbox" name="nessus" value="1"> <?php echo gettext("Enable nessus scan"); ?> </input><br/>
+      <input type="checkbox" name="nagios" value="1"> <?php echo gettext("Enable nagios"); ?> </input>
     </td>
   </tr>
 <?php
-    if (!$_REQUEST["scan"]) {
+    if (empty($scan)) {
 ?>
   <tr>
     <th> <?php echo gettext("OS"); ?> </th>
@@ -222,12 +235,12 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 <?php
     } else {
 ?>
-        <input type="hidden" name="ips" value="<?php echo $_POST["ips"] ?>" />
+        <input type="hidden" name="ips" value="<?php echo $ips ?>" />
 <?php
-        for ($i = 0; $i < $_POST["ips"]; $i++) {
+        for ($i = 0; $i < $ips; $i++) {
 ?>
         <input type="hidden" name="ip_<?php echo $i ?>" 
-            value="<?php echo $_POST["ip_$i"] ?>" />
+            value="<?php echo POST("ip_$i") ?>" />
 <?php
         } /* foreach */
     } /* if ($scan) */

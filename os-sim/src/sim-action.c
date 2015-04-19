@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-action.h"
+#include <config.h>
 
 enum
 {
@@ -46,7 +46,6 @@ struct _SimActionPrivate {
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
@@ -150,3 +149,6 @@ sim_action_clone (SimAction *action)
 
   return new_action;
 }
+
+// vim: set tabstop=2:
+

@@ -240,33 +240,33 @@
     </rule>
 </directive>
 
-<directive id="11" name="Possible portscan originating at SRC_IP" priority="4">
+<directive id="11" name="Possible portscan against DST_IP" priority="4">
     <rule type="detector" name="Rare dest connection" reliability="1"
-    occurrence="1" from="ANY" to="ANY" port_from="ANY"
-    port_to="ANY" plugin_id="1104" plugin_sid="ANY" protocol="TCP">
+    occurrence="1" from="ANY" to="ANY" port_from="!20,139"
+    port_to="ANY" plugin_id="1104" plugin_sid="1,3" protocol="TCP">
         <rules>
             <rule type="detector" name="Too many rare connections (15) against
             same ip" reliability="3" time_out="300" occurrence="15"
             from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
-            plugin_id="1104" plugin_sid="ANY" sticky="true"
+            plugin_id="1104" plugin_sid="1,3" sticky="true"
             sticky_different="DST_PORT" protocol="TCP">
                 <rules>
                     <rule type="detector" name="Too many rare connections
                     (300) against same ip" reliability="5" time_out="1200"
                     occurrence="300" from="1:SRC_IP" to="1:DST_IP"
                     port_from="ANY" port_to="ANY" plugin_id="1104"
-                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    plugin_sid="1,3" sticky="true" sticky_different="DST_PORT"
                     protocol="TCP">
                         <rules>
                     <rule type="detector" name="Too many rare connections (2000) against same ip" reliability="10" time_out="1800" occurrence="2000" from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY" plugin_id="1104"
-		    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+		    plugin_sid="1,3" sticky="true" sticky_different="DST_PORT"
             protocol="TCP">
                     <rules>
                     <rule type="detector" name="Too many rare connections
                     (20000) against same ip" reliability="10" time_out="43200"
                     occurrence="20000" from="1:SRC_IP" to="1:DST_IP"
                     port_from="ANY" port_to="ANY" plugin_id="1104"
-                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    plugin_sid="1,3" sticky="true" sticky_different="DST_PORT"
                     protocol="TCP"/>
                     </rules>
                     </rule>
@@ -324,4 +324,157 @@
             sticky="true" sticky_different="DST_IP"/>
         </rules>
     </rule>
+</directive>
+
+<directive id="14" name="NMAP portscan against DST_IP" priority="4">
+    <rule type="detector" name="Rare dest connection" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="!20,139"
+    port_to="ANY" plugin_id="1104" plugin_sid="ANY" protocol="TCP">
+        <rules>
+            <rule type="detector" name="Too many rare connections (15) against
+            same ip" reliability="3" time_out="300" occurrence="15"
+            from="1:SRC_IP" to="1:DST_IP" port_from="1:SRC_PORT" port_to="ANY"
+            plugin_id="1104" plugin_sid="ANY" sticky="true"
+            sticky_different="DST_PORT" protocol="TCP">
+                <rules>
+                    <rule type="detector" name="Too many rare connections
+                    (300) against same ip" reliability="5" time_out="1200"
+                    occurrence="300" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="1:SRC_PORT" port_to="ANY" plugin_id="1104"
+                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP">
+                        <rules>
+                    <rule type="detector" name="Too many rare connections
+                    (2000) against same ip" reliability="10" time_out="1800"
+                    occurrence="2000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="1:SRC_PORT" port_to="ANY" plugin_id="1104"
+		    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+            protocol="TCP">
+                    <rules>
+                    <rule type="detector" name="Too many rare connections
+                    (20000) against same ip" reliability="10" time_out="43200"
+                    occurrence="20000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="1:SRC_PORT" port_to="ANY" plugin_id="1104"
+                    plugin_sid="ANY" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP"/>
+                    </rules>
+                    </rule>
+                        </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+
+<directive id="15" name="Portscan against DST_IP detected using IPTables" priority="4">
+    <rule type="detector" name="Dest connection logged at fw" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1503" plugin_sid="1,2,3" protocol="TCP">
+        <rules>
+            <rule type="detector" name="Too many connections (15) against
+            same ip" reliability="3" time_out="300" occurrence="15"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1503" plugin_sid="1,2,3" sticky="true"
+            sticky_different="DST_PORT" protocol="TCP">
+                <rules>
+                    <rule type="detector" name="Too many connections
+                    (300) against same ip" reliability="5" time_out="1200"
+                    occurrence="300" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1503"
+                    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP">
+                        <rules>
+                    <rule type="detector" name="Too many connections
+                    (2000) against same ip" reliability="10" time_out="1800"
+                    occurrence="2000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1503"
+		    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+            protocol="TCP">
+                    <rules>
+                    <rule type="detector" name="Too many connections
+                    (20000) against same ip" reliability="10" time_out="43200"
+                    occurrence="20000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1503"
+                    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP"/>
+                    </rules>
+                    </rule>
+                        </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<directive id="16" name="Portscan against DST_IP detected using FW1" priority="4">
+    <rule type="detector" name="Dest connection logged at fw" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1504" plugin_sid="1,2,3" protocol="TCP">
+        <rules>
+            <rule type="detector" name="Too many connections (15) against
+            same ip" reliability="3" time_out="300" occurrence="15"
+            from="1:SRC_IP" to="1:DST_IP" port_from="ANY" port_to="ANY"
+            plugin_id="1504" plugin_sid="1,2,3" sticky="true"
+            sticky_different="DST_PORT" protocol="TCP">
+                <rules>
+                    <rule type="detector" name="Too many connections
+                    (300) against same ip" reliability="5" time_out="1200"
+                    occurrence="300" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1504"
+                    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP">
+                        <rules>
+                    <rule type="detector" name="Too many connections (2000) against same ip" reliability="10" time_out="1800"
+                    occurrence="2000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1504"
+		    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+            protocol="TCP">
+                    <rules>
+                    <rule type="detector" name="Too many connections (20000) against same ip" reliability="10" time_out="43200"
+                    occurrence="20000" from="1:SRC_IP" to="1:DST_IP"
+                    port_from="ANY" port_to="ANY" plugin_id="1504"
+                    plugin_sid="1,2,3" sticky="true" sticky_different="DST_PORT"
+                    protocol="TCP"/>
+                    </rules>
+                    </rule>
+                        </rules>
+                    </rule>
+                </rules>
+            </rule>
+        </rules>
+    </rule>
+</directive>
+
+<directive id="17" name="An important host (SRC_IP) has changed its MAC address" priority="2">
+    <rule type="detector" name="Rare dest connection" reliability="2"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1512" plugin_sid="2" />
+</directive>
+
+<directive id="18" name="An important host (SRC_IP) has changed its OS" priority="2">
+    <rule type="detector" name="Rare dest connection" reliability="2"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY"
+    port_to="ANY" plugin_id="1511" plugin_sid="2" />
+</directive>
+
+<!-- Just a sample directive showing how to threshold alarms -->
+<!-- This one thresholds "edk2 connection to server" and "ssh covert usage" -->
+<directive id="19" name="SRC_IP: Alarm raised for plugin PLUGIN_ID:PLUGIN_SID" priority="3">
+    <rule type="detector" name="Rare dest connection" reliability="1"
+    occurrence="1" from="ANY" to="ANY" port_from="ANY" port_to="ANY"
+    plugin_id="1001" plugin_sid="2000330,2000354">
+        <rules>
+            <rule type="detector" name="(5) event occurences"  reliability="3"
+            time_out="1800" occurrence="5" from="1:SRC_IP" to="ANY"
+            port_from="ANY" port_to="ANY" plugin_id="1001"
+            plugin_sid="1:PLUGIN_SID" sticky="true">
+            <rules>
+            <rule type="detector" name="(150) event occurences"
+            reliability="3" time_out="18000" occurrence="150" from="1:SRC_IP"
+            to="ANY" port_from="ANY" port_to="ANY" plugin_id="1001"
+            plugin_sid="1:PLUGIN_SID" sticky="true"/>
+            </rules></rule></rules></rule>
 </directive>

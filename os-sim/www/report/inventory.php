@@ -13,7 +13,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 <body>
 
 <?php 
-    if (!$ip = $_GET["host"]) { 
+if (!$ip = validateVar($_GET["host"])) { 
         echo "<p>Wrong ip</p>";
         exit;
     }
@@ -39,7 +39,7 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     /* services update */
     if ($_GET["origin"] == 'active' && $_GET["update"] == 'services') 
     {
-        $conf = new ossim_conf();
+        $conf = $GLOBALS["CONF"];
         $nmap = $conf->get_conf("nmap_path");
 
         $ip = escapeshellcmd($ip);
@@ -59,8 +59,9 @@ Session::logcheck("MenuReports", "ReportsHostReport");
                 $service_type = $regs[2];
                 $version = $regs[4];
                 $origin = 1;
-                $date_formatted = strftime("%Y-%m-%d %H:%M:%S");
-                Host_services::insert($conn, $ip, $port, $protocol, $service, $service_type, $version, $date_formatted, $origin); // origin = 0 (pads), origin = 1 (nmap)
+                $date = strftime("%Y-%m-%d %H:%M:%S");
+                Host_services::insert($conn, $ip, $port, $date,
+                $_SERVER["SERVER_ADDR"], $protocol, $service, $service_type, $version, $origin); // origin = 0 (pads), origin = 1 (nmap)
             }
         }
     }
@@ -88,15 +89,14 @@ Session::logcheck("MenuReports", "ReportsHostReport");
         <td><b><?php echo $ip ?></b></td>
       </tr>
 <?php
-    if ($os_list = Host_os::get_list($conn, "WHERE ip = inet_aton('$ip')")) {
-        $os = $os_list[0];
+    if ($os = Host_os::get_ip_data($conn, $ip)) {
 ?>
       <tr>
         <th> <?php echo gettext("Operating System"); ?> </th>
         <td>
 <?php 
-            echo $os->os . " ";
-            echo Host_os::get_os_pixmap($conn, $os->get_ip()); 
+            echo $os["os"]; 
+            echo Host_os::get_os_pixmap($conn, $ip); 
 ?>
         </td>
       </tr>
@@ -106,12 +106,11 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 
 <?php
 
-    if ($mac_list = Host_mac::get_list($conn, "WHERE ip = inet_aton('$ip')")) {
-        $mac = $mac_list[0];
+    if ($mac = Host_mac::get_ip_data($conn, $ip)) {
 ?>
       <tr>
         <th>MAC</th>
-        <td><?php echo $mac->get_mac() ?></td>
+        <td><?php echo $mac["mac"]; ?></td>
       </tr>
 <?php
     }
@@ -193,29 +192,29 @@ Session::logcheck("MenuReports", "ReportsHostReport");
       </tr>
 <?php
     if($_GET["origin"] == 'active'){
-    if ($services_list = Host_services::get_list($conn, "WHERE ip = inet_aton('$ip') and origin = 1")) {
+    if ($services_list = Host_services::get_ip_data($conn, $ip, '1')) {
         foreach ($services_list as $services) {
 ?>
       <tr>
-        <td><?php echo $services->get_service() . " (" .
-            $services->get_port(). "/" .
-            getprotobynumber($services->get_protocol()) . ")" ?></td>
-        <td><?php echo $services->get_version() ?></td>
-        <td><?php echo $services->get_date() ?></td>
+        <td><?php echo $services['service'] . " (" .
+            $services['port']. "/" .
+            getprotobynumber($services['protocol']) . ")" ?></td>
+        <td><?php echo $services['version'] ?></td>
+        <td><?php echo $services['date'] ?></td>
       </tr>
 <?php
         }
     }
-    } else {
-    if ($services_list = Host_services::get_list($conn, "WHERE ip = inet_aton('$ip') and origin = 0")) {
+    } elseif ($_GET["origin"] == 'passive') {
+    if ($services_list = Host_services::get_ip_data($conn, $ip,'0')) {
         foreach ($services_list as $services) {
 ?>
       <tr>
-        <td><?php echo $services->get_service() . " (" .
-            $services->get_port(). "/" .
-            getprotobynumber($services->get_protocol()) . ")" ?></td>
-        <td><?php echo $services->get_version() ?></td>
-        <td><?php echo $services->get_date() ?></td>
+        <td><?php echo $services['service'] . " (" .
+            $services['port']. "/" .
+            getprotobynumber($services['protocol']) . ")" ?></td>
+        <td><?php echo $services['version'] ?></td>
+        <td><?php echo $services['date'] ?></td>
       </tr>
 <?php
         }

@@ -32,13 +32,13 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 #include <gnet.h>
 
 #include "sim-directive.h"
 #include "sim-rule.h"
 #include "sim-action.h"
 #include "sim-inet.h"
+#include <config.h>
 
 #include <time.h>
 
@@ -56,13 +56,13 @@ struct _SimDirectivePrivate {
 
   gint       priority;
 
-  gboolean   matched;
+  gboolean   matched;	//this is filled in the last level of the directive
 
   GTime      time_out;
   gint64     time;
   GTime      time_last;
 
-  GNode     *rule_root;
+  GNode     *rule_root; //this is tested in sim_rule_match_by_event. It's a SimRule.
   GNode     *rule_curr;
 
   GList		*groups;
@@ -83,7 +83,6 @@ static void
 sim_directive_impl_finalize (GObject  *gobject)
 {
   SimDirective *directive = SIM_DIRECTIVE (gobject);
-  GList        *list;
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_impl_finalize: Id %lu, Name %s, BacklogId %lu, Match %d", 
 	 directive->_priv->id, directive->_priv->name, directive->_priv->backlog_id, directive->_priv->matched);
@@ -115,7 +114,7 @@ sim_directive_instance_init (SimDirective *directive)
 {
   directive->_priv = g_new0 (SimDirectivePrivate, 1);
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_instance_init");
+  //g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_directive_instance_init");
 
   directive->_priv->backlog_id = 0;
 
@@ -281,8 +280,8 @@ sim_directive_free_groups (SimDirective		*directive)
 GList*
 sim_directive_get_groups (SimDirective		*directive)
 {
-  g_return_if_fail (directive);
-  g_return_if_fail (SIM_IS_DIRECTIVE (directive));
+  g_return_val_if_fail (directive, NULL);
+  g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
 
   return directive->_priv->groups;
 }
@@ -396,9 +395,9 @@ sim_directive_get_priority (SimDirective   *directive)
   g_return_val_if_fail (directive != NULL, 0);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), 0);
 
-  if (directive->_priv->priority < 0)
+  if (directive->_priv->priority <= 0)
     return 0;
-  if (directive->_priv->priority > 5)
+  if (directive->_priv->priority >= 5)
     return 5;
 
   return directive->_priv->priority;
@@ -638,12 +637,13 @@ sim_directive_get_rule_level (SimDirective   *directive)
 
 /*
  *
- *
+ * We want to know if the directive match with the root node directive.
+ * We only check this against the root node. Here we don't check the children nodes of the directive
  *
  */
 gboolean
-sim_directive_match_by_alert (SimDirective  *directive,
-			      SimAlert      *alert)
+sim_directive_match_by_event (SimDirective  *directive,
+												      SimEvent      *event)
 {
   SimRule *rule;
   gboolean match;
@@ -654,24 +654,27 @@ sim_directive_match_by_alert (SimDirective  *directive,
   g_return_val_if_fail (directive->_priv->rule_root, FALSE);
   g_return_val_if_fail (directive->_priv->rule_root->data, FALSE);
   g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_root->data), FALSE);
-  g_return_val_if_fail (alert, FALSE);
-  g_return_val_if_fail (SIM_IS_ALERT (alert), FALSE);
+  g_return_val_if_fail (event, FALSE);
+  g_return_val_if_fail (SIM_IS_EVENT (event), FALSE);
 
   rule = SIM_RULE (directive->_priv->rule_root->data);
 
-  match = sim_rule_match_by_alert (rule, alert);
+  match = sim_rule_match_by_event (rule, event); 
 
   return match;
 }
 
 /*
  *
- *
- *
+ * This will check if an event can match with some of the data in backlog. the backlog is in fact 
+ * one directive with data from events.
+ * 
+ * Each backlog entry is a tree with all the rules from a directive (is a directive clone). And 
+ * each one of those rules (SimRule) contains also the data from the event that matched with the rule.
  */
 gboolean
-sim_directive_backlog_match_by_alert (SimDirective  *directive,
-				      SimAlert    *alert)
+sim_directive_backlog_match_by_event (SimDirective  *directive,
+																      SimEvent    *event)
 {
   GNode      *node = NULL;
 
@@ -681,52 +684,57 @@ sim_directive_backlog_match_by_alert (SimDirective  *directive,
   g_return_val_if_fail (directive->_priv->rule_curr, FALSE);
   g_return_val_if_fail (directive->_priv->rule_curr->data, FALSE);
   g_return_val_if_fail (SIM_IS_RULE (directive->_priv->rule_curr->data), FALSE);
-  g_return_val_if_fail (alert, FALSE);
-  g_return_val_if_fail (SIM_IS_ALERT (alert), FALSE);
+  g_return_val_if_fail (event, FALSE);
+  g_return_val_if_fail (SIM_IS_EVENT (event), FALSE);
 
   node = directive->_priv->rule_curr->children;
-  while (node)
-    {
-      SimRule *rule = (SimRule *) node->data;
+  while (node)		//we have to check the event against all the rule nodes from backlog 
+									//(except the root_node because it's checked in sim_directive_match_by_event 
+									//wich is called from sim_organizer_correlation).
+  {
+    SimRule *rule = (SimRule *) node->data;
 
-      if (sim_rule_match_by_alert (rule, alert))
-	{
-	  GTime time_last = time (NULL);
-	  directive->_priv->rule_curr = node;
-	  directive->_priv->time_last = time_last;
-	  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
+    if (sim_rule_match_by_event (rule, event))
+		{
+		  GTime time_last = time (NULL);
+			directive->_priv->rule_curr = node;		//each time that the event matches, the directive goes down one level to 
+																						//the node that matched. next time, the event will be checked against this level
+																						//FIXME: may be that there are a memory leak in the parent node? 
+		  directive->_priv->time_last = time_last;
+		  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
 
-	  sim_rule_set_alert_data (rule, alert);
-	  sim_rule_set_time_last (rule, time_last);
+			sim_rule_set_event_data (rule, event);		//here we asign the data from event to the fields in the rule,
+																								//so each time we enter into the rule we can see the event that matched
+		  sim_rule_set_time_last (rule, time_last);
 
-	  if (!G_NODE_IS_LEAF (node))
+		  if (!G_NODE_IS_LEAF (node))
 	    {
 	      GNode *children = node->children;
 	      while (children)
-		{
-		  SimRule *rule_child = (SimRule *) children->data;
+				{
+				  SimRule *rule_child = (SimRule *) children->data;
 
-		  sim_rule_set_time_last (rule_child, time_last);
+				  sim_rule_set_time_last (rule_child, time_last);
 
-		  sim_directive_set_rule_vars (directive, children);
-		  children = children->next;
+				  sim_directive_set_rule_vars (directive, children);
+				  children = children->next;
+				}
+			}
+		  else
+		  {
+			  directive->_priv->matched = TRUE;
+		  }
+
+		  return TRUE;
 		}
-	    }
-	  else
-	    {
-	      directive->_priv->matched = TRUE;
-	    }
-
-	  return TRUE;
+	  node = node->next;
 	}
-      node = node->next;
-    }
 
   return FALSE;
 }
 
 /*
- *
+ * Check all the nodes (rules) in the directive to see if.......
  *
  *
  */
@@ -745,59 +753,63 @@ sim_directive_backlog_match_by_not (SimDirective  *directive)
 
   node = directive->_priv->rule_curr->children;
 
-  while (node)
-    {
-      SimRule *rule = (SimRule *) node->data;
-      
-      if ((sim_rule_is_time_out (rule)) && (sim_rule_get_not (rule)) && (!sim_rule_is_not_invalid (rule))) 
-	{
-	  GTime time_last = time (NULL);
-	  directive->_priv->rule_curr = node;
-	  directive->_priv->time_last = time_last;
-	  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
+  while (node) 
+  {
+    SimRule *rule = (SimRule *) node->data;
+		//if the rule is timeouted &&       
+    if ((sim_rule_is_time_out (rule)) && (sim_rule_get_not (rule)) && (!sim_rule_is_not_invalid (rule))) 
+		{
+		  GTime time_last = time (NULL);
+	  	directive->_priv->rule_curr = node;
+		  directive->_priv->time_last = time_last;
+		  directive->_priv->time_out = sim_directive_get_rule_curr_time_out_max (directive);
 
-	  sim_rule_set_not_data (rule);
+	  	sim_rule_set_not_data (rule);
 
-	  if (!G_NODE_IS_LEAF (node))
+		  if (!G_NODE_IS_LEAF (node)) //this isn't the last node, it has some children
 	    {
 	      children = node->children;
 	      while (children)
-		{
-		  SimRule *rule_child = (SimRule *) children->data;
+				{
+		  		SimRule *rule_child = (SimRule *) children->data;
 
-		  sim_rule_set_time_last (rule_child, time_last);
+				  sim_rule_set_time_last (rule_child, time_last);
 
-		  sim_directive_set_rule_vars (directive, children);
-		  children = children->next;
-		}
+				  sim_directive_set_rule_vars (directive, children);
+				  children = children->next;
+				}
 	    }
-	  else
+	  	else //last node!
 	    {
 	      directive->_priv->matched = TRUE;
 	    }
 	  
-	  return TRUE;
-	}
-      node = node->next;
-    }
+	  	return TRUE;
+		}
+    node = node->next;
+  }
 
   return FALSE;
 }
 
 /*
- *
- *
+ * backlog & directives is almost the same: backlog is where directives are stored and filled with data from events.
+ * 
+ * The "node" function parameter is a children node. We need to add to that node the src_ip, port, etc from the
+ * node whose level is referenced. ie. if "node" parameter is the children2 in root_node->children1->children2, and we
+ * have something like 1:PLUGIN_SID in children2, we have to add the plugin_sid from root_node to children2
  *
  */
 void
 sim_directive_set_rule_vars (SimDirective     *directive,
-			     GNode            *node)
+												     GNode            *node)
 {
   SimRule    *rule;
   SimRule    *rule_up;
   GNode      *node_up;
   GList      *vars;
   GInetAddr  *ia;
+  GInetAddr  *sensor;
   gint        port;
   gint        sid;
   SimProtocolType  protocol;
@@ -808,132 +820,142 @@ sim_directive_set_rule_vars (SimDirective     *directive,
   g_return_if_fail (g_node_depth (node) > 1);
 
   rule = (SimRule *) node->data;
-  vars = sim_rule_get_vars (rule);
+  vars = sim_rule_get_vars (rule);	
 
-  while (vars)
-    {
-      SimRuleVar *var = (SimRuleVar *) vars->data;
+  while (vars)	//just in case there are vars (ie. 1:PLUGIN_SID or 2:SRC_IP) in the rule.
+  {
+    SimRuleVar *var = (SimRuleVar *) vars->data;
 
-      node_up = sim_directive_get_node_branch_by_level (directive, node, var->level);
-      if (!node_up)
-	{
-	  vars = vars->next;
-	  continue;
-	}
+		//now we need to know the node to wich is referencing the level in the SimRuleVar. 
+		node_up = sim_directive_get_node_branch_by_level (directive, node, var->level); 
+    if (!node_up)
+		{
+		  vars = vars->next;
+			continue;
+		}
 
-      rule_up = (SimRule *) node_up->data;
+		rule_up = (SimRule *) node_up->data;
 
-      switch (var->type)
-	{
-	case SIM_RULE_VAR_SRC_IA:
-	  ia = sim_rule_get_src_ia (rule_up);
+		//"node" function parameter is a children node. We need to add to that node the src_ip, port, etc from the
+		//node whose level is referencec. ie. if this is the children2 in root_node->children1->children2, and we
+		//have something like 1:PLUGIN_SID in children2, we have to add the plugin_sid from root_node to children2
+		switch (var->type)
+		{
+			case SIM_RULE_VAR_SRC_IA:
+						ia = sim_rule_get_src_ia (rule_up);
 
-	  switch (var->attr)
-	    {
-	    case SIM_RULE_VAR_SRC_IA:
-	      sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr (ia));
-	      break;
-	    case SIM_RULE_VAR_DST_IA:
-	      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr (ia));
-	      break;
-	    default:
-	      break;
-	    }
-	  break;
+					  switch (var->attr)
+				    {
+					    case SIM_RULE_VAR_SRC_IA:
+								    sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr (ia));
+							      break;
+					    case SIM_RULE_VAR_DST_IA:
+							      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr (ia));
+							      break;
+					    default:
+							      break;
+						}
+					  break;
 
-	case SIM_RULE_VAR_DST_IA:
-	  ia = sim_rule_get_dst_ia (rule_up);
+			case SIM_RULE_VAR_DST_IA:
+						ia = sim_rule_get_dst_ia (rule_up);
 
-	  switch (var->attr)
-	    {
-	    case SIM_RULE_VAR_SRC_IA:
-	      sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr  (ia));
-	      break;
-	    case SIM_RULE_VAR_DST_IA:
-	      sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr  (ia));
-	      break;
-	    default:
-	      break;
-	    }
-	  break;
+						switch (var->attr)
+						{
+							case SIM_RULE_VAR_SRC_IA:
+										sim_rule_append_src_inet (rule, sim_inet_new_from_ginetaddr  (ia));
+										break;
+							case SIM_RULE_VAR_DST_IA:
+										sim_rule_append_dst_inet (rule, sim_inet_new_from_ginetaddr  (ia));
+										break;
+							default:
+										break;
+						}
+						break;
 
-	case SIM_RULE_VAR_SRC_PORT:
-	  port = sim_rule_get_src_port (rule_up);
+			case SIM_RULE_VAR_SRC_PORT:
+						port = sim_rule_get_src_port (rule_up);
 
-	  switch (var->attr)
-	    {
-	    case SIM_RULE_VAR_SRC_PORT:
-	      sim_rule_append_src_port (rule, port);
-	      break;
-	    case SIM_RULE_VAR_DST_PORT:
-	      sim_rule_append_dst_port (rule, port);
-	      break;
-	    default:
-	      break;
-	    }
-	  break;
+						switch (var->attr)
+						{
+							case SIM_RULE_VAR_SRC_PORT:
+										sim_rule_append_src_port (rule, port);
+										break;
+							case SIM_RULE_VAR_DST_PORT:
+										sim_rule_append_dst_port (rule, port);
+										break;
+							default:
+										break;
+						}
+						break;
 
-	case SIM_RULE_VAR_DST_PORT:
-	  port = sim_rule_get_dst_port (rule_up);
+			case SIM_RULE_VAR_DST_PORT:
+						port = sim_rule_get_dst_port (rule_up);
 
-	  switch (var->attr)
-	    {
-	    case SIM_RULE_VAR_SRC_PORT:
-	      sim_rule_append_src_port (rule, port);
-	      break;
-	    case SIM_RULE_VAR_DST_PORT:
-	      sim_rule_append_dst_port (rule, port);
-	      break;
-	    default:
-	      break;
-	    }
-	  break;
+						switch (var->attr)
+						{
+							case SIM_RULE_VAR_SRC_PORT:
+										sim_rule_append_src_port (rule, port);
+										break;
+							case SIM_RULE_VAR_DST_PORT:
+										sim_rule_append_dst_port (rule, port);
+										break;
+							default:
+										break;
+						}
+						break;
 
-	case SIM_RULE_VAR_PLUGIN_SID:
-	  sid = sim_rule_get_plugin_sid (rule_up);
-	  sim_rule_append_plugin_sid (rule, sid);
-	  break;
+			case SIM_RULE_VAR_PLUGIN_SID:
+						sid = sim_rule_get_plugin_sid (rule_up);
+						sim_rule_append_plugin_sid (rule, sid);
+						break;
 
-	case SIM_RULE_VAR_PROTOCOL:
-	  protocol = sim_rule_get_protocol (rule_up);
-	  sim_rule_append_protocol (rule, protocol);
-	  break;
+			case SIM_RULE_VAR_PROTOCOL:
+						protocol = sim_rule_get_protocol (rule_up);
+						sim_rule_append_protocol (rule, protocol);
+						break;
 
-	default:
-	  break;
-	}
+      case SIM_RULE_VAR_SENSOR:
+            sensor = sim_rule_get_sensor (rule_up);
+						gchar *aux = gnet_inetaddr_get_canonical_name (sensor);
+            sim_rule_append_sensor (rule, sim_sensor_new_from_hostname(aux));
+            break;
 
-      vars = vars->next;
-    }
+			default:
+						break;
+		}
+
+    vars = vars->next;
+  }
 }
 
 /*
- *
- *
- *
+ * This function returns the node to wich is referencing the directive level when you say something like "1:SRC_IP".
+ * Take for example: root_node->children1->children2. If the "node" parameter in the function is children2, and the
+ * level is 1, then this will return the root_node, as it's the 1st level of the children.
  */
 GNode*
 sim_directive_get_node_branch_by_level (SimDirective     *directive,
-					GNode            *node,
-					gint              level)
+																				GNode            *node,
+																				gint              level)
 {
   GNode  *ret;
   gint    up_level;
   gint    i;
-
+	
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
   g_return_val_if_fail (node, NULL);
   
-  up_level = g_node_depth (node) - level;
+  up_level = g_node_depth (node) - level;	//The root node has a depth of 1.For the children of the root node the depth is 2
   if (up_level < 1)
     return NULL;
 
   ret = node;
   for (i = 0; i < up_level; i++)
-    {
-      ret = ret->parent;
-    }
+  {
+    ret = ret->parent;
+  }
   
   return ret;
 }
@@ -983,8 +1005,8 @@ sim_directive_is_time_out (SimDirective     *directive)
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), FALSE);
   g_return_val_if_fail (!directive->_priv->matched, FALSE);
 
-  if ((!directive->_priv->time_out) || (!directive->_priv->time_last))
-    return FALSE;
+  if ((!directive->_priv->time_out) || (!directive->_priv->time_last))	//if directive hasn't got any time, this
+    return FALSE;																												//is the 1st time it enteres here, so no timeout.
 
   if (time (NULL) > (directive->_priv->time_last + directive->_priv->time_out))
     return TRUE;
@@ -1047,7 +1069,6 @@ sim_directive_clone (SimDirective     *directive)
 {
   SimDirective     *new_directive;
   GTimeVal          curr_time;
-  GList            *list;
 
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
@@ -1104,7 +1125,6 @@ sim_directive_backlog_get_insert_clause (SimDirective *directive)
 /*
  *
  *
- *
  */
 gchar*
 sim_directive_backlog_get_update_clause (SimDirective *directive)
@@ -1148,26 +1168,26 @@ sim_directive_backlog_get_delete_clause (SimDirective *directive)
  *
  */
 gchar*
-sim_directive_backlog_alert_get_insert_clause (SimDirective *directive,
-					       SimAlert     *alert)
+sim_directive_backlog_event_get_insert_clause (SimDirective *directive,
+					    															   SimEvent     *event)
 {
   gchar    *query;
   
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
-  g_return_val_if_fail (alert, NULL);
-  g_return_val_if_fail (SIM_IS_ALERT (alert), NULL);
+  g_return_val_if_fail (event, NULL);
+  g_return_val_if_fail (SIM_IS_EVENT (event), NULL);
   
-  query = g_strdup_printf ("INSERT INTO backlog_alert"
-			   " (backlog_id, alert_id, time_out,"
+  query = g_strdup_printf ("INSERT INTO backlog_event"
+			   " (backlog_id, event_id, time_out,"
 			   " occurrence, rule_level, matched)"
 			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
 			   directive->_priv->backlog_id,
-			   alert->id,
+			   event->id,
 			   directive->_priv->time_out,
-			   alert->count,
-			   alert->level,
-			   alert->matched);
+			   event->count,
+			   event->level,
+			   event->matched);
 
   return query;
 }
@@ -1178,26 +1198,26 @@ sim_directive_backlog_alert_get_insert_clause (SimDirective *directive,
  *
  */
 gchar*
-sim_directive_backlog_alert_get_delete_clause (SimDirective *directive,
-					       SimAlert     *alert)
+sim_directive_backlog_event_get_delete_clause (SimDirective *directive,
+					       SimEvent     *event)
 {
   gchar    *query;
   
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
-  g_return_val_if_fail (alert, NULL);
-  g_return_val_if_fail (SIM_IS_ALERT (alert), NULL);
+  g_return_val_if_fail (event, NULL);
+  g_return_val_if_fail (SIM_IS_EVENT (event), NULL);
   
-  query = g_strdup_printf ("DELETE FROM backlog_alert WHERE backlog_id ="
-			   " (backlog_id, alert_id, time_out,"
+  query = g_strdup_printf ("DELETE FROM backlog_event WHERE backlog_id ="
+			   " (backlog_id, event_id, time_out,"
 			   " occurrence, rule_level, matched)"
 			   " VALUES (%lu, %lu, %d, %d, %d, %d)",
 			   directive->_priv->backlog_id,
-			   alert->id,
+			   event->id,
 			   directive->_priv->time_out,
-			   alert->count,
-			   alert->level,
-			   alert->matched);
+			   event->count,
+			   event->level,
+			   event->matched);
 
   return query;
 }
@@ -1228,7 +1248,6 @@ sim_directive_backlog_to_string (SimDirective  *directive)
   GString  *str, *vals;
   GNode    *node;
   gchar    *val;
-  gint      i;
 
   g_return_val_if_fail (directive, NULL);
   g_return_val_if_fail (SIM_IS_DIRECTIVE (directive), NULL);
@@ -1236,26 +1255,29 @@ sim_directive_backlog_to_string (SimDirective  *directive)
 
   str = g_string_sized_new (0);
   g_string_append_printf (str, "%s, Priority: %d\n",
-			  directive->_priv->name,
-			  directive->_priv->priority);
+												  directive->_priv->name,
+												  directive->_priv->priority);
 
   vals = g_string_sized_new (0);
   node = directive->_priv->rule_curr;
   while (node)
-    {
-      SimRule *rule = (SimRule *) node->data;
+  {
+    SimRule *rule = (SimRule *) node->data;
       
-      if ((val = sim_rule_to_string (rule)))
-	{
-	  g_string_prepend (vals, val);
-	  g_free (val);
-	}
+    if ((val = sim_rule_to_string (rule)))
+		{
+		  g_string_prepend (vals, val);
+	  	g_free (val);
+		}
 
-      node = node->parent;
-    }
+    node = node->parent;
+  }
 
   g_string_append (str, vals->str);
   g_string_free (vals, TRUE);
 
   return g_string_free (str, FALSE);
 }
+
+// vim: set tabstop=2:
+

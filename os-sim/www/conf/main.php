@@ -1,19 +1,10 @@
 <?php
-require_once ('classes/Session.inc');
+require_once 'classes/Session.inc';
 Session::logcheck("MenuConfiguration", "ConfigurationMain");
-?>
+require_once 'ossim_conf.inc';
+require_once 'classes/Security.inc';
 
-<html>
-<head>
-  <title> <?php echo gettext("Main Configuration"); ?> </title>
-  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
-</head>
-
-<?php
-
-require_once ('ossim_conf.inc');
-$ossim_conf = new ossim_conf();
+$ossim_conf = $GLOBALS["CONF"];
 
 $CONFIG = array (
 
@@ -41,13 +32,26 @@ $CONFIG = array (
     "server" => array 
     (
         "title" => gettext("Server"),
-        "desc"  => gettext("Configure where the server's listening address"),
+        "desc"  => gettext("Configure the server's listening address"),
         "conf"  => array 
         (
             "server_address"    => "text",
             "server_port"       => "text"
         )
     ),
+
+    "frameworkd" => array 
+    (
+        "title" => gettext("FrameworkD"),
+        "desc"  => gettext("Configure the frameworkd's listening address"),
+        "conf"  => array 
+        (
+            "frameworkd_address"    => "text",
+            "frameworkd_port"       => "text"
+        )
+    ),
+
+
 
     "snort" => array 
     (
@@ -76,7 +80,18 @@ $CONFIG = array (
             "threshold" => "text"
         )
     ),
-
+    
+    "panel" => array
+    (
+        "title" => gettext("Executive Panel"),
+        "desc"  => gettext("Configure panel settings"),
+        "conf"  => array 
+        (
+            "panel_plugins_dir"  => "text",
+            "panel_configs_dir"  => "text"
+        )
+    ),
+    
     "phpgacl" => array 
     (
         "title" => gettext("phpGACL"),
@@ -134,6 +149,7 @@ $CONFIG = array (
             "rrdpath_net"           => "text",
             "rrdpath_global"        => "text",
             "rrdpath_level"         => "text",
+            "rrdpath_incidents"     => "text",
             "rrdpath_ntop"          => "text",
             "font_path"             => "text"
         )
@@ -147,7 +163,7 @@ $CONFIG = array (
         (
             "ossim_link"    => "text",
             "ntop_link"     => "text",
-            "opennms_link"  => "text"
+            "nagios_link"   => "text"
         )
     ),
 
@@ -180,6 +196,7 @@ $CONFIG = array (
             "nessus_port"           => "text",
             "nessus_path"           => "text",
             "nessus_rpt_path"       => "text",
+            "nessusrc_path"         => "text",
             "nessus_distributed"    => array
                 (
                     "0" => gettext("No"),
@@ -194,7 +211,7 @@ $CONFIG = array (
         "desc"  => gettext("Acid configuration"),
         "conf"  => array 
         (
-            "alert_viewer" => array
+            "event_viewer" => array
                 (
                     "acid" => gettext("Acid"),
                     "base" => gettext("Base")
@@ -226,7 +243,21 @@ $CONFIG = array (
                     "1" => gettext("Yes")
                 )
         )
-    )
+    ),
+
+   "userlog" => array
+   (
+       "title" => gettext("User action logging"),
+       "desc"  => gettext("User action logging"),
+       "conf"  => array
+       (
+        "user_action_log"       => array
+                (
+                    "0" => gettext("No"),
+                    "1" => gettext("Yes")
+                )     
+       )
+   )
 );
 
 
@@ -241,12 +272,13 @@ function valid_value ($key, $value)
 
     if (in_array($key, $numeric_values)) {
         if (!is_numeric($value)) {
-            echo "Error: <b>".$_POST["conf"]."</b> must be numeric";
-            return False;
+            require_once("ossim_error.inc");
+            $error = new OssimError();
+            $error->display("NOT_NUMERIC", array($key));
         }
     }
 
-    return True;
+    return true;
 }
 
 function submit ()
@@ -266,23 +298,23 @@ function submit ()
 }
 
 
-if ($_POST["update"]) 
+if (POST('update')) 
 {
-    require_once ('classes/Config.inc');
+    require_once 'classes/Config.inc';
     $config = new Config();
 
-    for ($i = 0; $i < $_POST["nconfs"]; $i++)
+    for ($i = 0; $i < POST('nconfs'); $i++)
     {
-        if (valid_value($_POST["conf_$i"], $_POST["value_$i"])) {
-            $value_update = mysql_real_escape_string($_POST["value_$i"]);
-            $config->update($_POST["conf_$i"], $value_update);
+        if (valid_value(POST("conf_$i"), POST("value_$i"))) {
+            $config->update(POST("conf_$i"), POST("value_$i"));
         }
     }
+    header("Location: ".$_SERVER['PHP_SELF']); exit;
 }
 
-if ($_REQUEST["reset"]) {
+if (REQUEST("reset")) {
 
-    if (!isset($_GET["confirm"])) {
+    if (!(GET('confirm'))) {
 ?>
         <p align="center">
           <b><?php echo gettext("Are you sure ?") ?></b>
@@ -294,13 +326,20 @@ if ($_REQUEST["reset"]) {
         exit;
     }
 
-    require_once ('classes/Config.inc');
+    require_once 'classes/Config.inc';
     $config = new Config();
     $config->reset();
+    header("Location: ".$_SERVER['PHP_SELF']); exit;
 }
 
 ?>
 
+<html>
+<head>
+  <title> <?php echo gettext("Main Configuration"); ?> </title>
+  <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+  <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+</head>
 <body>
 
   <h1> <?php echo gettext("Main Configuration"); ?> </h1>

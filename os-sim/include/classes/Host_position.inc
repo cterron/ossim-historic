@@ -1,5 +1,7 @@
 <?php
 
+require_once ("ossim_db.inc");
+
 class Host_position {
 
     var $host_ip;
@@ -22,10 +24,11 @@ class Host_position {
 
     function get_list($conn, $where = "", $order = "") 
     {
-        $query = "SELECT * FROM host_position $where $order";
+        $query = OssimQuery("SELECT * FROM host_position $where $order");
         if (!$rs = &$conn->Execute("$query")) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 $list[] = new Host_position ($rs->fields["host_ip"], 
                                              $rs->fields["x"],
@@ -43,8 +46,9 @@ class Host_position {
         $y = intval($y);
         $z = intval($z);
 
-        $query = "INSERT INTO host_position VALUES ('$ip', $x, $y, $z);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO host_position VALUES (?, ?, ?, ?)";
+        $params = array($ip, $x, $y, $z);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -56,17 +60,19 @@ class Host_position {
         $y = intval($y);
         $z = intval($z);
 
-        $query = "UPDATE host_position SET host_ip = '$ip', 
-                    x = $x, y = $y, z = $z WHERE host_ip = '$ip';";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE host_position SET host_ip = ?, x = ?, y = ?, z = ? WHERE host_ip = ?";
+        $params = array($ip, $x, $y, $z, $ip);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
 
     function delete($conn, $ip) {
-        $query = "DELETE FROM host_position WHERE host_ip = '$ip';";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM host_position WHERE host_ip = ?";
+        $params = array($ip);
+
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }

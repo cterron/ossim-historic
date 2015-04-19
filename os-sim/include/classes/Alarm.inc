@@ -2,10 +2,12 @@
 
 require_once ('classes/Net.inc');
 require_once ('classes/Session.inc');
+require_once ('classes/Log_action.inc');
+require_once ("ossim_db.inc");
 
 class Alarm {
 
-    var $alert_id;
+    var $event_id;
     var $backlog_id;
     var $timestamp;
     var $status;
@@ -24,12 +26,12 @@ class Alarm {
     var $rule_level;
     var $alarm;
 
-    function Alarm ($alert_id, $backlog_id, $timestamp, $status, $since,
+    function Alarm ($event_id, $backlog_id, $timestamp, $status, $since,
                     $plugin_id, $plugin_sid, $protocol, $src_ip, $dst_ip, 
                     $src_port, $dst_port, $risk, $sensors, 
                     $snort_sid, $snort_cid, $rule_level = "", $alarm = 1)
     {
-        $this->alert_id     = intval($alert_id);
+        $this->event_id     = intval($event_id);
         $this->backlog_id   = intval($backlog_id);
         $this->timestamp    = $timestamp;
         $this->status       = $status;
@@ -53,7 +55,7 @@ class Alarm {
             $this->sensors  = array($sensors);
     }
 
-    function get_alert_id()         { return $this->alert_id;       }
+    function get_event_id()         { return $this->event_id;       }
     function get_backlog_id()       { return $this->backlog_id;     }
     function get_timestamp()        { return $this->timestamp;      }
     function get_status()           { return $this->status;         }
@@ -77,9 +79,8 @@ class Alarm {
     function get_count($conn, $src_ip = "", $dst_ip = "", $hide_closed = 1)
     {
         $count = 0;
-        $allowed_nets = Session::allowedNets();
 
-        $query = "SELECT alert_id, src_ip, dst_ip FROM alarm ";
+        $query = "SELECT event_id, src_ip, dst_ip FROM alarm ";
 
         if ($src_ip && $dst_ip)
             $where = " WHERE (alarm.src_ip = inet_aton('$src_ip') OR
@@ -98,20 +99,17 @@ class Alarm {
                 $where = " AND (alarm.status = 'open') ";
         }
         
-        $query = $query . $where;
+        $query = OssimQuery($query . $where);
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-            if ((Net::isIpInNet($rs->fields["src_ip"],
-                                $allowed_nets) or
-                 Net::isIpInNet($rs->fields["dst_ip"],
-                                $allowed_nets) or
-                 (!$allowed_nets)))
-            {
-                $count++;
-            }
+                if ( (Session::hostAllowed($conn, $rs->fields["src_ip"])) or
+                     (Session::hostAllowed($conn, $rs->fields["dst_ip"])) )
+                {
+                    $count++;
+                }
                 $rs->MoveNext();
             }
             return $count;
@@ -123,12 +121,10 @@ class Alarm {
     {
         $sensor = "-";
         
-        $query = "SELECT count(*) AS count, alert.sensor AS sensor 
-            FROM alert, backlog_alert 
-            WHERE backlog_alert.backlog_id = $backlog_id AND
-                backlog_alert.alert_id = alert.id 
-            GROUP BY alert.sensor ORDER by count DESC LIMIT 1;";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT count(*) AS count, event.sensor AS sensor FROM event, backlog_event WHERE backlog_event.backlog_id = ? AND
+                backlog_event.event_id = event.id GROUP BY event.sensor ORDER by count DESC LIMIT 1";
+        $params = array($backlog_id);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } elseif (!$rs->EOF) {
             $sensor = $rs->fields["sensor"];
@@ -136,17 +132,16 @@ class Alarm {
         return $sensor;
     }
 
-    function __get_sensors($conn, $alert_id, $backlog_id)
+    function __get_sensors($conn, $event_id, $backlog_id)
     {
         $sensor = array();
         
         if ($backlog_id != 0) {
         
-            $query = "SELECT distinct alert.sensor AS sensor 
-                FROM alert, backlog_alert 
-                WHERE backlog_alert.backlog_id = $backlog_id AND
-                    backlog_alert.alert_id = alert.id";
-            if (!$rs = &$conn->Execute($query)) {
+            $sql = "SELECT distinct event.sensor AS sensor FROM event, backlog_event 
+                    WHERE backlog_event.backlog_id = ? AND backlog_event.event_id = event.id";
+            $params = array($backlog_id);
+            if (!$rs = &$conn->Execute($sql, $params)) {
                 print $conn->ErrorMsg();
                 return $sensor;
             }
@@ -158,8 +153,9 @@ class Alarm {
 
         } else {
 
-            $query = "SELECT sensor FROM alert WHERE id = $alert_id";
-            if (!$rs = &$conn->Execute($query)) {
+            $sql = "SELECT sensor FROM event WHERE id = ?";
+            $params = array($event_id);
+            if (!$rs = &$conn->Execute($sql, $params)) {
                 print $conn->ErrorMsg();
                 return $sensor;
             } elseif (!$rs->EOF) {
@@ -172,18 +168,17 @@ class Alarm {
     }
 
     /* function used in get_list to get the date when alarm began */
-    function __get_since($conn, $alert_id, $backlog_id)
+    function __get_since($conn, $event_id, $backlog_id)
     {
         $since = "-";
 
         if ($backlog_id != 0) {
 
-            $query = "SELECT min(alert.id) AS alert_id, alert.timestamp as since
-                FROM alert ,backlog_alert 
-                WHERE backlog_alert.backlog_id = $backlog_id AND
-                    backlog_alert.alert_id = alert.id
-                GROUP BY backlog_alert.backlog_id";
-            if (!$rs = &$conn->Execute($query)) {
+            $sql = "SELECT min(event.id) AS event_id, event.timestamp as since FROM event ,backlog_event 
+                    WHERE backlog_event.backlog_id = ? AND backlog_event.event_id = event.id
+                    GROUP BY backlog_event.backlog_id";
+            $params = array($backlog_id);
+            if (!$rs = &$conn->Execute($sql, $params)) {
                 print $conn->ErrorMsg();
             } elseif (!$rs->EOF) {
                 $since = $rs->fields["since"];
@@ -191,8 +186,9 @@ class Alarm {
 
         } else {
             
-            $query = "SELECT timestamp FROM alert WHERE id = $alert_id";
-            if (!$rs = &$conn->Execute($query)) {
+            $sql = "SELECT timestamp FROM event WHERE id = ?";
+            $params = array($event_id);
+            if (!$rs = &$conn->Execute($sql, $params)) {
                 print $conn->ErrorMsg();
             } elseif (!$rs->EOF) {
                 $since = $rs->fields["timestamp"];
@@ -205,7 +201,8 @@ class Alarm {
     function get_list($conn, $src_ip, $dst_ip, $hide_closed = 1,
                       $order, $inf = 0, $sup = 25)
     {
-
+        $list = array();
+        $where = "";
         /* ip filter */
         if ($src_ip and $dst_ip) {
             $where .= " WHERE (inet_aton('$src_ip') = src_ip OR
@@ -225,31 +222,41 @@ class Alarm {
                 $where = " AND (alarm.status = 'open') ";
         }
 
-        /* number of alerts per page */
-        $nalerts = $sup - $inf;
+        /* number of events per page */
+        $nevents = $sup - $inf;
 
-        $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
-            FROM alarm $where $order LIMIT $inf,$nalerts";
+        $query = OssimQuery("SELECT *, timestamp + 0 AS timestamp, 
+                  inet_ntoa(src_ip), inet_ntoa(dst_ip) 
+            FROM alarm $where $order LIMIT $nevents OFFSET $inf");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
             return array();
         }
 
-        $allowed_nets = Session::allowedNets();
         while (!$rs->EOF) 
         {
-            if ((Net::isIpInNet($rs->fields["src_ip"], $allowed_nets) or
-                 Net::isIpInNet($rs->fields["dst_ip"], $allowed_nets) or
-                 (!$allowed_nets)))
+            $sensors = Alarm::__get_sensors($conn,
+                                            $rs->fields["event_id"],
+                                            $rs->fields["backlog_id"]);
+
+            $sensor_allowed = 0;
+            foreach($sensors as $sensor) {
+                if(Session::hostAllowed($conn, $sensor))
+                    $sensor_allowed = 1;
+            }
+
+            if ( (Session::hostAllowed($conn, $rs->fields["src_ip"])) or
+                 (Session::hostAllowed($conn, $rs->fields["dst_ip"])) or
+                 ($sensor_allowed) )
             {
                 $list[] = new Alarm (
-                    $rs->fields["alert_id"],
+                    $rs->fields["event_id"],
                     $rs->fields["backlog_id"],
                     $rs->fields["timestamp"],
                     $rs->fields["status"],
                     Alarm::__get_since($conn, 
-                                       $rs->fields["alert_id"],
+                                       $rs->fields["event_id"],
                                        $rs->fields["backlog_id"]),
                     $rs->fields["plugin_id"],
                     $rs->fields["plugin_sid"],
@@ -259,9 +266,7 @@ class Alarm {
                     $rs->fields["src_port"],
                     $rs->fields["dst_port"],
                     $rs->fields["risk"],
-                    Alarm::__get_sensors($conn,
-                                         $rs->fields["alert_id"],
-                                         $rs->fields["backlog_id"]),
+                    $sensors,
                     $rs->fields["snort_sid"],
                     $rs->fields["snort_cid"],
                     "",
@@ -278,14 +283,14 @@ class Alarm {
     {
         $i = 0;
 
-        /* get main alerts id */
-        $query = "SELECT backlog_id, alert_id FROM alarm $order";
+        /* get main events id */
+        $query = OssimQuery("SELECT backlog_id, event_id FROM alarm $order");
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
                 $backlog_ids[] = $rs->fields["backlog_id"];
-                $alerts[] = $rs->fields["alert_id"];
+                $events[] = $rs->fields["event_id"];
                 $rs->MoveNext();
             }
         }
@@ -294,15 +299,15 @@ class Alarm {
             return array();
         }
 
-        /* get alerts id with minimal rule_level */
+        /* get events id with minimal rule_level */
         foreach ($backlog_ids as $backlog_id) {
-            $query = "SELECT min(alert.id) AS alert_id,
-                    alert.timestamp AS timestamp,
-                    alert.sensor AS sensor
-                FROM alert LEFT JOIN backlog_alert
-                ON backlog_alert.backlog_id = $backlog_id
-                    AND backlog_alert.alert_id = alert.id 
-                GROUP BY backlog_alert.backlog_id";
+            $sql = OssimQuery("SELECT min(event.id) AS event_id,
+                    event.timestamp AS timestamp,
+                    event.sensor AS sensor
+                FROM event LEFT JOIN backlog_event
+                ON backlog_event.backlog_id = $backlog_id
+                    AND backlog_event.event_id = event.id 
+                GROUP BY backlog_event.backlog_id");
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg();
             } else {
@@ -310,7 +315,7 @@ class Alarm {
                     $since[] = "";
                 }
                 while (!$rs->EOF) {
-                    $min_alerts[] = $rs->fields["alert_id"];
+                    $min_events[] = $rs->fields["event_id"];
                     $since[] = $rs->fields["timestamp"];
                     $sensor[] = $rs->fields["sensor"];
                     $rs->MoveNext();
@@ -318,9 +323,7 @@ class Alarm {
             }
         }
 
-        foreach ($alerts as $alert_id) {
-
-            $allowed_nets = Session::allowedNets();
+        foreach ($events as $event_id) {
 
             $array_backlog_id = $array_since = $array_sensor = NULL;
             if (is_array($backlog_ids))
@@ -330,9 +333,9 @@ class Alarm {
             if (is_array($sensor))
                 $array_sensor = array_shift($sensor);
 
-            $query = "SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
-                FROM alarm WHERE alert_id = $alert_id 
-                    AND backlog_id = $array_backlog_id $order";
+            $query = OssimQuery("SELECT *, inet_ntoa(src_ip), inet_ntoa(dst_ip) 
+                FROM alarm WHERE event_id = $event_id 
+                    AND backlog_id = $array_backlog_id $order");
 
             if (!$rs = &$conn->Execute($query)) {
                 print $conn->ErrorMsg();
@@ -364,15 +367,12 @@ class Alarm {
                         if (($can_insert) and
 
                             /* net filter */
-                            (Net::isIpInNet($db_src,
-                                            $allowed_nets) or
-                             Net::isIpInNet($db_dst,
-                                            $allowed_nets) or
-                            (!$allowed_nets)))
+                            ( (Session::hostAllowed($conn, $db_src)) or
+                              (Session::hostAllowed($conn, $db_dst)) ) )
                         {
                             $inf++;
                             $list[] = new Alarm (
-                                    $alert_id,
+                                    $event_id,
                                     $array_backlog_id,
                                     $rs->fields["timestamp"],
                                     $array_since,
@@ -403,72 +403,50 @@ class Alarm {
     /*
      * PRE:
      *   $show_all = 0  =>  show only alarms
-     *   $show_all = 1  =>  show all alerts
+     *   $show_all = 1  =>  show all events
      *
-     *   $alert_id => alarm to expand
+     *   $event_id => alarm to expand
      */
-    function get_alerts($conn, $backlog_id, $show_all = 0, $alert_id = "")
+    function get_events($conn, $backlog_id, $show_all = 0, $event_id = "")
     {
         $expand = false;
     
-        $query = "SELECT backlog_alert.alert_id AS alert_id, 
-                         backlog_alert.backlog_id AS backlog_id, 
-                         alert.timestamp AS backlog_time,
-                         alert.timestamp AS timestamp,
-                         alert.plugin_id AS plugin_id,
-                         alert.plugin_sid AS plugin_sid,
-                         alert.protocol AS protocol,
-                         inet_ntoa(alert.src_ip) AS src_ip, 
-                         inet_ntoa(alert.dst_ip) AS dst_ip, 
-                         alert.src_port AS src_port,
-                         alert.dst_port AS dst_port,
-                         alert.risk_a AS risk,
-                         alert.sensor AS sensor,
-                         alert.snort_sid AS snort_sid,
-                         alert.snort_cid AS snort_cid,
-                         alert.alarm AS alarm,
-                         backlog_alert.rule_level AS rule_level
-            FROM backlog_alert, alert
-            WHERE backlog_alert.alert_id = alert.id AND
-                backlog_alert.backlog_id = $backlog_id ";
-/*
-//    Doesn't work:
-        $query = "SELECT backlog_alert.alert_id AS alert_id, 
-                         backlog.id AS backlog_id, 
-                         backlog.timestamp AS backlog_time,
-                         alert.timestamp AS timestamp,
-                         alert.plugin_id AS plugin_id,
-                         alert.plugin_sid AS plugin_sid,
-                         alert.protocol AS protocol,
-                         inet_ntoa(alert.src_ip) AS src_ip, 
-                         inet_ntoa(alert.dst_ip) AS dst_ip, 
-                         alert.src_port AS src_port,
-                         alert.dst_port AS dst_port,
-                         alert.risk_a AS risk,
-                         alert.sensor AS sensor,
-                         alert.snort_sid AS snort_sid,
-                         alert.snort_cid AS snort_cid,
-                         alert.alarm AS alarm,
-                         backlog_alert.rule_level AS rule_level
-            FROM backlog_alert, alert, backlog
-            WHERE backlog_alert.alert_id = alert.id AND
-                backlog.id = backlog_alert.backlog_id AND
-                backlog.id = $backlog_id ";
-                */
- 
+        $query = "SELECT backlog_event.event_id AS event_id, 
+                         backlog_event.backlog_id AS backlog_id, 
+                         event.timestamp AS backlog_time,
+                         event.timestamp AS timestamp,
+                         event.plugin_id AS plugin_id,
+                         event.plugin_sid AS plugin_sid,
+                         event.protocol AS protocol,
+                         inet_ntoa(event.src_ip) AS src_ip, 
+                         inet_ntoa(event.dst_ip) AS dst_ip, 
+                         event.src_port AS src_port,
+                         event.dst_port AS dst_port,
+                         event.risk_a AS risk,
+                         event.sensor AS sensor,
+                         event.snort_sid AS snort_sid,
+                         event.snort_cid AS snort_cid,
+                         event.alarm AS alarm,
+                         backlog_event.rule_level AS rule_level
+            FROM backlog_event, event
+            WHERE backlog_event.event_id = event.id AND
+                backlog_event.backlog_id = $backlog_id ";
                 
         if (!$show_all) {
-            $query .= " AND alert.alarm = 1 ";
+            $query .= " AND event.alarm = 1 ";
         }
                 
-        $query .= "ORDER BY alert.id DESC;";
-            
+        $query .= "ORDER BY event.id DESC";
+           
+        $query = OssimQuery($query);
+        
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
+            $list = array();
             while (!$rs->EOF) {
                 
-                if ((!$expand) and ($rs->fields["alert_id"] == $alert_id)) {
+                if ((!$expand) and ($rs->fields["event_id"] == $event_id)) {
                     $expand = true;
                 } elseif (($expand) and ($rs->fields["alarm"] == 1)) {
                     $expand = false;
@@ -477,7 +455,7 @@ class Alarm {
                 if (($expand) or ($rs->fields["alarm"] == 1)) {
 
                     $list[] = new Alarm (
-                            $rs->fields["alert_id"],
+                            $rs->fields["event_id"],
                             $rs->fields["backlog_id"],
                             $rs->fields["timestamp"],
                             "", /* status */
@@ -504,7 +482,7 @@ class Alarm {
     }
 
 
-    function get_alarm_stats($conn, $backlog_id, $alert_id) 
+    function get_alarm_stats($conn, $backlog_id, $event_id) 
     {
         $expand = false;
         $count = 0;
@@ -514,19 +492,19 @@ class Alarm {
         $types = array();
         $dst_ports = array();
 
-        $query = "
-            SELECT alert.id AS alert_id, 
-                alert.alarm AS alarm,
-                alert.dst_ip AS dst_ip,
-                alert.plugin_id AS plugin_id,
-                alert.plugin_sid AS plugin_sid,
-                alert.dst_port AS dst_port
-            FROM backlog_alert, alert 
-            WHERE backlog_alert.backlog_id = $backlog_id 
-                AND alert.id = backlog_alert.alert_id 
-            ORDER BY alert.id DESC";
+        $sql = "SELECT event.id AS event_id, 
+                event.alarm AS alarm,
+                event.dst_ip AS dst_ip,
+                event.plugin_id AS plugin_id,
+                event.plugin_sid AS plugin_sid,
+                event.dst_port AS dst_port
+                FROM backlog_event, event 
+                WHERE backlog_event.backlog_id = ? 
+                AND event.id = backlog_event.event_id 
+                ORDER BY event.id DESC";
+        $params = array($backlog_id);
 
-        if (!$rs = &$conn->Execute($query)) {
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
@@ -543,7 +521,7 @@ class Alarm {
                     $count++;
                 }
                 
-                if ((!$expand) and ($rs->fields["alert_id"] == $alert_id)) {
+                if ((!$expand) and ($rs->fields["event_id"] == $event_id)) {
                     $expand = true;
                 }
 
@@ -564,47 +542,52 @@ class Alarm {
 
     function delete_day($conn, $day)
     {
-        $query = "SELECT backlog_id, alert_id FROM alarm
-            WHERE to_days(timestamp) = to_days($day)";
-
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT backlog_id, event_id FROM alarm WHERE to_days(timestamp) = to_days(?)";
+        $params = array($day);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
                 if ($rs->fields["backlog_id"] == 0) {
-                    Alarm::delete($conn, $rs->fields["alert_id"]);
+                    Alarm::delete($conn, $rs->fields["event_id"]);
                 } else {
                     Alarm::delete_from_backlog ($conn,
                                                 $rs->fields["backlog_id"],
-                                                $rs->fields["alert_id"]);
+                                                $rs->fields["event_id"]);
                 }
                 $rs->MoveNext();
             }
         }
+        $infolog = array($day);
+        Log_action::log(13,$infolog);
     }
 
-    function close($conn, $alert_id)
+    function close($conn, $event_id)
     {
-        $query = "UPDATE alarm SET status = 'closed', timestamp = timestamp 
-            WHERE alert_id = '$alert_id'";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE alarm SET status = 'closed', timestamp = timestamp WHERE event_id = ?";
+        $params = array($event_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error closing alarm: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
-
+        $infolog = array($event_id);
+        Log_action::log(12,$infolog);
     }
 
-    function delete($conn, $alert_id)
+    function delete($conn, $event_id)
     {
-        $query = "DELETE FROM alarm WHERE alert_id = '$alert_id'";
-        $query2 = "DELETE FROM alert WHERE id = '$alert_id'";
+        $sql = "DELETE FROM alarm WHERE event_id = ?";
+        $sql2 = "DELETE FROM event WHERE id = ?";
+        $params = array($event_id);
 
-        if ( ($conn->Execute($query) === false) or
-             ($conn->Execute($query2) === false) )
+        if ( ($conn->Execute($sql, $params) === false) or
+             ($conn->Execute($sql2, $params) === false) )
         {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
+       $infolog = array($event_id);
+       Log_action::log(11,$infolog);
     }
 
     function delete_from_backlog($conn, $backlog_id, $alarm_id)
@@ -612,9 +595,9 @@ class Alarm {
         /* delete ALL */
         if (!strcmp($backlog_id, "all")) {
             if ( ($conn->Execute("DELETE FROM alarm") === false) or
-                 ($conn->Execute("DELETE FROM alert") === false) or
+                 ($conn->Execute("DELETE FROM event") === false) or
                  ($conn->Execute("DELETE FROM backlog") === false) or
-                 ($conn->Execute("DELETE FROM backlog_alert") === false) )
+                 ($conn->Execute("DELETE FROM backlog_event") === false) )
             {
                 print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             }
@@ -623,11 +606,11 @@ class Alarm {
         } else {
 
 
-            /* Delete all alerts related with $backlog_id */
-            $query = "SELECT alert.id AS id FROM alert, backlog_alert
-                WHERE backlog_alert.backlog_id = $backlog_id
-                    AND backlog_alert.alert_id = alert.id";
-            if (!$rs = &$conn->Execute($query)) {
+            /* Delete all events related with $backlog_id */
+            $sql = "SELECT event.id AS id FROM event, backlog_event WHERE backlog_event.backlog_id = ?
+                    AND backlog_event.event_id = event.id";
+            $params = array($backlog_id);
+            if (!$rs = &$conn->Execute($sql, $params)) {
                 print $conn->ErrorMsg();
             } else {
                 while (!$rs->EOF) {
@@ -636,14 +619,16 @@ class Alarm {
                 }
             }
 
-            $query = "DELETE FROM backlog_alert WHERE backlog_id = $backlog_id";
-            $query2 = "DELETE FROM backlog WHERE id = $backlog_id";
-            $query3 = "DELETE FROM alarm WHERE alert_id = $alarm_id 
-                AND backlog_id = $backlog_id";
+            $sql = "DELETE FROM backlog_event WHERE backlog_id = ?";
+            $params = array($backlog_id);
+            $sql2 = "DELETE FROM backlog WHERE id = ?";
+            $params2 = array($backlog_id);
+            $sql3 = "DELETE FROM alarm WHERE event_id = ? AND backlog_id = ?";
+            $params3 = array($alarm_id, $backlog_id);
             
-            if ( ($conn->Execute($query) === false) or
-                 ($conn->Execute($query2) === false) or
-                 ($conn->Execute($query3) === false) )
+            if ( ($conn->Execute($sql, $params) === false) or
+                 ($conn->Execute($sql2, $params2) === false) or
+                 ($conn->Execute($sql3, $params3) === false) )
             {
                 print 'error deleting: '.$conn->ErrorMsg().'<BR>';
                 exit;
@@ -654,14 +639,14 @@ class Alarm {
     function purge($conn) 
     {
         /* TODO: very heavy query!! */
-        $query = "SELECT alert.id AS alert_id, backlog_alert.backlog_id AS
-            backlog_id FROM alert LEFT JOIN backlog_alert ON
-            backlog_alert.alert_id = alert.id WHERE backlog_id IS NULL";
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT event.id AS event_id, backlog_event.backlog_id AS
+                backlog_id FROM event LEFT JOIN backlog_event ON
+                backlog_event.event_id = event.id WHERE backlog_id IS NULL";
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
-                Alarm::delete($conn, $rs->fields["alert_id"]);
+                Alarm::delete($conn, $rs->fields["event_id"]);
                 $rs->MoveNext();
             }
         }

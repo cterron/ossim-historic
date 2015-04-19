@@ -21,19 +21,34 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
     require_once 'classes/Plugin.inc';
 
 
-    if (($nessus_action = $_GET["nessus"]) AND ($net_name = $_GET["net_name"])) 
+    if (($nessus_action = validateVar($_GET["nessus"])) AND ($net_name =
+        validateVar($_GET["net_name"]))) 
     {
         $db = new ossim_db();
         $conn = $db->connect();
         if ($nessus_action == "enable") {
-            Net::enable_nessus($conn, $net_name);
+            Net::enable_plugin($conn, $net_name, 3001);
         } elseif ($nessus_action = "disable") {
-            Net::disable_nessus($conn, $net_name);
+            Net::disable_plugin($conn, $net_name, 3001);
+        }
+        $db->close($conn);
+    }
+    if (($nagios_action = validateVar($_GET["nagios"])) AND ($net_name =
+        validateVar($_GET["net_name"]))) 
+    {
+        $db = new ossim_db();
+        $conn = $db->connect();
+        if ($nagios_action == "enable") {
+            Net::enable_plugin($conn, $net_name, 2007);
+        } elseif ($nagios_action = "disable") {
+            Net::disable_plugin($conn, $net_name, 2007);
         }
         $db->close($conn);
     }
 
-    if (!$order = $_GET["order"]) $order = "name";
+
+
+    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_ALPHA . OSS_SPACE)) $order = "name";
 ?>
 
   <table align="center">
@@ -63,7 +78,7 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
           ?>">Persistence</a></th>
 -->
       <th> <?php echo gettext("Sensors"); ?> </th>
-      <th> <?php echo gettext("Nessus Scan"); ?> </th>
+      <th> <?php echo gettext("Scan types"); ?> </th>
       <th> <?php echo gettext("Description"); ?> </th>
       <th> <?php echo gettext("Action"); ?> </th>
     </tr>
@@ -106,28 +121,27 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 
     <td>
 <?php
-    if($scan_list = Net_scan::get_list($conn, 
-        "WHERE net_name = '$name' AND plugin_id = 3001"))
+    if($scan_list = Net_scan::get_list($conn, "WHERE net_name = '$name' AND plugin_id = 3001"))
     {
 
         echo "<a href=\"". $_SERVER["PHP_SELF"] .
-            "?nessus=disable&net_name=$name\">ENABLED</a>";
-/*
-    foreach($scan_list as $scan){
-        $id = $scan->get_plugin_id();
-        $plugin_name = "";
-        if ($plugin_list = Plugin::get_list($conn, "WHERE id = $id")) {
-            $plugin_name = $plugin_list[0]->get_name();
-            echo "$plugin_name<BR>";
-        } else {
-            echo $id;
-        }
-    }
-*/
+            "?nessus=disable&net_name=$name\"> " . _("Nessus ENABLED") . " </a><br/>";
     } else {
         echo "<a href=\"". $_SERVER["PHP_SELF"] .
-            "?nessus=enable&net_name=$name\">DISABLED</a>";
+            "?nessus=enable&net_name=$name\"> " . _("Nessus DISABLED") . " </a><br/>";
     }
+
+    if($scan_list = Net_scan::get_list($conn, "WHERE net_name = '$name' AND plugin_id = 2007"))
+    {
+
+        echo "<a href=\"". $_SERVER["PHP_SELF"] .
+            "?nagios=disable&net_name=$name\"> " . _("Nagios ENABLED") . " </a>";
+    } else {
+        echo "<a href=\"". $_SERVER["PHP_SELF"] .
+            "?nagios=enable&net_name=$name\">" . _("Nagios DISABLED") . "</a>";
+    }
+
+
 
 ?>
 </td>

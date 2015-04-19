@@ -20,29 +20,25 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     if (($_POST["insert"]) &&
         (!$_POST["name"] || !$_POST["nports"] || !$_POST["descr"]))
     {
-?>
-
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
-
-<?php
-
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("FORM_MISSING_FIELDS");
 /* check OK, insert into BD */
 } elseif($_POST["insert"]) {
 
-    $name  = mysql_escape_string($_POST["name"]);
-    $nports = mysql_escape_string($_POST["nports"]);
-    $descr = mysql_escape_string($_POST["descr"]);
+    $name  = validateVar($_POST["name"], OSS_ALPHA . OSS_SCORE . OSS_DOT);
+    $nports = validateVar($_POST["nports"]);
+    $descr = validateVar($_POST["descr"], OSS_ALPHA . OSS_SCORE . OSS_AT . OSS_PUNC);
 
     require_once 'ossim_db.inc';
     require_once 'classes/Port_group.inc';
     $db = new ossim_db();
     $conn = $db->connect();
 
-    for ($i = 1; $i <= $_POST["nports"]; $i++) {
+    for ($i = 1; $i <= $nports; $i++) {
         $mboxname = "mbox" . $i;
         if ($_POST[$mboxname]) {
-            $port_list[] = mysql_escape_string($_POST[$mboxname]);
+            $port_list[] = validateVar($_POST[$mboxname]);
         }
     }
    

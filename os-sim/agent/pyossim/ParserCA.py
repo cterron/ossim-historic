@@ -134,7 +134,7 @@ class ParserCA(Parser.Parser):
         elif diff >= 2: priority = 2
         elif diff >= 1: priority = 1
 
-        self.agent.sendAlert  (type = 'detector',
+        self.agent.sendEvent  (type = 'detector',
                          date       = date,
                          sensor     = self.plugin["sensor"],
                          interface  = self.plugin["interface"],

@@ -1,6 +1,7 @@
 <?php
-
-require_once ("ossim_db.inc");
+require_once 'classes/Security.inc';
+require_once 'ossim_db.inc';
+require_once 'ossim_sql.inc';
 
 class Config {
 
@@ -10,10 +11,10 @@ class Config {
     function Config ()
     {
         $ossimdb = new ossim_db();
-        $this->conn = $ossimdb->connect();
+        $this->conn = $ossimdb->Nconnect();
 
-        $query = "SELECT * FROM config;";
-        if (!$rs = &$this->conn->Execute($query)) {
+        $sql = "SELECT * FROM config";
+        if (!$rs = &$this->conn->Execute($sql)) {
             print $this->conn->ErrorMsg();
         } else {
             while (!$rs->EOF) 
@@ -32,23 +33,27 @@ class Config {
         return $this->confs[$key];
     }
 
+    function get_list()
+    {
+        return $this->confs;
+    }
+
     function insert($key, $value)
     {
-        $query = "INSERT INTO config (conf, value) VALUES ('$key', '$value')";
-
-        if ($this->conn->Execute($query) === false) {
-            print 'error updating: '. $this->conn->ErrorMsg().'<BR>';
-            exit;
-        }
+        ossim_valid($key, array(OSS_LETTER, OSS_SCORE, OSS_DIGIT)); // update() uses that too
+        ossim_valid($value, array(OSS_NULLABLE));
+        if (ossim_error()) die(ossim_error());
+        $sql = "INSERT INTO config (conf, value) VALUES (?, ?)";
+        $params = array($key, $value);
+        if (!$this->conn->Execute($sql, $params)) die($this->conn->ErrorMsg());
     }
     
     function update($key, $value)
     {
-        $query = "DELETE FROM config WHERE conf = '$key'";
-        if ($this->conn->Execute($query) === false) {
-            print 'error updating: '. $this->conn->ErrorMsg().'<BR>';
-            exit;
-        }
+        ossim_valid($key, array(OSS_LETTER, OSS_SCORE, OSS_DIGIT)); // insert() uses that too
+        if (ossim_error()) die(ossim_error());
+        $sql = "DELETE FROM config WHERE conf = ?";
+        if (!$this->conn->Execute($sql, array($key))) die($this->conn->ErrorMsg());
         Config::insert($key, $value);
     }
 
@@ -56,13 +61,16 @@ class Config {
     /*  Reset default values */
     function reset()
     {
-        $query = "DELETE FROM config";
+        require_once ('classes/Log_action.inc');
+        Log_action::log(8,NULL);
 
-	    if ($this->conn->Execute($query) === false) {
+        $sql = "DELETE FROM config";
+
+	    if ($this->conn->Execute($sql) === false) {
 	        print 'error deleting: '. $this->conn->ErrorMsg().'<BR>';
 	        exit;
 	    }
-
+        
         Config::common_reset();
 	
         if (preg_match("/debian/i", $_SERVER["SERVER_SOFTWARE"]))
@@ -71,6 +79,7 @@ class Config {
             Config::fedora_reset();
         else
             Config::default_reset();
+   
     }
 
     /* Common values */
@@ -95,7 +104,6 @@ class Config {
         Config::insert('threshold', '300');
 
         /* PHP: PHP Configuration (graphs, acls, database api) */
-        Config::insert('alert_viewer', 'acid');
         Config::insert('phpgacl_path', '/var/www/phpgacl/');
         Config::insert('fpdf_path', '/usr/share/fpdf/');
         Config::insert('report_graph_type', 'images');
@@ -117,7 +125,7 @@ class Config {
         /* Links: Links to other applications */
         Config::insert('ntop_link','http://localhost:3000');
         Config::insert('ossim_link','/ossim/');
-        Config::insert('opennms_link','http://localhost:8080/opennms/');
+        Config::insert('nagios_link','/nagios/');
 
         /* Backup: Backup configuration: backup database, directory, interval */
         Config::insert('backup_type','mysql');
@@ -156,22 +164,25 @@ class Config {
         /* Language */
         Config::insert('language', 'en_GB');
         Config::insert('locale_dir', '/usr/share/locale');
-        
+
+        /* User action logging*/
+        Config::insert('user_action_log', '1'); 
     } 
     
     /* Debian specific values */
     function debian_reset() 
     {
         /* PHP: PHP Configuration (graphs, acls, database api) */
-        Config::insert('adodb_path', '/usr/share/adodb/');
+        Config::insert('adodb_path', '/usr/share/php/adodb/');
 
         /* RRD: RRD Configuration (graphing) */
         Config::insert('rrdpath_ntop', '/var/lib/ntop/rrd');
         Config::insert('font_path', '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf');
 
         /* ACID: Acid cache configuration */
-        Config::insert('acid_link','http://localhost/acidlab/');
-        Config::insert('acid_path','/usr/share/acidlab/');
+        Config::insert('event_viewer', 'base');
+        Config::insert('acid_link','http://localhost/acidbase/');
+        Config::insert('acid_path','/usr/share/acidbase/');
     }
 
     /* fedora/redhat specific values */
@@ -185,6 +196,7 @@ class Config {
         Config::insert('font_path','/usr/share/ossim/fonts/Vera.ttf');
 
         /* ACID: Acid cache configuration */
+        Config::insert('event_viewer', 'acid');
         Config::insert('acid_link','http://localhost/acid/');
         Config::insert('acid_path','/var/www/acid/');
     }

@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-inet.h"
+#include <config.h>
 
 
 #include <sys/types.h>
@@ -46,6 +46,11 @@
 
 #ifdef BSD
 #define KERNEL
+#include <netinet/in.h>
+#endif
+
+#ifdef __FreeBSD__
+#define _KERNEL
 #include <netinet/in.h>
 #endif
 
@@ -64,7 +69,7 @@ struct _SimInetPrivate
 static gpointer parent_class = NULL;
 static gint sim_inet_signals[LAST_SIGNAL] = { 0 };
 
-static gint get_bits (gchar   *numbits);
+static gint get_bits (gchar   *string_to_count);
 
 /* GType Functions */
 
@@ -132,33 +137,30 @@ sim_inet_get_type (void)
 }
 
 /*
- *
- *
- *
- *
+ * Returns the number of bits that a string that contains a number has.
+ * This is usefull to store the netmask of the networks in the SimInet objects.
  */
 static gint
-get_bits (gchar   *numbits)
+get_bits (gchar   *string_to_count)
 {
-  gchar        *endptr;
+  gchar        *endptr=NULL;
   gint          bits;
 
-  bits = strtol (numbits, &endptr, 10);
+  bits = strtol (string_to_count, &endptr, 10);
 
-  if (*numbits == '\0' || *endptr != '\0')
+  if (*string_to_count == '\0' || *endptr != '\0')
     return -1;
 
   return bits;
 }
 
 /*
- *
- *
+ * Transforms something like: "192.168.0.1/24" or "192.168.8.9" into a SimInet object.
  *
  *
  */
 SimInet*
-sim_inet_new (const gchar      *hostname)
+sim_inet_new (const gchar      *hostname_ip)
 {
   SimInet      *inet;
   gchar        *slash;
@@ -169,53 +171,58 @@ sim_inet_new (const gchar      *hostname)
   struct in6_addr in6addr;
 #endif
 
-  g_return_val_if_fail (hostname, NULL);
+  g_return_val_if_fail (hostname_ip, NULL);
 
-  slash = strchr (hostname, '/');
+  slash = strchr (hostname_ip, '/');
   if (slash)
-    *slash = '\0';
-
-  if (slash)
-    bits = get_bits (slash + 1);
+  {
+    *slash = '\0'; //we remove the "/" to do the inet_pton without use another variable.
+    bits = get_bits (slash + 1); //count the mask bits.
+  }
 
   if (bits < 0)
     return NULL;
 
-  if ((inet_pton(AF_INET, hostname, &inaddr) > 0) && (bits <= 32))
-    {
-      struct sockaddr_in* sa_in;
+  if ((inet_pton(AF_INET, hostname_ip, &inaddr) > 0) && (bits <= 32))
+  {
+    struct sockaddr_in* sa_in;
 
-      inet = SIM_INET (g_object_new (SIM_TYPE_INET, NULL));
+    inet = SIM_INET (g_object_new (SIM_TYPE_INET, NULL));
 
-      sa_in = (struct sockaddr_in*) &inet->_priv->sa;
+    sa_in = (struct sockaddr_in*) &inet->_priv->sa;
  
-      sa_in->sin_family = AF_INET;
-      sa_in->sin_addr = inaddr;
+    sa_in->sin_family = AF_INET;
+    sa_in->sin_addr = inaddr;
 
-      inet->_priv->bits = (bits) ? bits : 32;
-    }
+ 		//If hostname_ip is "0.0.0.0", instead "0.0.0.0/32", SimInet object must be "0.0.0.0/0"
+  	if (!strcmp(hostname_ip, "0.0.0.0"))
+	  	inet->_priv->bits = 0;
+		else	
+		  inet->_priv->bits = (bits) ? bits : 32; //if there are no mask bits, assume it's a host (32 mask bit)
+
+  }
 #ifdef HAVE_IPV6
-  else if ((inet_pton(AF_INET6, hostname, &in6addr) > 0) && (bits <= 128))
-    {
-      struct sockaddr_in6* sa_in6;
- 
-      inet = SIM_INET (g_object_new (SIM_TYPE_INET, NULL));
+  else
+  if ((inet_pton(AF_INET6, hostname_ip, &in6addr) > 0) && (bits <= 128))
+  {
+    struct sockaddr_in6* sa_in6;
 
-      sa_in6 = (struct sockaddr_in6*) &inet->_priv->sa;
+    inet = SIM_INET (g_object_new (SIM_TYPE_INET, NULL));
 
-      sa_in6->sin6_family = AF_INET6;
-      sa_in6->sin6_addr = in6addr;
+    sa_in6 = (struct sockaddr_in6*) &inet->_priv->sa;
 
-      inet->_priv->bits = (bits) ? bits : 128;
-    }
+    sa_in6->sin6_family = AF_INET6;
+    sa_in6->sin6_addr = in6addr;
+
+    inet->_priv->bits = (bits) ? bits : 128;
+  }
 #endif
   else
-    {
-      if (slash)
-	*slash = '/';
-
-      return NULL;
-    }
+  {
+    if (slash)
+      *slash = '/';
+    return NULL;
+  }
 
   if (slash)
    *slash = '/';
@@ -225,8 +232,7 @@ sim_inet_new (const gchar      *hostname)
 
 /*
  *
- *
- *
+ * Creates a SimInet object, wich can contains a host or a network depending on mask.
  *
  */
 SimInet*
@@ -307,14 +313,11 @@ sim_inet_equal (SimInet   *inet1,
 }
 
 /*
- *
- *
- *
- *
+ * Check if inet2 belongs to the inet1 network
  */
 gboolean
 sim_inet_has_inet (SimInet   *inet1,
-		   SimInet   *inet2)
+		  						 SimInet   *inet2)
 {
   g_return_val_if_fail (inet1, FALSE);
   g_return_val_if_fail (SIM_IS_INET (inet1),FALSE);
@@ -332,8 +335,32 @@ sim_inet_has_inet (SimInet   *inet1,
       guint32 val1 = ntohl (sa_in1->sin_addr.s_addr);
       guint32 val2 = ntohl (sa_in2->sin_addr.s_addr);
 
+/* Debug
+      gchar *temp = g_strdup_printf ("%d.%d.%d.%d",
+                             (val1 >> 24) & 0xFF,
+                             (val1 >> 16) & 0xFF,
+                             (val1 >> 8) & 0xFF,
+                             (val1) & 0xFF);
+
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_has_inet val1; %d bits: %s",inet1->_priv->bits, temp);
+      g_free(temp);
+      temp = g_strdup_printf ("%d.%d.%d.%d",
+                             (val2 >> 24) & 0xFF,
+                             (val2 >> 16) & 0xFF,
+                             (val2 >> 8) & 0xFF,
+                             (val2) & 0xFF);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_has_inet val2; %d bits: %s",inet2->_priv->bits, temp);
+      g_free(temp);
+/**/
+
       if ((val1 >> (32 - inet1->_priv->bits)) == (val2 >> (32 - inet1->_priv->bits)))
-	return TRUE;
+			{
+//	      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_has_inet MATCH");							
+				return TRUE;
+			}
+//			else
+//	      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_has_inet DOESN'T MATCH");							
+			
     }
 #ifdef HAVE_IPV6
   else if (inet1->_priv->sa.ss_family == AF_INET6)
@@ -474,3 +501,4 @@ sim_inet_cidr_ntop (SimInet  *inet)
 
   return ret;
 }
+// vim: set tabstop=2:

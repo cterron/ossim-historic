@@ -32,9 +32,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config.h>
 
 #include "sim-plugin-state.h"
+#include <config.h>
 
 enum
 {
@@ -291,3 +291,4 @@ sim_plugin_state_set_enabled (SimPluginState   *plugin_state,
   plugin_state->_priv->enabled = enabled;
 }
 
+// vim: set tabstop=2:

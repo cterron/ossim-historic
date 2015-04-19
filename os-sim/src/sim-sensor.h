@@ -56,6 +56,18 @@ extern "C" {
 
 G_BEGIN_DECLS
 
+typedef struct _event_kind	event_kind;
+	
+struct _event_kind     //used to store temporary (thanks to sim_container_set_sensor_events) how much events has arrived
+{
+  gint  events;
+  gint  host_os_events;
+  gint  host_mac_events;
+  gint  host_ids_events;
+  gint  host_service_events;
+};
+
+
 typedef struct _SimSensor         SimSensor;
 typedef struct _SimSensorClass    SimSensorClass;
 typedef struct _SimSensorPrivate  SimSensorPrivate;
@@ -72,6 +84,8 @@ struct _SimSensorClass {
 
 GType             sim_sensor_get_type                        (void);
 SimSensor*        sim_sensor_new                             (void);
+SimSensor*        sim_sensor_new_from_hostname               (gchar *sensor_ip);
+
 SimSensor*        sim_sensor_new_from_dm                     (GdaDataModel     *dm,
 							      gint              row);
 
@@ -106,8 +120,18 @@ GList*            sim_sensor_get_plugins                     (SimSensor    *sens
 gboolean          sim_sensor_has_plugin_by_type              (SimSensor       *sensor,
 							     SimPluginType   type);
 
+GList*            sim_sensor_get_plugins                     (SimSensor    *sensor);
 
+inline	void			sim_sensor_add_number_events								(SimSensor	*sensor);
+inline	void			sim_sensor_add_number_host_os_events				(SimSensor	*sensor);
+inline	void			sim_sensor_add_number_host_mac_events				(SimSensor	*sensor);
+inline	void			sim_sensor_add_number_host_service_events		(SimSensor	*sensor);
+inline	void			sim_sensor_add_number_host_ids_events				(SimSensor	*sensor);
 
+void							sim_sensor_debug_events_number (SimSensor  *sensor); //debug function
+void							sim_sensor_reset_events_number							(SimSensor	*sensor);
+event_kind				sim_sensor_get_events_number								(SimSensor *sensor);
+	
 G_END_DECLS
 
 #ifdef __cplusplus
@@ -115,3 +139,4 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_SENSOR_H__ */
+// vim: set tabstop=2:

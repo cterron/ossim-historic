@@ -28,10 +28,16 @@ require_once ('classes/Net.inc');
 require_once ('classes/Net_group.inc');
 require_once ('classes/Host_qualification.inc');
 require_once ('classes/Net_qualification.inc');
-require_once ('acid_funcs.inc');
 require_once ('classes/Util.inc');
-require_once ('common.inc'); // TODO: move functions to Util.inc
 
+$range = GET('range');
+$expand = GET('expand');
+ossim_valid($range, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("range"));
+ossim_valid($expand, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("expand"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
 
 
 function echo_values($val, $max, $ip, $date, $target) {
@@ -41,7 +47,7 @@ function echo_values($val, $max, $ip, $date, $target) {
     if ($val / $max > 5) {
 ?>
         <td bgcolor="red">
-          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
+          <a href="<?php echo Util::get_acid_date_link($date, $ip, $target) ?>">
             <font color="white"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -49,7 +55,7 @@ function echo_values($val, $max, $ip, $date, $target) {
     } elseif ($val / $max > 3) {
 ?>
         <td bgcolor="orange">
-          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
+          <a href="<?php echo Util::get_acid_date_link($date, $ip, $target) ?>">
             <font color="black"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -57,7 +63,7 @@ function echo_values($val, $max, $ip, $date, $target) {
     } elseif ($val / $max > 1) {
 ?>
         <td bgcolor="green">
-          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
+          <a href="<?php echo Util::get_acid_date_link($date, $ip, $target) ?>">
             <font color="white"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -65,7 +71,7 @@ function echo_values($val, $max, $ip, $date, $target) {
     } else {
 ?>
         <td>
-          <a href="<?php echo get_acid_date_link($date, $ip, $target) ?>">
+          <a href="<?php echo Util::get_acid_date_link($date, $ip, $target) ?>">
             <font color="black"><b><?php echo $val ?></b></font>
           </a>
         </td>
@@ -74,16 +80,14 @@ function echo_values($val, $max, $ip, $date, $target) {
 }
 
 /* get conf */
-$framework_conf = new ossim_conf();
+$framework_conf = $GLOBALS["CONF"];
 $THRESHOLD = $framework_conf->get_conf("threshold");
 $graph_link = $framework_conf->get_conf("graph_link");
 $acid_link = $framework_conf->get_conf("acid_link");
 $use_svg_graphics = $framework_conf->get_conf("use_svg_graphics");
 
 /* range select (day, week, month or year) */
-if (array_key_exists('range', $_GET))
-    $range = mysql_escape_string($_GET["range"]);
-else
+if (empty($range))
     $range = 'day';
 
 
@@ -106,6 +110,10 @@ foreach($nets_order_by_c as $temp_net){
     foreach($net_groups as $net_group){
         $ng_name = $net_group->get_name();
         $net_group_array[$ng_name]["name"] = $ng_name;
+        $net_group_array[$ng_name]["max_c"] = 0;
+        $net_group_array[$ng_name]["max_a"] = 0;
+        $net_group_array[$ng_name]["max_c_date"] = 0;
+        $net_group_array[$ng_name]["max_a_date"] = 0;
         if(Net_group::isNetInGroup($conn, $ng_name, $net_name)){
             $net_group_array[$ng_name]["time_range"] = $temp_net->get_time_range(); 
             $net_group_array[$ng_name]["max_c"] += $temp_net->get_max_c(); 
@@ -123,17 +131,17 @@ foreach($nets_order_by_c as $temp_net){
 }
 
 function ordenar_c($a, $b){
-     return ($a["max_c"] < $b["max_c"]) ? True : False;
+     return ($a["max_c"] < $b["max_c"]) ? true : false;
 }
 
 function ordenar_a($a, $b){
-     return ($a["max_a"] < $b["max_a"]) ? True : False;
+     return ($a["max_a"] < $b["max_a"]) ? true : false;
 }
 
 
 /* get global values */
-$query = "SELECT * FROM control_panel 
-    WHERE id = 'global_$user' AND time_range = '$range';";
+$query = OssimQuery("SELECT * FROM control_panel 
+    WHERE id = 'global_$user' AND time_range = '$range'");
 if (!$rs_global = &$conn->Execute("$query"))
     print $conn->ErrorMsg();
 
@@ -188,7 +196,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             <img border="0" src="../pixmaps/riskmeter.png"/></a>
           </td>
             <?php 
-            $image = graph_image_link("level_$user", "level", "attack",
+            $image = Util::graph_image_link("level_$user", "level", "attack",
                               $start, "N", 1, $range);
             $sec_level = ($rs_global->fields["c_sec_level"] + 
                               $rs_global->fields["a_sec_level"]) / 2;
@@ -252,7 +260,7 @@ if (!$rs_global = &$conn->Execute("$query"))
           </tr>
           <tr>
 <?php
-    $image = graph_image_link("global_$user", "global", "compromise",
+    $image = Util::graph_image_link("global_$user", "global", "compromise",
                               $start, "N", 1, $range);
     
 ?>
@@ -264,7 +272,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             $priority = $rs_global->fields["max_c"] / $THRESHOLD;
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: C level exceeded (Global)&" .
             "priority=$priority&" .
@@ -278,9 +286,9 @@ if (!$rs_global = &$conn->Execute("$query"))
               <?php echo $rs_global->fields["max_c_date"] ?>
             </font></td>
 <?php
-            echocolor($rs_global->fields["max_c"], $THRESHOLD,
-                get_acid_date_link($rs_global->fields["max_c_date"]));
-            echocolor(Host_qualification::get_global_compromise($conn), 
+            Util::echocolor($rs_global->fields["max_c"], $THRESHOLD,
+                Util::get_acid_date_link($rs_global->fields["max_c_date"]));
+            Util::echocolor(Host_qualification::get_global_compromise($conn), 
                       $THRESHOLD, $image);
 ?>
           </tr>
@@ -299,7 +307,7 @@ if (!$rs_global = &$conn->Execute("$query"))
           </tr>
           <tr>
 <?php
-    $image = graph_image_link("global_$user", "global", "attack",
+    $image = Util::graph_image_link("global_$user", "global", "attack",
                               $start, "N", 1, $range);
     
 ?>
@@ -311,7 +319,7 @@ if (!$rs_global = &$conn->Execute("$query"))
             $priority = $rs_global->fields["max_a"] / $THRESHOLD;
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: A level exceeded (Global)&" .
             "priority=$priority&" .
@@ -325,9 +333,9 @@ if (!$rs_global = &$conn->Execute("$query"))
               <?php echo $rs_global->fields["max_a_date"] ?>
             </font></td>
 <?php
-            echocolor($rs_global->fields["max_a"], $THRESHOLD,
-                get_acid_date_link($rs_global->fields["max_a_date"]));
-            echocolor(Host_qualification::get_global_attack($conn), 
+            Util::echocolor($rs_global->fields["max_a"], $THRESHOLD,
+                Util::get_acid_date_link($rs_global->fields["max_a_date"]));
+            Util::echocolor(Host_qualification::get_global_attack($conn), 
                       $THRESHOLD, $image);
 ?>
           </tr>
@@ -355,12 +363,16 @@ if (!$rs_global = &$conn->Execute("$query"))
     usort($net_group_array, "ordenar_c");
     $temporary = current($net_group_array);
     while($temporary){
-        $image = graph_image_link($temporary["name"], "net", "compromise",
+        if($temporary["max_c_date"] == ""){
+        $temporary = next($net_group_array);
+        continue;
+        }
+        $image = Util::graph_image_link($temporary["name"], "net", "compromise",
                               $start, "N", 1, $range);
 ?>
           <tr>
             <td class="left" nowrap>
-            <?php if($_GET["expand"] && $_GET["expand"] == $temporary["name"]){ ?>
+            <?php if($expand == $temporary["name"]){ ?>
             <a href="<?php echo $_SERVER["PHP_SELF"]?>?range=<?php echo $range;?>">-</a>
             <?php } else { ?>
             <a href="<?php echo $_SERVER["PHP_SELF"]?>?expand=<?php echo $temporary["name"] . "&range=" . $range;?>">+</a>
@@ -374,7 +386,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Net_group::netthresh_c($conn, $temporary["name"]);
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: C level exceeded (Group " .
                 $temporary["name"] .")&" .
@@ -387,10 +399,10 @@ if (!$rs_global = &$conn->Execute("$query"))
             </td>
             <td nowrap><font size="-2"><?php echo $temporary["max_c_date"] ?></font></td>
             <?php 
-                echocolor($temporary["max_c"], 
+                Util::echocolor($temporary["max_c"], 
                             Net_group::netthresh_c($conn, $temporary["name"]),
-                            get_acid_date_link($temporary["max_c_date"]));
-                echocolor(Net_group::get_compromise($conn, $temporary["name"]),
+                            Util::get_acid_date_link($temporary["max_c_date"]));
+                Util::echocolor(Net_group::get_compromise($conn, $temporary["name"]),
                             Net_group::netthresh_c($conn, $temporary["name"]),
                             $image);
             $temporary = next($net_group_array);
@@ -418,12 +430,16 @@ if (!$rs_global = &$conn->Execute("$query"))
     usort($net_group_array, "ordenar_a");
     $temporary = current($net_group_array);
     while($temporary){
-        $image = graph_image_link($temporary["name"], "net", "compromise",
+        if($temporary["max_a_date"] == ""){
+        $temporary = next($net_group_array);        
+        continue;
+        }
+        $image = Util::graph_image_link($temporary["name"], "net", "compromise",
                               $start, "N", 1, $range);
 ?>
           <tr>
             <td class="left" nowrap>
-            <?php if($_GET["expand"] && $_GET["expand"] == $temporary["name"]){ ?>
+            <?php if($expand == $temporary["name"]){ ?>
             <a href="<?php echo $_SERVER["PHP_SELF"]?>?range=<?php echo
             $range;?>">-</a>
             <?php } else { ?>
@@ -438,7 +454,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Net_group::netthresh_a($conn, $temporary["name"]);
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: A level exceeded (Group " .
                 $temporary["name"] .")&" .
@@ -451,10 +467,10 @@ if (!$rs_global = &$conn->Execute("$query"))
             </td>
             <td nowrap><font size="-2"><?php echo $temporary["max_c_date"] ?></font></td>
             <?php 
-                echocolor($temporary["max_a"], 
+                Util::echocolor($temporary["max_a"], 
                             Net_group::netthresh_a($conn, $temporary["name"]),
-                            get_acid_date_link($temporary["max_a_date"]));
-                echocolor(Net_group::get_attack($conn, $temporary["name"]), 
+                            Util::get_acid_date_link($temporary["max_a_date"]));
+                Util::echocolor(Net_group::get_attack($conn, $temporary["name"]), 
                             Net_group::netthresh_a($conn, $temporary["name"]),
                             $image);
             $temporary = next($net_group_array);
@@ -483,11 +499,11 @@ if (!$rs_global = &$conn->Execute("$query"))
 <?php
     if ($nets_order_by_c)
     foreach ($nets_order_by_c as $net) {
-        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net->get_net_name()))
+        if (!Net_group::isNetInGroup($conn, @$_GET["expand"], $net->get_net_name()))
         if (($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
         && ($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
         && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}
-        $image = graph_image_link($net->get_net_name(), "net", "compromise",
+        $image = Util::graph_image_link($net->get_net_name(), "net", "compromise",
                               $start, "N", 1, $range);
 ?>
           <tr>
@@ -500,7 +516,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Net::netthresh_c($conn, $net->get_net_name());
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: C level exceeded (Net " .
                 $net->get_net_name() .")&" .
@@ -513,14 +529,14 @@ if (!$rs_global = &$conn->Execute("$query"))
             </td>
             <td nowrap><font size="-2"><?php echo $net->get_max_c_date() ?></font></td>
             <?php 
-                echocolor($net->get_max_c(), 
+                Util::echocolor($net->get_max_c(), 
                             Net::netthresh_c($conn, $net->get_net_name()),
-                            get_acid_date_link($net->get_max_c_date()));
+                            Util::get_acid_date_link($net->get_max_c_date()));
                 if ($net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
                                         $net->get_net_name() . "'"))
                 {
-                    echocolor($net_list[0]->get_compromise(), 
+                    Util::echocolor($net_list[0]->get_compromise(), 
                             Net::netthresh_c($conn, $net->get_net_name()),
                             $image);
                 }
@@ -543,11 +559,11 @@ if (!$rs_global = &$conn->Execute("$query"))
 <?php 
     if ($nets_order_by_a)
     foreach ($nets_order_by_a as $net) { 
-        if (!Net_group::isNetInGroup($conn, $_GET["expand"], $net->get_net_name()))
+        if (!Net_group::isNetInGroup($conn, @$_GET["expand"], $net->get_net_name()))
         if (($net->get_max_a() < Net::netthresh_a($conn, $net->get_net_name()))
         && ($net->get_max_c() < Net::netthresh_c($conn, $net->get_net_name()))
         && (Net_group::isNetInAnyGroup($conn, $net->get_net_name()))){continue;}
-        $image = graph_image_link($net->get_net_name(), "net", "attack",
+        $image = Util::graph_image_link($net->get_net_name(), "net", "attack",
                               $start, "N", 1, $range);
 ?>
           <tr>
@@ -560,7 +576,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Net::netthresh_a($conn, $net->get_net_name());
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: A level exceeded (Net " .
                 $net->get_net_name() . ")&" .
@@ -573,14 +589,14 @@ if (!$rs_global = &$conn->Execute("$query"))
             </td>
             <td nowrap><font size="-2"><?php echo $net->get_max_a_date() ?></font>
             <?php 
-                echocolor($net->get_max_a(), 
+                Util::echocolor($net->get_max_a(), 
                             Net::netthresh_a($conn, $net->get_net_name()),
-                            get_acid_date_link($net->get_max_c_date()));
+                            Util::get_acid_date_link($net->get_max_c_date()));
                 if ($net_list = Net_qualification::get_list($conn, 
                                         "WHERE net_name = '" . 
                                         $net->get_net_name() . "'"))
                 {
-                    echocolor($net_list[0]->get_attack(), 
+                    Util::echocolor($net_list[0]->get_attack(), 
                             Net::netthresh_a($conn, $net->get_net_name()),
                             $image);
                 }
@@ -609,7 +625,7 @@ if (!$rs_global = &$conn->Execute("$query"))
     if ($hosts_order_by_c)
     foreach ($hosts_order_by_c as $host) { 
         $host_ip = $host->get_host_ip();
-        $image = graph_image_link($host->get_host_ip(), "host", "compromise",
+        $image = Util::graph_image_link($host->get_host_ip(), "host", "compromise",
                                   $start, "N", 1, $range); 
 ?>
           <tr>
@@ -626,7 +642,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Host::ipthresh_c($conn, $host->get_host_ip());
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: C level exceeded (Host $host_ip)&" .
             "priority=$priority&" .
@@ -647,11 +663,11 @@ if (!$rs_global = &$conn->Execute("$query"))
                                         "WHERE host_ip = '" . 
                                         $host->get_host_ip() . "'");
             if ($host_list)
-                echocolor($host_list[0]->get_compromise(), 
+                Util::echocolor($host_list[0]->get_compromise(), 
                           Host::ipthresh_c($conn, $host->get_host_ip()),
                           $image);
             else
-                echocolor(0, 
+                Util::echocolor(0, 
                           Host::ipthresh_c($conn, $host->get_host_ip()), 
                           $image);
         ?>
@@ -675,7 +691,7 @@ if (!$rs_global = &$conn->Execute("$query"))
     if ($hosts_order_by_a)
     foreach ($hosts_order_by_a as $host) { 
         $host_ip = $host->get_host_ip();
-        $image = graph_image_link($host->get_host_ip(), "host", "attack",
+        $image = Util::graph_image_link($host->get_host_ip(), "host", "attack",
                                   $start, "N", 1, $range); 
     ?>
           <tr>
@@ -692,7 +708,7 @@ if (!$rs_global = &$conn->Execute("$query"))
                 Host::ipthresh_a($conn, $host->get_host_ip());
             if ($priority > 10) $priority = 10;
         ?>
-        <a href="<?php echo "../incidents/incident.php?insert=1&" .
+        <a href="<?php echo "../incidents/newincident.php?" .
             "ref=Metric&" .
             "title=Metric Threshold: A level exceeded (Host $host_ip)&" .
             "priority=$priority&" .
@@ -713,11 +729,11 @@ if (!$rs_global = &$conn->Execute("$query"))
                                         "WHERE host_ip = '" . 
                                         $host->get_host_ip() . "'");
             if ($host_list)
-                echocolor($host_list[0]->get_attack(), 
+                Util::echocolor($host_list[0]->get_attack(), 
                           Host::ipthresh_a($conn, $host->get_host_ip()),
                           $image);
             else
-                echocolor(0, 
+                Util::echocolor(0, 
                           Host::ipthresh_a($conn, $host->get_host_ip()), 
                           $image);
         ?>

@@ -63,11 +63,21 @@ typedef struct {
     gchar	*filename;
     gint	fd;
     gint	level;
+    guint	handler[3]; //we use 3 handlers because we call 3 times to g_log_set_handler().
   } log;
 
 } SimMain;
 
 extern SimMain	ossim;
+
+typedef struct 
+{
+  gchar          *config;
+  gboolean        daemon;
+  gint            debug;
+} SimCmdArgs;
+
+SimCmdArgs simCmdArgs;
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,8 @@
 <?php
 
 require_once ('classes/Net_group.inc');
+require_once ("ossim_db.inc");
+
 
 class Net_group_scan {
 
@@ -21,7 +23,7 @@ class Net_group_scan {
 
     function get_list($conn, $args = "") 
     {
-        $query = "SELECT * FROM net_group_scan $args";
+        $query = OssimQuery("SELECT * FROM net_group_scan $args");
 
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
@@ -40,11 +42,11 @@ class Net_group_scan {
     {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
-        $net_group_name = mysql_real_escape_string($net_group_name);
 
-        $query = "INSERT INTO net_group_scan VALUES 
-            ('$net_group_name', $plugin_id, $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "INSERT INTO net_group_scan VALUES (?, ?, ?)";
+        
+        $params = array($net_group_name, $plugin_id, $plugin_sid);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error inserting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
@@ -54,30 +56,27 @@ class Net_group_scan {
     {
         settype($plugin_id, "int");
         settype($plugin_sid, "int");
-        $net_group_name = mysql_real_escape_string($net_group_name);
 
-        $query = "UPDATE net_group_scan SET net = '$net', 
-            plugin_id = $plugin_id, plugin_sid = $plugin_sid);";
-        if ($conn->Execute($query) === false) {
+        $sql = "UPDATE net_group_scan SET net = ?, plugin_id = ?, plugin_sid = ?";
+        $params = array($net, $plugin_id, $plugin_sid);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error updating: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     
     function delete($conn, $net, $plugin_id) {
-        $net = mysql_real_escape_string($net);
-        $query = "DELETE FROM net_group_scan WHERE net_group_name = '$net' 
-                    AND plugin_id = $plugin_id;";
-        if ($conn->Execute($query) === false) {
+        $sql = "DELETE FROM net_group_scan WHERE net_group_name = ? AND plugin_id = ?";
+        $params = array($net, $plugin_id);
+        if ($conn->Execute($sql, $params) === false) {
             print 'error deleting: '.$conn->ErrorMsg().'<BR>';
             exit;
         }
     }
     function in_net_group_scan($conn, $net, $plugin_id) {
-        $net = mysql_real_escape_string($net);
-        $query = "SELECT * FROM net_group_scan WHERE net_group_name = '$net' AND plugin_id=$plugin_id;";
-        
-        if (!$rs = &$conn->Execute($query)) {
+        $sql = "SELECT * FROM net_group_scan WHERE net_group_name = ? AND plugin_id = ?";
+        $params = array($net, $plugin_id);
+        if (!$rs = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         }
         return $rs->fields[0];

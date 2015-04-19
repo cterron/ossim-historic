@@ -1,6 +1,6 @@
 <?php
 require_once('ossim_conf.inc');
-$path_conf = new ossim_conf();
+$path_conf = $GLOBALS["CONF"];
 $fpdf_path = $path_conf->get_conf("fpdf_path");
 
 define('FPDF_FONTPATH','font/');
@@ -9,6 +9,7 @@ define('DEFAULT_LINE_HEIGTH', 6);
 require($fpdf_path . '/fpdf.php');
 
 require_once ('classes/SecurityReport.inc');
+require_once ('classes/Log_action.inc');
 
 class PDF extends FPDF
 {
@@ -24,7 +25,7 @@ class PDF extends FPDF
         $this->title = $title;
 
         /* ossim framework conf */
-        $this->conf = new ossim_conf();
+        $this->conf = $GLOBALS["CONF"];
 
         /* connection to ossim/snort database */
         $db = new ossim_db();
@@ -39,6 +40,7 @@ class PDF extends FPDF
         $this->SetTitle($title);
         $this->SetCreator('OSSIM framework');
         $this->AddPage();
+        Log_action::log(19,NULL);
     }
 
     function Header()
@@ -173,15 +175,18 @@ class PDF extends FPDF
         $this->Ln(5);
     }
 
-    function __AttackHosts($title, $ip_target, $limit = 10, $color = "blue")
+    function __AttackHosts($title, $ip_target, $limit = 10, $color = "blue",
+    $type = "event")
     {
         require_once ('classes/Host.inc');
     
         $content[] = array("Host", "Occurrences");
         $length  = array(80, 25);
 
-        $attack = $this->security_report->AttackHost($ip_target, $limit);
-
+        $attack = $this->security_report->AttackHost($this->ossim_conn, 
+                                                     $ip_target,
+                                                     $limit, 
+                                                     $type);
         /* resolve ips */
         for ($i = 0; $i < count($attack); $i++)
             $attack[$i][0] = 
@@ -192,100 +197,159 @@ class PDF extends FPDF
         $this->__WriteTable($title, $length, $content, 1, $color);
     }
 
-    function AttackedHosts($limit = 10)
+    function AttackedHosts($limit = 10, $type = "event")
     {
-        $this->__AttackHosts("Top $limit Attacked Hosts", "ip_dst", $limit, "red");
+        $this->__AttackHosts("Top $limit Attacked Hosts", "ip_dst", $limit,
+        "red", $type);
     }
 
-    function AttackerHosts($limit = 10)
+    function AttackerHosts($limit = 10, $type = "event")
     {
-        $this->__AttackHosts("Top $limit Attacker Hosts", "ip_src", $limit, "blue");
+        $this->__AttackHosts("Top $limit Attacker Hosts", "ip_src", $limit,
+        "blue", $type);
     }
 
-    function Alerts($limit = 10)
+    function Events($limit = 10, $type = "event")
     {
-        $content[] = array("Alert", "Occurrences");
+        $content[] = array("Event", "Occurrences");
         $length  = array(100, 25);
         $content = array_merge(
-            $content, $this->security_report->Alerts($limit));
+            $content, $this->security_report->Events($limit, $type));
 
-        $this->__WriteTable("Top $limit Alerts", $length, $content, 1);
+        $this->__WriteTable("Top $limit Events", $length, $content, 1);
     }
 
-    function Ports($limit = 10)
+    function Ports($limit = 10, $type = "event")
     {
         $content[] = array("Port", "Service", "Ocurrences");
         $length  = array(35, 40, 25);
         $content = array_merge(
-            $content, $this->security_report->Ports($limit));
+            $content, $this->security_report->Ports($limit, $type));
 
         $this->__WriteTable("Top $limit Destination Ports", $length, $content, 1, "orange");
     }
 
-    function AlertsByRisk($limit = 10)
+    function EventsByRisk($limit = 10, $type = "event")
     {
-        $content[] = array("Alert", "Risk");
+        $content[] = array("Event", "Risk");
         $length  = array(100, 25);
         $content = array_merge(
-            $content, $this->security_report->AlertsByRisk($limit));
+            $content, $this->security_report->EventsByRisk($limit, $type));
 
-        $this->__WriteTable("Top $limit Alerts by risk", $length, $content, 1);
+        $this->__WriteTable("Top $limit Events by risk", $length, $content, 1);
     }
 
 
+    /*
+     * INCIDENTS
+     */
 
-    function IncidentSummary($show_metrics = True, 
-                             $show_alarms = True)
+    function __get_ids($ref)
+    {
+        if ($ref != "Metric" && $ref != "Alarm" && $ref != "Event")
+            return NULL;
+
+        $ids = array();
+
+        $incident_list = Incident::get_list($this->ossim_conn,
+            "WHERE ref = '$ref' ORDER BY date DESC");
+        if (is_array($incident_list)) {
+            foreach ($incident_list as $incident) {
+                $ids[] = $incident->get_id();
+            }
+        }
+
+        return $ids;
+    }
+
+    function get_metric_ids()
+    {
+        return $this->__get_ids("Metric");
+    }
+
+    function get_alarm_ids()
+    {
+        return $this->__get_ids("Alarm");
+    }
+
+    function get_event_ids()
+    {
+        return $this->__get_ids("Event");
+    }
+
+
+    function IncidentGeneralData($reason, $date, $place, $responsible, $summary)
+    {
+        $this->__WriteTitle(gettext("GENERAL DATA"));
+        $this->SetFont('Arial', '', 12);
+
+        $this->__WriteBold(gettext("Reason: "));
+        $this->Write(DEFAULT_LINE_HEIGTH, $reason);
+        $this->Ln(DEFAULT_LINE_HEIGTH);
+
+        $this->__WriteBold(gettext("Date: "));
+        $this->Write(DEFAULT_LINE_HEIGTH, $date);
+        $this->Ln(DEFAULT_LINE_HEIGTH);
+
+        $this->__WriteBold(gettext("Place: "));
+        $this->Write(DEFAULT_LINE_HEIGTH, $place);
+        $this->Ln(DEFAULT_LINE_HEIGTH);
+
+        $this->__WriteBold(gettext("Responsible: "));
+        $this->Write(DEFAULT_LINE_HEIGTH, $responsible);
+        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+
+        $this->__WriteTitle(gettext("SUMMARY"));
+        $this->SetFont('Arial', '', 12);
+        $this->Write(DEFAULT_LINE_HEIGTH, $summary);
+        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+    }
+
+    function IncidentSummary($title, $ref, $summary)
     {
         require_once ('classes/Incident.inc');
 
         $ids = array();
-
-        /* Generic Data */
-        /*
-        $this->__WriteTitle("Generic Data");
-        $this->__WriteBold("Date: ");
-        $this->Write(DEFAULT_LINE_HEIGTH, strftime("%d %B %Y", time()));
-        $this->Ln(15);
-        */
         
-        /* last N incidents */
-        $this->__WriteTitle("Last $limit incidents summary");
+        $this->__WriteTitle($title);
         $this->SetFont('Arial', '', 12); 
 
+        /* Summary */
+        $this->Write(DEFAULT_LINE_HEIGTH, $summary);
+        $this->Ln(DEFAULT_LINE_HEIGTH * 2);
+
+        $this->Write(DEFAULT_LINE_HEIGTH, gettext("List of $ref"."s:"));
+        $this->Ln(DEFAULT_LINE_HEIGTH);
         $incident_list = Incident::get_list($this->ossim_conn, 
-            "ORDER BY date DESC");
+            "WHERE ref = '$ref' ORDER BY date DESC");
         if (is_array($incident_list)) {
             foreach ($incident_list as $incident) {
-                if ( ($incident->get_ref() == "Metric" and $show_metrics) or
-                     ($incident->get_ref() == "Alarm" and $show_alarms) )
-                {
-                    $priority = $incident->get_priority($this->ossim_conn);
-                    $color = $incident->get_priority_bgcolor($priority);
+                $priority = $incident->get_priority($this->ossim_conn);
+                $color = $incident->get_priority_bgcolor($priority);
 
-                    /* date */
-                    $this->Write(DEFAULT_LINE_HEIGTH,
-                                 $incident->get_date() . "  ");
+                /* date */
+                $this->Write(DEFAULT_LINE_HEIGTH,
+                             $incident->get_date() . "  ");
 
-                    /* title */
-                    $this->__WriteBold($incident->get_title(), $color);
-                    $this->Ln();
+                /* title */
+                $this->__WriteBold($incident->get_title(), $color);
+                $this->Ln();
 
 
-                    /* priority */
-                    /*
-                    $this->Write(DEFAULT_LINE_HEIGTH, "Priority: ");
-                    $this->__WriteBold($priority, $color);
-                    $this->Ln();
-                    */
+                /* priority */
+                /*
+                $this->Write(DEFAULT_LINE_HEIGTH, "Priority: ");
+                $this->__WriteBold($priority, $color);
+                $this->Ln();
+                */
 
-                    $ids[] = $incident->get_id();
-                }
+                $ids[] = $incident->get_id();
             }
         }
         $this->Ln(10);
         return $ids;
     }
+
 
     function Incident($incident_id)
     {
@@ -304,7 +368,8 @@ class PDF extends FPDF
         $this->Ln(DEFAULT_LINE_HEIGTH * 2);
 
         /* Alarm or Metric specific data */
-        if ($incident->get_ref() == "Alarm") {
+        if ($incident->get_ref() == "Alarm" or $incident->get_ref() == "Event")
+        {
             if ($alarm_list = $incident->get_alarms($this->ossim_conn)) {
                 foreach ($alarm_list as $alarm) {
                     $this->__WriteBold("Source ips: ");
@@ -471,7 +536,7 @@ class PDF extends FPDF
             }
         } elseif ($target == "global") {
             $query = "SELECT * FROM control_panel
-                WHERE id = 'global_$user' AND time_range = '$time_range';";
+                WHERE id = 'global_$user' AND time_range = '$time_range'";
             if (!$rs_global = &$this->ossim_conn->Execute($query))
                 print $conn->ErrorMsg();
             else {

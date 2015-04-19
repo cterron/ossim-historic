@@ -15,17 +15,19 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
   <h1> <?php echo gettext("Delete host scan configuration"); ?> </h1>
 
 <?php 
-    if (!$host_ip = $_GET["host_ip"]) { 
-        echo "<p align=\"center\">Wrong ip</p>";
-        exit;
-    }
+    require_once 'classes/Security.inc';
+    
+    $host_ip = GET('host_ip');
+    $plugin_id = GET('plugin_id'); 
+    
+    ossim_valid($host_ip, OSS_IP_ADDR, 'illegal:'._("IP Address"));
+    ossim_valid($plugin_id, OSS_DIGIT, 'illegal:'._("Plugin id"));
 
-    if (!$plugin_id = $_GET["plugin_id"]) {
-        echo "<p align=\"center\">Plugin id missing</p>";
-        exit;
+    if (ossim_error()) {
+        die(ossim_error());
     }
-
-    if (!$_GET["confirm"]) {
+    
+    if (GET('confirm')) {
         echo "<p> " . gettext("Are you sure") . " ?</p>";
         echo "<p><a href=\"" . $_SERVER["PHP_SELF"].
         "?host_ip=$host_ip&plugin_id=$plugin_id&confirm=yes\">Yes</a>" . 

@@ -40,7 +40,7 @@
 #include <gnet.h>
 
 #include "sim-enums.h"
-#include "sim-alert.h"
+#include "sim-event.h"
 #include "sim-rule.h"
 
 #ifdef __cplusplus
@@ -150,7 +150,7 @@ struct _SimCommand {
     } plugin_disabled;
 
     struct {
-      /* Alert Info */
+      /* Event Info */
       gchar             *type;
       gchar             *date;
       gchar             *sensor;
@@ -184,10 +184,10 @@ struct _SimCommand {
       gint               asset_dst;
       gdouble            risk_c;
       gdouble            risk_a;
-      gboolean		 alarm;
+      gboolean					 alarm;
 
-      SimAlert          *alert;
-    } alert;
+      SimEvent          *event;
+    } event;
 
     struct {
       gchar             *str;
@@ -198,24 +198,28 @@ struct _SimCommand {
       gchar             *date;
       gchar             *host;
       gchar             *os;
+      gchar             *sensor;
+      gchar             *interface;
 
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
-    } host_os_change;
+    } host_os_event;
 
     struct {
       gchar             *date;
       gchar             *host;
       gchar             *mac;
       gchar             *vendor;
+      gchar             *sensor;
+      gchar             *interface;
 
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
-    } host_mac_change;
+    } host_mac_event;
 
     struct {
       gchar             *date;
@@ -223,13 +227,15 @@ struct _SimCommand {
       gint               port;
       gint               protocol;
       gchar             *service;
+      gchar             *sensor;
+      gchar             *interface;
       gchar             *application;
 
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
-    } host_service_new;
+    } host_service_event;
 
     struct {
       gchar             *host;
@@ -239,6 +245,7 @@ struct _SimCommand {
       gchar             *what;
       gchar             *extra_data;
       gchar             *sensor;
+      gchar             *interface;
       gchar             *date;
 
       gint               plugin_id;
@@ -271,7 +278,7 @@ SimCommand*       sim_command_new_from_rule                   (SimRule         *
 
 gchar*            sim_command_get_string                      (SimCommand      *command);
 
-SimAlert*         sim_command_get_alert                       (SimCommand      *command);
+SimEvent*         sim_command_get_event                       (SimCommand      *command);
 
 gboolean          sim_command_is_valid                        (SimCommand      *command);
 
@@ -282,3 +289,6 @@ G_END_DECLS
 #endif /* __cplusplus */
 
 #endif /* __SIM_COMMAND_H__ */
+
+// vim: set tabstop=2:
+

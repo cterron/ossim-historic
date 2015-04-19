@@ -18,7 +18,7 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     require_once 'ossim_db.inc';
     require_once 'classes/Port_group.inc';
     
-    if (!$order = $_GET["order"]) $order = "name";
+    if (!$order = validateVar($_GET["order"], OSS_SCORE . OSS_SPACE . OSS_ALPHA)) $order = "name";
 ?>
 
   <table align="center">
@@ -74,4 +74,10 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
       </td>
     </tr>
 </table>
+</body>
+</html>
+
+<?php
+    $db->close($conn);
+?>
 

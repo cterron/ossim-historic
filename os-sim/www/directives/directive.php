@@ -36,9 +36,24 @@ function Menus(Objet)
 
 <?php
 
+  if (version_compare(PHP_VERSION,'5','>=')) require_once('xslt-php4-to-php5.php');
+
 require_once ('classes/Plugin.inc');
 require_once ('classes/Plugin_sid.inc');
 require_once ('ossim_db.inc');
+
+require_once ('classes/Security.inc');
+
+
+$directive_id = GET('directive');
+$level = GET('level');
+
+ossim_valid($directive_id, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("directive_id"));
+ossim_valid($level, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("level"));
+
+if (ossim_error()) {
+    die(ossim_error());
+}
 
 $db = new ossim_db();
 $conn = $db->connect();
@@ -108,8 +123,11 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
             if (($rule->type == XML_ELEMENT_NODE) && 
                 ($rule->tagname() == 'rule'))
             {
-	    if ($ilevel != $level)
-	        $indent = "<td colspan=" . ($ilevel-$level) . ">"; 
+	    if ($ilevel != $level) {
+	        $indent = "<td colspan=" . ($ilevel-$level) . ">";
+        } else {
+            $indent = '';
+        } 
 
             if ($level == 1) { ?>
       <tr><?php echo $indent; 
@@ -127,11 +145,11 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <td class="left" colspan=<?php echo $level;?>>
     <?php if (($level == 1) && ($rule->has_child_nodes())) {
     ?>
-            <a href="<?php echo $_server["php_self"] ?>?directive=<?php 
+            <a href="<?php echo $_SERVER["PHP_SELF"] ?>?directive=<?php 
                 echo $directive_id?>&level=<?php echo $ilevel + 1?>"><?php 
                 echo "+" ?></a>
     <?php } elseif ($rule->has_child_nodes()) { ?>
-            <a href="<?php echo $_server["php_self"] ?>?directive=<?php 
+            <a href="<?php echo $_SERVER["PHP_SELF"] ?>?directive=<?php 
                 echo $directive_id?>&level=<?php echo $ilevel-$level+1?>"><?php 
                 echo '-' ?></a>
     <?php } ?>
@@ -139,14 +157,14 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <!-- end expand -->
         
         <td><?php echo $rule->get_attribute('name'); ?></td>
-        <td><?php echo $rule->get_attribute('priority'); ?></td>
-        <td><?php echo $rule->get_attribute('reliability'); ?></td>
-        <td><?php echo $rule->get_attribute('time_out'); ?></td>
-        <td><?php echo $rule->get_attribute('occurrence'); ?></td>
-        <td><?php echo $rule->get_attribute('from'); ?></td>
-        <td><?php echo $rule->get_attribute('to'); ?></td>
-        <td><?php echo $rule->get_attribute('port_from'); ?></td>
-        <td><?php echo $rule->get_attribute('port_to'); ?></td>
+        <td><?php echo $rule->get_attribute('priority'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('reliability'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('time_out'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('occurrence'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('from'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('to'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('port_from'); ?>&nbsp;</td>
+        <td><?php echo $rule->get_attribute('port_to'); ?>&nbsp;</td>
         <td>
 <?php 
     $plugin_id = $rule->get_attribute('plugin_id'); 
@@ -196,7 +214,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
                         $rules = $rule->child_nodes();
                         foreach ($rules as $rule) {
                             rule_table($dom, $directive_id, $rule, 
-                                       $level - 1, $ilevel, $depth);
+                                       $level - 1, $ilevel);
                         }
                     } 
                 }
@@ -214,7 +232,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         exit;
     }
 
-    if ($directive_id = $_GET["directive"]) {
+    if (!empty($directive_id)) {
         $order = findorder($dom, $directive_id);
 
         if ($directive_id) {
@@ -222,7 +240,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
             $doc = $doc->child_nodes();
 	    $directive = $doc[$order * 2 -1];
             
-	    if (!$level = $_GET["level"])   $level = 1;
+	    if (empty($level))   $level = 1;
             $_SESSION["path"] = 0;
             rule_table_header($directive_id, $level);
 	    rule_table($dom, $directive_id, $directive, $level, $level);
@@ -284,10 +302,9 @@ $db->close($conn);
 </ol>
 <?php echo gettext("Default value"); ?> : 1.
 <h3 style="text-align: left;"> <?php echo gettext("Reliability"); ?> </h3>
-<?php echo gettext("When talking about classic risk-assessment this would be
-called") . " "; ?> &quot;
+<?php echo gettext("When talking about classic risk-assessment this would be called") . " "; ?> &quot;
 <?php echo gettext("probability") . " "; ?> &quot;. 
-<?php echo gettext("Since it's quite difficult to determine how probable it is our network being attacked by some sort of vulnerability, we'll transform this term into something more IDS related: reliability"); ?> .<br/>
+<?php echo gettext("Since it's quite difficult to determine how probable it is that our network being attacked through one or another vulnerability, we'll transform this term into something more IDS related: reliability"); ?> .<br/>
 <?php echo gettext("Surely many of you have seen unreliable signatures on every available NIDS. A host pinging a non-live destination is able to rise hundreds of thousands spade events a day. Snort's recent http-inspect functionality for example, although good implemented needs some heavy tweaking in order to be reliable or you'll get thousands of false positives a day"); ?> .<br/>
 <?php echo gettext("Coming back to our worm example. If a hosts connects to 5 different hosts on their own subnet using port 445, that could be a normal behaviour. Unreliable for IDS purposes. What happens if they connect to 15 hosts? We're starting to get suspicious. And what if they contact 500 different hosts in less than an hour? That's strange and the attack is getting more and more reliable"); ?> .<br/>
 <?php echo gettext("Each rule has it's own reliability, determining how reliable this particular rule is within the whole attack chain"); ?> .<br/>
@@ -342,9 +359,54 @@ called") . " "; ?> &quot;
 </ol>
 <?php echo gettext("The") . " "; ?> &quot;To&quot; <?php echo " " . gettext("field is the field used when referencing monitor data that has no source"); ?> .<br/>
 <?php echo gettext("Both") . " "; ?> &quot;From&quot; and &quot;To&quot; fields should accept input from the database in the near future. Host and Network objects are on the TODO list.
+<h3 style="text-align: left;">Sensor</h3>
+<?php echo gettext("Sensor IP. There are various possible values for this field"); ?> :
+<ol>
+<li>ANY<br/>
+<?php echo gettext("Just that, any ip address would match"); ?> .<br/>
+<li> <?php echo gettext("Dotted numerical Ipv4"); ?> (x.x.x.x)<br/>
+<?php echo gettext("Self explaining"); ?> .<br/>
+<li> <?php echo gettext("Comma separated Ipv4 addresses without netmask"); ?> .<br/>
+<?php echo gettext("You can use any number of ip addresses separated by commas"); ?> .<br/>
+<li> <?php echo gettext("Using a sensor name"); ?> .<br/>
+<?php echo gettext("You can use any sensor name defined via web"); ?> .<br/>
+<li> <?php echo gettext("Relative"); ?> .<br/>
+<?php echo gettext("This is used to reference sensor ip addresses from previous levels. This should be easier to understand using examples"); ?> <br/>
+1:SENSOR <?php echo gettext("means use the sensor ip referenced within the previous rule"); ?> .<br/>
+<li> <?php echo gettext("Negated"); ?> .<br/>
+<?php echo gettext("You can also use negated elements. I.e."); ?> :<br/>
+&quot;!192.168.2.203&quot;.<br/>
+</ol>
+
 <h3 style="text-align: left;">Port_from / Port_to</h3>
 This can be a port number or a sequence of comma separated port numbers. ANY port can also be used.<br/>
 Hint: 1:DST_PORT or 1:SRC_PORT would mean level 1 src and dest port respectively. They can be used too. (level 2 would be 2:DST_PORT for example).
+<br> <br>
+Also you can negate ports. This will negate ports 22 and 21 in the directive:
+<br><br>
+port="!22,25,110,!21"
+
+
+<h3 style="text-align: left;">Protocol</h3>
+This can be one of the following strings:<br><br>
+<li> TCP
+<li> UDP
+<li> ICMP
+<li> Host_ARP_Event
+<li> Host_OS_Event
+<li> Host_Service_Event
+<li> Host_IDS_Event
+<li> Information_Event
+<br><br>
+<li> Additionally, you can put just a number with the protocol.
+<br><br>
+Although Host_ARP_Event, Host_OS_Event, etc, are not really a protocol, you can use them if you want to do directives with ARP, OS, IDS or Service events. You can also use relative referencing like in 1:TCP, 2:Host_ARP_Event, etc...
+<br><br>
+You can negate the protocol also like this: protocol="!Host_ARP_Event,UDP,!ICMP"
+This will negate Host_ARP_Event and ICMP, but will match with UDP.
+<br/>
+
+
 <h3 style="text-align: left;">Plugin_id</h3>
 The numerical id assigned to the referenced plugin.
 <h3 style="text-align: left;">Plugin_sid</h3>
@@ -352,6 +414,8 @@ The nummerical sub-id assigned to each plugins events, functions or the like.<br
 For example, plugin id 1001 (snort) references it.s rules as normal plugin_sids.<br/>
 Plugin id 1501 (apache) uses the response codes as plugin_sid (200 OK, 404 NOT FOUND, ...)<br/>
 ANY can be used too for plugin_sid.
+<br><br>You can negate plugin_sid's: plugin_sid="1,2,3,!4" will negate just the plugin_sid 4.
+
 <h3 style="text-align: left;">Condition</h3>
 This parameter and the following three are only valid for &quot;monitor&quot;  and certain &quot;detector&quot; type rules.<br/>
 The logical condition that has to be met for the rule to match:
@@ -382,7 +446,7 @@ Only suitable for rules with more than one occurrence. We want to make sure that
 Take one example. A straight-ahead port-scanning rule. Fix destination with the previous sticky and set sticky_different=&quot;1:DST_PORT&quot;. This will assure we're going to match &quot;X occurrences&quot; against the same hosts having X different destination ports.<br/>
 In our worm rule the most important var is the DST_IP because as the number increases the reliable increases as well. Which host is going to do thousands of connections for the same port against different hosts??<br/>
 <h3 style="text-align: left;">Groups</h3>
-As sticky but involving more than one directive. If an alert matches against a directive defined within a group and the groups is set as &quot;sticky&quot; it won.t match any other directive.
+As sticky but involving more than one directive. If an event matches against a directive defined within a group and the groups is set as &quot;sticky&quot; it won.t match any other directive.
 
 
 <hr/><h2 style="text-align: left;">Risk</h2>

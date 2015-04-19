@@ -1,5 +1,6 @@
 <?php
-require_once ('classes/Session.inc');
+require_once 'classes/Security.inc';
+require_once 'classes/Session.inc';
 Session::logcheck("MenuPolicy", "PolicyPolicy");
 ?>
 
@@ -15,35 +16,17 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <h1> <?php echo gettext("New policy"); ?> </h1>
 
 <?php
-    /* check params */
-    if ((mysql_escape_string($_POST["insert"])) &&
-        (!(mysql_escape_string($_POST["sourcenips"]) ||
-           mysql_escape_string($_POST["sourcengrps"]))) ||
-        (!(mysql_escape_string($_POST["destnips"]) ||
-           mysql_escape_string($_POST["destngrps"]))) ||
-         !mysql_escape_string($_POST["nprts"]) ||
-         !mysql_escape_string($_POST["nsens"]) ||
-         !mysql_escape_string($_POST["nsigs"]) ||
-         !mysql_escape_string($_POST["begin_day"]) ||
-         !mysql_escape_string($_POST["end_day"]) ||
-         !mysql_escape_string($_POST["descr"]))
-{
-?>
 
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
+if (isset($_POST["insert"])) {
 
-<?php
-
-/* check OK, insert into DB */
-} elseif(mysql_escape_string($_POST["insert"])) {
-
-    $priority   = mysql_escape_string($_POST["priority"]);
-    $begin_hour = mysql_escape_string($_POST["begin_hour"]);
-    $end_hour   = mysql_escape_string($_POST["end_hour"]);
-    $begin_day  = mysql_escape_string($_POST["begin_day"]);
-    $end_day    = mysql_escape_string($_POST["end_day"]);
-    $descr      = mysql_escape_string($_POST["descr"]);
+    $priority   = validateVar($_POST["priority"]);
+    $begin_hour = validateVar($_POST["begin_hour"]);
+    $end_hour   = validateVar($_POST["end_hour"]);
+    $begin_day  = validateVar($_POST["begin_day"]);
+    $end_day    = validateVar($_POST["end_day"]);
+    $descr      = validateVar($_POST["descr"], OSS_ALPHA . OSS_PUNC . OSS_SCORE
+    . OSS_AT);
+    $store      = validateVar($_POST["store"]);
 
     /*
      *  Check correct range of dates
@@ -54,65 +37,88 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     $begin_expr = (($begin_day -1) * 7) + $begin_hour;
     $end_expr = (($end_day -1) * 7) + $end_hour;
     if ($begin_expr >= $end_expr) {
-?>
-        <p align="center"> <?php echo gettext("Error: Incorrect range of dates"); ?> !</p>
-<?php   exit;
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("INCORRECT_DATE_RANGE");
     }
 
     /* source ips */
-    for ($i = 1; $i <= mysql_escape_string($_POST["sourcenips"]); $i++) {
+    $source_ips = array();
+    for ($i = 1; $i <= validateVar($_POST["sourcenips"]); $i++) {
         $name = "sourcemboxi" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $source_ips[] = mysql_escape_string($_POST[$name]);
-        }
-    }
-                                                                                
-    /* dest ips */
-    for ($i = 1; $i <= mysql_escape_string($_POST["destnips"]); $i++) {
-        $name = "destmboxi" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $dest_ips[] = mysql_escape_string($_POST[$name]);
-        }
-    }
-                                                                                
-    /* source nets */
-    for ($i = 1; $i <= mysql_escape_string($_POST["sourcengrps"]); $i++) {
-        $name = "sourcemboxg" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $source_nets[] = mysql_escape_string($_POST[$name]);
-        }
-    }
-                                                                                
-    /* dest nets */
-    for ($i = 1; $i <= mysql_escape_string($_POST["destngrps"]); $i++) {
-        $name = "destmboxg" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $dest_nets[] = mysql_escape_string($_POST[$name]);
-        }
-    }
-                                                                                
-    /* ports */
-    for ($i = 1; $i <= mysql_escape_string($_POST["nprts"]); $i++) {
-        $name = "mboxp" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $ports[] = mysql_escape_string($_POST[$name]);
-        }
-    }
-
-    /* signatures */
-    for ($i = 1; $i <= mysql_escape_string($_POST["nsigs"]); $i++) {
-        $name = "mboxsg" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $sigs[] = mysql_escape_string($_POST[$name]);
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $source_ips[] = validateVar($_POST[$name]);
         }
     }
     
-    /* sensors */
-    for ($i = 1; $i <= mysql_escape_string($_POST["nsens"]); $i++) {
-        $name = "mboxs" . $i;
-        if (mysql_escape_string($_POST[$name])) {
-            $sensors[] = mysql_escape_string($_POST[$name]);
+    /* source nets */
+    $source_nets = array();
+    for ($i = 1; $i <= validateVar($_POST["sourcengrps"]); $i++) {
+        $name = "sourcemboxg" . $i;
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $source_nets[] = validateVar($_POST[$name]);
         }
+    }
+    if (!count($source_ips) && !count($source_nets)) {
+        die(ossim_error(_("At least one Source IP or Net required")));
+    }
+    
+    /* dest ips */
+    $dest_ips = array();
+    for ($i = 1; $i <= validateVar($_POST["destnips"]); $i++) {
+        $name = "destmboxi" . $i;
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $dest_ips[] = validateVar($_POST[$name]);
+        }
+    }
+                                                                                                                                                                
+    /* dest nets */
+    $dest_nets = array();
+    for ($i = 1; $i <= validateVar($_POST["destngrps"]); $i++) {
+        $name = "destmboxg" . $i;
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $dest_nets[] = validateVar($_POST[$name]);
+        }
+    }
+    if (!count($dest_ips) && !count($dest_nets)) {
+        die(ossim_error(_("At least one Destination IP or Net required")));
+    }
+                                                                                
+    /* ports */
+    $ports = array();
+    for ($i = 1; $i <= validateVar($_POST["nprts"]); $i++) {
+        $name = "mboxp" . $i;
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $ports[] = validateVar($_POST[$name]);
+        }
+    }
+    if (!count($ports)) {
+        die(ossim_error(_("At least one Port required")));
+    }
+
+    /* plugin groups */
+    $plug_groups = array();
+    foreach (POST('plugins') as $group_id => $on) {
+        ossim_valid($group_id, OSS_DIGIT, 'illegal:'._("Plugin Group ID"));
+        $plug_groups[] = $group_id;
+    }
+    if (!count($plug_groups)) {
+        die(ossim_error(_("At least one plugin group required")));
+    }
+    if (ossim_error()) {
+        die(ossim_error());
+    }
+    
+    /* sensors */
+    $sensors = array();
+    for ($i = 1; $i <= validateVar($_POST["nsens"]); $i++) {
+        $name = "mboxs" . $i;
+        if (isset($_POST[$name]) && validateVar($_POST[$name])) {
+            $sensors[] = validateVar($_POST[$name]);
+        }
+    }
+    if (!count($sensors)) {
+        die(ossim_error("At least one Sensor required"));
     }
 
     require_once ('classes/Policy.inc');
@@ -123,7 +129,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
     Policy::insert($conn, $priority, 
                    $begin_hour, $end_hour, $begin_day, $end_day, $descr,
                    $source_ips, $dest_ips, $source_nets, $dest_nets,
-                   $ports, $sigs, $sensors);
+                   $ports, $plug_groups, $sensors, $store);
 ?>
     <p> <?php echo gettext("Policy succesfully inserted"); ?> </p>
     <p><a href="policy.php">

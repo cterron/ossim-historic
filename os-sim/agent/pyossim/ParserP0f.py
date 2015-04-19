@@ -101,6 +101,8 @@ class ParserP0f(Parser.Parser):
                              host       = source,
                              os         = ops,
                              date       = date,
+			                 sensor     = self.plugin["sensor"],							  
+                             iface      = self.plugin["interface"],
                              plugin_id  = self.plugin["id"],
                              plugin_sid = 1,
                              log        = line)

@@ -3,6 +3,7 @@
 <config>
 	<log filename="/var/log/ossim/server.log"/>
 	<sensor name="server" ip="127.0.0.1" interface="eth0"/>
+    <framework name="server" ip="127.0.0.1" port="40003"/>
 	<datasources>
 		<datasource name="ossimDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=ossim;HOST=localhost"/>
 		<datasource name="snortDS" provider="MySQL" dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=snort;HOST=localhost"/>
@@ -11,12 +12,6 @@
 	<scheduler interval="15"/>
 	<server port="40001"/>
     
-    <!-- alarm_risks can be low, medium, high or all -->
-<!--
-	<notifies program="/usr/sbin/sendmail">
-		<notify emails="root@localhost" alarm_risks="low" />
-	</notifies>
--->
     <!-- Replication Servers -->
 <!--
 	<rservers>

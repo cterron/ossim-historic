@@ -5,27 +5,36 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
 
 <html>
 <head>
-  <title> <?php echo gettext("Riskmeter"); ?> </title>
+  <title> <?php echo gettext("Plugin Sid"); ?> </title>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 </head>
 <body>
 
-  <h1> <?php echo gettext("Priority and Reliability configuration"); ?> </h1>
+  <h1> <?php echo gettext("Plugin Sid"); ?> </h1>
 
 <?php
     require_once 'ossim_db.inc';
+    require_once 'classes/Security.inc';
+
+    $order = GET('order');
+    $id = GET('id');
+    $name = GET('name');
+
+    ossim_valid($order, OSS_NULLABLE, OSS_SPACE,  OSS_SCORE, OSS_ALPHA , 'illegal:'._("order"));
+    ossim_valid($id, OSS_ALPHA , 'illegal:'._("id"));
+    ossim_valid($name, OSS_ALPHA , OSS_SCORE, OSS_NULLABLE, 'illegal:'._("name"));
+
+    if (ossim_error()) {
+        die(ossim_error());
+    }
     
+    if (empty($order)) $order = "sid";
+
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if (!$order = $_GET["order"]) $order = "sid";
-    if (!$id = $_GET["id"]) {
-        echo "<p align=\"center\">Unknown plugin id</p>";
-        exit();
-    }
-
-    $title = $_GET["name"] . " ($id)";
+    $title = $name . " ($id)";
     
     require_once 'classes/Plugin_sid.inc';
     require_once 'classes/Classification.inc';
@@ -97,7 +106,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
         <!-- category id -->
         <td nowrap>
 <?php 
-            if ($category_name) echo $category_name . " (". $category_id .")";
+            if (!empty($category_name)) echo $category_name . " (". $category_id .")";
             else echo "-";
 ?> 
         </td>
@@ -106,7 +115,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
         <!-- class id -->
         <td nowrap>
 <?php 
-            if ($class_name) echo $class_name . " (". $class_id .")";
+            if (!empty($class_name)) echo $class_name . " (". $class_id .")";
             else echo "-"; 
 ?> 
         </td>

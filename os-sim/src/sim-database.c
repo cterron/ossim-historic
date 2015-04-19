@@ -35,11 +35,14 @@
 #include <libgda/libgda.h>
 
 #include "sim-database.h"
+#include <config.h>
 
 #define PROVIDER_MYSQL   "MySQL"
 #define PROVIDER_PGSQL   "PostgreSQL"
 #define PROVIDER_ORACLE  "Oracle"
 #define PROVIDER_ODBC    "odbc"
+
+gboolean restarting_mysql = FALSE; //no mutex needed 
 
 enum 
 {
@@ -193,7 +196,9 @@ sim_database_new (SimConfigDS  *config)
       g_print ("NAME: %s", db->_priv->name);
       g_print (" PROVIDER: %s", db->_priv->provider);
       g_print (" DSN: %s", db->_priv->dsn);
-      g_print ("\n");
+      g_print ("\n\n");
+      g_message("We can't open the database connection. Please check that your DB is up.");
+      exit (EXIT_FAILURE);
     }
 
   errors = gda_error_list_copy (gda_connection_get_errors (db->_priv->conn));
@@ -209,13 +214,13 @@ sim_database_new (SimConfigDS  *config)
 }
 
 /*
- *
- *
+ * Executes a query in the database specified and returns the number of affected rows (-1
+ * on error)
  *
  */
 gint
 sim_database_execute_no_query  (SimDatabase  *database,
-				const gchar  *buffer)
+																const gchar  *buffer)
 {
   GdaCommand     *command;
   GdaError       *error;
@@ -229,31 +234,53 @@ sim_database_execute_no_query  (SimDatabase  *database,
   g_mutex_lock (database->_priv->mutex);
 
   command = gda_command_new (buffer, 
-			     GDA_COMMAND_TYPE_SQL, 
-			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
+												     GDA_COMMAND_TYPE_SQL, 
+												     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
 
-  if (!gda_connection_is_open (database->_priv->conn))
-    {
-      g_message ("Connection not is open");
-      gda_connection_close (database->_priv->conn);
-      database->_priv->conn = gda_client_open_connection_from_string (database->_priv->client,
-								      database->_priv->provider,
-								      database->_priv->dsn,
-								      GDA_CONNECTION_OPTIONS_DONT_SHARE);
-    }
+  if (!gda_connection_is_open (database->_priv->conn)) //if database connection is not open, try to open it.
+  {
+    g_message ("DB Connection is closed. Opening it again....");
+    gda_connection_close (database->_priv->conn);
+    database->_priv->conn = gda_client_open_connection_from_string (database->_priv->client,
+																															      database->_priv->provider,
+																															      database->_priv->dsn,
+																															      GDA_CONNECTION_OPTIONS_DONT_SHARE);
+		if (!database->_priv->conn)
+		{
+			if (!restarting_mysql)
+			{
+				restarting_mysql= TRUE;
+				sleep(10);	//we'll wait to check if database is availabe again..
+				sim_database_execute_no_query (database, buffer);
+			}
+			else
+				restarting_mysql = FALSE;
+		}
+
+			
+		if (!database->_priv->conn)
+		{
+      g_message ("CONNECTION ERROR\n");
+      g_message ("NAME: %s", database->_priv->name);
+      g_message (" PROVIDER: %s", database->_priv->provider);
+      g_message (" DSN: %s", database->_priv->dsn);
+      g_message ("\n\n");
+      g_message("We can't open the database connection. Please check that your DB is up.");
+      exit (EXIT_FAILURE);
+		}			
+  }
   ret = gda_connection_execute_non_query (database->_priv->conn, command, NULL);
 
   if (ret < 0)
-    {
-      errors = gda_error_list_copy (gda_connection_get_errors (database->_priv->conn));
-      for (i = 0; i < g_list_length(errors); i++)
-	{
-	  error = (GdaError *) g_list_nth_data (errors, i);
-
-	  g_message ("ERROR %s %lu: %s", buffer, gda_error_get_number (error), gda_error_get_description (error));
-	}
-      gda_error_list_free (errors);
-    }
+  {
+    errors = gda_error_list_copy (gda_connection_get_errors (database->_priv->conn));
+    for (i = 0; i < g_list_length(errors); i++)
+		{
+		  error = (GdaError *) g_list_nth_data (errors, i);
+		  g_message ("ERROR %s %lu: %s", buffer, gda_error_get_number (error), gda_error_get_description (error));
+		}
+    gda_error_list_free (errors);
+  }
 
   gda_command_free (command);
 
@@ -267,40 +294,9 @@ sim_database_execute_no_query  (SimDatabase  *database,
  *
  *
  */
-GList*
-sim_database_execute_command (SimDatabase  *database,
-			      const gchar  *buffer)
-{
-  GdaCommand     *command;
-  GList          *list;
-
-  g_return_val_if_fail (database != NULL, NULL);
-  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
-  g_return_val_if_fail (buffer != NULL, NULL);
-
-  g_mutex_lock (database->_priv->mutex);
-
-  command = gda_command_new (buffer,
-			     GDA_COMMAND_TYPE_SQL,
-			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
-
-  list = gda_connection_execute_command (database->_priv->conn, command, NULL);
-
-  gda_command_free (command);
-
-  g_mutex_unlock (database->_priv->mutex);
-
-  return list;
-}
-
-/*
- *
- *
- *
- */
 GdaDataModel*
 sim_database_execute_single_command (SimDatabase  *database,
-				     const gchar  *buffer)
+																     const gchar  *buffer)
 {
   GdaCommand     *command;
   GdaDataModel   *model;
@@ -312,18 +308,41 @@ sim_database_execute_single_command (SimDatabase  *database,
   g_mutex_lock (database->_priv->mutex);
 
   command = gda_command_new (buffer,
-			     GDA_COMMAND_TYPE_SQL,
-			     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
+												     GDA_COMMAND_TYPE_SQL,
+												     GDA_COMMAND_OPTION_STOP_ON_ERRORS);
 
   if (!gda_connection_is_open (database->_priv->conn))
+  {
+    g_message ("DB Connection is closed. Opening it again....");
+    gda_connection_close (database->_priv->conn);
+    database->_priv->conn = gda_client_open_connection_from_string (database->_priv->client,
+                                                                    database->_priv->provider,
+                                                                    database->_priv->dsn,
+                                                                    GDA_CONNECTION_OPTIONS_DONT_SHARE);
+  	if (!database->_priv->conn)	
+		{
+			if (!restarting_mysql)
+			{
+				restarting_mysql= TRUE;
+				sleep(10);	//we'll wait to check if database is availabe again..
+				sim_database_execute_no_query (database, buffer);
+			}
+			else
+				restarting_mysql = FALSE;
+		}
+
+		if (!database->_priv->conn)
     {
-      g_message ("Connection not is open");
-      gda_connection_close (database->_priv->conn);
-      database->_priv->conn = gda_client_open_connection_from_string (database->_priv->client,
-								      database->_priv->provider,
-								      database->_priv->dsn,
-								      GDA_CONNECTION_OPTIONS_DONT_SHARE);
+      g_message ("CONNECTION ERROR\n");
+      g_message ("NAME: %s", database->_priv->name);
+      g_message (" PROVIDER: %s", database->_priv->provider);
+      g_message (" DSN: %s", database->_priv->dsn);
+      g_message ("\n\n");
+      g_message("We can't open the database connection. Please check that your DB is up.");
+      exit (EXIT_FAILURE);
     }
+  }
+
   model = gda_connection_execute_single_command (database->_priv->conn, command, NULL);
 
   gda_command_free (command);
@@ -346,3 +365,6 @@ sim_database_get_conn (SimDatabase  *database)
 
   return database->_priv->conn;  
 }
+
+// vim: set tabstop=2:
+

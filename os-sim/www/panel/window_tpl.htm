@@ -1,0 +1,72 @@
+<style type="text/css">
+    .hb h1{
+        padding-top:0;
+        margin-bottom:0px;
+        font-size:92%;
+        font-family:Verdana,Geneva,sans-serif;
+        color:#3f3f3f;
+        font-weight:bold;
+    }
+    .hb h1 a,.hb h1 a:visited{
+        font-family:Verdana,Geneva,sans-serif;
+        text-decoration:underline;
+        color:#3f3f3f;
+    }
+    .hb h1 small {
+        color:#3f3f3f;
+    }
+    .ymymd {
+        background: #ffffff;
+        border: 2px solid #a4a4a4;
+    }
+
+</style>
+<!-- Window Template -->
+<div id="window_%ID%">
+    <div class="ymymdi">
+        <div class="ymymd">
+<!-- Window Title Bar -->
+<div class="hd" id="76889_bx">
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+    <tr>
+        <td width="1%" valign="top" align="left" class="hb t1">
+            <!--
+            <a href="#" title="Ocultar" id="window_1_title"
+               onClick="return minimize('%ID%');">
+            <img src="../pixmaps/panel/window_hide.gif" width="14" height="15" alt="Ocultar" border="0"
+                 id="window_1_showhide" style="margin:0 10px 0 5px">
+            </a>
+            -->
+            &nbsp;
+        </td>
+        <td valign="top" class="hb t1">
+            <h1 id="window_1_titlestr"
+                ondblclick="return minimize('%ID%');">%TITLE%</h1>
+        </td>
+        <td width="1%" valign="top" align="right" class="hb t1" NOWRAP>
+            <small>%CONFIG%&nbsp;</small>
+            <!--
+            <a href="#" onClick="javascript: return Control.Panel.destroyWindow(this);" title="Cerrar">
+                <img src="../pixmaps/panel/window_close.gif" width=17 height=13 border=0 alt="Cerrar" hspace=2>
+            </a>
+            -->
+        </td>
+    </tr>
+</table>
+</div>
+<!-- Window Contents -->
+<div id="window_1_contents" style="display:block">
+    <table cellpadding=0 cellspacing=0 border=0 width="100%">
+        <tr>
+            <td style="padding:4px;">
+                <div class="article_atomic" id="window_1_value">
+                %CONTENTS%
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</div></div></div>
+
+<!-- /Window -->

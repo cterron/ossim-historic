@@ -15,28 +15,25 @@ Session::logcheck("MenuPolicy", "PolicySensors");
   <h1> <?php echo gettext("Update sensor"); ?> </h1>
 
 <?php
+require_once 'classes/Security.inc';
 
-    /* check params */
-    if (($_POST["insert"]) &&
-        (!$_POST["name"] || !$_POST["ip"] || !$_POST["port"] ||
-         !$_POST["descr"])) 
-    {
-?>
+$name   = POST('name');
+$ip     = POST('ip');
+$port   = POST('port');
+$descr  = POST('descr'); 
+$priority = POST('priority');
 
-  <p align="center"> <?php echo gettext("Please, complete all the fields"); ?> </p>
-  <?php exit();?>
+ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Sensor name"));
+ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("Ip address"));
+ossim_valid($port, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Port number"));
+ossim_valid($descr, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Description"));
+ossim_valid($priority, OSS_DIGIT, OSS_DOT, OSS_NULLABLE, 'illegal:'._("Priority"));
 
-<?php
+if (ossim_error()) {
+    die(ossim_error());
+}
 
-/* check OK, insert into BD */
-} elseif($_POST["insert"]) {
-
-    $name        = mysql_escape_string($_POST["name"]);
-    $ip          = mysql_escape_string($_POST["ip"]);
-    $priority    = mysql_escape_string($_POST["priority"]);
-    $port        = mysql_escape_string($_POST["port"]);
-    $descr       = mysql_escape_string($_POST["descr"]);
-
+if (POST('insert')) {
     require_once 'ossim_db.inc';
     require_once 'classes/Sensor.inc';
     $db = new ossim_db();
@@ -52,4 +49,3 @@ Session::logcheck("MenuPolicy", "PolicySensors");
 
 </body>
 </html>
-

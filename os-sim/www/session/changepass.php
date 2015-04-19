@@ -1,3 +1,7 @@
+<?php
+require_once ('classes/Session.inc');
+Session::logcheck("MenuConfiguration", "ConfigurationUsers");
+?>
 <html>
 <head>
   <title> <?php echo gettext("OSSIM Framework"); ?> </title>
@@ -13,37 +17,64 @@
 
     require_once ('ossim_db.inc');
     require_once ('classes/Session.inc');
+    require_once ('ossim_acl.inc');
+
+$user  = POST('user');
+$pass1 = POST('pass1');
+$pass2 = POST('pass2');
+$oldpass = POST('oldpass');
+
+ossim_valid($user, OSS_USER, 'illegal:'._("User name"));
+
+if (ossim_error()) {
+        die(ossim_error());
+}
+
 
     $db = new ossim_db();
     $conn = $db->connect();
 
 
+
     /* check params */
-    if (!$_POST["user"] || !$_POST["oldpass"] ||
-        !$_POST["pass1"] || !$_POST["pass2"])
+    if (!POST("user") || !POST("pass1") || !POST("pass2"))
     {
-        echo "<p align=\"center\">Please, complete all the fields</p>";
-        exit();
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("FORM_MISSING_FIELDS");
     }
 
-    /* check for old password */
-    if (!$user_list = Session::get_list($conn,
-        "WHERE login = '" . $_POST["user"] . "' and pass = '" . md5($_POST["oldpass"]) . "'"))
+    if (($_SESSION["_user"] != ACL_DEFAULT_OSSIM_ADMIN) && 
+         (($_SESSION["_user"] != $user) && !POST("oldpass"))) 
     {
-        echo "<p align=\"center\">Authentication failure</p>";
-        exit();
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("FORM_MISSING_FIELDS");
+    }
+
+    /* check for old password if not actual user or admin */
+    if ((($_SESSION["_user"] != $user) && 
+          $_SESSION["_user"] != ACL_DEFAULT_OSSIM_ADMIN) && 
+          !is_array($user_list = Session::get_list($conn,
+                        "WHERE login = '" . $user . 
+                        "' and pass = '" . md5($oldpass) . "'")))
+    {
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("BAD_OLD_PASSWORD");
     }
 
     /* check passwords */
-    if (0 != strcmp($_POST["pass1"], $_POST["pass2"])) {
-        echo "<p align=\"center\">Password mismatch</p>";
-        exit();
+    if (0 != strcmp($pass1, $pass2)) {
+        require_once("ossim_error.inc");
+        $error = new OssimError();
+        $error->display("PASSWORDS_MISMATCH");
     }
 
     /* check OK, insert into DB */
-    if ($_POST["update"]) {
+    if (POST('update')) {
 
-        Session::changepass ($conn, $_POST["user"], $_POST["pass1"]);
+        Session::changepass ($conn, $user, $pass1);
 
 ?>
     <p> <?php echo gettext("User succesfully updated"); ?> </p>

@@ -22,9 +22,10 @@ Session::logcheck("MenuPolicy", "PolicyPorts");
     $db = new ossim_db();
     $conn = $db->connect();
 
-    if (!$port_name = mysql_escape_string($_GET["portname"])) {
-        echo "<p>Wrong port name</p>";
-        exit;
+    if (!$port_name = validateVar($_GET["portname"])) {
+      require_once("ossim_error.inc");
+      $error = new OssimError();
+      $error->display("WRONG_PORTNAME");
     }
 
     if ($port_group_list = Port_group::get_list
