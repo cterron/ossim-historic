@@ -174,23 +174,23 @@ if (empty($sup)) $sup = $ROWS;
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php echo
         ossim_db::get_order("date", $order);?>">
         <?php echo
-        "date"; ?></a></th>
+        gettext("Date"); ?></a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php echo
         ossim_db::get_order("login", $order);?>">
         <?php echo
-        "user"; ?></a></th>
+        gettext("User"); ?></a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php echo
         ossim_db::get_order("ipfrom", $order);?>">
         <?php echo
-        "ip"; ?></a></th>
+        gettext("ip"); ?></a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php echo
         ossim_db::get_order("code", $order);?>">
         <?php echo
-        "code"; ?></a></th>
+        gettext("Code"); ?></a></th>
         <th><a href="<?php echo $_SERVER["PHP_SELF"]?>?order=<?php echo
         ossim_db::get_order("info", $order);?>">
         <?php echo
-        "Action"; ?></a></th>
+        gettext("Action"); ?></a></th>
       </tr>
 
 <?php
@@ -237,7 +237,7 @@ if (empty($sup)) $sup = $ROWS;
 
 <?php
 $time_load = time() - $time_start;
-print "[ Page loaded in $time_load seconds ]";
+echo "[ ".gettext("Page loaded in")." $time_load ".gettext("seconds")." ]";
 $db->close($conn);
 ?>
 

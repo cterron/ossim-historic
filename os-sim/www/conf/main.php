@@ -23,7 +23,8 @@ $CONFIG = array (
                     "ja_JP" => gettext("Japanese"),
                     "pt_BR" => gettext("Brazilian Portuguese"),
                     "zh_CN" => gettext("Simplified Chinese"),
-                    "zh_TW" => gettext("Traditional Chinese")
+                    "zh_TW" => gettext("Traditional Chinese"),
+                    "ru_RU.UTF-8" => gettext("Russian")
                 ),
             "locale_dir"        => "text"
         )

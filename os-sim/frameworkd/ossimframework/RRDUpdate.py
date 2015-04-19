@@ -16,33 +16,51 @@ class RRDUpdate(threading.Thread):
         threading.Thread.__init__(self)
 
 
+    # get hosts c&a
     def __get_hosts(self):
 
         query = "SELECT * FROM host_qualification"
         return self.__db.exec_query(query)
 
 
+    # get nets c&a
     def __get_nets(self):
 
         query = "SELECT * FROM net_qualification"
         return self.__db.exec_query(query)
 
+    # get groups c&a
+    def __get_groups(self):
+    
+        query = "SELECT net_group_reference.net_group_name AS group_name,\
+          SUM(net_qualification.compromise) AS COMPROMISE,\
+          SUM(net_qualification.attack) AS ATTACK\
+          FROM net_group_reference, net_qualification WHERE\
+          net_group_reference.net_name = net_qualification.net_name GROUP BY\
+          group_name"
+        return self.__db.exec_query(query)
 
+
+    # get ossim users
     def __get_users(self):
         
         query = "SELECT * FROM users"
         return self.__db.exec_query(query)
 
+
+    # get users of incidents
     def __get_incident_users(self):
         
         query = "SELECT in_charge FROM incident_ticket GROUP BY in_charge;"
         return self.__db.exec_query(query)
 
 
-    
+    # get global c&a as sum of hosts c&a
     def get_global_qualification(self, allowed_nets):
         
-        compromise = attack = 1
+        MIN_GLOBAL_VALUE = 0.0001 # set to 0.0001 by alexlopa (sure?)
+
+        compromise = attack = MIN_GLOBAL_VALUE
 
         for host in self.__get_hosts():
             if Util.isIpInNet(host["host_ip"], allowed_nets) or \
@@ -50,42 +68,24 @@ class RRDUpdate(threading.Thread):
                 compromise += int(host["compromise"])
                 attack += int(host["attack"])
 
-        if compromise < 1: compromise = 1
-        if attack < 1: attack = 1
+        if compromise < MIN_GLOBAL_VALUE: compromise = MIN_GLOBAL_VALUE
+        if attack < MIN_GLOBAL_VALUE: attack = MIN_GLOBAL_VALUE
 
         return (compromise, attack)
 
-    
-    def get_level_qualification(self, user):
-        
-        compromise = attack = count = 0
 
-        if self.__conf["rrdtool_path"]:
-           Const.RRD_BIN = os.path.join(self.__conf["rrdtool_path"], "rrdtool")
+    # get level (0 or 100) using c&a and threshold
+    def get_level_qualification(self, user, c, a):
 
-        f = os.popen("%s fetch %s AVERAGE -s N-1D -e N" % \
-            (Const.RRD_BIN, os.path.join(self.__conf["rrdpath_global"], 
-                                         "global_" + user + ".rrd")))
-        for line in f.readlines():
-            result = re.findall("(\d+):\s+(\S+)\s+(\S+)", line)
-            if result != []:
-                (date, c, a) = tuple(result[0])
-                if c != "nan" and a != "nan":
-                    if float(c) <= float(self.__conf["threshold"]):
-                        compromise += 1
-                    if float(a) <= float(self.__conf["threshold"]):
-                        attack += 1
-                    count += 1
+        compromise = attack = 1
 
-        f.close()
+        if float(c) > float(self.__conf["threshold"]):
+            compromise = 0
+        if float(a) > float(self.__conf["threshold"]):
+            attack = 0
 
-        if count != 0:
-            if compromise != 0:
-                compromise = (compromise * 100) / count
-            if attack != 0:
-                attack = (attack * 100) / count
+        return (100*compromise, 100*attack)
 
-        return (compromise, attack)
 
     def get_incidents (self, user):
        
@@ -97,6 +97,7 @@ class RRDUpdate(threading.Thread):
         return status
 
 
+    # update rrd files with new C&A values
     def update(self, rrdfile, compromise, attack):
 
         timestamp = int(time.time())
@@ -134,6 +135,7 @@ class RRDUpdate(threading.Thread):
         except Exception, e:
             print "Error updating %s: %s" % (rrdfile, e) 
 
+    # update incident rrd files with a new incident count
     def update_simple(self, rrdfile, count):
 
         timestamp = int(time.time())
@@ -209,11 +211,27 @@ class RRDUpdate(threading.Thread):
             except OSError, e:
                 print __name__, e
 
-            ### global
+            ### groups
+            try:
+                rrdpath = self.__conf["rrdpath_net"]
+                if not os.path.isdir(rrdpath):
+                    os.mkdir(rrdpath, 0755)
+                for group in self.__get_groups():
+                    filename = os.path.join(rrdpath, "group_" + group["group_name"] + ".rrd")
+                    self.update(filename, group["compromise"], group["attack"])
+            except OSError, e:
+                print __name__, e
+
+
+
+            ### global & level
             try:
                 rrdpath = self.__conf["rrdpath_global"]
                 if not os.path.isdir(rrdpath):
                     os.mkdir(rrdpath, 0755)
+                rrdpath_level = self.__conf["rrdpath_level"]
+                if not os.path.isdir(rrdpath_level):
+                    os.mkdir(rrdpath_level, 0755)
                 for user in self.__get_users():
 
                     # ** FIXME **
@@ -222,28 +240,22 @@ class RRDUpdate(threading.Thread):
                     if user['login'] == 'admin':
                         user['allowed_nets'] = ''
 
+                    ### global
                     filename = os.path.join(rrdpath,
                                             "global_" + user["login"] + ".rrd")
                     (compromise, attack) = \
                         self.get_global_qualification(user["allowed_nets"])
                     self.update(filename, compromise, attack)
+
+                    ### level
+                    filename_level = os.path.join(rrdpath_level,
+                                            "level_" + user["login"] + ".rrd")
+                    (c_percent, a_percent) = \
+                        self.get_level_qualification(user["login"], compromise, attack)
+                    self.update(filename_level, c_percent, a_percent)
             except OSError, e:
                 print __name__, e
                     
-            ### level
-            try:
-                rrdpath = self.__conf["rrdpath_level"]
-                if not os.path.isdir(rrdpath):
-                    os.mkdir(rrdpath, 0755)
-                for user in self.__get_users():
-                    filename = os.path.join(rrdpath,
-                                            "level_" + user["login"] + ".rrd")
-                    (compromise, attack) = \
-                        self.get_level_qualification(user["login"])
-                    self.update(filename, compromise, attack)
-            except OSError, e:
-                print __name__, e
-
             time.sleep(float(Const.SLEEP))
 
         # never reached..

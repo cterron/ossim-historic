@@ -134,22 +134,22 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
             $policy_time = $policy->get_time($conn);
             
             $begin_day = $policy_time->get_begin_day();
-            if     ($begin_day == 1) $begin_day_char = "Mon";
-            elseif ($begin_day == 2) $begin_day_char = "Tue";
-            elseif ($begin_day == 3) $begin_day_char = "Wed";
-            elseif ($begin_day == 4) $begin_day_char = "Thu";
-            elseif ($begin_day == 5) $begin_day_char = "Fri";
-            elseif ($begin_day == 6) $begin_day_char = "Sat";
-            elseif ($begin_day == 7) $begin_day_char = "Sun";
+            if     ($begin_day == 1) $begin_day_char = _("Mon");
+            elseif ($begin_day == 2) $begin_day_char = _("Tue");
+            elseif ($begin_day == 3) $begin_day_char = _("Wed");
+            elseif ($begin_day == 4) $begin_day_char = _("Thu");
+            elseif ($begin_day == 5) $begin_day_char = _("Fri");
+            elseif ($begin_day == 6) $begin_day_char = _("Sat");
+            elseif ($begin_day == 7) $begin_day_char = _("Sun");
             
             $end_day = $policy_time->get_end_day();
-            if     ($end_day == 1) $end_day_char = "Mon";
-            elseif ($end_day == 2) $end_day_char = "Tue";
-            elseif ($end_day == 3) $end_day_char = "Wed";
-            elseif ($end_day == 4) $end_day_char = "Thu";
-            elseif ($end_day == 5) $end_day_char = "Fri";
-            elseif ($end_day == 6) $end_day_char = "Sat";
-            elseif ($end_day == 7) $end_day_char = "Sun";
+            if     ($end_day == 1) $end_day_char = _("Mon");
+            elseif ($end_day == 2) $end_day_char = _("Tue");
+            elseif ($end_day == 3) $end_day_char = _("Wed");
+            elseif ($end_day == 4) $end_day_char = _("Thu");
+            elseif ($end_day == 5) $end_day_char = _("Fri");
+            elseif ($end_day == 6) $end_day_char = _("Sat");
+            elseif ($end_day == 7) $end_day_char = _("Sun");
             
             echo $begin_day_char . " " .
                  $policy_time->get_begin_hour() . "h - " .

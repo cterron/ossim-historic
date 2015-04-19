@@ -62,7 +62,7 @@ if (POST('update'))
 ?>
 <tr>
     <th>#</th>
-    <th>Action description</th>
+    <th><?php echo gettext("Action description"); ?></th>
     <th>#</th>
 </tr>
 

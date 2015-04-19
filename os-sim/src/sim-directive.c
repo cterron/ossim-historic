@@ -1261,8 +1261,9 @@ sim_directive_backlog_get_insert_clause (SimDirective *directive)
   strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime (&time));
 
   query = g_strdup_printf ("INSERT INTO backlog "
-			   "(directive_id, timestamp, matched) "
-			   "VALUES (%d, '%s', %d)",
+			   "(id, directive_id, timestamp, matched) "
+			   "VALUES (%d, %d, '%s', %d)",
+         directive->_priv->backlog_id,
 			   directive->_priv->id,
 			   timestamp,
 			   directive->_priv->matched);

@@ -240,7 +240,7 @@ $labels = array(
                 <td>
                     <input type="button" value="->" onClick="javascript: insertAtCursor(document.myform.body_tpl);">
                 </td>
-                <th valign="top" width="10%">Body</th>
+                <th valign="top" width="10%"><?php echo gettext("Body"); ?></th>
                 <td style="text-align: left;">
                     <textarea name="body_tpl" rows="25" cols="80" WRAP=HARD style="font-family: mono-space, mono;"><?=$body_tpl?></textarea>
                 </td>

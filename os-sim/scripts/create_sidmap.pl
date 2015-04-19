@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# $Id: create_sidmap.pl,v 1.9 2005/03/04 11:30:11 dkarg Exp $ #
+# $Id: create_sidmap.pl,v 1.10 2006/08/07 10:36:41 dkarg Exp $ #
 
 # Copyright (C) 2004 Andreas Östling <andreaso@it.su.se>
 
@@ -287,6 +287,7 @@ sub get_category_id($ $)
     if(!exists($row->{"id"})) {
         return 117; # misc
     }
+    $stm->finish();
 
     return $row->{"id"};
 }
@@ -307,6 +308,7 @@ sub get_class_info($ $)
 
         my @info = ($row->{"id"}, 
                     $row->{"priority"});
+        $stm->finish();
         return \@info;
     }
 }
@@ -344,6 +346,7 @@ sub update_ossim_db()
     while (my $row = $stm->fetchrow_hashref) {
         $db_sids{$row->{"sid"}} = $row;
     }
+    $stm->finish();
 
 
     foreach my $sid (sort { $a <=> $b } keys(%sidinfo)) {
@@ -363,6 +366,7 @@ sub update_ossim_db()
             if($execute){
                 my $stm = $conn->prepare($query);
                 $stm->execute();
+                $stm->finish();
                 print "Inserting $msg: [1001:$sid:$priority]\n" unless ($quiet);
             } else {
                 print "$query\n";

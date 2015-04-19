@@ -28,7 +28,18 @@ function server_get_sensors($conn) {
         return $list;
     } 
 
-    $in = 'server-get-sensors id="1"' . "\n";
+    /* first send a connect message to server */
+    $in = 'connect id="1" type="web"' . "\n";
+    $out = '';
+    socket_write($socket, $in, strlen($in));
+    $out = socket_read($socket, 2048, PHP_NORMAL_READ);
+    if (strncmp($out, "ok id=", 4)) {
+        echo "<p><b>" . gettext("Bad response from server") . "</b></p>";
+		return $list;
+    }
+
+    /* get sensors from server */
+    $in = 'server-get-sensors id="2"' . "\n";
     $out = '';
     socket_write ($socket, $in, strlen ($in));
     

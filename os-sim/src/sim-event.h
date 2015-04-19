@@ -53,7 +53,19 @@ extern "C" {
 #define SIM_IS_EVENT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE (obj, SIM_TYPE_EVENT))
 #define SIM_IS_EVENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_EVENT))
 #define SIM_EVENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_EVENT, SimEventClass))
-	
+
+typedef struct	_SimRole				SimRole;	//different event role
+
+struct	_SimRole			//this hasn't got any data from sensor associated.
+{
+  gboolean  correlate;
+  gboolean  cross_correlate;
+  gboolean  store;
+  gboolean  qualify;
+  gboolean  resend_event;
+  gboolean  resend_alarm;
+};
+
 G_BEGIN_DECLS
 
 typedef struct _SimEvent        SimEvent;
@@ -106,7 +118,7 @@ struct _SimEvent {
 
   /* Directives */
   gboolean           sticky;
-  gboolean           match;
+  gboolean           match;  // TRUE if this has been matched the rule in sim_rule_match_by_event()
   gboolean           matched;
   gint               count;
   gint               level;
@@ -117,7 +129,17 @@ struct _SimEvent {
 
 	gchar							**data_storage; // This variable must be used ONLY to pass data between the sim-session and 
 																		//sim-organizer, where the event is stored in DB.
-	gboolean					store_in_DB;		//variable used to know if this specific event should be stored in DB or not.
+	gboolean					store_in_DB;		//variable used to know if this specific event should be stored in DB or not. Used in Policy.
+  gchar              *buffer;				//used to speed up the resending events so it's not needed to turn it again into a string
+
+	gboolean					is_correlated;	//Just needed for MAC, OS, Service and HIDS events.
+																		// Take an example: server1 resend data to server2. We have correlated in server1 a MAC event.
+																		// Then we resend the event to server2 in both ways: "host_mac_event...." and "event...". Obviously,
+																		// "event..." is the event correlated, with priority, risk information and so on. But we don't want
+																		// to re-correlate "host_mac_event...", because the correlation information is in "event...". So in 
+																		// sim_organizer_correlation() we check this variable. Also, in this way, we are able to correlate
+																		// the event with another event wich arrives to server2. 
+	SimRole						*role;
 
 	/* additional data (not necessary used) */
 	gchar							*filename;
@@ -139,21 +161,25 @@ struct _SimEventClass {
   GObjectClass parent_class;
 };
 
-GType		sim_event_get_type			(void);
-SimEvent*	sim_event_new				(void);
-SimEvent*	sim_event_new_from_type			(SimEventType	 type);
+GType			sim_event_get_type								(void);
+SimEvent*	sim_event_new											(void);
+SimEvent*	sim_event_new_from_type						(SimEventType	 type);
 
-SimEvent*	sim_event_clone				(SimEvent	*event);
+SimEvent*	sim_event_clone										(SimEvent	*event);
 
-gchar*		sim_event_get_insert_clause		(SimEvent	*event);
-gchar*		sim_event_get_update_clause		(SimEvent	*event);
+gchar*		sim_event_get_insert_clause				(SimEvent	*event);
+gchar*		sim_event_get_update_clause				(SimEvent	*event);
+gchar*    sim_event_get_replace_clause      (SimEvent   *event);
+
 gchar*		sim_event_get_alarm_insert_clause	(SimEvent	*event);
 
-gchar*		sim_event_to_string			(SimEvent	*event);
+gchar*		sim_event_to_string								(SimEvent	*event);
 
-void		sim_event_print				(SimEvent	*event);
+void			sim_event_print										(SimEvent	*event);
 
-gchar*		sim_event_get_msg			(SimEvent	*event);
+gchar*		sim_event_get_msg									(SimEvent	*event);
+gboolean	sim_event_is_special							(SimEvent *event);
+gchar*    sim_event_get_str_from_type       (SimEventType type);
 
 
 G_END_DECLS

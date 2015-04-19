@@ -40,6 +40,8 @@
 
 #include <time.h>
 #include <math.h>
+#include <string.h> //strlen()
+
 enum 
 {
   DESTROY,
@@ -78,6 +80,9 @@ sim_event_impl_finalize (GObject  *gobject)
   if (event->data)
     g_free (event->data);
 
+	if (event->role)
+		g_free (event->role);
+	
 	g_free (event->filename);//no needed to check, g_free will just return if "filename" is NULL
 	g_free (event->username);
 	g_free (event->password);
@@ -90,6 +95,8 @@ sim_event_impl_finalize (GObject  *gobject)
 	g_free (event->userdata7);
 	g_free (event->userdata8);
 	g_free (event->userdata9);
+
+  g_free (event->buffer);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -157,7 +164,11 @@ sim_event_instance_init (SimEvent *event)
   event->rserver = FALSE;
   event->store_in_DB = TRUE; //we want to store everything by default
 
+	event->is_correlated = FALSE;
+
 	event->data_storage = NULL;
+	
+	event->role = NULL;
 
 	event->filename = NULL;
 	event->username = NULL;
@@ -171,6 +182,8 @@ sim_event_instance_init (SimEvent *event)
 	event->userdata7 = NULL;
 	event->userdata8 = NULL;
 	event->userdata9 = NULL;	
+	
+	event->buffer = NULL;	
 	
 }
 
@@ -256,6 +269,18 @@ sim_event_get_type_from_str (const gchar *str)
   return SIM_EVENT_TYPE_NONE;
 }
 
+gchar*
+sim_event_get_str_from_type (SimEventType type)
+{
+  if (type == SIM_EVENT_TYPE_DETECTOR)
+    return (g_ascii_strdown (SIM_DETECTOR_CONST, strlen (SIM_DETECTOR_CONST)));
+  else
+  if (type == SIM_EVENT_TYPE_MONITOR)
+    return (g_ascii_strdown (SIM_MONITOR_CONST, strlen (SIM_MONITOR_CONST)));
+
+  return NULL;
+}
+
 /*
  *
  *
@@ -303,6 +328,16 @@ sim_event_clone (SimEvent       *event)
   new_event->risk_c = event->risk_c;
   new_event->risk_a = event->risk_a;
 
+	if (event->role)
+	{
+		new_event->role = g_new0 (SimRole, 1);
+		new_event->role->correlate = event->role->correlate;
+		new_event->role->cross_correlate = event->role->cross_correlate;
+		new_event->role->store = event->role->store;
+		new_event->role->qualify = event->role->qualify;
+		new_event->role->resend_event = event->role->resend_event;
+		new_event->role->resend_alarm = event->role->resend_alarm;
+	}
   new_event->log = event->log;
 
 	(event->filename) ? new_event->filename = g_strdup (event->filename) : NULL;
@@ -318,6 +353,8 @@ sim_event_clone (SimEvent       *event)
 	(event->userdata8) ? new_event->userdata8 = g_strdup (event->userdata8) : NULL;
 	(event->userdata9) ? new_event->userdata9 = g_strdup (event->userdata9) : NULL;
 
+	(event->buffer) ? new_event->buffer = g_strdup (event->buffer) : NULL;
+	
   return new_event;
 }
 
@@ -491,13 +528,14 @@ sim_event_get_insert_clause (SimEvent   *event)
   strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 
   query = g_strdup_printf ("INSERT INTO event "
-			   "(timestamp, sensor, interface, type, plugin_id, plugin_sid, " 
+			   "(id, timestamp, sensor, interface, type, plugin_id, plugin_sid, " 
 			   "protocol, src_ip, dst_ip, src_port, dst_port, "
 			   "event_condition, value, time_interval, "
 			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
 			   "snort_sid, snort_cid) "
-			   " VALUES  ('%s', '%s', '%s', %d, %d, %d,"
+			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d,"
 			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %lu, %lu)",
+         event->id,
 			   timestamp,
 			   (event->sensor) ? event->sensor : "",
 			   (event->interface) ? event->interface : "",
@@ -590,6 +628,72 @@ sim_event_get_update_clause (SimEvent   *event)
   return query;
 }
 
+/*
+ *
+ *
+ *
+ *
+ */
+gchar*
+sim_event_get_replace_clause (SimEvent   *event)
+{
+  gchar    timestamp[TIMEBUF_SIZE];
+  gchar   *query;
+  gint     c;
+  gint     a;
+
+  g_return_val_if_fail (event, NULL);
+  g_return_val_if_fail (SIM_IS_EVENT (event), NULL);
+
+  c = rint (event->risk_c);
+  a = rint (event->risk_a);
+
+  if (c < 0)
+    c = 0;
+  else if (c > 10)
+    c = 10;
+  if (a < 0)
+    a = 0;
+  else if (a > 10)
+    a = 10;
+
+  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
+
+  query = g_strdup_printf ("REPLACE INTO event "
+			   "(id, timestamp, sensor, interface, type, plugin_id, plugin_sid, " 
+			   "protocol, src_ip, dst_ip, src_port, dst_port, "
+			   "event_condition, value, time_interval, "
+			   "priority, reliability, asset_src, asset_dst, risk_c, risk_a, alarm, "
+			   "snort_sid, snort_cid) "
+			   " VALUES  (%d, '%s', '%s', '%s', %d, %d, %d,"
+			   " %d, %lu, %lu, %d, %d, %d, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %lu, %lu)",
+         event->id,
+			   timestamp,
+			   (event->sensor) ? event->sensor : "",
+			   (event->interface) ? event->interface : "",
+			   event->type,
+			   event->plugin_id,
+			   event->plugin_sid,
+			   event->protocol,
+			   (event->src_ia) ? sim_inetaddr_ntohl (event->src_ia) : -1,
+			   (event->dst_ia) ? sim_inetaddr_ntohl (event->dst_ia) : -1,
+			   event->src_port,
+			   event->dst_port,
+			   event->condition,
+			   (event->value) ? event->value : "",
+			   event->interval,
+			   event->priority,
+			   event->reliability,
+			   event->asset_src,
+			   event->asset_dst,
+			   c, a,
+			   event->alarm,
+			   event->snort_sid,
+			   event->snort_cid);
+
+  return query;
+}
+
 
 /*
  *
@@ -646,9 +750,8 @@ sim_event_get_alarm_insert_clause (SimEvent   *event)
 }
 
 /*
- *
- *
- *
+ * //FIXME: This function is called just from config_send_notify_email(), but that
+ * function is not used anymore, so this is deprecated too. Remove this function some day.
  *
  */
 gchar*
@@ -768,6 +871,13 @@ sim_event_to_string (SimEvent	*event)
   g_string_append_printf (str, "id=\"%lu\" ", event->id);
   g_string_append_printf (str, "alarm=\"%d\" ", event->alarm);
 
+  gchar *aux = sim_event_get_str_from_type (event->type);
+	if (aux)
+  {			
+    g_string_append_printf (str, "type=\"%s\" ", aux);
+    g_free (aux);
+  }
+
   if (event->time)
     {
       strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
@@ -809,7 +919,7 @@ sim_event_to_string (SimEvent	*event)
   if (event->protocol)
     {
       gchar *value = sim_protocol_get_str_from_type (event->protocol);
-      g_string_append_printf (str, "protocol=\"%s\" ->%d ", value, (gint) event->protocol);
+      g_string_append_printf (str, "protocol=\"%s\" ", value);
       g_free (value);
     }
 
@@ -843,11 +953,77 @@ sim_event_to_string (SimEvent	*event)
     g_string_append_printf (str, "snort_cid=\"%lu\" ", event->snort_cid);
 
   if (event->data)
-    g_string_append_printf (str, "data=\"%s\"", event->data);
+    g_string_append_printf (str, "data=\"%s\" ", event->data);
   if (event->log)
-    g_string_append_printf (str, "log=\"%s\"", event->log);
+    g_string_append_printf (str, "log=\"%s\" ", event->log);
+	
+	if (event->filename)
+		g_string_append_printf (str, "filename=\"%s\" ", event->filename);
+	if (event->username)
+		g_string_append_printf (str, "username=\"%s\" ", event->username);
+	if (event->password)
+		g_string_append_printf (str, "password=\"%s\" ", event->password);
+	if (event->userdata1)
+		g_string_append_printf (str, "userdata1=\"%s\" ", event->userdata1);
+	if (event->userdata2)
+		g_string_append_printf (str, "userdata2=\"%s\" ", event->userdata2);
+	if (event->userdata3)
+		g_string_append_printf (str, "userdata3=\"%s\" ", event->userdata3);
+	if (event->userdata4)
+		g_string_append_printf (str, "userdata4=\"%s\" ", event->userdata4);
+	if (event->userdata5)
+		g_string_append_printf (str, "userdata5=\"%s\" ", event->userdata5);
+	if (event->userdata6)
+		g_string_append_printf (str, "userdata6=\"%s\" ", event->userdata6);
+	if (event->userdata7)
+		g_string_append_printf (str, "userdata7=\"%s\" ", event->userdata7);
+	if (event->userdata8)
+		g_string_append_printf (str, "userdata8=\"%s\" ", event->userdata8);
+	if (event->userdata9)
+		g_string_append_printf (str, "userdata9=\"%s\" ", event->userdata9);
+		
+	g_string_append_printf (str, "\n");
+	
 
   return g_string_free (str, FALSE);
+}
+
+/*
+ * Returns TRUE if the event is one of the "special" events: MAC, OS, Service or HIDS
+ */
+gboolean
+sim_event_is_special (SimEvent *event)
+{
+	if ((event->plugin_id == 1512) ||
+			(event->plugin_id == 1511) ||
+			(event->plugin_id == 1516) ||
+			(event->plugin_id == 4001))
+		return TRUE;
+	else
+		return FALSE;
+}	
+/*
+ * FIXME: This function will remove some things from the event, like SQL injection and so on.
+ * At this moment, it just substitute ";" with "," from event->data. The reason is that the call to GDA function
+ * wich is supposed to do just one query gda_connection_execute_non_query(), in fact accept 
+ * multiple queries (as tells the GDA source in gda_connection_execute_command() comments. And
+ * that queries are supposed to be separated by ';'
+ * 
+ * This is a FIXME because we have to analize much more in depth the event.
+ */
+void
+sim_event_sanitize (SimEvent *event)
+{
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
+
+	
+	//sim_string_remove_char (event->data, ';'); 
+	//sim_string_remove_char (event->log, ';'); 
+	
+	sim_string_substitute_char (event->data, ';', ','); 
+	sim_string_substitute_char (event->log, ';', ','); 
+		
 }
 
 // vim: set tabstop=2:

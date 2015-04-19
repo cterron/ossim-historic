@@ -40,6 +40,7 @@
 #include <gnet.h>
 
 #include "sim-enums.h"
+#include "sim-command.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,11 @@ extern "C" {
 #define SIM_IS_CONFIG_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_CONFIG))
 #define SIM_CONFIG_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_CONFIG, SimConfigClass))
 
+#define HA_ROLE_NONE		0
+#define HA_ROLE_PASSIVE	1
+#define HA_ROLE_ACTIVE	2
+	
+	
 G_BEGIN_DECLS
 
 typedef struct _SimConfig        SimConfig;
@@ -65,7 +71,7 @@ struct _SimConfig {
 
   GList   *datasources;
   GList   *notifies;
-  GList   *rservers;
+  GList   *rservers;		//SimConfigRServer
 
   gchar   *notify_prog;
 
@@ -92,6 +98,9 @@ struct _SimConfig {
 		gchar			*ip;
 //		gchar			*interface;
     gint      port;
+		SimRole		*role;
+		gchar			*HA_ip;
+		gint			HA_port;
   } server;
 
   struct {
@@ -122,12 +131,15 @@ struct _SimConfigNotify {
   GList    *alarm_risks;
 };
 
-struct _SimConfigRServer {
-  gchar     *name;
-  gchar     *ip;
-  GInetAddr *ia;
-  gint       port;
-  gboolean   resend;
+struct _SimConfigRServer {	//servers "up" in the architecture. Also, the HA remote server is a rserver too.
+  gchar				*name;
+  gchar				*ip;	//ip & ia has the same address. //FIXME: redundant storage
+  GInetAddr		*ia;
+  gint				port;
+	GTcpSocket	*socket;
+	GIOChannel	*iochannel;
+	gint				HA_role;			//HA_ROLE_PASSIVE, HA_ROLE_ACTIVE, HA_ROLE_NONE
+	gboolean		is_HA_server;	//true if the remote server is an HA server.
 };
 
 GType             sim_config_get_type                        (void);
@@ -135,13 +147,15 @@ SimConfig*        sim_config_new                             (void);
 SimConfigDS*      sim_config_ds_new                          (void);
 void              sim_config_ds_free                         (SimConfigDS  *ds);
 SimConfigDS*      sim_config_get_ds_by_name                  (SimConfig    *config,
-							      const gchar  *name);
+																												      const gchar  *name);
 
 SimConfigNotify*  sim_config_notify_new                      (void);
 void              sim_config_notify_free                     (SimConfigNotify *notify);
 
 SimConfigRServer* sim_config_rserver_new                     (void);
 void              sim_config_rserver_free                    (SimConfigRServer *rserver);
+void							sim_config_set_data_role										(SimConfig   *config,
+																															SimCommand  *cmd);
 
 G_END_DECLS
 

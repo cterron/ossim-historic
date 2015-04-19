@@ -128,12 +128,16 @@ class Host_os{
         require_once('classes/Security.inc');
 
         $list = array();
-
-        $sql = "SELECT distinct ip, sensor FROM host_os";
+		$num_anom = 0;
+		
+		$num_anom = (int) $num_anom;
+		$limit = (int) $limit;
+        
+		$sql = "SELECT distinct ip, sensor FROM host_os";
         if (!$ips = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
-            $num_anom = 0;
+			
             while ((!$ips->EOF) && (($num_anom < $limit) || ($limit == "all"))) {
                 $sql2 = "SELECT *, inet_ntoa(sensor) as ip_sensor, inet_ntoa(ip)
                          as ip_addr from host_os where ip= ? and sensor = ? order by date desc";
@@ -214,33 +218,36 @@ class Host_os{
 
     function get_ip_data($conn, $host)
     {
-        $sql  = "SELECT * from host_os where ip = inet_aton(?) order by date desc";
+        $sql  = "SELECT * FROM host_os WHERE ip = inet_aton(?) ".
+                "ORDER BY date DESC";
         $params = array($host);
         
         if (!$aux = &$conn->Execute($sql, $params)) {
             print $conn->ErrorMsg();
         } else {
-            $os = $aux->fields["os"];
-            if (($aux->fields["anom"] == "0") && ($aux->RecordCount() > 1)) {
-                while (!$aux->EOF) {
+            // Search the latest record with a anom == 0
+            while (!$aux->EOF) {
+                if ($aux->fields["anom"] == "0") {
                     return array("host" => $host, "os" => $aux->fields["os"]);
-                $aux->MoveNext();
                 }
-            } 
-            return array("host" => $host, "os" => $os);
+                $aux->MoveNext();
+            }
+            // If no "0 anom" record found, use the first record introduced
+            // in the DB
+            return array("host" => $host, "os" => $aux->fields["os"]);
         }
+        return null;
     }
 
     function get_list_count($conn)
     {
-        $sql = "SELECT count(distinct(ip)) from host_os";
+        $sql = "SELECT count(distinct(ip)) AS num FROM host_os";
         
         if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
-            return $rs->fields["count(distinct(ip))"];
+            return $rs->fields["num"];
         }
-     
     }
 
     function ack_ign($conn, $host, $date, $sensor)
@@ -266,12 +273,14 @@ class Host_os{
         }
     }
 
-    function get_os_pixmap($conn, $host, $pixmap_dir = '../pixmaps/') {
-
-
-       if ( $os_data = Host_os::get_ip_data($conn, $host)){
+    // XXX The API should be changed, to accept a $os instead of $host
+    //     avoinding one DB query
+    /***** XXX Deprecated ******/
+    function get_os_pixmap($conn, $host, $pixmap_dir = '../pixmaps/')
+    {
+        if ( $os_data = Host_os::get_ip_data($conn, $host)) {
             $os = $os_data["os"];
-        if (preg_match('/win/i', $os)) {
+            if (preg_match('/win/i', $os)) {
                 return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
             } elseif (preg_match('/linux/i', $os)) {
                 return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
@@ -282,7 +291,24 @@ class Host_os{
             } elseif (preg_match('/sun|solaris/i', $os)) {
                 return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
             }
-          } else return "";
+        }
+        return "";
+    }
+
+    function get_os_pixmap_nodb($os, $pixmap_dir = '../pixmaps/')
+    {
+        if (preg_match('/win/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/win.png\" alt=\"win\" />";
+        } elseif (preg_match('/linux/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/linux.png\" alt=\"linux\" />";
+        } elseif (preg_match('/bsd/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/bsd.png\" alt=\"bsd\" />";
+        } elseif (preg_match('/mac/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/mac.png\" alt=\"mac\" />";
+        } elseif (preg_match('/sun|solaris/i', $os)) {
+            return "<img src=\"$pixmap_dir/os/sunos.png\" alt=\"sunos\" />";
+        }
+        return "";
     }
 
 }

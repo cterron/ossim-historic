@@ -162,7 +162,7 @@ sim_rule_impl_finalize (GObject  *gobject)
   GList   *list;
 
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_impl_finalize: Name %s, Level %d", rule->_priv->name, rule->_priv->level);
-    sim_rule_print(rule);
+//    sim_rule_print(rule);
 
   if (rule->_priv->name)
     g_free (rule->_priv->name);
@@ -3123,8 +3123,10 @@ sim_rule_clone (SimRule     *rule)
 }
 
 /*
+ * If the reliability is relative, the reliability of that node will be the sum of
+ * the reliabilities from parent rules.
  *
- *
+ * We know the the reliability is relative because a "+" appears before the number.
  */
 gint
 sim_rule_get_reliability_relative (GNode   *rule_node)
@@ -3248,9 +3250,9 @@ sim_rule_match_by_event (SimRule      *rule,
   g_return_val_if_fail (event->plugin_sid > 0, FALSE);
   g_return_val_if_fail (event->src_ia, FALSE);
 
-	sim_rule_print (rule);
-	gchar *lala = sim_event_to_string (event);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: printing event: %s",lala);
+//	sim_rule_print (rule);
+//	gchar *lala = sim_event_to_string (event);
+//  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_rule_match_by_event: printing event: %s",lala);
 			
 	match = TRUE;
 	

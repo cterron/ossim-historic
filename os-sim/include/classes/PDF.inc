@@ -129,11 +129,15 @@ class PDF extends FPDF
         $this->SetTextColor(255);
         $this->SetFont('','B',11);
 
+		$MaxLength = array();
+		$count = 0;
+
         foreach ($content as $row)
         {
             foreach ($row as $element) {
-                $MaxLength[$count] = max($this->GetStringWidth($element),
-                                         $MaxLength[$count]);
+				if (!array_key_exists($count, $MaxLength)) $MaxLength[$count] = 0;
+				$MaxLength[$count] = max($this->GetStringWidth($element),
+										 $MaxLength[$count]);
                 $count++;
             }
             $count = 0;
@@ -455,15 +459,11 @@ class PDF extends FPDF
                 $this->__WriteBold("In charge: ");
                 $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_in_charge());
                 $this->Ln();
-                if ($ticket->get_transferred) {
+                if ($ticket->get_transferred()) {
                     $this->__WriteBold("Transferred: ");
                     $this->Write(DEFAULT_LINE_HEIGTH, 
                                  $ticket->get_transferred());
                     $this->Ln();
-                }
-                if ($ticket->get_copy()) {
-                    $this->__WriteBold("Copy to: ");
-                    $this->Write(DEFAULT_LINE_HEIGTH, $ticket->get_copy());
                 }
                 $this->Ln(DEFAULT_LINE_HEIGTH * 2);
             }
@@ -608,7 +608,7 @@ class PDF extends FPDF
         $h=$this->_readstr_int($var,$pos);
         $bpc=ord($this->_readstr($var,$pos,1));
         if ($bpc > 8)
-            $this->Error('16-bit depth not supported: '.$file);
+            $this->Error('16-bit depth not supported');
         $ct = ord($this->_readstr($var,$pos,1));
         if ($ct == 0)
             $colspace='DeviceGray';
@@ -617,13 +617,13 @@ class PDF extends FPDF
         elseif ($ct == 3)
             $colspace='Indexed';
         else
-            $this->Error('Alpha channel not supported: '.$file);
+            $this->Error('Alpha channel not supported');
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Unknown compression method: '.$file);
+            $this->Error('Unknown compression method');
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Unknown filter method: '.$file);
+            $this->Error('Unknown filter method');
         if (ord($this->_readstr($var,$pos,1)) != 0)
-            $this->Error('Interlacing not supported: '.$file);
+            $this->Error('Interlacing not supported');
         $this->_readstr($var,$pos,4);
         $parms = '/DecodeParms <</Predictor 15 /Colors ' . ($ct==2 ? 3 : 1)
                  . ' /BitsPerComponent ' . $bpc . ' /Columns ' . $w . '>>';
@@ -672,7 +672,7 @@ class PDF extends FPDF
         while($n);
 	
 	if ($colspace == 'Indexed' and empty($pal))
-            $this->Error('Missing palette in ' . $file);
+            $this->Error('Missing palette');
         return array('w'     => $w,
                      'h'     => $h,
                      'cs'    => $colspace,
@@ -687,39 +687,39 @@ class PDF extends FPDF
     function MemImage($data, $x, $y, $width=0, $height=0, $link='')
     {
     	$id = md5($data);
-	if (!isset($this->images[$id]))
-	{
-	    $info = $this->_parsemempng( $data );
-	    $info['i'] = count($this->images)+1;
-	    $this->images[$id]=$info;
-	}
-	else
-	    $info = $this->images[$id];
-	    
-	// Automatic width and height calculation if needed
-	if ($width == 0 and $height == 0)
-	{
-	    // image at 72 dpi
-	    $width = $info['w'] / $this->k;
-	    $height = $info['h'] / $this->k;
-	}
-	if ($width == 0)
-	    $width = $height * $info['w'] / $info['h'];
-	if ($height == 0)
-	    $height = $width * $info['h'] / $info['w'];
-
-	$this->_out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q',
-	                     $width * $this->k, $height * $this->k, $x * $this->k,
-			     ($this->h-($y+$h))*$this->k, $info['i']));
+    	if (!isset($this->images[$id]))
+    	{
+    	    $info = $this->_parsemempng( $data );
+    	    $info['i'] = count($this->images)+1;
+    	    $this->images[$id]=$info;
+    	}
+    	else
+    	    $info = $this->images[$id];
+    	    
+    	// Automatic width and height calculation if needed
+    	if ($width == 0 and $height == 0)
+    	{
+    	    // image at 72 dpi
+    	    $width = $info['w'] / $this->k;
+    	    $height = $info['h'] / $this->k;
+    	}
+    	if ($width == 0)
+    	    $width = $height * $info['w'] / $info['h'];
+    	if ($height == 0)
+    	    $height = $width * $info['h'] / $info['w'];
+    
+    	$this->_out(sprintf('q %.2f 0 0 %.2f %.2f %.2f cm /I%d Do Q',
+    	                     $width * $this->k, $height * $this->k, $x * $this->k,
+    			     ($this->h-($y+$height))*$this->k, $info['i']));
     }
     
     function GDImage($image, $x, $y, $width=0, $height=0, $link='')
     {
-	ob_start();
-	imagepng($image);
-	$data = ob_get_contents();
-	ob_end_clean();
-        $this->MemImage($data, $x, $y, $width, $height, $link);
+    	ob_start();
+    	imagepng($image);
+    	$data = ob_get_contents();
+    	ob_end_clean();
+            $this->MemImage($data, $x, $y, $width, $height, $link);
     }
 }
 ?>

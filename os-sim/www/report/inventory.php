@@ -26,7 +26,7 @@ if (ossim_error()) {
 
 ?>
 
-<h1>Inventory - <?php echo $host ?></h1>
+<h1><?php echo gettext("Inventory")." - $host" ?></h1>
 
 <?php
 
@@ -139,7 +139,7 @@ if (ossim_error()) {
 ?>
       <tr><td colspan="2"></td></tr>
       <tr><td colspan="2"></td></tr>
-      <tr><th colspan="2">Host belongs to:</td></tr>
+      <tr><th colspan="2"><?php echo gettext("Host belongs to:"); ?></td></tr>
 
 <?php
     if ($net_list = Net::get_list($conn))
@@ -148,7 +148,7 @@ if (ossim_error()) {
             if (Net::isIpInNet($host, $net->get_ips())) {
 ?>
       <tr>
-        <th>Net</th>
+        <th><?php echo gettext("Net"); ?></th>
         <td><?php echo $net->get_name() ?></td>
       </tr>
 <?php

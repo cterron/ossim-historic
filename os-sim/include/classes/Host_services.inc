@@ -9,7 +9,14 @@ class Host_services{
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
         
-        $nanoms = $sup - $inf;
+		$list = array();
+		$nanoms = 0;
+
+		$nanoms = (int) $nanoms;
+		$sup = (int) $sup;
+		$inf = (int) $sup;
+
+		$nanoms = $sup - $inf;
 
         $sql = "SELECT distinct ip, port, sensor FROM host_services LIMIT ? OFFSET ?";
         $params = array($nanoms, $inf);

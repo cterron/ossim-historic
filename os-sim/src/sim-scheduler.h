@@ -81,6 +81,7 @@ void		sim_scheduler_task_execute_at_interval									(SimScheduler  *scheduler,
 																																	gpointer       data);				    
 void 		sim_scheduler_task_GDAErrorHandling											(void);
 void		sim_scheduler_task_store_event_number_at_5min						(SimScheduler  *scheduler);
+void		sim_scheduler_task_rservers															(SimScheduler  *scheduler);
 	
 G_END_DECLS
 

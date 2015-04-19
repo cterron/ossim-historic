@@ -98,7 +98,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
         if (!empty($nessus)) {
             Host_scan::insert ($conn, $ip, 3001, 0);
         }
-        if (!empty($nessus)) {
+        if (!empty($nagios)) {
             Host_scan::insert ($conn, $ip, 2007, 0);
         }
     } else {

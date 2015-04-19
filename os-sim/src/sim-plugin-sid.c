@@ -205,6 +205,8 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
   if (!gda_value_is_null (value))
     plugin_sid->_priv->name = gda_value_stringify (value);
 
+	//gda_value_free (value); //FIXME: why this fails?
+
   return plugin_sid;
 }
 
@@ -214,7 +216,7 @@ sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
  *
  *
  */
-gint
+inline gint
 sim_plugin_sid_get_plugin_id (SimPluginSid  *plugin_sid)
 {
   g_return_val_if_fail (plugin_sid, 0);

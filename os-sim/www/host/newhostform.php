@@ -254,13 +254,13 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
   <tr>
     <td colspan="2" align="center">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
 </table>
 </form>
 
-<p align="center"><i>Values marked with (*) are mandatory</b></i></p>
+<p align="center"><i><?php echo gettext("Values marked with (*) are mandatory"); ?></b></i></p>
 
 </body>
 </html>

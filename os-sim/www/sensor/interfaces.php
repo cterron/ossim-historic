@@ -21,11 +21,10 @@ $main = GET('main');
 $submit = GET('submit');
 
 
-ossim_valid($sensor, OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Sensor"));
-ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Interface"));
+ossim_valid($sensor, OSS_ALPHA, OSS_SPACE, OSS_PUNC, 'illegal:'._("Sensor"));
+ossim_valid($interface, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("Interface"));
 ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Sensor Name"));
 ossim_valid($submit, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Submit"));
-ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Interface"));
 
 if (ossim_error()) {
     die(ossim_error());

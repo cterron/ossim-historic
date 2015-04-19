@@ -34,6 +34,7 @@
 
 
 #define _GNU_SOURCE
+
 #include <getopt.h>
 
 #include <sys/types.h>
@@ -107,13 +108,6 @@ void init_signals(void)
 
 }
 
-/*
- * sim_container_scheduler:
- *
- *   arguments:
- *
- *   results:
- */
 static gpointer
 sim_thread_scheduler (gpointer data)
 {
@@ -125,13 +119,6 @@ sim_thread_scheduler (gpointer data)
   return NULL;
 }
 
-/**
- * sim_container_organizer:
- *
- *   arguments:
- *
- *   results:
- */
 
 static gpointer
 sim_thread_organizer (gpointer data)
@@ -144,13 +131,6 @@ sim_thread_organizer (gpointer data)
   return NULL;
 }
 
-/**
- * sim_container_organizer:
- *
- *   arguments:
- *
- *   results:
- */
 
 static gpointer
 sim_thread_server (gpointer data)
@@ -158,10 +138,22 @@ sim_thread_server (gpointer data)
   g_message ("sim_thread_server");
 
   ossim.server = sim_server_new (ossim.config);
-  sim_server_run (ossim.server);
+  sim_server_listen_run (ossim.server);
 
   return NULL;
 }
+
+static gpointer
+sim_thread_HA_server (gpointer data)
+{
+  g_message ("sim_thread_HA_server");
+
+  ossim.HA_server = sim_server_HA_new (ossim.config);
+  sim_server_listen_run (ossim.HA_server);
+
+  return NULL;
+}
+
 
 /*
  *
@@ -211,7 +203,7 @@ options (int argc, char **argv)
 				break;
 	  
 			case 'D':
-				if (sim_string_is_number (optarg))									
+				if (sim_string_is_number (optarg, 0))									
 					simCmdArgs.debug = strtol (optarg, (char **)NULL, 10);
 				break;
 	
@@ -219,7 +211,7 @@ options (int argc, char **argv)
 	      simCmdArgs.ip = g_strdup (optarg);
 
 			case 'p':
-				if (sim_string_is_number (optarg))
+				if (sim_string_is_number (optarg, 0))
 					simCmdArgs.port = strtol (optarg, (char **)NULL, 10);				
 					 
 			case '?':
@@ -366,6 +358,19 @@ main (int argc, char *argv[])
   /* Container init */
   ossim.container = sim_container_new (ossim.config);
 
+  /* Initializes the listening keywords scanner*/
+  sim_command_start_scanner();
+
+	/* Server Thread */
+  thread = g_thread_create (sim_thread_server, NULL, FALSE, NULL);
+  g_return_if_fail (thread);
+  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
+	
+	/* Server HA Thread: Manage conns to the other HA server*/ 
+/*  thread = g_thread_create (sim_thread_HA_server, NULL, FALSE, NULL);
+  g_return_if_fail (thread);
+  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
+*/
   /* Scheduler Thread */
   thread = g_thread_create (sim_thread_scheduler, NULL, FALSE, NULL);
   g_return_if_fail (thread);
@@ -376,11 +381,6 @@ main (int argc, char *argv[])
   g_return_if_fail (thread);
   g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
 
-  /* Server Thread */
-  thread = g_thread_create (sim_thread_server, NULL, FALSE, NULL);
-  g_return_if_fail (thread);
-  g_thread_set_priority (thread, G_THREAD_PRIORITY_NORMAL);
-	
 	/* Main Loop */
   g_main_loop_run (loop);
 

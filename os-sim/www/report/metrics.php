@@ -25,7 +25,7 @@ if (ossim_error()) {
 
 ?>
 
-<h1>Metrics - <?php echo $host ?></h1>
+<h1><?php echo gettext("Metrics")." - ".$host ?></h1>
 
 <?php
 

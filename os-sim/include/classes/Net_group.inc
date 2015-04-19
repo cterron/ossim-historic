@@ -30,11 +30,12 @@ class Net_group {
     function get_descr()        { return $this->descr; }
 
 
-    function get_networks($conn, $name = "") {
-        if($name != ""){
-        return Net_group_reference::get_list($conn, $name);
+    function get_networks($conn, $name = "")
+    {
+        if ($name != "") {
+            return Net_group_reference::get_list($conn, $name);
         } else {
-        return Net_group_reference::get_list($conn, $this->name);
+            return Net_group_reference::get_list($conn, $this->name);
         }
     }
 

@@ -181,18 +181,58 @@ sim_server_new (SimConfig  *config)
 	if (config->server.ip)
 		server->_priv->ip = g_strdup (config->server.ip);
 
+	//load the server's role specified in DB (this can be changed with an event from a
+	//master server)
+	sim_server_load_role (server);
+
+
+  return server;
+}
+
+/*
+ * As we want to use the same functions that with the "normal" server, we fill the
+ * internal data of the server with the HA config data. ie, the server->_priv->ip
+ * with the HA_ip from the config.
+ *
+ * Each server ("normal" and HA) will have it's own sessions.
+ */
+SimServer*
+sim_server_HA_new (SimConfig  *config)
+{
+  SimServer *server;
+
+  g_return_val_if_fail (config, NULL);
+  g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
+
+  server = SIM_SERVER (g_object_new (SIM_TYPE_SERVER, NULL));
+  server->_priv->config = config;
+
+	if (config->server.name)
+		server->_priv->name = g_strdup (config->server.name);
+	
+	if (config->server.HA_port > 0) 
+    server->_priv->port = config->server.HA_port;
+	
+	if (config->server.HA_ip)
+		server->_priv->ip = g_strdup (config->server.HA_ip);
+
 
   return server;
 }
 
 
 /*
+ * OSSIM has internally in fact two servers; the ossim.server (the "main" server), wich
+ * stores all the sessions from children and master servers, as well as the sensors and 
+ * frameworkd sessions. And the ossim.HA_server, wich only contains sessions from an
+ * HA server. 
  *
- *
- *
+ * This function can be called with ossim.server or ossim.HA_server as parameters. Here
+ * is the main loop wich accept connections from "main" server or HA server.
+ * 
  */
 void
-sim_server_run (SimServer *server)
+sim_server_listen_run (SimServer *server)
 {
   SimSession		*session;
   SimSensor			*sensor;
@@ -226,6 +266,82 @@ sim_server_run (SimServer *server)
     exit (EXIT_FAILURE);   
   }
 
+	//Main loop wich accept connections
+  while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
+  {
+      /*FIXME: we don't know yet the type of the session. we can't close it
+       * just because the ip is the same. Check if do something with this is really interesting
+       * (I don't think so, very probably I'll remove this check in a near future)
+		//If we have some session established with that machine, it will be removed before the new session gets connected.
+    GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+    sensor = sim_container_get_sensor_by_ia (ossim.container, ia);
+    if (sensor)
+		{
+		  session = sim_server_get_session_by_sensor (server, sensor);
+      if (session)
+      {
+        sim_session_close (session);		
+      }
+		}
+    gnet_inetaddr_unref (ia);
+    */
+
+    session_data = g_new0 (SimSessionData, 1);
+    session_data->config = server->_priv->config;
+    session_data->server = server;
+    session_data->socket = socket;
+    
+		/* Session Thread */		
+    thread = g_thread_create(sim_server_session, session_data, FALSE, &error);
+		
+	  if (thread == NULL)
+			g_message ("thread error %d: %s", error->code, error->message);
+		else
+			continue;
+										 
+  }
+
+}
+
+/*
+ *
+ *
+ */
+void
+sim_server_HA_run (SimServer *server)
+{
+  SimSession		*session;
+  SimSensor			*sensor;
+  SimSessionData	*session_data;
+  GTcpSocket		*socket;
+  GThread				*thread;
+	GError 				*error;
+	GInetAddr			*serverip;
+  
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+
+  g_message ("Waiting for connections...");
+
+	if (!server->_priv->ip)
+		server->_priv->ip = g_strdup("0.0.0.0");
+	
+	serverip = gnet_inetaddr_new_nonblock(server->_priv->ip, 0);
+	if (!serverip)
+	{
+	  g_message("Error creating server address. Please check that the ip %s has the right format",server->_priv->ip);
+	  exit (EXIT_FAILURE);	
+	}
+  
+	server->_priv->socket = gnet_tcp_socket_server_new_full (serverip ,server->_priv->port); //bind in the interface defined
+	
+  if (!server->_priv->socket)
+  {
+    printf("Error in bind; as you didn't specify different ip and/or port for the HA process, it will listen in the same ip/port than the server"); //the log file may be in use.
+    g_message("Error in bind; as you didn't specify different ip and/or port for the HA process, it will listen in the same ip/port than the server");
+    return;   
+  }
+
   while ((socket = gnet_tcp_socket_server_accept (server->_priv->socket)) != NULL)
   {
     GInetAddr *ia = gnet_tcp_socket_get_remote_inetaddr (socket);
@@ -254,7 +370,9 @@ sim_server_run (SimServer *server)
 										 
   }
 
+
 }
+
 
 /*
  *
@@ -278,14 +396,14 @@ sim_server_session (gpointer data)
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
   g_return_val_if_fail (socket, NULL);
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: Trying to do a sim_session_new: pid %d. Session: %x", getpid(), session);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: Trying to do a sim_session_new: pid %d", getpid());
  
   session = sim_session_new (G_OBJECT (server), config, socket);
   
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_session: New Session: pid %d; session address: %x", getpid(), session);
   g_message ("New session");
  
-	if (!sim_session_is_close(session))
+	if (!sim_session_must_close (session))
 	{
 	  sim_server_append_session (server, session);
 
@@ -326,7 +444,7 @@ sim_server_session (gpointer data)
  */
 void
 sim_server_append_session (SimServer     *server,
-			   SimSession    *session)
+												   SimSession    *session)
 {
   g_return_if_fail (server);
   g_return_if_fail (SIM_IS_SERVER (server));
@@ -379,10 +497,7 @@ sim_server_get_sessions (SimServer     *server)
 }
 
 /*
- *
  * This is called just from sim_organizer_run
- *
- *
  */
 void
 sim_server_push_session_command (SimServer       *server,
@@ -442,7 +557,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
       {
         if (sim_session_has_plugin_id (session, plugin_id))
 				{
-					monitor_requests	*data;
+					monitor_requests	*data = g_new0 (monitor_requests, 1);
 					GError						*error;	
 					GThread *thread;
 
@@ -453,6 +568,7 @@ sim_server_push_session_plugin_command (SimServer       *server,
 				  thread = g_thread_create (sim_server_thread_monitor_requests, data, FALSE, &error);
 			    if (thread == NULL)
 			      g_message ("thread error %d: %s", error->code, error->message);										
+
 				}
       }
 		}
@@ -467,16 +583,21 @@ sim_server_push_session_plugin_command (SimServer       *server,
   }
 }
 
-static gpointer 
-sim_server_thread_monitor_requests(gpointer data)
+gpointer 
+sim_server_thread_monitor_requests (gpointer data)
 {
 	monitor_requests  *request = (monitor_requests *) data;
 
+	g_return_val_if_fail (request->command != NULL, 0);
+	g_return_val_if_fail (SIM_IS_COMMAND (request->command), 0);
+		
 	sim_session_write (request->session, request->command);	
 
 	//I don't like to reserve/free memory in different levels of execution, but it's the only way 
 	//without change a bit more the code
 	g_object_unref (request->command);
+
+	return NULL;
 }
 
 
@@ -515,7 +636,7 @@ sim_server_reload (SimServer       *server)
  */
 SimSession*
 sim_server_get_session_by_sensor (SimServer   *server,
-				  SimSensor   *sensor)
+																  SimSensor   *sensor)
 {
   GList *list;
 
@@ -530,26 +651,65 @@ sim_server_get_session_by_sensor (SimServer   *server,
     SimSession *session = (SimSession *) list->data;
     if ((session != NULL) && SIM_IS_SESSION(session))
       if (sim_session_get_sensor (session) == sensor)
-	return session;
+				return session;
 
-    list = list->next;
+	  list = list->next;
   }
 
-  return NULL; //no sessions established
+  return NULL; //no sessions stablished
 }
+
+/*
+ *
+ * returns this server's bind IP.
+ *
+ *
+ */
+gchar*
+sim_server_get_ip (SimServer   *server)
+{
+  GList *list;
+
+  g_return_val_if_fail (server, NULL);
+  g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
+
+  return server->_priv->ip;	
+}
+
+/*
+ * returns this server's unique OSSIM name.
+ */
+gchar*
+sim_server_get_name (SimServer   *server)
+{
+  GList *list;
+
+  g_return_val_if_fail (server, NULL);
+  g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
+
+  return server->_priv->name;	
+}
+
+
 
 
 /*
  *
+ * This will return the session associated with a specific ia (ip & port).
+ * If the parameter "server" is ossim.server, here you'll find the sessions from 
+ * other agents, as well as the sessions from this server to its master servers.
+ * If the parameter "server" is ossim.HA_server, you'll find the HA server sessions.
  *
- *
- *
+ * Although it's a bad idea (and I'm not sure if really interesting),
+ * you can do the following: Say you have 2 machines each one with an ossim-server, A and B. 
+ * You can connect server A to server B, and configure the agent B to send data 
+ * to server A instead to server B.
  *
  */
 SimSession*
 sim_server_get_session_by_ia (SimServer       *server,
-			      SimSessionType   session_type,
-			      GInetAddr       *ia)
+												      SimSessionType   session_type,
+												      GInetAddr       *ia)
 {
   GList *list;
 
@@ -564,7 +724,7 @@ sim_server_get_session_by_ia (SimServer       *server,
       if (session_type == SIM_SESSION_TYPE_ALL || session_type == session->type)
       {
         GInetAddr *tmp = sim_session_get_ia (session);
-        if (gnet_inetaddr_noport_equal (tmp, ia))
+        if (gnet_inetaddr_equal (tmp, ia)) 
           return session;
       }
 
@@ -574,12 +734,38 @@ sim_server_get_session_by_ia (SimServer       *server,
 }
 
 /*
+ * Sets this server's different roles
+ *
+ */
+void
+sim_server_set_data_role (SimServer		*server,
+													SimCommand	*command)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+  g_return_if_fail (command);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+	
+	SimConfig *conf = server->_priv->config;
+	sim_config_set_data_role (conf, command);
+}
+
+SimConfig*
+sim_server_get_config (SimServer   *server)
+{
+  g_return_if_fail (server);
+  g_return_if_fail (SIM_IS_SERVER (server));
+
+	return server->_priv->config;
+}
+
+
+/*
  *
  * Debug function: print the server sessions 
  *
  *
  */
-
 void sim_server_debug_print_sessions (SimServer *server)
 {
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_server_debug_print_sessions:");
@@ -597,6 +783,174 @@ void sim_server_debug_print_sessions (SimServer *server)
 
 }
 
+void
+sim_server_load_role (SimServer	*server)
+{
+  GdaDataModel	*dm;
+  gchar         *query;
+	gchar					*c;
+	GdaValue			*value;
+
+  SimConfig *config = server->_priv->config;
+
+	//load correlate role
+	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_correlate'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->correlate = atoi (c);
+			else
+			{
+				config->server.role->correlate = FALSE;
+				g_message ("Error in the correlate data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in correlate value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, correlate");			
+
+	g_free (query);
+	g_object_unref (dm);
+
+	//load cross_correlate role
+	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_cross_correlate'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->cross_correlate = atoi (c);
+			else
+			{
+				config->server.role->cross_correlate = FALSE;
+				g_message ("Error in the cross correlate data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in cross correlate value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, cross correlate");			
+
+	g_free (query);
+	g_object_unref (dm);
+
+
+	//load store role
+  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_store'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->store = atoi (c);
+			else
+			{
+				config->server.role->store = FALSE;
+				g_message ("Error in the store data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in store value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, store");			
+
+	g_free (query);
+	g_object_unref (dm);
+
+  //Load qualify role
+	query = g_strdup ("SELECT value FROM config WHERE conf = 'server_qualify'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->qualify = atoi (c);
+			else
+			{
+				config->server.role->qualify = FALSE;
+				g_message ("Error in the qualify data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in qualify value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, Qualificate");			
+
+	g_free (query);
+	g_object_unref (dm);
+
+	//load resend_alarm value role
+  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_resend_alarm'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->resend_alarm = atoi (c);
+			else
+			{
+				config->server.role->resend_alarm = FALSE;
+				g_message ("Error in the resend data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in resend alarm value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, Resend alarm");			
+
+	g_free (query);
+	g_object_unref (dm);
+	
+	//load resend_event value role
+  query = g_strdup ("SELECT value FROM config WHERE conf = 'server_resend_event'");
+	dm = sim_database_execute_single_command (ossim.dbossim, query);
+	if (dm)
+	{
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+		if (!gda_value_is_null (value))
+		{
+			c = gda_value_stringify (value);
+			if (sim_string_is_number (c, 0))
+				config->server.role->resend_event = atoi (c);
+			else
+			{
+				config->server.role->resend_event = FALSE;
+				g_message ("Error in the resend data value from configuration");
+			}			
+		}
+		else
+		  g_message (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: configuration string in resend event value");
+	}
+	else
+	  g_message ("CONFIG DATA MODEL ERROR, resend event");			
+
+	g_free (query);
+	g_object_unref (dm);
+
+}
 
 
 

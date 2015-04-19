@@ -13,7 +13,7 @@ Session::logcheck("MenuPolicy", "PolicyResponses");
 </head>
 <body>
 
-  <h1>New Response Action</h1>
+  <h1><?php echo gettext("New Response Action"); ?></h1>
 
 <?php
 define (ANY, "ANY");
@@ -184,7 +184,7 @@ function select_response_object($title, $objects, $id)
 ?>
   <!-- <?php echo $title ?> -->
   <tr>
-    <th valign="top"><?php echo gettext("$title:") ?></th>
+    <th valign="top"><?php echo $title . ":"; ?></th>
     <td valign="top">
       <table class="noborder" width="100%" align="center">
         <tr>
@@ -228,7 +228,7 @@ $db->close($conn);
   <form name="new_response" method="POST">
   
     <tr>
-      <th>Description</th>
+      <th><?php echo gettext("Description"); ?></th>
       <td>
         <textarea name="descr"></textarea>
         <br/>
@@ -250,15 +250,15 @@ $db->close($conn);
     </tr>
 
 <?php
-    select_response_object("Source Nets", $nets, "source_net");
-    select_response_object("Source Hosts", $hosts, "source_host");
-    select_response_object("Dest Nets", $nets, "dest_net");
-    select_response_object("Dest Host", $hosts, "dest_host");
-    select_response_object("Sensors", $sensors, "sensor");
-    select_response_object("Source Ports", $ports, "source_port");
-    select_response_object("Dest Ports", $ports, "dest_port");
-    select_response_object("Plugins", $plugins, "plugin");
-    select_response_object("Actions", $actions, "action");
+    select_response_object(gettext("Source Nets"), $nets, "source_net");
+    select_response_object(gettext("Source Hosts"), $hosts, "source_host");
+    select_response_object(gettext("Dest Nets"), $nets, "dest_net");
+    select_response_object(gettext("Dest Hosts"), $hosts, "dest_host");
+    select_response_object(gettext("Sensors"), $sensors, "sensor");
+    select_response_object(gettext("Source Ports"), $ports, "source_port");
+    select_response_object(gettext("Dest Ports"), $ports, "dest_port");
+    select_response_object(gettext("Plugins"), $plugins, "plugin");
+    select_response_object(gettext("Actions"), $actions, "action");
 
 
     if (  ($_SESSION["_response_descr"]) and
@@ -274,7 +274,7 @@ $db->close($conn);
         ?>
     <tr>
       <td colspan="3">
-        <input type="submit" name="insert_response" value="Insert" />
+        <input type="submit" name="insert_response" value="<?php echo gettext("Insert"); ?>" />
       </td>
     </tr>
         <?php

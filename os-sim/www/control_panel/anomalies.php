@@ -93,7 +93,7 @@ $conn = $db->connect();
     <tr>
     <th colspan=8><?php echo gettext("RRD global anomalies"); ?>
      <a name="Anomalies" href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title=" <?php echo gettext("Fix"); ?> "><img src="../pixmaps/Hammer2.png" width="24" border="0"></a>
-     <a href="rrd_global.php" target="_blank">[Get full list]</a>
+     <a href="rrd_global.php" target="_blank">[<?php echo gettext("Get full list"); ?>]</a>
     </th>
     </tr>
     <tr>
@@ -155,7 +155,7 @@ echo $event->get_what();?>"></input></td>
 <tr></tr>
 <tr><th colspan="8"><?php echo gettext("RRD anomalies");?>
 <a name="Anomalies" href="<?php echo $_SERVER["PHP_SELF"]?>?#Anomalies" title=" <?php echo gettext("Fix"); ?> "><img src="../pixmaps/Hammer2.png" width="24" border="0"></a>
-<a href="rrd_anomaly.php" target="_blank">[Get full list]</a>
+<a href="rrd_anomaly.php" target="_blank">[<?php echo gettext("Get full list"); ?>]</a>
 </th>
 </tr>
 <tr>

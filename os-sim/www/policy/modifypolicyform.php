@@ -621,7 +621,7 @@ Session::logcheck("MenuPolicy", "PolicyPolicy");
   <tr>
     <td colspan="2" align="center">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext('reset'); ?>">
     </td>
   </tr>
 </table>

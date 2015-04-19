@@ -68,7 +68,9 @@ struct _SimXmlConfigPrivate {
 #define PROPERTY_ALARM_RISKS    "alarm_risks"
 #define PROPERTY_HOST           "host"
 #define PROPERTY_PROGRAM        "program"
-#define PROPERTY_RESEND        "resend"
+#define PROPERTY_HA_IP				  "HA_ip"
+#define PROPERTY_HA_PORT				"HA_port"
+#define PROPERTY_HA_ROLE				"HA_role"
 
 
 static void sim_xml_config_class_init (SimXmlConfigClass *klass);
@@ -621,6 +623,29 @@ sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
       xmlFree(value);
     }
 
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_HA_IP)))
+    {
+      config->server.HA_ip = g_strdup (value);
+      xmlFree(value);
+    }
+
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_HA_PORT)))
+    {
+	    if (sim_string_is_number (value, 0))
+  	  {
+   			config->server.HA_port = atoi (value);
+      	xmlFree(value);
+		  }
+	    else
+  	  {
+    	  g_message ("Error: May be that you introduced a bad remote HA port in the server's config.xml?");
+      	xmlFree(value);
+	      return;
+  	  }
+    }
+
+
+
 /*  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERFACE)))
     {
       config->server.interface = g_strdup (value);
@@ -767,15 +792,13 @@ sim_xml_config_set_config_smtp (SimXmlConfig  *xmlconfig,
 }
 
 /*
- *
- *
- *
+ *	Load the server's placed "UP" in the architecture, the master/s server/s
  *
  */
 void
 sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
-				  SimConfig     *config,
-				  xmlNodePtr     node)
+																  SimConfig     *config,
+																  xmlNodePtr     node)
 {
   SimConfigRServer  *rserver;
   gchar             *value;
@@ -787,40 +810,88 @@ sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
   g_return_if_fail (node);
 
   if (strcmp ((gchar *) node->name, OBJECT_RSERVER))
-    {
-      g_message ("Invalid config rserver node %s", node->name);
-      return;
-    }
+  {
+    g_message ("Invalid config rserver node %s", node->name);
+    return;
+  }
 
   rserver = sim_config_rserver_new ();
-  rserver->port = 40001;
 
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
-    {
-      rserver->name = g_strdup (value);
-      xmlFree(value);
-    }
+  {
+    rserver->name = g_strdup (value);
+    xmlFree(value);
+  }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
-    {
-      rserver->ip = g_strdup (value);
-      rserver->ia = gnet_inetaddr_new_nonblock (value, 0);
-      xmlFree(value);
-    }
+  {
+    if (value)
+		{	
+			rserver->ia = gnet_inetaddr_new_nonblock (value, 0);
+			if (rserver->ia)
+			{
+				rserver->ip = g_strdup (value);
+				xmlFree(value);			
+			}
+			else
+			{
+				g_message ("Error: May be that you introduced a bad remote server IP in the server's config.xml?");
+				sim_config_rserver_free(rserver);
+				xmlFree(value);			
+				return;
+			}
+		}
+		else
+		{
+			g_message ("Error: May be that you didn't introduced a remote server IP in the server's config.xml?");
+      sim_config_rserver_free(rserver);
+      return;								
+		}
+  }
+	
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
-    {
-      rserver->port = strtol (value, (char **) NULL, 10);
-      xmlFree(value);
-    }
-  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_RESEND)))
-    {
-      if (!g_ascii_strcasecmp (value, "TRUE"))
-	rserver->resend = TRUE;
-      else
-	rserver->resend = FALSE;
+  {
+		if (sim_string_is_number (value, 0))
+		{
+	    rserver->port = strtol (value, (char **) NULL, 10);
+		  xmlFree(value);
+		}
+		else
+		{
+			g_message ("Error: May be that you introduced a bad remote IP port in the server's config.xml?");
+			sim_config_rserver_free(rserver);
+		  xmlFree(value);
+			return;											 
+		}
+  }
 
-      xmlFree(value);
-    }
+	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_HA_ROLE)))
+  {
+    if (!g_ascii_strcasecmp (value, "active"))
+		{
+			rserver->is_HA_server = TRUE;
+			rserver->HA_role = HA_ROLE_ACTIVE;
+		}
+		else				
+		if (!g_ascii_strcasecmp (value, "passive"))
+		{
+			rserver->is_HA_server = TRUE;
+			rserver->HA_role = HA_ROLE_PASSIVE;
+		}
+    else	
+		{
+			rserver->is_HA_server = FALSE;
+			rserver->HA_role = HA_ROLE_NONE;
+		}
+    xmlFree(value);
+  }
 
+  if (!rserver->port)
+	{
+		rserver->port = 40001;
+	}
+
+	gnet_inetaddr_set_port (rserver->ia, rserver->port);	
+	
   config->rservers = g_list_append (config->rservers, rserver);
 }
 
@@ -832,8 +903,8 @@ sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
  */
 void
 sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
-					SimConfig     *config,
-					xmlNodePtr     node)
+																		SimConfig     *config,
+																		xmlNodePtr     node)
 {
   xmlNodePtr  children;
   
@@ -844,19 +915,20 @@ sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
   g_return_if_fail (node);
 
   if (strcmp ((gchar *) node->name, OBJECT_RSERVERS))
-    {
-      g_message ("Invalid config rservers node %s", node->name);
-      return;
-    }
+  {
+    g_message ("Invalid config rservers node %s", node->name);
+    return;
+  }
 
   children = node->xmlChildrenNode;
-  while (children) {
+  while (children) 
+	{
     if (!strcmp ((gchar *) children->name, OBJECT_RSERVER))
-      {
-	sim_xml_config_set_config_rserver (xmlconfig, config, children);
-      }
+    {
+			sim_xml_config_set_config_rserver (xmlconfig, config, children);
+    }
 
-    children = children->next;
+	  children = children->next;
   }
 
 }

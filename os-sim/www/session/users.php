@@ -83,7 +83,9 @@ if (empty($order)) $order = "login";
       [<a href="changepassform.php?user=<?php echo $login ?>">
       <?php echo gettext("Change Password"); ?> </a>]
 <?php
-    if ($login != ACL_DEFAULT_OSSIM_ADMIN) {
+    if ( Session::am_i_admin() )
+    {
+        if ($login != ACL_DEFAULT_OSSIM_ADMIN) {
 ?>
       [<a href="modifyuserform.php?user=<?php echo $login ?>"> 
       <?php echo gettext("Update"); ?> </a>]
@@ -95,6 +97,7 @@ if (empty($order)) $order = "login";
       [<a href="modifyuserform.php?user=<?php echo $login ?>"> 
       <?php echo gettext("Update"); ?> </a>]
 <?php
+        }
     }
 ?>
       </td>
@@ -105,6 +108,8 @@ if (empty($order)) $order = "login";
         }
     }
 
+    if ( Session::am_i_admin() )
+    {
 ?>
     <tr>
       <td colspan="7"><a href="newuserform.php"> <?php echo gettext("Insert new user"); ?> </a></td>
@@ -112,6 +117,9 @@ if (empty($order)) $order = "login";
     <tr>
       <td colspan="7"><a href="../setup/ossim_acl.php"> <?php echo gettext("Reload ACLS"); ?> </a></td>
     </tr>
+<?php
+    }
+?>
   </table>
 
 <?php

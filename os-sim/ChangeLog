@@ -1,5 +1,79 @@
 # ChangeLog for OSSIM
 
+        22 Sep 2006 DK <dk@ossim.net> :
+        * 0.9.9rc3 released.
+
+* OSSIM-0.9.9rc3 (22 Sep 2006)
+
+        22 Sep 2006 Alberto Roman <alberto@ossim.net> : All this changes applies to
+				ossim server:
+        * Increased speed: the preload of symbols is done one time in the beggining not
+          with each event.
+        * Fixed: problem with a GScanner call in ossim-server
+        * Directives: Now you can put the same name to different directives	
+        * Added error support for web sessions: If the remote address
+          has no permissions to execute something, now it's rejected with an
+          error msg
+        * Fixed: server <-> sensor disconnect problem. Now it won't
+          disconnect machines with the same IP (i.e. a sensor session and a web
+          session from the same machine)
+        * mysql tables: dissappeared auto_increment in some tables. Now using
+          sequences in event and backlog tables
+        * Discarding events: If doesn't exists the plugin_id and plugin_sid, don't try to
+          do nothing; discard the event.
+        * Directives: Added some fields to the "special events" so you can use
+           them in directives
+           Arpwatch events:
+             Userdata1 = MAC
+           Pads events:
+             Userdata1 = application
+             Userdata2 = service
+           P0f Events:
+             Userdata1 = O.S.
+        * Fixed: Someday the host_os, host_mac and host_service events was
+          removed from inserting in DB. Now it inserts in their specific tables,
+          as well as into the snort table. Thx santiago gonzalez for his help.
+        * Monitor requests: Use by default ntop instead tcptrack in directives
+        * Fixed: MAC events didn't inserted the vendor, and the MAC's
+          was inserted when it shouldn't be.
+        * Correlation: Ossim server won't correlate if priority is 0 (this may be
+          changed in a near future, take it with care)
+ 
+        22 Sep 2006 David Gil <dgil@ossim.net> :
+        * agent: switch to the new message protocol for managing plugins:
+          + messages eceived from server:
+             sensor-plugin-start
+             sensor-plugin-stop
+             sensor-plugin-enable
+             sensor-plugin-disable
+          + messages sent to server:
+             plugin-process-started
+             plugin-process-stopped
+             plugin-process-unknown
+             plugin-enabled
+             plugin-disabled
+        * debian packages: update python packages following the new debian
+          python policy.
+        * frontend (monitor->sensors, policy->sensors):
+          always connect to server before sending any message.
+        * frameworkd: many fixes and improvements, thanks to alexlopa!
+
+        9 Aug 2006 Alberto <alberto@ossim.net> : 
+        * Events with ";": fixed a problem with a GDA call that made the
+          insertion into DB to fail. If there are a ";" inside log, it will
+          be replaced with a ","					
+        * ossim-server: fixed a server crash when host_os table has a problem 
+          and an OS event arrives
+        * ossim-server: Fixed another SIM_IS_SESSION() bug.
+        * server's config.xml: "resend" keyword (inside rserver) has been deprecated 
+          and won't be used anymore
+        * Anomalies: - To get the MAC's anomalies inserted in DB, won't be needed 
+          anymore to define the host or network inside policy. Still needed for OS
+          and Service events.
+        * event protocol: If the sensor doesn't issue a protocol, we will
+          treat it as "OTHER" although it will be inserted (to be able to
+          search it in ACID) as a TCP one.
+				
         26 Jun 2006 Tomas V.V.cox <tvvcox@ossim.net> :
         * New feature for Executive panel: help labels
         * Moved panel configs dir out from the doc root

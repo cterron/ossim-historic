@@ -58,16 +58,15 @@ class Host_qualification {
 
         $global = 0;
 
-        $sql = "SELECT ?, host_ip FROM host_qualification";
-        $params = array($type);
+        $sql = "SELECT $type, host_ip FROM host_qualification";
         
-        if (!$rs = &$conn->Execute($sql, $params)) {
+        if (!$rs = &$conn->Execute($sql)) {
             print $conn->ErrorMsg();
         } else {
             while (!$rs->EOF) {
                 if (Session::hostAllowed($conn, $rs->fields["host_ip"]))
                 {
-                    $global += $rs->fields["$type"];
+                    $global += $rs->fields[$type];
                 }
                 $rs->MoveNext();
             }

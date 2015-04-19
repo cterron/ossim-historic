@@ -9,13 +9,14 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-export DH_COMPAT=4
+export DH_COMPAT=5
+export DH_PYCOMPAT=2
 
 include /usr/share/dpatch/dpatch.make
 
 TMP=`pwd`/debian
 #LANGUAGES=`ls locale | grep -v CVS`
-LANGUAGES=de en es fr ja
+LANGUAGES=de en es fr ja ru
 
 configure: configure-stamp
 configure-stamp:
@@ -172,7 +173,10 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 #	dh_perl
-	dh_python
+	dh_pysupport /usr/share/ossim-agent/ \
+		/usr/share/ossim-framework/ossimframework
+	dh_python /usr/share/ossim-agent/ \
+		/usr/share/ossim-framework/ossimframework
 #	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps

@@ -41,6 +41,7 @@
 #include <config.h>
 #include "sim-sensor.h"
 
+
 static GTime       last_time = 0;
 
 /*****debug*****/
@@ -340,16 +341,69 @@ sim_container_db_update_host_os_ul (SimContainer  *container,
 
 /*
  *
- * Returns from the db the host mac (NULL on error), provided an ip and the sensor to wich belongs that ip.
- * It returns the mac associated with the last time it was modified (if any)
+ * Returns from the db the host mac and the vendor (NULL on error), provided an ip and the sensor to wich belongs that ip.
+ * It returns the mac and the vendor associated with the last time it was modified (if any)
  *
  */
-gchar*
+gchar**
 sim_container_db_get_host_mac_ul (SimContainer  *container,
 																  SimDatabase   *database,
 																  GInetAddr     *ia,
 																  GInetAddr     *sensor)
 {
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+  gchar         *version = NULL;
+	gchar					**m_and_v; //mac and vendor
+  gint           row;
+  
+  g_return_val_if_fail (container, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (database, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+  g_return_val_if_fail (ia, NULL);
+
+  query = g_strdup_printf ("SELECT mac, vendor FROM host_mac WHERE ip = %lu and sensor = %lu ORDER BY date DESC LIMIT 1",
+                           sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor)); //we want the last
+
+  dm = sim_database_execute_single_command (database, query);
+	
+   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_ul: %s", query);
+	 
+  if (dm)
+  {
+		m_and_v = g_new0 (gchar*, 2);
+		
+	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) 
+    {
+      if (!gda_value_is_null (value))
+        m_and_v[0] = gda_value_stringify (value);	//MAC
+    }
+    else
+      m_and_v[0]=NULL;
+
+		value = (GdaValue *) gda_data_model_get_value_at (dm, 1, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) 
+    {
+      if (!gda_value_is_null (value))
+        m_and_v[1] = gda_value_stringify (value);	//vendor
+    }
+    else
+      m_and_v[1]=NULL;
+		
+    g_object_unref(dm);
+  }
+  else
+  {
+    g_message ("HOST MAC DATA MODEL ERROR");
+  }
+  g_free (query);
+
+  return m_and_v;
+
+/*
   GdaDataModel	*dm;
   GdaValue	*value;
   gchar		*query;
@@ -374,10 +428,18 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
 		if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical: gda_value_is_null: assertion `value != NULL' failed
 		{																				//this happens the first time that an event is inserted
 			if (!gda_value_is_null (value))
+			{
 				mac = gda_value_stringify (value);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_ul mac: %s",mac);
+			}
+			else
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_ul mac value null");
 		}
 		else
+		{
 			mac=NULL;
+			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_ul gda_data_model_get_n_rows(dm): %d", gda_data_model_get_n_rows(dm));
+		}
 		
 		g_object_unref(dm);
   }
@@ -387,6 +449,7 @@ sim_container_db_get_host_mac_ul (SimContainer  *container,
   g_free (query);
 
   return mac;
+*/
 }
 
 /*
@@ -461,48 +524,56 @@ sim_container_db_get_host_service_ul (SimContainer  *container,
 
 
 /*
- *
- *
- * FIXME: this function is not called anymore. Its not needed.
- *
+ * FIXME: this function is not called anymore.
  */
 gchar*
 sim_container_db_get_host_mac_vendor_ul (SimContainer  *container,
-					 SimDatabase   *database,
-					 GInetAddr     *ia,
-					 GInetAddr     *sensor)
+																				 SimDatabase   *database,
+																				 GInetAddr     *ia,
+																				 GInetAddr     *sensor)
 {
-  GdaDataModel  *dm;
-  GdaValue      *value;
-  gchar         *query;
-  gchar         *vendor = NULL;
-  gint           row;
+	GdaDataModel  *dm;
+  GdaValue  *value;
+  gchar   *query;
+  gchar   *vendor = NULL;
+  gint    row;
 
-  g_return_if_fail (container);
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (database);
-  g_return_if_fail (SIM_IS_DATABASE (database));
-  g_return_if_fail (ia);
-  g_return_if_fail (sensor);
+  g_return_val_if_fail (container != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_return_val_if_fail (database != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
+  g_return_val_if_fail (ia, NULL);
+  g_return_val_if_fail (sensor, NULL);
 
-  query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu and sensor = %lu",
-                           sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor));			     
+  query = g_strdup_printf ("SELECT vendor FROM host_mac WHERE ip = %lu and sensor = %lu ORDER BY date DESC LIMIT 1",
+                           sim_inetaddr_ntohl (ia), sim_inetaddr_ntohl (sensor)); //we want the last
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_vendor_ul query: %s",query);
+
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-	  if (!gda_value_is_null (value))
-	    vendor = gda_value_stringify (value);
-	}
-      
-      g_object_unref(dm);
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical: gda_value_is_null: assertion `value != NULL' failed
+    {                                       //this happens the first time that an event is inserted
+      if (!gda_value_is_null (value))
+      {
+        vendor = gda_value_stringify (value);
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_vendor_ul vendor: %s",vendor);
+      }
+      else
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_vendor_ul vendor value null");
     }
+    else
+    {
+      vendor=NULL;
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_get_host_mac_vendor_ul gda_data_model_get_n_rows(dm): %d", gda_data_model_get_n_rows(dm));
+    }
+
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("HOST MAC DATA MODEL ERROR");
-    }
+    g_message ("HOST MAC VENDOR DATA MODEL ERROR");
+
   g_free (query);
 
   return vendor;
@@ -537,8 +608,8 @@ sim_container_db_insert_host_mac_ul (SimContainer  *container,
   g_return_if_fail (sensor);
    
 	//we want to insert only the hosts defined in Policy->hosts or inside a network from policy->networks
-	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
-		return;
+//	if((sim_container_get_host_by_ia(container,ia) == NULL) && (sim_container_get_nets_has_ia(container,ia) == NULL))
+//		return;
 
 	 //  query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor, sensor, interface) VALUES (%lu, '%s', '%s', '%s', %lu, '%s')", sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "", sim_inetaddr_ntohl (sensor), interface);
   query = g_strdup_printf ("INSERT INTO host_mac (ip, date, mac, vendor, sensor, interface) VALUES (%lu, '%s', '%s', '%s', %lu, '%s')", sim_inetaddr_ntohl (ia), date, mac, (vendor) ? vendor : "", sim_ipchar_2_ulong (sensor), interface);
@@ -616,9 +687,8 @@ sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
 																						SimDatabase  *dbsnort,
 																						SimEvent	   *event,
 																						gchar        *timestamp,
-																						gint					sid,
-																						gulong				cid,
-																						gint					sig_id)
+																						gint					sid,	//sid & cid is needed here to reference the extra_data.
+																						gulong				cid)
 {
   gchar			*query;
 
@@ -631,9 +701,6 @@ sim_container_db_insert_host_ids_event_ul (SimContainer  *container,
   g_return_if_fail (timestamp);
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
-
-  sim_organizer_snort_event_sidcid_insert (dbsnort, event, sid, cid, sig_id);
-
 
   query = g_strdup_printf ("INSERT INTO host_ids (ip, date, hostname, sensor, plugin_sid, event_type, what, target, extra_data, sid, cid) VALUES (%lu, '%s', '%s', '%s', %u, '%s', '%s', '%s', '%s', '%d', '%d')",
 										  sim_inetaddr_ntohl (event->src_ia), 
@@ -734,8 +801,8 @@ sim_container_db_update_host_service_ul (SimContainer  *container,
 
 /*
  *
- *
- *
+ * This function inserts event into DB, but it doesn't calculate the event->id, 
+ * so the event-> id should be calculated outside.
  *
  */
 void
@@ -757,7 +824,36 @@ sim_container_db_insert_event_ul (SimContainer  *container, //FIXME: container i
   query = sim_event_get_insert_clause (event);
   sim_database_execute_no_query (database, query);
   g_free (query);
+}
 
+/*
+ * This function gets an event-> id and insert the event into DB.
+ */
+void
+sim_container_db_insert_event (SimContainer  *container, //FIXME: container is not used here.
+															  SimDatabase   *database,
+															  SimEvent      *event)
+{
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query = NULL;
+  
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database != NULL);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (SIM_IS_EVENT (event));
+  
+  event->id = sim_database_get_id (ossim.dbossim, EVENT_SEQ_TABLE);
+	
+  query = sim_event_get_insert_clause (event);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,"sim_container_db_insert_event: query= %s",query);
+  sim_database_execute_no_query (database, query);
+  g_free (query);
+		
+
+/*
   query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
   dm = sim_database_execute_single_command (database, query);
   if (dm)
@@ -772,7 +868,9 @@ sim_container_db_insert_event_ul (SimContainer  *container, //FIXME: container i
     g_message ("BACKLOG INSERT DATA MODEL ERROR");
 			
   g_free (query);
+	*/
 }
+
 
 /*
  *
@@ -786,6 +884,7 @@ sim_container_db_update_event_ul (SimContainer  *container,
 				  SimEvent      *event)
 {
   gchar         *query;
+  gint          n;
 
   g_return_if_fail (container);
   g_return_if_fail (SIM_IS_CONTAINER (container));
@@ -795,9 +894,44 @@ sim_container_db_update_event_ul (SimContainer  *container,
   g_return_if_fail (SIM_IS_EVENT (event));
   
   query = sim_event_get_update_clause (event);
+  n = sim_database_execute_no_query (database, query);
+  g_free (query);
+
+  if (!n)
+  {
+    query = sim_event_get_insert_clause (event);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,"sim_container_db_update_event_ul: query 2 = %s",query);
+    sim_database_execute_no_query (database, query);
+    g_free (query);
+  }
+}
+
+/*
+ *
+ * Replace the DB with the new event. May be something has changed, like priority or..
+ *
+ *
+ */
+void
+sim_container_db_replace_event_ul (SimContainer  *container,
+				  SimDatabase   *database,
+				  SimEvent      *event)
+{
+  gchar         *query;
+  gint          n;
+
+  g_return_if_fail (container);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  g_return_if_fail (database);
+  g_return_if_fail (SIM_IS_DATABASE (database));
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
+  
+  query = sim_event_get_replace_clause (event);
   sim_database_execute_no_query (database, query);
   g_free (query);
 }
+
 
 /*
  *
@@ -1184,25 +1318,25 @@ sim_container_db_get_threshold_ul (SimContainer  *container,
   
   dm = sim_database_execute_single_command (database, query);
   if (dm)
-    {
-      for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
-	{
+  {
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++)
+		{
 	  /* Threshold */
       gchar *threshold_string;
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
       if (NULL != (threshold_string = gda_value_stringify (value)))
-        {
+      {
 	      threshold = atoi (threshold_string);
-          g_free(threshold_string);
-        }
-	}
+        g_free(threshold_string);
+      }
+		}
       
-      g_object_unref(dm);
-    }
+    g_object_unref(dm);
+  }
   else
-    {
-      g_message ("THRESHOLD DATA MODEL ERROR");
-    }
+  {
+    g_message ("THRESHOLD DATA MODEL ERROR");
+  }
 
   return threshold;
 }
@@ -2270,7 +2404,7 @@ sim_container_get_sensor_by_ia_ul (SimContainer  *container,
     if (gnet_inetaddr_noport_equal (sim_sensor_get_ia (sensor), ia))
 		{
 		  found = TRUE;
-			break;
+			return sensor;
 		}
 
     list = list->next;
@@ -2279,7 +2413,6 @@ sim_container_get_sensor_by_ia_ul (SimContainer  *container,
   if (!found)
     return NULL;
 
-  return sensor;
 }
 
 /*
@@ -2687,22 +2820,22 @@ sim_container_get_host_by_ia_ul (SimContainer  *container,
 
   list = container->_priv->hosts;
   while (list)
-    {
-      host = (SimHost *) list->data;
+  {
+    host = (SimHost *) list->data;
 
-      if (gnet_inetaddr_get_canonical_name(sim_host_get_ia(host)))
+    if (gnet_inetaddr_get_canonical_name(sim_host_get_ia(host)))
+    {
+      if (gnet_inetaddr_noport_equal (sim_host_get_ia (host), ia))
       {
-        if (gnet_inetaddr_noport_equal (sim_host_get_ia (host), ia))
-        {
 	      found = TRUE;
 	      break;
 	    }
-      }
-      else
-        g_message("Error: Some host is bad-defined in Policy->Hosts. Please check it!!");
-
-      list = list->next;
     }
+    else
+      g_message("Error: Some host is bad-defined in Policy->Hosts. Please check it!!");
+
+    list = list->next;
+  }
 
   if (!found)
     return NULL;
@@ -3441,6 +3574,8 @@ sim_container_db_load_policies_ul (SimContainer  *container,
 
 		
     /* Sensors */
+		//Remember!!!! if someone inserts into DB "ANY" sensor and other sensor, this will fail. If you want to put ANY,
+		//shouldn't be more sensors
     query2 = g_strdup_printf ("SELECT ip FROM sensor,policy_sensor_reference WHERE policy_id = %d and policy_sensor_reference.sensor_name=sensor.name;", sim_policy_get_id (policy));
     dm2 = sim_database_execute_single_command (database, query2);
     if (dm2)
@@ -3476,7 +3611,7 @@ sim_container_db_load_policies_ul (SimContainer  *container,
 		        value = (GdaValue *) gda_data_model_get_value_at (dm3, 0, row2);
 		        sensor = gda_value_stringify (value);
 
-    		    if ( g_strstr_len (sensor, strlen(sensor), SIM_IN_ADDR_ANY_CONST) ||
+    		    if ( g_strstr_len (sensor, strlen(sensor), SIM_IN_ADDR_ANY_CONST) || //ANY
         		     g_strstr_len (sensor, strlen(sensor), "any"))
 		        {
     		      g_free (sensor);
@@ -3581,23 +3716,65 @@ sim_container_db_load_policies_ul (SimContainer  *container,
       g_message ("POLICY PLUGIN_ID REFERENCES DATA MODEL ERROR");
 
     g_free (query2);
-
-    /* Store events in this policy in DB or not? */
-    query2 = g_strdup_printf ("SELECT store FROM policy WHERE id = %d", sim_policy_get_id (policy));
+		
+		/* Load the role of this policy.*/
+    query2 = g_strdup_printf ("SELECT correlate, cross_correlate, store, qualify, resend_alarm, resend_event FROM policy_role_reference WHERE policy_id = %d", sim_policy_get_id (policy));
     dm2 = sim_database_execute_single_command (database, query2);
     if (dm2)
     {
-      if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical first time
+      if (gda_data_model_get_n_rows(dm2) !=0) //to avoid (null)-Critical first time
       {
+        SimRole *role = g_new0 (SimRole, 1);
+        role->cross_correlate;
         gboolean store;
+				gboolean qualify;
+				gboolean resend_alarm;
+				gboolean resend_avent;
+				
         value = (GdaValue *) gda_data_model_get_value_at (dm2, 0, 0);
-        store = gda_value_get_tinyint (value);  //this should be boolean, but GDA is... is.... gggggg
-        sim_policy_set_store (policy, store);              
-        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul Store: %d", store);
+        role->correlate = gda_value_get_tinyint (value);  //this should be boolean, but GDA is... is.... gggggg
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->correlate: %d", role->correlate);
 
+				sim_gda_value_extract_type (value);
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 1, 0);
+        role->cross_correlate = gda_value_get_tinyint (value);  
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->cross_correlate: %d", role->cross_correlate);
+
+				sim_gda_value_extract_type (value);
+		    // Store events in this policy in DB or not?
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 2, 0);
+				sim_gda_value_extract_type (value);
+        role->store = gda_value_get_tinyint (value);  
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->Store: %d", role->store);
+
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 3, 0);
+				sim_gda_value_extract_type (value);
+        role->qualify = gda_value_get_tinyint (value);  
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->qualify: %d", role->qualify);
+
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 4, 0);
+        role->resend_alarm = gda_value_get_tinyint (value);  
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->resend_alarm: %d", role->resend_alarm);
+
+				sim_gda_value_extract_type (value);
+
+        value = (GdaValue *) gda_data_model_get_value_at (dm2, 5, 0);
+        role->resend_event = gda_value_get_tinyint (value);  
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_load_policies_ul role->resend_event: %d", role->resend_event);
+
+				sim_policy_set_role (policy, role);
+				
       }
       else
-        g_message("Error: May be that there are a problem in policy table; store column failed!");
+      {
+//Until web has this, this is nto an error.
+//        g_message("Error: May be that there are a problem in role table; role load failed!");
+        sim_policy_set_role (policy, NULL);
+
+      }
 
       g_object_unref(dm2);
     }
@@ -3758,7 +3935,7 @@ sim_container_get_policy_match_ul (SimContainer     *container,
   }
 
   if (!found)
-    return FALSE;
+    return NULL;
 
   return policy;
 }
@@ -3948,10 +4125,9 @@ sim_container_load_directives_from_file_ul (SimContainer  *container,
   while (list)
   {
     SimDirective *directive = (SimDirective *) list->data;
-
-    plugin_sid = sim_container_get_plugin_sid_by_name (container, 
+    plugin_sid = sim_container_get_plugin_sid_by_pky (container, 
 																											 SIM_PLUGIN_ID_DIRECTIVE,
-																											 sim_directive_get_name (directive));
+																											 sim_directive_get_id (directive));
 
     if (!plugin_sid)
 		{
@@ -5306,26 +5482,12 @@ sim_container_db_insert_backlog_ul (SimContainer  *container,
   g_return_if_fail (backlog != NULL);
   g_return_if_fail (SIM_IS_DIRECTIVE (backlog));
   
+	backlog_id = sim_database_get_id (ossim.dbossim, BACKLOG_SEQ_TABLE);
+  sim_directive_set_backlog_id (backlog, backlog_id);
+		
   query = sim_directive_backlog_get_insert_clause (backlog);
   sim_database_execute_no_query (database, query);
-  g_free (query);
-
-  query = g_strdup_printf ("SELECT LAST_INSERT_ID()");
-  dm = sim_database_execute_single_command (database, query);
-  if (dm)
-  {
-    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-    if (!gda_value_is_null (value))
-			backlog_id = gda_value_get_bigint (value);
-      
-    sim_directive_set_backlog_id (backlog, backlog_id);
-      
-    g_object_unref(dm);
-  }
-  else
-  {
-      g_message ("BACKLOG INSERT DATA MODEL ERROR");
-  }
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_container_db_insert_backlog_ul: %s", query);
   g_free (query);
 }
 

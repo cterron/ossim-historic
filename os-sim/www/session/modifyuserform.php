@@ -76,7 +76,7 @@ require_once ('ossim_acl.inc');
         value="<?php echo $user->get_name(); ?>" /></td>
     <td colspan="2" align="center">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
   <tr>
@@ -139,7 +139,7 @@ if($networks){
     }
 ?>
       <input type="hidden" name="nnets" value="<?php echo $i ?>" />
-      <i>NOTE: No selection allows ALL nets</i>
+      <i><?php echo gettext("NOTE: No selection allows ALL")." ".gettext("nets"); ?></i>
     </td>
     <td class="left" valign="top">
 <?php
@@ -177,7 +177,7 @@ if($sensors){
     }
 ?>
       <input type="hidden" name="nsensors" value="<?php echo $i ?>" />
-      <i>NOTE: No selection allows ALL sensors</i>
+      <i><?php echo gettext("NOTE: No selection allows ALL")." ".gettext("sensors"); ?></i>
     </td>
     <td colspan="2" class="left" valign="top">
 <?php
@@ -218,7 +218,7 @@ if($perms){
   <tr>
     <td colspan="2" align="center">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
 </table>

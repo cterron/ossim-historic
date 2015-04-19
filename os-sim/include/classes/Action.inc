@@ -137,7 +137,8 @@ class Action {
 
     function delete($conn, $id)
     {
-        $type = $this->action_type;
+	$Action = Action::get_action_by_id($conn, $id);
+        $type = $Action->action_type;
         
         $sql  = "DELETE FROM action WHERE id = ?";
         $params = array($id);

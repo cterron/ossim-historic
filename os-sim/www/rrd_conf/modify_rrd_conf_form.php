@@ -20,7 +20,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
   <li> <?php echo gettext("Priority: Resulting impact if threshold is being exceeded"); ?> .
   <li> <?php echo gettext("Alpha: Intercept adaption parameter"); ?> .
   <li> <?php echo gettext("Beta: Slope adaption parameter"); ?> .
-  <li> <?php echo gettext("Persistence: How long has this event to last before we alert. (20 mins)"); ?> 
+  <li> <?php echo gettext("Persistence: How long has this event to last before we alert.")." (20 ".gettext("mins").")"; ?> 
   </ul>
 
 
@@ -169,7 +169,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     }
 ?>
     <tr>
-        <td colspan="7"><input type="submit" value="Modify"/></td>
+        <td colspan="7"><input type="submit" value="<?php echo gettext("Modify"); ?>"/></td>
     </tr>
     </form>
   </table>

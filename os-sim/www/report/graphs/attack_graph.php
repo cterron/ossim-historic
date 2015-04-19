@@ -50,6 +50,7 @@ if (!strcmp($target, "ip_src") || !strcmp($target, "src_ip")) {
 
 $list = $security_report->AttackHost($security_report->ossim_conn,
                                      $target, $limit, $type);
+$datax = $datay = array();
 foreach ($list as $l) {
     $datax[] = Host::ip2hostname($security_report->ossim_conn, $l[0]);
     $datay[] = $l[1];
@@ -59,8 +60,8 @@ require_once ('ossim_conf.inc');
 $conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
 
-include ("$jpgraph/jpgraph.php");
-include ("$jpgraph/jpgraph_bar.php");
+require_once "$jpgraph/jpgraph.php";
+require_once "$jpgraph/jpgraph_bar.php";
 
 // Setup the graph.
 $graph = new Graph(400,250,"auto");    
@@ -98,6 +99,6 @@ $graph->Add($bplot);
 
 // Finally send the graph to the browser
 $graph->Stroke();
-
+unset($graph);
 ?>
 

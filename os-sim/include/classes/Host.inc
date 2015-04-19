@@ -84,10 +84,10 @@ class Host {
         mysql_escape_string($order);
 
         $query = OssimQuery("SELECT * FROM host $where $order");
+        $list = array();
         if (!$rs = &$conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
-            $list = array();
             while (!$rs->EOF) {
 
                 if (Session::hostAllowed($conn, $rs->fields["ip"]))

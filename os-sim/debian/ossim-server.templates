@@ -5,8 +5,10 @@ Description: Please enter the name of your OSSIM server
 
 Template: ossim-server/server_ip
 Type: string
-Default: 127.0.0.1
-Description: Please enter the ip address of your OSSIM server
+Default: 0.0.0.0
+Description: Ip address configuration
+ Please enter the ip address your OSSIM server will be listening on
+ (Use 127.0.0.1 if you want to limit connections to localhost)
 
 Template: ossim-server/framework_name
 Type: string

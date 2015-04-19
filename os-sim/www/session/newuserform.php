@@ -79,7 +79,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     </td>
     <td colspan="2" align="center">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
   <tr>
@@ -136,7 +136,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     }
 ?>
         <input type="hidden" name="nnets" value="<?php echo $i ?>" />
-        <i>NOTE: No selection allows ALL nets</i>
+        <i><?php echo gettext("NOTE: No selection allows ALL")." ".gettext("nets"); ?></i>
     </td>
     <td class="left" valign="top">
 
@@ -155,7 +155,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
     }
 ?>
         <input type="hidden" name="nsensors" value="<?php echo $i ?>" />
-        <i>NOTE: No selection allows ALL sensors</i>
+        <i><?php echo gettext("NOTE: No selection allows ALL")." ".gettext("sensors"); ?></i>
     </td>
     <td colspan="2" class="left" valign="top">
 
@@ -191,7 +191,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationUsers");
   <tr>
     <td colspan="2" align="center" valign="top">
       <input type="submit" value="OK">
-      <input type="reset" value="reset">
+      <input type="reset" value="<?php echo gettext("reset"); ?>">
     </td>
   </tr>
 </table>

@@ -31,11 +31,11 @@
     require_once ('classes/Scan.inc');
     $scan = new Scan($net);
 
-    echo "Scanning network ($net), please wait..<br/>"; flush();
+    echo gettext("Scanning network")." ($net), ".gettext("please wait")."..<br/>"; flush();
     $scan->do_scan();
 
-    echo "Scan completed.<br/><br/>";
-    echo "<a href=\"index.php\">Click here to show the results</a>";
+    echo gettext("Scan completed").".<br/><br/>";
+    echo "<a href=\"index.php\">".gettext("Click here to show the results")."</a>";
     $scan->save_scan();
 
 ?>

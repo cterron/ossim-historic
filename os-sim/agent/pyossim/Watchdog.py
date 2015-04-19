@@ -25,7 +25,7 @@ class Watchdog(threading.Thread):
                     util.debug_watchlog (msg, '--', 'YELLOW')
 
                     # unknown plugin state
-                    msg = "plugin-unknown-state plugin_id=\"%s\"\n" % id
+                    msg = "plugin-process-unknown plugin_id=\"%s\"\n" % id
                     self.agent.sendMessage(msg)
 
 
@@ -37,7 +37,7 @@ class Watchdog(threading.Thread):
                     util.debug_watchlog (msg, '--', 'GREEN')
                     
                     # plugin started
-                    msg = "plugin-start plugin_id=\"%s\"\n" % id
+                    msg = "plugin-process-started plugin_id=\"%s\"\n" % id
                     self.agent.sendMessage(msg)
 
 
@@ -61,11 +61,11 @@ class Watchdog(threading.Thread):
                     # notify result to server
                     time.sleep(1)
                     if util.pidof(plugin["process"]) is not None:
-                        msg = "plugin-start plugin_id=\"%s\"\n" % id
+                        msg = "plugin-process-started plugin_id=\"%s\"\n" % id
                         util.debug_watchlog('service %s (%s) started' % \
                             (id, plugin["process"]), '<-', 'GREEN')
                     else:
-                        msg = "plugin-stop plugin_id=\"%s\"\n" % id
+                        msg = "plugin-process-stopped plugin_id=\"%s\"\n" % id
                         util.debug_watchlog('error starting service %s' % \
                             (plugin["process"]), '!!', 'RED')
                     self.agent.sendMessage(msg)
@@ -76,7 +76,7 @@ class Watchdog(threading.Thread):
                         (id, plugin["process"])
                     util.debug_watchlog (msg, '--', 'YELLOW')
 
-                    msg = "plugin-stop plugin_id=\"%s\"\n" % id
+                    msg = "plugin-process-stopped plugin_id=\"%s\"\n" % id
                     self.agent.sendMessage(msg)
 
             time.sleep(float(self.watchdog_interval))

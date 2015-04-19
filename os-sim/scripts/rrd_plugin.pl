@@ -24,7 +24,6 @@ if ($DEBUG) {use Benchmark ':hireswallclock'};
 
 #Configure this variables to match your installation:
 my $pidfile = "/var/run/rrd_plugin.pid";
-my $rrd_log = "/var/log/ossim/rrd_plugin.log";
 my $rrd_interval = 300;
 my $rrd_sleep = $rrd_interval;
 my $rrd_range = "1H";
@@ -37,12 +36,14 @@ my ($td,$t0,$t1,$count)if $DEBUG;
 
 sub usage {
     print "Usage:\n";
-    print "rrd_plugin.pl [-d dsn][-i interfaces]\n";
+    print "rrd_plugin.pl [-d dsn][-i interfaces][-o logfile]\n";
     print "Options:\n";
     print "    -d dsn         Set database connection options string\n";
     print "                   dbtype:host:dbname:user:pass(:port)\n";
     print "    -i interfaces  Set ntop's monitored interfaces names\n";
     print "                   comma separated\n";
+    print "    -o logfile     Set output file for logs\n";
+    print "                   (default: /var/log/ossim/rrd_plugin.log)\n";
     exit 0
 }
 
@@ -68,7 +69,7 @@ print PID $$;
 close(PID);
 
 my %options=();
-getopts("i:d:",\%options);
+getopts("i:d:o:",\%options);
 
 if (defined $options{d}) {
     ($ds_type, $ds_host, $ds_name, $ds_user, $ds_pass, $ds_port) =
@@ -85,6 +86,11 @@ if (defined $options{i})
 else {
   print "ERROR: Monitored interfaces not defined\n";
   usage()
+}
+
+my $rrd_log = "/var/log/ossim/rrd_plugin.log";
+if (defined $options{o}) {
+	$rrd_log = $options{o};
 }
 
 my $dsn = join ":","dbi",$ds_type,$ds_name,$ds_host,$ds_port;

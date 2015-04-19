@@ -9,6 +9,7 @@ $db = new ossim_db();
 $conn = $db->connect();
 
 $conf = $GLOBALS["CONF"];
+$rrdtool_bin = $conf->get_conf("rrdtool_path") . "/rrdtool";
 
 //
 // This will show errors (both PHP Errors and those detected in the code)
@@ -42,7 +43,7 @@ $what = GET('what');
 $type = GET('type');
 $start = GET('start');
 $end  = GET('end');
-
+$zoom = GET('zoom') ? GET('zoom') : 1;
 //
 // params validations
 //
@@ -56,6 +57,7 @@ if (!in_array($type, array('host', 'net', 'global', 'level'))) {
 ossim_valid($ip,    OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_SCORE, 'illegal:'._('IP'));
 ossim_valid($start, OSS_LETTER, OSS_DIGIT, OSS_SCORE, 'illegal:'._('Start param'));
 ossim_valid($end,   OSS_LETTER, OSS_DIGIT, OSS_SCORE, 'illegal:'._('End param'));
+ossim_valid($zoom,  OSS_DIGIT, OSS_DOT, 'illegal:'._('Zoom parameter'));
 
 if (ossim_error()) {
     mydie(strip_tags(ossim_error()));
@@ -79,7 +81,6 @@ switch ($type) {
 // Graph style
 //
 $font = $conf->get_conf('font_path');
-$zoom = 1;
 $tmpfile = tempnam('/tmp', 'OSSIM');
 
 function clean_tmp()
@@ -147,9 +148,9 @@ $params .=
          "AREA:negcomp$color1:" . _("Compromise") . " " .
          "HRULE:$threshold_a#000000 " .
          "HRULE:-$threshold_c#000000 ";
+
          
-         
-exec("rrdtool $params 2>&1", $output, $exit_code);
+exec("$rrdtool_bin $params 2>&1", $output, $exit_code);
 if (preg_match('/^ERROR/i', $output[0]) || $exit_code != 0) {
     mydie(sprintf(_("rrdtool cmd failed with error: '%s' (exit code: %s)"), $output[0], $exit_code));
 }

@@ -1,4 +1,4 @@
-SUBDIRS=classes panel upgrades
+SUBDIRS=classes panel upgrades xajax
 
 phpdir   = $(datadir)/ossim/include
 php_DATA = ossim_conf.inc \

@@ -80,9 +80,13 @@ void              sim_organizer_correlation_plugin              (SimOrganizer *o
 
 void              sim_organizer_mac_os_change                   (SimOrganizer *organizer, 
 																																 SimEvent     *event);
+SimPolicy*				sim_organizer_get_policy											(SimOrganizer *organizer,
+			                                                           SimEvent     *event);
+	
 /* Correlate Function */
-void              sim_organizer_calificate                      (SimOrganizer  *organizer,
-																																 SimEvent      *event);
+void              sim_organizer_qualify		                      (SimOrganizer  *organizer,
+																																 SimEvent      *event,
+																																 SimPolicy			*policy);
 
 /* Correlate Function */
 void              sim_organizer_correlation                     (SimOrganizer  *organizer,
@@ -111,6 +115,8 @@ void              sim_organizer_rrd           	                (SimOrganizer  *o
 void              sim_organizer_backlog_match                   (SimDatabase   *db_ossim,
 																																 SimDirective  *backlog,
 																																 SimEvent      *event);
+void              sim_organizer_resend                          (SimEvent  *event, 
+                                                                 SimRole   *role);
 
 G_END_DECLS
 

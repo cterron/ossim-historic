@@ -28,7 +28,7 @@ Session::logcheck("MenuIncidents", "IncidentsReport");
     function incidents_by_status_table($conn)
     {
 ?>
-    <h2 align="center">Incidents by status</h2>
+    <h2 align="center"><?php echo gettext("Incidents by status"); ?></h2>
     <table align="center">
       <tr>
         <th><?php echo gettext("Incident Status") ?></th>
@@ -65,7 +65,7 @@ Session::logcheck("MenuIncidents", "IncidentsReport");
     function incidents_by_type_table($conn)
     {
 ?>
-    <h2 align="center">Incidents by type</h2>
+    <h2 align="center"><?php echo gettext("Incidents by type"); ?></h2>
     <table align="center">
       <tr>
         <th><?php echo gettext("Incident type") ?></th>
@@ -102,7 +102,7 @@ Session::logcheck("MenuIncidents", "IncidentsReport");
     function incidents_by_user_table($conn)
     {
 ?>
-    <h2 align="center">Incidents by user in charge</h2>
+    <h2 align="center"><?php echo gettext("Incidents by user in charge"); ?></h2>
     <table align="center">
       <tr>
         <th><?php echo gettext("User in charge") ?></th>

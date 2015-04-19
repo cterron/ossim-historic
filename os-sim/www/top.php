@@ -28,6 +28,7 @@ $upgrade = new Upgrade();
   $conf = $GLOBALS["CONF"];
 
   $ntop_link = $conf->get_conf("ntop_link");
+  $language = $conf->get_conf("language");
   $sensor_ntop = parse_url($ntop_link);
 
   $nagios_link = $conf->get_conf("nagios_link");
@@ -355,15 +356,13 @@ $upgrade = new Upgrade();
      <table border=0 cellpadding=0 cellspacing=0><tr>
        <? if ($option==$i) { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/abajo.gif" border=0></td>
-       <td class=blue NOWRAP><? echo strtoupper(gettext($name)) ?></td>
+       <td class=blue NOWRAP>
+	   <? if($language != "ru_RU.UTF-8") echo strtoupper(gettext($name)); else echo gettext($name); ?>
+	   </td>
        <? } else { ?>
        <td style="padding-right:3px"><img src="pixmaps/top/dcha.gif" border=0></td>
-       <td class=white NOWRAP><a class=white href="top.php?option=<? echo $i ?>">
-<?  
-#echo strtoupper(gettext($name));
-echo gettext($name);
-?>
-</a>
+       <td class=white NOWRAP>
+        <a class=white href="top.php?option=<?=$i ?>"><?=gettext($name);?></a>
 <?php
 if($name == "Logout"){
 echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>"; 
@@ -393,7 +392,8 @@ echo "<b> [<font color=\"black\">" .  $_SESSION["_user"] . "</font>] </b>";
       <table border=0 cellpadding=0 cellspacing=0><tr>
         <? if ($soption==$i) { ?>
         <td><img src="pixmaps/top/li.gif" border=0></td>
-        <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo strtoupper($op["name"]) ?></a></td>
+        <td class=blue bgcolor=white style="padding-left:8px;padding-right:8px"><a class=blue
+		href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<?  echo urlencode($op["url"]) ?>"><? if($language != "ru_RU.UTF-8") echo strtoupper($op["name"]); else echo $op["name"]; ?></a></td>
         <td><img src="pixmaps/top/ld.gif" border=0></td>
         <? } else { ?>
         <td class=blue style="padding-left:8px;padding-right:8px"><a class=blue href="top.php?option=<? echo $option ?>&soption=<? echo $i ?>&url=<? echo urlencode($op["url"]) ?>"><? echo $op["name"]; #echo strtoupper($op["name"]) ?></a></td>

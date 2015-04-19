@@ -44,40 +44,29 @@ Session::logcheck("MenuReports", "ReportsHostReport");
     </tr>
 
 <?php
-
     $db = new ossim_db();
     $conn = $db->connect();
     
-    if ($host_list = Host::get_list($conn, '', "ORDER BY $order")) {
-        foreach($host_list as $host) {
-            $ip = $host->get_ip();
-
-            if ($os_data = Host_os::get_ip_data($conn,$ip)) {
-                $os = $os_data["os"];
-            } else {
-                $os = "";
-            }
+    $host_list = Host::get_list($conn, '', "ORDER BY $order");
+    foreach ($host_list as $host) {
+		$ip = $host->get_ip();
 ?>
-
     <tr>
       <td><a href="../report/index.php?host=<?php 
         echo $ip ?>"><?php echo $host->get_hostname(); ?></a></td>
       <td><?php echo $host->get_ip(); ?></td>
       <td><?php echo $host->get_asset(); ?></td>
       <td>
-        <?php 
-        echo "$os ";
-        echo Host_os::get_os_pixmap($conn, $host->get_ip());
-        ?>
+        <?php
+        if ($os_data = Host_os::get_ip_data($conn, $host->get_ip())) {
+            $os = $os_data["os"];
+            echo $os." ".Host_os::get_os_pixmap_nodb($os);
+        }
+        ?>&nbsp;
       </td>
-
     </tr>
-
 <?php
-        } /* host_list */
     } /* foreach */
-
-    $db->close($conn);
 ?>
   </table>
     

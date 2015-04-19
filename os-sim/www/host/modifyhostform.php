@@ -304,7 +304,7 @@ Session::logcheck("MenuPolicy", "PolicyHosts");
 </table>
 </form>
 
-<p align="center"><i>Values marked with (*) are mandatory</b></i></p>
+<p align="center"><i><?php echo gettext("Values marked with (*) are mandatory"); ?></b></i></p>
 
 </body>
 </html>

@@ -20,18 +20,18 @@
 </head>
 <body>
 
-  <h1>Responses</h1>
+  <h1><?php echo gettext("Responses"); ?></h1>
 
   <table align="center" width="100%">
     <tr>
-      <th nowrap>Description</th>
-      <th nowrap>Source</th>
-      <th nowrap>Dest</th>
-      <th nowrap>Source Ports</th>
-      <th nowrap>Dest Ports</th>
-      <th nowrap>Sensors</th>
-      <th nowrap>Plugins</th>
-      <th nowrap>Actions</th>
+      <th nowrap><?php echo gettext("Description"); ?></th>
+      <th nowrap><?php echo gettext("Source"); ?></th>
+      <th nowrap><?php echo gettext("Dest"); ?></th>
+      <th nowrap><?php echo gettext("Source Ports"); ?></th>
+      <th nowrap><?php echo gettext("Dest Ports"); ?></th>
+      <th nowrap><?php echo gettext("Sensors"); ?></th>
+      <th nowrap><?php echo gettext("Plugins"); ?></th>
+      <th nowrap><?php echo gettext("Actions"); ?></th>
       <th nowrap>#</th>
       <td></td>
     </tr>
@@ -191,7 +191,7 @@
 ?>
     <tr>
       <td colspan="9">
-        <a href="newresponseform.php">Insert new response</a>
+        <a href="newresponseform.php"><?php echo gettext("Insert new response"); ?></a>
       </td>
     </tr>
 

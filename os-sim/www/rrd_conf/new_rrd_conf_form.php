@@ -12,15 +12,15 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 </head>
 <body>
 
-  <h1>New RRD Profile</h1>
+  <h1><?php echo gettext("New RRD Profile"); ?></h1>
 
-<h3>Hints</h3>
+<h3><?php echo gettext("Hints"); ?></h3>
 <ul>
-<li> Threshold: Absolute value above which is being alerted.
-<li> Priority: Resulting impact if threshold is being exceeded.
-<li> Alpha: Intercept adaption parameter.
-<li> Beta: Slope adaption parameter.
-<li> Persistence: How long has this event to last before we alert. (Hours)
+<li> <?php echo gettext("Threshold: Absolute value above which is being alerted"); ?>.
+<li> <?php echo gettext("Priority: Resulting impact if threshold is being exceeded"); ?>.
+<li> <?php echo gettext("Alpha: Intercept adaption parameter"); ?>.
+<li> <?php echo gettext("Beta: Slope adaption parameter"); ?>.
+<li> <?php echo gettext("Persistence: How long has this event to last before we alert.")." (".gettext("Hours").")"; ?>
 </ul>
 
 <?php
@@ -34,19 +34,19 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
     <form method="post" action="new_rrd_conf.php">
 
     <table align="center">
-      <tr><th>Enter a profile name</th></tr>
+      <tr><th><?php echo gettext("Enter a profile name"); ?></th></tr>
       <tr><td><input type="text" name="profile"></td></tr>
     </table>
     <br/>
     <table align="center">
       <tr>
-        <th>Attribute</th>
-        <th>Threshold</th>
-        <th>Priority</th>
-        <th>Alpha</th>
-        <th>Beta</th>
-        <th>Persistence</th>
-        <th>Enable</th>
+        <th><?php echo gettext("Attribute"); ?></th>
+        <th><?php echo gettext("Threshold"); ?></th>
+        <th><?php echo gettext("Priority"); ?></th>
+        <th><?php echo gettext("Alpha"); ?></th>
+        <th><?php echo gettext("Beta"); ?></th>
+        <th><?php echo gettext("Persistence"); ?></th>
+        <th><?php echo gettext("Enable"); ?></th>
       </tr>
 
 <?php
@@ -88,7 +88,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationRRDConfig");
 ?>
 
       <tr>
-        <td colspan="7"><input type="submit" value="Insert"/></td>
+        <td colspan="7"><input type="submit" value="<?php echo gettext("Insert"); ?>"/></td>
       </tr>
     </table>
     </form>

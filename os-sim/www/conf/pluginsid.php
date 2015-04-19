@@ -131,7 +131,7 @@ Session::logcheck("MenuConfiguration", "ConfigurationPlugins");
             value="<?php echo $plugin->get_priority(); ?>"/></td>
         <td><input type="text" name="reliability" size="2" 
             value="<?php echo $plugin->get_reliability(); ?>"/></td>
-        <td><input type="submit" value="Modify"/></td>
+        <td><input type="submit" value="<?php echo gettext("Modify"); ?>"/></td>
         </form>
       </tr>
 <?php

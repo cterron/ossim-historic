@@ -108,7 +108,7 @@ cd -
 
 
 # locales
-LANGUAGES="es de en fr ja"
+LANGUAGES="es de en fr ja ru"
 
 for lang in $LANGUAGES; do \
     /usr/bin/msgfmt -v -o locale/$lang/LC_MESSAGES/ossim.mo locale/$lang/LC_MESSAGES/ossim.po; \

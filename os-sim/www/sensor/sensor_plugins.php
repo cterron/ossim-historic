@@ -92,7 +92,17 @@ Session::logcheck("MenuMonitors", "MonitorsSensors");
                     socket_strerror($result) . "\n\n";
                 exit();
             }
-           
+
+            /* first send a connect message to server */
+            $in = 'connect id="1" type="web"' . "\n";
+            $out = '';
+            socket_write($socket, $in, strlen($in));
+            $out = socket_read($socket, 2048, PHP_NORMAL_READ);
+            if (strncmp($out, "ok id=", 4)) {
+                echo "<p><b>" . gettext("Bad response from server") . "</b></p>";
+                break;
+            }
+
             /* send command */
             $msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"";
             socket_write($socket, $msg, strlen($msg));

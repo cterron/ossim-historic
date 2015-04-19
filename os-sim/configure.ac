@@ -92,6 +92,7 @@ include/classes/Makefile
 include/upgrades/Makefile
 include/panel/Makefile
 include/panel/plugins/Makefile
+include/xajax/Makefile
 www/Makefile
 www/action/Makefile
 www/conf/Makefile

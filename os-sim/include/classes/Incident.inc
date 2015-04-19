@@ -103,7 +103,7 @@ class Incident {
      */
     function get_ticket()
     {
-        $id = ($this->id > 10)? $this->id : "0" . $this->id;
+        $id = ($this->id >= 10)? $this->id : "0" . $this->id;
         return strtoupper(substr($this->ref, 0, 3)) . $id;
     }
 

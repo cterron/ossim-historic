@@ -205,13 +205,9 @@ class Net {
     {
         $net_list = explode(",", $nets);
 
-        if (!is_array($net_list = explode (",", $nets)))
-              return false;
-
-        foreach ($net_list as $n) 
-        {
-            list($net, $mask) = split("/", $n);
+        foreach ($net_list as $n) {
             
+            list($net, $mask) = split("/", $n);
             $val1 = ip2long($ip);
             $val2 = ip2long($net);
 

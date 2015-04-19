@@ -75,18 +75,17 @@ function findorder($dom, $directive_id)
     return $order;
 }
 
-function rule_table_header($directive_id, $level)
+function rule_table_header($directive_id, $level, $directive_priority)
 {
 ?>
     <!-- rule table -->
     <table align="center">
       <tr><th colspan=<?php echo $level+12; ?>>
-      <?php echo gettext("Rules"); ?> (
-      <?php echo gettext("Directive"); ?> <?php echo $directive_id ?>)</th></tr>
+        <?php echo gettext("Directive"); ?> <?php echo $directive_id ?> (
+        <?php echo gettext("Priority"); ?>: <?php echo $directive_priority ?> )</th></tr>
       <tr>
         <td colspan=<?php echo $level; ?>></td>
         <th> <?php echo gettext("Name"); ?> </th>
-        <th> <?php echo gettext("Priority"); ?> </th>
         <th> <?php echo gettext("Reliability"); ?> </th>
         <th> <?php echo gettext("Time_out"); ?> </th>
         <th> <?php echo gettext("Occurrence"); ?> </th>
@@ -157,7 +156,6 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <!-- end expand -->
         
         <td><?php echo $rule->get_attribute('name'); ?></td>
-        <td><?php echo $rule->get_attribute('priority'); ?>&nbsp;</td>
         <td><?php echo $rule->get_attribute('reliability'); ?>&nbsp;</td>
         <td><?php echo $rule->get_attribute('time_out'); ?>&nbsp;</td>
         <td><?php echo $rule->get_attribute('occurrence'); ?>&nbsp;</td>
@@ -185,7 +183,11 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         <div id="plugsid" class="menucache">
 <?php
     }
-    foreach ($plugin_sid_list as $sid) {
+    foreach ($plugin_sid_list as $sid_negate) {
+
+        $sid = $sid_negate;
+        if (!strncmp($sid_negate,"!",1))
+            $sid = substr($sid_negate,1);
 
         /* sid == ANY */
         if (!strcmp($sid, "ANY")) {
@@ -196,7 +198,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
         elseif ($plugin_list = Plugin_sid::get_list
                 ($conn, "WHERE plugin_id = $plugin_id AND sid = $sid")) {
             $name = $plugin_list[0]->get_name();
-            echo "<a title=\"$name\">$sid</a>&nbsp; ";
+            echo "<a title=\"$name\">$sid_negate</a>&nbsp; ";
         }
     }
      if (count($plugin_sid_list) > 30) {
@@ -242,7 +244,7 @@ function rule_table($dom, $directive_id, $directive, $level, $ilevel)
             
 	    if (empty($level))   $level = 1;
             $_SESSION["path"] = 0;
-            rule_table_header($directive_id, $level);
+            rule_table_header($directive_id, $level,$directive->get_attribute('priority'));
 	    rule_table($dom, $directive_id, $directive, $level, $level);
 	    rule_table_foot();
         }
@@ -258,7 +260,7 @@ $db->close($conn);
 <?php echo gettext("Click on the left side to view a directive"); ?>.<br/>
 <?php echo gettext("Click on the categories of directives to expand or collapse them"); ?>.
 
-<hr/><h2 style="text-align: left;">Directive numbering</h2>
+<hr/><h2 style="text-align: left;"><?php echo gettext("Directive numbering"); ?></h2>
 
 <table>
 <tr><th> <?php echo gettext("Category"); ?> 
@@ -276,7 +278,7 @@ $db->close($conn);
 <tr><td> <?php echo gettext("User contributed"); ?> <td>500000+
 </table>
 
-<hr/><h2 style="text-align: left;">Element of a directive</h2>
+<hr/><h2 style="text-align: left;"><?php echo gettext("Element of a directive"); ?></h2>
 
 <h3 style="text-align: left;">Type</h3>
 <?php echo gettext("What type of rule is this. There are two possible types as of today"); ?> :
@@ -301,7 +303,7 @@ $db->close($conn);
 <?php echo gettext("Again, the attack is dangerous, it could compromise your machine but surely your host is patched against that particular attack and you don't mind being a test-platform for one of your friends"); ?> .
 </ol>
 <?php echo gettext("Default value"); ?> : 1.
-<h3 style="text-align: left;"> <?php echo gettext("Reliability"); ?> </h3>
+<h3 style="text-align: left;"> Reliability </h3>
 <?php echo gettext("When talking about classic risk-assessment this would be called") . " "; ?> &quot;
 <?php echo gettext("probability") . " "; ?> &quot;. 
 <?php echo gettext("Since it's quite difficult to determine how probable it is that our network being attacked through one or another vulnerability, we'll transform this term into something more IDS related: reliability"); ?> .<br/>
@@ -310,7 +312,7 @@ $db->close($conn);
 <?php echo gettext("Each rule has it's own reliability, determining how reliable this particular rule is within the whole attack chain"); ?> .<br/>
 <?php echo gettext("Accepts: 0-10. Can be specified as absolute value (i.e. 7) or relative (i.e. +2 means two more than the previous level)"); ?> .<br/>
 <?php echo gettext("Default value"); ?> : 1.
-<h3 style="text-align: left;"> <?php echo gettext("Ocurrence"); ?> </h3>
+<h3 style="text-align: left;"> Ocurrence </h3>
 <?php echo gettext("How many times we have to match a unique") . " "; ?>
 &quot;from, to, port_from, port_to, plugin_id &amp; plugin_sid&quot; <?php echo " " . gettext("in order to advance one correlation level"); ?> .
 <h3 style="text-align: left;">Time_out</h3>
@@ -358,7 +360,7 @@ $db->close($conn);
 <?php echo " " . gettext("this would match the whole class C except") . " "; ?> 192.168.2.203.
 </ol>
 <?php echo gettext("The") . " "; ?> &quot;To&quot; <?php echo " " . gettext("field is the field used when referencing monitor data that has no source"); ?> .<br/>
-<?php echo gettext("Both") . " "; ?> &quot;From&quot; and &quot;To&quot; fields should accept input from the database in the near future. Host and Network objects are on the TODO list.
+<?php echo gettext("Both \"From\" and \"To\" fields should accept input from the database in the near future. Host and Network objects are on the TODO list."); ?>
 <h3 style="text-align: left;">Sensor</h3>
 <?php echo gettext("Sensor IP. There are various possible values for this field"); ?> :
 <ol>
@@ -379,16 +381,16 @@ $db->close($conn);
 </ol>
 
 <h3 style="text-align: left;">Port_from / Port_to</h3>
-This can be a port number or a sequence of comma separated port numbers. ANY port can also be used.<br/>
-Hint: 1:DST_PORT or 1:SRC_PORT would mean level 1 src and dest port respectively. They can be used too. (level 2 would be 2:DST_PORT for example).
+<?php echo gettext("This can be a port number or a sequence of comma separated port numbers. ANY port can also be used"); ?>.<br/>
+<?php echo gettext("Hint: 1:DST_PORT or 1:SRC_PORT would mean level 1 src and dest port respectively. They can be used too. (level 2 would be 2:DST_PORT for example)"); ?>.
 <br> <br>
-Also you can negate ports. This will negate ports 22 and 21 in the directive:
+<?php echo gettext("Also you can negate ports. This will negate ports 22 and 21 in the directive"); ?>:
 <br><br>
 port="!22,25,110,!21"
 
 
 <h3 style="text-align: left;">Protocol</h3>
-This can be one of the following strings:<br><br>
+<?php echo gettext("This can be one of the following strings"); ?>:<br><br>
 <li> TCP
 <li> UDP
 <li> ICMP
@@ -398,81 +400,91 @@ This can be one of the following strings:<br><br>
 <li> Host_IDS_Event
 <li> Information_Event
 <br><br>
-<li> Additionally, you can put just a number with the protocol.
+<li> <?php echo gettext("Additionally, you can put just a number with the protocol"); ?>.
 <br><br>
-Although Host_ARP_Event, Host_OS_Event, etc, are not really a protocol, you can use them if you want to do directives with ARP, OS, IDS or Service events. You can also use relative referencing like in 1:TCP, 2:Host_ARP_Event, etc...
+<?php echo gettext("Although Host_ARP_Event, Host_OS_Event, etc, are not really a protocol, you can use them if you want to do directives with ARP, OS, IDS or Service events. You can also use relative referencing like in 1:TCP, 2:Host_ARP_Event, etc.."); ?>.
 <br><br>
-You can negate the protocol also like this: protocol="!Host_ARP_Event,UDP,!ICMP"
-This will negate Host_ARP_Event and ICMP, but will match with UDP.
+<?php echo gettext("You can negate the protocol also like this"); ?>: 
+protocol="!Host_ARP_Event,UDP,!ICMP"
+<?php echo gettext("This will negate Host_ARP_Event and ICMP, but will match with UDP"); ?>.
 <br/>
 
 
 <h3 style="text-align: left;">Plugin_id</h3>
-The numerical id assigned to the referenced plugin.
+<?php echo gettext("The numerical id assigned to the referenced plugin"); ?>.
 <h3 style="text-align: left;">Plugin_sid</h3>
-The nummerical sub-id assigned to each plugins events, functions or the like.<br/>
-For example, plugin id 1001 (snort) references it.s rules as normal plugin_sids.<br/>
-Plugin id 1501 (apache) uses the response codes as plugin_sid (200 OK, 404 NOT FOUND, ...)<br/>
-ANY can be used too for plugin_sid.
-<br><br>You can negate plugin_sid's: plugin_sid="1,2,3,!4" will negate just the plugin_sid 4.
+<?php echo gettext("The nummerical sub-id assigned to each plugins events, functions or the like"); ?>.<br/>
+<?php echo gettext("For example, plugin id 1001 (snort) references it.s rules as normal plugin_sids"); ?>.<br/>
+<?php echo gettext("Plugin id 1501 (apache) uses the response codes as plugin_sid"); ?> (200 OK, 404 NOT FOUND, ...)<br/>
+<?php echo gettext("ANY can be used too for plugin_sid"); ?>.
+<br><br><?php echo gettext("You can negate plugin_sid's: plugin_sid=\"1,2,3,!4\" will negate just the plugin_sid 4"); ?>.
 
 <h3 style="text-align: left;">Condition</h3>
-This parameter and the following three are only valid for &quot;monitor&quot;  and certain &quot;detector&quot; type rules.<br/>
-The logical condition that has to be met for the rule to match:
+<?php echo gettext("This parameter and the following three are only valid for \"monitor\" and certain \"detector\" type rules"); ?>.<br/>
+<?php echo gettext("The logical condition that has to be met for the rule to match"); ?>:
 <ol>
-<li>eq - Equal
-<li>ne - Not equal
-<li>lt - Lesser than
-<li>gt - Greater than
-<li>le - Lesser or equal
-<li>ge - Greater or equal
+<li>eq - <?php echo gettext("Equal"); ?>
+<li>ne - <?php echo gettext("Not equal"); ?>
+<li>lt - <?php echo gettext("Less than"); ?>
+<li>gt - <?php echo gettext("Greater than"); ?>
+<li>le - <?php echo gettext("Less or equal"); ?>
+<li>ge - <?php echo gettext("Greater or equal"); ?>
 </ol>
 <h3 style="text-align: left;">Value</h3>
-The value that has to be matched using the previous directives.
+<?php echo gettext("The value that has to be matched using the previous directives"); ?>.
 <h3 style="text-align: left;">Interval</h3>
-This value is similar to time_out but used for &quot;monitor&quot; type rules.
+<?php echo gettext("This value is similar to time_out but used for \"monitor\" type rules"); ?>.
 <h3 style="text-align: left;">Absolute</h3>
-Determines if the provided value is absolute or relative.<br/>
-For example, providing 1000 as a value, gt as condition and 60 (seconds) as interval, querying ntop for HttpSentBytes would mean:<br/>
+<?php echo gettext("Determines if the provided value is absolute or relative"); ?>.<br/>
+<?php echo gettext("For example, providing 1000 as a value, gt as condition and 60 (seconds) as interval, querying ntop for HttpSentBytes would mean"); ?>:<br/>
 <ul>
-<li>Absolute true: Match if the host has more than 1000 http sent bytes within the next 60 seconds. Report back when (and only if) this absolute value is reached.
-<li>Absolute false: Match if the host shows an increase of 1000 http sent bytes within the next 60 seconds. Report back as soon as this difference is reached (if it was reached...)
+<li><?php echo gettext("Absolute true: Match if the host has more than 1000 http sent bytes within the next 60 seconds. Report back when (and only if) this absolute value is reached"); ?>.
+<li><?php echo gettext("Absolute false: Match if the host shows an increase of 1000 http sent bytes within the next 60 seconds. Report back as soon as this difference is reached (if it was reached...)"); ?>
 </ul>
 <h3 style="text-align: left;">Sticky</h3>
-A bit more difficult to explain. Take the worm rule. At the end we want to match 20000 connections involving the same source host and same destination port but we want to avoid 20000 directives from spawning so this is our little helper. Just set this to true or false depending on how you want the system to behave. If it's true, all the vars that aren't ANY or fixed (fixed means defined source or dest host, port or plugin id or sid.) are going to be made sticky so they won't spawn another directive.<br/>
-In our example at level 2 there are two vars that are going to be fixed at correlation level 2: 1:SRC_IP and 1:DST_PORT. Of course plugin_id is already fixed (1104 == spade) and all the other ANY vars are still going to be ANY.
+<?php echo gettext("A bit more difficult to explain. Take the worm rule. At the end we want to match 20000 connections involving the same source host and same destination port but we want to avoid 20000 directives from spawning so this is our little helper. Just set this to true or false depending on how you want the system to behave. If it's true, all the vars that aren't ANY or fixed (fixed means defined source or dest host, port or plugin id or sid.) are going to be made sticky so they won't spawn another directive"); ?>.<br/>
+<?php echo gettext("In our example at level 2 there are two vars that are going to be fixed at correlation level 2: 1:SRC_IP and 1:DST_PORT. Of course plugin_id is already fixed (1104 == spade) and all the other ANY vars are still going to be ANY"); ?>.
 <h3 style="text-align: left;">Sticky_different</h3>
-Only suitable for rules with more than one occurrence. We want to make sure that the specified parameter happens X times (occurrence) and that all the occurrences are different.<br/>
-Take one example. A straight-ahead port-scanning rule. Fix destination with the previous sticky and set sticky_different=&quot;1:DST_PORT&quot;. This will assure we're going to match &quot;X occurrences&quot; against the same hosts having X different destination ports.<br/>
-In our worm rule the most important var is the DST_IP because as the number increases the reliable increases as well. Which host is going to do thousands of connections for the same port against different hosts??<br/>
+<?php echo gettext("Only suitable for rules with more than one occurrence. We want to make sure that the specified parameter happens X times (occurrence) and that all the occurrences are different"); ?>.<br/>
+<?php echo gettext("Take one example. A straight-ahead port-scanning rule. Fix destination with the previous sticky and set sticky_different=\"1:DST_PORT\". This will assure we're going to match \"X occurrences\" against the same hosts having X different destination ports"); ?>.<br/>
+<?php echo gettext("In our worm rule the most important var is the DST_IP because as the number increases the reliability increases as well. Which (normally operating) host is going to do thousands of connections for the same port against different hosts"); ?>??<br/>
 <h3 style="text-align: left;">Groups</h3>
-As sticky but involving more than one directive. If an event matches against a directive defined within a group and the groups is set as &quot;sticky&quot; it won.t match any other directive.
+<?php echo gettext("As sticky but involving more than one directive. If an event matches against a directive defined within a group and the group is set as \"sticky\" it won't match any other directive"); ?>.
 <br><br>
 <h3 style="text-align: left;">Username, password, filename, userdata1, userdata2, userdata3, userdata4, userdata5, userdata6, userdata7, userdata8, userdata9</h3>
-This keywords are optional. They can be used to store special data from agents. Obviously, this only will work if the event has this modificators. The following things are accpeted:<br>You can insert any string to match here. If you want that this matches with any keyword, you can not to put this keywords, or use ANY as the value. <br/>
+<?php echo gettext("This keywords are optional. They can be used to store special data from agents. Obviously, this only will work if the event has this modificators. The following things are accpeted"); ?>:<br>
+<?php echo gettext("You can insert any string to match here. If you want that this matches with any keyword, you can skip these keywords, or use ANY as the value"); ?>. <br/>
 <ol>
-<li> ANY <br> Just that, this will match with any word. You can also avoid this keyword, and it will match too.
-<li> Comma separated <br> You can use any number of words separated by commas
-<li> Relative <br> This is used to reference kwywords from previous levels, for example:<br>
-1:FILENAME -> Means use the filename referenced in the first rule level
-2_USERDATA5 -> Means use the filename referenced in the second rule level
-<li> Negated: You can also use negated keywords, i.e: <br>
+<li> ANY <br> <?php echo gettext("Just that, this will match with any word. You can also avoid this keyword, and it will match too"); ?>.
+<li> <?php echo gettext("Comma separated list"); ?><br> 
+<?php echo gettext("You can use any number of words separated by commas"); ?>
+<li> <?php echo gettext("Relative value"); ?><br> 
+<?php echo gettext("This is used to reference keywords from previous levels, for example"); ?>:<br>
+1:FILENAME -> <?php echo gettext("Means use the filename referenced in the first rule level"); ?><br>
+2:USERDATA5 -> <?php echo gettext("Means use some data from USERDATA5 keyword referenced in the second rule level"); ?>
+<li> <?php echo gettext("Negated: You can also use negated keywords, i.e"); ?>: <br>
 "!johndoe,foobar".<br>
-This will match with foobar, but not johndoe
+<?php echo gettext("This will match with foobar, but not johndoe"); ?>
 </ol>
-Here you can see an example of what can de done: <br>
+<?php echo gettext("Here you can see an example of what can be done"); ?>: <br>
 
 username="one,two,three,!four4444,five" filename="1:FILENAME,/etc/password,!/etc/shadow" userdata5="el cocherito lere me dijo anoche lere,!2:USERDATA5"
-<br>
+<br><br>
+NOTE: There are some kind of events that stores by default some of that fields:<br>
+<li>  Arpwatch events:&nbsp;&nbsp;&nbsp; Userdata1 = MAC
+<li>  Pads events:&nbsp;&nbsp;&nbsp; Userdata1 = application ; Userdata2 = service
+<li>  P0f Events:&nbsp;&nbsp;&nbsp; Userdata1 = O.S.<br>
+<li>  Syslog Events:&nbsp;&nbsp;&nbsp; Username = dest username ; Userdata1 = src username ; Userdata2 = src user uid ; Userdata3 = service<br>
+
 <br>
 <hr/><h2 style="text-align: left;">Risk</h2>
-The main formula for risk calculation would look like this:<br/>
+<?php echo gettext("The main formula for risk calculation would look like this"); ?>:<br/>
 
-Risk = (Asset * Priority * Reliability) / 25<br/>
-Where:<ul>
-<li>Asset (0-5).
-<li>Priority (0-5).
-<li>Reliability (0-10).
+Risk = (<?php echo gettext("Asset")." * ".gettext("Priority")." * ".gettext("Reliability"); ?>) / 25<br/>
+<?php echo gettext("Where"); ?>:<ul>
+<li><?php echo gettext("Asset"); ?> (0-5).
+<li><?php echo gettext("Priority"); ?> (0-5).
+<li><?php echo gettext("Reliability"); ?> (0-10).
 </ul>
 <?php
     }

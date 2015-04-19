@@ -40,7 +40,11 @@
 
 #include "sim-config.h"
 #include "sim-database.h"
+
+#ifndef __SIM_SESSION_H__
 #include "sim-session.h"
+#endif
+
 #include "sim-command.h"
 
 typedef struct _monitor_requests monitor_requests;
@@ -80,8 +84,10 @@ struct _SimServerClass {
 
 GType             sim_server_get_type                      (void);
 SimServer*        sim_server_new                           (SimConfig       *config);
+SimServer*        sim_server_HA_new                        (SimConfig       *config);
 
-void              sim_server_run                           (SimServer       *server);
+void              sim_server_listen_run                    (SimServer       *server);
+void              sim_server_master_run                    (SimServer       *server);
 
 void              sim_server_append_session                (SimServer       *server,
 																												    SimSession      *session);
@@ -96,13 +102,18 @@ void              sim_server_push_session_plugin_command   (SimServer       *ser
 																												    SimSessionType   session_type,
 																												    gint             plugin_id,
 																												    SimRule					*rule);
-static gpointer		sim_server_thread_monitor_requests				(gpointer data);
+gpointer					sim_server_thread_monitor_requests				(gpointer data);
 	
 SimSession*       sim_server_get_session_by_sensor         (SimServer   *server,
 																												    SimSensor   *sensor);
 
 void              sim_server_debug_print_sessions           (SimServer    *server); //debug function
+gchar*						sim_server_get_ip													(SimServer   *server);
+gchar*						sim_server_get_name												(SimServer   *server);
 
+SimConfig*				sim_server_get_config											(SimServer   *server);
+void							sim_server_load_role											(SimServer *server);
+	
 G_END_DECLS
 
 #ifdef __cplusplus

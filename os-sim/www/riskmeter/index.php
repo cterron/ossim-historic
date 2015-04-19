@@ -114,7 +114,7 @@ function ordenar($a, $b){
     <!-- end configure refresh -->
 
     <tr><td colspan="3"></td></tr>
-    <tr><th align="center" colspan="3">Global</th></tr>
+    <tr><th align="center" colspan="3"><?php echo gettext("Global"); ?></th></tr>
     <tr><td colspan="3"></td></tr>
     <!-- rule for threshold -->
     <tr>

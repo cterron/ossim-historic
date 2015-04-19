@@ -150,9 +150,9 @@ if (GET('interface') == 'ajax') {
 <? } ?>
 </td><td align="right"><small>
 <? if ($show_edit && !GET('edit')) { ?>
-[<a href="<?=$_SERVER['PHP_SELF']?>?edit=1">edit</a>]
+[<a href="<?=$_SERVER['PHP_SELF']?>?edit=1"><?php echo gettext("Edit"); ?></a>]
 <? } elseif ($show_edit) { ?>
-[<a href="<?=$_SERVER['PHP_SELF']?>">no edit</a>]
+[<a href="<?=$_SERVER['PHP_SELF']?>"><?php echo gettext("No Edit"); ?></a>]
 <? } ?>
 </small>
 </td></tr>
@@ -177,7 +177,7 @@ Ossim Panel Loading...
 var myResponders = {
     onCreate: function() {
         Element.show('loading');
-        $('loading').innerHTML = 'Loading..';
+        $('loading').innerHTML = '<?php echo gettext("Loading"); ?>..';
     }
 }
 Ajax.Responders.register(myResponders);
@@ -195,7 +195,7 @@ function ajax_load(id)
             asynchronous: true,
             parameters: '<?= $can_edit ? 'edit=1' : '' ?>',
             onComplete: function(req) {
-                $('loading').innerHTML = 'Loading ('+AjaxRequestCounter+' pending)';
+                $('loading').innerHTML = '<?php echo gettext("Loading"); ?> ('+AjaxRequestCounter+' <?php echo gettext("pending"); ?>)';
                 AjaxRequestCounter--;
                 if (AjaxRequestCounter == 0) {
                     Element.hide('loading');

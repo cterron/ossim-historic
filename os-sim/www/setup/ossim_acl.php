@@ -12,11 +12,11 @@ require_once ("$phpgacl/gacl_api.class.php");
 $gacl_api = new gacl_api($ACL_OPTIONS);
 
 /* Domain access */
-echo "Setting up domain access...<br/>";
+echo gettext("Setting up domain access")."...<br/>";
 $gacl_api->add_object_section (ACL_DEFAULT_DOMAIN_SECTION,
                                ACL_DEFAULT_DOMAIN_SECTION,
                                1, 0, 'ACO');
-echo "  * Users...<br/>";
+echo "  * ".gettext("Users")."...<br/>";
 $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_ALL,
                        ACL_DEFAULT_DOMAIN_ALL,
@@ -25,12 +25,12 @@ $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_LOGIN,
                        ACL_DEFAULT_DOMAIN_LOGIN,
                        2, 0, 'ACO');
-echo "  * Networks...<br/>";
+echo "  * ".gettext("Networks")."...<br/>";
 $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_NETS,
                        ACL_DEFAULT_DOMAIN_NETS,
                        3, 0, 'ACO');
-echo "  * Sensors...<br/><br/>";
+echo "  * ".gettext("Sensors")."...<br/><br/>";
 $gacl_api->add_object (ACL_DEFAULT_DOMAIN_SECTION,
                        ACL_DEFAULT_DOMAIN_SENSORS,
                        ACL_DEFAULT_DOMAIN_SENSORS,
@@ -102,5 +102,5 @@ $gacl_api->add_acl (
 // In this case, there is not HTTP_REFERER and btw we don't want to show
 // this "go back" link.
 if (isset($_SERVER['HTTP_REFERER'])) { ?>
-<a href="<?php echo $_SERVER['HTTP_REFERER'];?>"> Back </a>
+<a href="<?php echo $_SERVER['HTTP_REFERER'];?>"> <?php echo gettext("Back"); ?> </a>
 <? } ?>

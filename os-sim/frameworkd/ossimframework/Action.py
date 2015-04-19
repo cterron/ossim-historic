@@ -178,8 +178,10 @@ class Action(threading.Thread):
                     "SELECT * FROM response_%s WHERE response_id = %d" %\
                         (item, response["id"]))
             # ensure int datatype for plugin ids and ports
-            for item in ("plugin", "port"):
-                response[item] = int(response[item])
+	    # XXX response["plugin"] and response["port"] are not string type
+	    # they are arrays
+#            for item in ("plugin", "port"):
+#                response[item] = int(response[item])
 
         return responses
 
@@ -245,10 +247,10 @@ class Action(threading.Thread):
                         email_message = email_message.replace(replace, replaces[replace])
                     
                     m = ActionMail()
-                    m.sendmail(action_email['_from'],
-                               [ action_email['_to'] ],
-                               action_email['subject'],
-                               action_email['message'] +\
+                    m.sendmail(email_from,
+                               [ email_to ],
+                               email_subject,
+                               email_message +\
                                "\n\n" + self.requestRepr(self.__request))
                     del(m)
                 

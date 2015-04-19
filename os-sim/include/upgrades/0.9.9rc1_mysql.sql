@@ -257,7 +257,7 @@ INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (151
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1512, 4, NULL, NULL, 'arpwatch: Mac address Same');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (1512, 5, NULL, NULL, 'arpwatch: Mac address Event unknown');
 
-DELETE FROM plugin_sid WHERE plugin_id=1512;
+DELETE FROM plugin_sid WHERE plugin_id=2002;
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (2002, 1, NULL, NULL, 'arp_watch: New Mac');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (2002, 2, NULL, NULL, 'arp_watch: Mac Change');
 INSERT INTO plugin_sid (plugin_id, sid, category_id, class_id, name) VALUES (2002, 3, NULL, NULL, 'arp_watch: Mac Deleted');

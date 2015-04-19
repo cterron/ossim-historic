@@ -83,11 +83,18 @@ GList       *sim_string_hash_to_list (GHashTable *hash_table);
 gchar    *sim_file_load (const gchar *filename);
 gboolean  sim_file_save (const gchar *filename, const gchar *buffer, gint len);
 
-gulong						sim_inetaddr_aton			(GInetAddr		*ia);
-inline gulong			sim_inetaddr_ntohl		(GInetAddr		*ia);
-inline gulong			sim_ipchar_2_ulong		(gchar				*ip);
-inline gboolean		sim_string_is_number	(gchar				*string);
-guint							sim_g_strv_length			(gchar				**str_array);
+gulong						sim_inetaddr_aton						(GInetAddr		*ia);
+inline gulong			sim_inetaddr_ntohl					(GInetAddr		*ia);
+inline gulong			sim_ipchar_2_ulong					(gchar				*ip);
+inline gboolean		sim_string_is_number				(gchar				*string, 
+																							gboolean      may_be_float);
+inline gchar *		sim_string_remove_char			(gchar *string,
+																								gchar c);
+inline gchar *		sim_string_substitute_char  (gchar *string,
+										                            gchar c_orig,
+										                            gchar c_dest);
+
+guint							sim_g_strv_length				(gchar				**str_array);
 	
 G_END_DECLS
 

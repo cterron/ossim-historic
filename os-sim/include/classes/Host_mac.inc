@@ -8,7 +8,13 @@ class Host_mac{
     {
         require_once('classes/Session.inc');
         require_once('classes/Security.inc');
-        
+			
+		$nanoms = 0;
+		
+		$nanoms = (int) $nanoms;
+		$inf = (int) $inf;
+		$sup = (int) $sup;
+
         $nanoms = $sup - $inf;
         
         $sql = "SELECT distinct ip, sensor FROM host_mac LIMIT ? OFFSET ?";

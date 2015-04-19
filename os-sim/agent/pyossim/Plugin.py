@@ -20,7 +20,7 @@ class Plugin(threading.Thread):
         result = re.findall(pattern, self.data)
         try:
             (command, plugin_id) = result[0]
-            if command == 'plugin-start' and \
+            if command == 'sensor-plugin-start' and \
                 self.plugins[plugin_id]["process"] is not None:
                 
                 # start daemon
@@ -33,7 +33,7 @@ class Plugin(threading.Thread):
                 # notify server about the change
                 time.sleep(1)
                 if util.pidof(self.plugins[plugin_id]["process"]) is not None:
-                    self.agent.sendMessage('plugin-start plugin_id="%s"\n' % \
+                    self.agent.sendMessage('plugin-process-started plugin_id="%s"\n' % \
                                             plugin_id)
                     self.plugins[plugin_id]["start"] = 'yes'
                     
@@ -45,7 +45,7 @@ class Plugin(threading.Thread):
                         (self.plugins[plugin_id]["process"]), '!!', 'RED')
 
                 
-            elif command == 'plugin-stop' and \
+            elif command == 'sensor-plugin-stop' and \
                 self.plugins[plugin_id]["process"] is not None:
                 
                 # stop daemon
@@ -57,7 +57,7 @@ class Plugin(threading.Thread):
                 
                 # notify server about the change
                 if util.pidof(self.plugins[plugin_id]["process"]) is None:
-                    self.agent.sendMessage('plugin-stop plugin_id="%s"\n' % \
+                    self.agent.sendMessage('plugin-process-stopped plugin_id="%s"\n' % \
                                           plugin_id)
                     self.plugins[plugin_id]["start"] = 'no'
                     
@@ -69,13 +69,13 @@ class Plugin(threading.Thread):
                         (self.plugins[plugin_id]["process"]), '!!', 'RED')
                     
                 
-            elif command == 'plugin-enabled':
+            elif command == 'sensor-plugin-enable':
                 
                 self.agent.sendMessage('plugin-enabled plugin_id="%s"\n' % \
                                      plugin_id)
                 self.plugins[plugin_id]["enable"] = 'yes'
 
-            elif command == 'plugin-disabled':
+            elif command == 'sensor-plugin-disable':
                 
                 self.agent.sendMessage('plugin-disabled plugin_id="%s"\n' % \
                                      plugin_id)

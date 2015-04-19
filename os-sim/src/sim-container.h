@@ -65,6 +65,10 @@ extern "C" {
 #define SIM_IS_CONTAINER_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_CONTAINER))
 #define SIM_CONTAINER_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_CONTAINER, SimContainerClass))
 
+#define EVENT_SEQ_TABLE         "event_seq"
+#define BACKLOG_SEQ_TABLE       "backlog_seq"
+#define BACKLOG_EVENT_SEQ_TABLE "backlog_event_seq" //FIXME: needed?
+		
 G_BEGIN_DECLS
 	
 typedef struct _SimContainer         SimContainer;
@@ -123,7 +127,7 @@ void              sim_container_db_update_host_os_ul            (SimContainer  *
 								 gchar         *prev_os,
 								 GInetAddr     *sensor);
 
-gchar*            sim_container_db_get_host_mac_ul              (SimContainer  *container,
+gchar**          sim_container_db_get_host_mac_ul              (SimContainer  *container,
 								 SimDatabase   *database,
 								 GInetAddr     *ia,
 								 GInetAddr     *sensor);
@@ -179,9 +183,8 @@ void		sim_container_db_insert_host_ids_event_ul 	(SimContainer  *container,
 																											SimDatabase   *dbsnort,
 																											SimEvent			*event,
 																											gchar         *timestamp,
-																											gint          sid,
-																											gulong				cid,
-																											gint					sig_id);
+																											gint					sid,
+																											gulong				cid);
 
 
 /* Recovery Function */

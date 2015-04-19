@@ -45,7 +45,9 @@ Session::logcheck("MenuReports", "ReportsHostReport");
 ?>
 
 <br/>
-&nbsp;<font style="font-size: 12pt; font-weight: bold;">Host Report</font><br/><br/>
+&nbsp;<font style="font-size: 12pt; font-weight: bold;">
+<?php echo gettext("Host Report"); ?>
+</font><br/><br/>
 
 &nbsp;&nbsp;<a href="inventory.php?host=<?php 
     echo $host ?>&origin=passive" target="report">

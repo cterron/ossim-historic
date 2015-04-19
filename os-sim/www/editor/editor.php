@@ -12,7 +12,7 @@ Session::logcheck("MenuTools", "ToolsRuleViewer");
 </head>
 <body>
   
-  <h1>Rule viewer</h1>
+  <h1><?php echo gettext("Rule viewer"); ?></h1>
 
 <?php
     require_once ('ossim_conf.inc');

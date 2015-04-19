@@ -1,3 +1,50 @@
+ossim (1:0.9.9~rc3-1) ossim; urgency=low
+
+  * New upstream version (release candidate)
+
+ -- David Gil <dgil@ossim.net>  Fri, 22 Sep 2006 10:24:01 +0200
+
+ossim (1:0.9.9~rc2-6) ossim; urgency=low
+
+  * New CVS snapshot
+
+ -- David Gil <dgil@ossim.net>  Fri, 15 Sep 2006 11:26:51 +0200
+
+ossim (1:0.9.9~rc2-5) ossim; urgency=low
+
+  * New CVS snapshot:
+    + frameworkd fixes (thanks alexlopa)
+    + web policy fixes
+    + pdf reports fixes
+    + host_os/host_mac/host_service server fixes
+  * Use python-support in python packages for the new python policy
+  * Debhelper compatibility to 5
+  * Standar-versions to 3.7.2 
+
+ -- David Gil <dgil@ossim.net>  Wed, 23 Aug 2006 09:20:33 +0200
+
+ossim (1:0.9.8+0.9.9rc2-4) ossim; urgency=low
+
+  * New CVS snapshot.
+  * Several frameworkd fixes related with level calculation 
+  * Db upgrade system fixed
+
+ -- Juan Manuel Lorenzo <juanma@ossim.net>  Thu, 03 Aug 2006 09:28:57 +0200
+
+ossim (1:0.9.8+0.9.9rc2-3) ossim; urgency=low
+
+  * New CVS snapshot.
+  * Several frameworkd fixes related with level calculation 
+    (thanks to alexlopa)
+
+ -- David Gil <dgil@ossim.net>  Tue, 01 Aug 2006 11:28:57 +0200
+
+ossim (1:0.9.8+0.9.9rc2-2) ossim; urgency=low
+
+  * Fixed server crash on os/mac/service and hids events.
+
+ -- David Gil <dgil@ossim.net>  Fri, 30 Jun 2006 18:28:14 +0200
+
 ossim (1:0.9.8+0.9.9rc2-1) ossim; urgency=low
 
   * New upstream release candidate 2.

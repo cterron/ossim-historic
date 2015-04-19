@@ -46,7 +46,7 @@ $db->close($conn);
 
 <!-- change sensor -->
 <form method="GET" action="menu.php">
-Sensor:&nbsp;
+<?php echo gettext("Sensor"); ?>:&nbsp;
 <select name="sensor" onChange="submit()">
 
 <?php
@@ -80,7 +80,7 @@ Sensor:&nbsp;
 
 
 
-<b>Monitoring</b><br/>
+<b><?php echo gettext("Monitoring"); ?></b><br/>
 <!--
 &nbsp;&nbsp;&nbsp;
 <a href="<?php // echo "$nagios/cgi-bin/tac.cgi" ?>"
@@ -126,7 +126,7 @@ Sensor:&nbsp;
 <a href="<?php echo "$nagios/cgi-bin/extinfo.cgi?&type=7" ?>"
    target="nagios"><?php echo gettext("Scheduling Queue") ?></a><br/><br/>
 
-<b>Reporting</b><br/>
+<b><?php echo gettext("Reporting"); ?></b><br/>
 &nbsp;&nbsp;&nbsp;
 <a href="<?php echo "$nagios/cgi-bin/trends.cgi" ?>"
    target="nagios"><?php echo gettext("Trends") ?></a><br/>

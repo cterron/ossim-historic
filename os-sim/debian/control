@@ -2,8 +2,8 @@ Source: ossim
 Section: net
 Priority: optional
 Maintainer: David Gil <dgil@ossim.net>
-Build-Depends: debhelper (>= 4.0.0), docbook-to-man, libglib2.0-dev (>= 2.4.6), libgda2-dev (>= 1.0.4), libgnet-dev (>= 2.0.4), automake, python-dev (>= 2.3), gettext, dpatch
-Standards-Version: 3.6.2
+Build-Depends: debhelper (>= 5.0.37.2), docbook-to-man, libglib2.0-dev (>= 2.4.6), libgda2-dev (>= 1.0.4), libgnet-dev (>= 2.0.4), automake, python-all-dev, python-support, gettext, dpatch
+Standards-Version: 3.7.2
 
 Package: ossim
 Architecture: any
@@ -54,14 +54,14 @@ Description: Open Source Security Information Management (Framework)
 
 Package: ossim-framework-daemon
 Architecture: any
-Depends: python (>= 2.3), python-adodb, python-mysqldb | python-pgsql, python-rrd, ossim-framework (= ${Source-Version})
+Depends: ${python:Depends}, python-adodb, python-mysqldb | python-pgsql, python-rrd, ossim-framework (= ${Source-Version})
 Conflicts: ossim-framework (<< 0.9.8-14)
 Description: Open Source Security Information Management (Framework Daemon)
  Ossim Framework Daemon
 
 Package: ossim-agent
 Architecture: any
-Depends: ${misc:Depends}, python (>= 2.3), lsb-base (>= 3.0-6)
+Depends: ${python:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
 Suggests: ossim-utils, ossim-contrib, python-mysqldb, snort, apache, p0f, arpwatch, ntop, tcptrack, pads, nessusd, nagios-mysql, nagios-plugins, nagios-statd-client
 Description: Open Source Security Information Management (Agent)
  OSSIM is a distribution of open source products that are integrated

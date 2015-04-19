@@ -427,26 +427,26 @@ class ParserJuniperFW(Parser.Parser):
                 plugin_sid = len(self.eventCodes)
                 util.debug (__name__, 'Unknown event ' + message, '**', 'YELLOW')
 
-                if proto == 6:
-                    proto = "tcp"
-                elif proto == 17:
-                    proto = "udp"
-                elif proto == 1:
-                    proto = "icmp"
+            if proto == 6:
+                proto = "tcp"
+            elif proto == 17:
+                proto = "udp"
+            elif proto == 1:
+                proto = "icmp"
 
-                self.agent.sendEvent  (type = 'detector',
-                      date       = date,
-                      sensor     = self.plugin["sensor"],
-                      interface  = self.plugin["interface"],
-                      plugin_id  = self.plugin["id"],
-                      plugin_sid = plugin_sid,
-                      priority   = priority,
-                      protocol   = proto,
-                      src_ip     = src,
-                      src_port   = s_port,
-                      dst_ip     = dst,
-                      dst_port   = d_port,
-                      log        = line)
+            self.agent.sendEvent  (type = 'detector',
+                  date       = date,
+                  sensor     = self.plugin["sensor"],
+                  interface  = self.plugin["interface"],
+                  plugin_id  = self.plugin["id"],
+                  plugin_sid = plugin_sid,
+                  priority   = priority,
+                  protocol   = proto,
+                  src_ip     = src,
+                  src_port   = s_port,
+                  dst_ip     = dst,
+                  dst_port   = d_port,
+                  log        = line)
 
         except IndexError: 
             pass

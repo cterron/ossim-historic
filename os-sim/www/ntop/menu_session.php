@@ -49,7 +49,7 @@ $conn = $db->connect();
 <form method="GET" action="menu_session.php">
 <input type="hidden" name="proto" value="<?php echo $proto ?>"/>
 <input type="hidden" name="port" value="<?php echo $port ?>"/>
-Sensor:&nbsp;
+<?php echo gettext("Sensor"); ?>:&nbsp;
 <select name="sensor" onChange="submit()">
 <?php
 
@@ -87,7 +87,7 @@ if ($net_list = Net::get_list($conn)) {
         if (!strcmp($sensor, $n->get_name())) echo " SELECTED ";
 ?>
     value="<?php echo $n->get_name() ?>"><?php 
-        echo "Net: " . $n->get_name() ?></option>
+        echo gettext("Net").": " . $n->get_name() ?></option>
 <?php
     }
 }

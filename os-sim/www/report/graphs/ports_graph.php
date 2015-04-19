@@ -1,9 +1,8 @@
 <?php
 
-require_once ('classes/SecurityReport.inc');
-
-
+require_once 'classes/SecurityReport.inc';
 require_once 'classes/Security.inc';
+Session::logcheck("MenuReports", "ReportsSecurityReport");
 
 $limit = GET('ports');
 $type = GET('type');
@@ -15,8 +14,7 @@ if (ossim_error()) {
     die(ossim_error());
 }
 
-
-/* hosts to show */
+/* ports to show */
 if (empty($limit)) {
     $limit = 10;
 }
@@ -25,10 +23,9 @@ if (empty($type)) {
     $type = "event";
 }
 
-
-
 $security_report = new SecurityReport();
 $list = $security_report->Ports($limit, $type);
+$datax = $datay = array();
 foreach ($list as $l) {
     $datax[] = $l[0];
     $datay[] = $l[2];
@@ -37,8 +34,8 @@ foreach ($list as $l) {
 $conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
 
-include ("$jpgraph/jpgraph.php");
-include ("$jpgraph/jpgraph_bar.php");
+require_once "$jpgraph/jpgraph.php";
+require_once "$jpgraph/jpgraph_bar.php";
 
 $titlecolor = "darkorange";
 $color = "darkorange";
@@ -82,4 +79,5 @@ $graph->Add($bplot);
 
 // Finally send the graph to the browser
 $graph->Stroke();
+unset($graph);
 ?>

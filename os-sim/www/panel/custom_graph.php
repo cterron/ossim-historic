@@ -58,8 +58,9 @@ $data = array();
 if (!$rs = $conn->Execute($sql)) {
     mydie("Error was: ".$conn->ErrorMsg()."\n\nQuery was: ".$sql);
 }
-// Only one field. Use column name as legend.
-if ($rs->RecordCount() == 1) {
+// Only one record (row) and 1 or >2 fields.
+// Use column (fields) name as legend.
+if ($rs->RecordCount() == 1 && $rs->FieldCount() != 2) {
     for ($i = 0; $i < $rs->FieldCount(); $i++) {
         $field = $rs->FetchField($i);
         $data['legend'][] = $field->name;
@@ -81,6 +82,7 @@ if ($options['graph_type'] == 'pie') {
     // Setup graph
     $graph = new PieGraph($width,250,"auto");
     $graph->SetShadow();
+    $graph->SetAntiAliasing();
     
     // Setup graph title
     $graph->title->Set($data['title']);
@@ -106,7 +108,7 @@ if ($options['graph_type'] == 'pie') {
     //printr($options['graph_pie_explode_pos']);
     switch ($options['graph_pie_explode']) {
         case 'all':
-            $plot->ExplodeAll(); break;
+            $plot->ExplodeAll(10); break;
         case 'pos':
             $plot->ExplodeSlice((int)$options['graph_pie_explode_pos']); break;
     }
@@ -244,4 +246,6 @@ if ($options['graph_type'] == 'pie') {
 }
 $graph->Stroke();
 
+// Close db connection
+$db->close($conn);
 ?>

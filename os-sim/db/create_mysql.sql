@@ -186,7 +186,7 @@ CREATE TABLE policy (
     id              int NOT NULL auto_increment,
     priority        smallint NOT NULL,
     descr           varchar(255),
-    store           BOOLEAN NOT NULL DEFAULT '1',
+    server_name     varchar(64) NOT NULL,   /*this is the server to wich applies the policy*/        
     PRIMARY KEY     (id)
 );
 CREATE TABLE policy_seq (
@@ -260,6 +260,18 @@ CREATE TABLE policy_plugin_group_reference (
     policy_id       INTEGER NOT NULL REFERENCES policy(id),
     group_id        INTEGER NOT NULL REFERENCES plugin_group_descr(group_id),
     PRIMARY KEY (policy_id, group_id)
+);
+
+DROP TABLE IF EXISTS policy_role_reference;
+CREATE TABLE policy_role_reference (
+    policy_id       INTEGER NOT NULL REFERENCES policy(id), 
+    correlate       BOOLEAN	NOT NULL DEFAULT '1',
+    cross_correlate BOOLEAN	NOT NULL DEFAULT '1',
+    store           BOOLEAN	NOT NULL DEFAULT '1',
+    qualify         BOOLEAN	NOT NULL DEFAULT '1',
+    resend_alarm    BOOLEAN	NOT NULL DEFAULT '1',
+    resend_event    BOOLEAN	NOT NULL DEFAULT '1',
+    PRIMARY KEY (policy_id)
 );
 
 
@@ -392,8 +404,8 @@ CREATE TABLE control_panel (
     max_a           int NOT NULL,
     max_c_date      datetime,
     max_a_date      datetime,
-    c_sec_level     float NOT NULL,
-    a_sec_level     float NOT NULL,
+    c_sec_level     float,
+    a_sec_level     float,
     PRIMARY KEY     (id, rrd_type, time_range)
 );
 
@@ -568,7 +580,7 @@ CREATE TABLE plugin_group (
 
 DROP TABLE IF EXISTS event;
 CREATE TABLE event (
-        id              BIGINT NOT NULL AUTO_INCREMENT,
+        id              BIGINT NOT NULL,
         timestamp       TIMESTAMP NOT NULL,
         sensor          TEXT NOT NULL,
         interface       TEXT NOT NULL,
@@ -602,7 +614,7 @@ CREATE INDEX event_idx ON event (id);
 --
 DROP TABLE IF EXISTS backlog;
 CREATE TABLE backlog (
-	id		BIGINT NOT NULL AUTO_INCREMENT,
+	id		BIGINT NOT NULL DEFAULT 0,
 	directive_id	INTEGER NOT NULL,
 	timestamp	TIMESTAMP NOT NULL,
 	matched		TINYINT,
@@ -622,6 +634,28 @@ CREATE TABLE backlog_event (
 	matched		TINYINT,
 	PRIMARY KEY (backlog_id, event_id)
 );
+
+--
+-- Sequences 
+--
+
+DROP TABLE IF EXISTS event_seq;
+CREATE TABLE event_seq (
+         id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO event_seq VALUES (0);
+
+DROP TABLE IF EXISTS backlog_seq;
+CREATE TABLE backlog_seq (
+         id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO backlog_seq VALUES (0);
+
+DROP TABLE IF EXISTS backlog_event_seq;
+CREATE TABLE backlog_event_seq (
+         id INTEGER UNSIGNED NOT NULL
+);
+INSERT INTO backlog_event_seq VALUES (0);
 
 --
 -- Table: Alarm
@@ -702,8 +736,8 @@ CREATE TABLE users (
     pass    varchar(41)  NOT NULL,
     allowed_nets    varchar(255) DEFAULT '' NOT NULL,
     email   varchar(64),
-    company varchar(128) NOT NULL,
-    department varchar(128) NOT NULL,
+    company varchar(128),
+    department varchar(128),
     PRIMARY KEY (login)
 );
 

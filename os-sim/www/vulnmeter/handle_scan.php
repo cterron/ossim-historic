@@ -75,8 +75,8 @@ Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
     {
         if (preg_match($pattern, $out, $regs))
         {
-            print "Successfully " . $action . "d " .  Util::timestamp2date($regs[1]);
-            print "<br><a href=\"index.php\"> Back </a>";
+            print gettext("Successfully") . " " . gettext($action . "d") . " " .  Util::timestamp2date($regs[1]);
+            print "<br><a href=\"index.php\"> " . gettext("Back") . " </a>";
             socket_close ($socket);
             exit();
         }

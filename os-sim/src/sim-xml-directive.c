@@ -629,7 +629,7 @@ sim_xml_directive_set_rule_generic (SimRule          *rule,
 			var->attr = sim_xml_directive_get_rule_var_from_property (field_type);
 			if (var->attr == SIM_RULE_VAR_NONE)
 				return FALSE;
-			if (sim_string_is_number (level[0]))
+			if (sim_string_is_number (level[0], 0))
 				var->level = atoi(level[0]);
 			else
 			{
@@ -717,7 +717,7 @@ sim_xml_directive_set_rule_plugin_sids (SimXmlDirective  *xmldirect, //FIXME: xm
 
 		  var->type = sim_get_rule_var_from_char (level[1]);			//level[1] = PLUGIN_SID
 		  var->attr = SIM_RULE_VAR_PLUGIN_SID;
-			if (sim_string_is_number (level[0]))
+			if (sim_string_is_number (level[0], 0))
 				var->level = atoi(level[0]);
 			else
 			{
@@ -745,10 +745,8 @@ sim_xml_directive_set_rule_plugin_sids (SimXmlDirective  *xmldirect, //FIXME: xm
 		  sim_rule_append_plugin_sid (rule, 0);
 		}
     else																											// this token IS the 1st level
-		if (sim_string_is_number (token_value))
+		if (sim_string_is_number (token_value, 0))
 		{
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "ADDING: %s",token_value);
-
     	if (pluginsid_neg)
 				sim_rule_append_plugin_sid_not (rule, atoi(token_value));
       else
@@ -814,7 +812,7 @@ sim_xml_directive_set_rule_src_ips (SimXmlDirective  *xmldirect,	//FIXME: xmldir
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 		  var->attr = SIM_RULE_VAR_SRC_IA;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -960,7 +958,7 @@ sim_xml_directive_set_rule_dst_ips (SimXmlDirective  *xmldirect,
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 		  var->attr = SIM_RULE_VAR_DST_IA;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -1106,7 +1104,7 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 	  	var->attr = SIM_RULE_VAR_SRC_PORT;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -1142,7 +1140,7 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
 
       range = g_strsplit (token_value, SIM_DELIMITER_RANGE, 0);
 
-			if (!sim_string_is_number (range[0]) || !sim_string_is_number (range[1]))
+			if (!sim_string_is_number (range[0], 0) || !sim_string_is_number (range[1], 0))
 			{
 				g_strfreev (range);
 				g_strfreev (values);
@@ -1163,7 +1161,7 @@ sim_xml_directive_set_rule_src_ports (SimXmlDirective  *xmldirect,
     }
     else																									//just one port
 		{
-      if (sim_string_is_number (token_value))
+      if (sim_string_is_number (token_value, 0))
 			{
 				if (port_neg)			
 				  sim_rule_append_src_port_not (rule, atoi (token_value));
@@ -1233,7 +1231,7 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 		  var->attr = SIM_RULE_VAR_DST_PORT;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -1273,7 +1271,7 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
       gint start, end, j = 0;
 
       range = g_strsplit (token_value, SIM_DELIMITER_RANGE, 0);
-      if (!sim_string_is_number (range[0]) || !sim_string_is_number (range[1]))
+      if (!sim_string_is_number (range[0], 0) || !sim_string_is_number (range[1], 0))
       {
         g_strfreev (range);
         g_strfreev (values);
@@ -1294,7 +1292,7 @@ sim_xml_directive_set_rule_dst_ports (SimXmlDirective  *xmldirect,
     }
     else
 		{
-			if (sim_string_is_number (token_value))
+			if (sim_string_is_number (token_value, 0))
 			{
         if (port_neg)
           sim_rule_append_dst_port_not (rule, atoi (token_value));
@@ -1357,7 +1355,7 @@ sim_xml_directive_set_rule_protocol (SimXmlDirective  *xmldirect,		//FIXME: xmld
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 		  var->attr = SIM_RULE_VAR_PROTOCOL;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -1388,7 +1386,7 @@ sim_xml_directive_set_rule_protocol (SimXmlDirective  *xmldirect,		//FIXME: xmld
 		}
     else
 		{
-      if (sim_string_is_number (token_value))
+      if (sim_string_is_number (token_value, 0))
       {
 				if (proto_neg)
 					sim_rule_append_protocol_not (rule, atoi (token_value));
@@ -1464,7 +1462,7 @@ sim_xml_directive_set_rule_sensors (SimContainer	  *container,
 
 		  var->type = sim_get_rule_var_from_char (level[1]);
 		  var->attr = SIM_RULE_VAR_SENSOR;
-      if (sim_string_is_number (level[0]))
+      if (sim_string_is_number (level[0], 0))
         var->level = atoi(level[0]);
       else
       {
@@ -1635,7 +1633,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PRIORITY)))
   {
- 		if (sim_string_is_number (value))
+ 		if (sim_string_is_number (value, 0))
 	    priority= strtol(value, (char **) NULL, 10);
 		else
 		{
@@ -1654,14 +1652,14 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 		{
 			rel_abs = FALSE;
 			value++;		// ++ to the pointer so now "value" points to the number string and we can check it.
-   		if (sim_string_is_number (value))
+   		if (sim_string_is_number (value, 0))
 	 	  	reliability = atoi(value);
 			else
 				aux=FALSE;			
 		}
 		else
 		{
-   		if (sim_string_is_number (value))
+   		if (sim_string_is_number (value, 0))
       	reliability = atoi(value);
 			else
 				aux=FALSE;
@@ -1687,7 +1685,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   } 
 	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERVAL)))
   {
-    if (sim_string_is_number (value))
+    if (sim_string_is_number (value, 0))
 		{
 	    interval = strtol(value, (char **) NULL, 10);
 	    xmlFree(value);
@@ -1707,7 +1705,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
   } 
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_TIME_OUT)))
   {
-    if (sim_string_is_number (value))
+    if (sim_string_is_number (value, 0))
     {
       time_out = strtol(value, (char **) NULL, 10);
       xmlFree(value);
@@ -1722,7 +1720,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 	
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_OCCURRENCE)))
   {
-    if (sim_string_is_number (value))
+    if (sim_string_is_number (value, 0))
     {
       occurrence = strtol(value, (char **) NULL, 10);
       xmlFree(value);
@@ -1737,7 +1735,7 @@ sim_xml_directive_new_rule_from_node (SimXmlDirective  *xmldirect,
 	
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PLUGIN_ID)))
   {
-    if (sim_string_is_number (value))
+    if (sim_string_is_number (value, 0))
     {
       plugin = strtol(value, (char **) NULL, 10);
       xmlFree(value);
@@ -2063,7 +2061,7 @@ sim_xml_directive_new_append_directive_from_node (SimXmlDirective	*xmldirect,
   }
   if ((value = xmlGetProp (node, (xmlChar *) PROPERTY_DIRECTIVE_ID)))
   {
-		if (sim_string_is_number ((gchar *)value))
+		if (sim_string_is_number ((gchar *)value, 0))
 		{
 	    id = strtol((gchar *) value, (char **) NULL, 10);
 		  sim_directive_group_append_id (group, id);

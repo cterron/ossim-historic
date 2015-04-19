@@ -27,7 +27,7 @@ $end_day    = POST('end_day');
 $descr      = POST('descr');
 $store      = POST('store');
 
-ossim_valid($priority, OSS_NULLABLE, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Priority"));
+ossim_valid($priority, OSS_NULLABLE, OSS_DIGIT, OSS_SCORE, 'illegal:'._("Priority"));
 ossim_valid($begin_hour, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Begin hour"));
 ossim_valid($begin_day, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Begin day"));
 ossim_valid($end_day, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("End day"));

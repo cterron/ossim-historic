@@ -242,7 +242,7 @@ if (!$sup)
                 $link_delete = "
                     <a href=\"" . 
                         $_SERVER["PHP_SELF"] . "?delete_day=" . 
-                        $alarm->get_timestamp() . "&hide_closed=$hide_closed\"> Delete </a>
+                        $alarm->get_timestamp() . "&hide_closed=$hide_closed\"> ". gettext("Delete")." </a>
                 ";
                 echo "
                 <tr>
@@ -335,14 +335,13 @@ if (!$sup)
         <td>
 <?php
     foreach ($sensors as $sensor) { 
-        if ($sensor == "") {
-            echo "-";
-        } else {
 ?>
           <a href="../sensor/sensor_plugins.php?sensor=<?php echo $sensor ?>"
             ><?php echo Host::ip2hostname($conn, $sensor) ?></a>  
 <?php 
-        }
+    }
+    if (!count($sensors)) {
+        echo "&nbsp;";
     }
 ?>
         </td>
@@ -391,12 +390,14 @@ if (!$sup)
     $event_id = $alarm->get_event_id();
 
     if ( ($status = $alarm->get_status()) == "open") {
-        echo "<a title='Click here to close alarm #$event_id' " .
+        echo "<a title='" . gettext("Click here to close alarm") . " #$event_id' " .
              "href=\"" . $_SERVER['PHP_SELF'] . "?close=$event_id" . 
+             "&sup=" . "$sup" .
+             "&inf=" . ($sup-$ROWS) .
              "&hide_closed=$hide_closed\"" .
-             ">$status</a>";
+             ">" . gettext($status) . "</a>";
     } else {
-        echo $status;
+        echo gettext($status);
     }
 ?>
         </td>
@@ -413,6 +414,8 @@ if (!$sup)
 ?>
         [<a href="<?php echo $_SERVER["PHP_SELF"] . 
             "?delete_backlog=" . "$backlog_id-$event_id" . 
+            "&sup=" . "$sup" .
+            "&inf=" . ($sup-$ROWS) .
             "&hide_closed=$hide_closed"; ?>">
             <?php echo gettext("Delete"); ?> </a>]
 <?php
@@ -450,7 +453,7 @@ if (!$sup)
 
 <?php
 $time_load = time() - $time_start;
-print "[ Page loaded in $time_load seconds ]";
+echo  "[ ".gettext("Page loaded in")." $time_load ".gettext("seconds")." ]";
 $db->close($conn);
 ?>
 

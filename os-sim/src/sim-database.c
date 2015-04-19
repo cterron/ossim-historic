@@ -269,6 +269,7 @@ sim_database_execute_no_query  (SimDatabase  *database,
       exit (EXIT_FAILURE);
 		}			
   }
+
   ret = gda_connection_execute_non_query (database->_priv->conn, command, NULL);
 
   if (ret < 0)
@@ -300,6 +301,9 @@ sim_database_execute_single_command (SimDatabase  *database,
 {
   GdaCommand     *command;
   GdaDataModel   *model;
+  GdaError       *error;
+  GList          *errors = NULL;
+	gint 						i;
 
   g_return_val_if_fail (database != NULL, NULL);
   g_return_val_if_fail (SIM_IS_DATABASE (database), NULL);
@@ -345,6 +349,17 @@ sim_database_execute_single_command (SimDatabase  *database,
 
   model = gda_connection_execute_single_command (database->_priv->conn, command, NULL);
 
+  if (model == NULL)
+  {
+    errors = gda_error_list_copy (gda_connection_get_errors (database->_priv->conn));
+    for (i = 0; i < g_list_length (errors); i++)
+    {
+      error = (GdaError *) g_list_nth_data (errors, i);
+      g_message ("ERROR %s %lu: %s", buffer, gda_error_get_number (error), gda_error_get_description (error));
+    }
+    gda_error_list_free (errors);
+  }
+
   gda_command_free (command);
 
   g_mutex_unlock (database->_priv->mutex);
@@ -365,6 +380,61 @@ sim_database_get_conn (SimDatabase  *database)
 
   return database->_priv->conn;  
 }
+
+/*
+ * This returns from the database and table specified, a sequence number.
+ * The number is "reserved".
+ * The table specified should be something like blablabla_seq or lalalala_seq, you know ;)
+ * Beware! if you write the name of a non-existant table this function will fail and will return 0.
+ */
+guint
+sim_database_get_id (SimDatabase  *database,
+											gchar				*table_name)
+{
+
+  GdaDataModel  *dm;
+  GdaValue      *value;
+  gchar         *query;
+	guint					id=0;
+
+  g_return_val_if_fail (database != NULL, 0);
+  g_return_val_if_fail (SIM_IS_DATABASE (database), 0);
+  g_return_val_if_fail (table_name != NULL, 0);
+	
+
+  query = g_strdup_printf ("UPDATE %s SET id=LAST_INSERT_ID(id+1)", table_name);
+  sim_database_execute_no_query (database, query);
+	g_free (query);
+
+	query = g_strdup_printf ("SELECT LAST_INSERT_ID(id) FROM %s", table_name);
+
+  dm = sim_database_execute_single_command (database, query);
+  if (dm)
+  {
+    value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
+    if (gda_data_model_get_n_rows(dm) !=0) 
+    {
+      if (!gda_value_is_null (value))
+				id =value->value.v_uinteger;	//Again, I have to use this instead the commented below one. 
+																			//If I use sim_gda_value_extract_type() to know the type of the value, I get that it's a
+																			//GDA_VALUE_TYPE_BIGINT, although in mysql DB it has been created with: id INTEGER UNSIGNED NOT NULL.
+        //id = gda_value_get_uinteger (value);
+    }
+    else
+      id=0;
+
+    g_object_unref(dm);
+  }
+  else
+    g_message ("sim_database_get_id: %s table DATA MODEL ERROR", table_name);
+
+  g_free (query);
+
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_database_get_id: id obtained: %d", id);
+
+  return id;
+}
+
 
 // vim: set tabstop=2:
 

@@ -44,16 +44,16 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
         onChange="document.forms['report_selector'].submit()">
       <option 
         <?php if ($report_type == "security") echo " selected "; ?>
-        value="security">Security Report</option>
+        value="security"><?php echo gettext('Security Report'); ?></option>
       <option 
         <?php if ($report_type == "alarms") echo " selected "; ?>
-        value="alarms">Alarms Report</option>
+        value="alarms"><?php echo gettext('Alarms Report'); ?></option>
       <option 
         <?php if ($report_type == "metrics") echo " selected "; ?>
-        value="metrics">Metrics Report</option>
+        value="metrics"><?php echo gettext('Metrics Report'); ?></option>
       <option 
         <?php if ($report_type == "incident") echo " selected "; ?>
-        value="incident">Incident Report</option>
+        value="incident"><?php echo gettext('Incidents Report'); ?></option>
     </select>
     </td></tr>
   </table>
@@ -136,7 +136,7 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
       <!-- end security report options -->
     </tr>
     <tr>
-      <td><input type="submit" name="submit_security" value="Generate" /></td>
+      <td><input type="submit" name="submit_security" value="<?php echo gettext('Generate'); ?>" /></td>
     </tr>
 <?php
     }
@@ -180,7 +180,7 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
       <!-- end metrics report -->
     </tr>
     <tr>
-      <td><input type="submit" name="submit_metrics" value="Generate" /></td>
+      <td><input type="submit" name="submit_metrics" value="<?php echo gettext('Generate'); ?>" /></td>
     </tr>
 <?php
     }
@@ -234,7 +234,7 @@ Session::logcheck("MenuReports", "ReportsPDFReport");
       <!-- end incident report -->
     </tr>
     <tr>
-      <td><input type="submit" name="submit_incident" value="Generate" /></td>
+      <td><input type="submit" name="submit_incident" value="<?php echo gettext('Generate'); ?>" /></td>
     </tr>
 <?php
     }
@@ -295,7 +295,7 @@ function alarms_report()
       <!-- end security report options -->
     </tr>
     <tr>
-      <td><input type="submit" name="submit_alarms" value="Generate" /></td>
+      <td><input type="submit" name="submit_alarms" value="<?php echo gettext('Generate'); ?>" /></td>
     </tr>
 <?php
     }

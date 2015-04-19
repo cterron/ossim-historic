@@ -64,7 +64,7 @@ if (GET('interface') == 'ajax') {
         $title = isset($options['window_opts']['title']) ? $options['window_opts']['title'] : '';
         $help  = isset($options['window_opts']['help'])  ? $options['window_opts']['help'] : '';
         $opts['window_opts']['title'] = GET('window_title') ? GET('window_title') : $title;
-        $opts['window_opts']['help']  = GET('window_help') ? GET('window_help') : $help;
+        $opts['window_opts']['help']  = GET('window_help') !== null ? GET('window_help') : $help;
     }
     if (!isset($options['plugin_opts'])) {
         $options['plugin_opts'] = array();

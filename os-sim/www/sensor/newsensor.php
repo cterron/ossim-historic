@@ -23,11 +23,11 @@ $port   = POST('port');
 $descr  = POST('descr');
 $priority = POST('priority');
 
-ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Sensor name"));
-ossim_valid($ip, OSS_IP_ADDR, OSS_NULLABLE, 'illegal:'._("Ip address"));
-ossim_valid($port, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Port number"));
+ossim_valid($name, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Sensor name"));
+ossim_valid($ip, OSS_IP_ADDR, 'illegal:'._("Ip address"));
+ossim_valid($port, OSS_DIGIT,  'illegal:'._("Port number"));
 ossim_valid($descr, OSS_ALPHA, OSS_PUNC, OSS_SPACE, OSS_NULLABLE, 'illegal:'._("Description"));
-ossim_valid($priority, OSS_DIGIT, OSS_DOT, OSS_NULLABLE, 'illegal:'._("Priority"));
+ossim_valid($priority, OSS_DIGIT, OSS_DOT, 'illegal:'._("Priority"));
 
 if (ossim_error()) {
     die(ossim_error());

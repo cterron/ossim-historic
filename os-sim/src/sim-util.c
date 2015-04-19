@@ -80,6 +80,8 @@ sim_protocol_get_type_from_str (const gchar  *str)
     return SIM_PROTOCOL_TYPE_HOST_IDS_EVENT;
   else if (!g_ascii_strcasecmp (str, "Information_Event"))
     return SIM_PROTOCOL_TYPE_INFORMATION_EVENT;
+  else if (!g_ascii_strcasecmp (str, "OTHER"))
+    return SIM_PROTOCOL_TYPE_OTHER;
  
   return SIM_PROTOCOL_TYPE_NONE;
 }
@@ -633,12 +635,17 @@ sim_ipchar_2_ulong (gchar     *ip)
 /*
  * Check if all the characters in the given string are numbers, so we can transform
  * that string into a number if we want, or whatever.
+ * The parameter may_be_float tell us if we have to check also if it's a
+ * floating number, checking one "." in the string
+ * may_be_float = 0 means no float.
  */
 inline gboolean
-sim_string_is_number (gchar *string)
+sim_string_is_number (gchar *string, 
+                      gboolean may_be_float)
 {
 	int n;
 	gboolean ok = FALSE;
+  int count = 0;
 
 	if (!string)
 		return FALSE;
@@ -648,6 +655,15 @@ sim_string_is_number (gchar *string)
 	  if (g_ascii_isdigit (string[n]))
 	    ok=TRUE;
 	  else
+    if (may_be_float)
+    { 
+      if ((string[n] == '.') && (count == 0))
+      {
+        count++;
+        ok = TRUE;
+      }			
+    }
+    else
 	  {
 	    ok = FALSE;
 	    break;
@@ -655,6 +671,55 @@ sim_string_is_number (gchar *string)
 	}
 	return ok;
 }
+
+/*
+ * Check if exists and remove all the appearances of the character from a string.
+ * A pointer to the same string is returned to allow nesting (if needed).
+ */
+inline gchar *
+sim_string_remove_char	(gchar *string,
+													gchar c)
+{
+	int n;
+	gboolean ok = FALSE;
+  int count = 0;
+
+	if (!string)
+		return FALSE;
+
+	gchar *s = string;
+	
+	while ((s = strchr (s, c)) != NULL)
+		memmove (s, s+1, strlen (s));
+	
+	return string;
+}
+
+/*
+ * Check if exists and substitute all the appearances of c_orig in the string,
+ * with the character c_dest.
+ * A pointer to the same string is returned.
+ */
+inline gchar *
+sim_string_substitute_char	(gchar *string,
+														gchar c_orig,
+														gchar	c_dest)
+{
+	int n;
+	gboolean ok = FALSE;
+  int count = 0;
+
+	if (!string)
+		return FALSE;
+
+	gchar *s = string;
+	
+	while ((s = strchr (s, c_orig)) != NULL)
+		*s = c_dest;
+	
+	return string;
+}
+
 
 /*
  * Substitute for g_strv_length() as it's just supported in some environments

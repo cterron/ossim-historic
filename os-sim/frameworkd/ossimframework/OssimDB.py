@@ -22,6 +22,7 @@ class OssimDB:
         try:
             self.conn.Connect(host, user, passwd, db)
         except Exception, e:
+            print __name__, ": Can't connect to database (%s@%s)" % (user, host)
             print e
             sys.exit()
 

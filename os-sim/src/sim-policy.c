@@ -36,6 +36,7 @@
 #include "sim-policy.h"
 #include "sim-sensor.h"
 #include "sim-inet.h"
+#include "sim-event.h"
 /*****/
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -66,7 +67,8 @@ struct _SimPolicyPrivate {
   gint    end_hour;
   gint    begin_day;
   gint    end_day;
-  gboolean    store_in_DB; //will be stored in database the events in this policy?
+
+  SimRole	*role;				//this is not intended to match. This is the behaviour of the events that matches with this policy
 
   GList  *src;  				// SimInet objects
   GList  *dst;
@@ -103,6 +105,9 @@ sim_policy_impl_finalize (GObject  *gobject)
   sim_policy_free_sensors (policy);
 	//FIXME: sim_policy_free_plugin_id y sid.
 
+	if (policy->_priv->role)
+		g_free (policy->_priv->role);
+	
   g_free (policy->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -141,6 +146,8 @@ sim_policy_instance_init (SimPolicy *policy)
   policy->_priv->plugin_ids = NULL;
   policy->_priv->plugin_sids = NULL;
   policy->_priv->plugin_groups = NULL;
+ 
+	policy->_priv->role = g_new0 (SimRole, 1);
 }
 
 /* Public Methods */
@@ -285,12 +292,12 @@ sim_policy_get_priority (SimPolicy* policy)
  */
 void
 sim_policy_set_priority (SimPolicy* policy,
-			 gint       priority)
+												 gint       priority)
 {
   g_return_if_fail (policy);
   g_return_if_fail (SIM_IS_POLICY (policy));
 
-  if (priority < 0)
+  if (priority < -1)
     policy->_priv->priority = 0;
   else if (priority > 5)
     policy->_priv->priority = 5;
@@ -416,7 +423,7 @@ sim_policy_set_end_hour (SimPolicy* policy,
 /*
  * This set, tells if the events that match in the policy must be stored in database
  * or not.
- */
+ *//*
 void
 sim_policy_set_store (SimPolicy *policy, gboolean store)
 {
@@ -424,11 +431,11 @@ sim_policy_set_store (SimPolicy *policy, gboolean store)
   g_return_if_fail (SIM_IS_POLICY (policy));
 
   policy->_priv->store_in_DB = store;  
-}
+}*/
 
 /*
  * Get if the events that match in the policy must be stored.
- */
+ *//*
 gboolean
 sim_policy_get_store (SimPolicy *policy)
 {
@@ -436,7 +443,7 @@ sim_policy_get_store (SimPolicy *policy)
   g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
 
   return policy->_priv->store_in_DB;
-}
+}*/
 /*
  *
  *
@@ -1120,7 +1127,6 @@ void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               sensors:     %x",policy->_priv->sensors);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_groups: %x",policy->_priv->plugin_groups);
 	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               priority: %d",policy->_priv->priority);
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               store_in_DB: %d",policy->_priv->store_in_DB);
 //	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_ids:  %x",policy->_priv->plugin_ids);
 //	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "                               plugin_sids: %x",policy->_priv->plugin_sids);
 
@@ -1141,5 +1147,29 @@ void sim_policy_debug_print_policy	(SimPolicy	*policy) //print hexa values
 
 }
 
+/*
+ * Given a specific policy, it returns the role associated to it.
+ */
+SimRole *
+sim_policy_get_role	(SimPolicy *policy)
+{
+  g_return_val_if_fail (policy, FALSE);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
+  g_return_val_if_fail (policy, FALSE);
+  g_return_val_if_fail (SIM_IS_POLICY (policy), FALSE);
 
+	return policy->_priv->role;
+}
+
+void
+sim_policy_set_role	(SimPolicy *policy,
+											SimRole	*role)
+{
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+  g_return_if_fail (policy);
+  g_return_if_fail (SIM_IS_POLICY (policy));
+
+	policy->_priv->role = role;
+}
 // vim: set tabstop=2:

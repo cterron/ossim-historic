@@ -46,12 +46,15 @@ extern "C" {
 #include <sim-server.h>
 
 typedef struct {
-  SimConfig	*config;
+  SimConfig	*config;		//this config is passed to server, scheduler, organizer, etc in sim_*_new,
+												//so they can add or remove configuration things individually.
 
   SimContainer	*container;
   SimOrganizer	*organizer;
   SimScheduler	*scheduler;
   SimServer	*server;
+  SimServer	*HA_server;		
+  //SimMasterServer	*master_server;
 
   SimDatabase	*dbossim;
   SimDatabase	*dbsnort;

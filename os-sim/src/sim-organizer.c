@@ -186,9 +186,10 @@ SimRule *arule;
   g_mutex_unlock (ossim.mutex_directives);
 ******************/
 	
-  SimEvent *event = NULL;
+  SimEvent	*event = NULL;
   SimCommand *cmd = NULL;
-  gchar		*str;
+  gchar			*str;
+	SimConfig	*config;
 
   g_return_if_fail (organizer != NULL);
   g_return_if_fail (SIM_IS_ORGANIZER (organizer));
@@ -199,7 +200,7 @@ SimRule *arule;
   {
     event =  sim_container_pop_event (ossim.container);//gets and remove the last event in queue 
 		sim_server_debug_print_sessions (ossim.server);
-      
+			
     if (!event)
 		{
 		  continue;
@@ -212,43 +213,206 @@ SimRule *arule;
 		}
 
 /********debug******/
-      str = sim_event_to_string (event); 
-      g_message ("sim_organizer_run before calculations: %s", str);
+			str = sim_event_to_string (event); 
+      g_message ("Event received: %s", str);
       g_free (str);
 /*********************/      
-      
-    if (!gnet_inetaddr_noport_equal(event->dst_ia, ia_zero))
-			sim_organizer_correlation_plugin (organizer, event);  //Actualize priority and reliability. Also, event -> alarm. 
-    sim_organizer_calificate (organizer, event);				//Actualice priority (if match with some policy), C&A, event->alarm
-    sim_organizer_snort (organizer, event); 						//Insert the snort OR other event into DB
-    sim_organizer_rrd (organizer, event);
-    insert_event_alarm (event);													//Insert alarm & assign event->id 
-    sim_organizer_correlation (organizer, event);
 
+		sim_event_sanitize (event); //do some checks.
+			
+    config = sim_server_get_config (ossim.server);
+		//now we can segregate and tell this server to do a specific	thing. 
+		//For example we can decide that this server will be able to qualify events, but not to correlate them.
+			
+	
+		SimPolicy *policy;
+		policy = sim_organizer_get_policy (organizer, event);
+					
+		SimRole *role;
+	
+		//The policy role (if any) supersedes the general server role.
+		if (policy)
+			//get the role of this event to know if it should been treat as a specific case.
+			role = sim_policy_get_role (policy);
+		else
+			role = config->server.role;
+
+    if (role == NULL) //FIXME: temporary fix.
+        role = config->server.role;
+	
+		if (role->cross_correlate)
+			if (!gnet_inetaddr_noport_equal(event->dst_ia, ia_zero))
+				sim_organizer_correlation_plugin (organizer, event);  //Actualize priority and reliability. Also, event -> alarm. 
+			
+		if (role->qualify)
+			sim_organizer_qualify (organizer, event, policy);				//actualice priority (if match with some policy), c&a, event->alarm
+
+		if (role->store)
+			sim_organizer_snort (organizer, event); 						//insert the snort or other event into snort db. This doesn't inserts nothing
+																													//into ossim db, so events regarding alarms are not stored here. They're 
+																													//stored inside sim_organizer_correlation().
+																													
+		sim_organizer_rrd (organizer, event);
+    
+		if ((role->correlate) && (event->priority != 0))
+		{
+			insert_event_alarm (event);													//insert alarm in ossim db & assign event->id 
+			sim_organizer_correlation (organizer, event);       //correlation process
+		}
+
+/*
     str = sim_event_to_string (event); 
-    g_message ("sim_organizer_run after calculations: %s", str);
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_run after calculations: %s", str);
     g_free (str);
+*/
 
-    if (event->alarm) 
+		
+		//time to resend the event/alarm  to master server/s
+		if (role->resend_alarm || role->resend_event)
+		{
+			sim_organizer_resend (event, role);
+		}
+		
+		//needed for action/respose. 
+		if (event->alarm) 
 		{
 			cmd = sim_command_new ();
 			cmd->type = SIM_COMMAND_TYPE_EVENT;
 			cmd->data.event.event = event;
-			sim_server_push_session_command (ossim.server, SIM_SESSION_TYPE_RSERVER, cmd);
+//			sim_server_push_session_command (ossim.server, SIM_SESSION_TYPE_SERVER_UP, cmd);
 			g_object_unref (cmd);
 	    sim_connect_send_alarm (organizer->_priv->config,event);
     }
 
+		//uncomment this if you want that each time a mac or os change event arrives, an alarm is sent to the framework
+		//fixme: transform this unifying policy with action/responses.
+		/*	
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_run: plugin-id: %d, plugin-sid: %d", event->plugin_id, event->plugin_sid);
+		if (((event->plugin_id == sim_event_host_os_event) || (event->plugin_id == sim_event_host_mac_event) )&& (event->plugin_sid == event_same))
+		{
+	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sending mac event/alarm to frameworkd");
+			sim_connect_send_alarm (organizer->_priv->config,event);
+		}
+		*/
     g_object_unref (event);
   }
 }
 
+SimPolicy *
+sim_organizer_get_policy (SimOrganizer	*organizer,
+													SimEvent			*event)
+{
+  SimPluginSid    *plugin_sid=NULL;
+  SimPolicy       *policy;
+
+  g_return_if_fail (organizer != NULL);
+  g_return_if_fail (SIM_IS_ORGANIZER (organizer));
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (SIM_IS_EVENT (event));
+
+	SimPortProtocol *pp;
+  gint             date = 0;
+  gint             i;
+  struct tm       *loctime;
+  time_t           curtime;
+
+  g_return_if_fail (organizer != NULL);
+  g_return_if_fail (SIM_IS_ORGANIZER (organizer));
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (SIM_IS_EVENT (event));
+
+  /*
+   * get current day and current hour
+   * calculate date expresion to be able to compare dates
+   *
+   * for example, fri 21h = ((5 - 1) * 24) + 21 = 117
+	 *              sat 14h = ((6 - 1) * 24) + 14 = 134
+	 */
+  curtime = time (NULL);
+  loctime = localtime (&curtime);
+  date = ((loctime->tm_wday - 1) * 24) + loctime->tm_hour;
+
+	//fixme: this is not used at this time.
+  //get plugin and plugin-sid objects from the plugin_id and plugin_sid of the event
+  //plugin = sim_container_get_plugin_by_id (ossim.container, event->plugin_id);
+  plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container, event->plugin_id, event->plugin_sid);
+  if (!plugin_sid)
+  {
+    g_message ("sim_organizer_qualify: error plugin %d, pluginsid %d", event->plugin_id, event->plugin_sid);
+    return;
+  }
+
+	//get the port/protocol used to obtain the policy that matches.
+	pp = sim_port_protocol_new (event->dst_port, event->protocol);
+//	policy = (SimPolicy *) 
+	policy = sim_container_get_policy_match (ossim.container,  //check if some policy applies, so we get the new priority
+																			    date,
+																			    event->src_ia, 
+																			    event->dst_ia,
+																					pp,
+																					event->sensor,
+																					event->plugin_id,
+																					event->plugin_sid);
+  g_free (pp);
+	
+	if (policy)
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_get_policy: Policy %d MATCH", sim_policy_get_id (policy));
+	else
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_get_policy: Policy No MATCH");
+		
+	return policy;
+
+}
+
+
+/*
+ * all kind of events (including os, mac, service and hids).
+ */
+void
+sim_organizer_resend (SimEvent	*event, SimRole *role)
+{
+  g_return_if_fail (event);
+  g_return_if_fail (SIM_IS_EVENT (event));
+	
+	gchar	*event_str = sim_event_to_string (event); 
+	gboolean alarm_sended = FALSE;
+
+  if (role->resend_alarm)
+	{
+		if (event->alarm)
+		{
+			sim_session_resend_buffer (event_str); //fixme: this will send only the "alarm", not the events wich generated
+		                                        //that alarm. check how to do this. (new message? index the alarms?...)
+			alarm_sended = TRUE;
+		}
+	}	
+	
+	if (role->resend_event)
+	{
+		if (sim_event_is_special (event))
+		{
+			sim_session_resend_buffer (event->buffer);	//in this case, we prefer to send the data in the same
+																									//way we received it, so we can treat it specially (storing it in special tables).
+																									//the master server won't correlate this events again.
+		}
+		if ((!alarm_sended) && (!event->alarm))
+			sim_session_resend_buffer (event_str); //this won't be an alarm, just an event with some modifications in priority, risk..
+
+
+	}
+
+
+}
+
 /*
  *
- * This is usefull only if the event has the "Alarm" flag.
- * We also assign here an event->id (if it hasn't got anyone, like the first time the event arrives).
+ * This is usefull only if the event has the "alarm" flag. This can occur for example if the event has
+ * priority&reliability very high and it has been converted automatically into an alarm. Also, this can occur
+ * if the event is a directive_event wich has been re-inserted into container from sim_organizer_correlation().
+ * 
+ * we also assign here an event->id (if it hasn't got anyone, like the first time the event arrives).
  * event->id is just needed to know if that event belongs to a specific backlog_id (a directive), so if
- * an event is not an alarm, it hasn't got any sense to fill event->id.
+ * an event is not part of an alarm, it hasn't got any sense to fill event->id.
  *
  */
 void
@@ -267,34 +431,45 @@ insert_event_alarm (SimEvent	*event)
 				
   if (!event->id)	
 	{
-    sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, event); //the event (wooops, I mean, the Alarm) is new
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: Inserting new event Into Alarms");
+    sim_container_db_insert_event (ossim.container, ossim.dbossim, event); //the event (wooops, i mean, the alarm) is new
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: inserting new event into alarms. No id. event->id: %d",event->id);
 	}
   else
 	{
-    sim_container_db_update_event_ul (ossim.container, ossim.dbossim, event); //update the event (it depends on event id)
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: Updating event Into Alarms. event->id: %d",event->id);
+    sim_container_db_replace_event_ul (ossim.container, ossim.dbossim, event); //update the event (it depends on event id)
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: updating event into alarms. event->id: %d",event->id);
 	}
 
-  query0 = g_strdup_printf ("SELECT backlog_id, MAX(event_id) from backlog_event GROUP BY backlog_id HAVING MAX(event_id) = %d",  event->id); //One backlog_id can handle multiple event_id's. We choose the bigger event_id if it coincides with the event->id.
+  //we check if the event could be part of an alarm.
+  query0 = g_strdup_printf ("SELECT backlog_id, MAX(event_id) FROM backlog_event GROUP BY backlog_id HAVING MAX(event_id) = %d",  event->id); //one backlog_id can handle multiple event_id's. we choose the bigger event_id if it coincides with the event->id.
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query %s", query0);
+
+
   dm = sim_database_execute_single_command (ossim.dbossim, query0);
   if (dm)
   {
     if (!gda_data_model_get_n_rows (dm)) //first event inserted as alarm
 		{
-		  if (event->backlog_id) 
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: AA");
+		  if (event->backlog_id)		//if the event is also part of an alarm 
 	  	{
 	      query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", event->backlog_id);
 	      sim_database_execute_no_query (ossim.dbossim, query1);
+
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1:%s",query1);
 	      g_free (query1);
 	    }
+      else
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: No event->backlog_id");
 
 	  	query1 = sim_event_get_alarm_insert_clause (event);
 		  sim_database_execute_no_query (ossim.dbossim, query1);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1: %s",query1);
 		  g_free (query1);
 		}
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: BB");
 
-    for (row = 0; row < gda_data_model_get_n_rows (dm); row++) //All the events (the alarms, in fact) enter here (except the first)
+    for (row = 0; row < gda_data_model_get_n_rows (dm); row++) //all the events (the alarms, in fact) enter here (except the first)
 		{
 		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
 	  	if (!gda_value_is_null (value))
@@ -302,29 +477,32 @@ insert_event_alarm (SimEvent	*event)
 	 
 		  query1 = g_strdup_printf ("DELETE FROM alarm WHERE backlog_id = %lu", backlog_id);
 		  sim_database_execute_no_query (ossim.dbossim, query1);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1 -2: %s",query1);
 	  	g_free (query1);
 	  
 		  event->backlog_id = backlog_id;
 		  query1 = sim_event_get_alarm_insert_clause (event);
 	  	sim_database_execute_no_query (ossim.dbossim, query1);
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: query1 -3: %s",query1);
 		  g_free (query1);
 
 		}
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "insert_event_alarm: CC");
 
     g_object_unref(dm);
   }
   else
-    g_message ("ORGANIZER ALARM INSERT DATA MODEL ERROR");
+    g_message ("organizer alarm insert data model error");
 			
   g_free (query0);
 
-  query0 = g_strdup_printf ("SELECT COUNT(backlog_id) FROM alarm WHERE backlog_id != 0 GROUP BY event_id HAVING COUNT(backlog_id) > 2");
+  query0 = g_strdup_printf ("SELECT count(backlog_id) FROM alarm WHERE backlog_id != 0 GROUP BY event_id HAVING COUNT(backlog_id) > 2");
   g_free (query0);
 }
 
 
 /*
- * FIXME: This function isn't called from anywhere at this time.
+ * fixme: this function isn't called from anywhere at this time.
  *
  *
  */
@@ -362,10 +540,10 @@ config_send_notify_email (SimConfig    *config,
 	      gchar *msg;
 	      gint   fd;
 
-	      tmpname = g_strdup ("/tmp/ossim-mail.XXXXXX");
+	      tmpname = g_strdup ("/tmp/ossim-mail.xxxxxx");
 	      fd = g_mkstemp (tmpname);
 	      
-	      msg = g_strdup_printf ("Subject: OSSIM ALARM RISK (%d)\n", risk);
+	      msg = g_strdup_printf ("subject: ossim alarm risk (%d)\n", risk);
 	      write (fd, msg, strlen(msg));
 	      g_free (msg);
 	      write (fd, "\n", 1);
@@ -394,9 +572,10 @@ config_send_notify_email (SimConfig    *config,
 
 /*
  *
- * Actualize the reliability and the priority of all the plugin_sids of the dst_ia from the Event.
- * Also, if the event has plugin_sids associated, the event is transformed into an Alarm.
- * This function has sense just with events with a defined dst.
+ * actualize the reliability and the priority of all the plugin_sids of the dst_ia from the event.
+ * also, if the event has plugin_sids associated, the event is transformed into an alarm.
+ * this function has sense just with events with a defined dst. and that events has to have some relationship
+ * with others (see sim_container_db_host_get_plugin_sids_ul())
  */
 void
 sim_organizer_correlation_plugin (SimOrganizer *organizer, 
@@ -410,7 +589,7 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
   g_return_if_fail (SIM_IS_EVENT (event));
 
   if (!event->dst_ia) return;
-  if (event->rserver) return;
+//  if (event->rserver) return;
 
   list = sim_container_db_host_get_plugin_sids_ul (ossim.container,
 						   ossim.dbossim,
@@ -446,24 +625,25 @@ sim_organizer_correlation_plugin (SimOrganizer *organizer,
  * 1.- Modifies the priority if the event belongs to a policy
  * 2.- Update everything's C and A
  * 3.- If Risk >= 2 then transform the event into an alarm
- * 4.- Tells if the event must be stored in DB or not (thanks to its policy)
- *
+ * 
+ * Remember that event could be a directive_event.
  */
 void
-sim_organizer_calificate (SimOrganizer *organizer, 
-												  SimEvent     *event)
+sim_organizer_qualify (SimOrganizer *organizer, 
+											  SimEvent    *event,
+												SimPolicy		*policy)
 {
   SimHost         *host;
   SimNet          *net;
   SimPlugin       *plugin;
   SimPluginSid    *plugin_sid=NULL;
-  SimPolicy       *policy;
   SimHostLevel    *host_level;
   SimNetLevel     *net_level;
   GList           *list;
   GList           *nets; //SimNet
   gint             threshold = 1;
   gint             asset_net = 1;
+	gchar						 *ip_temp;
 
   SimPortProtocol *pp;
 
@@ -477,59 +657,30 @@ sim_organizer_calificate (SimOrganizer *organizer,
   g_return_if_fail (event != NULL);
   g_return_if_fail (SIM_IS_EVENT (event));
 
-  if (event->rserver) return;
-
-  /*
-   * get current day and current hour
-   * calculate date expresion to be able to compare dates
-   *
-   * for example, Fri 21h = ((5 - 1) * 24) + 21 = 117
-	 *              Sat 14h = ((6 - 1) * 24) + 14 = 134
-	 */
-  curtime = time (NULL);
-  loctime = localtime (&curtime);
-  date = ((loctime->tm_wday - 1) * 24) + loctime->tm_hour;
-
+	//FIXME: this is not used at this time.
   //get plugin and plugin-sid objects from the plugin_id and plugin_sid of the event
-  plugin = sim_container_get_plugin_by_id (ossim.container, event->plugin_id);
+  //plugin = sim_container_get_plugin_by_id (ossim.container, event->plugin_id);
   plugin_sid = sim_container_get_plugin_sid_by_pky (ossim.container, event->plugin_id, event->plugin_sid);
   if (!plugin_sid)
   {
-    g_message ("sim_organizer_calificate: Error Plugin %d, PluginSid %d", event->plugin_id, event->plugin_sid);
+    g_message ("sim_organizer_qualify: Error Plugin %d, PluginSid %d", event->plugin_id, event->plugin_sid);
     return;
   }
 
-	//get the port/protocol used to obtain the policy that matches.
-	pp = sim_port_protocol_new (event->dst_port, event->protocol);
-	policy = (SimPolicy *) 
-  sim_container_get_policy_match (ossim.container,  //Check if some policy applies, so we get the new priority
-															    date,
-															    event->src_ia, 
-															    event->dst_ia,
-															    pp,
-																	event->sensor,
-																	event->plugin_id,
-																	event->plugin_sid);
-  g_free (pp);
-	  
   if (policy)
 	{
 		 gint aux;
      if ((aux = sim_policy_get_priority (policy)) != -1) //-1 means that it won't affect to the priority
 	     event->priority = aux;
-		 event->store_in_DB = sim_policy_get_store (policy);
-     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_calificate: Policy Match. new priority: %d", event->priority);
-	   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_calificate: Store. new stored: %d", event->store_in_DB);
-   }
-	 else
-		 g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_calificate: Policy Doesn't match");
-	
-  event->plugin = plugin;
-  event->pluginsid = plugin_sid;
-	
-	if (event->plugin_id == 0)
-		event->store_in_DB = FALSE;
+     g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_qualify: Policy Match. new priority: %d", event->priority);
+  }
+	else
+		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_qualify: Policy Doesn't match, priority: %d", event->priority);
 
+//	FIXME: this is not used at this time. Remove when checked
+//  event->plugin = plugin;
+//  event->pluginsid = plugin_sid;
+	 
   // Get the reliability of the plugin sid. There are a reliability inside the directive, but the
 	// reliability from the plugin is more important. So we usually try to get the plugin reliability
 	// and assign it to the event.
@@ -540,8 +691,15 @@ sim_organizer_calificate (SimOrganizer *organizer,
 		  event->reliability = aux;								
   }
 
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_qualify: reliability: %d", event->reliability);
+	
   event->asset_src = 2; 
   event->asset_dst = 2;
+
+  //FIXME: When the event is a directive_event (plugin_id 1505), inside the event->data appears (inserted in sim_organizer_correlation)
+  //with the "old" priority. Its needed to re-write the data and modify the priority (if the policy modifies it, of course).
+
+
 
 	// if the priority from the event is 0 (extracted from the plugin_sid and stored in the event in sim_session_cmd_event()),
 	// then the event won't update the C or A.
@@ -550,9 +708,10 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	if (event->priority != 0)
 	{	
 	
-  if ((event->src_ia) && (gnet_inetaddr_get_canonical_name(event->src_ia))) //error checking
+  if ((event->src_ia) && (ip_temp = gnet_inetaddr_get_canonical_name(event->src_ia))) //error checking
   {
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_calificate event->src_ia: -%s-",gnet_inetaddr_get_canonical_name(event->src_ia));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_qualify event->src_ia: -%s-", ip_temp);
+		g_free (ip_temp);
           
     /* Source Asset */
     host = sim_container_get_host_by_ia (ossim.container, event->src_ia);
@@ -574,7 +733,7 @@ sim_organizer_calificate (SimOrganizer *organizer,
 	    }
     }
 
-		//check if the source could be an alarm. This our (errr) "famous" formula!
+		//check if the source could be an alarm. This is our (errr) "famous" formula!
     event->risk_c = ((double) (event->priority * event->asset_src * event->reliability)) / 10;
     if (event->risk_c < 0)
 			event->risk_c = 0;
@@ -627,10 +786,11 @@ sim_organizer_calificate (SimOrganizer *organizer,
 
 	//if destination is "0.0.0.0", it will be very probably a MAC, a OS event, or something like that. And we shouldn't
 	//update the C & A of destination because it doesn't exists.
-	gchar *aux = gnet_inetaddr_get_canonical_name(event->dst_ia);  
-	if ((event->dst_ia) && (aux) && (strcmp (aux, "0.0.0.0")))
+	ip_temp = gnet_inetaddr_get_canonical_name(event->dst_ia);  
+	if ((event->dst_ia) && (ip_temp) && (strcmp (ip_temp, "0.0.0.0")))
   {
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_calificate event->dst_ia: %s",gnet_inetaddr_get_canonical_name(event->dst_ia));
+    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_qualify event->dst_ia: %s", ip_temp);
+		g_free (ip_temp);
           
     /* Destination Asset */
     host = (SimHost *) sim_container_get_host_by_ia (ossim.container, event->dst_ia);
@@ -716,7 +876,6 @@ void
 sim_organizer_correlation (SimOrganizer  *organizer,
 												   SimEvent      *event)
 {
-  SimConfig     *config;
   GList         *groups = NULL;
   GList         *lgs = NULL;
   GList         *list = NULL;
@@ -734,12 +893,19 @@ sim_organizer_correlation (SimOrganizer  *organizer,
   g_return_if_fail (event);
   g_return_if_fail (SIM_IS_EVENT (event));
 
-  config = organizer->_priv->config;
+	if (event->is_correlated) //needed & setted just for OS,MAC,Service and HIDS in multilevel architecture.
+														//If the event has been correlated early, we don't want to do it again.
+		return;
+
+	if (sim_event_is_special (event)) //other events doesn't need this. It doesn't matter that it doesn't match with any directive,
+		event->is_correlated = TRUE;		//the important thing is to know if it has been checked or not.
 
   /* Match Backlogs */
   g_mutex_lock (ossim.mutex_backlogs);
   list = sim_container_get_backlogs_ul (ossim.container); //1st time the server runs, this is empty
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: BEGIN backlogs %d", g_list_length (list));
+
+	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: BEGIN backlogs %d", g_list_length (list));
+
   while (list)
   {
     SimDirective *backlog = (SimDirective *) list->data;
@@ -763,7 +929,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
 		  event->matched = TRUE;
 
-		  /* Create New Event */
+		  /* Create New Event (directive_event) */
 	  	new_event = sim_event_new ();
 		  new_event->type = SIM_EVENT_TYPE_DETECTOR;
 		  new_event->time = time (NULL);
@@ -786,14 +952,14 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 			if ((ia = sim_rule_get_sensor (rule_root))) 
 				new_event->sensor = gnet_inetaddr_get_canonical_name (ia);
 
-			//FIXME: Is needed here to add filename, username, userdata, data, etc, to the new_event???
+			//FIXME: Is needed here to add filename, username, userdata, data, etc, to the new_event??? answer: YES. actualice also sim_container_db_insert_event()
 			
 			new_event->alarm = FALSE;
 			new_event->level = event->level;
 
 			event->backlog_id = sim_directive_get_backlog_id (backlog);	//as the event generated belongs to the directive, the event must know
 																																	//which is the backlog_id of that directive.
-			new_event->backlog_id = event->backlog_id;
+			new_event->backlog_id = event->backlog_id;   //The new event (the alarm) must know also the backlog_id.
 
 			/* Rule reliability */
 			if (sim_rule_get_rel_abs (rule_curr))
@@ -804,16 +970,23 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 			/* Directive Priority */
 			new_event->priority = sim_directive_get_priority (backlog);
 
-			if (!event->id)
-				sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, event);
+      if (!event->id)
+      {
+        sim_container_db_insert_event (ossim.container, ossim.dbossim, event);
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation1: insert event !event->id");
+      }
+      else
+        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation1: event->id: %d", event->id);
 
-			sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, new_event);
+      new_event->id = sim_database_get_id (ossim.dbossim, EVENT_SEQ_TABLE);
 
 			sim_container_push_event (ossim.container, new_event);
 
 			sim_container_db_update_backlog_ul (ossim.container, ossim.dbossim, backlog);
 			sim_container_db_insert_backlog_event_ul (ossim.container, ossim.dbossim, backlog, event);
 			sim_container_db_insert_backlog_event_ul (ossim.container, ossim.dbossim, backlog, new_event);
+ 
+	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: backlog_id: %d", sim_directive_get_backlog_id (backlog));
 
 			inserted = TRUE;
 
@@ -854,7 +1027,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 																				//inserted. So we have to insert it here.
 		{
 		  if (!event->id)
-	  	  sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, event);
+				sim_container_db_insert_event (ossim.container, ossim.dbossim, event);
 
 		  event->backlog_id = sim_directive_get_backlog_id (backlog);
 		  sim_container_db_insert_backlog_event_ul (ossim.container, ossim.dbossim, backlog, event);
@@ -931,6 +1104,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 		}
 		
 		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: MIDDLE backlogs %d", g_list_length (sim_container_get_backlogs_ul (ossim.container)));
+
 		//The directive hasn't match yet, so we try to test if it match with the event itself. (for example, the 1st time)
     if (sim_directive_match_by_event (directive, event)) 
 		{
@@ -958,13 +1132,15 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 			
 			event->matched = TRUE;
 
+			//we need the event->id to reference this event into backlog. The event is inserted here to store the information of 
+			//events inside the alarm.
 			if (!event->id)
 			{
-				sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, event);
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: insert event !event->id");
+				sim_container_db_insert_event (ossim.container, ossim.dbossim, event);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation2: insert event !event->id");
 			}
 			else
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation: event->id: %d", event->id);
+				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_correlation2: event->id: %d", event->id);
 
 			if (!G_NODE_IS_LEAF (node_root))	//if the node has some children...
 	    {
@@ -988,7 +1164,7 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 																							      SIM_SESSION_TYPE_SENSOR, 
 																							      sim_rule_get_plugin_id (rule),
 																							      rule);
-//			      g_object_unref (cmd);
+//			      g_object_unref (cmd); //done inside sim_server_push_session_plugin_command().
 			    }
 
 			  	children = children->next;
@@ -997,12 +1173,13 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 	      sim_container_append_backlog (ossim.container, backlog); //this is where the SimDirective gets inserted into backlog
 	      sim_container_db_insert_backlog_ul (ossim.container, ossim.dbossim, backlog);
 	      sim_container_db_insert_backlog_event_ul (ossim.container, ossim.dbossim, backlog, event);
-	      event->backlog_id = sim_directive_get_backlog_id (backlog);
+	      event->backlog_id = sim_directive_get_backlog_id (backlog); //FIXME: is this lost?
 	    } 
 		  else
 	    {
 	      sim_directive_set_matched (backlog, TRUE);	//As this hasn't got any children we know that the directive has match. 
 				//Now we need to create a new event, fill it with data from the directive wich made the event match.
+				//new_event is a directive event.
 				new_event = sim_event_new ();
 	      new_event->type = SIM_EVENT_TYPE_DETECTOR;
 	      new_event->alarm = FALSE;
@@ -1031,9 +1208,12 @@ sim_organizer_correlation (SimOrganizer  *organizer,
 
 	      /* Directive Priority */
 	      new_event->priority = sim_directive_get_priority (backlog);
-
-	      sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, new_event);
-
+				
+				//we need to assign a new_event->id before it's stored in memory. So we can repriorice & store it 
+				//in the next sim_organizer_run() loop. Of course, only if it matches with a policy with "directive_alert" plugin_id.
+				new_event->id = sim_database_get_id (ossim.dbossim, EVENT_SEQ_TABLE);
+//	      sim_container_db_insert_event_ul (ossim.container, ossim.dbossim, new_event);
+				
 	      sim_container_push_event (ossim.container, new_event);
 
 	      sim_container_db_insert_backlog_ul (ossim.container, ossim.dbossim, backlog);
@@ -1245,7 +1425,8 @@ sim_organizer_snort_event_sidcid_insert (SimDatabase  *db_snort,
 /*
  *
  * This calls to sim_organizer_snort_ossim_event_insert, so the events are stored in the snort DB.
- * This inserts into event and into ossim_event.
+ * This inserts into event (to identify it with cid&sid), into other tables like iphdr to store
+ * the data from the event and emulate snort events,  and into ossim_event to insert specific ossim data.
  *
  */
 void
@@ -1263,8 +1444,6 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
   g_return_if_fail (SIM_IS_EVENT (event));
   g_return_if_fail (sid > 0);
   g_return_if_fail (cid > 0);
-
-	sim_organizer_snort_event_sidcid_insert (db_snort, event, sid, cid, sig_id); 
 
   query = g_strdup_printf ("INSERT INTO iphdr (sid, cid, ip_src, ip_dst, ip_proto) "
 			   "VALUES (%u, %u, %lu, %lu, %d)",
@@ -1299,7 +1478,14 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
       sim_database_execute_no_query (db_snort, query);
       g_free (query);
       break;
-    default:
+		default://FIXME: although this may seem strange, I have decided to treat ALL other protocols as TCP. If you find
+						//some reason to modify this, please tell me. This will be vaild until we do an ACID-like interface. And yes,
+						//I have repeated the code to keep it clear.
+     query = g_strdup_printf ("INSERT INTO tcphdr (sid, cid, tcp_sport, tcp_dport, tcp_flags) "
+             "VALUES (%u, %u, %d, %d, 24)",
+             sid, cid, event->src_port, event->dst_port);
+      sim_database_execute_no_query (db_snort, query);
+      g_free (query);
       break;
     }
 
@@ -1313,7 +1499,6 @@ sim_organizer_snort_event_insert (SimDatabase  *db_snort,
     }
 
 //	sim_organizer_snort_extra_data_insert(db_snort, event, sid, cid);	
-
 	
   sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
 }
@@ -1389,8 +1574,10 @@ sim_organizer_snort_extra_data_insert (SimDatabase  *db_snort,
  * Inserts an event in the snort DB in the table ossim_event. 
  * This doesn't inserts an event into the "event" table because that fields
  * are stored by snort directly to DB.
+ *
+ * returns the cid (don't needed, just info)
  */
-void
+guint
 sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
 																				      SimEvent     *event,
 																				      gint          sid)
@@ -1401,7 +1588,7 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
   GString       *select;
   GString       *where;
   gint           row;
-  guint         cid;
+  guint         cid = 1;
   gchar         *src_ip;
   gchar         *dst_ip;
 
@@ -1453,6 +1640,7 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
   g_string_append (select, where->str);
 
   g_string_free (where, TRUE);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_event_get_cid_from_event:Query: %s",select->str);
 
   dm = sim_database_execute_single_command (db_snort, select->str);
   if (dm)
@@ -1461,6 +1649,7 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
 		{
 		  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
 			cid = value->value.v_uinteger;
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort_event_get_cid_from_event: cid: %d", cid);
 		  sim_organizer_snort_ossim_event_insert (db_snort, event, sid, cid);
 		}
 
@@ -1474,6 +1663,8 @@ sim_organizer_snort_event_get_cid_from_event (SimDatabase  *db_snort,
 	sim_organizer_snort_extra_data_insert (db_snort, event, sid, cid);	
 	
   g_string_free (select, TRUE);
+
+	return cid; //just for information purposes.
 }
 
 /*
@@ -1534,7 +1725,7 @@ sim_organizer_snort_signature_get_id (SimDatabase  *db_snort,
 
 /*
  *
- *
+ * Insert the snort OR other event into DB
  *
  */
 void
@@ -1561,7 +1752,11 @@ sim_organizer_snort (SimOrganizer	*organizer,
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort Start: event->sid: %d ; event->cid: %lu",event->snort_sid,event->snort_cid);
   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->sensor: %s ; event->interface: %s",event->sensor, event->interface);
  
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->data: -%s-",event->data);
+  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort event->log:-%s-",event->log);
+	
 	event->data = g_strdup(event->log);
+
 	
 	//Copy all the extra data to the payload before insert it.
 	//FIXME: This should be viewed each field in a separate place in ACID. We should replace ACID or something like that..
@@ -1586,7 +1781,7 @@ sim_organizer_snort (SimOrganizer	*organizer,
 	
 	// if there are snort_sid (wich snort is running) and snort_cid (number of
   // event inside snort) inside the event received, insert it directly in the snort DB.
-  if (event->snort_sid && event->snort_cid && event->store_in_DB) 
+  if (event->snort_sid && event->snort_cid) 
   {
     sim_organizer_snort_ossim_event_insert (ossim.dbsnort,
 																			      event,
@@ -1602,14 +1797,13 @@ sim_organizer_snort (SimOrganizer	*organizer,
     return;
   }
   sim_plugin_sid_print_internal_data (plugin_sid);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort: event->store_in_DB: %d", event->store_in_DB);
 
   //Get the id from the signature name
   sig_id = sim_organizer_snort_signature_get_id (ossim.dbsnort, sim_plugin_sid_get_name (plugin_sid));
 	
 	
   /* Events SNORT */
-  if ((event->plugin_id >= 1001) && (event->plugin_id < 1500) && event->store_in_DB)
+  if ((event->plugin_id >= 1001) && (event->plugin_id < 1500))
   {
       sid = sim_organizer_snort_sensor_get_sid (ossim.dbsnort,
 																								event->sensor,
@@ -1618,10 +1812,11 @@ sim_organizer_snort (SimOrganizer	*organizer,
 		
       sim_organizer_snort_event_get_cid_from_event (ossim.dbsnort,	//get's the CID and insert into ossim_event	
 						    event, sid);
+
+      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_organizer_snort: (snort without sid events) sid: %d, max_cid. %d", sid, cid);
   }
   else /* Others Events */
-  if (event->store_in_DB)
-    {
+  {
       plugin = sim_container_get_plugin_by_id (ossim.container, event->plugin_id);
 			
       sid = sim_organizer_snort_sensor_get_sid (ossim.dbsnort,
@@ -1637,16 +1832,23 @@ sim_organizer_snort (SimOrganizer	*organizer,
 			//The "right" way of doing this is using the sim_container_get_plugin_id_by_name() function,
 			//but this function is executed with all events, so we need as much speed as possible.
 			//We're going to check it directly against the plugin_id.
-			//If we change the plugin_id's in the database, we'll have to modify here too.
+			//If we change the plugin_id's in the database, we'll have to modify it here too.
 			gint i=0;
 			gchar timestamp[TIMEBUF_SIZE];
 			gboolean ok=FALSE;
+			
+			cid++;
+      sim_organizer_snort_event_sidcid_insert (ossim.dbsnort, event, sid, cid, sig_id);
+			sim_organizer_snort_event_insert (ossim.dbsnort, event, sid, cid, sig_id);
+			
 			switch (event->plugin_id)
-			{
-				case 1512: //arpwatch
+			{	
+				
+				case SIM_EVENT_HOST_MAC_EVENT: //arpwatch
 								  strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 
 									if ((event->plugin_sid == EVENT_NEW) || (event->plugin_sid == EVENT_CHANGE))
+									{
 										sim_container_db_insert_host_mac_ul (ossim.container,
 														    	                        ossim.dbossim,
 																						              event->src_ia,
@@ -1655,10 +1857,11 @@ sim_organizer_snort (SimOrganizer	*organizer,
 							                        	                  event->data_storage[1], //vendor
 																													event->interface,
 																												  event->sensor);
+									}
 									g_strfreev (event->data_storage);
 									break;
 									
-				case 1511: //P0f, OS event
+				case SIM_EVENT_HOST_OS_EVENT: //P0f, OS event
 									strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 								  if ((event->plugin_sid == EVENT_NEW) || (event->plugin_sid == EVENT_CHANGE))
 									{
@@ -1673,9 +1876,10 @@ sim_organizer_snort (SimOrganizer	*organizer,
 									g_strfreev (event->data_storage);
 									break;
 	
-				case 1516: //pads, service event
+				case SIM_EVENT_HOST_SERVICE_EVENT: //pads, service event
 									strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
 								  if ((event->plugin_sid == EVENT_NEW) || (event->plugin_sid == EVENT_CHANGE))
+									{
 						        sim_container_db_insert_host_service_ul (ossim.container,
     																						             	ossim.dbossim,
 																															event->src_ia,
@@ -1686,10 +1890,10 @@ sim_organizer_snort (SimOrganizer	*organizer,
 																															event->interface,
 																															event->data_storage[2], //service
 																															event->data_storage[3]); //application
-	
+									}
 									g_strfreev (event->data_storage);
 									break;
-				case 4001: //prelude, HIDS event
+				case SIM_EVENT_HOST_IDS_EVENT: //prelude, HIDS event
 									if (event->data_storage)
 									{
 										strftime (timestamp, TIMEBUF_SIZE, "%Y-%m-%d %H:%M:%S", localtime ((time_t *) &event->time));
@@ -1698,25 +1902,21 @@ sim_organizer_snort (SimOrganizer	*organizer,
 																																ossim.dbsnort,
 																																event,
 																																timestamp,
-																																sid,
-																																++cid,
-																																sig_id);	
+																																sid,	//cid & sid needed for extra_data (username, userdata1.....)
+																																cid);	
 
 										g_strfreev (event->data_storage);
 									}
 									else
 										g_message("sim_organizer_snort: Error: data from HIDS event incomplete. Maybe someone is testing this app?...");
 			
-							break;
-				default:
-									sim_organizer_snort_event_insert (ossim.dbsnort, event, sid, ++cid, sig_id);
-							break;
+									break;
 
 			}
 			
 			
 							 
-    }
+  }
 }
 
 /*

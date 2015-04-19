@@ -351,7 +351,7 @@ sim_inet_has_inet (SimInet   *inet1,
                              (val2) & 0xFF);
       g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_inet_has_inet val2; %d bits: %s",inet2->_priv->bits, temp);
       g_free(temp);
-/**/
+*/
 
       if ((val1 >> (32 - inet1->_priv->bits)) == (val2 >> (32 - inet1->_priv->bits)))
 			{

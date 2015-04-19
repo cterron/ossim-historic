@@ -26,6 +26,9 @@ class ParserSnareWindows(Parser.Parser):
 
         pattern = re.compile("\S+\s+\S+\s+\S+\s+(\S+).*?MSWinEventLog\s+(\d)\s+\S+\s+\d+\s+\S+\s+(\w+)\s+(\d{1,2})\s+(\d\d:\d\d:\d\d)\s+(\d+)\s+(\d+)")
 
+        username_pattern = re.compile("User Name:\s*(\S+)\s*")
+        filename_pattern = re.compile("Image File Name:\s*(\S+)\s*")
+
         location = self.plugin["location"]
         try:
             fd = open(location, 'r')
@@ -68,10 +71,23 @@ class ParserSnareWindows(Parser.Parser):
 
             else:
                 result = pattern.search(line)
+                result_username = username_pattern.search(line)
+                result_filename = filename_pattern.search(line)
                 if result is not None:
 
                     (src_ip, priority, 
                      month, day, datetime, year, sid) = result.groups()
+
+                    if result_username is not None:
+                        username = result_username.groups()[0]
+                    else:
+                        username = '';
+
+                    if result_filename is not None:
+                        # Extract file name and skip the full path
+                        filename = result_filename.groups()[0].split("\\")[-1]
+                    else:
+                        filename = '';
 
                     datestring = "%s %s %s %s" % (year, month, day, datetime)
                     date = time.strftime('%Y-%m-%d %H:%M:%S',
@@ -97,6 +113,8 @@ class ParserSnareWindows(Parser.Parser):
                                      dst_ip     = '',
                                      dst_port   = '',
                                      data       = '',
+                                     username   = username,
+                                     filename   = filename,
                                      log        = line)
 
         fd.close()

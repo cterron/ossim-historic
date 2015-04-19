@@ -30,7 +30,7 @@ function order_img($subject)
 
 <?php
 
-    $vars = array('order_by'      => OSS_LETTER . OSS_SCORE,
+    $vars = array('order_by'   => OSS_LETTER . OSS_SCORE,
                   'order_mode' => OSS_LETTER,
                   'ref'        => OSS_LETTER,
                   'type'       => OSS_ALPHA . OSS_SPACE,
@@ -60,7 +60,8 @@ function order_img($subject)
     }
 
     // First time we visit this page, show by default only Open incidents
-    if (!GET('status')) $status = 'Open';
+    // when GET() returns NULL, means that the param is not set
+    if (GET('status') === null) $status = 'Open';
     
     $db = new ossim_db();
     $conn = $db->connect();
@@ -302,7 +303,7 @@ function order_img($subject)
         } /* foreach */
     } /* incident_list */
     else {
-        echo "<p align=\"center\">No incidents</p>";
+        echo "<p align=\"center\">".gettext("No incidents")."</p>";
     }
 
     $db->close($conn);
@@ -310,7 +311,7 @@ function order_img($subject)
     <tr>
       <td colspan="8" align="center">
 
-        Insert new Incident (
+        <?php echo gettext("Insert new Incident"); ?> (
         <a href="newincident.php?ref=Alarm&title=New+Alarm+incident&priority=1&src_ips=&src_ports=&dst_ips=&dst_ports=">
 	<?php echo gettext("Alarm"); ?> </a> | 
         <?php echo gettext("Anomaly"); ?> [ 

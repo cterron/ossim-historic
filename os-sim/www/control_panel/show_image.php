@@ -26,7 +26,6 @@
         die(ossim_error());
     }
 
-    $graph_link = $conf->get_conf("graph_link");
 ?>
 
 <html>
@@ -48,15 +47,15 @@
       "$ip&what=$what&start=N-1M&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Month"); ?> </a>]
       [<a href="<?php echo $_SERVER["PHP_SELF"] ?>?range=year&ip=<?php echo
       "$ip&what=$what&start=N-1Y&type=$type&zoom=$zoom"?>"> <?php echo gettext("Last Year"); ?> </a>]
-    </td><td>Show [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
+    </td><td><?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
     "?range=$range&ip=$ip&what=compromise&start=$start&type=$type&zoom=$zoom"?>">
     <?php echo gettext("Compromise"); ?> </a>]<BR>
-    Show [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
+    <?php echo gettext("Show"); ?> [<a href="<?php echo $_SERVER["PHP_SELF"]?><?php echo
     "?range=$range&ip=$ip&what=attack&start=$start&type=$type&zoom=$zoom"?>">
     <?php echo gettext("Attack"); ?> </a>]</td></tr>
     <tr><td colspan="2"><HR noshade></td></tr>
     <tr><td colspan="2" align="center">
-      <img src="<?php echo "$graph_link?ip=$ip&what=$what&start=$start&end=N&type=$type"; ?>">
+      <img src="<?php echo "../report/graphs/draw_rrd.php?ip=$ip&what=$what&start=$start&end=N&type=$type"; ?>">
     </td></tr>
     </table>
 </HTML>

@@ -81,13 +81,13 @@ if (GET('version') && GET('type') && GET('force')) {
 <body>
 <table width="50%" align="center">
 <tr>
-    <th>Detected Ossim Version:</th><td><?=$upgrade->ossim_current_version?>&nbsp;</td>
+    <th><?php echo gettext("Detected Ossim Version"); ?>:</th><td><?=$upgrade->ossim_current_version?>&nbsp;</td>
 </tr>
 <tr>
-    <th>Detected Schema Version:</th><td><?=$upgrade->ossim_schema_version?>&nbsp;</td>
+    <th><?php echo gettext("Detected Schema Version"); ?>:</th><td><?=$upgrade->ossim_schema_version?>&nbsp;</td>
 </tr>
 <tr>
-    <th>Detected Database Type:</th><td><?=$upgrade->ossim_dbtype?>&nbsp;</td>
+    <th><?php echo gettext("Detected Database Type"); ?>:</th><td><?=$upgrade->ossim_dbtype?>&nbsp;</td>
 </tr>
 </table>
 <br/>
@@ -128,7 +128,7 @@ foreach ($list as $k => $v) {
     <? continue; }  ?>
     <form>
     <table align="center" width="85%" border=1>
-        <tr><th>Version</th><th>Required</th></tr>
+        <tr><th><?php echo gettext("Version"); ?></th><th><?php echo gettext("Required"); ?></th></tr>
         <? foreach ($v['upgrades'] as $version => $actions) { ?>
             <tr>
                 <td><?=$version?></td>
@@ -144,15 +144,15 @@ foreach ($list as $k => $v) {
                 }
                 if ($php && ++$pos) {
                     echo "<br/>{$pos}º ";
-                    print_upgrade_link($php, 'php_pre', 'PHP script: PRE', $version, $v['required']);
+                    print_upgrade_link($php, 'php_pre', gettext("PHP script: PRE"), $version, $v['required']);
                 }
                 if ($sql && ++$pos) {
                     echo "<br/>{$pos}º ";
-                    print_upgrade_link($sql, 'sql', 'SQL schema update', $version, $v['required']);
+                    print_upgrade_link($sql, 'sql', gettext("SQL schema update"), $version, $v['required']);
                 }
                 if ($php && ++$pos) {
                     echo "<br/>{$pos}º ";
-                    print_upgrade_link($php, 'php_post', 'PHP script: POST', $version, $v['required']);
+                    print_upgrade_link($php, 'php_post', gettext("PHP script: POST"), $version, $v['required']);
                 }
                 echo "<br/>&nbsp;";
                 ?>

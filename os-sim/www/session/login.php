@@ -115,7 +115,7 @@
 <html>
 <head>
   <title> <?php echo gettext("OSSIM Framework Login"); ?> </title>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
   <link rel="stylesheet" type="text/css" href="../style/style.css"/>
 <script>
@@ -166,7 +166,7 @@ if (location.href != top.location.href) top.location.href = location.href;
     <td><input type="password" name="pass" /></td>
   </tr>
   <tr>
-    <td colspan="2"><input type="submit" value="Login"></td>
+    <td colspan="2"><input type="submit" value="<?php echo gettext("Login"); ?>"></td>
   </tr>
   <tr><td colspan="2"></td></tr>
   <tr>
@@ -186,7 +186,7 @@ if (location.href != top.location.href) top.location.href = location.href;
   <?php
 
     if (isset($bad_pass))
-        echo "<p><font color=\"red\">Wrong User & Password</font></p>";
+        echo "<p><font color=\"red\">".gettext("Wrong User & Password")."</font></p>";
   ?>
 </p>
 

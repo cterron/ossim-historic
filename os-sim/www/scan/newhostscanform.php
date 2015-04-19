@@ -29,11 +29,11 @@ Session::logcheck("MenuConfiguration", "ConfigurationHostScan");
 
     <input type="hidden" name="insert" value="insert">
     <tr>
-      <th>Host ip</th>
+      <th><?php echo gettext("host IP"); ?></th>
       <td class="left"><input type="text" name="host_ip"></td>
     </tr>
     <tr>
-      <th>Plugin id</th>
+      <th><?php echo gettext("Plugin id"); ?></th>
       <td class="left">
         <select name="plugin_id">
 <?php

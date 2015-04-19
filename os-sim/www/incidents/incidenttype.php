@@ -54,8 +54,8 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
             
             if (!("Generic" == $inctype->get_id())){
             echo "[<a
-            href=\"modifyincidenttypeform.php?id=".$inctype->get_id()."\">Modify</a>] [
-            <a href=\"deleteincidenttype.php?inctype_id=".$inctype->get_id()."\"> Delete
+            href=\"modifyincidenttypeform.php?id=".$inctype->get_id()."\"> ".gettext("Modify")." </a>] [
+            <a href=\"deleteincidenttype.php?inctype_id=".$inctype->get_id()."\"> ".gettext("Delete")." 
             </a>]";
             } else {
                 echo " -- ";
@@ -75,7 +75,7 @@ Session::logcheck("MenuIncidents", "IncidentsTypes");
     }
 ?>
     <tr>
-    <td colspan="3" align="center"><a href="newincidenttypeform.php">Add new type</a><td>
+    <td colspan="3" align="center"><a href="newincidenttypeform.php"><?php echo gettext("Add new type"); ?></a><td>
     </tr>
     </table>
 

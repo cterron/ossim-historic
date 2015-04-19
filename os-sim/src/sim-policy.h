@@ -43,6 +43,7 @@
 #include "sim-enums.h"
 #include "sim-util.h"
 #include "sim-inet.h"
+#include "sim-event.h"	//SimRole
 
 #ifdef __cplusplus
 extern "C" {
@@ -169,8 +170,11 @@ GList*            sim_policy_get_plugin_groups                 (SimPolicy       
 void              sim_policy_free_plugin_groups                (SimPolicy        *policy);
 
 
-void							sim_policy_debug_print_policy								(SimPolicy				*policy);
+void							sim_policy_debug_print_policy									(SimPolicy				*policy);
 
+SimRole*					sim_policy_get_role														(SimPolicy					*policy);
+void		          sim_policy_set_role                           (SimPolicy          *policy,
+																																	SimRole						*role);
 
 
 G_END_DECLS

@@ -1,16 +1,16 @@
 <?php
-require_once ('classes/SecurityReport.inc');
+require_once 'classes/SecurityReport.inc';
 require_once 'classes/Security.inc';
 Session::logcheck("MenuReports", "ReportsSecurityReport");
 
 $limit = GET('hosts');
-$type = GET('type');
+$type  = GET('type');
 
 ossim_valid($limit, OSS_DIGIT, OSS_NULLABLE, 'illegal:'._("Limit"));
 ossim_valid($type, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("Report type"));
 
 if (ossim_error()) {
-           die(ossim_error());
+    die(ossim_error());
 }
 
 /* hosts to show */
@@ -24,16 +24,17 @@ if (empty($type)) {
 
 $security_report = new SecurityReport();
 $list = $security_report->Events($limit, $type);
+$legend = $data = array();
 foreach ($list as $l) {
     $legend[] = SecurityReport::Truncate($l[0],60);
     $data[]   = $l[1];
 }
- 
+
 $conf = $GLOBALS["CONF"];
 $jpgraph = $conf->get_conf("jpgraph_path");
 
-include ("$jpgraph/jpgraph.php");
-include ("$jpgraph/jpgraph_pie.php");
+require_once "$jpgraph/jpgraph.php";
+require_once "$jpgraph/jpgraph_pie.php";
 
 // Setup graph
 $graph = new PieGraph(640,300,"auto");
@@ -59,6 +60,6 @@ $p1->SetLegends($legend);
 
 $graph->Add($p1);
 
-$graph->Stroke(); 
-
+$graph->Stroke();
+unset($graph);
 ?>

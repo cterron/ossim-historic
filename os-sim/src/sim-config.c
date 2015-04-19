@@ -36,7 +36,11 @@
 #include <stdlib.h>
 
 #include "sim-config.h"
+#include "os-sim.h"
 #include <config.h>
+#include "sim-event.h"
+
+extern SimMain  ossim; //needed to be able to access to ossim.dbossim directly in sim_config_set_data_role()
 
 enum
 {
@@ -83,6 +87,15 @@ sim_config_impl_finalize (GObject  *gobject)
   if (config->directive.filename)
     g_free (config->directive.filename);
 
+	if (config->server.name)
+		g_free (config->server.name);
+
+	if (config->server.ip)
+		g_free (config->server.ip);
+
+	if (config->server.role)
+		g_free (config->server.role);
+	
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
@@ -119,6 +132,7 @@ sim_config_instance_init (SimConfig *config)
   config->server.port = 0;
   config->server.name = NULL;
   config->server.ip = NULL;
+	config->server.role = g_new0 (SimRole, 1);
 
   config->smtp.host = NULL;
   config->smtp.port = 0;
@@ -126,6 +140,7 @@ sim_config_instance_init (SimConfig *config)
   config->framework.name = NULL;
   config->framework.host = NULL;
   config->framework.port = 0;
+
 }
 
 /* Public Methods */
@@ -211,6 +226,65 @@ sim_config_ds_free (SimConfigDS *ds)
   g_free (ds);
 }
 
+/*
+ * This function doesn't returns anything, it stores directly the data into config parameter.
+ */
+void
+sim_config_set_data_role (SimConfig		*config,
+													SimCommand	*cmd)
+{
+	g_return_if_fail (config);
+	g_return_if_fail (SIM_IS_CONFIG (config));
+	g_return_if_fail (cmd);
+	g_return_if_fail (SIM_IS_COMMAND (cmd));
+	
+	config->server.role->store = cmd->data.server_set_data_role.store;
+	config->server.role->cross_correlate = cmd->data.server_set_data_role.cross_correlate;
+	config->server.role->correlate = cmd->data.server_set_data_role.correlate;
+	config->server.role->qualify = cmd->data.server_set_data_role.qualify;
+	config->server.role->resend_event = cmd->data.server_set_data_role.resend_event;	
+	config->server.role->resend_alarm = cmd->data.server_set_data_role.resend_alarm;	
+
+	//Also store in DB the configuration
+	gchar *store = g_strdup_printf ("%d", config->server.role->store);
+	gchar *correlate = g_strdup_printf ("%d", config->server.role->correlate);
+	gchar *cross_correlate = g_strdup_printf ("%d", config->server.role->cross_correlate);
+	gchar *qualify = g_strdup_printf ("%d", config->server.role->qualify);
+	gchar *resend_event = g_strdup_printf ("%d", config->server.role->resend_event);
+	gchar *resend_alarm = g_strdup_printf ("%d", config->server.role->resend_alarm);
+	
+	gchar *query;
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_store'", store);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_correlate'", correlate);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+	
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_cross_correlate'", cross_correlate);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+	
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_qualify'", qualify);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+	
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_resend_alarm'", resend_alarm);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+
+	query = g_strdup_printf ("UPDATE config SET value='%s' WHERE conf='server_resend_event'", resend_event);
+  sim_database_execute_no_query (ossim.dbossim, query);
+	g_free (query);
+	
+	g_free (store);
+	g_free (correlate);
+	g_free (cross_correlate);
+	g_free (qualify);
+	g_free (resend_alarm);
+	g_free (resend_event);
+}
 
 /*
  *
@@ -299,7 +373,10 @@ sim_config_rserver_new (void)
   rserver->ip = NULL;
   rserver->ia = NULL;
   rserver->port = 0;
-  rserver->resend = FALSE;
+	rserver->socket = NULL;
+  rserver->iochannel = NULL;
+  rserver->HA_role = HA_ROLE_NONE;
+  rserver->is_HA_server = FALSE;
 
   return rserver;
 }
@@ -320,7 +397,7 @@ sim_config_rserver_free (SimConfigRServer *rserver)
     g_free (rserver->ip);
   if (rserver->ia)
     gnet_inetaddr_unref (rserver->ia);
-
+	
   g_free (rserver);
 }
 

@@ -78,12 +78,12 @@ $db->close($conn);
   		<form name="backup" action="<?php echo $_SERVER["PHP_SELF"]?>" method="post">
   	  	<table>
   			<tr>
-  				<th colspan="3">Backup Manager</th>
+  				<th colspan="3"><?php echo gettext("Backup Manager"); ?></th>
 			</tr>
   			<tr>
-  				<th>Dates to Restore</th>
+  				<th><?php echo gettext("Dates to Restore"); ?></th>
   				<th></th>
-  				<th>Dates in Database</th>
+  				<th><?php echo gettext("Dates in Database"); ?></th>
   			</tr>
   			<tr>
   				<td>
@@ -93,7 +93,7 @@ for ($i=0; $i<count($insert); $i++) { ?>
 						<option value=<?=$insert[$i]?>>&nbsp;&nbsp;<?=$insert[$i]?>&nbsp;&nbsp;</option>
 <?php } 
 } else { ?>
-						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;NONE&nbsp;--&nbsp;&nbsp;</option>
+						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?php echo gettext("NONE"); ?>&nbsp;--&nbsp;&nbsp;</option>
 <?php } ?>
   					</select>
   				</td>
@@ -105,18 +105,18 @@ for ($i=0; $i<count($delete); $i++) { ?>
 						<option size="100" value=<?=$delete[$i]?>>&nbsp;&nbsp;<?=$delete[$i]?>&nbsp;&nbsp;</option>
 <?php } 
 } else { ?>
-						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;NONE&nbsp;--&nbsp;&nbsp;</option>
+						<option size="100" disabled>&nbsp;&nbsp;--&nbsp;<?php echo gettext("NONE"); ?>&nbsp;--&nbsp;&nbsp;</option>
 <?php } ?>
 					</select>
 				</td>
   			</tr>
   			<tr>
   				<td>
-  					<button name="insertB" value="insertDo" type="submit" onclick="boton(this.form, 'insert')" <?= ($isDisabled) ? "disabled" : "" ?> >Insert</button>
+  					<button name="insertB" value="insertDo" type="submit" onclick="boton(this.form, 'insert')" <?= ($isDisabled) ? "disabled" : "" ?> ><?php echo gettext("Insert"); ?></button>
   				</td>
   				<td></td>
   				<td>
-  					<button name="deleteB" value="deleteDo" type="submit" onclick="boton(this.form, 'delete')"  <?= ($isDisabled) ? "disabled" : "" ?> >Delete</button>
+  					<button name="deleteB" value="deleteDo" type="submit" onclick="boton(this.form, 'delete')"  <?= ($isDisabled) ? "disabled" : "" ?> ><?php echo gettext("Delete"); ?></button>
   				</td>
   			</tr>
   		</table>
@@ -125,14 +125,14 @@ for ($i=0; $i<count($delete); $i++) { ?>
   		<br>
 		<table aling="center">
 			<tr>
-				<th colspan="5">Backup Events</th>
+				<th colspan="5"><?php echo gettext("Backup Events"); ?></th>
 			</tr>
 			<tr>
-				<th>User</th>
-				<th>Date</th>
-				<th>Action</th>
-				<th>Status</th>
-				<th>Percent</th>
+				<th><?php echo gettext("User"); ?></th>
+				<th><?php echo gettext("Date"); ?></th>
+				<th><?php echo gettext("Action"); ?></th>
+				<th><?php echo gettext("Status"); ?></th>
+				<th><?php echo gettext("Percent"); ?></th>
 			</tr>
 <?php
 $db1 = new ossim_db();
@@ -149,9 +149,9 @@ while (!$rs1->EOF) {
 				<td><?= Util::timestamp2date($rs1->fields["date"]) ?></td>
 				<td><?= $rs1->fields["data"] ?></td>
 	<?php if ($rs1->fields["status"] == 1) { ?>
-				<td><font color="orange"><b>Running</b></font></td>
+				<td><font color="orange"><b><?php echo gettext("Running"); ?></b></font></td>
 	<?php } else { ?>
-				<td><font color="green"><b>Done</b></font></td>
+				<td><font color="green"><b><?php echo gettext("Done"); ?></b></font></td>
 	<?php } ?>
 				<td><?= $rs1->fields["percent"] ?></td>
 			</tr>

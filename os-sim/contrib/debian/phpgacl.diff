@@ -1,11 +1,28 @@
-diff -auNr phpgacl-3.3.4/debian/phpgacl.templates phpgacl-3.3.4.ossim/debian/phpgacl.templates
---- phpgacl-3.3.4/debian/phpgacl.templates	2005-08-10 08:56:38.414883256 +0200
-+++ phpgacl-3.3.4.ossim/debian/phpgacl.templates	2005-08-10 08:57:53.646446320 +0200
-@@ -1,6 +1,6 @@
- Template: phpgacl/name
- Type: string
--Default: phpgacl
-+Default: ossim_acl
- Description: Please enter the name of the database to use
+diff -aur phpgacl-3.3.6.orig/debian/apache.conf phpgacl-3.3.6/debian/apache.conf
+--- phpgacl-3.3.6.orig/debian/apache.conf	2006-08-30 09:20:02.000000000 +0200
++++ phpgacl-3.3.6/debian/apache.conf	2006-08-30 09:23:57.000000000 +0200
+@@ -3,9 +3,9 @@
+ </IfModule>
  
- Template: phpgacl/host
+ <Location /phpgacl>
+-    order deny,allow
+-    deny from all
+-    allow from 127.0.0.0/255.0.0.0
++#    order deny,allow
++#    deny from all
++#    allow from 127.0.0.0/255.0.0.0
+     Options Indexes FollowSymLinks MultiViews
+ </Location>
+ 
+diff -aur phpgacl-3.3.6.orig/debian/phpgacl.config phpgacl-3.3.6/debian/phpgacl.config
+--- phpgacl-3.3.6.orig/debian/phpgacl.config	2006-08-30 09:20:02.000000000 +0200
++++ phpgacl-3.3.6/debian/phpgacl.config	2006-08-30 09:23:37.000000000 +0200
+@@ -5,6 +5,8 @@
+ 
+ # source dbconfig-common stuff
+ dbc_dbtypes="mysql, pgsql"
++dbc_dbuser="root"
++dbc_dbname="ossim_acl"
+ . /usr/share/dbconfig-common/dpkg/config
+ dbc_go phpgacl $@
+ 

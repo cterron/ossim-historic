@@ -41,6 +41,7 @@ class ControlPanel (threading.Thread) :
             sys.exit()
  
 
+    # close db connection
     def __cleanup (self) :
         self.__conn.close()
 
@@ -55,7 +56,14 @@ class ControlPanel (threading.Thread) :
 
         self.__conn.exec_query(query)
 
-        if not (type == 'host' and info["max_c"] == 0 and info["max_a"] == 0):
+        if (type == 'host') and not (info["max_c"] > 1 or info["max_a"] > 1):
+            # Ignore hosts which don't have at least one of their values
+            # greater than 1.
+            # TODO: Compare against their thresholds instead of inserting
+            # almost everything anyway.
+            pass
+        else:
+
 
             query = """
                 INSERT INTO control_panel 
@@ -66,8 +74,8 @@ class ControlPanel (threading.Thread) :
 
             self.__conn.exec_query(query)
 
-            print __name__, ": Updating %s (%s):    \tC=%f, A=%f" % \
-                (rrd_name, range, info["max_c"], info["max_a"])
+            print __name__, ":(%s) Updating %s (%s):    \tC=%f, A=%f" % \
+                (type, rrd_name, range, info["max_c"], info["max_a"])
             sys.stdout.flush()
 
 
@@ -87,22 +95,30 @@ class ControlPanel (threading.Thread) :
             if result != []:
                 (date, compromise, attack) = result[0]
                 if compromise not in ("nan", "") and attack not in ("nan", ""):
-                    if float(compromise) >= max_c:
+                    if float(compromise) > max_c:
                         c_date = date
                         max_c = float(compromise)
-                    if float(attack) >= max_a:
+                    if float(attack) > max_a:
                         a_date = date
                         max_a = float(attack)
 
         output.close()
 
         # convert date to datetime format
-        if c_date != "":
+        if c_date:
             max_c_date = time.strftime('%Y-%m-%d %H:%M:%S',
                 time.localtime(float(c_date)))
-        if a_date != "":
+        else:
+            # no date, so use the oldest
+            max_c_date = time.strftime('%Y-%m-%d %H:%M:%S',
+                time.localtime(0))
+        if a_date:
             max_a_date = time.strftime('%Y-%m-%d %H:%M:%S',
                 time.localtime(float(a_date)))
+        else:
+            # no date, so use the oldest
+            max_a_date = time.strftime('%Y-%m-%d %H:%M:%S',
+                time.localtime(0))
         
         return (max_c_date, max_a_date)
 
@@ -161,41 +177,50 @@ class ControlPanel (threading.Thread) :
                 threshold = self.__conf["threshold"]
 
                 # calculate average for day, week, month and year levels
-                for range in ["day", "week", "month", "year"]:
+                range2date = {
+                    "day"  : "N-1D",
+                    "week" : "N-7D",
+                    "month": "N-1M",
+                    "year" : "N-1Y",
+                }
+                
+                pattern = "(\d+):\s+(\S+)\s+(\S+)"
 
-                    range2date = {
-                        "day"  : "N-1D",
-                        "week" : "N-7D",
-                        "month": "N-1M",
-                        "year" : "N-1Y",
-                    }
+                for range in range2date.keys():
 
                     output = os.popen("%s fetch %s AVERAGE -s %s -e N" % \
                         (Const.RRD_BIN, rrd_file, range2date[range]))
 
-                    pattern = "(\d+):\s+(\S+)\s+(\S+)"
                     C_level = A_level = count = 0
                     for line in output.readlines():
                         result = re.findall(pattern, line)
                         if result != []:
-                            (date, compromise, attack) = result[0]
+                            (date, compromise, attack) = tuple(result[0])
                             if compromise not in ("nan", "") \
                               and attack not in ("nan", ""):
                                 C_level += float(compromise)
                                 A_level += float(attack)
-                                count += 1
+                            else:
+                                # when there is no data we suppose 
+                                # the level is 100
+                                C_level += 100
+                                A_level += 100
+                            count += 1
 
                     output.close
 
                     if count == 0:
+
+                        # when there is no data we suppose the level is 100
+
                         query = """
                             UPDATE control_panel 
-                                SET c_sec_level = 0, a_sec_level = 0
+                                SET c_sec_level = 100, a_sec_level = 100
                                 WHERE id = 'global_%s' and time_range = '%s'
                         """ % (user, range)
 
-                        print __name__, ": Updating %s (%s):  C=0%%, A=0%%" % \
-                            (rrd_name, range )
+                        print __name__, ": Updating %s (%s):  C=100%%, A=100%%" % \
+                            (rrd_name, range)
 
                     else:
                         query = """
@@ -254,6 +279,28 @@ class ControlPanel (threading.Thread) :
                     print >> sys.stderr, "Unexpected exception:", e
 
 
+    # Delete hosts from control_panel when they're too old
+    def delete_old_rrds(self, type, range):
+
+        interval = 1
+        # Compatibility with MySQL < 5.0.0
+        # Value 'week' is available beginning with MySQL 5.0.0
+        if range == "week":
+            range = "day"
+            interval = 7
+
+        query = """
+            DELETE FROM control_panel
+                WHERE rrd_type = '%s' AND time_range = '%s'
+                    AND (max_c_date is NULL OR
+                         max_c_date<=SUBDATE(now(),INTERVAL %i %s))
+                    AND (max_a_date is NULL OR
+                         max_a_date<=SUBDATE(now(),INTERVAL %i %s))
+                   """ % (type, range, interval, range, interval, range)
+
+        self.__conn.exec_query(query)
+
+
     def run (self) :
         self.__startup()
         
@@ -265,6 +312,10 @@ class ControlPanel (threading.Thread) :
                 for path in [ "host", "net", "global" ]:
                     self.__update(path)
                 self.__sec_update()
+
+                # clean up host's rrds
+                for range in ["day", "week", "month", "year"]:
+                    self.delete_old_rrds("host", range)
 
                 # sleep to next iteration
                 print __name__, ": ** Update finished at %s **" % \

@@ -10,7 +10,7 @@
     <startup>/etc/init.d/ntop restart</startup>
     <shutdown>/etc/init.d/ntop stop</shutdown>
     <source>socket</source>
-    <location>&sensor;:3000</location>
+    <location>localhost:3000</location>
     <interface>&interface;</interface>
     <sensor>&sensor;</sensor>
     <frequency>20</frequency>

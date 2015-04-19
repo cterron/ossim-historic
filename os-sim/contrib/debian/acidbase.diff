@@ -1,0 +1,21 @@
+diff -aur acidbase-1.2.5.orig/debian/apache.conf acidbase-1.2.5/debian/apache.conf
+--- acidbase-1.2.5.orig/debian/apache.conf	2006-09-06 11:11:29.000000000 +0200
++++ acidbase-1.2.5/debian/apache.conf	2006-09-06 11:12:25.000000000 +0200
+@@ -5,13 +5,13 @@
+ <DirectoryMatch /usr/share/acidbase/>
+   Options +FollowSymLinks
+   AllowOverride None
+-  order deny,allow
+-  deny from all
+-  allow from 127.0.0.0/255.0.0.0
++#  order deny,allow
++#  deny from all
++#  allow from 127.0.0.0/255.0.0.0
+   <IfModule mod_php4.c>
+     php_flag magic_quotes_gpc Off
+     php_flag track_vars On
+-    php_value include_path .:/usr/share/php
++    php_value include_path .:/usr/share/php:/usr/share/ossim/include
+   </IfModule>
+ </DirectoryMatch>
+ 

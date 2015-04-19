@@ -64,15 +64,111 @@ struct _SimCommand {
 
   SimCommandType      type;
   gint                id;
+	gchar								*buffer;	//here will be stored the original buffer received so we can resend it later
 
   union {
     struct {
       gchar          *username;
       gchar          *password;
+			gchar          *hostname; //Used only in server conns. Not needed for sensors.
       SimSessionType  type;
     } connect;
 
+		struct {
+      gint            id;
+			gchar						*servername; //OSSIM server name, no FQDN
+    } server_get_sensors;
+
     struct {
+      gint            id;
+			gchar						*servername; //OSSIM server name, no FQDN
+    } server_get_sensor_plugins;
+
+    struct {
+      gint            id;
+			gchar						*servername;	//sever name to wich send data to. 
+			gboolean				store;
+			gboolean				correlate;
+			gboolean				cross_correlate;
+			gboolean				qualify;
+			gboolean				resend_alarm;			
+			gboolean				resend_event;			
+    } server_set_data_role;
+
+    struct {												//command sent from server to frameworkd
+      gchar           *host;
+      gboolean        state;
+    } sensor;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      gchar          *sensor;
+      gint            plugin_id;
+      gboolean        enabled;
+      gint            state;
+    } sensor_plugin;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_start;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_stop;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_enable;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      gchar          *sensor;
+      gint            plugin_id;
+    } sensor_plugin_disable;
+
+		//we could use just one struct to store all the "reload *" servername's,
+		//but I prefer to use multiple structs to not break the common usage (sig...).
+		//Oh, and may be in the future more fields needs to be added.
+		struct {
+			gchar						*servername;
+		} reload_plugins;
+		
+		struct {
+			gchar						*servername;
+		} reload_sensors;
+		
+		struct {
+			gchar						*servername;
+		} reload_hosts;
+		
+		struct {
+			gchar						*servername;
+		} reload_nets;
+		
+		struct {
+			gchar						*servername;
+		} reload_policies;
+		
+		struct {
+			gchar						*servername;
+		} reload_directives;
+		
+		struct {
+			gchar						*servername;
+		} reload_all;
+		
+		struct {
       gint            id;
       SimPluginType   type;
       gchar          *name;
@@ -88,56 +184,21 @@ struct _SimCommand {
       gint            state;
     } session_remove_plugin;
 
-    struct {
-      gint            id;
-    } server_get_sensor_plugins;
-
-    struct {
-      gint            id;
-      gchar          *sensor;
-      gint            plugin_id;
-      gboolean        enabled;
-      gint            state;
-    } sensor_plugin;
-
-    struct {
-      gint            id;
-      gchar          *sensor;
-      gint            plugin_id;
-    } sensor_plugin_start;
-
-    struct {
-      gint            id;
-      gchar          *sensor;
-      gint            plugin_id;
-    } sensor_plugin_stop;
-
-    struct {
-      gint            id;
-      gchar          *sensor;
-      gint            plugin_id;
-    } sensor_plugin_enabled;
-
-    struct {
-      gint            id;
-      gchar          *sensor;
-      gint            plugin_id;
-    } sensor_plugin_disabled;
 
     struct {
       gint            id;
       gint            plugin_id;
-    } plugin_start;
+    } plugin_state_started;
 
     struct {
       gint            id;
       gint            plugin_id;
-    } plugin_unknown;
+    } plugin_state_unknown;
 
     struct {
       gint            id;
       gint            plugin_id;
-    } plugin_stop;
+    } plugin_state_stopped;
 
     struct {
       gint            id;
@@ -152,6 +213,7 @@ struct _SimCommand {
     struct {
       /* Event Info */
       gchar             *type;
+      gint							id;
       gchar             *date;
       gchar             *sensor;
       gchar             *interface;
@@ -210,6 +272,7 @@ struct _SimCommand {
 
     struct {
       gchar             *date;
+      gint							id;
       gchar             *host;
       gchar             *os;
       gchar             *sensor;
@@ -223,6 +286,7 @@ struct _SimCommand {
 
     struct {
       gchar             *date;
+      gint							id;
       gchar             *host;
       gchar             *mac;
       gchar             *vendor;
@@ -237,6 +301,7 @@ struct _SimCommand {
 
     struct {
       gchar             *date;
+      gint							id;
       gchar             *host;
       gint               port;
       gint               protocol;
@@ -252,6 +317,7 @@ struct _SimCommand {
     } host_service_event;
 
     struct {
+      gint							id;
       gchar             *host;
       gchar             *hostname;
       gchar             *event_type;
@@ -281,15 +347,6 @@ struct _SimCommand {
 			gchar							*userdata9;
     } host_ids_event;
 
-    struct {
-      gint               id;
-    } server_get_sensors;
-
-    struct {
-      gchar             *host;
-      gboolean           state;
-    } sensor;
-
   } data;
 };
 
@@ -302,6 +359,8 @@ SimCommand*       sim_command_new                             (void);
 SimCommand*       sim_command_new_from_buffer                 (const gchar     *buffer);
 SimCommand*       sim_command_new_from_type                   (SimCommandType   type);
 SimCommand*       sim_command_new_from_rule                   (SimRule         *rule);
+
+void              sim_command_start_scanner                   (void);
 
 gchar*            sim_command_get_string                      (SimCommand      *command);
 

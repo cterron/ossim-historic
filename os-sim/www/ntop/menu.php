@@ -20,7 +20,7 @@ $interface = GET('interface');
 $proto = GET('proto');
 
 ossim_valid($sensor, OSS_ALPHA, OSS_PUNC, OSS_SPACE, 'illegal:'._("Sensor"));
-ossim_valid($interface, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("interface"));
+ossim_valid($interface, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE, 'illegal:'._("interface"));
 ossim_valid($proto, OSS_ALPHA, OSS_NULLABLE, 'illegal:'._("proto"));
 
 if (ossim_error()) {
@@ -46,7 +46,7 @@ $ntop = "$scheme://$sensor:$port";
 
 <!-- change sensor -->
 <form method="GET" action="menu.php">
-Sensor:&nbsp;
+<?php echo gettext("Sensor"); ?>:&nbsp;
 <select name="sensor" onChange="submit()">
 
 <?php
@@ -120,7 +120,7 @@ fclose($fd);
 ?>
 
 <form method="GET" action="menu.php">
-Interface:&nbsp;
+<?php echo gettext("Interface"); ?>:&nbsp;
 <input type="hidden" name="proto" value="<?php echo $proto ?>"/>
 <input type="hidden" name="port" value="<?php echo $port ?>"/>
 <input type="hidden" name="sensor" value="<?php echo $sensor?>"/>

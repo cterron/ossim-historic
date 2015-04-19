@@ -17,8 +17,6 @@ Session::logcheck("MenuPolicy", "PolicyNetworks");
 <?php
 require_once 'classes/Security.inc';
 
-printr($_POST);
-
 $net_name = POST('name');
 $threshold_a = POST('threshold_a');
 $threshold_c = POST('threshold_c');

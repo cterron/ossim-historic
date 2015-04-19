@@ -55,17 +55,21 @@
       <input type="hidden" name="ips" value="$count" />
     <table align="center">
       <tr>
-        <th>Host</th>
-        <th>Mac</th>
-        <th>OS</th>
-        <th>Services</th>
-        <th>Insert</th>
+EOF;
+        echo "<th>".gettext("Host")."</th>";
+        echo "<th>".gettext("Mac")."</th>";
+        echo "<th>".gettext("OS")."</th>";
+        echo "<th>".gettext("Services")."</th>";
+        echo "<th>".gettext("Insert")."</th>";
+      echo <<<EOF
       </tr>
       $html
       <tr></tr>
       <tr>
         <td colspan="5">
-          <input type="submit" value="Update database values" />
+EOF;
+          echo "<input type=\"submit\" value=\"".gettext("Update database values")."\" />";
+      echo <<<EOF
         </td>
       </tr>
     </table>

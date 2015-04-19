@@ -50,6 +50,7 @@ classes_DATA = About.inc \
 	Plugin.inc \
 	Plugin_reference.inc \
 	Plugin_sid.inc \
+	Plugingroup.inc \
 	Policy_host_reference.inc \
 	Policy.inc \
 	Policy_net_reference.inc \
@@ -82,6 +83,7 @@ classes_DATA = About.inc \
 	Signature.inc \
 	Upgrade.inc \
 	Upgrade_base.inc \
-	Util.inc
+	Util.inc \
+	Xajax.inc 
 
 EXTRA_DIST   = $(classes_DATA)

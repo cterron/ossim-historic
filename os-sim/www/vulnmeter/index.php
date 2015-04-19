@@ -3,6 +3,7 @@ require_once ('classes/Session.inc');
 Session::logcheck("MenuControlPanel", "ControlPanelVulnerabilities");
 ?>
 
+
 <html>
 <head>
   <title> <?php echo gettext("Vulnmeter"); ?> </title>
@@ -47,9 +48,9 @@ require_once ('classes/Security.inc');
     exit();
     }
     if ($host) {
-        echo "<h1 align=\"center\">Vulnmeter - $host</h1>";
+        echo "<h1 align=\"center\">".gettext("Vulnmeter")." - $host</h1>";
     } else {
-        echo "<h1 align=\"center\">Vulnmeter</h1>";
+        echo "<h1 align=\"center\">".gettext("Vulnmeter")."</h1>";
     }
 ?>
 
@@ -71,8 +72,7 @@ if(!file_exists($scan_date)){
     $scan_date = $last;
 }
 if(!Host_vulnerability::scan_exists($conn, $scan_date)){
-    echo _("Could not find database information for a scan happening at the specified
-    date") . " : <b>" . Util::timestamp2date($scan_date) . "</b>.<br>" . _("Exiting") . ".";
+    echo _("Could not find database information for a scan happening at the specified\ndate") . " : <b>" . Util::timestamp2date($scan_date) . "</b>.<br>" . _("Exiting") . ".";
     exit();
 }
 
@@ -145,8 +145,8 @@ if($file == "") continue;
 <tr>
 <td border="0">* <a href="<?php echo $_SERVER["PHP_SELF"] . "?scan_date=$file" ?>"><?php echo Util::timestamp2date($file);?> </a></td>
 <td border="0"> <a href="<?php echo $file . "/";?>"><?php echo _("Show");?> </a></td>
-<td border="0"> <a href="handle_scan.php?action=delete&scan_date=<?php echo $file; ?>"> Delete </a></td>
-<td border="0"> <a href="handle_scan.php?action=archive&scan_date=<?php echo $file; ?>"> Archive </a></td>
+<td border="0"> <a href="handle_scan.php?action=delete&scan_date=<?php echo $file; ?>"> <?php echo gettext("Delete"); ?> </a></td>
+<td border="0"> <a href="handle_scan.php?action=archive&scan_date=<?php echo $file; ?>"> <?php echo gettext("Archive"); ?> </a></td>
 </tr>
 <?
 }
@@ -236,7 +236,7 @@ $max_level = ossim_db::max_val($conn, "vulnerability", "host_vulnerability");
 if ($ip_stats) {
 ?>
 
-<tr><th colspan="2">Hosts</th></tr>
+<tr><th colspan="2"><?php echo gettext("Hosts"); ?></th></tr>
 
 <?php
     foreach ($ip_stats as $stat) {

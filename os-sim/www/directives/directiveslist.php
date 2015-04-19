@@ -13,6 +13,7 @@
     if (version_compare(PHP_VERSION,'5','>=') && extension_loaded('xsl')) {
         require_once('xslt-php4-to-php5.php');
     }
+
     if (GET('css_stylesheet')) {
         $css_stylesheet = GET('css_stylesheet');
     } else {

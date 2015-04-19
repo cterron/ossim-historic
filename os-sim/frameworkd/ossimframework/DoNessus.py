@@ -169,15 +169,16 @@ class DoNessus (threading.Thread) :
         for network in networks:
             result_ip = re.findall(str(pattern_ip),ip)
             result_net = re.findall(str(pattern_net),network)
-            try:
-                (ip_oct1, ip_oct2, ip_oct3, ip_oct4) = result_ip[0]
-                (net_oct1, net_oct2, net_oct3, net_oct4, mask) = result_net[0]
-            except IndexError:
-                return 0
-            ip_val = int(ip_oct1)*256*256*256 + int(ip_oct2)*256*256 + int(ip_oct3)*256 + int(ip_oct4)
-            net_val = int(net_oct1)*256*256*256 + int(net_oct2)*256*256 + int(net_oct3)*256 + int(net_oct4)
-            if (ip_val >> (32 - int(mask))) == (net_val >> (32 - int(mask))):
-                return 1
+            for result_network in result_net:  
+                try:
+                    (ip_oct1, ip_oct2, ip_oct3, ip_oct4) = result_ip[0]
+                    (net_oct1, net_oct2, net_oct3, net_oct4, mask) = result_network
+                except IndexError:
+                    return 0
+                ip_val = int(ip_oct1)*256*256*256 + int(ip_oct2)*256*256 + int(ip_oct3)*256 + int(ip_oct4)
+                net_val = int(net_oct1)*256*256*256 + int(net_oct2)*256*256 + int(net_oct3)*256 + int(net_oct4)
+                if (ip_val >> (32 - int(mask))) == (net_val >> (32 - int(mask))):
+                    return 1
         return 0
 
     def __get_networks (self, ip) :
@@ -303,9 +304,11 @@ class DoNessus (threading.Thread) :
             try:
                 (risk) = result2[0]
             except IndexError:
-                continue
+                # continue
+		risk = "None"
             if risk == "":
-                continue
+                # continue
+		risk = "None"
             
             hosts.add(host)
             risk = re.sub(" \/.*|if.*","", risk)

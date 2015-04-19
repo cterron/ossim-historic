@@ -1,0 +1,6514 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: OSSIM 0.9.9rc2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-06-20 10:28+0200\n"
+"PO-Revision-Date: 2006-08-21 17:22+0100\n"
+"Last-Translator: Dmitri Belotchkine <dmitri.belotchkine@gmail.com>\n"
+"Language-Team: Dmitri Belotchkine <dmitri.belotchkine@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Russian\n"
+"X-Poedit-Country: NETHERLANDS\n"
+"X-Poedit-SourceCharset: iso-8859-1\n"
+
+#: include/panel/Ajax_Panel.php:108
+msgid "To fix that, execute as root the following commands"
+msgstr "Чтобы это исправить выполните от имени пользователя root следующие комманды"
+
+#: include/panel/Ajax_Panel.php:112
+msgid "You can configure the panel configs directory at 'Configuration -> Main -> Executive Panel -> panel_configs_dir'"
+msgstr "Вы можете указать директорию установок панели в 'Configuration -> Main -> Executive Panel -> panel_configs_dir'"
+
+#: include/panel/Ajax_Panel.php:114
+msgid "Directory for panel config files does not exists."
+msgstr "Директория для конфигурационных файлов панели не существует"
+
+#: include/panel/Ajax_Panel.php:118
+msgid "Could not stat configs dir"
+msgstr "Не возможно определить статус директории конфигурации"
+
+#: include/panel/Ajax_Panel.php:127
+msgid "Invalid perms for configs dir"
+msgstr "Не верные права доступа у директории конфигурации"
+
+#: include/panel/Ajax_Panel.php:145
+msgid "Could not read config file"
+msgstr "Не возможно прочитать файл конфигурации"
+
+#: include/panel/Ajax_Panel.php:149
+msgid "Bad data found in config file"
+msgstr "Конфигурационный файл содержит неправильные данные"
+
+#: include/panel/Ajax_Panel.php:171
+#: include/panel/Ajax_Panel.php:233
+#: include/panel/Ajax_Panel.php:241
+#: include/panel/Ajax_Panel.php:249
+msgid "Please select a category first"
+msgstr "Пожалуйста, выберите сначала категорию"
+
+#: include/panel/Ajax_Panel.php:180
+msgid "Could not save config in file"
+msgstr "Не возможно сохранить конфигурацию в файл"
+
+#: include/panel/Ajax_Panel.php:201
+msgid "Window Title"
+msgstr "Заголовок Окна"
+
+#: include/panel/Panel.php:15
+msgid "Category Name not configured"
+msgstr "Не задано имя категории"
+
+#: include/panel/plugins/config_exchange.php:36
+msgid "Config Import"
+msgstr "Импортировать Конфигурацию"
+
+#: include/panel/plugins/config_exchange.php:41
+msgid "Import text"
+msgstr "Импорировать текст"
+
+#: include/panel/plugins/custom_html.php:11
+msgid "Custom HTML contents"
+msgstr "Пользовательский HTML контент"
+
+#: include/panel/plugins/custom_html.php:16
+msgid "HTML code"
+msgstr "HTML код"
+
+#: include/panel/plugins/custom_html.php:25
+msgid "No extra settings needed for this category"
+msgstr "Дополнительные установки в этой категории не требуются"
+
+#: include/panel/plugins/custom_sql.php:41
+msgid "Custom SQL graph"
+msgstr "Пользовательский SQL график"
+
+#: include/panel/plugins/custom_sql.php:58
+msgid "SQL code"
+msgstr "SQL код"
+
+#: include/panel/plugins/custom_sql.php:71
+msgid "Graph Title"
+msgstr "Заголовок Графика"
+
+#: include/panel/plugins/custom_sql.php:76
+msgid "Graph Type"
+msgstr "Тип Графика"
+
+#: include/panel/plugins/custom_sql.php:77
+msgid "Pie"
+msgstr "Секторный"
+
+#: include/panel/plugins/custom_sql.php:78
+msgid "Bars"
+msgstr "Столбцы"
+
+#: include/panel/plugins/custom_sql.php:87
+msgid "Plot Shadow"
+msgstr "Начертить тень"
+
+#: include/panel/plugins/custom_sql.php:88
+#: include/panel/plugins/custom_sql.php:139
+#: www/conf/main.php:126
+#: www/conf/main.php:131
+#: www/conf/main.php:202
+#: www/conf/main.php:242
+#: www/conf/main.php:256
+#: www/conf/main.php:323
+#: www/host/deletehost.php:40
+#: www/incidents/deleteincidenttype.php:44
+#: www/net/deletenet.php:35
+#: www/net/deletenetgroup.php:35
+#: www/policy/deletepolicy.php:32
+#: www/policy/modifypolicyform.php:612
+#: www/policy/newpolicyform.php:369
+#: www/policy/policy.php:165
+#: www/port/deleteport.php:35
+#: www/rrd_conf/delete_rrd_conf.php:35
+#: www/sensor/deletesensor.php:37
+#: www/sensor/interfaces.php:104
+#: www/sensor/interfaces.php:108
+#: www/sensor/interfaces.php:127
+#: www/sensor/interfaces.php:150
+#: www/session/deleteuser.php:45
+#: www/signature/deletesignature.php:33
+msgid "No"
+msgstr "Нет"
+
+#: include/panel/plugins/custom_sql.php:88
+#: include/panel/plugins/custom_sql.php:139
+#: www/conf/main.php:132
+#: www/conf/main.php:203
+#: www/conf/main.php:243
+#: www/conf/main.php:257
+#: www/conf/main.php:322
+#: www/host/deletehost.php:38
+#: www/incidents/deleteincidenttype.php:43
+#: www/net/deletenet.php:33
+#: www/net/deletenetgroup.php:33
+#: www/policy/deletepolicy.php:31
+#: www/policy/modifypolicyform.php:611
+#: www/policy/newpolicyform.php:368
+#: www/policy/policy.php:163
+#: www/port/deleteport.php:34
+#: www/rrd_conf/delete_rrd_conf.php:33
+#: www/sensor/deletesensor.php:35
+#: www/sensor/interfaces.php:103
+#: www/sensor/interfaces.php:109
+#: www/sensor/interfaces.php:128
+#: www/sensor/interfaces.php:149
+#: www/session/deleteuser.php:44
+#: www/signature/deletesignature.php:32
+msgid "Yes"
+msgstr "Да"
+
+#: include/panel/plugins/custom_sql.php:96
+msgid "Pie Options"
+msgstr "Опции Секторного"
+
+#: include/panel/plugins/custom_sql.php:100
+msgid "Color Theme"
+msgstr "Цветовые темы"
+
+#: include/panel/plugins/custom_sql.php:102
+msgid "Sand"
+msgstr "Песок"
+
+#: include/panel/plugins/custom_sql.php:103
+msgid "Earth"
+msgstr "Земля"
+
+#: include/panel/plugins/custom_sql.php:104
+msgid "Pastel"
+msgstr "Пастель"
+
+#: include/panel/plugins/custom_sql.php:105
+msgid "Water"
+msgstr "Вода"
+
+#: include/panel/plugins/custom_sql.php:115
+msgid "3D Angle"
+msgstr "3х мерный вид"
+
+#: include/panel/plugins/custom_sql.php:120
+msgid "Explode Slice"
+msgstr "Выделить сектор"
+
+#: include/panel/plugins/custom_sql.php:122
+#: www/host/host.php:126
+#: www/host/modifyhostform.php:136
+#: www/host/newhostform.php:130
+#: www/net/modifynetform.php:121
+#: www/net/modifynetgroupform.php:133
+#: www/net/newnetform.php:90
+#: www/net/newnetgroupform.php:107
+msgid "None"
+msgstr "Пусто"
+
+#: include/panel/plugins/custom_sql.php:123
+#: www/control_panel/anomalies.php:103
+#: www/control_panel/anomalies.php:166
+#: www/control_panel/rrd_anomaly.php:91
+#: www/control_panel/rrd_global.php:73
+msgid "All"
+msgstr "Все"
+
+#: include/panel/plugins/custom_sql.php:134
+msgid "Bar & Points Options"
+msgstr "Опции Столбец & Пункты"
+
+#: include/panel/plugins/custom_sql.php:138
+msgid "Show values"
+msgstr "Показать значения"
+
+#: include/panel/plugins/custom_sql.php:149
+msgid "Color"
+msgstr "Цвет"
+
+#: include/panel/plugins/custom_sql.php:217
+msgid "Please configure options at the Sub-category tab"
+msgstr "Пожалуйста, выберите опции во вкладке Под-категория"
+
+#: include/panel/plugins/custom_sql.php:220
+msgid "Please configure options at the Settings tab"
+msgstr "Пожалуйста, выберите опции во вкладке Установки"
+
+#: www/action/action.php:8
+#: www/action/newactionform.php:128
+#: www/conf/emailtemplate.php:144
+#: www/control_panel/handle_anomaly.php:8
+#: www/control_panel/handle_anomaly.php:15
+#: www/control_panel/handle_mac.php:8
+#: www/control_panel/handle_mac.php:15
+#: www/control_panel/handle_os.php:8
+#: www/control_panel/handle_os.php:15
+#: www/control_panel/handle_services.php:8
+#: www/control_panel/handle_services.php:15
+#: www/control_panel/mac.php:8
+#: www/control_panel/os.php:8
+#: www/control_panel/services.php:8
+#: www/editor/rule.php:61
+#: www/hids/host_detail.php:8
+#: www/hids/index.php:8
+#: www/host/deletehost.php:8
+#: www/host/host.php:8
+#: www/host/modifyhost.php:8
+#: www/host/modifyhostform.php:8
+#: www/host/newhost.php:8
+#: www/host/newhostform.php:8
+#: www/incidents/deleteincidenttype.php:8
+#: www/incidents/incident.php:30
+#: www/incidents/incidenttag.php:75
+#: www/incidents/incidenttype.php:8
+#: www/incidents/index.php:22
+#: www/incidents/modifyincidenttype.php:8
+#: www/incidents/modifyincidenttypeform.php:8
+#: www/incidents/newincident.php:104
+#: www/incidents/newincidenttype.php:8
+#: www/incidents/newincidenttypeform.php:13
+#: www/nagios/menu.php:8
+#: www/net/deletenet.php:8
+#: www/net/deletenetgroup.php:8
+#: www/net/modifynet.php:8
+#: www/net/modifynetform.php:8
+#: www/net/modifynetgroup.php:8
+#: www/net/modifynetgroupform.php:8
+#: www/net/net.php:8
+#: www/net/netgroup.php:8
+#: www/net/newnet.php:8
+#: www/net/newnetform.php:8
+#: www/net/newnetgroup.php:8
+#: www/net/newnetgroupform.php:8
+#: www/netscan/do_scan.php:9
+#: www/netscan/index.php:31
+#: www/netscan/scan_db.php:8
+#: www/ntop/menu.php:8
+#: www/ntop/menu_session.php:9
+#: www/policy/deletepolicy.php:8
+#: www/policy/modifyplugingroupsform.php:39
+#: www/policy/modifypolicy.php:9
+#: www/policy/modifypolicyform.php:8
+#: www/policy/newpolicy.php:9
+#: www/policy/plugingroups.php:17
+#: www/policy/policy.php:8
+#: www/port/deleteport.php:8
+#: www/port/modifyport.php:8
+#: www/port/modifyportform.php:8
+#: www/port/newport.php:8
+#: www/port/newportform.php:8
+#: www/port/newsingleport.php:8
+#: www/port/newsingleportform.php:8
+#: www/port/port.php:8
+#: www/report/anomalies.php:8
+#: www/report/incidentreport.php:8
+#: www/report/inventory.php:8
+#: www/report/menu.php:8
+#: www/report/metrics.php:8
+#: www/report/pdfreportform.php:8
+#: www/report/report.php:9
+#: www/report/sec_report.php:8
+#: www/response/newresponseform.php:9
+#: www/response/response.php:16
+#: www/rrd_conf/delete_rrd_conf.php:8
+#: www/rrd_conf/modify_rrd_conf_form.php:8
+#: www/rrd_conf/new_rrd_conf.php:8
+#: www/rrd_conf/rrd_conf.php:8
+#: www/scan/deletehostscan.php:8
+#: www/scan/hostscan.php:8
+#: www/scan/newhostscan.php:8
+#: www/scan/newhostscanform.php:8
+#: www/scan/scan.php:8
+#: www/sensor/deletesensor.php:8
+#: www/sensor/interfaces.php:8
+#: www/sensor/modifysensor.php:8
+#: www/sensor/modifysensorform.php:8
+#: www/sensor/newsensor.php:8
+#: www/sensor/newsensorform.php:8
+#: www/sensor/sensor.php:8
+#: www/sensor/sensor_plugins.php:8
+#: www/session/changepass.php:7
+#: www/session/changepassform.php:7
+#: www/session/deleteuser.php:9
+#: www/session/modifyuser.php:8
+#: www/session/modifyuserform.php:10
+#: www/session/newuser.php:8
+#: www/session/newuserform.php:22
+#: www/session/users.php:8
+#: www/signature/deletesignature.php:8
+#: www/signature/modifysignature.php:8
+#: www/signature/modifysignatureform.php:8
+#: www/signature/newsignature.php:8
+#: www/signature/newsignatureform.php:8
+#: www/signature/signature.php:8
+#: www/upgrade/index.php:76
+#: www/vulnmeter/do_nessus.php:12
+msgid "OSSIM Framework"
+msgstr "Инфраструктура OSSIM"
+
+#: www/action/action.php:15
+#: www/incidents/incidenttag.php:122
+#: www/incidents/incidenttype.php:34
+#: www/policy/plugingroups.php:49
+#: www/session/users.php:58
+#: www/top.php:230
+msgid "Actions"
+msgstr "Действия"
+
+#: www/action/action.php:28
+#: www/action/modifyactionform.php:34
+#: www/action/modifyactionform.php:169
+#: www/action/newactionform.php:21
+#: www/action/newactionform.php:164
+#: www/conf/plugin.php:47
+#: www/host/host.php:70
+#: www/host/modifyhostform.php:292
+#: www/host/newhostform.php:249
+#: www/incidents/incident.php:302
+#: www/incidents/incident.php:424
+#: www/incidents/incidenttag.php:100
+#: www/incidents/incidenttag.php:121
+#: www/incidents/incidenttype.php:33
+#: www/incidents/modifyincidenttype.php:23
+#: www/incidents/modifyincidenttypeform.php:48
+#: www/incidents/newincidenttype.php:23
+#: www/incidents/newincidenttypeform.php:30
+#: www/net/modifynet.php:40
+#: www/net/modifynetform.php:210
+#: www/net/modifynetgroup.php:32
+#: www/net/modifynetgroupform.php:154
+#: www/net/net.php:93
+#: www/net/netgroup.php:69
+#: www/net/newnet.php:42
+#: www/net/newnetform.php:157
+#: www/net/newnetgroup.php:31
+#: www/net/newnetgroupform.php:121
+#: www/policy/modifyplugingroups.php:59
+#: www/policy/modifyplugingroupsform.php:92
+#: www/policy/modifypolicy.php:35
+#: www/policy/modifypolicyform.php:602
+#: www/policy/newpolicy.php:34
+#: www/policy/newpolicyform.php:374
+#: www/policy/plugingroups.php:48
+#: www/policy/policy.php:37
+#: www/port/modifyport.php:28
+#: www/port/modifyportform.php:91
+#: www/port/newportform.php:58
+#: www/port/newsingleport.php:28
+#: www/port/newsingleportform.php:40
+#: www/port/port.php:40
+#: www/sensor/modifysensor.php:29
+#: www/sensor/modifysensorform.php:104
+#: www/sensor/newsensor.php:29
+#: www/sensor/newsensorform.php:65
+#: www/sensor/sensor.php:70
+#: www/signature/modifysignatureform.php:88
+#: www/signature/newsignatureform.php:56
+#: www/signature/signature.php:39
+#: include/classes/Incident_ticket.inc:345
+msgid "Description"
+msgstr "Описание"
+
+#: www/action/action.php:29
+#: www/conf/pluginsid.php:76
+#: www/control_panel/alarm_console.old.php:189
+#: www/control_panel/alarm_console.php:191
+#: www/control_panel/events.old.php:75
+#: www/control_panel/events.php:76
+#: www/editor/rule.php:83
+#: www/host/host.php:71
+#: www/incidents/incident.php:49
+#: www/incidents/incident.php:304
+#: www/incidents/incident.php:429
+#: www/incidents/index.php:119
+#: www/net/net.php:94
+#: www/net/netgroup.php:70
+#: www/policy/policy.php:39
+#: www/port/port.php:41
+#: www/rrd_conf/rrd_conf.php:42
+#: www/scan/hostscan.php:54
+#: www/scan/scan.php:52
+#: www/sensor/interfaces.php:89
+#: www/sensor/interfaces.php:144
+#: www/sensor/sensor.php:71
+#: www/sensor/sensor_plugins.php:134
+#: www/sensor/sensor_plugins.php:136
+#: www/signature/signature.php:40
+#: www/userlog/user_action_log.php:68
+#: www/vulnmeter/handle_scan.php:26
+#: include/classes/Incident_ticket.inc:347
+msgid "Action"
+msgstr "Действие"
+
+#: www/action/action.php:38
+#: www/host/host.php:133
+#: www/net/net.php:161
+#: www/net/netgroup.php:124
+#: www/policy/policy.php:171
+#: www/port/port.php:70
+#: www/rrd_conf/rrd_conf.php:58
+#: www/sensor/sensor.php:126
+#: www/signature/signature.php:66
+msgid "Modify"
+msgstr "Изменить"
+
+#: www/action/action.php:39
+#: www/control_panel/alarm_console.old.php:410
+#: www/control_panel/alarm_console.old.php:417
+#: www/control_panel/alarm_console.php:441
+#: www/control_panel/alarm_console.php:448
+#: www/control_panel/anomalies.php:109
+#: www/control_panel/anomalies.php:172
+#: www/control_panel/backlog.php:119
+#: www/control_panel/backlog.php:152
+#: www/control_panel/rrd_anomaly.php:97
+#: www/control_panel/rrd_global.php:79
+#: www/host/host.php:134
+#: www/incidents/incident.php:197
+#: www/net/net.php:162
+#: www/net/netgroup.php:125
+#: www/policy/plugingroups.php:64
+#: www/policy/policy.php:174
+#: www/port/port.php:73
+#: www/rrd_conf/rrd_conf.php:64
+#: www/scan/hostscan.php:80
+#: www/sensor/sensor.php:128
+#: www/session/users.php:91
+#: www/signature/signature.php:69
+msgid "Delete"
+msgstr "Удалить"
+
+#: www/action/action.php:47
+#: www/action/action.php:57
+msgid "Add new action"
+msgstr "Добавить новое действие"
+
+#: www/action/action.php:55
+msgid "There are no defined actions"
+msgstr "Нет действий"
+
+#: www/action/deleteaction.php:18
+#: www/action/modifyactionform.php:32
+#: www/action/newactionform.php:19
+#: www/port/newsingleport.php:25
+msgid "Action id"
+msgstr "Идентификатор действия"
+
+#: www/action/deleteaction.php:32
+msgid "Action deleted"
+msgstr "Действие удалено"
+
+#: www/action/deleteaction.php:34
+#: www/action/modifyactionform.php:97
+#: www/action/newactionform.php:75
+#: www/conf/pluginupdate.php:28
+#: www/conf/pluginupdate.php:34
+#: www/conf/pluginupdate.php:51
+#: www/control_panel/handle_anomaly.php:58
+#: www/control_panel/handle_mac.php:69
+#: www/control_panel/handle_os.php:69
+#: www/control_panel/handle_services.php:71
+#: www/host/deletehost.php:60
+#: www/host/modifyhost.php:105
+#: www/host/newhost.php:82
+#: www/host/newhost.php:117
+#: www/incidents/deleteincidenttype.php:63
+#: www/incidents/manageincident.php:15
+#: www/incidents/modifyincidenttype.php:49
+#: www/incidents/newincidenttype.php:44
+#: www/net/deletenet.php:56
+#: www/net/deletenetgroup.php:55
+#: www/net/modifynet.php:81
+#: www/net/modifynetgroup.php:73
+#: www/net/newnet.php:82
+#: www/net/newnetgroup.php:72
+#: www/policy/deletepolicy.php:49
+#: www/policy/modifypolicy.php:209
+#: www/policy/newpolicy.php:201
+#: www/port/deleteport.php:52
+#: www/port/modifyport.php:59
+#: www/port/newport.php:59
+#: www/port/newsingleport.php:47
+#: www/response/deleteresponse.php:36
+#: www/rrd_conf/delete_rrd_conf.php:51
+#: www/rrd_conf/new_rrd_conf.php:78
+#: www/scan/deletehostscan.php:47
+#: www/scan/makescan.php:38
+#: www/scan/newhostscan.php:42
+#: www/sensor/deletesensor.php:60
+#: www/sensor/interfaces.php:59
+#: www/sensor/interfaces.php:160
+#: www/sensor/modifysensor.php:48
+#: www/sensor/newsensor.php:49
+#: www/session/changepass.php:88
+#: www/session/deleteuser.php:68
+#: www/session/modifyuser.php:106
+#: www/session/newuser.php:113
+#: www/signature/deletesignature.php:49
+#: www/signature/modifysignature.php:57
+#: www/signature/newsignature.php:55
+#: www/vulnmeter/do_nessus.php:134
+#: www/vulnmeter/index.php:109
+#: include/ossim_error.inc:74
+#: include/ossim_error.inc:382
+msgid "Back"
+msgstr "Назад"
+
+#: www/action/modifyactionform.php:14
+msgid "Modify action"
+msgstr "Изменить действие"
+
+#: www/action/modifyactionform.php:33
+#: www/action/newactionform.php:20
+msgid "Action type"
+msgstr "Тип действия"
+
+#: www/action/modifyactionform.php:35
+#: www/action/newactionform.php:22
+msgid "Email from"
+msgstr "Email отправитель"
+
+#: www/action/modifyactionform.php:36
+#: www/action/newactionform.php:23
+msgid "Email to"
+msgstr "Email получатель"
+
+#: www/action/modifyactionform.php:37
+#: www/action/newactionform.php:24
+msgid "Email subject"
+msgstr "Тема email"
+
+#: www/action/modifyactionform.php:38
+#: www/action/newactionform.php:25
+msgid "Email message"
+msgstr "Текст email"
+
+#: www/action/modifyactionform.php:39
+#: www/action/newactionform.php:26
+msgid "Exec command"
+msgstr "Выполнить команду"
+
+#: www/action/modifyactionform.php:95
+msgid "Action succesfully updated"
+msgstr "Действие успешно обновлено"
+
+#: www/action/modifyactionform.php:106
+#: www/action/newactionform.php:84
+msgid "From:"
+msgstr "От:"
+
+#: www/action/modifyactionform.php:112
+#: www/action/newactionform.php:88
+msgid "To:"
+msgstr "Кому:"
+
+#: www/action/modifyactionform.php:118
+#: www/action/newactionform.php:92
+msgid "Subject:"
+msgstr "Тема:"
+
+#: www/action/modifyactionform.php:124
+#: www/action/newactionform.php:96
+msgid "Message:"
+msgstr "Текст:"
+
+#: www/action/modifyactionform.php:137
+#: www/action/newactionform.php:108
+msgid "Command:"
+msgstr "Команда:"
+
+#: www/action/newactionform.php:73
+msgid "Action inserted successfully"
+msgstr "Действие успешно создано"
+
+#: www/action/newactionform.php:135
+msgid "New action"
+msgstr "Новое действие"
+
+#: www/action/newactionform.php:142
+msgid "You can use the following keywords within any field which will be get substituted by it's matching value upon action execution"
+msgstr "В любом поле вы можете использовать следующие ключевые слова, которые в момент исполнения действия будут заменены их реальными значениями"
+
+#: www/action/newactionform.php:142
+msgid "They're pretty much self explanatory"
+msgstr "Они вполне объясняют сами себя"
+
+#: www/action/newactionform.php:174
+msgid "Select an action type"
+msgstr "Выберите тип действия"
+
+#: www/conf/emailtemplate.php:37
+msgid "The Incident database ID"
+msgstr "Идентификатор инцидента в БД"
+
+#: www/conf/emailtemplate.php:41
+msgid "The incident human-oriented reference"
+msgstr "Понятная человеку ссылка на инцидент"
+
+#: www/conf/emailtemplate.php:45
+msgid "The incident resume"
+msgstr "Краткое описание инцидента"
+
+#: www/conf/emailtemplate.php:46
+msgid "Detected MAC change in DMZ"
+msgstr "Обнаружено изменение MAC адреса в DMZ"
+
+#: www/conf/emailtemplate.php:49
+msgid "Related incident information"
+msgstr "Относящаяся к инциденту информация"
+
+#: www/conf/emailtemplate.php:56
+msgid "The person currently in charge of solving the incident"
+msgstr "Ответственный в данный момент за разрешение инцидента"
+
+#: www/conf/emailtemplate.php:60
+msgid "The login of the person currently in charge of solving the incident"
+msgstr "Имя учетной пользовательской записи ответственного в данный момент за разрешение инцидента"
+
+#: www/conf/emailtemplate.php:64
+msgid "The email of the person currently in charge of solving the incident"
+msgstr "Email ответственного в данный момент за разрешение инцидента"
+
+#: www/conf/emailtemplate.php:68
+msgid "The department of the person currently in charge of solving the incident"
+msgstr "Отдел ответственного в данный момент за разрешение инцидента"
+
+#: www/conf/emailtemplate.php:72
+msgid "The company of the person currently in charge of solving the incident"
+msgstr "Организация ответственного в данный момент за разрешение инцидента"
+
+#: www/conf/emailtemplate.php:76
+msgid "The priority of the incident in numbers from 1 (low) to 10 (high)"
+msgstr "Количественный показатель инцидента от 1 (низкий) до 10 (высокий)"
+
+#: www/conf/emailtemplate.php:80
+msgid "The priority in string format: Low, Medium or High"
+msgstr "Текстовое обозначение приоритета: Низкий, Средний или Высокий"
+
+#: www/conf/emailtemplate.php:84
+msgid "The extra labels of information attached to the incident"
+msgstr "Дополнительные ярлыки информации приложенной к инциденту"
+
+#: www/conf/emailtemplate.php:88
+msgid "When was the incident created"
+msgstr "Когда был создан инсидент"
+
+#: www/conf/emailtemplate.php:92
+msgid "What's the current status: Open or Close"
+msgstr "Текущий статус: Открыт или Закрыт"
+
+#: www/conf/emailtemplate.php:96
+msgid "The type of incident: Alarm, Event, Metric..."
+msgstr "Тип инцидента: Тревога, Событие, Метрика ..."
+
+#: www/conf/emailtemplate.php:100
+msgid "The incident category or group"
+msgstr "Категория или группа инцидента"
+
+#: www/conf/emailtemplate.php:104
+msgid "The time passed since the creation of the incident"
+msgstr "Время прошедшее с момента создания инцидента"
+
+#: www/conf/emailtemplate.php:108
+msgid "The description filled by the ticket author"
+msgstr "Описание от автора инцидента"
+
+#: www/conf/emailtemplate.php:112
+msgid "The action filled by the ticket author"
+msgstr "Действие созданное автором инцидента"
+
+#: www/conf/emailtemplate.php:116
+msgid "The person who just created a new ticket"
+msgstr "Имя человека только что создавшего новый талон"
+
+#: www/conf/emailtemplate.php:120
+msgid "The email of the ticket author"
+msgstr "Email автора талона"
+
+#: www/conf/emailtemplate.php:124
+msgid "The department of the ticket author"
+msgstr "Отдел автора талона"
+
+#: www/conf/emailtemplate.php:128
+msgid "The company of the ticket author"
+msgstr "Организация автора талона"
+
+#: www/conf/emailtemplate.php:132
+msgid "Who (Name and Email) received this email too"
+msgstr "Кто (Имя и Email) также получил это письмо"
+
+#: www/conf/emailtemplate.php:136
+msgid "The complete list of tickets related to this incident"
+msgstr "Полный список талонов относящихся к данному инсиденту"
+
+#: www/conf/emailtemplate.php:206
+msgid "Incident Email Template"
+msgstr "Шаблон письма инцидента"
+
+#: www/conf/emailtemplate.php:209
+msgid "Select a TAG to see its meaning"
+msgstr "Выберите ЯРЛЫК, чтобы увидеть его значение"
+
+#: www/conf/emailtemplate.php:217
+msgid "Template Labels"
+msgstr "Ярлыки шаблона"
+
+#: www/conf/emailtemplate.php:234
+#: www/conf/emailtemplate.php:281
+msgid "Subject"
+msgstr "Тема"
+
+#: www/conf/emailtemplate.php:265
+msgid "Preview"
+msgstr "Просмотр"
+
+#: www/conf/emailtemplate.php:266
+msgid "Reset to Defaults"
+msgstr "Сбросить до значений по-умолчанию"
+
+#: www/conf/emailtemplate.php:267
+msgid "All changes will be lost. Continue anyway?"
+msgstr "Все изменения будут потеряны. Продолжить?"
+
+#: www/conf/emailtemplate.php:268
+msgid "Save Template"
+msgstr "Сохранить Шаблон"
+
+#: www/conf/emailtemplate.php:285
+msgid "Body"
+msgstr "Текст"
+
+#: www/conf/main.php:13
+msgid "Language"
+msgstr "Язык"
+
+#: www/conf/main.php:14
+msgid "Configure Internationalization"
+msgstr "Установка локализации"
+
+#: www/conf/main.php:19
+msgid "German"
+msgstr "Немецкий"
+
+#: www/conf/main.php:20
+msgid "English"
+msgstr "Английский"
+
+#: www/conf/main.php:21
+msgid "Spanish"
+msgstr "Испанский"
+
+#: www/conf/main.php:22
+msgid "French"
+msgstr "Французский"
+
+#: www/conf/main.php:23
+msgid "Japanese"
+msgstr "Японский"
+
+#: www/conf/main.php:24
+msgid "Brazilian Portuguese"
+msgstr "Бразильский Португальский"
+
+#: www/conf/main.php:25
+msgid "Simplified Chinese"
+msgstr "Упрощённый Китайский"
+
+#: www/conf/main.php:26
+msgid "Traditional Chinese"
+msgstr "Традиционный Китайский"
+
+#: www/conf/main.php:27
+msgid "Russian"
+msgstr "Русский"
+
+#: www/conf/main.php:34
+msgid "Server"
+msgstr "Сервер"
+
+#: www/conf/main.php:35
+msgid "Configure the server's listening address"
+msgstr "Сконфигурировать адрес сервера"
+
+#: www/conf/main.php:45
+msgid "FrameworkD"
+msgstr "FrameworkD"
+
+#: www/conf/main.php:46
+msgid "Configure the frameworkd's listening address"
+msgstr "Сконфигурировать адрес frameworkd"
+
+#: www/conf/main.php:58
+msgid "Snort"
+msgstr "Snort"
+
+#: www/conf/main.php:59
+msgid "Snort database and path configuration"
+msgstr "Установка путей и базы данных для Snort"
+
+#: www/conf/main.php:75
+#: www/control_panel/global_score.php:17
+#: www/report/menu.php:56
+#: www/top.php:66
+msgid "Metrics"
+msgstr "Метрики"
+
+#: www/conf/main.php:76
+msgid "Configure metric settings"
+msgstr "Установка параметров метрик"
+
+#: www/conf/main.php:86
+#: www/top.php:60
+msgid "Executive Panel"
+msgstr "Исполнительная панель"
+
+#: www/conf/main.php:87
+msgid "Configure panel settings"
+msgstr "Конфигурирование установок панели"
+
+#: www/conf/main.php:97
+msgid "phpGACL"
+msgstr "phpGACL"
+
+#: www/conf/main.php:98
+msgid "Access control list database configuration"
+msgstr "Установки базы данных для системы контроля доступа"
+
+#: www/conf/main.php:112
+msgid "PHP"
+msgstr "PHP"
+
+#: www/conf/main.php:113
+msgid "PHP Configuration (graphs, acls, database api)"
+msgstr "Конфигурация PHP (диаграммы, контроль доступа, интерфейс базы данных)"
+
+#: www/conf/main.php:121
+msgid "Images (php jpgraph)"
+msgstr "Графика (php jpgraph)"
+
+#: www/conf/main.php:122
+msgid "Applets (jfreechart)"
+msgstr "Апплеты (jfreechart)"
+
+#: www/conf/main.php:127
+msgid "Yes (Need SVG plugin)"
+msgstr "Да (Нужен плагин SVG)"
+
+#: www/conf/main.php:139
+msgid "RRD"
+msgstr "RRD"
+
+#: www/conf/main.php:140
+msgid "RRD Configuration (graphing)"
+msgstr "Конфигурация RRD (диаграммы)"
+
+#: www/conf/main.php:160
+#: www/sensor/editsensor.php:531
+#: include/classes/Host_ids.inc:131
+msgid "Links"
+msgstr "Ссылки"
+
+#: www/conf/main.php:161
+msgid "Links to other applications"
+msgstr "Ссылки на другие приложения"
+
+#: www/conf/main.php:172
+#: www/top.php:326
+msgid "Backup"
+msgstr "Резервное копирование данных"
+
+#: www/conf/main.php:173
+msgid "Backup configuration: backup database, directory, interval"
+msgstr "Конфигурация резервного копирования: база данных, директория, интервал"
+
+#: www/conf/main.php:189
+msgid "Nessus"
+msgstr "Nessus"
+
+#: www/conf/main.php:190
+msgid "Nessus client configuration"
+msgstr "Конфигурация клиента Nessus"
+
+#: www/conf/main.php:210
+msgid "ACID"
+msgstr "ACID"
+
+#: www/conf/main.php:211
+msgid "Acid configuration"
+msgstr "Конфигурация Acid"
+
+#: www/conf/main.php:216
+msgid "Acid"
+msgstr "Acid"
+
+#: www/conf/main.php:217
+msgid "Base"
+msgstr "Base"
+
+#: www/conf/main.php:230
+msgid "External applications"
+msgstr "Внешние приложения"
+
+#: www/conf/main.php:231
+msgid "Path to other applications"
+msgstr "Путь к другим приложениям"
+
+#: www/conf/main.php:250
+#: www/conf/main.php:251
+msgid "User action logging"
+msgstr "Учет действий пользователя"
+
+#: www/conf/main.php:291
+#: www/conf/userlog.php:37
+msgid "Update configuration"
+msgstr "Обновить конфигурацию"
+
+#: www/conf/main.php:293
+msgid "Reset default values"
+msgstr "Сбросить значения по-умолчанию"
+
+#: www/conf/main.php:320
+msgid "Are you sure ?"
+msgstr "Вы уверены?"
+
+#: www/conf/main.php:339
+#: www/conf/main.php:345
+msgid "Main Configuration"
+msgstr "Основная Конфигурация"
+
+#: www/conf/plugin.php:9
+#: www/conf/plugin.php:15
+msgid "Priority and Reliability configuration"
+msgstr "Конфигурация Приорита и Достоверности"
+
+#: www/conf/plugin.php:25
+#: www/conf/pluginref.php:24
+#: www/conf/pluginsid.php:24
+#: www/control_panel/alarm_console.old.php:44
+#: www/control_panel/alarm_console.old.php:51
+#: www/control_panel/alarm_console.php:46
+#: www/control_panel/alarm_console.php:53
+#: www/control_panel/backlog.php:36
+#: www/control_panel/backlog.php:40
+#: www/control_panel/mac.php:38
+#: www/control_panel/os.php:37
+#: www/control_panel/services.php:40
+#: www/host/host.php:28
+#: www/host/modifyhost.php:59
+#: www/rrd_conf/modify_rrd_conf_form.php:36
+#: www/rrd_conf/rrd_conf.php:25
+#: www/scan/hostscan.php:22
+#: www/scan/scan.php:33
+#: www/sensor/sensor.php:27
+#: www/session/users.php:26
+#: www/signature/signature.php:24
+#: www/userlog/user_action_log.php:35
+#: www/userlog/user_action_log.php:37
+msgid "order"
+msgstr "порядок"
+
+#: www/conf/plugin.php:38
+#: www/control_panel/backlog.php:106
+#: www/control_panel/events.old.php:68
+#: www/control_panel/events.php:69
+#: www/incidents/incidenttag.php:119
+#: www/incidents/incidenttype.php:32
+#: www/sensor/sensor_plugins.php:31
+msgid "Id"
+msgstr "Идентификатор"
+
+#: www/conf/plugin.php:41
+#: www/conf/pluginsid.php:67
+#: www/directives/directive.php:88
+#: www/editor/rule.php:81
+#: www/incidents/incidenttag.php:96
+#: www/incidents/incidenttag.php:120
+#: www/net/newnetform.php:34
+#: www/net/newnetgroupform.php:35
+#: www/policy/modifyplugingroups.php:58
+#: www/policy/modifyplugingroupsform.php:91
+#: www/policy/plugingroups.php:47
+#: www/port/modifyportform.php:44
+#: www/port/newportform.php:21
+#: www/report/inventory.php:85
+#: www/sensor/interfaces.php:87
+#: www/sensor/interfaces.php:142
+#: www/session/modifyuser.php:32
+#: www/session/newuser.php:32
+#: www/session/newuserform.php:46
+#: www/session/users.php:44
+#: www/signature/modifysignatureform.php:45
+#: www/signature/newsignatureform.php:21
+#: www/signature/signature.php:37
+msgid "Name"
+msgstr "Имя"
+
+#: www/conf/plugin.php:44
+#: www/incidents/index.php:114
+#: www/incidents/index.php:261
+#: include/classes/Incident.inc:169
+msgid "Type"
+msgstr "Тип"
+
+#: www/conf/pluginref.php:8
+#: www/conf/pluginref.php:14
+msgid "Plugin reference"
+msgstr "Взаимотношение плагинов"
+
+#: www/conf/pluginref.php:25
+msgid "sup"
+msgstr "sup"
+
+#: www/conf/pluginref.php:26
+#: www/control_panel/alarm_console.old.php:50
+#: www/control_panel/alarm_console.php:52
+#: www/control_panel/backlog.php:39
+#: www/control_panel/mac.php:37
+#: www/control_panel/os.php:36
+#: www/control_panel/services.php:39
+#: www/userlog/user_action_log.php:36
+msgid "inf"
+msgstr "inf"
+
+#: www/conf/pluginref.php:66
+#: www/control_panel/alarm_console.old.php:143
+#: www/control_panel/alarm_console.php:145
+#: www/control_panel/backlog.php:92
+#: www/control_panel/mac.php:133
+#: www/control_panel/mac.php:313
+#: www/control_panel/os.php:132
+#: www/control_panel/os.php:317
+#: www/control_panel/services.php:134
+#: www/control_panel/services.php:323
+#: www/userlog/user_action_log.php:161
+#, php-format
+msgid "Prev %d"
+msgstr "Предыдущие %d"
+
+#: www/conf/pluginref.php:68
+#: www/control_panel/alarm_console.old.php:146
+#: www/control_panel/alarm_console.old.php:149
+#: www/control_panel/alarm_console.php:148
+#: www/control_panel/alarm_console.php:151
+#: www/control_panel/backlog.php:94
+#: www/control_panel/mac.php:138
+#: www/control_panel/mac.php:141
+#: www/control_panel/mac.php:318
+#: www/control_panel/mac.php:321
+#: www/control_panel/os.php:137
+#: www/control_panel/os.php:140
+#: www/control_panel/os.php:322
+#: www/control_panel/os.php:325
+#: www/control_panel/services.php:139
+#: www/control_panel/services.php:142
+#: www/control_panel/services.php:328
+#: www/control_panel/services.php:331
+#: www/userlog/user_action_log.php:164
+#: www/userlog/user_action_log.php:167
+#, php-format
+msgid "%d-%d of %d"
+msgstr "%d-%d из %d"
+
+#: www/conf/pluginref.php:70
+#: www/control_panel/alarm_console.old.php:147
+#: www/control_panel/alarm_console.php:149
+#: www/control_panel/backlog.php:96
+#: www/control_panel/mac.php:139
+#: www/control_panel/mac.php:319
+#: www/control_panel/os.php:138
+#: www/control_panel/os.php:323
+#: www/control_panel/services.php:140
+#: www/control_panel/services.php:329
+#: www/userlog/user_action_log.php:165
+#, php-format
+msgid "Next %d"
+msgstr "Следующие %d"
+
+#: www/conf/pluginref.php:79
+#: www/scan/deletehostscan.php:24
+#: www/scan/hostscan.php:49
+msgid "Plugin id"
+msgstr "Идентификатор плагина"
+
+#: www/conf/pluginref.php:84
+#: www/scan/hostscan.php:53
+msgid "Plugin sid"
+msgstr "Идентификатор под-плагина"
+
+#: www/conf/pluginref.php:89
+msgid "Reference id"
+msgstr "Связанный плагин"
+
+#: www/conf/pluginref.php:94
+msgid "Reference sid"
+msgstr "Связанный под-плагин"
+
+#: www/conf/pluginsid.php:8
+#: www/conf/pluginsid.php:14
+msgid "Plugin Sid"
+msgstr "Идентификатор под-плагина"
+
+#: www/conf/pluginsid.php:25
+#: www/conf/pluginupdate.php:17
+#: www/host/modifyhost.php:44
+#: www/host/newhost.php:43
+#: www/incidents/attachment.php:10
+#: www/incidents/modifyincidenttype.php:24
+#: www/incidents/newincidenttype.php:24
+msgid "id"
+msgstr "Идентификатор"
+
+#: www/conf/pluginsid.php:26
+#: www/editor/rule.php:12
+#: www/net/deletenetgroup.php:22
+#: www/net/modifynetgroupform.php:28
+#: www/port/modifyport.php:26
+#: www/port/newport.php:23
+#: www/signature/modifysignature.php:27
+#: www/signature/newsignature.php:25
+msgid "name"
+msgstr "имя"
+
+#: www/conf/pluginsid.php:51
+#: www/sensor/sensor_plugins.php:132
+msgid "Plugin"
+msgstr "Плагин"
+
+#: www/conf/pluginsid.php:55
+#: www/hids/host_detail.php:42
+msgid "Sid"
+msgstr "Под-плагин"
+
+#: www/conf/pluginsid.php:59
+#: www/directives/directive.php:264
+#: www/panel/window_panel.php:198
+msgid "Category"
+msgstr "Категория"
+
+#: www/conf/pluginsid.php:63
+#: www/incidents/index.php:113
+msgid "Class"
+msgstr "Класс"
+
+#: www/conf/pluginsid.php:71
+#: www/directives/directive.php:89
+#: www/incidents/incident.php:48
+#: www/incidents/incident.php:317
+#: www/incidents/incident.php:391
+#: www/incidents/index.php:118
+#: www/incidents/index.php:258
+#: www/incidents/newincident.php:125
+#: www/net/modifynet.php:33
+#: www/net/modifynetform.php:61
+#: www/net/newnet.php:35
+#: www/net/newnetform.php:45
+#: www/policy/modifypolicy.php:30
+#: www/policy/modifypolicyform.php:284
+#: www/policy/newpolicy.php:29
+#: www/policy/newpolicyform.php:208
+#: www/policy/policy.php:32
+#: www/rrd_conf/modify_rrd_conf_form.php:116
+#: www/sensor/modifysensor.php:30
+#: www/sensor/modifysensorform.php:58
+#: www/sensor/newsensor.php:30
+#: www/sensor/newsensorform.php:44
+#: www/sensor/sensor.php:61
+#: include/classes/Incident.inc:170
+msgid "Priority"
+msgstr "Приоритет"
+
+#: www/conf/pluginsid.php:75
+#: www/directives/directive.php:90
+#: www/directives/directive.php:304
+msgid "Reliability"
+msgstr "Достоверность"
+
+#: www/conf/pluginupdate.php:3
+#: www/control_panel/global_score.php:191
+#: www/riskmeter/index.php:28
+#: www/top.php:155
+msgid "Riskmeter"
+msgstr "Рискометр"
+
+#: www/conf/pluginupdate.php:18
+msgid "sid"
+msgstr "Под-плагин"
+
+#: www/conf/pluginupdate.php:19
+msgid "priority"
+msgstr "приоритет"
+
+#: www/conf/pluginupdate.php:20
+msgid "reliability"
+msgstr "достоверность"
+
+#: www/conf/pluginupdate.php:27
+#: include/ossim_error.inc:164
+msgid "Priority must be between 0 and 10"
+msgstr "Приоритет должен быть между 0 и 10"
+
+#: www/conf/pluginupdate.php:33
+#: include/ossim_error.inc:171
+msgid "Reliability must be between 0 and 5"
+msgstr "Достоверность должна быть между 0 и 5"
+
+#: www/conf/pluginupdate.php:50
+msgid "Priority and reliability successfully updated <br/>"
+msgstr "Приоритет и надежность успешно обновлены <br/>"
+
+#: www/conf/reload.php:7
+#: www/control_panel/anomalies.php:106
+#: www/control_panel/anomalies.php:169
+#: www/control_panel/rrd_anomaly.php:94
+#: www/control_panel/rrd_global.php:76
+#: www/hids/host_detail.php:43
+msgid "What"
+msgstr "Что"
+
+#: www/conf/reload.php:26
+#, php-format
+msgid "socket_create() failed: reason: %s\n"
+msgstr "socket_create() ошибка: причина: %s \n"
+
+#: www/conf/reload.php:32
+#, php-format
+msgid "socket_connect() failed: reason: %s %s\n"
+msgstr "socket_connect() ошибка: причина: %s %s \n"
+
+#: www/conf/reload.php:40
+msgid "Error connecting to server"
+msgstr "Ошибка при соединении с сервером"
+
+#: www/conf/reload.php:49
+msgid "Bad response from server"
+msgstr "Не верный ответ от сервера"
+
+#: www/conf/reload.php:61
+msgid "Reload completed successfully"
+msgstr "Перезагрузка успешно завершена"
+
+#: www/conf/userlog.php:8
+msgid "User logging Configuration"
+msgstr "Конфигурирование регистрации пользователей"
+
+#: www/control_panel/alarm_console.old.php:45
+#: www/control_panel/alarm_console.php:47
+#: www/control_panel/backlog.php:35
+msgid "delete"
+msgstr "delete"
+
+#: www/control_panel/alarm_console.old.php:46
+#: www/control_panel/alarm_console.php:48
+msgid "close"
+msgstr "close"
+
+#: www/control_panel/alarm_console.old.php:47
+#: www/control_panel/alarm_console.php:49
+msgid "delete_day"
+msgstr "delete_day"
+
+#: www/control_panel/alarm_console.old.php:48
+#: www/control_panel/alarm_console.php:50
+#: www/control_panel/backlog.php:37
+msgid "src_ip"
+msgstr "src_ip"
+
+#: www/control_panel/alarm_console.old.php:49
+#: www/control_panel/alarm_console.php:51
+#: www/control_panel/backlog.php:38
+msgid "dst_ip"
+msgstr "dst_ip"
+
+#: www/control_panel/alarm_console.old.php:52
+#: www/control_panel/alarm_console.php:54
+#: www/userlog/user_action_log.php:38
+#: www/userlog/user_action_log.php:39
+msgid "hide_closed"
+msgstr "hide_closed"
+
+#: www/control_panel/alarm_console.old.php:112
+#: www/control_panel/alarm_console.php:114
+msgid "Hide closed alarms"
+msgstr "Не показывать закрытые сигналы тревоги"
+
+#: www/control_panel/alarm_console.old.php:166
+#: www/control_panel/alarm_console.php:168
+#: www/control_panel/events.old.php:69
+#: www/control_panel/events.php:70
+#: www/incidents/index.php:128
+#: www/incidents/index.php:315
+#: www/report/sec_report.php:263
+#: www/report/sec_report.php:338
+msgid "Alarm"
+msgstr "Сигнал тревоги"
+
+#: www/control_panel/alarm_console.old.php:170
+#: www/control_panel/alarm_console.php:172
+#: www/control_panel/events.old.php:70
+#: www/control_panel/events.php:71
+#: www/report/sec_report.php:342
+msgid "Risk"
+msgstr "Риск"
+
+#: www/control_panel/alarm_console.old.php:171
+#: www/control_panel/alarm_console.php:173
+#: www/control_panel/anomalies.php:222
+#: www/control_panel/anomalies.php:343
+#: www/control_panel/anomalies.php:463
+#: www/control_panel/handle_mac.php:38
+#: www/control_panel/handle_mac.php:54
+#: www/control_panel/handle_os.php:38
+#: www/control_panel/handle_os.php:54
+#: www/control_panel/handle_services.php:38
+#: www/control_panel/handle_services.php:55
+#: www/incidents/newincident.php:222
+#: www/nagios/index.php:19
+#: www/nagios/menu.php:21
+#: www/ntop/index.php:19
+#: www/ntop/menu.php:22
+#: www/ntop/menu_session.php:22
+#: www/ntop/session.php:19
+#: www/sensor/interfaces.php:24
+#: www/sensor/sensor_plugins.php:29
+msgid "Sensor"
+msgstr "Сенсор"
+
+#: www/control_panel/alarm_console.old.php:172
+#: www/control_panel/alarm_console.php:174
+msgid "Since"
+msgstr "С"
+
+#: www/control_panel/alarm_console.old.php:176
+#: www/control_panel/alarm_console.php:178
+#: www/control_panel/mac.php:148
+#: www/control_panel/mac.php:328
+#: www/control_panel/os.php:147
+#: www/control_panel/os.php:332
+#: www/control_panel/services.php:149
+#: www/control_panel/services.php:338
+#: www/vulnmeter/index.php:117
+#, php-format
+msgid "Last"
+msgstr "Последнее"
+
+#: www/control_panel/alarm_console.old.php:180
+#: www/control_panel/alarm_console.php:182
+#: www/control_panel/events.old.php:72
+#: www/control_panel/events.php:73
+#: www/policy/modifypolicyform.php:51
+#: www/policy/newpolicyform.php:36
+#: www/policy/policy.php:27
+#: www/report/menu.php:65
+msgid "Source"
+msgstr "Источник"
+
+#: www/control_panel/alarm_console.old.php:184
+#: www/control_panel/alarm_console.php:186
+#: www/control_panel/events.old.php:73
+#: www/control_panel/events.php:74
+#: www/report/menu.php:68
+#: www/session/login.php:83
+msgid "Destination"
+msgstr "Назначение"
+
+#: www/control_panel/alarm_console.old.php:188
+#: www/control_panel/alarm_console.php:190
+#: www/incidents/incident.php:47
+#: www/incidents/incident.php:313
+#: www/incidents/incident.php:382
+#: www/incidents/index.php:117
+#: www/incidents/index.php:262
+#: www/sensor/sensor_plugins.php:133
+#: www/vulnmeter/do_nessus.php:25
+msgid "Status"
+msgstr "Состояние"
+
+#: www/control_panel/alarm_console.old.php:440
+#: www/control_panel/alarm_console.php:471
+msgid "Delete ALL alarms"
+msgstr "Удалить ВСЕ сигналы тревоги"
+
+#: www/control_panel/alarm_console.old.php:442
+#: www/control_panel/alarm_console.php:473
+msgid "Purge orphaned events"
+msgstr "Стереть события относящиеся к удаленным сигналам тревоги"
+
+#: www/control_panel/anomalies.php:8
+#: www/control_panel/backlog.php:8
+#: www/control_panel/events.old.php:7
+#: www/control_panel/events.php:7
+#: www/control_panel/global_score.php:9
+#: www/control_panel/rrd_anomaly.php:8
+#: www/control_panel/rrd_global.php:8
+#: www/control_panel/visualize.php:7
+#: www/top.php:46
+msgid "Control Panel"
+msgstr "Панeль Управлeния"
+
+#: www/control_panel/anomalies.php:15
+#: www/report/menu.php:105
+#: www/top.php:90
+msgid "Anomalies"
+msgstr "Аномалии"
+
+#: www/control_panel/anomalies.php:42
+msgid "acked"
+msgstr "acked"
+
+#: www/control_panel/anomalies.php:43
+#: www/control_panel/os.php:39
+msgid "ex_os"
+msgstr "ex_os"
+
+#: www/control_panel/anomalies.php:44
+#: www/control_panel/os.php:40
+msgid "ex_oss"
+msgstr "ex_oss"
+
+#: www/control_panel/anomalies.php:45
+#: www/control_panel/mac.php:40
+msgid "ex_mac"
+msgstr "ex_mac"
+
+#: www/control_panel/anomalies.php:46
+#: www/control_panel/mac.php:41
+msgid "ex_macs"
+msgstr "ex_macs"
+
+#: www/control_panel/anomalies.php:47
+#: www/control_panel/services.php:42
+msgid "ex_serv"
+msgstr "ex_serv"
+
+#: www/control_panel/anomalies.php:50
+#: www/control_panel/services.php:43
+msgid "ex_servs"
+msgstr "ex_servs"
+
+#: www/control_panel/anomalies.php:51
+#: www/control_panel/services.php:44
+msgid "ex_servp"
+msgstr "ex_servp"
+
+#: www/control_panel/anomalies.php:94
+#: www/control_panel/rrd_global.php:65
+msgid "RRD global anomalies"
+msgstr "Глобальные аномалии RRD"
+
+#: www/control_panel/anomalies.php:95
+#: www/control_panel/anomalies.php:157
+#: www/control_panel/anomalies.php:212
+#: www/control_panel/anomalies.php:333
+#: www/control_panel/anomalies.php:453
+#: www/control_panel/rrd_anomaly.php:83
+#: www/control_panel/rrd_global.php:66
+msgid "Fix"
+msgstr "Устранить"
+
+#: www/control_panel/anomalies.php:101
+#: www/control_panel/anomalies.php:164
+#: www/control_panel/rrd_anomaly.php:89
+#: www/control_panel/rrd_global.php:71
+msgid "Acknowledged"
+msgstr "Подтверждено"
+
+#: www/control_panel/anomalies.php:102
+#: www/control_panel/anomalies.php:165
+#: www/control_panel/rrd_anomaly.php:90
+#: www/control_panel/rrd_global.php:72
+msgid "Not Acknowledged"
+msgstr "Не  Подтверждено"
+
+#: www/control_panel/anomalies.php:106
+#: www/control_panel/anomalies.php:169
+#: www/control_panel/anomalies.php:221
+#: www/control_panel/anomalies.php:342
+#: www/control_panel/anomalies.php:462
+#: www/control_panel/global_score.php:618
+#: www/control_panel/global_score.php:685
+#: www/control_panel/os.php:166
+#: www/control_panel/rrd_anomaly.php:94
+#: www/control_panel/rrd_global.php:76
+#: www/hids/index.php:34
+#: www/incidents/newincident.php:216
+#: www/report/index.php:16
+#: www/report/inventory.php:21
+#: www/report/menu.php:28
+#: www/report/metrics.php:20
+#: www/report/sec_report.php:174
+#: www/scan/hostscan.php:45
+#: www/scan/scan.php:47
+#: www/vulnmeter/index.php:24
+msgid "Host"
+msgstr "Сервер"
+
+#: www/control_panel/anomalies.php:106
+#: www/control_panel/anomalies.php:169
+#: www/control_panel/anomalies.php:225
+#: www/control_panel/anomalies.php:346
+#: www/control_panel/anomalies.php:467
+#: www/control_panel/rrd_anomaly.php:94
+#: www/control_panel/rrd_global.php:76
+#: www/incidents/newincident.php:243
+#: www/incidents/newincident.php:278
+#: www/incidents/newincident.php:320
+msgid "When"
+msgstr "Когда"
+
+#: www/control_panel/anomalies.php:107
+#: www/control_panel/anomalies.php:170
+#: www/control_panel/rrd_anomaly.php:95
+#: www/control_panel/rrd_global.php:77
+msgid "Not acked count (hours)"
+msgstr "Не подвержденное число (часов)"
+
+#: www/control_panel/anomalies.php:107
+#: www/control_panel/anomalies.php:170
+#: www/control_panel/rrd_anomaly.php:95
+#: www/control_panel/rrd_global.php:77
+msgid "Over threshold (absolute)"
+msgstr "Превысило (абсолютное) значение"
+
+#: www/control_panel/anomalies.php:108
+#: www/control_panel/anomalies.php:171
+#: www/control_panel/anomalies.php:226
+#: www/control_panel/anomalies.php:347
+#: www/control_panel/anomalies.php:468
+#: www/control_panel/mac.php:176
+#: www/control_panel/os.php:173
+#: www/control_panel/rrd_anomaly.php:96
+#: www/control_panel/rrd_global.php:78
+#: www/control_panel/services.php:176
+msgid "Ack"
+msgstr "Подтверждение"
+
+#: www/control_panel/anomalies.php:156
+#: www/control_panel/rrd_anomaly.php:82
+msgid "RRD anomalies"
+msgstr "Аномалии RRD"
+
+#: www/control_panel/anomalies.php:199
+#: www/control_panel/anomalies.php:315
+#: www/control_panel/anomalies.php:433
+#: www/control_panel/anomalies.php:561
+#: www/control_panel/mac.php:162
+#: www/control_panel/mac.php:274
+#: www/control_panel/os.php:161
+#: www/control_panel/os.php:278
+#: www/control_panel/rrd_anomaly.php:129
+#: www/control_panel/rrd_global.php:128
+#: www/control_panel/services.php:163
+#: www/control_panel/services.php:284
+msgid "OK"
+msgstr "OK"
+
+#: www/control_panel/anomalies.php:200
+#: www/control_panel/anomalies.php:316
+#: www/control_panel/anomalies.php:434
+#: www/control_panel/anomalies.php:562
+#: www/control_panel/mac.php:163
+#: www/control_panel/mac.php:275
+#: www/control_panel/os.php:162
+#: www/control_panel/os.php:279
+#: www/control_panel/rrd_anomaly.php:130
+#: www/control_panel/rrd_global.php:129
+#: www/control_panel/services.php:164
+#: www/control_panel/services.php:285
+msgid "reset"
+msgstr "сбросить"
+
+#: www/control_panel/anomalies.php:211
+msgid "OS Changes"
+msgstr "Изменения ОС"
+
+#: www/control_panel/anomalies.php:215
+#: www/control_panel/anomalies.php:336
+#: www/control_panel/anomalies.php:456
+msgid "Get anom list"
+msgstr "Получить лист аномалий"
+
+#: www/control_panel/anomalies.php:216
+#: www/control_panel/anomalies.php:337
+#: www/control_panel/anomalies.php:457
+msgid "Get full list"
+msgstr "Получить полный лист"
+
+#: www/control_panel/anomalies.php:223
+#: www/control_panel/os.php:168
+#: www/host/modifyhostform.php:233
+#: www/host/newhostform.php:204
+#: www/incidents/index.php:320
+#: www/report/report.php:43
+msgid "OS"
+msgstr "ОС"
+
+#: www/control_panel/anomalies.php:224
+msgid "Previous OS"
+msgstr "Предыдущая ОС"
+
+#: www/control_panel/anomalies.php:227
+#: www/control_panel/anomalies.php:348
+#: www/control_panel/anomalies.php:469
+#: www/control_panel/mac.php:177
+#: www/control_panel/os.php:174
+#: www/control_panel/services.php:177
+msgid "Ignore"
+msgstr "Проигнорировать"
+
+#: www/control_panel/anomalies.php:332
+msgid "Mac Changes"
+msgstr "Изменения MAC адреса"
+
+#: www/control_panel/anomalies.php:344
+#: www/host/modifyhostform.php:258
+#: www/host/newhostform.php:217
+#: www/host/newhostform.php:228
+#: www/incidents/index.php:318
+msgid "Mac"
+msgstr "MAC адрес"
+
+#: www/control_panel/anomalies.php:345
+#: www/control_panel/mac.php:172
+msgid "Previous Mac"
+msgstr "Предыдущий MAC адрес"
+
+#: www/control_panel/anomalies.php:451
+msgid "Service Changes"
+msgstr "Изменения Сервиса"
+
+#: www/control_panel/anomalies.php:464
+#: www/control_panel/handle_services.php:40
+#: www/control_panel/handle_services.php:57
+#: www/control_panel/services.php:170
+#: www/incidents/newincident.php:290
+#: www/port/modifyport.php:44
+#: www/port/newport.php:42
+#: www/sensor/modifysensorform.php:98
+#: www/sensor/newsensorform.php:61
+#: www/sensor/sensor.php:65
+msgid "Port"
+msgstr "Порт"
+
+#: www/control_panel/anomalies.php:465
+#: www/control_panel/services.php:171
+msgid "Service [Version]"
+msgstr "Сервис [Версия]"
+
+#: www/control_panel/anomalies.php:466
+#: www/control_panel/services.php:173
+msgid "Previous Service [Version]"
+msgstr "Предыдущий Сервис [Версия]"
+
+#: www/control_panel/backlog.php:16
+#: www/top.php:259
+msgid "Backlog"
+msgstr "Незавершенные события"
+
+#: www/control_panel/backlog.php:110
+#: www/control_panel/events.old.php:71
+#: www/control_panel/events.php:72
+#: www/control_panel/handle_mac.php:39
+#: www/control_panel/handle_mac.php:55
+#: www/control_panel/handle_os.php:39
+#: www/control_panel/handle_os.php:55
+#: www/control_panel/handle_services.php:39
+#: www/control_panel/handle_services.php:56
+#: www/control_panel/os.php:169
+#: www/control_panel/services.php:172
+#: www/report/inventory.php:196
+msgid "Date"
+msgstr "Дата"
+
+#: www/control_panel/backlog.php:114
+#: www/directives/directive.php:85
+msgid "Directive"
+msgstr "Директивы"
+
+#: www/control_panel/backlog.php:118
+msgid "Matched"
+msgstr "Совпавшие"
+
+#: www/control_panel/backlog.php:146
+msgid "NO"
+msgstr "НЕТ"
+
+#: www/control_panel/backlog.php:148
+#: www/sensor/sensor.php:165
+msgid "YES"
+msgstr "ДА"
+
+#: www/control_panel/backlog.php:159
+msgid "Delete ALL"
+msgstr "Удалить ВСЕ"
+
+#: www/control_panel/events.old.php:14
+#: www/control_panel/events.php:14
+msgid "Alarms/Events"
+msgstr "Тревоги/События"
+
+#: www/control_panel/events.old.php:33
+#: www/control_panel/events.php:33
+#: www/control_panel/visualize.php:18
+msgid "backlog_id"
+msgstr "baclkog_id"
+
+#: www/control_panel/events.old.php:34
+#: www/control_panel/events.php:34
+msgid "event_id"
+msgstr "event_id"
+
+#: www/control_panel/events.old.php:35
+#: www/control_panel/events.php:35
+msgid "show_all"
+msgstr "show_all"
+
+#: www/control_panel/events.old.php:62
+#: www/control_panel/events.php:63
+msgid "Back to main"
+msgstr "Назад к главной"
+
+#: www/control_panel/events.old.php:74
+#: www/control_panel/events.php:75
+msgid "Correlation Level"
+msgstr "Уровень Корреляции"
+
+#: www/control_panel/events.old.php:256
+#: www/control_panel/events.php:282
+msgid "Alarm Summary"
+msgstr "Сводка тревог"
+
+#: www/control_panel/events.old.php:257
+#: www/control_panel/events.php:283
+#, php-format
+msgid "Total Events: %d"
+msgstr "Всего Событий: %d"
+
+#: www/control_panel/events.old.php:258
+#: www/control_panel/events.php:284
+#, php-format
+msgid "Unique Dst IPAddr: %d"
+msgstr "Уникальный IP адрес назначения: %d"
+
+#: www/control_panel/events.old.php:259
+#: www/control_panel/events.php:285
+#, php-format
+msgid "Unique Types: %d"
+msgstr "Уникальные Типы: %d"
+
+#: www/control_panel/events.old.php:260
+#: www/control_panel/events.php:286
+#, php-format
+msgid "Unique Dst Ports: %d"
+msgstr "Уникальные Порты назначения: %d"
+
+#: www/control_panel/events.old.php:264
+#: www/control_panel/events.php:290
+msgid "Visualize alarm"
+msgstr "Визуализировать сигнал тревоги"
+
+#: www/control_panel/global_score.php:35
+#: www/control_panel/show_image.php:18
+msgid "range"
+msgstr "диапазон"
+
+#: www/control_panel/global_score.php:36
+msgid "expand"
+msgstr "развернуть"
+
+#: www/control_panel/global_score.php:154
+#: www/control_panel/show_image.php:44
+msgid "Last Day"
+msgstr "День"
+
+#: www/control_panel/global_score.php:157
+#: www/control_panel/show_image.php:46
+msgid "Last Week"
+msgstr "Неделя"
+
+#: www/control_panel/global_score.php:160
+#: www/control_panel/show_image.php:48
+msgid "Last Month"
+msgstr "Месяц"
+
+#: www/control_panel/global_score.php:163
+#: www/control_panel/show_image.php:50
+msgid "Last Year"
+msgstr "Год"
+
+#: www/control_panel/global_score.php:192
+msgid "Service Level"
+msgstr "Уровень Сервиса"
+
+#: www/control_panel/global_score.php:250
+#: www/control_panel/global_score.php:256
+#: www/control_panel/global_score.php:303
+#: www/ntop/menu.php:164
+#: www/riskmeter/index.php:133
+msgid "Global"
+msgstr "Общий"
+
+#: www/control_panel/global_score.php:257
+#: www/control_panel/global_score.php:358
+#: www/control_panel/global_score.php:494
+#: www/control_panel/global_score.php:619
+msgid "Max C date"
+msgstr "Дата макс. уровня C"
+
+#: www/control_panel/global_score.php:258
+#: www/control_panel/global_score.php:359
+#: www/control_panel/global_score.php:495
+#: www/control_panel/global_score.php:620
+msgid "Max C"
+msgstr "Макс. уровень C"
+
+#: www/control_panel/global_score.php:259
+#: www/control_panel/global_score.php:360
+#: www/control_panel/global_score.php:496
+#: www/control_panel/global_score.php:621
+msgid "Current C"
+msgstr "Уровень C"
+
+#: www/control_panel/global_score.php:267
+#: www/control_panel/global_score.php:314
+msgid "GLOBAL SCORE"
+msgstr "ОБЩИЙ ПОКАЗАТЕЛЬ"
+
+#: www/control_panel/global_score.php:304
+#: www/control_panel/global_score.php:425
+#: www/control_panel/global_score.php:555
+#: www/control_panel/global_score.php:686
+msgid "Max A date"
+msgstr "Дата макс. уровня A"
+
+#: www/control_panel/global_score.php:305
+#: www/control_panel/global_score.php:426
+#: www/control_panel/global_score.php:556
+#: www/control_panel/global_score.php:687
+msgid "Max A"
+msgstr "Макс. уровень А"
+
+#: www/control_panel/global_score.php:306
+#: www/control_panel/global_score.php:427
+#: www/control_panel/global_score.php:557
+#: www/control_panel/global_score.php:688
+msgid "Current A"
+msgstr "Уровень А"
+
+#: www/control_panel/global_score.php:350
+#: www/riskmeter/index.php:223
+msgid "Groups"
+msgstr "Группы"
+
+#: www/control_panel/global_score.php:357
+#: www/control_panel/global_score.php:424
+msgid "Group"
+msgstr "Группа"
+
+#: www/control_panel/global_score.php:487
+#: www/net/modifynetgroupform.php:55
+#: www/net/net.php:15
+#: www/net/netgroup.php:58
+#: www/net/newnetgroupform.php:40
+#: www/riskmeter/index.php:343
+#: www/top.php:198
+msgid "Networks"
+msgstr "Сети"
+
+#: www/control_panel/global_score.php:493
+#: www/control_panel/global_score.php:554
+#: www/top.php:167
+msgid "Network"
+msgstr "Сеть"
+
+#: www/control_panel/global_score.php:611
+#: www/host/host.php:15
+#: www/riskmeter/index.php:531
+#: www/top.php:192
+msgid "Hosts"
+msgstr "Хосты"
+
+#: www/control_panel/handle_anomaly.php:57
+#: www/control_panel/handle_mac.php:68
+#: www/control_panel/handle_os.php:68
+#: www/control_panel/handle_services.php:70
+msgid "Successfully Acked/Deleted"
+msgstr "Успешно Подтвержденные/Удаленные"
+
+#: www/control_panel/handle_mac.php:37
+#: www/control_panel/handle_mac.php:53
+#: www/control_panel/handle_os.php:37
+#: www/control_panel/handle_os.php:53
+#: www/control_panel/handle_services.php:37
+#: www/control_panel/handle_services.php:54
+#: www/control_panel/show_image.php:19
+#: www/hids/host_detail.php:27
+#: www/host/deletehost.php:23
+#: www/host/modifyhost.php:43
+#: www/host/modifyhostform.php:27
+#: www/host/newhost.php:42
+#: www/host/newhostform.php:37
+msgid "ip"
+msgstr "ip"
+
+#: www/control_panel/mac.php:15
+msgid "OSSIM Framework - Mac list"
+msgstr "Инфраструкткра OSSIM - список MAC адресов"
+
+#: www/control_panel/mac.php:39
+#: www/control_panel/os.php:38
+#: www/control_panel/services.php:41
+msgid "show_anom"
+msgstr "show_anom"
+
+#: www/control_panel/mac.php:42
+#: www/control_panel/os.php:41
+#: www/control_panel/services.php:45
+msgid "num"
+msgstr "num"
+
+#: www/control_panel/mac.php:78
+#: www/control_panel/os.php:77
+#: www/control_panel/services.php:79
+#: www/vulnmeter/index.php:147
+msgid "Show"
+msgstr "Показать"
+
+#: www/control_panel/mac.php:87
+#: www/control_panel/os.php:86
+#: www/control_panel/services.php:88
+msgid " per page"
+msgstr "на странице"
+
+#: www/control_panel/mac.php:94
+msgid "Showing only anomalies, click here to see the complete mac list"
+msgstr "Видны только аномалии, нажмите здесь чтобы увидеть весь лист MAC адресов"
+
+#: www/control_panel/mac.php:96
+#: www/control_panel/os.php:95
+#: www/control_panel/services.php:97
+msgid "Click here to see the only the anomalies"
+msgstr "Нажмите здесь, чтобы видеть только аномалии"
+
+#: www/control_panel/mac.php:126
+#: www/control_panel/mac.php:306
+#: www/control_panel/os.php:125
+#: www/control_panel/os.php:310
+#: www/control_panel/services.php:127
+#: www/control_panel/services.php:316
+#, php-format
+msgid "First"
+msgstr "Первый"
+
+#: www/control_panel/mac.php:168
+#: www/control_panel/os.php:167
+#: www/control_panel/services.php:169
+msgid "Sensor [interface]"
+msgstr "Сенсор [интерфейс]"
+
+#: www/control_panel/mac.php:170
+msgid "Vendor"
+msgstr "Производитель"
+
+#: www/control_panel/mac.php:173
+msgid "Previous Vendor"
+msgstr "Предыдущий Производитель"
+
+#: www/control_panel/mac.php:174
+#: www/control_panel/os.php:171
+#: www/control_panel/services.php:174
+msgid "Previous Date"
+msgstr "Предыдущая дата"
+
+#: www/control_panel/mac.php:175
+#: www/control_panel/os.php:172
+#: www/control_panel/services.php:175
+msgid "Delta"
+msgstr "Дельта"
+
+#: www/control_panel/os.php:15
+msgid "OSSIM Framework - os list"
+msgstr "Инфраструктура OSSIM - список ОС"
+
+#: www/control_panel/os.php:93
+msgid "Showing only anomalies, click here to see the complete os list"
+msgstr "Видны только аномалии, нажмите здесь чтобы увидеть весь лист ОС"
+
+#: www/control_panel/os.php:170
+msgid "Previous os"
+msgstr "Предыдущая ОС"
+
+#: www/control_panel/rrd_anomaly.php:58
+#: www/control_panel/rrd_global.php:58
+msgid "RRD Anomalies"
+msgstr "RRD Аномалии"
+
+#: www/control_panel/services.php:15
+msgid "OSSIM Framework - services list"
+msgstr "Инфраструктура OSSIM - список сервисов"
+
+#: www/control_panel/services.php:95
+msgid "Showing only anomalies, click here to see the complete services list"
+msgstr "Видны только аномалии, нажмите здесь чтобы увидеть весь лист сервисов"
+
+#: www/control_panel/show_image.php:20
+msgid "what"
+msgstr "Что"
+
+#: www/control_panel/show_image.php:21
+#: www/sensor/sensor_plugins.php:169
+msgid "start"
+msgstr "старт"
+
+#: www/control_panel/show_image.php:22
+#: www/upgrade/index.php:21
+msgid "type"
+msgstr "тип"
+
+#: www/control_panel/show_image.php:23
+msgid "zoom"
+msgstr "увеличить"
+
+#: www/control_panel/show_image.php:34
+#: www/sensor/editsensor.php:557
+msgid "graph"
+msgstr "диаграмма"
+
+#: www/control_panel/show_image.php:53
+msgid "Compromise"
+msgstr "Вторжение"
+
+#: www/control_panel/show_image.php:56
+msgid "Attack"
+msgstr "Атака"
+
+#: www/control_panel/svg_level.php:10
+msgid "sl"
+msgstr "sl"
+
+#: www/control_panel/svg_level.php:11
+msgid "scale"
+msgstr "масштаб"
+
+#: www/control_panel/visualize.php:40
+msgid "Alarm viewer"
+msgstr "Просмотрщик сигналов тревоги"
+
+#: www/directives/directive.php:12
+#: www/directives/directive.php:35
+msgid "Directive Editor"
+msgstr "Редактор Директив"
+
+#: www/directives/directive.php:51
+msgid "directive_id"
+msgstr "directive_id"
+
+#: www/directives/directive.php:52
+msgid "level"
+msgstr "level"
+
+#: www/directives/directive.php:84
+msgid "Rules"
+msgstr "Правила"
+
+#: www/directives/directive.php:91
+msgid "Time_out"
+msgstr "Период"
+
+#: www/directives/directive.php:92
+msgid "Occurrence"
+msgstr "Количество"
+
+#: www/directives/directive.php:93
+msgid "From"
+msgstr "Источник"
+
+#: www/directives/directive.php:94
+msgid "To"
+msgstr "Назначение"
+
+#: www/directives/directive.php:95
+msgid "Port_from"
+msgstr "Порт источника"
+
+#: www/directives/directive.php:96
+msgid "Port_to"
+msgstr "Порт назначения"
+
+#: www/directives/directive.php:97
+msgid "Plugin ID"
+msgstr "Идентификатор плагина"
+
+#: www/directives/directive.php:98
+msgid "Plugin SID"
+msgstr "Идентификатор под-плагина"
+
+#: www/directives/directive.php:184
+msgid "Expand / Collapse"
+msgstr "Раскрыть/Свернуть"
+
+#: www/directives/directive.php:192
+#: www/policy/modifypolicyform.php:139
+#: www/policy/modifypolicyform.php:235
+#: www/policy/modifypolicyform.php:381
+#: www/policy/newpolicyform.php:98
+#: www/policy/newpolicyform.php:167
+#: www/policy/newpolicyform.php:274
+msgid "ANY"
+msgstr "ЛЮБЫЕ"
+
+#: www/directives/directive.php:258
+msgid "Click on the left side to view a directive"
+msgstr "Щёлкните мышкой по левой стороне для просмотра директивы"
+
+#: www/directives/directive.php:259
+msgid "Click on the categories of directives to expand or collapse them"
+msgstr "Щёлкните по категориям директив чтобы их раскрыть или свернуть"
+
+#: www/directives/directive.php:265
+msgid "Numbers"
+msgstr "Номера"
+
+#: www/directives/directive.php:266
+msgid "Generic ossim"
+msgstr "Общие ossim"
+
+#: www/directives/directive.php:267
+msgid "Attack correlation"
+msgstr "Корреляция Атаки"
+
+#: www/directives/directive.php:268
+msgid "Virus and Worms"
+msgstr "Вирусы и Черви"
+
+#: www/directives/directive.php:269
+msgid "Web attack correlation"
+msgstr "Корреляция веб-ориентированных атак"
+
+#: www/directives/directive.php:270
+msgid "DoS"
+msgstr "Атаки Отказ в Обслуживании"
+
+#: www/directives/directive.php:271
+msgid "Portscan/scan"
+msgstr "Сканирование портов/сетей"
+
+#: www/directives/directive.php:272
+msgid "Behaviour anomalies"
+msgstr "Аномалии поведения"
+
+#: www/directives/directive.php:273
+msgid "Network abuse and error"
+msgstr "Злоупотребление и ошибки использования сети"
+
+#: www/directives/directive.php:274
+msgid "Trojans"
+msgstr "Троянские кони"
+
+#: www/directives/directive.php:275
+msgid "Miscellaneous"
+msgstr "Разное"
+
+#: www/directives/directive.php:276
+msgid "User contributed"
+msgstr "Пользовательские"
+
+#: www/directives/directive.php:282
+msgid "What type of rule is this. There are two possible types as of today"
+msgstr "Какого типа правило. На сегодня возможны два типа"
+
+#: www/directives/directive.php:284
+msgid "Detector"
+msgstr "Детектор"
+
+#: www/directives/directive.php:285
+msgid "Detector rules are those received automatically from the agent as they are recorded. This includes snort, spade, apache, etc"
+msgstr "Правила типа детектор работают с событиями поступающими от агентов в режиме реального времени. Это события от snort, spade, apache и т.п."
+
+#: www/directives/directive.php:286
+#: www/riskmeter/options.php:46
+msgid "Monitor"
+msgstr "Монитор"
+
+#: www/directives/directive.php:287
+msgid "Monitor rules must be queried by the server ntop data and ntop sessions"
+msgstr "Правила типа монитор получают события от сервера который запрашивает данные и сессии ntop"
+
+#: www/directives/directive.php:290
+msgid "The  rule name shown within the event database when the level is matched"
+msgstr "Название правила показываемое в базе данных событий при срабатывании правила"
+
+#: www/directives/directive.php:291
+msgid "Accepts: UTF-8 compliant string"
+msgstr "Принимает: UTF-8 кодировку"
+
+#: www/directives/directive.php:293
+msgid "When we talk about priority we're talking about threat. It's the importance of the isolated attack. It has nothing to do with your equipment or environment, it only measures the relative importance of the attack"
+msgstr "Когда мы говорим о приоритете мы подразумеваем угрозу. Это значение важности отдельно взятого типа атаки. Оно не имеет ничего общего с вашим оборудованием и окружением, а только измеряет относительную важность этого типа атаки"
+
+#: www/directives/directive.php:294
+msgid "This will become clear using a couple of examples"
+msgstr "Это станет понятным на паре примеров"
+
+#: www/directives/directive.php:296
+msgid "Your unix server running samba gets attacked by the sasser worm"
+msgstr "Ваш samba сервер под UNIX атакован червём sasser"
+
+#: www/directives/directive.php:297
+msgid "The attack"
+msgstr "Эта атака"
+
+#: www/directives/directive.php:298
+msgid "per se"
+msgstr "по определению"
+
+#: www/directives/directive.php:299
+msgid "is dangerous, it has compromised thousands of hosts and is very easy to accomplish. But. does it really matter to you? Surely not, but it's a big security hole so it'll have a high priority"
+msgstr "опасна. Червь уже проник на тысячи  компьютеров и эту атаку легко осуществить. Но, имеет ли это значение для вас? Конечно же нет, но осуществление этой атаки приводит к большой дыре в системе безопасности, поэтому у этого типа атаки высокий приоритет"
+
+#: www/directives/directive.php:300
+msgid "You're running a CVS server on an isolated network that is only accessible by your friends and has only access to the outside. Some new exploit tested by one of your friends hits it"
+msgstr "Ваш CVS сервер работает в изолированной сети которая доступна только для ваших друзей и только через внешнее соединение. Одна из новых вредоносных программ (эксплойт), тестируемая вашим другом, атакует Ваш сервер"
+
+#: www/directives/directive.php:301
+msgid "Again, the attack is dangerous, it could compromise your machine but surely your host is patched against that particular attack and you don't mind being a test-platform for one of your friends"
+msgstr "Повторюсь, атака опасна, она может скомпрометировать ваш сервер, но, конечно же на вашем сервер стоят все необходимые патчи против данного вредоносного кода и Вы не против быть объектом для тестирования для одного из ваших друзей"
+
+#: www/directives/directive.php:303
+#: www/directives/directive.php:312
+msgid "Default value"
+msgstr "Значение по-умолчанию"
+
+#: www/directives/directive.php:305
+msgid "When talking about classic risk-assessment this would be called"
+msgstr "В терминах классической оценки рисков это называлось бы"
+
+#: www/directives/directive.php:306
+msgid "probability"
+msgstr "вероятность"
+
+#: www/directives/directive.php:307
+msgid "Since it's quite difficult to determine how probable it is that our network being attacked through one or another vulnerability, we'll transform this term into something more IDS related: reliability"
+msgstr "Так как довольно сложно определить насколько вероятно то, что наша сеть атакована с использованием той или иной уязвимости, мы трансформируем этот термин во что-нибудь больше относящееся к IDS - системе обнаружения вторжений: достоверность"
+
+#: www/directives/directive.php:308
+msgid "Surely many of you have seen unreliable signatures on every available NIDS. A host pinging a non-live destination is able to rise hundreds of thousands spade events a day. Snort's recent http-inspect functionality for example, although good implemented needs some heavy tweaking in order to be reliable or you'll get thousands of false positives a day"
+msgstr "Конечно же многие из вас видели недостоверные характеристики и признаки атак (сигнатуры) на любой системе обнаружения вторжений (IDS). Компьютер посылающий сигналы 'запрос-ответ' (ping) на другой не работающий компьютер способен спровоцировать сотни тысяч событий в день в детекторе spade. Новая функциональность Snort по инспектированию HTTP трафика хотя и выполнена хорошо требует основательной подстройки чтобы работать достоверно иначе вы будете получать тысячи ложных тревог ежедневно "
+
+#: www/directives/directive.php:309
+msgid "Coming back to our worm example. If a hosts connects to 5 different hosts on their own subnet using port 445, that could be a normal behaviour. Unreliable for IDS purposes. What happens if they connect to 15 hosts? We're starting to get suspicious. And what if they contact 500 different hosts in less than an hour? That's strange and the attack is getting more and more reliable"
+msgstr "Возвращаясь к нашему примеру с червём. Если компьютер соединяется с другими пятью компьютерами в своей сети используя порт 445 это вполне может быть нормальным состоянием сети. Мы не можем сказать, что это достоверное событие вторжения. А что если эти компютеры попытаются соединиться с 15 другими? Это становится подозрительным. А что если эти компьютеры попытаются соединиться с 500 различными компьютерами за меньше чем один час? Это странно и признаки атаки становятся все более очевидными"
+
+#: www/directives/directive.php:310
+msgid "Each rule has it's own reliability, determining how reliable this particular rule is within the whole attack chain"
+msgstr "У каждого правила есть свое значение достоверности, определяющее на сколько надежно это конкретное правило во всей цепи атаки"
+
+#: www/directives/directive.php:311
+msgid "Accepts: 0-10. Can be specified as absolute value (i.e. 7) or relative (i.e. +2 means two more than the previous level)"
+msgstr "Принимает: 0-10. Может быть указано как абсолютное значение (например, 7) или как относительное (например, +2 означает на два больше чем на предыдущем уровне)"
+
+#: www/directives/directive.php:313
+msgid "Ocurrence"
+msgstr "Количество"
+
+#: www/directives/directive.php:314
+msgid "How many times we have to match a unique"
+msgstr "Сколько раз должна встретиться уникальная комбинация"
+
+#: www/directives/directive.php:315
+msgid "in order to advance one correlation level"
+msgstr "для перехода на следующий уровень коррелляции"
+
+#: www/directives/directive.php:317
+msgid "We wait a fixed amount of seconds until a rule expires and the directives lifetime is over"
+msgstr "Мы ждем определённое количество секунд до момента когда срок действия правила истек и директива прекращает своё существование"
+
+#: www/directives/directive.php:319
+msgid "Source IP. There are various possible values for this field"
+msgstr "IP адрес источника. Возможны разные варианты значения этого поля"
+
+#: www/directives/directive.php:322
+#: www/directives/directive.php:343
+#: www/directives/directive.php:366
+msgid "Just that, any ip address would match"
+msgstr "Как значение и гласит - любой адрес"
+
+#: www/directives/directive.php:323
+#: www/directives/directive.php:344
+#: www/directives/directive.php:367
+msgid "Dotted numerical Ipv4"
+msgstr "Цифровая нотация IPv4 адреса"
+
+#: www/directives/directive.php:324
+#: www/directives/directive.php:345
+#: www/directives/directive.php:368
+msgid "Self explaining"
+msgstr "Не требует дополнительного разъяснения"
+
+#: www/directives/directive.php:325
+#: www/directives/directive.php:346
+#: www/directives/directive.php:369
+msgid "Comma separated Ipv4 addresses without netmask"
+msgstr "Разделенный запятыми список IPv4 адресов без масок сети"
+
+#: www/directives/directive.php:326
+#: www/directives/directive.php:347
+#: www/directives/directive.php:370
+msgid "You can use any number of ip addresses separated by commas"
+msgstr "Вы можете использовать любое количество IP адресов разделённых запятыми"
+
+#: www/directives/directive.php:327
+#: www/directives/directive.php:348
+msgid "Using a network name"
+msgstr "Имя сети"
+
+#: www/directives/directive.php:328
+#: www/directives/directive.php:349
+msgid "You can use any network name defined via web"
+msgstr "Вы можете использовать любое имя сети определённое через веб интерфейс"
+
+#: www/directives/directive.php:329
+#: www/directives/directive.php:350
+#: www/directives/directive.php:373
+msgid "Relative"
+msgstr "Относительное значение"
+
+#: www/directives/directive.php:330
+#: www/directives/directive.php:351
+msgid "This is used to reference ip addresses from previous levels. This should be easier to understand using examples"
+msgstr "Используется для ссылки на IP адрес на предыдущих уровнях коррелляции. Это легче понять на примерах"
+
+#: www/directives/directive.php:331
+#: www/directives/directive.php:352
+msgid "means use the source ip referenced within the previous rule"
+msgstr "означает использование IP адреса источника из предыдущего правила"
+
+#: www/directives/directive.php:332
+#: www/directives/directive.php:353
+msgid "means use the destination ip referenced two rules below as source address"
+msgstr "означает использвание IP адреса назначения из правила на два уровня до текущего правила в качестве адреса источника в текущем правиле"
+
+#: www/directives/directive.php:333
+#: www/directives/directive.php:354
+#: www/directives/directive.php:376
+msgid "Negated"
+msgstr "Отрицание"
+
+#: www/directives/directive.php:334
+#: www/directives/directive.php:355
+#: www/directives/directive.php:377
+msgid "You can also use negated elements. I.e."
+msgstr "Вы можете также использовать отрицание. Например,"
+
+#: www/directives/directive.php:336
+msgid "If "
+msgstr "Если "
+
+#: www/directives/directive.php:337
+#: www/directives/directive.php:358
+msgid "this would match the whole class C except"
+msgstr "то совпадение было бы для всей сети класса C за исключением"
+
+#: www/directives/directive.php:340
+msgid "Destination IP. There are various possible values for this field"
+msgstr "IP адрес назначения. Здесь возможны различные значения"
+
+#: www/directives/directive.php:357
+msgid "If"
+msgstr "Если"
+
+#: www/directives/directive.php:360
+msgid "The"
+msgstr "Поле"
+
+#: www/directives/directive.php:360
+msgid "field is the field used when referencing monitor data that has no source"
+msgstr "это поле используемое для ссылки на данные от мониторов которые не имеют адреса источника"
+
+#: www/directives/directive.php:361
+msgid "Both"
+msgstr "Оба"
+
+#: www/directives/directive.php:363
+msgid "Sensor IP. There are various possible values for this field"
+msgstr "IP адрес сенсора. Возможны несколько значений этого поля"
+
+#: www/directives/directive.php:371
+msgid "Using a sensor name"
+msgstr "Используя имя сенсора"
+
+#: www/directives/directive.php:372
+msgid "You can use any sensor name defined via web"
+msgstr "Вы можете использовать любое имя сенсора определенное через веб интерфейс"
+
+#: www/directives/directive.php:374
+msgid "This is used to reference sensor ip addresses from previous levels. This should be easier to understand using examples"
+msgstr "Это используется для ссылки на IP адреса сенсора на других уровнях. Это легче понять на примере"
+
+#: www/directives/directive.php:375
+msgid "means use the sensor ip referenced within the previous rule"
+msgstr "означает использование IP адреса сенсора встречающегося в предыдущем правиле"
+
+#: www/directives/directiveslist.php:30
+msgid "Missing required XSL file"
+msgstr "Отсутствует необходимый XSL файл"
+
+#: www/directives/directiveslist.php:33
+msgid "Missing required XML file"
+msgstr "Отсутствует необходимый XML файл"
+
+#: www/editor/rule.php:54
+#: www/editor/rule.php:63
+msgid "Rule editor"
+msgstr "Редактор Правил"
+
+#: www/editor/rule.php:85
+#: www/port/newsingleport.php:26
+#: www/port/newsingleportform.php:25
+msgid "Protocol"
+msgstr "Протокол"
+
+#: www/editor/rule.php:87
+msgid "SRC IP"
+msgstr "IP источника"
+
+#: www/editor/rule.php:89
+msgid "SRC Ports"
+msgstr "Порты источника"
+
+#: www/editor/rule.php:91
+msgid "Dir"
+msgstr "Дир"
+
+#: www/editor/rule.php:93
+msgid "DEST IP"
+msgstr "IP Назначения"
+
+#: www/editor/rule.php:95
+msgid "DEST Ports"
+msgstr "Порты Назначения"
+
+#: www/editor/rule.php:97
+msgid "Content"
+msgstr "Содержание"
+
+#: www/editor/rule.php:99
+msgid "Options"
+msgstr "Варианты"
+
+#: www/hids/hids_graph.php:10
+msgid "limit"
+msgstr "предел"
+
+#: www/hids/host_detail.php:15
+#: www/hids/index.php:15
+msgid "Host IDS"
+msgstr "Хост IDS"
+
+#: www/hids/host_detail.php:28
+msgid "date"
+msgstr "дата"
+
+#: www/hids/host_detail.php:44
+msgid "Event Type"
+msgstr "Тип События"
+
+#: www/hids/host_detail.php:45
+#: www/report/graphs/attack_graph.php:13
+#: www/report/graphs/incidents_bar_graph.php:12
+#: www/report/graphs/incidents_pie_graph.php:12
+#: include/classes/Incident.inc:185
+#: include/classes/Incident_ticket.inc:391
+msgid "Target"
+msgstr "Цель"
+
+#: www/hids/host_detail.php:46
+msgid "Extra Data"
+msgstr "Дополнительные данные"
+
+#: www/hids/index.php:34
+msgid "Event date"
+msgstr "Дата События"
+
+#: www/hids/index.php:34
+#: www/report/menu.php:70
+#: www/riskmeter/options.php:39
+#: www/top.php:78
+msgid "Events"
+msgstr "События"
+
+#: www/host/deletehost.php:15
+msgid "Delete host"
+msgstr "Удалить Хост"
+
+#: www/host/deletehost.php:24
+msgid "confirm"
+msgstr "подтвердить"
+
+#: www/host/deletehost.php:35
+#: www/incidents/deleteincidenttype.php:39
+#: www/net/deletenet.php:30
+#: www/net/deletenetgroup.php:30
+#: www/policy/deletepolicy.php:29
+#: www/port/deleteport.php:32
+#: www/scan/deletehostscan.php:31
+#: www/session/deleteuser.php:40
+#: www/signature/deletesignature.php:30
+msgid "Are you sure"
+msgstr "Вы уверенны"
+
+#: www/host/deletehost.php:58
+msgid "Host deleted"
+msgstr "Хост удален"
+
+#: www/host/host.php:29
+msgid "search"
+msgstr "поиск"
+
+#: www/host/host.php:43
+#: www/host/modifyhostform.php:55
+#: www/host/newhostform.php:66
+#: www/report/report.php:34
+#: www/sensor/modifysensorform.php:44
+#: www/sensor/newsensorform.php:35
+#: www/sensor/sensor.php:57
+msgid "Hostname"
+msgstr "Имя хоста"
+
+#: www/host/host.php:46
+#: www/report/report.php:38
+#: www/sensor/sensor.php:53
+msgid "Ip"
+msgstr "Ip"
+
+#: www/host/host.php:47
+#: www/host/modifyhostform.php:161
+#: www/host/newhostform.php:153
+msgid "NAT"
+msgstr "NAT"
+
+#: www/host/host.php:50
+#: www/host/modifyhostform.php:69
+#: www/host/newhostform.php:79
+#: www/net/net.php:73
+#: www/report/report.php:42
+msgid "Asset"
+msgstr "Актив"
+
+#: www/host/host.php:53
+#: www/net/net.php:76
+#: www/net/netgroup.php:61
+msgid "Threshold_C"
+msgstr "Порог_С"
+
+#: www/host/host.php:56
+#: www/net/net.php:79
+#: www/net/netgroup.php:64
+msgid "Threshold_A"
+msgstr "Порог_А"
+
+#: www/host/host.php:59
+#: www/host/modifyhostform.php:112
+#: www/host/newhostform.php:112
+#: www/net/modifynetform.php:98
+#: www/net/modifynetgroupform.php:110
+#: www/net/net.php:82
+#: www/net/netgroup.php:67
+#: www/net/newnetform.php:72
+#: www/net/newnetgroupform.php:89
+msgid "RRD Profile"
+msgstr "Профиль RRD"
+
+#: www/host/host.php:68
+#: www/host/modifyhostform.php:168
+#: www/host/newhostform.php:159
+#: www/net/modifynetform.php:147
+#: www/net/net.php:91
+#: www/net/newnetform.php:113
+#: www/policy/modifypolicyform.php:332
+#: www/policy/newpolicyform.php:241
+#: www/policy/policy.php:35
+#: www/sensor/sensor.php:15
+#: www/sensor/sensor_plugins.php:15
+#: www/top.php:177
+#: www/top.php:210
+msgid "Sensors"
+msgstr "Сенсоры"
+
+#: www/host/host.php:69
+msgid "Scantype"
+msgstr "Тип сканирования"
+
+#: www/host/host.php:146
+#: www/host/newhostform.php:23
+#: www/policy/modifypolicyform.php:56
+#: www/policy/modifypolicyform.php:151
+msgid "Insert new host"
+msgstr "Завести новый хост"
+
+#: www/host/host.php:150
+#: www/net/net.php:175
+#: www/ntop/menu_session.php:104
+#: www/ntop/menu_session.php:114
+#: www/policy/policy.php:190
+#: www/sensor/sensor.php:179
+#: www/signature/signature.php:80
+msgid "Reload"
+msgstr "Перезагрузить"
+
+#: www/host/host.php:158
+msgid "Search"
+msgstr "Поиск"
+
+#: www/host/modifyhost.php:15
+msgid "Update host"
+msgstr "Обновить хост"
+
+#: www/host/modifyhost.php:41
+#: www/host/newhost.php:40
+#: www/scan/newhostscan.php:24
+#: www/signature/modifysignature.php:26
+#: www/signature/newsignature.php:24
+msgid "insert"
+msgstr "вставить"
+
+#: www/host/modifyhost.php:42
+#: www/host/newhost.php:41
+msgid "hostname"
+msgstr "имя_хоста"
+
+#: www/host/modifyhost.php:45
+#: www/host/newhost.php:44
+#: www/net/modifynet.php:34
+#: www/net/modifynetgroup.php:28
+#: www/net/newnet.php:36
+#: www/net/newnetgroup.php:27
+msgid "threshold_a"
+msgstr "порог_a"
+
+#: www/host/modifyhost.php:46
+#: www/host/newhost.php:45
+#: www/net/modifynet.php:35
+#: www/net/modifynetgroup.php:29
+#: www/net/newnet.php:37
+#: www/net/newnetgroup.php:28
+msgid "threshold_c"
+msgstr "порог_c"
+
+#: www/host/modifyhost.php:47
+#: www/host/newhost.php:46
+msgid "nsens"
+msgstr "nsens"
+
+#: www/host/modifyhost.php:48
+#: www/host/newhost.php:47
+msgid "asset"
+msgstr "рессурс"
+
+#: www/host/modifyhost.php:49
+#: www/host/newhost.php:48
+msgid "alert"
+msgstr "тревога"
+
+#: www/host/modifyhost.php:50
+#: www/host/newhost.php:49
+msgid "persistence"
+msgstr "продолжительность"
+
+#: www/host/modifyhost.php:51
+#: www/host/newhost.php:50
+msgid "nat"
+msgstr "nat"
+
+#: www/host/modifyhost.php:52
+#: www/host/newhost.php:51
+#: www/signature/modifysignature.php:29
+#: www/signature/newsignature.php:27
+msgid "descr"
+msgstr "описание"
+
+#: www/host/modifyhost.php:53
+#: www/host/newhost.php:52
+msgid "rrd_profile"
+msgstr "rrd_профиль"
+
+#: www/host/modifyhost.php:54
+#: www/host/newhost.php:53
+msgid "os"
+msgstr "ос"
+
+#: www/host/modifyhost.php:55
+#: www/host/newhost.php:54
+msgid "mac_vendor"
+msgstr "производитель_mac"
+
+#: www/host/modifyhost.php:56
+#: www/host/newhost.php:55
+msgid "mac"
+msgstr "mac"
+
+#: www/host/modifyhost.php:57
+#: www/host/newhost.php:56
+msgid "nesus"
+msgstr "nesus"
+
+#: www/host/modifyhost.php:58
+#: www/host/newhost.php:57
+msgid "nagios"
+msgstr "nagios"
+
+#: www/host/modifyhostform.php:15
+msgid "Modify host"
+msgstr "Изменить хост"
+
+#: www/host/modifyhostform.php:61
+#: www/host/newhostform.php:70
+#: www/net/modifynetform.php:55
+#: www/report/graphs/draw_rrd.php:56
+#: www/riskmeter/frameoptions.php:5
+#: www/sensor/modifysensorform.php:52
+#: www/sensor/newsensorform.php:39
+#: include/classes/Incident_ticket.inc:398
+msgid "IP"
+msgstr "IP"
+
+#: www/host/modifyhostform.php:75
+#: www/host/newhostform.php:83
+msgid "0"
+msgstr "0"
+
+#: www/host/modifyhostform.php:79
+#: www/host/newhostform.php:85
+msgid "1"
+msgstr "1"
+
+#: www/host/modifyhostform.php:83
+#: www/host/newhostform.php:87
+msgid "2"
+msgstr "2"
+
+#: www/host/modifyhostform.php:87
+#: www/host/newhostform.php:89
+msgid "3"
+msgstr "3"
+
+#: www/host/modifyhostform.php:91
+#: www/host/newhostform.php:91
+msgid "4"
+msgstr "4"
+
+#: www/host/modifyhostform.php:95
+#: www/host/newhostform.php:93
+msgid "5"
+msgstr "5"
+
+#: www/host/modifyhostform.php:100
+#: www/host/newhostform.php:98
+#: www/net/modifynetform.php:86
+#: www/net/modifynetgroupform.php:98
+#: www/net/newnetform.php:58
+#: www/net/newnetgroupform.php:75
+msgid "Threshold C"
+msgstr "Порог C"
+
+#: www/host/modifyhostform.php:106
+#: www/host/newhostform.php:105
+#: www/net/modifynetform.php:92
+#: www/net/modifynetgroupform.php:104
+#: www/net/newnetform.php:65
+#: www/net/newnetgroupform.php:82
+msgid "Threshold A"
+msgstr "Порог А"
+
+#: www/host/modifyhostform.php:115
+#: www/host/newhostform.php:115
+#: www/net/modifynetform.php:100
+#: www/net/modifynetgroupform.php:112
+#: www/net/newnetform.php:75
+#: www/net/newnetgroupform.php:92
+msgid "Insert new profile"
+msgstr "Введите новый профиль"
+
+#: www/host/modifyhostform.php:171
+#: www/host/newhostform.php:162
+#: www/net/modifynetform.php:149
+#: www/net/newnetform.php:116
+#: www/policy/modifypolicyform.php:335
+#: www/sensor/newsensorform.php:15
+#: www/sensor/sensor.php:176
+msgid "Insert new sensor"
+msgstr "Введите новый сенсор"
+
+#: www/host/modifyhostform.php:211
+#: www/host/newhostform.php:194
+#: www/net/modifynetform.php:189
+#: www/net/modifynetgroupform.php:140
+#: www/net/newnetform.php:148
+#: www/net/newnetgroupform.php:112
+msgid "Scan options"
+msgstr "Варианты сканирования"
+
+#: www/host/modifyhostform.php:220
+#: www/host/newhostform.php:196
+#: www/net/newnetform.php:150
+#: www/net/newnetgroupform.php:115
+msgid "Enable nessus scan"
+msgstr "Включите сканирование по средствам nessus"
+
+#: www/host/modifyhostform.php:228
+#: www/host/newhostform.php:197
+#: www/net/newnetform.php:151
+msgid "Enable nagios"
+msgstr "Включить nagios"
+
+#: www/host/modifyhostform.php:238
+#: www/host/newhostform.php:209
+msgid "Unknown"
+msgstr "Неизвестно"
+
+#: www/host/modifyhostform.php:243
+#: www/host/newhostform.php:211
+msgid "Windows"
+msgstr "Windows"
+
+#: www/host/modifyhostform.php:248
+#: www/host/newhostform.php:213
+msgid "Linux"
+msgstr "Linux"
+
+#: www/host/modifyhostform.php:253
+#: www/host/newhostform.php:215
+msgid "BSD"
+msgstr "BSD"
+
+#: www/host/modifyhostform.php:268
+#: www/host/newhostform.php:221
+msgid "Plan9"
+msgstr "Plan9"
+
+#: www/host/modifyhostform.php:272
+#: www/host/newhostform.php:223
+msgid "Other"
+msgstr "Другая"
+
+#: www/host/modifyhostform.php:278
+msgid "Mac Address"
+msgstr "MAC адрес"
+
+#: www/host/modifyhostform.php:285
+#: www/host/newhostform.php:232
+msgid "Mac Vendor"
+msgstr "Производитель MAC"
+
+#: www/host/newhost.php:15
+msgid "New Host"
+msgstr "Новый Хост"
+
+#: www/host/newhost.php:58
+#: www/sensor/deletesensor.php:23
+#: www/sensor/modifysensor.php:26
+#: www/sensor/modifysensorform.php:24
+#: www/sensor/newsensor.php:26
+#: www/sensor/newsensorform.php:23
+msgid "Sensor name"
+msgstr "Имя сенсора"
+
+#: www/host/newhost.php:80
+msgid "You Need to select at least one sensor"
+msgstr "Необходимо выбрать по крайней мере один сенсор"
+
+#: www/host/newhost.php:115
+msgid "Host succesfully inserted"
+msgstr "Хост успешно добавлен"
+
+#: www/host/newhostform.php:18
+msgid "Insert new scan"
+msgstr "Ввести новое сканирование"
+
+#: www/host/newhostform.php:20
+msgid "Please, fill these global properties about the hosts you've scaned"
+msgstr "Пожалуйста, заполните глобальные свойства хоста, который вы просканировали"
+
+#: www/host/newhostform.php:38
+msgid "ips"
+msgstr "ips"
+
+#: www/host/newhostform.php:39
+msgid "scan"
+msgstr "scan"
+
+#: www/incidents/check.php:10
+msgid "q"
+msgstr "q"
+
+#: www/incidents/deleteincidenttype.php:15
+msgid "Delete Incident type"
+msgstr "Удалить тип инцидента"
+
+#: www/incidents/deleteincidenttype.php:23
+#: www/incidents/incident.php:13
+msgid "Incident ID"
+msgstr "Идентификатор инсидента"
+
+#: www/incidents/deleteincidenttype.php:62
+msgid "Action type deleted"
+msgstr "Тип действия удален"
+
+#: www/incidents/incident.php:44
+#: www/incidents/index.php:256
+msgid "Ticket"
+msgstr "Талон"
+
+#: www/incidents/incident.php:45
+#: www/incidents/newincident.php:111
+msgid "Incident"
+msgstr "Инцидент"
+
+#: www/incidents/incident.php:46
+msgid "In Charge"
+msgstr "Ответственный"
+
+#: www/incidents/incident.php:102
+msgid "n/a"
+msgstr "н/д"
+
+#: www/incidents/incident.php:189
+#: www/policy/plugingroups.php:63
+msgid "Edit"
+msgstr "Редактировать"
+
+#: www/incidents/incident.php:194
+msgid "New ticket"
+msgstr "Новый талон"
+
+#: www/incidents/incident.php:205
+msgid "Email changes to:"
+msgstr "Отправить изменения по email на:"
+
+#: www/incidents/incident.php:284
+msgid "Delete Ticket"
+msgstr "Удалить талон"
+
+#: www/incidents/incident.php:298
+#: www/incidents/incident.php:420
+msgid "Attachment"
+msgstr "Приложение"
+
+#: www/incidents/incident.php:324
+#: www/incidents/index.php:116
+#: www/incidents/index.php:260
+msgid "In charge"
+msgstr "Ответственный"
+
+#: www/incidents/incident.php:328
+msgid "Transferred To"
+msgstr "Передан на"
+
+#: www/incidents/incident.php:332
+msgid "Since Creation"
+msgstr "С момента создания"
+
+#: www/incidents/incident.php:385
+#: www/incidents/index.php:166
+msgid "Open"
+msgstr "Открыт"
+
+#: www/incidents/incident.php:386
+#: www/incidents/index.php:169
+msgid "Closed"
+msgstr "Закрыт"
+
+msgid "closed"
+msgstr "закрыт"
+
+#: www/incidents/incident.php:401
+#: www/incidents/index.php:185
+msgid "Low"
+msgstr "Низкий"
+
+#: www/incidents/incident.php:402
+#: www/incidents/index.php:182
+msgid "Medium"
+msgstr "Средний"
+
+#: www/incidents/incident.php:403
+#: www/incidents/index.php:179
+msgid "High"
+msgstr "Высокий"
+
+#: www/incidents/incident.php:407
+msgid "Transfer To"
+msgstr "Передать На"
+
+#: www/incidents/incident.php:436
+msgid "Add ticket"
+msgstr "Добавить талон"
+
+#: www/incidents/incident.php:443
+#: www/top.php:142
+msgid "Tags"
+msgstr "Ярлыки"
+
+#: www/incidents/incidenttag.php:33
+msgid "ID not valid"
+msgstr "Идентификатор не действителен"
+
+#: www/incidents/incidenttag.php:34
+msgid "<b>Name</b> required, should be only letters and underscores"
+msgstr "<b>Имя</b> обязательно, должно содержать только буквы и знак подчеркивания"
+
+#: www/incidents/incidenttag.php:35
+msgid "<b>Description</b> required and should contain valid characters"
+msgstr "<b>Описание</b> обязательно и должно содержать только допустимые символы"
+
+#: www/incidents/incidenttag.php:81
+msgid "Incident Tags"
+msgstr "Ярлыки инцидента"
+
+#: www/incidents/incidenttag.php:105
+msgid "Cancel"
+msgstr "Отменить"
+
+#: www/incidents/incidenttag.php:134
+#, php-format
+msgid "There are %d incidents using this tag. Do you really want to delete it?"
+msgstr "%d инцидентов используют этот ярлык. Вы действительно хотите удалить его?"
+
+#: www/incidents/incidenttag.php:141
+msgid "Add new tag"
+msgstr "Добавить новый ярлык"
+
+#: www/incidents/incidenttype.php:15
+msgid "Incidents types"
+msgstr "Типы инцидентов"
+
+#: www/incidents/index.php:29
+#: www/top.php:48
+#: www/top.php:130
+msgid "Incidents"
+msgstr "Инциденты"
+
+#: www/incidents/index.php:93
+#: www/userlog/user_action_log.php:61
+msgid "Filter"
+msgstr "Фильтр"
+
+#: www/incidents/index.php:94
+msgid "change to "
+msgstr "Изменить на"
+
+#: www/incidents/index.php:96
+#: www/incidents/index.php:103
+msgid "Advanced"
+msgstr "Расширенный"
+
+#: www/incidents/index.php:97
+#: www/incidents/index.php:102
+msgid "Simple"
+msgstr "Простой"
+
+#: www/incidents/index.php:115
+msgid "Search text in all fields"
+msgstr "Искать текст во всех полях"
+
+#: www/incidents/index.php:125
+#: www/incidents/index.php:144
+#: www/incidents/index.php:162
+#: www/incidents/index.php:176
+msgid "ALL"
+msgstr "ВСЕ"
+
+#: www/incidents/index.php:131
+#: www/incidents/index.php:325
+#: www/report/sec_report.php:265
+#: www/report/sec_report.php:340
+msgid "Event"
+msgstr "Событие"
+
+#: www/incidents/index.php:134
+#: www/incidents/index.php:327
+msgid "Metric"
+msgstr "Метрика"
+
+#: www/incidents/index.php:137
+#: www/incidents/index.php:316
+msgid "Anomaly"
+msgstr "Аномалия"
+
+#: www/incidents/index.php:202
+msgid "with User"
+msgstr "с Пользователем"
+
+#: www/incidents/index.php:203
+msgid "with Title"
+msgstr "с заголовком"
+
+#: www/incidents/index.php:204
+msgid "with Attachment Name"
+msgstr "с именем приложения"
+
+#: www/incidents/index.php:205
+msgid "with Tag"
+msgstr "с Ярлыком"
+
+#: www/incidents/index.php:257
+#: www/incidents/newincident.php:119
+#: include/classes/Incident.inc:168
+msgid "Title"
+msgstr "Название"
+
+#: www/incidents/index.php:259
+msgid "Life Time"
+msgstr "Оставшееся Время"
+
+#: www/incidents/index.php:263
+msgid "Extra"
+msgstr "Дополнительно"
+
+#: www/incidents/index.php:322
+#: www/ntop/menu.php:168
+msgid "Services"
+msgstr "Сервисы"
+
+#: www/incidents/manageincident.php:71
+msgid "Users with no valid email are not allowed to insert tickets"
+msgstr "Пользрватели без действительного email адреса не имеют права создавать талоны"
+
+#: www/incidents/manageincident.php:84
+#: www/upgrade/index.php:36
+#: www/upgrade/index.php:71
+msgid "Continue"
+msgstr "Продолжить"
+
+#: www/incidents/modifyincidenttype.php:15
+msgid "Modify Action type"
+msgstr "Изменить Тип Действия"
+
+#: www/incidents/modifyincidenttype.php:48
+msgid "Action type succesfully updated"
+msgstr "Тип Действия успешно обновлен"
+
+#: www/incidents/modifyincidenttypeform.php:15
+msgid "Modify Incident Type"
+msgstr "Изменить Тип Инцидента"
+
+#: www/incidents/modifyincidenttypeform.php:22
+#: www/incidents/modifyincidenttypeform.php:44
+#: www/report/incidentreport.php:71
+msgid "Incident type"
+msgstr "Тип Инцидента"
+
+#: www/incidents/newincident.php:153
+#: include/classes/Incident.inc:179
+msgid "Source Ips"
+msgstr "IP адреса источников"
+
+#: www/incidents/newincident.php:159
+#: include/classes/Incident.inc:180
+msgid "Dest Ips"
+msgstr "IP адреса назначений"
+
+#: www/incidents/newincident.php:165
+#: include/classes/Incident.inc:181
+#: include/classes/Incident_ticket.inc:385
+msgid "Source Ports"
+msgstr "Порты источника"
+
+#: www/incidents/newincident.php:171
+#: include/classes/Incident.inc:182
+msgid "Dest Ports"
+msgstr "Порты назначения"
+
+#: www/incidents/newincident.php:179
+msgid "Target (net, ip, etc)"
+msgstr "Цель (сеть, ip и.т.п.)"
+
+#: www/incidents/newincident.php:185
+#: include/classes/Incident.inc:186
+msgid "Metric type"
+msgstr "Тип Метрики"
+
+#: www/incidents/newincident.php:201
+#: include/classes/Incident.inc:187
+msgid "Metric value"
+msgstr "Значение Метрики"
+
+#: www/incidents/newincident.php:210
+#: include/classes/Incident_ticket.inc:397
+msgid "Anomaly type"
+msgstr "Тип аномалии"
+
+#: www/incidents/newincident.php:231
+msgid "Old OS"
+msgstr "Предыдущая ОС"
+
+#: www/incidents/newincident.php:237
+msgid "New OS"
+msgstr "Новая ОС"
+
+#: www/incidents/newincident.php:254
+msgid "Old mac"
+msgstr "Предыдущий mac"
+
+#: www/incidents/newincident.php:260
+msgid "New mac"
+msgstr "Новый mac"
+
+#: www/incidents/newincident.php:266
+msgid "Old vendor"
+msgstr "Предыдущий производитель"
+
+#: www/incidents/newincident.php:272
+msgid "New vendor"
+msgstr "Новый производитель"
+
+#: www/incidents/newincident.php:296
+msgid "Old Protocol"
+msgstr "Предыдущий протокол"
+
+#: www/incidents/newincident.php:302
+msgid "Old Version"
+msgstr "Предыдущая версия"
+
+#: www/incidents/newincident.php:308
+msgid "New Protocol"
+msgstr "Новый протокол"
+
+#: www/incidents/newincident.php:314
+msgid "New Version"
+msgstr "Новая версия"
+
+#: www/incidents/newincidenttype.php:15
+msgid "New Incident type"
+msgstr "Новый тип инцидента"
+
+#: www/incidents/newincidenttype.php:43
+msgid "New incident type  succesfully inserted"
+msgstr "Новый тип инцидента успешно создан"
+
+#: www/incidents/newincidenttypeform.php:20
+msgid "Add new incident type"
+msgstr "Добавить новый тип инцидента"
+
+#: www/incidents/newincidenttypeform.php:26
+msgid "Type id"
+msgstr "Идентификатор типа"
+
+#: www/index.php:11
+#: www/nagios/index.php:8
+#: www/ntop/index.php:8
+#: www/ntop/session.php:8
+msgid "OSSIM"
+msgstr "OSSIM"
+
+#: www/nagios/menu.php:91
+msgid "Service Detail"
+msgstr "Подробности сервиса"
+
+#: www/nagios/menu.php:94
+msgid "Host Detail"
+msgstr "Подробности Хоста"
+
+#: www/nagios/menu.php:97
+msgid "Status Overview"
+msgstr "Обзор статуса"
+
+#: www/nagios/menu.php:100
+msgid "Status Grid"
+msgstr "Сетка статуса"
+
+#: www/nagios/menu.php:103
+msgid "Status Map"
+msgstr "Карта статуса"
+
+#: www/nagios/menu.php:106
+msgid "Service Problems"
+msgstr "Проблемы Сервиса"
+
+#: www/nagios/menu.php:109
+msgid "Host Problems"
+msgstr "Проблемы хоста"
+
+#: www/nagios/menu.php:112
+msgid "Network Outages"
+msgstr "Простои сети"
+
+#: www/nagios/menu.php:115
+msgid "Comments"
+msgstr "Комментарии"
+
+#: www/nagios/menu.php:118
+msgid "Downtime"
+msgstr "Время простоя"
+
+#: www/nagios/menu.php:121
+msgid "Process Info"
+msgstr "Информация о процессах"
+
+#: www/nagios/menu.php:124
+#: www/nagios/menu.php:150
+msgid "Performance Info"
+msgstr "Информация о производительности"
+
+#: www/nagios/menu.php:127
+msgid "Scheduling Queue"
+msgstr "Очередь планирования"
+
+#: www/nagios/menu.php:132
+msgid "Trends"
+msgstr "Тенденции"
+
+#: www/nagios/menu.php:135
+#: www/top.php:172
+msgid "Availability"
+msgstr "Работоспособность"
+
+#: www/nagios/menu.php:138
+msgid "Event Histogram"
+msgstr "Гистограмма Событий"
+
+#: www/nagios/menu.php:141
+msgid "Event History"
+msgstr "История Событий"
+
+#: www/nagios/menu.php:144
+msgid "Event Summary"
+msgstr "Краткая подборка событий"
+
+#: www/nagios/menu.php:147
+msgid "Notifications"
+msgstr "Уведомления"
+
+#: www/net/deletenet.php:15
+msgid "Delete net"
+msgstr "Удалить сеть"
+
+#: www/net/deletenet.php:22
+#: www/net/modifynet.php:31
+#: www/net/modifynet.php:39
+#: www/net/modifynetform.php:28
+#: www/net/modifynetgroup.php:27
+#: www/net/modifynetgroup.php:31
+#: www/net/net.php:31
+#: www/net/newnet.php:33
+#: www/net/newnet.php:41
+#: www/net/newnetgroup.php:26
+#: www/net/newnetgroup.php:30
+#: www/riskmeter/index.php:16
+#: www/riskmeter/index.php:17
+msgid "Net name"
+msgstr "Имя сети"
+
+#: www/net/deletenet.php:54
+msgid "Net deleted"
+msgstr "Сеть удалена"
+
+#: www/net/deletenetgroup.php:15
+msgid "Delete network group"
+msgstr "Удалить группу сетей"
+
+#: www/net/deletenetgroup.php:53
+msgid "Network group deleted"
+msgstr "Группа сетей удалена"
+
+#: www/net/modifynet.php:15
+msgid "Update net"
+msgstr "Обновить данные сети"
+
+#: www/net/modifynet.php:32
+#: www/net/net.php:70
+#: www/net/newnet.php:34
+#: www/net/newnetform.php:38
+msgid "Ips"
+msgstr "IP адреса"
+
+#: www/net/modifynet.php:36
+#: www/net/modifynetgroup.php:30
+#: www/net/newnet.php:38
+#: www/net/newnetgroup.php:29
+#: www/session/modifyuser.php:34
+#: www/session/newuser.php:34
+msgid "nnets"
+msgstr "nnets"
+
+#: www/net/modifynet.php:37
+#: www/net/newnet.php:39
+msgid "Alert"
+msgstr "Сигнал тревоги"
+
+#: www/net/modifynet.php:38
+#: www/net/newnet.php:40
+#: www/rrd_conf/modify_rrd_conf_form.php:128
+msgid "Persistence"
+msgstr "Продолжительность"
+
+#: www/net/modifynet.php:79
+msgid "Net succesfully updated"
+msgstr "Данные о сети успешно обновлены"
+
+#: www/net/modifynetform.php:15
+msgid "Modify network"
+msgstr "Изменить данные сети"
+
+#: www/net/modifynetform.php:47
+msgid "Netname"
+msgstr "Имя сети"
+
+#: www/net/modifynetgroup.php:15
+msgid "Update network group"
+msgstr "Обновить данные о группе сетей"
+
+#: www/net/modifynetgroup.php:71
+msgid "Network group succesfully updated"
+msgstr "Данные о группе сетей успешно обновлены"
+
+#: www/net/modifynetgroupform.php:15
+msgid "Modify network group"
+msgstr "Изменить данные о группе сетей"
+
+#: www/net/modifynetgroupform.php:47
+msgid "Group Name"
+msgstr "Имя Группы"
+
+#: www/net/modifynetgroupform.php:57
+#: www/net/net.php:172
+#: www/net/newnetform.php:15
+#: www/net/newnetgroupform.php:43
+msgid "Insert new network"
+msgstr "Введите новую сеть"
+
+#: www/net/net.php:29
+#: www/net/netgroup.php:29
+msgid "Nagios action"
+msgstr "Действие nagios"
+
+#: www/net/net.php:30
+#: www/net/netgroup.php:30
+msgid "Nessus action"
+msgstr "Действие nessus"
+
+#: www/net/net.php:32
+#: www/net/netgroup.php:32
+#: www/port/port.php:24
+#: www/report/report.php:24
+msgid "Order"
+msgstr "Порядок"
+
+#: www/net/net.php:69
+#: www/net/netgroup.php:57
+#: www/netscan/do_scan.php:22
+#: www/netscan/do_scan.php:23
+#: www/vulnmeter/index.php:25
+msgid "Net"
+msgstr "Сеть"
+
+#: www/net/net.php:92
+msgid "Scan types"
+msgstr "Типы сканирования"
+
+#: www/net/net.php:139
+msgid "Nessus ENABLED"
+msgstr "Nessus ВКЛЮЧЕН"
+
+#: www/net/net.php:142
+msgid "Nessus DISABLED"
+msgstr "Nessus ВЫКЛЮЧЕН"
+
+#: www/net/net.php:149
+msgid "Nagios ENABLED"
+msgstr "Nagios ВКЛЮЧЕН"
+
+#: www/net/net.php:152
+msgid "Nagios DISABLED"
+msgstr "Nagios ВЫКЛЮЧЕН"
+
+#: www/net/netgroup.php:15
+#: www/top.php:204
+msgid "Network groups"
+msgstr "Группы сетей"
+
+#: www/net/netgroup.php:31
+msgid "Net group name"
+msgstr "Имя группы сетей"
+
+#: www/net/netgroup.php:68
+msgid "Nessus Scan"
+msgstr "Nessus сканирование"
+
+#: www/net/netgroup.php:135
+#: www/net/newnetgroupform.php:15
+msgid "Insert new network group"
+msgstr "Введите новую группу сетей"
+
+#: www/net/newnet.php:15
+msgid "New network"
+msgstr "Новая сеть"
+
+#: www/net/newnet.php:80
+msgid "Network succesfully inserted"
+msgstr "Новая сеть успешно заведена"
+
+#: www/net/newnetform.php:40
+msgid "example"
+msgstr "пример"
+
+#: www/net/newnetgroup.php:15
+msgid "New network group"
+msgstr "Новая группа сетей"
+
+#: www/net/newnetgroup.php:70
+msgid "Network group succesfully inserted"
+msgstr "Новая группа сетей успешно заведена"
+
+#: www/netscan/index.php:51
+#: www/top.php:314
+msgid "Net Scan"
+msgstr "Сканирование сети"
+
+#: www/netscan/index.php:65
+msgid "Please, select the network you want to scan:"
+msgstr "Пожалуйста, выберите сеть, которую  вы хотите просканировать:"
+
+#: www/netscan/index.php:90
+msgid "Scan"
+msgstr "Сканирование"
+
+#: www/netscan/index.php:106
+msgid "NOTE: This tool is a nmap frontend. In order to use all nmap funcionality, you need root privileges."
+msgstr "ПРИМЕЧАНИЕ: Этот инструмент - внешний интерфейс nmap. Для использования всей функциональности nmap, вы должны обладать привилегиями пользователя root"
+
+#: www/netscan/index.php:109
+msgid "For this purpose you can use suphp, or set suid to nmap binary (chmod 4750 /usr/bin/nmap) changing the group to the one of the web-user (chgrp www /usr/bin/nmap)."
+msgstr "Для этой цели вы можете использовать suphp или установить suid флаг бинарному файлу nmap (chmod 4750 /usr/bin/nmap) и изменить группу на ту которой принадлежит пользователь под которым работает веб сервер (chgrp www /usr/bin/nmap)."
+
+#: www/netscan/scan_db.php:25
+msgid "Return to host's policy"
+msgstr "Возврат к политике хоста"
+
+#: www/netscan/scan_db.php:52
+#: www/policy/deletepolicy.php:21
+#: www/policy/modifypolicy.php:37
+#: www/policy/modifypolicyform.php:29
+msgid "Policy id"
+msgstr "Идентификатор Политики"
+
+#: www/netscan/scan_db.php:63
+msgid "Updating "
+msgstr "Обновление"
+
+#: www/netscan/scan_db.php:88
+msgid "Inserting "
+msgstr "Введение"
+
+#: www/ntop/menu.php:23
+msgid "interface"
+msgstr "интерфейс"
+
+#: www/ntop/menu.php:24
+msgid "proto"
+msgstr "протокол"
+
+#: www/ntop/menu.php:166
+msgid "Protocols"
+msgstr "Протоколы"
+
+#: www/ntop/menu.php:171
+#: www/ntop/menu.php:190
+msgid "By host: Total"
+msgstr "По хостам: Итого"
+
+#: www/ntop/menu.php:174
+#: www/ntop/menu.php:193
+msgid "By host: Sent"
+msgstr "По хостам: Послано"
+
+#: www/ntop/menu.php:177
+#: www/ntop/menu.php:196
+msgid "By host: Recv"
+msgstr "По хостам: Получено"
+
+#: www/ntop/menu.php:181
+msgid "Service statistic"
+msgstr "Статистика сервисов"
+
+#: www/ntop/menu.php:185
+msgid "By client-server"
+msgstr "По клиент-сервер"
+
+#: www/ntop/menu.php:187
+msgid "Throughput"
+msgstr "Пропускная способность"
+
+#: www/ntop/menu.php:199
+msgid "Total (Graph)"
+msgstr "Итого (Диаграмма)"
+
+#: www/ntop/menu.php:201
+msgid "Matrix"
+msgstr "Матрица"
+
+#: www/ntop/menu.php:204
+msgid "Data Matrix"
+msgstr "Матрица Данных"
+
+#: www/ntop/menu.php:208
+msgid "Time Matrix"
+msgstr "Матрица Времени"
+
+#: www/ntop/menu.php:210
+msgid "Gateways, VLANs"
+msgstr "Маршрутизаторы, VLAN"
+
+#: www/ntop/menu.php:213
+msgid "Gateways"
+msgstr "Маршрутизаторы"
+
+#: www/ntop/menu.php:216
+msgid "VLANs"
+msgstr "VLAN"
+
+#: www/ntop/menu.php:219
+msgid "OS and Users"
+msgstr "ОС и пользователи"
+
+#: www/ntop/menu.php:222
+msgid "Domains"
+msgstr "Домены"
+
+#: www/ntop/net_session.php:18
+msgid "net"
+msgstr "сеть"
+
+#: www/panel/custom_graph.php:49
+msgid "SQL Query invalid due security reasons"
+msgstr "Запрос SQL признан не действительным из соображений безопасности"
+
+#: www/panel/panel.php:35
+msgid "New window"
+msgstr "Новое окно"
+
+#: www/panel/panel.php:125
+msgid "Panel config"
+msgstr "Конфигурация панели"
+
+#: www/panel/panel.php:126
+msgid "Geom"
+msgstr "Геометрия"
+
+#: www/panel/panel.php:131
+msgid "Apply"
+msgstr "Применить"
+
+#: www/panel/window_panel.php:102
+msgid "Exported text"
+msgstr "Экспортированый текст"
+
+#: www/panel/window_panel.php:206
+msgid "Sub-category"
+msgstr "Под-категория"
+
+#: www/panel/window_panel.php:214
+msgid "Settings"
+msgstr "Установки"
+
+#: www/panel/window_panel.php:223
+msgid "Export Config"
+msgstr "Экспортировать конфигурацию"
+
+#: www/panel/window_panel.php:226
+msgid "Update Output"
+msgstr "Обновить выходные данные"
+
+#: www/panel/window_panel.php:231
+msgid "Config for window position"
+msgstr "Конфигурация позиционирования окна"
+
+#: www/panel/window_panel.php:237
+msgid "Accept config"
+msgstr "Принять конфигурацию"
+
+#: www/policy/deletepolicy.php:15
+msgid "Delete policy"
+msgstr "Удалить политику"
+
+#: www/policy/deletepolicy.php:47
+msgid "Policy deleted"
+msgstr "Политика удалена"
+
+#: www/policy/modifyplugingroups.php:46
+msgid "Sid can not be empty. Specify '0' if you want ALL sids"
+msgstr "под-плагин не может отсутствовать. Укажите '0' если вы хотите все под-плагины"
+
+#: www/policy/modifyplugingroups.php:69
+msgid "Error for plugin "
+msgstr "Ошибка плагина"
+
+#: www/policy/modifyplugingroups.php:76
+msgid "No plugins or SIDs selected"
+msgstr "Не выбран ни один плагин или под-плагин"
+
+#: www/policy/modifyplugingroupsform.php:47
+#: www/policy/modifypolicyform.php:313
+#: www/policy/newpolicyform.php:223
+#: www/policy/plugingroups.php:25
+#: www/top.php:240
+msgid "Plugin Groups"
+msgstr "Группы плагинов"
+
+#: www/policy/modifyplugingroupsform.php:90
+#: include/classes/Host_ids.inc:135
+msgid "Group ID"
+msgstr "Идентификатор группы"
+
+#: www/policy/modifyplugingroupsform.php:147
+msgid "Accept"
+msgstr "Принять"
+
+#: www/policy/modifypolicy.php:16
+msgid "Update Policy"
+msgstr "Обновить Политику"
+
+#: www/policy/modifypolicy.php:31
+#: www/policy/newpolicy.php:30
+msgid "Begin hour"
+msgstr "Час начала"
+
+#: www/policy/modifypolicy.php:32
+#: www/policy/newpolicy.php:31
+msgid "Begin day"
+msgstr "День начала"
+
+#: www/policy/modifypolicy.php:33
+#: www/policy/newpolicy.php:32
+msgid "End day"
+msgstr "День окончания"
+
+#: www/policy/modifypolicy.php:34
+#: www/policy/newpolicy.php:33
+msgid "End hour"
+msgstr "Час окончания"
+
+#: www/policy/modifypolicy.php:36
+#: www/policy/newpolicy.php:35
+#: www/policy/policy.php:38
+msgid "Store"
+msgstr "Сохранить"
+
+#: www/policy/modifypolicy.php:97
+#: www/policy/newpolicy.php:92
+msgid "At least one Source IP or Net required"
+msgstr "Нобходим по крайней мере один IP адрес или сеть источника"
+
+#: www/policy/modifypolicy.php:135
+#: www/policy/newpolicy.php:129
+msgid "At least one Destination IP or Net required"
+msgstr "Нобходим по крайней мере один IP адрес или сеть назначения"
+
+#: www/policy/modifypolicy.php:155
+#: www/policy/newpolicy.php:149
+msgid "At least one Port required"
+msgstr "Нобходим по крайней мере один порт"
+
+#: www/policy/modifypolicy.php:163
+#: www/policy/newpolicy.php:157
+msgid "Plugin Group ID"
+msgstr "Идентификатор группы плагинов"
+
+#: www/policy/modifypolicy.php:168
+msgid "No plugin group selected"
+msgstr "Не выбрана группа плагинов"
+
+#: www/policy/modifypolicy.php:207
+msgid "Policy succesfully updated"
+msgstr "Политика успешно обновлена"
+
+#: www/policy/modifypolicyform.php:15
+msgid "Update policy"
+msgstr "Обновить политику"
+
+#: www/policy/modifypolicyform.php:53
+#: www/policy/modifypolicyform.php:148
+msgid "Insert new net"
+msgstr "Введите новую сеть"
+
+#: www/policy/modifypolicyform.php:146
+#: www/policy/newpolicyform.php:105
+#: www/policy/policy.php:28
+msgid "Dest"
+msgstr "Назначение"
+
+#: www/policy/modifypolicyform.php:242
+#: www/policy/newpolicyform.php:174
+#: www/port/modifyportform.php:52
+#: www/port/newportform.php:25
+#: www/port/port.php:15
+#: www/port/port.php:39
+#: www/top.php:224
+msgid "Ports"
+msgstr "Порты"
+
+#: www/policy/modifypolicyform.php:244
+#: www/port/newportform.php:15
+#: www/port/newsingleportform.php:15
+msgid "Insert new port group"
+msgstr "Введите новую группу портов"
+
+#: www/policy/modifypolicyform.php:289
+#: www/policy/newpolicyform.php:211
+#: www/policy/policy.php:94
+msgid "Do not change"
+msgstr "Не менять"
+
+#: www/policy/modifypolicyform.php:316
+#: www/policy/newpolicyform.php:226
+msgid "Insert new plugin group"
+msgstr "Создать новую группу плагинов"
+
+#: www/policy/modifypolicyform.php:386
+#: www/policy/newpolicyform.php:279
+#: www/policy/policy.php:36
+msgid "Time Range"
+msgstr "Временной Диапазон"
+
+#: www/policy/modifypolicyform.php:391
+#: www/policy/newpolicyform.php:283
+msgid "Begin"
+msgstr "Начало"
+
+#: www/policy/modifypolicyform.php:391
+#: www/policy/newpolicyform.php:283
+msgid "End"
+msgstr "Конец"
+
+#: www/policy/modifypolicyform.php:609
+#: www/policy/newpolicyform.php:366
+msgid "Store events"
+msgstr "Сохранить события"
+
+#: www/policy/newpolicy.php:16
+msgid "New policy"
+msgstr "Новая политика"
+
+#: www/policy/newpolicy.php:162
+msgid "At least one plugin group required"
+msgstr "Нобходима по крайней мере одна группа плагинов"
+
+#: www/policy/newpolicy.php:199
+msgid "Policy succesfully inserted"
+msgstr "Новая политика успешно создана"
+
+#: www/policy/newpolicyform.php:38
+#: www/policy/newpolicyform.php:107
+msgid "Insert new net?"
+msgstr "Создать новую сеть?"
+
+#: www/policy/newpolicyform.php:41
+#: www/policy/newpolicyform.php:110
+msgid "Insert new host?"
+msgstr "Создать новый хост?"
+
+#: www/policy/newpolicyform.php:176
+msgid "Insert new port group?"
+msgstr "Создать новую группу портов?"
+
+#: www/policy/newpolicyform.php:243
+msgid "Insert new sensor?"
+msgstr "Создать новый сенсор"
+
+#: www/policy/newpolicyform.php:288
+#: www/policy/newpolicyform.php:326
+msgid "Mon"
+msgstr "Пон"
+
+#: www/policy/newpolicyform.php:289
+#: www/policy/newpolicyform.php:327
+msgid "Tue"
+msgstr "Вто"
+
+#: www/policy/newpolicyform.php:290
+#: www/policy/newpolicyform.php:328
+msgid "Wed"
+msgstr "Сре"
+
+#: www/policy/newpolicyform.php:291
+#: www/policy/newpolicyform.php:329
+msgid "Thu"
+msgstr "Чет"
+
+#: www/policy/newpolicyform.php:292
+#: www/policy/newpolicyform.php:330
+msgid "Fri"
+msgstr "Пят"
+
+#: www/policy/newpolicyform.php:293
+#: www/policy/newpolicyform.php:331
+msgid "Sat"
+msgstr "Суб"
+
+#: www/policy/newpolicyform.php:332
+msgid "Sun"
+msgstr "Вос"
+
+#: www/policy/plugingroups.php:41
+msgid "Insert new group"
+msgstr "Создать новую группу"
+
+#: www/policy/plugingroups.php:46
+#: include/classes/Incident.inc:799
+msgid "ID"
+msgstr "Идентификатор"
+
+#: www/policy/policy.php:15
+#: www/top.php:50
+#: www/top.php:185
+msgid "Policy"
+msgstr "Политика"
+
+#: www/policy/policy.php:33
+msgid "Port Group"
+msgstr "Группа Портов"
+
+#: www/policy/policy.php:34
+msgid "Plugin Group"
+msgstr "Группа Плагинов"
+
+#: www/policy/policy.php:186
+msgid "Insert new policy"
+msgstr "Введите новую политику"
+
+#: www/port/deleteport.php:15
+msgid "Delete port group"
+msgstr "Удалить группу портов"
+
+#: www/port/deleteport.php:23
+#: www/port/modifyportform.php:26
+msgid "Port group name"
+msgstr "Имя группы портов"
+
+#: www/port/deleteport.php:50
+msgid "Port group deleted"
+msgstr "Группа портов удалена"
+
+#: www/port/modifyport.php:15
+msgid "Modify Port group"
+msgstr "Изменить группу портов"
+
+#: www/port/modifyport.php:27
+msgid "nports"
+msgstr "nports"
+
+#: www/port/modifyport.php:57
+msgid "Port succesfully updated"
+msgstr "Порт успешно обновлен"
+
+#: www/port/modifyportform.php:15
+msgid "Modify port group"
+msgstr "Изменить группу портов"
+
+#: www/port/newport.php:15
+#: www/port/newsingleport.php:15
+msgid "New port"
+msgstr "Новый порт"
+
+#: www/port/newport.php:24
+msgid "nportse"
+msgstr "nportse"
+
+#: www/port/newport.php:25
+msgid "Descrition"
+msgstr "Описание"
+
+#: www/port/newport.php:57
+#: www/port/newsingleport.php:45
+msgid "Port succesfully inserted"
+msgstr "Порт усрпешно введён"
+
+#: www/port/newsingleport.php:27
+#: www/port/newsingleportform.php:36
+#: www/report/inventory.php:194
+#: www/report/sec_report.php:470
+msgid "Service"
+msgstr "Сервис"
+
+#: www/port/newsingleportform.php:21
+#: www/sensor/modifysensor.php:28
+#: www/sensor/newsensor.php:28
+msgid "Port number"
+msgstr "Номер порта"
+
+#: www/port/newsingleportform.php:29
+msgid "UDP"
+msgstr "UDP"
+
+#: www/port/newsingleportform.php:31
+msgid "TCP"
+msgstr "TCP"
+
+#: www/port/port.php:38
+msgid "Port group"
+msgstr "Группа портов"
+
+#: www/port/port.php:81
+msgid "Insert new Port Group"
+msgstr "Введите новую группу портов"
+
+#: www/port/port.php:82
+msgid "Insert new Port"
+msgstr "Введите новый порт"
+
+#: www/report/anomalies.php:77
+msgid "Info about host"
+msgstr "Информация о хосте"
+
+#: www/report/anomalies.php:81
+msgid "year"
+msgstr "год"
+
+#: www/report/anomalies.php:82
+msgid "month"
+msgstr "месяц"
+
+#: www/report/anomalies.php:83
+msgid "week"
+msgstr "неделя"
+
+#: www/report/anomalies.php:84
+#: www/report/graphs/incidents_bar_graph.php:77
+msgid "day"
+msgstr "день"
+
+#: www/report/anomalies.php:85
+msgid "last 12h"
+msgstr "последние 12ч"
+
+#: www/report/anomalies.php:86
+msgid "last 6h"
+msgstr "последние 6ч"
+
+#: www/report/anomalies.php:87
+msgid "last hour"
+msgstr "последний час"
+
+#: www/report/anomalies.php:105
+msgid "NOTE: total and average values are NOT absolute but calculated on the specified time interval"
+msgstr "ПРИМЕЧАНИЕ: всего и усреднённое значения НЕ являются абсолютными, а посчитаны только для определенного интервала времени"
+
+#: www/report/graphs/attack_graph.php:11
+#: www/report/graphs/events_received_graph.php:9
+#: www/report/graphs/ports_graph.php:11
+msgid "Limit"
+msgstr "Предел"
+
+#: www/report/graphs/attack_graph.php:12
+#: www/report/graphs/events_received_graph.php:10
+#: www/report/graphs/ports_graph.php:12
+msgid "Report type"
+msgstr "Тип отчёта"
+
+#: www/report/graphs/draw_rrd.php:51
+#: www/report/graphs/draw_rrd.php:54
+#, php-format
+msgid "Invalid param '%s' with value '%s'"
+msgstr "Неверный параметр '%s' со значением '%s'"
+
+#: www/report/graphs/draw_rrd.php:57
+msgid "Start param"
+msgstr "Начальный параметр"
+
+#: www/report/graphs/draw_rrd.php:58
+msgid "End param"
+msgstr "Конечный параметр"
+
+#: www/report/graphs/draw_rrd.php:118
+#, php-format
+msgid "No RRD available for: '%s' at '%s'"
+msgstr "Нет RRD для: '%s' в '%s'"
+
+#: www/report/graphs/draw_rrd.php:136
+#, php-format
+msgid "rrdtool cmd failed with error: '%s' (exit code: %s)"
+msgstr "запуск rrdtool из командной строки закончилось ошибкой: '%s' (exit code: %s)"
+
+#: www/report/graphs/draw_rrd.php:142
+#, php-format
+msgid "Could not read rrdtool created image: '%s'"
+msgstr "Не возможно прочитать созданный rrdtool график: '%s'"
+
+#: www/report/graphs/events_received_graph.php:44
+msgid "ALERTS RECEIVED"
+msgstr "ПОЛУЧЕНО СОБЫТИЙ"
+
+#: www/report/graphs/events_received_graph.php:46
+msgid "ALARMS RECEIVED"
+msgstr "ПОЛУЧЕНО СИГНАЛОВ ТРЕВОГИ"
+
+#: www/report/graphs/incidents_bar_graph.php:56
+#: www/report/pdfreportform.php:169
+#: include/classes/Util.inc:177
+msgid "Month"
+msgstr "Месяц"
+
+#: www/report/graphs/incidents_bar_graph.php:56
+#: www/report/pdfreportform.php:175
+#: include/classes/Util.inc:173
+msgid "Year"
+msgstr "Год"
+
+#: www/report/graphs/incidents_bar_graph.php:57
+#: www/report/graphs/incidents_bar_graph.php:81
+msgid "Num. Incidents"
+msgstr "Кол. Инцидентов"
+
+#: www/report/graphs/incidents_bar_graph.php:77
+#: www/report/graphs/incidents_bar_graph.php:78
+msgid "days"
+msgstr "дней"
+
+#: www/report/graphs/incidents_bar_graph.php:78
+msgid "or more"
+msgstr "или больше"
+
+#: www/report/graphs/incidents_bar_graph.php:80
+msgid "Duration in days"
+msgstr "Продолжительность в днях"
+
+#: www/report/graphs/incidents_pie_graph.php:29
+msgid "INCIDENT BY USER"
+msgstr "ИНЦИДЕНТОВ ПО ПОЛЬЗОВАТЕЛЯМ"
+
+#: www/report/graphs/incidents_pie_graph.php:32
+msgid "INCIDENT BY TYPE"
+msgstr "ИНЦИДЕНТОВ ПО ТИПУ"
+
+#: www/report/graphs/incidents_pie_graph.php:34
+msgid "INCIDENT BY STATUS"
+msgstr "ИНЦИДЕНТОВ ПО СТАТУСУ"
+
+#: www/report/incidentreport.php:15
+msgid "Incident report"
+msgstr "Отчёт инцидента"
+
+#: www/report/incidentreport.php:34
+msgid "Incident Status"
+msgstr "Статус инцидента"
+
+#: www/report/incidentreport.php:35
+#: www/report/incidentreport.php:72
+#: www/report/incidentreport.php:109
+#: www/report/sec_report.php:471
+msgid "Ocurrences"
+msgstr "Количество"
+
+#: www/report/incidentreport.php:108
+msgid "User in charge"
+msgstr "Ответственный пользователь"
+
+#: www/report/incidentreport.php:142
+msgid "Closed Incidents By Month"
+msgstr "Закрытых инциденитов по-месячно"
+
+#: www/report/incidentreport.php:148
+msgid "Incident Resolution Time"
+msgstr "Время разрешения инцидента"
+
+#: www/report/inventory.php:76
+msgid "Host Info"
+msgstr "Информация о хосте"
+
+#: www/report/inventory.php:100
+msgid "Operating System"
+msgstr "Операционная система"
+
+#: www/report/inventory.php:130
+msgid "Netbios Name"
+msgstr "Имя Netbios"
+
+#: www/report/inventory.php:134
+msgid "Netbios Work Group"
+msgstr "Рабочая группа Netbios"
+
+#: www/report/inventory.php:174
+msgid "Port / Service information"
+msgstr "Порт/Сервис информация"
+
+#: www/report/inventory.php:178
+#: www/scan/scan.php:51
+#: www/sensor/sensor.php:69
+msgid "Active"
+msgstr "Активен"
+
+#: www/report/inventory.php:182
+msgid "update"
+msgstr "обновить"
+
+#: www/report/inventory.php:187
+msgid "Passive"
+msgstr "Пассивный"
+
+#: www/report/inventory.php:195
+#: www/session/login.php:154
+msgid "Version"
+msgstr "Версия"
+
+#: www/report/menu.php:52
+msgid "Inventory"
+msgstr "Реестр ресурсов"
+
+#: www/report/menu.php:58
+#: www/top.php:72
+msgid "Alarms"
+msgstr "Тревоги"
+
+#: www/report/menu.php:62
+msgid "Source or Dest"
+msgstr "Источник или Назначение"
+
+#: www/report/menu.php:73
+#: www/sensor/interfaces.php:88
+#: www/sensor/interfaces.php:143
+#: www/top.php:266
+msgid "Main"
+msgstr "Главная"
+
+#: www/report/menu.php:76
+msgid "Src Unique events"
+msgstr "Уникальные источники"
+
+#: www/report/menu.php:79
+msgid "Dst Unique events"
+msgstr "Уникальные назначения"
+
+#: www/report/menu.php:88
+#: www/vulnmeter/handle_scan.php:8
+#: www/vulnmeter/index.php:8
+#: www/vulnmeter/index.php:51
+#: www/vulnmeter/index.php:53
+msgid "Vulnmeter"
+msgstr "Уязвиметр"
+
+#: www/report/menu.php:92
+msgid "Security Problems"
+msgstr "Проблемы безопасности"
+
+#: www/report/menu.php:97
+msgid "Usage"
+msgstr "Использование"
+
+#: www/report/metrics.php:119
+msgid "Current C Level"
+msgstr "Уровень C"
+
+#: www/report/metrics.php:125
+msgid "Current A Level"
+msgstr "Уровень A"
+
+#: www/report/metrics.php:136
+msgid "Max C Level (last day)"
+msgstr "Макс. Уровень С (за день)"
+
+#: www/report/metrics.php:148
+msgid "Max A Level (last day)"
+msgstr "Макс. уровень A (за день)"
+
+#: www/report/metrics.php:160
+msgid "Max C Level (last month)"
+msgstr "Макс. уровень C (за месяц)"
+
+#: www/report/metrics.php:171
+msgid "Max A Level (last month)"
+msgstr "Макс. уровень A (за месяц)"
+
+#: www/report/metrics.php:183
+msgid "Max C Level (last year)"
+msgstr "Макс. Уровень C (за год)"
+
+#: www/report/metrics.php:194
+msgid "Max A Level (last year)"
+msgstr "Макс. Уровень A (за год)"
+
+#: www/report/metrics.php:206
+msgid "Last day"
+msgstr "День"
+
+#: www/report/metrics.php:209
+msgid "Last week"
+msgstr "Неделя"
+
+#: www/report/metrics.php:212
+msgid "Last month"
+msgstr "Месяц"
+
+#: www/report/metrics.php:215
+msgid "Last year"
+msgstr "Год"
+
+#: www/report/pdfreport.php:127
+msgid "1. METRICS"
+msgstr "1. МЕТРИКИ"
+
+#: www/report/pdfreport.php:134
+msgid "2. ALARMS"
+msgstr "2. ТРЕВОГИ"
+
+#: www/report/pdfreport.php:141
+msgid "3. ALERTS"
+msgstr "3. СОБЫТИЯ"
+
+#: www/report/pdfreportform.php:14
+msgid "PDF reports"
+msgstr "Отчёт в PDF"
+
+#: www/report/pdfreportform.php:21
+msgid "Report Type"
+msgstr "Тип Отчёта"
+
+#: www/report/pdfreportform.php:87
+msgid "Security Report Options"
+msgstr "Опции Отчёта Безопасности"
+
+#: www/report/pdfreportform.php:96
+#: www/report/pdfreportform.php:255
+msgid "Top Attacked Hosts"
+msgstr "Самые атакуемые хосты"
+
+#: www/report/pdfreportform.php:103
+msgid "Top AttackerHosts"
+msgstr "Самые атакующие хосты "
+
+#: www/report/pdfreportform.php:110
+#: www/report/pdfreportform.php:269
+msgid "Top Destination Ports"
+msgstr "Наиболее используемые порты назначения"
+
+#: www/report/pdfreportform.php:117
+msgid "Top Events by Host"
+msgstr "Наиболее встречаемые события по хостам"
+
+#: www/report/pdfreportform.php:124
+msgid "Top Events by Risk"
+msgstr "Наиболее встречаемые события по рискам"
+
+#: www/report/pdfreportform.php:130
+#: www/report/pdfreportform.php:289
+msgid "Number of hosts per table"
+msgstr "Количество хостов на таблицу"
+
+#: www/report/pdfreportform.php:148
+msgid "Metrics Report Options"
+msgstr "Опции Отчёта Метрик"
+
+#: www/report/pdfreportform.php:157
+#: include/classes/Util.inc:185
+msgid "Day"
+msgstr "День"
+
+#: www/report/pdfreportform.php:163
+#: include/classes/Util.inc:181
+msgid "Week"
+msgstr "Неделя"
+
+#: www/report/pdfreportform.php:192
+msgid "Incident Report Options"
+msgstr "Опции отчёта о инциденте"
+
+#: www/report/pdfreportform.php:199
+#: include/classes/PDF.inc:286
+msgid "Reason: "
+msgstr "Причина:"
+
+#: www/report/pdfreportform.php:203
+#: include/classes/PDF.inc:290
+msgid "Date: "
+msgstr "Дата:"
+
+#: www/report/pdfreportform.php:209
+msgid "Location: "
+msgstr "Меcто:"
+
+#: www/report/pdfreportform.php:213
+msgid "In Charge: "
+msgstr "Ответственный:"
+
+#: www/report/pdfreportform.php:217
+msgid "Summary: "
+msgstr "Обзор:"
+
+#: www/report/pdfreportform.php:221
+msgid "Metrics notes: "
+msgstr "Заметки Метрик:"
+
+#: www/report/pdfreportform.php:225
+msgid "Alarms notes: "
+msgstr "Заметки тревог:"
+
+#: www/report/pdfreportform.php:229
+msgid "Events notes: "
+msgstr "Заметки событий:"
+
+#: www/report/pdfreportform.php:246
+msgid "Alarms Report Options"
+msgstr "Опции Отчёта о тревогах"
+
+#: www/report/pdfreportform.php:262
+msgid "Top Attacker Hosts"
+msgstr "Самые атакующие хосты"
+
+#: www/report/pdfreportform.php:276
+msgid "Top Alarms by Host"
+msgstr "Самые частые тревоги по хостам"
+
+#: www/report/pdfreportform.php:283
+msgid "Top Alarms by Risk"
+msgstr "Самые опасные тревоги по рискам"
+
+#: www/report/report.php:16
+msgid "Host report"
+msgstr "Отчёт о хосте"
+
+#: www/report/sec_report.php:19
+msgid "Alarm Security report"
+msgstr "Очёт безопасности по тревогам"
+
+#: www/report/sec_report.php:25
+msgid "Security report"
+msgstr "Отчёт безопасности"
+
+#: www/report/sec_report.php:175
+#: www/report/sec_report.php:267
+msgid "Occurrences"
+msgstr "Количество"
+
+#: www/response/deleteresponse.php:17
+msgid "Response ID"
+msgstr "Идентификатор ответа"
+
+#: www/response/deleteresponse.php:34
+msgid "Response deleted"
+msgstr "Ответ удален"
+
+#: www/response/newresponseform.php:203
+#: www/response/newresponseform.php:237
+msgid "Add"
+msgstr "Добавить"
+
+#: www/response/newresponseform.php:205
+#: www/response/newresponseform.php:239
+msgid "Clear"
+msgstr "Очистить"
+
+#: www/response/response.php:57
+#: www/response/response.php:90
+msgid "Net "
+msgstr "Сеть"
+
+#: www/response/response.php:69
+#: www/response/response.php:102
+msgid "Host "
+msgstr "Хост"
+
+#: www/riskmeter/index.php:15
+msgid "Refresh interval"
+msgstr "Обновить интервал"
+
+#: www/riskmeter/index.php:98
+msgid "Page Refresh"
+msgstr "Обновить Страницу"
+
+#: www/riskmeter/options.php:15
+#: www/riskmeter/resetip.php:6
+#: www/sensor/editsensor.php:28
+msgid "IP address"
+msgstr "IP адрес"
+
+#: www/riskmeter/options.php:44
+msgid "History"
+msgstr "История"
+
+#: www/riskmeter/resetip.php:19
+msgid "Reset completed"
+msgstr "Сброс завершён"
+
+#: www/rrd_conf/delete_rrd_conf.php:15
+msgid "Delete RRD Conf"
+msgstr "Удалить конфигурацию RRD"
+
+#: www/rrd_conf/delete_rrd_conf.php:22
+msgid "RRD profile"
+msgstr "RRD профиль"
+
+#: www/rrd_conf/delete_rrd_conf.php:50
+msgid "RRD profile deleted"
+msgstr "Профиль RRD удалён"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:15
+msgid "Modify RRD Config"
+msgstr "Изменить конфигурацию RRD"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:17
+msgid "Hints"
+msgstr "Советы"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:19
+msgid "Threshold: Absolute value above which is being alerted"
+msgstr "Порог: Абсолютное значение при превышении которого вырабатывается сигнал предупреждения"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:20
+msgid "Priority: Resulting impact if threshold is being exceeded"
+msgstr "Приоритет: Значение ущерба в случае превышения порога"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:21
+msgid "Alpha: Intercept adaption parameter"
+msgstr "Альфа: Усвоенный параметр перехвата"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:22
+msgid "Beta: Slope adaption parameter"
+msgstr "Бета: Усвоенный параметр отклонения"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:23
+msgid "Persistence: How long has this event to last before we alert."
+msgstr "Продолжительность: Какова должна быть минимальная продолжительность события для срабатывания сигнала тревоги."
+
+#: www/rrd_conf/modify_rrd_conf_form.php:23
+msgid "mins"
+msgstr "минут"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:37
+#: www/rrd_conf/new_rrd_conf.php:23
+#: www/rrd_conf/rrd_conf.php:41
+msgid "Profile"
+msgstr "Профиль"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:108
+msgid "Attribute"
+msgstr "Атрибут"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:112
+msgid "Threshold"
+msgstr "Порог"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:120
+msgid "Alpha"
+msgstr "Альфа"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:124
+msgid "Beta"
+msgstr "Бета"
+
+#: www/rrd_conf/modify_rrd_conf_form.php:132
+msgid "Enable"
+msgstr "Включить"
+
+#: www/rrd_conf/new_rrd_conf.php:15
+msgid "New RRD Profile"
+msgstr "Новый Профиль RRD"
+
+#: www/rrd_conf/new_rrd_conf.php:77
+msgid "RRD Config succesfully inserted"
+msgstr "Новая конфигурация RRD введена успешно"
+
+#: www/rrd_conf/rrd_conf.php:15
+#: www/top.php:284
+msgid "RRD Config"
+msgstr "Конфигурация RRD"
+
+#: www/rrd_conf/rrd_conf.php:79
+msgid "Insert new RRD profile"
+msgstr "Ввести новый профиль RRD"
+
+#: www/scan/deletehostscan.php:15
+msgid "Delete host scan configuration"
+msgstr "Удалить конфигурацию сканирования хоста"
+
+#: www/scan/deletehostscan.php:23
+msgid "IP Address"
+msgstr "IP Адрес"
+
+#: www/scan/deletehostscan.php:46
+msgid "Host scan configuration deleted"
+msgstr "Конфигурация сканирования хоста удалена"
+
+#: www/scan/hostscan.php:15
+msgid "Host scan configuration"
+msgstr "Конфигурация сканирования хоста"
+
+#: www/scan/hostscan.php:37
+msgid "Use policy->hosts or networks to define nessus scans or else you'll get unexpected results"
+msgstr "Используйте Политика->Хосты или Сети для включения сканирования Nessus, иначе возможны не предсказуемые результаты"
+
+#: www/scan/hostscan.php:89
+#: include/classes/Incident_ticket.inc:400
+msgid "New"
+msgstr "Новая"
+
+#: www/scan/makescan.php:28
+msgid "Scan target"
+msgstr "Объект сканирования"
+
+#: www/scan/newhostscan.php:15
+msgid "New host scan configuration"
+msgstr "Новая конфигурация сканирования хоста"
+
+#: www/scan/newhostscan.php:25
+msgid "host IP"
+msgstr "IP хоста"
+
+#: www/scan/newhostscan.php:26
+msgid "Plugin Id"
+msgstr "Идентификатор плагина"
+
+#: www/scan/newhostscan.php:41
+msgid "Host scan configuration succesfully inserted"
+msgstr "Конфигурация сканирования хоста успешно введена"
+
+#: www/scan/newhostscanform.php:15
+msgid "Insert new host scan configuration"
+msgstr "Ввести новую конфигурацию хоста"
+
+#: www/sensor/deletesensor.php:15
+msgid "Delete sensor"
+msgstr "Удалить сенсор"
+
+#: www/sensor/deletesensor.php:32
+msgid "Are you sure?"
+msgstr "Вы уверены?"
+
+#: www/sensor/deletesensor.php:58
+msgid "Sensor deleted"
+msgstr "Сенсор удалён"
+
+#: www/sensor/editsensor.php:44
+msgid "Edit sensor"
+msgstr "Изменить сенсор"
+
+#: www/sensor/editsensor.php:45
+msgid "properties"
+msgstr "свойства"
+
+#: www/sensor/editsensor.php:64
+msgid "What sensor do you want to edit"
+msgstr "Какой сенсор вы хотите изменить"
+
+#: www/sensor/editsensor.php:118
+#: www/sensor/editsensor.php:292
+#: www/sensor/editsensor.php:703
+msgid "Error opening"
+msgstr "Ошибка при открытии"
+
+#: www/sensor/editsensor.php:118
+#: www/sensor/editsensor.php:292
+#: www/sensor/editsensor.php:703
+msgid "file"
+msgstr "файл"
+
+#: www/sensor/editsensor.php:163
+msgid "Load default values for snort config file"
+msgstr "Загрузить конфигурацию snort по-умолчанию"
+
+#: www/sensor/editsensor.php:164
+#: www/sensor/editsensor.php:383
+#: www/sensor/editsensor.php:734
+msgid "use this option only if you are sure"
+msgstr "используйте это только если вы знаете что делаете"
+
+#: www/sensor/editsensor.php:181
+msgid "Snort configuration"
+msgstr "Конфигурация Snort"
+
+#: www/sensor/editsensor.php:218
+#: www/sensor/editsensor.php:440
+#: www/sensor/editsensor.php:479
+msgid "Password unchanged if field left blank"
+msgstr "Пароль не измениться если поле не заполнено"
+
+#: www/sensor/editsensor.php:271
+#: www/sensor/editsensor.php:682
+#: www/sensor/editsensor.php:804
+msgid "Error opening file"
+msgstr "Ошибка при открытии файла"
+
+#: www/sensor/editsensor.php:275
+#: www/sensor/editsensor.php:687
+#: www/sensor/editsensor.php:809
+msgid "Sensor edit completed"
+msgstr "Измнение сенсора завершено"
+
+#: www/sensor/editsensor.php:382
+msgid "Load default values for ossim config file"
+msgstr "Загрузить значения по-умолчанию в конфигурационный файл ossim"
+
+#: www/sensor/editsensor.php:399
+msgid "OSSIM configuration"
+msgstr "Конфигурация OSSIM"
+
+#: www/sensor/editsensor.php:401
+msgid "Base configuration"
+msgstr "Конфигурация Base"
+
+#: www/sensor/editsensor.php:403
+msgid "Base directory"
+msgstr "Директория Base"
+
+#: www/sensor/editsensor.php:409
+msgid "Log file"
+msgstr "Файл учета деятельности"
+
+#: www/sensor/editsensor.php:414
+msgid "Database"
+msgstr "База данных"
+
+#: www/sensor/editsensor.php:416
+msgid "hostname of the mysql database server"
+msgstr "Имя сервера базы данных mysql"
+
+#: www/sensor/editsensor.php:422
+msgid "name of the database"
+msgstr "имя базы данных"
+
+#: www/sensor/editsensor.php:428
+msgid "name of the database user"
+msgstr "имя пользователя базы данных"
+
+#: www/sensor/editsensor.php:434
+msgid "password for the database connection"
+msgstr "пароль для соединения с базой данных"
+
+#: www/sensor/editsensor.php:444
+msgid "path to snort"
+msgstr "путь к snort"
+
+#: www/sensor/editsensor.php:450
+msgid "path to snort rules directory"
+msgstr "путь к директории правил snort"
+
+#: www/sensor/editsensor.php:455
+msgid "hostname of the snort database server"
+msgstr "Имя сервера базы данных для snort"
+
+#: www/sensor/editsensor.php:461
+msgid "name of the snort database"
+msgstr "имя базы данных для snort"
+
+#: www/sensor/editsensor.php:467
+msgid "name of the snort database user"
+msgstr "имя пользователя базы данных для snort"
+
+#: www/sensor/editsensor.php:473
+msgid "password for the snort database connection"
+msgstr "пароль для соединения с базой данных для snort"
+
+#: www/sensor/editsensor.php:481
+msgid "Paths"
+msgstr "Пути"
+
+#: www/sensor/editsensor.php:483
+msgid "adodb"
+msgstr "adodb"
+
+#: www/sensor/editsensor.php:489
+msgid "rrdtool"
+msgstr "rrdtool"
+
+#: www/sensor/editsensor.php:495
+msgid "rrdtool lib directory"
+msgstr "директория библиотек rrdtool"
+
+#: www/sensor/editsensor.php:501
+#: www/sensor/editsensor.php:551
+msgid "mrtg"
+msgstr "mrtg"
+
+#: www/sensor/editsensor.php:507
+msgid "mrtg rrd files"
+msgstr "файлы rrd mrtg"
+
+#: www/sensor/editsensor.php:512
+msgid "Applications"
+msgstr "Приложения"
+
+#: www/sensor/editsensor.php:514
+msgid "nmap"
+msgstr "nmap"
+
+#: www/sensor/editsensor.php:520
+msgid "p0f"
+msgstr "p0f"
+
+#: www/sensor/editsensor.php:526
+msgid "arpwatch"
+msgstr "arpwatch"
+
+#: www/sensor/editsensor.php:533
+msgid "acid"
+msgstr "acid"
+
+#: www/sensor/editsensor.php:539
+msgid "ntop"
+msgstr "ntop"
+
+#: www/sensor/editsensor.php:545
+msgid "opennms"
+msgstr "opennms"
+
+#: www/sensor/editsensor.php:694
+#: www/sensor/editsensor.php:817
+msgid "Default values loaded"
+msgstr "Значения по-умолчанию загружены"
+
+#: www/sensor/editsensor.php:733
+msgid "Load default values for spade config file"
+msgstr "Загрузить значения по-умолчанию в конфигурационный файл spade"
+
+#: www/sensor/editsensor.php:750
+msgid "Spade configuration"
+msgstr "Конфигурация spade"
+
+#: www/sensor/editsensor.php:752
+msgid "SPADEDIR"
+msgstr "Директория spade"
+
+#: www/sensor/editsensor.php:757
+msgid "dest"
+msgstr "назначение"
+
+#: www/sensor/editsensor.php:762
+msgid "logfile"
+msgstr "Лог-Файл"
+
+#: www/sensor/editsensor.php:767
+msgid "statefile"
+msgstr "файл состояния"
+
+#: www/sensor/editsensor.php:772
+msgid "homenet"
+msgstr "домашняя сеть"
+
+#: www/sensor/get_sensor_plugins.php:29
+#: www/sensor/get_sensors.php:27
+msgid "Is OSSIM server running at"
+msgstr "Работает ли Сервер OSSIM на"
+
+#: www/sensor/interfaces.php:25
+#: www/sensor/interfaces.php:28
+#: www/sensor/interfaces.php:86
+#: www/sensor/interfaces.php:141
+msgid "Interface"
+msgstr "Интерфейс"
+
+#: www/sensor/interfaces.php:26
+msgid "Sensor Name"
+msgstr "Имя Сенсора"
+
+#: www/sensor/interfaces.php:27
+msgid "Submit"
+msgstr "Послать"
+
+#: www/sensor/interfaces.php:47
+msgid "updated"
+msgstr "обновлен"
+
+#: www/sensor/interfaces.php:51
+msgid "deleted"
+msgstr "удален"
+
+#: www/sensor/interfaces.php:58
+msgid "Interface succesfully"
+msgstr "Интерфейс удачно"
+
+#: www/sensor/interfaces.php:83
+msgid "Update interfaces for"
+msgstr "Обновить интерфейсы для"
+
+#: www/sensor/modifysensor.php:15
+msgid "Update sensor"
+msgstr "Обновить сенсор"
+
+#: www/sensor/modifysensor.php:27
+#: www/sensor/newsensor.php:27
+msgid "Ip address"
+msgstr "IP адрес"
+
+#: www/sensor/modifysensor.php:47
+msgid "Sensor succesfully updated"
+msgstr "Сенсор успешно обновлён"
+
+#: www/sensor/modifysensorform.php:15
+msgid "Modify sensor"
+msgstr "Изменить сенсор"
+
+#: www/sensor/newsensor.php:15
+msgid "New sensor"
+msgstr "Новый сенсор"
+
+#: www/sensor/newsensor.php:48
+msgid "Sensor succesfully inserted"
+msgstr "Сенсор успешно введён"
+
+#: www/sensor/sensor.php:39
+msgid "Active Sensors"
+msgstr "Работающие сенсоры"
+
+#: www/sensor/sensor.php:40
+msgid "Total Sensors"
+msgstr "Всего сенсоров"
+
+#: www/sensor/sensor.php:130
+msgid "Interfaces"
+msgstr "Интерфейсы"
+
+#: www/sensor/sensor.php:152
+msgid "Warning"
+msgstr "Предупреждение"
+
+#: www/sensor/sensor.php:153
+msgid "the following sensor(s) are being reported as enabled by the server but aren't configured"
+msgstr "следующий сенсор(ы) заявлены сервером как подключенные, но без конфигурации"
+
+#: www/sensor/sensor.php:168
+msgid "Insert"
+msgstr "Вставить"
+
+#: www/sensor/sensor_plugins.php:30
+msgid "Cmd"
+msgstr "Команда"
+
+#: www/sensor/sensor_plugins.php:52
+msgid "There aren't any sensors connected to OSSIM server"
+msgstr "Ни один сенсор не подключен к серверу OSSIM"
+
+#: www/sensor/sensor_plugins.php:135
+msgid "Enabled"
+msgstr "Включен"
+
+#: www/sensor/sensor_plugins.php:159
+msgid "UP"
+msgstr "ВВЕРХ"
+
+#: www/sensor/sensor_plugins.php:162
+msgid "stop"
+msgstr "стоп"
+
+#: www/sensor/sensor_plugins.php:166
+msgid "DOWN"
+msgstr "ВНИЗ"
+
+#: www/sensor/sensor_plugins.php:181
+msgid "ENABLED"
+msgstr "ВКЛЮЧЕН"
+
+#: www/sensor/sensor_plugins.php:184
+msgid "disable"
+msgstr "выключить"
+
+#: www/sensor/sensor_plugins.php:188
+msgid "DISABLED"
+msgstr "ВЫКЛЮЧЕН"
+
+#: www/sensor/sensor_plugins.php:191
+msgid "enable"
+msgstr "включить"
+
+#: www/session/changepass.php:14
+#: www/session/changepassform.php:14
+msgid "Change password"
+msgstr "Изменить пароль"
+
+#: www/session/changepass.php:27
+#: www/session/changepassform.php:21
+#: www/session/changepassform.php:34
+#: www/session/deleteuser.php:23
+#: www/session/login.php:82
+#: www/session/modifyuser.php:31
+#: www/session/modifyuserform.php:28
+#: www/session/modifyuserform.php:74
+#: www/session/newuser.php:31
+#: www/session/newuserform.php:45
+msgid "User name"
+msgstr "Имя пользрвателя"
+
+#: www/session/changepass.php:78
+msgid "To change the password for other user is not allowed"
+msgstr "Смена пароля другим пользователям не разрешена"
+
+#: www/session/changepass.php:87
+#: www/session/modifyuser.php:105
+msgid "User succesfully updated"
+msgstr "Данные о пользователе успешно обновлены"
+
+#: www/session/changepassform.php:42
+msgid "Current password"
+msgstr "Текущий пароль"
+
+#: www/session/changepassform.php:49
+msgid "Enter new password"
+msgstr "Введите новый пароль"
+
+#: www/session/changepassform.php:53
+msgid "Retype new password"
+msgstr "Введите ещё раз новый пароль"
+
+#: www/session/deleteuser.php:16
+msgid "Delete user"
+msgstr "Удалить пользователя"
+
+#: www/session/deleteuser.php:67
+msgid "User deleted"
+msgstr "Пользователь удалён"
+
+#: www/session/login.php:117
+msgid "OSSIM Framework Login"
+msgstr "Регистрация для доступа в оболочку OSSIM"
+
+#: www/session/login.php:127
+msgid "OSSIM Login"
+msgstr "Доступ в OSSIM"
+
+#: www/session/login.php:161
+#: www/userlog/user_action_log.php:65
+msgid "User"
+msgstr "Пользователь"
+
+#: www/session/login.php:165
+#: www/session/users.php:49
+msgid "Password"
+msgstr "Пароль"
+
+#: www/session/login.php:175
+msgid "NOTE: Default user is admin-admin"
+msgstr "ПРИМЕЧАНИЕ: Пользователь по-умолчанию admin-admin"
+
+#: www/session/login.php:176
+msgid "For security reasons you should change it at Configuration->Users"
+msgstr "Из соображений безопасности вам надлежит изменить его через Конфигурация->Пользователи"
+
+#: www/session/modifyuser.php:15
+msgid "Modify User"
+msgstr "Изменить пользователя"
+
+#: www/session/modifyuser.php:33
+#: www/session/newuser.php:33
+#: www/session/newuserform.php:47
+msgid "e-mail"
+msgstr "e-mail"
+
+#: www/session/modifyuser.php:35
+#: www/session/newuser.php:35
+msgid "nsensors"
+msgstr "nsensors"
+
+#: www/session/modifyuser.php:36
+#: www/session/modifyuserform.php:89
+#: www/session/newuser.php:36
+#: www/session/newuserform.php:48
+#: www/session/newuserform.php:100
+#: www/session/users.php:53
+msgid "Company"
+msgstr "Организация"
+
+#: www/session/modifyuser.php:37
+#: www/session/modifyuserform.php:95
+#: www/session/newuser.php:37
+#: www/session/newuserform.php:49
+#: www/session/newuserform.php:107
+#: www/session/users.php:57
+msgid "Department"
+msgstr "Отдел"
+
+#: www/session/modifyuserform.php:17
+msgid "Modify user"
+msgstr "Изменить пользователя"
+
+#: www/session/modifyuserform.php:29
+msgid "networks"
+msgstr "сети"
+
+#: www/session/modifyuserform.php:30
+msgid "sensors"
+msgstr "сенсоры"
+
+#: www/session/modifyuserform.php:31
+msgid "perms"
+msgstr "права доступа"
+
+#: www/session/modifyuserform.php:69
+#: www/session/newuserform.php:62
+msgid "User login"
+msgstr "Логин пользователя"
+
+#: www/session/modifyuserform.php:83
+msgid "User email"
+msgstr "email пользователя"
+
+#: www/session/modifyuserform.php:104
+#: www/session/newuserform.php:117
+msgid "Allowed nets"
+msgstr "Разрешённые сети"
+
+#: www/session/modifyuserform.php:105
+#: www/session/newuserform.php:118
+msgid "Allowed sensors"
+msgstr "Разрешенные сенсоры"
+
+#: www/session/modifyuserform.php:106
+#: www/session/newuserform.php:119
+#: include/classes/Host_ids.inc:129
+msgid "Permissions"
+msgstr "Полномочия"
+
+#: www/session/modifyuserform.php:112
+#: www/session/modifyuserform.php:117
+#: www/session/modifyuserform.php:148
+#: www/session/modifyuserform.php:153
+#: www/session/modifyuserform.php:186
+#: www/session/modifyuserform.php:191
+#: www/session/newuserform.php:124
+#: www/session/newuserform.php:143
+#: www/session/newuserform.php:162
+msgid "Select / Unselect all"
+msgstr "Установить/Снять выделение всего"
+
+#: www/session/newuser.php:15
+msgid "New User"
+msgstr "Новый Пользователь"
+
+#: www/session/newuser.php:112
+msgid "User succesfully inserted"
+msgstr "Пользователь успешно создан"
+
+#: www/session/newuserform.php:30
+#: www/session/users.php:110
+msgid "Insert new user"
+msgstr "Создать нового пользователя"
+
+#: www/session/newuserform.php:69
+msgid "User full name"
+msgstr "Полное имя пользователя"
+
+#: www/session/newuserform.php:76
+#: www/session/users.php:48
+msgid "Email"
+msgstr "Email"
+
+#: www/session/newuserform.php:86
+msgid "Enter password"
+msgstr "Введите пароль"
+
+#: www/session/newuserform.php:93
+msgid "Re-enter password"
+msgstr "Введите пароль ещё раз"
+
+#: www/session/newuserform.php:163
+msgid "Back to Defaults"
+msgstr "Вернуться к начальным параметрам"
+
+#: www/session/users.php:15
+#: www/top.php:272
+msgid "Users"
+msgstr "Пользователи"
+
+#: www/session/users.php:40
+#: include/classes/Incident.inc:800
+msgid "Login"
+msgstr "Логин"
+
+#: www/session/users.php:84
+msgid "Change Password"
+msgstr "Изменить Пароль"
+
+#: www/session/users.php:89
+#: www/session/users.php:96
+msgid "Update"
+msgstr "Изменить"
+
+#: www/session/users.php:113
+msgid "Reload ACLS"
+msgstr "Перезагрузить ACLS"
+
+#: www/signature/deletesignature.php:15
+msgid "Delete signature group"
+msgstr "Удалить группу шаблонов IDS"
+
+#: www/signature/deletesignature.php:22
+#: www/signature/modifysignatureform.php:27
+msgid "Signature name"
+msgstr "имя шаблона"
+
+#: www/signature/deletesignature.php:48
+msgid "Signature group deleted"
+msgstr "Группа шаблонов IDS удалена"
+
+#: www/signature/modifysignature.php:15
+#: www/signature/modifysignatureform.php:15
+msgid "Modify signature group"
+msgstr "Изменить группу шаблонов IDS"
+
+#: www/signature/modifysignature.php:28
+#: www/signature/newsignature.php:26
+msgid "nsigs"
+msgstr "nsigs"
+
+#: www/signature/modifysignature.php:45
+#: www/signature/newsignature.php:43
+msgid "mboxname"
+msgstr "mboxname"
+
+#: www/signature/modifysignatureform.php:53
+#: www/signature/newsignatureform.php:25
+#: www/signature/signature.php:15
+#: www/signature/signature.php:38
+msgid "Signatures"
+msgstr "Шаблоны"
+
+#: www/signature/newsignature.php:15
+msgid "New signature"
+msgstr "Новый шаблон IDS"
+
+#: www/signature/newsignatureform.php:15
+msgid "Insert new signature group"
+msgstr "Введите новую группу шаблонов"
+
+#: www/signature/signature.php:77
+msgid "Insert new Signature Group"
+msgstr "Ввести новую группу шаблонов IDS"
+
+#: www/top.php:42
+msgid "System Upgrade Needed"
+msgstr "Необходимо обновление системы"
+
+#: www/top.php:47
+msgid "Reports"
+msgstr "Отчёты"
+
+#: www/top.php:49
+msgid "Monitors"
+msgstr "Мониторы"
+
+#: www/top.php:51
+msgid "Correlation"
+msgstr "Корреляция"
+
+#: www/top.php:52
+msgid "Configuration"
+msgstr "Конфигурация"
+
+#: www/top.php:53
+msgid "Tools"
+msgstr "Инструменты"
+
+#: www/top.php:54
+msgid "Logout"
+msgstr "Выйти"
+
+#: www/top.php:84
+msgid "Vulnerabilities"
+msgstr "Уязвимости"
+
+#: www/top.php:96
+msgid "Hids"
+msgstr "Хост IDS"
+
+#: www/top.php:105
+msgid "Host Report"
+msgstr "Отчёт о хостe"
+
+#: www/top.php:111
+msgid "Alarm Report"
+msgstr "Отчёт тревог"
+
+#: www/top.php:117
+msgid "Security Report"
+msgstr "Отчёт о событиях"
+
+#: www/top.php:123
+msgid "PDF Report"
+msgstr "Отчёты в PDF"
+
+#: www/top.php:136
+msgid "Types"
+msgstr "Типы"
+
+#: www/top.php:148
+msgid "Report"
+msgstr "Отчёт"
+
+#: www/top.php:161
+msgid "Session"
+msgstr "Сессии"
+
+#: www/top.php:235
+msgid "Responses"
+msgstr "Ответы"
+
+#: www/top.php:247
+msgid "Directives"
+msgstr "Директивы"
+
+#: www/top.php:253
+msgid "Cross Correlation"
+msgstr "Перекрестная Корреляция"
+
+#: www/top.php:278
+msgid "Plugins"
+msgstr "Плагины"
+
+#: www/top.php:290
+msgid "Host Scan"
+msgstr "Сканирование Хоста"
+
+#: www/top.php:296
+msgid "User action logs"
+msgstr "Протокол активности пользователя"
+
+#: www/top.php:302
+msgid "Incidents Email Template"
+msgstr "Шаблон письма инцидента"
+
+#: www/top.php:307
+msgid "Upgrade"
+msgstr "Обновление"
+
+#: www/top.php:320
+msgid "Rule Viewer"
+msgstr "Просмотр Правил"
+
+#: www/top.php:332
+msgid "User log"
+msgstr "Протокол активности пользователя"
+
+#: www/upgrade/index.php:9
+msgid "Not enough perms"
+msgstr "Не достаточный уровень привилегий"
+
+#: www/upgrade/index.php:20
+msgid "version"
+msgstr "версия"
+
+#: www/upgrade/index.php:22
+msgid "force"
+msgstr "форсировать"
+
+#: www/upgrade/index.php:32
+msgid "No upgrades needed"
+msgstr "Обновление не нужно"
+
+#: www/upgrade/index.php:33
+msgid "Not clean installation detected. Refusing to apply upgrades, please do it manually"
+msgstr "Обнаружена не стандартная ситуация. Автоматическое обновление системы произведено не будет. Произведите обновление в ручную"
+
+#: www/upgrade/index.php:44
+msgid "Error: no valid version upgrade"
+msgstr "Ошибка: не верная версия обновления"
+
+#: www/upgrade/index.php:51
+#: include/classes/Upgrade.inc:257
+msgid "Starting PHP PRE script"
+msgstr "Запускается PHP ДО- командный файл"
+
+#: www/upgrade/index.php:53
+#: include/classes/Upgrade.inc:259
+msgid "PHP PRE script ended"
+msgstr "PHP ДО- командный файл исполнен"
+
+#: www/upgrade/index.php:59
+#: include/classes/Upgrade.inc:266
+msgid "Starting PHP POST script"
+msgstr "Запускается PHP ПОСЛЕ- командный файл"
+
+#: www/upgrade/index.php:61
+#: include/classes/Upgrade.inc:268
+msgid "PHP POST script ended"
+msgstr "PHP ПОСЛЕ- командный файл исполнен"
+
+#: www/upgrade/index.php:100
+msgid "This will force only this upgrade and "
+msgstr "Это только форсирует данной обновление и "
+
+#: www/upgrade/index.php:101
+msgid "may cause unexpected results. Use the \\'Apply Changes\\' "
+msgstr "может привести к неожиданным результатам. Используйте \\'Принять Измения\\' "
+
+#: www/upgrade/index.php:102
+msgid ""
+"button instead.\\n"
+"\\n"
+"Continue anyway?"
+msgstr ""
+"вместо этого.\\n"
+"\\n"
+"Продолжить?"
+
+#: www/upgrade/index.php:110
+msgid "Required upgrades"
+msgstr "Требуемое обновление"
+
+#: www/upgrade/index.php:118
+msgid "All upgrades"
+msgstr "Все обновления"
+
+#: www/upgrade/index.php:127
+msgid "No upgrades"
+msgstr "Нет обновлений"
+
+#: www/upgrade/index.php:166
+msgid "Apply Changes"
+msgstr "Принять Изменения"
+
+#: www/upgrade/index.php:167
+msgid "IMPORTANT: Please make sure you have made a backup of the database before continue"
+msgstr "ВНИМАНИЕ: Пожалуйста, перед тем как продолжить удостоверьтись, что вы сделали резервную копию базы данных"
+
+#: www/userlog/user_action_log.php:16
+msgid "User Action logs"
+msgstr "Протокол активности пользователей"
+
+#: www/vulnmeter/do_nessus.php:19
+msgid "Update Scan"
+msgstr "Произвести сканирование"
+
+#: www/vulnmeter/do_nessus.php:67
+msgid "Nessus scan started, depending on number of hosts to be scanned this may take a while"
+msgstr "Сканирование начато, необходимое для завершения время зависит от количества хостов"
+
+#: www/vulnmeter/do_nessus.php:70
+msgid "Scan status:"
+msgstr "Статус сканирования"
+
+#: www/vulnmeter/do_nessus.php:72
+#: www/vulnmeter/do_nessus.php:85
+msgid "completed."
+msgstr "завершен."
+
+#: www/vulnmeter/do_nessus.php:93
+msgid "Error! return was:"
+msgstr "Ошибка! возвратное значение:"
+
+#: www/vulnmeter/do_nessus.php:93
+msgid "Please check your frameworkd logs."
+msgstr "Пожалуйста, просмотрите протокольный файл frameworkd"
+
+#: www/vulnmeter/do_nessus.php:102
+msgid "Scan succesfully completed."
+msgstr "Сканирование успешно завершено"
+
+#: www/vulnmeter/do_nessus.php:112
+msgid "An error ocurred, please check your frameworkd & web server logs:"
+msgstr "Произошла ошибка, пожалуйста просмотрите файлы протоколов frameworkd и веб сервера:"
+
+#: www/vulnmeter/do_nessus.php:113
+msgid "Reset"
+msgstr "Сбросить"
+
+#: www/vulnmeter/do_nessus.php:122
+msgid "Frameworkd said:"
+msgstr "Сообщение frameworkd:"
+
+#: www/vulnmeter/handle_scan.php:25
+#: www/vulnmeter/index.php:26
+msgid "Scan date"
+msgstr "Дата сканирования"
+
+#: www/vulnmeter/handle_scan.php:34
+msgid "Deleting"
+msgstr "Удаляется"
+
+#: www/vulnmeter/handle_scan.php:37
+msgid "Archiving"
+msgstr "Архивируется"
+
+#: www/vulnmeter/handle_scan.php:40
+msgid "Restoring"
+msgstr "Восстанавливается"
+
+#: www/vulnmeter/index.php:27
+msgid "Number"
+msgstr "Число"
+
+#: www/vulnmeter/index.php:43
+msgid "No scans have been issued yet"
+msgstr "Пока не было запущено ни одного процесса сканирования"
+
+#: www/vulnmeter/index.php:44
+msgid "Please update scan"
+msgstr "Пожалуйста, повторите сканирования"
+
+#: www/vulnmeter/index.php:74
+msgid ""
+"Could not find database information for a scan happening at the specified\n"
+"date"
+msgstr ""
+"Не возможно найти информацию в базе данных о сканировании произошедшем в указанную\n"
+"дату"
+
+#: www/vulnmeter/index.php:75
+msgid "Exiting"
+msgstr "Завершение"
+
+#: www/vulnmeter/index.php:107
+msgid "Last scan"
+msgstr "Результаты последнего сканирования"
+
+#: www/vulnmeter/index.php:108
+msgid "Update scan"
+msgstr "Произвести сканирование"
+
+#: www/vulnmeter/index.php:113
+msgid "Showing date:"
+msgstr "Показываемая дата:"
+
+#: www/vulnmeter/index.php:117
+msgid "scans"
+msgstr "сканирования"
+
+#: www/vulnmeter/index.php:165
+msgid "Nets"
+msgstr "Сети"
+
+#: www/vulnmeter/index.php:312
+msgid "No scans have been done yet"
+msgstr "Пока не было выполнено ни одного сканирования"
+
+#: include/classes/Host_ids.inc:125
+msgid "Device"
+msgstr "Устройство"
+
+#: include/classes/Host_ids.inc:127
+msgid "Inode"
+msgstr "Inode"
+
+#: include/classes/Host_ids.inc:133
+msgid "User ID"
+msgstr "Идентификатор пользователя"
+
+#: include/classes/Host_ids.inc:137
+msgid "Modification Time"
+msgstr "Время изменения"
+
+#: include/classes/Host_ids.inc:139
+msgid "Access Time"
+msgstr "Время доступа"
+
+#: include/classes/Host_ids.inc:141
+msgid "Inode Change Time"
+msgstr "Время изменения Inode"
+
+#: include/classes/Host_ids.inc:143
+msgid "Device Type"
+msgstr "Тип устройства"
+
+#: include/classes/Host_ids.inc:145
+msgid "Blocks"
+msgstr "Блоки"
+
+#: include/classes/Host_ids.inc:147
+msgid "Block Size"
+msgstr "Размер Блока"
+
+#: include/classes/Host_ids.inc:149
+msgid "Bytes"
+msgstr "Байты"
+
+#: include/classes/Host_ids.inc:151
+msgid "Group: "
+msgstr "Группа:"
+
+#: include/classes/Host_ids.inc:153
+msgid "Kernel: "
+msgstr "Ядро:"
+
+#: include/classes/Host_ids.inc:155
+msgid "User: "
+msgstr "Пользователь:"
+
+#: include/classes/Incident.inc:173
+msgid "Incident Ref"
+msgstr "Ссылка на инцидент"
+
+#: include/classes/Incident_ticket.inc:98
+msgid "Invalid Incident ID"
+msgstr "Не верный идентификатор инцидента"
+
+#: include/classes/Incident_ticket.inc:99
+msgid "Status possible values are 'Open' or 'Close'"
+msgstr "Возможные значения статуса 'Открыт' или 'Закрыт'"
+
+#: include/classes/Incident_ticket.inc:100
+msgid "Priority should be a value between 1 and 10"
+msgstr "Значения приоритета должно быть от 1 до 10"
+
+#: include/classes/Incident_ticket.inc:101
+msgid "Invalid user login format"
+msgstr "Неприемлимый формат имени пользователя"
+
+#: include/classes/Incident_ticket.inc:102
+msgid "Description required"
+msgstr "Требуется описание"
+
+#: include/classes/Incident_ticket.inc:104
+msgid "Invalid transferred login format"
+msgstr "Неприемлимый формат имени перенимающего пользователя"
+
+#: include/classes/Incident_ticket.inc:105
+msgid "Invalid TAG ID"
+msgstr "Не приемлимый идентификатор ярлыка"
+
+#: include/classes/Incident_ticket.inc:309
+msgid "Could not email ticket to the following address"
+msgstr "Не возможно переслать талон на слудующий email адрес"
+
+#: include/classes/Incident_ticket.inc:384
+msgid "Source IPs"
+msgstr "IP адреса исчточника"
+
+#: include/classes/Incident_ticket.inc:386
+msgid "Dest. IPs"
+msgstr "IP адреса назначения"
+
+#: include/classes/Incident_ticket.inc:387
+msgid "Dest. Ports"
+msgstr "Порты назначения"
+
+#: include/classes/Incident_ticket.inc:392
+msgid "Metric Type"
+msgstr "Тип метрики"
+
+#: include/classes/Incident_ticket.inc:393
+msgid "Metric Value"
+msgstr "Значение метрики"
+
+#: include/classes/Incident_ticket.inc:399
+msgid "Previous"
+msgstr "Предыдущий"
+
+#: include/classes/PDF.inc:283
+msgid "GENERAL DATA"
+msgstr "ОБЩИЕ ДАННЫЕ"
+
+#: include/classes/PDF.inc:294
+msgid "Place: "
+msgstr "Место:"
+
+#: include/classes/PDF.inc:298
+msgid "Responsible: "
+msgstr "Ответственный:"
+
+#: include/classes/PDF.inc:302
+msgid "SUMMARY"
+msgstr "ОБЗОР"
+
+#: include/classes/PDF.inc:321
+msgid "s:"
+msgstr "s:"
+
+#: include/classes/Security.inc:65
+msgid "unkown error"
+msgstr "неизвестная ошибка"
+
+#: include/classes/Security.inc:125
+#, php-format
+msgid "Error in the '%s' field"
+msgstr "Ошибка в поле '%s'"
+
+#: include/classes/Security.inc:144
+msgid "missing required field"
+msgstr "отсутствует необходимое поле"
+
+#: include/classes/Security.inc:188
+msgid "spaces"
+msgstr "пробелы"
+
+#: include/classes/Security.inc:189
+msgid "breaklines"
+msgstr "знаки новой строки"
+
+#: include/classes/Security.inc:192
+#, php-format
+msgid "(\"%s\" not allowed)"
+msgstr "(\"%s\" не разрешены)"
+
+#: include/classes/Security.inc:227
+msgid "Invalid IP address. Format allowed: nnn.nnn.nnn.nnn"
+msgstr "Не верный IP адрес. Разрешенный формат: ццц.ццц.ццц.ццц"
+
+#: include/classes/Security.inc:248
+msgid "Required field"
+msgstr "Требуемое поле"
+
+#: include/classes/Upgrade.inc:58
+msgid "Sorry, before run this script you need to "
+msgstr "Извините, перед запуском этого командного файла вам необходимо"
+
+#: include/classes/Upgrade.inc:59
+msgid "upgrade the database to version >= 0.9.8"
+msgstr "обновить базу данных до версии >= 0.9.8"
+
+#: include/classes/Upgrade.inc:61
+msgid "Detected uncompleted 0.9.9 schema (CVS version?). "
+msgstr "Обнаружена неполная схема 0.9.9 (CVS версия?). "
+
+#: include/classes/Upgrade.inc:62
+msgid "Please complete manually the upgrade to at least 0.9.9rc1"
+msgstr "Пожалуйста, завершите обновление в ручную по крайней мере до версии 0.9.9rc1"
+
+#: include/classes/Upgrade.inc:72
+msgid "Detected schema version greater than ossim version, "
+msgstr "Обнаружена версия схемы больше чем версия ossim, "
+
+#: include/classes/Upgrade.inc:73
+msgid "please upgrade Ossim"
+msgstr "пожалуйста, обновите Ossim"
+
+#: include/classes/Upgrade.inc:184
+msgid "No sql file found for database: "
+msgstr "Не найдено файла SQL для базы данных: "
+
+#: include/classes/Upgrade_base.inc:38
+msgid "Executing"
+msgstr "Выполняется"
+
+#: include/classes/Util.inc:173
+msgid "Years"
+msgstr "Лет"
+
+#: include/classes/Util.inc:177
+msgid "Months"
+msgstr "Месяцев"
+
+#: include/classes/Util.inc:181
+msgid "Weeks"
+msgstr "Недель"
+
+#: include/classes/Util.inc:185
+msgid "Days"
+msgstr "Дней"
+
+#: include/ossim_error.inc:15
+#: include/ossim_error.inc:16
+msgid "Error"
+msgstr "Ошибка"
+
+#: include/ossim_error.inc:80
+msgid "Unable to load ADODB library"
+msgstr "Не возможно загрузить библиотеку ADODB"
+
+#: include/ossim_error.inc:81
+msgid ""
+"\n"
+"                Make sure that adodb_path is pointing to the right path"
+msgstr ""
+"\n"
+"                Убедитесь, что adodb_path указывает на правильный путь"
+
+#: include/ossim_error.inc:88
+msgid "PHP-domxml  not loaded"
+msgstr "PHP-domxml не загружен"
+
+#: include/ossim_error.inc:89
+msgid ""
+"\n"
+"                Make sure that php-domxml is installed and loaded"
+msgstr ""
+"\n"
+"                Убедитесь, что php-domxml установлен и загружен"
+
+#: include/ossim_error.inc:96
+msgid "NMAP not found"
+msgstr "Не найден NMAP"
+
+#: include/ossim_error.inc:97
+msgid ""
+"\n"
+"                Make sure that nmap is installed and nmap_path is pointing to\n"
+"                the right path"
+msgstr ""
+"\n"
+"                Убедитесь, что nmap установлен и nmap_path указывает на\n"
+"                правильный путь"
+
+#: include/ossim_error.inc:105
+msgid "Unable to load FPDF library"
+msgstr "Не возможно загрузить FPDF библиотеку"
+
+#: include/ossim_error.inc:106
+msgid ""
+"\n"
+"                Make sure that fpdf_path is pointing to the right path"
+msgstr ""
+"\n"
+"                Убедитесь, что fpdf_path указывает на правильный путь"
+
+#: include/ossim_error.inc:113
+msgid "Unable to load Jpgraph library"
+msgstr "Не возможно загрузить библиотеку jpgraph"
+
+#: include/ossim_error.inc:114
+msgid ""
+"\n"
+"                Make sure that jpgraph_path is pointing to the right path"
+msgstr ""
+"\n"
+"                Убедитесь, что jpgraph_path указывает на правильный путь"
+
+#: include/ossim_error.inc:121
+msgid "There are missing fields"
+msgstr "Некоторые поля не заполнены"
+
+#: include/ossim_error.inc:122
+msgid "Please, fill all the fields"
+msgstr "Пожалуйста, заполните все поля"
+
+#: include/ossim_error.inc:128
+msgid "There are missing parameters"
+msgstr "Некотроые параметры отсутствуют"
+
+#: include/ossim_error.inc:129
+msgid "action_id is required"
+msgstr "Требуется action_id"
+
+#: include/ossim_error.inc:135
+msgid "Action id not found"
+msgstr "Идентификатор действия не найден"
+
+#: include/ossim_error.inc:136
+msgid "action_id %1% not found"
+msgstr "action_id %1% не найден"
+
+#: include/ossim_error.inc:142
+msgid "Error processing"
+msgstr "Ошибка обработки"
+
+#: include/ossim_error.inc:143
+msgid "<b> %1% </b> must be numeric"
+msgstr "<b> %1% </b> должен быть числом"
+
+#: include/ossim_error.inc:149
+msgid "Plugin id is not valid"
+msgstr "Идентификатор плагина не верен"
+
+#: include/ossim_error.inc:150
+msgid "plugin_id %1%"
+msgstr "plugin_id %1%"
+
+#: include/ossim_error.inc:156
+msgid "Missing parameters"
+msgstr "Отсутствующие параметры"
+
+#: include/ossim_error.inc:157
+msgid "Not values for priority or reliability"
+msgstr "Нет значений приоритета или надежности"
+
+#: include/ossim_error.inc:163
+msgid "Not valid priority"
+msgstr "Не приемлимое значение приоритета"
+
+#: include/ossim_error.inc:170
+msgid "Not valid reliability"
+msgstr "Не приемлимое значение надежности"
+
+#: include/ossim_error.inc:177
+msgid "Scan not started"
+msgstr "Сканирование не началось"
+
+#: include/ossim_error.inc:178
+msgid "Unknown action"
+msgstr "Не известное действие"
+
+#: include/ossim_error.inc:184
+msgid "Socket_create() failed: reason"
+msgstr "Ошибка socket_create(): причина"
+
+#: include/ossim_error.inc:185
+msgid "%1%"
+msgstr "%1%"
+
+#: include/ossim_error.inc:191
+#: include/ossim_error.inc:205
+msgid "Socket error"
+msgstr "Ошибка сокета"
+
+#: include/ossim_error.inc:192
+#: include/ossim_error.inc:206
+msgid "Is Ossim framework running at %1% ?"
+msgstr "Запущена ли и работает инфраструктура Ossim на %1% ?"
+
+#: include/ossim_error.inc:198
+msgid "Invalid Signature"
+msgstr "Не верная сигнатура"
+
+#: include/ossim_error.inc:199
+msgid "Wrong signature name"
+msgstr "Неверное имя шаблона IDS"
+
+#: include/ossim_error.inc:212
+msgid "Wrong user"
+msgstr "Не верный пользователь"
+
+#: include/ossim_error.inc:213
+msgid "Please enter a valid username"
+msgstr "Пожалуйста, введите допустимое имя пользователя"
+
+#: include/ossim_error.inc:219
+#: include/ossim_error.inc:226
+msgid "Authentication failure"
+msgstr "Ошибка подтверждения подлинности"
+
+#: include/ossim_error.inc:220
+#: include/ossim_error.inc:227
+msgid "Old password is not correct"
+msgstr "Старый пароль не правилен"
+
+#: include/ossim_error.inc:233
+#: include/ossim_error.inc:240
+msgid "Permission error"
+msgstr "Не хватает прав доступа"
+
+#: include/ossim_error.inc:234
+msgid "Only admin can do that"
+msgstr "Только администратор может это делать"
+
+#: include/ossim_error.inc:241
+msgid "A user can not remove himself"
+msgstr "Пользователь не может удалить сам себя"
+
+#: include/ossim_error.inc:247
+msgid "Wrong IP"
+msgstr "Не верный IP"
+
+#: include/ossim_error.inc:248
+msgid "Please introduce a valid ip"
+msgstr "Пожалуйста, представьте корректный ip"
+
+#: include/ossim_error.inc:254
+msgid "Wrong profile"
+msgstr "Не верный профиль"
+
+#: include/ossim_error.inc:255
+msgid "Please introduce a valid profile"
+msgstr "Пожалуйста, представьте корректный профиль"
+
+#: include/ossim_error.inc:261
+msgid "Wrong policy id"
+msgstr "Неверный идентификатор политики"
+
+#: include/ossim_error.inc:262
+msgid "Please introduce a valid policy id"
+msgstr "Пожалуйста, представьте корректный идентификатор политики"
+
+#: include/ossim_error.inc:268
+msgid "Wrong incident id"
+msgstr "Не верный идентификатор инцидента"
+
+#: include/ossim_error.inc:269
+msgid "Please introduce a valid incident id"
+msgstr "Пожалуйста, представьте корректный идентификатор инцидента"
+
+#: include/ossim_error.inc:275
+msgid "Wrong incident type id"
+msgstr "Не верный идентификатор типа инцидента"
+
+#: include/ossim_error.inc:276
+msgid "Please introduce a valid incident type id"
+msgstr "Пожалуйста, представьте корректный идентификатор типа инцидента"
+
+#: include/ossim_error.inc:283
+msgid "Wrong port name"
+msgstr "Неверное имя порта"
+
+#: include/ossim_error.inc:284
+msgid "Please introduce a valid port name"
+msgstr "Пожалуйста, представьте корректное имя порта"
+
+#: include/ossim_error.inc:290
+msgid "Wrong sensor"
+msgstr "Неверный сенсор"
+
+#: include/ossim_error.inc:291
+msgid "Please introduce a valid sensor"
+msgstr "Пожалуйста, представьте корректный сенсор"
+
+#: include/ossim_error.inc:297
+msgid "Wrong net"
+msgstr "Не верная сеть"
+
+#: include/ossim_error.inc:298
+msgid ""
+"Please introduce the net argument in nmap\n"
+"            format example: ?net=192.168.1.1-255"
+msgstr ""
+"Пожалуйста, представьте аргумент сети как в примере\n"
+"            формата nmap: ?net=192.168.1.1-255"
+
+#: include/ossim_error.inc:305
+msgid "Wrong backlog id"
+msgstr "Не верный идентификатор незавершенных событий"
+
+#: include/ossim_error.inc:306
+msgid "Please introduce a valid backlog id"
+msgstr "Пожалуйста, представьте корректный идентификатор незавершенных событий"
+
+#: include/ossim_error.inc:313
+msgid "Wrong rule name"
+msgstr "Неверное имя правила"
+
+#: include/ossim_error.inc:314
+msgid "Please introduce a valid rule name"
+msgstr "Пожалуйста, представьте корректное имя правила"
+
+#: include/ossim_error.inc:321
+msgid "Wrong parameter"
+msgstr "Неверный параметр"
+
+#: include/ossim_error.inc:322
+msgid "Incorrect date range"
+msgstr "Некорректный диапазон дат"
+
+#: include/ossim_error.inc:328
+msgid "Parameters missing"
+msgstr "Отсутствуют параметры"
+
+#: include/ossim_error.inc:329
+msgid "Response id is required"
+msgstr "Требуется идентификатор ответа"
+
+#: include/ossim_error.inc:335
+msgid "Rules not found"
+msgstr "Правила не найдены"
+
+#: include/ossim_error.inc:336
+msgid "Snort rules where not found at: %1%"
+msgstr "Правила Snort не были найдены в: %1%"
+
+#: include/ossim_error.inc:358
+msgid "String is not valid!"
+msgstr "Строка не верна!"
+
+#: include/ossim_error.inc:359
+msgid ""
+"\n"
+"                For security reasons, bad characters have been skipped"
+msgstr ""
+"\n"
+"                Из соображений безопасности некорректные символы были пропущены"
+
+#: include/ossim_error.inc:363
+msgid "Error!"
+msgstr "Ошибка!"
+
+msgid "Page loaded in"
+msgstr "Страница загружена за"
+
+msgid "seconds"
+msgstr "секунд"
+
+#: www/report/inventory.php:147
+msgid "Host belongs to:"
+msgstr "Хост относится к:"
+
+#: www/incidents/index.php:283
+msgid "Insert new Incident"
+msgstr "Создать новый инцидент"
+
+#: www/incidents/index.php:305
+msgid "No incidents"
+msgstr "Нет инцидентов"
+
+#: www/session/login.php:189
+msgid "Wrong User & Password"
+msgstr "Не верное имя пользователя и/или пароль"
+
+#: www/incidents/incidenttype.php:78
+msgid "Add new type"
+msgstr "Добавить новый тип"
+
+#: www/report/incidentreport.php:31
+msgid "Incidents by status"
+msgstr "Инциденты по статусам"
+
+#: www/report/incidentreport.php:68
+msgid "Incidents by type"
+msgstr "Инциденты по типам"
+
+#: www/report/incidentreport.php:105
+msgid "Incidents by user in charge"
+msgstr "Инциденты по ответственным"
+
+#: www/nagios/menu.php:83
+msgid "Monitoring"
+msgstr "Мониторинг"
+
+#: www/nagios/menu.php:129
+msgid "Reporting"
+msgstr "Отчёты"
+
+#: www/host/modifyhostform.php:307
+msgid "Values marked with (*) are mandatory"
+msgstr "Значения помеченные (*) обязательны"
+
+#: www/response/response.php:193
+msgid "Insert new response"
+msgstr "Создать новый ответ"
+
+#: www/response/newresponseform.php:16
+msgid "New Response Action"
+msgstr "Новое ответное действие"
+
+#: www/response/newresponseform.php:151
+msgid "Source Nets"
+msgstr "Сети Источники"
+
+#: www/response/newresponseform.php:152
+msgid "Source Hosts"
+msgstr "Хосты Источники"
+
+#: www/response/newresponseform.php:153
+msgid "Dest Nets"
+msgstr "Сети Назначения"
+
+#: www/response/newresponseform.php:154
+msgid "Dest Hosts"
+msgstr "Хосты Назначения"
+
+#: www/directives/directive.php:260
+msgid "Directive numbering"
+msgstr "Нумеризация директив"
+
+#: www/directives/directive.php:278
+msgid "Element of a directive"
+msgstr "Составляющие директивы"
+
+#: www/directives/directive.php:361
+msgid "Both \"From\" and \"To\" fields should accept input from the database in the near future. Host and Network objects are on the TODO list."
+msgstr "Оба \"From\" и \"To\" элементы в ближайшее будующее должны будут получать значения из базы данных. Элементы Host и Network также запланированы на реализацию"
+
+#: www/directives/directive.php:382
+msgid "This can be a port number or a sequence of comma separated port numbers. ANY port can also be used"
+msgstr "Это может быть номер порта или последовательность номеров разделённых запятыми. Значение ANY также допустимо"
+
+#: www/directives/directive.php:383
+msgid "Hint: 1:DST_PORT or 1:SRC_PORT would mean level 1 src and dest port respectively. They can be used too. (level 2 would be 2:DST_PORT for example)"
+msgstr "Совет: 1:DST_PORT или 1:SRC_PORT означали бы номер порта назначения или источника из первого уровня правила. Они также могут использоваться. (Для ссылки на уровень 2 используйте, например, 2:DST_PORT)"
+
+#: www/directives/directive.php:385
+msgid "Also you can negate ports. This will negate ports 22 and 21 in the directive"
+msgstr "Также возможно использование отрицания. Ниже следующая строка исключает номера портов 22 и 21 в директиве"
+
+#: www/directives/directive.php:391
+msgid "This can be one of the following strings"
+msgstr "Возможны следующие значения"
+
+#: www/directives/directive.php:401
+msgid "Additionally, you can put just a number with the protocol"
+msgstr "В дополнение, можно просто указать номер протокола"
+
+#: www/directives/directive.php:403
+msgid "Although Host_ARP_Event, Host_OS_Event, etc, are not really a protocol, you can use them if you want to do directives with ARP, OS, IDS or Service events. You can also use relative referencing like in 1:TCP, 2:Host_ARP_Event, etc.."
+msgstr "Хотя Host_ARP_Event, Host_OS_Event и т.п. не являются строго говоря протоколом их использование возможно если вы хотите создать директиву работающую с ARP, OS, IDS или Service событиями. Также возможна относительная адресация, например, 1:TCP, 2:Host_ARP_Event и т.п.."
+
+#: www/directives/directive.php:405
+msgid "You can negate the protocol also like this"
+msgstr "Возможно исключение протоколов следующим образом"
+
+#: www/directives/directive.php:407
+msgid "This will negate Host_ARP_Event and ICMP, but will match with UDP"
+msgstr "В данном примере Host_ARP_Event и ICMP исключаются, но не UDP"
+
+#: www/directives/directive.php:412
+msgid "The numerical id assigned to the referenced plugin"
+msgstr "Числовой идентификатор назначенный плагину"
+
+#: www/directives/directive.php:414
+msgid "The nummerical sub-id assigned to each plugins events, functions or the like"
+msgstr "Числовой под-идентификатор назначенный каждому событию, функции и т.п. плагина"
+
+#: www/directives/directive.php:415
+msgid "For example, plugin id 1001 (snort) references it.s rules as normal plugin_sids"
+msgstr "Например, для плагина 1001 (snort) под-идентификаторами являются его правила"
+
+#: www/directives/directive.php:416
+msgid "Plugin id 1501 (apache) uses the response codes as plugin_sid"
+msgstr "Для плагина 1501 (apache) коды ответа являются под-идентификаторами"
+
+#: www/directives/directive.php:417
+msgid "ANY can be used too for plugin_sid"
+msgstr "ANY также может быть использован в поле под-идентификатора"
+
+#: www/directives/directive.php:418
+msgid "You can negate plugin_sid's: plugin_sid=\"1,2,3,!4\" will negate just the plugin_sid 4"
+msgstr "Вы можете также исключать под-идентификаторы плагинов: plugin_sid=\"1,2,3,!4\" исключит только под-идентификатор 4"
+
+#: www/directives/directive.php:421
+msgid "This parameter and the following three are only valid for \"monitor\" and certain \"detector\" type rules"
+msgstr "Этот параметр и последующие три используются только в правилах типа \"монитор\" и определённых правилах \"детектор\""
+
+#: www/directives/directive.php:422
+msgid "The logical condition that has to be met for the rule to match"
+msgstr "Логическое условие, которое должно выполниться для срабатывания правила"
+
+#: www/directives/directive.php:424
+msgid "Equal"
+msgstr "Равенство"
+
+#: www/directives/directive.php:425
+msgid "Not equal"
+msgstr "Неравенство"
+
+#: www/directives/directive.php:426
+msgid "Less than"
+msgstr "Меньше чем"
+
+#: www/directives/directive.php:427
+msgid "Greater than"
+msgstr "Больше чем"
+
+#: www/directives/directive.php:428
+msgid "Less or equal"
+msgstr "Меньше или равно"
+
+#: www/directives/directive.php:429
+msgid "Greater or equal"
+msgstr "Больше или равно"
+
+#: www/directives/directive.php:432
+msgid "The value that has to be matched using the previous directives"
+msgstr "Значение которое должно совпасть при использовании предыдущих директив"
+
+#: www/directives/directive.php:434
+msgid "This value is similar to time_out but used for \"monitor\" type rules"
+msgstr "Этот параметр аналогичен параметру time_out, но используется для типов правил \"монитор\""
+
+#: www/directives/directive.php:436
+msgid "Determines if the provided value is absolute or relative"
+msgstr "Определяет является ли заданное значение абсолютным или относительным"
+
+#: www/directives/directive.php:437
+msgid "For example, providing 1000 as a value, gt as condition and 60 (seconds) as interval, querying ntop for HttpSentBytes would mean"
+msgstr "Например, задавая 1000 в качестве значения (value), gt в качестве условия (condition) и 60 (секунд) в качестве интервала (interval), запрос к ntop на HttpSentBytes означал бы"
+
+#: www/directives/directive.php:439
+msgid "Absolute true: Match if the host has more than 1000 http sent bytes within the next 60 seconds. Report back when (and only if) this absolute value is reached"
+msgstr "Абсолютная истина: Удовлетворяет если хост пошлёт 1000 http байт в течении следующих 60 секунд. Сообщить об этом когда (и только если) это абсолютное значение достигнуто"
+
+#: www/directives/directive.php:440
+msgid "Absolute false: Match if the host shows an increase of 1000 http sent bytes within the next 60 seconds. Report back as soon as this difference is reached (if it was reached...)"
+msgstr "Абсолютная ложь: Удовлетворяет если хост показывает динамику роста посланных http байт 1000 в минуту. Сообщить как только такой уровень роста достигнут (если достигнут)"
+
+#: www/directives/directive.php:443
+msgid "A bit more difficult to explain. Take the worm rule. At the end we want to match 20000 connections involving the same source host and same destination port but we want to avoid 20000 directives from spawning so this is our little helper. Just set this to true or false depending on how you want the system to behave. If it's true, all the vars that aren't ANY or fixed (fixed means defined source or dest host, port or plugin id or sid.) are going to be made sticky so they won't spawn another directive"
+msgstr "Немного сложнее объяснить. Возьмем правила червя. В качестве результата мы хотим получить совпадение 20000 соединений с одинаковым хостом источника и одинаковым портом назначения, но мы не хотим активизировать для этого 20000 директив, так что sticky это наша небольшая помощь. Просто установите значение истина или ложь в зависимости от желаемого поведения системы. Если значение истинно, все переменные не имеющие фиксированного значения или ANY (фиксированное значит определенное не переменное значение хоста источника или назначения, порта, идентификатора или под-идентификатора плагина) будут определены как \"закрепленные\" так что другая аналогичная директива не будет активизирована."
+
+#: www/directives/directive.php:444
+msgid "In our example at level 2 there are two vars that are going to be fixed at correlation level 2: 1:SRC_IP and 1:DST_PORT. Of course plugin_id is already fixed (1104 == spade) and all the other ANY vars are still going to be ANY"
+msgstr "В нашем примере на уровне 2 присутствуют 2 переменные которые будут зафиксированы на 2ом уровне коррелляции: 1:SRC_IP и 1:DST_PORT. Конечно же plugin_id уже фиксирован (1104 == spade) и все другие переменные ANY останутся со значением ANY"
+
+#: www/directives/directive.php:446
+msgid "Only suitable for rules with more than one occurrence. We want to make sure that the specified parameter happens X times (occurrence) and that all the occurrences are different"
+msgstr "Подходит только для правил с больше чем одной итерацией. Мы хотим гарантировать, что определённый параметр меняет значение X раз (событий) и что все эти значения уникальны"
+
+#: www/directives/directive.php:447
+msgid "Take one example. A straight-ahead port-scanning rule. Fix destination with the previous sticky and set sticky_different=\"1:DST_PORT\". This will assure we're going to match \"X occurrences\" against the same hosts having X different destination ports"
+msgstr "Возьмём один пример. Правило прямолинейного сканирования портов. Зафиксируем адрес назначения используя ранее описанный элемент sticky и установим sticky_different=\"1:DST_PORT\" Это гарантирует, что будет совпадение \"X событий\" против одного и того же хоста, но с X разными портами назначения"
+
+#: www/directives/directive.php:448
+msgid "In our worm rule the most important var is the DST_IP because as the number increases the reliability increases as well. Which (normally operating) host is going to do thousands of connections for the same port against different hosts"
+msgstr "В нашем правиле для обнаружения червя самой важной переменной является DST_IP потому что с ростом числа ёё уникальных значений также растёт и достоверность. Какой (нормально функционирующий) хост будет устанавливать тысячи соединений на один и тот же порт на разных хостах"
+
+#: www/directives/directive.php:450
+msgid "As sticky but involving more than one directive. If an event matches against a directive defined within a group and the group is set as \"sticky\" it won't match any other directive"
+msgstr "То же что и sticky но с участием более одной директивы. Если событие привело к срабатыванию одной из директив определённой в группе и группа помечена \"sticky\", то остальные директивы группы игнорируются"
+
+#: www/directives/directive.php:453
+msgid "This keywords are optional. They can be used to store special data from agents. Obviously, this only will work if the event has this modificators. The following things are accpeted"
+msgstr "Эти ключевые слова не обязательны. Они могут быть использованы для хранения каких то особенных данных от агентов. Очевидно, что это имеет смысл только в случае если событие содержит в себе эти модификаторы. Принимаются следующие значения"
+
+#: www/directives/directive.php:454
+msgid "You can insert any string to match here. If you want that this matches with any keyword, you can skip these keywords, or use ANY as the value"
+msgstr "Вы можете использовать любое строчное значение в качестве значения. Если вы хотите что бы любое значение было истиной, просто пропустите эти параметры или укажите ANY в качестве значения"
+
+#: www/directives/directive.php:456
+msgid "Just that, this will match with any word. You can also avoid this keyword, and it will match too"
+msgstr "Как значение и гласит - любое значение. Вы также можете просто не использовать ключевое слово, что даст тот же эффект"
+
+#: www/directives/directive.php:458
+msgid "Comma separated list"
+msgstr "Разделённый запятыми список"
+
+#: www/directives/directive.php:459
+msgid "You can use any number of words separated by commas"
+msgstr "Вы можете использовать любое количество слов разделённых запятой"
+
+#: www/directives/directive.php:460
+msgid "Relative value"
+msgstr "Относительное значение"
+
+#: www/directives/directive.php:461
+msgid "This is used to reference keywords from previous levels, for example"
+msgstr "Используется для указания значений с предыдущих уровней, например"
+
+#: www/directives/directive.php:462
+msgid "Means use the filename referenced in the first rule level"
+msgstr "Означает использовать имя файла указанного в первом правиле директивы"
+
+#: www/directives/directive.php:463
+msgid "Means use some data from USERDATA5 keyword referenced in the second rule level"
+msgstr "Означает использовать данные из параметра USERDATA5 указанном во втором правиле директивы"
+
+#: www/directives/directive.php:464
+msgid "Negated: You can also use negated keywords, i.e"
+msgstr "Отрицание: Вы также можете исключать значение, например"
+
+#: www/directives/directive.php:466
+msgid "This will match with foobar, but not johndoe"
+msgstr "Истиной будет совпадение с foobar, но не с johndoe"
+
+#: www/directives/directive.php:468
+msgid "Here you can see an example of what can be done"
+msgstr "На этом примере вы можете видеть, что можно сделать"
+
+#: www/directives/directive.php:474
+msgid "The main formula for risk calculation would look like this"
+msgstr "Главная формула для подсчёта риска выглядит следующим образом"
+
+#: www/directives/directive.php:477
+msgid "Where"
+msgstr "Где"
+
+#: www/session/newuserform.php:139
+msgid "NOTE: No selection allows ALL"
+msgstr "ПРИМЕЧАНИЕ: Отсутствие выбора разрешает исползовать все"
+
+#: www/session/newuserform.php:139
+msgid "nets"
+msgstr "сети"
+
+#: www/setup/ossim_acl.php:15
+msgid "Setting up domain access"
+msgstr "Установка доступа в домене"
+
+#: www/rrd_conf/new_rrd_conf_form.php:23
+msgid "Hours"
+msgstr "Часов"
+
+#: www/rrd_conf/new_rrd_conf_form.php:37
+msgid "Enter a profile name"
+msgstr "Введите имя профиля"
+
+#: www/conf/userlog.php:64
+msgid "Action description"
+msgstr "Описание действия"
+
+#: www/upgrade/index.php:84
+msgid "Detected Ossim Version"
+msgstr "Обнаруженная версия Ossim"
+
+#: www/upgrade/index.php:87
+msgid "Detected Schema Version"
+msgstr "Обнаруженная версия схемы"
+
+#: www/upgrade/index.php:90
+msgid "Detected Database Type"
+msgstr "Обнаруженный тип базы данных"
+
+#: www/upgrade/index.php:131
+msgid "Required"
+msgstr "Требуется"
+
+#: www/upgrade/index.php:150
+msgid "SQL schema update"
+msgstr "Обновить SQL схему"
+
+#: www/upgrade/index.php:146
+msgid "PHP script: PRE"
+msgstr "PHP скрипт: ДО"
+
+#: www/upgrade/index.php:154
+msgid "PHP script: POST"
+msgstr "PHP скрипт: ПОСЛЕ"
+
+#: www/netscan/do_scan.php:34
+msgid "Scanning network"
+msgstr "Сканирование сети"
+
+#: www/netscan/do_scan.php:34
+msgid "please wait"
+msgstr "пожалуйста подождите"
+
+#: www/netscan/do_scan.php:37
+msgid "Scan completed"
+msgstr "Сканирование завершено"
+
+#: www/netscan/do_scan.php:38
+msgid "Click here to show the results"
+msgstr "Нажмите сюда для просмотра результатов"
+
+#: www/netscan/scan_util.php:71
+msgid "Update database values"
+msgstr "Обновить информацию в базе данных"
+
+#: www/editor/editor.php:15
+msgid "Rule viewer"
+msgstr "Просмотр правил"
+
+#: www/backup/index.php:80
+msgid "Backup Manager"
+msgstr "Менеджер резервного копирования"
+
+#: www/backup/index.php:83
+msgid "Dates to Restore"
+msgstr "Востановить даты"
+
+#: www/backup/index.php:85
+msgid "Dates in Database"
+msgstr "Даты в базе данных"
+
+#: www/backup/index.php:122
+msgid "Backup Events"
+msgstr "События резервного копирования"
+
+#: www/backup/index.php:129
+msgid "Percent"
+msgstr "Процент"
+
+#: www/userlog/user_action_log.php:189
+msgid "Code"
+msgstr "Код"
+
+#: www/panel/panel.php:180
+msgid "Loading"
+msgstr "Загрузка"
+
+#: www/panel/panel.php:198
+msgid "pending"
+msgstr "ожидаются"
+
+#: www/backup/index.php:152
+msgid "Running"
+msgstr "Выполняется"
+
+#: www/backup/index.php:154
+msgid "Done"
+msgstr "Выполнено"
+
+msgid "Successfully"
+msgstr "Успешно"
+
+msgid "Archive"
+msgstr "Архив"
+
+msgid "archived"
+msgstr "архивировано"
+
+msgid "Click here to close alarm"
+msgstr "Нажмите сюда чтобы закрыть тревогу"
+
+msgid "open"
+msgstr "открыт"
+
+msgid "Generate"
+msgstr "Сгенерировать"
+
+msgid "Alarms Report"
+msgstr "Отчёт о тревогах"
+
+msgid "Metrics Report"
+msgstr "Отчёт о метриках"
+
+msgid "Incidents Report"
+msgstr "Отчёт об инциндентах"
+

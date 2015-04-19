@@ -144,10 +144,10 @@ class Server(threading.Thread):
                                             data  = rule_info,
                                             itime = int(time.time())))
 
-                elif data.__contains__('plugin-start') or \
-                   data.__contains__('plugin-stop') or \
-                   data.__contains__('plugin-enabled') or \
-                   data.__contains__('plugin-disabled'):
+                elif data.__contains__('sensor-plugin-start') or \
+                   data.__contains__('sensor-plugin-stop') or \
+                   data.__contains__('sensor-plugin-enable') or \
+                   data.__contains__('sensor-plugin-disable'):
 
                     # Plugin monitor
                     mp = Plugin.Plugin(self.agent, data)
