@@ -1,37 +1,41 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
+
+#include "sim-xml-config.h"
+
 #include <string.h>
-#include <sim-util.h>
-#include <sim-xml-config.h>
-#include <config.h>
+#include <uuid/uuid.h>
+
+#include "sim-util.h"
 
 struct _SimXmlConfigPrivate {
   SimConfig     *config;
@@ -42,6 +46,7 @@ struct _SimXmlConfigPrivate {
 #define OBJECT_DATASOURCES      "datasources"
 #define OBJECT_DATASOURCE       "datasource"
 #define OBJECT_DIRECTIVE        "directive"
+#define OBJECT_REPUTATION       "reputation"
 #define OBJECT_SCHEDULER        "scheduler"
 #define OBJECT_SERVER           "server"
 #define OBJECT_RSERVERS         "rservers"
@@ -50,7 +55,11 @@ struct _SimXmlConfigPrivate {
 #define OBJECT_NOTIFY           "notify"
 #define OBJECT_SMTP             "smtp"
 #define OBJECT_FRAMEWORK	"framework"
+#define OBJECT_FORENSIC_STORAGE "forensic_storage"
+#define OBJECT_IDM              "idm"
+#define OBJECT_CONTEXT          "context"
 
+#define PROPERTY_ID             "id"
 #define PROPERTY_NAME           "name"
 #define PROPERTY_IP             "ip"
 #define PROPERTY_INTERFACE      "interface"
@@ -68,7 +77,31 @@ struct _SimXmlConfigPrivate {
 #define PROPERTY_HA_ROLE				"HA_role"
 #define PROPERTY_PRIMARY				"primary"				//primary master server? The primary master server is from the initial data is loaded.
 #define PROPERTY_LOCAL_DB				"local_DB"			//this and the following, needed to know where to connect if the DB is not local
+#define PROPERTY_PRIORITY       "priority"      // Establishes a resend priority order between rservers.
 #define PROPERTY_RSERVER_NAME		"rserver_name"	//
+#define PROPERTY_CONTEXT_ID     "context_id"    // Context id associated to Rserver
+#define PROPERTY_MSSP           "mssp"
+
+//Forensic Storage Properties
+#define PROPERTY_FORENSIC_STORAGE_PATH "path"
+#define PROPERTY_FORENSIC_STORAGE_SIG_TYPE "signature_type"
+#define PROPERTY_FORENSIC_STORAGE_SIG_CIPHER "signature_cipher"
+#define PROPERTY_FORENSIC_STORAGE_SIG_BIT "signature_bit_length"
+#define PROPERTY_FORENSIC_STORAGE_ENC_TYPE "encryption_type"
+#define PROPERTY_FORENSIC_STORAGE_ENC_CIPHER "encryption_cipher"
+#define PROPERTY_FORENSIC_STORAGE_ENC_BIT "encryption_bit_length"
+#define PROPERTY_FORENSIC_STORAGE_KEY_SOURCE "key_source"
+#define PROPERTY_FORENSIC_STORAGE_SIG_PRV_KEY_PATH "sig_prv_key_path"
+#define PROPERTY_FORENSIC_STORAGE_SIG_PASS "sig_pass"
+#define PROPERTY_FORENSIC_STORAGE_SIG_PUB_KEY_PATH "sig_pub_key_path"
+#define PROPERTY_FORENSIC_STORAGE_ENC_PRV_KEY_PATH "enc_prv_key_path"
+#define PROPERTY_FORENSIC_STORAGE_ENC_PASS "enc_pass"
+#define PROPERTY_FORENSIC_STORAGE_ENC_PUB_KEY_PATH "enc_pub_key_path"
+#define PROPERTY_FORENSIC_STORAGE_CERT_PATH "enc_cert_path"
+
+// MSSP Context Properties
+#define PROPERTY_DIRECTIVE_FILE "directive_file"
+#define PROPERTY_DISABLED_FILE  "disabled_file"
 
 
 static void sim_xml_config_class_init (SimXmlConfigClass *klass);
@@ -114,6 +147,9 @@ static void
 sim_xml_config_init (SimXmlConfig *xmlconfig, SimXmlConfigClass *klass)
 {
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
+
+  // unused parameter
+  (void) klass;
   
   /* allocate private structure */
   xmlconfig->_priv = g_new0 (SimXmlConfigPrivate, 1);
@@ -145,7 +181,8 @@ sim_xml_config_get_type (void)
       NULL,
       sizeof (SimXmlConfig),
       0,
-      (GInstanceInitFunc) sim_xml_config_init
+      (GInstanceInitFunc) sim_xml_config_init,
+      NULL
     };
     type = g_type_register_static (G_TYPE_OBJECT, "SimXmlConfig", &info, 0);
   }
@@ -178,7 +215,6 @@ sim_xml_config_new_from_file (const gchar *file)
   gchar *body;
   xmlDocPtr doc;
   xmlNodePtr root;
-  xmlNodePtr node;
   
   g_return_val_if_fail (file != NULL, NULL);
 
@@ -206,11 +242,12 @@ sim_xml_config_new_from_file (const gchar *file)
 	{
 		g_message ("Invalid XML config file '%s'", file);
     g_object_unref (G_OBJECT (xmlconfig));
+    xmlFreeDoc (doc);
     return NULL;
   }
 
   xmlconfig->_priv->config = sim_xml_config_new_config_from_node (xmlconfig, root);
-	g_free (doc);
+  xmlFreeDoc (doc);
 
   return xmlconfig;
 }
@@ -241,6 +278,9 @@ sim_xml_config_changed (SimXmlConfig * xmlconfig)
 void
 sim_xml_config_reload (SimXmlConfig *xmlconfig)
 {
+  // unused parameter
+  (void) xmlconfig;
+
   /* FIXME: implement */
 }
 
@@ -284,8 +324,6 @@ sim_xml_config_to_string (SimXmlConfig *xmlconfig)
 {
   xmlDocPtr doc;
   xmlNodePtr root;
-  xmlNodePtr tables_node = NULL;
-  GList *list, *l;
   xmlChar *xml;
   gint size;
   gchar *retval;
@@ -324,9 +362,7 @@ sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig,
 {
   gchar  *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -398,9 +434,7 @@ sim_xml_config_set_config_framework (SimXmlConfig  *xmlconfig,
 {
   gchar  *value;
   
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -442,9 +476,7 @@ sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
   SimConfigDS  *ds;
   gchar        *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -467,8 +499,29 @@ sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
     }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_DSN)))
     {
-      ds->dsn = g_strdup (value);
-      xmlFree(value);      
+      GString *dsn_new = g_string_new ("");
+      gchar **key_value, **split;
+      gchar **i;
+
+      /* Adapt the data source name from GDA 2 to GDA 4 */
+      key_value = g_strsplit (value, ";", 0);
+      for (i = key_value; *i; i++)
+      {
+        split = g_strsplit (*i, "=", 2);
+        if (!strcmp(*split, "USER"))
+          g_string_append_printf (dsn_new, "USERNAME=%s;", *(split+1));
+        else if (!strcmp(*split, "DATABASE"))
+          g_string_append_printf (dsn_new, "DB_NAME=%s;", *(split+1));
+        else
+          g_string_append_printf (dsn_new, "%s=%s;", *split, *(split+1));
+
+        g_strfreev(split);
+      }
+      g_strfreev(key_value);
+
+      sim_config_ds_set_dsn_string (ds, g_string_free (dsn_new, FALSE));
+
+      xmlFree(value);
     }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_LOCAL_DB)))
     {
@@ -508,9 +561,7 @@ sim_xml_config_set_config_datasources (SimXmlConfig  *xmlconfig,
 {
   xmlNodePtr  children;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -545,9 +596,7 @@ sim_xml_config_set_config_directive (SimXmlConfig  *xmlconfig,
 {
   gchar  *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -575,15 +624,47 @@ sim_xml_config_set_config_directive (SimXmlConfig  *xmlconfig,
  *
  */
 void
+sim_xml_config_set_config_reputation (SimXmlConfig  *xmlconfig,
+				     SimConfig     *config,
+				     xmlNodePtr     node)
+{
+  gchar  *value;
+
+  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
+  g_return_if_fail (SIM_IS_CONFIG (config));
+  g_return_if_fail (node);
+
+  if (strcmp ((gchar *) node->name, OBJECT_REPUTATION))
+    {
+      g_message ("Invalid config reputation node %s", node->name);
+      return;
+    }
+
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FILENAME)))
+    {
+      config->reputation.filename = g_strdup (value);
+      xmlFree(value);      
+    }
+  else
+    {
+      config->reputation.filename = NULL;
+    }
+}
+
+/*
+ *
+ *
+ *
+ *
+ */
+void
 sim_xml_config_set_config_scheduler (SimXmlConfig  *xmlconfig,
 				     SimConfig     *config,
 				     xmlNodePtr     node)
 {
   gchar  *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -596,7 +677,7 @@ sim_xml_config_set_config_scheduler (SimXmlConfig  *xmlconfig,
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_INTERVAL)))
     {
       config->scheduler.interval = strtol (value, (char **) NULL, 10);
-      xmlFree(value);      
+      xmlFree(value);
     }
 }
 
@@ -613,9 +694,7 @@ sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
 {
   gchar  *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -628,7 +707,7 @@ sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
     {
       config->server.port = strtol (value, (char **) NULL, 10);
-      xmlFree(value);      
+      xmlFree(value);
     }
 
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
@@ -691,9 +770,7 @@ sim_xml_config_set_config_notify (SimXmlConfig  *xmlconfig,
   gchar           **values;
   gint              i;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -744,9 +821,7 @@ sim_xml_config_set_config_notifies (SimXmlConfig  *xmlconfig,
   gchar  *value;
   xmlNodePtr  children;
   
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -787,9 +862,7 @@ sim_xml_config_set_config_smtp (SimXmlConfig  *xmlconfig,
 {
   gchar  *value;
 
-  g_return_if_fail (xmlconfig);
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
@@ -811,168 +884,141 @@ sim_xml_config_set_config_smtp (SimXmlConfig  *xmlconfig,
     }
 }
 
-/*
- *	Load the server's placed "UP" in the architecture, the master/s server/s
- *
- */
 void
-sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
-																  SimConfig     *config,
-																  xmlNodePtr     node)
+sim_xml_config_set_config_forensic_storage (SimXmlConfig  *xmlconfig,
+											                      SimConfig     *config,
+																			      xmlNodePtr     node)
 {
-  SimConfigRServer  *rserver;
-  gchar             *value;
+  //g_message("LOADING FORENSIC STORAGE CONFIGS");
+  gchar  *value;
 
-  g_return_if_fail (xmlconfig);
+  // Check validity of all needed objects.
   g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
   g_return_if_fail (SIM_IS_CONFIG (config));
   g_return_if_fail (node);
 
-  if (strcmp ((gchar *) node->name, OBJECT_RSERVER))
+  //Ensure that the current XML object is the correct for this function
+  if (strcmp ((gchar *) node->name, OBJECT_FORENSIC_STORAGE))
   {
-    g_message ("Invalid config rserver node %s", node->name);
+    g_message ("Invalid sensor log node %s", node->name);
     return;
   }
 
-  rserver = sim_config_rserver_new ();
-
-  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_NAME)))
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_PATH)))
   {
-    rserver->name = g_strdup (value);
+    config->forensic_storage.path = g_strdup (value);
     xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_TYPE)))
+  {
+    config->forensic_storage.sig_type = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_CIPHER)))
+  {
+    config->forensic_storage.sig_cipher = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_BIT)))
+  {
+    config->forensic_storage.sig_bit = strtol (value, (char **) NULL, 10);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_TYPE)))
+  {
+    config->forensic_storage.enc_type = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_CIPHER)))
+  {
+    config->forensic_storage.enc_cipher = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_BIT)))
+  {
+    config->forensic_storage.enc_bit = strtol (value, (char **) NULL, 10);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_KEY_SOURCE)))
+  {
+    config->forensic_storage.key_source = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_PRV_KEY_PATH)))
+  {
+    config->forensic_storage.sig_prv_key_path = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_PASS)))
+  {
+    config->forensic_storage.sig_pass = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_SIG_PUB_KEY_PATH)))
+  {
+    config->forensic_storage.sig_pub_key_path = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_PUB_KEY_PATH)))
+  {
+    config->forensic_storage.enc_pub_key_path = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_PASS)))
+  {
+    config->forensic_storage.enc_pass = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_ENC_PRV_KEY_PATH)))
+  {
+    config->forensic_storage.enc_prv_key_path = g_strdup (value);
+    xmlFree(value);
+  }
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_FORENSIC_STORAGE_CERT_PATH)))
+  {
+    config->forensic_storage.enc_cert_path = g_strdup (value);
+    xmlFree(value);
+  }
+}
+
+void
+sim_xml_config_set_config_idm (SimXmlConfig  *xmlconfig,
+											         SimConfig     *config,
+														   xmlNodePtr     node)
+{
+  gchar *value;
+
+  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
+  g_return_if_fail (SIM_IS_CONFIG (config));
+  g_return_if_fail (node);
+
+  if (strcmp ((gchar *) node->name, OBJECT_IDM))
+  {
+    g_message ("Invalid config idm node %s", node->name);
+    return;
+  }
+
+  if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_MSSP)))
+  {
+    if (!g_ascii_strncasecmp (value, "true", 4))
+      config->idm.mssp = TRUE;
+    else if (!g_ascii_strncasecmp (value, "false", 4))
+      config->idm.mssp = FALSE;
+    else
+      g_message ("Error: Please put a valid value (true/false) in the IDM MSSP parameter");
+
+    xmlFree (value);
   }
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_IP)))
   {
-    if (value)
-		{	
-			rserver->ia = gnet_inetaddr_new_nonblock (value, 0);
-			if (rserver->ia)
-			{
-				rserver->ip = g_strdup (value);
-				xmlFree(value);			
-			}
-			else
-			{
-				g_message ("Error: May be that you introduced a bad remote server IP in the server's config.xml?");
-				sim_config_rserver_free(rserver);
-				xmlFree(value);			
-				return;
-			}
-		}
-		else
-		{
-			g_message ("Error: May be that you didn't introduced a remote server IP in the server's config.xml?");
-      sim_config_rserver_free(rserver);
-      return;								
-		}
+    config->idm.ip = g_strdup (value);
+    xmlFree (value);
   }
-	
   if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PORT)))
   {
-		if (sim_string_is_number (value, 0))
-		{
-	    rserver->port = strtol (value, (char **) NULL, 10);
-		  xmlFree(value);
-		}
-		else
-		{
-			g_message ("Error: May be that you introduced a bad remote IP port in the server's config.xml?");
-			sim_config_rserver_free(rserver);
-		  xmlFree(value);
-			return;											 
-		}
+    config->idm.port = strtol (value, (char **) NULL, 10);
+    xmlFree (value);
   }
-
-	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_HA_ROLE)))
-  {
-    if (!g_ascii_strcasecmp (value, "active"))
-		{
-			rserver->is_HA_server = TRUE;
-			rserver->HA_role = HA_ROLE_ACTIVE;
-		}
-		else				
-		if (!g_ascii_strcasecmp (value, "passive"))
-		{
-			rserver->is_HA_server = TRUE;
-			rserver->HA_role = HA_ROLE_PASSIVE;
-		}
-    else	
-		{
-			rserver->is_HA_server = FALSE;
-			rserver->HA_role = HA_ROLE_NONE;
-		}
-    xmlFree(value);
-  }
-
-	if ((value = (gchar *) xmlGetProp (node, (xmlChar *) PROPERTY_PRIMARY)))
-  {
-    if (!g_ascii_strcasecmp (value, "true"))
-		{
-			rserver->primary = TRUE;
-		}
-		else				
-		if (!g_ascii_strcasecmp (value, "false"))
-		{
-			rserver->primary = FALSE;
-		}
-		else
-		{
-      g_message ("Error: May be that you introduced a bad primary in the server's config.xml?: please write TRUE or FALSE");
-    	xmlFree(value);
-      sim_config_rserver_free(rserver);
-			return;
-		}
-    xmlFree(value);
-  }
-
-
-  if (!rserver->port)
-	{
-		rserver->port = 40001;
-	}
-
-	gnet_inetaddr_set_port (rserver->ia, rserver->port);	
-	
-  config->rservers = g_list_append (config->rservers, rserver);
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
-																		SimConfig     *config,
-																		xmlNodePtr     node)
-{
-  xmlNodePtr  children;
-  
-  g_return_if_fail (xmlconfig);
-  g_return_if_fail (SIM_IS_XML_CONFIG (xmlconfig));
-  g_return_if_fail (config);
-  g_return_if_fail (SIM_IS_CONFIG (config));
-  g_return_if_fail (node);
-
-  if (strcmp ((gchar *) node->name, OBJECT_RSERVERS))
-  {
-    g_message ("Invalid config rservers node %s", node->name);
-    return;
-  }
-
-  children = node->xmlChildrenNode;
-  while (children) 
-	{
-    if (!strcmp ((gchar *) children->name, OBJECT_RSERVER))
-    {
-			sim_xml_config_set_config_rserver (xmlconfig, config, children);
-    }
-
-	  children = children->next;
-  }
-
 }
 
 /*
@@ -983,11 +1029,9 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
 																     xmlNodePtr     node)
 {
   SimConfig     *config;
-  SimAction     *action;
-  GNode         *rule_root;
   xmlNodePtr     children;
+	gboolean aux = FALSE;
   
-  g_return_val_if_fail (xmlconfig, NULL);
   g_return_val_if_fail (SIM_IS_XML_CONFIG (xmlconfig), NULL);
   g_return_val_if_fail (node != NULL, NULL);
   
@@ -1008,6 +1052,8 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
 			sim_xml_config_set_config_datasources (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_DIRECTIVE))
 			sim_xml_config_set_config_directive (xmlconfig, config, children);
+    if (!strcmp ((gchar *) children->name, OBJECT_REPUTATION))
+			sim_xml_config_set_config_reputation (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_SCHEDULER))
 			sim_xml_config_set_config_scheduler (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_SERVER))
@@ -1015,15 +1061,27 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
     if (!strcmp ((gchar *) children->name, OBJECT_SMTP))
 			sim_xml_config_set_config_smtp (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_NOTIFIES))
-			sim_xml_config_set_config_notifies (xmlconfig, config, children);		
-		//FIXME: This multilevel code is unstable and unmaintained, uncomment this at your own risk.
-    //if (!strcmp ((gchar *) children->name, OBJECT_RSERVERS))
-		//	sim_xml_config_set_config_rservers (xmlconfig, config, children);
+			sim_xml_config_set_config_notifies (xmlconfig, config, children);
     if (!strcmp ((gchar *) children->name, OBJECT_FRAMEWORK))
 			sim_xml_config_set_config_framework (xmlconfig, config, children);
-		
+	  if (!strcmp ((gchar *) children->name, OBJECT_FORENSIC_STORAGE))
+		{
+      sim_xml_config_set_config_forensic_storage (xmlconfig, config, children);
+			aux = TRUE;	
+		}
+    if (!strcmp ((gchar *) children->name, OBJECT_IDM))
+    {
+      sim_xml_config_set_config_idm (xmlconfig, config, children);
+      config->idm.activated = TRUE;
+    }
+
     children = children->next;
   }
+
+	if (aux)
+		config->forensic_storage.sem_activated = TRUE;
+	else
+		config->forensic_storage.sem_activated = FALSE;
 
   return config;
 }
@@ -1037,54 +1095,9 @@ sim_xml_config_new_config_from_node (SimXmlConfig  *xmlconfig,
 SimConfig*
 sim_xml_config_get_config (SimXmlConfig  *xmlconfig)
 {
-  g_return_val_if_fail (xmlconfig, NULL);
   g_return_val_if_fail (SIM_IS_XML_CONFIG (xmlconfig), NULL);
 
   return xmlconfig->_priv->config;
 }
-#if 0
-/*
- *
- *
- */
-void
-sim_xml_config_set_config_max_event_tmp (SimConfig     *config)
-{
-	GdaDataModel  *dm;
-  GdaValue      *value;
-	gchar					*query;
-
-  g_return_if_fail (config);
-  g_return_if_fail (SIM_IS_CONFIG (config));
-
-
-	query = g_strdup_printf ("SELECT value FROM config WHERE conf='max_event_tmp'");	
-  dm = sim_database_execute_single_command (ossim.ossimdb, query);
-
-	if (dm)
-	{
-	  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, 0);
-    if (gda_data_model_get_n_rows(dm) !=0) //to avoid (null)-Critical: gda_value_is_null: assertion `value != NULL' failed
-    {                                       
-      if (!gda_value_is_null (value))
-      {
-        config->max_event_tmp = gda_value_stringify (value);
-      }
-      else
-        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_xml_config_set_config_max_event_tmp value null");
-    }
-    else
-      config->max_event_tmp = 0;
-	}
-	else
-	{
-		g_message ("Error: Config DATA MODEL ERROR");
-    config->max_event_tmp = 0;		
-	}
-
-	g_free (query);
-}
-#endif
-
 
 // vim: set tabstop=2:

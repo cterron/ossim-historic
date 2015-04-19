@@ -1,2 +1,2 @@
-SUBDIRS=server framework cron.d cron.daily init.d logrotate.d
+SUBDIRS=framework cron.d  init.d logrotate.d
 DISTCLEANFILES = Makefile.in

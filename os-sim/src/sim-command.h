@@ -1,31 +1,31 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
 #ifndef __SIM_COMMAND_H__
@@ -34,14 +34,9 @@ Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #include <glib.h>
 #include <glib-object.h>
 #include <gnet.h>
+#include <uuid/uuid.h>
 
-#include "sim-enums.h"
-#include "sim-event.h"
-#include "sim-rule.h"
-#include "sim-packet.h"
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define SIM_TYPE_COMMAND                  (sim_command_get_type ())
 #define SIM_COMMAND(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_COMMAND, SimCommand))
@@ -50,23 +45,36 @@ extern "C" {
 #define SIM_IS_COMMAND_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_COMMAND))
 #define SIM_COMMAND_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_COMMAND, SimCommandClass))
 
-G_BEGIN_DECLS
-
 typedef struct _SimCommand        SimCommand;
 typedef struct _SimCommandClass   SimCommandClass;
+
+#include "sim-enums.h"
+#include "sim-event.h"
+#include "sim-rule.h"
+#include "sim-radix.h"
+#include "sim-uuid.h"
+#include "sim-inet.h"
+#include "sim-util.h"
+
 struct _SimCommand {
   GObject parent;
+	guint signature;
 
   SimCommandType      type;
   gint                id;
-	gchar								*buffer;	//here will be stored the original buffer received so we can resend it later
-
+  SimUuid            *context_id; // Context identifier
+  gchar              *buffer;     // here will be stored the original buffer received so we can resend it later
+  gint                agentVersion;
+  /* Funtion pointer*/
+  gboolean (*pf_event_scan)(SimCommand *,GScanner *scanner);  
   union {
     struct {
       gchar          *username;
       gchar          *password;
-			gchar          *hostname; //Used only in server conns. Not needed for sensors.
-			gchar					 *version;
+      gchar          *hostname; //Used only in server conns. Not needed for sensors.
+      SimVersion    * sensor_ver;
+      SimUuid       * sensor_id;
+      gfloat						tzone;
       SimSessionType  type;
     } connect;
 
@@ -94,20 +102,29 @@ struct _SimCommand {
 
     struct {
       gint            id;
-			gchar						*servername;	//sever name to wich send data to. 
+			gchar						*servername;	//sever name to which send data to. 
 			gboolean				store;
 			gboolean				correlate;
 			gboolean				cross_correlate;
+      gboolean        reputation;
+			gint            logger_if_priority;
 			gboolean				qualify;
-			gboolean				resend_alarm;			
-			gboolean				resend_event;			
+			gboolean				forward_alarm;
+			gboolean				forward_event;
     } server_set_data_role;
 
     struct {												//command sent from server to frameworkd
       gchar           *host;        //ip, not name
+			guint						sport;
       gboolean        state;
-      gchar           *servername;  //this info is inserted by the server. This is the server to wich is attached the sensor
+      gchar           *servername;  //this info is inserted by the server. This is the server to which is attached the sensor
     } sensor;
+
+    struct {
+      gint            id;
+			gchar						*servername; 
+      guint           num_events;
+    } sensor_get_events;
 
     struct {
       gint            id;
@@ -172,10 +189,18 @@ struct _SimCommand {
 		struct {
 			gchar						*servername;
 		} reload_directives;
-		
+
+    struct {
+      gchar	          *servername;
+    } reload_servers;
+
 		struct {
 			gchar						*servername;
 		} reload_all;
+
+    struct {
+        gchar           *sids;
+    } reload_post_correlation_sids;
 		
 		struct {
       gint            id;
@@ -222,11 +247,19 @@ struct _SimCommand {
     struct {
       /* Event Info */
       gchar             *type;
-      gint							id;
-      time_t            date;
+      SimUuid           *id;     // This is used to identify each event.
+                                 // We need to know with event are resonsable of generate each alarm,
+                                 // because we need to show it in the interface
+      guint              id_transaction;
+      time_t             date;
       gchar             *date_str;
-      gint              tzone;
+      gfloat             tzone;
       gchar             *sensor;
+      SimUuid           *sensor_id;
+      gchar             *device;
+      guint              device_id;
+      gchar             *server; //the server where the event was generated 
+      gchar             *servername; //the server where the event was generated 
       gchar             *interface;
 
       /* Plugin Info */
@@ -239,6 +272,8 @@ struct _SimCommand {
       gchar             *dst_ip;
       gint               src_port;
       gint               dst_port;
+      SimUuid          * src_net;
+      SimUuid          * dst_net;
 
       /* Plugin Type Monitor */
       gchar             *condition;
@@ -246,13 +281,16 @@ struct _SimCommand {
       gint               interval;
 
       gchar             *data;
-      gchar             *log;
+      GString           *log;
 
-      guint32            snort_sid;
-      guint32            snort_cid;
+      guint            snort_sid;
+      guint            snort_cid;
 
       gint               reliability;
       gint               priority;
+      gboolean           is_remote;
+      gboolean           is_reliability_set;
+      gboolean           is_priority_set;
       gint               asset_src;
       gint               asset_dst;
       gdouble            risk_c;
@@ -273,9 +311,33 @@ struct _SimCommand {
 			gchar							*userdata7;
 			gchar							*userdata8;
 			gchar							*userdata9;
+      gchar             *binary_data;
+      guint              binary_data_len;
 
-			gboolean					is_prioritized;	//needed to know if the children server has changed the event's priority, or it should be done in master server.
+      // IDM info
+      SimUuid           *src_id;
+      SimUuid           *dst_id;
+      gchar             *src_username;
+      gchar             *dst_username;
+      gchar             *src_hostname;
+      gchar             *dst_hostname;
+      gchar             *src_mac;
+      gchar             *dst_mac;
 
+      // Reputation data.
+      guint   rep_prio_src;
+      guint   rep_prio_dst;
+      guint   rep_rel_src;
+      guint   rep_rel_dst;
+      gchar * rep_act_src;
+      gchar * rep_act_dst;
+
+      gboolean					belongs_to_alarm; //This variable is used for multiserver resend, to tell the upper servers that an event is part of an alarm
+      gboolean					belongs_to_alarm_from_child;	//This variable is used for multiserver, in the upper servers, if some event arrives with this information, it will be inserted into ossim.event
+
+      // Saqqara specific.
+      SimUuid * saqqara_backlog_id;
+      gint      level;
     } event;
 
     struct {
@@ -284,94 +346,68 @@ struct _SimCommand {
 
 
     struct {
-      time_t             date;
-      gint							id;
+      gint							id_transaction;
       gchar             *host;
       gchar             *os;
       gchar             *sensor;
+      gchar             *server;
       gchar             *interface;
-      gint              tzone;
-      gchar             *date_str;
 
+			gfloat							tzone;
+      gchar             *date_str;
+      time_t            date;
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
+      SimUuid           *id;
     } host_os_event;
 
     struct {
-      time_t            date;
-      gint							id;
+      gint							id_transaction;
       gchar             *host;
       gchar             *mac;
       gchar             *vendor;
       gchar             *sensor;
+      gchar             *server;
       gchar             *interface;
-      gint              tzone;
-      gchar             *date_str;
 
+			gfloat							tzone;
+      gchar             *date_str;
+      time_t            date;
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
+      SimUuid           *id;
     } host_mac_event;
 
     struct {
-      time_t             date;
-      gint							id;
+      gint							id_transaction;
       gchar             *host;
       gint               port;
       gint               protocol;
       gchar             *service;
       gchar             *sensor;
+      gchar             *server;
       gchar             *interface;
       gchar             *application;
-      gint              tzone;
+
+			gfloat							tzone;
       gchar             *date_str;
-
-      gint               plugin_id;
-      gint               plugin_sid;
-
-      gchar             *log;
-    } host_service_event;
-
-    struct {
-      gint							id;
-      gchar             *host;
-      gchar             *hostname;
-      gchar             *event_type;
-      gchar             *target;
-      gchar             *what;
-      gchar             *extra_data;
-      gchar             *sensor;
-      gchar             *interface;
       time_t            date;
-      gint              tzone;
-      gchar             *date_str;
 
       gint               plugin_id;
       gint               plugin_sid;
 
       gchar             *log;
-
-			gchar							*filename;	//this variables are duplicated, here and inside the above "event" object
-			gchar							*username;
-			gchar							*password;
-			gchar							*userdata1;
-			gchar							*userdata2;
-			gchar							*userdata3;
-			gchar							*userdata4;
-			gchar							*userdata5;
-			gchar							*userdata6;
-			gchar							*userdata7;
-			gchar							*userdata8;
-			gchar							*userdata9;
-    } host_ids_event;
+      SimUuid           *id;
+    } host_service_event;
 
 		struct {
       gint							id;	//Not used at this moment.
 			SimDBElementType	database_element_type; //is this a Host query, or a network query, or a directive query....
-			gchar							*servername;	//the master server to wich is sended this query, has to know where does the msg come from.
+			gchar							*servername;	//the master server to which is sended this query, has to know where does the msg come from.
 																			//This is the server who originated the query.
 		} database_query;
 	
@@ -379,34 +415,69 @@ struct _SimCommand {
       gint							id;
 			gchar							*answer;
 			SimDBElementType	database_element_type; //is this a Host answer, or a network answer, or a directive answer....
-			gchar							*servername;	//children server to wich is sended the answer
+			gchar							*servername;	//children server to which is sended the answer
 		} database_answer;
-		
-		  } data;
-	struct {
-		  guint unziplen;
-			guint8 *gzipdata;
-			guint32 snort_gid; /* snort generator */
-			guint32 snort_sid; /* snort signature */
-			guint32 snort_rev; /* snort revision */
-			guint32 snort_classification; /* snort classification */
-			guint32 snort_priority; /* snort priority */
 
-		} snort_event;
-	SimPacket *packet;
+		//get framework command data
+		struct
+		{
+		  gchar* framework_name;
+		  gchar* framework_host;
+		  gint framework_port;
+		  gchar* server_host;
+		  gchar* server_name;
+		  gint server_port;
+		} framework_data;
+		//snort database data
+		struct
+		{
+		  gchar *dbname;
+		  gint dbport;
+		  gchar *dbhost;
+		  gchar *dbuser;
+		  gchar *dbpassword;
+		}snort_database_data;
+    struct {
+      SimInet    *ip;
+      gboolean    is_login;
+      gchar      *username;
+      gchar      *hostname;
+      gchar      *domain;
+      gchar      *mac;
+      gchar      *os;
+      gchar      *cpu;
+      gint        memory;
+      gchar      *video;
+      gchar      *service;
+      gchar      *software;
+      gchar      *state;
+      gint        inventory_source;
+      SimUuid    *host_id;
+    } idm_event;
+    struct {
+      gint    id;
+      gchar * your_sensor_id;
+    } noack;
+
+  } data;
 };
 
 struct _SimCommandClass {
   GObjectClass parent_class;
 };
 
+/* Prototypes */
 GType             sim_command_get_type                        (void);
+void              sim_command_register_type                   (void);
+
 SimCommand*       sim_command_new                             (void);
-SimCommand*       sim_command_new_from_buffer                 (const gchar     *buffer);
+SimCommand*       sim_command_new_from_buffer                 (const gchar     *buffer,
+                                                               gboolean       (*pf_scan)(SimCommand *, GScanner *),
+                                                               const gchar     *session_ip_str);
 SimCommand*       sim_command_new_from_type                   (SimCommandType   type);
 SimCommand*       sim_command_new_from_rule                   (SimRule         *rule);
 
-GScanner *              sim_command_start_scanner                   (void);
+void              sim_command_init_tls                        (void);
 
 gchar*            sim_command_get_string                      (SimCommand      *command);
 
@@ -414,13 +485,20 @@ SimEvent*         sim_command_get_event                       (SimCommand      *
 
 gboolean          sim_command_is_valid                        (SimCommand      *command);
 
-G_END_DECLS
+gboolean (*sim_command_get_remote_server_scan(void))(SimCommand*,GScanner*);
+gboolean (*sim_command_get_agent_scan(void))(SimCommand*,GScanner*);
+gboolean (*sim_command_get_default_scan(void))(SimCommand*,GScanner*);
+//gboolean sim_command_sensor_get_events_scan (SimCommand    *command, GScanner      *scanner,gchar* session_ip_str);
+void sim_command_append_inets (SimRadixNode *node, void *string);
+GScanner *sim_command_start_scanner (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+gboolean sim_command_snort_event_scan (SimCommand	*command, GScanner *scanner, gchar* session_ip_str);
+GHashTable *sim_command_idm_event_parse_username(const gchar *username);
+
+G_END_DECLS
 
 #endif /* __SIM_COMMAND_H__ */
 
 // vim: set tabstop=2:
+
 

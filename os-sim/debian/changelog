@@ -1,1048 +1,392 @@
-ossim (1:2.1-3) ossim; urgency=low
+ossim (1:4.11.0-0) stable; urgency=low
 
-  * Small cosmetic fixes
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Fri, 10 Jul 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:23:39 -0400
 
-ossim (1:2.1-2) ossim; urgency=low
+ossim (1:4.11.0-0) stable; urgency=low
 
-  * Minor version bumps for installer CD generation tests.
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 06:41:02 -0400
 
-ossim (1:2.1-1) ossim; urgency=low
+ossim (1:4.10.0-0) unstable; urgency=low
 
-  * Minor version bumps for installer CD generation tests.
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 17 Jul 2014 06:25:10 -0400
 
-ossim (1:2.1) ossim; urgency=low
+ossim (1:4.10-0) unstable; urgency=low
 
-  * Unify versioning for release
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 09 Jul 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 07 Jul 2014 07:29:15 -0400
 
-ossim (1:1.0.0~rc1-5+cvs20090701-1) ossim; urgency=low
+ossim (1:4.9-0) unstable; urgency=low
 
-  * Visual fixes
-  * License header added to php files
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 30 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Fri, 23 May 2014 03:27:50 -0400
 
-ossim (1:1.0.0~rc1-5+cvs20090630-1) ossim; urgency=low
+ossim (1:4.8-0) unstable; urgency=low
 
-  * Bug fixes and more visuals
-  * Fixes openvas reporting bug
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 30 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 14 Apr 2014 05:54:59 -0400
 
-ossim (1:1.0.0~rc1-5+cvs20090629-1) ossim; urgency=low
+ossim (1:4.7-0) unstable; urgency=low
 
-  * Visual enhancements
-  * Bug fixes
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Mon, 29 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Tue, 18 Mar 2014 13:03:00 -0400
 
-ossim (1:1.0.0~rc1-5+cvs20090625-1) ossim; urgency=low
+ossim (1:4.6-0) unstable; urgency=low
 
-  * Added alarm grouping.
-  * Re-organized menu layout.
-  * Added submenus as tabs at some places.
-  * New header design.
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 25 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 30 Jan 2014 12:19:07 -0500
 
-ossim (1:1.0.0~rc1-5+cvs20090623-1) ossim; urgency=low
+ossim (1:4.5-0) unstable; urgency=low
 
-  * Misc bugfixes: forensics, policy, alarms.
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Tue, 23 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 23 Nov 2013 14:57:12 -0500
 
-ossim (1:1.0.0~rc1-5+cvs20090617-1) ossim; urgency=low
+ossim (1:4.4-0) unstable; urgency=low
 
-  * Alarm console deletion fixes.
-  * Plugin group fixes.
-  * Re-introduce actions into policy.
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Wed, 17 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 12 Jun 2013 16:26:11 +0200
 
-ossim (1:1.0.0~rc1-5+cvs20090607-1) ossim; urgency=low
+ossim (1:4.3.0-1-0) unstable; urgency=low
 
-  * SQL line broke DB updates
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Tue, 07 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 20 May 2013 12:36:17 +0200
 
-ossim (1:1.0.0~rc1-5+cvs20090606-2) ossim; urgency=low
+ossim (1:4.2.1-0) unstable; urgency=low
 
-  * Missed a small Incident fix for KDB
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Mon, 06 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 14 Feb 2013 11:27:25 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090606-1) ossim; urgency=low
+ossim (1:4.2.0-0) unstable; urgency=low
 
-  * Forensics fixes
-  * Policy fixes
-  * Incidents fixes
-  * Alarm console fixes
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Mon, 06 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Tue, 18 Dec 2012 09:54:01 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090604-1) ossim; urgency=low
+ossim (1:4.1.2-0) unstable; urgency=low
 
-  * Forensics fixes
-  * Policy fixes
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Thu, 04 Jun 2009 11:20:45 +0100
+ -- OSSIM Integration Team <ossim@ossim.net>  Tue, 11 Dec 2012 11:55:31 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090526-1) ossim; urgency=low
+ossim (1:4.1.0-0) ossim; urgency=low
 
-  * Forensics fixes
-  * Policy fixes
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Tue, 26 May 2009 11:20:45 +0100
+ -- Pedro F. «pancho» Horrillo <pfhorrillo@alienvault.com>  Tue, 25 Sep 2012 17:22:22 +0200
 
-ossim (1:1.0.0~rc1-5+cvs20090522-1) ossim; urgency=low
+ossim (1:4.0.1-0) ossim; urgency=low
 
-  * Fix policy
+  * Added IDM and Repuration support
 
- -- Dominique Karg <dk@ossim.net>  Fri, 22 May 2009 11:20:45 +0100
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 30 Sep 2011 14:31:00 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090519-2) ossim; urgency=low
+ossim (1:3.0.0-1) ossim; urgency=low
 
-  * Fix server postinst
-  * Include new policy images
+  * New release
 
- -- Dominique Karg <dk@ossim.net>  Tue, 19 May 2009 11:20:45 +0100
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 13 Aug 2011 14:31:00 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090519-1) ossim; urgency=low
+ossim (1:2.5.3-1) ossim; urgency=low
 
-  * New policy interface
-  * New backup code greatly improves performance
+  * Multiple fixes
+  * New reports: Netflows, Vuln Summary and Details
+  * Any Forensic "Custom View" can added as subreport
+  * Reports export/import feature
+
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 13 Aug 2011 14:31:00 +0100
+
+ossim (1:2.4.2-1) ossim; urgency=low
+
+  * Multiple fixes
+  * New labels classification for Alarms
+  * Timeline analysis in Forensics Console
+  * Assets imports
+
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 13 Aug 2011 14:31:00 +0100
+
+ossim (1:2.4.1-1) ossim; urgency=low
+
+  * New report types and multiple fixes
+
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 13 Aug 2011 14:31:00 +0100
+
+ossim (1:2.4.0-1) ossim; urgency=low
+
+  * Change to 2.4.0 branch
+
+ -- Albarracin <jmalbarracin@alienvault.com>  Fri, 13 Aug 2011 14:31:00 +0100
+
+ossim (1:2.3.1-8) ossim; urgency=low
+
+  * Multiple fix
+
+ -- jdelacasa <jdelacasa@alienvault.com>  Fri, 10 Aug 2011 13:22:00 +0100
+
+Old Changelog:
+ossim (1:2.3.1-7) ossim; urgency=low
+
+  * Merge all the changes from upstream 2.2b branch
+
+ -- Carlos Terron <cterron@alienvault.com> Fri, 30 Jul 2010 12:22:00 +0100
+
+ossim (1:2.3.1-6) ossim; urgency=low
+
+  * Fix the Nagios issue in update
+  * Merge all the changes from upstream 2.2b branch
+
+ -- Carlos Terron <cterron@alienvault.com> Fri, 30 Jul 2010 12:22:00 +0100
+
+ossim (1:2.3.1-5) ossim; urgency=low
+
+  * packages fix
+
+ -- Alberto Roman <aroman@ossim.net>  Tue, 27 Jul 2010 11:20:46 +0100
+
+ossim (1:2.3.1-4) ossim; urgency=low
+
+  * Multiple Fixes. Thanks to Nahuel Grisolia (www.bonsai-sec.com) for some of
+    them
+
+ -- Alberto Roman <aroman@ossim.net>  Fri, 23 Jul 2010 11:20:46 +0100
+
+ossim (1:2.3.1-1) ossim; urgency=low
+
+  * Fix ossim-server path
+
+ -- Alberto Roman <aroman@ossim.net>  Fri, 25 may 2010 11:20:46 +0100
+
+ossim (1:2.3-1) ossim; urgency=low
+
+  * Customized views in the SIEM analizer
+  * HTML display report fixed.
+  * Nessus 4 and OpenVAS 2/3 support
+  * Remote distributed scanning using nmap
+  * Capability to stop remote scannings
+  * Multiple visualization and usage improvements
+  * New reports
+  * Performance optimization in Tickets,Alarms (using session cache and new
+    indexes)
+  * Better policy definitions
+  * Multiple fixes 
+  * HTTPS by default
+
+ -- Alberto Roman <aroman@ossim.net>  Fri, 25 may 2010 11:20:46 +0100
+
+ossim (1:2.2.4-5) ossim; urgency=low
+
+  * Alarm Optimization performance using session cache and a new mysql index
+  * HTML display report fixed.
+  * Right deleting of entity types in IE
+  * Fixed external links to sections changes accordeon menu and tabs
+
+ -- Alberto Roman <aroman@ossim.net>  Fri, 25 may 2010 11:20:46 +0100
+
+ossim (1:2.2.4-3) ossim; urgency=low
+
+  * Pagination for vulnerability scan results
+  * New consistency messages on edit entities
+
+ -- Alberto Roman <aroman@ossim.net>  Thu, 24 may 2010 11:20:46 +0100
+
+ossim (1:2.2.4-2) ossim; urgency=low
+
+  * Scans can be stopped
+  * minimum password length and complexity	
+  * Some fixes of OSVDB, Tabs in dashboard 
+
+ -- Alberto Roman <aroman@ossim.net>  Thu, 19 may 2010 11:20:46 +0100
+
+ossim (1:2.2.4-1) ossim; urgency=low
+
+  * Some fixes to draw trees
+  * Disable plugins 11219, 10335, 80009 for openvas3
+
+ -- Alberto Roman <aroman@ossim.net>  Thu, 19 may 2010 11:20:46 +0100
+
+ossim (1:2.2.4-1) ossim; urgency=low
+
+  * User password validation using javascript and php.
+  * Added password expiration option to global config.
+  * Added option to request password change to newly created users on first
+    login.
+  * Added "My profile" option for self-management of credentials.
+  * Restrict what users can see of other users and entities.
+  * Custom view integrated into the SIEM console.
+  * php-ids integration for input validation. ossim-valid revision.
+  * Default tabs in Dashboard. Do not overwrite user tabs.
+  * Alarm filtering fixed. Added sensor filtering.
+  * Ticket performance fixes. Paging and now it's possible to close them
+    without opening them.
+  * Plugin group filtering integrated into SIEM view.
+  * Plugin group definition improvements.
+  * Alive host scanning option added. OpenVAS 3 and Nessus 4.02 compatibility
+    fixes.
+  * Tree/table caching for assets.
+  * Correlation directive id fixes. Directive editor fixes.
+  * Logger event count fixes.
+  * Tons of multiuser fixes, including: Risk metrics, risk maps, ntop, KDB,
+    Geographic Report, B&C reports, etc..
+  * Custom report wizard.
+
+  -- Alberto Roman <aroman@ossim.net>  Thu, 13 may 2010 11:20:46 +0100
+
+ossim (1:2.2.3-5) ossim; urgency=low
+
+  * Fixed Policy "sign" error message when an Action is modified
+  * Fixed Frameworkd translation console warning
+
+ -- Alberto Roman <aroman@ossim.net>  Wed, 28 Apr 2010 11:20:46 +0100
+
+ossim (1:2.2.3-4) ossim; urgency=low
+
+  * Fixed Logger and Policy issues in config
+
+ -- Alberto Roman <aroman@ossim.net>  Wed, 14 Apr 2010 11:20:46 +0100
+
+ossim (1:2.2.3-3) ossim; urgency=low
+
+  * added some php issues
+  * Fixed access to Logger
+
+ -- Alberto Roman <aroman@ossim.net>  Tue, 13 Apr 2010 11:20:46 +0100
+
+ossim (1:2.2.3-2) ossim; urgency=low
+
+  * add binutils
+
+ -- Alberto Roman <aroman@ossim.net>  Tue, 6 Apr 2010 11:20:46 +0100
+
+ossim (1:2.2.3-1) ossim; urgency=low
+
+  * Kismet fix
+
+ -- Alberto Roman <aroman@ossim.net>  Mon, 5 Apr 2010 11:20:46 +0100
+
+ossim (1:2.2.2-1) ossim; urgency=low
+
+  * Some more fixes
+
+ -- Alberto Roman <aroman@ossim.net>  Wed, 31 Mar 2010 11:20:46 +0100
+
+ossim (1:2.2.1-3) ossim; urgency=low
+
+  * Fix the problem accessing interface
+
+ -- AR <aroman@ossim.net>  Mon, 30 Mar 2010 11:20:46 +0100
+
+ossim (1:2.2.1-2) ossim; urgency=low
+
+  * Some fixes
+
+ -- AR <aroman@ossim.net>  Mon, 29 Mar 2010 11:20:46 +0100
+
+ossim (1:2.2.1-1) ossim; urgency=low
+
+  * multiples fixes
+
+ -- AR <aroman@ossim.net>  Mon, 21 Feb 2010 11:20:46 +0100
+
+ossim (1:2.2-2) ossim; urgency=low
+
+  * temporary removal of OSVDB
+
+ -- AR <aroman@ossim.net>  Mon, 21 Feb 2010 11:20:46 +0100
+
+ossim (1:2.2-1) ossim; urgency=high
+
+  * New release, will be updating this changelog before the 15th
+
+ -- DK <dk@ossim.net>  Mon, 15 Feb 2010 11:20:46 +0100
+
+ossim (1:2.1.8-1) ossim; urgency=low
+
+  * Security fixes, courtesy of Nahuel Grisolia (ngrisolia at Cybsec.com)
+  * Improved vulnerability scanning interface (beta)
+  * New wireless detection part (using Kismet)
+  * Flow management (alpha)
+
+ -- DK <dk@ossim.net>  Wed, 16 Dec 2009 11:20:46 +0100
+
+ossim (1:2.1.5-3) ossim; urgency=low
+
+  * New Ossim Agent parser added
+  * Improved Host Report (right click on any IP in the SIM)
+  * Nessus management improved
+  * Multiple bugfixes
+
+ -- Alberto Roman <alberto@ossim.net>  Tue, 03 Nov 2009 11:20:46 +0100
+
+ossim (1:2.1.5-2) ossim; urgency=low
+
+  * SEM Export bugfix.
+
+ -- Alberto Roman <alberto@ossim.net>  Tue, 07 Oct 2009 11:20:46 +0100
+
+ossim (1:2.1.5-1) ossim; urgency=low
+
+  * Action/Responses fixed.
+  * New host reports.
   * Bugfixes
 
- -- Dominique Karg <dk@ossim.net>  Tue, 19 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Tue, 06 Oct 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090512-1) ossim; urgency=low
+ossim (1:2.1.4-4) ossim; urgency=low
 
-  * Many SEM fixes
-  * Flag code in forensics
-  * Forensics fixes
+  * More Bugfixes. SEM debug log.
 
- -- Dominique Karg <dk@ossim.net>  Tue, 12 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Wed, 23 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090511-1) ossim; urgency=low
+ossim (1:2.1.4-3) ossim; urgency=low
 
-  * New flag code
+  * Bugfixes. Forensics beautifying and SEM fixes.
 
- -- Dominique Karg <dk@ossim.net>  Mon, 11 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Mon, 21 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090508-1) ossim; urgency=low
+ossim (1:2.1.4-2) ossim; urgency=low
 
-  * SEM fixes
-  * Forensic fixes
-  * Directive editor fixes
+  * Temporarily disable action/responses part until it gets a throughout
+    revision.
 
- -- Dominique Karg <dk@ossim.net>  Fri, 08 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Thu, 17 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090505-2) ossim; urgency=low
+ossim (1:2.1.4-1) ossim; urgency=low
 
-  * Fix forensics
+  * Bugfixes on auto-updates and various others.
+  * Performance enhancements on reporting.
 
- -- Dominique Karg <dk@ossim.net>  Tue, 05 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Wed, 16 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090505-1) ossim; urgency=low
+ossim (1:2.1.3-2) ossim; urgency=low
 
-  * Small bugfixes
-  * Fix update checks again
+  * Bugfixes.
 
- -- Dominique Karg <dk@ossim.net>  Thu, 05 May 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Mon, 14 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090430-1) ossim; urgency=low
+ossim (1:2.1.3-1) ossim; urgency=low
 
-  * SEM fixes
+  * Security fixes: various SQL injections and XSS discovered by Digital
+    Security Research Group [DSecRG]
+  * Bugfixes.
+  * Some new plugins.
 
- -- Dominique Karg <dk@ossim.net>  Thu, 30 Apr 2009 11:20:45 +0100
+ -- Dominique Karg <dk@ossim.net>  Thu, 10 Sep 2009 11:20:45 +0100
 
-ossim (1:1.0.0~rc1-5+cvs20090429-1) ossim; urgency=low
+ossim (1:2.1-7) ossim; urgency=low
 
-  * Link to reporting platform
-  * Fix some directives
+  * bugfix the Policy tree
 
- -- Dominique Karg <dk@ossim.net>  Wed, 29 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090428-2) ossim; urgency=low
-
-  * Fix some plugins
-
- -- Dominique Karg <dk@ossim.net>  Tue, 28 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090428-1) ossim; urgency=low
-
-  * OpenVAS fixes for ossim
-  * Directive fixes
-
- -- Dominique Karg <dk@ossim.net>  Tue, 28 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090422-1) ossim; urgency=low
-
-  * Add knowledge DB
-  * Fix english localization in forensics
-
- -- Dominique Karg <dk@ossim.net>  Wed, 22 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090421-1) ossim; urgency=low
-
-  * PHP_SELF --> SCRIPT_NAME
-  * Add new policy roles
-  * Forensic fixes
-
- -- Dominique Karg <dk@ossim.net>  Tue, 21 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090416-1) ossim; urgency=low
-
-  * Fix directives for directive editor
-  * Enable directive editor
-  * Server fixes
-
- -- Dominique Karg <dk@ossim.net>  Thu, 16 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090415-1) ossim; urgency=low
-
-  * Prettier t-shark pcap output
-  * Forensics bugfixes
-  * Fixed some forum-reported bugs (delete host, directive editor, server)
-  * Some other minor bugfixes
-
- -- Dominique Karg <dk@ossim.net>  Wed, 15 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090403-1) ossim; urgency=low
-
-  * Get greenish links instead of orange ones
-  * Reinsert backlog info with extended information
-  * Some other minor bugfixes
-
- -- Dominique Karg <dk@ossim.net>  Fri, 03 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090402-1) ossim; urgency=low
-
-  * Fix accordion
-  * Fix some forensics issues
-
- -- Dominique Karg <dk@ossim.net>  Thu, 02 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090401-1) ossim; urgency=low
-
-  * Fix update panel issue
-  * Add conficker directive
-
- -- Dominique Karg <dk@ossim.net>  Wed, 01 Apr 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090327-2) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Do not call reload acls after postinst, needs more testing
-  * Fix top.php, remove backlog
-  * iclude sem into top.php
-
- -- Dominique Karg <dk@ossim.net>  Fri, 27 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090327-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Start adding permissions to SEM. 
-  * Reinit the acl DB after install.
-  * Fix RT event viewer.
-
- -- Dominique Karg <dk@ossim.net>  Fri, 27 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090326-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Fix status bar (closed->open)
-  * Fix server erasing log files
-  * Forensics now shows plugin id and sid in the payload
-  * Fix forensics stylesheet
-
- -- Dominique Karg <dk@ossim.net>  Thu, 26 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090325-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Fix all the annoying "Back" links
-  * Fix some issues with the new frontend and IE8
-
- -- Dominique Karg <dk@ossim.net>  Wed, 25 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090324-2) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Fix executive panel tab creation.
-  * Fix some issues with the new frontend and IE8
-
- -- Dominique Karg <dk@ossim.net>  Tue, 24 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090324-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Get update checks into the frames again
-
- -- Dominique Karg <dk@ossim.net>  Tue, 24 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090323-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Let's start implementing the new frontend style
-
- -- Dominique Karg <dk@ossim.net>  Mon, 23 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090317-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Fix nagios frontend
-
- -- Dominique Karg <dk@ossim.net>  Tue, 17 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090313-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Some minor bugfixes
-  * BSD --> GPL
-
- -- Dominique Karg <dk@ossim.net>  Fri, 13 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090310-2) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Server crash fixed
-
- -- Dominique Karg <dk@ossim.net>  Tue, 10 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090310-1) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Move db script to a more useful place. Fix nessus update script.
-
- -- Dominique Karg <dk@ossim.net>  Tue, 10 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090309-2) ossim; urgency=low
-
-  * New CVS Snapshot.
-  * Fix some anomaly issues
-
- -- Dominique Karg <dk@ossim.net>  Mon, 09 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090309-1) ossim; urgency=low
-
-  * Remove acidbase from dependencies.
-  * Create update dir
-  * Do not link acidbase stuff
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Mon, 09 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090306-1) ossim; urgency=low
-
-  * Fix plugin sids
-  * New update auto-notifications
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Fri, 06 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090305-1) ossim; urgency=low
-
-  * Forensics console fixes.
-  * Server fix: insert into acid_event.
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090304-1) ossim; urgency=low
-
-  * Include some new forensics console enhancements.
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090303-2) ossim; urgency=low
-
-  * reconfig breaks install, just show a message
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Tue, 03 Mar 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090303-1) ossim; urgency=low
-
-  * Fix realtime event viewer, fix server logging.
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Fri, 27 Feb 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090227-1) ossim; urgency=low
-
-  * Grab the new forensics console and some bugfixes
-  * New CVS Snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Fri, 27 Feb 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090226-1) ossim; urgency=low
-
-  * CVS snapshot fixing some script issues.
-
- -- Dominique Karg <dk@ossim.net>  Thu, 26 Feb 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090226) ossim; urgency=low
-
-  * CVS snapshot.
-
- -- Dominique Karg <dk@ossim.net>  Thu, 26 Feb 2009 11:20:45 +0100
-
-ossim (1:1.0.0~rc1-5+cvs20090224) ossim; urgency=low
-
-  * CVS snapshot.
-
- -- David Gil <dgil@ossim.net>  Tue, 24 Feb 2009 10:39:45 +0100
-
-ossim (1:1.0.0~rc1-4) ossim; urgency=low
-
-  * Add sudo dependency.
-  * Add rules changes: modify permissions.
-
- -- DK <dk@ossim.net>  Wed, 26 Nov 2008 20:14:11 +0100
-
-ossim (1:1.0.0~rc1-3) ossim; urgency=low
-
-  * CVS Snapshot.
-
- -- David Gil <dgil@ossim.net>  Tue, 25 Nov 2008 12:14:11 +0100
-
-ossim (1:1.0.0~rc1-2) ossim; urgency=low
-
-  * New upstream release.
-  * Revert epoch change.
-
- -- DK <dk@ossim.net>  Tue, 03 Sep 2008 10:12:23 +0100
-
-ossim (1:1.0.0~rc1) ossim; urgency=low
-
-  * New upstream release.
-  * Security fixes
-  * Bug fixes
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Tue, 19 Aug 2008 10:12:23 +0100
-
-ossim (1:0.9.9-3) ossim; urgency=low
-
-  * New upstream release.
-  * Security fixes
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Fri, 22 Feb 2008 16:18:51 +0100
-
-ossim (1:0.9.9-2) ossim; urgency=low
-
-  * New upstream release.
-  * Ntop session menu fixed
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Wed, 20 Feb 2008 17:50:51 +0100
-
-ossim (1:0.9.9-1) ossim; urgency=low
-
-  * New upstream release.
-
- -- David Gil <dgil@ossim.net>  Tue, 19 Feb 2008 11:45:51 +0100
-
-ossim (1:0.9.9~rc5-3) ossim; urgency=low
-
-  * Fixed errors when inserting create_mysql.sql in database
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Tue, 14 Aug 2007 23:57:00 +0200
-
-ossim (1:0.9.9~rc5-2) ossim; urgency=low
-
-  * Fixed debconf variables replacements in ossim-server.postinst
-
- -- David Gil <dgil@ossim.net>  Thu, 09 Aug 2007 14:36:00 +0200
-
-ossim (1:0.9.9~rc5-1) ossim; urgency=low
-
-  * New upstream release
-
- -- David Gil <dgil@ossim.net>  Wed, 08 Aug 2007 10:43:54 +0200
-
-ossim (1:0.9.9~rc4-8) ossim; urgency=low
-
-  * New cvs snapshot
-    + server correlation fixes
-
- -- David Gil <dgil@ossim.net>  Thu, 05 Jul 2007 11:51:14 +0200
-
-ossim (1:0.9.9~rc4-7) ossim; urgency=low
-
-  * New cvs snapshot, which fixes a server crash.
-
- -- David Gil <dgil@ossim.net>  Mon, 25 Jun 2007 21:34:08 +0200
-
-ossim (1:0.9.9~rc4-6) ossim; urgency=low
-
-  * New cvs snapshot
-
- -- David Gil <dgil@ossim.net>  Wed, 20 Jun 2007 13:16:44 +0200
-
-ossim (1:0.9.9~rc4-5) ossim; urgency=low
-
-  * New cvs snapshot
-  * ossim-framework-daemon depends on python-pycurl (not python-curl),
-    Thanks Simone.
-
- -- David Gil <dgil@ossim.net>  Tue, 17 Apr 2007 16:58:40 +0200
-
-ossim (1:0.9.9~rc4-4) ossim; urgency=low
-
-  * New cvs snapshot
-  * Switch all packages to arch: all (except the server one).
-  * ossim-framework-daemon now depends on python-curl for AcidCache.
-
- -- David Gil <dgil@ossim.net>  Tue, 10 Apr 2007 18:41:10 +0200
-
-ossim (1:0.9.9~rc4-3) ossim; urgency=low
-
-  * Relax version dependency on ossim-agent
-  * Minor fixes
-
- -- David Gil <dgil@ossim.net>  Mon, 02 Apr 2007 14:02:40 +0200
-
-ossim (1:0.9.9~rc4-2) ossim; urgency=low
-
-  * Release of 0.9.9rc4.
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Sun, 01 Apr 2007 00:00:00 +0200
-
-ossim (1:0.9.9~rc3-5) ossim; urgency=low
-
-  * Pre-release of 0.9.9rc4.
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Sat, 31 Mar 2007 21:33:45 +0200
-
-ossim (1:0.9.9~rc3-4) ossim; urgency=low
-
-  * Pre-release of 0.9.9rc4.
-
- -- David Gil <dgil@ossim.net>  Fri, 30 Mar 2007 19:14:45 +0200
-
-ossim (1:0.9.9~rc3-3) ossim; urgency=low
-
-  * Set ossim_scheme_version to 0.9.9rc3 in ossim_config.sql.
-
- -- David Gil <dgil@ossim.net>  Wed, 25 Oct 2006 17:15:05 +0200
-
-ossim (1:0.9.9~rc3-2) ossim; urgency=low
-
-  * Fixed a few memory memory leaks in ossim server.
-
- -- David Gil <dgil@ossim.net>  Fri, 22 Sep 2006 15:49:57 +0200
-
-ossim (1:0.9.9~rc3-1) ossim; urgency=low
-
-  * New upstream version (release candidate)
-
- -- David Gil <dgil@ossim.net>  Fri, 22 Sep 2006 10:24:01 +0200
-
-ossim (1:0.9.9~rc2-6) ossim; urgency=low
-
-  * New CVS snapshot
-
- -- David Gil <dgil@ossim.net>  Fri, 15 Sep 2006 11:26:51 +0200
-
-ossim (1:0.9.9~rc2-5) ossim; urgency=low
-
-  * New CVS snapshot:
-    + frameworkd fixes (thanks alexlopa)
-    + web policy fixes
-    + pdf reports fixes
-    + host_os/host_mac/host_service server fixes
-  * Use python-support in python packages for the new python policy
-  * Debhelper compatibility to 5
-  * Standar-versions to 3.7.2 
-
- -- David Gil <dgil@ossim.net>  Wed, 23 Aug 2006 09:20:33 +0200
-
-ossim (1:0.9.8+0.9.9rc2-4) ossim; urgency=low
-
-  * New CVS snapshot.
-  * Several frameworkd fixes related with level calculation 
-  * Db upgrade system fixed
-
- -- Juan Manuel Lorenzo <juanma@ossim.net>  Thu, 03 Aug 2006 09:28:57 +0200
-
-ossim (1:0.9.8+0.9.9rc2-3) ossim; urgency=low
-
-  * New CVS snapshot.
-  * Several frameworkd fixes related with level calculation 
-    (thanks to alexlopa)
-
- -- David Gil <dgil@ossim.net>  Tue, 01 Aug 2006 11:28:57 +0200
-
-ossim (1:0.9.8+0.9.9rc2-2) ossim; urgency=low
-
-  * Fixed server crash on os/mac/service and hids events.
-
- -- David Gil <dgil@ossim.net>  Fri, 30 Jun 2006 18:28:14 +0200
-
-ossim (1:0.9.8+0.9.9rc2-1) ossim; urgency=low
-
-  * New upstream release candidate 2.
-
- -- David Gil <dgil@ossim.net>  Fri, 30 Jun 2006 12:42:12 +0200
-
-ossim (1:0.9.8+0.9.9rc1-1) ossim; urgency=low
-
-  * New upstream release candidate 1.
-
- -- David Gil <dgil@ossim.net>  Wed, 31 May 2006 12:50:19 +0200
-
-ossim (1:0.9.8-15) ossim; urgency=low
-
-  * CVS snapshot 20060526.
-
- -- David Gil <dgil@ossim.net>  Fri, 26 May 2006 15:32:17 +0200
-
-ossim (1:0.9.8-14) ossim; urgency=low
-
-  * CVS snapshot 20060523.
-  * This hopefully fixes errors in ossim-framework upgrades, thanks to
-    ossim-help people.
-  * Sorry for the delay, sourceforge's CVS problems.
-
- -- David Gil <dgil@ossim.net>  Tue, 23 May 2006 15:37:38 +0200
-
-ossim (1:0.9.8-12) ossim; urgency=low
-
-  * CVS snapshot 20060310.
-
- -- David Gil <dgil@ossim.net>  Fri, 10 Mar 2006 15:38:24 +0100
-
-ossim (1:0.9.8-11) ossim; urgency=low
-
-  * CVS snapshot 20060308.
-
- -- David Gil <dgil@ossim.net>  Wed, 08 Mar 2006 14:16:55 +0100
-
-ossim (1:0.9.8-10) ossim; urgency=low
-
-  * CVS snapshot 20051114.
-
- -- David Gil <dgil@ossim.net>  Mon, 14 Nov 2005 10:30:41 +0100
-
-ossim (1:0.9.8-9) ossim; urgency=low
-
-  * CVS snapshot 20051110.
-
- -- David Gil <dgil@ossim.net>  Thu, 10 Nov 2005 10:47:43 +0100
-
-ossim (1:0.9.8-8) ossim; urgency=low
-
-  * CVS snapshot 20051101.
-
- -- David Gil <dgil@ossim.net>  Wed, 02 Nov 2005 17:09:28 +0100
-
-ossim (1:0.9.8-7) ossim; urgency=low
-
-  * CVS snapshot 20051026.
-
- -- David Gil <dgil@ossim.net>  Wed, 26 Oct 2005 16:36:34 +0200
-
-ossim (1:0.9.8-6) ossim; urgency=low
-
-  * CVS snapshot 20051019.
-
- -- David Gil <dgil@ossim.net>  Wed, 19 Oct 2005 11:03:11 +0200
-
-ossim (1:0.9.8-5) ossim; urgency=low
-
-  * CVS snapshot 20051006.
-
- -- David Gil <dgil@ossim.net>  Thu, 06 Oct 2005 16:03:21 +0200
-
-ossim (1:0.9.8-4) ossim; urgency=low
-
-  * CVS snapshot 20051005.
-
- -- David Gil <dgil@ossim.net>  Wed, 05 Oct 2005 11:15:14 +0200
-
-ossim (1:0.9.8-3) ossim; urgency=low
-
-  * CVS snapshot 20050922.
-
- -- David Gil <dgil@ossim.net>  Thu, 22 Sep 2005 11:35:36 +0200
-
-ossim (1:0.9.8-2) ossim; urgency=low
-
-  * CVS snapshot 20050917.
-
- -- David Gil <dgil@ossim.net>  Mon, 19 Sep 2005 10:16:03 +0200
-
-ossim (1:0.9.8-1) ossim; urgency=low
-
-  * New upstream release.
-
- -- David Gil <dgil@ossim.net>  Wed, 18 May 2005 11:40:57 +0200
-
-ossim (0.9.8rc2-cvs20050506-1) ossim; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Fri, 06 May 2005 11:32:27 +0200
-
-ossim (0.9.8rc2-cvs20050429-2) ossim; urgency=low
-
-  * Build against libgda2-3, libgda2-1 is out of sarge.
-
- -- David Gil <dgil@ossim.net>  Fri, 29 Apr 2005 18:31:52 +0200
-
-ossim (0.9.8rc2-cvs20050429-1) ossim; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Fri, 29 Apr 2005 14:18:03 +0200
-
-ossim (0.9.8rc2-cvs20050420-1) ossim; urgency=low
-
-  * New CVS Release.
-  * Install logrotate files.
-
- -- David Gil <dgil@ossim.net>  Wed, 20 Apr 2005 18:12:53 +0200
-
-ossim (0.9.8rc2-cvs20050418-1) ossim; urgency=low
-
-  * New CVS Release.
-  * Added libgda2-3 to depends.
-
- -- David Gil <dgil@ossim.net>  Mon, 18 Apr 2005 10:36:18 +0200
-
-ossim (0.9.8rc2-cvs20050414-1) ossim; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Thu, 14 Apr 2005 16:39:29 +0200
-
-ossim (0.9.8rc2-cvs20050413-1) ossim; urgency=low
-
-  * New CVS Release.
-  * Base fixes.
-  * /usr/share/doc/ossim*/INSTALL.pdf
-
- -- David Gil <dgil@ossim.net>  Wed, 13 Apr 2005 17:04:57 +0200
-
-ossim (0.9.8rc2-cvs20050412-1) ossim; urgency=low
-
-  * New CVS Release.
-  * ossim-mysql depends on mysql4.0, mysql4.1 integration needs work.
-  * ossim package depends on ossim-contrib.
-  * Debian install guide rewritten in html+css
-  * Add base to ossim-framework depends
-    (acid is still the default alert viewer)
-  * cron.d and cron.daily scripts update.
-
- -- David Gil <dgil@ossim.net>  Tue, 12 Apr 2005 15:51:22 +0200
-
-ossim (0.9.8rc2+cvs20050328-1) ossim; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Mon, 28 Mar 2005 17:37:54 +0200
-
-ossim (0.9.8rc2) unstable; urgency=low
-
-  * New Release.
-
- -- David Gil <dgil@ossim.net>  Fri, 18 Mar 2005 10:26:25 +0100
-
-ossim (0.9.8rc1+cvs20050316-2) unstable; urgency=low
-
-  * Main Acid page caching (forgotten in last version).
-
- -- David Gil <dgil@ossim.net>  Thu, 17 Mar 2005 14:45:44 +0100
-
-ossim (0.9.8rc1+cvs20050316-1) unstable; urgency=low
-
-  * New CVS Release.
-  * AcidCache fixes
-
- -- David Gil <dgil@ossim.net>  Wed, 16 Mar 2005 17:04:15 +0100
-
-ossim (0.9.8rc1+cvs20050315-1) unstable; urgency=low
-
-  * New CVS Release.
-  * init scripts improvements.
-
- -- David Gil <dgil@ossim.net>  Tue, 15 Mar 2005 17:56:53 +0100
-
-ossim (0.9.8rc1+cvs20050311-1) unstable; urgency=low
-
-  * New CVS Release.
-  * Fixed 10_mysql_conffiles.dpatch
-
- -- David Gil <dgil@ossim.net>  Fri, 11 Mar 2005 14:38:09 +0100
-
-ossim (0.9.8rc1+cvs20050309-1) unstable; urgency=low
-
-  * New CVS Release.
-  * Agent, Framework and Server init scripts
-
- -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 18:55:44 +0100
-
-ossim (0.9.8rc1+cvs20050302-2) unstable; urgency=low
-
-  * Frameworkd fixes.
-
- -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 18:55:44 +0100
-
-ossim (0.9.8rc1+cvs20050302-1) unstable; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Wed, 02 Mar 2005 16:18:27 +0100
-
-ossim (0.9.8rc1+cvs20050224-1) unstable; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Thu, 24 Feb 2005 17:55:30 +0100
-
-ossim (0.9.8rc1+cvs20050222-1) unstable; urgency=low
-
-  * New CVS Release.
-  * Alarm console speedup !
-
- -- David Gil <dgil@ossim.net>  Tue, 22 Feb 2005 17:20:07 +0100
-
-ossim (0.9.8rc1+cvs20050221-1) unstable; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Mon, 21 Feb 2005 08:57:55 +0100
-
-ossim (0.9.8rc1+cvs20050209-2) unstable; urgency=low
-
-  * Fixed server high CPU load.
-
- -- David Gil <dgil@ossim.net>  Wed, 09 Feb 2005 14:36:24 +0100
-
-ossim (0.9.8rc1+cvs20050209-1) unstable; urgency=low
-
-  * New CVS Release.
-  * Debian Patch System
-
- -- David Gil <dgil@ossim.net>  Wed, 09 Feb 2005 10:23:51 +0100
-
-ossim (0.9.8rc1+cvs20050207-1) unstable; urgency=low
-
-  * New CVS Release.
-
- -- David Gil <dgil@ossim.net>  Mon, 07 Feb 2005 11:15:22 +0100
-
-ossim (0.9.8rc1-3) unstable; urgency=low
-
-  * Apache2 support.
-
- -- David Gil <dgil@ossim.net>  Wed, 02 Feb 2005 12:33:54 +0100
-
-ossim (0.9.8rc1-2) unstable; urgency=low
-
-  * phpGACL update.
-
- -- David Gil <dgil@ossim.net>  Tue, 01 Feb 2005 13:05:29 +0100
-
-ossim (0.9.8rc1-1) unstable; urgency=low
-
-  * New CVS version. 0.9.8 is incoming..
-
- -- David Gil <dgil@ossim.net>  Mon, 31 Jan 2005 17:25:22 +0100
-
-ossim (0.9.7+cvs20050127-1) unstable; urgency=low
-
-  * New CVS version. Locale and language fixes.
-
- -- David Gil <dgil@ossim.net>  Thu, 27 Jan 2005 17:54:27 +0100
-
-ossim (0.9.7+cvs20050126-1) unstable; urgency=low
-
-  * New CVS version.
-
- -- David Gil <dgil@ossim.net>  Wed, 26 Jan 2005 19:07:08 +0100
-
-ossim (0.9.7+cvs20050117-1) unstable; urgency=low
-
-  * New CVS version.
-
- -- David Gil <dgil@ossim.net>  Wed, 19 Jan 2005 02:04:56 +0100
-
-ossim (0.9.7+cvs20050114-1) unstable; urgency=low
-
-  * New CVS version. Expected a lot of changes during the next weeks.
-
- -- David Gil <dgil@ossim.net>  Fri, 14 Jan 2005 15:21:06 +0100
-
-ossim (0.9.7+cvs20041223-7) unstable; urgency=low
-
-  * ossim-framework.cron.d fixes
-
- -- David Gil <dgil@ossim.net>  Tue, 11 Jan 2005 23:12:44 +0100
-
-ossim (0.9.7+cvs20041223-6) unstable; urgency=low
-
-  * debian/rules: dh_installdebconf, dh_installcron (ossim-framework.cron.d)
-
- -- David Gil <dgil@ossim.net>  Mon, 10 Jan 2005 13:12:37 +0100
-
-ossim (0.9.7+cvs20041223-5) unstable; urgency=low
-
-  * Fixed bug that fixed server bug related to active sensors
-
- -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 18:12:36 +0100
-
-ossim (0.9.7+cvs20041223-4) unstable; urgency=low
-
-  * Fixed server bug related with active sensors
-
- -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 11:49:09 +0100
-
-ossim (0.9.7+cvs20041223-3) unstable; urgency=low
-
-  * debian/control: added mysql-4.1 to ossim-mysql dependencies (mysql-4.0 is
-    installed by default)
-
- -- David Gil <dgil@ossim.net>  Tue, 04 Jan 2005 10:12:32 +0100
-
-ossim (0.9.7+cvs20041223-2) unstable; urgency=low
-
-  * debian/ossim-framework.postinst: Impossible to upgrade due to a postinst
-    error, fixed using another way to check if apache or apache-ssl are
-    installed
-  * debian/framework/ossim.cron.d: run backupdb script as root user
-  * debian/INSTALL: added ossim-contrib and TODO section
-
- -- David Gil <dgil@ossim.net>  Mon, 03 Jan 2005 15:12:14 +0100
-
-ossim (0.9.7+cvs20041223-1) unstable; urgency=low
-
-  * The Happy Christmas CVS release.
-
- -- David Gil <dgil@ossim.net>  Thu, 23 Dec 2004 13:09:29 +0100
-
-ossim (0.9.7+cvs20041201-1) unstable; urgency=low
-
-  * New CVS version.
-
- -- David Gil <dgil@ossim.net>  Wed, 01 Dec 2004 18:43:40 +0100
-
-ossim (0.9.7+cvs20041119-2) unstable; urgency=low
-
-  * Impossible to upgrade due to a ossim-framework.postinst error.
-
- -- David Gil <dgil@ossim.net>  Fri, 19 Nov 2004 19:45:32 +0100
-
-ossim (0.9.7+cvs20041119-1) unstable; urgency=low
-
-  * New CVS version.
-  * debian/ossim-framework.postinst: apache and/or apache-ssl restart after
-    ossim-framework update.
-
- -- David Gil <dgil@ossim.net>  Fri, 19 Nov 2004 13:46:55 +0100
-
-ossim (0.9.7+cvs20041115-2) unstable; urgency=low
-
-  * New ossim-contrib package with a lot of patches and sample files.
-
- -- David Gil <dgil@ossim.net>  Mon, 15 Nov 2004 18:20:02 +0100
-
-ossim (0.9.7+cvs20041115-1) unstable; urgency=low
-
-  * New CVS version.
-  * New ossim-server templates.
-
- -- David Gil <dgil@ossim.net>  Mon, 15 Nov 2004 12:59:40 +0100
-
-ossim (0.9.7+cvs20041112-1) unstable; urgency=low
-
-  * New CVS version.
-  * New ossim-agent template, plugins.
-  * Multiselect template type depends on debconf (>= 0.2.26)
-
- -- David Gil <dgil@ossim.net>  Fri, 12 Nov 2004 13:09:57 +0100
-
-ossim (0.9.7+cvs20041105-3) unstable; urgency=low
-
-  * New ossim-agent and ossim-utils debconf templates.
-
- -- David Gil <dgil@ossim.net>  Thu, 11 Nov 2004 18:07:14 +0100
-
-ossim (0.9.7+cvs20041105-2) unstable; urgency=low
-
-  * Manage directories with .dirs files.
-  * Added debconf message in ossim-mysql package (Learning debconf templates)
-  * Less restrictive dependencies (Trying to compile ossim on a Ubuntu system)
-  * Added ttf-bitstream-vera to ossim-framework dependencies (rrd fonts)
-
- -- David Gil <dgil@ossim.net>  Mon, 08 Nov 2004 13:17:30 +0100
-
-ossim (0.9.7+cvs20041105-1) unstable; urgency=low
-
-  * New CVS version.
-  * Install OSSIM ChangeLog into /usr/share/ossim-*/changelog.gz
-  * Install an specific debian INSTALL file into /usr/share/ossim-*
-
- -- David Gil <dgil@ossim.net>  Fri, 05 Nov 2004 13:35:56 +0100
-
-ossim (0.9.7+cvs20041102-6) unstable; urgency=low
-
-  * Added libdbi-perl and libdbd-mysql-perl to ossim-utils depends
-  * Moved /etc/ossim/framework/ossim.conf config file to ossim-utils package
-
- -- David Gil <dgil@ossim.net>  Thu, 04 Nov 2004 17:44:46 +0100
-
-ossim (0.9.7+cvs20041102-5) unstable; urgency=low
-
-  * Install ossim-agent using python distutils
-  * Added python-dev and automake to build-depends
-  * Added ossim-utils to ossim-agent suggestes, since it include rrd_plugin
-  * /etc/init.d/ossim cleanup
-  * Updated phpgacl apache configuration
-
- -- David Gil <dgil@ossim.net>  Thu, 04 Nov 2004 11:04:29 +0100
-
-ossim (0.9.7+cvs20041102-4) unstable; urgency=low
-
-  * Moved /usr/share/ossim-framework and /usr/share/ossim-utils
-    to /usr/share/ossim
-  * Moved /usr/lib/ossim/backup to /var/lib/ossim/backup
-
- -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 16:23:04 +0100
-
-ossim (0.9.7+cvs20041102-3) unstable; urgency=low
-
-  * debian/db/ossim_config.sql: specific debian configuration
-  * debian/ossim.postrm: added update-rc.d -f ossim remove
-  * debian/control: added (apache | apache-ssl) to dependencies
-
- -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 14:30:05 +0100
-
-oossim (0.9.7+cvs20041102-2) unstable; urgency=low
-
-  * debian/rules: perms update
-  * debian/control: depends update
-
- -- David Gil <dgil@ossim.net>  Wed, 03 Nov 2004 10:48:51 +0100
-
-ossim (0.9.7+cvs20041102-1) unstable; urgency=low
-
-  * Agent bugfixes
-  * Jfreechart applets
-
- -- David Gil <dgil@ossim.net>  Tue, 02 Nov 2004 12:31:40 +0100
-
-ossim (0.9.7-1) unstable; urgency=low
-
-  * Initial Release.
-
- -- David Gil <dgil@ossim.net>  Sat, 30 Oct 2004 15:35:19 +0000
-
+ -- Dominique Karg <dk@ossim.net>  Thu, 10 Sep 2009 11:20:45 +0100

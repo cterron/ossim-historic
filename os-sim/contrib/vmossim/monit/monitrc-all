@@ -49,7 +49,7 @@ check process ossim-server with pidfile /var/run/ossim-server.pid
 	group server
 	start program = "/etc/init.d/ossim-server start"
 	stop program = "/etc/init.d/ossim-server stop"
-	if failed host 127.0.0.1 port 40001 type tcp then restart
+	if failed host 127.0.0.1 port 40001 type tcp 10 times within 10 cycles then restart
 	if totalmem > 90% then restart
 	if 5 restarts within 5 cycles then timeout
 
@@ -59,6 +59,7 @@ check process ossim-framework with pidfile /var/run/ossim-framework.pid
 	start program = "/etc/init.d/ossim-framework start"
 	stop program = "/etc/init.d/ossim-framework stop"
 	if 5 restarts within 5 cycles then timeout
+	if totalmem > 60% for 2 cycles then restart
 
 # Wui
 check process apache2 with pidfile /var/run/apache2.pid
@@ -79,31 +80,8 @@ check process ossim-agent with pidfile /var/run/ossim-agent.pid
 	if totalmem > 90% for 2 cycles then restart
 	if 5 restart within 5 cycles then timeout
 
-# System
-check file passwd with path /etc/passwd
-	group system
-	if changed checksum then alert
-
-check file shadow with path /etc/shadow
-	group system
-	if changed checksum then alert
-
-check file group with path /etc/group
-	group system
- 	if changed checksum then alert
+#System
+include /etc/monit/monit-system
 
 # Networking
-check process sshd with pidfile /var/run/sshd.pid
-	group net
-	stop program = "/etc/init.d/ssh stop"
-	start program = "/etc/init.d/ssh start"
-	if failed port 22 protocol ssh then restart
-	if 5 restarts within 5 cycles then timeout
-
-check file hosts  with path /etc/hosts
-	group net
-	if changed checksum then alert
-
-check file resolv.conf with path /etc/resolv.conf
-	group net
- 	if changed checksum then alert
+include /etc/monit/monit-networking

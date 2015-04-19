@@ -3,7 +3,8 @@
 import glob, os
 from distutils.core import setup
 
-from ossimframework.Const import VERSION
+from ossimframework.__init__ import __version__
+
 
 lib  = [ ('share/ossim-framework/ossimframework/', 
     glob.glob(os.path.join('ossimframework', '*.py')))
@@ -11,7 +12,7 @@ lib  = [ ('share/ossim-framework/ossimframework/',
 
 setup (
     name            = "ossim-framework",
-    version         = VERSION,
+    version         = __version__,
     description     = "OSSIM framework",
     author          = "OSSIM Development Team",
     author_email    = "ossim@ossim.net",

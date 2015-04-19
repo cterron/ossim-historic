@@ -1,31 +1,31 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
 #ifndef __SIM_CONFIG_H__
@@ -35,12 +35,19 @@ Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #include <glib-object.h>
 #include <gnet.h>
 
+typedef struct _SimConfig            SimConfig;
+typedef struct _SimConfigClass       SimConfigClass;
+typedef struct _SimConfigDS          SimConfigDS;
+typedef struct _SimConfigNotify      SimConfigNotify;
+typedef struct _SimConfigMsspContext SimConfigMsspContext;
+
 #include "sim-enums.h"
 #include "sim-command.h"
+#include "sim-database.h"
+#include "sim-role.h"
+#include "sim-uuid.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define SIM_TYPE_CONFIG                  (sim_config_get_type ())
 #define SIM_CONFIG(obj)                  (G_TYPE_CHECK_INSTANCE_CAST (obj, SIM_TYPE_CONFIG, SimConfig))
@@ -49,30 +56,22 @@ extern "C" {
 #define SIM_IS_CONFIG_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), SIM_TYPE_CONFIG))
 #define SIM_CONFIG_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), SIM_TYPE_CONFIG, SimConfigClass))
 
-#define HA_ROLE_NONE		0
-#define HA_ROLE_PASSIVE	1
-#define HA_ROLE_ACTIVE	2
-	
 
-G_BEGIN_DECLS
-
-typedef struct _SimConfig        SimConfig;
-typedef struct _SimConfigClass   SimConfigClass;
-typedef struct _SimConfigDS      SimConfigDS;
-typedef struct _SimConfigNotify  SimConfigNotify;
-typedef struct _SimConfigRServer SimConfigRServer;
-
-struct _SimConfig {
+struct _SimConfig
+{
   GObject parent;
 
   GList   *datasources;
   GList   *notifies;
-  GList   *rservers;		//SimConfigRServer
+
+  SimUuid * component_id;
+  SimUuid * default_context_id;
+  SimUuid * default_engine_id;
 
   gchar   *notify_prog;
 
-	gint		max_event_tmp;	//this is taken from 'config' table in DB. It means the maximum number 
-													//of events that should be inside event_tmp table.
+  gboolean copy_siem_events;  //copy events from acid_event_input to acid_event
+
   struct {
     gchar    *filename;
   } log;
@@ -88,17 +87,21 @@ struct _SimConfig {
   } directive;
 
   struct {
+    gchar    *filename;
+  } reputation;
+
+  struct {
     gulong    interval;
   } scheduler;
 
   struct {
-		gchar			*name;
-		gchar			*ip;
-//		gchar			*interface;
+    SimUuid * id;
+    gchar   * name;
+    gchar   * ip;
     gint      port;
-		SimRole		*role;
-		gchar			*HA_ip;
-		gint			HA_port;
+    SimRole	* role;
+    gchar	* HA_ip;
+    gint	  HA_port;
   } server;
 
   struct {
@@ -111,18 +114,66 @@ struct _SimConfig {
     gchar    *host;
     gint      port;
   } framework;
+ /*
+	#define PROPERTY_FORENSIC_STORAGE_PATH "path"
+	#define PROPERTY_FORENSIC_STORAGE_SIG_TYPE "signature_type"
+	#define PROPERTY_FORENSIC_STORAGE_SIG_CIPHER "signature_cipher"
+	#define PROPERTY_FORENSIC_STORAGE_SIG_BIT "signature_bit_length"
+	#define PROPERTY_FORENSIC_STORAGE_ENC_TYPE "encryption_type"
+	#define PROPERTY_FORENSIC_STORAGE_ENC_CIPHER "encryption_cipher"
+	#define PROPERTY_FORENSIC_STORAGE_ENC_BIT "encryption_bit_length"
+	#define PROPERTY_FORENSIC_STORAGE_KEY_SOURCE "key_source"
+	#define PROPERTY_FORENSIC_STORAGE_SIG_PRV_KEY_PATH "sig_prv_key_path"
+	#define PROPERTY_FORENSIC_STORAGE_SIG_PUB_KEY_PATH "sig_pub_key_path"
+	#define PROPERTY_FORENSIC_STORAGE_ENC_PRV_KEY_PATH "enc_prv_key_path"
+	#define PROPERTY_FORENSIC_STORAGE_ENC_PUB_KEY_PATH "enc_pub_key_path"
+	*/
+  struct {
+	gchar	*path;
+	gchar *sig_type;
+	gchar	*sig_cipher;
+	gint	sig_bit;
+	gchar *enc_type;
+	gchar	*enc_cipher;
+	gint	enc_bit;
+	gchar	*key_source;
+	gchar	*sig_prv_key_path;
+	gchar *sig_pass;
+	gchar *sig_pub_key_path;
+	gchar *enc_prv_key_path;
+	gchar *enc_pass;
+	gchar *enc_pub_key_path;
+	gboolean	sem_activated; //This is different from the SimRole. This depends on license; if the machine hasn't got SEM license or if the SEM stanzas are not in the config file, this will be false
+  gchar *enc_cert_path;
+  } forensic_storage;	
 
+  struct {
+    gboolean activated;
+    gboolean mssp;
+    gchar *ip;
+    gint port;
+  } idm;
 };
 
 struct _SimConfigClass {
   GObjectClass parent_class;
 };
 
-struct _SimConfigDS {
+struct _SimConfigDS
+{
   gchar    *name;
   gchar    *provider;
   gchar    *dsn;
-  gboolean local_DB;     //if False: database queries are executed against other ossim server in other machine.
+
+  // DSN splitted
+  gchar    *port;
+  gchar    *username;
+  gchar    *password;
+  gchar    *database;
+  gchar    *host;
+  gchar    *unix_socket;
+
+  gboolean  local_DB;     //if False: database queries are executed against other ossim server in other machine.
   gchar		 *rserver_name;     //if local_DB=False, this is the server where we have to connect to.
 };
 
@@ -131,54 +182,31 @@ struct _SimConfigNotify {
   GList    *alarm_risks;
 };
 
-struct _SimConfigRServer {	//servers "up" in the architecture directly connected. Also, the HA remote server is a rserver too.
-  gchar				*name;
-  gchar				*ip;	//ip & ia has the same address. //FIXME: redundant storage
-  GInetAddr		*ia;
-  gint				port;
-	GTcpSocket	*socket;
-	GIOChannel	*iochannel;
-	gint				HA_role;			//HA_ROLE_PASSIVE, HA_ROLE_ACTIVE, HA_ROLE_NONE
-	gboolean		is_HA_server;	//true if the remote server is an HA server.
-	gboolean		primary; //true if the rserver is the main master server. At last, this rserver thinks that this is the 
-												//main master server, I mean: ie. in an architecture like this:
-												//server1->server2->server3, where server3 is the children server lower in the architecture, the "real" main master
-												//server is the server1. But for server3, his main & primary master server will be server2.
-												//NOTE: Mandatory in server's config.xml. If not specified, this server won't be able to extract data
-												//(hosts, nets..) from it.
-};
-
 GType             sim_config_get_type                        (void);
-SimConfig*        sim_config_new                             (void);
-SimConfigDS*      sim_config_ds_new                          (void);
+SimConfig *       sim_config_new                             (void);
+SimConfigDS *     sim_config_ds_new                          (void);
 void              sim_config_ds_free                         (SimConfigDS  *ds);
-SimConfigDS*      sim_config_get_ds_by_name                  (SimConfig    *config,
-																												      const gchar  *name);
+void              sim_config_ds_set_dsn_string               (SimConfigDS  *ds,
+                                                              gchar        *dsn_string);
 
-SimConfigNotify*  sim_config_notify_new                      (void);
+SimConfigDS *     sim_config_get_ds_by_name                  (SimConfig    *config,
+                                                              const gchar  *name);
+
+SimConfigNotify * sim_config_notify_new                      (void);
 void              sim_config_notify_free                     (SimConfigNotify *notify);
 
-SimConfigRServer* sim_config_rserver_new                     (void);
-void              sim_config_rserver_free                    (SimConfigRServer *rserver);
-void							sim_config_set_data_role										(SimConfig   *config,
-																															SimCommand  *cmd);
-void							sim_config_rserver_debug_print							(SimConfigRServer *rserver);
+void              sim_config_set_data_role                  (SimConfig   *config,
+                                                             SimCommand  *cmd);
+SimRole *         sim_config_get_server_role                (SimConfig   *config);
+void              sim_config_set_server_role                (SimConfig   *config,
+                                                             SimRole     *role);
 
-//aggg do this here...
-#ifndef __SIM_DATABASE_H__
-#include "sim-database.h"
-void							sim_config_set_config_db_max_event_tmp			(SimConfig     *config,
-													                                     SimDatabase   *database);
+SimConfigDS *     sim_config_ds_clone                       (SimConfigDS *);
 
-void							sim_config_load_database_config							(SimConfig     *config,
-																	                             SimDatabase     *database);
-#endif
+gboolean          sim_config_load_server_ids                (SimConfig   *config,
+                                                             SimDatabase *database);
 
 G_END_DECLS
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __SIM_CONFIG_H__ */
 

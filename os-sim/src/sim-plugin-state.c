@@ -1,42 +1,36 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
 
 #include "sim-plugin-state.h"
-#include <config.h>
-
-enum
-{
-  DESTROY,
-  LAST_SIGNAL
-};
 
 struct _SimPluginStatePrivate {
   SimPlugin   *plugin;
@@ -47,7 +41,6 @@ struct _SimPluginStatePrivate {
 };
 
 static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
 
 /* GType Functions */
 
@@ -60,7 +53,7 @@ sim_plugin_state_impl_dispose (GObject  *gobject)
 static void 
 sim_plugin_state_impl_finalize (GObject  *gobject)
 {
-  SimPluginState *plugin = SIM_PLUGIN_STATE (gobject);
+  //SimPluginState *plugin = SIM_PLUGIN_STATE (gobject);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -149,7 +142,7 @@ sim_plugin_state_new_from_data (SimPlugin    *plugin,
 
   g_return_val_if_fail (plugin, NULL);
   g_return_val_if_fail (SIM_IS_PLUGIN (plugin), NULL);
-  g_return_if_fail (state >= 0);
+  g_return_val_if_fail (state >= 0, NULL);
 
   plugin_state = SIM_PLUGIN_STATE (g_object_new (SIM_TYPE_PLUGIN_STATE, NULL));
   plugin_state->_priv->plugin = plugin;
@@ -183,14 +176,12 @@ sim_plugin_state_get_plugin (SimPluginState   *plugin_state)
  */
 void
 sim_plugin_state_set_plugin (SimPluginState   *plugin_state,
-			     SimPlugin        *plugin)
+                             SimPlugin        *plugin)
 {
-  g_return_if_fail (plugin_state);
   g_return_if_fail (SIM_IS_PLUGIN_STATE (plugin_state));
-  g_return_if_fail (plugin);
   g_return_if_fail (SIM_IS_PLUGIN (plugin));
 
-  plugin_state->_priv->plugin = plugin;
+  plugin_state->_priv->plugin = g_object_ref (plugin);
 }
 
 /*

@@ -1,17 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - InitArray()
-* - RegisterGlobalState()
-* - CleanVariable()
-* - SetSessionVar()
-* - ImportHTTPVar()
-* - ExportHTTPVar()
-* - filterSql()
-* - XSSPrintSafe()
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -23,6 +10,21 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
+/**
+* Function list:
+* - InitArray()
+* - RegisterGlobalState()
+* - CleanVariable()
+* - SetSessionVar()
+* - ImportHTTPVar()
+* - ExportHTTPVar()
+* - filterSql()
+* - XSSPrintSafe()
+*/
+
+
 defined('_BASE_INC') or die('Accessing this file directly is not allowed.');
 /* ***********************************************************************
 * Function: InitArray()
@@ -55,24 +57,29 @@ function InitArray(&$a, $dim1, $dim2, $value) {
 function RegisterGlobalState() {
     /* Deal with user specified session handlers */
     if (session_module_name() == "user") {
+        $phperrorcsession = gettext("PHP ERROR: A custom (user) PHP session have been detected. However, BASE has not been set to explicitly use this custom handler.  Set <CODE>use_user_session=1</CODE> in <CODE>base_conf.php</CODE>");
+        $phperrorcsessioncode = gettext("PHP ERROR: A custom (user) PHP session hander has been configured, but the supplied hander code specified in <CODE>user_session_path</CODE> is invalid.");
+        $phperrorcsessionvar = gettext("PHP ERROR: A custom (user) PHP session handler has been configured, but the implementation of this handler has not been specified in BASE.  If a custom session handler is desired, set the <CODE>user_session_path</CODE> variable in <CODE>base_conf.php</CODE>.");
         if ($GLOBALS['use_user_session'] != 1) {
-            ErrorMessage(_PHPERRORCSESSION);
+            ErrorMessage($phperrorcsession);
             die();
         } else if ($GLOBALS['user_session_path'] != "") {
             if (is_file($GLOBALS['user_session_path'])) {
-                include_once ($GLOBALS['user_session_path']);
-                if ($GLOBALS['user_session_function'] != "") $GLOBALS['user_session_function']();
+            	ErrorMessage(_("Custom User PHP session handlers are deprecated in this version of SIEM Events Console"));
+            	die();
+                //include_once ($GLOBALS['user_session_path']);
+                //if ($GLOBALS['user_session_function'] != "") $GLOBALS['user_session_function']();
             } else {
-                ErrorMessage(_PHPERRORCSESSIONCODE);
+                ErrorMessage($phperrorcsessioncode);
                 die();
             }
         } else {
-            ErrorMessage(_PHPERRORCSESSIONVAR);
+            ErrorMessage($phperrorcsessionvar);
             die();
         }
     }
     //session_start();
-    if ($GLOBALS['debug_mode'] > 0) echo '<FONT COLOR="#FF0000">' . _PHPSESSREG . '</FONT><BR>';
+    //if ($GLOBALS['debug_mode'] > 0) echo '<FONT COLOR="#FF0000">' . gettext("Session Registered") . '</FONT><BR>';
 }
 /* ***********************************************************************
 * Function: CleanVariable()
@@ -99,7 +106,8 @@ function CleanVariable($item, $valid_data, $exception = "") {
     }
     /* Check the exception value list first */
     if ($exception != "" && in_array($item, $exception)) return $item;
-    if ($valid_data == "") return $item;
+    if ($valid_data == "") return ""; //return $item;
+    
     $regex_mask = "";
     if (($valid_data & VAR_DIGIT) > 0) $regex_mask = $regex_mask . "0-9";
     if (($valid_data & VAR_LETTER) > 0) $regex_mask = $regex_mask . "A-Za-z";
@@ -116,9 +124,9 @@ function CleanVariable($item, $valid_data, $exception = "") {
     if (($valid_data & VAR_USCORE) > 0) $regex_mask = $regex_mask . "\_";
     if (($valid_data & VAR_AT) > 0) $regex_mask = $regex_mask . "\@";
     /* Score (\-) always must be at the end of the character class */
-    if (($valid_data & VAR_PUNC) > 0) $regex_mask = $regex_mask . "\~\!\#\$\%\^\&\*\_\=\+\:\;\,\.\?\ \(\))\-";
+    if (($valid_data & VAR_PUNC) > 0) $regex_mask = $regex_mask . "\~\!\#\$\%\^\&\*\_\=\+\:\;\,\.\?\ \(\))\-\[\]";
     if (($valid_data & VAR_SCORE) > 0) $regex_mask = $regex_mask . "\-";
-    return ereg_replace("[^" . $regex_mask . "]", "", $item);
+    return preg_replace("/[^" . $regex_mask . "]/", "", $item);
 }
 /* ***********************************************************************
 * Function: SetSessionVar()
@@ -142,13 +150,13 @@ function CleanVariable($item, $valid_data, $exception = "") {
 ************************************************************************/
 function SetSessionVar($var_name) {
     if (isset($_POST[$var_name])) {
-        if ($GLOBALS['debug_mode'] > 0) echo "importing POST var '$var_name'<BR>";
+        // if ($GLOBALS['debug_mode'] > 0) echo "importing POST var '$var_name'<BR>";
         return $_POST[$var_name];
     } else if (isset($_GET[$var_name])) {
-        if ($GLOBALS['debug_mode'] > 0) echo "importing GET var '$var_name'<BR>";
+        // if ($GLOBALS['debug_mode'] > 0) echo "importing GET var '$var_name'<BR>";
         return $_GET[$var_name];
     } else if (isset($_SESSION[$var_name])) {
-        if ($GLOBALS['debug_mode'] > 0) echo "importing SESSION var '$var_name'<BR>";
+        // if ($GLOBALS['debug_mode'] > 0) echo "importing SESSION var '$var_name'<BR>";
         return $_SESSION[$var_name];
     } else return "";
 }
@@ -210,7 +218,7 @@ function ImportHTTPVar($var_name, $valid_data = "", $exception = "") {
 *
 ************************************************************************/
 function ExportHTTPVar($var_name, $var_value) {
-    echo "<INPUT TYPE=\"hidden\" NAME=\"$var_name\" VALUE=\"$var_value\">\n";
+    echo "<INPUT TYPE=\"hidden\" NAME=\"$var_name\" VALUE=\"".Util::htmlentities($var_value)."\">\n";
 }
 /* ***********************************************************************
 * Function: filterSql()
@@ -222,7 +230,7 @@ function ExportHTTPVar($var_name, $var_value) {
 *
 *
 ************************************************************************/
-function filterSql($item, $force_alert_db = 0) {
+function filterSql($item, $db = NULL) {
     GLOBAL $DBlib_path, $DBtype, $db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password;
     /* Determine whether a variable is set */
     if (!isset($item)) return $item;
@@ -231,13 +239,21 @@ function filterSql($item, $force_alert_db = 0) {
         for ($i = 0; $i < count($item); $i++) $item[$i] = XSSPrintSafe($item[$i]);
         return $item;
     }
-    $db = NewBASEDBConnection($DBlib_path, $DBtype);
-    $db->baseDBConnect($db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password, $force_alert_db);
-    /* magic_quotes_gpc safe adodb qmagic() returns escaped $item in quotes */
-    $item = $db->DB->qmagic($item);
-    $db->baseClose();
+    
+    // *********** Aux connection commented, unable to open multiple connections with mysqli *************
+    /*
+    if (!is_object($db)) {
+        $dbc = NewBASEDBConnection($DBlib_path, $DBtype);
+        $dbc->baseDBConnect($db_connect_method, $alert_dbname, $alert_host, $alert_port, $alert_user, $alert_password, $force_alert_db);
+        //magic_quotes_gpc safe adodb qmagic() returns escaped $item in quotes
+        $item = $dbc->DB->qmagic($item);
+        $dbc->baseClose();
+    } else {
+        $item = $db->DB->qmagic($item);
+    }
+    */
     /* cut off first and last character (quotes added by qmagic()) */
-    $item = substr($item, 1, strlen($item) - 2);
+    //$item = substr($item, 1, strlen($item) - 2);
     return $item;
 }
 /* ***********************************************************************

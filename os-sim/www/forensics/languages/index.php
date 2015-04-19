@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault

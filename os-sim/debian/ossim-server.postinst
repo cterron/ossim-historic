@@ -1,98 +1,125 @@
-#!/bin/sh -e
+#!/bin/sh
+# postinst script for ossim-server
+#
+# see: dh_installdeb(1)
 
-. /usr/share/debconf/confmodule
+set -e
 
-CONFIG=/etc/ossim/server/config.xml
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
 
-db_get ossim-server/server_name      || true ; SERVER_NAME=$RET     
-db_get ossim-server/server_ip        || true ; SERVER_IP=$RET   
-db_get ossim-server/framework_name   || true ; FRAMEWORK_NAME=$RET
-db_get ossim-server/framework_ip     || true ; FRAMEWORK_IP=$RET
-db_get ossim-server/framework_port   || true ; FRAMEWORK_PORT=$RET
-db_get ossim-server/ossim_base       || true ; OSSIM_BASE=$RET
-db_get ossim-server/ossim_host       || true ; OSSIM_HOST=$RET
-db_get ossim-server/ossim_user       || true ; OSSIM_USER=$RET
-db_get ossim-server/ossim_pass       || true ; OSSIM_PASS=$RET
-db_get ossim-server/snort_base       || true ; SNORT_BASE=$RET
-db_get ossim-server/snort_host       || true ; SNORT_HOST=$RET
-db_get ossim-server/snort_user       || true ; SNORT_USER=$RET
-db_get ossim-server/snort_pass       || true ; SNORT_PASS=$RET
-db_get ossim-server/osvdb_base       || true ; OSVDB_BASE=$RET
-db_get ossim-server/osvdb_host       || true ; OSVDB_HOST=$RET
-db_get ossim-server/osvdb_user       || true ; OSVDB_USER=$RET
-db_get ossim-server/osvdb_pass       || true ; OSVDB_PASS=$RET
+configure_db(){
+    OSSIM_SETUP_CONF_FILE="/etc/ossim/ossim_setup.conf"
+    SERVER_CONFIG_XML_FILE="/etc/ossim/server/config.xml"
 
-# manually stop debconf here, since we're starting a daemon later
-db_stop
+    if [ -f "$OSSIM_SETUP_CONF_FILE" ] && [ -f "$SERVER_CONFIG_XML_FILE" ]; then
+        HOSTNAME=$(grep "^hostname=.*" "$OSSIM_SETUP_CONF_FILE" | cut -d "=" -f 2)
+        DB_IP=$(grep "^db_ip=.*" "$OSSIM_SETUP_CONF_FILE" | cut -d "=" -f 2)
+        DB_USER=$(grep "^user=.*" "$OSSIM_SETUP_CONF_FILE" | cut -d "=" -f 2)
+        DB_PASS=$(grep "^pass=.*" "$OSSIM_SETUP_CONF_FILE" | cut -d "=" -f 2)
+        ADMIN_IP=$(grep "^admin_ip=.*" "$OSSIM_SETUP_CONF_FILE" | cut -d "=" -f 2)
+        SYSTEM_ID=$(/usr/bin/alienvault-system-id)
+
+        sed -i "s:<server .*:<server port=\"40001\" name=\"$HOSTNAME\" ip=\"0.0.0.0\" id=\"$SYSTEM_ID\"\/>:" "$SERVER_CONFIG_XML_FILE"
+        sed -i "s:<framework .*:<framework name=\"$HOSTNAME\"  ip=\"$ADMIN_IP\" port=\"40003\"\/>:" "$SERVER_CONFIG_XML_FILE"
+        sed -i "s:<datasource name=\"ossimDS\" .*:<datasource name=\"ossimDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$DB_USER;PASSWORD=$DB_PASS;DATABASE=alienvault;HOST=$DB_IP\"\/>:" "$SERVER_CONFIG_XML_FILE"
+        sed -i "s:<datasource name=\"snortDS\" .*:<datasource name=\"snortDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$DB_USER;PASSWORD=$DB_PASS;DATABASE=alienvault_siem;HOST=$DB_IP\"\/>:" "$SERVER_CONFIG_XML_FILE"
+        sed -i "s:<datasource name=\"osvdbDS\" .*:<datasource name=\"osvdbDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$DB_USER;PASSWORD=$DB_PASS;DATABASE=alienvault_siem;HOST=$DB_IP\"\/>:" "$SERVER_CONFIG_XML_FILE"
+
+        # Update config.xml permissions
+        chown avserver:alienvault "$SERVER_CONFIG_XML_FILE"
+    fi
+}
+
+configure_reputation_data(){
+    REPUTATION_DATA_FILE="/etc/ossim/server/reputation.data"
+    chgrp alienvault "$REPUTATION_DATA_FILE"
+    chmod g+w "$REPUTATION_DATA_FILE"
+}
 
 case "$1" in
     configure)
+        ETC_DIR="/etc/ossim/server"
+        LOG_DIR="/var/log/alienvault/server"
+        RUN_DIR="/var/run/alienvault"
+	    HOME_SERVER="/home/avserver"
 
-        TMPFILE=`tempfile -p ossim-server.`
-        cp $CONFIG $TMPFILE
+        # Create user, group and log directories, if needed.
+	    if ! getent group alienvault > /dev/null; then
+		    addgroup --quiet --system alienvault
+	    fi
+	    if ! getent passwd avserver > /dev/null; then
+		    adduser  --system --ingroup alienvault --gecos "AlienVault Server" --no-create-home avserver
+	    fi
 
-        cat $CONFIG | \
-            sed -e "s/<server .*/<server port=\"40001\" name=\"$SERVER_NAME\" ip=\"$SERVER_IP\"\/>/" |\
-            sed -e "s/<framework .*/<framework name=\"$FRAMEWORK_NAME\" ip=\"$FRAMEWORK_IP\" port=\"$FRAMEWORK_PORT\"\/>/" |\
-            sed -e "s/<datasource name=\"ossimDS\" .*/<datasource name=\"ossimDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$OSSIM_USER;PASSWORD=$OSSIM_PASS;DATABASE=$OSSIM_BASE;HOST=$OSSIM_HOST\"\/>/" |\
-            sed -e "s/<datasource name=\"snortDS\" .*/<datasource name=\"snortDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$SNORT_USER;PASSWORD=$SNORT_PASS;DATABASE=$SNORT_BASE;HOST=$SNORT_HOST\"\/>/" |\
-            sed -e "s/<datasource name=\"osvdbDS\" .*/<datasource name=\"osvdbDS\" provider=\"MySQL\" dsn=\"PORT=3306;USER=$OSVDB_USER;PASSWORD=$OSVDB_PASS;DATABASE=$OSVDB_BASE;HOST=$OSVDB_HOST\"\/>/" \
-        > $TMPFILE
+        # Configure firewall
+        dpkg-trigger --no-await alienvault-restart-firewall
 
-        mv $TMPFILE $CONFIG
+        chmod 0770 "$ETC_DIR"
+	    chown -R avserver:alienvault "$ETC_DIR"
 
-    ;;
-    upgrade)
-    ;;
+	    [ -d "$LOG_DIR" ] || mkdir -p -m 0750 "$LOG_DIR"
+	    chown -R avserver:alienvault "$LOG_DIR"
+
+        configure_db
+
+        # Add permissions to allow avserver user to read the system_id.
+        grep --fixed-strings --quiet "avserver ALL=NOPASSWD: /usr/bin/alienvault-system-id" /etc/sudoers || echo "avserver ALL=NOPASSWD: /usr/bin/alienvault-system-id" >> /etc/sudoers
+
+        # Add permissions to allow www-data to restart the server.
+        grep --fixed-strings --quiet "www-data ALL=NOPASSWD: /etc/init.d/ossim-server restart" /etc/sudoers || echo "www-data ALL=NOPASSWD: /etc/init.d/ossim-server restart" >> /etc/sudoers
+
+        # Create 'run' directories (for PID).
+        [ -d "$RUN_DIR" ] || mkdir -p -m 0770 "$RUN_DIR"
+        chgrp -R alienvault "$RUN_DIR"
+	    # Create de $HOME directory
+	    [ -d "$HOME_SERVER" ] || mkdir -p -m 0755 "$HOME_SERVER"
+	    chown -R avserver.alienvault "$HOME_SERVER"
+
+	    # Reputation.data file
+	    configure_reputation_data
+
+        ;;
+
+    triggered)
+        for trigger in $2
+        do
+            case "$trigger" in
+                alienvault-config-system-admin-ip|alienvault-config-system-vpn-ip)
+                    configure_db
+                    ;;
+                alienvault-config-database-pass)
+                    configure_db
+                    ;;
+                *)
+                    echo "postinst called with unknown trigger \`$2'">&2
+                    exit 1
+                ;;
+            esac
+        done
+        ;;
+
     abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
+        ;;
+
     *)
         echo "postinst called with unknown argument \`$1'" >&2
-        exit 0
-    ;;
+        exit 1
+        ;;
 esac
-
-# Ensure that all directive files are readable by www.data.www.data user
-for directive in /etc/ossim/server /etc/ossim/server/*.xml; do
-	if [ ! -x /usr/sbin/dpkg-statoverride ] || \
-		! dpkg-statoverride --list $directive > /dev/null
-	then
-		chown www-data:www-data $directive;
-	fi
-done
-
-# Ensure the config file is readable by root.root and mode 640
-# since it stores the database password
-if [ ! -x /usr/sbin/dpkg-statoverride ] || \
-   ! dpkg-statoverride --list $CONFIG > /dev/null
-then
-    chown root:root $CONFIG
-    chmod 640 $CONFIG
-fi
 
 # dh_installdeb will replace this with shell code automatically
 # generated by other debhelper scripts.
 
-if ! [ -f /etc/sudoers ]
-then
-	touch /etc/sudoers
-fi
-if ! [ `grep -c "ossim-server restart" /etc/sudoers` -ne 0 ]
-then
-	echo "www-data ALL=NOPASSWD: /etc/init.d/ossim-server restart" >> /etc/sudoers
-fi
-
 #DEBHELPER#
 
-update-rc.d ossim-server defaults 40 2&> /dev/null
-
-
-if [ -x /usr/bin/ossim-reconfig ]; then
-echo "#######################################"
-echo "#######################################"
-echo "Please run ossim-reconfig after install"
-echo "#######################################"
-echo "#######################################"
-#/usr/bin/ossim-reconfig
-fi
-#/etc/init.d/ossim-server restart
+exit 0

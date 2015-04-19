@@ -1,39 +1,47 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#define _XOPEN_SOURCE 1
+
+#include "config.h"
+
+#include "sim-session.h"
+
+#include <sys/socket.h>
 #include <gnet.h>
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "sim-config.h"	//server role.
 #include "os-sim.h"
-#include "sim-session.h"
 #include "sim-rule.h"
 #include "sim-directive.h"
 #include "sim-plugin-sid.h"
@@ -42,15 +50,29 @@ Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #include "sim-sensor.h"
 #include "sim-command.h"
 #include "sim-plugin-state.h"
-#include <config.h>
+#include "sim-server.h"
+#include "sim-debug.h"
+#include "sim-db-command.h"
+#include "sim-geoip.h"
+
+G_LOCK_EXTERN (s_mutex_config);
+G_LOCK_EXTERN (s_mutex_plugins);
+G_LOCK_EXTERN (s_mutex_plugin_sids);
+G_LOCK_EXTERN (s_mutex_inets);
+G_LOCK_EXTERN (s_mutex_host_levels);
+G_LOCK_EXTERN (s_mutex_net_levels);
+G_LOCK_EXTERN (s_mutex_events);
+G_LOCK_EXTERN (s_mutex_servers);
 
 extern SimMain    ossim;
+extern guint sem_total_events_popped;
+extern gboolean	ActivateDemo;
 
-enum 
-{
-  DESTROY,
-  LAST_SIGNAL
-};
+int aux_created_events = 0;
+int aux_recvd_msgs = 0;
+
+//extern guint sem_total_events_popped;
+
 
 struct _SimSessionPrivate {
   GTcpSocket	*socket;
@@ -63,11 +85,24 @@ struct _SimSessionPrivate {
   GList				*plugin_states;
 
   GIOChannel	*io;
+  gint 				g_io_hup;
 
-  GInetAddr		*ia;
+  gsize				ptr; // pointer to the current position to the agent private buffer
+  gsize				cur_len; // Current length of the last buffer read from gnet
+  gchar				ring[RING_SIZE]; // private buffer for the agent, (ring buffer)
+
+	guint			received; // Number of received events
+
+	//FIXME: ONE: I have to delete the following variable, since are not really used nor needed
+	gulong			broken; //Number of broken lines
+
+  SimInet  		*ia;
+	gint				port;
+  gchar 			*ip_str;
   gint				seq;
   gboolean		close;
-  gboolean		connect;
+	gboolean		connect;
+
 	gchar				*hostname;	//name of the machine connected. This can be a server name (it can be up or down in the architecture)
 													//, a sensor name or even a frameworkd name
   guint       watch; 
@@ -83,35 +118,47 @@ struct _SimSessionPrivate {
 																//server) had been sent a message to master server, and the master server answers with an OK.
 	GCond				*initial_cond;		//condition & mutex to control fully_stablished var.
 	GMutex			*initial_mutex;		
+	GMutex			*socket_mutex;		
 
 	gint				id;			//this id is not used always. It's used to know what is the identification of the master server or
 											//frameworkd that sent a msg to this server, asking for data in a children server. I.e. server1->server2->server3. 
 											//server1 asks to server2 for the sensors connected to server3. We store in the session id the same id that server1
 											//sent us, and it will be kept during all the messages.
+	gboolean (*agent_scan_fn)(SimCommand *,GScanner*);
+	gboolean (*remote_server_scan_fn)(SimCommand *,GScanner *);
+	gboolean (*default_scan_fn)(SimCommand*,GScanner*);
 
+	// Used for multiple sensors config
+	GHashTable	*hashSensors;
+	time_t last_data_timestamp;
+  time_t last_event_timestamp;
 };
 
-static gpointer parent_class = NULL;
-static gint sim_server_signals[LAST_SIGNAL] = { 0 };
+SIM_DEFINE_TYPE (SimSession, sim_session, G_TYPE_OBJECT, NULL)
+
+/* static prototipes*/
+static void sim_session_config_agent (SimSession *session,SimCommand *command);
+static void sim_session_config_frameworkd (SimSession *session,SimCommand *command);
+static void sim_session_config_default (SimSession *session,SimCommand *command);
+static void sim_session_cmd_agent_ping(SimSession *session, SimCommand *command);
+static void sim_session_cmd_idm_event(SimSession *session, SimCommand *command);
+static gboolean sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gsize *bytes_writtenp);
+static void sim_session_update_last_event_timestamp (SimSession * session);
 
 /* GType Functions */
 
-static void 
-sim_session_impl_dispose (GObject  *gobject)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (gobject);
-}
-
-static void 
-sim_session_impl_finalize (GObject  *gobject)
+static void
+sim_session_finalize (GObject  *gobject)
 {
   SimSession *session = SIM_SESSION (gobject);
+	g_message ("Session %p received %u events/commands.", session->_priv->io, session->_priv->received);
+	g_message ("Session %p received %ld broken events/commands.", session->_priv->io, session->_priv->broken);
 
   if (session->_priv->socket)
     gnet_tcp_socket_delete (session->_priv->socket);
 
 	if (sim_session_is_sensor (session))
-			g_message ("Session Sensor : REMOVED");
+		g_message ("Session Sensor : REMOVED");
 	else
 	if (sim_session_is_web (session))
 		g_message ("Session Web: REMOVED");
@@ -122,19 +169,31 @@ sim_session_impl_finalize (GObject  *gobject)
 	if (sim_session_is_children_server (session))
 		g_message ("Session Children Server: REMOVED");
 	
-	gchar *ip = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-	g_message ("              Removed IP: %s", ip);
-	g_free (ip);
+	g_message ("              Removed IP: %s", session->_priv->ip_str);
 
   if (session->_priv->ia)
-    gnet_inetaddr_unref (session->_priv->ia);
-  if (session->_priv->hostname)
-		    g_free (session->_priv->hostname);
+    g_object_unref (session->_priv->ia);
+
+	if (session->_priv->hostname)
+		g_free (session->_priv->hostname);
+	if (session->_priv->ip_str)
+		g_free (session->_priv->ip_str);
+
+	if (session->_priv->hashSensors)
+		g_hash_table_destroy (session->_priv->hashSensors);
+
+  if (session->_priv->sensor)
+    g_object_unref (session->_priv->sensor);
+
+  if (session->_priv->server)
+    g_object_unref (session->_priv->server);
 
 	g_cond_free (session->_priv->initial_cond);
 	g_mutex_free (session->_priv->initial_mutex);
+	g_mutex_free (session->_priv->socket_mutex);
 
-  g_free (session->_priv);
+  if(session->_priv)
+  	g_free (session->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -146,8 +205,7 @@ sim_session_class_init (SimSessionClass * class)
 
   parent_class = g_type_class_ref (G_TYPE_OBJECT);
 
-  object_class->dispose = sim_session_impl_dispose;
-  object_class->finalize = sim_session_impl_finalize;
+  object_class->finalize = sim_session_finalize;
 }
 
 static void
@@ -167,14 +225,23 @@ sim_session_instance_init (SimSession *session)
 
   session->_priv->plugin_states = NULL;
 
+  session->_priv->received= 0;
+  session->_priv->broken= 0;
+
+  session->_priv->ptr= 0;
+  session->_priv->cur_len= 0;
+
+
   session->_priv->io = NULL;
   session->_priv->ia = NULL;
-
+	session->_priv->port = 0;
   session->_priv->seq = 0;
 
   session->_priv->connect = FALSE;
-  
-	session->_priv->hostname = NULL;
+
+ 	session->_priv->hostname = NULL;
+ 	session->_priv->ip_str = NULL;
+
 
 	session->_priv->is_initial = FALSE;
 
@@ -183,117 +250,143 @@ sim_session_instance_init (SimSession *session)
 	session->_priv->initial_cond = g_cond_new();
 	session->_priv->initial_mutex = g_mutex_new();
 
+	//To prevent more than 1 thread writting to the socket
+	session->_priv->socket_mutex = g_mutex_new();
+
 	session->_priv->id = 0;
+	// Init de scannner to NULL
+	session->_priv->agent_scan_fn = NULL;
+	session->_priv->remote_server_scan_fn = NULL;
+	session->_priv->default_scan_fn = sim_command_get_default_scan ();
+	session->type = SIM_SESSION_TYPE_NONE;
+	session->_priv->hashSensors = g_hash_table_new_full (g_str_hash,g_str_equal,g_free,NULL);
 }
 
 /* Public Methods */
 
-GType
-sim_session_get_type (void)
-{
-  static GType object_type = 0;
- 
-  if (!object_type)
-  {
-    static const GTypeInfo type_info = {
-              sizeof (SimSessionClass),
-              NULL,
-              NULL,
-              (GClassInitFunc) sim_session_class_init,
-              NULL,
-              NULL,                       /* class data */
-              sizeof (SimSession),
-              0,                          /* number of pre-allocs */
-              (GInstanceInitFunc) sim_session_instance_init,
-              NULL                        /* value table */
-    };
-    
-    g_type_init ();
-                                                                                                                             
-    object_type = g_type_register_static (G_TYPE_OBJECT, "SimSession", &type_info, 0);
-  }
-
-  return object_type;
-}
-
 /*
  *
  *
  *
  *
  */
-SimSession*
+SimSession *
 sim_session_new (GObject       *object,
-								 SimConfig     *config,
-								 GTcpSocket    *socket)
+                 SimConfig     *config,
+                 GTcpSocket    *socket)
 {
-  SimServer    *server = (SimServer *) object;
-  SimSession   *session = NULL;
+  SimServer  *server  = (SimServer *) object;
+  SimSession *session = NULL;
+  GInetAddr  *ia      = NULL;
+  gchar      *ip;
 
-  g_return_val_if_fail (server, NULL);
   g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
-  g_return_val_if_fail (config, NULL);
   g_return_val_if_fail (SIM_IS_CONFIG (config), NULL);
-  g_return_val_if_fail (socket, NULL);
+  if (!(session = SIM_SESSION (g_object_new (SIM_TYPE_SESSION, NULL))))
+  {
+    if (!socket)
+      return NULL;
 
-  session = SIM_SESSION (g_object_new (SIM_TYPE_SESSION, NULL));
+    ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+    if (ia != NULL)
+    {
+      ip = gnet_inetaddr_get_canonical_name (ia);
+      g_message ("%s: Cannot create new session for remote IP %s", __func__, ip);
+      g_free (ip);
+    }
+    else
+      g_message ("%s: Cannot create new session for remote IP", __func__);
+
+    gnet_inetaddr_unref (ia);
+    return (NULL);
+  }
+
   session->_priv->config = config;
-  session->_priv->server = server;
-  session->_priv->socket = socket;
+  session->_priv->server = g_object_ref (server);
   session->_priv->close = FALSE;
-		
-  session->_priv->ia = gnet_tcp_socket_get_remote_inetaddr (socket);
 
-	gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new: remote IP/port: %s/%d", ip_temp, gnet_inetaddr_get_port (session->_priv->ia));
-  g_message ("New Session remote IP: %s", ip_temp);
-	g_free (ip_temp);
-		
-  if (gnet_inetaddr_is_loopback (session->_priv->ia)) //if the agent is in the same host than the server, we should get the real ip.
-  {
-		GInetAddr *aux = gnet_inetaddr_get_host_addr ();
-		if (aux)
-		{
-			gnet_inetaddr_unref (session->_priv->ia);
-	    session->_priv->ia = aux;
-		  gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new Remote address is loopback, applying new address: %s ", ip_temp);
-			g_free (ip_temp);
-		}
-		else
-		{
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new: Warning: we will maintain the 127.0.0.1 address. Please check your /etc/hosts file to include the real IP");
-		}
-  }
+  if (socket)
+    sim_session_set_socket (session, socket);
+  else
+    session->_priv->close = TRUE;
 
-  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new session->_priv->io: %x",session->_priv->io);
-
-	if (!session->_priv->io) //FIXME: Why does this happens?
-  {
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_new Error: channel with IP %s has been closed (NULL value)", ip_temp);
-		g_free (ip_temp);
-    
-    session->_priv->close=TRUE;
-    return session;
-  }
+  g_message ("New session %s socket created", socket ? "with" : "without");
   return session;
 }
 
+void 
+sim_session_handle_HUP(GIOChannel *io,GIOCondition condition, gpointer data)
+{
+	SimSession *session=(SimSession*)data;
+
+	// unused parameter
+	(void) io;
+
+	if(condition&G_IO_HUP)
+	{
+		//g_mutex_lock(session->_priv->socket_mutex);
+		ossim_debug ( "sim_session_handle_HUP: Caught in:  %s", session->_priv->ip_str);
+		 
+		session->_priv->g_io_hup=1;
+		//g_mutex_unlock(session->_priv->socket_mutex);
+	}
+}
+
+void 
+sim_session_set_g_io_hup(SimSession *session)
+{
+	session->_priv->g_io_hup=1;
+}
+
 /*
  *
  *
  *
  */
-GInetAddr*
+SimInet  *
 sim_session_get_ia (SimSession *session)
 {
-  g_return_val_if_fail (session, NULL);
   g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
 
   return session->_priv->ia;
 }
+
+/**
+ * @sim_session_set_ia
+ */
+void
+sim_session_set_ia (SimSession *session,
+                    SimInet    *ia)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_INET (ia));
+
+  if (SIM_IS_INET (session->_priv->ia))
+    g_object_unref (session->_priv->ia);
+
+  session->_priv->ia = g_object_ref (ia);
+}
+
+gint
+sim_session_get_port (SimSession * session)
+{
+  g_return_val_if_fail (session, 0);
+
+	return session->_priv->port;
+}
+
+/**
+ * sim_session_get_ip_str:
+ *
+ */
+const gchar *
+sim_session_get_ip_str (SimSession * session)
+{
+  g_return_val_if_fail (session, NULL);
+
+  return ((const gchar *)session->_priv->ip_str);
+}
+
 
 /*
  * The hostname in a session means the name of the connected machine. This can be i.e. the hostname of a server or a sensor one.
@@ -309,17 +402,95 @@ sim_session_set_hostname (SimSession *session,
 	session->_priv->hostname = g_strdup (hostname);
 }
 
+gboolean
+sim_session_set_socket (SimSession *session, GTcpSocket *socket)
+{
+  GInetAddr *ia;
+
+	g_return_val_if_fail (socket, FALSE);
+
+  if (session->_priv->socket)
+    gnet_tcp_socket_delete (session->_priv->socket);
+
+  if (session->_priv->ia)
+    g_object_unref (session->_priv->ia);
+
+  if (session->_priv->ip_str)
+    g_free (session->_priv->ip_str);
+
+  session->_priv->socket = socket;
+  session->_priv->close = FALSE;
+	session->_priv->port = gnet_inetaddr_get_port  (gnet_tcp_socket_get_local_inetaddr(socket));
+
+  ia = gnet_tcp_socket_get_remote_inetaddr (socket);
+  session->_priv->ia = sim_inet_new (ia, SIM_INET_HOST);
+
+	if ((session->_priv->ip_str = sim_inet_get_canonical_name (session->_priv->ia)))
+	  ossim_debug ("sim_session_new: remote IP/port: %s/%d", session->_priv->ip_str, sim_inet_get_port (session->_priv->ia));
+	else
+	{
+	  ossim_debug ( "%s: cannot get remote IP", __func__);
+		session->_priv->close = TRUE;
+		return FALSE;
+	}
+		
+  if (gnet_inetaddr_is_loopback (ia)) //if the agent is in the same host than the server, we should get the real ip.
+  {
+		GInetAddr *aux = gnet_inetaddr_get_host_addr ();
+		if (aux)
+		{
+			/* Copy source port */
+			gnet_inetaddr_set_port (aux,gnet_inetaddr_get_port (ia));
+      if (SIM_IS_INET (session->_priv->ia))
+        g_object_unref (session->_priv->ia);
+	    session->_priv->ia = sim_inet_new (aux, SIM_INET_HOST);
+      gnet_inetaddr_unref (aux);
+
+			if (session->_priv->ip_str)
+				g_free (session->_priv->ip_str);
+
+		  if ((session->_priv->ip_str = sim_inet_get_canonical_name (session->_priv->ia)))
+				ossim_debug ("sim_session_new Remote address is loopback, applying new address: %s ", session->_priv->ip_str);
+  		else
+			{
+				ossim_debug ( "%s: cannot get IP for loopback", __func__);
+				session->_priv->close = TRUE;
+				return FALSE;
+			}
+		}
+		else
+			ossim_debug ( "sim_session_new: Warning: we will maintain the 127.0.0.1 address. Please check your /etc/hosts file to include the real IP");
+  }
+
+  gnet_inetaddr_unref (ia);
+
+  //add watch for broken pipes...
+  //GIOCondition condition;
+  //condition=G_IO_HUP;
+
+  session->_priv->io = gnet_tcp_socket_get_io_channel (session->_priv->socket);
+	if (!session->_priv->io) //FIXME: Why does this happens?
+  {
+    ossim_debug ( "sim_session_new Error: channel with IP %s has been closed (NULL value)", session->_priv->ip_str);
+		session->_priv->close = TRUE;
+    return FALSE;
+  }
+
+  ossim_debug ("%s: session->_priv->io: %lx", __func__, (glong)session->_priv->io);
+
+	return TRUE;
+}
+
 /*
  */
 gchar*
 sim_session_get_hostname (SimSession *session)
 {
-  g_return_if_fail (session);
-  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_val_if_fail (session, NULL);
+  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
 
 	return session->_priv->hostname;
 }
-
 
 /*
  *
@@ -328,75 +499,147 @@ sim_session_get_hostname (SimSession *session)
  */
 static void
 sim_session_cmd_connect (SimSession  *session,
-												 SimCommand  *command)
+                         SimCommand  *command)
 {
   SimCommand  *cmd;
   SimSensor   *sensor = NULL;
+  SimUuid    * id = NULL;
+  SimVersion sensor_four = {4, 0, 0};
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
-  
-  sensor = sim_container_get_sensor_by_ia (ossim.container, session->_priv->ia);
-  session->_priv->sensor = sensor;	//if the connection is from a server or frameworkd, this will be NULL.
-	
+
   switch (command->data.connect.type)
   {
-    case SIM_SESSION_TYPE_SERVER_DOWN:
-		      session->type = SIM_SESSION_TYPE_SERVER_DOWN;
-				  break;
-    case SIM_SESSION_TYPE_SENSOR:
-		      session->type = SIM_SESSION_TYPE_SENSOR;
-				  break;
-    case SIM_SESSION_TYPE_WEB:
-		      session->type = SIM_SESSION_TYPE_WEB;
-				  break;
-    default:
-		      session->type = SIM_SESSION_TYPE_NONE;
-		      break;
+  case SIM_SESSION_TYPE_SENSOR:
+    // Test for sensor UUID.
+
+    // Test for v4 sensors. They should have an uuid.
+    if (sim_version_match (command->data.connect.sensor_ver, &sensor_four))
+    {
+      // Connect string hasn't an uuid, close session.
+      if (!(command->data.connect.sensor_id))
+      {
+        g_warning ("Agent from %s is at v4 but no ID was received, closing connection...", session->_priv->ip_str);
+        sim_session_close (session);
+        return;
+      }
+
+      // Search for this sensor uuid.
+      if (!(sensor = sim_container_get_sensor_by_id (ossim.container, command->data.connect.sensor_id)))
+      {
+        // Search for this sensor inet address.
+        if (!(sensor = sim_container_get_sensor_by_inet (ossim.container, session->_priv->ia)))
+        {
+          // We didn't found it. This is a new v4 agent, insert.
+          sensor = sim_sensor_new_from_ia (session->_priv->ia);
+          sim_sensor_set_id (sensor, command->data.connect.sensor_id);
+					sim_sensor_set_name (sensor, "(null)");
+				  sim_sensor_set_tzone (sensor, command->data.connect.tzone);
+          sim_container_add_sensor_to_hash_table (ossim.container, sensor);
+          sim_db_insert_sensor (ossim.dbossim, sensor);
+          g_message ("Added a new unknown sensor with IP %s", sim_inet_get_canonical_name (session->_priv->ia));
+        }
+        else
+        {
+          // Found it. Has it a configured uuid already?
+          if ((id = sim_sensor_get_id (sensor)))
+          {
+            // Tell the sensor it should use our uuid.
+            cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_NOACK);
+            cmd->id = command->id;
+            cmd->data.noack.your_sensor_id = g_strdup((gchar *)sim_uuid_get_string (id));
+            sim_session_write (session, cmd);
+            g_object_unref (cmd);
+            g_object_unref (sensor);
+            sim_session_close (session);
+            return;
+          }
+          else
+          {
+            // We haven't an id, use the issued one.
+            sim_sensor_set_id (sensor, command->data.connect.sensor_id);
+            sim_container_set_sensor_by_id (ossim.container, sensor);
+            sim_db_update_sensor_by_ia (ossim.dbossim, sensor);
+          }
+        }
+      }
+      else
+      {
+        // Check if this sensor has a new ip address and update it.
+        SimInet * sensor_ia = sim_sensor_get_ia (sensor);
+        if (!(sim_inet_equal (session->_priv->ia, sensor_ia)))
+        {
+          sim_sensor_set_ia (sensor, session->_priv->ia);
+          sim_db_insert_sensor (ossim.dbossim, sensor);
+        }
+      }
+      // End testing for v4 sensors.
+    }
+    else
+    {
+      // Test for v3 sensors.
+      if (!(sensor = sim_container_get_sensor_by_inet (ossim.container, session->_priv->ia)))
+      {
+        // We didn't found it. This is a new v3 agent, insert.
+        sensor = sim_sensor_new_from_ia (session->_priv->ia);
+				sim_sensor_set_name (sensor, "(null)");
+				sim_sensor_set_tzone (sensor, command->data.connect.tzone);
+        sim_container_add_sensor_to_hash_table (ossim.container, sensor);
+        sim_db_insert_sensor (ossim.dbossim, sensor);
+      }
+    }
+    // End testing for v3 sensors.
+
+		sim_sensor_set_version (sensor, command->data.connect.sensor_ver);
+		sim_db_insert_sensor_properties (ossim.dbossim, sensor);
+
+    session->_priv->sensor = sensor;
+
+    session->type = SIM_SESSION_TYPE_SENSOR;
+    sim_session_config_agent (session, command);
+
+    break;
+  case SIM_SESSION_TYPE_FRAMEWORKD:
+    sim_session_config_frameworkd (session,command);
+    session->type = SIM_SESSION_TYPE_FRAMEWORKD;
+    break;
+  case SIM_SESSION_TYPE_WEB:
+    session->type = SIM_SESSION_TYPE_WEB;
+    break;
+  default:
+    session->type = SIM_SESSION_TYPE_NONE;
+    sim_session_config_default (session,command);
+    break;
   }
-	
-	if (command->data.connect.hostname)
-		sim_session_set_hostname (session, command->data.connect.hostname);
-	else
-		sim_session_set_hostname (session, "");
 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_connect: hostname: %s", sim_session_get_hostname(session));
+  if (command->data.connect.hostname&&strcmp(command->data.connect.hostname,"None"))
+    sim_session_set_hostname (session, command->data.connect.hostname);
+  else
+    sim_session_set_hostname (session, session->_priv->ip_str);
 
-	
-	if (session->type != SIM_SESSION_TYPE_NONE)
-	{
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
+  if (session->type != SIM_SESSION_TYPE_NONE)
+  {
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
 
-		sim_session_write (session, cmd);
-	  g_object_unref (cmd);
-		session->_priv->connect = TRUE;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+    session->_priv->connect = TRUE;
+  }
+  else
+  {
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+    cmd->id = command->id;
 
-		if(command->data.connect.version!=NULL)
-		{
-			//Update server version
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
 
-			gchar *ip = gnet_inetaddr_get_canonical_name (session->_priv->ia);
-			gchar *query= g_strdup_printf("replace sensor_agent_info(ip,version) values (\"%s\",\"%s\");", ip, command->data.connect.version);
-			g_free (ip);
-			sim_database_execute_no_query(ossim.dbossim, query);
-			g_free(query);
-		}
-	}
-	else
-	{
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-		cmd->id = command->id;
+    g_message("Received a strange session type. Clossing connection....");
+    sim_session_close (session);
+  }
 
-		sim_session_write (session, cmd);
-	  g_object_unref (cmd);
-
-		g_message("Received a strange session type. Clossing connection....");
-		sim_session_close (session);
-	}
-
+  return;
 }
 
 /*
@@ -408,66 +651,80 @@ sim_session_cmd_connect (SimSession  *session,
  */
 static void
 sim_session_cmd_session_append_plugin (SimSession  *session,
-				       SimCommand  *command)
+                                       SimCommand  *command)
 {
-  SimCommand      *cmd;
-  SimPlugin       *plugin = NULL;
-  SimPluginState  *plugin_state;
+//  SimCommand     *cmd;
+  SimPlugin      *plugin = NULL;
+  SimPluginState *plugin_state;
+  SimContext     *context;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  session->type = SIM_SESSION_TYPE_SENSOR;	//FIXME: This will be desappear. A session always must be initiated
-																						//with a "connect" command
+  session->type = SIM_SESSION_TYPE_SENSOR;  //FIXME: This will be desappear. A session always must be initiated
+                                            //with a "connect" command
 
-  plugin = sim_container_get_plugin_by_id (ossim.container, command->data.session_append_plugin.id);
+  context = sim_container_get_context (ossim.container, NULL);
+
+  plugin = sim_context_get_plugin (context, command->data.session_append_plugin.id);
   if (plugin)
   {
     plugin_state = sim_plugin_state_new_from_data (plugin,
-						     command->data.session_append_plugin.id,
-						     command->data.session_append_plugin.state,
-						     command->data.session_append_plugin.enabled);
+                                                   command->data.session_append_plugin.id,
+                                                   command->data.session_append_plugin.state,
+                                                   command->data.session_append_plugin.enabled);
 
     session->_priv->plugin_states = g_list_append (session->_priv->plugin_states, plugin_state);
+/*
+  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+  cmd->id = command->id;
 
-    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-    cmd->id = command->id;
-
-    sim_session_write (session, cmd);
-    g_object_unref (cmd);
-  
-      /* Directives with root rule type MONITOR */
+  sim_session_write (session, cmd);
+  g_object_unref (cmd);
+*/
+    /* Directives with root rule type MONITOR */
+		/* FIXME: delete this code in January 2013 if no one has complained
     if (plugin->type == SIM_PLUGIN_TYPE_MONITOR)
-	  {      
-	    GList *directives = NULL;
-  	  g_mutex_lock (ossim.mutex_directives);
-	    directives = sim_container_get_directives_ul (ossim.container);
-  	  while (directives)
-	    {
-	      SimDirective *directive = (SimDirective *) directives->data;
-	      SimRule *rule = sim_directive_get_root_rule (directive);
+    {
+      SimEngine *engine;
+      GPtrArray *directives = NULL;
 
-	      if (sim_rule_get_plugin_id (rule) == command->data.session_append_plugin.id)
-	    	{
-					cmd = sim_command_new_from_rule (rule);
-				  sim_session_write (session, cmd);
-				  g_object_unref (cmd);
-				}
+      engine = sim_container_get_engine_for_context (ossim.container, NULL);
 
-	      directives = directives->next;
-		  }
-		  g_mutex_unlock (ossim.mutex_directives);
-		}
+			// TODO: with taxonomy there are directives with plugin_id ANY
+      directives = sim_engine_get_directives_by_plugin_id (engine,
+                                                           command->data.session_append_plugin.id);
+      if (directives)
+      {
+        guint i;
+        for (i = 0; i < directives->len; i++)
+        {
+          SimDirective *directive = (SimDirective *)g_ptr_array_index (directives, i);
+          SimRule *rule = sim_directive_get_root_rule (directive);
+
+					SIM_WHILE_HASH_TABLE (sim_rule_get_plugin_ids (rule))
+	          if (GPOINTER_TO_INT (_key) == command->data.session_append_plugin.id)
+		        {
+			        cmd = sim_command_new_from_rule (rule);
+				      sim_session_write (session, cmd);
+					    g_object_unref (cmd);
+						}
+        }
+				g_ptr_array_unref (directives);
+      }
+    }
+		*/
+
+    g_object_unref (plugin);
   }
   else
-  {
-    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-    cmd->id = command->id;
+  {/*
+     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+     cmd->id = command->id;
 
     sim_session_write (session, cmd);
     g_object_unref (cmd);
+    */
   }
 }
 
@@ -482,31 +739,33 @@ sim_session_cmd_session_remove_plugin (SimSession  *session,
 {
   SimCommand  *cmd;
   SimPlugin   *plugin = NULL;
+  SimContext  *context;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  plugin = sim_container_get_plugin_by_id (ossim.container, command->data.session_remove_plugin.id);
+  context = sim_container_get_context (ossim.container, NULL);
+
+  plugin = sim_context_get_plugin (context, command->data.session_remove_plugin.id);
   if (plugin)
-    {
-      session->_priv->plugins = g_list_remove (session->_priv->plugins, plugin);
+  {
+    session->_priv->plugins = g_list_remove (session->_priv->plugins, plugin);
 
-      cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-      cmd->id = command->id;
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
 
-      sim_session_write (session, cmd);
-      g_object_unref (cmd);
-    }
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+    g_object_unref (plugin);
+  }
   else
-    {
-      cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-      cmd->id = command->id;
+  {
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+    cmd->id = command->id;
 
-      sim_session_write (session, cmd);
-      g_object_unref (cmd);
-    }
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
 }
 
 /*
@@ -517,7 +776,7 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
 																    SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
+  GList       *list, *listf;
 	gboolean		 for_this_server;
 
   g_return_if_fail (session != NULL);
@@ -525,10 +784,11 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
+  ossim_debug ("WEB:  --- get sensors... ");
 	if (sim_session_is_master_server (session) ||	// a little identity check
 			sim_session_is_web (session))
 	{
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensors Inside");
+		ossim_debug ( "sim_session_cmd_server_get_sensors Inside");
     SimServer *server = session->_priv->server;
 		
 		//Check if the message is for this server....
@@ -540,26 +800,50 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
 		else
     	for_this_server = FALSE;
 					
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensors: %s, %s", sim_server_get_name (server), command->data.server_get_sensors.servername);
+		ossim_debug ( "sim_session_cmd_server_get_sensors: %s, %s", sim_server_get_name (server), command->data.server_get_sensors.servername);
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
+			gchar *canonicalip = NULL;
 			SimSession *sess = (SimSession *) list->data;
-			
+			canonicalip =  sim_inet_get_canonical_name (sess->_priv->ia);
+			//check if canonicalip!=NULL and hashSenosor !=NULL
+			if (canonicalip == NULL ||  session->_priv->hashSensors == NULL )
+			{
+				if (canonicalip == NULL)
+				{
+					if (sess->_priv->ia == NULL)
+                      g_warning ("sim_session_cmd_server_get_sensors: canonical ip  NULL sess->_priv->ia: NULL");
+                    else
+                      g_warning ("sim_session_cmd_server_get_sensors: canonical ip  NULL,sess->_priv->ia");
+				}
+				if (session->_priv->hashSensors == NULL)
+					g_warning ("sim_session_cmd_server_get_sensors: Sensor hash table is NULL");
+				continue;
+			}
+			if (g_hash_table_lookup (session->_priv->hashSensors,canonicalip) != NULL){
+				g_free (canonicalip);
+				list = list->next;
+				continue;
+			}
+			g_hash_table_insert (session->_priv->hashSensors,canonicalip,sess);
 			if (for_this_server)	//execute the command in this server
 		  {
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensors Inside 2");
+				ossim_debug ( "sim_session_cmd_server_get_sensors Inside 2");
 				if (sim_session_is_sensor (sess))	
 				{
 				  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR);
 					cmd->id = command->id;	//the original query sim_session_cmd_server_get_sensors has originated an id. This id is needed to know
 																	//where to send the answer. I.e. server1/server0->server2->server3. If we're server3, we need to say to
 																	//server2 which is the server1 where we want to send data, server0 or server1.
-					cmd->data.sensor.host = gnet_inetaddr_get_canonical_name (sess->_priv->ia);
+					cmd->data.sensor.host = g_strdup(canonicalip);
+					/* Ok, we use the host the key for the hashSensor*/
+					
 					cmd->data.sensor.state = TRUE;	//FIXME: check this and why is it used. Not filled in sim_command_sensor_scan() by now.
 					cmd->data.sensor.servername = g_strdup (sim_server_get_name (server));
-						
+					ossim_debug ("WEB: Sensor: %s, state:%d",cmd->data.sensor.host,	cmd->data.sensor.state);
 					sim_session_write (session, cmd);	//write the sensor info in the server master or web session
 					g_object_unref (cmd);
 				}
@@ -585,13 +869,15 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
 			}
 			list = list->next;
 		}
+		g_hash_table_remove_all (session->_priv->hashSensors);
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
+	  ossim_debug ("WEB: --- get sensors... Envio respuesta.. OK");
 		g_object_unref (cmd);
 	}
 	else
@@ -600,6 +886,7 @@ sim_session_cmd_server_get_sensors (SimSession  *session,
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
+	  ossim_debug ("WEB: --- get sensors... Envio respuesta.. ERROR");
 		g_object_unref (cmd);
 	}
 }
@@ -617,8 +904,7 @@ sim_session_cmd_sensor (SimSession  *session,
 											  SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-	gboolean		 for_this_server;
+  GList       *list, *listf;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
@@ -629,9 +915,10 @@ sim_session_cmd_sensor (SimSession  *session,
 	{
     SimServer *server = session->_priv->server;
 		
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_sensor: %s, %s", sim_server_get_name (server), command->data.sensor.servername);
+		ossim_debug ( "sim_session_cmd_sensor: %s, %s", sim_server_get_name (server), command->data.sensor.servername);
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
@@ -645,7 +932,7 @@ sim_session_cmd_sensor (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 	}
 	else
 	{
@@ -666,7 +953,7 @@ sim_session_cmd_server_get_servers (SimSession  *session,
 																    SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
+  GList       *list, *listf;
 	gboolean		 for_this_server;
 
   g_return_if_fail (session != NULL);
@@ -677,7 +964,7 @@ sim_session_cmd_server_get_servers (SimSession  *session,
 	if (sim_session_is_master_server (session) ||
 			sim_session_is_web (session))
 	{
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_servers Inside");
+		ossim_debug ( "sim_session_cmd_server_get_servers Inside");
     SimServer *server = session->_priv->server;
 		
 		//Check if the message is for this server....
@@ -689,21 +976,22 @@ sim_session_cmd_server_get_servers (SimSession  *session,
 		else
     	for_this_server = FALSE;
 					
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_servers: %s, %s", sim_server_get_name (server), command->data.server_get_servers.servername);
+			ossim_debug ( "sim_session_cmd_server_get_servers: %s, %s", sim_server_get_name (server), command->data.server_get_servers.servername);
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
 			
 			if (for_this_server)	//execute the command in this server
 		  {
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_servers Inside 2");
+				ossim_debug ( "sim_session_cmd_server_get_servers Inside 2");
 				if (sim_session_is_children_server (sess))	
 				{
 				  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SERVER);
 					cmd->id = command->id;	//see sim_session_cmd_server_get_sensors() to understand this.
-					cmd->data.server.host = gnet_inetaddr_get_canonical_name (sess->_priv->ia);
+					cmd->data.server.host = sim_inet_get_canonical_name (sess->_priv->ia);
 					cmd->data.server.servername = g_strdup (sim_session_get_hostname (sess));
 						
 					sim_session_write (session, cmd);	//write the server info in the server master or web session
@@ -722,7 +1010,7 @@ sim_session_cmd_server_get_servers (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
@@ -753,8 +1041,7 @@ sim_session_cmd_server (SimSession  *session,
 											  SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-	gboolean		 for_this_server;
+  GList       *list, *listf;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
@@ -765,9 +1052,10 @@ sim_session_cmd_server (SimSession  *session,
 	{
     SimServer *server = session->_priv->server;
 		
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server: %s, %s", sim_server_get_name (server), command->data.server.servername);
+		ossim_debug ( "sim_session_cmd_server: %s, %s", sim_server_get_name (server), command->data.server.servername);
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
@@ -781,7 +1069,7 @@ sim_session_cmd_server (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 	}
 	else
 	{
@@ -807,14 +1095,18 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 																				   SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
+  GList       *list, *listf;
   GList       *plugin_states;
 	gboolean 		for_this_server;
+	GHashTable	*sensorPlugins;
+	GHashTable	*sensorHash;
+	gchar 			*canonicalip;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
+	sensorHash = g_hash_table_new_full (g_str_hash,g_str_equal,g_free,(GDestroyNotify)g_hash_table_destroy);
 
 	if (sim_session_is_master_server (session) ||
 			sim_session_is_web (session))
@@ -830,15 +1122,28 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 		else
     	for_this_server = FALSE;
 					
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensor_plugins: %s, %s", sim_server_get_name (server), command->data.server_get_sensor_plugins.servername);
+			ossim_debug ( "sim_session_cmd_server_get_sensor_plugins: %s, %s", sim_server_get_name (server), command->data.server_get_sensor_plugins.servername);
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
-		
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensor_plugins: Session : %x", sess);
-			
+			/* Get the IP */
+			canonicalip = sim_inet_get_canonical_name (sess->_priv->ia);
+			if (canonicalip == NULL)
+			{
+			  g_message("WEB - GetSensorPlugins - canonical ip NULL");
+			  continue;
+			}
+			if ((sensorPlugins = g_hash_table_lookup (sensorHash,canonicalip))==NULL){
+				sensorPlugins = g_hash_table_new (g_direct_hash,g_direct_equal);
+				g_hash_table_insert(sensorHash,g_strdup (canonicalip),sensorPlugins);
+			}
+			/* If table == NULL we must create and ADD the table*/
+
+      ossim_debug ("%s: Session : %lx", __func__, (glong)sess);
+
 			if (for_this_server)	//execute the command in this server
 		  {
 				if (sim_session_is_sensor (sess))	
@@ -847,17 +1152,24 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 		      while (plugin_states)
 		      {
     	      SimPluginState  *plugin_state = (SimPluginState *) plugin_states->data;
-      		  SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
-
-		        cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR_PLUGIN);
-    		    cmd->data.sensor_plugin.plugin_id = sim_plugin_get_id (plugin);
-		        cmd->data.sensor_plugin.sensor = gnet_inetaddr_get_canonical_name (sess->_priv->ia); //if this is not defined
-    		    cmd->data.sensor_plugin.state = sim_plugin_state_get_state (plugin_state);
-        		cmd->data.sensor_plugin.enabled = sim_plugin_state_get_enabled (plugin_state);
-
-						sim_session_write (session, cmd);	//write the sensor info in the server master or web session
-        		g_object_unref (cmd);
-
+						SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
+						if (!g_hash_table_lookup(sensorPlugins,GUINT_TO_POINTER(sim_plugin_get_id(plugin)))){
+			        cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR_PLUGIN);
+ 	 	  		    cmd->data.sensor_plugin.plugin_id = sim_plugin_get_id (plugin);
+			        cmd->data.sensor_plugin.sensor = sim_inet_get_canonical_name (sess->_priv->ia); //if this is not defined
+    			    cmd->data.sensor_plugin.state = sim_plugin_state_get_state (plugin_state);
+        			cmd->data.sensor_plugin.enabled = sim_plugin_state_get_enabled (plugin_state);
+        			ossim_debug ("WEB: get sensor plugins.... Plugin:%d  State:%d Enable:%d",cmd->data.sensor_plugin.plugin_id,cmd->data.sensor_plugin.state,cmd->data.sensor_plugin.enabled );
+							sim_session_write (session, cmd);	//write the sensor info in the server master or web session
+	        		g_object_unref (cmd);
+							ossim_debug ("%s: Plugin:%u State:%u Enabled:%u,", __FUNCTION__,sim_plugin_get_id(plugin),
+								sim_plugin_state_get_state (plugin_state),
+								sim_plugin_state_get_enabled (plugin_state));
+							
+							g_hash_table_insert (sensorPlugins, GUINT_TO_POINTER(sim_plugin_get_id(plugin)), plugin_state);
+						}else{
+							ossim_debug ("%s: Info about plugin:%u already sent",__FUNCTION__,sim_plugin_get_id (plugin));
+						}
 		        plugin_states = plugin_states->next;
       		}
 				}
@@ -871,14 +1183,17 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 				}
 			}
 			list = list->next;
-		    
+			//FIXME: Carlos, why was done the below function???. Also, "plugins" hasn't got any value
+			//g_hash_table_replace (sensorPlugins,g_strdup (canonicalip),plugins);
+
+			g_free (canonicalip);	    
 		}
-		
-	  g_list_free (list);
+	  g_list_free (listf);
+		/* Iterate throught has table*/
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
-  
+		ossim_debug ("WEB:  get sensor plugins.... web --- ok");
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
 	}
@@ -886,10 +1201,11 @@ sim_session_cmd_server_get_sensor_plugins (SimSession  *session,
 	{
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
 		cmd->id = command->id;
-  
+		ossim_debug ("WEB:  get sensor plugins.... web -- fail");
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
 	}
+	g_hash_table_destroy (sensorHash);
 
 }
 
@@ -902,8 +1218,7 @@ sim_session_cmd_server_set_data_role (SimSession  *session,
                                     	SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-  GList       *sessions;
+  GList       *list, *listf;
 
   g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
@@ -914,7 +1229,7 @@ sim_session_cmd_server_set_data_role (SimSession  *session,
 	{	
 		SimServer *server = session->_priv->server;
 	  
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_set_data_role: servername: %s; set to server: %s", sim_server_get_name (server), command->data.server_set_data_role.servername);
+		ossim_debug ( "sim_session_cmd_server_set_data_role: servername: %s; set to server: %s", sim_server_get_name (server), command->data.server_set_data_role.servername);
 		
 		//Check if the command is regarding this server to get the data and store it in memory & database
 		if (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.server_set_data_role.servername))
@@ -926,6 +1241,7 @@ sim_session_cmd_server_set_data_role (SimSession  *session,
 		{
 			//send the data to other servers down in the architecture
 		  list = sim_server_get_sessions (session->_priv->server);
+			listf = list;
 			while (list)
 			{
       	SimSession *sess = (SimSession *) list->data;
@@ -944,9 +1260,9 @@ sim_session_cmd_server_set_data_role (SimSession  *session,
 						cmd->data.server_set_data_role.store = command->data.server_set_data_role.store;
 						cmd->data.server_set_data_role.correlate = command->data.server_set_data_role.correlate;
 						cmd->data.server_set_data_role.cross_correlate = command->data.server_set_data_role.cross_correlate;
+						cmd->data.server_set_data_role.reputation = command->data.server_set_data_role.reputation;
+						cmd->data.server_set_data_role.logger_if_priority = command->data.server_set_data_role.logger_if_priority;
 						cmd->data.server_set_data_role.qualify = command->data.server_set_data_role.qualify;
-						cmd->data.server_set_data_role.resend_alarm = command->data.server_set_data_role.resend_alarm;
-						cmd->data.server_set_data_role.resend_event = command->data.server_set_data_role.resend_event;
 
 					  sim_session_write (sess, cmd);
 						g_object_unref (cmd);
@@ -957,16 +1273,16 @@ sim_session_cmd_server_set_data_role (SimSession  *session,
 				list = list->next;
 
 			}
-	    g_list_free (list); //FIXME: check this and all other functions so session list are returned, not copied. Add mutexes to sessions.
+	    g_list_free (listf); //FIXME Add mutexes to sessions?
 		
 		}
 
 	}
 	else
 	{
-		GInetAddr *ia;
+		SimInet   *ia;
 		ia = sim_session_get_ia (session);
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
+	  gchar *ip_temp = sim_inet_get_canonical_name (ia);
 		g_message ("Error: Warning, %s is trying to send server role without rights!", ip_temp);
 		g_free (ip_temp);
 	
@@ -988,13 +1304,11 @@ sim_session_cmd_sensor_plugin_start (SimSession  *session,
 																     SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-  GInetAddr   *ia;
+  GList       *list, *listf;
+  SimInet     *ia;
 	gboolean 		for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 	if (sim_session_is_master_server (session) ||
@@ -1011,11 +1325,12 @@ sim_session_cmd_sensor_plugin_start (SimSession  *session,
 		else
     	for_this_server = FALSE;
 					
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_sensor_plugin_start: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_start.servername);
+			ossim_debug ( "sim_session_cmd_sensor_plugin_start: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_start.servername);
 
-  	ia = gnet_inetaddr_new_nonblock (command->data.sensor_plugin_start.sensor, 0); //FIXME: Remember to check this as soon as event arrive!!
+  	ia = sim_inet_new_from_string (command->data.sensor_plugin_start.sensor); //FIXME: Remember to check this as soon as event arrive!!
 
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
@@ -1024,7 +1339,7 @@ sim_session_cmd_sensor_plugin_start (SimSession  *session,
 		  {
 				if (sim_session_is_sensor (sess))	
 				{
-	  	  	if (gnet_inetaddr_noport_equal (sess->_priv->ia, ia))	//FIXME:when agent support send names, this should be changed with sensor name
+	  	  	if (sim_inet_noport_equal (sess->_priv->ia, ia)) //FIXME:when agent support send names, this should be changed with sensor name
 					{
 		//				cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_PLUGIN_START); //this is the command isssued TO sensor
 						//Now we take the data from the command issued from web (in
@@ -1033,7 +1348,6 @@ sim_session_cmd_sensor_plugin_start (SimSession  *session,
 			//		  cmd->data.plugin_start.plugin_id = command->data.sensor_plugin_start.plugin_id;						
 						sim_session_write (sess, command); //	we pass the same command we received so we can extract the query directly.
 				//		g_object_unref (cmd);
-						gnet_inetaddr_unref (ia);
 					}
 				}
 			}
@@ -1048,13 +1362,14 @@ sim_session_cmd_sensor_plugin_start (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
+    g_object_unref (ia);
 	}
   else
   {
@@ -1072,20 +1387,18 @@ sim_session_cmd_sensor_plugin_stop (SimSession  *session,
 																    SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-  GInetAddr   *ia;
+  GList       *list, *listf;
+  SimInet     *ia;
 	gboolean 		for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 	if (sim_session_is_master_server (session) ||
 			sim_session_is_web (session))
 	{
     SimServer *server = session->_priv->server;
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensors: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_stop.servername);
+		ossim_debug ( "%s: %s, %s", __func__, sim_server_get_name (server), command->data.sensor_plugin_stop.servername);
 		
 		//Check if the message is for this server....
     if ((!command->data.sensor_plugin_stop.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
@@ -1097,24 +1410,24 @@ sim_session_cmd_sensor_plugin_stop (SimSession  *session,
     	for_this_server = FALSE;
 					
 
-  	ia = gnet_inetaddr_new_nonblock (command->data.sensor_plugin_stop.sensor, 0);
+  	ia = sim_inet_new_from_string (command->data.sensor_plugin_stop.sensor);
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
 			
 			if (for_this_server)	//execute the command in this server
 		  {
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_server_get_sensors Inside 2");
+				ossim_debug ( "sim_session_cmd_server_get_sensors Inside 2");
 				if (sim_session_is_sensor (sess))	
 				{
-		      if (gnet_inetaddr_noport_equal (sess->_priv->ia, ia))
+		      if (sim_inet_noport_equal (sess->_priv->ia, ia))
     		  {
 //		        cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_PLUGIN_STOP);
 //    		    cmd->data.plugin_stop.plugin_id = command->data.sensor_plugin_stop.plugin_id;
         		sim_session_write (sess, command);
 //		        g_object_unref (cmd);
-						gnet_inetaddr_unref (ia);
     		  }
 				}
 			}
@@ -1129,13 +1442,14 @@ sim_session_cmd_sensor_plugin_stop (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
+    g_object_unref (ia);
 	}
   else
   {
@@ -1157,20 +1471,18 @@ sim_session_cmd_sensor_plugin_enable (SimSession  *session,
 				     SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-  GInetAddr   *ia;
+  GList       *list, *listf;
+  SimInet     *ia;
 	gboolean 		for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 	if (sim_session_is_master_server (session) ||
 			sim_session_is_web (session))
 	{
     SimServer *server = session->_priv->server;
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_sensor_plugin_enable: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_enable.servername);
+		ossim_debug ( "sim_session_cmd_sensor_plugin_enable: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_enable.servername);
 		
 		//Check if the message is for this server....
     if ((!command->data.sensor_plugin_enable.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
@@ -1181,8 +1493,9 @@ sim_session_cmd_sensor_plugin_enable (SimSession  *session,
 		else
     	for_this_server = FALSE;					
 
-  	ia = gnet_inetaddr_new_nonblock (command->data.sensor_plugin_enable.sensor, 0);
+  	ia = sim_inet_new_from_string (command->data.sensor_plugin_enable.sensor);
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
@@ -1191,13 +1504,12 @@ sim_session_cmd_sensor_plugin_enable (SimSession  *session,
 		  {
 				if (sim_session_is_sensor (sess))	
 				{
- 			  	if (gnet_inetaddr_noport_equal (sess->_priv->ia, ia))
+ 			  	if (sim_inet_noport_equal (sess->_priv->ia, ia))
 					{
 //					  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_PLUGIN_ENABLED);
 //						cmd->data.plugin_enabled.plugin_id = command->data.sensor_plugin_enabled.plugin_id;
 					  sim_session_write (sess, command);
 //					  g_object_unref (cmd);
-						gnet_inetaddr_unref (ia);
     		  }
 				}
 			}
@@ -1211,13 +1523,14 @@ sim_session_cmd_sensor_plugin_enable (SimSession  *session,
 			}
 			list = list->next;
 		}
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
+    g_object_unref (ia);
 	}
   else
   {
@@ -1232,23 +1545,21 @@ sim_session_cmd_sensor_plugin_enable (SimSession  *session,
 
 static void
 sim_session_cmd_sensor_plugin_disable (SimSession  *session,
-					SimCommand  *command)
+                                       SimCommand  *command)
 {
   SimCommand  *cmd;
-  GList       *list;
-  GInetAddr   *ia;
+  GList       *list, *listf;
+  SimInet     *ia;
 	gboolean 		for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 	if (sim_session_is_master_server (session) ||
 			sim_session_is_web (session))
 	{
     SimServer *server = session->_priv->server;
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_sensor_plugin_disable: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_disable.servername);
+		ossim_debug ( "sim_session_cmd_sensor_plugin_disable: %s, %s", sim_server_get_name (server), command->data.sensor_plugin_disable.servername);
 		
 		//Check if the message is for this server....
     if ((!command->data.sensor_plugin_disable.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
@@ -1259,8 +1570,9 @@ sim_session_cmd_sensor_plugin_disable (SimSession  *session,
 		else
     	for_this_server = FALSE;					
 
-  	ia = gnet_inetaddr_new_nonblock (command->data.sensor_plugin_disable.sensor, 0);
+  	ia = sim_inet_new_from_string (command->data.sensor_plugin_disable.sensor);
 		list = sim_server_get_sessions (server);
+		listf = list;
 	  while (list)	//list of the sessions connected to the server
 		{
 			SimSession *sess = (SimSession *) list->data;
@@ -1269,13 +1581,12 @@ sim_session_cmd_sensor_plugin_disable (SimSession  *session,
 		  {
 				if (sim_session_is_sensor (sess))	
 				{
- 			  	if (gnet_inetaddr_noport_equal (sess->_priv->ia, ia))
+ 			  	if (sim_inet_noport_equal (sess->_priv->ia, ia))
 					{
 //		        cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_PLUGIN_DISABLED);
  //   		    cmd->data.plugin_disabled.plugin_id = command->data.sensor_plugin_disabled.plugin_id;
 					  sim_session_write (sess, command);
 //					  g_object_unref (cmd);
-						gnet_inetaddr_unref (ia);
     		  }
 				}
 			}
@@ -1290,13 +1601,14 @@ sim_session_cmd_sensor_plugin_disable (SimSession  *session,
 			list = list->next;
 		}
 		
-	  g_list_free (list);
+	  g_list_free (listf);
 			
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
 		cmd->id = command->id;
   
 	  sim_session_write (session, cmd);
 		g_object_unref (cmd);
+    g_object_unref (ia);
 	}
   else
   {
@@ -1321,8 +1633,6 @@ static void
 sim_session_cmd_plugin_state_started (SimSession  *session,
 			      SimCommand  *command)
 {
-  SimCommand  *cmd;
-  GList       *sessions;
   GList       *list;
   
   g_return_if_fail (session != NULL);
@@ -1348,8 +1658,6 @@ static void
 sim_session_cmd_plugin_state_unknown (SimSession  *session,
 			      SimCommand  *command)
 {
-  SimCommand  *cmd;
-  GList       *sessions;
   GList       *list;
   
   g_return_if_fail (session != NULL);
@@ -1382,8 +1690,6 @@ static void
 sim_session_cmd_plugin_state_stopped (SimSession  *session,
 			      SimCommand  *command)
 {
-  SimCommand  *cmd;
-  GList       *sessions;
   GList       *list;
   
   g_return_if_fail (session != NULL);
@@ -1414,8 +1720,6 @@ static void
 sim_session_cmd_plugin_enabled (SimSession  *session,
 				SimCommand  *command)
 {
-  SimCommand  *cmd;
-  GList       *sessions;
   GList       *list;
   
   g_return_if_fail (session != NULL);
@@ -1423,18 +1727,18 @@ sim_session_cmd_plugin_enabled (SimSession  *session,
   g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  list = session->_priv->plugin_states;
+	list = session->_priv->plugin_states;
   while (list)
-    {
-      SimPluginState  *plugin_state = (SimPluginState *) list->data;
-      SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
-      gint id = sim_plugin_get_id (plugin);
+  {
+    SimPluginState  *plugin_state = (SimPluginState *) list->data;
+    SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
+    gint id = sim_plugin_get_id (plugin);
 
-      if (id == command->data.plugin_enabled.plugin_id)
-	sim_plugin_state_set_enabled (plugin_state, TRUE);
+    if (id == command->data.plugin_enabled.plugin_id)
+	    sim_plugin_state_set_enabled (plugin_state, TRUE);
 
-      list = list->next;
-    }
+    list = list->next;
+	}
 }
 
 /*
@@ -1446,8 +1750,6 @@ static void
 sim_session_cmd_plugin_disabled (SimSession  *session,
 				 SimCommand  *command)
 {
-  SimCommand  *cmd;
-  GList       *sessions;
   GList       *list;
   
   g_return_if_fail (session != NULL);
@@ -1457,16 +1759,38 @@ sim_session_cmd_plugin_disabled (SimSession  *session,
 
   list = session->_priv->plugin_states;
   while (list)
-    {
-      SimPluginState  *plugin_state = (SimPluginState *) list->data;
-      SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
-      gint id = sim_plugin_get_id (plugin);
+  {
+    SimPluginState  *plugin_state = (SimPluginState *) list->data;
+    SimPlugin  *plugin = sim_plugin_state_get_plugin (plugin_state);
+    gint id = sim_plugin_get_id (plugin);
 
-      if (id == command->data.plugin_disabled.plugin_id)
-	sim_plugin_state_set_enabled (plugin_state, FALSE);
+    if (id == command->data.plugin_disabled.plugin_id)
+     	sim_plugin_state_set_enabled (plugin_state, FALSE);
 
-      list = list->next;
-    }
+    list = list->next;
+  }
+}
+
+
+// This will return the number of events that the server has received in this session
+static void
+sim_session_cmd_sensor_get_events (SimSession  *session,
+                                   SimCommand  *command)
+{
+  SimCommand  *cmd;
+
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+
+  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR_GET_EVENTS);
+  cmd->id = command->id;
+
+  gpointer aux = g_hash_table_lookup (sim_server_get_individual_sensors (session->_priv->server), sim_session_get_ia (session));
+
+  cmd->data.sensor_get_events.num_events = GPOINTER_TO_INT (aux);
+  ossim_debug ( "sim_session_cmd_sensor_get_events: %u",  GPOINTER_TO_INT (aux));
+  sim_session_write (session, cmd);
+  g_object_unref (cmd);
 }
 
 /*
@@ -1478,40 +1802,125 @@ static void
 sim_session_cmd_event (SimSession	*session,
 								       SimCommand	*command)
 {
-  SimPluginSid  *plugin_sid;
-  SimEvent      *event;
+  SimEvent      *event = NULL;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Inside1");
-  event = sim_command_get_event (command); //generates an event from the command received
+	SimCommand *cmd;
+	cmd = command;
 
-  if (!event)
-    return;
+  ossim_debug ( "sim_session_cmd_event: Inside1");
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Inside2");
+	if ((!cmd->data.event.src_ip)||(!gnet_inetaddr_is_canonical (cmd->data.event.src_ip)))
+	{
+		if(!cmd->data.event.userdata1) cmd->data.event.userdata1=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata2) cmd->data.event.userdata2=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata3) cmd->data.event.userdata3=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata4) cmd->data.event.userdata4=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata5) cmd->data.event.userdata5=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata6) cmd->data.event.userdata6=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata7) cmd->data.event.userdata7=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata8) cmd->data.event.userdata8=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+		else if(!cmd->data.event.userdata9) cmd->data.event.userdata9=g_strdup_printf("Warning: Malformed SRC_IP: %s",cmd->data.event.src_ip);
+
+		g_free (cmd->data.event.src_ip);
+		cmd->data.event.src_ip = g_strdup_printf("0.0.0.0");
+	}
+
+	if ((!cmd->data.event.dst_ip)||(!gnet_inetaddr_is_canonical (cmd->data.event.dst_ip)))
+	{
+		if(!cmd->data.event.userdata1) cmd->data.event.userdata1=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata2) cmd->data.event.userdata2=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata3) cmd->data.event.userdata3=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata4) cmd->data.event.userdata4=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata5) cmd->data.event.userdata5=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata6) cmd->data.event.userdata6=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata7) cmd->data.event.userdata7=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata8) cmd->data.event.userdata8=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+		else if(!cmd->data.event.userdata9) cmd->data.event.userdata9=g_strdup_printf("Warning: Malformed DST_IP: %s",cmd->data.event.dst_ip);
+
+		g_free (cmd->data.event.dst_ip);
+		cmd->data.event.dst_ip = g_strdup_printf("0.0.0.0");
+}
+
+	//If no sensor is given, use the session info 
+	if(!command->data.event.sensor||!strcmp(command->data.event.sensor,"0.0.0.0")||!strcmp(command->data.event.sensor,"None"))
+	{
+		g_free(command->data.event.sensor);
+    if (session->_priv->sensor)
+      command->data.event.sensor=g_strdup(sim_sensor_get_name(session->_priv->sensor));
+    else
+      command->data.event.sensor=g_strdup(ossim.config->framework.host); //this will be used for events from frameworkd (usually, plugin_id 2505, post correlation)
+	}
+
+	//If there's no src_ip, we know at least the sensor
+	if(!command->data.event.src_ip||!strcmp(command->data.event.src_ip,"None"))
+	{
+		g_free(command->data.event.src_ip);
+		command->data.event.src_ip = g_strdup(command->data.event.sensor);
+	}
+
+
+  //if (sem_total_events_popped <= 500000)
+	event = sim_command_get_event (command); //generates an event from the command received
+	if (!event)
+  {
+		ossim_debug ( "sim_session_cmd_event: Error Event NULL");
+		//Continue with the next event
+		return;
+	}
+
+    // Only special events in our database will be processed.
+    if ((sim_event_is_special (event)) &&
+        (!sim_context_has_inet (event->context, event->src_ia)))
+    {
+      sim_event_unref (event);
+      return;
+    }
+
+  //else
+  //  event = sim_command_get_event_demo (command); //generates a demo command
+
+  // Check for sensor or sensor_id
+  if ((!event->sensor_id) || (!event->sensor))
+  {
+    SimSensor *sensor = sim_session_get_sensor (session);
+    if (sensor)
+    {
+      // Free these value "for the flies"
+      if (event->sensor)
+        g_object_unref (event->sensor);
+      if (event->sensor_id)
+        g_object_unref (event->sensor_id);
+
+      event->sensor = g_object_ref (sim_sensor_get_ia (sensor));
+      event->sensor_id = g_object_ref (sim_sensor_get_id (sensor));
+    }
+  }
+
+  // v3 agents only send 'sensor' fields. Use them to fill 'device' fields if needed.
+  if (!event->device)
+    event->device = g_object_ref (event->sensor);
+
+  ossim_debug ( "sim_session_cmd_event: Event address: %p", event);
+  ossim_debug ( "sim_session_cmd_event: Event received: %s", event->buffer);
+
+	if (session->_priv->received==G_MAXDOUBLE) 
+		session->_priv->received=0;
+	session->_priv->received++; 
+
+  ossim_debug ( "sim_session_cmd_event: Inside2");
   if (event->type == SIM_EVENT_TYPE_NONE)
   {
-    g_object_unref (event);
+  	ossim_debug ( "Error. sim_session_cmd_event: event type=none");
+    sim_event_unref (event);
     return;
   }
 
-/*
-	if (!sim_session_is_children_server (session)) //if this isn't from a children server we should change the priority & reliability with the DB values.
-	{
-		event->from_sensor = FALSE;
-	}
-	*/
+	sim_session_prepare_and_insert (session, event);
 
-  sim_container_push_event (ossim.container, event); //push the event in the queue
-
-	GInetAddr *sensor = gnet_inetaddr_new_nonblock (command->data.event.sensor, 0);
-	sim_container_set_sensor_event_number (ossim.container, SIM_EVENT_EVENT, sensor);
-	gnet_inetaddr_unref (sensor);
-		
+  return;
 }
 
 /*
@@ -1524,12 +1933,10 @@ sim_session_cmd_reload_plugins (SimSession  *session,
 																SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
+	GList				*list, *listf;
 	gboolean		for_this_server;
 
-  g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 	if (sim_session_is_master_server (session) ||
@@ -1546,16 +1953,19 @@ sim_session_cmd_reload_plugins (SimSession  *session,
 		else
     	for_this_server = FALSE;
 					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_plugins: %s, %s", sim_server_get_name (server), command->data.reload_plugins.servername);
+		ossim_debug ( "sim_session_cmd_reload_plugins: %s, %s", sim_server_get_name (server), command->data.reload_plugins.servername);
 		
 		if (for_this_server)	//execute the command in this server
 	  {
-		  sim_container_free_plugins (ossim.container);
-		  sim_container_db_load_plugins (ossim.container, ossim.dbossim);
+      //FIXME: Reload context plugins and/or common plugins...?
+		  //sim_container_free_plugins (ossim.container);
+		  //sim_container_db_load_plugins (ossim.container, ossim.dbossim);
+			g_message ("Plugins reloaded");
 		}
 		else	//resend the command buffer to the children servers whose name match.
 		{
 			list = sim_server_get_sessions (server);
+			listf = list;
 		  while (list)	//list of the sessions connected to the server
 			{
 				SimSession *sess = (SimSession *) list->data;
@@ -1566,7 +1976,7 @@ sim_session_cmd_reload_plugins (SimSession  *session,
 				}
 				list = list->next;
 			}
-	  	g_list_free (list);
+	  	g_list_free (listf);
 		}
 	
 	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
@@ -1595,56 +2005,56 @@ sim_session_cmd_reload_sensors (SimSession  *session,
 																SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
-	gboolean		for_this_server;
+  GList       *list, *listf;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
+
+    //Check if the message is for this server....
     if ((!command->data.reload_sensors.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
+        //we will assume that this is the dst server. This should be removed in
+        //a near future. All the commands from frameworkd should issue a server name.
         (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_sensors.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_sensors: %s, %s", sim_server_get_name (server), command->data.reload_sensors.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
-		  sim_container_free_sensors (ossim.container);
-		  sim_container_db_load_sensors (ossim.container, ossim.dbossim);
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_sensors.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ("%s: %s, %s", __func__,
+                 sim_server_get_name (server), command->data.reload_sensors.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      sim_container_reload_sensors (ossim.container);
+      g_message ("Sensors reloaded");
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_sensors.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -1653,7 +2063,6 @@ sim_session_cmd_reload_sensors (SimSession  *session,
     sim_session_write (session, cmd);
     g_object_unref (cmd);
   }
-
 }
 
 /*
@@ -1663,59 +2072,61 @@ sim_session_cmd_reload_sensors (SimSession  *session,
  */
 static void
 sim_session_cmd_reload_hosts (SimSession  *session,
-												      SimCommand  *command)
+                              SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
-	gboolean		for_this_server;
+  GList       *list, *listf;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
+
+    //Check if the message is for this server....
     if ((!command->data.reload_hosts.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
+        //we will assume that this is the dst server. This should be removed in
+        //a near future. All the commands from frameworkd should issue a server name.
         (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_hosts.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_hosts: %s, %s", sim_server_get_name (server), command->data.reload_hosts.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
-  		sim_container_free_hosts (ossim.container);
-		  sim_container_db_load_hosts (ossim.container, ossim.dbossim);
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_hosts.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ("%s: %s, %s", __func__, sim_server_get_name (server), command->data.reload_hosts.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      SimContext *context = sim_container_get_context (ossim.container, NULL);
+      sim_context_reload_hosts (context);
+      sim_context_check_host_plugin_sids (context);
+
+      g_message ("Host reloaded");
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_hosts.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -1724,7 +2135,6 @@ sim_session_cmd_reload_hosts (SimSession  *session,
     sim_session_write (session, cmd);
     g_object_unref (cmd);
   }
-
 }
 
 /*
@@ -1734,59 +2144,61 @@ sim_session_cmd_reload_hosts (SimSession  *session,
  */
 static void
 sim_session_cmd_reload_nets (SimSession  *session,
-			     SimCommand  *command)
+                             SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
-	gboolean		for_this_server;
+  GList       *list, *listf;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
+
+    //Check if the message is for this server....
     if ((!command->data.reload_nets.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
+        //we will assume that this is the dst server. This should be removed in
+        //a near future. All the commands from frameworkd should issue a server name.
         (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_nets.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_nets: %s, %s", sim_server_get_name (server), command->data.reload_nets.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
-  		sim_container_free_nets (ossim.container);
-		  sim_container_db_load_nets (ossim.container, ossim.dbossim);
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_nets.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ("%s: %s, %s", __func__, sim_server_get_name (server), command->data.reload_nets.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      SimContext *context = sim_container_get_context (ossim.container, NULL);
+      sim_context_reload_nets (context);
+      sim_context_check_host_plugin_sids (context);
+
+      g_message ("Nets reloaded");
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_nets.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -1805,68 +2217,62 @@ sim_session_cmd_reload_nets (SimSession  *session,
  */
 static void
 sim_session_cmd_reload_policies (SimSession  *session,
-																 SimCommand  *command)
+                                 SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
-	gboolean		for_this_server;
+  GList       *list, *listf;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
+
+    //Check if the message is for this server....
     if ((!command->data.reload_policies.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
+        //we will assume that this is the dst server. This should be removed in
+        //a near future. All the commands from frameworkd should issue a server name.
         (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_policies.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_policies: %s, %s", sim_server_get_name (server), command->data.reload_policies.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
-  		sim_container_free_policies (ossim.container);
-			if (sim_database_is_local (ossim.dbossim))
-			  sim_container_db_load_policies (ossim.container, ossim.dbossim);
-			else 
-			{
-				//FIXME: this will produce unespected results, as the server is still receiving data and being processed.
-				//mutex & blocking will be needed. This happens also with all the sim_session_cmd_reload_*() functions.
-				//You should try to avoid to do this at this time; unless you're very lucky (and you aren't) this will crash something.
-				//Instead, please re-start the ossim-server
-				sim_container_remote_load_element (SIM_DB_ELEMENT_TYPE_POLICIES);
-			}
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_policies.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ("sim_session_cmd_reload_policies: %s, %s", sim_server_get_name (server), command->data.reload_policies.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      SimContext *context = sim_container_get_context (ossim.container, NULL);
+      sim_context_reload_policies (context);
+
+			context = sim_container_get_engine_ctx (ossim.container);
+			sim_context_reload_policies (context);
+			g_object_unref (context);
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_policies.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -1885,66 +2291,66 @@ sim_session_cmd_reload_policies (SimSession  *session,
  */
 static void
 sim_session_cmd_reload_directives (SimSession  *session,
-																   SimCommand  *command)
+                                   SimCommand  *command)
 {
   SimCommand  *cmd;
-	GList				*list;
-	gboolean		for_this_server;
+  GList       *list, *listf;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
-    if ((!command->data.reload_directives.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
-        (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_directives.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_directives: %s, %s", sim_server_get_name (server), command->data.reload_directives.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
-		// We dont nedd to remove them in database. Just replace if needed
-//		  sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
-		  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
 
-		  sim_container_free_backlogs (ossim.container);
-		  sim_container_free_directives (ossim.container);
-		  sim_container_load_directives_from_file (ossim.container,
-																						   ossim.dbossim,
-																						   SIM_XML_DIRECTIVE_FILE);
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_directives.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+    //Check if the message is for this server....
+    if ((!command->data.reload_directives.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
+        //we will assume that this is the dst server. This should be removed in
+        //a near future. All the commands from frameworkd should issue a server name.
+        (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_directives.servername)))
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ( "sim_session_cmd_reload_directives: %s, %s", sim_server_get_name (server), command->data.reload_directives.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      SimEngine *engine = sim_container_get_engine (ossim.container, NULL);
+
+// Directives are replaced in db if they exist !
+//      sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
+
+//      sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
+
+      sim_engine_free_backlogs (engine);
+
+      sim_engine_reload_directives (engine);
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_directives.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -1962,90 +2368,49 @@ sim_session_cmd_reload_directives (SimSession  *session,
  *
  */
 static void
-sim_session_cmd_reload_all (SimSession  *session,
-			    SimCommand  *command)
+sim_session_cmd_reload_servers (SimSession *session,
+                                SimCommand *command)
 {
   SimCommand  *cmd;
-  SimConfig   *config;
-	GList				*list;
-	gboolean		for_this_server;
+  gboolean    for_this_server;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
-	if (sim_session_is_master_server (session) ||
-			sim_session_is_web (session))
-	{
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
     SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
-    if ((!command->data.reload_all.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																									//we will assume that this is the dst server. This should be removed in 
-																									//a near future. All the commands from frameworkd should issue a server name.
-        (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_all.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_reload_all: %s, %s", sim_server_get_name (server), command->data.reload_all.servername);
-		
-		if (for_this_server)	//execute the command in this server
-	  {
- 			config = session->_priv->config;
 
-			sim_container_free_directives (ossim.container);
-		  sim_container_free_backlogs (ossim.container);
-		  sim_container_free_net_levels (ossim.container);
-		  sim_container_free_host_levels (ossim.container);
-		  sim_container_free_policies (ossim.container);
-		  sim_container_free_nets (ossim.container);
-		  sim_container_free_hosts (ossim.container);
-		  sim_container_free_sensors (ossim.container);
-		  sim_container_free_plugin_sids (ossim.container);
-		  sim_container_free_plugins (ossim.container);
+    //Check if the message is for this server....
+    if ((!command->data.reload_servers.servername) ||
+        (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_servers.servername)))
+    {
+      for_this_server = TRUE;
+    }
+    else
+    {
+      for_this_server = FALSE;
+    }
 
-    // We dont nedd to remove them in database. Just replace if needed
-		// sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
-		  sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
+    ossim_debug ("%s: %s, %s", __func__, sim_server_get_name (server), command->data.reload_servers.servername);
 
-		  sim_container_db_load_plugins (ossim.container, ossim.dbossim);
-		  sim_container_db_load_plugin_sids (ossim.container, ossim.dbossim);
-		  sim_container_db_load_sensors (ossim.container, ossim.dbossim);
-		  sim_container_db_load_hosts (ossim.container, ossim.dbossim);
-		  sim_container_db_load_nets (ossim.container, ossim.dbossim);
-		  sim_container_db_load_policies (ossim.container, ossim.dbossim);
-		  sim_container_db_load_host_levels (ossim.container, ossim.dbossim);
-		  sim_container_db_load_net_levels (ossim.container, ossim.dbossim);
+    if (for_this_server)  //execute the command in this server
+    {
+      /* Reload servers */
+      sim_container_reload_servers (ossim.container, ossim.dbossim);
+      g_message ("Server reloaded");
+    }
+    else  // Do nothing
+    {
+      return;
+    }
 
-		  if ((config->directive.filename) && (g_file_test (config->directive.filename, G_FILE_TEST_EXISTS)))
-    		sim_container_load_directives_from_file (ossim.container, ossim.dbossim, config->directive.filename);
-
-		  sim_server_reload (session->_priv->server);
-
-		}
-		else	//resend the command buffer to the children servers whose name match.
-		{
-			list = sim_server_get_sessions (server);
-		  while (list)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list->data;
-				if (sim_session_is_children_server (sess) && 
-						!g_ascii_strcasecmp (command->data.reload_all.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-				list = list->next;
-			}
-	  	g_list_free (list);
-		}
-	
-	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);
-	}
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
   else
   {
     cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
@@ -2054,7 +2419,92 @@ sim_session_cmd_reload_all (SimSession  *session,
     sim_session_write (session, cmd);
     g_object_unref (cmd);
   }
+}
 
+/*
+ *
+ *
+ *
+ */
+static void
+sim_session_cmd_reload_all (SimSession  *session,
+                            SimCommand  *command)
+{
+  SimCommand  *cmd;
+  GList       *list, *listf;
+  gboolean    for_this_server;
+
+  g_return_if_fail (session != NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (command != NULL);
+  g_return_if_fail (SIM_IS_COMMAND (command));
+
+  if (sim_session_is_master_server (session) ||
+      sim_session_is_web (session))
+  {
+    SimServer *server = session->_priv->server;
+
+    //Check if the message is for this server....
+    if ((!command->data.reload_all.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
+                                                  //we will assume that this is the dst server. This should be removed in
+                                                  //a near future. All the commands from frameworkd should issue a server name.
+        (!g_ascii_strcasecmp (sim_server_get_name (server), command->data.reload_all.servername)))
+      for_this_server = TRUE;
+    else
+      for_this_server = FALSE;
+
+    ossim_debug ( "sim_session_cmd_reload_all: %s, %s", sim_server_get_name (server), command->data.reload_all.servername);
+
+    if (for_this_server)  //execute the command in this server
+    {
+      SimContext *context = sim_container_get_context (ossim.container, NULL);
+      SimEngine *engine = sim_container_get_engine_for_context (ossim.container, NULL);
+
+      //FIXME: Reload context plugins and/or common plugins...?
+      // sim_container_free_plugin_sids (ossim.container);
+      // sim_container_free_plugins (ossim.container);
+
+      sim_engine_free_backlogs (engine);
+
+      // sim_container_db_load_plugins (ossim.container, ossim.dbossim);
+      // sim_container_db_load_plugin_sids (ossim.container, ossim.dbossim);
+
+      /* Reload all data in context */
+      sim_engine_reload_all (engine);
+      sim_context_reload_all (context);
+
+      sim_server_reload (session->_priv->server, context);
+    }
+    else  //resend the command buffer to the children servers whose name match.
+    {
+      list = sim_server_get_sessions (server);
+      listf = list;
+      while (list)  //list of the sessions connected to the server
+      {
+        SimSession *sess = (SimSession *) list->data;
+        if (sim_session_is_children_server (sess) &&
+            !g_ascii_strcasecmp (command->data.reload_all.servername, sim_session_get_hostname (sess)) )
+        {
+          sim_session_write_from_buffer (sess, command->buffer);
+        }
+        list = list->next;
+      }
+      g_list_free (listf);
+    }
+
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
+    cmd->id = command->id;
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
+  else
+  {
+    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
+    cmd->id = command->id;
+
+    sim_session_write (session, cmd);
+    g_object_unref (cmd);
+  }
 }
 
 /*
@@ -2064,44 +2514,25 @@ sim_session_cmd_reload_all (SimSession  *session,
  */
 void
 sim_session_cmd_host_os_event (SimSession  *session,
-															SimCommand  *command)
+                               SimCommand  *command)
 {
-  SimConfig   *config;
-  SimEvent    *event;
-  GInetAddr   *ia=NULL;
-  GInetAddr   *sensor=NULL;
-  gchar       *os = NULL;
-  struct tm    tm;
+  SimEvent  *event;
+  SimInet   *ia     = NULL;
+  struct tm  tm;
 
-		
-	g_return_if_fail (session);
-	g_return_if_fail (SIM_IS_SESSION (session));
-	g_return_if_fail (command);
-	g_return_if_fail (SIM_IS_COMMAND (command));
-	g_return_if_fail (command->data.host_os_event.date);
-	g_return_if_fail (command->data.host_os_event.host);
-	g_return_if_fail (command->data.host_os_event.os);
-	g_return_if_fail (command->data.host_os_event.sensor);
-	g_return_if_fail (command->data.host_os_event.interface);
-	g_return_if_fail (command->data.host_os_event.plugin_id > 0);
-	g_return_if_fail (command->data.host_os_event.plugin_sid > 0);
-	
-	config = session->_priv->config;
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.host_os_event.date);
+  g_return_if_fail (command->data.host_os_event.host);
+  g_return_if_fail (command->data.host_os_event.os);
+  g_return_if_fail (command->data.host_os_event.interface);
+  g_return_if_fail (command->data.host_os_event.plugin_id > 0);
+  g_return_if_fail (command->data.host_os_event.plugin_sid > 0);
 
-  if (command->data.host_os_event.sensor)
-		sensor = gnet_inetaddr_new_nonblock (command->data.host_os_event.sensor, 0);
-	if (!sensor)
-		return;				
-	
-	if (ia = gnet_inetaddr_new_nonblock (command->data.host_os_event.host, 0))
-	{
-	
-		os = sim_container_db_get_host_os_ul (ossim.container,
-																				 ossim.dbossim,
-																				 ia,
-																				 sensor);
-		event = sim_event_new ();
-		
+  if ((ia = sim_inet_new_from_string (command->data.host_os_event.host)))
+  {
+    event = sim_event_new_full (SIM_EVENT_TYPE_DETECTOR, command->data.host_os_event.id, command->context_id);
+
     // We only want first word (OS name)
     if (command->data.host_os_event.os)
     {
@@ -2112,34 +2543,30 @@ sim_session_cmd_host_os_event (SimSession  *session,
       g_strfreev(os_event_split);
     }
 
-    if (!os) //the new event is inserted into db.
-      event->plugin_sid = EVENT_NEW;
-    else
+    event->alarm = FALSE;
+    event->protocol = SIM_PROTOCOL_TYPE_HOST_OS_EVENT;
+    event->plugin_id = command->data.host_os_event.plugin_id;
+    event->plugin_sid = command->data.host_os_event.plugin_sid;
+
+    if (!event->sensor_id)
     {
-      gchar **os_split = NULL;
+      SimSensor *sensor = sim_session_get_sensor (session);
+      if (sensor)
+      {
+        if (event->sensor)
+          g_object_unref (event->sensor);
+        if (event->sensor_id)
+          g_object_unref (event->sensor_id);
 
-      // We only want first word (OS name)
-      os_split = g_strsplit (os, " ", 2);
-      g_free (os);
-      os = g_strdup (os_split?os_split[0]:NULL);
-      g_strfreev(os_split);
-
-      if (!g_ascii_strcasecmp (os, command->data.host_os_event.os))
-        event->plugin_sid = EVENT_SAME;
-      else // we insert the event, but it's in database at this moment.
-        event->plugin_sid = EVENT_CHANGE;
-
+        event->sensor = g_object_ref (sim_sensor_get_ia (sensor));
+        event->sensor_id = g_object_ref (sim_sensor_get_id (sensor));
+      }
     }
 
-		event->type = SIM_EVENT_TYPE_DETECTOR;
-		event->alarm = FALSE;
-		event->protocol=SIM_PROTOCOL_TYPE_HOST_OS_EVENT;
-		event->plugin_id = command->data.host_os_event.plugin_id;
-	
-		event->sensor = g_strdup (command->data.host_os_event.sensor);
+    if (command->data.host_os_event.server)
+      event->server = g_strdup (command->data.host_os_event.server);
 
-		event->interface = g_strdup (command->data.host_os_event.interface);
-
+    event->interface = g_strdup (command->data.host_os_event.interface);
     if(command->data.host_os_event.date)
       event->time=command->data.host_os_event.date;
     else
@@ -2150,43 +2577,57 @@ sim_session_cmd_host_os_event (SimSession  *session,
     if(!event->time)
       event->time = time (NULL);
 
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
-		if (ip_temp)
-		{
-			event->src_ia = ia;
-		}
-		else
-		{
-			event->src_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
-		}
-		g_free (ip_temp);
+    gchar *ip_temp = sim_inet_get_canonical_name (ia);
+    if (ip_temp)
+    {
+      event->src_ia = ia;
+      g_free (ip_temp);
+    }
+    else
+      event->src_ia = sim_inet_new_none ();
 
     //we want to process only the hosts defined in Policy->hosts or inside a network from policy->networks
-	  if ((sim_container_get_host_by_ia(ossim.container, event->src_ia) == NULL) &&
-				(sim_container_get_nets_has_ia(ossim.container, event->src_ia) == NULL))
-  	  return;
-		
-		event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
+    if (!sim_context_has_inet (event->context, event->src_ia))
+      return;
 
-	  event->data = g_strdup_printf ("%s --> %s", (os) ? os : command->data.host_os_event.os,
-																							 command->data.host_os_event.os);
+    event->dst_ia = sim_inet_new_none ();
 
-  	//this is used to pass the event data to sim-organizer, so it can insert it into database
-    event->data_storage = g_new(gchar*, 2);
-    event->data_storage[0] = g_strdup((command->data.host_os_event.os) ? command->data.host_os_event.os : "");
-  	event->data_storage[1] = NULL;  
+    // Assign asset values.
+    if (event->asset_src == VOID_ASSET)
+    {
+      event->asset_src = DEFAULT_ASSET;
+      if (event->src_id)
+        event->asset_src = sim_context_get_host_asset (event->context, event->src_id);
+      else
+        if (event->src_ia)
+          event->asset_src = sim_context_get_inet_asset (event->context, event->src_ia);
+    }
+    if (event->asset_dst == VOID_ASSET)
+    {
+      event->asset_dst = DEFAULT_ASSET;
+      if (event->dst_id)
+        event->asset_dst = sim_context_get_host_asset (event->context, event->dst_id);
+      else
+        if (event->dst_ia)
+          event->asset_dst = sim_context_get_inet_asset (event->context, event->dst_ia);
+    }
 
-		event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
+    event->data = g_strdup (command->data.host_os_event.log);
+
+    //this is used to pass the event data to sim-organizer, so it can insert it into database
+    event->userdata1 = g_strdup (command->data.host_os_event.os); //needed for correlation
+
+    event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
                                                 //events that matched with policy to frameworkd (future implementation)
-																								//
-		event->userdata1 = g_strdup (command->data.host_os_event.os); //needed for correlation
-																										
-		sim_container_push_event (ossim.container, event);
-		sim_container_set_sensor_event_number (ossim.container, SIM_EVENT_HOST_OS_EVENT, sensor);
-	
-		if (os)
-		  g_free (os);
-		gnet_inetaddr_unref (sensor);
+                                                //
+
+    event->tzone = command->data.host_os_event.tzone;
+
+    if (session->_priv->received == G_MAXDOUBLE)
+      session->_priv->received = 0;
+    session->_priv->received++;
+
+    sim_session_prepare_and_insert (session, event);
   }
   else
     g_message("Error: Data sent from agent; host OS event wrong src IP %s",command->data.host_os_event.host);
@@ -2201,82 +2642,56 @@ sim_session_cmd_host_os_event (SimSession  *session,
  */
 static void
 sim_session_cmd_host_mac_event (SimSession  *session,
-												        SimCommand  *command)
+                                SimCommand  *command)
 {
-  SimConfig   *config;
-  SimEvent    *event;
-  GInetAddr   *ia=NULL;
-  gchar       *mac = NULL;
-  gchar       *vendor = NULL;
-	gchar				**mac_and_vendor;
-  GInetAddr   *sensor;   
-  struct tm    tm;
+  SimEvent   *event;
+  SimInet    *ia     = NULL;
+  struct tm   tm;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (command->data.host_mac_event.date);
   g_return_if_fail (command->data.host_mac_event.host);
   g_return_if_fail (command->data.host_mac_event.mac);
-  g_return_if_fail (command->data.host_mac_event.sensor);
-  g_return_if_fail (command->data.host_mac_event.vendor); 
-  g_return_if_fail (command->data.host_mac_event.interface); 
+  g_return_if_fail (command->data.host_mac_event.vendor);
   g_return_if_fail (command->data.host_mac_event.plugin_id > 0);
   g_return_if_fail (command->data.host_mac_event.plugin_sid > 0);
- 
-  config = session->_priv->config;
 
   // Normalize MAC address (usefull for comparaisons)
   gchar *aux = sim_normalize_host_mac (command->data.host_mac_event.mac);
   if (aux == NULL)
     return;
   g_free(command->data.host_mac_event.mac);
-  command->data.host_mac_event.mac = aux;	
+  command->data.host_mac_event.mac = aux;
 
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: command->data.host_mac_event.mac: %s",command->data.host_mac_event.mac);
-  
-	if (command->data.host_mac_event.sensor)
-  	sensor = gnet_inetaddr_new_nonblock (command->data.host_mac_event.sensor, 0);
-	if (!sensor)
-		return;
+  ossim_debug ( "sim_session_cmd_host_mac_event: command->data.host_mac_event.mac: %s",command->data.host_mac_event.mac);
 
-  if (ia = gnet_inetaddr_new_nonblock (command->data.host_mac_event.host, 0))
+  if ((ia = sim_inet_new_from_string (command->data.host_mac_event.host)))
   {
-    mac_and_vendor = sim_container_db_get_host_mac_ul (ossim.container, //get the mac wich should be the ia mac.
-																											 ossim.dbossim,
-																											 ia,
-																											 sensor);
-		mac = mac_and_vendor[0];
-		vendor = mac_and_vendor[1];
-		
-    event = sim_event_new ();
-    if (!mac) //if the ia-sensor pair doesn't obtains a mac in the database, inserts the new one.
-    {
-      event->plugin_sid = EVENT_NEW; 
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: EVENT_NEW");
-    }
-    else  
-    if (!g_ascii_strcasecmp (mac, command->data.host_mac_event.mac)) //the mac IS the same (0 = exact match)
-    {
-      event->plugin_sid = EVENT_SAME;
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: EVENT_SAME");
-    }
-    else //the mac is different
-    {
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: EVENT_CHANGE");
+    event = sim_event_new_full (SIM_EVENT_TYPE_DETECTOR, command->data.host_mac_event.id, command->context_id);
 
-			event->plugin_sid = EVENT_CHANGE;       
-    }
-
-    event->type = SIM_EVENT_TYPE_DETECTOR;
     event->alarm = FALSE;
     event->plugin_id = command->data.host_mac_event.plugin_id;
-		event->protocol=SIM_PROTOCOL_TYPE_HOST_ARP_EVENT;
+    event->plugin_sid = command->data.host_mac_event.plugin_sid;
+    event->protocol=SIM_PROTOCOL_TYPE_HOST_ARP_EVENT;
 
-    event->sensor = g_strdup (command->data.host_mac_event.sensor);
+    if (!event->sensor_id)
+    {
+      SimSensor *sensor = sim_session_get_sensor (session);
+      if (sensor)
+      {
+        if (event->sensor)
+          g_object_unref (event->sensor);
+        if (event->sensor_id)
+          g_object_unref (event->sensor_id);
 
-    event->interface = g_strdup (command->data.host_mac_event.interface);
+        event->sensor = g_object_ref (sim_sensor_get_ia (sensor));
+        event->sensor_id = g_object_ref (sim_sensor_get_id (sensor));
+      }
+    }
+
+    if(event->interface)
+      event->interface = g_strdup (command->data.host_mac_event.interface);
 
     if(command->data.host_mac_event.date)
       event->time=command->data.host_mac_event.date;
@@ -2288,53 +2703,60 @@ sim_session_cmd_host_mac_event (SimSession  *session,
     if(!event->time)
       event->time = time (NULL);
 
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
-		if (ip_temp)
-	    event->src_ia = ia;
-		else
-		{
-			event->src_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
-    	g_message("Error: Data sent from agent; host MAC event wrong IP %s",command->data.host_mac_event.host);
-		}
-		g_free(ip_temp);
+    gchar *ip_temp = sim_inet_get_canonical_name (ia);
+    if (ip_temp)
+    {
+      event->src_ia = ia;
+      g_free(ip_temp);
+    }
+    else
+    {
+      event->src_ia = sim_inet_new_none ();
+      g_message("Error: Data sent from agent; host MAC event wrong IP %s",command->data.host_mac_event.host);
+    }
 
-	  event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
-		event->data = g_strdup_printf ("%s|%s --> %s|%s", (mac) ? mac : command->data.host_mac_event.mac,
-																											(vendor) ? vendor : "",
-																											command->data.host_mac_event.mac,
-																											(command->data.host_mac_event.vendor) ? command->data.host_mac_event.vendor : "");
-	
-  	//this is used to pass the event data to sim-organizer, so it can insert it into database
-    event->data_storage = g_new(gchar*, 3);
-   	event->data_storage[0] = g_strdup((command->data.host_mac_event.mac) ? command->data.host_mac_event.mac : "");
-	  event->data_storage[1] = g_strdup((command->data.host_mac_event.vendor) ? command->data.host_mac_event.vendor : "");
-  	event->data_storage[2] = NULL; //this is needed for g_strfreev(). Don't remove. 
+    event->dst_ia = sim_inet_new_none ();
+    event->data = g_strdup (command->data.host_mac_event.log);
+    event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
+                                                //events that matched with policy to frameworkd (future implementation)
 
-	  event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
-		                                            //events that matched with policy to frameworkd (future implementation)
-		
-		event->userdata1 = g_strdup (command->data.host_mac_event.mac);	//needed for correlation
-		if (command->data.host_mac_event.vendor)
-			event->userdata2 = g_strdup (command->data.host_mac_event.vendor);
+    // Assign asset values.
+    if (event->asset_src == VOID_ASSET)
+    {
+      event->asset_src = DEFAULT_ASSET;
+      if (event->src_id)
+        event->asset_src = sim_context_get_host_asset (event->context, event->src_id);
+      else
+        if (event->src_ia)
+          event->asset_src = sim_context_get_inet_asset (event->context, event->src_ia);
+    }
+    if (event->asset_dst == VOID_ASSET)
+    {
+      event->asset_dst = DEFAULT_ASSET;
+      if (event->dst_id)
+        event->asset_dst = sim_context_get_host_asset (event->context, event->dst_id);
+      else
+        if (event->dst_ia)
+          event->asset_dst = sim_context_get_inet_asset (event->context, event->dst_ia);
+    }
 
-    sim_container_push_event (ossim.container, event);
-		sim_container_set_sensor_event_number (ossim.container, SIM_EVENT_HOST_MAC_EVENT, sensor);
-		
-		if (mac)
-			g_free (mac);
-		if (vendor)
-			g_free (vendor);	
-		if (mac_and_vendor)
-			g_free (mac_and_vendor);
-    gnet_inetaddr_unref (sensor);
+    event->userdata1 = g_strdup (command->data.host_mac_event.mac); //needed for correlation
+    if (command->data.host_mac_event.vendor)
+      event->userdata2 = g_strdup (command->data.host_mac_event.vendor);
+
+    event->tzone = command->data.host_mac_event.tzone;
+
+    if (session->_priv->received==G_MAXDOUBLE)
+      session->_priv->received=0;
+    session->_priv->received++;
+    sim_session_prepare_and_insert (session, event);
+
+    ossim_debug ( "sim_session_cmd_host_mac_event: TYPE: %d",event->plugin_sid);
   }
   else
     g_message("Error: Data sent from agent; host MAC event wrong IP %s",command->data.host_mac_event.host);
 
-	if(command->data.host_mac_event.date_str)
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "command->data.host_mac_event.date: %s",command->data.host_mac_event.date_str);
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_mac_event: TYPE: %d",event->plugin_sid);
-				
+  ossim_debug ( "command->data.host_mac_event.date: %s",command->data.host_mac_event.date_str);
 }
 
 /*
@@ -2346,1192 +2768,137 @@ sim_session_cmd_host_mac_event (SimSession  *session,
  */
 static void
 sim_session_cmd_host_service_event (SimSession  *session,
-																	  SimCommand  *command)
+                                    SimCommand  *command)
 {
-  SimConfig		*config;
-  SimEvent		*event;
-  GInetAddr		*ia=NULL;
-  gint				port = 0;
-  gint				protocol = 0;
-  gchar				*mac = NULL;
-  gchar				*vendor = NULL;
-  GInetAddr 	*sensor;   
-  gchar				*application = NULL;
-  gchar				*service = NULL;
-  gchar				**application_and_service = NULL;
-  struct tm		tm;
-  SimCommand  *cmd;
+  SimEvent    *event;
+  SimInet     *ia                      = NULL;
+  struct tm    tm;
 
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
   g_return_if_fail (command->data.host_service_event.date);
   g_return_if_fail (command->data.host_service_event.host);
   g_return_if_fail (command->data.host_service_event.service);
-  g_return_if_fail (command->data.host_service_event.sensor);
   g_return_if_fail (command->data.host_service_event.interface);
-  g_return_if_fail (command->data.host_service_event.application); //application is "version" field in DDBB
   g_return_if_fail (command->data.host_service_event.plugin_id > 0);
   g_return_if_fail (command->data.host_service_event.plugin_sid > 0);
+
+  if (!command->data.host_service_event.application)
+  {
+    ossim_debug ( "sim_session_cmd_host_service_event: empty field \"application\".");
+  }
 
   // We don't use icmp. Maybe useful for a list of active hosts....
   if (command->data.host_service_event.protocol == 1)
     return;
-  
-  if (ia = gnet_inetaddr_new_nonblock (command->data.host_service_event.host, 0))
+
+  if ((ia = sim_inet_new_from_string (command->data.host_service_event.host)))
   {
-    config = session->_priv->config;
-			 
-    // Check if we've got a mac to call host_mac_event and insert it.
-    if (!g_ascii_strcasecmp (command->data.host_service_event.service, "ARP"))
-    {			
-      //as the pads plugin uses the same variables to store mac changes and services changes, we must normalize it.
-      cmd = sim_command_new_from_type(SIM_COMMAND_TYPE_HOST_MAC_EVENT);
-      cmd->data.host_mac_event.date = command->data.host_service_event.date;
-      cmd->data.host_mac_event.date_str = g_strdup(command->data.host_service_event.date_str);
-      cmd->data.host_mac_event.host = g_strdup(command->data.host_service_event.host);
-      cmd->data.host_mac_event.mac = g_strdup(command->data.host_service_event.application);
-      cmd->data.host_mac_event.sensor = g_strdup(command->data.host_service_event.sensor);
-      cmd->data.host_mac_event.interface = g_strdup(command->data.host_service_event.interface);
-      cmd->data.host_mac_event.vendor = g_strdup_printf(" "); //FIXME: this will be usefull when pads get patched to know the vendor
-      cmd->data.host_mac_event.plugin_id = sim_container_get_plugin_id_by_name(ossim.container, "arpwatch");
-      cmd->data.host_mac_event.plugin_sid = EVENT_UNKNOWN;
-  
-      sim_session_cmd_host_mac_event (session, cmd);
-    }
-    else //ok, this is not a MAC change event, its a service change event
+    event = sim_event_new_full (SIM_EVENT_TYPE_DETECTOR, command->data.host_service_event.id, command->context_id);
+
+    if (!event->sensor_id)
     {
-      event = sim_event_new ();
-    
-			if (command->data.host_service_event.sensor)
-				event->sensor = g_strdup (command->data.host_service_event.sensor);
-			if (!(sensor = gnet_inetaddr_new_nonblock (event->sensor, 0))) //sanitize
-				return;
-		
-      port = command->data.host_service_event.port;
-      protocol = command->data.host_service_event.protocol;
-      application_and_service = sim_container_db_get_host_service_ul (ossim.container, ossim.dbossim, ia, port, protocol, sensor);
-			
-			if (!application_and_service)	//FIXME: check this with a new event. will it work?.
-				return;
-			
-			application = application_and_service[0];
-			service = application_and_service[1];			
-
-      if (!application) //first time this service (apache, IIS...) is saw
+      SimSensor *sensor = sim_session_get_sensor (session);
+      if (sensor)
       {
-				event->plugin_sid = EVENT_NEW;
+        if (event->sensor)
+          g_object_unref (event->sensor);
+        if (event->sensor_id)
+          g_object_unref (event->sensor_id);
+
+        event->sensor = g_object_ref (sim_sensor_get_ia (sensor));
+        event->sensor_id = g_object_ref (sim_sensor_get_id (sensor));
       }
-      else
-      if (!g_ascii_strcasecmp (application, command->data.host_service_event.application)) //service is the same
-      {
-				if (!g_ascii_strcasecmp (service, command->data.host_service_event.service))
-		       event->plugin_sid = EVENT_SAME;
-				else
-				   event->plugin_sid = EVENT_CHANGE;				
-      }
-      else //The service is different
-				event->plugin_sid = EVENT_CHANGE;
+    }
 
-/*	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_service_event app1: %s", application);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_service_event app2: %s", command->data.host_service_event.application);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_service_event service1: %s", service);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_service_event service2: %s", command->data.host_service_event.service);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_service_event event: %d", event->plugin_sid);
-  */
-      event->type = SIM_EVENT_TYPE_DETECTOR;
-      event->alarm = FALSE;
-      event->plugin_id = command->data.host_service_event.plugin_id;
-			event->protocol=SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT;
-  
-	    event->interface = g_strdup (command->data.host_service_event.interface);
-      if(command->data.host_service_event.date)
-        event->time=command->data.host_service_event.date;
-      else
-        if(command->data.host_service_event.date_str)
-          if (strptime (command->data.host_service_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
-            event->time =  mktime (&tm);
-      if(!event->time)
-          event->time = time (NULL);
- 
-	    gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
-			if (ip_temp)
-	      event->src_ia = ia;
-			else
-	    {
-  	    event->src_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
-    	  g_message("Error: Data sent from agent; host Service event wrong IP %s",command->data.host_service_event.host);
-	    }
-			g_free (ip_temp);
+    if (command->data.host_service_event.server)
+      event->server = g_strdup (command->data.host_service_event.server);
 
-		  //we want to process only the hosts defined in Policy->hosts or inside a network from policy->networks
-		  if ((sim_container_get_host_by_ia (ossim.container, event->src_ia) == NULL) &&
-					(sim_container_get_nets_has_ia (ossim.container, event->src_ia) == NULL))
-    		return;
-	
-	  	event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
-      event->data = g_strdup_printf ("%d/%d - %s/%s", port, protocol, command->data.host_service_event.service, (application) ? application: command->data.host_service_event.application );
-			
-	    //this is used to pass the event data to sim-organizer, so it can insert it into database
-  	  event->data_storage = g_new(gchar*, 5);
-			event->data_storage[0] = g_strdup_printf ("%d", port); 
-			event->data_storage[1] = g_strdup_printf ("%d", protocol); 
-    	event->data_storage[2] = g_strdup(command->data.host_service_event.service);
-	    event->data_storage[3] = g_strdup( (application) ? application: command->data.host_service_event.application);
-    	event->data_storage[4] = NULL;  //this is needed for g_strfreev(). Don't remove.
-
-			event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
-	                                                //events that matched with policy to frameworkd (future implementation)
-			
-			event->userdata1 = g_strdup (command->data.host_service_event.application);	//may be needed in correlation
-			event->userdata2 = g_strdup (command->data.host_service_event.service);
-			
-     	sim_container_push_event (ossim.container, event);
-			sim_container_set_sensor_event_number (ossim.container, SIM_EVENT_HOST_SERVICE_EVENT, sensor);
-			
-			if (application)	
-	      g_free (application);
-			if (service)
-				g_free (service);
-			if (application_and_service)
-				g_free (application_and_service);
-      gnet_inetaddr_unref (sensor);
-    }	
-  }
-	else
-    g_message("Error: Data sent from agent; host MAC or OS event wrong IP %s",command->data.host_service_event.host);
-
-
-}
-
-/*
- *
- * HIDS
- *
- */
-static void
-sim_session_cmd_host_ids_event (SimSession  *session,
-															  SimCommand  *command)
-{
-  SimConfig	*config;
-  SimEvent	*event;
-  GInetAddr	*ia=NULL;
-  GInetAddr	*ia_temp=NULL;
-  GInetAddr	*sensor;
-  struct tm	tm;
-
-  g_return_if_fail (session != NULL);
-  g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
-  g_return_if_fail (SIM_IS_COMMAND (command));
-  g_return_if_fail (command->data.host_ids_event.date);
-  g_return_if_fail (command->data.host_ids_event.host);
-  g_return_if_fail (command->data.host_ids_event.hostname);
-  g_return_if_fail (command->data.host_ids_event.event_type);
-  g_return_if_fail (command->data.host_ids_event.target);
-  g_return_if_fail (command->data.host_ids_event.what);
-  g_return_if_fail (command->data.host_ids_event.extra_data);
-  g_return_if_fail (command->data.host_ids_event.sensor);
-  g_return_if_fail (command->data.host_ids_event.plugin_id > 0);
-  g_return_if_fail (command->data.host_ids_event.plugin_sid > 0);
-  g_return_if_fail (command->data.host_ids_event.log);
-
-  if (ia = gnet_inetaddr_new_nonblock (command->data.host_ids_event.host, 0))
-  {
-    config = session->_priv->config;
-
-    event = sim_event_new ();
-    event->type = SIM_EVENT_TYPE_DETECTOR;
     event->alarm = FALSE;
-  
-    if (command->data.host_ids_event.sensor)
-			event->sensor = g_strdup (command->data.host_ids_event.sensor);
-	  if (!(ia_temp = gnet_inetaddr_new_nonblock (event->sensor, 0))) //sanitize
-		  return;
-		else
-			gnet_inetaddr_unref (ia_temp);
-		
-    if(command->data.host_ids_event.date)
-      event->time=command->data.host_ids_event.date;
+    event->plugin_id = command->data.host_service_event.plugin_id;
+    event->plugin_sid = command->data.host_service_event.plugin_sid;
+    event->protocol = SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT;
+
+    event->interface = g_strdup (command->data.host_service_event.interface);
+
+    if (command->data.host_service_event.date)
+    {
+      event->time=command->data.host_service_event.date;
+    }
     else
-      if(command->data.host_ids_event.date_str)
-        if (strptime (command->data.host_ids_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
+    {
+      if (command->data.host_service_event.date_str)
+      {
+        if (strptime (command->data.host_service_event.date_str, "%Y-%m-%d %H:%M:%S", &tm))
           event->time =  mktime (&tm);
+      }
+    }
 
     if(!event->time)
-        event->time = time (NULL);
- 
-    event->plugin_id = command->data.host_ids_event.plugin_id;
-    event->plugin_sid = command->data.host_ids_event.plugin_sid;
+      event->time = time (NULL);
 
-	  gchar *ip_temp = gnet_inetaddr_get_canonical_name (ia);
+    gchar *ip_temp = sim_inet_get_canonical_name (ia);
     if (ip_temp)
+    {
       event->src_ia = ia;
+      g_free (ip_temp);
+    }
     else
     {
-      event->src_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);
-      g_message("Error: Data sent from agent; host Service event wrong IP %s",command->data.host_ids_event.host);
+      event->src_ia = sim_inet_new_none ();
+      g_message("Error: Data sent from agent; host Service event wrong IP %s",command->data.host_service_event.host);
     }
-		g_free (ip_temp);
 
-	  event->dst_ia = gnet_inetaddr_new_nonblock ("0.0.0.0", 0);							
-		event->interface = g_strdup("unknown");
-  
-    event->data = g_strdup(command->data.host_ids_event.log);
+    //we want to process only the hosts defined in Policy->hosts or inside a network from policy->networks
+    if (!sim_context_has_inet (event->context, event->src_ia))
+      return;
 
-		//this is used to pass the event data to sim-organizer, so it can insert it into database
-		event->data_storage = g_new(gchar*, 6);
-		event->data_storage[0] = g_strdup(command->data.host_ids_event.hostname);
-		event->data_storage[1] = g_strdup(command->data.host_ids_event.event_type);
-		event->data_storage[2] = g_strdup(command->data.host_ids_event.target);
-		event->data_storage[3] = g_strdup(command->data.host_ids_event.what);
-		event->data_storage[4] = g_strdup(command->data.host_ids_event.extra_data);
-		event->data_storage[5] = NULL;	//this is needed to free this (inside sim_organizer_snort, btw)
-		
-		event->protocol=SIM_PROTOCOL_TYPE_HOST_IDS_EVENT;
-              
-//		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_host_ids_event filename: %s", command->data.host_ids_event.filename);
-							
-		if (command->data.host_ids_event.filename)
-			event->filename = g_strdup (command->data.host_ids_event.filename);
-		if (command->data.host_ids_event.username)
-			event->username = g_strdup (command->data.host_ids_event.username);
-		if (command->data.host_ids_event.password)
-			event->password = g_strdup (command->data.host_ids_event.password);
-		if (command->data.host_ids_event.userdata1)
-			event->userdata1 = g_strdup (command->data.host_ids_event.userdata1);
-		if (command->data.host_ids_event.userdata2)
-			event->userdata2 = g_strdup (command->data.host_ids_event.userdata2);
-		if (command->data.host_ids_event.userdata3)
-			event->userdata3 = g_strdup (command->data.host_ids_event.userdata3);
-		if (command->data.host_ids_event.userdata4)
-			event->userdata4 = g_strdup (command->data.host_ids_event.userdata4);
-		if (command->data.host_ids_event.userdata5)
-			event->userdata5 = g_strdup (command->data.host_ids_event.userdata5);
-		if (command->data.host_ids_event.userdata6)
-			event->userdata6 = g_strdup (command->data.host_ids_event.userdata6);
-		if (command->data.host_ids_event.userdata7)
-			event->userdata7 = g_strdup (command->data.host_ids_event.userdata7);
-		if (command->data.host_ids_event.userdata8)
-			event->userdata8 = g_strdup (command->data.host_ids_event.userdata8);
-		if (command->data.host_ids_event.userdata9)
-			event->userdata9 = g_strdup (command->data.host_ids_event.userdata9);
+    event->dst_ia = sim_inet_new_none ();
 
-		event->buffer = g_strdup (command->buffer);	//we need this to resend data to other servers, or to send
-																								//events that matched with policy to frameworkd (future implementation)
-																							 
-    sim_container_push_event (ossim.container, event);
-    sim_container_set_sensor_event_number (ossim.container, SIM_EVENT_HOST_IDS_EVENT, sensor);
-		
-  }
-  else
-    g_message("Error: Data sent from agent; error from host ids event, IP: %s",command->data.host_ids_event.host);
-}
-
-/*
- * This function is used when arrives a msg from a children server requesting for data from DB.
- * Here we will generate a msg that will be sent to the children server, so it can work without DB.
- */
-void
-sim_session_cmd_database_query (SimSession  *session,
-																SimCommand  *command)
-{
-	GdaDataModel *dm;
-  SimCommand  *cmd;
-	GList				*list, *rservers, *list2, *list_targets;
-	gchar *aux = NULL, *s = NULL, *s2 = NULL;
-	gint n;
-  gboolean	 	for_this_server = TRUE;
-	gboolean		found = FALSE; //variable used to check server's name
-	SimRole *role;
-
-	guint	base64_len;
-	gchar base64_stored [BUFFER_SIZE]; //stores the data needed to be sent in base64.
-	memset (base64_stored, 0, BUFFER_SIZE);
-
-	gchar				*blank = g_strdup_printf (" ");	//used to fill places where some string fields doesn't exists to be sure that 
-																							//always there are a string.
-
-  g_return_if_fail (session != NULL);
-  g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
-  g_return_if_fail (SIM_IS_COMMAND (command));
-
-	if (sim_session_is_children_server (session) || sim_session_is_sensor (session))
-	{
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_query");
-    SimServer *server = session->_priv->server;
-
-		rservers = ossim.config->rservers;
-		SimConfigRServer *rserver;
-    while (rservers)
+    // Assign asset values.
+    if (event->asset_src == VOID_ASSET)
     {
-	    rserver = (SimConfigRServer*) list->data;
-			if (rserver->primary)	//If there are some primary server, this can't be the server that has to answer to the message.
-			{
-				for_this_server = FALSE;
-				break;
-			}
-			rservers = rservers->next;
-		}
-				
-		g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_query: %s, %s", sim_server_get_name (server), command->data.database_query.servername);
-		
-		if (for_this_server)	//execute the command in this server. 
-	  {
-			//as this is a query, we have to construct an answer to send the response.
-			//FIXME: the three definitions below appears in all cases, test if any problem appears if its put outside switch.
-			cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_DATABASE_ANSWER);
-			cmd->data.database_answer.database_element_type = command->data.database_query.database_element_type;
-			cmd->data.database_answer.servername = g_strdup (command->data.database_query.servername);
-			switch (command->data.database_query.database_element_type)
-			{
-				//I don't want to use the GScanner here. As this will be a lot of info to send, I think may be better to use
-				//static fields in static places.
-				case SIM_DB_ELEMENT_TYPE_PLUGINS:
-							if (sim_session_is_sensor (session)) return; //the sensor must able to load only the Policy
-							list = sim_container_get_plugins (ossim.container);
-							while (list)
-							{
-								SimPlugin *plugin = (SimPlugin *) list->data;
-							
-								gchar	*plugin_name = sim_plugin_get_name (plugin);
-								gchar	*plugin_description = sim_plugin_get_description (plugin);
+      event->asset_src = DEFAULT_ASSET;
+      if (event->src_id)
+        event->asset_src = sim_context_get_host_asset (event->context, event->src_id);
+      else
+        if (event->src_ia)
+          event->asset_src = sim_context_get_inet_asset (event->context, event->src_ia);
+    }
+    if (event->asset_dst == VOID_ASSET)
+    {
+      event->asset_dst = DEFAULT_ASSET;
+      if (event->dst_id)
+        event->asset_dst = sim_context_get_host_asset (event->context, event->dst_id);
+      else
+        if (event->dst_ia)
+          event->asset_dst = sim_context_get_inet_asset (event->context, event->dst_ia);
+    }
 
-								//May be that in the description appears some strange characters so we convert it to BASE64 before send it over the network.
-								sim_base64_encode (	plugin_description,
-																		strlen(plugin_description),
-																		base64_stored,
-																		BUFFER_SIZE,
-																		&base64_len);
-	
+    event->data = g_strdup (command->data.host_service_event.log);
 
-								//we will use this separation character: |
-								//id, type, name, description
-								cmd->data.database_answer.answer = g_strdup_printf("%d|%d|%s|%s",	sim_plugin_get_id (plugin), 
-																																									plugin->type, 
-																																									plugin_name ? plugin_name	: blank,
-																																									plugin_description ? base64_stored : blank);
-								sim_session_write (session, cmd);				
-								g_free (cmd->data.database_answer.answer);
-								memset (base64_stored, 0, BUFFER_SIZE);
-								list = list->next;
-							}
-							g_list_free (list);
-							break;
-				case SIM_DB_ELEMENT_TYPE_PLUGIN_SIDS:
-							if (sim_session_is_sensor (session)) return; 
-							list = sim_container_get_plugin_sids (ossim.container);
-							while (list)
-							{
-								SimPluginSid *plugin_sid = (SimPluginSid *) list->data;
-								gchar	*plugin_sid_name = sim_plugin_sid_get_name (plugin_sid);
+    //this is used to pass the event data to sim-organizer, so it can insert it into database
+    event->userdata1 = g_strdup (command->data.host_service_event.application); //may be needed in correlation
+    event->userdata2 = g_strdup (command->data.host_service_event.service);
+    event->userdata3 = g_strdup_printf ("%d", command->data.host_service_event.port);
+    event->userdata4 = g_strdup_printf ("%d", command->data.host_service_event.protocol);
 
-								sim_base64_encode (	plugin_sid_name,
-																		sim_strnlen(plugin_sid_name, BUFFER_SIZE),
-																		base64_stored,
-																		BUFFER_SIZE,
-																		&base64_len);
-	
-								//plugin_id, sid, reliability, priority, name.
-								cmd->data.database_answer.answer = g_strdup_printf("%d|%d|%d|%d|%s",	sim_plugin_sid_get_plugin_id (plugin_sid), 
-																																											sim_plugin_sid_get_sid (plugin_sid), 
-																																											sim_plugin_sid_get_reliability (plugin_sid), 
-																																											sim_plugin_sid_get_priority (plugin_sid), 
-																																											plugin_sid_name? base64_stored : blank); 
-								if (!sim_session_write (session, cmd))
-									g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "Error: sim_session_cmd_database_query NO Session");
-								g_free (cmd->data.database_answer.answer);
-								memset (base64_stored, 0, BUFFER_SIZE);
-								list = list->next;
-							}
-							g_list_free (list);
-							break;
-				case SIM_DB_ELEMENT_TYPE_SENSORS:
-							if (sim_session_is_sensor (session)) return; 
-              list = sim_container_get_sensors (ossim.container);
-              while (list)
-              {
-                SimSensor *sensor = (SimSensor *) list->data;
-								
-								GInetAddr	*ia = sim_sensor_get_ia (sensor);
-								gchar *ip = gnet_inetaddr_get_canonical_name (ia);
+    event->buffer = g_strdup (command->buffer); //we need this to resend data to other servers, or to send
+                                                  //events that matched with policy to frameworkd (future implementation)
 
-							  //name, ip, port
-                cmd->data.database_answer.answer = g_strdup_printf("%s|%s|%d",  sim_sensor_get_name (sensor),
-																																							  ip,
-																																								sim_sensor_get_port (sensor));
-								g_free (ip);
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-                list = list->next;
-              }
-              g_list_free (list);
-							break;
-				case SIM_DB_ELEMENT_TYPE_HOSTS:
-							if (sim_session_is_sensor (session)) return; 
-              list = sim_container_get_hosts (ossim.container);
-              while (list)
-              {
-                SimHost *host = (SimHost *) list->data;
-								GInetAddr	*ia = sim_host_get_ia (host);
-								gchar *ip = gnet_inetaddr_get_canonical_name (ia);
-								
-                //name, ip, asset
-                cmd->data.database_answer.answer = g_strdup_printf("%s|%s|%d",  sim_host_get_name (host),
-																																							  ip,
-																																								sim_host_get_asset (host));
-								g_free (ip);
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-                list = list->next;
-              }
-              g_list_free (list);
-							break;
-				case SIM_DB_ELEMENT_TYPE_NETS:
-							if (sim_session_is_sensor (session)) return; 
-              list = sim_container_get_nets (ossim.container);
-              while (list)
-              {
-                SimNet *net = (SimNet *) list->data;
-								
-                //name, ips (string with multiple networks), asset
-                cmd->data.database_answer.answer = g_strdup_printf("%s|%s|%d",  sim_net_get_name (net),
-																																							  sim_net_get_ips (net),
-																																								sim_net_get_asset (net));
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-                list = list->next;
-              }
-              g_list_free (list);
-							break;
-				case SIM_DB_ELEMENT_TYPE_POLICIES:
-              list = sim_container_get_policies (ossim.container);
-              while (list)
-              {
-                SimPolicy *policy = (SimPolicy *) list->data;
-/*
-								//first, we check if we have to send this policy to the children server.
-								//FIXME: at this time we don't know the entire list of servers down in the architecture, 
-								//just the servers directly connected with this one. so this is not possible to do, we have to send all
-								//the server data to all the servers
-							  list_servers = sim_policy_get_servers (policy);
-							  while (list_servers)
-							  {
-							    gchar *server_name = (gchar *) list_servers->data;
-							    if (!g_ascii_strcasecmp (server_name, cmd->data.database_answer.servername) ||
-							        !g_ascii_strcasecmp (server_name, SIM_IN_ADDR_ANY_CONST))
-							    {
-								    found = TRUE;
-							      break;
-							    }
-							    list_servers = list_servers->next;
-								}
-								if (!found)
-								{
-									list = list->next;
-									continue; //try next policy... 
-								}
-*/
-								//As the sensor is directly connected to the server, we can check if it has some policy
-								if (sim_session_is_sensor (session))
-								{
-									list_targets = sim_policy_get_targets (policy);
-									while (list_targets)
-									{
-										gchar *target_name = (gchar *) list_targets->data;
-										if (!g_ascii_strcasecmp (target_name, cmd->data.database_answer.servername) || //to simplify things, we store sensor name in servername variable
-												!g_ascii_strcasecmp (target_name, SIM_IN_ADDR_ANY_CONST))
-										{
-											found = TRUE;
-											break;
-										}
-										list_targets = list_targets->next;
-									}
-									if (!found)
-									{
-										list = list->next;
-										continue; //try next policy... 
-									}
-								}
+    event->tzone = command->data.host_service_event.tzone;
 
-								//There are multiple possible policy answers. It depends on the kind of policy data sended:
-								//First, we say the kind of element inside policy that we're going to send. Then, the data itself.
-								// -- General Info --
-								//id, priority, begin_hour, end_hour, begin_day, end_day
-								cmd->data.database_answer.answer = g_strdup_printf("%d|%d|%d|%d|%d|%d|%d", SIM_POLICY_ELEMENT_TYPE_GENERAL,
-																																												sim_policy_get_id (policy),
-																																												sim_policy_get_priority (policy),
-																																												sim_policy_get_begin_hour (policy),
-																																												sim_policy_get_end_hour (policy),
-																																												sim_policy_get_begin_day (policy),
-																																												sim_policy_get_end_day (policy));
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-								cmd->data.database_answer.answer = NULL;
+    if (session->_priv->received==G_MAXDOUBLE) 
+		  session->_priv->received=0;
+  	session->_priv->received++;
 
-								// --	Policy role --
-								// correlate, cross_correlate, store, qualify, resend_event, resend_alarm
-								SimRole	*role = sim_policy_get_role (policy);
-								if (role)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%d|%d|%d|%d|%d|%d", SIM_POLICY_ELEMENT_TYPE_ROLE,
-																																													sim_policy_get_id (policy),
-																																													role->correlate,
-																																													role->cross_correlate,
-																																													role->store,
-																																													role->qualify,
-																																													role->resend_event,
-																																													role->resend_alarm);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-								}
-								cmd->data.database_answer.answer = NULL;
-
-								// -- Src: GList SimInet objects --
-								// string sended, ie.: 192.168.1.0/24,192.168.1.1,192.168.6/10
-								GList *src= sim_policy_get_src (policy);
-								s = NULL;
-								while (src)
-								{
-									SimInet *HostOrNet = (SimInet *) src->data;
-									aux = sim_inet_cidr_ntop (HostOrNet);
-									s2 = s;
-									if (src->next == NULL)
-										s = g_strdup_printf ("%s%s",s ? s : "", aux);	
-									else
-										s = g_strdup_printf ("%s%s%s",s ? s : "", aux, SIM_DELIMITER_LIST); //if there are more src's we have to separate it with a ","
-
-									g_free (s2);	
-									g_free (aux);	
-									src = src->next;
-								}
-								if (s)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s", SIM_POLICY_ELEMENT_TYPE_SRC, 
-																																									sim_policy_get_id (policy),
-																																									s);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-									g_free (s);
-								}
-								cmd->data.database_answer.answer = NULL;
-
-								// -- Dst: GList SimInet objects --
-								// string sended, ie.: 192.168.1.0/24,192.168.1.1,192.168.6/10
-								GList *dst = sim_policy_get_dst (policy);
-								s = NULL;
-								while (dst)
-								{
-									SimInet *HostOrNet = (SimInet *) dst->data;
-									aux = sim_inet_cidr_ntop (HostOrNet);
-									s2 = s;
-
-									if (dst->next == NULL)
-										s = g_strdup_printf ("%s%s",s ? s : "", aux);
-									else
-										s = g_strdup_printf ("%s%s%s",s ? s : "", aux, SIM_DELIMITER_LIST);
-
-									g_free (s2);	
-									g_free (aux);	
-									dst = dst->next;
-								}
-								if (s)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s", SIM_POLICY_ELEMENT_TYPE_DST,
-																																									sim_policy_get_id (policy),
-																																									s);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-									g_free (s);
-								}
-								cmd->data.database_answer.answer = NULL;
-
-								// -- Port: GList SimPortProtocol objects --
-								// port-protocol ie string:  110-6,53-17  ---> (equal to 110-TCP, 53-UDP)
-								list2 = sim_policy_get_ports (policy);
-								s = NULL;
-								while (list2)
-								{
-									SimPortProtocol *pp = (SimPortProtocol *) list2->data;
-									aux = g_strdup_printf ("%d%s%d", pp->port, SIM_DELIMITER_RANGE, pp->protocol);
-									s2 = s;
-									
-									if (list2->next == NULL)
-										s = g_strdup_printf ("%s%s",s ? s : "", aux);
-									else	
-										s = g_strdup_printf ("%s%s%s",s ? s : "", aux, SIM_DELIMITER_LIST);//if next not null, we'll need a ","
-
-									g_free (s2);	
-									g_free (aux);	
-									list2 = list2->next;
-								}
-								if (s)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s", SIM_POLICY_ELEMENT_TYPE_PORTS,
-																																									sim_policy_get_id (policy),
-																																									s);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-									g_free (s);
-								}
-								cmd->data.database_answer.answer = NULL;
-
-								// -- Sensors: GList gchar* --
-								// sensor; string sended ie: 192.138.1.1,3.3.3.3,192.168.0.2
-								list2 = sim_policy_get_sensors (policy);
-								s = NULL;
-								while (list2)
-								{
-									gchar *sensor = (gchar *) list2->data; //each sensor
-									s2 = s;
-									
-									if (list2->next == NULL)
-										s = g_strdup_printf ("%s%s",s ? s : "", sensor);
-									else	
-										s = g_strdup_printf ("%s%s%s",s ? s : "", sensor, SIM_DELIMITER_LIST);//if next not null, we'll need a ","
-
-									g_free (s2);	
-									list2 = list2->next;
-								}
-								if (s)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s", SIM_POLICY_ELEMENT_TYPE_SENSORS,
-																																									sim_policy_get_id (policy),
-																																									s);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-									g_free (s);
-								}
-								cmd->data.database_answer.answer = NULL;
-
-								// -- Plugin groups: GList Plugin_PluginSid objects --		
-								// multiple strings like:						
-								// plugin-plugin_sid list ie string:  1001-100,101,102,103  ---> (1001 plugin_id, and 100, 101, 102, 103 plugin_sid)
-								list2 = sim_policy_get_plugin_groups (policy);
-								while (list2)
-								{
-									s = NULL;
-									Plugin_PluginSid *plugin_group = (Plugin_PluginSid *) list2->data;
-
-									aux = g_strdup_printf ("%d%s", plugin_group->plugin_id, SIM_DELIMITER_RANGE);
-									GList	*sids = plugin_group->plugin_sid;
-									while (sids)
-									{
-						        gint *aux_plugin_sid = (gint *) sids->data;
-
-										s2 = s;
-										if (sids->next == NULL)
-											s = g_strdup_printf ("%s%d",s ? s : "", *aux_plugin_sid);
-										else	
-											s = g_strdup_printf ("%s%d%s",s ? s : "", *aux_plugin_sid, SIM_DELIMITER_LIST);//if next not null, we'll need a ","
-										
-										sids = sids->next;
-										g_free (s2);	
-									}
-									//there will be multiple msgs, one for each plugin_id.
-									if (s)
-									{
-			              cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s%s", SIM_POLICY_ELEMENT_TYPE_PLUGIN_GROUPS,
-							                                                                        sim_policy_get_id (policy),
-																																											aux, //plugin_id- (ie. "1001-")
-						                                                                          s);  //plugin_sid's 
-										sim_session_write (session, cmd);
-										g_free (cmd->data.database_answer.answer);
-										g_free (aux);	
-										g_free (s);
-									}
-									cmd->data.database_answer.answer = NULL;
-									list2 = list2->next;
-								}
-
-								// -- Targets: GList gchar* --
-								// target; string sended ie: serverA,happy_server,sensor_dmz
-								list2 = sim_policy_get_targets (policy);
-								s = NULL;
-								while (list2)
-								{
-									gchar *target_aux = (gchar *) list2->data; //each server
-									s2 = s;
-									
-									if (list2->next == NULL)
-										s = g_strdup_printf ("%s%s",s ? s : "", target_aux);
-									else	
-										s = g_strdup_printf ("%s%s%s",s ? s : "", target_aux, SIM_DELIMITER_LIST);//if next not null, we'll need a ","
-
-									g_free (s2);	
-									list2 = list2->next;
-								}
-								if (s)
-								{
-									cmd->data.database_answer.answer = g_strdup_printf ("%d|%d|%s", SIM_POLICY_ELEMENT_TYPE_TARGETS,
-																																									sim_policy_get_id (policy),
-																																									s);
-	                sim_session_write (session, cmd);
-									g_free (cmd->data.database_answer.answer);
-									g_free (s); 
-								}
-								cmd->data.database_answer.answer = NULL;
-
-
-
-                list = list->next;
-              }
-              g_list_free (list);
-
-							break;
-				case SIM_DB_ELEMENT_TYPE_HOST_LEVELS:
-							if (sim_session_is_sensor (session)) return; 
-              list = sim_container_get_host_levels (ossim.container);
-              while (list)
-              {
-                SimHostLevel *host_level = (SimHostLevel *) list->data;
-								
-								GInetAddr	*ia = sim_host_level_get_ia (host_level);
-								gchar *ip = gnet_inetaddr_get_canonical_name (ia);
-								
-                //ip, c, a
-                cmd->data.database_answer.answer = g_strdup_printf("%s|%f|%f",  ip,
-																																							  sim_host_level_get_c (host_level),
-																																							  sim_host_level_get_a (host_level));
-								g_free (ip);
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-                list = list->next;
-              }
-              g_list_free (list);
-
-							break;
-				case SIM_DB_ELEMENT_TYPE_NET_LEVELS:
-							if (sim_session_is_sensor (session)) return; 
-              list = sim_container_get_net_levels (ossim.container);
-              while (list)
-              {
-                SimNetLevel *net_level = (SimNetLevel *) list->data;
-								
-                //name, c, a
-                cmd->data.database_answer.answer = g_strdup_printf("%s|%f|%f",  sim_net_level_get_name (net_level),
-																																							  sim_net_level_get_c (net_level),
-																																							  sim_net_level_get_a (net_level));
-                sim_session_write (session, cmd);
-								g_free (cmd->data.database_answer.answer);
-                list = list->next;
-              }
-              g_list_free (list);
-							break;
-
-				case SIM_DB_ELEMENT_TYPE_SERVER_ROLE:
-							if (sim_session_is_sensor (session)) return; 
-						  role = sim_server_get_role (ossim.server);
-							// correlate, cross_correlate, store, qualify, resend_event, resend_alarm
-              cmd->data.database_answer.answer = g_strdup_printf("%d|%d|%d|%d|%d|%d", role->correlate,
-																																									role->cross_correlate,
-																																									role->store,
-																																									role->qualify,
-																																									role->resend_event,
-																																									role->resend_alarm);
-              sim_session_write (session, cmd);
-							g_free (cmd->data.database_answer.answer);
-							break;
-
-				case SIM_DB_ELEMENT_TYPE_LOAD_COMPLETE:	//Not a DB type. We only have to send a simple msg to children server so it knows
-																								// that we have ended the data loading, so it can start to work.
-              sim_session_write (session, cmd);
-							break;
-
-			}
-			g_object_unref (cmd);
-		}
-		else	//resend the command buffer _only_ to the primary master server. We have to check that exists a session between us and it.
-		{
-			list2 = sim_server_get_sessions (server);
-		  while (list2)	//list of the sessions connected to the server
-			{
-				SimSession *sess = (SimSession *) list2->data;
-				if (sim_session_is_master_server (sess) && 
-						!g_ascii_strcasecmp (rserver->name, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-					break;
-				}
-				list2 = list2->next;
-			}
-	  	g_list_free (list2);
-		}
-		
-		//Here we don't need to send an OK message to the children server, as we sent the response to the query done.
-
-	}
+    sim_session_prepare_and_insert (session, event);
+  }
   else
   {
-    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-    cmd->id = command->id;
-
-    sim_session_write (session, cmd);
-    g_object_unref (cmd);
+    g_message("Error: Data sent from agent; host MAC or OS event wrong IP %s",command->data.host_service_event.host);
   }
-	
 }
-
-/*
- *
- */
-void
-sim_session_cmd_database_answer (SimSession  *session,
-																SimCommand  *command)
-{
-	GdaDataModel	*dm;
-  SimCommand		*cmd;
-	GList					*list, *list2;
-	gint					n,i;
-  gchar					**values, **values2, **values3;
-	gboolean			for_this_server;
-	GInetAddr			*ia;
-
-	//variables to store data
-  SimPlugin			*plugin; 
-  SimPluginSid	*plugin_sid; 
-	SimSensor			*sensor;
-	SimHost				*host;
-	SimNet				*net;
-	SimPolicy			*policy;
-	SimHostLevel	*host_level;
-	SimNetLevel		*net_level;
-	SimRole				*role;
-
-	guint	base64_len;
-	gchar base64_stored [BUFFER_SIZE]; //stores the data from the base64 encoding
-	memset (base64_stored, 0, BUFFER_SIZE);
-
-  g_return_if_fail (session != NULL);
-  g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
-  g_return_if_fail (SIM_IS_COMMAND (command));
-
-	if (sim_session_is_master_server (session))
-	{
-//    SimServer *server = session->_priv->server;
-		
-		//Check if the message is for this server....
-    if ((!command->data.database_answer.servername) || //FIXME: If the server name isn't specified, for backwards compatibility
-																													//we will assume that this is the dst server. This should be removed in 
-																													//a near future. All the commands from frameworkd should issue a server name.
-        (!g_ascii_strcasecmp (sim_server_get_name (ossim.server), command->data.database_answer.servername)))
-    	for_this_server = TRUE;
-		else
-    	for_this_server = FALSE;
-					
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer: %s, %s", sim_server_get_name (ossim.server), command->data.database_answer.servername);
-
-		list = sim_server_get_sessions (ossim.server);
-	  while (list)	//list of the sessions connected to the server
-		{
-			SimSession *sess = (SimSession *) list->data;
-			
-			if (for_this_server)	//execute the command in this server
-		  {
-				
-				switch (command->data.database_answer.database_element_type)
-				{
-					g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer: string: %s",sim_command_get_string (command));
-					//I don't want to use the GScanner here. As this will be a lot of info to send, I think may be better to use
-	        //static fields in static places.
-		      case SIM_DB_ELEMENT_TYPE_PLUGINS:
-                plugin = sim_plugin_new();
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-								//NOTE: From here and in this function, this comment will be the sort of elements sended.
-								//ie. the following line means that: id == values[0], type == values[1] name==values[2], description==values[3]
-								//id, type, name, description
-								//
-								sim_base64_decode	(values[2], sim_strnlen(values[2], BUFFER_SIZE), base64_stored, &base64_len); //the data comes here in base64, so we decode it
-
-								sim_plugin_set_id						(plugin, atoi (values[0]));
-								sim_plugin_set_sim_type			(plugin, atoi (values[1]));
-								sim_plugin_set_name					(plugin, g_strdup (base64_stored));
-								sim_plugin_set_description	(plugin, g_strdup (values[3]));
-
-								G_LOCK (s_mutex_plugins);
-				        sim_container_append_plugin (ossim.container, plugin);
-							  G_UNLOCK (s_mutex_plugins);
-
-				        g_strfreev (values);              
-								memset (base64_stored, 0, BUFFER_SIZE);
-              break;
-
-	        case SIM_DB_ELEMENT_TYPE_PLUGIN_SIDS:
-					      plugin_sid = sim_plugin_sid_new();
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-								
-								//plugin_id, sid, reliability, priority, name.
-
-								sim_base64_decode	(values[4], sim_strnlen(values[4], BUFFER_SIZE), base64_stored, &base64_len);
-
-								sim_plugin_sid_set_plugin_id		(plugin_sid, atoi (values[0]));
-								sim_plugin_sid_set_sid					(plugin_sid, atoi (values[1]));
-								sim_plugin_sid_set_reliability	(plugin_sid, atoi (values[2]));
-								sim_plugin_sid_set_priority			(plugin_sid, atoi (values[3]));
-								sim_plugin_sid_set_name					(plugin_sid, g_strdup (base64_stored));
-
-								G_LOCK (s_mutex_plugin_sids);
-				        sim_container_append_plugin_sid (ossim.container, plugin_sid);
-							  G_UNLOCK (s_mutex_plugin_sids);
-
-				        g_strfreev (values); 
-								memset (base64_stored, 0, BUFFER_SIZE);
-		            break;
-
-			    case SIM_DB_ELEMENT_TYPE_SENSORS:
-					      sensor = sim_sensor_new();
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-								ia = gnet_inetaddr_new_nonblock (values[1], atoi (values[2]));
-								
-                //name, ip, port
-								sim_sensor_set_name		(sensor, values[0]);	//no needed g_strdup()
-								sim_sensor_set_ia			(sensor, ia);
-								sim_sensor_set_port		(sensor, atoi (values[2]));
-
-								sim_sensor_debug_print(sensor);
-
-								G_LOCK (s_mutex_sensors);
-				        sim_container_append_sensor (ossim.container, sensor);
-							  G_UNLOCK (s_mutex_sensors);
-
-				        g_strfreev (values);
- 
-				        break;
-	        case SIM_DB_ELEMENT_TYPE_HOSTS:
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-								ia = gnet_inetaddr_new_nonblock (values[1], 0);
-								
-                //name, ip, asset -> name= vlaues[0], ip=values[1], asset=values[2]
-					      host = sim_host_new (ia, values[0], atoi (values[2]));
-
-								G_LOCK (s_mutex_hosts);
-				        sim_container_append_host (ossim.container, host);
-							  G_UNLOCK (s_mutex_hosts);
-
-				        g_strfreev (values);
- 
-		            break;
-			    case SIM_DB_ELEMENT_TYPE_NETS:
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-                //name, ips (string with multiple ips) , asset.
-					      net = sim_net_new (values[0], values[1], atoi (values[2]));
-
-								G_LOCK (s_mutex_nets);
-				        sim_container_append_net (ossim.container, net);
-							  G_UNLOCK (s_mutex_nets);
-
-				        g_strfreev (values);
-
-				        break;
-					case SIM_DB_ELEMENT_TYPE_POLICIES:
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-								SimPolicy *pol = NULL;
-								if ( (!sim_string_is_number (values[0], FALSE)) || (!sim_string_is_number (values[1], FALSE)))
-									break;	//check SIM_POLICY_ELEMENT_TYPE_* and policy id as a partial sanity check
-
-								//we obtain the policies to know in what policy must we insert data.
-								//Obviously this is not needed for the first msg of all, the SIM_POLICY_ELEMENT_TYPE_GENERAL,
-								//but we do this anyway to remove duplicated code inside switch (values[0])
-								list2 = sim_container_get_policies (ossim.container);
-								g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer list2: %x", list2);
-								while (list2)	//find the policy that matches with id.
-								{
-									pol = (SimPolicy *) list2->data;
-									g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer pol 1: %x", pol);
-									if (sim_policy_get_id (pol) == atoi (values[1]))
-										break;
-									else
-										pol = NULL;				//maintain this NULL if there are some error
-									list2 = list2->next;
-								}
-								
-								switch (atoi (values[0]))		//In all the policy msgs, the first field is the kind of message.
-								{
-									case SIM_POLICY_ELEMENT_TYPE_GENERAL:
-												// -- General Info --
-												//id, priority, begin_hour, end_hour, begin_day, end_day
-												policy = sim_policy_new (); //only is a new policy if its the first kind of message (general). This is only my convention.
-												sim_policy_set_id (policy, atoi (values[1]));	
-												sim_policy_set_priority (policy, atoi (values[2]));	
-												sim_policy_set_begin_hour (policy, atoi (values[3]));	
-												sim_policy_set_end_hour (policy, atoi (values[4]));	
-												sim_policy_set_begin_day (policy, atoi (values[5]));	
-												sim_policy_set_end_day (policy, atoi (values[6]));	
-
-												G_LOCK (s_mutex_policies);
-												sim_container_append_policy (ossim.container, policy);
-												G_UNLOCK (s_mutex_policies);
-												g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer pol 2: %x", policy);
-												break;
-									case SIM_POLICY_ELEMENT_TYPE_ROLE:
-												// -- Policy role --
-												// correlate, cross_correlate, store, qualify, resend_event, resend_alarm
-												role = g_new0 (SimRole, 1);
-
-												role->correlate				=	atoi (values[2]);
-												role->cross_correlate = atoi (values[3]);
-												role->store						= atoi (values[4]);
-												role->qualify					= atoi (values[5]);
-												role->resend_event		= atoi (values[6]);
-												role->resend_alarm		= atoi (values[7]);
-												
-												sim_policy_set_role (pol, role);
-												g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_cmd_database_answer pol 3: %x", pol);
-												break;
-
-									case SIM_POLICY_ELEMENT_TYPE_SRC:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_LIST, 0);	//192.168.1.0/24,192.168.1.1,192.168.6/10
-												for (i=0; values2[i] != NULL; i++)
-												{					
-													SimInet *new_inet	= sim_inet_new (values2[i]);
-													sim_policy_append_src (pol, new_inet);
-												}
-												g_strfreev (values2);
-												break;
-
-									case SIM_POLICY_ELEMENT_TYPE_DST:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_LIST, 0);
-												for (i=0; values2[i] != NULL; i++)
-												{					
-													SimInet *new_inet	= sim_inet_new (values2[i]);
-													sim_policy_append_dst (pol, new_inet);
-												}
-												g_strfreev (values2);
-												break;
-
-									case SIM_POLICY_ELEMENT_TYPE_PORTS:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_LIST, 0); //values[2] == 110-6,53-17   i.e. 
-												for (i=0; values2[i] != NULL; i++)
-												{	
-													values3 = g_strsplit (values2[i], SIM_DELIMITER_RANGE, 0);  //values3[i][0] == 110 ; values3[i][1] == 6				
-													SimPortProtocol	*pp = sim_port_protocol_new (atoi (values3[0]), atoi (values3[1]));
-													sim_policy_append_port (pol, pp);
-													g_strfreev (values3);
-												}
-												g_strfreev (values2);
-												break;
-
-									case SIM_POLICY_ELEMENT_TYPE_SENSORS:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_LIST, 0); //string values[2] ie: 192.138.1.1,3.3.3.3,192.168.0.2
-												for (i=0; values2[i] != NULL; i++)
-													sim_policy_append_sensor (pol, g_strdup (values2[i]));
-
-												g_strfreev (values2);
-												break;
-
-									case SIM_POLICY_ELEMENT_TYPE_PLUGIN_GROUPS:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_RANGE, 0); //string values[2] ie: 1001-100,101,102,103  
-
-												Plugin_PluginSid *plugin_group =  g_new0 (Plugin_PluginSid, 1);
-												plugin_group->plugin_id = atoi (values2[0]);								//plugin_id (1001)
-												values3 = g_strsplit (values2[1], SIM_DELIMITER_LIST, 0);		//plugin_sids (100,101,102,103...)
-												for (i=0; values3[i] != NULL; i++)
-												{
-													gint *sid = g_new0 (gint, 1);
-													*sid = atoi (values3[i]);
-													plugin_group->plugin_sid = g_list_append (plugin_group->plugin_sid, sid);			
-												}
-												sim_policy_append_plugin_group (pol, plugin_group);
-
-												g_strfreev (values3);
-												g_strfreev (values2);
-												break;
-									case SIM_POLICY_ELEMENT_TYPE_TARGETS:
-												values2 = g_strsplit (values[2], SIM_DELIMITER_LIST, 0); //string values[2] ie: serverA,sensor_dmz,funny_server
-												for (i=0; values2[i] != NULL; i++)
-													sim_policy_append_target (pol, g_strdup (values2[i]));
-
-												g_strfreev (values2);
-												break;
-
-								}							
-								
-						    break;
-	        case SIM_DB_ELEMENT_TYPE_HOST_LEVELS:
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-								ia = gnet_inetaddr_new_nonblock (values[0], 0);
-
-                //ip, c, a
-					      host_level = sim_host_level_new (ia, g_ascii_strtod (values[1], NULL), g_ascii_strtod (values[2], NULL));
-
-								G_LOCK (s_mutex_host_levels);
-				        sim_container_append_host_level (ossim.container, host_level);
-							  G_UNLOCK (s_mutex_host_levels);
-
-				        g_strfreev (values);
-								gnet_inetaddr_unref (ia);
-		            break;
-
-			    case SIM_DB_ELEMENT_TYPE_NET_LEVELS:
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-							
-                //name, c, a
-					      net_level = sim_net_level_new (values[0], g_ascii_strtod (values[1], NULL), g_ascii_strtod (values[2], NULL));
-
-								G_LOCK (s_mutex_net_levels);
-				        sim_container_append_net_level (ossim.container, net_level);
-							  G_UNLOCK (s_mutex_net_levels);
-
-				        g_strfreev (values);
-				        break;
-					case SIM_DB_ELEMENT_TYPE_SERVER_ROLE://not in container, stored in ossim.server object.
-							  values = g_strsplit (command->data.database_answer.answer, SIM_DELIMITER_PIPE, 0);
-								SimConfig *config = sim_server_get_config (ossim.server);
-
-								// correlate, cross_correlate, store, qualify, resend_event, resend_alarm
-								config->server.role->store 						= atoi (values[0]);
-								config->server.role->cross_correlate	= atoi (values[1]);
-								config->server.role->correlate				= atoi (values[2]);
-							  config->server.role->qualify 					= atoi (values[3]);
-							  config->server.role->resend_event 		= atoi (values[4]);
-							  config->server.role->resend_alarm 		= atoi (values[5]);
-								break;
-			    case SIM_DB_ELEMENT_TYPE_LOAD_COMPLETE:
-								sim_container_set_rload_complete (ossim.container);
-								break;
-	      }	
-	
-
-			}
-			else	//resend the command buffer to ALL the children servers. No matter if the name doesn't matches, so we can have
-			{			//more than three levels (in fact, n levels).
-				if (sim_session_is_children_server (sess))
-						//&& !g_ascii_strcasecmp (command->data.database_answer.servername, sim_session_get_hostname (sess)) )
-				{
-					sim_session_write_from_buffer (sess, command->buffer);
-				}
-			}
-			list = list->next;
-		}
-		
-	  g_list_free (list);
-			
-/*	  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_OK);
-		cmd->id = command->id;
-  
-	  sim_session_write (session, cmd);
-		g_object_unref (cmd);*/
-	}
-  else
-  {
-    cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
-    cmd->id = command->id;
-
-    sim_session_write (session, cmd);
-    g_object_unref (cmd);
-  }
-	
-}
-
-
 
 /*
  *
@@ -3542,9 +2909,7 @@ static void
 sim_session_cmd_ok (SimSession  *session,
 								    SimCommand  *command)
 {
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
 
 }
@@ -3558,14 +2923,365 @@ static void
 sim_session_cmd_error (SimSession  *session,
 		       SimCommand  *command)
 {
-  g_return_if_fail (session != NULL);
   g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (command != NULL);
   g_return_if_fail (SIM_IS_COMMAND (command));
+}
+
+static void
+sim_session_cmd_pong (SimSession  *session,
+										  SimCommand  *command)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+}
+
+/*
+ *
+ * @param session: SimSession* object representing the session
+ *      where the command is received.
+ * @param commnad: SimCommand* object to build.
+ * Gets framework connetion data and fills the command
+ * with this data.
+ */
+static void sim_session_cmd_session_get_framework(SimSession *session, SimCommand *command)
+{
+  SimCommand *cmd;
+
+  g_return_if_fail(session != NULL);
+  g_return_if_fail(SIM_IS_SESSION (session));
+  g_return_if_fail(command != NULL);
+  g_return_if_fail(SIM_IS_COMMAND (command));
+
+  cmd = sim_command_new_from_type(SIM_COMMAND_TYPE_SENSOR_GET_FRAMEWORK);
+  cmd->data.framework_data.framework_host = g_strdup(
+      session->_priv->config->framework.host);
+  cmd->data.framework_data.framework_name = g_strdup(
+      session->_priv->config->framework.name);
+  cmd->data.framework_data.framework_port
+      = session->_priv->config->framework.port;
+  cmd->data.framework_data.server_name = g_strdup(
+      session->_priv->config->server.name);
+  cmd->data.framework_data.server_host = g_strdup(session->_priv->ip_str);
+  cmd->data.framework_data.server_port = session->_priv->config->server.port;
+//  gchar* str = sim_command_get_string(cmd);
+//  ossim_debug ("sim_session_cmd_session_get_framework Command: %s",str);
+//  g_free(str);
+  sim_session_write(session, cmd);
+  g_object_unref(cmd);
+}
+/*
+ *
+ * @param session: SimSession* object representing the session
+ *      where the command is received.
+ * @param commnad: SimCommand* object to build.
+ * ping response.
+ */
+static void sim_session_cmd_agent_ping(SimSession *session, SimCommand *command)
+{
+  SimCommand *cmd;
+  g_return_if_fail(session != NULL);
+  g_return_if_fail(SIM_IS_SESSION (session));
+  g_return_if_fail(command != NULL);
+  g_return_if_fail(SIM_IS_COMMAND (command));
+  cmd = sim_command_new_from_type(SIM_COMMAND_TYPE_AGENT_PING);
+  sim_session_write(session, cmd);
+  g_object_unref(cmd);
+}
+
+/*
+ *
+ * @param session: SimSession* object representing the session
+ *      where the command is received.
+ * @param commnad: SimCommand* object to build.
+ * Stores IDM event in the data store.
+ */
+static void sim_session_cmd_idm_event(SimSession *session, SimCommand *command)
+{
+  g_return_if_fail(SIM_IS_SESSION (session));
+  g_return_if_fail(SIM_IS_COMMAND (command));
+
+  if (command->data.idm_event.mac) // Normalize MAC address (usefull for comparaisons)
+  {
+    gchar *aux = sim_normalize_host_mac (command->data.idm_event.mac);
+    if (aux == NULL)
+		{
+			g_message ("Discarding idm event with bad mac address: %s", command->data.idm_event.mac);
+      return;
+		}
+    g_free(command->data.idm_event.mac);
+    command->data.idm_event.mac = aux;
+  }
+
+  sim_idm_put (sim_session_get_sensor (session), command);
+}
+
+/*
+ *
+ * @param session: SimSession* object representing the session
+ *      where the command is received.
+ * @param commnad: SimCommand* object to build.
+ * Gets snort database connection data and fills the command
+ * with this data.
+ */
+static void sim_session_cmd_session_get_frmk_getdb(SimSession *session, SimCommand *command)
+{
+  SimCommand *cmd;
+  g_return_if_fail(session != NULL);
+  g_return_if_fail(SIM_IS_SESSION (session));
+  g_return_if_fail(command != NULL);
+  g_return_if_fail(SIM_IS_COMMAND (command));
+
+  /*
+   * ossim.dbsnort->_priv->dsn -> readed from xml config file:
+   * example:
+   * dsn="PORT=3306;USER=root;PASSWORD=passwd;DATABASE=snort;HOST=localhost"
+   */
+
+  gchar *dnsstr = NULL;
+  cmd = sim_command_new_from_type(SIM_COMMAND_TYPE_FRMK_GETDB);
+  dnsstr = g_strdup( sim_database_get_dsn(ossim.dbsnort));
+
+  if(sim_util_parse_snort_db_dns(cmd, dnsstr))
+    {
+      g_free(dnsstr);
+      //Now, we send the response to the framework
+      sim_session_write(session, cmd);
+    }
+  else
+    {
+      g_message("Error: sim_session_cmd_session_get_frmk_getdb - parse dns error! ");
+    }
+
+  g_free (dnsstr);
+  g_object_unref(cmd);
 
 }
 
+/*
+ * Reload and insert the post correlation sids into DB
+ */
+static void
+sim_session_cmd_reload_post_correlation_sids (SimSession *session, SimCommand *command)
+{
+  g_return_if_fail(SIM_IS_SESSION (session));
+  g_return_if_fail(SIM_IS_COMMAND (command));
 
+  gchar **values;
+  gchar **values2;
+  gint i;
+  SimPluginSid *plugin_sid = NULL;
+  SimContext *context;
+
+  context = sim_container_get_context (ossim.container, NULL);
+
+  if (command->data.reload_post_correlation_sids.sids)
+  {
+    /* separate each of the individual plugin_sid chunk (id:name:priority:reliability) delimited with ";" */
+    values = g_strsplit (command->data.reload_post_correlation_sids.sids, SIM_DELIMITER_ELEMENT_LIST, 0);
+    for (i = 0; values[i] != NULL; i++)
+    {
+      values2 = g_strsplit (values[i],SIM_DELIMITER_LEVEL,0);
+
+      if ((!sim_string_is_number (values2[0], 0)) ||
+          (!sim_string_is_number (values2[2], 0)) ||
+          (!sim_string_is_number (values2[3], 0)))
+      {
+        g_message("Error: sid number incorrect. Please check the post correlation sids issued by frameworkd: %s", values[i]);
+        g_strfreev (values);
+        g_strfreev (values2);
+        return;
+      }
+
+      //sim_rule_add_plugin_sid_not (rule, atoi(values[i]));
+      plugin_sid = sim_plugin_sid_new_from_data (SIM_PLUGIN_ID_POST_CORRELATION,
+                                                 atoi (values2[0]),
+                                                 atoi (values2[3]),
+                                                 atoi (values2[2]),
+                                                 values2[1]);
+
+      sim_db_insert_plugin_sid (ossim.dbossim, plugin_sid, command->context_id);
+
+      sim_context_add_plugin_sid (context, plugin_sid);
+
+      g_strfreev (values2);
+    }
+
+    g_strfreev (values);
+  }
+}
+
+GIOStatus sim_session_read_event(SimSession *session, gchar *buffer, gsize *n)  //n = received bytes
+{
+  GIOStatus status=G_IO_STATUS_NORMAL;
+
+  gsize     event_len = 0;
+  gboolean  got_event = FALSE;
+	GError		*gerror = NULL;
+
+	ossim_debug ( "sim_session_read_event: Entering Main Loop. Session: %p", session);
+
+	while(event_len < BUFFER_SIZE - 2 && !got_event && session->_priv->ptr < RING_SIZE)
+	{
+		//ossim_debug ( "sim_session_read_event: Iteration %d. Session: %x", iteration, session);
+		if( session->_priv->cur_len>0 && session->_priv->ptr < session->_priv->cur_len && session->_priv->ptr < RING_SIZE)
+		{
+			//ossim_debug ( "sim_session_read_event: Reading from cache. Session: %x", session);
+			buffer[event_len++] = session->_priv->ring[session->_priv->ptr++];
+
+			if(buffer[event_len-1]=='\n')
+			{
+				ossim_debug ( "sim_session_read_event: returning one event (ok). Session: %p", session);
+				buffer[event_len]='\n';
+				buffer[event_len+1]='\0';
+				got_event=TRUE;
+			}
+		}
+		else
+		{
+			session->_priv->ptr=0;
+			gerror = NULL;
+			status= g_io_channel_read_chars(session->_priv->io, session->_priv->ring, RING_SIZE - 1, &session->_priv->cur_len, &gerror);
+			if(gerror && status==G_IO_STATUS_ERROR)
+			{
+				switch(gerror->code)
+				{
+					case G_IO_CHANNEL_ERROR_INVAL:
+					case G_IO_CHANNEL_ERROR_IO:
+					case G_IO_CHANNEL_ERROR_NOSPC:
+					case G_IO_CHANNEL_ERROR_OVERFLOW:
+					case G_IO_CHANNEL_ERROR_PIPE:
+					case G_IO_CHANNEL_ERROR_FAILED:
+						g_message ("%s: %s", __func__, gerror->message);
+						g_error_free (gerror);
+						return status;
+
+					case G_IO_CHANNEL_ERROR_FBIG:
+						g_message("sim_session_read_event: File too large.");
+						g_error_free (gerror);
+						break;
+
+					case G_IO_CHANNEL_ERROR_ISDIR:
+						g_message("sim_session_read_event: File is a directory.");
+						g_error_free (gerror);
+						break;
+
+					case G_IO_CHANNEL_ERROR_NXIO:
+						g_message("sim_session_read_event: No such device or address.");
+						g_error_free (gerror);
+						break;
+
+					default:
+						if (gerror->message)
+							g_message("%s: %s", __func__, gerror->message);
+						else
+							g_message("%s: Unknown socket error", __func__);
+						g_error_free (gerror);
+						return status;
+				}
+
+        ossim_debug ("%s: Error from gnet in g_io_channel_read_chars. "
+                     "Check your networking configuration. Session: %lx",
+                     __func__, (glong)session);
+			}
+			else if (status==G_IO_STATUS_ERROR)
+			{
+				ossim_debug ("%s: Error from gnet in g_io_channel_read_chars. "
+                     "Check your networking configuration. Session: %lx",
+                     __func__, (glong)session);
+			}
+			else
+			{
+				if(status==G_IO_STATUS_EOF&&session->_priv->cur_len<=0)
+				{
+					ossim_debug ( "sim_session_read_event: EOF received in Session: %p; Closing connection.", session);
+					session->_priv->close=TRUE;
+					return status;
+				}
+
+				if(session->_priv->cur_len<=0)
+				{
+					ossim_debug ( "sim_session_read_event: no data available from gnet. Cur_len %zu Session: %p;", session->_priv->cur_len, session);
+					session->_priv->cur_len=0;
+					*n=0;
+				}
+				else
+					ossim_debug ( "sim_session_read_event: %zu bytes readed from gnet. Session: %p;", session->_priv->cur_len, session);
+			}
+		}
+	}
+
+	//"Converting" offset as number of bytes (it will be returned and must be == strlen(buffer)
+	*n=++event_len;
+
+	//If we do not have an event, clear the event buffer (to prevent corrupted data..)
+	if(!got_event&& status==G_IO_STATUS_NORMAL)
+	{
+		ossim_debug ( "sim_session_read_event: Clearing the buffer. Session: %p", session);
+		memset(buffer, 0, BUFFER_SIZE);
+	}
+
+	ossim_debug ( "event(%zu)[status:%d]: %s ",*n,status,buffer);
+
+	return status;
+}
+
+
+/*
+ * This function set to 0 the event count of this specific sensor. This will be updated by any sensor instances sensor with the same IP (so, they're the same sensor)
+ */
+void
+sim_session_initialize_count (SimSession  *session)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_hash_table_replace (sim_server_get_individual_sensors (session->_priv->server), g_object_ref (sim_session_get_ia (session)), GINT_TO_POINTER (0));
+}
+
+/*
+ * This function increases the event count of this specific sensor. This is shared by all the sensor threads (it depends on the IP)
+ */
+void
+sim_session_increase_count (SimSession  *session)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+
+  gpointer aux = g_hash_table_lookup (sim_server_get_individual_sensors (session->_priv->server), sim_session_get_ia (session));
+  guint aux2 = GPOINTER_TO_INT (aux);
+  aux2++;
+  g_hash_table_replace	(sim_server_get_individual_sensors (session->_priv->server), g_object_ref (sim_session_get_ia (session)), GINT_TO_POINTER (aux2));
+}
+
+gboolean
+sim_session_check_iochannel_status (SimSession  * session, GIOStatus status)
+{
+
+  g_return_val_if_fail (session != NULL, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
+
+    //sanity checks...
+    if (status != G_IO_STATUS_NORMAL)
+    {
+      switch(status)
+  		{
+		    case   G_IO_STATUS_AGAIN:
+				      g_message ("sim_session_check_iochannel_status: Socket temporarily unavailable in session %p ", session);
+				      sleep(1);
+							return TRUE;
+							break; //not needed hehe O:)
+		    case  G_IO_STATUS_EOF:
+    				  g_message ("sim_session_check_iochannel_status: socket closed in session %p: Stopping session", session);
+				      return FALSE;
+							break;
+    		case  G_IO_STATUS_ERROR:
+				      g_message ("sim_session_check_iochannel_status: read operation failed. Socket disconnected or timed out%p: Stopping session", session);
+				      return FALSE;
+							break;
+		    default:
+    				  g_message("sim_session_check_iochannel_status: Unknown state %d", status);
+				      return FALSE;
+		  }	
+    }
+		return TRUE;
+}
 
 /*
  *
@@ -3577,31 +3293,38 @@ sim_session_read (SimSession  *session)
 {
   SimCommand  *cmd = NULL;
   SimCommand  *res;
-  GIOError     error;
-  //gchar        buffer[BUFFER_SIZE];
-  gchar        buffer[BUFFER_SIZE];
+  GIOStatus	status=G_IO_STATUS_AGAIN;
+  gchar        buffer[BUFFER_SIZE+1];
   gsize		     n;
+  gchar 			*buf;
+  gchar       *session_ip_str;
+  gboolean  break_conn;
+
+  session->_priv->received = 0;  //set the initial number of received events to 0
 
   g_return_val_if_fail (session != NULL, FALSE);
   g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
 
-  memset(buffer, 0, BUFFER_SIZE);
+  
 
-  while ( (!session->_priv->close) && 
-					(error = gnet_io_channel_readline (session->_priv->io, buffer, BUFFER_SIZE, &n)) == G_IO_ERROR_NONE && (n>0) )
+  //Let's ensure that the buffer is really clean before reading.. (this shouldn't be needed..)
+  while ((memset(buffer, 0, BUFFER_SIZE+1)||1)&& (!session->_priv->close) && status!=G_IO_STATUS_EOF && (status= sim_session_read_event(session, buffer, &n)) == G_IO_STATUS_NORMAL&& (n>0) && (!session->_priv->close) )
   {
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Entering while. Session: %x", session);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: strlen(buffer)=%d; n=%d",strlen(buffer),n);
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Buffer: %s", buffer);
+		ossim_debug ( "sim_session_read: Session : Entering while. Session %p", session);
+		ossim_debug ( "sim_session_read: strlen(buffer)=%zu; n=%zu", strlen(buffer),n);
+		ossim_debug ( "sim_session_read: Session (%p): Buffer: %s", session, buffer);
+		
+    aux_recvd_msgs++;
 
-//      g_message("GIOError: %d",error);	 
-      
-      //sanity checks...
-    if (error != G_IO_ERROR_NONE)
-    {
-		  g_message ("Received error, closing socket: %d: %s", error, g_strerror(error));
-	  	return FALSE;
-    }
+    //sanity checks...
+    if (status != G_IO_STATUS_NORMAL)
+		{
+			break_conn = sim_session_check_iochannel_status (session, status);
+			if (break_conn)
+				continue;
+			else
+				return FALSE;
+		}
 		
 		//FIXME: This not a OSSIM fixme, IMHO this is a GLib fixme. If strlen(buffer) > n, gscanner will crash
 		//This can be easily reproduced commenting the "if" below, and doing a telnet to the server port, and sending one event. After that, do
@@ -3614,31 +3337,13 @@ sim_session_read (SimSession  *session)
 		//I'll be very glad is someone has some time to check what's happening) :)
 		if (strlen(buffer) != n)
 		{
-		  g_message ("Received error. Inconsistent data entry, closing socket. Received:%d Buffer lenght: %d: %d: %s", n, strlen(buffer), error, g_strerror(error));
-	  	return FALSE;
-		}
-/*
-      if (sim_strnlen(buffer,BUFFER_SIZE) == BUFFER_SIZE) 
-      {
-        g_message("Error: Data received from the agent > %d, line truncated.");
-	return FALSE;
-      }
-      
-      if (sim_strnlen(buffer,BUFFER_SIZE) < n-1 )
-      {
-         g_message("Error: Data received from the agent has a \"0\" character before newline");
-         return FALSE;
-      }
-  */   
-    if (n == 0)
-		{
-		  g_message ("0 bytes read (closing socket)");
+		  g_message ("Received error. Inconsistent data entry, closing socket. Received:%zu Buffer lenght: %zu", n, strlen(buffer));
 	  	return FALSE;
 		}
 
-    if (!buffer)
+    if (buffer == NULL)
 		{
-    	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Buffer NULL");
+    	ossim_debug ( "sim_session_read: Buffer NULL");
 			return FALSE;
 		}
 
@@ -3646,47 +3351,54 @@ sim_session_read (SimSession  *session)
 		//g_message("Data received: -%s- Count: %d  n: %d",buffer,sim_strnlen(buffer,BUFFER_SIZE),n);	 
 		if (strlen (buffer) <= 2) 
 		{
-	    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Buffer <= 2 bytes");
+	    ossim_debug ( "sim_session_read: Buffer <= 2 bytes");
 			memset(buffer, 0, BUFFER_SIZE);
 			continue;
-//			return FALSE; 
 		}
-
-    cmd = sim_command_new_from_buffer (buffer); //this gets the command and all of the parameters associated.
+		
+	  ossim_debug ( "sim_session_read: buffer address before:%s", buffer);
+		buf = sim_buffer_sanitize (buffer);		
+		
+	  ossim_debug ( "sim_session_read: buffer address after:%s", buffer);
+      session_ip_str = sim_inet_get_canonical_name (sim_session_get_ia (session));
+      cmd = sim_command_new_from_buffer (buf, sim_session_get_event_scan_fn (session), session_ip_str); //this gets the command and all of the parameters associated.
+      g_free (session_ip_str);
+      g_free(buf);
 
 		if (!cmd)
 		{
-		  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command null");
-			continue; //we don't break the connection if the event is strange, we just reject the event
-	  	//return FALSE;
+		  g_message ("sim_session_read: error command null. Buffer: %s", buffer);
+			continue;
 		}
+    ossim_debug ( "sim_session_read: Command from buffer type:%d ; id=%d",cmd->type,cmd->id);
 
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Command from buffer type:%d ; id=%d",cmd->type,cmd->id);
+		if (session->_priv->sensor
+				&& sim_sensor_get_name (session->_priv->sensor)
+				&& ! strcmp (sim_sensor_get_name (session->_priv->sensor), "(null)"))
+		{
+			g_object_unref (cmd);
+			continue;
+		}
       
     if (cmd->type == SIM_COMMAND_TYPE_NONE)
 		{
-	  	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command type none");
+	  	ossim_debug ( "sim_session_read: error command type none");
 		  g_object_unref (cmd);
-		  return FALSE;
+			return FALSE;
 		}
 
 		if (sim_session_get_is_initial (session))		//is this the session started in sim_container_new();?
 		{
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: This is a initial session load");
-			if (cmd->type == SIM_COMMAND_TYPE_DATABASE_ANSWER)
-			{
-        sim_session_cmd_database_answer (session, cmd); 
-			}
-			else
+			ossim_debug ( "sim_session_read: This is a initial session load");
 			if	(cmd->type == SIM_COMMAND_TYPE_OK)	// 
 			{ 
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Mutex lock in OK");
+				ossim_debug ( "sim_session_read: Mutex lock in OK");
 				//this will permit to load data the first time the server gets data from rservers.
 				//Take a look at sim-container
 				if (session->_priv->fully_stablished == FALSE)	//we only need to do the mutex the first time, when we are not sure that the
 					sim_session_set_fully_stablished (session);		//connection is open
 				
-				g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: Mutex unlock in OK");
+				ossim_debug ( "sim_session_read: Mutex unlock in OK");
 			}
 			else
 			{
@@ -3696,23 +3408,31 @@ sim_session_read (SimSession  *session)
 
         sim_session_write (session, res);
         g_object_unref (res);
+				g_object_unref (cmd);
 				return FALSE;
 			}
 			memset(buffer, 0, BUFFER_SIZE);
+			g_object_unref (cmd);
 			continue; //we only want to listen database answer events.
 		}
 
-		//this two variables are used in SIM_COMMAND_TYPE_EVENT
-		SimServer	*server = session->_priv->server;
-		SimConfig	*config = sim_server_get_config (server);
-		gboolean *r = FALSE;
-	
+/*
+		//-- FIXI 
+		//No leak up until here!!
+		g_object_unref (cmd);
+		continue;
+		//--
+*/
+    sim_session_update_last_data_timestamp (session);
+
 		//this messages can arrive from other servers (up in the architecture -a master server-, down in the
 		//architecture -a children server-, or at the same level -HA server-), from some sensor (an agent) or from the frameworkd.
     switch (cmd->type)
 		{
+	
 			case SIM_COMMAND_TYPE_CONNECT:															//from children server / frameworkd / sensor
 						sim_session_cmd_connect (session, cmd);
+						sim_session_initialize_count (session);
 						break;
 			case SIM_COMMAND_TYPE_SERVER_GET_SENSORS:										//from frameworkd / master server
 						sim_session_cmd_server_get_sensors (session, cmd);
@@ -3762,6 +3482,9 @@ sim_session_read (SimSession  *session)
 			case SIM_COMMAND_TYPE_RELOAD_DIRECTIVES:										// from frameworkd / master server
 						sim_session_cmd_reload_directives (session, cmd);
 						break;
+      case SIM_COMMAND_TYPE_RELOAD_SERVERS:                       // from frameworkd / master server
+            sim_session_cmd_reload_servers (session, cmd);
+            break;
 			case SIM_COMMAND_TYPE_RELOAD_ALL:														// from frameworkd / master server
 						sim_session_cmd_reload_all (session, cmd);
 						break;
@@ -3786,33 +3509,26 @@ sim_session_read (SimSession  *session)
 			case SIM_COMMAND_TYPE_PLUGIN_DISABLED:											//from sensor
 						sim_session_cmd_plugin_disabled (session, cmd);
 						break;
-			case SIM_COMMAND_TYPE_EVENT:																//from sensor / server children
-						//if we're just a "redirecter", only send the buffer to other servers. If the server
-						//is a redirecter, and also some other thing, this will be done later. This is just to try to accelerate
-						//up to the maximum the functionality.
-						if ((!config->server.role->correlate) &&
-								(!config->server.role->cross_correlate) &&
-								(!config->server.role->store) &&
-								(!config->server.role->qualify) &&
-								(!config->server.role->resend_alarm))
-						{
-	            g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: DENTRO");
-							sim_session_resend_buffer (buffer);
-						}
-						else		
-							sim_session_cmd_event (session, cmd);
+			case SIM_COMMAND_TYPE_SENSOR_GET_EVENTS:					    			//from sensor
+						sim_session_cmd_sensor_get_events (session, cmd);
 						break;
+						
+			case SIM_COMMAND_TYPE_EVENT:																//from sensor / server children
+						sim_session_cmd_event (session, cmd);
+                        sim_session_update_last_event_timestamp (session);
+						break;
+					
 			case SIM_COMMAND_TYPE_HOST_OS_EVENT:								        // from sensor / children server
+						sim_session_increase_count (session);
 						sim_session_cmd_host_os_event (session, cmd);
 						break;
-			case SIM_COMMAND_TYPE_HOST_MAC_EVENT:												// from sensor / children server
+			case SIM_COMMAND_TYPE_HOST_MAC_EVENT:												// from sensor / children server	
+						sim_session_increase_count (session);
 						sim_session_cmd_host_mac_event (session, cmd);
 						break;
 			case SIM_COMMAND_TYPE_HOST_SERVICE_EVENT:										// from sensor / children server
+						sim_session_increase_count (session);
 						sim_session_cmd_host_service_event (session, cmd);
-						break;
-			case SIM_COMMAND_TYPE_HOST_IDS_EVENT:												// from sensor / children server
-						sim_session_cmd_host_ids_event (session, cmd); 
 						break;
 			case SIM_COMMAND_TYPE_OK:																		//from *
 						sim_session_cmd_ok (session, cmd);
@@ -3820,24 +3536,45 @@ sim_session_read (SimSession  *session)
 			case SIM_COMMAND_TYPE_ERROR:																//from *
 						sim_session_cmd_error (session, cmd);
 						break;
-			case SIM_COMMAND_TYPE_DATABASE_QUERY:												// from children server
-						sim_session_cmd_database_query (session, cmd); 
-						break;							
-			case SIM_COMMAND_TYPE_DATABASE_ANSWER:											// from master server
-						sim_session_cmd_database_answer (session, cmd); 
-						break;							
+			case SIM_COMMAND_TYPE_PONG:
+						sim_session_cmd_pong (session, cmd);									// from sensor
+						break;
+      case SIM_COMMAND_TYPE_DATABASE_QUERY:                       // from children server
+						ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_QUERY deprecated", __func__);
+				    break;                                                  
+	    case SIM_COMMAND_TYPE_DATABASE_ANSWER:                      // from master server
+						ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_ANSWER deprecated", __func__);
+            break;
 			case SIM_COMMAND_TYPE_SNORT_EVENT:
-					 sim_session_cmd_event (session, cmd);
+						sim_session_increase_count (session);
+					  sim_session_cmd_event (session, cmd);
 		   		break;
-
+      case SIM_COMMAND_TYPE_AGENT_DATE:                           //from sensor. still it doesn't do nothing
+          break;
+			case SIM_COMMAND_TYPE_SENSOR_GET_FRAMEWORK:
+			  sim_session_cmd_session_get_framework(session,cmd);
+			  break;
+			case SIM_COMMAND_TYPE_FRMK_GETDB:
+			  sim_session_cmd_session_get_frmk_getdb(session,cmd);
+					break;
+			case SIM_COMMAND_TYPE_AGENT_PING:
+        sim_session_cmd_agent_ping (session,cmd);
+				break;
+      case SIM_COMMAND_TYPE_IDM_EVENT:
+	      sim_session_cmd_idm_event(session,cmd);
+	      break;
+	    case SIM_COMMAND_TYPE_RELOAD_POST_CORRELATION_SIDS:
+  	    sim_session_cmd_reload_post_correlation_sids (session,cmd);
+				break;
 			default:
-						g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: error command unknown type");
+						ossim_debug ( "sim_session_read: error command unknown type");
 						res = sim_command_new_from_type (SIM_COMMAND_TYPE_ERROR);
 						res->id = cmd->id;
 
 						sim_session_write (session, res);
 						g_object_unref (res);
 						break;
+
 		}
 
     g_object_unref (cmd);
@@ -3845,11 +3582,16 @@ sim_session_read (SimSession  *session)
 
 		n=0;
   	memset(buffer, 0, BUFFER_SIZE);
-		
+
+		aux_created_events++;
+		ossim_debug ( "sim_session_read: %d", aux_created_events);
 
 	}
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_read: exiting function in session: %x", session);
-			
+	session->_priv->close=TRUE;
+	ossim_debug ( "sim_session_read: exiting function in session: %p", session);
+
+	//if(n==0)
+		//return FALSE;
   return TRUE;
 }
 
@@ -3869,6 +3611,7 @@ sim_session_resend_command (SimSession *session,	//FIXME: is this function depre
 	SimServer *server = session->_priv->server;
 
 	GList *list = sim_server_get_sessions (server);
+	GList *listf = list;
 	while (list)
 	{
 		SimSession *session = (SimSession *) list->data;
@@ -3877,31 +3620,48 @@ sim_session_resend_command (SimSession *session,	//FIXME: is this function depre
 
 		list = list->next;
 	}
+	g_list_free (listf);
 
 
 }
 
-/*
- * This will resend the buffer specified to master servers.
- */
-void 
-sim_session_resend_buffer (gchar	*buffer)
+void
+sim_session_debug_channel_status(SimSession *session)
 {
-  g_return_if_fail (buffer != NULL);
+  GIOCondition conds;
+  GIOFlags flags;
 
-	GList *list = sim_server_get_sessions (ossim.server);
-	while (list)
-	{
-		SimSession *session = (SimSession *) list->data;
-		if (sim_session_is_master_server (session))
-			sim_session_write_from_buffer (session, buffer);
+  flags = g_io_channel_get_flags(session->_priv->io);
+  conds = g_io_channel_get_buffer_condition(session->_priv->io);
 
-		list = list->next;
-	}
-	
-	g_list_free (list);
-
+  g_debug ("*** Channel status START ***\n"
+           "Before write at session with %s\n"
+           "WR %d\n"
+           "RD %d\n"
+           "IO_HUP %d\n"
+           "IO_ERR %d\n"
+           "IO_IN %d\n"
+           "IO_NVAL %d\n"
+           "IO_OUT %d\n"
+           "Is buffered %d\n"
+           "Buffer size %ld\n"
+           "Enc: %s\n"
+           "***Channel status END ***",
+           session->_priv->ip_str,
+           flags & G_IO_FLAG_IS_WRITEABLE,
+           flags & G_IO_FLAG_IS_READABLE,
+           conds & G_IO_HUP,
+           conds & G_IO_ERR,
+           conds & G_IO_IN,
+           conds & G_IO_NVAL,
+           conds & G_IO_OUT,
+           g_io_channel_get_buffered(session->_priv->io),
+           g_io_channel_get_buffer_size(session->_priv->io),
+           (g_io_channel_get_encoding(session->_priv->io)) ? g_io_channel_get_encoding(session->_priv->io) : "N/A"
+  );
 }
+
+
 /*
  * This function may be used to send data to sensors, to other servers, or to the frameworkd (if needed)
  *
@@ -3909,63 +3669,91 @@ sim_session_resend_buffer (gchar	*buffer)
  */
 gint
 sim_session_write (SimSession  *session,
-								   SimCommand  *command)
+                   SimCommand  *command)
 {
-  GIOError  error;
-  gchar    *str;
-  gsize     n;
-
-	g_return_val_if_fail (session != NULL, 0);
-  g_return_val_if_fail (SIM_IS_SESSION (session), 0);
-  g_return_val_if_fail (session->_priv->io != NULL, 0);
+  gchar *str;
+  gsize n;
 
   str = sim_command_get_string (command);
   if (!str)
     return 0;
 
-  // cipher
-
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_write: %s", str);
-
-  error = gnet_io_channel_writen (session->_priv->io, str, strlen(str), &n);
+  n = sim_session_write_from_buffer (session, str);
 
   g_free (str);
-
-  if  (error != G_IO_ERROR_NONE)
-    {
-      session->_priv->close = TRUE;
-      return 0;
-    }
 
   return n;
 }
 
-/*
- * write a specific buffer into a session channel. returns the bytes written.
- * FIXME: Use another thread, this will block.
- */
-guint
-sim_session_write_from_buffer (SimSession	*session,
-																gchar			*buffer)
+gint
+sim_session_write_from_buffer (SimSession *session,
+                               gchar      *buffer)
 {
-	GIOError	error;
-	gsize n; //gsize = unsigned integer 32 bits
-	
-  g_return_val_if_fail (session != NULL, 0);
+  gboolean ok;
+  gsize n = 0; //gsize = unsigned integer 32 bits
+
   g_return_val_if_fail (SIM_IS_SESSION (session), 0);
-  g_return_val_if_fail (session->_priv->io != NULL, 0);
-			
-  error = gnet_io_channel_writen (session->_priv->io, buffer, strlen (buffer), &n);
-		
-	if	(error != G_IO_ERROR_NONE)
+
+  //To prevent monitor threads writting at the same time as sessions
+  g_mutex_lock (session->_priv->socket_mutex);
+
+  ok = sim_session_write_final (session, buffer, strlen(buffer), &n);
+
+  if (!ok)
   {
     session->_priv->close = TRUE;
-    return 0;
+    g_message ("%s: send buffer unsuccesful: %s", __func__, buffer);
   }
-	
-return n; 
+
+  g_mutex_unlock (session->_priv->socket_mutex);
+
+  return n;
 }
 
+static gboolean
+sim_session_write_final (SimSession *session, gchar *buffer, gssize count, gsize *bytes_writtenp)
+{
+  GIOCondition conds;
+  GIOStatus status;
+  GError *err = NULL;
+  gboolean break_conn;
+
+  g_return_val_if_fail (session->_priv->io != NULL, 0);
+
+  g_debug ("%s: session %s: %s %ld", __func__, session->_priv->ip_str, buffer, (glong)count);
+
+  conds = g_io_channel_get_buffer_condition(session->_priv->io);
+
+  if ((conds&G_IO_HUP) || session->_priv->g_io_hup || session->_priv->close) //with this condition should be enought
+    return FALSE;
+
+  sim_util_block_signal (SIGPIPE);
+  status = g_io_channel_write_chars (session->_priv->io, buffer, count, bytes_writtenp, &err);
+  sim_util_unblock_signal (SIGPIPE);
+
+  if (status != G_IO_STATUS_NORMAL)
+    goto beach;
+
+  status = g_io_channel_flush(session->_priv->io, &err);
+
+  if (status != G_IO_STATUS_NORMAL)
+    goto beach;
+
+  return TRUE;
+
+beach:
+  if (status == G_IO_STATUS_ERROR)
+  {
+    g_debug ("%s: %s", __func__, err->message);
+    g_error_free (err);
+  }
+
+  break_conn = sim_session_check_iochannel_status (session, status);
+  if (!break_conn)
+    session->_priv->close = TRUE;
+
+  return FALSE;
+}
 
 /*
  *
@@ -3973,8 +3761,7 @@ return n;
  *
  */
 gboolean
-sim_session_has_plugin_type (SimSession     *session,
-			     SimPluginType   type)
+sim_session_has_plugin_type (SimSession     *session,  SimPluginType   type)
 {
   GList  *list;
   gboolean  found = FALSE;
@@ -4039,21 +3826,23 @@ sim_session_has_plugin_id (SimSession     *session,
  *
  */
 void
-sim_session_reload (SimSession     *session)
+sim_session_reload (SimSession *session,
+                    SimContext *context)
 {
   GList  *list;
   list = session->_priv->plugin_states;
   while (list)
-    {
-      SimPluginState  *plugin_state = (SimPluginState *) list->data;
-      gint plugin_id = sim_plugin_state_get_plugin_id (plugin_state);
+  {
+    SimPluginState  *plugin_state = (SimPluginState *) list->data;
+    gint plugin_id = sim_plugin_state_get_plugin_id (plugin_state);
 
-      SimPlugin *plugin = sim_container_get_plugin_by_id (ossim.container, plugin_id);
+    SimPlugin *plugin = sim_context_get_plugin (context, plugin_id);
 
-      sim_plugin_state_set_plugin (plugin_state, plugin);
+    sim_plugin_state_set_plugin (plugin_state, plugin);
+    g_object_unref (plugin);
 
-      list = list->next;
-    }
+    list = list->next;
+  }
 }
 
 /*
@@ -4073,7 +3862,7 @@ sim_session_get_sensor (SimSession *session)
 /*
  * Returns the server associated with this session (this server);
  */
-SimServer*
+gpointer
 sim_session_get_server (SimSession *session)
 {
   g_return_val_if_fail (session, NULL);
@@ -4172,7 +3961,7 @@ sim_session_close (SimSession *session)
   
   session->_priv->close = TRUE;
 			
-	g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_session_close: closing session: %x",session);
+	ossim_debug ( "sim_session_close: closing session: %p",session);
 		
 }
 
@@ -4184,8 +3973,8 @@ sim_session_close (SimSession *session)
 gboolean
 sim_session_must_close (SimSession *session)
 {
-  g_return_if_fail (session);
-  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_val_if_fail (session, TRUE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), TRUE);
   
   return session->_priv->close;
 }
@@ -4206,8 +3995,8 @@ sim_session_set_is_initial (SimSession *session,
 gboolean
 sim_session_get_is_initial (SimSession *session)
 {
-  g_return_if_fail (session);
-  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_val_if_fail (session, FALSE);
+  g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
 
 	return session->_priv->is_initial;
 }
@@ -4266,9 +4055,230 @@ sim_session_get_id (SimSession *session)
   g_return_val_if_fail (SIM_IS_SESSION (session), -1);
 
   return session->_priv->id; 
+}
+void sim_session_set_sensor(SimSession *session,SimSensor *sensor){
+	g_return_if_fail (session!=NULL);
+	g_return_if_fail (sensor!=NULL);
+	g_return_if_fail (SIM_IS_SESSION (session));
+	g_return_if_fail (SIM_IS_SENSOR (sensor));
+	session->_priv->sensor = sensor;
+}
+
+void							sim_session_set_event_scan_fn								(SimSession *session,gboolean (*pf)(SimCommand *,GScanner*)){
+	g_return_if_fail (session!=NULL);
+	g_return_if_fail (SIM_IS_SESSION (session));
+	g_return_if_fail (pf!=NULL);
+	session->_priv->agent_scan_fn = pf;
+
+}
+gboolean				  (*sim_session_get_event_scan_fn             (SimSession *session))(SimCommand *,GScanner*){
+	g_return_val_if_fail (session!=NULL, FALSE);
+	g_return_val_if_fail (SIM_IS_SESSION (session), FALSE);
+	return session->_priv->agent_scan_fn;
+
+}
+
+guint
+sim_session_get_received (SimSession *session)
+{
+  g_return_val_if_fail (session, 0);
+  g_return_val_if_fail (SIM_IS_SESSION (session), 0);
+
+  return session->_priv->received; 
 } 
 
+/*
+ * This will be used by directive_events only.
+ */
+void
+sim_session_prepare_and_insert_non_block(SimEvent *event)
+{
+	//FIXME: This NEVER should occur
+	if (!SIM_IS_EVENT (event))
+	{
+		ossim_debug	("sim_session_cmd_event: Error SIM_IS_EVENT norl");
+		return;
+	}
 
+	sim_event_set_role_and_policy (event);
+
+  if (!event->device_id && event->sensor_id)
+  {
+    if (!sim_event_set_sid (event)) //this will insert data also in alienvault_siem.device table
+    {
+      g_message ("%s: Error: event discarded: problems in sid", __func__);
+      sim_event_unref (event);
+      return;
+    }
+  }
+
+  //SIM correlation/storage/forward call.
+  if (sim_role_sim (event->role))
+  {
+    ossim_debug ("%s: inserting into SIM... event->id = %s", __func__, sim_uuid_get_string (event->id));
+    sim_container_push_event_noblock (ossim.container, event); //push the event in the queue
+  }
+}
+
+
+// Anomalies events from IDM come with session NULL
+void
+sim_session_prepare_and_insert (SimSession *session, SimEvent *event)
+{
+  SimPlugin *plugin;
+  SimPluginSid *plugin_sid;
+
+  g_return_if_fail (SIM_IS_EVENT(event));
+
+  if (ossim.config->idm.activated)
+  {
+    sim_event_enrich_idm (event);
+  }
+
+  sim_event_set_asset_value (event);
+
+  // Fill taxonomy - product
+  plugin = sim_context_get_plugin (event->context, event->plugin_id);
+  if (plugin)
+  {
+    event->tax_product = sim_plugin_get_product (plugin);
+    g_object_unref (plugin);
+  }
+
+  // Fill taxonomy - category, subcategory
+  plugin_sid = sim_context_get_plugin_sid (event->context, event->plugin_id, event->plugin_sid);
+	if (plugin_sid)
+	{
+	  event->tax_category = sim_plugin_sid_get_category (plugin_sid);
+	  event->tax_subcategory = sim_plugin_sid_get_subcategory (plugin_sid);
+		g_object_unref (plugin_sid);
+	}
+
+  // Check reputation for this event.
+	if (session)
+	{
+	  SimReputation *reputation = sim_server_get_reputation(session->_priv->server);
+	  if(reputation)
+	    sim_reputation_match_event (reputation, event);
+	}
+
+	// GeoIP information
+	event->src_country = sim_geoip_lookup (event->src_ia);
+	event->dst_country = sim_geoip_lookup (event->dst_ia);
+
+  sim_event_set_role_and_policy (event);
+
+  if (!event->device_id && event->sensor_id)
+  {
+    if (!sim_event_set_sid (event)) //this will insert data also in alienvault_siem.device table
+    {
+      g_message ("%s: Error: event discarded: problems in sid", __func__);
+      sim_event_unref (event);
+      return;
+    }
+  }
+
+  //SIM correlation call.
+  if (sim_role_sim (event->role))
+  {
+    if (sim_container_get_events_in_queue (ossim.container)<10000)
+    {
+      ossim_debug	("%s: inserting into SIM...event->id = %s", __func__, sim_uuid_get_string (event->id));
+      sim_container_push_event (ossim.container, event); //push the event in the queue
+    }
+    else
+      sim_container_inc_discarded_events (ossim.container);
+  }
+
+  sim_event_unref (event);
+
+  return;
+}
+
+static void
+sim_session_config_agent (SimSession *session,SimCommand *command){
+	g_return_if_fail (session!=NULL);
+	g_return_if_fail (command!=NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+	g_return_if_fail (command->data.connect.type==SIM_SESSION_TYPE_SENSOR);
+	session->_priv->agent_scan_fn = sim_command_get_agent_scan(); //which parser whould we use? Assign it to the function pointer
+}
+
+static void
+sim_session_config_frameworkd (SimSession *session,SimCommand *command){
+  g_return_if_fail (session!=NULL);
+  g_return_if_fail (command!=NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+  g_return_if_fail (command->data.connect.type==SIM_SESSION_TYPE_FRAMEWORKD);
+  session->_priv->agent_scan_fn = sim_command_get_agent_scan(); //which parser whould we use? Assign it to the function pointer
+}
+
+static void 
+sim_session_config_default (SimSession *session,SimCommand *command){
+	g_return_if_fail (session!=NULL);
+	g_return_if_fail (command!=NULL);
+  g_return_if_fail (SIM_IS_SESSION (session));
+  g_return_if_fail (SIM_IS_COMMAND (command));
+	g_return_if_fail (command->data.connect.type==SIM_SESSION_TYPE_NONE);
+	session->_priv->default_scan_fn = sim_command_get_default_scan();
+}
+
+gboolean (*sim_session_get_event_scan(SimSession *session))(SimCommand*,GScanner*){
+	g_return_val_if_fail (session!=NULL,NULL);
+	g_return_val_if_fail (SIM_IS_SESSION (session),NULL);
+	switch (session->type){
+		case SIM_SESSION_TYPE_SERVER_DOWN:
+			return session->_priv->remote_server_scan_fn;
+			break;
+		case SIM_SESSION_TYPE_SENSOR:
+	  case SIM_SESSION_TYPE_FRAMEWORKD:
+			return session->_priv->agent_scan_fn;
+			break;
+		case SIM_SESSION_TYPE_NONE:
+			return session->_priv->default_scan_fn;
+		default:
+          g_warning ("Unknown session type. Aborting program");
+          g_return_val_if_fail (0, NULL);
+			
+	}
+	return NULL; //never reached
+}
+
+
+void sim_session_update_last_data_timestamp(SimSession * session)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+  time(&session->_priv->last_data_timestamp);
+
+}
+
+time_t sim_session_get_last_data_timestamp(SimSession * session)
+{
+  g_return_val_if_fail (SIM_IS_SESSION (session), 0);
+  return session->_priv->last_data_timestamp;
+}
+
+static
+void
+sim_session_update_last_event_timestamp (SimSession * session)
+{
+  g_return_if_fail (SIM_IS_SESSION (session));
+  session->_priv->last_event_timestamp = session->_priv->last_data_timestamp;
+
+  return;
+}
+
+time_t
+sim_session_get_last_event_timestamp (SimSession * session)
+{
+  g_return_val_if_fail (SIM_IS_SESSION (session), 0);
+
+  return (session->_priv->last_event_timestamp);
+}
 
 
 // vim: set tabstop=2 sts=2 noexpandtab:
+
+

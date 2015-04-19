@@ -1,3 +1,34 @@
+#!/usr/bin/python
+#
+# License:
+#
+#    Copyright (c) 2003-2006 ossim.net
+#    Copyright (c) 2007-2014 AlienVault
+#    All rights reserved.
+#
+#    This package is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 dated June, 1991.
+#    You may not use, modify or distribute this program under any other version
+#    of the GNU General Public License.
+#
+#    This package is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this package; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#    MA  02110-1301  USA
+#
+#
+# On Debian GNU/Linux systems, the complete text of the GNU General
+# Public License can be found in `/usr/share/common-licenses/GPL-2'.
+#
+# Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+#
+
 import os, sys, time, re
 
 from OssimConf import OssimConf
@@ -22,7 +53,7 @@ class ControlPanel (threading.Thread) :
 
         # database connection
         self.__conn = OssimDB()
-        self.__conn.connect ( self.__conf["ossim_host"],
+        self.__conn.connect (self.__conf["ossim_host"],
                               self.__conf["ossim_base"],
                               self.__conf["ossim_user"],
                               self.__conf["ossim_pass"])
@@ -34,10 +65,10 @@ class ControlPanel (threading.Thread) :
         try:
             for dest in [ "global", "net", "host", "level" ] :
                 self.__rrd_path[dest] = \
-                    os.path.join(self.__conf["mrtg_rrd_files_path"], 
+                    os.path.join(self.__conf["mrtg_rrd_files_path"],
                         '%s_qualification' % (dest))
         except OSError, e:
-            print >>sys.stderr, "Error reading RRD path: " + e
+            logger.error("Error reading RRD path: " + str(e))
             sys.exit()
  
 
@@ -46,7 +77,43 @@ class ControlPanel (threading.Thread) :
         self.__conn.close()
 
 
-    # update the rrd database entry
+    def __get_delete_query(self, type, info, rrd_name, range):
+        """Returns the delete query
+        """
+        query = """
+            DELETE FROM control_panel 
+                WHERE id = '%s' AND rrd_type = '%s' AND time_range = '%s';
+            """ % (rrd_name, type, range)
+        return query
+
+
+    def __get_insert_query(self, type, info, rrd_name, range):
+        """
+            Returns the insert query
+        """
+        query = """
+        INSERT INTO control_panel 
+        (id, rrd_type, time_range, max_c, max_a, max_c_date, max_a_date)
+        VALUES ('%s', '%s', '%s', %f, %f, '%s', '%s');
+        """ % (rrd_name, type, range, info["max_c"], info["max_a"],
+              info["max_c_date"], info["max_a_date"])
+        return query
+
+
+    def __update_query_string(self, type, info, rrd_name, range):
+        """Returns the update rdd query string
+        """
+        querystring = self.__get_delete_query(type, info, rrd_name, range)
+        if (type == 'host') and not (info["max_c"] > 1 or info["max_a"] > 1):
+            # Ignore hosts which don't have at least one of their values
+            # greater than 1.
+            # TODO: Compare against their thresholds instead of inserting
+            # almost everything anyway.
+            pass
+        else:
+            querystring = self.__get_insert_query(type, info, rrd_name, range)
+        return querystring
+
     def __update_db(self, type, info, rrd_name, range):
 
         query = """
@@ -74,8 +141,7 @@ class ControlPanel (threading.Thread) :
 
             self.__conn.exec_query(query)
 
-            print __name__, ":(%s) Updating %s (%s):    \tC=%f, A=%f" % \
-                (type, rrd_name, range, info["max_c"], info["max_a"])
+            logger.info("(%s) Updating %s (%s):    \tC=%f, A=%f" % (type, rrd_name, range, info["max_c"], info["max_a"]))
             sys.stdout.flush()
 
 
@@ -206,21 +272,16 @@ class ControlPanel (threading.Thread) :
                                 C_level += 100
                                 A_level += 100
                             count += 1
-
                     output.close
-
                     if count == 0:
-
                         # when there is no data we suppose the level is 100
-
                         query = """
                             UPDATE control_panel 
                                 SET c_sec_level = 100, a_sec_level = 100
                                 WHERE id = 'global_%s' and time_range = '%s'
                         """ % (user, range)
 
-                        print __name__, ": Updating %s (%s):  C=100%%, A=100%%" % \
-                            (rrd_name, range)
+                        logger.info(" Updating %s (%s):  C=100%%, A=100%%" % (rrd_name, range))
 
                     else:
                         query = """
@@ -228,10 +289,7 @@ class ControlPanel (threading.Thread) :
                                 SET c_sec_level = %f, a_sec_level = %f
                                 WHERE id = 'global_%s' and time_range = '%s'
                         """ % (C_level / count, A_level / count, user, range)
-
-                        print __name__, ": Updating %s (%s):  C=%s%%, A=%s%%" % \
-                            (rrd_name, range, C_level / count, A_level / count)
-
+                        logger.info(": Updating %s (%s):  C=%s%%, A=%s%%" % (rrd_name, range, C_level / count, A_level / count))
                     self.__conn.exec_query(query)
 
 
@@ -246,10 +304,10 @@ class ControlPanel (threading.Thread) :
                     rrd_file = os.path.join(self.__rrd_path[type], rrd_file)
                     rrd_name = os.path.basename(rrd_file.split(".rrd")[0])
                     
-                    rrd_info_day   = self.__get_rrd_value("N-1D", "N", rrd_file)
-                    rrd_info_week  = self.__get_rrd_value("N-7D", "N", rrd_file)
+                    rrd_info_day = self.__get_rrd_value("N-1D", "N", rrd_file)
+                    rrd_info_week = self.__get_rrd_value("N-7D", "N", rrd_file)
                     rrd_info_month = self.__get_rrd_value("N-1M", "N", rrd_file)
-                    rrd_info_year  = self.__get_rrd_value("N-1Y", "N", rrd_file)
+                    rrd_info_year = self.__get_rrd_value("N-1Y", "N", rrd_file)
 
                     if rrd_info_day["max_c"] == rrd_info_day["max_a"] == \
                         rrd_info_week["max_c"] == rrd_info_week["max_a"] == \
@@ -259,24 +317,30 @@ class ControlPanel (threading.Thread) :
 
                         # Only remove rrd files with ctime older than 1 day
                         if int(time.time()) - \
-                           int(os.path.getctime(rrd_file)) > int(24*60*60):
+                           int(os.path.getctime(rrd_file)) > int(24 * 60 * 60):
 
-                            print __name__, \
-                                ": Removing unused rrd file (%s).." \
-                                % (rrd_file)
+                            logger.info("Removing unused rrd file (%s).." % (rrd_file))
                             try:
                                 os.remove(rrd_file)
                             except OSError, e:
                                 print e
 
                     else:
-                        self.__update_db(type, rrd_info_day,   rrd_name, 'day')
-                        self.__update_db(type, rrd_info_week,  rrd_name, 'week')
-                        self.__update_db(type, rrd_info_month, rrd_name, 'month')
-                        self.__update_db(type, rrd_info_year,  rrd_name, 'year')
+                        update_query_string=""
+                        update_query_string = self.__update_query_string(type, rrd_info_day, rrd_name, 'day')
+                        update_query_string += self.__update_query_string(type, rrd_info_week, rrd_name, 'week')
+                        update_query_string += self.__update_query_string(type, rrd_info_month, rrd_name, 'month')
+                        update_query_string += self.__update_query_string(type, rrd_info_year, rrd_name, 'year')
+                        self.__conn.execute_non_query(query=update_query_string,autocommit=False)
+# 
+#                         self.__update_db(type, rrd_info_day, rrd_name, 'day')
+#                         self.__update_db(type, rrd_info_week, rrd_name, 'week')
+#                         self.__update_db(type, rrd_info_month, rrd_name, 'month')
+#                         self.__update_db(type, rrd_info_year, rrd_name, 'year')
 
                 except Exception, e:
-                    print >> sys.stderr, "Unexpected exception:", e
+                   logger.error("Unexpected exception: %s" % str(e))
+                   
 
 
     # Delete hosts from control_panel when they're too old
@@ -319,7 +383,7 @@ class ControlPanel (threading.Thread) :
 
                 # sleep to next iteration
                 print __name__, ": ** Update finished at %s **" % \
-                    time.strftime('%Y-%m-%d %H:%M:%S', 
+                    time.strftime('%Y-%m-%d %H:%M:%S',
                                   time.localtime(time.time()))
                 print __name__, ": Next iteration in %d seconds...\n\n" % \
                     (int(Const.SLEEP))

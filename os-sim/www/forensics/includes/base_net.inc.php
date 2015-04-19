@@ -1,19 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - baseIP2long()
-* - baseLong2IP()
-* - baseDecBin()
-* - getIPMask()
-* - baseGetHostByAddr()
-* - baseGetWhois()
-* - GetWhoisRaw()
-* - CallWhoisServer()
-* - baseProcessWhoisRaw()
-* - VerifySocketSupport()
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -25,6 +10,23 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
+/**
+* Function list:
+* - baseIP2long()
+* - baseLong2IP()
+* - baseDecBin()
+* - getIPMask()
+* - baseGetHostByAddr()
+* - baseGetWhois()
+* - GetWhoisRaw()
+* - CallWhoisServer()
+* - baseProcessWhoisRaw()
+* - VerifySocketSupport()
+*/
+
+
 defined('_BASE_INC') or die('Accessing this file directly is not allowed.');
 /****************************************************************************
 *
@@ -43,6 +45,9 @@ function baseIP2long($IP_str) {
     $tmp_long = ip2long($IP_str);
     if ($tmp_long < 0) $tmp_long = 4294967296 - abs($tmp_long);
     return $tmp_long;
+}
+function baseIP2hex($IP_str) {
+    return bin2hex(inet_pton($IP_str));
 }
 /****************************************************************************
 *
@@ -114,39 +119,22 @@ function getIPMask($ipaddr, $mask) {
 *          OR an error message indicating resolution was not possible
 *
 ***************************************************************************/
-function baseGetHostByAddr($ipaddr, $db, $cache_lifetime) {
-    $ip32 = baseIP2long($ipaddr);
-    $current_unixtime = time();
-    $current_time = date("Y-m-d H:i:s", $current_unixtime);
-    $sql = "SELECT ipc_ip,ipc_fqdn,ipc_dns_timestamp" . " FROM acid_ip_cache " . " WHERE ipc_ip = '$ip32' ";
-    $result = $db->baseExecute($sql);
-    $ip_cache = $result->baseFetchRow();
-    /* cache miss */
-    if ($ip_cache == "") {
-        $tmp = gethostbyaddr($ipaddr);
-        /* add to cache regardless of whether can resolve */
-        if ($db->DB_type == "oci8") $sql = "INSERT INTO acid_ip_cache (ipc_ip, ipc_fqdn, ipc_dns_timestamp) " . "VALUES ($ip32, '$tmp', to_date( '$current_time', 'YYYY-MM-DD HH24:MI:SS' ) )";
-        else $sql = "INSERT INTO acid_ip_cache (ipc_ip, ipc_fqdn, ipc_dns_timestamp) " . "VALUES ('$ip32', '$tmp', '$current_time')";
-        $db->baseExecute($sql);
-    } else
-    /* cache hit */ {
-        if ($ip_cache[2] != "" && (((strtotime($ip_cache[2]) / 60) + $cache_lifetime) >= ($current_unixtime / 60))) {
-            /* valid entry */
-            if (($ip_cache[2] != "") && ($ip_cache[2] != 0)) {
-                $tmp = $ip_cache[1];
-            } else
-            /* name could not be resolved */
-            $tmp = $ipaddr;
-        } else
-        /* cache expired */ {
-            $tmp = gethostbyaddr($ipaddr);
-            /* Update entry in cache regardless of whether can resolve */
-            $sql = "UPDATE acid_ip_cache SET ipc_fqdn='$tmp', " . " ipc_dns_timestamp='$current_time' WHERE ipc_ip='$ip32'";
-            $db->baseExecute($sql);
-        }
-    }
-    if ($tmp == $ipaddr) return "&nbsp;<I>" . _ERRRESOLVEADDRESS . "</I>&nbsp;";
-    else return $tmp;
+function baseGetHostByAddr($ipaddr, $ctx, $db) {  //, $cache_lifetime) {
+    
+    if (!preg_match("/^\d+\.\d+\.\d+\.\d+$/",$ipaddr)) return $ipaddr;
+    if ($_SESSION["_resolv"][$ipaddr] == "") {
+    
+        $result = $db->baseExecute("SELECT h.fqdns FROM alienvault.host h,alienvault.host_ip hi WHERE h.id=hi.host_id AND hi.ip=inet6_pton('$ipaddr') and h.ctx=unhex('$ctx')");
+    	$rs = $result->baseFetchRow();
+    	if (trim($rs[0]) == '') {
+        	$_SESSION["_resolv"][$ipaddr] = gethostbyaddr($ipaddr);
+    	} else {
+    		$_SESSION["_resolv"][$ipaddr] = preg_replace("/\,\s*/","<br>",$rs[0]);
+    	}
+	
+	}
+    return $_SESSION["_resolv"][$ipaddr];
+    
 }
 /****************************************************************************
 *

@@ -40,13 +40,21 @@ BEGIN {
                             $ossim_conf::ossim_data->{"ossim_pass"}) 
         or die "Can't connect to Database\n";
 
-    my $query = "SELECT * FROM config";
+	my $uuid = "";
+	if (-e "/etc/ossim/framework/db_encryption_key") {
+		$uuid = `grep "^key=" /etc/ossim/framework/db_encryption_key | awk 'BEGIN { FS = "=" } ; {print \$2}'`; chomp($uuid);
+	} else {
+		$uuid = uc(`/usr/bin/alienvault-system-id`);
+	}
+    my $query = "SELECT *,AES_DECRYPT(value,'$uuid') as dvalue FROM config";
     my $stm = $conn->prepare($query);
     $stm->execute();
     
     while (my $row = $stm->fetchrow_hashref) {
         if (!$ossim_conf::ossim_data->{$row->{"conf"}}) {
-            $ossim_conf::ossim_data->{$row->{"conf"}} = $row->{"value"};
+            if (!defined($row->{"dvalue"})) { $row->{"dvalue"}=""; }
+            my $value = ($row->{"dvalue"} ne "") ? $row->{"dvalue"} : $row->{"value"};
+            $ossim_conf::ossim_data->{$row->{"conf"}} = $value;
         }
     }
     $stm->finish();

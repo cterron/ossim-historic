@@ -1,36 +1,42 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
 
 #include "sim-plugin-sid.h"
-#include <config.h>
+
+#include "os-sim.h"
+#include "sim-util.h"
+#include "sim-log.h"
+
+extern SimMain  ossim;
 
 enum
 {
@@ -41,13 +47,18 @@ enum
 struct _SimPluginSidPrivate {
   gint     plugin_id;
   gint     sid;
+  guint    cantor_key;
   gint     reliability;
   gint     priority;
   gchar   *name;
+  gint     category;
+  gint     subcategory;
 };
 
 static gpointer parent_class = NULL;
+/* Disable signals
 static gint sim_plugin_sid_signals[LAST_SIGNAL] = { 0 };
+*/
 
 /* GType Functions */
 
@@ -63,7 +74,11 @@ sim_plugin_sid_impl_finalize (GObject  *gobject)
   SimPluginSid *plugin = SIM_PLUGIN_SID (gobject);
 
   if (plugin->_priv->name)
+	{
+  	ossim_debug ( "sim_plugin_sid_impl_finalize: %s",plugin->_priv->name);
     g_free (plugin->_priv->name);
+	}
+  ossim_debug ( "sim_plugin_sid_impl_finalize");
 
   g_free (plugin->_priv);
 
@@ -88,9 +103,12 @@ sim_plugin_sid_instance_init (SimPluginSid *plugin)
 
   plugin->_priv->plugin_id = 0;
   plugin->_priv->sid = 0;
+  plugin->_priv->cantor_key = 0;
   plugin->_priv->reliability = 1;
   plugin->_priv->priority = 1;
   plugin->_priv->name = NULL;
+  plugin->_priv->category = 0;
+  plugin->_priv->subcategory = 0;
 }
 
 /* Public Methods */
@@ -157,6 +175,7 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
   plugin_sid = SIM_PLUGIN_SID (g_object_new (SIM_TYPE_PLUGIN_SID, NULL));
   plugin_sid->_priv->plugin_id = plugin_id;
   plugin_sid->_priv->sid = sid;
+  plugin_sid->_priv->cantor_key = CANTOR_KEY(plugin_id, sid);
   plugin_sid->_priv->reliability = reliability;
   plugin_sid->_priv->priority = priority;
   plugin_sid->_priv->name = g_strdup (name);  
@@ -170,65 +189,70 @@ sim_plugin_sid_new_from_data (gint          plugin_id,
  *
  */
 inline SimPluginSid*
-sim_plugin_sid_new_from_dm (GdaDataModel  *dm,
-												    gint           row)
+sim_plugin_sid_new_from_dm (GdaDataModel *dm, gint row)
 {
   SimPluginSid  *plugin_sid;
-  GdaValue      *value;
+  const GValue  *value;
 
   plugin_sid = SIM_PLUGIN_SID (g_object_new (SIM_TYPE_PLUGIN_SID, NULL));
 
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
+  value = gda_data_model_get_value_at (dm, 0, row, NULL);
   if (!gda_value_is_null (value))
-    plugin_sid->_priv->plugin_id = gda_value_get_integer (value);
+    plugin_sid->_priv->plugin_id = g_value_get_int (value);
 
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
+  value = gda_data_model_get_value_at (dm, 1, row, NULL);
   if (!gda_value_is_null (value))
-    plugin_sid->_priv->sid = gda_value_get_integer (value);
+    plugin_sid->_priv->sid = g_value_get_int (value);
   
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
-  if (!gda_value_is_null (value))
-    plugin_sid->_priv->reliability = gda_value_get_integer (value);
-  
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row);
-  if (!gda_value_is_null (value))
-    plugin_sid->_priv->priority = gda_value_get_integer (value);
-  
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 4, row);
-  if (!gda_value_is_null (value))
-    plugin_sid->_priv->name = gda_value_stringify (value);
+  plugin_sid->_priv->cantor_key = CANTOR_KEY(plugin_sid->_priv->plugin_id, plugin_sid->_priv->sid);
 
-	//FIXME: This MUST be substituted because | is the symbol that we are using to separe data
-	//to send it to children servers. We have to use uuencode the data sended in sim_session_cmd_database_query() 
-	//to send the data and remove this section:
-	//**********
-	/*
-	sim_string_substitute_char (plugin_sid->_priv->name, '|', ' ');
-	//also some other things needed to remove temporarly until uuencode.
+  value = gda_data_model_get_value_at (dm, 2, row, NULL);
+  if (!gda_value_is_null (value))
+	{
+    plugin_sid->_priv->reliability = g_value_get_int (value);
+		if (plugin_sid->_priv->reliability > 10)
+			plugin_sid->_priv->reliability = 10;
+	}
+  
+  value = gda_data_model_get_value_at (dm, 3, row, NULL);
+  if (!gda_value_is_null (value))
+	{
+    plugin_sid->_priv->priority = g_value_get_int (value);
+		if (plugin_sid->_priv->priority > 5)
+			plugin_sid->_priv->priority = 5;
+	}
+  
+  value = gda_data_model_get_value_at (dm, 4, row, NULL);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->name = g_value_dup_string (value);
+
+  value = gda_data_model_get_value_at (dm, 5, row, NULL);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->category = g_value_get_int (value);
+
+  value = gda_data_model_get_value_at (dm, 6, row, NULL);
+  if (!gda_value_is_null (value))
+    plugin_sid->_priv->subcategory = g_value_get_int (value);
+
 	sim_string_substitute_char (plugin_sid->_priv->name, '\\', ' ');
+	sim_string_substitute_char (plugin_sid->_priv->name, ';', ' ');
 	sim_string_substitute_char (plugin_sid->_priv->name, '\'', ' ');
 	sim_string_substitute_char (plugin_sid->_priv->name, '\"', ' ');
 	sim_string_substitute_char (plugin_sid->_priv->name, '\r', ' ');
 	sim_string_substitute_char (plugin_sid->_priv->name, '\n', ' ');
-	*/
-	//***********
 	
-	
-	//gda_value_free (value); //FIXME: why does this fails?
-
   return plugin_sid;
 }
 
 /*
  *
- * Returns the plugin id wich is the "owner" of the plugin_sid given.
+ * Returns the plugin id which is the "owner" of the plugin_sid given.
  *
  *
  */
 inline gint
 sim_plugin_sid_get_plugin_id (SimPluginSid  *plugin_sid)
 {
-  g_return_val_if_fail (plugin_sid, 0);
   g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
 
   return plugin_sid->_priv->plugin_id;
@@ -249,6 +273,7 @@ sim_plugin_sid_set_plugin_id (SimPluginSid  *plugin_sid,
   g_return_if_fail (plugin_id > 0);
 
   plugin_sid->_priv->plugin_id = plugin_id;
+  plugin_sid->_priv->cantor_key = CANTOR_KEY(plugin_sid->_priv->plugin_id, plugin_sid->_priv->sid);
 }
 
 /*
@@ -281,6 +306,7 @@ sim_plugin_sid_set_sid (SimPluginSid  *plugin_sid,
   g_return_if_fail (sid > 0);
 
   plugin_sid->_priv->sid = sid;
+  plugin_sid->_priv->cantor_key = CANTOR_KEY(plugin_sid->_priv->plugin_id, plugin_sid->_priv->sid);
 }
 
 /*
@@ -381,6 +407,24 @@ sim_plugin_sid_set_name (SimPluginSid  *plugin_sid,
   plugin_sid->_priv->name = name;
 }
 
+gint
+sim_plugin_sid_get_category (SimPluginSid *plugin_sid)
+{
+  g_return_val_if_fail (plugin_sid, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
+
+  return plugin_sid->_priv->category;
+}
+
+gint
+sim_plugin_sid_get_subcategory (SimPluginSid *plugin_sid)
+{
+  g_return_val_if_fail (plugin_sid, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
+
+  return plugin_sid->_priv->subcategory;
+}
+
 /*
  *
  *
@@ -388,7 +432,8 @@ sim_plugin_sid_set_name (SimPluginSid  *plugin_sid,
  *
  */
 gchar*
-sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
+sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid,
+                                  SimUuid       *plugin_ctx)
 {
   GString  *insert;
   GString  *values;
@@ -413,8 +458,11 @@ sim_plugin_sid_get_insert_clause (SimPluginSid  *plugin_sid)
   g_string_append (insert, ", priority");
   g_string_append_printf (values, ", %d", plugin_sid->_priv->priority);
 
-  g_string_append (insert, ", name)");
-  g_string_append_printf (values, ", '%s')", plugin_sid->_priv->name);
+  g_string_append (insert, ", name");
+  g_string_append_printf (values, ", '%s'", plugin_sid->_priv->name);
+
+  g_string_append (insert, ", plugin_ctx)");
+  g_string_append_printf (values, ", %s)", sim_uuid_get_db_string (plugin_ctx));
 
   g_string_append (insert, values->str);
 
@@ -433,16 +481,29 @@ void
 sim_plugin_sid_debug_print (SimPluginSid  *plugin_sid)
 {
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_plugin_sid_print_internal_data:");
+  ossim_debug ( "sim_plugin_sid_print_internal_data:");
 
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       Name: %s", plugin_sid->_priv->name);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       plugin_id: %d", plugin_sid->_priv->plugin_id);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       sid: %d", plugin_sid->_priv->sid);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       reliability: %d", plugin_sid->_priv->reliability);
-  g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "       priority: %d", plugin_sid->_priv->priority);
+  ossim_debug ( "       Name: %s", plugin_sid->_priv->name);
+  ossim_debug ( "       plugin_id: %d", plugin_sid->_priv->plugin_id);
+  ossim_debug ( "       sid: %d", plugin_sid->_priv->sid);
+  ossim_debug ( "       Cantor key: %d", plugin_sid->_priv->cantor_key);
+  ossim_debug ( "       reliability: %d", plugin_sid->_priv->reliability);
+  ossim_debug ( "       priority: %d", plugin_sid->_priv->priority);
+}
 
+/*
+ *
+ * gets the cantor key from the object plugin_sid
+ *
+ *
+ */
+guint
+sim_plugin_sid_get_cantor_key (SimPluginSid  *plugin_sid)
+{
+  g_return_val_if_fail (plugin_sid, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN_SID (plugin_sid), 0);
 
-
+  return plugin_sid->_priv->cantor_key;
 }
 
 // vim: set tabstop=2:

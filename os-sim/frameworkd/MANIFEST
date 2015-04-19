@@ -1,7 +1,6 @@
 ossim-framework
 ossimframework
 ossimframework/AcidCache.py
-ossimframework/Const.py
 ossimframework/ControlPanel.py
 ossimframework/Framework.py
 ossimframework/OssimConf.py

@@ -1,6 +1,18 @@
 <?php
+/*******************************************************************************
+** OSSIM Forensics Console
+** Copyright (C) 2009 OSSIM/AlienVault
+** Copyright (C) 2004 BASE Project Team
+** Copyright (C) 2000 Carnegie Mellon University
+**
+** (see the file 'base_main.php' for license details)
+**
+** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
+** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
+*/
+
+
 /**
-* Class and Function List:
 * Function list:
 * - FindGraphingLib()
 * - VerifyGraphingLib()
@@ -16,19 +28,9 @@
 * - run_ip2cc()
 * - IncreaseCountryValue()
 * - GetCountryDataSet()
-* Classes list:
 */
-/*******************************************************************************
-** OSSIM Forensics Console
-** Copyright (C) 2009 OSSIM/AlienVault
-** Copyright (C) 2004 BASE Project Team
-** Copyright (C) 2000 Carnegie Mellon University
-**
-** (see the file 'base_main.php' for license details)
-**
-** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
-** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
-*/
+
+
 include_once ("base_conf.php");
 include_once ("$BASE_path/base_qry_common.php");
 include_once ("$BASE_path/includes/base_signature.inc.php");
@@ -105,8 +107,8 @@ function FindGraphingLib($libfile) {
 function VerifyGraphingLib() {
     GLOBAL $debug_mode;
     /* Check if GD is compiled into PHP */
-    if (!(function_exists("ImageDestroy"))) {
-        echo "<FONT COLOR=\"#FF0000\">" . _ERRPHPERROR . "</FONT>:
+    if (!(function_exists("imagedestroy"))) {
+        echo "<FONT COLOR=\"#FF0000\">" . gettext("PHP ERROR") . "</FONT>:
             <B>PHP build incomplete</B>: <FONT>
             the prerequisite GD support required to
             generate graphs was not built into PHP.
@@ -245,7 +247,7 @@ function ProcessChartTimeConstraint($start_hour, $start_day, $start_month, $star
 }
 function StoreAlertNum($sql, $label, &$xdata, &$cnt, $min_threshold) {
     GLOBAL $db, $debug_mode;
-    if ($debug_mode > 0) echo $sql . "<BR>";
+    //if ($debug_mode > 0) echo $sql . "<BR>";
     $result = $db->baseExecute($sql);
     if ($myrow = $result->baseFetchRow()) {
         if ($myrow[0] >= $min_threshold) {
@@ -258,10 +260,10 @@ function StoreAlertNum($sql, $label, &$xdata, &$cnt, $min_threshold) {
 }
 function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $criteria) {
     GLOBAL $db, $debug_mode;
-    if ($debug_mode > 0) {
-        echo "chart_type = $chart_type<BR>
-            data_source = $data_source<BR>";
-    }
+    // if ($debug_mode > 0) {
+        // echo "chart_type = $chart_type<BR>
+            // data_source = $data_source<BR>";
+    // }
     $sql = "SELECT min(timestamp), max(timestamp) FROM acid_event " . $criteria[0] . " WHERE " . $criteria[1];
     $result = $db->baseExecute($sql);
     $myrow = $result->baseFetchRow();
@@ -327,10 +329,10 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
     switch ($chart_type) {
         case 1: // hour
             {
-                    if ($debug_mode > 0) {
-                        print "chart_begin_hour = \"$chart_begin_hour\", hour_start = \"$hour_start\"<BR>\n";
-                        print "chart_end_hour = \"$chart_end_hour\", hour_end = \"$hour_end\"<BR>\n";
-                    }
+                    // if ($debug_mode > 0) {
+                        // print "chart_begin_hour = \"$chart_begin_hour\", hour_start = \"$hour_start\"<BR>\n";
+                        // print "chart_end_hour = \"$chart_end_hour\", hour_end = \"$hour_end\"<BR>\n";
+                    // }
                     if (!strcmp($chart_end_hour, " ") || $chart_end_hour == "") {
                         // hour_start = -1 is NOT possible, because with chart_type == 1
                         // each hour is to be queried. We want bars hour by hour.
@@ -350,14 +352,14 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                 break;
             }
         }
-        if ($debug_mode > 0) {
-            echo '<TABLE BORDER="1">
-            <TR>
-              <TD>year_start<TD>year_end<TD>month_start<TD>month_end
-              <TD>day_start<TD>day_end<TD>hour_start<TD>hour_end
-            <TR>
-              <TD>' . $year_start . '<TD>' . $year_end . '<TD>' . $month_start . '<TD>' . $month_end . '<TD>' . $day_start . '<TD>' . $day_end . '<TD>' . $hour_start . '<TD>' . $hour_end . '</TABLE>';
-        }
+        // if ($debug_mode > 0) {
+            // echo '<TABLE BORDER="1">
+            // <TR>
+              // <TD>year_start<TD>year_end<TD>month_start<TD>month_end
+              // <TD>day_start<TD>day_end<TD>hour_start<TD>hour_end
+            // <TR>
+              // <TD>' . $year_start . '<TD>' . $year_end . '<TD>' . $month_start . '<TD>' . $month_end . '<TD>' . $day_start . '<TD>' . $day_end . '<TD>' . $hour_start . '<TD>' . $hour_end . '</TABLE>';
+        // }
         $cnt = 0;
         $ag = $criteria[0];
         $ag_criteria = $criteria[1];
@@ -415,7 +417,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         GLOBAL $db, $debug_mode;
         if ($chart_type == 6) $sql = "SELECT DISTINCT ip_src, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " AND ip_src is NOT NULL " . "GROUP BY ip_src ORDER BY ip_src";
         else if ($chart_type == 7) $sql = "SELECT DISTINCT ip_dst, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " AND ip_dst is NOT NULL " . "GROUP BY ip_dst ORDER BY ip_dst";
-        if ($debug_mode > 0) echo $sql . "<BR>";
+        //if ($debug_mode > 0) echo $sql . "<BR>";
         $result = $db->baseExecute($sql);
         $cnt = 0;
         while ($myrow = $result->baseFetchRow()) {
@@ -432,7 +434,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         GLOBAL $db, $debug_mode;
         if (($chart_type == 8) || ($chart_type == 9)) $sql = "SELECT DISTINCT layer4_dport, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " AND layer4_dport is NOT NULL " . "GROUP BY layer4_dport ORDER BY layer4_dport";
         else if (($chart_type == 10) || ($chart_type == 11)) $sql = "SELECT DISTINCT layer4_sport, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " AND layer4_sport is NOT NULL " . "GROUP BY layer4_sport ORDER BY layer4_sport";
-        if ($debug_mode > 0) echo $sql . "<BR>";
+        //if ($debug_mode > 0) echo $sql . "<BR>";
         $result = $db->baseExecute($sql);
         $cnt = 0;
         while ($myrow = $result->baseFetchRow()) {
@@ -448,7 +450,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
     function GetClassificationDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $criteria) {
         GLOBAL $db, $debug_mode;
         $sql = "SELECT DISTINCT sig_class_id, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " GROUP BY sig_class_id ORDER BY sig_class_id";
-        if ($debug_mode > 0) echo $sql . "<BR>";
+        //if ($debug_mode > 0) echo $sql . "<BR>";
         $result = $db->baseExecute($sql);
         $cnt = 0;
         while ($myrow = $result->baseFetchRow()) {
@@ -464,14 +466,14 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
     function GetSensorDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $criteria) {
         GLOBAL $db, $debug_mode;
         $sql = "SELECT DISTINCT acid_event.sid, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " GROUP BY acid_event.sid ORDER BY acid_event.sid";
-        if ($debug_mode > 0) echo $sql . "<BR>";
+        //if ($debug_mode > 0) echo $sql . "<BR>";
         $result = $db->baseExecute($sql);
         $cnt = 0;
         while ($myrow = $result->baseFetchRow()) {
             if ($myrow[1] >= $min_threshold) {
-                $result2 = $db->baseExecute("SELECT hostname FROM sensor where sid=" . $myrow[0]);
+                $result2 = $db->baseExecute("SELECT * FROM alienvault_siem.sensor where sid=" . $myrow[0]);
                 $sensor_name = $result2->baseFetchRow();
-                $xdata[$cnt][0] = $sensor_name[0];
+                $xdata[$cnt][0] = ($sensor_name["sensor"]!="") ? $sensor_name["sensor"] : $sensor_name["hostname"];
                 $result2->baseFreeRows();
                 $xdata[$cnt][1] = $myrow[1];
                 ++$cnt;
@@ -486,7 +488,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         if (empty($Geo_IPfree_file_ascii) || !is_file($Geo_IPfree_file_ascii) || !is_readable($Geo_IPfree_file_ascii)) {
             return 0;
         }
-        ini_set("memory_limit", "50M");
+        //ini_set("memory_limit", "50M");
         $lines = file($Geo_IPfree_file_ascii);
         if ($lines == FALSE) {
             print "WARNING: " . $Geo_IPfree_file_ascii . " could not be opened.<BR>\n";
@@ -507,9 +509,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                     $estr.= "does not exist. Ignoring.<BR>\n";
                     ErrorMessage($estr);
                 } else {
-                    if ($debug_mode > 1) {
-                        print "Full name of " . $index . " = \"" . $iso_3166[$index] . "\"<BR>\n";
-                    }
+                    // if ($debug_mode > 1) {
+                        // print "Full name of " . $index . " = \"" . $iso_3166[$index] . "\"<BR>\n";
+                    // }
                     $index.= " (" . $iso_3166[$index] . ")";
                 }
                 if (!isset($Geo_IPfree_array) || !key_exists($index, $Geo_IPfree_array)) {
@@ -548,17 +550,17 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
             $nelements = count($val);
             if (count($val) > 0) {
                 while (list($key2, $val2) = each($val)) {
-                    if ($debug_mode > 1) {
-                        if ($val2[0] > $val2[1]) {
-                            print "WARNING: Inconsistency with $key array element no. " . $key2 . ": " . long2ip($val2[0]) . " - " . long2ip($val2[1]) . "<BR>\n";
-                        }
-                    }
+                    // if ($debug_mode > 1) {
+                        // if ($val2[0] > $val2[1]) {
+                            // print "WARNING: Inconsistency with $key array element no. " . $key2 . ": " . long2ip($val2[0]) . " - " . long2ip($val2[1]) . "<BR>\n";
+                        // }
+                    // }
                     if (($address >= $val2[0]) && ($address <= $val2[1])) {
-                        if ($debug_mode > 0) {
-                            print "Found: " . $address_with_dots . " belongs to " . $key;
-                            print ": " . long2ip($val2[0]) . " - " . long2ip($val2[1]);
-                            print "<BR>\n";
-                        }
+                        // if ($debug_mode > 0) {
+                            // print "Found: " . $address_with_dots . " belongs to " . $key;
+                            // print ": " . long2ip($val2[0]) . " - " . long2ip($val2[1]);
+                            // print "<BR>\n";
+                        // }
                         $country = $key;
                         return 1;
                     }
@@ -605,9 +607,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         for ($i = 3; $i < $max; $i++) {
             $country.= $result[$i] . " ";
         }
-        if ($debug_mode > 0) {
-            print "Found: " . $address_with_dots . " belongs to " . $country . "<BR>\n";
-        }
+        // if ($debug_mode > 0) {
+            // print "Found: " . $address_with_dots . " belongs to " . $country . "<BR>\n";
+        // }
         return 1;
     }
     function IncreaseCountryValue(&$countries, $to_search, $number_of_alerts) {
@@ -621,14 +623,14 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                 return;
             }
             if (array_key_exists($to_search, $countries)) {
-                if ($debug_mode > 1) {
-                    print $to_search . " does exist.<BR>\n";
-                }
+                // if ($debug_mode > 1) {
+                    // print $to_search . " does exist.<BR>\n";
+                // }
                 $countries[$to_search]+= $number_of_alerts;
             } else {
-                if ($debug_mode > 1) {
-                    print $to_search . " does NOT exist.<BR>\n";
-                }
+                // if ($debug_mode > 1) {
+                    // print $to_search . " does NOT exist.<BR>\n";
+                // }
                 $countries[$to_search] = $number_of_alerts;
             }
         } else
@@ -639,14 +641,14 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                 return;
             }
             if (key_exists($to_search, $countries)) {
-                if ($debug_mode > 1) {
-                    print $to_search . " does exist.<BR>\n";
-                }
+                // if ($debug_mode > 1) {
+                    // print $to_search . " does exist.<BR>\n";
+                // }
                 $countries[$to_search]+= $number_of_alerts;
             } else {
-                if ($debug_mode > 1) {
-                    print $to_search . " does NOT exist.<BR>\n";
-                }
+                // if ($debug_mode > 1) {
+                    // print $to_search . " does NOT exist.<BR>\n";
+                // }
                 $countries[$to_search] = $number_of_alerts;
             }
         }
@@ -665,7 +667,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
         {
             $sql = "SELECT DISTINCT ip_dst, COUNT(acid_event.cid) " . "FROM acid_event " . $criteria[0] . "WHERE " . $criteria[1] . " AND ip_dst is NOT NULL " . "GROUP BY ip_dst ORDER BY ip_dst";
         }
-        if ($debug_mode > 0) echo $sql . "<BR>";
+        // if ($debug_mode > 0) echo $sql . "<BR>";
         $result = $db->baseExecute($sql);
         if (!isset($Geo_IPfree_file_ascii) && !isset($IP2CC)) {
             ErrorMessage("ERROR: Neither \$Geo_IPfree_file_ascii nor \$IP2CC has been configured in base_conf.php.<BR>\n");
@@ -685,9 +687,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                             return 0;
                         } else {
                             $country_method = 1;
-                            if ($debug_mode > 0) {
-                                print "<BR>\ncountry method 1: We use the database of Geo::IPfree<BR>\n<BR>\n";
-                            }
+                            // if ($debug_mode > 0) {
+                                // print "<BR>\ncountry method 1: We use the database of Geo::IPfree<BR>\n<BR>\n";
+                            // }
                             // Read in database with country data for ip addresses
                             ReadGeoIPfreeFileAscii($Geo_IPfree_array);
                         }
@@ -714,9 +716,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                             }
                             return 0;
                         } else {
-                            if ($debug_mode > 0) {
-                                print "<BR>\ncountry_method 2: We make use of ip2cc<BR>\n<BR>\n";
-                            }
+                            // if ($debug_mode > 0) {
+                                // print "<BR>\ncountry_method 2: We make use of ip2cc<BR>\n<BR>\n";
+                            // }
                             $country_method = 2;
                         }
                     }
@@ -749,9 +751,9 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                         print "WARNING: country_method no. " . $country_method . " is not supported.<BR>\n";
                         return 0;
                 }
-                if ($debug_mode > 0) {
-                    print $mycountry . ": " . $addresses[$cnt][1] . " alerts<BR>\n";
-                }
+                // if ($debug_mode > 0) {
+                    // print $mycountry . ": " . $addresses[$cnt][1] . " alerts<BR>\n";
+                // }
                 // Increase number of alerts for this country
                 IncreaseCountryValue($countries, $mycountry, $addresses[$cnt][1]);
                 ++$cnt;
@@ -761,12 +763,12 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
             ErrorMessage("ERROR: \$mycountry has not been set as expected.<BR>\n");
             return 0;
         }
-        if ($debug_mode > 1) {
-            print "<pre>############\n";
-            //var_dump($countries);
-            print_r($countries);
-            print "###########</pre>\n";
-        }
+        // if ($debug_mode > 1) {
+            // print "<pre>############\n";
+            // //var_dump($countries);
+            // print_r($countries);
+            // print "###########</pre>\n";
+        // }
         // Now setup the chart array:
         reset($countries);
         $cnt2 = 0;

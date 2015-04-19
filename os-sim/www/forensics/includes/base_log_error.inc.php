@@ -1,16 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - ErrorMessage()
-* - returnErrorMessage()
-* - FatalError()
-* - PrintServerInformation()
-* - PrintPageHeader()
-* - PrintHTTPPost()
-* - SQLTraceLog()
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -22,8 +10,29 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
+/**
+* Function list:
+* - ErrorMessage()
+* - returnErrorMessage()
+* - FatalError()
+* - PrintServerInformation()
+* - PrintPageHeader()
+* - PrintHTTPPost()
+* - SQLTraceLog()
+*/
+
+
 defined('_BASE_INC') or die('Accessing this file directly is not allowed.');
+require_once ('classes/Util.inc');
+
 function ErrorMessage($message, $color = "#FF0000") {
+    $message = Util::htmlentities($message);
+    $message = str_ireplace("&lt;BR&gt;", "<br>", $message);
+    $message = str_ireplace("&lt;B&gt;", "<b>", $message);
+    $message = str_ireplace("&lt;/B&gt;", "</b>", $message);
+    
     echo '<FONT COLOR="' . $color . '">' . $message . '</FONT><br>';
 }
 function returnErrorMessage($message) {
@@ -31,12 +40,13 @@ function returnErrorMessage($message) {
     return $error;
 }
 function FatalError($message) {
-    echo '<FONT COLOR="#FF0000"><B>' . _ERRBASEFATAL . '</B> ' . $message . '</FONT>';
+    echo '<FONT COLOR="#FF0000"><B>' . gettext("BASE FATAL ERROR:") . '</B> ' . $message . '</FONT>';
     die();
 }
 function PrintServerInformation() {
     echo '';
 }
+/*
 function PrintPageHeader() {
     GLOBAL $DBtype, $ADODB_vers;
     $tmp = session_encode();
@@ -72,6 +82,7 @@ function PrintPageHeader() {
          <B>SESSION ID:</B> " . session_id() . "( " . strlen($tmp) . " bytes )
          </PRE>";
 }
+*/
 function PrintHTTPPost() {
     echo "<BR><B>HTTP POST Variables</B><PRE>";
     XSSPrintSafe($_POST);
@@ -79,6 +90,7 @@ function PrintHTTPPost() {
 }
 function SQLTraceLog($message) {
     GLOBAL $sql_trace_mode, $sql_trace_file;
+    // $sql_trace_file is allways '/var/tmp/debug_sql', use it static way
     if ($sql_trace_mode < 1)
     // then fallback to http server's error log:
     {
@@ -86,8 +98,8 @@ function SQLTraceLog($message) {
     } else
     // preferred
     {
-        if (($sql_trace_file != "") && file_exists($sql_trace_file)) {
-            $fd = fopen($sql_trace_file, "a");
+        if (($sql_trace_file != "") && file_exists('/var/tmp/debug_sql')) {
+            $fd = fopen('/var/tmp/debug_sql', "a");
             if ($fd) {
                 fputs($fd, $message);
                 fputs($fd, "\n");

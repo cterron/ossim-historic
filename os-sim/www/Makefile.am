@@ -1,44 +1,29 @@
 SUBDIRS= action \
 	backup \
-	business_processes \
 	conf \
 	control_panel \
 	directives \
-	editor \
-	event_viewer \
-	feed \
-	hids \
-	host \
 	incidents \
 	java \
 	js \
-	maps \
 	nagios \
-	net \
 	netscan \
 	ntop \
 	panel \
-	pixmaps \
 	policy \
 	port \
 	report \
-	response \
 	riskmeter \
-	rrd_conf \
-	scan \
 	sensor \
 	server \
 	session \
-	setup \
-	signature \
-	style \
 	upgrade \
 	userlog \
-	vulnmeter 
+	vulnmeter
 	
 wwwdir = $(datadir)/ossim/www
-www_DATA = index.php \
-	top.php
+www_DATA = index.php
+	
 
 EXTRA_DIST   = $(www_DATA)
 

@@ -4,64 +4,86 @@
  * Based on code by: 4mir Salihefendic (http://amix.dk)
  * License: LGPL (read more in LGPL.txt)
  * 2009-05-1 modified by jmalbarracin. Added GB_TYPE. Fixed  total document width/height
- * 2009-06-4 modified by jmalbarracin. Support of width %
+ * 2009-06-4 modified by jmalbarracin. Support of width %, height %
+ * 2012-02-01 modified by fjmnav and jmalbarracin. Added move, scale and resize
+ * 2012-03-20 Deleting GB_DONE configuration --> Now the container is loaded everytime the GB is called.
  */
 
-var GB_DONE = false;
-var GB_TYPE = ''; // empty or "w"
-var GB_HEIGHT = 400;
-var GB_WIDTH = 400;
-var GB_SCROLL_DIFF = 22;
+function GB_show(caption, url, height, width, nohide, post)
+{
+    if(typeof(GB_TYPE) != 'undefined' && typeof(parent.LB_TYPE) != 'undefined' && parent.LB_TYPE != GB_TYPE)
+    {
+        parent.LB_TYPE = GB_TYPE;
+    }
 
-function GB_show(caption, url, height, width) {
-  GB_HEIGHT = height || 400;
-  GB_WIDTH = width || 400;
-  if(!GB_DONE) {
-    $(document.body)
-      .append("<div id='GB_overlay" + GB_TYPE + "'></div><div id='GB_window'><div id='GB_caption'></div>"
-        + "<img src='../pixmaps/theme/close.png' alt='Close'/></div>");
-    $("#GB_window img").click(GB_hide);
-    $("#GB_overlay" + GB_TYPE).click(GB_hide);
-    $(window).resize(GB_position);
-    GB_DONE = true;
-  }
+    if(typeof(parent.LB_FLAG) != 'undefined' && typeof(parent.is_lightbox_opened) == 'function')
+    {
+        parent.LB_FLAG = ( parent.is_lightbox_opened() > 0 ) ? true : false;
+    }
 
-  $("#GB_frame").remove();
-  $("#GB_window").append("<iframe id='GB_frame' src='"+url+"'></iframe>");
+    if(typeof(parent.LB_show) == 'function')
+    {
+        parent.LB_show(caption, url, height, width, nohide, post);
+    }
 
-  $("#GB_caption").html(caption);
-  $("#GB_overlay" + GB_TYPE).show();
-  GB_position();
-
-  $("#GB_window").show();
+    return false;
 }
 
-function GB_hide() {
-  //$('body').removeClass("noscroll").addClass("autoscroll");
-  $("#GB_window,#GB_overlay" + GB_TYPE).hide();
-  if (typeof(GB_onclose) == "function") GB_onclose();
+function GB_show_multiple(caption, url, height, width)
+{
+    if(typeof(GB_TYPE) != 'undefined' && typeof(parent.LB_TYPE) != 'undefined' && parent.LB_TYPE != GB_TYPE)
+    {
+        parent.LB_TYPE = GB_TYPE;
+    }
+
+    if(typeof(parent.LB_FLAG) != 'undefined')
+    {
+        parent.LB_FLAG = true;
+    }
+
+    if(typeof(parent.LB_show) == 'function')
+    {
+        parent.LB_show(caption, url, height, width, false, false);
+    }
+
+    return false;
 }
 
-function GB_position() {
-  var de = document.documentElement;
-  // total document width
-  var w = document.body.scrollWidth
-  if (self.innerWidth > w) w = self.innerWidth;
-  if (de && de.clientWidth > w) w = de.clientWidth;
-  if (document.body.clientWidth > w) w = document.body.clientWidth;
-  // total document height
-  var h = document.body.scrollHeight
-  if ((self.innerHeight+window.scrollMaxY) > h) h = self.innerHeight+window.scrollMaxY;
-  if (de && de.clientHeight > h) h = de.clientHeight;
-  if (document.body.clientHeight > h) h = document.body.clientHeight;
-  //alert(h+';'+document.body.scrollHeight+';'+self.innerHeight+';'+de.clientHeight+';'+document.body.clientHeight+';'+window.scrollMaxY)
-  //
-  //$('body').removeClass("autoscroll").addClass("noscroll");
-  $("#GB_overlay" + GB_TYPE).css({width:(w+GB_SCROLL_DIFF)+"px",height:(h+GB_SCROLL_DIFF)+"px"});
-  var sy = document.documentElement.scrollTop || document.body.scrollTop;
-  var ww = (typeof(GB_WIDTH) == "string" && GB_WIDTH.match(/\%/)) ? GB_WIDTH : GB_WIDTH+"px";
-  var wp = (typeof(GB_WIDTH) == "string" && GB_WIDTH.match(/\%/)) ? w*(GB_WIDTH.replace(/\%/,''))/100 : GB_WIDTH;
-  $("#GB_window").css({ width: ww, height: GB_HEIGHT+"px",
-    left: ((w - wp)/2)+"px", top: (sy+32)+"px" });
-  $("#GB_frame").css("height",GB_HEIGHT - 44 +"px");
+function GB_show_nohide(caption, url, height, width)
+{
+    GB_show(caption, url, height, width, true);
+}
+
+function GB_show_post(caption, url, height, width)
+{
+    GB_show(caption, url, height, width, false, true);
+}
+
+function GB_hide()
+{
+    if(typeof(parent.GB_hide) == 'function')
+    {
+        parent.GB_hide();
+    }
+}
+
+function GB_close()
+{
+    if(typeof(parent.GB_close) == 'function')
+    {
+        parent.GB_close();
+    }
+}
+
+function GB_makeurl(url)
+{
+	var loc = window.location;
+	if (!url.match(/^\//))
+	{
+		var uri = loc.pathname.split('/'); uri.pop();
+		url = uri.join('/') + '/' + url;
+	}
+	url = '' + loc.protocol + '//' + loc.hostname + (loc.port != '' ? ':' + loc.port : '') + url;
+	//console.log(url);
+	return url;
 }

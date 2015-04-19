@@ -5,10 +5,10 @@
  * Dual licensed under the MIT (MIT-LICENSE.txt)
  * and GPL (GPL-LICENSE.txt) licenses.
  *
- * $Date: 2009/07/08 07:52:19 $
+ * $Date: 2010/03/12 09:23:53 $
  */
  
-/* Last Modified by jmalbarracin 2009-04-15
+/* Last Modified by jmalbarracin 2009-11-30
 Search button with styling added
 % in width/height supported
 onColumnChange and onEndResize with a columnInfo function added to store layout configuration
@@ -18,6 +18,7 @@ Added viewTableToogle / onTableToggle trigger function
 Added "right click" Contextmenu
 Added usardataX variables for extenal use
 Added idGroup/nameGroup for toggleGrid over header
+Added onSelectedRow / toggleSelected functions
 */
  
 (function($){
@@ -47,13 +48,14 @@ Added idGroup/nameGroup for toggleGrid over header
 			 useRp: true, //use the results per page select box
 			 rp: 15, // results per page
 			 rpOptions: [10,15,20,25,35,50],
+			 //rpOptions: [100,200,500,1000,2000], too slow
 			 uptxt: '',
 			 downtxt: '',
-			 title: false,
+			 title: 'No title',
 			 titleClass: false,
 			 laststat: '',
 			 pagestat: 'Displaying {from} to {to} of {total} items',
-			 procmsg: 'Processing, please wait ...',
+			 procmsg: 'Processing, please wait <img src="../pixmaps/loading3.gif" border="0" align="absmiddle">',
 			 query: '',
 			 qtype: '',
 			 nomsg: 'No items',
@@ -66,7 +68,10 @@ Added idGroup/nameGroup for toggleGrid over header
 			 showToggleBtn: true, //show or hide column toggle popup
 			 hideOnSubmit: true,
 			 contextMenu: false,
+			 contextMenuh: false,
 			 onContextMenuClick: false,
+			 onContextMenuClickh: false,
+			 callback_already: false,
 			 inSpeed: 150,
 			 outSpeed: 75,
 			 autoload: true,
@@ -81,7 +86,10 @@ Added idGroup/nameGroup for toggleGrid over header
 			 onSuccess: false,
 			 onSubmit: false, // using a custom populate function
 			 onColumnChange: false,
-			 onEndResize: false
+			 onEndResize: false,
+			 onSelectedRow: false,
+             onDblClick: false,
+			 openSearch: false
 		  }, p);
 		  		
 
@@ -135,9 +143,10 @@ Added idGroup/nameGroup for toggleGrid over header
 					);
 					
 					var nd = parseInt($(g.nDiv).height());
-					
+					newH = 150;
+
 					if (nd>newH)
-						$(g.nDiv).height(newH).width(200);
+						$(g.nDiv).height(newH).width('auto');
 					else
 						$(g.nDiv).height('auto').width('auto');
 					
@@ -403,7 +412,7 @@ Added idGroup/nameGroup for toggleGrid over header
 
 				if (!data) 
 					{
-					$('.pPageStat',this.pDiv).html(p.errormsg);	
+					$('.pPageStat').html(p.errormsg);	
 					return false;
 					}
 
@@ -411,17 +420,26 @@ Added idGroup/nameGroup for toggleGrid over header
 					p.total = +$('rows total',data).text();
 				else
 					p.total = data.total;
-					
+				
+								
 				if (p.total==0)
-					{
+				{
 					$('tr, a, td, div',t).unbind();
 					$(t).empty();
 					p.pages = 1;
 					p.page = 1;
 					this.buildpager();
-					$('.pPageStat',this.pDiv).html(p.nomsg);
+					$('.pPageStat').html(p.nomsg);
+					$(this.mDiv).show();
+					$('.pDiv').css('border-top', 'none');
+										
 					return false;
-					}
+				}
+				else if (p.total > 0)
+				{
+					$('.pDiv').css('border-top', 'solid 1px #CCCCCC');
+					$(this.mDiv).hide();				
+				}
 				
 				p.pages = Math.ceil(p.total/p.rp);
 				
@@ -502,7 +520,8 @@ Added idGroup/nameGroup for toggleGrid over header
 							
 							var robj = this;
 
-							
+							var rorder = $(this).attr('col_order');
+							if (rorder) tr.order = rorder;
 							
 							$('thead tr:first th',g.hDiv).each
 							(
@@ -621,13 +640,31 @@ Added idGroup/nameGroup for toggleGrid over header
 				
 				var stat = p.pagestat;
 				
-				stat = stat.replace(/{from}/,r1);
-				stat = stat.replace(/{to}/,r2);
-				stat = stat.replace(/{total}/,p.total);
+				stat = stat.replace(/{from}/,'<b>'+r1+'</b>');
+				stat = stat.replace(/{to}/,'<b>'+r2+'</b>');
+				stat = stat.replace(/{total}/,'<b>'+p.total+'</b>');
 				
 				p.laststat = stat;
-				$('.pPageStat',this.pDiv).html(stat);
-			
+				$('.pPageStat').html(stat);
+				
+				// Modification by AV: Set the style of pagination links
+				if (p.page <= 1)
+				{
+					$('#prev_link').addClass('paglink_disabled');
+				}
+				else
+				{
+					$('#prev_link').removeClass('paglink_disabled');
+				}
+				
+				if (p.page == p.pages)
+				{
+					$('#next_link').addClass('paglink_disabled');
+				}
+				else
+				{
+					$('#next_link').removeClass('paglink_disabled');
+				}
 			},
 			populate: function () { //get latest data
 
@@ -640,6 +677,8 @@ Added idGroup/nameGroup for toggleGrid over header
 					g.drow = null;
 					$("#srcrow").html('');
 					$("#dstrow").html('');
+					$("#srcroworder").html('');
+					$("#dstroworder").html('');
 					g.drowp = null;
 					g.hrow = null;
 					g.hset = null;
@@ -655,13 +694,12 @@ Added idGroup/nameGroup for toggleGrid over header
 				this.loading = true;
 				if (!p.url) return false;
 				
-				$('.pPageStat',this.pDiv).html(p.procmsg);
+				$('.pPageStat').html(p.procmsg);
 				
 				$('.pReload',this.pDiv).addClass('loading');
 				
-				$(g.block).css({top:g.bDiv.offsetTop});
-				
-				if (p.hideOnSubmit) $(this.gDiv).prepend(g.block); //$(t).hide();
+				//$(g.block).css({top:g.bDiv.offsetTop, height:$(g.bDiv).height(), marginBottom:($(g.bDiv).height() * -1)});
+				//if (p.hideOnSubmit) $(this.gDiv).prepend(g.block); //$(t).hide();
 				
 				if ($.browser.opera) $(t).css('visibility','hidden');
 				
@@ -696,7 +734,6 @@ Added idGroup/nameGroup for toggleGrid over header
 				p.query = $('input[name=q]',g.sDiv).val();
 				p.qtype = $('select[name=qtype]',g.sDiv).val();
 				p.newp = 1;
-
 				this.populate();				
 			},
 			changePage: function (ctype){ //change page
@@ -734,42 +771,40 @@ Added idGroup/nameGroup for toggleGrid over header
 					(
 						function ()
 							{
-									var tdDiv = document.createElement('div');
-									var n = $('td',$(this).parent()).index(this);
-									var pth = $('th:eq('+n+')',g.hDiv).get(0);
-			
-									if (pth!=null)
-									{
-									if (p.sortname==$(pth).attr('abbr')&&p.sortname) 
-										{
+								var tdDiv = document.createElement('div');
+								var n = $('td',$(this).parent()).index(this);
+								var pth = $('th:eq('+n+')',g.hDiv).get(0);
+
+								if (pth!=null)
+								{
+									if (p.sortname==$(pth).attr('abbr')&&p.sortname){
 										this.className = 'sorted';
-										}
-									 $(tdDiv).css({textAlign:pth.align,width: $('div:first',pth)[0].style.width});
-									 
-									 if (pth.hide) $(this).css('display','none');
-									 
-									 }
-									 
-									 if (p.nowrap==false) $(tdDiv).css('white-space','normal');
-									 
-									 if (this.innerHTML=='') this.innerHTML = '&nbsp;';
-									 
-									 //tdDiv.value = this.innerHTML; //store preprocess value
-									 tdDiv.innerHTML = this.innerHTML;
-									 
-									 var prnt = $(this).parent()[0];
-									 var pid = false;
-									 if (prnt.id) pid = prnt.id.substr(3);
-									 
-									 if (pth!=null)
-									 {
-									 if (pth.process) pth.process(tdDiv,pid);
-									 }
-									 
-									$(this).empty().append(tdDiv).removeAttr('width'); //wrap content
+									}
+									$(tdDiv).css({textAlign:pth.align,width: $('div:first',pth)[0].style.width});
 
-									//add editable event here 'dblclick'
+									if (pth.hide) $(this).css('display','none');
+								}
 
+								if (p.nowrap==false) $(tdDiv).css('white-space','normal');
+								
+								if ( $(this).html() == '' ) $(this).html("&nbsp;");
+
+								//tdDiv.value = this.innerHTML; //store preprocess value
+								tdDiv.innerHTML = this.innerHTML;
+
+								var prnt = $(this).parent()[0];
+								var pid = false;
+								
+								if (prnt.id) pid = prnt.id.substr(3);
+
+								if (pth!=null)
+								{
+									if (pth.process) pth.process(tdDiv,pid);
+								}
+
+								$(this).empty().append(tdDiv).removeAttr('width'); //wrap content
+
+								//add editable event here 'dblclick'
 							}
 					);
 					
@@ -799,7 +834,15 @@ Added idGroup/nameGroup for toggleGrid over header
 										var obj = (e.target || e.srcElement); if (obj.href || obj.type) return true;
 										$(this).toggleClass('trSelected');
 										if (p.singleSelect) $(this).siblings().removeClass('trSelected');
-										$(".contextMenu").fadeOut(p.outSpeed);
+										if (p.contextMenu) $(".contextMenu").fadeOut(p.outSpeed);
+										if (p.onSelectedRow) p.onSelectedRow(g.gDiv);
+									}
+							)
+                            .dblclick(
+								function (e) 
+									{ 
+										var obj = (e.target || e.srcElement); if (obj.href || obj.type) return true;
+										if (p.onDblClick) p.onDblClick(this.id.substr(3));
 									}
 							)
 							.mousedown(
@@ -816,7 +859,9 @@ Added idGroup/nameGroup for toggleGrid over header
 										if (p.contextMenu) $(".contextMenu").fadeOut(p.outSpeed);
 										g.drowp = this;
 										g.drow = this.id.substr(3);
+										g.droworder = this.order;
 										$("#srcrow").html(this.id.substr(3));
+										$("#srcroworder").html(this.order);
 										g.hset = $(g.bDiv).offset();
 										g.hset.right = g.hset.left + $('table',g.bDiv).width();
 										g.hset.bottom = g.hset.top + $('table',g.bDiv).height();
@@ -824,7 +869,7 @@ Added idGroup/nameGroup for toggleGrid over header
 										{
 											$(this).toggleClass('trSelectedCopy');
 											g.rowCopy = true;
-											$("#rowCopy").html('<i>Switch order row id</i> <b>'+g.drow+'</b>');
+											$("#rowCopy").html('<i>Switch order row id</i> <b>'+g.droworder+'</b>');
 											$("#rowCopy").css({display:'none'});
 											if ($.browser.mozilla) $('body').css('cursor','-moz-grab');
 											else $('body').css('cursor','url(../pixmaps/theme/grab.cur),auto');
@@ -875,6 +920,8 @@ Added idGroup/nameGroup for toggleGrid over header
 											g.drow = null;
 											$("#srcrow").html('');
 											$("#dstrow").html('');
+											$("#srcroworder").html('');
+											$("#dstroworder").html('');
 											g.drowp = null;
 											g.hrow = null;
 											g.hset = null;
@@ -885,6 +932,8 @@ Added idGroup/nameGroup for toggleGrid over header
 											if (p.onToggleGrid) p.onToggleGrid($("#srcrow").html(),$("#dstrow").html());
 											$("#srcrow").html('');
 											$("#dstrow").html('');
+											$("#srcroworder").html('');
+											$("#dstroworder").html('');
 										}
 										if (e.button == 2 && p.contextMenu) { // right buttom
 											//alert(e.button);
@@ -914,17 +963,18 @@ Added idGroup/nameGroup for toggleGrid over header
 											$(this).toggleClass('trSelected');
 										}
 										$("#dstrow").html(this.id.substr(3));
+										$("#dstroworder").html(this.order);
 										//if (p.contextMenu) $(".contextMenu").fadeOut(p.outSpeed);
 										if (g.rowCopy)
 										{
 											//g.hrow = $('tbody tr',g.bDiv).index(this);
 											g.hrow = this.id.substr(3);
-											$("#rowCopy").html('<i>Switch order row id</i> <b>'+g.drow+'</b> and <b>'+g.hrow+'</b>');
+											$("#rowCopy").html('<i>Switch order row id</i> <b>'+g.droworder+'</b> and <b>'+this.order+'</b>');
 										}
 										// over another grid?
 										else if ($("#srcrow").html()!='' && $("#rowCopy").html()!='')
 										{
-											$("#rowCopy").html('<i>Switch order row id</i> <b>'+$("#srcrow").html()+'</b> and <b>'+$("#dstrow").html()+'</b>');
+											$("#rowCopy").html('<i>Switch order row id</i> <b>'+$("#srcroworder").html()+'</b> and <b>'+$("#dstroworder").html()+'</b>');
 										}
 									},
 								function () {}
@@ -977,14 +1027,14 @@ Added idGroup/nameGroup for toggleGrid over header
 						$(th).attr('width',cm.width);
 
 					if (cm.hide)
-						{
-						th.hide = true;
-						}
+					{
+					   th.hide = true;
+					}
 						
 					if (cm.process)
-						{
-							th.process = cm.process;
-						}
+					{
+					   th.process = cm.process;
+					}
 
 					$(tr).append(th);
 				}
@@ -1042,7 +1092,7 @@ Added idGroup/nameGroup for toggleGrid over header
 						btnDiv.className = (typeof(btn.iclass)!='undefined') ? btn.iclass : 'fbutton';
 						btnDiv.innerHTML = "<div><span>"+btn.name+"</span></div>";
 						if (btn.bclass)
-							$('span',btnDiv).addClass(btn.bclass).css({paddingLeft:20});
+							$('span',btnDiv).addClass(btn.bclass); //.css({paddingLeft:20});
 						btnDiv.onpress = btn.onpress;
 						btnDiv.name = btn.name;
 						if (btn.onpress)
@@ -1066,7 +1116,7 @@ Added idGroup/nameGroup for toggleGrid over header
 					}
 				}
 				$(g.tDiv).append(tDiv2);
-				$(g.tDiv).append("<div style='clear:both'></div>");
+				//$(g.tDiv).append("<div style='clear:both'></div>");
 				$(g.gDiv).prepend(g.tDiv);
 		}
 		
@@ -1169,8 +1219,8 @@ Added idGroup/nameGroup for toggleGrid over header
 									
 									var ndw = parseInt($(g.nDiv).width());
 									
-									$(g.nDiv).css({top:g.bDiv.offsetTop});
-									
+									$(g.nDiv).css({top:g.bDiv.offsetTop });
+																		
 									if ((nl+ndw)>$(g.gDiv).width())
 										$(g.nDiv).css('left',onl-ndw+1);
 									else
@@ -1317,14 +1367,15 @@ Added idGroup/nameGroup for toggleGrid over header
 		g.pDiv.className = 'pDiv';
 		g.pDiv.innerHTML = '<div class="pDiv2"></div>';
 		$(g.bDiv).after(g.pDiv);
-		var html = ' <div class="pGroup"> <div class="pFirst pButton"><span></span></div><div class="pPrev pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pcontrol">Page <input type="text" size="3" style="margin-bottom:2px" value="1" /> of <span> 1 </span></span></div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pNext pButton"><span></span></div><div class="pLast pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pReload pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pPageStat"></span></div>';
+		//var html = ' <div class="pGroup"> <div class="pFirst pButton"><span></span></div><div class="pPrev pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pcontrol"><table><tr><td>Page: </td><td><input type="text" size="3" style="margin-bottom:2px" value="1" /></td><td> of <span> 1 </span></td></tr></table></span></div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pNext pButton"><span></span></div><div class="pLast pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pReload pButton"><span></span></div> </div>';
+		var html = ' <div class="pGroup"><div class="pPrev"><span id="prev_link">&lt; PREVIOUS</span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pcontrol"><table><tr><td>Page: </td><td><input type="text" size="3" style="margin-bottom:2px" value="1" /></td><td> of <span> 1 </span></td></tr></table></span></div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pNext"><span id="next_link">NEXT &gt;</span></div></div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pReload pButton"><span></span></div> </div>';
 		$('div',g.pDiv).html(html);
 		
 		$('.pReload',g.pDiv).click(function(){g.populate()});
-		$('.pFirst',g.pDiv).click(function(){g.changePage('first')});
+		//$('.pFirst',g.pDiv).click(function(){g.changePage('first')});
 		$('.pPrev',g.pDiv).click(function(){g.changePage('prev')});
 		$('.pNext',g.pDiv).click(function(){g.changePage('next')});
-		$('.pLast',g.pDiv).click(function(){g.changePage('last')});
+		//$('.pLast',g.pDiv).click(function(){g.changePage('last')});
 		$('.pcontrol input',g.pDiv).keydown(function(e){if(e.keyCode==13) g.changePage('input')});
 		if ($.browser.msie&&$.browser.version<7) $('.pButton',g.pDiv).hover(function(){$(this).addClass('pBtnOver');},function(){$(this).removeClass('pBtnOver');});
 			
@@ -1336,8 +1387,11 @@ Added idGroup/nameGroup for toggleGrid over header
 				if (p.rp == p.rpOptions[nx]) sel = 'selected="selected"'; else sel = '';
 				 opt += "<option value='" + p.rpOptions[nx] + "' " + sel + " >" + p.rpOptions[nx] + "&nbsp;&nbsp;</option>";
 			};
-			$('.pDiv2',g.pDiv).prepend("<div class='pGroup'><select name='rp'>"+opt+"</select></div> <div class='btnseparator'></div>");
-			$('select',g.pDiv).change(
+			
+			$(g.tDiv).append("<div class='pGroup' style='float:left'><table><tr><td>Show <select name='rp'>"+opt+"</select> entries</td></tr></table></div>");
+			
+			//$('.pDiv2',g.pDiv).prepend("<div class='pGroup'><table><tr><td>Show </td><td><select name='rp'>"+opt+"</select></td><td> entries</td></tr></table></div> <div class='btnseparator'></div>");
+			$('select',g.tDiv).change(
 					function ()
 					{
 						if (p.onRpChange) 
@@ -1355,7 +1409,7 @@ Added idGroup/nameGroup for toggleGrid over header
 		//add search button
 		if (p.searchitems)
 			{
-				$('.pDiv2',g.pDiv).prepend("<div class='pGroup'> <div class='pSearch pButton'><span></span></div> </div>  <div class='btnseparator'></div>");
+				$('.pDiv2',g.pDiv).append("<div class='btnseparator'></div> <div class='pGroup'> <div class='pSearch pButton'><span></span></div> </div>");
 				$('.pSearch',g.pDiv).click(function(){$(g.sDiv).slideToggle('fast',function(){$('.sDiv:visible input:first',g.gDiv).trigger('focus');});});				
 				//add search box
 				g.sDiv.className = 'sDiv';
@@ -1375,7 +1429,7 @@ Added idGroup/nameGroup for toggleGrid over header
 				
 				if (p.qtype=='') p.qtype = sitems[0].name;
 				
-				$(g.sDiv).append("<div class='sDiv2'>Quick Search <input type='text' size='30' name='q' class='qsbox' /> <select name='qtype'>"+sopt+"</select> <input type='submit' class='qbtn' value='Search' /> <input type='button' class='qbtn' value='Clear' /></div>");
+				$(g.sDiv).append("<div class='sDiv2'><table><tr><td><b>Quick Search</b></td><td style='padding-left:4px'><input type='text' size='30' name='q' class='qsbox' /></td><td><select name='qtype'>"+sopt+"</select></td><td style='padding-left:3px;padding-right:3px'><input type='submit' id='flexigrid_search' class='small' value='Search' /></td><td><input type='button' id='flexigrid_clear' class='av_b_secondary small' value='Clear' /></td></tr></table></div>");
 
 				$('input[name=q],select[name=qtype]',g.sDiv).keydown(function(e){if(e.keyCode==13) g.doSearch()});
 				$('input[value=Search]',g.sDiv).click(function(){g.doSearch()});
@@ -1391,21 +1445,15 @@ Added idGroup/nameGroup for toggleGrid over header
 		if (p.title)
 		{
 			g.mDiv.className = (p.titleClass) ? p.titleClass : 'mDiv';
-			g.mDiv.innerHTML = '<div class="ftitle">'+p.title+'</div>';
-			$(g.gDiv).prepend(g.mDiv);
-			if (p.onUpDown)
-				{
-					$(g.mDiv).append('<div class="updown"><span class="up" title="'+p.uptxt+'"></span><span class="down"  title="'+p.downtxt+'"></span></div>');
-					$('span.up',g.mDiv).click( function () {
-						p.onUpDown(p,'up');
-					});
-					$('span.down',g.mDiv).click( function () {
-						p.onUpDown(p,'down');
-					});
-				}
+			//g.mDiv.innerHTML = '<div class="ftitle">'+p.title+' <span class="pPageStat"></span></div> ';
+			g.mDiv.innerHTML = '<div class="ftitle"><span class="pPageStat"></span></div> ';
+			//$(g.gDiv).prepend(g.mDiv);
+			$(g.pDiv).prepend(g.mDiv);
+			
 			if (p.showTableToggleBtn)
 				{
 					$(g.mDiv).append('<div class="ptogtitle" title="Minimize/Maximize Table"><span></span></div>');
+					/*
 					$('div.ptogtitle',g.mDiv).click
 					(
 					 	function ()
@@ -1416,6 +1464,17 @@ Added idGroup/nameGroup for toggleGrid over header
 								if (p.onTableToggle) p.onTableToggle(p,state);
 							}
 					);
+					*/
+				}
+			if (p.onUpDown)
+				{
+					$(g.mDiv).append('<div class="updown"><span class="up" title="'+p.uptxt+'"></span><span class="down"  title="'+p.downtxt+'"></span></div>');
+					$('span.up',g.mDiv).click( function () {
+						p.onUpDown(p,'up');
+					});
+					$('span.down',g.mDiv).click( function () {
+						p.onUpDown(p,'down');
+					});
 				}
 			//g.rePosDrag();
 			// drop over header title
@@ -1426,7 +1485,7 @@ Added idGroup/nameGroup for toggleGrid over header
 						$("#dstrow").html(p.idGroup+':'+p.nameGroup);
 						if ($("#srcrow").html()!='' && $("#rowCopy").html()!='') {
 							var dst = $("#dstrow").html().replace(/.*\:/,'');
-							$("#rowCopy").html('<i>Switch order row id</i> <b>'+$("#srcrow").html()+'</b> and <b>'+dst+'</b>');
+							$("#rowCopy").html('<i>Switch order row id</i> <b>'+$("#srcroworder").html()+'</b> and <b>'+dst+'</b>');
 						}
 					}
 			);
@@ -1434,6 +1493,7 @@ Added idGroup/nameGroup for toggleGrid over header
 			(
 				function (e)
 					{
+						if (p.contextMenu) $(".contextMenu").fadeOut(p.outSpeed);
 						if ($("#srcrow").html()!='' && $("#rowCopy").html()!='') {
 							$("#rowCopy").css({top:e.pageY + 10,left:e.pageX + 20, display: 'block'});
 						}
@@ -1451,6 +1511,43 @@ Added idGroup/nameGroup for toggleGrid over header
 						}
 					}
 			);
+			//if (p.onUpDown) {
+			if (1 == 2) { // Temporary commmented
+				// Right click in Header Title
+				$(g.mDiv).bind('contextmenu', function() { return false; }); // disabke browser context menu
+				
+				$(g.mDiv).mouseup(
+					function(e) {
+						if (e.button == 2) {
+							$(document).unbind('click');
+							if (!p.callback_already) {
+								$('#'+p.contextMenuh).find('LI:not(.disabled) A').click(function() {
+									p.callback_already = true;
+									$(document).unbind('click');
+									$(".contextMenu").hide();
+									// Callback
+									if (p.onContextMenuClickh) p.onContextMenuClickh($(this).attr('href').substr(1),p);
+									return false;
+								});
+							}
+							$('#'+p.contextMenuh).css({ top: e.pageY - 12, left: e.pageX -20 }).fadeIn(p.inSpeed);
+							$('#'+p.contextMenuh).add('UL.contextMenu').bind('contextmenu', function() { return false; }); // disabke browser context menu
+							return false;
+						}
+					}
+				);
+			}
+			if (p.showTableToggleBtn){
+			    $(g.mDiv).click(
+				function (e)
+				{
+					$(g.gDiv).toggleClass('hideBody');
+					$('div.ptogtitle',g.mDiv).toggleClass('vsble');
+					var state = ($(g.gDiv).attr("class").match(/hideBody/)) ? 'close' : 'open';
+					if (p.onTableToggle) p.onTableToggle(p,state);
+				}
+                            );
+			}
 			
 		}
 
@@ -1503,8 +1600,9 @@ Added idGroup/nameGroup for toggleGrid over header
 						var kcol = $("th[axis='col" + cn + "']",g.hDiv)[0];
 						var chk = 'checked="checked"';
 						if (kcol.style.display=='none') chk = '';
-						
-						$('tbody',g.nDiv).append('<tr><td class="ndcol1"><input type="checkbox" '+ chk +' class="togCol" value="'+ cn +'" /></td><td class="ndcol2">'+this.innerHTML+'</td></tr>');
+						if (cn == 0) var disabled = "disabled";
+						else var disabled = "";
+						$('tbody',g.nDiv).append('<tr><td class="ndcol1"><input type="checkbox" '+ chk +' class="togCol" value="'+ cn +'" '+disabled+'/></td><td class="ndcol2">'+this.innerHTML+'</td></tr>');
 						cn++;
 					}
 			);
@@ -1521,7 +1619,7 @@ Added idGroup/nameGroup for toggleGrid over header
 			 	function ()
 					{
 						if ($('input:checked',g.nDiv).length<=p.minColToggle&&$(this).prev().find('input')[0].checked) return false;
-						return g.toggleCol($(this).prev().find('input').val());
+						return ($(this).prev().find('input').val()!=0) ? g.toggleCol($(this).prev().find('input').val()) : false;
 					}
 			);
 			
@@ -1562,12 +1660,15 @@ Added idGroup/nameGroup for toggleGrid over header
 		$(g.bDiv).append(g.iDiv);
 		
 		// add flexigrid events
+		
 		$(g.bDiv)
 		.hover(function(){$(g.nDiv).hide();$(g.nBtn).hide();},function(){if (g.multisel) g.multisel = false;})
 		;
 		$(g.gDiv)
 		.hover(function(){},function(){$(g.nDiv).hide();$(g.nBtn).hide();})
 		;
+		
+		if (p.openSearch) $(g.sDiv).slideToggle('fast',function(){$('.sDiv:visible input:first',g.gDiv).trigger('focus');});
 		
 		//add document events
 		$(document)
@@ -1625,6 +1726,13 @@ Added idGroup/nameGroup for toggleGrid over header
 			$(el).css({display:'none'});
 			$('body').append(el);
 		}
+		if ($("#srcroworder").html() == null) {
+			var el = document.createElement("div");
+			el.id = "srcroworder";
+			el.innerHTML = "";
+			$(el).css({display:'none'});
+			$('body').append(el);
+		}
 		if ($("#dstrow").html() == null) {
 			var el = document.createElement("div");
 			el.id = "dstrow";
@@ -1632,7 +1740,15 @@ Added idGroup/nameGroup for toggleGrid over header
 			$(el).css({display:'none'});
 			$('body').append(el);
 		}
+		if ($("#dstroworder").html() == null) {
+			var el = document.createElement("div");
+			el.id = "dstroworder";
+			el.innerHTML = "";
+			$(el).css({display:'none'});
+			$('body').append(el);
+		}
 		// init
+		this.bind('contextmenu', function() { return false; }); // disabke browser context menu
 		return this.each( function() {
 				if (!docloaded)
 				{
@@ -1723,10 +1839,24 @@ Added idGroup/nameGroup for toggleGrid over header
 		return this.each(function() {
 			if (this.grid) {
 				if (state==true) message = message + ' ' + this.p.laststat
-				$('.pPageStat',this.pDiv).html(message);
+				//$('.pPageStat').html(message);
 			}
 		});
 	}; // end changeStatus
+
+    $.fn.toggleSelected = function(ids,max) {
+        if (typeof(max)=='undefined') max=ids.length;
+        return this.each(function() {
+            if (this.grid) {
+                $('tbody tr',this.bDiv).each(function () {
+                    for (var i=0;i<max;i++) {
+                        if (this.id.substr(3)==ids[i])
+                            $(this).toggleClass('trSelected');
+                    }
+                });
+            }
+        });
+    }; // end toggleSelected
 
 	$.fn.viewTableToggle = function() {
 		return this.each(function() {
@@ -1803,3 +1933,12 @@ function serialize(obj)
 
     return string;
 };
+
+
+function get_flexi_width() 
+{
+    if (typeof parent.is_lightbox_loaded == 'function')
+	    return $('body').width() - ( (parent.is_lightbox_loaded(window.name)) ? 0 : 0 ); // fix greybox padding 
+	else
+	    return $('body').width();				
+}

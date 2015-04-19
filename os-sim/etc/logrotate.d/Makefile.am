@@ -1,6 +1,6 @@
 logrotateddir = $(sysconfdir)/logrotate.d
 
-logrotated_DATA = ossim-server ossim-framework
+logrotated_DATA = ossim-framework
 
 EXTRA_DIST = $(logrotated_DATA)
 

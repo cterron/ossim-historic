@@ -1,19 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - UpdateDNSCache()
-* - UpdateWhoisCache()
-* - CacheAlert()
-* - CacheSensor()
-* - UpdateSensorCids()
-* - UpdateAlertCache_ossim()
-* - UpdateAlertCache()
-* - DropAlertCache()
-* - DropDNSCache()
-* - DropWhoisCache()
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -25,6 +10,23 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
+/**
+* Function list:
+* - UpdateDNSCache()
+* - UpdateWhoisCache()
+* - CacheAlert()
+* - CacheSensor()
+* - UpdateSensorCids()
+* - UpdateAlertCache_ossim()
+* - UpdateAlertCache()
+* - DropAlertCache()
+* - DropDNSCache()
+* - DropWhoisCache()
+*/
+
+
 defined('_BASE_INC') or die('Accessing this file directly is not allowed.');
 include_once ("$BASE_path/base_stat_common.php");
 include_once ("$BASE_path/includes/base_log_error.inc.php");
@@ -33,38 +35,38 @@ function UpdateDNSCache($db) {
     $cnt = 0;
     $ip_result = $db->baseExecute("SELECT DISTINCT ip_src FROM acid_event " . "LEFT JOIN acid_ip_cache ON ipc_ip = ip_src " . "WHERE ipc_fqdn IS NULL");
     while (($row = $ip_result->baseFetchRow()) != NULL) {
-        if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
+        //if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
         baseGetHostByAddr(baseLong2IP($row[0]) , $db, $dns_cache_lifetime);
         ++$cnt;
     }
     $ip_result->baseFreeRows();
     $ip_result = $db->baseExecute("SELECT DISTINCT ip_dst FROM acid_event " . "LEFT JOIN acid_ip_cache ON ipc_ip = ip_dst " . "WHERE ipc_fqdn IS NULL");
     while (($row = $ip_result->baseFetchRow()) != NULL) {
-        if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
+        //if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
         baseGetHostByAddr(baseLong2IP($row[0]) , $db, $dns_cache_lifetime);
         ++$cnt;
     }
     $ip_result->baseFreeRows();
-    ErrorMessage(_ADDED . $cnt . _HOSTNAMESDNS);
+    ErrorMessage(gettext("Added ") . $cnt . gettext(" hostnames to the IP DNS cache"));
 }
 function UpdateWhoisCache($db) {
     GLOBAL $debug_mode, $whois_cache_lifetime;
     $cnt = 0;
     $ip_result = $db->baseExecute("SELECT DISTINCT ip_src FROM acid_event " . "LEFT JOIN acid_ip_cache ON ipc_ip = ip_src " . "WHERE ipc_whois IS NULL");
     while (($row = $ip_result->baseFetchRow()) != NULL) {
-        if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
+        //if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
         baseGetWhois(baseLong2IP($row[0]) , $db, $whois_cache_lifetime);
         ++$cnt;
     }
     $ip_result->baseFreeRows();
     $ip_result = $db->baseExecute("SELECT DISTINCT ip_dst FROM acid_event " . "LEFT JOIN acid_ip_cache ON ipc_ip = ip_dst " . "WHERE ipc_whois IS NULL");
     while (($row = $ip_result->baseFetchRow()) != NULL) {
-        if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
+        //if ($debug_mode > 0) echo $row[0] . " - " . baseLong2IP($row[0]) . "<BR>";
         baseGetWhois(baseLong2IP($row[0]) , $db, $whois_cache_lifetime);
         ++$cnt;
     }
     $ip_result->baseFreeRows();
-    ErrorMessage(_ADDED . $cnt . _HOSTNAMESWHOIS);
+    ErrorMessage(gettext("Added ") . $cnt . gettext(" hostnames to the Whois cache"));
 }
 function CacheAlert($sid, $cid, $db) {
     $signature = $timestamp = $ip_src = $ip_dst = null;
@@ -113,7 +115,7 @@ function CacheAlert($sid, $cid, $db) {
             }
         }
     } else {
-        ErrorMessage(_ERRCACHENULL);
+        ErrorMessage(gettext("Caching ERROR: NULL event row found?"));
         echo "<PRE>" . $sql . "</PRE>";
     }
     /* There can be events without certain attributes */
@@ -306,7 +308,7 @@ Caches all alerts for sensor $sid newer than the event $cid
     $update_cnt = count($update_sql);
     for ($i = 0; $i < $update_cnt; $i++) {
         $db->baseExecute($update_sql[$i]);
-        if ($db->baseErrorMessage() != "") ErrorMessage(_ERRCACHEERROR . " [" . _SENSOR . " #$sid][" . _EVENTTYPE . " $i]" . " " . _ERRCACHEUPDATE);
+        if ($db->baseErrorMessage() != "") ErrorMessage(gettext("EVENT CACHING ERROR:") . " [" . gettext("Sensor") . " #$sid][" . gettext("event type") . " $i]" . " " . gettext("Could not update event cache"));
     }
 }
 function UpdateSensorCids($db) {
@@ -315,7 +317,7 @@ function UpdateSensorCids($db) {
 function UpdateAlertCache_ossim($db) {
     GLOBAL $debug_mode;
     GLOBAL $archive_exists;
-    GLOBAL $DBlib_path, $DBtype, $archive_dbname, $archive_host, $archive_port, $archive_user, $archive_password;
+    GLOBAL $DBlib_path, $DBtype, $archive_dbname, $archive_host, $archive_port, $archive_user;
     $batch_sql = "";
     $batch_cnt = 0;
     $updated_cache_cnt = 0;
@@ -333,7 +335,7 @@ function UpdateAlertCache_ossim($db) {
         $ccid_row = $ccid_lst->baseFetchRow();
         $ccid = $ccid_row[0];
         if ($ccid == NULL) $ccid = 0;
-        if ($debug_mode > 0) echo "sensor #$sid: event.cid = $cid, acid_event.cid = $ccid";
+        //if ($debug_mode > 0) echo "sensor #$sid: event.cid = $cid, acid_event.cid = $ccid";
         /* if the CID in the cache < the CID in the event table
         *  then there are events which have NOT been added to the cache
         */
@@ -342,14 +344,14 @@ function UpdateAlertCache_ossim($db) {
             CacheSensor($sid, $ccid, $db);
             $updated_cache_cnt+= EventCntBySensor($sid, $db) - $before_cnt;
         }
-        if ($debug_mode > 0) echo "<BR>";
+        //if ($debug_mode > 0) echo "<BR>";
         $cid_lst->baseFreeRows();
         $ccid_lst->baseFreeRows();
         /* BEGIN LOCAL FIX */
         /* If there's an archive database, and this isn't it, get the MAX(cid) from there */
         if (($archive_exists == 1) && (@$_COOKIE['archive'] != 1)) {
             $db2 = NewBASEDBConnection($DBlib_path, $DBtype);
-            $db2->baseConnect($archive_dbname, $archive_host, $archive_port, $archive_user, $archive_password);
+            $db2->baseConnect($archive_dbname, $archive_host, $archive_port, $archive_user, "");
             $archive_ccid_lst = $db2->baseExecute("SELECT MAX(cid) FROM acid_event WHERE sid='" . $sid . "'");
             $archive_ccid_row = $archive_ccid_lst->baseFetchRow();
             $archive_ccid = $archive_ccid_row[0];
@@ -371,76 +373,11 @@ function UpdateAlertCache_ossim($db) {
         /* END LOCAL FIX */
     }
     if ($updated_cache_cnt != 0) {
-        if (preg_match("/base_main.php/", $_SERVER['SCRIPT_NAME'])) ErrorMessage(_ADDED . $updated_cache_cnt . _ALERTSCACHE, "yellow");
-        else ErrorMessage(_ADDED . $updated_cache_cnt . _ALERTSCACHE);
+        if (preg_match("/base_main.php/", $_SERVER['SCRIPT_NAME'])) ErrorMessage(gettext("Added ") . $updated_cache_cnt . gettext(" Event(s) to the Event cache"), "yellow");
+        else ErrorMessage(gettext("Added ") . $updated_cache_cnt . gettext(" Event(s) to the Event cache"));
     }
 }
 function UpdateAlertCache($db) {
-    GLOBAL $debug_mode;
-    GLOBAL $archive_exists;
-    GLOBAL $DBlib_path, $DBtype, $archive_dbname, $archive_host, $archive_port, $archive_user, $archive_password;
-    $batch_sql = "";
-    $batch_cnt = 0;
-    $updated_cache_cnt = 0;
-    // 2008/03/12 DK: The rest is useless without auto_cache update, which we won't support.
-    // Thanks One for the query :-)
-    // Moving all of this into a separate function.
-    return;
-    $sensor_lst = $db->baseExecute("SELECT sid FROM sensor");
-    /* Iterate through all sensors in the SENSOR table */
-    while (($sid_row = $sensor_lst->baseFetchRow()) != NULL) {
-        $sid = $sid_row[0];
-        /* Get highest CID for a given sensor */
-        $cid_lst = $db->baseExecute("SELECT MAX(cid) FROM event WHERE sid='" . $sid . "'");
-        $cid_row = $cid_lst->baseFetchRow();
-        $cid = $cid_row[0];
-        if ($cid == NULL) $cid = 0;
-        /* Get highest CID for a given sensor in the cache */
-        $ccid_lst = $db->baseExecute("SELECT MAX(cid) FROM acid_event WHERE sid='" . $sid . "'");
-        $ccid_row = $ccid_lst->baseFetchRow();
-        $ccid = $ccid_row[0];
-        if ($ccid == NULL) $ccid = 0;
-        if ($debug_mode > 0) echo "sensor #$sid: event.cid = $cid, acid_event.cid = $ccid";
-        /* if the CID in the cache < the CID in the event table
-        *  then there are events which have NOT been added to the cache
-        */
-        if ($cid > $ccid) {
-            $before_cnt = EventCntBySensor($sid, $db);
-            CacheSensor($sid, $ccid, $db);
-            $updated_cache_cnt+= EventCntBySensor($sid, $db) - $before_cnt;
-        }
-        if ($debug_mode > 0) echo "<BR>";
-        $cid_lst->baseFreeRows();
-        $ccid_lst->baseFreeRows();
-        /* BEGIN LOCAL FIX */
-        /* If there's an archive database, and this isn't it, get the MAX(cid) from there */
-        if (($archive_exists == 1) && (@$_COOKIE['archive'] != 1)) {
-            $db2 = NewBASEDBConnection($DBlib_path, $DBtype);
-            $db2->baseConnect($archive_dbname, $archive_host, $archive_port, $archive_user, $archive_password);
-            $archive_ccid_lst = $db2->baseExecute("SELECT MAX(cid) FROM acid_event WHERE sid='" . $sid . "'");
-            $archive_ccid_row = $archive_ccid_lst->baseFetchRow();
-            $archive_ccid = $archive_ccid_row[0];
-            $archive_ccid_lst->baseFreeRows();
-            $db2->baseClose();
-            if ($archive_ccid == NULL) $archive_ccid = 0;
-            $archive_ccid_lst->baseFreeRows();
-            $db2->baseClose();
-        } else {
-            $archive_ccid = 0;
-        }
-        if ($archive_ccid > $ccid) {
-            $max_ccid = $archive_ccid;
-        } else {
-            $max_ccid = $ccid;
-        }
-        /* Fix the last_cid value for the sensor */
-        $db->baseExecute("UPDATE sensor SET last_cid=$max_ccid WHERE sid=$sid");
-        /* END LOCAL FIX */
-    }
-    if ($updated_cache_cnt != 0) {
-        if (preg_match("/base_main.php/", $_SERVER['SCRIPT_NAME'])) ErrorMessage(_ADDED . $updated_cache_cnt . _ALERTSCACHE, "yellow");
-        else ErrorMessage(_ADDED . $updated_cache_cnt . _ALERTSCACHE);
-    }
 }
 function DropAlertCache($db) {
     $db->baseExecute("DELETE FROM acid_event");

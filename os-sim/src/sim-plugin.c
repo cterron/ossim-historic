@@ -1,37 +1,39 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
 
 #include "sim-plugin.h"
+
 #include "os-sim.h"	//log
-#include <config.h>
+#include "sim-util.h"
 
 enum
 {
@@ -43,10 +45,14 @@ struct _SimPluginPrivate {
   gint                 id;
   gchar               *name;
   gchar               *description;
+  gint                 product;
 };
 
 static gpointer parent_class = NULL;
+/* We don't use signals */
+/*
 static gint sim_plugin_signals[LAST_SIGNAL] = { 0 };
+*/
 
 /* GType Functions */
 
@@ -92,6 +98,7 @@ sim_plugin_instance_init (SimPlugin *plugin)
   plugin->_priv->id = 0;
   plugin->_priv->name = NULL;
   plugin->_priv->description = NULL;
+  plugin->_priv->product = 0;
 }
 
 /* Public Methods */
@@ -146,28 +153,33 @@ sim_plugin_new (void)
  *
  */
 SimPlugin*
-sim_plugin_new_from_dm (GdaDataModel  *dm,
-		      gint           row)
+sim_plugin_new_from_dm (GdaDataModel  *dm, gint row)
 {
   SimPlugin    *plugin;
-  GdaValue     *value;
+  const GValue *value;
+  GValue  smallint = { 0, {{0}, {0}} };
 
   g_return_val_if_fail (dm, NULL);
   g_return_val_if_fail (GDA_IS_DATA_MODEL (dm), NULL);
 
   plugin = SIM_PLUGIN (g_object_new (SIM_TYPE_PLUGIN, NULL));
 
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 0, row);
-  plugin->_priv->id = gda_value_get_integer (value);
+  value = gda_data_model_get_value_at (dm, 0, row, NULL);
+  plugin->_priv->id = g_value_get_int (value);
   
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 1, row);
-  plugin->type = gda_value_get_smallint (value);
+  value = gda_data_model_get_value_at (dm, 1, row, NULL);
+  g_value_init (&smallint, GDA_TYPE_SHORT);
+  g_value_transform (value, &smallint);
+  plugin->type = gda_value_get_short (&smallint);
   
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 2, row);
-  plugin->_priv->name = gda_value_stringify (value);
+  value = gda_data_model_get_value_at (dm, 2, row, NULL);
+  plugin->_priv->name = g_value_dup_string (value);
 
-  value = (GdaValue *) gda_data_model_get_value_at (dm, 3, row);
-  plugin->_priv->description = gda_value_stringify (value);
+  value = gda_data_model_get_value_at (dm, 3, row, NULL);
+  plugin->_priv->description = g_value_dup_string (value);
+
+  value = gda_data_model_get_value_at (dm, 4, row, NULL);
+  plugin->_priv->product = g_value_get_int (value);
 
   return plugin;
 }
@@ -297,9 +309,17 @@ sim_plugin_set_description (SimPlugin  *plugin,
   plugin->_priv->description = description;
 }
 
+gint
+sim_plugin_get_product (SimPlugin *plugin)
+{
+  g_return_val_if_fail (plugin, 0);
+  g_return_val_if_fail (SIM_IS_PLUGIN (plugin), 0);
+
+  return plugin->_priv->product;
+}
 
 /*
- * This function should be called sim_plugin_set_type, but there are other "get" function called with that name.
+ * This function should be called sim_plugin_set_type, but there is other "get" function called with that name.
  */
 void
 sim_plugin_set_sim_type (SimPlugin  		*plugin,
@@ -312,13 +332,13 @@ sim_plugin_set_sim_type (SimPlugin  		*plugin,
 }
 
 /*
- * This function should be called sim_plugin_get_type, but there are another function called with that name.
+ * This function should be called sim_plugin_get_type, but there is another function called with that name.
  */
 SimPluginType
 sim_plugin_get_sim_type (SimPlugin  		*plugin)
 {
-  g_return_if_fail (plugin);
-  g_return_if_fail (SIM_IS_PLUGIN (plugin));
+  g_return_val_if_fail (plugin, SIM_PLUGIN_TYPE_NONE);
+  g_return_val_if_fail (SIM_IS_PLUGIN (plugin), SIM_PLUGIN_TYPE_NONE);
 
   return plugin->type;
 }
@@ -331,11 +351,11 @@ void sim_plugin_debug_print (SimPlugin	*plugin)
   g_return_if_fail (plugin);
   g_return_if_fail (SIM_IS_PLUGIN (plugin));
 
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_plugin_debug_print:");
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         type: %d", plugin->type);
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         description: %s", plugin->_priv->description);
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         name: %s", plugin->_priv->name);
-   g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "         id: %d", plugin->_priv->id);
+   ossim_debug ( "sim_plugin_debug_print:");
+   ossim_debug ( "         type: %d", plugin->type);
+   ossim_debug ( "         description: %s", plugin->_priv->description);
+   ossim_debug ( "         name: %s", plugin->_priv->name);
+   ossim_debug ( "         id: %d", plugin->_priv->id);
 
 
 }

@@ -1,13 +1,11 @@
 sessiondir = $(datadir)/ossim/www/session
-session_DATA = changepass.php \
-	changepassform.php \
-	deleteuser.php \
+session_DATA = deleteuser.php \
 	login.php \
-	modifyuser.php \
-	modifyuserform.php \
-	newuser.php \
-	newuserform.php \
-	users.php
+	users.php \
+	users_edit.php \
+	first_login.php \
+	getusers.php \
+	secure_nagios.php
 
 EXTRA_DIST   = $(session_DATA)
 DISTCLEANFILES = Makefile.in

@@ -1,6 +1,5 @@
 incidentsdir = $(datadir)/ossim/www/incidents
 incidents_DATA = attachment.php \
-	check.php \
 	deleteincidenttype.php \
 	incident.php \
 	incidenttag.php \
@@ -10,9 +9,7 @@ incidents_DATA = attachment.php \
 	modifyincidenttype.php \
 	newincident.php \
 	newincidenttypeform.php \
-	newincidenttype.php \
-	manageincident.php \
-	osvdb.php
+	manageincident.php
 
 EXTRA_DIST   = $(incidents_DATA)
 

@@ -1,11 +1,51 @@
-import threading, socket, re, sys, time
+#!/usr/bin/python
+#
+# License:
+#
+#    Copyright (c) 2003-2006 ossim.net
+#    Copyright (c) 2007-2014 AlienVault
+#    All rights reserved.
+#
+#    This package is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 dated June, 1991.
+#    You may not use, modify or distribute this program under any other version
+#    of the GNU General Public License.
+#
+#    This package is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this package; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#    MA  02110-1301  USA
+#
+#
+# On Debian GNU/Linux systems, the complete text of the GNU General
+# Public License can be found in `/usr/share/common-licenses/GPL-2'.
+#
+# Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+#
 
+#
+# GLOBAL IMPORTS
+#
+import threading, socket, re, sys, time
 from xmlrpclib import ServerProxy, Transport
 from sets import Set
+
+#
+# LOCAL IMPORTS
+#
 
 import Const
 from OssimDB import OssimDB
 from OssimConf import OssimConf
+
+from Logger import Logger
+logger = Logger.logger
 
 _CONF  = OssimConf(Const.CONFIG_FILE)
 _DB    = OssimDB()
@@ -26,6 +66,7 @@ class ProxiedTransport(Transport):
     user_agent = 'frameworkd'
 
     def __init__(self, proxy):
+        Transport.__init__(self, use_datetime=0)
         self.proxy = proxy
         # xmlrpclib.Transport.__init__(self, proxy)
 
@@ -92,11 +133,25 @@ class Status:
                 self.info['attack_level'] = int(levels[0]['a'])
 
     def _get_threshold(self):
-        
-        query = "SELECT value FROM config WHERE conf = 'threshold'"
+        query = ''
+        usekey = False
+        if not _CONF['encryptionKey']:
+            query = "SELECT value FROM config WHERE conf = 'threshold'"
+        else:
+            logger.debug("THRESHOLD---- using key: %s" % _CONF['encryptionKey'])
+            query = "SELECT *,AES_DECRYPT(value,'%s') as dvalue FROM config WHERE conf = 'threshold'" % _CONF['encryptionKey']
+            usekey = True
+            
         result = _DB.exec_query(query)
         if result != []:
             self.info['threshold'] = int(result[0]['value'])
+        elif usekey:
+            #test for no decrypt.
+            query = "SELECT value FROM config WHERE conf = 'threshold'"
+            result = _DB.exec_query(query)
+            if result != []:
+                self.info['threshold'] = int(result[0]['value'])
+
 
     def _get_last_incident(self):
 
@@ -221,8 +276,8 @@ class Services:
                     try:
                         (sensor_temp, sensor_temp_status) = result[0]
                         sensor_set.add(sensor_temp)
-                    except IndexError:
-                        pass
+                    except IndexError,e:
+                        logger.debug("Error ..%s" % str(e))
                 except socket.error, e:
                     print e
             self.info['agents']['up'] = len(sensor_set)
@@ -240,15 +295,13 @@ class Services:
 
 
     def _get_sensor_plugins(self):
-        
         snort_set = Set()
-	snort_total_set = Set()
+        snort_total_set = Set()
         ntop_set = Set()
-	ntop_total_set = Set()
+        ntop_total_set = Set()
         
         if self.conn is None:
             return
-        
         try:
             self.conn.send(self.GET_SENSOR_PLUGINS_REQUEST)
             while 1:
@@ -283,7 +336,8 @@ class Services:
             try:
                 char = conn.recv(1)
                 data += char
-                if char == '\n': break;
+                if char == '\n':
+                    break
             except socket.error:
                 print 'Error receiving from server'
             except AttributeError:

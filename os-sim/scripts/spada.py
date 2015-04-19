@@ -107,7 +107,7 @@ class garbage(Thread):
 		t = time.mktime(t.timetuple())
 		for ts in tsts.keys():
 			if tsts[ts] + 3 < t:
-				logger.info("NLDU: %s:%s, %s:%s" % (ts[0], ts[1], ts[2], ts[3]))
+				logger.info("1 %s: Non-live dest used %s:%s, %s:%s" % (interface, ts[0], ts[1], ts[2], ts[3]))
 				conns.remove([ts[0], ts[1], ts[2], ts[3]])
 				del tsts[ts]
 		time.sleep(0.1)
@@ -139,14 +139,13 @@ def check(p):
 			del tsts[(p.getlayer(IP).dst, p.getlayer(TCP).dport, p.getlayer(IP).src, p.getlayer(TCP).sport)]
 		except:
 			pass
-		logger.info("CDPU: %s:%s, %s:%s" % (p.getlayer(IP).src, p.getlayer(TCP).sport, p.getlayer(IP).dst, p.getlayer(TCP).dport))
+		logger.info("2 %s: Closed dest port used %s:%s, %s:%s" % (interface, p.getlayer(IP).src, p.getlayer(TCP).sport, p.getlayer(IP).dst, p.getlayer(TCP).dport))
 		
 try:
 	interface = sys.argv[1]
 	logFile = sys.argv[2]
-	ptime = sys.argv[3]
 except:
-	print "Usage: spada.py interface logfile ptime"
+	print "Usage: spada.py interface logfile"
 	sys.exit()
 	
 logger = Logger.logger

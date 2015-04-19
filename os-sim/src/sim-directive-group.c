@@ -1,36 +1,36 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
 
 #include "sim-directive-group.h"
-#include <config.h>
 
 enum 
 {
@@ -46,7 +46,9 @@ struct _SimDirectiveGroupPrivate {
 };
 
 static gpointer parent_class = NULL;
+/* no signals
 static gint sim_directive_group_signals[LAST_SIGNAL] = { 0 };
+*/
 
 /* GType Functions */
 
@@ -156,7 +158,7 @@ sim_directive_group_get_name (SimDirectiveGroup	*dg)
  */
 void
 sim_directive_group_set_name (SimDirectiveGroup	*dg,
-			      gchar		*name)
+			      const gchar		*name)
 {
   g_return_if_fail (dg);
   g_return_if_fail (SIM_IS_DIRECTIVE_GROUP (dg));
@@ -165,7 +167,7 @@ sim_directive_group_set_name (SimDirectiveGroup	*dg,
   if (dg->_priv->name)
     g_free (dg->_priv->name);
 
-  dg->_priv->name = name;
+  dg->_priv->name = g_strdup (name);
 }
 
 /*

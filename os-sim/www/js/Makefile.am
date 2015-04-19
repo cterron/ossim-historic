@@ -1,11 +1,8 @@
 SUBDIRS= rico \
-		 scriptaculous \
-		 mattkruse \
-		 OpenLayers
+		 scriptaculous 
 
 jsdir = $(datadir)/ossim/www/js
-js_DATA = prototype.js \
-		xajax.js
+js_DATA = prototype.js 
 
 EXTRA_DIST   = $(js_DATA)
 DISTCLEANFILES = Makefile.in

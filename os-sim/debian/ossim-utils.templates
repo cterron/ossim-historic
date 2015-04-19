@@ -1,6 +1,6 @@
 Template: ossim-utils/base
 Type: string
-Default: ossim
+Default: alienvault
 Description: Please enter the name of the database to use
  OSSIM Database configuration
 

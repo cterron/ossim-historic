@@ -1,9 +1,8 @@
 confdir = $(datadir)/ossim/www/conf
-conf_DATA = main.php \
+conf_DATA = \
 	emailtemplate.php \
 	reload.php \
 	plugin.php \
-	pluginupdate.php \
 	pluginref.php \
 	pluginsid.php \
 	userlog.php

@@ -1,12 +1,47 @@
-import os, sys, time, re
+#!/usr/bin/python
+#
+# License:
+#
+#    Copyright (c) 2003-2006 ossim.net
+#    Copyright (c) 2007-2014 AlienVault
+#    All rights reserved.
+#
+#    This package is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 dated June, 1991.
+#    You may not use, modify or distribute this program under any other version
+#    of the GNU General Public License.
+#
+#    This package is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this package; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#    MA  02110-1301  USA
+#
+#
+# On Debian GNU/Linux systems, the complete text of the GNU General
+# Public License can be found in `/usr/share/common-licenses/GPL-2'.
+#
+# Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+#
+import os
+import sys
+import time
+import re
 import pycurl
 import StringIO
 
 from OssimConf import OssimConf
-from OssimDB import OssimDB
+#from OssimDB import OssimDB
 import threading
-import Const
+from DBConstantNames import *
 
+from Logger import Logger
+logger = Logger.logger
 
 class AcidCache (threading.Thread) :
 
@@ -17,14 +52,14 @@ class AcidCache (threading.Thread) :
     __STAT_PORTS    = "_stat_ports.php?port_type=2%26proto=-1%26sort_order=dip_d"
 
     def __init__ (self) :
-        self.__conf = OssimConf (Const.CONFIG_FILE)
+        self.__conf = OssimConf ()
         self.__urls = {}
         threading.Thread.__init__(self)
 
     def run (self) :
 
         # default scheme and ip values
-        if Const.HTTP_SSL:
+        if self.__conf[VAR_USE_HTTPS]:
             acid_scheme = ossim_scheme = "https://"
         else :
             acid_scheme = ossim_scheme = "http://"
@@ -67,7 +102,7 @@ class AcidCache (threading.Thread) :
         while 1:
 
             # Open ossim session
-            print __name__, ': Login to web framework'
+            logger.info('Login to web framework')
             contents = StringIO.StringIO()
             url = "%s%s%s/session/login.php" % (ossim_scheme, ossim_ip, ossim_link)
             curl = pycurl.Curl()
@@ -77,28 +112,27 @@ class AcidCache (threading.Thread) :
             curl.setopt(pycurl.SSL_VERIFYHOST, 0)
             curl.setopt(pycurl.SSL_VERIFYPEER, 0)
             curl.setopt(pycurl.COOKIEFILE, "")
-            curl.setopt(pycurl.HTTPPOST, [('user',acid_user),
-                                          ('pass',acid_pass)])
+            curl.setopt(pycurl.HTTPPOST, [('user', acid_user),
+                                          ('pass', acid_pass)])
             try:
                 curl.perform()
             except Exception, e:
-                print __name__, ":", e
+                logger.error(str(e))
 
-# TODO: What's the reason to logging to ossim-framework?
-#       I can't get it working with this piece of code :(
-#
-#            match = re.search(r".*OSSIM Framework Login.*", contents.getvalue())
-#            contents.close()
-#            if match is not None:
-#                print >>sys.stderr, __name__, ":", "Error : Failed login to web framework"
-#                continue
+            # TODO: What's the reason to logging to ossim-framework?
+            #       I can't get it working with this piece of code :(
+            #
+            #            match = re.search(r".*OSSIM Framework Login.*", contents.getvalue())
+            #            contents.close()
+            #            if match is not None:
+            #                print >>sys.stderr, __name__, ":", "Error : Failed login to web framework"
+            #                continue
 
             for key, url in self.__urls.iteritems():
                 contents = StringIO.StringIO()
                 try:
                     fname = self.__conf["acid_path"] + "/" + key + ".html"
-
-                    print __name__, ': Fetching %s from "%s"' % (fname, url)
+                    logger.info('Fetching %s from "%s"' % (fname, url))
 
                     curl.setopt(pycurl.URL, url)
                     curl.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -110,8 +144,7 @@ class AcidCache (threading.Thread) :
                     fout.close()
 
                 except Exception, e:
-                    print __name__, ":", e
-
+                    logger.error(str(e))
                 contents.close()
  
             curl.close()

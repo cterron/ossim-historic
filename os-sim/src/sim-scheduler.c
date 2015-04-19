@@ -1,90 +1,113 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
+#include "config.h"
+
+#include "sim-scheduler.h"
+
 #include <unistd.h>
+#include <inttypes.h>
 
 #include "os-sim.h"
-#include "sim-scheduler.h"
 #include "sim-container.h"
 #include "sim-config.h"
 #include "sim-directive.h"
 #include "sim-command.h"
 #include "sim-server.h"
 #include "sim-session.h"
-#include <config.h>
 #include "sim-enums.h"
+#include "sim-database.h"
+#include "sim-groupalarm.h"
+#include "sim-db-insert.h"
 
 extern SimMain  ossim;
+extern int aux_recvd_msgs;
 
-enum 
+enum
 {
   DESTROY,
   LAST_SIGNAL
 };
 
-/* FIXME: this struct is not used anywhere*/
-struct SimSchedulerTask {
-  gint     id;
-  gchar   *name;
-  gint     timer;
-};
-/**/
-
-
-struct _SimSchedulerPrivate {
-  SimConfig      *config;
-
-  gint            timer;
-
-  GList          *tasks;
+struct _SimSchedulerPrivate
+{
+  SimConfig *config;
+  gint       timer;
+  GList     *tasks;
 };
 
 static gpointer parent_class = NULL;
-static gint sim_container_signals[LAST_SIGNAL] = { 0 };
+/* No signals
+   static gint sim_container_signals[LAST_SIGNAL] = { 0 };
+*/
 
-static time_t       last = 0;
-static time_t       timer = 0;
+static time_t last  = 0;
+static time_t timer = 0;
 
-//the following used in sim_scheduler_task_store_event_number_at_5min()
-static time_t       event_last = 0;
-static time_t       event_timer = 300; //FIXME: A variable in config may be more friendly than this...
+static time_t       unconfigured_sensors_last_sec = 0;
+
+/* Reload host_plugin_sids hash table every 5 minutes. Needed for cross-correlation. */
+static time_t host_plugin_sids_last  = 0;
+static time_t host_plugin_sids_timer = 300;
+
+// used in sim_scheduler_show_stats()
+static time_t db_last = 0;
+static guint  events_before = 0;
+static guint  sim_before = 0; //store how many events had the sem queue last time
+
+// Static prototypes.
+static void       sim_scheduler_task_remove_backlogs            (SimScheduler * scheduler,
+                                                                 GTimeVal curr_time);
+static void       sim_scheduler_task_calculate                  (SimScheduler  *scheduler,
+                                                                 gpointer       data);
+
+
+static void       sim_scheduler_task_execute_at_interval        (SimScheduler * scheduler,
+                                                                 gpointer       data,
+                                                                 GTimeVal curr_time);
+static void       sim_scheduler_task_insert_host_plugin_sids    (SimScheduler * scheduler,
+                                                                 GTimeVal curr_time);
+static void       sim_scheduler_show_stats                      (SimScheduler * scheduler,
+                                                                 GTimeVal curr_time);
+static void       sim_scheduler_unconfigured_sensors            (GTimeVal curr_time);
+static void       sim_scheduler_clean_group_alarm               (SimScheduler *scheduler);
+
 
 /* GType Functions */
-
-static void 
+static void
 sim_scheduler_impl_dispose (GObject  *gobject)
 {
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
 
-static void 
+static void
 sim_scheduler_impl_finalize (GObject  *gobject)
 {
   SimScheduler *sch = SIM_SCHEDULER (gobject);
@@ -111,10 +134,8 @@ sim_scheduler_instance_init (SimScheduler *scheduler)
   scheduler->_priv = g_new0 (SimSchedulerPrivate, 1);
 
   scheduler->_priv->config = NULL;
-
-  scheduler->_priv->timer = 30;
-
   scheduler->_priv->tasks = NULL;
+  scheduler->_priv->timer = 30;
 }
 
 /* Public Methods */
@@ -123,27 +144,27 @@ GType
 sim_scheduler_get_type (void)
 {
   static GType object_type = 0;
- 
+
   if (!object_type)
   {
     static const GTypeInfo type_info = {
-              sizeof (SimSchedulerClass),
-              NULL,
-              NULL,
-              (GClassInitFunc) sim_scheduler_class_init,
-              NULL,
-              NULL,                       /* class data */
-              sizeof (SimScheduler),
-              0,                          /* number of pre-allocs */
-              (GInstanceInitFunc) sim_scheduler_instance_init,
-              NULL                        /* value table */
+      sizeof (SimSchedulerClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) sim_scheduler_class_init,
+      NULL,
+      NULL,                       /* class data */
+      sizeof (SimScheduler),
+      0,                          /* number of pre-allocs */
+      (GInstanceInitFunc) sim_scheduler_instance_init,
+      NULL                        /* value table */
     };
-    
+
     g_type_init ();
-                                                                                                                             
+
     object_type = g_type_register_static (G_TYPE_OBJECT, "SimScheduler", &type_info, 0);
   }
-                                                                                                                             
+
   return object_type;
 }
 
@@ -169,32 +190,17 @@ sim_scheduler_new (SimConfig    *config)
 
 /*
  * Recover the host and net levels of C and A
- * 
  */
-void
+static void
 sim_scheduler_task_calculate (SimScheduler  *scheduler,
-			      gpointer       data)
+                              gpointer       data)
 {
-  gint           recovery;
-  
-  recovery = sim_container_db_get_recovery (ossim.container, ossim.dbossim);
-  sim_container_set_host_levels_recovery (ossim.container, ossim.dbossim, recovery);
-  sim_container_set_net_levels_recovery (ossim.container, ossim.dbossim, recovery);
-}
-
-/*
- *
- *
- *
- */
-void
-sim_scheduler_task_correlation (SimScheduler  *scheduler,
-																gpointer       data)
-{
-  g_return_if_fail (scheduler != NULL);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
-  sim_scheduler_backlogs_time_out (scheduler);
+  // unused parameter
+  (void) data;
+
+  sim_container_update_recovery (ossim.container, ossim.dbossim);
 }
 
 /*
@@ -204,15 +210,11 @@ sim_scheduler_task_correlation (SimScheduler  *scheduler,
  */
 void
 sim_scheduler_task_execute_at_interval (SimScheduler  *scheduler,
-				                   	            gpointer       data)
+                                        gpointer       data,
+                                        GTimeVal curr_time)
 {
   SimConfig     *config;
-  GTimeVal       curr_time;
-
-  g_return_if_fail (scheduler != NULL);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
-
-  g_get_current_time (&curr_time);
 
   if (curr_time.tv_sec < (last + timer))
     return;
@@ -222,248 +224,62 @@ sim_scheduler_task_execute_at_interval (SimScheduler  *scheduler,
 
   timer = config->scheduler.interval; //interval is 15 by default in config.xml
 
-	//Functions to execute (some of them just if DB is local).:
-	if (sim_database_is_local (ossim.dbossim))
-	{
-		sim_scheduler_task_calculate (scheduler, data);//do the net and host level recovering
-		sim_scheduler_task_GDAErrorHandling(); 	//do a GDA check to test if everything goes fine.
-	}
-  sim_scheduler_task_rservers (SIM_SCHEDULER_STATE_NORMAL); //(Re)connect with Main Server/s & HA servers
+  sim_scheduler_task_calculate (scheduler, data);//do the net and host level recovering
 
-//  sim_scheduler_task_rservers (scheduler); //(Re)connect with the other HA Server.
-
+  return;
 }
 
-/*
- * Although this function is executed each second or so, only
- * do its job (store how much events of each kind has arrived to the server)
- * each 5 minutes
+/**
+ * sim_scheduler_task_insert_host_plugin_sids:
+ * @scheduler: a #SimScheduler object.
+ *
+ * Dumps the contents of the @host_plugin_sids hash table into database every 5 minutes.
  */
-void
-sim_scheduler_task_store_event_number_at_5min (SimScheduler  *scheduler)
+static void
+sim_scheduler_task_insert_host_plugin_sids (SimScheduler * scheduler,
+                                            GTimeVal       curr_time)
 {
-  GTimeVal       curr_time;
-
-  g_return_if_fail (scheduler != NULL);
-  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
-
-  g_get_current_time (&curr_time);
-
-  if (curr_time.tv_sec < (event_last + event_timer))
+  if (curr_time.tv_sec < (host_plugin_sids_last + host_plugin_sids_timer))
     return;
 
-  event_last = curr_time.tv_sec;
+  host_plugin_sids_last = curr_time.tv_sec;
 
-  //storing events:
-	G_LOCK (s_mutex_sensors);
-	
-	GList *list;
+  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
-  list = sim_container_get_sensors_ul(ossim.container);
-  SimSensor *sensor;
-  while (list)
+  SimContext * context = sim_container_get_context (ossim.container, NULL);
+  GList * host_plugin_sids = NULL;
+
+  sim_context_lock_host_plugin_sids_r (context);
+
+  host_plugin_sids = sim_context_get_host_plugin_sid_list (context);
+
+  while (host_plugin_sids)
   {
-    sensor = (SimSensor *) list->data;
-	  sim_container_db_update_sensor_events_number (ossim.container, ossim.dbossim, sensor); //store in DB!
-		sim_sensor_reset_events_number (sensor); //reset memory 
-		
-		list = list->next;			
-	}   
+    SimHostPluginSid * host_plugin_sid = (SimHostPluginSid *) host_plugin_sids->data;
+    // Store only if it wasn't previously.
+    if (!(host_plugin_sid->in_database))
+    {
+      sim_db_insert_host_plugin_sid (ossim.dbossim, host_plugin_sid->host_ip, host_plugin_sid->plugin_id, host_plugin_sid->plugin_sid, sim_context_get_id (host_plugin_sid->context));
+      g_atomic_int_set (&host_plugin_sid->in_database, TRUE);
+    }
 
-
-	G_UNLOCK (s_mutex_sensors);
-
-
-}
-
-
-
-/*
- * this function go through the last gda errors and print it.
- * may be this is not the best place to put this function, but...
- * its called from sim_scheduler_task_calculate() (each 15 seconds)
- */
-void
-sim_scheduler_task_GDAErrorHandling (void)
-{
-  GList		*list = NULL;
-  GList		*node;
-  GdaError	*error;
-  GdaConnection *conn;
-
-  conn = (GdaConnection *) sim_database_get_conn(ossim.dbossim);
-
-  list = (GList *) gda_connection_get_errors (conn);
-      
-//  if (!list)
-//    g_log (g_log_domain, g_log_level_debug, "gda ok");
-
-  for (node = g_list_first (list); node != NULL; node = g_list_next (node))
-  {
-    error = (GdaError *) node->data;
-
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "error in gdaconnection:");
-    if (error)
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "error no: %d \ndesc: %s \nsource: %s \nsqlstate: %s", gda_error_get_number (error), gda_error_get_description (error), gda_error_get_source (error), gda_error_get_sqlstate (error));
-  }
-  gda_connection_clear_error_list(conn); 
-}
-
-/*
- *	thread call from sim_scheduler_task_rservers()
- */
-static gpointer
-sim_scheduler_session (gpointer data)
-{
-  SimSession  *session = (SimSession *) data;
-  SimCommand  *command = NULL;
-                             
-  g_return_val_if_fail (session, NULL);
-  g_return_val_if_fail (SIM_IS_SESSION (session), NULL);
-
-  g_message ("New session (Remote Servers)");
-
-  command = sim_command_new ();
-  command->id = 1;
-  command->type = SIM_COMMAND_TYPE_CONNECT;
-  command->data.connect.type = session->type;
-		
-	SimServer	*server = (SimServer *) sim_session_get_server (session);
-	command->data.connect.hostname = sim_server_get_name (server);	//this is the name of this server, to send it to the master server
-																																	//so he knows who we are. Or to send it to the HA server.
-  if (sim_session_write (session, command))
-	{
-		if (!sim_session_must_close (session))
-		{
-		  sim_session_read (session);
-		}
-
-		//When the session stops reading data, we must close the conn and re-connect 
-		//(in sim_scheduler_task_rservers() )
-	  if (sim_server_remove_session (ossim.server, session))
-		{
-			g_message ("Remove Session (Remote Servers)");
-			g_object_unref (session);
-		}
-		else
-			g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_session: Error removing session: %x", session);
-		
-	}  
-  return NULL;
-}
-
-
-/*
- * This function will open the connection against all the servers from which OSSIM gets information, hosts, networks,
- * (called "rservers" in config.xml) and commands from the "Main Server", identified as primary. If connection is lost,
- * this will try to reopen it.
- */
-gboolean
-sim_scheduler_task_rservers (SimSchedulerState state)
-{
-  GThread  *thread;
-  GList    *list;
-	gboolean exist_rserver;
-
-  list = ossim.config->rservers;
-
-  if (list != NULL)
-	{
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_task_rservers: there are some rservers");
-		exist_rserver = TRUE;
-	}
-	else
-		exist_rserver = FALSE;
-
-	
-	//may be that the connection with the master servers has been lost. Reopen if needed...
-	while (list)
-  {
-    SimConfigRServer *rserver = (SimConfigRServer*) list->data;
-
-		//This is usefull when we are connecting to the primary master server to load DB data from it (in sim_container_start_temp_listen())
-		//we only want to activate the primary master server session, not other master server sessions or HA servers.
-		if (state == SIM_SCHEDULER_STATE_INITIAL)	
-			if (!rserver->primary)
-			{
-				list = list->next;
-				continue;
-			}
-
-
-		SimSessionType	sesstype;		
-		SimServer				*srv;
-		if (rserver->is_HA_server)
-		{
-			sesstype = SIM_SESSION_TYPE_HA;
-			srv = ossim.HA_server;
-
-			//sim_server_send_keepalive(); //just a reminder of the next step to programming.
-		}
-		else
-		{			
-			sesstype = SIM_SESSION_TYPE_SERVER_UP;		
-			srv = ossim.server;
-		}
-		
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_task_rservers, sim_scheduler_backlogs_time_out: backlogs %d", g_list_length (list));
-		//if the rservers defined aren't active, we've to activate them to accept instructions from
-		//them (remember, rservers are the servers "up" in the multiserver architecture) or to accept 
-		//data from an HA server. A rserver can be also another HA server in the same level than this one.
-		if (!sim_server_get_session_by_ia (srv, sesstype, rserver->ia))
-		{
-		  rserver->socket = gnet_tcp_socket_new (rserver->ia); //connect to its master server or to the HA server.
-
-			if (rserver->socket)
-			{
-				SimSession *session = sim_session_new (G_OBJECT (srv), ossim.config, rserver->socket);					
-				sim_session_set_hostname (session, rserver->name);
-				sim_session_set_is_initial (session, state);
-				if (!sim_session_must_close (session))
-				{
-					session->type = sesstype;
-			    sim_server_append_session (srv, session);
-				  g_message ("Connecting to remote server: %s\n", rserver->name);
-					/* session thread */
-					thread = g_thread_create(sim_scheduler_session, session, FALSE, NULL);
-				  g_return_if_fail (thread);
-				}
-				else
-				{
-					g_object_unref (session);
-			    g_message ("Session Removed: error");				
-				}
-			}	    
-		  else
-	    {
-		    if (!rserver->is_HA_server)							
-		      g_message ("Error connecting to remote server %s with ip %s,\n please check the server's config.xml file or the connection\n", rserver->name, rserver->ip);							
-				else	//this server takes the control; the other server is down.
-				{
-					
-		      g_message ("HA remote server %s with ip %s is down. This is now the active server.\n", rserver->name, rserver->ip);							
-				}
-					
-	    }
-			
-		}
-    list = list->next;
-		
+    host_plugin_sids = g_list_delete_link (host_plugin_sids, host_plugin_sids);
   }
 
-	return exist_rserver;
+  sim_context_unlock_host_plugin_sids_r (context);
+
+  return;
 }
 
 /*
- * main scheduler loop wich decides what should run in a specific moment
+ * main scheduler loop which decides what should run in a specific moment
  *
  */
 void
 sim_scheduler_run (SimScheduler *scheduler)
 {
-  GTimeVal      curr_time;
+  GTimeVal   curr_time;
 
-  g_return_if_fail (scheduler != NULL);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
   g_get_current_time (&curr_time);
@@ -471,149 +287,139 @@ sim_scheduler_run (SimScheduler *scheduler)
   if (!last)
     last = curr_time.tv_sec;
 
-	if (!event_last)
-		event_last = curr_time.tv_sec;
+  if (!host_plugin_sids_last)
+    host_plugin_sids_last = curr_time.tv_sec;
 
-	
   while (TRUE)
   {
-    sleep (1);
-		if (sim_database_is_local (ossim.dbossim)) //this functions has no sense if the DB is not local
-		{
-	    sim_scheduler_task_correlation (scheduler, NULL); //removes backlog entries when needed
-			sim_scheduler_task_store_event_number_at_5min (scheduler); //stores the event number each 5 minutes (I know, this is a bad style, I'm sorry)
-		}
-    sim_scheduler_task_execute_at_interval (scheduler, NULL);//execute some tasks in the time interval defined in config.xml
+    g_usleep (G_USEC_PER_SEC);
+    g_get_current_time (&curr_time);
+
+    sim_scheduler_task_remove_backlogs (scheduler, curr_time); //removes backlog entries when needed
+    sim_scheduler_task_insert_host_plugin_sids (scheduler, curr_time); // Needed for cross correlation.
+    sim_scheduler_clean_group_alarm (scheduler); // Activate the clean of group alarms
+    sim_scheduler_show_stats (scheduler, curr_time); //NOTE: comment or uncomment this if you want to see statistics
+    sim_scheduler_unconfigured_sensors (curr_time);
+
+    sim_scheduler_task_execute_at_interval (scheduler, NULL, curr_time);//execute some tasks in the time interval defined in config.xml
   }
+
+  return;
 }
 
-/*
- *
- *
- *
+/**
+ * sim_scheduler_show_stats:
+ * @scheduler: a SimScheduler object.
+ * @curr_time: the current time.
  *
  */
 void
-sim_scheduler_backlogs_time_out (SimScheduler  *scheduler)
+sim_scheduler_show_stats (SimScheduler *scheduler,
+                          GTimeVal curr_time)
 {
-  SimConfig     *config;
-  GList         *list;
-  GList					*removes = NULL; //here will be append all the events so we can delete it in the second "while".
+  gint events_now = 0;      // events in DB in this moment
+  static gint total_db_old=0;
+  glong elapsed_time;
 
-  g_return_if_fail (scheduler);
   g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
 
-  config = scheduler->_priv->config;
+  if (curr_time.tv_sec < (db_last + STATS_TIME_LAPSE))
+    return;
 
-  g_mutex_lock (ossim.mutex_backlogs);
-  list = sim_container_get_backlogs_ul (ossim.container);
-  if (list)
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_backlogs_time_out: backlogs %d", g_list_length (list));
+  elapsed_time = curr_time.tv_sec - db_last;
+  db_last = curr_time.tv_sec;
+
+  events_now = sim_container_get_events_count (ossim.container);
+  if(!total_db_old)
+    total_db_old = events_now;
+
+  guint eps = (events_now - events_before) / elapsed_time;
+  guint eps_sim = (sim_organizer_get_total_events (ossim.organizer) - sim_before) / elapsed_time;
+
+  //this if needed for the first event
+  if (events_before == 0)
+    eps = 0;
+
+  gchar *context_stats = sim_container_get_context_stats (ossim.container, elapsed_time);
+
+  if (simCmdArgs.dvl == 666)
+  {
+    g_message("%d [SIM q: %u, popped: %u, discarded: %u, eps: %u] [DB Inserted/Total DB: %d/%d, eps: %u] [session %u/%u] [backlogs: %u]%s",
+              aux_recvd_msgs,
+              sim_organizer_get_events_in_queue (),
+              (sim_organizer_get_total_events(ossim.organizer) >0? sim_organizer_get_total_events(ossim.organizer):0),
+              sim_container_get_discarded_events (ossim.container),
+              (eps_sim > 0 ? eps_sim:0),
+              ((events_now - total_db_old) > 0 ? (events_now - total_db_old):0),
+              (events_now > 0 ?events_now:0) , eps,
+              (sim_server_get_session_count(ossim.server) > 0 ?sim_server_get_session_count(ossim.server):0),
+              (sim_server_get_session_count_active(ossim.server) > 0?sim_server_get_session_count_active(ossim.server):0 ),
+              sim_container_get_total_backlogs (ossim.container),
+              context_stats);
+  }
   else
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "sim_scheduler_backlogs_time_out: list is NULL");
-  
-  while (list)
   {
-    SimDirective *backlog = (SimDirective *) list->data;
-
-    if (sim_directive_is_time_out (backlog)) //the directive has ended. Its 'timeouted'
-		{
-		  /* Rule NOT */
-		  if (sim_directive_backlog_match_by_not (backlog))
-	    {
-	      SimEvent     *new_event;
-	      SimRule      *rule_root;
-	      GNode        *rule_node;
-
-	      rule_root = sim_directive_get_root_rule (backlog);
-	      rule_node = sim_directive_get_curr_node (backlog);
-	      
-	      /* Create New Event */
-	      new_event = sim_event_new ();
-	      new_event->type = SIM_EVENT_TYPE_DETECTOR;
-	      new_event->alarm = FALSE;
-				new_event->sensor = gnet_inetaddr_get_canonical_name (sim_rule_get_sensor(rule_root));
-
-	      new_event->plugin_id = SIM_PLUGIN_ID_DIRECTIVE;
-	      new_event->plugin_sid = sim_directive_get_id (backlog);
-
-	      if (sim_rule_get_src_ia (rule_root))
-					new_event->src_ia = gnet_inetaddr_clone (sim_rule_get_src_ia (rule_root));
-	      if (sim_rule_get_dst_ia (rule_root))
-					new_event->dst_ia = gnet_inetaddr_clone (sim_rule_get_dst_ia (rule_root));
-	      new_event->src_port = sim_rule_get_src_port (rule_root);
-	      new_event->dst_port = sim_rule_get_dst_port (rule_root);
-	      new_event->protocol = sim_rule_get_protocol (rule_root);
-	      new_event->condition = sim_rule_get_condition (rule_root);
-	      if (sim_rule_get_value (rule_root))
-					new_event->value = g_strdup (sim_rule_get_value (rule_root));
-
-	      new_event->data = sim_directive_backlog_to_string (backlog);
-
-	      /* Rule reliability */
-	      if (sim_rule_get_rel_abs (rule_root))
-					new_event->reliability = sim_rule_get_reliability (rule_root);
-	      else
-					new_event->reliability = sim_rule_get_reliability_relative (rule_node);
-
-	      /* Directive Priority */
-	      new_event->priority = sim_directive_get_priority (backlog);
-
-	      sim_container_push_event (ossim.container, new_event);
-	      
-	      sim_container_db_update_backlog_ul (ossim.container, ossim.dbossim, backlog);
-	      
-	      /* Children Rules with type MONITOR */
-	      if (!G_NODE_IS_LEAF (rule_node))
-				{
-				  GNode *children = rule_node->children;
-				  while (children)
-			    {
-		  	    SimRule *rule = children->data;
-		      
-		    	  if (rule->type == SIM_RULE_TYPE_MONITOR)
-						{	
-#if 0							
-					//	  SimCommand *cmd = sim_command_new_from_rule (rule);
-						  sim_server_push_session_plugin_command (ossim.server, 
-																										  SIM_SESSION_TYPE_SENSOR, 
-																										  sim_rule_get_plugin_id (rule),
-																										  rule);
-						//  g_object_unref (cmd);
-#endif											
-						}
-		      
-		    	  children = children->next;
-
-		  	  }
-				} 
-		    else
-				{
-		  		removes = g_list_append (removes, backlog);
-				}
-							 
-	  	  list = list->next;
-		    continue;
-		  }
-	  	removes = g_list_append (removes, backlog);
-							
-		}
-	  list = list->next;
+    g_message("Events in DB: %d; Discarded events: %d", events_now, sim_container_get_discarded_events (ossim.container));
   }
 
-  list = removes;
-  while (list)
-  {
-    SimDirective *backlog = (SimDirective *) list->data;
-    sim_container_remove_backlog_ul (ossim.container, backlog);
-    sim_container_db_delete_backlog_ul (ossim.container, ossim.dbossim, backlog);
-    g_object_unref (backlog);
-    list = list->next;
-  }
+  g_free (context_stats);
 
-	if (removes)
-		g_list_free (removes);
-
-  g_mutex_unlock (ossim.mutex_backlogs);
+  events_before = events_now;
+  sim_before = sim_organizer_get_total_events (ossim.organizer);
 }
+
+static void
+sim_scheduler_unconfigured_sensors (GTimeVal curr_time)
+{
+  SimSensor *sensor;
+
+  if (curr_time.tv_sec < (unconfigured_sensors_last_sec + UNCONFIGURED_SENSORS_TIME_LAPSE))
+    return;
+
+  unconfigured_sensors_last_sec = curr_time.tv_sec;
+
+  sensor = sim_container_get_sensor_by_name (ossim.container, "(null)");
+
+  if (sensor)
+  {
+    g_message ("There are unconfigured sensors, please configure them from the UI. Meanwhile information generated by them will be discarded");
+    g_object_unref (sensor);
+  }
+}
+
+/**
+ * sim_scheduler_task_remove_backlogs:
+ * @scheduler: a SimScheduler object.
+ * @curr_time: the current time.
+ *
+ * Remove backlogs that are mean to, whether they're expired or
+ * already matched.
+ */
+static void
+sim_scheduler_task_remove_backlogs (SimScheduler * scheduler,
+                                    GTimeVal       curr_time)
+{
+  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
+
+  // unused parameter
+  (void) curr_time;
+
+  sim_container_remove_expired_backlogs (ossim.container);
+}
+
+/**
+ * sim_scheduler_clean_group_alarm:
+ * @scheduler: a SimScheduler object.
+ *
+ * This function lock the access to the alarm hash table => it can block the
+ * correlation. We are going to run it each five minutes
+ */
+void
+sim_scheduler_clean_group_alarm (SimScheduler *scheduler)
+{
+  g_return_if_fail (SIM_IS_SCHEDULER (scheduler));
+
+  sim_container_remove_expired_group_alarms (ossim.container);
+}
+
 // vim: set tabstop=2:

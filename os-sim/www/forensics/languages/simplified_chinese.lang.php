@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -15,6 +10,8 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 */
+
+
 //locale
 DEFINE('_LOCALESTR1', 'eng_ENG.ISO8859-1'); //NEW
 DEFINE('_LOCALESTR2', 'eng_ENG.utf-8'); //NEW
@@ -344,13 +341,10 @@ DEFINE('_PHPERRORCSESSIONCODE', 'PHP 错误: 配置了一个用户定制的
 PHP 
 会话，但是<CODE>user_session_path</CODE>里提供的供应处理器代码不可用。');
 DEFINE('_PHPERRORCSESSIONVAR', 'PHP 错误: 配置了一个用户定制的 
-DEFINE('_DISPACTION',' {
-    action
-}
-'); //NEW
 PHP 会话，但是在 BASE 
 里没有制定这个处理器的工具。如果需要一个定制会话处理器，在<CODE>base_conf.php</CODE>里设置<CODE>user_session_path</CODE> 
 变量.');
+DEFINE('_DISPACTION',' {action}'); //NEW
 DEFINE('_PHPSESSREG', '会话已注册');
 //base_state_criteria.inc.php
 DEFINE('_REMOVE', '移除');
@@ -359,7 +353,7 @@ DEFINE('_ERRCRITELEM', '不可用的准则元素');
 //base_state_query.inc.php
 DEFINE('_VALIDCANNED', '可用的固定查询列表');
 DEFINE('_DISPLAYING', '显示');
-DEFINE('_DISPLAYINGTOTAL', '显示警告 %d-%d 总数 %d ');
+DEFINE('_DISPLAYINGTOTAL', '显示警告 %d-%d 总数 %s ');
 DEFINE('_NOALERTS', '没有警告。');
 DEFINE('_QUERYRESULTS', '查询结果');
 DEFINE('_QUERYSTATE', '查询状态');

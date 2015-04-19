@@ -19,7 +19,8 @@ update-po:
 	rm -f .filenames .ossim.po
 
 DISTCLEANFILES = install-sh mkinstalldirs missing config.guess config.sub aclocal.* config.h* configure Makefile \
-	Makefile.in
+	Makefile.in \
+	ltmain.sh libtool
 distclean-local:
 	test -z autom4te.cache || rm -rf autom4te.cache
 install-data-hook:

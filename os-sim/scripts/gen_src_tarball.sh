@@ -49,7 +49,7 @@ fi
 #
 #  Check if the directory specified is really an ossim source directory
 #
-if [ ! -f $OSSIM_SRC_DIR/include/classes/About.inc ] || \
+if [ ! -f $OSSIM_SRC_DIR/include/classes/about.inc ] || \
    [ ! -f $OSSIM_SRC_DIR/db/ossim_config.sql ]
 then
     echo " ERROR: Sorry, it seems that the directory specified "
@@ -61,7 +61,7 @@ fi
 #  Get current version from source
 #  This version number will be used in the tarball name
 #
-VERSION=`grep "this->version\s*=" $OSSIM_SRC_DIR/include/classes/About.inc  | sed -e 's/.*"\(.*\)";/\1/'`
+VERSION=`grep "this->version\s*=" $OSSIM_SRC_DIR/include/classes/about.inc  | sed -e 's/.*"\(.*\)";/\1/'`
 
 #
 #  Check for version mismatches
@@ -70,7 +70,7 @@ VERSION2=`grep "ossim_schema_version" $OSSIM_SRC_DIR/db/ossim_config.sql | sed -
 if [ "$VERSION" != "$VERSION2" ]; then
     echo " ERROR: There is a version mismatch [ $VERSION != $VERSION2 ] "
     echo " Review the following files: "
-    echo " - 'include/classes/About.inc' (version) "
+    echo " - 'include/classes/about.inc' (version) "
     echo " - 'db/ossim_config.sql' (ossim_schema_version) "
     exit
 fi

@@ -1,31 +1,31 @@
 /*
-License:
+  License:
 
-   Copyright (c) 2003-2006 ossim.net
-   Copyright (c) 2007-2009 AlienVault
-   All rights reserved.
+  Copyright (c) 2003-2006 ossim.net
+  Copyright (c) 2007-2013 AlienVault
+  All rights reserved.
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
-   You may not use, modify or distribute this program under any other version
-   of the GNU General Public License.
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+  You may not use, modify or distribute this program under any other version
+  of the GNU General Public License.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA  02110-1301  USA
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA  02110-1301  USA
 
 
-On Debian GNU/Linux systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
+  On Debian GNU/Linux systems, the complete text of the GNU General
+  Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 */
 
 #if !defined(__sim_xml_config_h__)
@@ -79,6 +79,57 @@ SimConfig*       sim_xml_config_new_config_from_node (SimXmlConfig *xmlconfig,
 																								      xmlNodePtr       node);
 
 SimConfig*       sim_xml_config_get_config (SimXmlConfig  *xmlconfig);
+void						 sim_xml_config_set_confi(SimXmlConfig  *xmlconfig,
+												       SimConfig     *config,
+												       xmlNodePtr     node);
+void						 sim_xml_config_set_config_framework (SimXmlConfig  *xmlconfig,
+				 										 SimConfig     *config,
+														  xmlNodePtr     node);
+void						 sim_xml_config_set_config_datasource (SimXmlConfig  *xmlconfig,
+																      SimConfig     *config,
+																      xmlNodePtr     node);
+void 						sim_xml_config_set_config_datasources (SimXmlConfig  *xmlconfig,
+										       SimConfig     *config,
+				    						   xmlNodePtr     node);
+void						 sim_xml_config_set_config_directive (SimXmlConfig  *xmlconfig,
+				    							 SimConfig     *config,
+				   							  xmlNodePtr     node);
+void						 sim_xml_config_set_config_reputation (SimXmlConfig  *xmlconfig,
+				   					  SimConfig     *config,
+				   					  xmlNodePtr     node);
+void						 sim_xml_config_set_config_scheduler (SimXmlConfig  *xmlconfig,
+				   					  SimConfig     *config,
+				   			 		 xmlNodePtr     node);
+void						 sim_xml_config_set_config_server (SimXmlConfig  *xmlconfig,
+									  SimConfig     *config,
+				 						 xmlNodePtr     node);
+void						 sim_xml_config_set_config_notify (SimXmlConfig  *xmlconfig,
+								  SimConfig     *config,
+								  xmlNodePtr     node);
+void						 sim_xml_config_set_config_notifies (SimXmlConfig  *xmlconfig,
+				  					  SimConfig     *config,
+				   					 xmlNodePtr     node);
+void					 sim_xml_config_set_config_smtp (SimXmlConfig  *xmlconfig,
+									SimConfig     *config,
+									xmlNodePtr     node);
+void					 sim_xml_config_set_config_rserver (SimXmlConfig  *xmlconfig,
+																  SimConfig     *config,
+																  xmlNodePtr     node);
+
+
+void						 sim_xml_config_set_config_rservers (SimXmlConfig  *xmlconfig,
+																		SimConfig     *config,
+																		xmlNodePtr     node);
+void						 sim_xml_config_set_config_forensic_storage (SimXmlConfig  *xmlconfig,
+											                      SimConfig     *config,
+																			      xmlNodePtr     node);
+
+void						 sim_xml_config_set_config_idm (SimXmlConfig  *xmlconfig,
+											                      SimConfig     *config,
+																			      xmlNodePtr     node);
+
+void sim_xml_config_set_config_log (SimXmlConfig  *xmlconfig, SimConfig     *config, xmlNodePtr     node);
+
 
 G_END_DECLS
 

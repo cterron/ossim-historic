@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -15,6 +10,8 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 */
+
+
 //locale
 DEFINE('_LOCALESTR1', 'eng_ENG.ISO8859-1'); //NEW
 DEFINE('_LOCALESTR2', 'eng_ENG.utf-8'); //NEW
@@ -337,7 +334,7 @@ DEFINE('_ERRCRITELEM', 'Criterio inv&aacute;lido');
 //base_state_query.inc.php
 DEFINE('_VALIDCANNED', 'Lista de consultas pre-hechas');
 DEFINE('_DISPLAYING', 'Mostrando');
-DEFINE('_DISPLAYINGTOTAL', 'Mostrando alertas %d-%d de %d en total');
+DEFINE('_DISPLAYINGTOTAL', 'Mostrando alertas %d-%d de %s en total');
 DEFINE('_NOALERTS', 'No hay alertas.');
 DEFINE('_QUERYRESULTS', 'Resultados de consulta');
 DEFINE('_QUERYSTATE', 'Estado de consulta');

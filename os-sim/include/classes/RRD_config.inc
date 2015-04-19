@@ -1,34 +1,50 @@
 <?php
-/*****************************************************************************
+/**
+* RRD_config.inc
 *
-*    License:
+* File RRD_config.inc is used to:
+*   - Task 1 (TO DO)
+*   - Task 2 (TO DO)
+*   - Task 3 (TO DO)
 *
-*   Copyright (c) 2003-2006 ossim.net
-*   Copyright (c) 2007-2009 AlienVault
-*   All rights reserved.
 *
-*   This package is free software; you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License as published by
-*   the Free Software Foundation; version 2 dated June, 1991.
-*   You may not use, modify or distribute this program under any other version
-*   of the GNU General Public License.
+* License:
 *
-*   This package is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
+* Copyright (c) 2003-2006 ossim.net
+* Copyright (c) 2007-2013 AlienVault
+* All rights reserved.
 *
-*   You should have received a copy of the GNU General Public License
-*   along with this package; if not, write to the Free Software
-*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-*   MA  02110-1301  USA
+* This package is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; version 2 dated June, 1991.
+* You may not use, modify or distribute this program under any other version
+* of the GNU General Public License.
+*
+* This package is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this package; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+* MA  02110-1301  USA
 *
 *
 * On Debian GNU/Linux systems, the complete text of the GNU General
 * Public License can be found in `/usr/share/common-licenses/GPL-2'.
 *
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
-****************************************************************************/
+*
+* @package    ossim-framework\Metrics
+* @autor      AlienVault INC
+* @license    http://www.gnu.org/licenses/gpl-2.0.txt
+* @copyright  2003-2006 ossim.net
+* @copyright  2007-2013 AlienVault
+* @link       https://www.alienvault.com/
+*/
+
+
 /**
 * Class and Function List:
 * Function list:
@@ -50,19 +66,20 @@
 * Classes list:
 * - RRD_config
 */
-require_once ('classes/Log_action.inc');
-require_once ("ossim_db.inc");
+require_once 'ossim_db.inc';
+require_once 'classes/Util.inc';
+
 class RRD_config {
-    var $profile;
-    var $rrd_attrib;
-    var $threshold;
-    var $priority;
-    var $alpha;
-    var $beta;
-    var $persistence;
-    var $enable;
-    var $description;
-    function RRD_config($profile, $rrd_attrib, $threshold, $priority, $alpha, $beta, $persistence, $enable, $description) {
+    public $profile;
+    public $rrd_attrib;
+    public $threshold;
+    public $priority;
+    public $alpha;
+    public $beta;
+    public $persistence;
+    public $enable;
+    public $description;
+    function __construct($profile, $rrd_attrib, $threshold, $priority, $alpha, $beta, $persistence, $enable, $description) {
         $this->profile = $profile;
         $this->rrd_attrib = $rrd_attrib;
         $this->threshold = $threshold;
@@ -101,7 +118,7 @@ class RRD_config {
         return $this->description;
     }
     function get_list($conn, $args = "") {
-        $query = OssimQuery("SELECT * FROM rrd_config $args");
+        $query = ossim_query("SELECT * FROM rrd_config $args");
         if (!$rs = & $conn->Execute($query)) {
             print $conn->ErrorMsg();
         } else {
@@ -127,10 +144,10 @@ class RRD_config {
         return $list;
     }
     function insert($conn, $profile, $rrd_attrib, $threshold, $priority, $alpha, $beta, $persistence, $enable, $description = "") {
-        $profile = htmlentities($profile, ENT_COMPAT, "UTF-8");
-        $rrd_attrib = htmlentities($rrd_attrib, ENT_COMPAT, "UTF-8");
-        $description = htmlentities($description, ENT_COMPAT, "UTF-8");
-        $enable = htmlentities($enable, ENT_COMPAT, "UTF-8");
+        $profile = Util::htmlentities($profile, ENT_COMPAT, "UTF-8");
+        $rrd_attrib = Util::htmlentities($rrd_attrib, ENT_COMPAT, "UTF-8");
+        $description = Util::htmlentities($description, ENT_COMPAT, "UTF-8");
+        $enable = Util::htmlentities($enable, ENT_COMPAT, "UTF-8");
         $threshold = intval($threshold);
         $priority = intval($priority);
         $alpha = intval($alpha);

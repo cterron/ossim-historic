@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -15,7 +10,14 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 */
-session_start();
+
+
+if (count($argv)==0) 
+{
+    ini_set('memory_limit', '2048M');
+    require_once 'av_init.php';
+    Session::logcheck("analysis-menu", "EventsForensics");
+}
 $BASE_VERSION = '';
 /*
 Set the below to the language you would like people to use while viewing
@@ -53,7 +55,7 @@ $base_custom_footer = '';
 /* Path to the DB abstraction library
 *  (Note: DO NOT include a trailing backslash after the directory)
 *   e.g. $foo = '/tmp'      [OK]
-*        $foo = '/tmp/'     [OK]
+*        $foo = '/var/tmp/'     [OK]
 *        $foo = 'c:\tmp'    [OK]
 *        $foo = 'c:\tmp\'   [WRONG]
 */
@@ -76,22 +78,31 @@ $DBlib_path = '/usr/share/php/adodb';
 *  output plugin configuration.
 */
 //##### Begin of variables configured through dbconfig-common
-require ('/etc/acidbase/database.php');
+$alert_user     = trim(`grep ^ossim_user /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
+$alert_password = trim(`grep ^ossim_pass /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
+$basepath       = '';
+$alert_dbname   = 'alienvault_siem';
+$alert_host     = trim(`grep ^ossim_host /etc/ossim/framework/ossim.conf | cut -f 2 -d "="`);
+$alert_port     = '';
+$DBtype         = 'mysqli';
+
 // Adjust dbconfig-common names
 if ($DBtype == 'pgsql') $DBtype = 'postgres';
 //##### End of variables configured through dbconfig-common
 /* Archive DB connection parameters */
 $archive_exists = 0; // Set this to 1 if you have an archive DB
-$archive_dbname = 'snort';
+$archive_dbname = 'alienvault_siem';
 $archive_host = 'localhost';
 $archive_port = '';
 $archive_user = 'root';
-$archive_password = '';
+// Fortify alert on empty password
+//$archive_password = '';
 /* Type of DB connection to use
 *   1  : use a persistant connection (pconnect)
 *   2  : use a normal connection (connect)
 */
 $db_connect_method = 2;
+$db_memcache = 60; // 0 do not use memcache
 /* Use referential integrity
 *   1  : use
 *   0  : ignore (not installed)
@@ -113,12 +124,12 @@ $use_referential_integrity = 0;
 */
 $use_ossim_session = 1;
 $ossim_login_path = "/ossim/session/login.php";
-$ossim_acid_aco_section = "MenuEvents";
+$ossim_acid_aco_section = "analysis-menu";
 $ossim_acid_aco = "EventsForensics";
 $ossim_domain_aco_section = "DomainAccess";
 $ossim_domain_aco = "Nets";
 /* Variable to start the ability to handle themes... */
-$base_style = 'ossim_style.css';
+
 /* Chart default colors - (red, green, blue)
 *    - $chart_bg_color_default    : background color of chart
 *    - $chart_lgrid_color_default : gridline color of chart
@@ -174,7 +185,7 @@ $debug_mode = 0;
 $debug_time_mode = 1;
 $html_no_cache = 1;
 $sql_trace_mode = 0;
-$sql_trace_file = '';
+$sql_trace_file = '/var/tmp/debug_sql';
 /* Auto-Screen refresh
 * - Refresh_Stat_Page - Should certain statistics pages refresh?
 * - Stat_Page_Refresh_Time - refresh interval (in seconds)
@@ -220,7 +231,7 @@ $show_expanded_query = 0;
 */
 $show_summary_stats = 0;
 /* DNS cache lifetime (in minutes) */
-$dns_cache_lifetime = 20160;
+$dns_cache_lifetime = 10080;
 /* Whois information cache lifetime (in minutes) */
 $whois_cache_lifetime = 40320;
 /* Snort spp_portscan log file */
@@ -252,7 +263,7 @@ $event_cache_auto_update = 1;
 *   1 : yes
 *   0 : no
 */
-$maintain_history = 1;
+$maintain_history = 0;
 /* Level of detail to display on the main page.
 *
 * Note: The presence of summary statistics will slow page loading time
@@ -281,11 +292,11 @@ $show_first_last_links = 0;
 * External URLs
 */
 /* Whois query */
-$external_whois_link = 'http://www.dnsstuff.com/tools/whois.ch?ip=';
+$external_whois_link = 'http://www.dnsstuff.com/tools/whois/?ip=';
 /* Alternative query */
 //  $external_whois_link = 'http://www.samspade.org/t/ipwhois?a=';
 /* DNS query */
-$external_dns_link = 'http://www.dnsstuff.com/tools/ptr.ch?ip=';
+$external_dns_link = 'http://www.dnsstuff.com/tools/ipall/?ip=';
 /* Alternative query */
 //  $external_dns_link = 'http://www.samspade.org/t/dns?a=';
 /* SamSpade "all" query */
@@ -300,35 +311,39 @@ $external_port_link = array(
 $external_sig_link = array(
     'bugtraq' => array(
         'http://www.securityfocus.com/bid/',
-        ''
+        '',''
     ) ,
     'snort' => array(
         'http://www.snort.org/pub-bin/sigs.cgi?sid=',
-        ''
+        '',''
     ) ,
     'cve' => array(
         'http://cve.mitre.org/cgi-bin/cvename.cgi?name=',
-        ''
+        '',''
     ) ,
     'mcafee' => array(
         'http://vil.nai.com/vil/content/v_',
-        '.htm'
+        '.htm',''
     ) ,
     'icat' => array(
         'http://nvd.nist.gov/nvd.cfm?cvename=CAN-',
-        ''
+        '',''
     ) ,
     'nessus' => array(
         'http://www.nessus.org/plugins/index.php?view=single&id=',
-        ''
+        '',''
+    ) ,
+    'kdb' => array(
+        Menu::get_menu_url('../repository/index.php', 'configuration', 'threat_intelligence', 'knowledgebase'),
+        '','main'
     ) ,
     'url' => array(
         'http://',
-        ''
+        '',''
     ) ,
     'local' => array(
         'signatures/',
-        '.txt'
+        '.txt',''
     )
 );
 // No longer valid:
@@ -386,5 +401,5 @@ $BASE_path = '/usr/share/ossim/www/forensics/';
 // _BASE_INC is a variable set to prevent direct access to certain include files....
 define("_BASE_INC", 1);
 // Include for languages
-include ("$BASE_path/languages/$BASE_Language.lang.php");
+require ("$BASE_path/languages/$BASE_Language.lang.php");
 ?>

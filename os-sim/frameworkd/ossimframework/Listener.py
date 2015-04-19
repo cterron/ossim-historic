@@ -1,293 +1,260 @@
-import threading, socket, sys, SocketServer, os, re
+#!/usr/bin/python
+#
+# License:
+#
+#    Copyright (c) 2003-2006 ossim.net
+#    Copyright (c) 2007-2014 AlienVault
+#    All rights reserved.
+#
+#    This package is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; version 2 dated June, 1991.
+#    You may not use, modify or distribute this program under any other version
+#    of the GNU General Public License.
+#
+#    This package is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this package; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+#    MA  02110-1301  USA
+#
+#
+# On Debian GNU/Linux systems, the complete text of the GNU General
+# Public License can be found in `/usr/share/common-licenses/GPL-2'.
+#
+# Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
+#
+
+#
+# GLOBAL IMPORTS
+#
+import os
+import re
+import socket
+import SocketServer
+import sys
+import threading
+import traceback
+import struct
+import json
 from time import sleep
-import Const
+#
+# LOCAL IMPORTS
+#
 import Action
-from DoNessus import DoNessus
+#from AlarmGroup import AlarmGroup
+#import Const
+from DoControl import ControlManager
+from DoASEC import ASECHandler
+from DoWS import WSHandler
+from DoNagios import NagiosManager
+from ApacheNtopProxyManager import ApacheNtopProxyManager
+from BackupManager import BackupRestoreManager
+from Logger import Logger
 from OssimConf import OssimConf
-from DoNagios import DoNagios
-from NagiosMisc import nagios_host, nagios_host_group, nagios_host_service
-from AlarmGroup import AlarmGroup
-import Const
+from DBConstantNames import *
+import Util
 
-
+#
+# GLOBAL VARIABLES
+#
+logger = Logger.logger
+controlmanager = None
+asechandler = None
+bkmanager = None
 class FrameworkBaseRequestHandler(SocketServer.StreamRequestHandler):
 
-    __nessus = None
-    # configuration values
+    __nagiosmanager = None
     __conf = None
-    donag=None
+    __sensorID = ""
 
-
-
+    def getRequestorIP(self):
+        return self.client_address[0]
+    def getRequestorPort(self):
+        return self.client_address[1]
+    def getRequestorID(self):
+        return self.__id
     def handle(self):
+        global controlmanager
+        global bkmanager
+        global asechandler
+        self.__id = None
 
-        print __name__, ":", "Request from", self.client_address
+        logger.debug("Request from: %s:%i" % (self.client_address))
 
         while 1:
             try:
-                line= self.rfile.readline()
+                line = self.rfile.readline().rstrip('\n')
                 if len(line) > 0:
-                    self.process_data(line)
+                    command = line.split()[0]
+
+                    # set sane default response
+                    response = ""
+
+                    # check if we are a "control" request message
+                    if command == "control":
+                        # spawn our control timer
+                        if controlmanager == None:
+                            controlmanager = ControlManager(OssimConf())
+
+                        response = controlmanager.process(self, command, line)
+
+                    # otherwise we are some form of standard control message
+
+                    elif command == "nagios":
+                        if self.__nagiosmanager == None:
+                            self.__nagiosmanager = NagiosManager(OssimConf())
+
+                        response = self.__nagiosmanager.process(line)
+
+                    elif command == "ping":
+                        response = "pong\n"
+
+                    elif command == "add_asset" or command == "remove_asset" or command == "refresh_asset_list":
+                        linebk = ""
+                        if controlmanager == None:
+                            controlmanager = ControlManager(OssimConf())
+                        linebk = "action=\"refresh_asset_list\"\n"
+                        response = controlmanager.process(self, command, linebk)
+
+#                    elif command == "refresh_inventory_task":
+#                        if controlmanager == None:
+#                            controlmanager = ControlManager(OssimConf())
+#                        response = controlmanager.process(self, command, linebk)
+
+                    elif command == "refresh_sensor_list":
+                        logger.info("Check ntop proxy configuration ...")
+                        ap = ApacheNtopProxyManager(OssimConf())
+                        ap.refreshConfiguration()
+                        ap.close()
+                    elif command == "backup":
+                        if bkmanager == None:
+                            bkmanager=  BackupRestoreManager(OssimConf())
+                        response =  bkmanager.process(line)
+                    elif command == "asec":
+                        if asechandler == None:
+                            asechandler = ASECHandler(OssimConf())
+                        response = asechandler.process_web(self, line)
+                    elif command == "asec_m":#struct.unpack('!H',line[0:2])[0] == 0x1F1F:
+                        #it's a tlv 
+                        if asechandler == None:
+                            asechandler = ASECHandler(OssimConf())
+                        response = asechandler.process(self,line)
+                    elif command == "ws":
+                        [ws_data] = re.findall('ws_data=(.*)$', line)
+                        try:
+                            ws_json = json.loads(ws_data)
+                            logger.info("Received new WS: %s" % str(ws_json))
+                        except Exception, msg:
+                            logger.warning ("WS json is invalid: '%s'" % line)
+                        else:
+                            if ws_json['ws_id'] != '':
+
+                                for ws_id in ws_json['ws_id'].split(','):
+                                    try:
+                                        ws_handler = WSHandler(OssimConf(), ws_id)
+                                    except Exception, msg:
+                                        logger.warning (msg)
+                                    else:
+#                                        response = ws_handler.process_json(ws_type, ws_data)
+                                        response = ws_handler.process_json('insert', ws_json)
+                            else:
+                                logger.warning ("WS command does not contain a ws_id field: '%s'" % line)
+                    else:
+                        a = Action.Action(line)
+                        a.start()
+
+                        # Group Alarms
+                        #ag = AlarmGroup.AlarmGroup()
+                        #ag.start()
+
+                    # return the response as appropriate
+                    if len(response) > 0:
+                        self.wfile.write(response)
+
                     line = ""
+
                 else:
                     return
+            except socket.error, e:
+                logger.warning("Client disconnected...%s" % e)
+
             except IndexError:
-                pass
-            except socket.error:
-                return
-            except AttributeError:
+                logger.error("IndexError")
+
+            except Exception, e:
+                logger.error("Unexpected exception in listener: %s" % str(e))
+                import sys, traceback
+                traceback.print_exc(file=sys.stdout)
                 return
 
-            sleep(1)
 
+    def finish(self):
+        global controlmanager
+        if controlmanager != None:
+            controlmanager.finish(self)
+
+        return SocketServer.StreamRequestHandler.finish(self)
+
+
+    def set_id(self, id):
+        self.__id = id
+
+    def set_sensorID(self,uuid):
+        self.__sensorID=uuid
+    def get_sensorID(self):
+        return self.__sensorID
+    def get_id(self):
+        return self.__id
+
+
+class FrameworkBaseServer(SocketServer.ThreadingTCPServer):
+    allow_reuse_address = True
+
+    def __init__(self, server_address, handler_class=FrameworkBaseRequestHandler):
+        SocketServer.ThreadingTCPServer.__init__(self, server_address, handler_class)
         return
 
-    def debug(self,msg):
-        print __name__, " : ", msg
 
-    def process_data(self, line):
-
-        print __name__, ":", line
-        command = None
-        try:
-            command = line.split()[0]
-        except ValueError, IndexError:
-            pass
-
-        #
-        #  TODO:
-        #  move all this code to an external class in DoNessus.py
-        #  for example, NessusManager
-        #
-
-        if command == "nessus":
-            result = re.findall("action=\"([a-z]+)\"", line)
-            action = ''
-            if result != []:
-                action = result[0]
-            
-            if FrameworkBaseRequestHandler.__nessus == None:
-                FrameworkBaseRequestHandler.__nessus = DoNessus()
-
-            if action == "report":
-                result = re.findall("title=\"([a-zA-Z+]+)\" list=\"([0-9\.,]*)\"", line)
-                if result != []:
-                    (title,list) = result[0]
-                    sensor_list = list.split(",")
-                    print __name__, ": Report host list:", sensor_list
-                    FrameworkBaseRequestHandler.__nessus.generate_report(title, sensor_list)
-
-            if action == "scan":
-                sensor_list = []
-                hosts_list = []
-                hostgroups_list = []
-                nets_list = []
-                netgroups_list = []
-                
-                result = re.findall("target_type=\"([a-z]+)\"" , line)
-                if result != []:
-                    target_type = result[0]
-                    # need to be modifified to support schedule for host, hostgropup, etc..
-                    if target_type == "schedule":
-                        result = re.findall("id=\"([0-9]*)\"", line)
-                        if result != []:
-                            id = result[0]
-                            print __name__, ": Got schedule request."
-                            FrameworkBaseRequestHandler.__nessus.load_shedule(id)
-                    elif target_type == "sensors":
-                        result = re.findall("list=\"([0-9\.,]*)\"", line)
-                        if result != []:
-                            list = result[0]
-                            if not list == "":
-                                sensor_list = list.split(",")
-                        print __name__, ": Sensor_list:", sensor_list
-                        FrameworkBaseRequestHandler.__nessus.set_scan_type("sensor")
-                        FrameworkBaseRequestHandler.__nessus.load_sensors(sensor_list)
-                    elif target_type == "hosts":
-                        result = re.findall("netgroups=\"([0-9a-zA-Z\._,]*)\" nets=\"([0-9a-zA-Z\._,]*)\" hostgroups=\"([0-9a-zA-Z\._,]*)\" hosts=\"([0-9\.,]*)\"", line)
-                        if result != []:
-                            (netgroups,nets,hostgroups,hosts) = result[0]
-                            nets_list = FrameworkBaseRequestHandler.__nessus.get_nets(netgroups,nets)
-                            if not hostgroups == "":
-                                hostgroups_list = hostgroups.split(",")
-                            if not hosts == "":
-                                hosts_list = hosts.split(",")
-                        print __name__, ": Net_list:", nets_list
-                        print __name__, ": Host_list:", hosts_list
-                        print __name__, ": Hostgroup_list:", hostgroups_list
-                        FrameworkBaseRequestHandler.__nessus.set_scan_type("hosts")
-                        FrameworkBaseRequestHandler.__nessus.load_hosts(hostgroups_list, nets_list, hosts_list)
-
-                    if FrameworkBaseRequestHandler.__nessus.status() == 0:
-                        FrameworkBaseRequestHandler.__nessus.run()
-                        self.wfile.write("ok\n")
-                    elif FrameworkBaseRequestHandler.__nessus.status() > 0 :
-                        print __name__, ": scan already started, status:", FrameworkBaseRequestHandler.__nessus.status()
-                        self.wfile.write("Scan already started, status: " + str(FrameworkBaseRequestHandler.__nessus.status()) + "%\n")
-            
-            if action == "status":
-                print __name__, ": status:", FrameworkBaseRequestHandler.__nessus.status()
-                self.wfile.write(str(FrameworkBaseRequestHandler.__nessus.status()) + "\n")
-            if action == "reset" and FrameworkBaseRequestHandler.__nessus.status() == -1:
-                print __name__, ": Resetting status"
-                self.wfile.write("Resetting status\n")
-                FrameworkBaseRequestHandler.__nessus.reset_status()
-            if FrameworkBaseRequestHandler.__nessus.status() == -1:
-                print __name__, ": Previous scan aborted raising errors, please check your logfile. Error: " + \
-                FrameworkBaseRequestHandler.__nessus.get_error()
-                self.wfile.write("Previous scan aborted raising errors, please check your logfile. Error: " + \
-                str(FrameworkBaseRequestHandler.__nessus.get_error()) + "\n")
-            if action == "archive":
-                result = re.findall("report=\"([a-z0-9.]+)\"", line)
-                if result != []:
-                    report = result[0]
-                    print __name__, ": Got archive request for", report
-                    FrameworkBaseRequestHandler.__nessus.archive(report)
-                    self.wfile.write("nessus archive ack " + report + "\n")
-            if action == "delete":
-                result = re.findall("report=\"([a-z0-9.]+)\"", line)
-                if result != []:
-                    report = result[0]
-                print __name__, ": Got delete request for", report
-                if report.endswith(".report"):
-                    FrameworkBaseRequestHandler.__nessus.delete(report, True)
-                else:
-                    FrameworkBaseRequestHandler.__nessus.delete(report, False)
-                self.wfile.write("nessus delete ack " + report + "\n")
-            if action == "restore":
-                result = re.findall("report=\"([a-z0-9.]+)\"", line)
-                if result != []:
-                    report = result[0]
-                print __name__, ": Got restore request for", report
-                FrameworkBaseRequestHandler.__nessus.restore(report)
-                self.wfile.write("nessus restore ack " + report + "\n")
-        else:
-
-        #
-        #  TODO:
-        #  move all this code to an external class in DoNagios.py
-        #  for example, NagiosManager
-        #
-            if command=="nagios":
-                if self.__conf == None:
-                    self.__conf = OssimConf (Const.CONFIG_FILE)
-
-                print "nagios command: " + line
-                action = self.get_var("action=\"([a-z]+)\"",line)
-
-                if action=="add":
-                    type = self.get_var("type=\"([a-zA-Z]+)\"", line)
-
-                    if type=="host":
-                        liststring=self.get_var("list=\"[^\"]+\"",line)
-                        list=liststring.split("|")
-                        for host in list:
-                            host_data=re.match(r"^\s*(list=\")*(?P<ip>([0-9]{1,3}\.){3}[0-9]{1,3})\s+(?P<hostname>[\w_\-.]+)\s*\"*$",host)
-                            if host_data.group('ip') != [] and host_data.group('hostname') != []:
-                                hostname=host_data.group('hostname')
-                                ip=host_data.group('ip')
-                                self.debug("Adding hostname \"%s\" with ip \"%s\" to nagios" % (hostname, ip))
-                                nh=nagios_host(ip,hostname,"",self.__conf)
-                                nh.write()
-
-                    if type=="hostgroup":
-                        name=self.get_var("name=\"([\w_\-.]+)\"",line)
-                        liststring=self.get_var("list=\"([^\"]+)\"",line)
-                        list=liststring.split(",")
-                        hosts=""
-                        for host in list:
-                            host_data=re.match(r"^\s*(list=\")*(?P<ip>([0-9]{1,3}\.){3}[0-9]{1,3})\s*\"*$",host)
-                            if host_data.group('ip') != []:
-                                ip=host_data.group('ip')
-                                if hosts=="":
-                                    hosts=ip
-                                else:
-                                    hosts=ip + "," + hosts
-                                self.debug("Adding host \"%s\" with ip \"%s\" needed by group_name %s to nagios" % (ip, ip, name))
-                                nh=nagios_host(ip, ip, "", self.__conf)
-                                nh.write()
-                            else:
-                                print " In Listener.py, nagios format error in the message " + line
-                                return
-
-                        if hosts!="":
-                            self.debug("Adding %s to nagios" % (name))
-                            nhg=nagios_host_group(name,name,hosts,self.__conf)
-                            nhg.write()
-                        else:
-                            self.debug("Invalid hosts list... not adding %s to nagios" %
-(name))
-
-                    action="reload"
-
-                if action=="del":
-                    type = self.get_var("type=\"([a-zA-Z]+)\"", line)
-
-                    if type=="host":
-                        ip=self.get_var("list=\"\s*(([0-9]{1,3}\.){3}[0-9]{1,3})\s*\"",line)
-                        ip=ip[0]
-                        if ip !="":
-                            self.debug("Deleting hostname \"%s\" from nagios" % (ip))
-                            nh=nagios_host(ip,ip,"",self.__conf)
-                            nh.delete_host()
-
-                    if type=="hostgroup":
-                        name=self.get_var("name=\"([\w_\-.]+)\"",line)
-                        self.debug("Deleting hostgroup_name \"%s\" from nagios" % (name))
-                        nhg=nagios_host_group(name,name,"",self.__conf)
-                        nhg.delete_host_group()
-
-                    action="reload"
-
-
-                if action=="restart" or action=="reload":
-                    if self.donag==None:
-                        self.donag=DoNagios()
-                    self.donag.make_nagios_changes()
-                    self.donag.reload_nagios()
-
-            else:
-                a = Action.Action(line)
-                a.start()
-
-                # Group Alarms
-                ag = AlarmGroup.AlarmGroup()
-                ag.start()
-
+    def serve_forever(self):
+        while True:
+            try:
+                self.handle_request()
+            except Exception,e:
+                raise e
+                logger.error("Error handling request: %s" % str(e))
+                break
         return
-
-    def get_var(self,regex,line):
-        result = re.findall(regex, line)
-        if result != []:
-            return result[0]
-        else:
-            return ""
-
-    def get_vars(self,regex,line):
-        return re.findall(regex, line)
 
 
 
 class Listener(threading.Thread):
 
     def __init__(self):
-
+        self.__conf = OssimConf()
         self.__server = None
         threading.Thread.__init__(self)
 
 
     def run(self):
 
-        try:
-            serverAddress = ("", int(Const.LISTENER_PORT))
-            self.__server = SocketServer.ThreadingTCPServer(
-                                                   serverAddress,
-                                                   FrameworkBaseRequestHandler)
-        except socket.error, e:
-            print __name__, ":", e
-            sys.exit()
 
-        self.__server.serve_forever()
+        try:
+            serverAddress = ("0.0.0.0", int(self.__conf[VAR_FRAMEWORK_PORT]))
+            logger.info("Listen on: %s:%s"% serverAddress)
+            sleep(3)
+            self.__server = FrameworkBaseServer(serverAddress, FrameworkBaseRequestHandler)
+            self.__server.serve_forever()
+        except socket.error, e:
+            logger.critical("Something wrong happend while binding the socket. %s" % str(e))
+            sys.exit(-1)
+        except Exception,e:
+            logger.error("ERROR: %s" % str(e))
+            sys.exit(-1)
 
 
 if __name__ == "__main__":

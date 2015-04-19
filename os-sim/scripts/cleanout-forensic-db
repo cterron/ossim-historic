@@ -29,9 +29,9 @@ if(!$ARGV[0]){
 }
 
 $| = 1;
-my $user   = $ossim_conf::ossim_data->{"snort_user"};
-my $passwd = $ossim_conf::ossim_data->{"snort_pass"};
-my $dsn = "dbi:mysql:".$ossim_conf::ossim_data->{"snort_base"}.":".$ossim_conf::ossim_data->{"snort_host"}.":".$ossim_conf::ossim_data->{"snort_port"};
+my $user   = $ossim_conf::ossim_data->{"ossim_user"};
+my $passwd = $ossim_conf::ossim_data->{"ossim_pass"};
+my $dsn = "dbi:mysql:alienvault_siem:".$ossim_conf::ossim_data->{"ossim_host"}.":".$ossim_conf::ossim_data->{"ossim_port"};
 
 
 # NOTE: ordering of tables IS important!

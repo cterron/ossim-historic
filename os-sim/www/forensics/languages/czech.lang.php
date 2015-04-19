@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -15,6 +10,8 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 */
+
+
 //locale
 DEFINE('_LOCALESTR1', 'eng_ENG.ISO8859-1'); //NEW
 DEFINE('_LOCALESTR2', 'eng_ENG.utf-8'); //NEW
@@ -338,7 +335,7 @@ DEFINE('_ERRCRITELEM', 'Neplatný elemt kritéria');
 //base_state_query.inc.php
 DEFINE('_VALIDCANNED', 'Platný základní dotaz');
 DEFINE('_DISPLAYING', 'Zobrazuji');
-DEFINE('_DISPLAYINGTOTAL', 'Zobrazuji alarmy %d-%d z %d celkem');
+DEFINE('_DISPLAYINGTOTAL', 'Zobrazuji alarmy %d-%d z %s celkem');
 DEFINE('_NOALERTS', '®ádné alarmy nenalezeny.');
 DEFINE('_QUERYRESULTS', 'Výsledky dotazu');
 DEFINE('_QUERYSTATE', 'Stav dotazu');

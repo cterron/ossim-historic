@@ -1,14 +1,18 @@
 Source: ossim-agent
 Section: net
 Priority: optional
-Maintainer: David Gil <dgil@ossim.net>
-Build-Depends: debhelper (>= 7), docbook-to-man, python-support (>= 0.5.3)
-Standards-Version: 3.7.2
+Maintainer: AlienVault package developers <debian-devel@alienvault.com>
+Build-Depends: debhelper (>= 7), docbook-to-man, python-support (>= 0.5.3), config-package-dev
+Standards-Version: 3.8.0
+Homepage: http://www.alienvault.com/
 
 Package: ossim-agent
 Architecture: all
 Suggests: arpwatch, nmap, ntop, osiris, p0f, pads, snort, tcptrack
-Depends: ${python:Depends}, lsb-base (>= 3.0-6), python-adodb, python-mysqldb, python-pymssql
+Pre-Depends: python-tz, python-pyinotify
+Depends: ${python:Depends},alienvault-plugins, lsb-base (>= 3.0-6), python-adodb, python-mysqldb, python-paramiko, python-pymssql, python-libpcap,python-nmap, python-ldap, python-pyinotify, python-geoip, python-yaml, alienvault-agent-generator
+Provides: ossim-agent
+Replaces: ossim-agent
 Description: Open Source Security Information Management (Agent)
  OSSIM is a distribution of open source products that are integrated
  to provide an infrastructure for security monitoring. It provides a
@@ -22,5 +26,5 @@ Description: Open Source Security Information Management (Agent)
  output of the different plugin or tool to the correlation engine for
  further process.
  .
-  Homepage: http://www.ossim.net
+  Homepage: http://www.alienvault.com/
 

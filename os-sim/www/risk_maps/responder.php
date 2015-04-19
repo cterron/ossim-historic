@@ -1,119 +1,230 @@
-<?
-/*****************************************************************************
+<?php
+/**
 *
-*    License:
+* License:
 *
-*   Copyright (c) 2003-2006 ossim.net
-*   Copyright (c) 2007-2009 AlienVault
-*   All rights reserved.
+* Copyright (c) 2003-2006 ossim.net
+* Copyright (c) 2007-2013 AlienVault
+* All rights reserved.
 *
-*   This package is free software; you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License as published by
-*   the Free Software Foundation; version 2 dated June, 1991.
-*   You may not use, modify or distribute this program under any other version
-*   of the GNU General Public License.
+* This package is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; version 2 dated June, 1991.
+* You may not use, modify or distribute this program under any other version
+* of the GNU General Public License.
 *
-*   This package is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
+* This package is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
 *
-*   You should have received a copy of the GNU General Public License
-*   along with this package; if not, write to the Free Software
-*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-*   MA  02110-1301  USA
+* You should have received a copy of the GNU General Public License
+* along with this package; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+* MA  02110-1301  USA
 *
 *
 * On Debian GNU/Linux systems, the complete text of the GNU General
 * Public License can be found in `/usr/share/common-licenses/GPL-2'.
 *
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
-****************************************************************************/
-/**
-* Class and Function List:
-* Function list:
-* - check_writable_relative()
-* Classes list:
+*
 */
-require_once 'classes/Session.inc';
-Session::logcheck("MenuControlPanel", "BusinessProcesses");
+require_once 'av_init.php';
+require_once 'riskmaps_functions.php';
 
-if (!Session::menu_perms("MenuControlPanel", "BusinessProcessesEdit")) {
-print _("You don't have permissions to edit risk indicators");
-exit();
+Session::logcheck('dashboard-menu', 'BusinessProcesses');
+
+if (!Session::menu_perms('dashboard-menu', 'BusinessProcessesEdit'))
+{
+    echo ossim_Error(_("You don't have permissions to edit risk indicators"));
+    exit();
 }
 
-require_once 'ossim_db.inc';
-$db = new ossim_db();
-$conn = $db->connect();
+$db     = new ossim_db();
+$conn   = $db->connect();
 
-$map = $_GET["map"];
-$url = $_GET["url"];
-$data = $_GET["data"];
-$element_type = $_GET["type"];
+$map    = GET('map');
+$type   = GET('type');
+$url    = (empty($_GET['url_data']))       ? ''         : GET("url_data");
+$url    = ($url == '' && GET('url') != '') ? GET('url') : $url;
 
-ossim_valid($map, OSS_DIGIT,'illegal:'._("map"));
-ossim_valid($data, OSS_NULLABLE, OSS_SCORE, OSS_ALPHA, OSS_DIGIT, OSS_SPACE, ";,.:\/\?=&()%&", 'illegal:'._("data"));
+$nolink = intval(GET('nolinks'));
 
-if (ossim_error()) {
-die(ossim_error());
+ossim_valid($map,   OSS_HEX,                                'illegal:'._('Map'));
+ossim_valid($type,  OSS_NULLABLE, OSS_ALPHA, OSS_SCORE,     'illegal:'._('Type'));
+
+if (!empty($url) && $url != 'REPORT')
+{
+    ossim_valid($url, OSS_SCORE, OSS_DOT, OSS_ALPHA, OSS_DIGIT,'REPORT','\/=%\.\?', 'illegal:'._('Url'));
+}
+
+if ($type != 'rect')
+{
+    $chosen_icon  = GET("chosen_icon");
+    $chosen_icon  = str_replace("url_slash","/", $chosen_icon);
+    $chosen_icon  = str_replace("url_quest","?", $chosen_icon);
+    $chosen_icon  = str_replace("url_equal","=", $chosen_icon);
+
+
+    $asset_type   = GET('asset_type');
+    $asset_id     = GET("elem");
+    $alarm_name   = utf8_decode(GET("alarm_name"));
+    $iconbg       = GET('iconbg');
+    $iconsize     = (GET('iconsize') != '' ) ? GET('iconsize') : 0;
+    $noname       = (GET('noname') != '')    ? "#NONAME"       : '';
+    $name_show    = utf8_decode(GET("name_show"));
+
+    ossim_valid($chosen_icon, OSS_NULLABLE, OSS_SCORE, OSS_ALPHA, OSS_DIGIT, OSS_SPACE, ";,.:\/\?=&()%&", 'illegal:'._('Icon'));
+    ossim_valid($asset_type , OSS_NULLABLE, OSS_ALPHA, OSS_SCORE,                                         'illegal:'._('Asset Type'));
+    ossim_valid($asset_id   , OSS_HEX,OSS_NULLABLE,                                                       'illegal:'._('Asset ID'));
+    ossim_valid($alarm_name , OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT, '#',                                 'illegal:'._('Alarm name'));
+    ossim_valid($iconbg     , OSS_ALPHA, OSS_NULLABLE,                                                    'illegal:'._('Icon Background'));
+    ossim_valid($iconsize   , OSS_DIGIT, '-',                                                             'illegal:'._('Icon size'));
+    ossim_valid($name_show  , OSS_NULLABLE, OSS_TEXT, OSS_PUNC_EXT,                                       'illegal:'._('Asset Name'));
+    
+    $alarm_name = $alarm_name.$noname;
 }
 
 
-	if ($element_type =="rect") {
-		$sql = "insert into risk_indicators (name,map,url,type,type_name,icon,x,y,w,h) values ('rect',?,?,'','','',100,100,50,50)";
-		$params = array($map, $url);
-        	if (!$rs = &$conn->Execute($sql, $params)) {
-            		print $conn->ErrorMsg();
-        	} else {
-			$query = "select last_insert_id() as id";
-  		        if (!$rs = &$conn->Execute($query)) {
-		            print $conn->ErrorMsg();
-		        } else {
-		                if(!$rs->EOF){
-					$id = $rs->fields["id"];
-				}
-			}
+if (ossim_error())
+{
+    echo ossim_get_error_clean();
+    exit();
+}
 
-		echo "drawRect('$id',100,100,50,50);\n";
-		}
-	} else { 
-		$dt = explode(";",$data);
-		$type = $dt[1];
-		$ip = $type_name = $dt[2];
-		$what = "name";
-		$valid_types = array("host", "net", "server", "sensor");
-
-		if(in_array($type, $valid_types)){
-		if($type == "host"){
-			$what = "hostname";
-		}
-		$query = "select ip from $type where $what = \"$type_name\"";
-        	if ($rs = &$conn->Execute($query)) {
-               		$ip = $rs->fields["ip"];
-		}
-		}
+if ($type != "rect" && strtolower($alarm_name) == 'rect')
+{
+    echo _("'Rect' is a reserved word.  Please, use another name");
+    exit();
+}
 
 
-		$sql = "insert ignore into bp_asset_member values (0, ?, ?)";
-		$params = array($ip, $type);
-		$conn->Execute($sql, $params);
+if ($type == 'rect')
+{
+    $sql    = "INSERT INTO risk_indicators (name,map,url,type,type_name,icon,x,y,w,h) VALUES ('rect',UNHEX(?),?,'','','',100,100,50,50)";
 
-		$sql = "insert into risk_indicators (url,map,icon,type_name,name,type,x,y,w,h) values (?,?,?,?,?,?,100,100,90,60)";
-		$params = array($dt[4], $map, $dt[0], $dt[2], $dt[3], $dt[1]);
-		$conn->Execute($sql, $params);
+    $params = array($map, $url);
+    $rs     = $conn->Execute($sql, $params);
 
-		$query = "select last_insert_id() as id";
-        if (!$rs = &$conn->Execute($query)) {
-            print $conn->ErrorMsg();
-        } else {
-                if(!$rs->EOF){
-                $id = $rs->fields["id"];
-                }
+    if (!$rs)
+    {
+        Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+        exit();
+    }
+
+    $sql = "SELECT last_insert_id() AS id";
+    $rs  = $conn->Execute($sql);
+
+    if (!$rs)
+    {
+        Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+        exit();
+    }
+
+    if(!$rs->EOF)
+    {
+        $id = $rs->fields['id'];
+
+        echo "OK###drawRect('$id','$url',100,100,50,50);\n";
+    }
+}
+else
+{
+    $icon = ($iconbg != '' && $iconbg != 'transparent') ? $chosen_icon."#".$iconbg : $chosen_icon;
+
+    if (!empty($asset_type))
+    {
+        $asset_type_aux = fix_type($asset_type);
+
+        $params = array($asset_id, $asset_type_aux);
+
+        $sql = "SELECT HEX(member), type FROM bp_asset_member WHERE member = UNHEX(?) AND type = ?";
+        $rs  = $conn->Execute($sql, $params);
+
+        if (!$rs)
+        {
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+            exit();
         }
 
-		echo "drawDiv('$id','".$dt[3]."',txtbbb,'".$dt[0]."','".$dt[4]."',100,100,90,60);\n";
+        if ($rs->RecordCount() == "0")
+        {
+            // check if asset exist
+            $sql = "INSERT INTO bp_asset_member (id, member, type) VALUES (0, UNHEX(?), ?)";
+            $rs  = $conn->Execute($sql, $params);
 
-	}
-	$conn->close();
-?>
+            if (!$rs)
+            {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+                exit();
+            }
+
+            // For net_group insert all related networks
+            if ($asset_type == 'net_group' || $asset_type == 'netgroup')
+            {
+                $networks = Net_group::get_networks($conn, $asset_id);
+
+                foreach($networks as $network)
+                {
+                    $net_id = $network->get_net_id();
+                    $sql    = "INSERT INTO bp_asset_member (id, member, type) VALUES (0, UNHEX(?), ?)";
+
+                    $conn->Execute($sql, array($net_id, "net"));
+                }
+            }
+        }
+    }
+
+
+    // Random position to prevent overlaping
+    $x = rand(50, 250);
+    $y = rand(50, 150);
+
+    $params = array(
+        $alarm_name,
+        $map,
+        $url,
+        $asset_type,
+        $asset_id,
+        $icon,
+        $x,
+        $y,
+        $iconsize
+    );
+
+
+    $sql = "INSERT INTO risk_indicators (name, map, url, type, type_name, icon, x, y, w, h, size) VALUES (?,UNHEX(?),?,?,?,?,?,?,80,70,?)";
+    $rs  = $conn->Execute($sql, $params);
+
+    if (!$rs)
+    {
+        Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+        exit();
+    }
+
+
+    $sql = "SELECT last_insert_id() AS id";
+    $rs  = $conn->Execute($sql);
+
+    if (!$rs)
+    {
+        Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+        exit();
+    }
+
+    if(!$rs->EOF)
+    {
+        $id = $rs->fields['id'];
+
+        echo "OK###drawDiv('$id','".Util::htmlentities($alarm_name)."','','$icon','$url',$x,$y,80,70,'$asset_type','".Util::htmlentities($asset_id)."', $iconsize, '".Util::htmlentities($name_show)."');\n";
+    }
+}
+
+$db->close();

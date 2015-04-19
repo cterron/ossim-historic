@@ -1,12 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - CapaRegistry()
-* - hasCapa()
-* Classes list:
-* - CapaRegistry
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -18,6 +10,8 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
 // Definitions for capabilities -- Add here as needed.
 define(CAPA_MAIL, 1);
 define(CAPA_PMAIL, 2);

@@ -1,7 +1,6 @@
-ossim-historic
-==============
+alienvault-ossim
+================
 
-* 2.1 version
+Alienvault ossim
 
-* Clone from http://sourceforge.net/projects/os-sim/files/deprecated__check_readme/os-sim-2.1
-
+Version 4.11.0 cloned from https://github.com/jpalanco/alienvault-ossim 

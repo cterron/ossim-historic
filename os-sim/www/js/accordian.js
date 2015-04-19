@@ -13,7 +13,7 @@ Added option to collapse option if expanded
 */
 
 // Prototype Method to get the element based on ID
-function $(d){
+function ele(d){
 	return document.getElementById(d);
 }
 
@@ -55,7 +55,7 @@ var af=false;
 
 //Collapse Timer is triggered as a setInterval to reduce the height of the div exponentially.
 function ct(d){
-	d = $(d);
+	d = ele(d);
 	if(sh(d)>10){
 		v = Math.round(sh(d)/d.s);
 		v = (v<1) ? 1 :v ;
@@ -74,7 +74,7 @@ function ct(d){
 
 //Expand Timer is triggered as a setInterval to increase the height of the div exponentially.
 function et(d){
-	d = $(d);
+	d = ele(d);
 	if(sh(d)<d.maxh){
 		v = Math.round((d.maxh-sh(d))/d.s);
 		v = (v<1) ? 1 :v ;
@@ -85,6 +85,9 @@ function et(d){
 	}else{
 		sh(d,d.maxh);
 		clearInterval(d.t);
+        // jump to default url when expand accordian
+        if (typeof(d.getAttribute('url'))=='string')
+            parent.frames['main'].document.location.href = d.getAttribute('url');
 	}
 }
 
@@ -121,7 +124,7 @@ function cc(n,v){
 //Accordian Initializer
 function Accordian(d,s,tc){
 	// get all the elements that have id as content
-	l=$(d).getElementsByTagName('div');
+	l=ele(d).getElementsByTagName('div');
 	c=[];
 	for(i=0;i<l.length;i++){
 		h=l[i].id;
@@ -132,12 +135,12 @@ function Accordian(d,s,tc){
 	for(i=0;i<l.length;i++){
 		h=l[i].id;
 		if(h.substr(h.indexOf('-')+1,h.length)=='header'){
-			d=$(h.substr(0,h.indexOf('-'))+'-content');
+			d=ele(h.substr(0,h.indexOf('-'))+'-content');
 			d.style.display='none';
 			d.style.overflow='hidden';
 			d.maxh =sh(d);
 			d.s=(s==undefined)? 7 : s;
-			h=$(h);
+			h=ele(h);
 			h.tc=tc;
 			h.c=c;
 			// set the onclick function for each header.
@@ -146,18 +149,18 @@ function Accordian(d,s,tc){
 					cn=this.c[i];
 					n=cn.substr(0,cn.indexOf('-'));
 					if((n+'-header')==this.id){
-						if (!af || (af && !hh($(n+'-header')))) {
-							ex($(n+'-content'));
-							n=$(n+'-header');
+						if (!af || (af && !hh(ele(n+'-header')))) {
+							ex(ele(n+'-content'));
+							n=ele(n+'-header');
 							cc(n,'');
 							n.className=n.className+' '+n.tc;
 						}else{
-							cl($(n+'-content'));
-							cc($(n+'-header'),'');
+							cl(ele(n+'-content'));
+							cc(ele(n+'-header'),'');
 						}
 					}else{
-						cl($(n+'-content'));
-						cc($(n+'-header'),'');
+						cl(ele(n+'-content'));
+						cc(ele(n+'-header'),'');
 					}
 				}
 			}

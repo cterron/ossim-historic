@@ -34,13 +34,11 @@
 * Function list:
 * Classes list:
 */
-require_once ('classes/Session.inc');
+require_once ('av_init.php');
 Session::logcheck("MenuCorrelation", "CorrelationDirectives");
 ?>
 
 <?php
-require_once ('classes/Plugin.inc');
-require_once ('classes/Plugin_sid.inc');
 require_once ('ossim_db.inc');
 $level = $_GET["level"];
 $directive_id = $_GET["directive"];

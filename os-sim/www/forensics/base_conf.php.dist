@@ -132,13 +132,12 @@ $use_referential_integrity = 0;
  */
 $use_ossim_session = 0;
 $ossim_login_path = "/ossim/session/login.php";
-$ossim_acid_aco_section = "MenuEvents";
+$ossim_acid_aco_section = "analysis-menu";
 $ossim_acid_aco = "EventsForensics";
 $ossim_domain_aco_section = "DomainAccess";
 $ossim_domain_aco = "Nets";
 
 /* Variable to start the ability to handle themes... */
-$base_style = 'base_style.css';
 
 /* Chart default colors - (red, green, blue)
  *    - $chart_bg_color_default    : background color of chart

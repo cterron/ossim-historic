@@ -1,3 +1,0 @@
-# default ossim-agent options
-OPTS="-c /etc/ossim/agent/config.xml"
-

@@ -1,20 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* - QueryResultsOutput()
-* - AddTitle()
-* - GetSortSQL()
-* - PrintHeader()
-* - PrintFooter()
-* - DumpQROHeader()
-* - qroReturnSelectALLCheck()
-* - qroPrintEntryHeader()
-* - qroPrintEntry()
-* - qroPrintEntryFooter()
-* Classes list:
-* - QueryResultsOutput
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -26,6 +10,25 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 **/
+
+
+/**
+* Function list:
+* - QueryResultsOutput()
+* - AddTitle()
+* - GetSortSQL()
+* - PrintHeader()
+* - PrintFooter()
+* - DumpQROHeader()
+* - qroReturnSelectALLCheck()
+* - qroPrintEntryHeader()
+* - qroPrintEntry()
+* - qroPrintEntryFooter()
+*
+* Classes list:
+* - QueryResultsOutput
+*/
+
 defined('_BASE_INC') or die('Accessing this file directly is not allowed.');
 include_once ("$BASE_path/includes/base_constants.inc.php");
 class QueryResultsOutput {
@@ -70,7 +73,9 @@ class QueryResultsOutput {
         /* $sort is not a valid sort type of any header */
         return NULL;
     }
-    function PrintHeader($text = '') {
+    function PrintHeader($text = '',$custom=0) {
+        GLOBAL $htmlPdfReport;
+        GLOBAL $current_cols_titles, $current_cols_widths;
         /* Client-side Javascript to select all the check-boxes on the screen
         *   - Bill Marque (wlmarque@hewitt.com) */
         echo '
@@ -100,73 +105,49 @@ class QueryResultsOutput {
         if ('' != $text) {
             echo $text;
         }
-        echo '<TABLE CELLSPACING=0 CELLPADDING=2 BORDER=0 WIDTH="100%" BGCOLOR="#000000">' . "\n" . "<TR><TD>\n" . '<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0 WIDTH="100%" BGCOLOR="#FFFFFF">' . "\n" . "\n\n<!-- Query Results Title Bar -->\n   <TR>\n";
+        echo '<div style="width:100%;overflow-x:auto;"><TABLE class="table_list">' . "\n" . "\n\n<!-- Query Results Title Bar -->\n   <tr>\n";
         reset($this->qroHeader);
-        while ($title = each($this->qroHeader)) {
-            $print_title = "";
-            if ($title['key'] == "L4-proto") $width = " width=60";
-            elseif ($title['key'] == "Risk" || $title['key'] == "Rel" || $title['key'] == "Prio" || $title['key'] == "Asst") $width = " width=40";
-            elseif ($title['key'] == _TIMESTAMP || $title['key'] == _NBSOURCEADDR || $title['key'] == _NBDESTADDR) $width = " width=120";
-            else $width = "";
-			if (!preg_match("/INPUT/",$title['key']) && isset($this->qroHeader2[$title['key']])) {
-				// Add asc and desc link icons
-				$sort_keys = array_keys($title["value"]);
-				$asc_icon = $desc_icon = $bold_s = $bold_e = "";
-				$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
-				if ($_GET['sort_order'] == $sort_keys[0] || $_POST['sort_order'] == $sort_keys[0]) {
-					$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
-					$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
-					$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
-					$bold_s = "<font color='#2969A8'>";
-					$bold_e = "</font>";
-					if ($width == " width=40") $width = " width=75";
-					elseif ($width == " width=60") $width = " width=95";
+        $flag = 0; 
+        $checkbox = 0;
+		if ($custom) $allowed_cols = $_SESSION['views'][$_SESSION['current_cview']]['cols'];
+		else $allowed_cols = array("");
+        //print_r($allowed_cols); print_r($current_cols_titles);
+        // print custom headers and pdf headers
+        if (isset($htmlPdfReport)) $htmlPdfReport->set("<tr>\n");
+        //$wp = floor(100/count($allowed_cols));
+        foreach ($allowed_cols as $colname) {
+            $coltitle = ($current_cols_titles[$colname]!="") ? $current_cols_titles[$colname] : $colname;
+            $w = ($current_cols_widths[$colname]!="") ? "style='width:".$current_cols_widths[$colname]."'" : ""; // style='width:$wp%'
+            if (isset($htmlPdfReport)) $htmlPdfReport->set("<th align='center' $w>$coltitle</th>\n");
+        }   
+        if (isset($htmlPdfReport)) $htmlPdfReport->set("</tr>\n");
+        //
+        $field=0;
+		foreach ($allowed_cols as $colname) {
+			$coltitle = $current_cols_titles[$colname];
+			while ($title = each($this->qroHeader)) {
+			//print_r($title);
+				if ($custom) { // Custom view only
+					if (preg_match("/INPUT/",$title['key']) && $checkbox){ continue; }
+					elseif ($colname != preg_replace("/\&nbsp.*/","",$title['key']) && $checkbox) continue;
+					$checkbox=1;
 				}
-				if ($_GET['sort_order'] == $sort_keys[1] || $_POST['sort_order'] == $sort_keys[1]) {
-					$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
-					$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
-					$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
-					$bold_s = "<font color='#2969A8'>";
-					$bold_e = "</font>";
-					if ($width == " width=40") $width = " width=75";
-					elseif ($width == " width=60") $width = " width=95";
-				}
-				$print_title = $title["key"]."<br>$asc_icon<a href=\"$href\">$bold_s" . "S" . "$bold_e</a>$desc_icon";
-
-				// Add asc and desc link icons 2
-				$sort_keys2 = array_keys($this->qroHeader2[$title['key']]);
-				$asc_icon = $desc_icon = $bold_s = $bold_e = "";
-				$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
-				if ($_GET['sort_order'] == $sort_keys2[0] || $_POST['sort_order'] == $sort_keys2[0]) {
-					$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
-					$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
-					$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
-					$bold_s = "<font color='#2969A8'>";
-					$bold_e = "</font>";
-					if ($width == " width=40") $width = " width=75";
-					elseif ($width == " width=60") $width = " width=95";
-				}
-				if ($_GET['sort_order'] == $sort_keys2[1] || $_POST['sort_order'] == $sort_keys2[1]) {
-					$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
-					$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
-					$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
-					$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
-					$bold_s = "<font color='#2969A8'>";
-					$bold_e = "</font>";
-					if ($width == " width=40") $width = " width=75";
-					elseif ($width == " width=60") $width = " width=95";
-				}
-				$print_title .= "<img src='images/arrow-000-small.png' border=0 align=absmiddle>$asc_icon<a href=\"$href\">$bold_s" . "D" . "$bold_e</a>$desc_icon";
-				echo '<TD CLASS="plfieldhdr"' . $width . ' style="line-height:12px;padding-top:1px" NOWRAP>&nbsp;' . $print_title . '&nbsp;</TD>' . "\n";
-			} else {
-				$sort_keys = array_keys($title["value"]);
-				if (count($sort_keys) == 2) {
+				$print_title = "";
+				if ($title['key'] == "IP_PROTO") $width = "width:70px;";
+				elseif (preg_match("/INPUT/",$title['key'])) $width = "width:30px;";
+				elseif ($title['key'] == "RISK" || $title['key'] == "RELIABILITY" || $title['key'] == "PRIORITY" || $title['key'] == "ASSET") $width = "width:80px;";
+				elseif ($title['key'] == "DATE") $width = "width:130px;";
+				elseif ($title['key'] == "IP_PORTSRC" || $title['key'] == "IP_PORTDST") $width = "min-width:120px;";
+				else $width = "";
+				//$border = ($title['key'] == "L4-proto" || $title['key'] == "Last" || $title['key'] == "Total Events" || (preg_match("/(Dest\.|Src\.).+Addr\./",$title['key']) && $_GET['addr_type']>0) || !$flag) ? "border-bottom:1px solid #CACACA;" : "border-right:1px solid #CACACA;border-bottom:1px solid #CACACA;";
+                //$border = ($field>0 ? "border-left:1px solid #CACACA;" : "")."border-bottom:1px solid #CACACA;";
+				$flag = 1;
+				
+				$title['key'] = ($current_cols_titles[$title['key']]!="") ? $current_cols_titles[$title['key']] : $title['key'];
+				
+				if (!preg_match("/INPUT/",$title['key']) && isset($this->qroHeader2[$title['key']])) {
 					// Add asc and desc link icons
+					$sort_keys = array_keys($title["value"]);
 					$asc_icon = $desc_icon = $bold_s = $bold_e = "";
 					$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
 					if ($_GET['sort_order'] == $sort_keys[0] || $_POST['sort_order'] == $sort_keys[0]) {
@@ -174,10 +155,8 @@ class QueryResultsOutput {
 						$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
 						$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
 						$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
-						$bold_s = "<font color='#2969A8'>";
+						$bold_s = "<font style='text-decoration:underline;font-size:13px'>";
 						$bold_e = "</font>";
-						if ($width == " width=40") $width = " width=75";
-						elseif ($width == " width=60") $width = " width=95";
 					}
 					if ($_GET['sort_order'] == $sort_keys[1] || $_POST['sort_order'] == $sort_keys[1]) {
 						$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
@@ -185,27 +164,85 @@ class QueryResultsOutput {
 						$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
 						$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
 						$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
-						$bold_s = "<font color='#2969A8'>";
+						$bold_s = "<font style='text-decoration:underline;font-size:13px'>";
 						$bold_e = "</font>";
-						if ($width == " width=40") $width = " width=75";
-						elseif ($width == " width=60") $width = " width=95";
 					}
-					$print_title = "$asc_icon<a href=\"$href\">$bold_s" . $title["key"] . "$bold_e</a>$desc_icon";
+					$print_title = $title["key"]."<br>$asc_icon<a href=\"$href\" style='font-size:11px'>$bold_s" . "S" . "$bold_e</a>$desc_icon";
+
+					// Add asc and desc link icons 2
+					$sort_keys2 = array_keys($this->qroHeader2[$title['key']]);
+					$asc_icon = $desc_icon = $bold_s = $bold_e = "";
+					$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
+					if ($_GET['sort_order'] == $sort_keys2[0] || $_POST['sort_order'] == $sort_keys2[0]) {
+						$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
+						$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
+						$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
+						$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
+						$bold_s = "<font style='text-decoration:underline;font-size:13px'>";
+						$bold_e = "</font>";
+					}
+					if ($_GET['sort_order'] == $sort_keys2[1] || $_POST['sort_order'] == $sort_keys2[1]) {
+						$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
+						$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
+						$href = $this->url . "&amp;sort_order=" . $sort_keys2[1];
+						$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
+						$href = $this->url . "&amp;sort_order=" . $sort_keys2[0];
+						$bold_s = "<font style='text-decoration:underline'>";
+						$bold_e = "</font>";
+					}
+					$print_title .= "<img src='images/arrow-000-small.gif' border=0 align=absmiddle>$asc_icon<a href=\"$href\" style='color:#333333;font-size:11px'>$bold_s" . "D" . "$bold_e</a>$desc_icon";
+					echo '<th style="'. $width . $border.'" NOWRAP>&nbsp;' . $print_title . '&nbsp;</th>' . "\n";
 				} else {
-					$print_title = $title["key"];
+					$sort_keys = array_keys($title["value"]);
+					if (count($sort_keys) == 2) {
+						// Add asc and desc link icons
+						$asc_icon = $desc_icon = $bold_s = $bold_e = "";
+						$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
+						if ($_GET['sort_order'] == $sort_keys[0] || $_POST['sort_order'] == $sort_keys[0]) {
+							$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
+							$asc_icon = "<a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
+							$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
+							$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
+							$bold_s = "<font style='text-decoration:underline'>";
+							$bold_e = "</font>";
+						}
+						if ($_GET['sort_order'] == $sort_keys[1] || $_POST['sort_order'] == $sort_keys[1]) {
+							$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
+							$asc_icon = " <a href=\"$href\"><img src='images/order_sign_d.png' border=0 align=absmiddle></a>&nbsp;";
+							$href = $this->url . "&amp;sort_order=" . $sort_keys[1];
+							$desc_icon = "&nbsp;<a href=\"$href\"><img src='images/order_sign_a.png' border=0 align=absmiddle></a>";
+							$href = $this->url . "&amp;sort_order=" . $sort_keys[0];
+							$bold_s = "<font style='text-decoration:underline'>";
+							$bold_e = "</font>";
+						}						
+						$print_title = "$asc_icon<a href=\"$href\">$bold_s" . $title["key"] . "$bold_e</a>$desc_icon";
+					} else {
+						$print_title = $title["key"];
+					}
+					$align_style = ($title["key"] == "Source" || $title["key"] == "Destination" || $title["key"] == "Signature") ? "text-align:left;padding-left:0px;" : "";
+					echo '<th style="'.$align_style. $width . $border.'" NOWRAP>&nbsp;' . $print_title . '&nbsp;</th>' . "\n";
 				}
-				echo '<TD CLASS="plfieldhdr"' . $width . ' NOWRAP>&nbsp;' . $print_title . '&nbsp;</TD>' . "\n";
 			}
-        }
+			reset($this->qroHeader);
+            $field++;
+		}
+		
+		// Custom Views Dropdown
+		if ($custom)
+		{
+		    echo "<th style='width:30px;padding:0px;padding-right:5px' NOWRAP>";
+		    PrintPredefinedViews();
+		    echo "</th>";
+		}
+		
         echo "</TR>\n";
     }
     function PrintFooter() {
         echo "  </TABLE>\n
-           </TD></TR>\n
-          </TABLE>\n";
+           </div>\n";
     }
     function DumpQROHeader() {
-        echo "<B>" . _QUERYRESULTSHEADER . "</B>
+        echo "<B>" . gettext("Query Results Output Header") . "</B>
           <PRE>";
         print_r($this->qroHeader);
         echo "</PRE>";
@@ -214,18 +251,25 @@ class QueryResultsOutput {
 function qroReturnSelectALLCheck() {
     return '<INPUT type=checkbox value="Select All" onClick="if (this.checked) SelectAll(); if (!this.checked) UnselectAll();">';
 }
-function qroPrintEntryHeader($prio = 1, $color = 0, $more = "") {
+function qroPrintEntryHeader($prio = 1, $color = 0, $more = "", $forced_color="", $class="trcell") {
     global $priority_colors;
     if ($color == 1) {
-        echo '<TR BGCOLOR="#' . $priority_colors[$prio] . '" ' . $more . '>';
+        echo '<TR class="'.$class.'" BGCOLOR="#' . Util::htmlentities($priority_colors[$prio]) . '" ' . $more . '>';
     } else {
-        echo '<TR BGCOLOR="#' . ((($prio % 2) == 0) ? "DDDDDD" : "FFFFFF") . '" ' . $more . '>';
+        $bgcolor = ($forced_color != '') ? 'bgcolor="#'.$forced_color.'"' : '';
+        echo '<TR class="'.$class.'" ' . $bgcolor . ' ' . $more . '>';
     }
 }
-function qroPrintEntry($value, $halign = "center", $valign = "top", $passthru = "") {
-    echo "<TD align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
+function qroPrintEntry($value, $halign = "center", $valign = "top", $passthru = "", $bgcolor = "") {
+	echo "<TD $bgcolor align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
+}
+function qroPrintEntryTooltip($value, $halign = "center", $valign = "top", $passthru = "", $tooltip = "") {
+	echo "<TD txt='".str_replace("'","\'",$tooltip)."' class='tztooltip' style='padding:5px 4px' align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
 }
 function qroPrintEntryFooter() {
     echo '</TR>';
+}
+function colHidden($title,$current_cols_titles) {
+	return ($current_cols_titles[$title]) ? 1 : 0;
 }
 ?>

@@ -7,6 +7,8 @@ var/lib/ossim/rrd/global_qualification
 var/lib/ossim/rrd/level_qualification
 var/lib/ossim/rrd/incidents_qualification
 usr/share/ossim/
+usr/share/ossim/scripts/alarms
+usr/share/ossim/scripts/forensics
 usr/share/ossim/www/tmp/
 usr/bin/
 etc/cron.d/

@@ -1,51 +1,55 @@
 <?php
-/*****************************************************************************
+/**
 *
-*    License:
+* License:
 *
-*   Copyright (c) 2003-2006 ossim.net
-*   Copyright (c) 2007-2009 AlienVault
-*   All rights reserved.
+* Copyright (c) 2003-2006 ossim.net
+* Copyright (c) 2007-2013 AlienVault
+* All rights reserved.
 *
-*   This package is free software; you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License as published by
-*   the Free Software Foundation; version 2 dated June, 1991.
-*   You may not use, modify or distribute this program under any other version
-*   of the GNU General Public License.
+* This package is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; version 2 dated June, 1991.
+* You may not use, modify or distribute this program under any other version
+* of the GNU General Public License.
 *
-*   This package is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
+* This package is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
 *
-*   You should have received a copy of the GNU General Public License
-*   along with this package; if not, write to the Free Software
-*   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-*   MA  02110-1301  USA
+* You should have received a copy of the GNU General Public License
+* along with this package; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+* MA  02110-1301  USA
 *
 *
 * On Debian GNU/Linux systems, the complete text of the GNU General
 * Public License can be found in `/usr/share/common-licenses/GPL-2'.
 *
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
-****************************************************************************/
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
+*
 */
-/*
-Based on script by:
-Sairam Suresh sai1138@yahoo.com / www.entropyfarm.org
 
-Thermbar pic courtesy http://www.rosiehardman.com/
+
+/*
+* Based on script by: Sairam Suresh sai1138@yahoo.com / www.entropyfarm.org
+* Thermbar pic courtesy http://www.rosiehardman.com/
 */
-Header("Content-Type: image/jpeg");
-require_once 'classes/Session.inc';
+
+
+header("Content-Type: image/jpeg");
+require_once 'av_init.php';
 require_once 'classes/Util.inc';
 require_once 'ossim_db.inc';
 require_once 'ossim_conf.inc';
-Session::logcheck("MenuControlPanel", "ControlPanelMetrics");
+
+if ( !Session::menu_perms("dashboard-menu", "ControlPanelMetrics") ) 
+{
+  readfile("../../pixmaps/therm/therm_gray.jpg");
+  exit();
+}
+
 $db = new ossim_db();
 $conn = $db->connect();
 $user = Session::get_session_user();
@@ -89,7 +93,7 @@ $t_unit = 'none';
 $t_max = 100;
 $t_current = $level;
 $finalimagewidth = max(strlen($t_max) , strlen($t_current)) * 25;
-$finalimage = imagecreateTrueColor(60 + $finalimagewidth, 405);
+$finalimage = imagecreatetruecolor(60 + $finalimagewidth, 405);
 $white = imagecolorallocate($finalimage, 255, 255, 255);
 $black = imagecolorallocate($finalimage, 0, 0, 0);
 $red = imagecolorallocate($finalimage, 255, 0, 0);
@@ -98,15 +102,15 @@ $yellow = imagecolorallocate($finalimage, 252, 194, 0);
 $yellgr = imagecolorallocate($finalimage, 179, 174, 8);
 $green = imagecolorallocate($finalimage, 51, 142, 5);
 imagefill($finalimage, 0, 0, $white);
-ImageAlphaBlending($finalimage, true);
+imagealphablending($finalimage, true);
 $thermImage = imagecreatefromjpeg($img_ther);
-$tix = ImageSX($thermImage);
-$tiy = ImageSY($thermImage);
-//ImageCopy($finalimage,$thermImage,0,0,0,0,$tix,$tiy);
-ImageCopy($finalimage, $thermImage, 17, 0, 0, 0, $tix, $tiy);
-$thermbarImage = ImageCreateFromjpeg($img_therbar);
-$barW = ImageSX($thermbarImage);
-$barH = ImageSY($thermbarImage);
+$tix = imagesx($thermImage);
+$tiy = imagesy($thermImage);
+//imagecopy($finalimage,$thermImage,0,0,0,0,$tix,$tiy);
+imagecopy($finalimage, $thermImage, 17, 0, 0, 0, $tix, $tiy);
+$thermbarImage = imagecreatefromjpeg($img_therbar);
+$barW = imagesx($thermbarImage);
+$barH = imagesy($thermbarImage);
 $ybars = "";
 $xpos = 22;
 //$xpos = 5;
@@ -121,11 +125,11 @@ if ($t_current > $t_max) {
 }
 // Draw each ybar (filled red bar) in successive shifts of $ydelta.
 while ($ybars--) {
-    ImageCopy($finalimage, $thermbarImage, $xpos, $ypos, 0, 0, $barW, $barH);
+    imagecopy($finalimage, $thermbarImage, $xpos, $ypos, 0, 0, $barW, $barH);
     $ypos = $ypos - $ydelta;
 }
 if ($t_current == $t_max) {
-    ImageCopy($finalimage, $thermbarImage, $xpos, $ypos, 0, 0, $barW, $barH);
+    imagecopy($finalimage, $thermbarImage, $xpos, $ypos, 0, 0, $barW, $barH);
     $ypos-= $ydelta;
 }
 //Write level indicators
@@ -197,15 +201,15 @@ imagefilledellipse($finalimage, 65, 221, 6, 6, $yellow);
 imagefilledellipse($finalimage, 65, 281, 6, 6, $yellgr);
 imagefilledellipse($finalimage, 65, 346, 6, 6, $green);
 if ($t_current > $t_max) {
-    $burstImg = ImageCreateFromjpeg('burst.jpg');
-    $burstW = ImageSX($burstImg);
-    $burstH = ImageSY($burstImg);
-    ImageCopy($finalimage, $burstImg, 0, 0, 0, 0, $burstW, $burstH);
+    $burstImg = imagecreatefromjpeg('burst.jpg');
+    $burstW = imagesx($burstImg);
+    $burstH = imagesy($burstImg);
+    imagecopy($finalimage, $burstImg, 0, 0, 0, 0, $burstW, $burstH);
 }
 //Create the final image
-Imagejpeg($finalimage, NULL, 99);
+imagejpeg($finalimage, NULL, 99);
 //Destroy de rest of images
-Imagedestroy($finalimage);
-Imagedestroy($thermImage);
-Imagedestroy($thermbarImage);
+imagedestroy($finalimage);
+imagedestroy($thermImage);
+imagedestroy($thermbarImage);
 ?> 

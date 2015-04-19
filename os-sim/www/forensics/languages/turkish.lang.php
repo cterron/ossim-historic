@@ -1,9 +1,4 @@
 <?php
-/**
-* Class and Function List:
-* Function list:
-* Classes list:
-*/
 /*******************************************************************************
 ** OSSIM Forensics Console
 ** Copyright (C) 2009 OSSIM/AlienVault
@@ -15,6 +10,8 @@
 ** Built upon work by Roman Danyliw <rdd@cert.org>, <roman@danyliw.com>
 ** Built upon work by the BASE Project Team <kjohnson@secureideas.net>
 */
+
+
 //locale
 DEFINE('_LOCALESTR1', 'tur_TUR.ISO8859-9');
 DEFINE('_LOCALESTR2', 'tur_TUR.utf-8');
@@ -338,7 +335,7 @@ DEFINE('_ERRCRITELEM', 'Geçersiz ölçüt öðesi');
 //base_state_query.inc.php
 DEFINE('_VALIDCANNED', 'Geçerli Konservelenmiþ Sorgu Listesi');
 DEFINE('_DISPLAYING', 'Görüntüleniyor');
-DEFINE('_DISPLAYINGTOTAL', '%d-%d uyarýlarý görüntüleniyor, %d toplamda');
+DEFINE('_DISPLAYINGTOTAL', '%d-%d uyarýlarý görüntüleniyor, %s toplamda');
 DEFINE('_NOALERTS', 'Hiçbir Uyarý bulunamadý.');
 DEFINE('_QUERYRESULTS', 'Sorgu Sonuçlarý');
 DEFINE('_QUERYSTATE', 'Sorgu Durumu');

@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 
 # $Id: autogen.sh,v 1.3 2004/11/02 12:10:32 dvgil Exp $
 #
@@ -45,7 +45,7 @@ rm -f config.cache
 #echo "- intltoolize."		&& \
 #  intltoolize --copy --force	&& \
 #echo "- libtoolize."		&& \
-#  libtoolize --copy --force --automake 	&& \
+#  libtoolize --copy --automake 	&& \
 
 # We use aclocal-1.4 because that's required for automake-1.4 later.
 # Otherwise we get "automake requires `AM_CONFIG_HEADER', not `AC_CONFIG_HEADER'"

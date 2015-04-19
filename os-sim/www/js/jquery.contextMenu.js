@@ -20,7 +20,7 @@ if (jQuery) (function() {
     $.extend($.fn, {
 
         contextMenu: function(o, callback) {
-            // Defaults
+			// Defaults
             if (o.menu == undefined) return false;
             if (o.inSpeed == undefined) o.inSpeed = 150;
             if (o.outSpeed == undefined) o.outSpeed = 75;
@@ -34,17 +34,40 @@ if (jQuery) (function() {
                 var offset = $(el).offset();
                 // Add contextMenu class
                 $('#' + o.menu).addClass('contextMenu');
+                
                 // Simulate a true right click
                 $(this).mousedown(function(e) {
                     var evt = e;
+                    
+                    if(e.which === 3)
+                    {
+                        if(typeof $.fn.disableTextSelect == 'function')
+                        {
+                            $(el).disableTextSelect();
+                        }
+                    }
+
                     $(this).mouseup(function(e) {
+
+                        if(typeof $.fn.enableTextSelect == 'function')
+                        {
+                            $(el).enableTextSelect();
+                        }
+                        
                         var srcElement = $(this);
                         $(this).unbind('mouseup');
                         if (evt.button == 2 || o.leftButton == true) {
+                        
                             // Hide context menus that may be showing
                             $(".contextMenu").hide();
                             // Get this context menu
                             var menu = $('#' + o.menu);
+                            
+                            // Pre actions before the menu is shown (optional)
+                            if (typeof o.pre_action == 'function')
+                            	{
+                            		o.pre_action(el);
+                            	}
 
                             if ($(el).hasClass('disabled')) return false;
 
@@ -68,7 +91,29 @@ if (jQuery) (function() {
                                 d.innerWidth = document.body.clientWidth;
                             }
                             (e.pageX) ? x = e.pageX : x = e.clientX + d.scrollLeft;
-                            (e.pageY) ? y = e.pageY : x = e.clientY + d.scrollTop;
+                            (e.pageY) ? y = e.pageY : y = e.clientY + d.scrollTop;
+                            
+                            var mw = $(menu).width();
+                            var mh = $(menu).height();
+                            
+                            /** Better use $(document) instead $(window) to get the height
+                             *  It is too small value when lightbox is loaded
+                             *  Because it doesn't add the real framed document height
+                             *  $(window).height() was giving us the height of the frame,
+                             *  not the height of the scrolled inner content
+                             */
+                            var ww = $(window).width();
+                            var wh = $(document).height();
+
+                            if ((x + mw) > (ww - 50))
+                            {
+                                x = x - mw;
+                            }
+                            
+                            if ((y + mh) > (wh - 50))
+                            {
+                                y = y - mh;
+                            }
 
                             // Show the menu
                             $(document).unbind('click');
@@ -130,15 +175,13 @@ if (jQuery) (function() {
                         }
                     });
                 });
+                
+                
+                $('#' + o.menu).each(function() 
+                { 
+                    $(this).disableTextSelect();
+                });
 
-                // Disable text selection
-                if ($.browser.mozilla) {
-                    $('#' + o.menu).each(function() { $(this).css({ 'MozUserSelect': 'none' }); });
-                } else if ($.browser.msie) {
-                    $('#' + o.menu).each(function() { $(this).bind('selectstart.disableTextSelect', function() { return false; }); });
-                } else {
-                    $('#' + o.menu).each(function() { $(this).bind('mousedown.disableTextSelect', function() { return false; }); });
-                }
                 // Disable browser context menu (requires both selectors to work in IE/Safari + FF/Chrome)
                 $(el).add('UL.contextMenu').bind('contextmenu', function() { return false; });
 
@@ -187,7 +230,7 @@ if (jQuery) (function() {
         // Disable context menu(s)
         disableContextMenu: function() {
             $(this).each(function() {
-                $(this).addClass('disabled');
+            		$(this).find('LI').addClass('disabled');
             });
             return ($(this));
         },
@@ -195,7 +238,7 @@ if (jQuery) (function() {
         // Enable context menu(s)
         enableContextMenu: function() {
             $(this).each(function() {
-                $(this).removeClass('disabled');
+            		$(this).find('LI').removeClass('disabled');
             });
             return ($(this));
         },
