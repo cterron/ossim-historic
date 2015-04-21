@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -139,7 +139,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Suspic
 
 #by Axn Jxn
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Webbuying.net Spyware Install User-Agent 2 (wb v1.6.4)"; flow:to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:"wb v"; http_header; fast_pattern:only; reference:url,doc.emergingthreats.net/2003449; classtype:trojan-activity; sid:2003449; rev:10;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET USER_AGENTS Webbuying.net Spyware Install User-Agent 2 (wb v1.6.4)"; flow:to_server,established; content:"User-Agent|3a|"; nocase; http_header; content:"wb v"; within:150; fast_pattern; http_header; pcre:"/^User-Agent\x3a[^\r\n]+wb v\d/Hmi"; reference:url,doc.emergingthreats.net/2003449; classtype:trojan-activity; sid:2003449; rev:11;)
 
 #by Jaime Blasco
 #

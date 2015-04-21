@@ -1,0 +1,17 @@
+[properties]
+name=Backup notifications log
+description=Parses the api backup notifications log to search for issues.
+category=alienvault,platform
+type=file
+filename=/var/log/alienvault/api/backup-notifications.log
+raw_limit=2000
+
+
+[Error in backup process]
+pattern=^\S+\s\S+\s\S+\s--\s((\S+)\s--\s.+)$
+conditions=@info@;@string@:!="ERROR"
+fail_if_empty=False
+severity=Medium
+warning=Error message found in the backup notifications log file
+advice=There have been one or more errors during a backup process
+

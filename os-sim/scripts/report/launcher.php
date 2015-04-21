@@ -33,7 +33,9 @@ function getScheduler($conn)
 {
     $return  = array();
     
-    if ( !$rs = & $conn->Execute( "SELECT crs.* FROM custom_report_scheduler crs, users usr WHERE crs.user=usr.login AND usr.enabled=1 AND usr.expires > '".gmdate("Y-m-d H:i:s")."' ORDER BY id" ) ) 
+    $rs = $conn->Execute("SELECT crs.* FROM custom_report_scheduler crs, users usr WHERE crs.user=usr.login AND usr.enabled=1 AND usr.expires > '".gmdate('Y-m-d H:i:s', gmdate('U'))."' ORDER BY id");
+
+    if (!$rs)
     {
         print $conn->ErrorMsg();
         exit();
@@ -85,7 +87,7 @@ function getScheduler($conn)
 
 function reScheduleBypassed($conn)
 {
-    if ( !$rs = & $conn->Execute( "SELECT crs.* FROM custom_report_scheduler crs, users usr WHERE crs.user=usr.login AND usr.enabled=1 AND usr.expires > '".gmdate("Y-m-d H:i:s")."' AND unix_timestamp(next_launch) < unix_timestamp()" ) ) 
+    if ( !$rs = & $conn->Execute( "SELECT crs.* FROM custom_report_scheduler crs, users usr WHERE crs.user=usr.login AND usr.enabled=1 AND usr.expires > '".gmdate('Y-m-d H:i:s', gmdate('U'))."' AND unix_timestamp(next_launch) < unix_timestamp('".gmdate('Y-m-d H:i:s', gmdate('U'))."') AND next_launch <> '0000-00-00 00:00:00'" ) )
     {
         print $conn->ErrorMsg();
         exit();
@@ -98,6 +100,13 @@ function reScheduleBypassed($conn)
                 'type'        => $rs->fields['schedule_type'],
                 'next_launch' => $rs->fields['next_launch']
             );
+
+            // Reprogramme "Run Once" passed report
+            if ('O' === $schedule['type'])
+            {
+                $schedule['type'] = 'OR';
+            }
+
             $rid         = $rs->fields['id'];
             $next_launch = updateNextLaunch($conn,$schedule,$rid);
             echo "\tRe-scheduling bypassed $rid from ".$rs->fields['next_launch']." to $next_launch\n";
@@ -109,7 +118,10 @@ function reScheduleBypassed($conn)
 function getUserWeb($conn, $user)
 {
     $return = "";
-    if (!$rs = & $conn->Execute("SELECT * FROM users WHERE login='".$user."'")) 
+    
+    $rs = $conn->Execute("SELECT * FROM users WHERE login='".$user."'");
+    
+    if (!$rs)
     {
         print $conn->ErrorMsg();
         exit();
@@ -129,8 +141,10 @@ function getKeyEncript($conn)
     $uuid = Util::get_encryption_key();
 
     $return = "";
+    
+    $rs = $conn->Execute("select value, AES_DECRYPT(value, ?) as dvalue from config where conf='remote_key'", $uuid);
 
-    if (!$rs = & $conn->Execute("select value, AES_DECRYPT(value, ?) as dvalue from config where conf='remote_key'", $uuid)) 
+    if (!$rs) 
     {
         print $conn->ErrorMsg();
         exit();
@@ -221,6 +235,11 @@ function updateNextLaunch($conn, $schedule, $id){
         case 'O':
             $next_launch = '0000-00-00 00:00:00';
         break;
+
+        // Reprogrammed "Run Once" passed report
+        case 'OR':
+            $next_launch = Util::get_utc_date_calc($conn, $schedule['next_launch'], "1 HOUR");
+        break;
         
 		case 'D':
             $next_launch = Util::get_utc_date_calc($conn, $schedule['next_launch'], "1 DAY");
@@ -271,7 +290,7 @@ $cookieName = date('YmdHis').rand().'.txt';
 
 
 system("clear");
-$to_text .= "\n\n"._('Date (UTC)').': '.gmdate("Y-m-d H:i:s")."\n\n";
+$to_text .= "\n\n"._('Date (UTC)').': '.gmdate('Y-m-d H:i:s', gmdate('U'))."\n\n";
 $to_text .= _('Starting Report Scheduler')."...\n\n";
 
 
@@ -345,11 +364,10 @@ if ($i == 0)
 $db->close($conn);
 
 echo "\n\n";
-system("rm -f /tmp/logscheduler_err");
+system("rm -f /var/tmp/logscheduler_err");
 
 foreach ( $scheduled_reports as $value )
 {
-    
 	$id_sched = $value['id'];
 	$output   = null;
 	$to_text  = null;	
@@ -372,7 +390,7 @@ foreach ( $scheduled_reports as $value )
 
     $db->close($conn);
     
-	$step1 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /tmp/logscheduler_err',$output);
+	$step1 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err',$output);
 	
 	$result = searchString($output,$info_text[0]);
 
@@ -433,7 +451,7 @@ foreach ( $scheduled_reports as $value )
     
     $conn = $db->connect();
     
-    $run_at = get_timestamp($conn, $user, gmdate("Y-m-d H:i:s"));
+    $run_at = get_timestamp($conn, $user, gmdate('Y-m-d H:i:s', gmdate('U')));
     $user_name = $conn->GetOne("SELECT name FROM users WHERE login='".$value["user"]."'");
     
     $db->close($conn);
@@ -463,7 +481,7 @@ foreach ( $scheduled_reports as $value )
 	  		
 	// Run Report
 	$output  = null;
-	$step2   = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?run='.$value['id_report'].'&'.$params.'" -O - 2>> /tmp/logscheduler_err', $output);
+	$step2   = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?run='.$value['id_report'].'&'.$params.'" -O - 2>> /var/tmp/logscheduler_err', $output);
 	
       	
 	// Generate PDF
@@ -481,10 +499,10 @@ foreach ( $scheduled_reports as $value )
 	}
 	else
 	{
-		exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /tmp/logscheduler_err');
-		exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /tmp/logscheduler_err');
+		exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
+		exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err');
     
-		$step3 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?pdf=true&extra_data=true&run='.$value['id_report'].'" -O '.$dirUserPdf.$pdfName.'.pdf 2>> /tmp/logscheduler_err', $output);
+		$step3 = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/report/wizard_run.php?pdf=true&extra_data=true&run='.$value['id_report'].'" -O '.$dirUserPdf.$pdfName.'.pdf 2>> /var/tmp/logscheduler_err', $output);
 		
 		// Send PDF by email
 		
@@ -501,12 +519,12 @@ foreach ( $scheduled_reports as $value )
 			
 			$output   = null;
 			
-            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /tmp/logscheduler_err');
-            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /tmp/logscheduler_err');
+            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
+            exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --save-cookies='.$cookieName.' --post-data="login='.$login.'" "'.$server.'/index.php" -O - 2>> /var/tmp/logscheduler_err');
             
 			foreach($listEmails as $value2)
 			{
-				$step4  = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' --post-data="email='.$value2.'&pdfName='.$pdfName.'&pdfDir='.$dirUser.'&subject='.$subject_email.'&body='.$body_email.'" "'.$server.'/report/wizard_email_scheduler.php?format=email&run='.$pdfNameEmail.'" -O - 2>> /tmp/logscheduler_err',$output);
+				$step4  = exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' --post-data="email='.$value2.'&pdfName='.$pdfName.'&pdfDir='.$dirUser.'&subject='.$subject_email.'&body='.$body_email.'" "'.$server.'/report/wizard_email_scheduler.php?format=email&run='.$pdfNameEmail.'" -O - 2>> /var/tmp/logscheduler_err',$output);
 				
 				$result = searchString($output,$info_text[1]);
 				
@@ -540,7 +558,7 @@ foreach ( $scheduled_reports as $value )
 	}
 
 	// Logout
-	exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /tmp/logscheduler_err');
+	exec('wget -U "AV Report Scheduler ['.$id_sched.']" -t 1 --timeout=43200 --no-check-certificate --cookies=on --keep-session-cookies --load-cookies='.$cookieName.' "'.$server.'/session/login.php?action=logout" -O /dev/null 2>> /var/tmp/logscheduler_err');
 					
 }
 

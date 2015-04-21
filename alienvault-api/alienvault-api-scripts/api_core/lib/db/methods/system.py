@@ -45,18 +45,33 @@ ossim_setup = AVOssimSetupConfigHandler()
 
 DEFAULT_BACKUP_DAYS = 30
 
+@require_db
+def db_get_hostname(system_id):
+    try:
+        system_id_bin = get_bytes_from_uuid (system_id)
+        system = db.session.query(System).filter(System.id == system_id_bin).one()
+    except Exception, msg:
+        db.session.rollback()
+        return (False, "Error while querying for system with id '%s'" % system_id)
+    return (True, system.name)
 
 @require_db
 #@accepted_values(['Server', 'Sensor', 'Database'])
-def get_systems(system_type='', convert_to_dict=False):
+def get_systems(system_type='', convert_to_dict=False, exclusive=False):
     """
     Return a list of id/admin ip address pairs for systems in the system table.
     If the 'convert_to_dict' parameter is True, return a dict instead of a list of pairs.
+    :param exclusive(boolean) Means that system should have only the given system_type
+                            For example an AIO has the profiles [Sensor, Server,Database,Framework]
+                            if the function recieves system_type = Sensor it won't return this system.
     """
     if system_type.lower() not in ['sensor', 'server', 'database', '']:
         return False, "Invalid system type <%s>. Allowed values are ['sensor','server','database']" % system_type
     try:
-        system_list = db.session.query(System).filter(System.profile.ilike('%' + system_type + '%')).all()
+        if exclusive:
+            system_list = db.session.query(System).filter(System.profile.ilike(system_type)).all()
+        else:
+            system_list = db.session.query(System).filter(System.profile.ilike('%' + system_type + '%')).all()
     except Exception, msg:
         db.session.rollback()
         return (False, "Error while querying for '%s' systems: %s" % (system_type if system_type != '' else 'all', str(msg)))
@@ -473,11 +488,17 @@ def set_system_vpn_ip(system_id, value):
 
 
 def set_system_ha_ip(system_id, value):
+    if value == 'NULL':
+        return set_system_value(system_id, "ha_ip", value)
     return set_system_value(system_id, "ha_ip", get_ip_bin_from_str(value))
 
 
 def set_system_ha_role(system_id, value):
     return set_system_value(system_id, "ha_role", value)
+
+
+def set_system_ha_name(system_id, value):
+    return set_system_value(system_id, "ha_name", value)
 
 
 @require_db
@@ -531,3 +552,22 @@ def get_database_size(databases=[]):
     db_sizes = dict((_db.db, float(_db.size)) for _db in av_db)
     
     return True, db_sizes
+
+@require_db
+def fix_system_references():
+    """
+    Fix sensor_id and server_id columns from system table with HA environments
+    """
+
+    queries = ["update system set sensor_id=(select id from sensor where ip=admin_ip or ip=ha_ip) where ha_ip is not NULL and profile like 'sensor' and sensor_id is NULL","update system s1,system s2 set s1.sensor_id=s2.sensor_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like 'sensor' and s1.sensor_id is NULL","update system set server_id=(select id from server where ip=ha_ip) where ha_ip is not NULL and server_id is NULL","update system s1,system s2 set s1.server_id=s2.server_id where s1.id!=s2.id and s1.ha_ip=s2.ha_ip and s2.profile like '%%server%%' and s1.server_id is NULL"]
+
+    try:
+        db.session.begin()
+        for query in queries:
+            db.session.connection(mapper=System).execute(query)
+        db.session.commit()
+    except Exception, msg:
+        db.session.rollback()
+        return (False, str(msg))
+
+    return True, ''

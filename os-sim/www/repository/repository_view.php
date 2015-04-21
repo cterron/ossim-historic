@@ -73,7 +73,7 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         $parser->load_session_vars($vars);
         
         ?>
-        <link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui-1.7.custom.css"/>
+        <link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui.css"/>
         <script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>
         
         <style type='text/css'>
@@ -128,13 +128,11 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         
         	$(document).ready(function() 
         	{
-        
-        		$( ".accordion" ).accordion(
+        		$(".accordion").accordion(
         		{
         			collapsible: true,
         			autoHeight: false
         		});
-        		
         	});
         
         </script>
@@ -145,9 +143,9 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         	<div class="accordion">
         	
         	<?php
-        	foreach($repository_list as $type=>$repository_type) 
+        	foreach ($repository_list as $type => $repository_type) 
         	{
-        		switch($type) 
+        		switch ($type) 
         		{
         			case 'plugin_sid':
         				$type = _('Plugin SID');
@@ -165,17 +163,16 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         				$type = _('Unknown');
         		}
         		
-        		foreach($repository_type as $repository)
+        		foreach ($repository_type as $doc)
         		{ 
         		?>
-        			
-        			<h3><a href='#'><strong><?php echo $repository['title'] ?></strong> [<?php echo $type ?>]</a></h3>
+        			<h3><a href='#'><strong><?php echo $doc->get_title() ?></strong> [<?php echo $type ?>]</a></h3>
         
         			<div>
         			
         				<div class='text_container'>
         				<?php
-        					$parser->proccess_file($repository['text']);
+        					$parser->proccess_file($doc->get_text(FALSE));
         					
         					echo $parser->print_text();
         				?>
@@ -190,7 +187,7 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         								<?php echo _('Document') . ':' ?> 
         							</td>
         							<td class='txt'>
-                                        <?php echo $repository['title'] ?>
+                                        <?php echo $doc->get_title() ?>
         							</td>
         						</tr>
         						<tr>
@@ -198,7 +195,7 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         								<?php echo _('Visibility') . ':' ?> 
         							</td>
         							<td class='txt'>
-        								<?php echo $repository['in_charge'] ?>
+        								<?php echo $doc->get_visibility() ?>
         							</td>
         						</tr>
         						<tr>
@@ -206,7 +203,7 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         								<?php echo _('Date') . ':' ?> 
         							</td>
         							<td class='txt'>
-        								<?php echo $repository['date'] ?>
+        								<?php echo $doc->get_date() ?>
         							</td>
         						</tr>
         						<tr>
@@ -215,8 +212,8 @@ if(  $plugin_id != '' && $plugin_sid != '' )
         							</td>
         							<td class='txt'>
         								<?php 
-        								    
-        								    echo (intval($repository['num_atch']) == 0) ? '-' : intval($repository['num_atch']) ;
+        								    $num_attach = count($doc->get_attach());
+        								    echo ($num_attach == 0) ? '-' : $num_attach;
         								?>
         							</td>
         						</tr>

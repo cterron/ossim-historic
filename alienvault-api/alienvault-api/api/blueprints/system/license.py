@@ -31,31 +31,31 @@ from flask import Blueprint, request, current_app
 from apimethods.system.av_license import (register_appliance_trial,
                                           register_appliance_pro,
                                           get_current_version)
-from celerymethods.jobs.system import alienvault_asynchronous_update
+from apimethods.system.system import asynchronous_update
 from api.lib.common import make_ok, make_error, document_using
 from api.lib.utils import accepted_url
 
 from uuid import UUID
-from api.lib.auth import admin_permission
 
 import api_log
 
 blueprint = Blueprint(__name__, __name__)
 
+
 @blueprint.route('/<system_id>/license/trial', methods=['GET'])
 @document_using('static/apidocs/license.html')
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-                'email':str})
+               'email': str})
 def get_license_trial(system_id):
     # Retrieve URL parameters.
     email = request.args.get('email')
     if email is None:
-        current_app.logger.error ("license: get_license_trial error: Bad param 'email'")
+        current_app.logger.error("license: get_license_trial error: Bad param 'email'")
         return make_error('Bad parameter email', 400)
 
     (success, msg) = register_appliance_trial(email, system_id, False)
     if not success:
-        current_app.logger.error ("license: get_license_trial error: " + str(msg))
+        current_app.logger.error("license: get_license_trial error: " + str(msg))
         return make_error(msg, 500)
 
     return make_ok()
@@ -63,7 +63,7 @@ def get_license_trial(system_id):
 
 @blueprint.route('/<system_id>/license/pro', methods=['GET'])
 @document_using('static/apidocs/license.html')
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'key':str})
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'key': str})
 def get_license_pro(system_id):
     # Retrieve URL parameters.
     key = request.args.get('key')
@@ -73,12 +73,10 @@ def get_license_pro(system_id):
 
     (success, msg) = register_appliance_pro(key, system_id, False)
     if not success:
-        current_app.logger.error ("license: get_license_pro error: " + str(msg))
+        current_app.logger.error("license: get_license_pro error: " + str(msg))
         return make_error(msg, 500)
 
-    #Launch the upgrade
-    job = alienvault_asynchronous_update.delay(system_id, only_feed=False,update_key=key)
-    return make_ok(job_id=job.id)
+    return make_ok()
 
 
 @blueprint.route('/<system_id>/license/version', methods=['GET'])

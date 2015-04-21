@@ -77,7 +77,6 @@ $id               = GET("id");
 $siteLogo         = POST("siteLogo");
 $siteBranding     = POST("siteBranding");
 $vit              = intval(POST("vulnerability_incident_threshold"));
-$smethod          = GET("smethod");
 
 $error_message    = "";
 
@@ -88,6 +87,12 @@ ossim_valid($action, OSS_ALPHA, OSS_SCORE, OSS_NULLABLE, 'illegal:' . _("Action"
 if (ossim_error())
 {
 	die(ossim_error());
+}
+
+if ($action == 'repair' && !Token::verify('tk_repair_vuln_db', GET('token')))
+{
+    Token::show_error();
+    exit();
 }
 
 if( $action == "delete" && preg_match("/^[0-9a-f]{32}$/i", $id) ) // Delete credentials
@@ -298,20 +303,39 @@ else if ($action == "save_configuration") {
         }
     }
     
+    // Allowed Site logo filename
     if ( !ossim_valid($siteLogo, OSS_FILENAME, 'illegal:' . _("Site header logo")) ) 
 	{
         $error_message .= ossim_get_error_clean()."<br/>";
         ossim_clean_error();
     }
+    // Allowed Site logo paths
+    elseif (!preg_match('/www\/pixmaps/', realpath($siteLogo)) 
+            && !preg_match('/www\/tmp\/headers/', realpath($siteLogo))
+            && !preg_match('/ossim\/uploads/', realpath($siteLogo)))
+    {
+        $error_message .= _('Error updating settings: Site header logo not found');
+    }
     else 
 	{
-        $sql = "UPDATE vuln_settings SET settingValue=? WHERE settingName=?";
-
-        $params = array($siteLogo, "siteLogo");
-        
-        if($conn->Execute ( $sql, $params ) === false) {
-            $error_message = _('Error updating settings: ') . $conn->ErrorMsg() . '<br/>';
-        }
+	    // Site logo must be a valid image
+	    $image_data = getimagesize($siteLogo);
+	    list($file_type, $image_type) = explode("/", $image_data['mime']);
+	    
+	    if ($file_type == 'image')
+	    {
+            $sql = "UPDATE vuln_settings SET settingValue=? WHERE settingName=?";
+    
+            $params = array($siteLogo, "siteLogo");
+            
+            if($conn->Execute ( $sql, $params ) === false) {
+                $error_message = _('Error updating settings: ') . $conn->ErrorMsg() . '<br/>';
+            }
+	    }
+	    else
+	    {
+	        $error_message .= _('Error updating settings: Site header logo is not a valid image');
+	    }
     }
 
     $sql = "UPDATE config SET value=? WHERE conf='vulnerability_incident_threshold'";
@@ -345,8 +369,11 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="../js/greybox.js"></script>
     <script type="text/javascript" src="../js/notification.js"></script>
+	<script type="text/javascript" src="../js/utils.js"></script>
+    <script type="text/javascript" src="../js/token.js"></script>
     <script type="text/javascript">
-        var timer = null;
+        var timer  = null;
+        var reload = 0;
     
         function check_openvas_update()
         {
@@ -355,7 +382,7 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 				url: 'openvas_update_progress.php',
 				dataType: 'json',
                 success: function(data){
-                    timer = setTimeout('check_openvas_update()', 5000);
+                    timer = setTimeout('check_openvas_update()', 10000);
                         
                     if (typeof(data) == 'undefined' || data == null)
 				    {
@@ -364,8 +391,7 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 				        
 				        show_notification('update_notification', '<?php echo _("Error retrieving update state"); ?>', 'nf_error', 2000, true, "width: 100%;text-align:center;margin:10px 0px");
 				        
-						$("#update").removeAttr("disabled");
-						$("#recreate").removeAttr("disabled");
+						$('#repair').removeAttr('disabled');
 				        
 				    }					
 					else if (data.running == 'yes')
@@ -381,11 +407,31 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
                         }
                         
                         // disable update buttons
-                        $("#update").attr("disabled", "disabled");
-                        $("#recreate").attr("disabled", "disabled");
+                        $('#repair').attr('disabled', 'disabled');
+					}
+					else if (data.running == 'pending')
+					{
+					    reload = 1;
+					    $('.openvas-update').show();
+					
+					    // add lines
+
+					    if(data.lines != '')
+					    {
+					        var glue = $('#openvas-update').html() == '' ? data.lines : '.';
+                            $('#openvas-update').append(glue);
+                        }
+                        
+                        // disable update buttons
+                        $('#repair').attr('disabled', 'disabled');
 					}
 					else
 					{
+    				    if (reload)
+    				    {
+        				    document.location.reload();
+    				    }
+    				    
 					    clearTimeout(timer);
 					    
 					    // add lines
@@ -399,8 +445,7 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 					    $('#running_updateplugins').hide();
                         $('#text_done').show();
 						
-						$("#update").removeAttr("disabled");
-						$("#recreate").removeAttr("disabled");
+						$('#repair').removeAttr('disabled');
 					}
 				}
             });
@@ -432,6 +477,24 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 		}
 		
 		$(document).ready(function(){
+            
+            //Repair button
+            
+            $('#repair').on('click', function()
+            {
+                var msg_confirm = '<?php echo Util::js_entities(_("The custom profiles will be deleted. Would you like to continue?"))?>';
+                                         
+                var keys        = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
+                                
+                av_confirm(msg_confirm, keys).fail(function(){
+                    return false; 
+                }).done(function(){
+                    checking();
+                    var token = Token.get_token('repair_vuln_db');
+                    document.location.href='/ossim/vulnmeter/webconfig.php?action=repair&token=' + token;
+                }); 
+            });
+    		
             GB_TYPE = 'w';
             
 			$("a.greybox").click(function(){
@@ -539,36 +602,28 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
 <body>
     <?php
 
-    if( ($action=="migrate" || $action=="update") && Session::am_i_admin() ) {
-    
-        if ( !ossim_valid($smethod, 'rsync', 'wget', 'illegal:' . _("synchronization method")) )
-        {
-            $error_message .= ossim_get_error_clean()."<br/>";
-            ossim_clean_error();
+    if( $action=='repair' && Session::am_i_admin() ) {
+
+        $result_check = CheckScanner();
+        
+		if ( $result_check != '' ) 
+		{
+			$config_nt = array(
+				'content' => $result_check,
+				'options' => array (
+					'type'          => 'nf_warning',
+					'cancel_button' => false
+				),
+				'style'   => 'width: 98%; margin:5px auto; text-align: center;'
+			); 
+							
+			$nt = new Notification('nt_1', $config_nt);
+			$nt->show();
+			
         }
         else 
 		{
-            $result_check = CheckScanner();
-            
-			if ( $result_check != "" ) 
-			{
-				$config_nt = array(
-					'content' => $result_check,
-					'options' => array (
-						'type'          => 'nf_warning',
-						'cancel_button' => false
-					),
-					'style'   => 'width: 98%; margin:5px auto; text-align: center;'
-				); 
-								
-				$nt = new Notification('nt_1', $config_nt);
-				$nt->show();
-				
-            }
-            else 
-			{
-			    exec("export HOME='/tmp';cd /usr/share/ossim/scripts/vulnmeter/;nohup perl updateplugins.pl $action $smethod > /var/tmp/openvas_update 2>&1 &");
-            }
+		    exec("export HOME='/tmp';cd /usr/share/ossim/scripts/vulnmeter/;nohup perl updateplugins.pl $action > /var/tmp/openvas_update 2>&1 &");
         }
     }
     
@@ -623,15 +678,13 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
     <table width='100%' class='noborder openvas-update' style='background:transparent;'>
         <tr>
 			<td class='nobborder' style='text-align:left;padding-left:9px;'>
-				<?php echo _("Launching updateplugins.pl, please wait for a few minutes...be patient.")."&nbsp;&nbsp;";?>
+				<?php echo _("Task in progress, please wait for a few minutes...be patient.")."&nbsp;&nbsp;";?>
 				<img width='16' id='running_updateplugins' align='absmiddle' src='./images/loading.gif' border='0' alt='<?php echo _("Running updateplugins.pl")?>' title='<?php echo _("Running updateplugins.pl") ?>'>
 				<br><span id='text_done' style='display:none;'><?php echo _("Done") ?></span>
             </td>
         </tr>
     </table>
-    <pre id="openvas-update" class="openvas-update">
-
-    </pre>
+    <pre id="openvas-update" class="openvas-update"></pre>
     <table width="<?php echo ( (Vulnerabilities::scanner_type() == "omp") ? "90" : "50" ); ?>%" class="transparent" cellspacing="0" cellpadding="0" id="maintable">
         <tr>
         <?php
@@ -892,27 +945,14 @@ $vit          = $conn->GetOne("SELECT value FROM config WHERE conf='vulnerabilit
                 }
 				?>
 				<center>
-					<table width="100%" class="transparent">
-                   		<tr <?php echo $display;?>>
-							<td class="nobborder" style="padding:12px 0px 10px 0px;text-align:center;"><b><?php echo _("Synchronization method") ?>:</b><br/><br/>
-								<input type="radio" name="smethod" value="rsync" checked="checked"/> <?php echo _("rsync - fastest");?>
-								<input type="radio" name="smethod" value="wget" /> <?php echo _("wget - if rsync is blocked");?>
-							</td>
-						</tr>
-						
+					<table width="100%" class="transparent">						
 						<tr>
-							<td class="nobborder" style="text-align:center;">
-							<input id="recreate" class="av_b_secondary" type="button" onclick="checking();document.location.href='webconfig.php?action=migrate&smethod='+$('input[name=smethod]:checked').val()" value="<?=_("Recreate Scanner DB (Nessus < -- > OpenVAS migration)")?>">
+							<td class="nobborder" style="padding:50px 0px;text-align:center;">
+							<input id="repair" class="av_b_secondary" type="button" value="<?=_('Repair Scanner DB')?>">
 							<img style="display:none;" id="loading_image" width="16" align="absmiddle" src="./images/loading.gif" border="0" alt="<?=_("Loading")?>" title="<?=_("Loading")?>">&nbsp;&nbsp;
 							<span id="loading_message"><span>
 							</td>
-						</tr>
-						
-						<tr>
-							<td style="padding-top:8px;text-align:center;" class="nobborder">
-								<input id="update" class="av_b_secondary" type="button" onclick="checking();document.location.href='webconfig.php?action=update&smethod='+$('input[name=smethod]:checked').val()" value="<?=_("Update Scanner DB")?>">
-							</td>
-						</tr>
+						</tr>	
 					</table>
 				</center>
             </td>

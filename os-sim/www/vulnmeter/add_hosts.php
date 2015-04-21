@@ -233,7 +233,7 @@ if($action == 'insert')
                 ossim_valid($ctx, OSS_HEX, 'illegal:' . _('Ctx'));
             }
             
-            list($sensor_list, $total) = Av_sensor::get_list($conn, array('where' => "acl_sensors.entity_id = UNHEX('$ctx')"));
+            list($sensor_list, $total) = Av_sensor::get_list($conn, array('where' => "sensor.id = acl_sensors.sensor_id AND acl_sensors.entity_id = UNHEX('$ctx')"));
             
             $sensors = array_keys($sensor_list);
             
@@ -281,7 +281,7 @@ if($action == 'insert')
                 $host->set_ips($host_ip);
                 $host->set_sensors($sensors);
                 $host->set_fqdns($fqdns);
-                $host->save_in_db($conn);
+                $host->save_in_db($conn, FALSE);
                 
                 $save++;
             }
@@ -291,6 +291,15 @@ if($action == 'insert')
     if ($save>0)
     {
         Util::disable_perm_triggers($conn, FALSE);
+    
+        try
+        {   
+            Asset_host::report_changes($conn, 'hosts');
+        }
+        catch (Exception $e)
+        {
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
+        }
     }
     
     if(count($info_error) == 0) 

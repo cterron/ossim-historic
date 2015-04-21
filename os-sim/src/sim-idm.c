@@ -435,3 +435,9 @@ sim_idm_context_info_reload (void)
 
   g_static_rec_mutex_unlock (&context_info_store->context_mutex);
 }
+
+void
+sim_idm_context_reload (void)
+{
+  sim_idm_context_info_reload ();
+}

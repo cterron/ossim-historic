@@ -53,7 +53,7 @@ if ($qs->isCannedQuery()) PrintBASESubHeader($page_title . ": " . $qs->GetCurren
 else PrintBASESubHeader($page_title, $page_title, $cs->GetBackLink() , 1);
 
 // Use accumulate tables only when timestamp criteria is not hour sensitive
-$use_ac = can_use_accumulated_table();
+$use_ac = $criteria_clauses[3];
 
 if ($use_ac) { // use ac_acid_event
     $from    = " FROM ac_acid_event as acid_event " . $criteria_clauses[0];
@@ -61,7 +61,9 @@ if ($use_ac) { // use ac_acid_event
     $where2  = ($criteria_clauses[5] != "") ? " WHERE " . $criteria_clauses[5] : " ";
 	$counter = "sum(acid_event.cnt) as sig_cnt";
     $from1   = " FROM acid_event  " . $criteria_clauses[0];
-    $where1  = ($criteria_clauses[1] != "") ? " WHERE " . $criteria_clauses[1] : " ";	
+    //$where1  = ($criteria_clauses[1] != "") ? " WHERE " . $criteria_clauses[1] : " ";
+    $where1  = preg_replace("/day\s*\<\=\s*'([\d\-]+)'/", "timestamp <='\\1 23:59:59'", $where);
+    $where1  = preg_replace("/day\s*\>\=\s*'([\d\-]+)'/", "timestamp >='\\1 00:00:00'", $where1);
 } else {
     $from = $from1 = " FROM acid_event  " . $criteria_clauses[0];
     $where = $where1 = $where2 = ($criteria_clauses[1] != "") ? " WHERE " . $criteria_clauses[1] : " ";

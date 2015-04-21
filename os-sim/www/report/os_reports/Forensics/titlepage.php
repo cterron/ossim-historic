@@ -59,7 +59,9 @@ $t_query = "SELECT dataV1, dataV2
 	
 $conn->SetFetchMode(ADODB_FETCH_ASSOC);	
 
-if (!$t_rs = & $conn->Execute($t_query, $t_params)){
+$t_rs = $conn->Execute($t_query, $t_params);
+
+if (!$t_rs){
 	$filter = '';
 } 	
 else

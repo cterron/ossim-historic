@@ -128,11 +128,13 @@ img
     font-weight: normal;
     font-size: 11px;
     font-weight: normal;
+    white-space: nowrap;
+    overflow: auto;
 }
 
 #header_options a
 {
-    padding: 0 10px 0 11px;
+    padding: 0 10px 0 5px;
     color: inherit;
 }
 
@@ -148,7 +150,7 @@ img
 
 #welcome
 {
-    padding-right: 10px;
+    padding-right: 0px;
 }
 
 #c_content
@@ -221,12 +223,20 @@ img
     height:22px;
 }
 
-#sep_ri
+.sep_ri
 {
     padding: 0 10px;
 }
 
+#top_system_info
+{
+    display: inline;
+}
 
+#top_system_info > span:first-child
+{
+    padding-right: 5px
+}
 
 /*******************************************************
 ******                 Main Menu                  ******
@@ -638,6 +648,7 @@ img
     z-index: 10002;
 }
 
+
 .resume_sec
 {
     position: relative;
@@ -757,6 +768,20 @@ img
     content: "\25B6";
 }
 
+
+@media all and (max-width: 1335px) 
+{
+    #notif_resume
+    {
+        left: 0 !important;
+    }
+    
+    .resume_sec
+    {
+        display: none;
+    }
+
+}
 
 /*******************************************************
 ******                Loading Box                 ******

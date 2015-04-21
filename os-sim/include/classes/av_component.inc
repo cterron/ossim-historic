@@ -159,11 +159,20 @@ abstract class Av_component
     /**
     * This function returns the av_component description
     *
+    * @param boolean  $entities  [Optional] Transform to HTML entities
+    *
     * @return string
     */      
-    public function get_descr()
-    {
-        return $this->descr;
+    public function get_descr($entities = TRUE)
+    {        
+        if ($entities)
+        {
+            return Util::htmlentities($this->descr);
+        }
+        else
+        {
+            return $this->descr;
+        }        
     }
       
         
@@ -237,7 +246,7 @@ abstract class Av_component
         }
         else
         {                        
-            $exp_msg = _('Error! Alienvault Component ID is not valid');
+            $exp_msg = _('Error! AlienVault Component ID is not valid');
             
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -265,7 +274,7 @@ abstract class Av_component
     {
         if ($name == '')
         {                        
-            $exp_msg = _('Error! Alienvault Component name is empty');
+            $exp_msg = _('Error! AlienVault Component name is empty');
             
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -285,7 +294,7 @@ abstract class Av_component
     {
         if (!Asset_host_ips::valid_ip($ip))
         {            
-            $exp_msg = _('Error! Alienvault Component IP is not valid');
+            $exp_msg = _('Error! AlienVault Component IP is not valid');
             
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -333,7 +342,7 @@ abstract class Av_component
 
         if (!is_int($port) || $port <= 0 || $port > 65535)
         {           
-            $exp_msg = _('Error! Alienvault Component port is not valid');
+            $exp_msg = _('Error! AlienVault Component port is not valid');
             
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
@@ -399,7 +408,7 @@ abstract class Av_component
         }
         //Getting port and IP address from server
         
-        $address = $conf->get_conf('server_address');
+        $address = '127.0.0.1';
         $port    = $conf->get_conf('server_port');
 
 

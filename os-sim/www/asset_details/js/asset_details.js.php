@@ -32,7 +32,6 @@
 */
 
 require_once 'av_init.php';
-
 ?>
 
 /**
@@ -42,8 +41,8 @@ var current_section = "<?php echo ($load_section != '') ? $load_section : '' ?>"
 var current_tab     = "<?php echo ($load_tab != '') ? $load_tab : '' ?>";
 var force_reload    = '';
 var __main_timer    = false;
-    
-function GB_onclose() 
+
+function GB_onclose()
 {
     /**
     * Must reload the session serialized object (used in ajax scripts)
@@ -64,13 +63,13 @@ function GB_onclose()
                     {
                        load_info();
                     }
-                    
+
                     // Snapshot values
                     if (force_reload.match(/snapshot/))
                     {
                        load_snapshot();
                     }
-                    
+
                     // Other options ('software', 'properties', etc.)
                     // When 'info' or 'snapshot' must reload, perhaps the hostname may be changed into an event
                     reload_sections();
@@ -79,7 +78,7 @@ function GB_onclose()
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-            
+
             }
         });
     }
@@ -90,11 +89,11 @@ function GB_onclose()
 *
 * Local scan action
 *
-*/ 
-function local_scan()
-{ 
+*/
+function go_to_asset_discovery()
+{
     GB_hide();
-      
+
     scan_host('<?php echo $id?>');
 }
 
@@ -119,7 +118,7 @@ function toggle_more_info()
 /**
 * Go back to the listing
 */
-function go_back() 
+function go_back()
 {
     <?php
     if ($asset_type == 'host')
@@ -141,7 +140,7 @@ function go_back()
         <?php
     }
     ?>
-    
+
     if (typeof(top.av_menu.load_content) == 'function')
     {
         top.av_menu.load_content(url);
@@ -158,12 +157,12 @@ function draw_selected_layer(id)
 {
     $('.section').hide();
     $('#section_'+id).show();
-    
+
     var pos_init  = $('#db_tab_'+id).position();
-        pos_init  = (typeof(pos_init) == 'undefined' || pos_init == null ) ? 0 : pos_init.left; 
-    
+        pos_init  = (typeof(pos_init) == 'undefined' || pos_init == null ) ? 0 : pos_init.left;
+
     var width     = $('#db_tab_'+id).outerWidth();
-     
+
     $('#db_tab_blob').animate(
     {
         left  : pos_init,
@@ -175,11 +174,11 @@ function draw_selected_layer(id)
         queue    : false,
         complete : function()
         {
-            
+
         }
-    }); 
+    });
 }
-    
+
 
 // This function change the tab option and then load the content
 function load_section(section, tab)
@@ -195,7 +194,7 @@ function load_section(section, tab)
         }
     }
     catch(Err){}
-    
+
     load_section_content(section, tab);
 }
 
@@ -209,17 +208,17 @@ function load_section(section, tab)
             Alarms, Events, Netflows
         - Assets (Only for nets and groups)
         - History (Only for groups)
-        - Notes    
+        - Notes
 */
 function load_section_content(section, tab)
-{  
+{
     clearTimeout(__main_timer);
-    
+
     draw_selected_layer(section);
-    
+
     current_section = section;
     current_tab = tab;
-    
+
     $('.div_subcontent_'+section).hide();
     $('.c_arrow_down_'+section).hide();
     $('#div_'+tab).show();
@@ -227,7 +226,7 @@ function load_section_content(section, tab)
     $('#ll_opt_'+tab).removeClass('default').addClass('active');
     $('#arrow_down_'+tab).show();
 
-    
+
     switch (section)
     {
         case 'general':
@@ -235,34 +234,34 @@ function load_section_content(section, tab)
             $('.general_edit').hide();
 
             if (tab == 'software')
-            {                
+            {
                 load_software();
                 $('#edit_avail_button').show();
-            }      
+            }
             else if (tab == 'users')
             {
                 load_users();
-            }    
+            }
             else if (tab == 'properties')
             {
                 load_properties();
-                
+
                 $('#edit_properties_button').show();
             }
             else if (tab == 'plugins')
             {
                 <?php
-                if ($asset_type == 'host') 
+                if ($asset_type == 'host')
                 {
                     ?>
                     load_plugins();
-                    
+
                     $('#edit_plugins_button').show();
                     <?php
                 }
                 ?>
             }
-            
+
         break;
 
         case 'activity':
@@ -277,38 +276,42 @@ function load_section_content(section, tab)
             else if (tab == 'netflows')
             {
                 load_netflows();
-            }  
+            }
         break;
 
         case 'location':
 
             <?php
-            if ($asset_type == 'host') 
+            if ($asset_type == 'host')
             {
-                ?>
+            ?>
                 av_map = new Av_map('detail_map');
-                    
-                if(Av_map.is_map_available())
+
+                Av_map.is_map_available(function(conn)
                 {
-                    av_map.set_location($('#detail_map').data('lat'), $('#detail_map').data('lng'));
-                    av_map.set_zoom($('#detail_map').data('zoom'));
-                    
-                    av_map.draw_map();
-                    av_map.map.setOptions({draggable: false});
-                    
-                    if(av_map.get_lat() != '' && av_map.get_lng() != '')
+                    if(conn)
                     {
-                        av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                        av_map.markers[0].setDraggable(false);
-                        av_map.markers[0].setTitle($('#detail_map').data('marker_title'));
-                        av_map.markers[0].setMap(av_map.map);
+                        av_map.set_location($('#detail_map').data('lat'), $('#detail_map').data('lng'));
+                        av_map.set_zoom($('#detail_map').data('zoom'));
+
+                        av_map.draw_map();
+                        av_map.map.setOptions({draggable: false});
+
+                        if(av_map.get_lat() != '' && av_map.get_lng() != '')
+                        {
+                            av_map.add_marker(av_map.get_lat(), av_map.get_lng());
+                            av_map.markers[0].setDraggable(false);
+                            av_map.markers[0].setTitle($('#detail_map').data('marker_title'));
+                            av_map.markers[0].setMap(av_map.map);
+                        }
                     }
-                }
-                else
-                {
-                    av_map.draw_warning();
-                }
-                <?php
+                    else
+                    {
+                        av_map.draw_warning();
+                    }
+                });
+
+            <?php
             }
             ?>
 
@@ -328,7 +331,7 @@ function load_section_content(section, tab)
         break;
 
         case 'history':
-        
+
             <?php
             if ($asset_type == 'group')
             {
@@ -363,26 +366,26 @@ function change_note(id, txt)
         dataType: "json",
         async: false,
         success: function(msg) {
-            if (msg.state=="OK")  
+            if (msg.state=="OK")
             {
                 flag_change = true;
             }
-            
-            if (msg.state=="ERR") 
+
+            if (msg.state=="ERR")
             {
                 flag_change = false;
             }
-            
+
             if (note_action == "new_ajax")
             {
                 init_notes();
             }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {                      
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
             flag_change = false;
         }
     });
-    
+
     return flag_change;
 }
 
@@ -395,15 +398,15 @@ function change_note(id, txt)
 function delete_note(id)
 {
     var note_action = ""; // Empty action is delete in view_notes.php :S
-    
+
     $.ajax({
         url: "ajax/view_notes.php?type=<?php echo str_replace('group', 'host_group', $asset_type) ?>&id=<?php echo $id ?>&id_note="+id,
         async: false,
         success: function(msg) {
             init_notes();
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {                      
-            
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+
         }
     });
 }
@@ -424,7 +427,7 @@ function init_notes()
         success: function(msg) {
             $('#notes_list').html(msg);
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {                      
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
             alert("<?php echo _('There was an error') ?>");
         }
     });
@@ -437,11 +440,11 @@ function init_notes()
             if(change_note(id, enteredText))
             {
                 return enteredText;
-            } 
+            }
             else
             {
                 return prevtxt;
-            }                       
+            }
         },
         preinit: function(node) {
             var txt = $(node).html();
@@ -464,7 +467,7 @@ function init_notes()
         value_required: true,
         show_buttons:   true,
         save_button:   '<button class="small" style="margin:2px"><?php echo _('Save') ?></button>',
-        cancel_button: '<button class="small av_b_secondary" style="margin:2px"><?php echo _('Cancel') ?></button>' 
+        cancel_button: '<button class="small av_b_secondary" style="margin:2px"><?php echo _('Cancel') ?></button>'
     });
 }
 
@@ -480,14 +483,14 @@ function load_info()
         url: "ajax/get_info.php?asset_id=<?php echo $id?>&asset_type=<?php echo $asset_type?>",
         success: function(json)
         {
-            var session = new Session(json, '');                                                                               
-                                
+            var session = new Session(json, '');
+
             if (session.check_session_expired() == true || typeof(json) == 'undefined' || json == null)
             {
                 session.redirect();
                 return;
             }
-            
+
             // Some fields may not exist depending the asset type
             $("#info_icon"       ).html(json.icon);
             $("#info_title"      ).html(json.title);
@@ -501,37 +504,37 @@ function load_info()
             $("#info_owner"      ).html(json.owner);
             $(".info_asset_value").removeClass('asset_value_selected');
             $("#info_asset_value_"+json.asset_value).addClass('asset_value_selected');
-            
+
             // Availability monitoring
             $("#info_nagios").removeClass();
             $("#info_nagios").addClass('detail_led').addClass(json.nagios_class);
-            
+
             // Map: Only for host type, another will be ignored
             $('#detail_map').data('lat', json.lat);
             $('#detail_map').data('lng', json.lng);
             $('#detail_map').data('zoom',json.zoom);
             $('#detail_map').data('marker_title', json.title +' <?php echo _('Location')?>');
-            
+
             // If map is already loaded, then update
             if (typeof(av_map) != 'undefined' && av_map != null)
             {
                 av_map.set_location(json.lat, json.lng);
                 av_map.set_zoom(json.zoom);
                 av_map.map.setZoom(av_map.get_zoom());
-                                
+
                 av_map.remove_all_markers();
-               
+
                 if (av_map.get_lat() != '' && av_map.get_lng() != '')
                 {
                     av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                    
+
                     // Change title
                     av_map.markers[0].setTitle(json.title +' <?php echo _('Location')?>');
                 }
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-        
+
         }
     });
 }
@@ -555,14 +558,14 @@ function load_snapshot()
             $("#snap_events").html(json.events);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-        
+
         }
     });
 }
 
 
 /**
-* 
+*
 * Load HIDS value in background
 *
 */
@@ -581,8 +584,8 @@ function load_hids()
         }
     });
 }
-    
-    
+
+
 /**
 *
 * Load Services (Software) in dataTable
@@ -608,6 +611,7 @@ function load_software()
             "aaSorting": [[ 0, "desc" ]],
             "aoColumns": [
                 { "bSortable": false, "sClass": "left" },
+                { "bSortable": false },
                 { "bSortable": false },
                 { "bSortable": false },
                 { "bSortable": false },
@@ -639,7 +643,7 @@ function load_software()
                 $('#software_list').show();
             },
             "fnDrawCallback" : function(oSettings) {
-                $('.table_data_software tbody tr').on('click', function () 
+                $('.table_data_software tbody tr').on('click', function ()
                 {
                     toggle_service_tray(this);  // perform single-click action: toggle service vulns
                 });
@@ -664,12 +668,12 @@ function load_software()
         });
     }
 }
-    
-    
+
+
 /**
-*   
+*
 * Load Users in dataTable
-* 
+*
 */
 var users_loaded = false;
 var users_dataTable;
@@ -722,7 +726,7 @@ function load_users()
                 $('#users_list').show();
             },
             "fnDrawCallback" : function(oSettings) {
-                
+
             },
             "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) {
                 oSettings.jqXHR = $.ajax( {
@@ -801,7 +805,7 @@ function load_properties()
                 $('#properties_list').show();
             },
             "fnDrawCallback" : function(oSettings) {
-                
+
             },
             "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) {
                 oSettings.jqXHR = $.ajax( {
@@ -836,7 +840,7 @@ var plugins_dataTable = null;
 
 
 function load_plugins()
-{    
+{
     if (!plugins_loaded)
     {
         plugins_loaded = true;
@@ -899,7 +903,7 @@ function load_plugins()
 
                 var span = $('<span>', {
                     'class' : 'plugin_led led_gray',
-                    'html'  : "&nbsp;" 
+                    'html'  : "&nbsp;"
                 }).appendTo(led);
 
                 $('td:last', nRow).html(led);
@@ -932,7 +936,7 @@ function load_plugins()
                     }
                 } );
             }
-        }); 
+        });
     }
     else
     {
@@ -950,39 +954,39 @@ function get_devices_activity()
 {
     var av_info  = 'messages_box';
     var asset_id = "<?php echo $id?>";
-    
+
     //removing previous timeout to avoid queues
     clearTimeout(__main_timer);
-    
+
     var ctoken = Token.get_token("plugin_select");
 
-	$.ajax(
-	{
-		url: "ajax/plugin_ajax.php?token="+ctoken,
-		data: {"action": "plugin_activity", "data": {"asset": asset_id}},
-		type: "POST",
-		dataType: "json",
-		success: function(data)
-		{    		    
-    		$('.plugin_led').removeClass('led_green').addClass('led_gray');
-    		 
-    		if (typeof data != 'undefined' && data != null)
-    		{
-        		if (data.error)
-        		{        		    
-            		show_notification(av_info, data.msg, 'error', 0, true);
-            		
-            		return false;
-        		}
-        		
-                var active_plugins = data.data.plugins;  
+    $.ajax(
+    {
+        url: "ajax/plugin_ajax.php?token="+ctoken,
+        data: {"action": "plugin_activity", "data": {"asset": asset_id}},
+        type: "POST",
+        dataType: "json",
+        success: function(data)
+        {
+            $('.plugin_led').removeClass('led_green').addClass('led_gray');
+
+            if (typeof data != 'undefined' && data != null)
+            {
+                if (data.error)
+                {
+                    show_notification(av_info, data.msg, 'error', 0, true);
+
+                    return false;
+                }
+
+                var active_plugins = data.data.plugins;
                 var total_plugins  = data.data.total_p;
-                     
-                               
+
+
                 $('.table_data_plugins tbody tr').each(function()
                 {
-                    var id  = $(this).attr('id');           
-                         
+                    var id  = $(this).attr('id');
+
                     if (typeof(active_plugins[id]) != 'undefined' && active_plugins[id] == true)
                     {
                         $('.plugin_led',this).removeClass('led_gray').addClass('led_green');
@@ -991,39 +995,39 @@ function get_devices_activity()
                     {
                         $('.plugin_led',this).addClass('led_gray');
                     }
-                                        
+
                 });
-                
+
                 //If there is no plugin activated then we do not reload again
                 if (total_plugins > 0)
-                { 
+                {
                     __main_timer = setTimeout(get_devices_activity, 30000);
                 }
-                
-                
+
+
 
             }
             else
             {
                 $('.plugin_led').removeClass('led_green').addClass('led_gray');
             }
-            
-		},
-		error: function(XMLHttpRequest, textStatus, errorThrown) 
-		{	
+
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown)
+        {
             //Checking expired session
-    		var session = new Session(XMLHttpRequest, '');
+            var session = new Session(XMLHttpRequest, '');
             if (session.check_session_expired() == true)
             {
                 session.redirect();
                 return;
             }
-            
+
             $('.plugin_led').removeClass('led_green').addClass('led_gray');
 
-            show_notification(av_info, errorThrown, 'error', 0, true);            
-		}
-	});    
+            show_notification(av_info, errorThrown, 'error', 0, true);
+        }
+    });
 }
 
 
@@ -1036,7 +1040,7 @@ function get_devices_activity()
 
 var hosts_loaded = false;
 var assets_dataTable;
-    
+
 function load_hosts()
 {
     if (!hosts_loaded)
@@ -1082,39 +1086,39 @@ function load_hosts()
                     "sLast":     "<?php echo _('Last') ?>"
                 }
             },
-            "fnInitComplete": function(oSettings, json) 
+            "fnInitComplete": function(oSettings, json)
             {
                 $('#hosts_loading').hide();
                 $('#hosts_list').show();
-                
+
                 <?php
                 //Popup to Add Assets
-                if ($asset_type == "group") 
-                { 
+                if ($asset_type == "group")
+                {
                 ?>
                     var scope = oSettings.nTableWrapper;
-                    
+
                     if ( $('.dt_header .greybox_assets', scope).length < 1 )
                     {
-                        var add_b = '<input type="button" <?php echo $button_disabled ?> class="greybox_assets av_b_secondary" value="<?php echo _("Add Assets") ?>">';
-                        
-                        $('.dt_header', scope).prepend(add_b);  
+                        var add_b = '<input type="button" <?php echo $button_disabled ?> class="greybox_assets av_b_secondary small" value="<?php echo _("Add Assets") ?>">';
+
+                        $('.dt_header', scope).prepend(add_b);
                     }
-                    
-                <?php 
+
+                <?php
                 }
                 ?>
 
             },
-            "fnDrawCallback" : function(oSettings) 
+            "fnDrawCallback" : function(oSettings)
             {
                 $('.tipinfo').tipTip(
                 {
-                    content: function (e) 
+                    content: function (e)
                     {
                         return $(this).attr('txt')
                     }
-                });                
+                });
             },
             "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) {
                 oSettings.jqXHR = $.ajax( {
@@ -1122,7 +1126,7 @@ function load_hosts()
                     "type": "POST",
                     "url": sSource,
                     "data": aoData,
-                    "success": function (json) 
+                    "success": function (json)
                     {
                         $(oSettings.oInstance).trigger('xhr', oSettings);
                         fnCallback( json );
@@ -1137,7 +1141,7 @@ function load_hosts()
         });
     }
 }
-    
+
 
 /**
 *
@@ -1451,7 +1455,7 @@ function load_history()
                 $('#history_list').show();
             },
             "fnDrawCallback" : function(oSettings) {
-                
+
             },
             "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) {
                 oSettings.jqXHR = $.ajax( {
@@ -1506,10 +1510,13 @@ function export_hosts()
 */
 function delete_asset(asset_type, asset_id)
 {
-    if (confirm("<?php echo _('Are you sure to delete this element?') ?>"))
+    var msg_confirm = "<?php echo _('Are you sure tou want to delete this element?') ?>";
+    var keys        = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
+
+    av_confirm(msg_confirm, keys).done(function()
     {
         remove_asset(asset_type, asset_id);
-    }
+    });
 }
 
 
@@ -1519,11 +1526,11 @@ function delete_asset(asset_type, asset_id)
 *
 */
 function remove_asset(asset_type, asset_id)
-{                           
+{
     var av_info = 'messages_box';
-    
+
     //AJAX data
-    
+
     if (asset_type == 'host')
     {
         var action    = 'delete_host';
@@ -1548,61 +1555,61 @@ function remove_asset(asset_type, asset_id)
         var back_url  = '/ossim/assets/list_view.php?type=group&msg=saved'
         var token     = Token.get_token('ag_form');
     }
-    
-     
+
+
     var a_data = {
         "action"   : action,
         "asset_id" : asset_id,
         "token"    : token
-    };  
-    
-    
+    };
+
+
     $.ajax({
         type: "POST",
         url:  a_url,
         data: a_data,
         dataType: 'json',
         beforeSend: function(xhr){
-            
+
             // Clean previous messages
             $('#'+av_info).empty();
-            
+
             // Show loading box
             show_loading_box('main', l_message, '');
-            
+
         },
         error: function(data){
 
             //Check expired session
             var session = new Session(data, '');
-                        
+
             if (session.check_session_expired() == true)
             {
                 session.redirect();
-                
+
                 return;
-            }  
-            
+            }
+
             hide_loading_box();
-            
+
             show_notification(av_info, av_messages['unknown_error'], 'error', 0, true);
 
         },
         success: function(data){
-            
-            //Check expired session                
+
+            //Check expired session
             var session = new Session(data, '');
-            
+
             if (session.check_session_expired() == true)
             {
                 session.redirect();
-                
+
                 return;
-            } 
-                                                        
+            }
+
             var cnd_1  = (typeof(data) == 'undefined' || data == null);
             var cnd_2  = (typeof(data) != 'undefined' && data != null && data.status != 'OK');
-                                
+
             if (!cnd_1 && !cnd_2)
             {
                 document.location.href = back_url;
@@ -1610,10 +1617,10 @@ function remove_asset(asset_type, asset_id)
             else
             {
                 hide_loading_box();
-                
+
                 show_notification(av_info, data.data, 'error', 0, true);
             }
-            
+
         }
     });
 }
@@ -1626,11 +1633,15 @@ function remove_asset(asset_type, asset_id)
 */
 function del_asset_from_group(asset_id)
 {
-    var av_info = 'messages_box';
-    
-    if (confirm('<?php echo _('Are you sure to remove this asset from the group?') ?>'))
+    var av_info     = 'messages_box';
+    var msg_confirm = "<?php echo _('Are you sure you want to remove this asset from the group?') ?>";
+    var keys        = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
+
+
+    av_confirm(msg_confirm, keys).done(function()
     {
-        $.ajax({
+        $.ajax(
+        {
             type: "GET",
             dataType: 'json',
             url: "ajax/remove_group_asset.php?group_id=<?php echo $id ?>&asset_id="+asset_id,
@@ -1639,34 +1650,34 @@ function del_asset_from_group(asset_id)
                 // Clean previous messages
                 $('#'+av_info).empty();
             },
-            success: function(json) 
+            success: function(json)
             {
                 if (json.success)
                 {
                     // Refresh the dataTables info (now we have less data and it maybe still showing)
                     load_snapshot();
-                    
+
                     reload_sections();
                 }
                 else
                 {
                     var error = json.msg;
-                    
+
                     if (typeof error == 'undefined' || error == null)
                     {
                         error = "<?php echo _('Error removing this asset from the group') ?>";
                     }
-                    
+
                     show_notification(av_info, error, 'error', 0, true);
-                    
+
                 }
             },
-            error: function(XMLHttpRequest, textStatus, errorThrown) 
+            error: function(XMLHttpRequest, textStatus, errorThrown)
             {
                 show_notification(av_info, av_messages['unknown_error'], 'error', 0, true);
             }
         });
-    }
+    });
 }
 
 /**
@@ -1709,9 +1720,9 @@ function reload_sections()
     {
         netflows_dataTable.fnDraw();
     }
-    
+
     if (plugins_loaded)
-    {                
+    {
         plugins_dataTable.fnDraw();
     }
 }
@@ -1721,13 +1732,13 @@ function reload_sections()
 * Check all assets in add assets greybox list
 *
 */
-function checkall(that) 
+function checkall(that)
 {
     var status = that.checked;
 
-    $("input[type=checkbox]").each(function() 
+    $("input[type=checkbox]").each(function()
     {
-        if (this.id.match(/^check_[0-9A-Z]+/)) 
+        if (this.id.match(/^check_[0-9A-Z]+/))
         {
             if(!$(this).prop('disabled'))
             {
@@ -1754,7 +1765,7 @@ function select_host(host_id, val)
     {
         selected_hosts[host_id] = val;
     }
-    
+
     // Update message
     $('#add_assets_msg').html(Object.keys(selected_hosts).length+" <?php echo _("Assets selected") ?>");
 }
@@ -1763,14 +1774,14 @@ function select_host(host_id, val)
 function submit_assets_form()
 {
     $('#num_assets').val(Object.keys(selected_hosts).length);
-    
+
     var i = 0;
     for (var k in selected_hosts)
     {
         $('#assets_form').append('<input type="hidden" name="host'+i+'" value="'+k+'" />');
         i++;
     }
-    
+
     $('#assets_form').submit();
 }
 
@@ -1788,20 +1799,20 @@ function refresh_checks()
 
     // Bind onselect event handler
     $('.check_host').change(function () {
-        
+
         var check = $(this).attr('checked');
         var id    = $(this).attr('id').replace('check_', '');
-        
+
         // This will save the host as selected
         select_host(id, check);
     });
-    
+
     // Reselect hosts selected previously
     for (var k in selected_hosts)
     {
         $('#check_'+k).attr('checked', true);
     }
-    
+
 }
 
 
@@ -1809,13 +1820,13 @@ function get_service_tray(sData)
 {
     var asset_id = sData[0].match(/hostid_([a-f\d]{32})/i); // Get the host ID
     var port     = sData[1];
-    var service  = sData[2];
-    
+    var service  = sData[3];
+
     return $.ajax(
     {
         type: 'GET',
         url:  'ajax/get_service_tray.php?asset_id='+asset_id[1]+'&service='+service+'&port='+port,
-    });  
+    });
 }
 
 
@@ -1823,7 +1834,7 @@ function toggle_service_tray(row)
 {
     var nTr  = $(row)[0];
     var that = $(row);
-    
+
     if (software_dataTable.fnIsOpen(nTr))
     {
         software_dataTable.fnClose(nTr);

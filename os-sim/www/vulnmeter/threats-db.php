@@ -74,6 +74,7 @@
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 Session::logcheck("environment-menu", "EventsVulnerabilities");
 
@@ -469,7 +470,7 @@ function search($page, $kw, $cve,$family, $risk, $start_date, $end_date) {
 
      if ( $kw != "" ) 
      { 
-        $skw = mysql_real_escape_string($kw);
+        $skw = escape_sql($kw, $dbconn);
         $query_filter .= "AND ( t1.summary LIKE '%$skw%' OR t1.cve_id LIKE '%$skw%' OR t2.name LIKE '%$skw%' OR CONCAT(t2.name, ' - ', t1.summary) LIKE '%$skw%' )";
      }
      if ( $cve != "" ) {

@@ -70,8 +70,7 @@ $_SESSION['ossec_sensor'] = $sensor_id;
 
 
 if($tab == '#tab1')
-{   
-    $idm_enabled = (isset($_SESSION['_idm']) && !empty($_SESSION['_idm']) ) ? TRUE : FALSE;
+{
     echo '1###';
     ?>
     <div id='c_agent_table' style='padding-top:10px;'>
@@ -84,20 +83,13 @@ if($tab == '#tab1')
                         <th class='th_id'><?php echo _('ID')?></th>
                         <th class='th_name'><?php echo _('Name')?></th>
                         <th class='th_ip'><?php echo _('IP/CIDR')?></th>
-                        <?php 
-                        if ($idm_enabled)
-                        { 
-                            ?>
-                            <th class='th_ci'><?php echo _('Current IP')?></th>
-                            <th class='th_cu'><?php echo _('Current User@Domain')?></th>
-                            <?php 
-                        } 
-                        ?>
+                        <th class='th_ci'><?php echo _('Current IP')?></th>
+                        <th class='th_cu'><?php echo _('Current User@Domain')?></th>
                         <th class='th_status'><?php echo _('Status')?></th>
                         <th class='agent_actions'><?php echo _('Actions')?></th>
                     </tr>
                 </thead>
-                
+
                 <tbody>
                     <?php
                     
@@ -125,20 +117,12 @@ if($tab == '#tab1')
                                     <td id='agent_<?php echo $a_unique_id?>'><?php echo $agent_id?></td>
                                     <td><?php echo $a_data['name']?></td>
                                     <td><?php echo $a_data['ip']?></td>
-                                    <?php
-                                    if ($idm_enabled)
-                                    {
-                                        ?>
-                                        <td>
-                                            <div style='text-align: center !important'> - </div>
-                                        </td>
-
-                                        <td>
-                                            <div style='text-align: center !important'> - </div>
-                                        </td>
-                                        <?php
-                                    }
-                                    ?>
+                                    <td>
+                                        <div style='text-align: center !important'> - </div>
+                                    </td>
+                                    <td>
+                                        <div style='text-align: center !important'> - </div>
+                                    </td>
                                     <td><?php echo $a_data['status']?></td>
                                     <td class='agent_actions'><?php echo $agent_actions?></td>
                                 </tr>
@@ -219,15 +203,8 @@ if($tab == '#tab1')
                     { "bSortable": false },
                     { "bSortable": true },
                     { "bSortable": true },
-                    <?php
-                    if ($idm_enabled)
-                    {
-                        ?>
-                        { "bSortable": false },
-                        { "bSortable": false },
-                        <?php
-                    }
-                    ?>
+                    { "bSortable": false },
+                    { "bSortable": false },
                     { "bSortable": true },
                     { "bSortable": true },
                     { "bSortable": false }
@@ -261,21 +238,21 @@ if($tab == '#tab1')
                 "fnRowCallback": function(nRow, aData, iDrawIndex, iDataIndex)
                 {
                     //IDM data
-                    if ($(nRow).find("td").length > 6)
+                    if(!$(nRow).find("td:nth-child(5)").hasClass('td_c_ip') && !$(nRow).find("td:nth-child(6)").hasClass('td_c_ud'))
                     {
-                        if(!$(nRow).find("td:nth-child(5)").hasClass('td_c_ip') && !$(nRow).find("td:nth-child(6)").hasClass('td_c_ud'))
-                        {
-                            $(nRow).find("td:nth-child(5)").addClass('td_c_ip');
-                            $(nRow).find("td:nth-child(6)").addClass('td_c_ud');
+                        $(nRow).find("td:nth-child(5)").addClass('td_c_ip');
+                        $(nRow).find("td:nth-child(6)").addClass('td_c_ud');
 
-                            get_idm_data(nRow);
-                        }
+                        get_idm_data(nRow);
                     }
 
+                    //Bind Agent information handler
                     $(nRow).find("td:nth-child(1)").addClass('td_mi');
 
                     if ($(nRow).find("td:nth-child(1) img").hasClass('info'))
                     {
+                        $(nRow).find("td:nth-child(1) img").removeClass('disabled');
+        
                         get_agent_info($(nRow).find("td:nth-child(1)"));
                     }
 

@@ -70,7 +70,9 @@ function get_honeypot_category($conn)
 	$array_id = array();
 	$sqlgraph = "SELECT id FROM category WHERE name Like '%Honeypot%'";
 
-	if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+    $rg = $conn->CacheExecute($sqlgraph);
+
+	if (!$rg)
 	{
 	    print $conn->ErrorMsg();
 	} 
@@ -204,8 +206,9 @@ switch($type)
 		//TO DO: Use parameters in the query.
 		$sqlgraph      = "select count(acid_event.id) as num_events, acid_event.ip_src as name from alienvault_siem.acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_src order by num_events desc limit $limit";
 		
+		$rg = $conn->CacheExecute($sqlgraph);
 		
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -246,8 +249,9 @@ switch($type)
 		//TO DO: Use parameters in the query.
 		$sqlgraph      = "select count(acid_event.id) as num_events, acid_event.ip_dst as name from alienvault_siem.acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by acid_event.ip_dst order by num_events desc limit $limit";
 		
+		$rg = $conn->CacheExecute($sqlgraph);
 		
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -288,8 +292,9 @@ switch($type)
 		//TO DO: Use parameters in the query.
 		$sqlgraph = "select sum(acid_event.cnt) as val,p.name,p.plugin_id,p.sid FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.day BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by p.name order by val desc limit $limit";
 		
+        $rg = $conn->CacheExecute($sqlgraph);
 
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -301,7 +306,7 @@ switch($type)
 				$label[] = $rg->fields["name"];
 		        
                 $link    = str_replace("QQQ",$rg->fields["plugin_id"]."%3B".$rg->fields["sid"],$forensic_link);
-		        $links[] = "'$link'";
+		        $links[] = $link;
 		        
 				$rg->MoveNext();
 		    }
@@ -329,17 +334,19 @@ switch($type)
 		//Formating the info into a generinf format valid for the handler.
 		for ($i=$max-1; $i>=0; $i--) 
 		{
-			$d       = gmdate("j M",$timetz-(86400*$i));
+		    $tref    = $timetz-(86400*$i);
+		
+			$d       = gmdate("j M", $tref);
 			$label[] = $d;
 			$data[]  = ($values[$d]!="") ? $values[$d] : 0;
-			$link    = "/forensics/base_qry_main.php?clear_allcriteria=1&category[0]=19&time_range=day&time[0][0]= &time[0][1]=>=&time[0][2]=MM&time[0][3]=ZZ&time[0][4]=".gmdate("Y",$timetz)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[0][8]= &time[0][9]=AND&time[1][0]= &time[1][1]=<=&time[1][2]=MM&time[1][3]=ZZ&time[1][4]=".gmdate("Y",$timetz)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&time[1][8]= &time[1][9]= &submit=Query DB&num_result_rows=-1&time_cnt=2&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
+			$link    = "/forensics/base_qry_main.php?clear_allcriteria=1&category[0]=19&time_range=range&time[0][0]= &time[0][1]=>=&time[0][2]=".gmdate("m", $tref)."&time[0][3]=".gmdate("d",$tref)."&time[0][4]=".gmdate("Y", $tref)."&time[0][5]=00&time[0][6]=00&time[0][7]=00&time[0][8]= &time[0][9]=AND&time[1][0]= &time[1][1]=<=&time[1][2]=".gmdate("m", $tref)."&time[1][3]=".gmdate("d",$tref)."&time[1][4]=".gmdate("Y", $tref)."&time[1][5]=23&time[1][6]=59&time[1][7]=59&time[1][8]= &time[1][9]= &submit=Query DB&num_result_rows=-1&time_cnt=2&sort_order=time_d&hmenu=Forensics&smenu=Forensics";
 			$link    = Menu::get_menu_url($link, 'analysis', 'security_events');	
-			$links[] = "'$link'";
+			$links[$d] = $link;
 		        
 		}
 		
 		//Widget's links
-		$siem_url    = $links[0];
+		$siem_url    = $links;
 				
 		$colors = "'#854F61'";
 		
@@ -364,7 +371,9 @@ switch($type)
 		//TO DO: Use parameters in the query.
 		$sqlgraph = "select sum(acid_event.cnt) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.ac_acid_event acid_event, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND p.plugin_id=pl.id AND p.category_id in (".implode(',',$honeypot_category).") AND acid_event.day BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where group by p.plugin_id order by num_events desc limit $limit";
 		
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		$rg = $conn->CacheExecute($sqlgraph);
+		
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -405,7 +414,9 @@ switch($type)
 		$countries = array();
 		$country_names = array();
 
-		if (!$rg = & $conn->CacheExecute($sqlgraph))
+        $rg = $conn->CacheExecute($sqlgraph);
+
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		}

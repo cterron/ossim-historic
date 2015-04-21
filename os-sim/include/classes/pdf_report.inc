@@ -45,17 +45,40 @@
 
 class Pdf_report{
     private $path='../tmp/';
+
+
     private $pathHtml;
+
+
 	private $pathHtmlAux;
+
+
     private $pathDirResourcesHtml;
+
+
     private $namePdf;
+
+
     private $nameTemp;
+
+
     private $orientation;
+
+
     private $paperformat;
+
+
     private $name;
+
+
 	private $errors;
+
+
 	private $extra_data;
+
+
 	private $font;
+
 
     public function __construct($name,$orientation="P",$paperformat="A4", $user = null, $data=array()) {
 		
@@ -144,57 +167,67 @@ class Pdf_report{
 		}
 	}
 
+
     public function setName($name)
     {
         $this->name=$name;
     }
+
 
     public function setNameTemp($name)
     {
         $this->nameTemp=$name;
     }
 
+
     public function getName()
     {
         return $this->name;
     }
 
+
     public function getNameTemp()
     {
         return $this->nameTemp;
     }
-	
+
+
 	public function setNamePdf($name)
 	{
         $this->namePdf=$this->getActualDate().'-'.$name.'.pdf';
     }
-	
+
+
 	public function getNamePdf()
 	{
         return $this->namePdf;
     }
-    
-    
+
+
     private function setpathHtml($url)
     {
         $this->pathHtml=$url;
 		$this->pathHtmlAux=$url."_";
     }
 
+
     private function setpathDirResourcesHtml($url)
     {
         $this->pathDirResourcesHtml=$url;
     }
-    
+
+
     public function getpath()
     {
         return $this->path;
     }
-    
+
+
     public function getpathHtml()
     {
         return $this->pathHtml;
     }
+
 
     private function existHtml(){
 		
@@ -206,22 +239,26 @@ class Pdf_report{
 		return FALSE;
 	}
 
+
     private function getActualDate()
     {
         $date=getdate();
 
         return $date['year'].$date['yday'].$date['hours'].$date['minutes'].$date['seconds'];
     }
-	
+
+
 	public function getExtraData($key)
 	{
 		return ($key == '') ? $this->extra_data : $this->extra_data[$key];
 	}
-	
+
+
 	public function setExtraData($data)
 	{
 		return $this->extra_data = $data;
 	}
+
 
     private function convertEntities()
     {
@@ -244,7 +281,8 @@ class Pdf_report{
 		file_put_contents($this->pathHtmlAux,$file);
 		unset($file);
     }
-    
+
+
     public function getPdf($output='navigator')
     {     
 		if($this->existHtml())
@@ -277,6 +315,7 @@ class Pdf_report{
             echo "<div class='ossim_error' style='width:80%; text-align:center;'>"._('No data available')."</div>";
 		}
     }
+
 
     public function sendPdfEmail($title, $email, $pdfName=null, $dirUser=null, $body="") 
     {
@@ -338,7 +377,7 @@ class Pdf_report{
         return $res;        
     }
 
-    
+
     public function getLinkPdf($extra_data=FALSE){
         
 		$current_url = $_SERVER[SCRIPT_NAME].'?pdf=true&extra_data=true&'.$_SERVER[QUERY_STRING];
@@ -394,6 +433,7 @@ class Pdf_report{
 
         return $html;
     }
+
 
     public function setHtml($html)
     {       	

@@ -136,14 +136,14 @@ else
                                         
                                         if ($host_data['status'] == 'error')
                                         {
-                                            $detail_data = $host_data['errors'];
+                                            $import_detail = $host_data['errors'];
                                         }
                                         else
                                         {
-                                            $detail_data = $host_data['warnings'];
+                                            $import_detail = $host_data['warnings'];
                                         }                  
                                         
-                                        foreach($detail_data as $detail_id => $detail_data)
+                                        foreach($import_detail as $detail_id => $detail_data)
                                         {
                                             ?>
                                             <li><?php echo Util::htmlentities($detail_id.': '.$detail_data) ?></li>

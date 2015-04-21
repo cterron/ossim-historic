@@ -38,8 +38,6 @@ use Perl6::Slurp;
 use AV::ConfigParser;
 use AV::Log;
 use AV::Debian::Netifaces;
-use AV::uuid;
-use AvHACluster;
 use Avproxy;
 use Config::Tiny;
 
@@ -168,8 +166,8 @@ sub config_common($) {
         }
 
         # admin_ip change detect
-        if (   ( $config{'admin_ip'} ne $config_last{'admin_ip'} )
-                && ( ( $config{'ha_heartbeat_start'} // q{} ) ne "yes" ) ) {
+        if ( $config{'admin_ip'} ne $config_last{'admin_ip'} ) {
+
             verbose_log("Updating admin ip (old=$config_last{'admin_ip'} new=$config{'admin_ip'})");
             verbose_log("Updating /etc/hosts");
             my $command
@@ -178,8 +176,13 @@ sub config_common($) {
             system($command);
 
             if ( $profile_framework == 1 ){
-				system("sed -i \"s:framework_ip=.*:framework_ip=$config{'admin_ip'}:\" /etc/ossim/ossim_setup.conf");
-			}
+                system("sed -i \"s:framework_ip=.*:framework_ip=$config{'admin_ip'}:\" /etc/ossim/ossim_setup.conf");
+            }
+
+            if ( $profile_server == 1 ){
+                system("sed -i \"s:server_ip=.*:server_ip=$config{'admin_ip'}:\" /etc/ossim/ossim_setup.conf");
+            }
+
             %config      = AV::ConfigParser::current_config;
 
 		    $command = "/usr/bin/alienvault-update_sensors";
@@ -192,38 +195,8 @@ sub config_common($) {
 
 	Avproxy::config_system_proxy;
 
-        # ha
-        if ( ( $config{'ha_heartbeat_start'} // q{} ) eq "yes" ) {
 
-            verbose_log("Common Profile: enabling HA related config");
-            AvHACluster::configure_ossim_ha;
-
-            $reset{'rsync'} = 1;
-
-        }else{
-
-            # remove rsync daemon config, client and cron job
-            if ( -f "/etc/rsyncd.conf" ) {
-                system("rm -f /etc/rsyncd.conf");
-            }
-            if ( -f "/usr/local/sbin/ossim_ha-rsync.sh" ) {
-                system("rm -f /usr/local/sbin/ossim_ha-rsync.sh");
-            }
-            if ( -f "/etc/cron.hourly/ha-rsync" ) {
-                system("rm -f /etc/cron.hourly/ha-rsync");
-            }
-            if ( -f "/etc/cron.d/ossim_ha_rsync" ) {
-                system("rm -f /etc/cron.d/ossim_ha_rsync");
-            }
-            if ( -f "/etc/init.d/ossim-ha" ) {
-                system("rm -f /etc/init.d/ossim-ha");
-            }
-
-            $reset{'rsync'} = 0;
-
-        }
-
-	system("sed -i 's:^PRUNEPATHS=\".*:^PRUNEPATHS=\"/var/tmp /var/ossim\":' /etc/cron.daily/locate");
+        system("sed -i 's:^\\^\\?PRUNEPATHS=\\\".*:PRUNEPATHS=\\\"/var/tmp /var/ossim\\\":' /etc/cron.daily/locate");
 
         # munin-node #1498
         if ( -f "/etc/munin/munin-node.conf" ) {
@@ -444,7 +417,7 @@ if ( -f "/etc/ossim/first_login" ){
     my $pname = `cat /etc/ossim/first_login` ; $pname =~ s/\n//g;
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 4.11 - \\m - \\l
+AlienVault USM 4.15.2 - \\m - \\l
 
 =========================================================================
 == #### First time instructions ####   
@@ -456,7 +429,7 @@ EOF
 }else{
 	print ISSUEFILE <<EOF;
 
-AlienVault USM 4.11 - \\m - \\l
+AlienVault USM 4.15.2 - \\m - \\l
 
 EOF
 }
@@ -535,6 +508,9 @@ close(MOTDFILE);
                     );
                     system(
                         "echo \"deb http://data.alienvault.com/feed/ binary/\" >> /etc/apt/sources.list.d/$release_version.list"
+                    );
+                    system(
+                        "echo \"deb http://data.alienvault.com/plugins-feed/ binary/\" >> /etc/apt/sources.list.d/$release_version.list"
                     );
 
                     if ( "$config{'server_pro'}" eq "yes" ) {
@@ -713,18 +689,6 @@ close(MOTDFILE);
         debug_log("$command");
         system($command);
 
-
-
-        #1928
-        my $ulimits_file = "/etc/security/limits.conf";
-        verbose_log("Configuring max files open");
-        open ULIMITFILE, "> $ulimits_file";
-        print ULIMITFILE <<EOF;
-#<domain>	<type>	<item>	<value>
-*		soft	nofile	1000000
-*		hard	nofile	1000000
-EOF
-        close(ULIMITFILE);
 
         # Fix 1506
         my $sysstatfile = "/etc/default/sysstat";
@@ -932,7 +896,7 @@ EOF
 		push(@trigger_list, 'alienvault-config-ha-ha-password');
 	}
 	if ( exists $ConfigFile->{ha}->{ha_ping_node} and $ConfigFile->{ha}->{ha_ping_node} ne $OldConfigFile->{ha}->{ha_ping_node} ) {
-		push(@trigger_list, 'alienvault-config-ha-ha');
+		push(@trigger_list, 'alienvault-config-ha-ha-ping-node');
 	}
 	if ( exists $ConfigFile->{ha}->{ha_role} and $ConfigFile->{ha}->{ha_role} ne $OldConfigFile->{ha}->{ha_role} ) {
 		push(@trigger_list, 'alienvault-config-ha-ha-role');

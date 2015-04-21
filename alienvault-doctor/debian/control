@@ -9,6 +9,6 @@ Homepage: http://www.alienvault.com/
 
 Package: alienvault-doctor
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}, python-mysqldb, lshw, python-m2crypto, debsums
+Depends: ${misc:Depends}, ${python:Depends}, python-mysqldb, lshw, python-m2crypto, python-psutil, python-netaddr, debsums, hdparm
 Description: Detects errors and misconfigurations in your system
 

@@ -163,7 +163,7 @@ function GetPayloadFromAV($db, $eid, $is_snort) {
         $res->baseFreeRows();
         return array( ($is_snort) ? $row["hex_payload"] : Util::htmlentities($row["data_payload"]), $row["binary_data"]);
     }
-        
+
 }
 /*
 *  Need to import $submit and set the $QUERY_STRING early to support
@@ -395,7 +395,7 @@ if ($plugin_id == "" || $plugin_sid == "") {
     $userdata8 = Util::htmlentities($myrow2["userdata8"]); if ($userdata8=="") $userdata8=$empty;
     $userdata9 = Util::htmlentities($myrow2["userdata9"]); if ($userdata9=="") $userdata9=$empty;
     list($payload, $binary) = GetPayloadFromAV($db, $eid, $is_snort);
-    
+
     $context = 0;
     $idm_data['src_hostname'] = Util::htmlentities($myrow2['src_hostname']);
     $idm_data['src_mac']      = formatMAC($myrow2['src_mac']);
@@ -539,7 +539,7 @@ if ($tzone!=0) $event_date = gmdate("Y-m-d H:i:s",$event_date_uut+(3600*$tzone))
 if ($tz!=0) $tzdate = gmdate("Y-m-d H:i:s",$event_date_uut+(3600*$tz));
 
 $tzcell = ($event_date==$timestamp || $event_date==$tzdate) ? 0 : 1;
-_("Event date").": ".htmlspecialchars("<b>".$event_date."</b><br>"._("Timezone").": <b>".Util::timezone($tzone)."</b>");
+_("Event date").": <b>". Util::htmlentities($event_date)."</b><br>"._("Timezone").": <b>". Util::htmlentities(Util::timezone($tzone))."</b>";
 
 // This is one array that contains all the ids that are been used by snort, this way we will show more info for those events.
 
@@ -588,7 +588,7 @@ if (valid_hex32($myrow2['dst_host']))
     {
             $coordinates = $dst_obj->get_location();
             if (floatval($coordinates['lat']) != 0) $dst_latitude = floatval($coordinates['lat']);
-            if (floatval($coordinates['lon']) != 0) $dst_longitude = floatval($coordinates['lon']);    
+            if (floatval($coordinates['lon']) != 0) $dst_longitude = floatval($coordinates['lon']);
     }
 }
 if (!$dst_latitude && !$dst_longitude && $record->latitude!=0 && $record->longitude!=0)
@@ -610,13 +610,13 @@ echo '
                     <TR>
                         <th>' . _("Date") . '</th>
                         '.($tzcell ? '<th>'._("Event date").'</th>' : '').'
-                        <th>' . gettext("Alienvault Sensor") . '</th>
+                        <th>' . gettext("AlienVault Sensor") . '</th>
                         <th>' . gettext("Interface") . '</th>
 					</TR>
                     <TR>
-                        <TD> ' . htmlspecialchars($tzdate) . " " . $txtzone . '</TD>
+                        <TD> ' .  Util::htmlentities($tzdate) . " " . $txtzone . '</TD>
                         '.($tzcell ? '<TD nowrap>'.$event_date.' '.Util::timezone($tzone).'</TD>' : '').'
-                       <TD>' . htmlspecialchars( (@inet_ntop($myrow4["ip"])) ? $myrow4["name"]." [".inet_ntop($myrow4["ip"])."]" : _("Unknown")) . '</TD>
+                       <TD>' .  Util::htmlentities( (@inet_ntop($myrow4["ip"])) ? $myrow4["name"]." [".inet_ntop($myrow4["ip"])."]" : _("Unknown")) . '</TD>
                        <TD>' . (($myrow4["interface"] == "") ? "&nbsp;<I>-</I>&nbsp;" : $myrow4["interface"]) . '</TD>
 					</TR>
 				  </TABLE>
@@ -631,7 +631,7 @@ echo '
                     <TR>
                         <TD><a href="javascript:;" class="trlnka" id="'.$plugin_id.';'.$plugin_sid.'">';
                     	$htmlTriggeredSignature=str_replace("##", "", BuildSigByPlugin($plugin_id, $plugin_sid, $db));
-                    	
+
                     	// Extradata translation adding
                     	$myrow2['filename'] = $myrow6['filename'];
                     	$myrow2['username'] = $myrow6['username'];
@@ -639,7 +639,7 @@ echo '
                     	{
                     	    $myrow2['userdata'.$k] = $myrow6['userdata'.$k];
                     	}
-                    	
+
                     	echo TranslateSignature($htmlTriggeredSignature, $myrow2).'</a></TD>
                         <TD>' . $plugin_sid . '</TD>
                         <TD>' . $cat . '</TD>
@@ -682,6 +682,14 @@ echo '
 	//-->
 	$ossim_risk = ($ossim_risk_c < $ossim_risk_a) ? $ossim_risk_a : $ossim_risk_c;
 
+
+	$p_name = Protocol::get_protocol_by_number($ip_proto, TRUE);
+
+    if (FALSE === $p_name)
+    {
+        $p_name = _('UNKNOWN');
+    }
+
 echo '                </TD>
                     </TR>
                   </TABLE>
@@ -699,7 +707,7 @@ echo '                </TD>
                        <TD class="plfield" nowrap>' . $layer4_sport . '</TD>
                        <TD class="plfield" nowrap><div id="'.$current_dip.';'.$dip_aux.';'.$myrow2["dst_host"].'" ctx="'.$ctx.'" class="HostReportMenu">' . $ip_dst_data . '</div></TD>
                        <TD class="plfield" nowrap>' . $layer4_dport . '</TD>
-                       <TD class="plfield" nowrap>' . IPProto2str($ip_proto) . '</TD>
+                       <TD class="plfield" nowrap>' . strtoupper($p_name) . '</TD>
                   </TR>
                   </TABLE>
              </div>
@@ -779,10 +787,10 @@ if (!$is_snort && !empty($extradata1)) {
                        </TABLE>';
 
     } else {
-        echo '<br/><TABLE class="table_list"><TR>';
+        echo '<br/><TABLE class="table_list siem_detail_fixed"><TR>';
         foreach ($extradata1 as $k => $v) echo '<th>'._($k).'</th>';
         echo '</TR><TR>';
-        foreach ($extradata1 as $k => $v) echo '<TD>'.Util::htmlentities(Util::wordwrap($v, 30, ' ', TRUE)).'</TD>';
+        foreach ($extradata1 as $k => $v) echo '<TD>'.Util::htmlentities($v).'</TD>';
         echo '</TR>';
         if (!empty($extradata2)) {
             echo '<TR>';
@@ -922,17 +930,17 @@ if ($src_host || $dst_host ) {
                                     <TD> &nbsp;' .(($src_host) ? implode(", ", preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$src_host["service"])) : "") . '</TD>
                                     <TD> &nbsp;' . (($src_host) ? str_replace("|",", ",implode("<br>",$src_host["username"])) : "") . '</TD>
                                 <TR>
-                                
+
                               </TABLE>
-                          </td>  
+                          </td>
                           <td class="right_context_td">
                               <DIV id="src_map" style="width:100%;height:180px"></DIV>
                           </td>
                           </tr>
                     </table>
-                    
+
                   <br/>
-                    
+
                   <table class="transparent w100 context_table">
                       <tr>
                          <td class="left_context_td">
@@ -963,9 +971,9 @@ if ($src_host || $dst_host ) {
                                     <TD> &nbsp;' .(($dst_host) ? implode(", ", preg_replace("/(.*)\|(.*)\|(.*)/","\\3 (\\2/\\1)",$dst_host["service"])) : "") . '</TD>
                                     <TD> &nbsp;' . (($dst_host) ? str_replace("|",", ",implode("<br>",$dst_host["username"])) : "") . '</TD>
                                 <TR>
-                                
+
                               </TABLE>
-                          </td>  
+                          </td>
                           <td class="right_context_td">
                               <DIV id="dst_map" style="width:100%;height:180px"></DIV>
                           </td>
@@ -1106,12 +1114,13 @@ if ($payload) {
             if ($icmp_proto == "6" || $icmp_proto == "17") echo '<TD class="header">Org.Destination Port</TD>';
             echo '</TR>';
             echo '<TR>';
-            if ($ICMPitype == "5") {
+            if ($ICMPitype == "5")
+            {
                 echo '<TD class="plfield">';
                 echo '<A HREF="base_stat_ipaddr.php?ip=' . $gateway . '&amp;netmask=32" TARGET="_PL_SIP">' . $gateway . '</A></TD>';
                 echo '<TD class="plfield">' . baseGetHostByAddr($gateway, $ctx, $db) . '</TD>';
             }
-            echo '<TD class="plfield">' . IPProto2Str($icmp_proto) . '</TD>';
+            echo '<TD class="plfield">'.Protocol::get_protocol_by_number($icmp_proto, TRUE).'</TD>';
             echo '<TD class="plfield">';
             echo '<A HREF="base_stat_ipaddr.php?ip=' . $icmp_src . '&amp;netmask=32" TARGET="_PL_SIP">' . $icmp_src . '</A></TD>';
             echo '<TD class="plfield">' . baseGetHostByAddr($icmp_src, $ctx, $db) . '</TD>';
@@ -1166,89 +1175,92 @@ if ($is_snort) {
   <?php
 echo '</div></div><br>';
 ?>
-    <script type="text/javascript" src="https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript" src="../js/utils.js"></script>
     <script type="text/javascript" src="../js/av_map.js.php"></script>
     <script type="text/javascript" src="../js/notification.js"></script>
     <script type="text/javascript">
-        
-        function draw_maps() 
-        {                
+
+        function draw_maps()
+        {
             av_map_src = new Av_map('src_map');
             av_map_dst = new Av_map('dst_map');
-            
-            if(Av_map.is_map_available())
-            {                    
-                //Source Host
-                                
-                var src_latitude  = '<?php echo $src_latitude;?>';
-                var src_longitude = '<?php echo $src_longitude;?>';
-                                     
-                av_map_src.set_location(src_latitude, src_longitude);                                       
-    
-                if(av_map_src.get_lat() != '' && av_map_src.get_lng() != '')
-                {                        
-                    av_map_src.set_zoom(3);
-                    
-                    av_map_src.add_marker(av_map_src.get_lat(), av_map_src.get_lng());
-                    av_map_src.draw_map(3);
-                    av_map_src.map.setOptions({draggable: false});
-                    
-                    // Change title and drag property
-                    av_map_src.markers[0].setTitle('<?php echo $region_src?>');
-                    av_map_src.markers[0].setDraggable(false);
-                    
-                    av_map_src.markers[0].setMap(av_map_src.map);                     
+
+            Av_map.is_map_available(function(conn)
+            {
+                if(conn)
+                {
+                    //Source Host
+
+                    var src_latitude  = '<?php echo $src_latitude;?>';
+                    var src_longitude = '<?php echo $src_longitude;?>';
+
+                    av_map_src.set_location(src_latitude, src_longitude);
+
+                    if(av_map_src.get_lat() != '' && av_map_src.get_lng() != '')
+                    {
+                        av_map_src.set_zoom(3);
+
+                        av_map_src.add_marker(av_map_src.get_lat(), av_map_src.get_lng());
+                        av_map_src.draw_map(3);
+                        av_map_src.map.setOptions({draggable: false});
+
+                        // Change title and drag property
+                        av_map_src.markers[0].setTitle('<?php echo $region_src?>');
+                        av_map_src.markers[0].setDraggable(false);
+
+                        av_map_src.markers[0].setMap(av_map_src.map);
+                    }
+                    else
+                    {
+                        $('#src_map').html('<div style="padding-top: 90px"><?php echo _('No location')?></div>');
+                    }
+
+
+                    //Destination Host
+
+                    var dst_latitude  = '<?php echo $dst_latitude;?>';
+                    var dst_longitude = '<?php echo $dst_longitude;?>';
+
+                    av_map_dst.set_location(dst_latitude, dst_longitude);
+
+
+                    if(av_map_dst.get_lat() != '' && av_map_dst.get_lng() != '')
+                    {
+                        av_map_dst.set_zoom(3);
+                        av_map_dst.add_marker(av_map_dst.get_lat(), av_map_dst.get_lng());
+                        av_map_dst.draw_map(3);
+                        av_map_dst.map.setOptions({draggable: false});
+
+                        // Change title and drag property
+                        av_map_dst.markers[0].setTitle('<?php echo $region_dst?>');
+                        av_map_dst.markers[0].setDraggable(false);
+
+                        av_map_dst.markers[0].setMap(av_map_dst.map);
+                    }
+                    else
+                    {
+                        $('#dst_map').html('<div style="padding-top: 90px"><?php echo _('No location')?></div>');
+                    }
                 }
                 else
                 {
-                    $('#src_map').html('<div style="padding-top: 90px"><?php echo _('No location')?></div>');
+                    if ($('#src_map').length >= 1)
+                    {
+                        av_map_src.draw_warning();
+                        $('#src_map').parent().css('vertical-align', 'middle');
+                        $('#src_map').css('height', 'auto');
+                    }
+
+                    if ($('#dst_map').length >= 1)
+                    {
+                        av_map_dst.draw_warning();
+                        $('#dst_map').parent().css('vertical-align', 'middle');
+                        $('#dst_map').css('height', 'auto');
+                    }
                 }
-                
-                
-                //Destination Host             
-                
-                var dst_latitude  = '<?php echo $dst_latitude;?>';
-                var dst_longitude = '<?php echo $dst_longitude;?>';
-                                    
-                av_map_dst.set_location(dst_latitude, dst_longitude);
-                                   
-    
-                if(av_map_dst.get_lat() != '' && av_map_dst.get_lng() != '')
-                {                        
-                    av_map_dst.set_zoom(3);
-                    av_map_dst.add_marker(av_map_dst.get_lat(), av_map_dst.get_lng());
-                    av_map_dst.draw_map(3);
-                    av_map_dst.map.setOptions({draggable: false});
-                    
-                    // Change title and drag property
-                    av_map_dst.markers[0].setTitle('<?php echo $region_dst?>');
-                    av_map_dst.markers[0].setDraggable(false);
-                    
-                    av_map_dst.markers[0].setMap(av_map_dst.map);                     
-                }
-                else
-                {
-                    $('#dst_map').html('<div style="padding-top: 90px"><?php echo _('No location')?></div>');
-                }                                  
-            }
-            else
-            {                
-                if ($('#src_map').length >= 1)
-    			{    				
-    				av_map_src.draw_warning();
-    				$('#src_map').parent().css('vertical-align', 'middle');
-    				$('#src_map').css('height', 'auto');	
-    			}
-    
-    			if ($('#dst_map').length >= 1)
-    			{
-    				av_map_dst.draw_warning();
-    				$('#dst_map').parent().css('vertical-align', 'middle');
-    				$('#dst_map').css('height', 'auto');
-    			}
-            }         
+            });
         }
-        
+
    </script>
 <?php
 if (!array_key_exists("minimal_view", $_GET)) {
@@ -1275,13 +1287,13 @@ if (!array_key_exists("minimal_view", $_GET)) {
 				return '<?php echo _("Searching")."..."?>'; // We temporary show a Please wait text until the ajax success callback is called.
 			}
 	    });
-		
+
 		$('.scriptinfoimg').tipTip({
 			defaultPosition: "down",
 			content: function (e) {
 				return $(this).attr('txt')
 			}
-	    }); 
+	    });
 
         draw_maps();
 

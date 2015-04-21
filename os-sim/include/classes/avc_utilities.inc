@@ -126,7 +126,7 @@ class Avc_utilities
                 exit();
             }
 
-            $error_text = (!empty($msg)) ? $msg : _("You don't have permission to access to Alienvault Center");
+            $error_text = (!empty($msg)) ? $msg : _("You don't have permission to access to AlienVault Center");
 
             $config_nt = array(
                 'content' => "<div>".$error_text."</div>",

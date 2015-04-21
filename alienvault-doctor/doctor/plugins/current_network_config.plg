@@ -1,0 +1,37 @@
+[properties]
+name=Current network configuration
+description=Check for network problems in the current configuration.
+category=network
+type=command
+command=ifconfig
+
+[Loopback interface is present]
+pattern=(^lo)
+conditions=@string@:!=""
+fail_if_empty=True
+warning=Loopback interface is not available
+advice=The loopback network interface is always present by default. A missing interface may lead to many network related issues
+
+[Configured interfaces]
+pattern=^(\S+)
+conditions=@set@:@isequalto@@network_interfaces@
+warning=Configured and running network interfaces do not match
+advice=There are either more configured network interfaces than the ones running, or vice versa. Please check your network configuration
+
+[RX/TX errors]
+pattern=(^\S+).*\n.*\n.*\n\s+RX packets:\d+\s+errors:(\d+)\s+dropped:(\d+).*\n\s+TX packets:\d+\s+errors:(\d+)\s+dropped:(\d+)
+conditions=@info@;@int@:==0;@int@:==0;@int@:==0;@int@:==0
+warning=There are some transmission errors in your network interfaces
+advice=Too many errors in the RX or TX queues may point to network problems and connection performance degradation. Please check your network connections and hardware
+
+[Collisions]
+pattern=(^\S+).*\n.*\n.*\n.*\n.*\n\s+collisions:(\d+)
+conditions=@info@;@int@:<100
+warning=Network collisions are too damn high
+advice=Too many network collisions may point to network problems and connection performance degradation. Please check your network connections and hardware
+
+[MTU]
+pattern=(^(?!lo)\S+).*\n.*\n.*MTU:(\d+)\s+
+conditions=@info@;@int@:==1500
+warning=MTU value has been modified
+advice=Modifying the MTU value is not supported and may lead some tools like Suricata or pf_ring to stop working. Please check your network configuration

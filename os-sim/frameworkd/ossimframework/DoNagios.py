@@ -310,7 +310,7 @@ class DoNagios(threading.Thread):
         """
         logger.info("Making nagios changes..")
 
-        pattern = re.compile("(?P<kk>^[\w\-]+)$")
+        pattern = re.compile("(?P<kk>^\w[\w\-\s]+)$")
 
         path = os.path.join(self._tmp_conf['nagios_cfgs'], "host-services")
         for fi in os.listdir(path):
@@ -408,6 +408,11 @@ class DoNagios(threading.Thread):
                 for config in files:
                     config_file = root + "/" + config
                     os.chmod(config_file, 0644)
+                for cdir in dirs:
+                    config_dir = root + "/" + cdir
+                    os.chmod(config_dir, 0755)
+            os.chmod(self._tmp_conf['nagios_cfgs'], 0755)
+
         except Exception as e:
             logger.error("An error occurred while changing the configuration files permissions: %s" % str(e))
         self.reload_nagios()

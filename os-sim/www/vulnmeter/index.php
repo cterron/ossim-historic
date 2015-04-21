@@ -35,6 +35,7 @@ ini_set("max_execution_time","360");
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 Session::logcheck("environment-menu", "EventsVulnerabilities");
 
@@ -86,7 +87,7 @@ switch ($_SERVER['REQUEST_METHOD'])
 case "GET" :
    foreach($getParams as $gp) {
        if (isset($_GET[$gp])) {
-         $$gp=htmlspecialchars(mysql_real_escape_string(trim($_GET[$gp])), ENT_QUOTES);
+         $$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $conn));
       } else {
          $$gp = "";
       }
@@ -96,7 +97,7 @@ case "POST" :
    $post = TRUE;
    foreach($postParams as $pp) {
       if (isset($_POST[$pp])) {
-        $$pp=htmlspecialchars(mysql_real_escape_string(trim($_POST[$pp])), ENT_QUOTES);
+        $$pp=Util::htmlentities(escape_sql(trim($_POST[$pp]), $conn));
       } else {
         $$pp = "";
       }
@@ -1240,7 +1241,7 @@ EOT;
             drawTableLatest($fieldMap, $tdata, "Hosts");
         }
       elseif (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
-      	echo "<br><span class='gray'>"._("No results found: ")."</span><a href='sched.php?smethod=schedule&hosts_alive=1&scan_locally=1'>"._("Click here to run a Vulnerability Scan now")."</a><br><br>";
+      	echo "<br><span class='gray'>"._("No results found: ")."</span><a href='" . Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?smethod=schedule&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities','scan_jobs') . "'>"._("Click here to run a Vulnerability Scan now")."</a><br><br>";
       }
 
    }

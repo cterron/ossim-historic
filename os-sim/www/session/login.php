@@ -183,11 +183,6 @@ if (ossim_error())
 }
 
 
-if (!preg_match("/^[A-Za-z0-9\/\-_#]*$/", $bookmark))
-{
-    $bookmark = '';
-}
-
 /* Version */
 
 $version     = $conf->get_conf('ossim_server_version');
@@ -197,7 +192,17 @@ $demo        = (preg_match("/.*demo.*/i",$version))   ? TRUE : FALSE;
 $pro         = (preg_match("/.*pro.*/i",$version))    ? TRUE : FALSE;
 
 
+/*  System Name  */
+
+try
+{
+    list($system_name, $system_ip) = Session::get_local_sysyem_info();
+}
+catch (Exception $e){}
+
+
 /* Title */
+
 $title = _('AlienVault '.($opensource ? 'OSSIM' : 'USM'));
 
 
@@ -217,6 +222,22 @@ elseif ($demo)
 $logo   = 'logo'.$logo_type.'.png';
 $b_logo = 'ossim'.$logo_type.'.png';
 
+
+/*  Bookmark  */
+
+//Cleaning the bookmark url
+$bookmark = preg_replace('/\s+.*$/', '', $bookmark);
+
+if (!preg_match("/^[A-Za-z0-9\/\-_#]*$/", $bookmark))
+{
+    $bookmark = '';
+}
+
+//Adding the system name and IP
+if ($bookmark != '' && $system_name != '')
+{
+    $bookmark .= "    --    [$system_name - $system_ip]";
+}
 
 
 $failed       = TRUE;
@@ -412,7 +433,7 @@ if ($cnd_1 && $cnd_2)
                                 unset($_SESSION['_welcome_wizard_bar']);
                             }
                         }
-
+                        
                         header("Location: /ossim/$bookmark");
                     }
                 }
@@ -423,82 +444,89 @@ if ($cnd_1 && $cnd_2)
     }
 }
 
+if ($system_name != '')
+{
+    $title .= " [$system_name - $system_ip]";
+}
+
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title><?php echo $title;?></title>
+    <title><?php echo $title ?></title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="Shortcut Icon" type="image/x-icon" href="/ossim/favicon.ico"/>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/fancybox/jquery.fancybox-1.3.4.css"/>
-    <script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/ossim/js/jquery.base64.js"></script>
-    <script type="text/javascript" src="/ossim/js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+    
     
     <?php
-    // Welcome screen specific styles and javascript
+    //CSS Files
+    $_css_files = array(
+        array('src' => 'av_common.css',                         'def_path' => TRUE),
+        array('src' => '/fancybox/jquery.fancybox-1.3.4.css',   'def_path' => TRUE),
+        array('src' => 'tipTip.css',                            'def_path' => TRUE)
+    );
+
+    //JS Files
+    $_js_files = array(
+        array('src' => 'jquery.min.js',                                 'def_path' => TRUE),
+        array('src' => 'jquery.base64.js',                              'def_path' => TRUE),
+        array('src' => '/fancybox/jquery.fancybox-1.3.4.pack.js',       'def_path' => TRUE),
+        array('src' => 'jquery.tipTip.js',                              'def_path' => TRUE)
+    );
+    
     if ($first_login == 'yes')
     {
-        ?>
-        <link rel="stylesheet" type="text/css" href="/ossim/style/session/login_welcome.css"/>
-        <link rel="stylesheet" type="text/css" href="../style/tipTip.css" />
-        <script type="text/javascript" src="../js/jquery.tipTip.js"></script>
-        <script type="text/javascript" src="../js/jquery.pstrength.js"></script>
-        <script type="text/javascript" src="https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>
-        <script type="text/javascript" src="../js/jquery.autocomplete_geomod.js"></script>
-        <script type="text/javascript" src="../js/geo_autocomplete.js"></script>
-        <script type="text/javascript" src="../js/notification.js"></script>
-        <script type="text/javascript" src="../js/av_map.js.php"></script>
-        <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css"/>
-        <?php
+        $_css_files[] = array('src' => '/session/login_welcome.css',    'def_path' => TRUE);
+        $_css_files[] = array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE);
+        
+        $_js_files[]  = array('src' => 'av_internet_check.js.php',      'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'utils.js',                      'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'jquery.pstrength.js',           'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'jquery.autocomplete_geomod.js', 'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'geo_autocomplete.js',           'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'notification.js',               'def_path' => TRUE);
+        $_js_files[]  = array('src' => 'av_map.js.php',                 'def_path' => TRUE);
     }
-    
-    // Normal dark css login screen
     else
     {
-        ?>
-        <link rel="stylesheet" type="text/css" href="/ossim/style/session/login.css"/>
-        <?php
+        $_css_files[] = array('src' => '/session/login.css',    'def_path' => TRUE);
+        
     }
     
-    // Add some css for mobile devices
     if (Mobile::is_mobile_device())
     {
-        ?>
-        <link rel="stylesheet" type="text/css" href="/ossim/style/session/login_mobile.css"/>
-        <?php
+        $_css_files[] = array('src' => '/session/login_mobile.css',     'def_path' => TRUE);    
     }
+    
+    
+    Util::print_include_files($_css_files, 'css');
+    Util::print_include_files($_js_files, 'js');
+    
+    ?>   
+       
+    <?php
+    if (!Mobile::is_mobile_device() && $embed == 'true')
+    {
     ?>
-    
-    <style type="text/css">
-        
-        .pass_container
-        {
-            width: 203px !important;     
-        }
-    
-        <?php
-        if (!Mobile::is_mobile_device() && $embed == 'true')
-        {
-            ?>
+        <style type="text/css"> 
             #c_login
             {
                 margin: auto;
             }
-            <?php
-        }
-        ?>
-    </style>
+        </style>
+    <?php
+    }
+    ?>
 
     <script type='text/javascript'>
 
         var h_window;
-
+        var __internet  = null;
+        var av_bookmark = "<?php echo $bookmark ?>";
         function show_help()
         {
              var width  = 1024;
@@ -578,12 +606,16 @@ if ($cnd_1 && $cnd_2)
             <?php
         }
         ?>
-
-
-        $(document).ready(function()
+        
+        function save_hash()
         {
-            var _hash = location.hash;
-            $('#bookmark_string').val(_hash);
+            var av_hash = location.hash;
+            
+            $('#bookmark_string').val(av_hash);
+        }
+        
+        $(document).ready(function()
+        {            
             if (typeof(document.f_login) != 'undefined')
             {
                  document.f_login.user.focus();
@@ -615,7 +647,8 @@ if ($cnd_1 && $cnd_2)
             if ($first_login == 'yes')
             {
                 ?>
-
+                __internet = new Av_internet_check();
+                
                 // Scroll down to view de submit button (small screens)
                 document.getElementById('down_button').scrollIntoView();
 
@@ -624,88 +657,91 @@ if ($cnd_1 && $cnd_2)
 
                 av_map = new Av_map('c_map');
 
-                if(Av_map.is_map_available())
+                Av_map.is_map_available(function(conn)
                 {
-                    av_map.draw_map();
-
-                    $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
-    					mapkey: '<?php echo $map_key?>',
-    					selectFirst: true,
-    					minChars: 3,
-    					cacheLength: 50,
-    					width: 300,
-    					scroll: true,
-    					scrollHeight: 330
-    				}).result(function(_event, _data) {
-    					if (_data)
-    					{
-    						if (!$('.geolocation').is(':visible'))
-    						{
-    						    toggle_map();
-    						}
-
-    						//Set map coordenate
-                            av_map.map.fitBounds(_data.geometry.viewport);
-
-                            var aux_lat = _data.geometry.location.lat();
-                            var aux_lng = _data.geometry.location.lng();
-
-                            //console.log(aux_lat);
-                            //console.log(aux_lng);
-
-                            av_map.set_location(aux_lat, aux_lng);
-
-                            $('#latitude').val(av_map.get_lat());
-                            $('#longitude').val(av_map.get_lng());
-
-                            //Save address
-
-                            av_map.set_address(_data.formatted_address);
-
-                            // Marker (Add or update)
-
-                            av_map.remove_all_markers();
-                            av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                            av_map.markers[0].setTitle('<?php echo _('Company location')?>');
-                            av_map.markers[0].setMap(av_map.map);
-
-                            av_map.map.setZoom(8);
-
-                            //Get country
-
-    						var country = '';
-                            var i       = _data.address_components.length-1;
-
-                            for(i; i >= 0; i--)
-                            {
-                                var item = _data.address_components[i];
-
-                                if(item.types[0] == 'country')
+                    if (conn)
+                    {
+                        av_map.draw_map();
+    
+                        $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
+        					mapkey: '<?php echo $map_key?>',
+        					selectFirst: true,
+        					minChars: 3,
+        					cacheLength: 50,
+        					width: 300,
+        					scroll: true,
+        					scrollHeight: 330
+        				}).result(function(_event, _data) {
+        					if (_data)
+        					{
+        						if (!$('.geolocation').is(':visible'))
+        						{
+        						    toggle_map();
+        						}
+    
+        						//Set map coordenate
+                                av_map.map.fitBounds(_data.geometry.viewport);
+    
+                                var aux_lat = _data.geometry.location.lat();
+                                var aux_lng = _data.geometry.location.lng();
+    
+                                //console.log(aux_lat);
+                                //console.log(aux_lng);
+    
+                                av_map.set_location(aux_lat, aux_lng);
+    
+                                $('#latitude').val(av_map.get_lat());
+                                $('#longitude').val(av_map.get_lng());
+    
+                                //Save address
+    
+                                av_map.set_address(_data.formatted_address);
+    
+                                // Marker (Add or update)
+    
+                                av_map.remove_all_markers();
+                                av_map.add_marker(av_map.get_lat(), av_map.get_lng());
+                                av_map.markers[0].setTitle('<?php echo _('Company location')?>');
+                                av_map.markers[0].setMap(av_map.map);
+    
+                                av_map.map.setZoom(8);
+    
+                                //Get country
+    
+        						var country = '';
+                                var i       = _data.address_components.length-1;
+    
+                                for(i; i >= 0; i--)
                                 {
-                                    country = item.short_name;
-
-                                    break;
+                                    var item = _data.address_components[i];
+    
+                                    if(item.types[0] == 'country')
+                                    {
+                                        country = item.short_name;
+    
+                                        break;
+                                    }
                                 }
-                            }
-
-                            $('#country').val(country);
-    					}
-    				});
-
-
-    				$('#view_map').click(function(event){
-
-                        event.preventDefault();
-                        toggle_map();
-                    });
-
-    				//Search box (Handler Keyup and Blur)
-    				av_map.bind_sl_actions();
-                }
-                else
-                {
-                    $(".c_location").hide();
-                }
+    
+                                $('#country').val(country);
+        					}
+        				});
+    
+    
+        				$('#view_map').click(function(event){
+    
+                            event.preventDefault();
+                            toggle_map();
+                        });
+    
+        				//Search box (Handler Keyup and Blur)
+        				av_map.bind_sl_actions();
+                    }
+                    else
+                    {
+                        $(".c_location").hide();
+                    }
+                });
 
 
                 $('#f_login').submit(function(){
@@ -720,10 +756,22 @@ if ($cnd_1 && $cnd_2)
             else
             {
                 ?>
-                $('#f_login').submit(function(){
+                
+                if (av_bookmark != '' && location.hash == '')
+                {
+                    location.hash = av_bookmark;
+                }
+    
+                save_hash();
+                
+                $(window).on('hashchange', save_hash);
+                
+                $('#f_login').submit(function()
+                {
                     $('#submit_button').addClass('av_b_processing');
                     $('#pass').val($.base64.encode($('#passu').val()));
                 });
+                
                 <?php
             }
             ?>
@@ -757,14 +805,14 @@ if ($cnd_1 && $cnd_2)
                                             <tr>
                                                 <td class='td_user'> <?php echo _('Username').':'; ?> </td>
                                                 <td class="left">
-                                                    <input type="text" autocapitalize="off" id="user" name="user" value="<?php echo $default_user?>"/>
+                                                    <input type="text" autocapitalize="off" maxlength="64" id="user" name="user" value="<?php echo $default_user?>"/>
                                                 </td>
                                             </tr>
 
                                             <tr>
                                                 <td class='td_pass'> <?php echo _('Password').':'; ?> </td>
                                                 <td class="left">
-                                                    <input type="password" id="passu" name="passu"/>
+                                                    <input type="password" id="passu" name="passu" autocomplete="off"/>
                                                     <input type="hidden" id="pass" name="pass"/>
                                                 </td>
                                             </tr>
@@ -865,7 +913,21 @@ if ($cnd_1 && $cnd_2)
                                             ?>
                                         </td>
                                     </tr>
-
+                                    
+                                    <?php 
+                                    if ($system_name != '')
+                                    {
+                                    ?>
+                                    <tr>
+                                        <td class="noborder" id='system_info'>
+                                        <?php                                                                                           
+                                            echo $system_name . '  ' . $system_ip;
+                                        ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                    }
+                                    ?>
                                     <tr>
                                         <td class="noborder center" style="padding-top:20px">
 
@@ -875,7 +937,7 @@ if ($cnd_1 && $cnd_2)
                                                         <?php echo _('Username'); ?>
                                                     </td>
                                                     <td class="left noborder">
-                                                        <input type="text" size='25' id='user' name="user" value="<?php echo $default_user ?>" />
+                                                        <input type="text" size='25' maxlength="64" id='user' name="user" value="<?php echo $default_user ?>" />
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -883,7 +945,7 @@ if ($cnd_1 && $cnd_2)
                                                         <?php echo _('Password'); ?>
                                                     </td>
                                                     <td class="left noborder">
-                                                        <input type="password" onfocus="$('#wup').hide(); $('#nt_1').hide(); $('#nt_pass').hide();" id="passu" size='25' name="passu"/>
+                                                        <input type="password" onfocus="$('#wup').hide(); $('#nt_1').hide(); $('#nt_pass').hide();" id="passu" size='25' name="passu" autocomplete="off"/>
                                                         <input type="hidden" id="pass" name="pass"/>
                                                     </td>
                                                 </tr>
@@ -1045,7 +1107,7 @@ if ($cnd_1 && $cnd_2)
                                                                         <td class="td_user uppercase left noborder"><?php echo _('Password') ?> *</td>
                                                                         <td class="left noborder">
                                                                             <div class="pass_container">
-                                                                                <input type="password" id="pass" name="pass"/>
+                                                                                <input type="password" id="pass" name="pass" autocomplete="off"/>
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -1056,7 +1118,7 @@ if ($cnd_1 && $cnd_2)
                                                                         <td class="td_user uppercase left noborder"><?php echo _('Confirm Password') ?> *</td>
                                                                         <td class="left noborder">
                                                                             <div class="pass_container">
-                                                                                <input type="password" id="pass1" name="pass1"/>
+                                                                                <input type="password" id="pass1" name="pass1" autocomplete="off"/>
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -1066,7 +1128,7 @@ if ($cnd_1 && $cnd_2)
                                                                     <tr>
                                                                         <td class="td_user uppercase left noborder"><?php echo _('E-mail') ?> *</td>
                                                                         <td class="left noborder">
-                                                                            <input type="text" name="email" id="email" maxlength="256"/>
+                                                                            <input type="text" name="email" id="email" maxlength="255"/>
                                                                         </td>
                                                                     </tr>
 

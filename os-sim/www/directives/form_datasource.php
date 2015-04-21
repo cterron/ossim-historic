@@ -117,8 +117,8 @@ foreach ($plugin_list_order as $name => $plugin) {
 <html>
 <head>
 <link type="text/css" rel="stylesheet" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>" />
-<link type="text/css" rel="stylesheet" href="/ossim/style/ui.multiselect.css" />
 <link type="text/css" rel="stylesheet" href="/ossim/style/jquery-ui-1.7.custom.css" />
+<link type="text/css" rel="stylesheet" href="/ossim/style/ui.multiselect.css" />
 
 <script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
 <script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>

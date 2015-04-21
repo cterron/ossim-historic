@@ -69,8 +69,9 @@ logger = Logger.logger
 _CONF = OssimConf()
 
 
+
 class DoRestore(threading.Thread):
-    """This class is designed to do the restore jobs. 
+    """This class is designed to do the restore jobs.
     It runs on a separate thread in process the restores jobs without stops the frameworkd work.
     """
     STATUS_ERROR = -1
@@ -110,10 +111,25 @@ class DoRestore(threading.Thread):
         return self.__purgeStatus
 
     def string_status(self):
+        '''
+        This function returns the status of a purge/restore action
+        Called by "backup_status" action asked by web UI
+        '''
+        # Error
         if self.__status == DoRestore.STATUS_ERROR:
             string = 'status="%s" error="%s"' %(self.__status,self.__msgerror)
+        elif self.__purgeStatus == DoRestore.PURGE_STATUS_ERROR:
+            string = 'status="%s" error="%s"' %(self.__purgeStatus,self.__msgerror)
+        # Pending, Running or Stopped
         else:
-            string ='status="%s"' % self.__status
+            # Purge mode first (does not matter if Restore mode were first)
+            if self.__purgeStatus > 0:
+                string ='status="%s"' % self.__purgeStatus
+            elif self.__status > 0:
+                string ='status="%s"' % self.__status
+            else:
+                string ='status="0"'
+        
         return string
 
     def __resetPurgeParams(self):
@@ -340,20 +356,20 @@ class DoRestore(threading.Thread):
         self.__setStatusFlag(DoRestore.STATUS_ERROR)
 
 
-    def __unzipBackupToFile(self,backupfile,outputfile):
+    def __unzipBackupToFile(self, backupfile, outputfile):
         """Unzip a backup file to the outputfile
         """
         rt = True
         try:
-            ff = gzip.open(backupfile, 'rb')
-            data = ff.read()
-            ff.close()
-            fd = open(outputfile,'w')
-            fd.write(data)
-            fd.close()
+            cmd = "gunzip -c %s > %s" % (backupfile, outputfile)
+            status, output = commands.getstatusoutput(cmd)
+            if status != 0:
+                self.__setError("Error decompressing the file '%s': %s " % (backupfile, output))
+                return False
+
             os.chmod(outputfile, 0644)
         except Exception,e:
-            logger.error("Error decompressing the file %s " % backupfile)
+            self.__setError("Error decompressing the file %s " % backupfile)
             rt = False
         return rt
 
@@ -425,26 +441,24 @@ class DoRestore(threading.Thread):
         return True
 
 
-    def __doRestoreWithoutEntity(self,backupfile):
+    def __doRestoreWithoutEntity(self, backupfile):
         """Restores the backup file regardless of the entity
         @param bakcupfile file to restore
         """
-        restore_command = "mysql --host=%s --user=%s --password=%s  alienvault_siem < $FILE" % \
-            (self.__bbddhost, self.__bbdduser,self.__bbddpasswd)
-        random_string = ''.join(random.choice(string.ascii_uppercase) for x in range(10))
-        tmpfile = '/tmp/%s.sql' % random_string
-        if not self.__unzipBackupToFile(backupfile,tmpfile):
-            self.__setError("Unable to decompress the backup file")
-            return False
-        cmd = restore_command.replace('$FILE',tmpfile)
+        restore_command = "zcat %s | grep -i ^insert | mysql --host=%s --user=%s --password=%s  alienvault_siem" % \
+                          (backupfile, self.__bbddhost, self.__bbdduser,self.__bbddpasswd)
         logger.info("Running restore ")
-        status, output = commands.getstatusoutput(cmd)
-        if status != 0:
-            self.__setError("Error running restore: %s" % output)
+        try:
+            status, output = commands.getstatusoutput(restore_command)
+            if status != 0:
+                self.__setError("Error running restore: %s" % output)
+                return False
+            else:
+                logger.info("Restore OK")
+        except Exception, e:
+            self.__setError("Error restoring backup '%s': %s" % (backupfile, str(e)))
             return False
-        else:
-            logger.info("Restore :%s ok" % cmd)
-        os.remove(tmpfile)
+
         return True
 
 
@@ -481,7 +495,7 @@ class DoRestore(threading.Thread):
                                                    passwd=self.__bbddpasswd)
             db.autocommit(True)
             cursor  = db.cursor()
-            
+
             # 2 - Unzip the backup file
             random_string = ''.join(random.choice(string.ascii_uppercase) for x in range(10))
             tmpfile = '/tmp/%s.sql' % random_string
@@ -503,12 +517,10 @@ class DoRestore(threading.Thread):
             cursor.execute(query_remove_acid_event)
             cursor.fetchall()
 
-
             query_remove_reptutation= "delete from alienvault_siem_tmp.reputation_data where event_id not in (select event_id from alienvault_siem_tmp.acid_event)"
             logger.info(query_remove_reptutation)
             cursor.execute(query_remove_reptutation)
             cursor.fetchall()
-
 
             query_remove_idm_data = "delete from alienvault_siem_tmp.idm_data where event_id not in (select event_id from alienvault_siem_tmp.acid_event)"
             logger.info(query_remove_idm_data)
@@ -529,7 +541,6 @@ class DoRestore(threading.Thread):
             self.__myDB.exec_query(querytmp)
 
             logger.info("Restored data to acid_event")
-
 
             #table: reputation_data:
             querytmp = "select * into outfile '/tmp/reputation_data.sql' from alienvault_siem_tmp.reputation_data"
@@ -564,6 +575,7 @@ class DoRestore(threading.Thread):
         except Exception,e:
             self.__setError("Can't do the restore :%s" % str(e))
             return False
+
         return True
 
 
@@ -592,7 +604,6 @@ class DoRestore(threading.Thread):
         for filename in total_files:
             rt = True
             if self.__getIsOldDump(filename):
-                logger.info("Detected old database...")
                 rt = self.__doOldRestore(filename)
             elif self.emptyString(self.__entity):
                 rt = self.__doRestoreWithoutEntity(filename)
@@ -602,16 +613,17 @@ class DoRestore(threading.Thread):
                 return
         self.__setStatusFlag(DoRestore.STATUS_OK)
 
-
     def run(self):
-        """Thread entry point. 
+        """Thread entry point.
         Waits until new jobs arrives
         """
+
         while self.__keepWorking:
-            if  self.__status == DoRestore.STATUS_PENDING_JOB:                
+            if self.__status == DoRestore.STATUS_PENDING_JOB:
                 self.__dojob()
             if self.__purgeStatus == DoRestore.PURGE_STATUS_PENDING_JOB:
                 self.__do_purgeEvents()
+
             sleep(1)
 
 
@@ -730,17 +742,21 @@ class BackupManager(threading.Thread):
         tmpConfig = {}
         if data is not None:
             for row in data:
-                if row['conf'] in ['backup_base', 'backup_day', 'backup_dir', 'backup_events', 'backup_store','frameworkd_backup_storage_days_lifetime']:
+                if row['conf'] in ['backup_base', 'backup_day', 'backup_dir', 'backup_events', 'backup_store','frameworkd_backup_storage_days_lifetime', 'backup_hour']:
                     tmpConfig [row['conf']] = row['value']
+
+        for key, value in tmpConfig.iteritems():
+            if key == 'last_run':
+                continue
+            if key not in self.__bkConfig:
+                logger.info("Backup new config key: '%s' '%s'" % (key, value))
+                self.__bkConfig[key] = tmpConfig[key]
+            elif value != self.__bkConfig[key]:
+                logger.info('Backup Config value has changed %s=%s and old value %s=%s' % (key, value, key, self.__bkConfig[key]))
+                self.__bkConfig[key] = tmpConfig[key]
+
         if not self.__bkConfig.has_key('last_run'):
-            logger.info("Loading new backup config...")
-            self.__bkConfig = tmpConfig
             self.__bkConfig['last_run'] = date(year=1,month=1,day=1)
-        else:
-            for key, value in self.__bkConfig.iteritems():
-                if key != 'last_run' and  tmpConfig[key] != value:
-                    logger.info('Backup Config value has changed %s=%s and old value %s=%s' % (key, tmpConfig[key], key, value))
-                    self.__bkConfig[key] = tmpConfig[key]
         if not self.__bkConfig.has_key('backup_day'):
             self.__bkConfig['backup_day'] = 30
         if not self.__bkConfig.has_key('frameworkd_backup_storage_days_lifetime'):
@@ -764,16 +780,22 @@ class BackupManager(threading.Thread):
     def __loadBackupConfig(self):
         """Load the backup configuration from the backup file
         """
+        self.__bkConfig = {}
+
         if os.path.isfile(BackupManager.UPDATE_BACKUP_FILE):
             try:
                 bk_configfile = open(BackupManager.UPDATE_BACKUP_FILE)
                 self.__bkConfig = pickle.load(bk_configfile)
                 bk_configfile.close()
+                if not isinstance(self.__bkConfig, dict):
+                    logger.warning("Error loading backup configuration file.")
+                    logger.info("New configuration will be loaded from database")
+                    self.__bkConfig = {}
             except Exception, e:
-                logger.error("Error loading postcorrelation update_file...:%s" % str(e))
+                logger.warning("Error loading backup configuration file...:%s" % str(e))
+                logger.info("New configuration will be loaded from database")
                 self.__bkConfig = {}
-        else:
-            self.__bkConfig = {}
+
 
 
     def purgeOldBackupfiles(self):
@@ -816,6 +838,7 @@ class BackupManager(threading.Thread):
         except Exception as err:
             logger.error("An error occurred while reading the current database backups %s" % str(err))
         return backup_files
+
     def checkDiskUsage(self):
         """Check max disk usage.
         """
@@ -855,9 +878,9 @@ class BackupManager(threading.Thread):
                 try:
                     
                     #delete_file.write("DELETE FROM alienvault_siem.ac_acid_event WHERE day='%s';\n" % date.isoformat())
-                    delete_file.write("DELETE FROM alienvault_siem.idm_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');\n" % (initd, endd))
-                    delete_file.write("DELETE FROM alienvault_siem.reputation_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');\n" % (initd, endd))
-                    delete_file.write("DELETE FROM alienvault_siem.extra_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');\n" % (initd, endd))
+                    delete_file.write("DELETE aux FROM alienvault_siem.idm_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
+                    delete_file.write("DELETE aux FROM alienvault_siem.reputation_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
+                    delete_file.write("DELETE aux FROM alienvault_siem.extra_data aux INNER JOIN alienvault_siem.acid_event aa ON aux.event_id=aa.id WHERE aa.timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.write("DELETE FROM alienvault_siem.acid_event WHERE timestamp between '%s' and '%s';\n" % (initd, endd))
                     delete_file.close()
                     os.chmod(deletefilename, 0644)
@@ -867,99 +890,172 @@ class BackupManager(threading.Thread):
 
         return True
 
+    def __is_process_running(self, process_name=""):
+        """
+        Check if there is a process running in the system
+        """
+        try:
+            num_process = int(commands.getoutput("ps auxwww | grep %s | grep -v grep | grep -v tail | wc -l" % process_name))
+            if num_process > 0:
+                return True
+        except Exception, e:
+            logger.warning("Error checking process status '%s': %s" % process_name, str(e))
+
+        return False
 
     def __shouldRunBackup(self):
         """Checks if it should runs a new backup.
-        Backup Hour: Every day at 01:00:00
+        Backup Hour: By default every day at 01:00:00
         """
-        rt = False
-        utc_dt = datetime.utcnow()
-        limit_date = datetime.utcnow().replace(hour=1, minute=0, second=0, microsecond=0)
-        last_bk_day = self.__bkConfig['last_run']
-        #Alow backup now if it's after 01:00 pm and last_bk_day is less than today
-        if utc_dt > limit_date and last_bk_day < utc_dt.date():
-            rt = True
-        return rt
+        now = datetime.now()
+        backup_hour = now.replace(year=self.__bkConfig['last_run'].year,
+                                  month=self.__bkConfig['last_run'].month,
+                                  day=self.__bkConfig['last_run'].day,
+                                  hour=1,
+                                  minute=0,
+                                  second=0) + timedelta(days=1)
 
+        if 'backup_hour' in self.__bkConfig:
+            try:
+                (config_backup_hour, config_backup_minute) = self.__bkConfig['backup_hour'].split(':')
+                backup_hour = backup_hour.replace(hour=int(config_backup_hour),
+                                                  minute=int(config_backup_minute))
 
-    def __deleteByBackupDays(self,oldestEventDT):
-        """Runs the delete command using the backup_day threshold
-        @param datetime oldestEventDT: oldest event in the database
+            except Exception, e:
+                print str(e)
+                logger.warning("Bad parameter in backup_hour config table, using default time (01:00:00 Local time)")
+
+        # Run backups when:
+        # - It has reached the backup hour
+        # - alienvault-reconfig is not running
+        # - alienvault-update is not running
+        if backup_hour > now:
+            return False
+        if self.__is_process_running('alienvault-reconfig'):
+            logger.info("There is a alienvault-reconfig proccess running. Cannot run a Backup at this time")
+            return False
+        if self.__is_process_running('alienvault-update'):
+            logger.info("There is a alienvault-update proccess running. Cannot run a Backup at this time")
+            return False
+
+        return True
+
+    def __delete_events_older_than_timestamp(self, limit_date):
+        """
+        Delete all the events older than %limit_date
         """
         deletes = []
+        total_events = 0
+
+        # Get the date of the oldest event in database
+        begin_date = self.__getOldestEventInDatabaseDateTime()
+
+        # Runs the deletes...
+        while begin_date < limit_date:
+            end_date = begin_date.replace(hour=23, minute=59, second=59, microsecond=0)
+            query = ""
+            if end_date > limit_date:
+                end_date = limit_date
+                query = "SELECT COUNT(id) AS total FROM alienvault_siem.acid_event WHERE timestamp BETWEEN '%s' AND '%s';" % (begin_date, end_date)
+            else:
+                query = "SELECT ifnull(SUM(cnt),0) AS total FROM alienvault_siem.ac_acid_event WHERE day = '%s';" % (begin_date.date())
+            query_result = self.__myDB.exec_query(query)
+            if len(query_result) == 1:
+                events_to_delete = query_result[0]['total']
+                total_events += events_to_delete
+                if events_to_delete != 0:
+                    logger.info("Events to delete: '%s' events from %s to %s" % (events_to_delete, begin_date, end_date ))
+                    block = 100000
+
+                    delete_tmp_table = "alienvault_siem.backup_delete_temporal"
+                    delete_mem_table = "alienvault_siem.backup_delete_memory"
+
+                    # Get the event ids from begin_date to end_date to delete
+                    deletes.append("CREATE TABLE IF NOT EXISTS %s (id binary(16) NOT NULL, PRIMARY KEY (id));" % delete_tmp_table)
+                    deletes.append("TRUNCATE TABLE %s;" % delete_tmp_table)
+                    deletes.append("INSERT IGNORE INTO %s SELECT id FROM alienvault_siem.acid_event WHERE timestamp BETWEEN '%s' and '%s';" % (delete_tmp_table, begin_date, end_date))
+                    deletes.append("CREATE TEMPORARY TABLE %s (id binary(16) NOT NULL, PRIMARY KEY (`id`)) ENGINE=MEMORY;" % (delete_mem_table))
+
+                    # Delete by blocks
+                    for limit in range(0, events_to_delete + 1, block):
+                        deletes.append("INSERT INTO %s SELECT id FROM %s LIMIT %d;" % (delete_mem_table, delete_tmp_table, block))
+                        deletes.append("CALL alienvault_siem.delete_events('%s');" % (delete_mem_table))
+                        deletes.append("DELETE FROM %s limit %s;" % (delete_tmp_table, block))
+                        deletes.append("TRUNCATE TABLE %s;" % (delete_mem_table))
+
+                    deletes.append("DROP TABLE %s;" % (delete_mem_table))
+                    deletes.append("DROP TABLE %s;" % (delete_tmp_table))
+
+                # Go to the next date
+                next_date = self.__getOldestEventInDatabaseDateTime(begin_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
+
+                # Check last day of events
+                if begin_date.day == next_date.day:
+                    break;
+
+                begin_date = next_date
+
+        # Delete acumulate tables entries
+        deletes.append("DELETE FROM alienvault_siem.ac_acid_event WHERE cnt=0;")
+        deletes.append("DELETE FROM alienvault_siem.ah_acid_event WHERE cnt=0;")
+
+        logger.info("-- Total events to delete: %s" % total_events)
+
+        for delete in deletes:
+            logger.info("Running delete: %s" % delete)
+            try:
+                self.__myDB.exec_query(delete)
+            except Exception, e:
+                logger.error("Error running delete: %s" )
+
+    def __deleteByBackupDays(self):
+        """Runs the delete command using the backup_day threshold
+        """
         #
         # Check by backup days.
         #
-        backupdays=0
+        backupdays = 0
         try:
             backupdays = int(self.__bkConfig['backup_day'])
-        except Exception,e:
+        except Exception, e:
             logger.warning("Invalid value for: Events to keep in the Database (Number of days) -> %s" % self.__bkConfig['backup_day'])
             backupdays = 0
 
-        if backupdays>0:#backupdays = 0 unlimited.
-            threshold_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=int(self.__bkConfig['backup_day']))
-            begindt = oldestEventDT
-
-            # Runs the deletes...
-            while begindt < threshold_day:
-                enddt = begindt.replace(hour=23, minute=59, second=59, microsecond=0)
-                #Change #4376
-                #deletes.append("DELETE FROM (alienvault_siem.ac_alerts_signature, alienvault_siem.ac_sensor_sid) WHERE day='%s';" % begindt.isoformat())
-                #deletes.append("DELETE FROM (alienvault_siem.ac_acid_event) WHERE day='%s';" % begindt.isoformat())
-                deletes.append("DELETE FROM alienvault_siem.reputation_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');" % (begindt, enddt))
-                deletes.append("DELETE FROM alienvault_siem.idm_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');" % (begindt, enddt))
-                deletes.append("DELETE FROM alienvault_siem.extra_data WHERE event_id IN (select id from alienvault_siem.acid_event where timestamp between '%s' and '%s');" % (begindt, enddt))
-                deletes.append("DELETE FROM alienvault_siem.acid_event WHERE timestamp between '%s' and '%s';" % (begindt, enddt))
-                begindt = self.__getOldestEventInDatabaseDateTime(begindt + timedelta(days=1))
+        if backupdays > 0:  # backupdays = 0 unlimited.
+            limit_day = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=int(backupdays))
+            self.__delete_events_older_than_timestamp(limit_day)
         else:
             logger.info("Unlimited number of events.  Events to keep in the Database (Number of days) = %s" % backupdays)
-        for delete in deletes:
-            logger.info("Running delete :%s" % delete)
-            self.__myDB.exec_query(delete)
 
 
     def __deleteByNumberOfEvents(self):
-        """Runs the delete using the maximum number of events in the database 
+        """Runs the delete using the maximum number of events in the database
         as threshold.
         """
         limit_date = None
-        deletes = []
         #
         # Check by max number of events in the Database.
         #
-        max_events=0
+        max_events = 0
         try:
             max_events = int(self.__bkConfig['backup_events'])
         except Exception,e:
             logger.info("Invalid value for: Events to keep in the Database (Number of events) -> %s" % self.__bkConfig['backup_events'])
             max_events = 0
 
-        if max_events>0: # backup_events = 0 -> unlimited
+        if max_events > 0: # backup_events = 0 -> unlimited
             query = "select timestamp from alienvault_siem.acid_event order by timestamp desc limit %s,1;" % self.__bkConfig['backup_events']
             data = self.__myDB.exec_query(query)
 
             if len(data) == 1:
                 limit_date = data[0]['timestamp']
-                limit_date.replace(hour=0, minute=0, second=0, microsecond=0)
-
-                deletestr = "DELETE FROM alienvault_siem.reputation_data WHERE event_id IN (SELECT id FROM alienvault_siem.acid_event where timestamp < '%s');" % limit_date
-                deletes.append(deletestr)
-                deletestr = "DELETE FROM alienvault_siem.idm_data WHERE event_id IN (SELECT id FROM alienvault_siem.acid_event where timestamp < '%s');" % limit_date
-                deletes.append(deletestr)
-                deletestr = "DELETE FROM alienvault_siem.extra_data WHERE event_id IN (SELECT id FROM alienvault_siem.acid_event where timestamp < '%s');" % limit_date
-                deletes.append(deletestr)
-                deletestr = "DELETE FROM  alienvault_siem.acid_event WHERE timestamp < '%s';" % limit_date
-                deletes.append(deletestr)
+                self.__delete_events_older_than_timestamp(limit_date)
         else:
             logger.info("Unlimited number of events.  Events to keep in the Database (Number of events) = %s" % max_events)
 
-        for delete in deletes:
-            logger.info("Running delete :%s" % delete)
-            self.__myDB.exec_query(delete)
 
 
-    def __getOldestEventInDatabaseDateTime(self, min_timestamp):
+    def __getOldestEventInDatabaseDateTime(self, min_timestamp='1900-01-01 00:00:00'):
         """Returns the datetime of the oldest event in the database
         """
         oldestEvent = datetime.now()
@@ -1008,20 +1104,20 @@ class BackupManager(threading.Thread):
 
 
     def __run_backup(self):
-        """Run the backup job. 
+        """Run the backup job.
         """
-            #Check the disk space
+        # Check the disk space
         if not self.checkDiskUsage():
             logger.warning("[ALERT DISK USAGE] Can not run backups due to low free disk space")
             return
-        #Purge old backup files
+        # Purge old backup files
         self.purgeOldBackupfiles()
-        backupCMD = "mysqldump alienvault_siem $TABLE -h %s -u %s -p%s -c -n -t -f --no-autocommit --skip-triggers --single-transaction --quick --hex-blob --insert-ignore -w $CONDITION" % (_CONF[VAR_DB_HOST], _CONF[VAR_DB_USER], _CONF[VAR_DB_PASSWORD])
+        backupCMD = "ionice -c2 -n7 mysqldump alienvault_siem $TABLE -h %s -u %s -p%s -c -n -t -f --skip-add-locks --skip-disable-keys --skip-triggers --single-transaction --hex-blob --quick --insert-ignore -w $CONDITION" % (_CONF[VAR_DB_HOST], _CONF[VAR_DB_USER], _CONF[VAR_DB_PASSWORD])
 
-        #Should I  store the backups? -> only if store is true.
-        if self.__shouldRunBackup():#Time to do the backup?
+        # Should I  store the backups? -> only if store is true.
+        if self.__shouldRunBackup():  # Time to do the backup?
             logger.info("Running backups system...")
-            #do backup
+            # do backup
             if not self.__myDB_connected:
                 if self.__myDB.connect():
                     self.__myDB_connected = True
@@ -1029,10 +1125,9 @@ class BackupManager(threading.Thread):
                     logger.info("Can't connect to database..")
                     return
 
-            self.__bkConfig ['last_run'] = datetime.utcnow().date()
+            self.__bkConfig['last_run'] = datetime.now().date()
             firstEventDateTime = '1900-01-01 00:00:00'
             firstEventDateTime = self.__getOldestEventInDatabaseDateTime(firstEventDateTime)
-            oldestEventDT = firstEventDateTime
             try:
                 bkdays = int(_CONF[VAR_BACKUP_DAYS_LIFETIME])
             except ValueError:
@@ -1047,7 +1142,7 @@ class BackupManager(threading.Thread):
                         # Changes: #8312
                         # We should create a dump file only for the last bkdays
                         if firstEventDateTime < threshold_day:
-                            logger.info("Do not make backup becuase threshold day: first event datetime: %s, thresholday:%s" % (firstEventDateTime,threshold_day))
+                            logger.info("Do not make backup because threshold day: first event datetime: %s, thresholday:%s" % (firstEventDateTime,threshold_day))
                             firstEventDateTime = firstEventDateTime + timedelta(days=1)
                             continue
                         logger.info("="*50+"BACKUP: %s" % firstEventDateTime)
@@ -1113,7 +1208,7 @@ class BackupManager(threading.Thread):
             # Deletes....
             #
 
-            self.__deleteByBackupDays(oldestEventDT)
+            self.__deleteByBackupDays()
             self.__deleteByNumberOfEvents()
             self.__updateBackupConfigFile()
 
@@ -1121,7 +1216,15 @@ class BackupManager(threading.Thread):
     def run(self):
         """ Entry point for the thread.
         """
+        loop = 0
         while not self.__stopE.isSet():
+            loop += 1
+            # Reload configuration every 10 minutes
+            if loop >= 20:
+                logger.info("Reloading Backup Configuration")
+                self.__loadConfiguration()
+                loop = 0
+
             logger.info("BackupManager - Checking....")
             self.__run_backup()
             sleep(30)

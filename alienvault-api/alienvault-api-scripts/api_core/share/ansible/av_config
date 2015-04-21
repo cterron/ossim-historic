@@ -112,6 +112,10 @@ av_config_methods = {'general_admin_dns' : {'get': 'get_general_admin_dns',
                                          'set': 'set_sensor_netflow'},
                      'sensor_networks' : {'get': 'get_sensor_networks',
                                            'set' : 'set_sensor_networks'},
+                     'sensor_monitors' : {'get': 'get_sensor_monitors',
+                                           'set' : 'set_sensor_monitors'},
+                     'sensor_asec' : {'get': 'get_sensor_asec',
+                                           'set' : 'set_sensor_asec'},
                      'server_server_ip' : {'get': 'get_server_server_ip',
                                             'set': 'set_server_server_ip'},
                      'server_alienvault_ip_reputation' : {'get': 'get_server_alienvault_ip_reputation'},
@@ -125,6 +129,7 @@ av_config_methods = {'general_admin_dns' : {'get': 'get_general_admin_dns',
                      'vpn_vpn_infraestructure' : {'get': 'get_vpn_vpn_infraestructure',
                                                    'set' : 'set_vpn_vpn_infraestructure'},
                      'ha_ha_role':{'get':'get_ha_ha_role'},
+                     'ha_ha_other_node_ip':{'get':'get_ha_ha_other_node_ip'},
                      'ha_ha_virtual_ip':{'get':'get_ha_ha_virtual_ip'},
                      ####################################
                      # Non ossim_setup.conf related stuff
@@ -233,6 +238,8 @@ def main():
             sensor_mservers = dict(default=False),
             sensor_networks = dict(default=False),
             sensor_netflow = dict(default=False),
+            sensor_monitors= dict(default=False),
+            sensor_asec= dict(default=False),
             server_server_ip = dict(default=False),
             server_alienvault_ip_reputation = dict(default=False),
             sensor_sensor_ctx = dict(default=False),
@@ -244,7 +251,9 @@ def main():
             vpn_vpn_infraestructure = dict(default=False),
             network_interfaces = dict(default=False),
             ha_ha_role = dict(delfault=False),
-            ha_ha_virtual_ip = dict(default=False)
+            ha_ha_virtual_ip = dict(default=False),
+            ha_ha_other_node_ip = dict(default=False)
+
         )
     )
 

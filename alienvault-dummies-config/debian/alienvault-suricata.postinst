@@ -16,39 +16,834 @@ set -e
 #          <conflicting-package> <version>
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
+SURICATA_DEBIAN_YAML="/etc/suricata/suricata-debian.yaml"
+SURICATA_YAML="/etc/suricata/suricata.yaml"
+SURICATA_YAML_TMP="$SURICATA_YAML.tmp"
+OSSIM_SETUP_CONF="/etc/ossim/ossim_setup.conf"
+ETC_INITD_SURICATA="/etc/init.d/suricata"
+
+[ -f "$SURICATA_YAML" ] || cp "$SURICATA_DEBIAN_YAML" "$SURICATA_YAML"
+# Suricata version parameters
+SURICATA_VERSION=$(dpkg -p suricata | grep -w "Version:" | cut -d':' -f2)
+SURICATA_VERSION_RELEASE=$(echo $SURICATA_VERSION | cut -d'.' -f1)
+SURICATA_VERSION_VERSION=$(echo $SURICATA_VERSION | cut -d'.' -f2 | cut -d'-' -f1)
+SURICATA_VERSION_SUBVERSION=$(echo $SURICATA_VERSION | cut -d'.' -f2 | cut -d'-' -f2)
+
+# outputs.yaml related files
+OUTPUTS_FILENAME="outputs.yaml"
+OUTPUTS_TMP_YAML="/etc/suricata/$OUTPUTS_FILENAME.tmp"
+OUTPUTS_YAML="/etc/suricata/$OUTPUTS_FILENAME"
+
+# vars.yaml related files
+VARS_FILENAME="vars.yaml"
+VARS_YAML="/etc/suricata/$VARS_FILENAME"
+
+# logging.yaml
+LOGGING_FILENAME="logging.yaml"
+LOGGING_YAML="/etc/suricata/$LOGGING_FILENAME"
+
+# flow-timeouts.yaml related files
+FLOW_TIMEOUTS_FILENAME="flow-timeouts.yaml"
+FLOW_TIMEOUTS_YAML="/etc/suricata/$FLOW_TIMEOUTS_FILENAME"
+
+# rule-files.yaml related files
+RULE_FILES_FILENAME="rule-files.yaml"
+RULE_FILES_TMP_YAML="/etc/suricata/$RULE_FILES_FILENAME.tmp"
+RULE_FILES_YAML="/etc/suricata/$RULE_FILES_FILENAME"
+
+# pfring.yaml related files
+PFRING_FILENAME="pfring.yaml"
+PFRING_YAML_TEMPLATE="/etc/suricata/templates/$PFRING_FILENAME.template"
+PFRING_YAML="/etc/suricata/$PFRING_FILENAME"
+
+# afpacket.yaml related files
+AFPACKET_FILENAME="afpacket.yaml"
+AFPACKET_YAML_TEMPLATE="/etc/suricata/templates/$AFPACKET_FILENAME.template"
+AFPACKET_YAML="/etc/suricata/$AFPACKET_FILENAME"
+
+
+# stream.yaml related files
+STREAM_FILENAME="stream.yaml"
+STREAM_YAML="/etc/suricata/$STREAM_FILENAME"
+
+# vlan.yaml related files
+VLAN_YAML="/etc/suricata/vlan.yaml"
+
+# cuda.yaml
+CUDA_FILENAME="cuda.yaml"
+CUDA_YAML_TEMPLATE="/etc/suricata/templates/$CUDA_FILENAME.template"
+CUDA_YAML="/etc/suricata/$CUDA_FILENAME"
+
+# cuda.yaml
+FLOW_FILENAME="flow.yaml"
+FLOW_YAML_TEMPLATE="/etc/suricata/templates/$FLOW_FILENAME.template"
+FLOW_YAML="/etc/suricata/$FLOW_FILENAME"
+
+# engine_analysis.yaml
+ENGINE_ANALYSIS_FILENAME="engine_analysis.yaml"
+ENGINE_ANALYSIS_YAML_TEMPLATE="/etc/suricata/templates/$ENGINE_ANALYSIS_FILENAME.template"
+ENGINE_ANALYSIS_YAML="/etc/suricata/$ENGINE_ANALYSIS_FILENAME"
+
+# applayer
+APPLAYER_NAME="applayer.yaml"
+APPLAYER_YAML_TEMPLATE="/etc/suricata/templates/$APPLAYER_NAME.template"
+
+
+
+SECTIONS=($(egrep -n "^[a-z].*:" "$SURICATA_YAML" | cut -d':' -f2 | grep -v include))
+SECTION_LINES=($(egrep -n "^[a-z].*:" "$SURICATA_YAML" | cut -d':' -f1 | grep -v include))
+
+
+# Aux functions
+parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+
+include_yaml_in_suricata_yaml(){
+
+    filename=$1 
+    file_exists=$(grep "$filename" "$SURICATA_YAML" || echo "No")
+    if [ "$file_exists" = "No" ]; then
+        echo "include: $filename" >> "$SURICATA_YAML"
+    fi
+
+}
+
+
+change_param_in_yaml(){
+
+    file=$1
+    module=$2
+    section=$3
+    param=$4
+    subparam=$5
+    value=$6
+
+    init_line=$(egrep -n "^\s{0,2}-?\s?$section" $file | cut -d':' -f1)
+    end_line=$(tail -n +$init_line "$file" | egrep -n -m2 "^\s{0,2}-?\s?[#0-9a-zA-Z]" | grep -v $section | cut -d':' -f1)
+    end_line=$(( init_line + end_line - 2 ))
+    command="$init_line,$end_line"p
+
+    if [ "$param" != "null" ]; then
+        aux_line=$(sed -n "$command" "$file" | grep -w -n "$param:" | cut -d':' -f1)
+        param_line=$(( init_line+aux_line-1 ))
+        if [ "$subparam" != "null" ]; then
+            param_line=$(tail -n +$init_line "$file" | egrep -n "^\s{2}-?\s$param:" | cut -d':' -f1)
+            new_init_line=$(( init_line + param_line ))
+            aux=$(tail -n +$new_init_line "$file" | egrep -n -m1 "^.{6}$subparam:" | cut -d':' -f1)
+            subparam_line=$(( new_init_line + aux - 1 ))
+            sed -i "$subparam_line s:$subparam\:.*$:$subparam\: $value:" $file
+        else
+            sed -i "$param_line s:$param\:.*$:$param\: $value:" $file
+        fi
+    else
+        section_line=$init_line
+        sed -i "$section_line s:$section\:.*$:$section\: $value:" $file
+    fi
+
+
+}
+
+
+
+dump_section_to_yaml() {
+
+    i=$1
+    yaml_file=$2
+
+    length=${#SECTIONS[@]}
+    last=$(( length - 1 ))
+    init_line=${SECTION_LINES[i]}
+    if [ "$i" = "$last" ]; then
+        end_line=$(wc -l "$SURICATA_YAML" | cut -d' ' -f1)
+    else    
+        aux_index=$(( i + 1 ))
+        end_line=${SECTION_LINES[aux_index]}
+        end_line=$(( end_line - 1 ))
+    fi
+    sed -n "$init_line,$end_line"p "$SURICATA_YAML" >> "$yaml_file"
+}
+
+
+
+configure_xff(){
+
+    cp $OUTPUTS_YAML $OUTPUTS_TMP_YAML
+    xff_found=$(grep -n "xff:" "$OUTPUTS_TMP_YAML" || echo "-1")
+    if [ "$xff_found" = "-1" ]; then 
+        init_xff_line=$(grep -n -w "unified2\.alert" "$OUTPUTS_TMP_YAML" | cut -d':' -f1)
+        command="$init_xff_line"a
+       
+        unified_alert_numline=$(grep -n "unified2-alert" "$OUTPUTS_TMP_YAML" | cut -d':' -f1)
+        line=$(sed -n "$unified_alert_numline"p "$OUTPUTS_TMP_YAML")
+        index=$(expr index "$line" unified2)
+        case "$index" in 
+            5)
+                subcommand="      # HTTP X-Forwarded-For support by adding the unified2 extra header that \n\
+      # will contain the actual client IP address or by overwriting the source \n\
+      # IP address (helpful when inspecting traffic that is being reversed \n\
+      # proxied). \n\
+      xff: \n\
+        enabled: yes \n\
+        # Two operation modes are available, \"extra-data\" and \"overwrite\". Note \n\
+        # that in the \"overwrite\" mode, if the reported IP address in the HTTP \n\
+        # X-Forwarded-For header is of a different version of the packet \n\
+        # received, it will fall-back to \"extra-data\" mode. \n\
+        mode: overwrite \n\
+        # Header name were the actual IP address will be reported, if more than \n\
+        # one IP address is present, the last IP address will be the one taken \n\
+        # into consideration. \n\
+        header: X-Forwarded-For"
+                ;;
+            3)
+                subcommand="    # HTTP X-Forwarded-For support by adding the unified2 extra header that \n\
+    # will contain the actual client IP address or by overwriting the source \n\
+    # IP address (helpful when inspecting traffic that is being reversed \n\
+    # proxied). \n\
+    xff: \n\
+      enabled: yes \n\
+      # Two operation modes are available, \"extra-data\" and \"overwrite\". Note \n\
+      # that in the \"overwrite\" mode, if the reported IP address in the HTTP \n\
+      # X-Forwarded-For header is of a different version of the packet \n\
+      # received, it will fall-back to \"extra-data\" mode. \n\
+      mode: overwrite \n\
+      # Header name were the actual IP address will be reported, if more than \n\
+      # one IP address is present, the last IP address will be the one taken \n\
+      # into consideration. \n\
+      header: X-Forwarded-For"
+            
+                ;;
+        esac
+        sed "$command\\$subcommand" "$OUTPUTS_TMP_YAML" > "$OUTPUTS_YAML"
+
+    else
+        eval $(parse_yaml "$OUTPUTS_TMP_YAML" config_)
+        xff_line=$(echo "$xff_found" | cut -d':' -f1)        
+        if [ "$config_outputs___xff_enabled" != "yes" ]; then
+            enabled_line=$(tail -n +$xff_line $OUTPUTS_TMP_YAML | grep -n -m1 "enabled:" | cut -d':' -f1)
+            enabled_line=$(( xff_line + enabled_line - 1 ))
+            sed -i  "$enabled_line s/enabled:.*$/enabled: yes/" $OUTPUTS_TMP_YAML
+        fi
+        if [ "$config_outputs___xff_mode" != "overwrite" ]; then
+            mode_line=$(tail -n +$xff_line $OUTPUTS_TMP_YAML | grep -n -m1 "mode:" | cut -d':' -f1)
+            mode_line=$(( xff_line + mode_line - 1 ))
+            sed -i  "$mode_line s/mode:.*$/mode: overwrite/" $OUTPUTS_TMP_YAML
+        fi
+        if [ "$config_outputs___xff_header" != "X-Forwarded-For" ]; then
+            header_line=$(tail -n +$xff_line $OUTPUTS_TMP_YAML | grep -n -m1 "header:" | cut -d':' -f1)
+            header_line=$(( xff_line + header_line - 1 ))
+            sed -i  "$enabled_line s/header:.*$/header: X-Forwarded-For/" $OUTPUTS_TMP_YAML
+        fi
+        mv "$OUTPUTS_TMP_YAML" "$OUTPUTS_YAML"
+
+    fi
+
+}
+
+
+configure_pfring_yaml(){
+
+    echo "pfring:" >> "$PFRING_YAML"
+    ifaces=$(grep interfaces "$OSSIM_SETUP_CONF" | cut -d'=' -f2 | tr -d ' ' | sed -e 's/,/ /g')
+    for iface in $ifaces
+    do
+        if [ ! -z "$iface" ]; then
+            threads=1
+            cluster_id=99
+            cluster_type="cluster_round_robin"
+            sed "s/<iface_name>/$iface/g" "$PFRING_YAML_TEMPLATE" >> "$PFRING_YAML"
+            sed -i "s/<threads_num>/$threads/g" "$PFRING_YAML"
+            sed -i "s/<cluster_id>/$cluster_id/g" "$PFRING_YAML"
+            sed -i "s/<cluster_type>/$cluster_type/g" "$PFRING_YAML"
+        fi
+    done
+
+    cat "$PFRING_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$PFRING_YAML"
+}
+
+
+configure_afpacket_yaml() {
+
+    echo "af-packet:" >> "$AFPACKET_YAML"
+    ifaces=$(grep interfaces "$OSSIM_SETUP_CONF" | cut -d'=' -f2 | tr -d ' ' | sed -e 's/,/ /g')
+    for iface in $ifaces
+    do
+        if [ ! -z "$iface" ]; then
+            threads=1
+            cluster_id=99
+            cluster_type="cluster_round_robin"
+            defrag="yes"
+            sed "s/<iface_name>/$iface/g" "$AFPACKET_YAML_TEMPLATE" >> "$AFPACKET_YAML"
+            sed -i "s/<threads_num>/$threads/g" "$AFPACKET_YAML"
+            sed -i "s/<cluster_id>/$cluster_id/g" "$AFPACKET_YAML"
+            sed -i "s/<cluster_type>/$cluster_type/g" "$AFPACKET_YAML"
+            sed -i "s/<defrag>/$defrag/g" "$AFPACKET_YAML"
+        fi
+    done
+
+    cat "$AFPACKET_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$AFPACKET_YAML"
+}
+
+
+
+update_old_configs(){
+
+    sed -i -e "/max-sessions/ s/^/#/" "$SURICATA_YAML"
+
+    uri_include_all=$(grep "uri-include-all" "$SURICATA_YAML" || echo "Not found")
+    if [ "$uri_include_all" = "Not found" ]; then
+        counter=0
+        for numline in $(grep -n "personality" "$SURICATA_YAML" | tr -d ' ' | grep -v "#personality" | cut -d':' -f1)
+        do
+            auxline=$(( numline + counter ))
+            command="$auxline"p
+            line=$(sed -n "$command" "$SURICATA_YAML")
+            pos=$(expr index "$line" personality)
+            pattern=$(sed -n "$command" "$SURICATA_YAML" | sed -e "s/personality:.*$/uri-include-all: true/")
+            sed -i "$auxline i $pattern" $SURICATA_YAML
+            case "$pos" in
+                5)
+                    sed -i "s/^uri-include-all/    uri-include-all/g" $SURICATA_YAML
+                    ;; 
+                6)
+                    sed -i "s/^uri-include-all/     uri-include-all/g" $SURICATA_YAML
+                    ;;
+                7)
+                    sed -i "s/^uri-include-all/      uri-include-all/g" $SURICATA_YAML
+                    ;;
+                10)
+                    sed -i "s/^uri-include-all/         uri-include-all/g" $SURICATA_YAML
+                    ;;
+                12)
+                    sed -i "s/^uri-include-all/           uri-include-all/g" $SURICATA_YAML
+                    ;;
+                *)
+                    ;; 
+            esac
+            counter=$(( counter + 1 ))
+        done
+    fi 
+    
+}
+
+configure_suricata_options() {
+
+    old_suricata_options=$(grep -w -m1 SURICATA_OPTIONS "$ETC_INITD_SURICATA" | cut -d'=' -f2- | sed -e 's/"//g')
+    ifaces=$(grep interfaces "$OSSIM_SETUP_CONF" | cut -d'=' -f2 | tr -d ' ' | sed -e 's/,/ /g')
+    
+    new_suricata_options=""
+    for option in $old_suricata_options; do
+        # pfring configuration does not contain -i option
+        if [ $option = '$LISTEN_OPTIONS' ]; then
+            continue
+        fi
+        option_is_pfring=$(echo $option | grep "\--pfring" || echo "No")
+        if [ "$option_is_pfring" = "No" ]; then
+            new_suricata_options="$new_suricata_options $option"
+        else
+            continue
+        fi
+    done
+ 
+    for iface in $ifaces
+    do
+        if [ ! -z "$iface" ]; then
+            new_suricata_options="$new_suricata_options --pfring=$iface"
+        fi
+    done
+
+    sed -i "s/SURICATA_OPTIONS=.*$/SURICATA_OPTIONS=\"$new_suricata_options\"/g" $ETC_INITD_SURICATA
+}
+
+configure_outputs_yaml () {
+
+    FAST_TOGGLE="no"
+    HTTP_LOG_TOGGLE="no"
+    STATS_TOGGLE="no"
+    FILENAME="suricata"
+
+    # Change parameters one by one
+    change_param_in_yaml "$OUTPUTS_YAML" "outputs" "fast" "enabled" "null" "$FAST_TOGGLE"
+    change_param_in_yaml "$OUTPUTS_YAML" "outputs" "fast" "filename" "null" "$FILENAME"
+    change_param_in_yaml "$OUTPUTS_YAML" "outputs" "http-log" "enabled" "null" "$HTTP_LOG_TOGGLE"
+    stats_exists=$(grep "stats:" "$OUTPUTS_YAML" || echo "No")
+    [ "$stats_exists" != "No" ] && change_param_in_yaml "$OUTPUTS_YAML" "outputs" "stats" "enabled" "null" "$STATS_TOGGLE"
+    eve_log_exists=$(grep "eve-log:" "$OUTPUTS_YAML" || echo "No")
+    [ "$eve_log_exists" != "No" ] && change_param_in_yaml "$OUTPUTS_YAML" "outputs" "eve-log" "enabled" "null" "no"
+
+    # Include xff
+    if [ "$SURICATA_VERSION_RELEASE" -ge "2" ]; then
+        configure_xff
+    fi
+    cat "$OUTPUTS_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$OUTPUTS_YAML" "$OUTPUTS_TMP_YAML"
+}
+
+
+configure_logging_yaml () {
+
+    CONSOLE_LOG_TOGGLE="no"
+    FILE_LOG_TOGGLE="yes"
+    FILE_LOG_PATH="/var/log/suricata/suricata.log"
+    LOG_LEVEL="info"
+   
+    change_param_in_yaml "$LOGGING_YAML" "logging" "default-log-level" "null" "null" "$LOG_LEVEL" 
+    change_param_in_yaml "$LOGGING_YAML" "logging" "outputs" "console" "enabled" "$CONSOLE_LOG_TOGGLE"
+    change_param_in_yaml "$LOGGING_YAML" "logging" "outputs" "file" "enabled" "$FILE_LOG_TOGGLE"
+    change_param_in_yaml "$LOGGING_YAML" "logging" "outputs" "file" "filename" "$FILE_LOG_PATH"
+
+    cat "$LOGGING_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$LOGGING_YAML"
+
+}
+
+
+configure_vars_yaml (){
+
+    HOMENET=$(grep networks "$OSSIM_SETUP_CONF" | cut -d'=' -f2)
+    EXTERNAL_NET='!$HOME_NET'
+
+    # Change parameters
+        # Change parameters
+    echo "vars:" > $VARS_YAML
+    echo "  # Holds the address group vars that would be passed in a Signature." >> $VARS_YAML
+    echo "  # These would be retrieved during the Signature address parsing stage." >> $VARS_YAML
+    echo "  address-groups:" >> $VARS_YAML
+    echo "    HOME_NET: \"[$HOMENET]\"" >> $VARS_YAML
+    echo "    EXTERNAL_NET: \"!\$HOME_NET\"" >> $VARS_YAML
+    echo "    HTTP_SERVERS: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    SMTP_SERVERS: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    SQL_SERVERS: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    DNS_SERVERS: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    TELNET_SERVERS: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    AIM_SERVERS: \"\$EXTERNAL_NET\"" >> $VARS_YAML
+    echo "    DNP3_SERVER: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    DNP3_CLIENT: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    MODBUS_CLIENT: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    MODBUS_SERVER: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    ENIP_CLIENT: \"\$HOME_NET\"" >> $VARS_YAML
+    echo "    ENIP_SERVER: \"\$HOME_NET\"" >> $VARS_YAML
+
+    echo "" >> $VARS_YAML
+    echo "  # Holds the port group vars that would be passed in a Signature." >> $VARS_YAML
+    echo "  # These would be retrieved during the Signature port parsing stage." >> $VARS_YAML
+    echo "  port-groups:" >> $VARS_YAML
+    echo "    HTTP_PORTS: \"80\"" >> $VARS_YAML
+    echo "    SHELLCODE_PORTS: \"!80\"" >> $VARS_YAML
+    echo "    ORACLE_PORTS: 1521" >> $VARS_YAML
+    echo "    SSH_PORTS: 22" >> $VARS_YAML
+    echo "    DNP3_PORTS: 20000" >> $VARS_YAML   
+
+    cat "$VARS_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$VARS_YAML"
+}
+
+configure_flow_timeouts_yaml() {
+
+    TCP_ESTABLISHED=3600
+
+    # Change parameters
+    change_param_in_yaml "$FLOW_TIMEOUTS_YAML" "flow-timeouts" "tcp" "established" "null" "$TCP_ESTABLISHED"
+
+    cat "$FLOW_TIMEOUTS_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$FLOW_TIMEOUTS_YAML"
+}
+
+
+configure_cuda_yaml(){
+
+    mpm_batching_timeout=1
+    mpm_cuda_streams=2
+    mpm_device_id=0
+    mpm_packet_buffer_limit=2400
+    mpm_packet_buffers=10
+    mpm_packet_size_limit=1500
+    mpm_page_locked="enabled"
+
+    cp "$CUDA_YAML_TEMPLATE" "$CUDA_YAML"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "batching-timeout" "null" "$mpm_batching_timeout"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "cuda-streams" "null" "$mpm_cuda_streams"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "device-id" "null" "$mpm_device_id"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "packet-buffer-limit" "null" "$mpm_packet_buffer_limit"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "packet-buffers" "null" "$mpm_packet_buffers"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "packet-size-limit" "null" "$mpm_packet_size_limit"
+    change_param_in_yaml "$CUDA_YAML" "cuda" "mpm" "page-locked" "null" "$mpm_page_locked"
+    
+    cat "$CUDA_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$CUDA_YAML"
+
+}
+
+
+configure_engine_analysis_yaml() {
+
+    cat "$ENGINE_ANALYSIS_YAML_TEMPLATE" >> "$SURICATA_YAML_TMP"
+}
+
+
+configure_flow_yaml() {
+
+    emergency_recovery=30
+    hash_size=65536
+    memcap="32mb"
+    prealloc="10000"
+    prune_flows=5
+
+    cp "$FLOW_YAML_TEMPLATE" "$FLOW_YAML"
+    change_param_in_yaml "$FLOW_YAML" "flow" "emergency-recovery" "null" "null" "$emergency_recovery"
+    change_param_in_yaml "$FLOW_YAML" "flow" "hash-size" "null" "null" "$hash_size"
+    change_param_in_yaml "$FLOW_YAML" "flow" "memcap" "null" "null" "$memcap"
+    change_param_in_yaml "$FLOW_YAML" "flow" "prealloc" "null" "null" "$prealloc"
+    change_param_in_yaml "$FLOW_YAML" "flow" "prune-flows" "null" "null" "$prune_flows"
+
+    cat "$FLOW_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$FLOW_YAML"
+}
+
+
+configure_stream_yaml() {
+
+    CHECKSUM_VALIDATION="yes"
+    MEMCAP="32mb"
+    INLINE="no"
+    REASSEMBLY_MEMCAP="64mb"
+    REASSEMBLY_DEPTH="1mb"
+    REASSEMBLY_TOSERVER_CHUNK_SIZE=2560
+    REASSEMBLY_TOCLIENT_CHUNK_SIZE=2560
+
+    change_param_in_yaml "$STREAM_YAML" "stream" "memcap" "null" "null" "$MEMCAP"
+    change_param_in_yaml "$STREAM_YAML" "stream" "checksum-validation" "null" "null" "$CHECKSUM_VALIDATION"
+    change_param_in_yaml "$STREAM_YAML" "stream" "inline" "null" "null" "$INLINE"
+    change_param_in_yaml "$STREAM_YAML" "stream" "reassembly" "memcap" "null" "$REASSEMBLY_MEMCAP"
+    change_param_in_yaml "$STREAM_YAML" "stream" "reassembly" "depth" "null" "$REASSEMBLY_DEPTH"
+    change_param_in_yaml "$STREAM_YAML" "stream" "reassembly" "toserver_chunk_size" "null" "$REASSEMBLY_TOSERVER_CHUNK_SIZE"
+    change_param_in_yaml "$STREAM_YAML" "stream" "reassembly" "toclient_chunk_size" "null" "$REASSEMBLY_TOCLIENT_CHUNK_SIZE"
+
+    cat "$STREAM_YAML" >> "$SURICATA_YAML_TMP"
+    rm -f "$STREAM_YAML"
+}
+
+configure_applayer_yaml() {
+
+    cat "$APPLAYER_YAML_TEMPLATE" >> "$SURICATA_YAML_TMP"
+}
+
+configure_rule_files_yaml() {
+
+    DEFAULT_RULE_PATH="/etc/suricata/rules"
+    RULES_PRO=( 'emerging_pro-activex.rules' 
+'emerging_pro-attack_response.rules'
+'emerging_pro-chat.rules'
+'emerging_pro-current_events.rules'
+'emerging_pro-deleted.rules'
+'emerging_pro-dns.rules'
+'emerging_pro-dos.rules'
+'emerging_pro-exploit.rules'
+'emerging_pro-ftp.rules'
+'emerging_pro-games.rules'
+'emerging_pro-icmp.rules'
+'emerging_pro-icmp_info.rules'
+'emerging_pro-imap.rules'
+'emerging_pro-inappropriate.rules'
+'emerging_pro-info.rules'
+'emerging_pro-malware.rules'
+'emerging_pro-misc.rules'
+'emerging_pro-mobile_malware.rules'
+'emerging_pro-netbios.rules'
+'emerging_pro-p2p.rules'
+'emerging_pro-policy.rules'
+'emerging_pro-pop3.rules'
+'emerging_pro-rpc.rules'
+'emerging_pro-scada.rules'
+'emerging_pro-scada_special.rules'
+'emerging_pro-scan.rules'
+'emerging_pro-shellcode.rules'
+'emerging_pro-smtp.rules'
+'emerging_pro-snmp.rules'
+'emerging_pro-sql.rules'
+'emerging_pro-telnet.rules'
+'emerging_pro-tftp.rules'
+'emerging_pro-trojan.rules'
+'emerging_pro-user_agents.rules'
+'emerging_pro-virus.rules'
+'emerging_pro-voip.rules'
+'emerging_pro-web_client.rules'
+'emerging_pro-web_server.rules'
+'emerging_pro-web_specific_apps.rules'
+'emerging_pro-worm.rules'
+'suricata-decoder-events.rules'
+'suricata-files.rules'
+'suricata-http-events.rules'
+'suricata-smtp-events.rules'
+'suricata-stream-events.rules')
+
+    RULES_FREE=( 'emerging-activex.rules'
+'emerging-attack_response.rules'
+'emerging-chat.rules'
+'emerging-current_events.rules'
+'emerging-deleted.rules'
+'emerging-dns.rules'
+'emerging-dos.rules'
+'emerging-exploit.rules'
+'emerging-ftp.rules'
+'emerging-games.rules'
+'emerging-icmp.rules'
+'emerging-icmp_info.rules'
+'emerging-imap.rules'
+'emerging-inappropriate.rules'
+'emerging-info.rules'
+'emerging-malware.rules'
+'emerging-misc.rules'
+'emerging-mobile_malware.rules'
+'emerging-netbios.rules'
+'emerging-p2p.rules'
+'emerging-policy.rules'
+'emerging-pop3.rules'
+'emerging-rpc.rules'
+'emerging-scada.rules'
+'emerging-scan.rules'
+'emerging-shellcode.rules'
+'emerging-smtp.rules'
+'emerging-snmp.rules'
+'emerging-sql.rules'
+'emerging-telnet.rules'
+'emerging-tftp.rules'
+'emerging-trojan.rules'
+'emerging-user_agents.rules'
+'emerging-virus.rules'
+'emerging-voip.rules'
+'emerging-web_client.rules'
+'emerging-web_server.rules'
+'emerging-web_specific_apps.rules'
+'emerging-worm.rules'
+'suricata-decoder-events.rules'
+'suricata-files.rules'
+'suricata-http-events.rules'
+'suricata-smtp-events.rules'
+'suricata-stream-events.rules')
+
+
+    echo "%YAML 1.1" > $RULE_FILES_YAML
+    echo "---" >> $RULE_FILES_YAML
+    echo "default-rule-path: $DEFAULT_RULE_PATH" >> $RULE_FILES_YAML
+    echo "rule-files:" >> $RULE_FILES_YAML
+    
+    agent_version=$(dpkg -p ossim-agent | grep Version | cut -d':' -f2 | tr -d ' ')
+    if [ "$agent_version" = "10" ]; then
+        for rule in "${RULES_PRO[@]}"; do
+            echo "- $rule" >> "$RULE_FILES_YAML"
+        done
+    else
+        for rule in "${RULES_FREE[@]}"; do
+            echo "- $rule" >> "$RULE_FILES_YAML"
+        done
+    fi
+ 
+  
+}
+
+configure_default_file(){
+
+    default_file="/etc/default/suricata"
+    plugin_file="/etc/ossim/agent/plugins/suricata.cfg"
+    ifaces=$(grep interfaces "$OSSIM_SETUP_CONF" | cut -d'=' -f2 | tr -d ' ')
+    detectors=$(grep detectors /etc/ossim/ossim_setup.conf|grep suricata || true)
+    if [ ! -z "$detectors" ]; then
+        sed -i "s:RUN=.*:RUN=yes:" $default_file
+    else
+        sed -i "s:RUN.*:RUN=no:" $default_file
+    fi
+    sed -i "s:SURCONF=.*:SURCONF=$SURICATA_YAML:" $default_file
+    sed -i "s:LISTENMODE=.*:LISTENMODE=pcap:" $default_file
+    sed -i "s:IFACE=.*:IFACE=$ifaces:" $default_file
+    sed -i "s:interface=.*:interface=$ifaces:" $plugin_file
+}
+
+
+fix_deprecated_variables(){
+
+    deprecated_variables=('asn1_max_frames' 'max_dump' 'batching_timeout'
+'cuda_streams' 'device_id' 'packet_buffer_limit' 'packet_buffers' 'packet_size_limit'
+'page_locked' 'toclient_dp_groups' 'max_files' 'use_stream_depth' 'log_packet_content'
+'log_packet_header' 'toclient_src_groups' 'toclient_dst_groups' 'toclient_sp_groups'
+'toclient_dp_groups' 'toserver_src_groups' 'toserver_dst_groups' 'toserver_sp_groups'
+'toserver_dp_groups' 'set_cpu_affinity' 'cpu_affinity' 'management_cpu_set'
+'receive_cpu_set' 'decode_cpu_set' 'stream_cpu_set' 'detect_cpu_set' 'verdict_cpu_set'
+'reject_cpu_set' 'output_cpu_set' 'detect_thread_ratio' 'search_algo' 'hash_size' 
+'bf_size' 'emergency_recovery' 'prune_flows' 'emergency_new' 'emergency_established' 
+'emergency_closed' 'checksum_validation' 'toserver_chunk_size' 'toclient_chunk_size'
+'bsd_right' 'old_linux' 'old_solaris' 'request_body_limit')
+    
+    for var in ${deprecated_variables[@]}; do
+        updated_variable=$(echo $var | sed "s/_/-/g")
+        sed -i "s/$var/$updated_variable/g" "$SURICATA_YAML"
+    done
+
+}
+
+
+update_suricata_yaml() {
+
+    se=$(dpkg -l | grep "alienvault-10g-tools" || echo "No")
+
+    init_line=1
+    end_line=${SECTION_LINES[0]}
+    end_line=$(( end_line - 1 ))
+
+    sed -n "1,$end_line"p "$SURICATA_YAML" >> "$SURICATA_YAML_TMP"
+
+    for (( i = 0 ; i < ${#SECTIONS[@]} ; i++ )) do
+        case "${SECTIONS[i]}" in
+            af-packet)
+                configure_afpacket_yaml
+                continue
+                ;;
+            outputs)
+                dump_section_to_yaml "$i" "$OUTPUTS_YAML"
+                configure_outputs_yaml
+                continue
+                ;;
+            vars)
+                configure_vars_yaml
+                continue
+                ;;
+            logging)
+                dump_section_to_yaml "$i" "$LOGGING_YAML"
+                configure_logging_yaml
+                continue
+                ;;
+            pfring)
+                configure_pfring_yaml
+                continue
+                ;;
+            rule-files)
+                configure_rule_files_yaml
+                continue
+                ;;
+            cuda)
+                configure_cuda_yaml
+                continue
+                ;;
+            engine-analysis)
+                configure_engine_analysis_yaml
+                continue
+                ;;
+            flow)
+                configure_flow_yaml
+                continue
+                ;;
+            app-layer)
+                configure_applayer_yaml
+                continue
+                ;;
+            stream)
+                dump_section_to_yaml "$i" "$STREAM_YAML"
+                configure_stream_yaml
+                continue
+                ;;
+            flow-timeouts)
+                if [ "$se" != "No" ]; then
+                    dump_section_to_yaml "$i" "$FLOW_TIMEOUTS_YAML"
+                    configure_flow_timeouts_yaml
+                else
+                    dump_section_to_yaml "$i" "$SURICATA_YAML_TMP"
+                fi
+                continue
+                ;;
+            *)
+                dump_section_to_yaml "$i" "$SURICATA_YAML_TMP"
+                continue
+                ;;
+        esac
+    done
+ 
+    if [ "$SURICATA_VERSION_RELEASE" -ge "2" ]; then
+        update_old_configs
+        vlan_present=$(egrep "^vlan:" "$SURICATA_YAML_TMP" || echo "No")
+        if [ "$vlan_present" = "No" ]; then
+            echo "vlan:" >> "$SURICATA_YAML_TMP"
+            echo -e "  use-for-tracking: true" >> "$SURICATA_YAML_TMP"
+        fi
+    fi
+
+    rm -f "$RULE_FILES_YAML"
+    configure_rule_files_yaml
+
+    mv "$SURICATA_YAML_TMP" "$SURICATA_YAML"
+    include_yaml_in_suricata_yaml $RULE_FILES_FILENAME
+    fix_deprecated_variables
+           
+}            
 
 
 case "$1" in
     configure)
-	RET=1
-	MD5_PREV=`md5sum /etc/init.d/suricata|awk '{print $1}'`
-	echo "Updating the suricata"
-	sed -e '
+        /etc/init.d/suricata stop || true
+        RET=1
+        MD5_PREV=$(md5sum "$SURICATA_YAML" | awk '{print $1}')
+     
+        update_suricata_yaml
+
+        configure_suricata_options
+        configure_default_file
+
+
+        MD5_POST=$(md5sum "$SURICATA_YAML" | awk '{print $1}')
+        if [ "$MD5_PREV" != "$MD5_POST" ]; then
+                RET=$((RET&0))
+        fi
+
+    MD5_PREV=`md5sum /etc/init.d/suricata|awk '{print $1}'`
+    echo "Updating the suricata"
+    sed -e '
 s/$DAEMON \+$SURICATA_OPTIONS \+> \+\/var\/log\/suricata\/suricata-start\.log \+2>&1 \+&/\
        touch \/var\/log\/suricata\/suricata-start.log\
        chmod 600 \/var\/log\/suricata\/suricata-start.log\
        old_umask=$(umask)\
        umask 066\
-       $DAEMON $SURICATA_OPTIONS >> \/var\/log\/suricata\/suricata-start.log  2>\&1 \&\
+       start-stop-daemon --start --quiet --exec $DAEMON -- $SURICATA_OPTIONS >> \/var\/log\/suricata\/suricata-start.log  2>\&1 \&\
        umask $old_umask\
 /g' -i /etc/init.d/suricata
-	MD5_POST=`md5sum /etc/init.d/suricata|awk '{print $1}'`
-	if [ "$MD5_PREV" != "$MD5_POST" ]; then
+    # For updates
+    sed -e 's/$DAEMON $SURICATA_OPTIONS >> \/var\/log\/suricata\/suricata-start.log  2>&1 &/\
+       start-stop-daemon --start --exec $DAEMON -- $SURICATA_OPTIONS >> \/var\/log\/suricata\/suricata-start.log  2>\&1 \&/g' -i /etc/init.d/suricata
+    sed -e  '/# Use this if you want the user to explicitly set/,/^fi$/d' -i  /etc/init.d/suricata
+    # Remove default start / stop runlevels
+    update-rc.d -f suricata remove
+    sed -e 's/# Default-Start:.*/# Default-Start:/' -i /etc/init.d/suricata
+    sed -e '# Default-Stop:.*/# Default-Stop:/' -i  /etc/init.d/suricata
+    MD5_POST=`md5sum /etc/init.d/suricata|awk '{print $1}'`
+    if [ "$MD5_PREV" != "$MD5_POST" ]; then
                 RET=$((RET&0))
         fi
 
         echo "Done!"
-	echo "Fix the permissions of /var/log/suricata logs files"
-	[ -f /var/log/suricata/suricata-start.log ] && chmod 600 /var/log/suricata/suricata-start.log
-	[ -f /var/log/suricata/suricata.log ] && chmod 600 /var/log/suricata/suricata.log
-	echo "Done!"
-
-	if [ $RET -eq 0 ]; then
-                dpkg-trigger --no-await alienvault-suricata-restart
-	fi
+    echo "Fix the permissions of /var/log/suricata logs files"
+    [ -f /var/log/suricata/suricata-start.log ] && chmod 600 /var/log/suricata/suricata-start.log
+    [ -f /var/log/suricata/suricata.log ] && chmod 600 /var/log/suricata/suricata.log
+    echo "Done!"
+    # Ensure WE stop suricata
+    /etc/init.d/suricata stop || true
 
 
-
+    #if [ $RET -eq 0 ]; then
+    dpkg-trigger --no-await alienvault-suricata-restart
+    #fi
 
     ;;
 
@@ -58,9 +853,36 @@ s/$DAEMON \+$SURICATA_OPTIONS \+> \+\/var\/log\/suricata\/suricata-start\.log \+
             case "$trigger" in
                 alienvault-suricata-restart)
                     /etc/init.d/suricata stop || true
-		    /etc/init.d/suricata start 
-                    update-rc.d suricata defaults
+                    #RUNSURICATA=$(awk -F '=' '/RUN/ {print $2}' /etc/default/suricata || true)
+                    #if [ $RUNSURICATA='yes' ]; then
+                    #    /etc/init.d/suricata start 
+                    #fi
+                    RUNSURICATA=$(awk -F '=' '/detectors/ {print $2}' /etc/ossim/ossim_setup.conf|grep suricata || true)
+                    if [ -n "$RUNSURICATA" ]; then
+                        /etc/init.d/suricata start
+                    fi
+                    #update-rc.d suricata defaults
                 ;;
+                alienvault-config-sensor-interfaces|alienvault-config-sensor-networks)
+                    update_suricata_yaml
+                    configure_suricata_options
+                    configure_default_file
+                    dpkg-trigger --no-await alienvault-suricata-restart
+                ;;
+                alienvault-config-sensor-detectors)
+                    # We need a library / augeas module to read the ossim_setup.conf
+                    DETECTORS=$(awk -F '=' '/detectors/ {print $2}' /etc/ossim/ossim_setup.conf | grep suricata || true)
+                    # Well I need to stop before change this value 
+                    # Because we have a 
+                    if [ -n "$DETECTORS" ]; 
+                    then
+                        sed -i "s:RUN=.*:RUN=yes:" /etc/default/suricata
+                    else
+                        sed -i "s:RUN=.*:RUN=no:" /etc/default/suricata
+                    fi 
+                    
+                ;;
+        
                 *)
                     echo "postinst called with unknown trigger \`$2'">&2
                     exit 1

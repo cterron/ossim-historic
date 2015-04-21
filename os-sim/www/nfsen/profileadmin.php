@@ -332,7 +332,7 @@ function ProfileDialog ( ) {
 	$size	 = ScaleBytes($_SESSION['profileinfo']['size'], 1, 1024.0);
 	$maxsize = $_SESSION['profileinfo']['maxsize'] ? 
 					ScaleBytes($_SESSION['profileinfo']['maxsize'], 1, 1024.0) : 'unlimited';
-	$description = htmlspecialchars(implode("\n", $_SESSION['profileinfo']['description']), ENT_QUOTES);;
+	$description = Util::htmlentities(implode("\n", $_SESSION['profileinfo']['description']));
 	$status	= $_SESSION['profileinfo']['status'];
 	$locked	= $_SESSION['profileinfo']['locked'] == 1 ? " - locked" : "";
 	$opt_delete = $status == 'OK'  && ( $_SESSION['profile'] != 'live' );
@@ -660,8 +660,8 @@ function NewProfileDialog ($new_profile) {
 	foreach ( $new_profile['channel'] as $channel ) {
 		$selected_channel[$channel] = 1;
 	}
-	$description = htmlspecialchars(implode("\n", $new_profile['description']), ENT_QUOTES);;
-	$filter = htmlspecialchars(implode("\n", $new_profile['filter']), ENT_QUOTES);;
+	$description = Util::htmlentities(implode("\n", $new_profile['description']));
+	$filter = Util::htmlentities(implode("\n", $new_profile['filter']));
 
 	$cmd_out = nfsend_query("get-profilegroups", array(), 0);
 	if ( is_array($cmd_out) ) {

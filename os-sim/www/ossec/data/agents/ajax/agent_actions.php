@@ -36,6 +36,7 @@ require_once dirname(__FILE__) . '/../../../conf/config.inc';
 
 Session::logcheck('environment-menu', 'EventsHidsConfig');
 
+session_write_close();
 
 $validation_errors = array();
 $agents            = array();
@@ -173,9 +174,6 @@ else
 
             try
             {
-                $idm_enabled = (isset($_SESSION['_idm']) && !empty($_SESSION['_idm'])) ? TRUE : FALSE;
-                session_write_close();
-
                 $new_agent = Ossec_agent::create($sensor_id, $agent_name, $ip_cidr);
 
                 //If ossec-remoted is not running, we have to restart Ossec Server
@@ -199,25 +197,20 @@ else
                     $agent_actions = Ossec_agent::get_actions($agent_id, $new_agent);
 
                     $data['data'] = _('Agent added successfully')."###".$agent_id."###";
-
-                    $data['data'] .= '[{
-                        "DT_RowId": "cont_agent_'.$agent_id.'",
-                        "0": "'."<img class='info' src='".OSSEC_IMG_PATH."/information.png'/>".'",
-                        "1": "'.$agent_id.'",
-                        "2": "'.$new_agent['name'].'",
-                        "3": "'.$new_agent['ip'].'",';
-
-                    if ($idm_enabled == TRUE)
-                    {
-                        $data['data'] .= '
-                            "4": "'."<div style='text-align: center !important'> - </div>".'",
-                            "5": "'."<div style='text-align: center !important'> - </div>".'",';
-                    }
-
-                    $data['data'] .= '
-                        "6": "'.$new_agent['status'].'",
-                        "7": "'.$agent_actions.'"
-                    }]';
+                    
+                    $agent_elem = array(
+                        '<img class="info" src="'.OSSEC_IMG_PATH.'/information.png"/>',
+                        $agent_id,
+                        $new_agent['name'],
+                        $new_agent['ip'],
+                        '-',
+                        '-',
+                        $new_agent['status'],
+                        $agent_actions,
+                        'DT_RowId' => "cont_agent_$agent_id"
+                    );
+                    
+                    $data['data'] .= json_encode(array($agent_elem));                    
                 }
             }
             catch (Exception $e)

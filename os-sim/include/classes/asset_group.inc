@@ -130,80 +130,7 @@ class Asset_group
         $this->owner       = '';
         $this->threshold   = array('a' => 30, 'c' => 30);
     }
-
-
-    /**
-    * Function save_history
-    *
-    * This function log any membership action into host_group_history
-    *
-    * @param object $conn    Database access object
-    * @param string $action  new, add or remove
-    * @param array  $assets  [Optional] List of membership uuid
-    *
-    * @access private
-    *
-    * @throws Av_exception If a connection error occurred
-    *
-    * @return boolean   False if not correct action supplied
-    */
-    private function save_history($conn, $action, $assets = array())
-    {
-        Ossim_db::check_connection($conn);
-
-        // Action
-        if ($action == 'new' || $action == 'update')
-        {
-            $msg = ($action == 'new') ? _('Asset Group Created') : _('Asset Group Updated');
-
-            $query = 'REPLACE INTO host_group_history (host_group_id,date,login,action) VALUES (UNHEX(?), utc_timestamp(), ?, ?)';
-
-            $params = array(
-                $this->id,
-                Session::get_session_user(),
-                $msg
-            );
-
-            if ($conn->Execute($query, $params) === FALSE)
-            {
-                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            }
-
-        }
-
-        elseif ($action == 'add' || $action == 'remove')
-        {
-            $_msg = ($action == 'add') ? _('Added') : _('Removed');
-
-            // add a membership
-            foreach ($assets as $asset_id)
-            {
-                $hostname = Asset_host::get_name_by_id($conn, $asset_id);
-                $msg      = $hostname . ' ' . $_msg;
-
-                $query = 'REPLACE INTO host_group_history (host_group_id,date,login,action) VALUES (UNHEX(?), utc_timestamp(), ?, ?)';
-
-                $params = array(
-                    $this->id,
-                    Session::get_session_user(),
-                    $msg
-                );
-
-                if ($conn->Execute($query, $params) === FALSE)
-                {
-                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-                }
-            }
-        }
-
-        else
-        {
-            return FALSE;
-        }
-
-        return TRUE;
-    }
-    
+       
 
     /**
     * Function get_id
@@ -219,6 +146,7 @@ class Asset_group
         return $this->id;
     }
 
+
     /**
     * Function get_ctx
     *
@@ -232,6 +160,7 @@ class Asset_group
     {
         return $this->ctx;
     }
+    
 
     /**
     * Function get_name
@@ -252,14 +181,22 @@ class Asset_group
     * Function get_descr
     *
     * This function returns the description associated with the host group
-    *
     * @access public
+    *
+    * @param boolean  $entities  [Optional] Transform to HTML entities
     *
     * @return string
     */
-    public function get_descr()
+    public function get_descr($entities = TRUE)
     {
-        return $this->description;
+        if ($entities)
+        {
+            return Util::htmlentities($this->description);
+        }
+        else
+        {
+            return $this->description;
+        }
     }
     
 
@@ -308,7 +245,7 @@ class Asset_group
     */
     public function set_id($id)
     {
-        $this->id = $id;
+        $this->id = trim($id);
     }
 
     /**
@@ -324,7 +261,7 @@ class Asset_group
     */
     public function set_ctx($ctx)
     {
-        $this->ctx = $ctx;
+        $this->ctx = trim($ctx);
     }
 
 
@@ -341,7 +278,7 @@ class Asset_group
     */
     public function set_name($name)
     {
-        $this->name = $name;
+        $this->name = trim($name);
     }
 
 
@@ -466,7 +403,7 @@ class Asset_group
         Ossim_db::check_connection($conn);
 
         $exist = self::is_in_db($conn, $this->id);
-
+        
         if ($exist)
         {
             $this->can_i_edit($conn);
@@ -477,7 +414,13 @@ class Asset_group
         {
             $action = 'new';
         }
-
+        
+        if (self::is_group_name_duplicated($conn, $this->id, $this->name))
+        {
+            $agn_msg = sprintf(_('The group "%s" already exists. Please choose a different name for your group.'), Util::htmlentities($this->name));
+            Av_exception::throw_error(Av_exception::USER_ERROR, $agn_msg);
+        }
+        
         $query = "REPLACE INTO host_group(id, ctx, name, threshold_c, threshold_a, descr, owner)
                     VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?)";
 
@@ -867,6 +810,7 @@ class Asset_group
 
         return TRUE;
     }
+     
 
     /**
     * Function get_num_host
@@ -1556,6 +1500,79 @@ class Asset_group
 
         return array($history, $total);
     }
+    
+    
+    /**
+    * Function save_history
+    *
+    * This function log any membership action into host_group_history
+    *
+    * @param object $conn    Database access object
+    * @param string $action  new, add or remove
+    * @param array  $assets  [Optional] List of membership uuid
+    *
+    * @access private
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return boolean   False if not correct action supplied
+    */
+    private function save_history($conn, $action, $assets = array())
+    {
+        Ossim_db::check_connection($conn);
+
+        // Action
+        if ($action == 'new' || $action == 'update')
+        {
+            $msg = ($action == 'new') ? _('Asset Group Created') : _('Asset Group Updated');
+
+            $query = 'REPLACE INTO host_group_history (host_group_id,date,login,action) VALUES (UNHEX(?), utc_timestamp(), ?, ?)';
+
+            $params = array(
+                $this->id,
+                Session::get_session_user(),
+                $msg
+            );
+
+            if ($conn->Execute($query, $params) === FALSE)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+
+        }
+
+        elseif ($action == 'add' || $action == 'remove')
+        {
+            $_msg = ($action == 'add') ? _('Added') : _('Removed');
+
+            // add a membership
+            foreach ($assets as $asset_id)
+            {
+                $hostname = Asset_host::get_name_by_id($conn, $asset_id);
+                $msg      = $hostname . ' ' . $_msg;
+
+                $query = 'REPLACE INTO host_group_history (host_group_id,date,login,action) VALUES (UNHEX(?), utc_timestamp(), ?, ?)';
+
+                $params = array(
+                    $this->id,
+                    Session::get_session_user(),
+                    $msg
+                );
+
+                if ($conn->Execute($query, $params) === FALSE)
+                {
+                    Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                }
+            }
+        }
+
+        else
+        {
+            return FALSE;
+        }
+
+        return TRUE;
+    }
 
 
     /************************************************************************************************/
@@ -1916,6 +1933,36 @@ class Asset_group
     }
 
 
+    /**
+     * Function is_group_name_duplicated
+     *
+     * This function check if the given group name for a group is duplicated
+     *
+     * @param object $conn DB connection object
+     * @param string $id   Group ID
+     * @param string $name Group Name
+     *
+     * @access public
+     *
+     * @return boolean
+     */
+    public function is_group_name_duplicated($conn, $id, $name)
+    {
+        Ossim_db::check_connection($conn);
+
+        $num_groups  = self::get_id_by_name($conn, $name);  
+        
+        unset($num_groups[$id]);
+        
+        if (count($num_groups) > 0)
+        {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    
     /**
     * Function get_name_by_id
     *

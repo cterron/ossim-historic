@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (1, 1, 'Shellcode');
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (2, 1, 'SQL_Injection');
 INSERT IGNORE INTO subcategory(id, cat_id, name) VALUES (3, 1, 'Browser');

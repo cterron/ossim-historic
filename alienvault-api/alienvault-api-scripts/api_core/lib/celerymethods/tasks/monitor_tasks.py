@@ -33,7 +33,10 @@ from celerymethods.tasks import celery_instance
 from api.lib.monitors.sensor import MonitorSensorLocation,\
                                     MonitorSensorIDS,\
                                     MonitorVulnerabilityScans,\
-                                    MonitorSensorDroppedPackages
+                                    MonitorSensorDroppedPackages,\
+                                    MonitorPluginsVersion, \
+                                    MonitorPluginIntegrity
+                                    
 from api.lib.monitors.assets import MonitorSensorAssetLogActivity
 
 from api.lib.monitors.server import MonitorServerSensorActivity ,\
@@ -225,4 +228,42 @@ def monitor_check_pending_updates():
         rt = True
 
     logger.info("Monitor MonitorPendingUpdates stopped")
+    return rt
+
+@celery_instance.task
+def monitor_plugins_version():
+    """Monitor to check the plugin versions
+
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorPluginsVersion started")
+    monitor = MonitorPluginsVersion()
+    rt = False
+
+    if monitor.start():
+        rt = True
+
+    logger.info("Monitor MonitorPluginVersions stopped")
+    return rt
+    
+
+ 
+
+@celery_instance.task
+def monitor_check_plugin_integrity():
+    """Monitor to check plugin integrity (if installed agent plugins and agent rsyslog files have been modified or removed locally)
+ 
+    Returns:
+        True if successful, False otherwise
+    """
+    logger.info("Monitor MonitorPluginIntegrity started")
+    monitor = MonitorPluginIntegrity()
+    rt = False
+ 
+    if monitor.start():
+        rt = True
+ 
+    logger.info("Monitor MonitorPluginIntegrity stopped")
+    
     return rt

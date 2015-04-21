@@ -59,32 +59,16 @@ if (ossim_error())
     exit;
 }
 
-$response['error'] = FALSE;
 
-$response['msg']   = Util::get_otx_username($token);
-
-// Some error fetching the username
-if ($response['msg'])
+try
+{
+    $response['error'] = FALSE;
+    $response['msg']   = Util::get_otx_username($token);
+}
+catch(Exception $e)
 {
     $response['error'] = TRUE;
-    $response['msg']   = _('Unable to activate user or Invalid OTX auth-token');
-}
-// Success: saved in db conf, now response it
-else
-{
-    $conf         = new Config();
-    $otx_username = $conf->get_conf('open_threat_exchange_username');
-    
-    // If username is still empty there was an error
-    if ($otx_username == '')
-    {
-        $response['error'] = TRUE ;
-        $response['msg']   = _('Unable to activate user or Invalid OTX auth-token');
-    }
-    else
-    {
-        $response['msg'] = $otx_username;
-    }
+    $response['msg']   = $e->getMessage();
 }
 
 echo json_encode($response);

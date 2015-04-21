@@ -196,7 +196,7 @@ $_SESSION['views_data'] = array(
 
 // TIME RANGE
 // Security hash
-$valid_operator = array(">=" => ">=", "<=" => "<=", ">" => ">", "<" => "<", "=" => "=");
+$valid_operator = array(">=" => ">=", "<=" => "<=", ">" => ">", "<" => "<", "=" => "=", "!=" => "!=");
 if ($_GET['time_range'] != "") {
     // defined => save into session
     if (isset($_GET['time'])) {

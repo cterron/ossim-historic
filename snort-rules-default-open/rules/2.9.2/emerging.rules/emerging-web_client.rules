@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -247,18 +247,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT PDF Nam
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Internet Explorer URLMON.DLL Content-Encoding Overflow Attempt"; flow:to_client,established; content:"Content-Encoding|3A|"; nocase; pcre:"/Content-Encoding\x3A[^\r\n]{300,}/i"; reference:bugtraq,7419; reference:cve,2003-0113; reference:url,www.microsoft.com/technet/security/bulletin/MS03-015.mspx; classtype:attempted-admin; sid:100000119; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Mozilla Firefox DOMNodeRemoved attack attempt"; flow:to_client,established; content:"document|2e|addEventListener|28 22|DOMNodeRemoved|22|"; nocase; content:"document|2e|body|2e|appendChild|28|document|2e|getElementById|28|"; reference:bugtraq,18228; reference:cve,2006-2779; classtype:attempted-user; sid:100000447; rev:2;)
-
-#
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Winamp PlayList buffer overflow attempt"; flow:from_server,established; content:"playlist"; nocase; content:"\\\\"; reference:bugtraq,16410; reference:cve,2006-0476; reference:url,www.frsirt.com/english/advisories/2006/0361; classtype:attempted-admin; sid:100000228; rev:3;)
-
-#
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT midi file download attempt"; flow:to_client,established; content:"Content-Type|3a|"; nocase; content:"audio|2f|midi"; nocase; distance:0; pcre:"/^Content-Type\s*\x3A\s*audio\x2Fmidi/smi"; flowbits:set,midi.download; flowbits:noalert; reference:bugtraq,18507; classtype:misc-activity; sid:100000692; rev:3;)
-
-#
-#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT Winamp midi file header overflow attempt"; flow:to_client,established; flowbits:isset,midi.download; content:"|4d 54 68 64 00 00 00 06 00 00 00 01 00 60 4d 54 72 6b 00 00 00|"; nocase; flowbits:unset,midi.download; reference:bugtraq,18507; classtype:attempted-user; sid:100000693; rev:3;)
-
-#
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL WEB_CLIENT web bug 0x0 gif attempt"; flow:from_server,established; content:"Content-type|3A| image/gif"; nocase; content:"GIF"; distance:0; nocase; content:"|01 00 01 00|"; within:4; distance:3; content:","; distance:0; content:"|01 00 01 00|"; within:4; distance:4; classtype:misc-activity; sid:2102925; rev:4;)
 
 #
@@ -340,6 +328,9 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT PDF Wit
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Adobe Acrobat and Reader Pushstring Memory Corruption Attempt"; flow:established,to_client; flowbits:isset,ET.flash.pdf; content:"|2C E8 88 F0 FF 33|"; fast_pattern:only; reference:url,www.exploit-db.com/moaub12-adobe-acrobat-and-reader-pushstring-memory-corruption/; reference:bugtraq,41237; reference:cve,2010-2201; classtype:attempted-user; sid:2011500; rev:3;)
 
 #
+#alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Adobe CoolType Smart INdependent Glyplets - SING - Table uniqueName Stack Buffer Overflow Attempt"; flow:established,to_client; content:"PDF-"; depth:300; content:"SING"; distance:0; content:"|01 00 01 0E|"; within:100; content:"|00 3A|"; within:100; isdataat:100,relative; content:!"|0A|"; within:100; reference:url,contagiodump.blogspot.com/2010/09/cve-david-leadbetters-one-point-lesson.html; reference:cve,2010-2883; classtype:attempted-user; sid:2011501; rev:3;)
+
+#
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT String Replace in PDF File, Likely Hostile"; flow:established,to_client; content:"PDF-"; depth:300; content:".replace|28|"; nocase; reference:url,www.w3schools.com/jsref/jsref_replace.asp; classtype:bad-unknown; sid:2011504; rev:2;)
 
 #
@@ -398,6 +389,15 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Suspici
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Javascript obfuscation using app.setTimeOut in PDF in Order to Run Code"; flow:established,to_client; content:"PDF-"; depth:300; content:"app.setTimeOut("; nocase; distance:0; reference:url,www.h-online.com/security/features/CSI-Internet-PDF-timebomb-1038864.html?page=4; reference:url,www.vicheck.ca/md5query.php?hash=6932d141916cd95e3acaa3952c7596e4; classtype:bad-unknown; sid:2011868; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Microsoft Internet Explorer CSS Tags Remote Code Execution Attempt"; flow:established,to_client; file_data; content:"table"; nocase; content:"position|3A|absolute"; nocase; within:30; content:"clip|3A|rect"; fast_pattern; nocase; within:15; reference:bid,44536; reference:cve,2010-3962; classtype:attempted-user; sid:2011891; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft IE CSS Clip Attribute Memory Corruption (POC SPECIFIC)"; flow:from_server,established; file_data; content:"position|3A|absolute|3B|"; content:"clip|3A|"; within:20; content:"rect|28|0|29|"; fast_pattern; within:20; reference:url,extraexploit.blogspot.com/2010/11/cve-2010-3962-yet-another-internet.html; reference:url,www.symantec.com/connect/blogs/new-ie-0-day-used-targeted-attacks; reference:url,blog.fireeye.com/research/2010/11/ie-0-day-hupigon-joins-the-party.html; reference:url,www.offensive-security.com/0day/ie-0day.txt; reference:url,www.metasploit.com/redmine/projects/framework/repository/entry/modules/exploits/windows/browser/ms10_xxx_ie_css_clip.rb; classtype:attempted-user; sid:2011892; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Firefox Interleaving document.write and appendChild Overflow (POC SPECIFIC)"; flow:from_server,established; content:"document.body.appendChild(cobj)"; content:"document.getElementById|28 22|suv|22 29|.innerHTML"; content:"new|20|Array|28|"; reference:url,bugzilla.mozilla.org/show_bug.cgi?id=607222; reference:url,blog.mozilla.com/security/2010/10/26/critical-vulnerability-in-firefox-3-5-and-firefox-3-6/; classtype:attempted-user; sid:2011893; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Adobe Reader 9.4 this.printSeps Memory Corruption Attempt"; flow:established,to_client; content:".printSeps"; nocase; fast_pattern:only; pcre:"/(this|doc)\x2EprintSeps/i"; reference:bid,44638; reference:cve,2010-4091; classtype:attempted-user; sid:2011910; rev:4;)
@@ -505,13 +505,13 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possibl
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of document.write # Encoding"; flow:established,to_client; content:"#64#6f#63#75#6d#65#6e#74#2e#77#72#69#74#65"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; classtype:bad-unknown; sid:2012245; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt % Encoding"; flow:established,to_client; content:"%70%61%72%73%65%49%6e%74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,/www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012260; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt % Encoding"; flow:established,to_client; content:"%70%61%72%73%65%49%6e%74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012260; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt %u UTF-8 Encoding"; flow:established,to_client; content:"%u70%u61%u72%u73%u65%u49%u6e%u74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,/www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012261; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt %u UTF-8 Encoding"; flow:established,to_client; content:"%u70%u61%u72%u73%u65%u49%u6e%u74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012261; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt %u UTF-16 Encoding"; flow:established,to_client; content:"%u7061%u7273%u6549%u6e74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,/www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012262; rev:1;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of parseInt %u UTF-16 Encoding"; flow:established,to_client; content:"%u7061%u7273%u6549%u6e74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; reference:url,www.w3schools.com/jsref/jsref_parseInt.asp; classtype:bad-unknown; sid:2012262; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Hex Obfuscation of Script Tag % Encoding"; flow:established,to_client; content:"%3c%73%63%72%69%70%74"; nocase; fast_pattern:only; reference:url,cansecwest.com/slides07/csw07-nazario.pdf; reference:url,www.sophos.com/security/technical-papers/malware_with_your_mocha.html; classtype:bad-unknown; sid:2012263; rev:1;)
@@ -574,6 +574,33 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Android
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Opera Window.Open document.cloneNode Null Pointer Deference Attempt"; flow:established,to_client; content:"window.open|28|"; nocase; content:"document.createElement|28|"; nocase; distance:0; content:"document.body.appendChild|28|"; nocase; distance:0; content:"close|28|"; nocase; distance:0; content:"document.cloneNode|28|"; nocase; distance:0; reference:url,www.exploit-db.com/exploits/16979/; classtype:attempted-user; sid:2012511; rev:1;)
 
 #
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for addons.mozilla.org"; flow:established,from_server; content:"|00 92 39 d5 34 8f 40 d1 69 5a 74 54 70 e1 f2 3f|"; content:"addons.mozilla.org"; within:250; classtype:misc-activity; sid:2012546; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for Global Trustee"; flow:established,from_server; content:"|00 d8 f3 5f 4e b7 87 2b 2d ab 06 92 e3 15 38 2f b0|"; classtype:misc-activity; sid:2012547; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for login.live.com"; flow:established,from_server; content:"|00 b0 b7 13 3e d0 96 f9 b5 6f ae 91 c8 74 bd 3a c0|"; content:"login.live.com"; within:250; classtype:misc-activity; sid:2012548; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for login.skype.com"; flow:established,from_server; content:"|00 e9 02 8b 95 78 e4 15 dc 1a 71 0a 2b 88 15 44 47|"; content:"login.skype.com"; within:250; classtype:misc-activity; sid:2012549; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for login.yahoo.com 1"; flow:established,from_server; content:"|00 d7 55 8f da f5 f1 10 5b b2 13 28 2b 70 77 29 a3|"; content:"login.yahoo.com"; within:250; classtype:misc-activity; sid:2012550; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for login.yahoo.com 2"; flow:established,from_server; content:"|39 2a 43 4f 0e 07 df 1f 8a a3 05 de 34 e0 c2 29|"; content:"login.yahoo.com"; within:250; classtype:misc-activity; sid:2012551; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for login.yahoo.com 3"; flow:established,from_server; content:"|3e 75 ce d4 6b 69 30 21 21 88 30 ae 86 a8 2a 71|"; content:"login.yahoo.com"; within:250; classtype:misc-activity; sid:2012552; rev:4;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for mail.google.com"; flow:established,from_server; content:"|04 7e cb e9 fc a5 5f 7b d0 9e ae 36 e1 0c ae 1e|"; content:"mail.google.com"; within:250; classtype:misc-activity; sid:2012553; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET 443 -> $HOME_NET any (msg:"ET WEB_CLIENT Known Fraudulent SSL Certificate for www.google.com"; flow:established,from_server; content:"|00 f5 c8 6a f3 61 62 f1 3a 64 f5 4f 6d c9 58 7c 06|"; content:"www.google.com"; within:250; classtype:misc-activity; sid:2012554; rev:5;)
+
+#
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Office File With Embedded Executable"; flow:established,to_client; file_data; content:"|D0 CF 11 E0 A1 B1 1A E1|"; within:8; content:"MZ"; distance:0; byte_jump:4,58,relative,little; content:"PE|00 00|"; distance:-64; within:4; classtype:trojan-activity; sid:2012684; rev:6;)
 
 #
@@ -616,6 +643,9 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Adobe A
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Word RTF pFragments Stack Buffer Overflow Attempt"; flow:established,to_client; file_data; content:"|D0 CF 11 E0 A1 B1 1A E1|"; within:8; content:"|5C|sp"; nocase; content:"|5C|sn"; nocase; within:80; content:"pFragments"; nocase; within:80; content:"|5C|sv"; nocase; within:80; isdataat:100,relative; content:!"|0A|"; distance:1; within:100; reference:url,labs.m86security.com/2011/07/resurrection-of-cve-2010-3333-in-the-wild/; reference:bid,44652; reference:cve,2010-3333; classtype:attempted-user; sid:2013250; rev:2;)
 
 #
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Known in Wild Microsoft Internet Explorer Time Element Uninitialized Memory Remote Code Execution Attempt"; flow:established,to_client; content:"TTu0d0fu0d0eKKJJu0d0du0d0dLL1043416UU"; reference:url,labs.m86security.com/2011/06/0-day-exploit-used-in-a-targeted-attack-cve-2011-1255/; reference:bid,48206; reference:cve,2011-1255; classtype:attempted-user; sid:2013251; rev:2;)
+
+#
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Internet Explorer Time Element Uninitialized Memory Remote Code Execution Attempt"; flow:established,to_client; content:"|2e|location|2e|reload|28 29|"; content:"implementation=|22 23|default|23|time"; nocase; content:"contenteditable=|22|true|22|"; nocase; distance:0; reference:url,labs.m86security.com/2011/06/0-day-exploit-used-in-a-targeted-attack-cve-2011-1255/; reference:bid,48206; reference:cve,2011-1255; classtype:attempted-user; sid:2013252; rev:2;)
 
 #
@@ -643,6 +673,15 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Mozilla
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT PDF With Embedded U3D"; flow:established,to_client; file_data; content:"obj"; distance:0; content:"<<"; within:4; content:"/U3D"; within:64; reference:url,www.adobe.com/support/security/advisories/apsa11-04.html; classtype:bad-unknown; sid:2013995; rev:2;)
 
 #
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Windows Media component specific exploit"; flow:established,to_client; file_data; content:"bang()"; distance:0; content:"cloned"; distance:0; content:"unescape(|22|%u0c0c%u0c0c%u0c0c%u0c0c%u0c0c%u0c0c|22|)"; distance:0; reference:cve,2012-0003; classtype:attempted-user; sid:2014156; rev:4;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_CLIENT Likely MS12-004 midiOutPlayNextPolyEvent Heap Overflow Midi Filename Requested baby.mid"; flow:established,to_server; content:"/baby.mid"; http_uri; fast_pattern:only; reference:cve,2012-0003; classtype:trojan-activity; sid:2014207; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Adobe Flash Player Malformed MP4 Remote Code Execution Attempt"; flow:established,to_client; file_data; content:"|66 74 79 70 6D 70 34|"; distance:0; content:"|01 6D 70 34 32 69 73 6F 6D|"; distance:0; content:"|63 70 72 74 00 FF FF FF|"; distance:0; reference:url,contagiodump.blogspot.com/2012/03/mar-2-cve-2012-0754-irans-oil-and.html; reference:bid,52034; reference:cve,2012-0754; classtype:attempted-user; sid:2014335; rev:2;)
+
+#
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer CTableRowCellsCollectionCacheItem.GetNext Memory Use-After-Free Attempt"; flow:established,to_client; file_data; content:"document.getElementById|28 27|tableid|27 29|.cloneNode"; distance:0; nocase; content:"cells.urns"; nocase; distance:0; content:"cells.item"; nocase; distance:0; reference:url,dvlabs.tippingpoint.com/blog/2012/03/15/pwn2own-2012-challenge-writeup; reference:url,technet.microsoft.com/en-us/security/bulletin/MS10-002; reference:bid,37894; reference:cve,2010-0248; classtype:attempted-user; sid:2014463; rev:2;)
 
 #
@@ -667,6 +706,12 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Potenti
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Potential MSXML2.FreeThreadedDOMDocument Uninitialized Memory Corruption Attempt"; flow:to_client,established; file_data; content:"f6d90f12-9c73-11d3-b32e-00c04f990bb4"; nocase; content:"definition"; nocase; pcre:"/clsid\s*\x3a\s*\x7B?\s*f6d90f12-9c73-11d3-b32e-00c04f990bb4/si"; pcre:"/(?:\[\s*[\x22\x27]definition[\x22\x27]\s*\]|\.definition)\(/"; reference:cve,2012-1889; classtype:attempted-user; sid:2015557; rev:7;)
 
 #
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer execCommand function Use after free Vulnerability 0day"; flow:established,to_client; file_data; content:".execCommand|28|"; nocase; fast_pattern; pcre:"/^[\r\n\s]*[\x22\x27](s|\\(x|u00)[57]3)(e|\\(x|u00)[46]5)(l|\\(x|u00)[46]c)(e|\\(x|u00)[46]5)(c|\\(x|u00)[46]3)(t|\\(x|u00)[57]4)(A|\\(x|u00)[46]1)(l|\\(x|u00)[46]c){2}/Ri"; content:".write("; nocase; content:"parent|2e|"; nocase; distance:0; pcre:"/^\w+?\[[^\]]+?\]\.src[\r\n\s]*=/Ri"; content:"onselect"; nocase; reference:url,eromang.zataz.com/2012/09/16/zero-day-season-is-really-not-over-yet/; reference:cve,CVE-2012-4969; classtype:attempted-user; sid:2015711; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer execCommand function Use after free Vulnerability 0day Metasploit"; flow:established,to_client; file_data; content:".execCommand|28|"; nocase; pcre:"/^[\r\n\s]*[\x22\x27]selectAll/Ri"; content:"YMjf\\u0c08\\u0c0cKDog"; fast_pattern:only; reference:url,eromang.zataz.com/2012/09/16/zero-day-season-is-really-not-over-yet/; reference:cve,CVE-2012-4969; classtype:attempted-user; sid:2015712; rev:6;)
+
+#
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Rich Text File download - SET"; flow:from_server,established; file_data; content:"|7B 5C 72 74 66 31|"; within:6; flowbits:set,ET.http.rtf.download; flowbits:noalert; reference:cve,2012-0183; classtype:attempted-user; sid:2015790; rev:1;)
 
 #
@@ -674,6 +719,9 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Adobe F
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Adobe Flash Vuln (CVE-2012-1535 Uncompressed) Exploit Specific"; flow:from_server,established; flowbits:isset,Ole.Flash.kernpresent; file_data; content:"heapSpray"; classtype:trojan-activity; sid:2015810; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible exploitation of CVE-2012-5076 by an exploit kit Nov 13 2012"; flow:from_server,established; file_data; content:"<object"; content:"0b0909041f"; distance:0; fast_pattern; content:"3131"; distance:0; classtype:trojan-activity; sid:2015887; rev:4;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Microsoft Rich Text File .RTF File download with invalid listoverridecount"; flow:from_server,established; file_data; content:"|5c|listoverridetable"; distance:0; content:"|5c|listoverride|5c|"; fast_pattern:only; content:"|5c|listoverridecount"; isdataat:2,relative; pcre:"/^(?:0*?[19]\d|[^190])/R"; reference:cve,2012-2539; classtype:attempted-user; sid:2018315; rev:4;)
@@ -794,4 +842,55 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT DRIVEBY
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT DRIVEBY Social Engineering Toolkit Web Clone code detected"; flow:established,from_server; file_data; content:"|3c|param name=|22|"; content:"value=|22|nix.bin|22 3e|"; distance:0; reference:url,trustedsec.com/downloads/social-engineer-toolkit/; reference:url,securelist.com/blog/research/66108/el-machete/; classtype:trojan-activity; sid:2018972; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Malicious iframe guessing router password 1"; flow:established,from_server; file_data; content:"dnsPrimary="; nocase; fast_pattern:only; content:"dnsSecondary="; nocase; content:"dnsDynamic="; nocase; content:"dnsconfig.cgi"; nocase; reference:url,securelist.com/blog/incidents/66358/web-based-attack-targeting-home-routers-the-brazilian-way/; classtype:attempted-user; sid:2019111; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Malicious iframe guessing router password 2"; flow:established,from_server; file_data; content:"dnsPrimary="; nocase; fast_pattern:only; content:"dnsSecondary="; nocase; content:"dnsDynamic="; nocase; content:"rebootinfo.cgi"; nocase; reference:url,securelist.com/blog/incidents/66358/web-based-attack-targeting-home-routers-the-brazilian-way/; classtype:attempted-user; sid:2019112; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2014-4113 Exploit Download"; flow:to_client,established; file_data; content:"|fb ff ff ff|"; content:"|0b 00 00 00 01 00 00 00|"; content:"|25 00 00 00 01 00 00 00|"; content:"|8b 00 00 00 01 00 00 00|"; fast_pattern; reference:url,blog.crowdstrike.com/crowdstrike-discovers-use-64-bit-zero-day-privilege-escalation-exploit-cve-2014-4113-hurricane-panda/; reference:cve,2014-4141; classtype:attempted-user; sid:2019420; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible CVE-2014-4113 Exploit Download with Hurricane Panda IOC"; flow:to_client,established; flowbits:isset,ET.http.binary; file_data; content:"woqunimalegebi"; fast_pattern:only; reference:url,blog.crowdstrike.com/crowdstrike-discovers-use-64-bit-zero-day-privilege-escalation-exploit-cve-2014-4113-hurricane-panda/; reference:cve,2014-4113; classtype:attempted-user; sid:2019421; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Internet Explorer VBscript failure to handle error case information disclosure CVE-2014-6332"; flow:to_client,established; file_data; content:"vbscript"; nocase; content:"redim "; nocase; fast_pattern; pcre:"/^\s*?Preserve/Rsi"; content:"<script "; nocase; pcre:"/^[^>]*?(?:language\s*?=\s*?[\x22\x27]vbscript[\x22\x27]|type\s*?=\s*?[\x22\x27]text\/vbscript[\x22\x27])/Rsi"; reference:cve,2014-6332; classtype:attempted-user; sid:2019706; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT GENERIC VB ShellExecute Function Inside of VBSCRIPT tag"; flow:to_client,established; file_data; content:"vbscript"; nocase; content:"shellexecute"; nocase; fast_pattern:only; content:"<script "; nocase; pcre:"/^[^>]*?(?:language\s*?=\s*?[\x22\x27]vbscript[\x22\x27]|type\s*?=\s*?[\x22\x27]text/vbscript[\x22\x27](?:(?!<\/script>).)+?\WShellExecute)/Rsi"; reference:cve,2014-6332; classtype:attempted-user; sid:2019707; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Internet Explorer VBscript failure to handle error case information disclosure obfuscated CVE-2014-6332"; flow:to_client,established; file_data; content:"vbscript"; nocase; content:"Xor"; nocase; pcre:"/^\W/R"; content:"Execute"; nocase; content:"&chr"; nocase; content:"UBound"; fast_pattern:only; nocase; content:"Cint"; nocase; pcre:"/^\W/R"; content:"Split"; nocase; pcre:"/^\W/R"; content:"Mid"; pcre:"/^\W/R"; content:"Len"; pcre:"/^\W/R"; reference:cve,2014-6332; classtype:attempted-user; sid:2019715; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT GENERIC Possible IE Memory Corruption CollectGarbage with DOM Reset"; flow:established,to_client; file_data; content:"unescape"; nocase; content:"%u"; nocase; content:"CollectGarbage"; nocase; fast_pattern:only; content:"innerHTML"; nocase; pcre:"/^\s*?=\s*?(?:undefined|false|null|-?0|NaN|\x22\x22|\x27\x27)/Rsi"; classtype:attempted-user; sid:2019730; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Internet Explorer VBscript failure to handle error case information disclosure CVE-2014-6332 Percent Hex Encode"; flow:to_client,established; file_data; content:"vbscript"; nocase; content:"redim|25|"; nocase; fast_pattern; pcre:"/^(?:25)?20(?:\x25(?:25)?20|\s)*?Preserve/Rsi"; content:"redim|25|"; nocase; distance:0; pcre:"/^(?:25)?20(?:\x25(?:25)?20|\s)*?Preserve/Rsi"; reference:cve,2014-6332; classtype:attempted-user; sid:2019732; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Samsung Galaxy Knox Android Browser RCE smdm attempt"; flow:to_client,established; file_data; content:"smdm|3a|//"; nocase; distance:0; reference:url,blog.quarkslab.com/abusing-samsung-knox-to-remotely-install-a-malicious-application-story-of-a-half-patched-vulnerability.html; reference:osvdb,114590; reference:url,cxsecurity.com/issue/WLB-2014110124; classtype:web-application-activity; sid:2019750; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"/vbaProject"; nocase; pcre:"/\d*?\.bin/Ri"; classtype:bad-unknown; sid:2019835; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project"; flow:established,from_server; flowbits:isset,et.http.PK; file_data; content:"_VBA_PROJECT"; nocase; classtype:bad-unknown; sid:2019836; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT SUSPICIOUS Possible Office Doc with Embedded VBA Project (Wide)"; flow:established,from_server; flowbits:isset,et.MCOFF; file_data; content:"_|00|V|00|B|00|A|00|_|00|P|00|R|00|O|00|J|00|E|00|C|00|T|00|"; nocase; flowbits:set,et.DocVBAProject; classtype:bad-unknown; sid:2019837; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Internet Explorer VBscript CVE-2014-6332 multiple redim preserve"; flow:to_client,established; content:"preserve"; nocase; content:"redim "; nocase; fast_pattern; pcre:"/^\s*?Preserve\s*?(?P<var1>[a-z]\w{0,254}+)\s*?\x28\s*?[^\x29]+?\x29.*?redim\s*?Preserve\s*?(?P=var1)/Rsi"; reference:cve,2014-6332; classtype:attempted-user; sid:2019842; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT PDF With Hidden Embedded File"; flow:established,to_client; flowbits:isset,ET.pdf.in.http; file_data; content:"obj"; distance:0; content:"<<"; within:4; content:"/Embeddedfile"; distance:0; pcre:"/\x3C\x3C[^>]*\x2FEmbeddedfile/sm"; reference:url,blog.didierstevens.com/2009/07/01/embedding-and-hiding-files-in-pdf-documents/; classtype:bad-unknown; sid:2019850; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Internet Explorer execCommand function Use after free Vulnerability 0day Metasploit 2"; flow:established,to_client; file_data; content:"execCommand"; nocase; content:"YMjf|ff ff|KDog"; fast_pattern; reference:url,eromang.zataz.com/2012/09/16/zero-day-season-is-really-not-over-yet/; reference:cve,CVE-2012-4969; classtype:attempted-user; sid:2020099; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET WEB_CLIENT Possible Android RCE via XSS and Play Store XFO"; flow:from_server,established; file_data; content:"|5c|u00"; byte_test:2,<,0x21,0,relative,string,hex; content:"javascript|3a|"; nocase; within:11; distance:2; content:"/store/apps/details?id="; nocase; fast_pattern:only; reference:url,1337day.com/exploit/22581; reference:cve,2014-6041; reference:url,github.com/rapid7/metasploit-framework/commit/7f2add2ce30f33e7787310d7abcb1781e8ea8f43; classtype:attempted-user; sid:2020393; rev:1;)
 

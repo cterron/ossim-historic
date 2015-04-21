@@ -256,7 +256,7 @@ function get_params_field($field, $map_key = NULL)
 		case "Textarea":
 			
 			$validation  = ($field['required'] != 1) ? 'OSS_NULLABLE, ' : '';
-			$validation .= 'OSS_TEXT, OSS_AT';
+			$validation .= 'OSS_ALL';
 					
 			$params = array("name"       => $name,
 							"id"         => $fld, 
@@ -472,4 +472,10 @@ function clean_inc_ic()
 	return $v;
 }
 
-?>
+
+function print_incident_fields($title, $val)
+{
+    echo '<div class="ticket_section_title">'. $title .':</div>';
+    echo '<div class="ticket_section_val">'. $val .'</div>';
+    echo '<div class="clear_layer"></div>';
+}

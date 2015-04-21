@@ -424,7 +424,7 @@ else
                             <input type="checkbox" onclick="<?php echo $link_2?>" <?php echo $checked;?>/>
                         </td>
                         <td class="noborder" style="text-align:right;font-size:12px">
-                            <?php echo _("Show Alienvault Components")?>
+                            <?php echo _("Show AlienVault Components")?>
                         </td>                        
                     </tr>
                 </table>

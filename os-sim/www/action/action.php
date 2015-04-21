@@ -256,6 +256,12 @@ $layout      = load_layout($name_layout, $category);
             	});  
             	
             }); 
+
+            function apply_changes()
+            {
+                <?php $back = preg_replace ('/([&|\?]msg\=)(\w+)/', '\\1', $_SERVER["REQUEST_URI"]);?>
+                document.location.href = '../conf/reload.php?what=policies&back=<?php echo urlencode($back);?>';
+            }
             
         </script>
     	
@@ -263,9 +269,16 @@ $layout      = load_layout($name_layout, $category);
 
     <body style="margin:0">
     
-    	<br><table id="flextable" style="display:none"></table>
-    	
-    	 <!-- Right Click Menu -->
+        <br><table id="flextable" style="display:none"></table>
+
+        <?php
+            if (Web_indicator::is_on("Reload_policies"))
+            {
+                echo "<button class='button' onclick='apply_changes()'>"._("Apply Changes")."</button>";
+            }
+        ?>
+        
+         <!-- Right Click Menu -->
         <ul id="myMenu" class="contextMenu" style="width:110px">
             <li class="hostreport"><a href="#new" class="greybox" style="padding:3px"><img src="../pixmaps/tables/table_row_insert.png" align="absmiddle"/> <?=_("New Action")?></a></li>
             <li class="hostreport"><a href="#modify" class="greybox" style="padding:3px"><img src="../pixmaps/tables/table_edit.png" align="absmiddle"/> <?=_("Modify")?></a></li>

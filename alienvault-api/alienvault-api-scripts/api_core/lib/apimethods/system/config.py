@@ -30,8 +30,14 @@
 
 import api_log
 from db.methods.system import get_system_ip_from_system_id
+from db.methods.system import db_system_update_hostname
+from db.methods.system import db_system_update_admin_ip
+from celerymethods.jobs.system import alienvault_asynchronous_reconfigure
 from ansiblemethods.system.system import get_av_config
+from ansiblemethods.system.system import set_av_config
+from ansiblemethods.system.system import ansible_add_ip_to_inventory
 from apimethods.system.cache import use_cache
+from apimethods.system.cache import flush_cache
 
 
 @use_cache(namespace="system")
@@ -83,8 +89,8 @@ def get_system_config_alienvault(system_id, no_cache=False):
                                                          'sensor_networks': '',
                                                          'server_server_ip': '',
                                                          'server_alienvault_ip_reputation': '',
-                                                         'ha_ha_virtual_ip':'',
-                                                         'ha_ha_role':'',
+                                                         'ha_ha_virtual_ip': '',
+                                                         'ha_ha_role': '',
                                                          })
 
     if not success:
@@ -92,3 +98,81 @@ def get_system_config_alienvault(system_id, no_cache=False):
         return (False, "Cannot get AlienVault configuration info %s" % str(config_values))
 
     return (True, config_values)
+
+
+def set_system_config(system_id, set_values):
+    """
+    Set the configuration values to the system
+    Args:
+        system_id(str): The system id where the configuration will be setted
+        set_values: key-value dictionary with the configuration settings
+    Returns:
+        (success, job_id): success=True when the operation when ok, otherwise success=False.
+        On success job_id: id of the async reconfig job, error message string otherwise
+    """
+
+    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    if not success:
+        return (False, system_ip)
+
+    (success, config_values) = set_av_config(system_ip, set_values)
+
+    if not success:
+        api_log.error("system: set_config_general error: " + str(config_values))
+        return (False, "Cannot set general configuration info: %s" % str(config_values))
+
+    flush_cache(namespace="system")
+
+    if 'general_hostname' in set_values:
+        success, msg = db_system_update_hostname(system_id, set_values['general_hostname'])
+        if not success:
+            return (False, "Error setting values: %s" % msg)
+
+    new_admin_ip = None
+    if 'general_admin_ip' in set_values:
+        new_admin_ip = set_values['general_admin_ip']
+        success, msg = db_system_update_admin_ip(system_id, set_values['general_admin_ip'])
+        if not success:
+            return (False, "Error setting values: %s" % msg)
+
+        success, msg = ansible_add_ip_to_inventory(set_values['general_admin_ip'])
+        if not success:
+            return (False, "Error setting the admin IP address")
+
+    job = alienvault_asynchronous_reconfigure.delay(system_ip, new_admin_ip)
+
+    return (True, job.id)
+
+
+def get_system_sensor_configuration(system_id):
+
+    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    if not success:
+        return (False, system_ip)
+
+    (success, config_values) = get_av_config(system_ip, {'sensor_asec': '',
+                                                         'sensor_detectors': '',
+                                                         'sensor_interfaces': '',
+                                                         'sensor_mservers': '',
+                                                         'sensor_netflow': '',
+                                                         'sensor_networks': '',
+                                                         'sensor_monitors': '',
+                                                         })
+
+    if not success:
+        api_log.error("system: get_config_alienvault error: " + str(config_values))
+        return (False, "Cannot get AlienVault configuration info %s" % str(config_values))
+
+    return (True, config_values)
+
+def set_system_sensor_configuration(system_id, set_values):
+    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    if not success:
+        return (False, system_ip)
+
+    (success, config_values) = set_av_config(system_ip, set_values)
+
+    if not success:
+        api_log.error("system: set_config_general error: " + str(config_values))
+        return (False, "Cannot set general configuration info: %s" % str(config_values))
+    return True, "OK"

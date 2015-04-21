@@ -61,27 +61,8 @@ $host_id         = GET('host_id');
 $net_id          = GET('net_id');
 $ctx             = GET('ctx');
 
-$autorefresh     = "";
-$refresh_time    = "";
 
-if ( isset($_GET['search']) )
-{
-    unset($_SESSION['_alarm_autorefresh']);
-    if ( isset($_GET['autorefresh']) )
-    {
-        $autorefresh  = ( GET('autorefresh') != '1' ) ? 0 : 1;
-        $refresh_time = GET('refresh_time');
-        $_SESSION['_alarm_autorefresh'] = GET('refresh_time');
-    }
-}
-else
-{
-    if ( $_SESSION['_alarm_autorefresh'] != '' )
-    {
-        $autorefresh  = 1;
-        $refresh_time = $_SESSION['_alarm_autorefresh'];
-    }
-}
+
 
 $query            = (GET('query') != "") ? GET('query') : "";
 $directive_id     = GET('directive_id');
@@ -100,7 +81,6 @@ $num_alarms_page  = (GET('num_alarms_page') != "") ? intval(GET('num_alarms_page
 
 $tags             = Tags::get_list($conn);
 $tags_html        = Tags::get_list_html($conn,"",false);
-
 
 //$asset_data
 $asset_sensors    = Av_sensor::get_list($conn, array(), FALSE, TRUE);
@@ -121,8 +101,6 @@ ossim_valid($close,           OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($open,            OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Open"));
 ossim_valid($delete_day,      OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE,                 'illegal:' . _("Delete_day"));
 ossim_valid($query,           OSS_ALPHA, OSS_PUNC_EXT, OSS_SPACE, OSS_NULLABLE,             'illegal:' . _("Query"));
-ossim_valid($autorefresh,     OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Autorefresh"));
-ossim_valid($refresh_time,    OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Refresh_time"));
 ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Directive_id"));
 ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Intent"));
 ossim_valid($src_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Src_ip"));
@@ -166,18 +144,12 @@ $parameters['tag']                    = "tag="            .$tag;
 $parameters['num_alarms_page']        = "num_alarms_page=".$num_alarms_page;
 $parameters['num_events']             = "num_events="     .$num_events;
 $parameters['num_events_op']          = "num_events_op="  .$num_events_op;
-$parameters['refresh_time']           = "refresh_time="   .$refresh_time;
-$parameters['autorefresh']            = "autorefresh="    .$autorefresh;
 $parameters['ds_id']                  = "ds_id="          .$ds_id;
 $parameters['ds_name']                = "ds_name="        .urlencode($ds_name);
-//$parameters['bypassexpirationupdate'] = "bypassexpirationupdate=1";
 $parameters['beep']                   = "beep="           .$beep;
 $parameters['host_id']                = "host_id="        .$host_id;
 $parameters['net_id']                 = "net_id="         .$net_id;
 $parameters['ctx']                    = "ctx="            .$ctx;
-
-if (empty($refresh_time) || ($refresh_time != 30000 && $refresh_time != 60000 && $refresh_time != 180000 && $refresh_time != 600000))
-    $refresh_time = 60000;
 
 
 $params_alarm = implode("&", $parameters);
@@ -188,6 +160,11 @@ $autocomplete_keys = array('hosts');
 $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
 
+//New alarm time flag for new beep alarm.
+$_SESSION['_alarm_last_refresh_time'] = gmdate("U");
+
+$refresh_time_secs = 300;
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -197,59 +174,47 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
     
     <link rel="stylesheet" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
     <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css">
-    <?php 
-    if ( $autorefresh ) 
-    { 
-        ?>
-        <script type="text/javascript">
-            setInterval("refresh_function()", <?php echo $refresh_time ?>);
-            
-            function refresh_function() 
-            {
-                if (!GB_DONE && is_toggled < 1) {
-                    document.location.href='<?php echo $refresh_url ?>';
-                }
-            }
-        </script>
-        <?php 
-    } 
-    ?>
-    <script type="text/javascript" src="../js/jquery.min.js"></script>
-    <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="../js/greybox.js"></script>
-    <script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script>
-    
-    <script type='text/javascript' src='/ossim/js/notification.js'></script>
-    <script type='text/javascript' src='/ossim/js/utils.js'></script>
 
-    <!-- Hotkeys: -->
-    <script type="text/javascript" src="/ossim/js/jquery.hotkeys.js"></script>
-
-    <!-- JQuery TipTip: -->
-    <link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
-    <script type="text/javascript" src="/ossim/js/jquery.tipTip-ajax.js"></script>
-
-    <!-- JQuery DataTables: -->
-    <script type="text/javascript" src="/ossim/js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="/ossim/js/jquery.dataTables.plugins.js"></script>
-    <link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui.css"/>  
-    
-    <link rel="stylesheet" type="text/css" href="/ossim/style/jquery.dataTables.css"/>
-    
-    <!-- Token -->
-	<script type="text/javascript" src="/ossim/js/utils.js"></script>
-	<script type="text/javascript" src="/ossim/js/token.js"></script>
-
-    <!-- Spark Line: -->
-    <script type="text/javascript" src="/ossim/js/jquery.sparkline.js"></script>
-
-    <script type="text/javascript" src="/ossim/js/jquery.spin.js"></script>
-
-    <link rel="stylesheet" type="text/css" href="/ossim/style/alarm/console.css"/>
-    
-    <link rel="stylesheet" type="text/css" href="/ossim/style/datepicker.css"/>
+    <?php
+        //CSS Files
+        $_files = array(
+            array('src' => 'av_common.css',                 'def_path' => TRUE),
+            array('src' => 'jquery-ui.css',                 'def_path' => TRUE),
+            array('src' => 'jquery.autocomplete.css',       'def_path' => TRUE),
+            array('src' => 'tipTip.css',                    'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
+            array('src' => 'jquery.datepicker.css',         'def_path' => TRUE),
+            array('src' => 'jquery.dropdown.css',           'def_path' => TRUE),
+            array('src' => 'datepicker.css',                'def_path' => TRUE),
+            array('src' => '/alarm/console.css',            'def_path' => TRUE)
+        );
         
-    <?php require '../host_report_menu.php';?>
+        Util::print_include_files($_files, 'css');
+
+        //JS Files
+        $_files = array(
+            array('src' => 'jquery.min.js',                   'def_path' => TRUE),
+            array('src' => 'jquery-ui.min.js',                'def_path' => TRUE),
+            array('src' => 'utils.js',                        'def_path' => TRUE),
+            array('src' => 'notification.js',                 'def_path' => TRUE),
+            array('src' => 'token.js',                        'def_path' => TRUE),
+            array('src' => 'jquery.tipTip-ajax.js',           'def_path' => TRUE),
+            array('src' => 'greybox.js',                      'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.js',            'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.plugins.js',    'def_path' => TRUE),
+            array('src' => 'jquery.autocomplete.pack.js',     'def_path' => TRUE),
+            array('src' => 'jquery.sparkline.js',             'def_path' => TRUE),
+            array('src' => 'jquery.dropdown.js',              'def_path' => TRUE),
+            array('src' => 'jquery.hotkeys.js',               'def_path' => TRUE),
+            array('src' => 'jquery.spin.js',                  'def_path' => TRUE),
+            array('src' => '/alarm/js/alarm_console.js.php',  'def_path' => FALSE)
+        );
+        
+        Util::print_include_files($_files, 'js');
+
+        require '../host_report_menu.php';
+        
+    ?>
     
     <script language="javascript">
     
@@ -263,6 +228,8 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
         var alarm_table  = false;
         var graph_change = true;
         var graph_filter = false;
+        var draw_label   = false;
+        var dd_alarm     = '';
         
         //Double click issue variables
         var click_delay  = 250, n_clicks = 0, click_timer = null;
@@ -280,8 +247,8 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             notify(msg, type);
         }
   
-        function reload_alarms(){
-
+        function reload_alarms()
+        {
             if(time == 0)
             {
                 $('#reload').text('0');
@@ -289,11 +256,13 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                 if(alarm_table)
                 {
                     remove_tooltip();
+                    
                     if (!graph_filter)
                     {
                         $('#alarm_graph').hide();
                         $('#graph_overlay').show();                    
                     }
+                    
                     alarm_table._fnAjaxUpdate();
                 }
                 if (timeout_rfh)
@@ -329,11 +298,11 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             bg_close();
         }
                 
-        function tray_labels(backlog_id)
+        function add_alarm_label_tray(label_id)
         {
-            select_tray_input(backlog_id);
-            toogle_tags('tags_content_'+backlog_id,false);
-            chk_actions();
+            select_tray_input(dd_alarm);
+            add_alarm_label(label_id);
+            
         }
         
         function select_tray_input (backlog_id) 
@@ -419,15 +388,6 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     }
                 }
             });
-        }
-
-        
-        function set_hand_cursor() {
-            document.body.style.cursor = 'pointer';
-        }
-        
-        function set_pointer_cursor() {
-            document.body.style.cursor = 'default';
         }
         
         function get_alarms_checked()
@@ -611,6 +571,24 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     if (data.error != true)
                     {
                         $(label).parent('div').remove();
+                        
+                        var show_label = false;
+                        
+                        $(".table_data > tbody > tr").each(function()
+                        {
+                            var labels = $('.a_label_container > div', this).length;
+                            
+                            if (labels > 0)
+                            {
+                                show_label = true;
+                                return false;
+                            }
+    
+                        });
+                        
+                        display_datatables_column(show_label);
+                        
+                        
                     }
                     else
                     {
@@ -665,7 +643,7 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                         $(".alarm_check:checked").each(function()
                         {
                             var row  = $(this).parents('tr');  
-                            var cell = $('td',row).eq(3);
+                            var cell = $('.a_label_container', row);
                             
                             if ($('div.tag_'+tag, cell).length == 0)
                             {
@@ -675,8 +653,10 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                         });
                         
                         
+                        
                         $('.remove_tag').off('click').on('click', function(e)
                         {
+                        
                             e.stopPropagation();
                             e.preventDefault();
                             
@@ -766,22 +746,26 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     var params = "";
                     $(".alarm_check").each(function()
                     {
-                        if ( $(this).is(':checked') ) {
+                        if ($(this).is(':checked')) 
+                        {
                             params += "&"+$(this).attr('name')+"=1";
                         }
                     });
                     
                     var atoken = Token.get_token("alarm_operations");
                     
-                    $.ajax({
+                    $.ajax(
+                    {
                         type: "POST",
                         url: "alarms_check_delete.php?token=" + atoken,
                         data: "background=1" + params,
-                        success: function(msg){
+                        success: function(msg)
+                        {
                             $('#delete_data').html('<?php echo _("Reloading alarms ...") ?>');
                             document.location.href='<?php echo $refresh_url?>';
                         },
-                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        error: function(XMLHttpRequest, textStatus, errorThrown)
+                        {
                                 $('#info_delete').hide();
                                 notify(textStatus, 'nf_error');
                         }
@@ -959,6 +943,7 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     $('#sparktristatecols_'+alarm_data[1]).html('');
                     
                     load_trend('sparktristatecols_'+alarm_data[1]);
+                    
                 });
             }
         }
@@ -1003,16 +988,19 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             $('td.tipd').tipTip({defaultPosition:"right"});
             $('.scriptinfo').tipTip({
                defaultPosition: "down",
-               content: function (e) {
-                  
+               content: function (e) 
+               {
                   var ip_data = $(this).attr('data-title');                      
                   
-                  $.ajax({
+                  $.ajax(
+                  {
                       url: 'alarm_netlookup.php?ip=' + ip_data,
-                      success: function (response) {
+                      success: function (response) 
+                      {
                         e.content.html(response); // the var e is the callback function data (see above)
                       }
                   });
+                  
                   return '<?php echo _("Searching")."..."?>'; // We temporary show a Please wait text until the ajax success callback is called.
                }
             });
@@ -1031,16 +1019,18 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                 
             });
             
-            // stop propagation
-            $('a.stop, input.stop, td.stop').click(function(e) {
-                e.stopPropagation();
-            });
-            
             $('.remove_tag').on('click', function()
             {
                 remove_alarm_label(this);
 
-            });          
+            }); 
+            
+            // stop propagation
+            $('a.stop, input.stop, td.stop').click(function(e) 
+            {
+                e.stopPropagation();
+            });
+                
 
             $('.table_data tbody tr').on('click', function () 
             {
@@ -1083,7 +1073,6 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                         quicktip.close_tiptip();
                     }
                 }
-                
             });
             
             load_contextmenu();
@@ -1115,64 +1104,9 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
         
         function display_datatables_column(show)
         {
-            // Warning: complete length could change in the future
-            var complete_length = 11;
-            
-            if (show)
-            {
-                // Prevents for adding two times
-                if ($('.table_data thead th').length < complete_length)
-                {
-                    $('.table_data thead th:eq(2)').after('<th><?php echo _('Labels') ?></th>');
-                    $('.table_data tbody tr').each(function() {
-                        $('td:eq(2)',this).after('<td></td>');
-                    });
-                }
-            }
-            else
-            {
-                if ($('.table_data thead th').length == complete_length)
-                {
-                    $('.table_data thead th:eq(3)').remove();
-                }
-                
-                $('.table_data tbody tr').each(function() {
-                    if ($('td',this).length == complete_length)
-                    {
-                        $('td:eq(3)',this).remove();
-                    }
-                });
-                
-            }
+            alarm_table.fnSetColumnVis(3, show, false);
         }
         
-        function toogle_tags(layer,buttons)
-        {
-            
-            if ( $('#'+layer).html() == '' )
-            {
-                $('.apply_label_layer').empty();
-                
-                $('#'+layer).html($('#tags').html());
-                if (!buttons) // Call from a detail tray 
-                {
-                    $('#'+layer+' li.tagedit').hide();
-                    //$('#'+layer+' ul.labels').css('background-color','#2f2f2f');
-                }
-            }
-            else
-            {
-                $('#'+layer).empty(); 
-                
-                if (!buttons) // Call from a detail tray 
-                {   
-                    input = layer.replace('tags_content_', '#check_');
-                    $(input).prop('checked', false);
-                }                               
-
-            }
-        }
-
         function set_graph_height(h)
         {
                $('#alarm_graph').animate({ height: h+'px' }, 1000).show(); //height(h+'px').show();
@@ -1241,9 +1175,11 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             $('#graph_container').find('.alarm-info').remove();
         }
         
-        $(document).ready(function(){
+        $(document).ready(function()
+        {
         
-            $('#clean_date_filter').on('click', function() {
+            $('#clean_date_filter').on('click', function()
+            {
                 $('#date_from').val('');
                 $('#date_to').val('');
                 
@@ -1254,11 +1190,13 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                         
             check_background_tasks(0);  
 
+            //Loading the alarm counter that reloads the alarms
             reload_alarms();
             
             $('#graph_overlay').spin();
             
-            $("a.greybox2").click(function(e){
+            $("a.greybox2").click(function(e)
+            {
                 e.stopPropagation();
                 var t = this.title || $(this).attr('data-title') || this.href;
                 GB_show(t,this.href,550,'80%');
@@ -1268,43 +1206,53 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             // Autocomplete
             var hosts = [<?php echo $hosts_str ?>];
             
-            $("#src_ip").autocomplete(hosts, {
+            $("#src_ip").autocomplete(hosts, 
+            {
                 minChars: 0,
                 width: 225,
                 matchContains: "word",
                 autoFill: false,
-                formatItem: function(row, i, max) {
+                formatItem: function(row, i, max) 
+                {
                     return row.txt;
                 }
-            }).result(function(event, item) {
+            }).result(function(event, item) 
+            {
                 $("#src_ip").val(item.ip);
             });
             
-            $("#dst_ip").autocomplete(hosts, {
+            $("#dst_ip").autocomplete(hosts, 
+            {
                 minChars: 0,
                 width: 225,
                 matchContains: "word",
                 autoFill: false,
-                formatItem: function(row, i, max) {
+                formatItem: function(row, i, max) 
+                {
                     return row.txt;
                 }
-            }).result(function(event, item) {
+            }).result(function(event, item) 
+            {
                 $("#dst_ip").val(item.ip);
             });
             
-            $("#ds_name").autocomplete('search_ds.php', {
+            $("#ds_name").autocomplete('search_ds.php', 
+            {
                 minChars: 0,
                 width: 300,
                 matchContains: "word",
                 multiple: false,
                 autoFill: false,
-                formatItem: function(row, i, max, value) {
+                formatItem: function(row, i, max, value) 
+                {
                     return (value.split('###'))[1];
                 },
-                formatResult: function(data, value) {
+                formatResult: function(data, value) 
+                {
                     return (value.split('###'))[1];
                 }
-            }).result(function(event, item) {
+            }).result(function(event, item) 
+            {
                 $("#ds_id").val((item[0].split('###'))[0]);
             });
             
@@ -1312,7 +1260,8 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             toggle_filters();
             <?php } ?>
 
-            $('td.tipd').click(function(e) {
+            $('td.tipd').click(function(e) 
+            {
                 e.stopPropagation();
 
                 var check = $(this).find('input');
@@ -1331,10 +1280,10 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     
             });
 
-            var label_column = false;
-            
+
             // Data table
-            alarm_table = $('.table_data').dataTable( {
+            alarm_table = $('.table_data').dataTable(
+            {
                 "bProcessing": true,
                 "bServerSide": true,
                 "bDeferRender": true,
@@ -1350,7 +1299,7 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                     { "bSortable": false, sWidth: "30px" },
                     { "bSortable": true, sWidth: "80px" },
                     { "bSortable": true, sWidth: "60px" },
-                    { "bSortable": false, "sClass": "left" },
+                    { "bSortable": false, "sClass": "left", "bVisible": false },
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, "sClass": "left" },
                     { "bSortable": true, sWidth: "50px" },
@@ -1382,11 +1331,11 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                 "fnDrawCallback" : function(oSettings) 
                 {
                     // hide Label column if there are not content             
-                    display_datatables_column(label_column);
-
+                    display_datatables_column(draw_label);
+                    
                     // Load callbacks, tiptips and more
                     load_handlers();
-                    
+                                        
                     // No wrap for src/dst column
                     $('.table_data tbody tr').each(function() 
                     {
@@ -1414,86 +1363,26 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 
                     
                 },
-                "fnInitComplete": function() {
+                "fnInitComplete": function()
+                {
                     // show contents
                     $('#chkall div.DataTables_sort_wrapper').css('padding-right','0px');
                     
-                    <?php
-                    // Delete buttons
-                    if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") )
-                    {                        
-                    ?>                  
-                    var delete_buttons = '<div style="float:right;margin:0 auto;">\
-                        <div style="display:inline;position:relative">\
-                            <button id="btn_al" class="button av_b_secondary" onclick="toogle_tags(\'tags_content\',true)">\
-                            <span style="display:inline"><?php echo _("Apply Label")?></span>&nbsp;&nbsp;<span style="font-size:9px">&#x25BC;</span>\
-                            </button>\
-                            <div id="tags_content" class="apply_label_layer" style="position:absolute;z-index:99999;left:2px;top:19px"></div>\
-                        </div>\
-                        <button id="btn_ds" class="button av_b_secondary" onclick="bg_delete();">\
-                            <img src="style/img/trash_fill.png" height="14px" align="absmiddle" style="padding-right:8px">\
-                            <span style="display:inline"><?php echo _("Delete selected")?></span>\
-                        </button>\
-                        <button id="btn_cs" class="button av_b_secondary" onclick="bg_close();">\
-                            <img src="style/img/unlock.png" height="14px" align="absmiddle" style="padding-right:8px">\
-                            <span style="display:inline"><?php echo _("Close selected")?></span>\
-                        </button>\
-                        </div>';
-                    $('div.dt_header').prepend(delete_buttons);                 
-                    
-                    <?php 
-                    }
-                    ?>
                     chk_actions();    
                     
-                },
-                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                        if ( aData[3] != '' )
-                        {
-                            label_column = true;
-                        }
-                        /*
-                        // status
-                        if ( aData[2].indexOf("open") > 0 ) {
-                            $('td:eq(2)', nRow).addClass("opened");
-                        } else {
-                            $('td:eq(2)', nRow).addClass("closed");
-                        }
-                        // risk
-                        if ( parseInt(aData[5]) > 7 ) {
-                            $('td:eq(5)', nRow).addClass("high_risk");
-                        } else if ( parseInt(aData[5]) > 4 ) {
-                            $('td:eq(5)', nRow).addClass("medium_risk");
-                        } else if ( parseInt(aData[5]) > 2 ) {
-                            $('td:eq(5)', nRow).addClass("low_risk");
-                        }
-                        // dst reputation
-                        if ( aData[8].indexOf("green") > 0 ) {
-                            $('td:eq(8)', nRow).addClass("high_rep");
-                        } else if ( aData[8].indexOf("yellow") > 0 ) {
-                            $('td:eq(8)', nRow).addClass("medium_rep");
-                        } else if ( aData[8].indexOf("red") > 0 ) {
-                            $('td:eq(8)', nRow).addClass("low_rep");
-                        }
-                        // src reputation
-                        if ( aData[7].indexOf("green") > 0 ) {
-                            $('td:eq(7)', nRow).addClass("high_rep");
-                        } else if ( aData[7].indexOf("yellow") > 0 ) {
-                            $('td:eq(7)', nRow).addClass("medium_rep");
-                        } else if ( aData[7].indexOf("red") > 0 ) {
-                            $('td:eq(7)', nRow).addClass("low_rep");
-                        }
-                        */
-                },              
-                "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) {
-                    fnCallback
-                    oSettings.jqXHR = $.ajax( {
+                },             
+                "fnServerData": function ( sSource, aoData, fnCallback, oSettings ) 
+                {
+                    draw_label = false;
+                    
+                    oSettings.jqXHR = $.ajax( 
+                    {
                         "dataType": 'json',
                         "type": "POST",
                         "url": sSource,
                         "data": aoData,
-                        "success": function (json) {
-                            label_column = false;
+                        "success": function (json) 
+                        {                            
                             $(oSettings.oInstance).trigger('xhr', oSettings);
 
                             //This is for keeping pagination whe the page is back from alarm detail.
@@ -1502,11 +1391,13 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                             {
                                 oSettings.iInitDisplayStart = json.iDisplayStart;
                             }
-
-                            fnCallback( json );
-                        },
-                        "error": function(data){
                             
+                            draw_label = json.show_label;
+                            
+                            fnCallback(json);
+                        },
+                        "error": function(data)
+                        {
                             //Check expired session
                             var session = new Session(data, '');
                             
@@ -1515,9 +1406,7 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                                 session.redirect();
                                 return;
                             }
-                            
-                            //Empty table if error
-                            label_column = false;
+
                             var json = $.parseJSON('{"sEcho": '+aoData[0].value+', "iTotalRecords": 0, "iTotalDisplayRecords": 0, "aaData": "" }')
                             fnCallback( json );
                         }
@@ -1525,6 +1414,7 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                 }
             });
             
+                    
             $(document).on('mouseleave', '.dataTables_wrapper', function(e)
             {
                 var target = e.relatedTarget;
@@ -1545,13 +1435,23 @@ $hosts_str         = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                
             });
             
+            $('#dropdown-2').on('show', function(event,data)
+            {  
+                dd_alarm = data.trigger.data('backlog');
+            });
+                        
         });
 
         var alt_pressed = false;
-        $(window).bind('keydown.alt keydown.ctrl', function(event) {
+        
+        $(window).bind('keydown.alt keydown.ctrl', function(event) 
+        {
             alt_pressed = true;
-        }).bind('keyup.alt keyup.ctrl', function(event) {
+            
+        }).bind('keyup.alt keyup.ctrl', function(event) 
+        {
             alt_pressed = false;
+            
         });    
         
     </script>
@@ -1791,7 +1691,7 @@ if (!isset($_GET["hide_search"]))
                             <td class='noborder left'>
                                 <div style="margin-top:3px">
                                     <span style='font-weight: bold;'><?php echo _("Contains the event type")?></span>:
-                                    <input type="text" class='inpw_200' style='width:160px;margin-left: 10px;' name="ds_name" id='ds_name' value="<?php echo htmlentities($ds_name)?>" onchange="if (this.value=='') $('#ds_id').val('')"/>
+                                    <input type="text" class='inpw_200' style='width:160px;margin-left: 10px;' name="ds_name" id='ds_name' value="<?php echo Util::htmlentities($ds_name)?>" onchange="if (this.value=='') $('#ds_id').val('')"/>
                                     <input type="hidden" name="ds_id" id='ds_id' value="<?php echo $ds_id?>"/>
                                 </div>
                                 <div style="margin-top:5px">
@@ -1902,23 +1802,25 @@ if (!isset($_GET["hide_search"]))
                                                             <?php       
                                                             foreach ($tags as $tg) 
                                                             { 
-                                                                ?>
+                                                            ?>
                                                                 <tr>
                                                                     <td class="nobborder">
-                                                                        <table class="transparent" cellpadding="4" cellspacing="4">
+                                                                        <table class="transparent">
                                                                             <tr>
-                                                                                <?php
-                                                                                    $tag_url        = "alarm_console.php?";
-                                                                                    $p_tag['tag']   = "tag=".$tg->get_id();
-                                                                                    $tag_url       .=  implode("&", $p_tag);
-                                                                                    
-                                                                                    $style          = "border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;border:0px;";
-                                                                                    $style         .= "background-color: #".$tg->get_bgcolor().";";
-                                                                                    $style         .= "color: #".$tg->get_fgcolor().";";
-                                                                                    $style         .= ( $tg->get_bold() )   ? "font-weight: bold;"  : "font-weight: normal;";
-                                                                                    $style         .= ( $tg->get_italic() ) ? "font-style: italic;" : "font-style: none;";
-                                                                                ?>
-                                                                                <td onmouseover="set_hand_cursor()" onmouseout="set_pointer_cursor()" onclick="document.location='<?php echo $tag_url?>'" style="<?php echo $style?>"><?php echo $tg->get_name()?></td>
+                                                                            <?php
+                                                                                $tag_url        = "alarm_console.php?";
+                                                                                $p_tag['tag']   = "tag=".$tg->get_id();
+                                                                                $tag_url       .=  implode("&", $p_tag);
+                                                                                
+                                                                                $style          = "cursor:pointer;border-radius:5px;border:0px;";
+                                                                                $style         .= "background-color: #".$tg->get_bgcolor().";";
+                                                                                $style         .= "color: #".$tg->get_fgcolor().";";
+                                                                                $style         .= ( $tg->get_bold() )   ? "font-weight: bold;"  : "font-weight: normal;";
+                                                                                $style         .= ( $tg->get_italic() ) ? "font-style: italic;" : "font-style: none;";
+                                                                            ?>
+                                                                                <td onclick="document.location='<?php echo $tag_url?>'" style="<?php echo $style?>">
+                                                                                    <?php echo $tg->get_name()?>
+                                                                                </td>
                                                                             </tr>
                                                                         </table>
                                                                     </td>
@@ -1981,25 +1883,7 @@ if (!isset($_GET["hide_search"]))
                     $beep_url                .=  implode("&", $p_beep);
                     
                     $refresh_url             .=  implode("&", $parameters);
-                    
-                    $refresh_sel1 = $refresh_sel2 = $refresh_sel3 = $refresh_sel4 = "";
-                    
-                    if ($refresh_time == 30000)  $refresh_sel1 = 'selected="selected"';
-                    if ($refresh_time == 60000)  $refresh_sel2 = 'selected="selected"';
-                    if ($refresh_time == 180000) $refresh_sel3 = 'selected="selected"';
-                    if ($refresh_time == 600000) $refresh_sel4 = 'selected="selected"';
-                                
-                    if ($autorefresh) 
-                    {
-                        $hide_autorefresh    = 'checked="checked"';
-                        $disable_autorefresh = '';
-                    }
-                    else 
-                    {
-                        $hide_autorefresh    = '';
-                        $disable_autorefresh = 'disabled="disabled"';
-                    }
-                    
+                                                                       
                 ?>
                 
                 <td class="nobborder" style="text-align:center">
@@ -2019,18 +1903,6 @@ if (!isset($_GET["hide_search"]))
                                 <input style="border:none" name="beep" type="checkbox" value="1"  onClick="document.location='<?php echo $beep_url?>'" <?php echo $checked_beep?>><?php echo gettext("Beep on new alarm"); ?>
                             </td>
                         </tr>
-                        <!--<tr>
-                            <td style="text-align: left; border-width: 0px">
-                                <input type="checkbox" name="autorefresh" onclick="javascript:document.filters.refresh_time.disabled=!document.filters.refresh_time.disabled;" <?php echo $hide_autorefresh ?> value='1'/><?php echo gettext("Autorefresh") ?>&nbsp;
-                                <select name="refresh_time" <?php echo $disable_autorefresh ?> >
-                                    <option value="30000"  <?php echo $refresh_sel1 ?> ><?php echo _("30 sec") ?></option>
-                                    <option value="60000"  <?php echo $refresh_sel2 ?>><?php echo _("1 min") ?></option>
-                                    <option value="180000" <?php echo $refresh_sel3 ?>><?php echo _("3 min") ?></option>
-                                    <option value="600000" <?php echo $refresh_sel4 ?>><?php echo _("10 min") ?></option>
-                                </select>&nbsp;
-                                <a href="<?php echo $refresh_url ?>">[<?php echo _("Refresh") ?>]</a>
-                            </td>
-                        </tr>-->
                     </table>
                 </td>       
             </tr>
@@ -2051,7 +1923,34 @@ if (!isset($_GET["hide_search"]))
      </div>    
 
     <!-- ALARM LIST -->
-    <div id='alarm_list' style='width:100%;margin:10px 0 20px 0;'>
+    <div id='alarm_list'>
+        
+        <?php
+        // Menu buttons
+        if ( Session::menu_perms("analysis-menu", "ControlPanelAlarmsDelete") )
+        {                        
+        ?> 
+            <div id ='alarm_console_button_list'>
+                
+                <button id="btn_al" class="button_labels av_b_secondary" data-dropdown="#dropdown-1">
+                    <?php echo _("Apply Label")?>
+                </button>
+            
+                <button id="btn_ds" class="button av_b_secondary" onclick="bg_delete();">
+                    <img src="style/img/trash_fill.png">
+                    <span><?php echo _("Delete selected")?></span>
+                </button>
+                
+                <button id="btn_cs" class="button av_b_secondary" onclick="bg_close();">
+                    <img src="style/img/unlock.png">
+                    <span><?php echo _("Close selected")?></span>
+                </button>
+                
+            </div>
+        <?php
+        }
+        ?>
+        
         <table class='table_data'>
             <thead>
                 <tr>
@@ -2107,7 +2006,69 @@ if (!isset($_GET["hide_search"]))
         <?php echo _("Delete ALL"); ?>
     </a>
 
-                    
+    
+    <div id="dropdown-1" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
+    
+        <ul class="dropdown-menu labels">                             
+            <?php 
+            if (Session::am_i_admin()) 
+            { 
+                
+            ?>
+                <li class="tagedit" style="text-align:right">
+                    <a href="tags_edit.php" style="font-size:10px;font-weight:normal">[<?php echo _("Edit") ?>]</a>
+                </li>
+            <?php 
+            }     
+            if (count($tags) < 1)
+            {
+            ?>
+                <li>
+                    <?php echo _("No tags found.") ?>
+                </li>
+            <?php 
+            } 
+            else 
+            { 
+                foreach ($tags as $tg) 
+                { 
+                ?>
+                    <li onclick="add_alarm_label('<?php echo $tg->get_id() ?>')">
+                        <?php echo $tags_html[$tg->get_id()]; ?>
+                    </li>
+                <?php 
+                }  
+            } 
+            ?>
+        </ul>	
+    </div>  
+    
+    <div id="dropdown-2" class="dropdown dropdown-close dropdown-tip dropdown-anchor-right">
+    
+        <ul class="dropdown-menu labels">                             
+            <?
+            if (count($tags) < 1)
+            {
+            ?>
+                <li>
+                    <?php echo _("No tags found.") ?>
+                </li>
+            <?php 
+            } 
+            else 
+            { 
+                foreach ($tags as $tg) 
+                { 
+                ?>
+                    <li onclick="add_alarm_label_tray('<?php echo $tg->get_id() ?>')">
+                        <?php echo $tags_html[$tg->get_id()]; ?>
+                    </li>
+                <?php 
+                }  
+            } 
+            ?>
+        </ul>	
+    </div>          
 
 </body>
 </html>

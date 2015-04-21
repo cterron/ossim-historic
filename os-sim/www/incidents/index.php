@@ -50,7 +50,7 @@ $tag_list     = $incident_tag->get_list();
 
 //Load users and entities (Autocomplete)
 
-$autocomplete_keys   = array('users', 'entities');
+$autocomplete_keys  = array('users', 'entities');
 $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -64,106 +64,106 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
 	<link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css"/>
 	<script type="text/javascript" src="../js/jquery.min.js"></script> 
     <script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script>
-    <script type="text/javascript" src="../js/notification.js"></script>    
-    <script type="text/javascript" src="../js/jquery.tipTip.js"></script>	
+    <script type="text/javascript" src="../js/notification.js"></script>
+    <script type="text/javascript" src="../js/jquery.tipTip.js"></script>
 
-        
-	<script type="text/javascript">
-		        
+
+    <script type="text/javascript">
+
         function checkall()
         {
             if ($('input[name="ticket0"]').attr('checked'))
-            { 
-                $('input[type="checkbox"]').attr('checked',true);
+            {
+                $('input[type="checkbox"]').attr('checked', true);
             }
             else
             {
-                $('input[type="checkbox"]').attr('checked',false);
+                $('input[type="checkbox"]').attr('checked', false);
             }
         }
-                
+
+
         function get_chk_selected()
         {
             var size = $("input[type='checkbox']:checked").length;
-            
+
             if (size > 0)
             {
-                var selected = new Array();            
+                var selected = new Array();
                 $("input[type='checkbox']:checked").each(function (index) {
-                    
-                    var data = $(this).val().split("_");
-                    var id   = parseInt(data[0]);
-                    
+
+                    var id   = parseInt($(this).val());
+
                     if (!isNaN(id))
                     {
                         selected[selected.length] = id;
-                    }        
+                    }
                 });
-                                     
+
                 return selected;
             }
         }
-                     
-        
+
+
         function execute_action(action, tag)
         {
             var selected = get_chk_selected();
-           
+
             if (typeof(selected) == 'undefined')
-            {   
+            {
                 return;
             }
-                
-            var msg_action = "";
-            
+
+            var msg_action = '';
+
             if (action == 'apply_tags')
             {
                 msg_action = "<?php echo _("Applying tags to selected tickets")?>";
             }
             else if (action == 'remove_tags')
-            {    
+            {
                 msg_action = "<?php echo _("Removing tags to selected tickets")?>";
             }
             else
             {
                 return ;
             }
-            
+
             var loading    = "<div>"
                                 + "<img src='../pixmaps/loading3.gif' alt='<?php echo _("Loading")?>'/>"
                                 + "<span style='margin-left: 5px;'>" + msg_action + ", <?php echo _("please wait")?> ...</span>"
                            + "</div>";
-            
+
             $.ajax({
                 type: "POST",
                 url: "manage_incident_tags.php",
                 data: "action="+action+"&selected_incidents="+selected.join(",")+"&tag="+tag,
                 beforeSend: function(xhr) {
-                    $('#left_ct').html(loading); 
+                    $('#left_ct').html(loading);
                 },
                 success: function(html){
                     
                     $('#left_ct').html('');
-                                      
-                    var status    = html.split("###");
-                                       
+
+                    var status = html.split("###");
+
                     if (status[0] == "error")
-                    {                    
+                    {
                         var content = "<div class='cont_info'>"+status[1]+"</div>";
-                                  
-                        var config_nt = { 
-                            content: content, 
+
+                        var config_nt = {
+                            content: content,
                             options: {
                                 type: 'nf_error',
                                 cancel_button: false
                             },
                             style: 'width: 90%;'
                         };
-                    
-                        nt = new Notification('nt_mi',config_nt);                    
+
+                        nt = new Notification('nt_mi',config_nt);
                         
                         $("#middle_ct").html(nt.show());
-                        $("#middle_ct").fadeIn(2000);                     
+                        $("#middle_ct").fadeIn(2000);
                     }
                     else 
                     {
@@ -173,7 +173,7 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                             {
                                 return;
                             }
-                                                        
+
                             if (status[1] == "DB Error")
                             {
                                 selected = status[2].split(",");
@@ -182,6 +182,7 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                             if (action == 'apply_tags')
                             {
                                 var html_tag = (status[1] == "DB Error") ? status[3] : status[2];
+
                                 for (var i=0; i<selected.length; i++)
                                 {
                                     $('#tags_'+selected[i]).append(html_tag);
@@ -196,49 +197,50 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
                             }
                         }
                         else
-                        {                       
-                            var content = "<?php echo _('You do not have permission to realize this action')?>";
-                                  
-                            var config_nt = { 
-                                content: content, 
+                        {
+                            var content = "<?php echo _('You do not have permission to perform this action')?>";
+
+                            var config_nt = {
+                                content: content,
                                 options: {
                                     type: 'nf_error',
                                     cancel_button: false
                                 },
                                 style: 'width: 90%;'
                             };
-                        
-                            nt = new Notification('nt_mi',config_nt);                    
+
+                            nt = new Notification('nt_mi',config_nt);
                             
                             $("#middle_ct").html(nt.show());
-                            $("#middle_ct").fadeIn(2000);                        
+                            $("#middle_ct").fadeIn(2000);
                         }
                     }
-                    
-                    setTimeout('$("#middle_ct div").fadeOut(4000);', 25000);	
+
+                    setTimeout('$("#middle_ct div").fadeOut(4000);', 25000);
                 }
             });
         }
-        
-                 
-        $(document).ready(function(){
-            
-            $('.tiptip').tipTip();
-            
-            $('#link_tags,#link_tbox').bind('click', function()  {$('#tag_list').toggle(); });
-            
-            $('.td_tags').bind('click', function() {   
-                var tag = $(this).attr("id").replace("tag_", "");
-                execute_action('apply_tags', tag); 
-            });
-            
-            $('#link_rm_tags').bind('click', function()  {
-                execute_action('remove_tags', '');
-            }); 
 
-            //Autocomplete    
-            var users_and_entities = [ <?php echo $users_and_entities; ?> ];
-								        
+        $(document).ready(function(){
+
+            $('.tiptip').tipTip();
+
+            $('#link_tags,#link_tbox').click(function(){
+                $('#tag_list').toggle();
+            });
+
+            $('.td_tags').click(function() {
+                var tag = $(this).attr("id").replace("tag_", '');
+                execute_action('apply_tags', tag);
+            });
+
+            $('#link_rm_tags').click(function(){
+                execute_action('remove_tags', '');
+            });
+
+            //Autocomplete
+            var users_and_entities = [<?php echo $users_and_entities;?>];
+
             $("#text_in_charge").autocomplete(users_and_entities, {
                 minChars: 0,
                 width: 300,
@@ -252,22 +254,30 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             }).result(function(event, item) {
                 if (typeof(item) != 'undefined' && item != null)
                 {
-					$('#in_charge').val(item.id); 
-				}
-				else
-				{
-					$("#in_charge").val($('#text_in_charge').val());
-				}					
+                    $('#in_charge').val(item.id);
+                }
+                else
+                {
+                    $("#in_charge").val($('#text_in_charge').val());
+                }
             });
-		});
-        
+
+            $('#text_in_charge').blur(function() {
+
+                if ($('#text_in_charge').val() == '')
+                {
+                    $("#in_charge").val('');
+                }
+            });
+        });
+
 	</script>
-	<style type='text/css'>				
+	<style type='text/css'>
 		        
         #table_3 
         {
-            margin-top: 5px; 
-            border:none;            
+            margin-top: 5px;
+            border:none;
         }
 		
         .nobborder 
@@ -374,7 +384,7 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             position:absolute;
             right:0px;
             top:0px;
-            text-align: right;            
+            text-align: right;
         }
         
         #tag_box #theader_tag_box
@@ -398,7 +408,7 @@ $users_and_entities = Autocomplete::get_autocomplete($conn, $autocomplete_keys);
             float:left; 
             width:55%; 
             text-align: right;
-            padding: 6px 3px 3px 3px;            
+            padding: 6px 3px 3px 3px;
         }
     
         #theader_right
@@ -481,46 +491,66 @@ $vars = array(
     'close' 		  => OSS_ALPHA . OSS_SPACE
 );
 
-foreach($vars as $var => $validate) 
+foreach($vars as $var => $validate)
 {
     $$var = GET("$var");
-    if (!ossim_valid($$var, array($validate, OSS_NULLABLE))) 
+    if (!ossim_valid($$var, array($validate, OSS_NULLABLE)))
     {
         die(ossim_error());
     }
 }
 
-if (empty($in_charge) && empty($text_in_charge)){
-    $in_charge = null;
-    $text_in_charge = null;
+if (empty($in_charge) && empty($text_in_charge))
+{
+    $in_charge      = NULL;
+    $text_in_charge = NULL;
 }
 
 
-if (!$order_by) {
-    $order_by = 'life_time';
+if (!$order_by)
+{
+    $order_by   = 'life_time';
     $order_mode = 'DESC';
 }
 
-if ($page=="" || $page<=0) 
-    $page=1;
-    
+if ($page == '' || $page <= 0)
+{
+    $page = 1;
+}
+
 // First time we visit this page, show by default only Open incidents
 // when GET() returns NULL, means that the param is not set
-if (GET('status') === null) 
+if (GET('status') === NULL)
+{
     $status = 'Open';
-
+}
 
 // Close selected tickets
-if (GET('close') == _("Close selected")) 
+if (GET('close') == _('Close selected'))
 {
-    foreach ($_GET as $k => $v) 
+    foreach ($_GET as $k => $cst_inc_id)
     {
-        if (preg_match("/^ticket\d+/",$k) && $v != "") 
+        if (preg_match("/^ticket\d+/", $k) && $cst_inc_id != '')
         {
-            $idprio = explode("_",$v);
-            if (is_numeric($idprio[0]) && is_numeric($idprio[1]) && Incident::user_incident_perms($conn, $idprio[0], 'closed'))
+            list ($cst_incident) = Incident::search($conn, array('incident_id' => $cst_inc_id));
+
+            if (is_object($cst_incident) && !empty($cst_incident))
             {
-                Incident_ticket::insert($conn, $idprio[0], "Closed", $idprio[1], Session::get_session_user(), " ", "", "", array(), null);
+                //Incident is not already closed
+                $cst_prev_status = $cst_incident->get_status();
+
+                if ($cst_prev_status != 'Closed' && Incident::user_incident_perms($conn, $cst_inc_id, 'closed'))
+                {
+                    $cst_status      = 'Closed';
+                    $cst_priority    = $cst_incident->get_priority();
+                    $cst_user        = Session::get_session_user();
+                    $cst_description = sprintf(_('Ticket automatically closed by %s'), $cst_user);
+                    $cst_action      = sprintf(_('Change ticket status from %s to Closed'), ucfirst($cst_incident->get_status()));
+                    $cst_transferred = NULL;
+                    $cst_tags        = $cst_incident->get_tags();
+
+                    Incident_ticket::insert($conn, $cst_inc_id, $cst_status, $cst_priority, $cst_user, $cst_description, $cst_action, $cst_transferred, $cst_tags);
+                }
             }
         }
     }
@@ -621,7 +651,8 @@ $criteria = array(
 						foreach(Incident_type::get_list($conn) as $itype) 
 						{
 							$id = $itype->get_id();
-							if (preg_match("/custom/",$itype->get_keywords())) {
+							if (preg_match("/custom/",$itype->get_keywords()))
+							{
 								$customs[] = $itype->get_id();
 							}
 							?>
@@ -715,7 +746,7 @@ $criteria = array(
     $incident_list   = Incident::search($conn, $criteria, $order_by, $order_mode, $page, $rows_per_page);
     $total_incidents = Incident::search_count($conn);
     
-    if (count($incident_list)>=$total_incidents) 
+    if (count($incident_list) >= $total_incidents)
     {
         $total_incidents = count($incident_list);
         if ($total_incidents > 0)
@@ -723,11 +754,12 @@ $criteria = array(
             $rows_per_page = $total_incidents;
         }
     }
-            
-    
+
+
     $filter = '';
-        
-	foreach($criteria as $key => $value){
+
+	foreach($criteria as $key => $value)
+	{
 		$filter.= "&$key=" . urlencode($value);
 	}
 	
@@ -783,7 +815,7 @@ $criteria = array(
 
                     <tr valign="middle" class="ticket_tr">
                         <td>
-                            <input type="checkbox" name="ticket<?php echo $row ?>" value="<?php echo $incident->get_id()."_".$incident->get_priority()?>"/>
+                            <input type="checkbox" name="ticket<?php echo $row ?>" value="<?php echo $incident->get_id()?>"/>
                         </td>
                                     
                         <td>
@@ -848,7 +880,7 @@ $criteria = array(
                         
                         <td id='tags_<?php echo $incident->get_id()?>'>
                         <?php
-						foreach($incident->get_tags() as $tag_id) 
+                        foreach($incident->get_tags() as $tag_id) 
                         {
                             echo "<div style='color:grey; font-size: 10px; padding: 0 5px 3px 5px;'>" . $incident_tag->get_html_tag($tag_id) . "</div>\n";
                         }

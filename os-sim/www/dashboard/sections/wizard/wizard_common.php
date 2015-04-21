@@ -59,32 +59,34 @@ function check_report_availability($user_perm, $entity_perm, $creator, $wizard_p
 	}
 	
 	return FALSE;
-}	
+}
 
 
 function load_entities($dbconn)
-{		
-	$entities = Acl::get_entities_to_assign($dbconn);
+{
+    $entities      = Acl::get_entities_to_assign($dbconn);
+    $json_entities = '';
 
-	foreach ($entities as $entity => $name) 
-	{
-		$json_entities .= '{ "txt":"'. utf8_encode($name) .'", "id": "e_'. $entity .'", "desc": "ENTITY:'. utf8_encode($name) .'"},';
-	}
-	
-	return $json_entities;
+    foreach ($entities as $entity => $name)
+    {
+        $json_entities .= '{ "txt":"'.utf8_encode($name).'", "id": "e_'.$entity.'", "desc": "ENTITY:'.utf8_encode($name).'"},';
+    }
+
+    return $json_entities;
 }
 
 
 function load_users($dbconn)
 {
-	$users = Session::get_users_to_assign($dbconn);
+    $users      = Session::get_users_to_assign($dbconn);
+    $json_users = '';
 
-	foreach ($users as $user) 
-	{
-		$json_users .= '{ "txt":"'.utf8_encode($user->get_name()).' [User]", "id": "u_'.$user->get_login().'" },';
-	}
-	
-	return $json_users;
+    foreach ($users as $user)
+    {
+        $json_users .= '{ "txt":"'.utf8_encode($user->get_name()).' [User]", "id": "u_'.$user->get_login().'" },';
+    }
+
+    return $json_users;
 }
 
 
@@ -152,37 +154,6 @@ function get_wizard_perms($dbconn)
 	}
 	
 	return $perms;
-}
-
-
-function savetoDB($dbconn, $id, $type_id, $tab, $user, $column, $order, $height, $title, $help, $refresh, $file, $type, $asset, $media, $params)
-{
-	$sql = "REPLACE INTO dashboard_widget_config (id, type_id, panel_id, user, col, fil, height, title, help, refresh, file, type, asset, media, params)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-   
-	$params = array(
-		$id,
-		$type_id,
-        $tab,
-		$user,
-        $column,
-		$order,
-        $height,
-        $title,
-        $help,
-        $refresh,
-        $file,
-		$type,
-		$asset,
-		$media,
-        $params
-    );
-	
-	if ($dbconn->Execute($sql, $params) === FALSE) 
-	{
-        print 'Error inserting widget: ' . $dbconn->ErrorMsg() . '<br/>';
-        exit;
-    }	
 }
 
 

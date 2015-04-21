@@ -31,6 +31,7 @@
 verbose = False
 doctor_cfg_file = '/etc/ossim/doctor/doctor.cfg'
 ossim_setup_file = '/etc/ossim/ossim_setup.conf'
+ossim_license_file = '/etc/ossim/ossim.lic'
 plugin_list = 'all'
 category_list = 'all'
 severity_list = 'all'
@@ -41,14 +42,21 @@ output_path = '/var/ossim/doctor'
 output_file_prefix = 'data'
 output_raw = False
 version = 'VERSION'
-nickname = 'Hemingway'
+nickname = 'Mewes'
 version_string = 'AlienVault Doctor version %s\n' % version
 
 error_codes = {'invalid_dir': -1,
                'undef_ossim_profiles': -2,
                'invalid_ossim_profile': -3,
-               'missing_mysql_config': -4,
-               'undef_support_prefix': -5}
+               'missing_network_config': -4,
+               'invalid_network_config': -5,
+               'missing_mysql_config': -6,
+               'undef_support_prefix': -7,
+               'diff_versions_essential_packages': -8,
+               'missing_sensor_config': -9,
+               'cannot_connect_db': -10,}
 
 exit_codes = {'all_good': 0,
               'ftp_upload_failed': 1}
+
+severity = ['High', 'Medium', 'Low']

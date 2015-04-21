@@ -63,6 +63,34 @@ def get_devices_logging(system_ip):
         api_log.error("get_hosts_in_syslog error: %s, %s" % (str(e), traceback.format_exc()))
     return device_hash
 
+
+def get_network_devices_for_sensor(sensor_ip):
+    """Returns the list of devices logging to alienvault-sensor
+
+    Args:
+        sensor_ip (str): Sensor IP
+
+    Returns:
+        On success, it returns a hash table with device_id:device_ip, otherwise it returns
+        an empty dict
+    """
+    dev_hash = {}
+    try:
+        command = "grep cpe /etc/ossim/agent/config.yml | sed 's/.*device: \([^,]*\), device_id: \([^,]*\).*/\\2:\\1/g'"
+        response = ansible.run_module([sensor_ip], module="shell", args=command)
+        (success, msg) = ansible_is_valid_response(sensor_ip, response)
+        if success:
+            response = response['contacted'][sensor_ip]['stdout'].split('\n')
+            for i in response:
+                if i and ':' in i:
+                    k, v = i.split(':')
+                    if k and v and k not in dev_hash.keys():
+                        dev_hash[k] = v
+    except Exception, e:
+        api_log.error("[get_network_devices_for_sensor error]: %s, %s" % (str(e), traceback.format_exc()))
+    return dev_hash
+
+
 def get_hosts_in_syslog(system_ip):
     """Returns a hash table of host_ip = log filename found under the folder /var/log/*
 

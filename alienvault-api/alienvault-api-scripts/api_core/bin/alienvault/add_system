@@ -29,9 +29,9 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 
 import sys
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 
-from apimethods.system.system import add_system, add_system_from_ip
+from apimethods.system.system import add_system, add_system_from_ip, add_ha_system
 from apimethods.utils import is_valid_ipv4, is_valid_uuid
 
 
@@ -46,6 +46,8 @@ def parse_args():
                       help="System id number of the remote system")
     parser.add_option("-p", "--password", dest="password", type="string", default=None,
                       help="root password of the remote system")
+    parser.add_option("--ha", action="store_true", dest="is_ha", default=False,
+                      help=SUPPRESS_HELP)
 
     (options, args) = parser.parse_args()
 
@@ -83,7 +85,11 @@ def main():
     print "Adding system..."
     sys.stdout.flush()
 
-    if options.system_id:
+    if options.is_ha:
+        print "Adding HA system..."
+        (success, msg) = add_ha_system(system_ip=options.system_ip,
+                                            password=options.password)
+    elif options.system_id:
         (success, msg) = add_system(system_id=options.system_id,
                                     password=options.password)
     else:
@@ -95,7 +101,10 @@ def main():
         exit(-1)
 
     print "System added successfully"
-    print " %s - %s" % (msg['system_id'], msg['hostname'])
+    if options.is_ha:
+        print msg
+    else:
+        print " %s - %s" % (msg['system_id'], msg['hostname'])
 
     exit(0)
 

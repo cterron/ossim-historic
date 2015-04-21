@@ -1083,6 +1083,7 @@ class Av_tree
         {
             $tree['children'][] = array (
                 'title'        => self::utf8_encode(_('No MACs found')),
+                'key'          => 'no_macs_found',
                 'hideCheckbox' => TRUE,
                 'isLink'       => FALSE
             );
@@ -1366,6 +1367,7 @@ class Av_tree
         {
             $tree['children'][] = array (
                 'title'        => self::utf8_encode(_('No services found')),
+                'key'          => 'no_services_found',
                 'hideCheckbox' => TRUE,
                 'isLink'       => FALSE
             );
@@ -1643,6 +1645,7 @@ class Av_tree
         {
             $tree['children'][] = array (
                 'title'        => self::utf8_encode(_('No software found')),
+                'key'          => 'no_software_found',
                 'hideCheckbox' => TRUE,
                 'isLink'       => FALSE
             );
@@ -1860,6 +1863,7 @@ class Av_tree
         {       
             $tree = array (
                 'title'        => self::utf8_encode(_('No hosts found')),
+                'key'          => 'no_hosts_found',
                 'hideCheckbox' => TRUE,
                 'isLink'       => FALSE
             );

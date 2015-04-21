@@ -716,7 +716,7 @@ class Session
     *
     * @return boolean                
     */
-    public function toggle_enabled_user($conn, $user) 
+    public static function toggle_enabled_user($conn, $user)
     {        
         Ossim_db::check_connection($conn);
         
@@ -918,19 +918,19 @@ class Session
     /**
     * This function returns an array with all users that belong to user scope
     *
-    * @param object $conn  Database access object
-    * @param object $user  [Optional] User login to search
+    * @param object $conn      Database access object
+    * @param string $order_by  [Optional] ORDER BY clause
     *
     * @throws Exception  If a connection error occurred
     *
     * @return array
     */
-    public static function get_users_to_assign($conn, $user = NULL)
+    public static function get_users_to_assign($conn, $order_by = 'ORDER BY login ASC')
     {
         Ossim_db::check_connection($conn);
         
         $users = array();
-        $user  = (empty($user)) ? self::get_session_user() : $user;
+        $user  = self::get_session_user();
                     
         if (empty($user) && !empty($_SESSION['_user_vision']['users_to_assign']))
         {
@@ -980,9 +980,10 @@ class Session
             $users[$user] = $user; // myself
         }
 
-        $where = "WHERE login in ('".implode("','",$users)."')";
+        $where    = "WHERE login in ('".implode("','",$users)."')";
+        $order_by = (empty($order_by)) ? ' ORDER BY login ASC' : " $order_by";
         
-        return self::get_list($conn, $where, ' ORDER BY login ASC', TRUE);        
+        return self::get_list($conn, $where, $order_by, TRUE);        
     }
     
     
@@ -1024,6 +1025,7 @@ class Session
         $save_perm_in_tables = TRUE;        
        
         $conf        = $GLOBALS['CONF'];
+        $default_eng = self::get_default_engine($conn);
         $default_ctx = str_replace('-', '', strtoupper($conf->get_conf('default_context_id')));
         
         if (empty($default_ctx)) 
@@ -1120,7 +1122,7 @@ class Session
                 {
                     if (valid_hex32($sensor_key)) 
                     {
-                        list($sensor_hosts, $sensor_nets) = Av_sensor::get_related_assets($conn, $sensor_key, $user_vision['ctx_where']);
+                        list($sensor_hosts, $sensor_nets) = Av_sensor::get_related_assets($conn, $sensor_key);
                         
                         foreach ($sensor_hosts as $h_id) 
                         {
@@ -1162,7 +1164,7 @@ class Session
             {
                 foreach ($user_vision['asset']['net'] as $aid => $_perms)
                 {
-                    $sensors = Asset_net_sensors::get_sensors_by_id($conn, $net_id);
+                    $sensors = Asset_net_sensors::get_sensors_by_id($conn, $aid);
                     
                     foreach ($sensors as $id => $s_data) 
                     {
@@ -1202,6 +1204,21 @@ class Session
                     Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }                                 
                 
+                // Fill allowed ctx
+                $query = "INSERT IGNORE INTO user_ctx_perm (login, ctx) VALUES (?, UNHEX(?))";
+        
+                $rs = $conn->Execute($query, array($user, $default_ctx));
+                if (!$rs)
+                {
+                    Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                }
+                $rs = $conn->Execute($query, array($user, $default_eng));
+                if (!$rs)
+                {
+                    Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+                }
+                
+                
                 // Fill live perms tables
                 foreach ($user_vision['asset'] as $asset_type=>$assets_arr) 
                 {
@@ -1219,27 +1236,15 @@ class Session
                 }
                 
                 // Subnets of Allowed Nets
-                if (is_array($user_vision['asset']['net']))
+                if (!empty($user_vision['asset']['net']))
                 {
-                    foreach ($user_vision['asset']['net'] as $net_id => $perm)
+                    $query = "CALL _acl_fill_subnets(?)";
+                    $rs = $conn->Execute($query, array($user));
+                    if (!$rs)
                     {
-                        //My subnets (To display alarms, events, ...)        
-                        $my_subnets = Asset_net::get_my_subnets($conn, $net_id);
-                        
-                        foreach ($my_subnets as $net_id => $net_data)
-                        {                                                
-                            // Fill live perms tables
-                            $params = array($user, $net_id);
-                            $query  = "INSERT IGNORE INTO user_net_perm (login, asset_id) VALUES (?, UNHEX(?))";
-                            
-                            $rs = $conn->Execute($query, $params);
-                            
-                            if (!$rs) 
-                            {
-                                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-                            }                      
-                        }
+                        Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                     }
+                    $rs->Close();
                 }
                 
                 // Allowed Sensors
@@ -1315,39 +1320,39 @@ class Session
                 $user_vision['net_where_ff'] = TRUE;
             }
             elseif(!$user_vision['host_where'] && !$user_vision['net_where'])
-            {                
-                
-                $user_vision['host_where']    = TRUE;
+            {
+            
+                //$user_vision['host_where']    = TRUE;
                 $user_vision['host_where_ff'] = TRUE;
-                
-                $user_vision['net_where']    = TRUE;
+            
+                //$user_vision['net_where']    = TRUE;
                 $user_vision['net_where_ff'] = TRUE;
-                
+            
                 $params = array($user, 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
                 $query  = "INSERT IGNORE INTO user_host_perm (login, asset_id) VALUES (?, UNHEX(?))";
-                
-                $rs = $conn->Execute($query, $params);                             
-                
-                if (!$rs) 
+            
+                $rs = $conn->Execute($query, $params);
+            
+                if (!$rs)
                 {
                     Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
-                
+            
                 $query = "INSERT IGNORE INTO user_net_perm (login, asset_id) VALUES (?, UNHEX(?))";
-                
+            
                 $params = array($user, 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
                 $rs     = $conn->Execute($query, $params);
-                
-                if (!$rs) 
+            
+                if (!$rs)
                 {
                     Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
-                                
+            
                 if ($user_asset_restriction)
-                {                   
+                {
                     $user_vision['host_where_ff'] = FALSE;
                     $user_vision['net_where_ff']  = FALSE;
-                }                             
+                }
             }
                                        
                              
@@ -1364,11 +1369,9 @@ class Session
                 **********************************************************************************/  
                 
                 
-                $query = "SELECT id FROM host 
-                          WHERE ctx in (".$user_vision['ctx_where'].") AND id NOT IN (SELECT asset_id FROM user_host_perm WHERE login = '".$user."') 
-                          LIMIT 1";
+                $query = "SELECT id FROM host, user_ctx_perm WHERE user_ctx_perm.ctx=host.ctx AND user_ctx_perm.login=? AND host.id NOT IN (SELECT asset_id FROM user_host_perm WHERE login=?) LIMIT 1";
                 
-                $rs = $conn->Execute($query);
+                $rs = $conn->Execute($query,array($user,$user));
                 
                 if ($rs !== FALSE && count($rs->fields['id']) == 0)
                 {
@@ -1388,11 +1391,9 @@ class Session
                 
                            
                 
-                $query = "SELECT id FROM net 
-                          WHERE ctx in (".$user_vision['ctx_where'].") AND id NOT IN (SELECT asset_id FROM user_net_perm WHERE login = '".$user."') 
-                          LIMIT 1";
+                $query = "SELECT id FROM net, user_ctx_perm WHERE user_ctx_perm.ctx=net.ctx AND user_ctx_perm.login=? AND net.id NOT IN (SELECT asset_id FROM user_net_perm WHERE login=?) LIMIT 1";
                 
-                $rs = $conn->Execute($query);           
+                $rs = $conn->Execute($query,array($user,$user));          
                 
                 if ($rs !== FALSE && count($rs->fields['id']) == 0)
                 {
@@ -1896,7 +1897,7 @@ class Session
         
         $ldap_server = $conf->get_conf('login_ldap_server');
         $ldap_ssl    = $conf->get_conf('login_ldap_ssl');
-        $ldap_port   = $conf->get_conf('login_ldap_port');
+        $ldap_port   = intval($conf->get_conf('login_ldap_port'));
         $ldap_baseDN = $conf->get_conf('login_ldap_baseDN');
         $ldap_filter = $conf->get_conf('login_ldap_filter_to_search');
         $ldap_bindDN = $conf->get_conf('login_ldap_bindDN');
@@ -1914,8 +1915,8 @@ class Session
             return FALSE;
         }
                
-        $serverconn = ($ldap_ssl == 'yes')? 'ldaps://'.$ldap_server : $ldap_server;
-        $ldapconn   = ldap_connect($serverconn, intval($ldap_port));
+        $serverconn = ($ldap_ssl == 'yes')? 'ldaps://'.$ldap_server.':'.$ldap_port : $ldap_server;
+        $ldapconn   = ldap_connect($serverconn, $ldap_port);
         
         if ($ldapconn == FALSE)
         {            
@@ -2118,7 +2119,7 @@ class Session
     *
     * @return void 
     */
-    public function logout()
+    public static function logout()
     {        
         Session_activity::delete();
         
@@ -2559,8 +2560,10 @@ class Session
             return FALSE;
         } 
 
-        $conn->Execute("CALL acl_user_permissions(?)", array($login));        
-                        
+        $conn->Execute("CALL acl_user_permissions(?)", array($login));
+
+
+        $conn->Execute("UPDATE user_config SET login='admin' WHERE login=? AND category='custom_report'", array($login));
         User_config::deleteall($conn,$login);
 
         $infolog = array($login);
@@ -3987,7 +3990,7 @@ class Session
     *
     * @return int|string  1 if there is an error, otherwise the template ID
     */ 
-    function update_template($conn, $name, $perms, $template_id = '') 
+    static function update_template($conn, $name, $perms, $template_id = '')
     {
         Ossim_db::check_connection($conn);
         
@@ -4839,6 +4842,33 @@ class Session
                 
         return $types;
     }
+    
+    
+    /**
+    * This function returns an array with the hostname and admin IP from the local system.
+    *
+    * @throws Exception  If an error occurred
+    *
+    * @return array  Hostname and admin IP from the system.
+    */
+    public static function get_local_sysyem_info() 
+    {
+        // API CALL
+        $client = new Alienvault_client();
+        $rs     = $client->system()->get_local_system_info();
+        $rs     = @json_decode($rs, TRUE);
+
+        if (!$rs || $rs['status'] == 'error')
+        {  
+            $exp_msg = $client->get_error_message($rs);
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+        
+        return array($rs['data']['hostname'], $rs['data']['admin_ip']);
+    }
+
+    
         
     
     /* 

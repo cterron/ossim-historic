@@ -53,7 +53,7 @@ if ($qs->isCannedQuery()) PrintBASESubHeader($page_title . ": " . $qs->GetCurren
 else PrintBASESubHeader($page_title, $page_title, $cs->GetBackLink() , 1);
 
 // Use accumulate tables only when timestamp criteria is not hour sensitive
-$use_ac = can_use_accumulated_table();
+$use_ac = $criteria_clauses[3];
 
 if ($use_ac) { // use ac_acid_event
 	$from = " FROM ac_acid_event as acid_event, sensor " . $criteria_clauses[0];

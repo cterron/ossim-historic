@@ -148,7 +148,6 @@ void              sim_session_set_id                          (SimSession  *sess
 gint              sim_session_get_id                          (SimSession  *session);
 guint             sim_session_get_received                    (SimSession  *session);
 
-void              sim_session_initialize_count                (SimSession  *session);
 void              sim_session_increase_count                  (SimSession  *session);
 void              sim_session_prepare_and_insert              (SimSession *session,
                                                                SimEvent *event);

@@ -46,20 +46,20 @@ function PrintPortscanEvents($db, $ip) {
     $ip = Util::regex($ip);
     while (!feof($fp)) {
         $contents = fgets($fp, 255);
-        if (ereg($ip, $contents)) {
+        if (preg_match($ip, $contents)) {
             $total++;
             if ($i % 2 == 0) {
                 $color = "DDDDDD";
             } else {
                 $color = "FFFFFF";
             }
-            $contents = ereg_replace("  ", " ", $contents);
+            $contents = preg_replace("/\s\s/", " ", $contents);
             $elements = explode(" ", $contents);
             echo '<tr bgcolor="' . $color . '"><td align="center">' . $elements[0] . ' ' . $elements[1] . ' ' . $elements[2] . '</td>';
-            ereg("([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*):([0-9]*)", $elements[3], $store);
+            preg_match("/([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*):([0-9]*)/", $elements[3], $store);
             echo '<td align="center">' . $store[1] . '</td>';
             echo '<td align="center">' . $store[2] . '</td>';
-            ereg("([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*):([0-9]*)", $elements[5], $store);
+            preg_match("/([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*):([0-9]*)/", $elements[5], $store);
             echo '<td align="center">' . $store[1] . '</td>';
             echo '<td align="center">' . $store[2] . '</td>';
             echo '<td align="center">' . $elements[7] . '</td></tr>';

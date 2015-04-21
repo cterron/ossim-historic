@@ -84,11 +84,11 @@ $class_name = get_class($asset_object);
 // DATA
 $response['icon']        = ($asset_type != 'group') ? $asset_object->get_html_icon() : '';
 
-$response['title']       = $asset_object->get_name();
+$response['title']       = Util::htmlentities($asset_object->get_name());
 
 $response['subtitle']    = '';
 
-$response['description'] = ($asset_object->get_descr() != '') ? nl2br(Util::htmlentities($asset_object->get_descr())) : '<i>'._('none').'</i>';
+$response['description'] = ($asset_object->get_descr() != '') ? nl2br($asset_object->get_descr(TRUE)) : '<i>'._('none').'</i>';
 
 $response['networks']    = '';
 

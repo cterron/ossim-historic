@@ -274,7 +274,7 @@ foreach($sensors_status as $sensor_ip => $sensor_info)
                             {
                                 $('#ppbar'+data[0]).height(12);
                                 $('#ppbar'+data[0]+' .ui-progress').height(10);
-                                $('#ppbar'+data[0]+' .ui-progress').animateProgress(data[4]); // packages
+                                $('#ppbar'+data[0]+' .ui-progress').animateProgress(data[4]); // packets
                                 $('#pPacketsValue'+data[0]).html(Math.round(data[4]));
                                 
                                 $('#tpbar'+data[0]).height(12); // time
@@ -417,7 +417,7 @@ else
                                                 <div class="ui-progress stripes"></div>
                                             </div>
                                             <div style="float:left;padding-left:5px;">
-                                            <?php echo _("Packages");?> <span id="pPacketsValue<?php echo md5($sensor_ip); ?>">0</span>%
+                                            <?php echo _("Packets");?> <span id="pPacketsValue<?php echo md5($sensor_ip); ?>">0</span>%
                                             </div>
                                         </div>
                                         
@@ -565,7 +565,7 @@ else
                                 <div id="cap_size" style="width:150px;margin-right:6px;"></div>
                             </td>
                             <td class="nobborder" width="80">
-                                <span id="cap_size_value" style="color:#000000; font-weight:bold;"><?php echo ((intval($cap_size) != 0) ? intval($cap_size) : "4000"); ?></span><?php echo " "._("packages");?>
+                                <span id="cap_size_value" style="color:#000000; font-weight:bold;"><?php echo ((intval($cap_size) != 0) ? intval($cap_size) : "4000"); ?></span><?php echo " "._("packets");?>
                                 <input type="hidden" id="cap_size_input" name="cap_size" value="<?php echo ((intval($cap_size) != 0) ? intval($cap_size) : "4000"); ?>" />
                             </td>
                             <?php
@@ -574,7 +574,7 @@ else
                         {
                             ?>
                             <td class="nobborder" style="padding-left:10px;">
-                                <input type="text" size="10" id="cap_size_input" name="cap_size" value="<?php echo ((intval($cap_size)!=0) ? intval($cap_size) : "4000"); ?>" /><?php echo " "._("packages");?>
+                                <input type="text" size="10" id="cap_size_input" name="cap_size" value="<?php echo ((intval($cap_size)!=0) ? intval($cap_size) : "4000"); ?>" /><?php echo " "._("packets");?>
                             </td>
                             <?php 
                         }

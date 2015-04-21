@@ -144,7 +144,7 @@ else
             
     // Init html2pdf document
     //$header = ucwords(str_replace('_',' ',$pdfReport->getName()));
-    $htmlPdfReport= new Pdf_html($report_id, $report_data['report_name'],'', '', $styleCss, $footerContent);
+    $htmlPdfReport= new Pdf_html($report_id, $report_data['report_name'],(Session::is_pro()) ? 'default.png' : 'ossim.png', '', $styleCss, $footerContent);
     
     // Include php per each sub-report
     $runorder = 1;

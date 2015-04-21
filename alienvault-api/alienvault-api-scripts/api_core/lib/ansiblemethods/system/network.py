@@ -209,8 +209,12 @@ def get_conf_network_interfaces(system_ip, root=None,store_path = False):
     return (rt, result)
 
 
-def conf_update_iface(system_ip,iface,path,ipaddr,netmask,gateway,gw_paths=[]):
-    cmd = ""
+def conf_update_iface(system_ip,iface, ifconf,ipaddr,netmask,gateway,gw_paths=[]):
+    # I need the old info to generate the correct network and broadcast addresses
+    #
+    #
+    path = ifconf['path']
+    cmd=""
     if ipaddr:
         cmd = cmd + " set %s/address %s" % (path,ipaddr)
     if netmask:
@@ -220,7 +224,20 @@ def conf_update_iface(system_ip,iface,path,ipaddr,netmask,gateway,gw_paths=[]):
         for (k,v) in gw_paths:
             if k != iface:
                 cmd = cmd + " rm %s/gateway " % v
-
+    # Here I need to generate the correct information
+    if netmask is not None and ipaddr is not None:
+      iface_info = ipaddress.ip_interface(unicode(ipaddr + "/" + netmask))
+      cmd = cmd + " set %s/network %s" % (path, str(iface_info.network.network_address))
+      cmd = cmd + " set %s/broadcast %s" % (path, str(iface_info.network.broadcast_address))
+    elif ipaddr is not None and ifconf.get('netmask', None) is not None:
+      iface_info = ipaddress.ip_interface(unicode(ipaddr + "/" + ifconf.get('netmask')))
+      cmd = cmd + " set %s/network %s" % (path, str(iface_info.network.network_address))
+      cmd = cmd + " set %s/broadcast %s" % (path, str(iface_info.network.broadcast_address))
+    elif netmask is not None and ifconf.get('address', None) is not None:
+      iface_info = ipaddress.ip_interface(unicode(ifconf.get('address') + "/" + netmask))
+      cmd = cmd + " set %s/network %s" % (path, str(iface_info.network.network_address))
+      cmd = cmd + " set %s/broadcast %s" % (path, str(iface_info.network.broadcast_address))
+    #
     response = ansible.run_module(host_list=[system_ip],
                                   module="av_augeas",
                                   args="commands='%s' validate_filepath=no" % cmd)
@@ -231,12 +248,18 @@ def conf_update_iface(system_ip,iface,path,ipaddr,netmask,gateway,gw_paths=[]):
 
 
 def conf_new_iface(system_ip,iface,ipaddr,netmask,gateway,gw_paths=[]):
+    # Generate the correct network and broadcast information
+    iface_info = ipaddress.ip_interface(unicode(ipaddr + "/" + netmask))
     cmd = "set /files/etc/network/interfaces/auto[last()+1]/1 %s " % iface
     cmd = cmd + "set /files/etc/network/interfaces/iface[last()+1] %s " % iface
     cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/family inet " % iface
     cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/method static " % iface
     cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/address %s " % (iface,ipaddr)
     cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/netmask %s " % (iface,netmask)
+    cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/broadcast %s " % (iface, str(iface_info.network.broadcast_address))
+    cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/network %s " % (iface, str(iface_info.network.network_address))
+
+
     if gateway is not None:
         cmd = cmd + "set /files/etc/network/interfaces/iface[.=\\\"%s\\\"]/gateway %s " %(iface,gateway)
         # I want this op atomic. I'm going to make the "rm"
@@ -315,7 +338,7 @@ def set_conf_iface(system_ip,iface,ipaddr=None,netmask=None,gateway=None):
         # or I need to create another entry under the tree.
         # Also, remember the "auto" entry
         if response.has_key(iface):
-            (rc,msg) = conf_update_iface (system_ip,iface,response[iface]['path'],ipaddr,netmask,gateway, gatewaypath)
+            (rc,msg) = conf_update_iface (system_ip,iface,response[iface],ipaddr,netmask,gateway, gatewaypath)
         else:
             (rc,msg) = conf_new_iface (system_ip, iface,ipaddr,netmask,gateway, gatewaypath)
         if rc != True:

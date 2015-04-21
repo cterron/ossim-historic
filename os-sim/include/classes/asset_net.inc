@@ -763,7 +763,9 @@ class Asset_net extends Asset
         }
                 
         $is_in_db = self::is_in_db($conn, $id);
-        
+
+        Util::disable_perm_triggers($conn, TRUE);
+
         //Begin transaction
         $conn->StartTrans();            
         
@@ -831,7 +833,9 @@ class Asset_net extends Asset
          
         //Finish transaction
         if ($conn->CompleteTrans())
-        {           
+        {
+            Util::disable_perm_triggers($conn, FALSE);
+
             $infolog = array($name);
             
             if ($is_in_db == TRUE)
@@ -851,7 +855,7 @@ class Asset_net extends Asset
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());                   
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());                 
                 }    
             }         
         }
@@ -1455,7 +1459,7 @@ class Asset_net extends Asset
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }                   
         }

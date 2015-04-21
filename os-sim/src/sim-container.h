@@ -94,9 +94,6 @@ gint              sim_container_get_storage_type                (SimContainer * 
 void              sim_container_db_delete_plugin_sid_directive_ul
                                                                 (SimContainer  *container,
                                                                  SimDatabase   *database);
-void              sim_container_db_delete_backlogs_ul           (SimContainer  *container,
-                                                                 SimDatabase   *database);
-
 /* Plugins Functions */
 GList *           sim_container_get_common_plugins              (SimContainer  *container);
 
@@ -239,6 +236,8 @@ void              sim_container_reload_host_plugin_sids         (SimContainer  *
 gchar *
 sim_container_get_engine_stats_json (SimContainer *container,
                                 glong         elapsed_time);
+gint              sim_container_get_proto_by_name               (SimContainer *container, const gchar *name);
+const gchar *     sim_container_get_proto_by_number             (SimContainer *container, gint number);
 G_END_DECLS
 
 #endif /* __SIM_CONTAINER_H__ */

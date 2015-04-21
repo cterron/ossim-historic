@@ -15,7 +15,12 @@ REPLACE INTO `alienvault_api`.`status_action` (`action_id`,`is_admin`,`content`,
 (1030,true,'Configure an internal DNS:\n1. Go to Alienvault console (Alienvault-setup)\n2. System Preferences / Configure Network / Name Server DNS',''),
 (1040,true,'Confirm if the remote system is up and reachable',''),
 (1041,true,'Use the following form to configure the remote system: <<Authenticate>> the remote system','AV_PATH/av_center/data/sections/main/add_system.php?id=ASSET_ID'),
-(1050,true,'<<Update>> the system','AV_PATH/av_center/index.php?m_opt=configuration&sm_opt=deployment&h_opt=components');
+(1050,true,'<<Update>> the system','AV_PATH/av_center/index.php?m_opt=configuration&sm_opt=deployment&h_opt=components'),
+(1060,true,'<<Update>> the plugins feed','AV_PATH/av_center/index.php?m_opt=configuration&sm_opt=deployment&h_opt=components'),
+(1070,true,'Please contact AlienVault Support if you did not make this change', ''),
+(1071,true,'Please contact AlienVault Support if you did not make this change', ''),
+(1072,true,'Please contact AlienVault Support if you did not make this change', ''),
+(1073,true,'Please contact AlienVault Support if you did not make this change', '');
 
 -- Messages
 REPLACE INTO `alienvault_api`.`status_message` (`id`,`level`,`description`,`content`) VALUES
@@ -29,7 +34,12 @@ REPLACE INTO `alienvault_api`.`status_message` (`id`,`level`,`description`,`cont
 (8,'info','Configured DNS is external',"The configured Domain Name Server is external to your environment. This will cause your asset names won't be discovered. At TIMESTAMP"),
 (9,'error','The remote system is not connected to the AlienVault API','The remote system is not connected to the AlienVault API. The remote system is unreachable or it has not been configured properly. At TIMESTAMP'),
 (10,'notification','New Updates Available','New system updates pending. At TIMESTAMP'),
-(11,'notification','Sensor connection lost','Can not connect to the sensor. At TIMESTAMP');
+(11,'notification','Sensor connection lost','Can not connect to the sensor. At TIMESTAMP'),
+(12,'info','Plugins version out of date','There is a new version of the plugins feed. At TIMESTAMP'),
+(13,'warning','A change has been detected in the configuration files of one or more plugins','The AlienVault Sensor detected that the configuration files of one or more plugins have been modified. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.'),
+(14,'warning','One or more plugin configuration files have been deleted','The AlienVault Sensor detected that the configuration files of one or more plugins have been manually deleted. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.'),
+(15,'warning','One or more changes have been detected in the syslog processor configuration files','The syslog processor configuration files have been manually changed.  This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.'),
+(16,'warning','Syslog processor configuration files have been deleted','The syslog processor configuration files have been manually deleted. This could cause a system malfunction when collecting data from your environment.\n\nAny local changes will be overwritten in the next product update.');
 
 -- Actions for messages
 REPLACE INTO `alienvault_api`.`status_message_action` (`message_id`,`action_id`) VALUES
@@ -53,4 +63,9 @@ REPLACE INTO `alienvault_api`.`status_message_action` (`message_id`,`action_id`)
 (10,1050),
 (11,1003),
 (11,1040),
-(11,1041);
+(11,1041),
+(12,1060),
+(13,1070),
+(14,1071),
+(15,1072),
+(16,1073);

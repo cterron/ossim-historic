@@ -54,13 +54,12 @@
 * @link       https://www.alienvault.com/ Alienvault web page
 */
 
-class Remote_scan 
-{   
-    
+class Remote_scan
+{
     /**
-    * Networks and hosts for frameworkd
+    * Networks and hosts to be scanned
     *
-    * @var string
+    * @var array
     * @access private
     */
     private $targets;
@@ -68,11 +67,11 @@ class Remote_scan
     /**
     * Array to resolve IPs and IDs
     *
-    * @var string
+    * @var array
     * @access private
     */
     private $sensor_cache;
-    
+
     /**
     * Nmap scan type
     *
@@ -80,39 +79,31 @@ class Remote_scan
     * @access private
     */
     private $type;
-    
+
     /**
-    * Scan sensor IP
+    * Scanning sensor (IP address or Host ID)
     *
     * @var string
     * @access private
     */
-    private $id;
-    
+    private $scanning_sensor;
+
     /**
-    * Frameworkd error
+    * Error information
     *
-    * @var string
+    * @var array
     * @access private
     */
-    private $errmsg;
-    
+    private $error;
+
     /**
-    * Frameworkd IP
+    * Frameworkd configuration (IP address, port and timeout)
     *
-    * @var string
+    * @var array
     * @access private
     */
-    private $address;
-    
-    /**
-    * Frameworkd Port
-    *
-    * @var string
-    * @access private
-    */
-    private $port;
-    
+    private $f_config;
+
     /**
     * Scan results
     *
@@ -120,46 +111,38 @@ class Remote_scan
     * @access private
     */
     private $scan;
-    
+
     /**
-    * Available sensors
-    *
-    * @var string
-    * @access private
-    */
-    private $allids;    
-       
-    /**
-    * Socket configuration
+    * Connected agents (Sensors)
     *
     * @var array
     * @access private
     */
-    private $timeout;
-    
+    private $c_sensors;
+
     /**
     * Timing template option
     *
     * @var string
     * @access private
     */
-	private $timing_template;
-	
+    private $timing_template;
+
     /**
     * OS detection and version detection option
     *
     * @var string
     * @access private
     */
-	private $autodetect;
-	
+    private $autodetect;
+
     /**
     * Reverse DNS option
     *
     * @var string
     * @access private
     */
-	private $rdns;
+    private $rdns;
 
     /**
     * Ports to scan
@@ -167,24 +150,16 @@ class Remote_scan
     * @var string
     * @access private
     */
-	private $ports;
-	
+    private $ports;
+
     /**
     * Prefix to select last report
     *
     * @var string
     * @access private
     */
-	private $prefix;
-	
-    /**
-    * Notification configuration
-    *
-    * @var array
-    * @access private
-    */
-    private $config_nt;
-    
+    private $prefix;
+
     /**
     * Nmap parser object
     *
@@ -192,504 +167,762 @@ class Remote_scan
     * @access private
     */
     private $nmap_parser;
-    
-    /**
-    * File with Nmap results
+
+     /**
+    * www-data to change files with chown
     *
     * @var string
-    * @access public
+    * @access private
     */
-    public  $nmap_completed_scan;
-    
+    private $owner;
     
     /**
     * Class constructor
     *
     * This function sets up the class
     *
-    * @param string  $targets          Networks and hosts to be scanned
-    * @param string  $type             Scan type
-    * @param string  $id               Sensor ID or Sensor IP
-    * @param string  $scan_path        File with Nmap results
-    * @param string  $timing_template  Timing template option
-    * @param string  $autodetect       OS detection and version detection option
-    * @param string  $rdns             Reverse DNS option
-    * @param string  $ports            Ports to scan
+    * @param string  $targets          [Optional] Networks and hosts to be scanned
+    * @param string  $type             [Optional] Scan type
+    * @param string  $scanning_sensor  [Optional] Sensor ID or Sensor IP
+    * @param string  $user             [Optional] User that will launch the scan
+    * @param string  $scan_path        [Optional] File with Nmap results
+    * @param string  $timing_template  [Optional] Timing template option
+    * @param string  $autodetect       [Optional] OS detection and version detection option
+    * @param string  $rdns             [Optional] Reverse DNS option
+    * @param string  $ports            [Optional] Ports to scan
     */
-    public function __construct($targets, $type, $id = '', $user = '', $timing_template = 'T3', $autodetect = 'enable', $rdns = '1', $ports = '')
+    public function __construct($targets = '', $type = 'normal', $scanning_sensor = '', $user = '', $timing_template = 'T3', $autodetect = 'enable', $rdns = '1', $ports = '')
     {
-    
-        /* network to scan */
-        $this->targets         = preg_replace('/\s*\,\s*/', ' ', $targets);
+        //Initialize error by default
+        $this->error = array (
+            'data'     => '',
+            'severity' => ''
+        );
+
+        //Frameworkd configuration
+        $this->set_frameworkd_configuration();
+
+
+        // Scan configuration
+        $this->owner           = 'www-data';
         $this->type            = $type;
         $this->autodetect      = $autodetect;
         $this->rdns            = $rdns;
         $this->ports           = $ports;
         $this->timing_template = str_replace('-',' ', $timing_template);
-        $this->prefix          = md5(time());        
-        
-        $db   = new ossim_db();
+        $this->prefix          = md5(time());
+
+
+        //Normalize targets
+        $this->targets = array(
+            'nmap_format' => '',
+            'av_format'   => $av_format
+        );
+
+        if (!empty($targets))
+        {
+            $assets      = explode(' ', $targets);
+            $nmap_format = array();
+            $av_format   = array();
+
+            foreach($assets as $asset)
+            {
+                if (preg_match('/(.*)#((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/\d{1,2})?)/', $asset, $fnd))
+                {
+                    $type       = ($fnd[4] == '/32') ? 'host' : 'net';
+                    $id         = trim($fnd[1]);
+                    $ip_cidr    = ($type == 'host') ? trim($fnd[3]) : trim($fnd[2]);
+                    $namp_asset = trim($fnd[2]);
+                }
+                elseif(preg_match('/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/\d{1,2})?$/', $asset, $fnd))
+                {
+                    $type       = ($fnd[2] == '/32') ? 'host' : 'net';
+                    $id         = NULL;
+                    $ip_cidr    = ($type == 'host') ? trim($fnd[1]) : trim($fnd[0]);
+                    $namp_asset = trim($fnd[0]);
+                }
+
+                if (!empty($ip_cidr))
+                {
+                    $av_format[$asset] = array(
+                        'type'    => $type,
+                        'ip_cidr' => $ip_cidr,
+                        'id'      => $id
+                    );
+
+                    $nmap_format[$namp_asset] = $namp_asset;
+                }
+            }
+
+            $this->targets = array(
+                'nmap_format' => implode(' ', $nmap_format),
+                'av_format'   => $av_format
+            );
+        }
+
+
+        //Creating sensor hash to resolve IPs and IDs
+        $db   = new Ossim_db();
         $conn = $db->connect();
-        
-        $all_sensors = Av_sensor::get_list($conn);
-        
-        $db->close();
-        
-        // create hash to resolve IPs and IDs
+
+        $filters     = array('order_by' => 'priority desc');
+        $all_sensors = Av_sensor::get_list($conn, $filters);
+
         foreach ($all_sensors[0] as $sensor_id => $sensor_data)
         {
-            $this->sensor_cache[$sensor_data['ip']] = $sensor_id; 
+            $this->sensor_cache[$sensor_data['ip']] = $sensor_id;
             $this->sensor_cache[$sensor_id]         = $sensor_data['ip'];
         }
-        
-        // the id variable must be a IP
-        if ($id != '')
-        {
-            $id = strtoupper($id);
-            
-            if (!preg_match('/^\d+\.\d+\.\d+\.\d+$/', $id) && isset($this->sensor_cache[$id]))
-            {
-                $this->id = $this->sensor_cache[$id];
-            }
-            else
-            {
-                $this->id = $id;
-            }
-        }
-        
+
+        //Calculating connected agents
+        $this->get_connected_agents();
+
+        //Setting scanning sensor
+        $this->set_scanning_sensor($conn, $scanning_sensor);
+
+        $db->close();
+
+        //Initialize NMAP_parser Object
         $this->nmap_parser = new Nmap_parser();
 
-        $this->errmsg = '';
+        $this->set_path_xml_file($user);
+    }
 
-        $this->config_nt = array(
-            'options' => array (
-                'type'          => 'nf_warning',
-                'cancel_button' => FALSE),
-                'style'         => 'width: 80%; margin: 20px auto; text-align: left;'); 
 
+    /**
+    * This function sets Frameworkd configuration
+    *
+    * @return void
+    */
+    private function set_frameworkd_configuration()
+    {
         if (!$GLOBALS['CONF'])
         {
-           $GLOBALS['CONF'] = new Ossim_conf();
+            $GLOBALS['CONF'] = new Ossim_conf();
         }
-	    
-	    $ossim_conf = $GLOBALS['CONF'];
-	    
-	    /* get the port and IP address of the frameworkd */
-	   
-	    $this->address = $ossim_conf->get_conf('frameworkd_address');
-	    
-	    $this->port    = $ossim_conf->get_conf('frameworkd_port');
-	    
-	    $this->timeout = array('sec' => 5, 'usec' => 0);
-	    
-	    $this->secure_id_md5 = ($user != '') ? md5(Session::get_secure_id($user)) : Util::uuid();
-        $this->xml_output    = '/var/tmp/nmap_scan_' . $this->secure_id_md5 . '.xml';
+
+        $ossim_conf = $GLOBALS['CONF'];
+
+        // Set Frameworkd configuration
+        $this->f_config = array(
+            'address' => '127.0.0.1',
+            'port'    => $ossim_conf->get_conf('frameworkd_port'),
+            'timeout' => array('sec' => 5, 'usec' => 0)
+        );
     }
-    
-    
+
     /**
-    * This function returns the available sensor
+    * This function sets path from XML file which saves the scan
     *
-    * @param string $sensor_id  [Optional] Sensor ID
+    * @param string  $user  [Optional] User that will launch the scan
+    *
+    * @return void
+    */
+    private function set_path_xml_file($user = '')
+    {
+        $user_id = ($user != '') ? md5(Session::get_secure_id($user)) : Util::uuid();
+
+        $this->xml_output = "/var/tmp/nmap_scan_$user_id.xml";
+    }
+
+
+
+    /**
+    * This function gets the scanning sensor
     *
     * @return string
     */
-    public function available_scan($sensor_id = '')
+    public function get_scanning_sensor()
     {
-    	$max_agents = 50;
-        $this->allids = array();
-    	// try to connect with frameworkd and "getconnectedagents"
-	    $socket = socket_create(AF_INET, SOCK_STREAM, 0);
-	    if ($socket < 0)
-	    {
-            $this->config_nt['content'] = _("Can't connect with frameworkd") . ": " . socket_strerror(socket_last_error($socket));
-        	$nt = new Notification('nt_1', $this->config_nt);
-            $nt->show();
-	        $this->errmsg = _("Can't connect with frameworkd") . ": " . socket_strerror(socket_last_error($socket));
-	        return '';
-	    }
-	    /* connect */
-	    socket_set_block($socket);	    
-		socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
-		socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->timeout);
-	    $result = @socket_connect($socket, $this->address, $this->port);	    
-	    if (!$result)
-	    {
-            $this->config_nt['content'] = _("Can't connect with frameworkd") . " ($this->address:$this->port)";
-        	$nt = new Notification('nt_1', $this->config_nt);
-            $nt->show();
-	        $this->errmsg = _("Can't connect with frameworkd") ." ($this->address:$this->port)";
-	        return '';
-	    }
-	    /* get total agents */
-    	$in = 'control action="gettotalagentsconnected"' . "\n";
-	    $out = '';
-	    socket_write($socket, $in, strlen($in));
-	    $out = @socket_read($socket, 5120, PHP_BINARY_READ);
-	    if (!preg_match("/ack(end)?$/",$out))
-	    {
-	        echo _("Bad response from frameworkd").": $out";
-	    	$this->errmsg = _("Bad response from frameworkd").": $out";
-	        return '';
-	    }
-		preg_match('/gettotalagentsconnected count\=\"(\d+)\"/',$out,$found);
-		if (count($found)<1)
-		{
-	        $this->errmsg = _("Bad response from frameworkd") . ": $out";
-	        return '';
-	    }
-	    if ($found[1] < 1)
-	    {
-	    	$this->errmsg = _("No agents found from frameworkd") . ": $out";
-	        return '';
-	    }
-	    $total = $found[1];
-	    $first = TRUE;
-	    $agents = array();
-	    /* get agent lists with pagination */
-	    for($begin = 0; $begin < $total-1 || $first; $begin += $max_agents)
-	    {
-	    	$in = 'control action="getconnectedagents_p" begin_index="'.(($begin > 0) ? $begin + 1 : $begin).'" end_index="'.($begin + $max_agents).'"' . "\n";
-	    	$out = '';
-	    	// Save all names and check $network perms
-	    	$names = array();	    	
-		    socket_write($socket, $in, strlen($in));
-		    $out = @socket_read($socket, 5120, PHP_BINARY_READ);
-		    if (!preg_match("/ack(end)?$/",$out))
-		    {
-		        $this->errmsg = _("Bad response from frameworkd").": $out";
-		        return '';
-		    }
-			preg_match('/names=\"(.*?)\"/',$out,$found);
-			if (count($found) < 2)
-			{
-		        $this->errmsg = _("Bad response from frameworkd").": $out";
-		        return '';
-		    }
-		    $found[1] = explode('|', $found[1]);
-	    	foreach($found[1] as $a)
-	    	{
-	    	    $data = explode('=', $a);
-
-	    		$agents[] = $data[0];                              //sensor_name=sensor_ip
-	    		$names[$this->sensor_cache[$data[1]]] = $data[0];  // the keys are the ids
-	    	}
-		    $first = FALSE;
-	    }
-	    socket_close($socket);
-		
-		$db   = new ossim_db();
-		$conn = $db->connect();
-		
-		
-		// Check if this network sensor is available for remote scan
-		if ($this->targets == '')
-		{ // no asset selected
-			if (Session::am_i_admin())
-			{
-				$this->allids = $names;
-			}
-			else
-			{
-				if( !is_array($_SESSION['_user_vision']) || !array_key_exists('sensor',$_SESSION['_user_vision']) )
-				{
-					$this->allids = array();
-					return '';
-				}
-				else 
-				{
-					foreach($names as $sk => $sv)
-					{
-						if(!array_key_exists($sk, array_flip(array_keys($_SESSION['_user_vision']['sensor']))))
-						{
-							unset($names[$sk]);
-						}
-					}
-					
-					$this->allids = $names;
-					return '';
-				}
-			}
-		}
-
-        $sa = array();
-        
-        if (Session::allowedSensors() == '')
-        {
-            $sa = array_keys($names);
-        }
-        else
-        {
-            $sa = explode(',', Session::allowedSensors());
-        }
-        
-        //Assets are separated by spaces
-        $assets = explode(' ', $this->targets);
-        
-        $related_sensors = array();
-
-        foreach($assets as $asset)
-        {   //get related sensors
-        
-            if (preg_match('/(.*)#\d+\.\d+\.\d+\.\d+\/(\d+)/', $asset, $fnd) && $fnd[2] != '32')
-            {   
-                // NET_ID#DIDR
-                
-                $related_sensors = array_merge($related_sensors, Asset_net_sensors::get_sensors_by_id($conn, $fnd[1]));
-            }
-            else if (preg_match('/(.*)#\d+\.\d+\.\d+\.\d+\/(\d+)/', $asset, $fnd) && $fnd[2] == '32')
-            {   
-                // HOST_ID#DIDR
-                
-                $related_sensors = array_merge($related_sensors, Asset_host_sensors::get_sensors_by_id($conn, $fnd[1]));
-            }
-            else if (preg_match('/^(\d+\.\d+\.\d+\.\d+)(\/\d+)?$/', $asset, $fnd) && ($fnd[2] == '/32' || $fnd[2] ==''))
-            {  
-                // only IP
-                
-                $related_sensors = array_merge($related_sensors, Asset_host_sensors::get_sensors_by_ip($conn, $fnd[1]));
-            } 
-        }
-
-        if (empty($related_sensors))
-        {
-            $related_sensors = $sa;
-        }
-        else
-        {
-            $related_sensors = array_keys($related_sensors);
-        }
-        
-        $related_sensors = array_unique($related_sensors);
-	
-		$sensors = array_intersect($related_sensors, array_keys($names));
-		
-		if (count($sensors) < 1)
-		{
-	    	$db->close();
-	    	
-	        $this->errmsg = _('Network sensors are not available for remote scan');
-	        
-	        return '';
-	    }
-		
-	    // If sensor passed by argument check this
-	    if ($sensor_id != '' && $sensor_id != 'auto') 
-		{
-	    	$arg_sensor_is_available = FALSE;
-	    	
-			foreach ($sensors as $sensor)
-			{
-	    		if ($sensor == $sensor_id) 
-	    		{
-	    			$this->id = $sensor;
-	    			$arg_sensor_is_available = TRUE;
-	    		}
-	    	}
-	    	
-			if (!$arg_sensor_is_available)
-			{
-	    		$db->close();
-	    		
-	        	$this->errmsg = _('The selected sensor is not available for remote scan');
-	        	
-	        	return '';
-	    	}	
-	    } 
-		else
-		{
-		    // use the first available agent id to scan
-		    
-	    	$this->id = array_shift(array_values($sensors));
-	    }
-		
-	    $this->allids = $names;
-
-	    $db->close();
-	    
-		return $this->id;
+        return $this->scanning_sensor;
     }
 
 
     /**
-    * This function returns the available sensors
+    * This function sets the scanning sensor
+    *
+    * @param object $conn             Database access object
+    * @param string $scanning_sensor  [Optional] Sensor (NULL, Sensor ID or Sensor IP, 'local' or 'auto')
+    *
+    * @throws Av_exception If a connection error occurred
+    *
+    * @return boolean
+    */
+    public function set_scanning_sensor($conn, $scanning_sensor = '')
+    {
+        Ossim_db::check_connection($conn);
+
+        //Seting default scanning sensor
+        $this->scanning_sensor = NULL;
+
+
+        // No agents connected (It will use the Frameworkd)
+        if (count($this->c_sensors) == 0)
+        {
+            $error_msg = _('No sensors available');
+
+            $this->set_error('warning', $error_msg);
+
+            return FALSE;
+        }
+
+
+        // Getting local sensor ID
+        $admin_ip = Util::get_default_admin_ip();
+        $res      = Av_center::get_system_info_by_ip($conn, $admin_ip);
+
+        if ($res['status'] == 'success')
+        {
+            $local_sensor_id = $res['data']['sensor_id'];
+        }
+
+
+        if (empty($scanning_sensor) || $scanning_sensor == 'local')
+        {
+            // Local sensor
+            if ($local_sensor_id != '' && array_key_exists($local_sensor_id, $this->c_sensors))
+            {
+                $this->scanning_sensor = $local_sensor_id;
+
+                return TRUE;
+            }
+            else
+            {
+                $error_msg = _('Warning! Local sensor is not available at this time.  Please, choose another sensor');
+                $this->set_error('warning', $error_msg);
+
+                return FALSE;
+            }
+        }
+        elseif(valid_hex32($scanning_sensor) || Asset_host_ips::valid_ip($scanning_sensor))
+        {
+            //An specific sensor was selected
+
+            $scanning_sensor = (Asset_host_ips::valid_ip($scanning_sensor)) ? $this->sensor_cache[$scanning_sensor] : $scanning_sensor;
+
+            if (array_key_exists($scanning_sensor, $this->c_sensors))
+            {
+                $this->scanning_sensor = $scanning_sensor;
+
+                return TRUE;
+            }
+            else
+            {
+                $error_msg = _('Warning! Selected sensor is not available at this time.  Please, choose another sensor');
+
+                $this->set_error('warning', $error_msg);
+
+                return FALSE;
+            }
+        }
+        elseif ($scanning_sensor == 'auto')
+        {
+            //Automatic mode (Asset permissions are used to calculate automatically the scanning sensor)
+
+            $related_sensors = $this->c_sensors;
+
+            foreach($this->targets['av_format'] as $asset)
+            {
+                if ($asset['type'] == 'net')
+                {
+                    if (!empty($asset['id']))
+                    {
+                        //Net with ID
+                        $rs_by_asset     = Asset_net_sensors::get_sensors_by_id($conn, $asset['id']);
+                        $related_sensors = array_intersect_key($related_sensors, $rs_by_asset);
+                    }
+                    else
+                    {
+                        //Net without ID
+
+                        //Getting closest inventoried net
+                        $closest_nets = Asset_net::get_closest_nets($conn, $asset['ip_cidr']);
+
+                        if (is_array($closest_nets) && !empty($closest_nets))
+                        {
+                            $cn_key      = key($closest_nets);
+                            $net_id      = $closest_nets[$cn_key]['id'];
+
+                            $rs_by_asset = Asset_net_sensors::get_sensors_by_id($conn, $net_id);
+                        }
+                        else
+                        {
+                            $rs_by_asset = array();
+                        }
+
+                        $related_sensors = array_intersect_key($related_sensors, $rs_by_asset);
+                    }
+                }
+                elseif ($asset['type'] == 'host')
+                {
+                    if (!empty($asset['id']))
+                    {
+                        //Host with ID
+                        $rs_by_asset     = Asset_host_sensors::get_sensors_by_id($conn, $asset['id']);
+                        $related_sensors = array_intersect_key($related_sensors, $rs_by_asset);
+                    }
+                    else
+                    {
+                        //Host without ID
+                        $rs_by_asset     = Asset_host_sensors::get_sensors_by_ip($conn, $asset['ip_cidr']);
+                        $related_sensors = array_intersect_key($related_sensors, $rs_by_asset);
+                    }
+                }
+                else
+                {
+                    $related_sensors = array();
+                }
+            }
+
+            // No sensor found  to scan all assets
+            if (count($related_sensors) < 1)
+            {
+                $error_msg = _("Unable to select the scanning sensor using automatic mode.<br/><br/>
+                It could be because some assets are not associated with a valid scanning sensor or there is no common sensor to scan all assets.<br/>
+                Please, remove these assets from the select box or choose an specific sensor.");
+
+                $this->set_error('warning', $error_msg);
+
+                return FALSE;
+            }
+            else
+            {
+                if (array_key_exists($local_sensor_id, $related_sensors))
+                {
+                    // If local sensor is available, we use it
+                    $this->scanning_sensor = $local_sensor_id;
+                }
+                else
+                {
+                    // Otherwise, we use the fist available sensor
+                    $this->scanning_sensor = array_shift(array_keys($related_sensors));
+                }
+
+                return TRUE;
+            }
+        }
+    }
+
+
+    /**
+    * This function gets connected agents (sensors)
+    *
+    * @return boolean
+    */
+    private function get_connected_agents()
+    {
+        $max_agents = 50;
+
+        //Try to connect with frameworkd and "getconnectedagents"
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+
+        // Connecting ...
+        socket_set_block($socket);
+        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, $this->f_config['timeout']);
+        socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, $this->f_config['timeout']);
+
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+
+        /* Getting total number of agents */
+        $in = 'control action="gettotalagentsconnected"' . "\n";
+        $out = '';
+
+        socket_write($socket, $in, strlen($in));
+        $out = @socket_read($socket, 5120, PHP_BINARY_READ);
+        if (!preg_match("/ack(end)?$/", $out))
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        preg_match('/gettotalagentsconnected count\=\"(\d+)\"/', $out, $found);
+
+        if (count($found) < 1)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        if ($found[1] < 1)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Error! No sensors connected').'. '._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+
+        }
+
+        $total = $found[1];
+        $first = TRUE;
+
+
+        // Getting agent information with pagination
+        $s_agents = array();
+
+        for($begin = 0; $begin < $total-1 || $first; $begin += $max_agents)
+        {
+            $in  = 'control action="getconnectedagents_p" begin_index="'.(($begin > 0) ? $begin + 1 : $begin).'" end_index="'.($begin + $max_agents).'"' . "\n";
+            $out = '';
+
+            socket_write($socket, $in, strlen($in));
+            $out = @socket_read($socket, 5120, PHP_BINARY_READ);
+
+            if (!preg_match("/ack(end)?$/", $out))
+            {
+                $last_socket_error = socket_strerror(socket_last_error($socket));
+
+                $out = (empty($out)) ? _('empty response') : $out;
+
+                $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+                $this->set_error('error', $error_msg);
+
+                socket_close($socket);
+
+                return FALSE;
+            }
+
+            preg_match('/names=\"(.*?)\"/', $out, $found);
+
+            if (count($found) < 2)
+            {
+                $last_socket_error = socket_strerror(socket_last_error($socket));
+
+                $out = (empty($out)) ? _('empty response') : $out;
+
+                $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+                $this->set_error('error', $error_msg);
+
+                socket_close($socket);
+
+                return FALSE;
+            }
+
+            $found[1] = explode('|', $found[1]);
+
+            foreach($found[1] as $a)
+            {
+                $data = explode('=', $a);
+
+                // Pairs Sensor ID - Sensor name
+                $s_id = $this->sensor_cache[$data[1]];
+                if (!empty($s_id))
+                {
+                    $s_agents[$s_id] = $data[0];
+                }
+            }
+
+            $first = FALSE;
+        }
+
+        socket_close($socket);
+
+        // No sensor information
+        if (count($s_agents) < 1)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Error! No sensor available');
+
+            $this->set_error('error', $error_msg);
+
+            return FALSE;
+        }
+
+        $this->c_sensors = $s_agents;
+
+        return TRUE;
+    }
+
+
+    /**
+    * This function returns all connected agents (sensors)
     *
     * @return array
-    */ 
+    */
     public function get_sensors()
-    { 
-        return $this->allids;
+    {
+        return $this->c_sensors;
     }
-    
-    
+
+
     /**
     * This function launches a scan and retrieves the results
     *
     * @param boolean $quiet  [Optional] Show results on screen
     *
-    * @return void
+    * @return boolean
     */
     public function do_scan($quiet = TRUE)
     {
-    	session_write_close();
-    	
-    	$this->scan = '';
-    	
-    	// prepare to launch nmap
-		$socket = socket_create(AF_INET, SOCK_STREAM, 0);
-		
-	    if ($socket < 0)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd").": ". socket_strerror(socket_last_error($socket));
-	        return FALSE;
-	    }
-	    
-	    /* connect */
-	    socket_set_block($socket);
-		socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
-		socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->timeout);
-	    $result = @socket_connect($socket, $this->address, $this->port);
-	    
-	    if (!$result)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd")." ($this->address:$this->port)";
-	        
-	        return FALSE;
-	    }
-	    //
-	    // launch nmap
-	    // control action="nmap_scan" id="192.168.12.160" type="full" target="192.168.12.160/32" timming="T2" autodetect="enable"
-        
-	    $in = 'control action="nmap_scan" report_prefix="'.$this->prefix.'" id="'.$this->id.'" type="'.$this->type.'" target="'.$this->targets.'"';
-        
-        if ($this->timing_template != '') 
+        session_write_close();
+
+        //No scan will be launched if there is an error
+        $last_error = $this->get_last_error();
+
+        if (is_array($last_error) && !empty($last_error['data']))
+        {
+            return FALSE;
+        }
+
+
+        $this->scan = '';
+
+        // prepare to launch nmap
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        /* connect */
+        socket_set_block($socket);
+        socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->f_config['timeout']);
+        socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->f_config['timeout']);
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+
+        // Execute NMAP
+        // control action="nmap_scan" id="192.168.12.160" type="full" target="192.168.12.160/32" timming="T2" autodetect="enable"
+
+        $scanning_sensor_ip = $this->sensor_cache[$this->scanning_sensor];
+
+        $in = 'control action="nmap_scan" report_prefix="'.$this->prefix.'" id="'.$scanning_sensor_ip .'" type="'.$this->type.'" target="'.$this->targets['nmap_format'].'"';
+
+        if ($this->timing_template != '')
         {
             $in .= ' timming="'.$this->timing_template.'"';
         }
-	    
-	    $in .= ($this->autodetect) ? ' autodetect="enabled"' : ' autodetect="disabled"';
-	    $in .= ($this->rdns) ? ' rdns="enable"' : ' rdns="disable"';
-    	
-    	if ($this->type == "custom" && $this->ports != '') 
-    	{
-	    	$in .= ' scan_ports="'.$this->ports.'"';
-	    }
-	    $in .= "\n";
-	    	   	    
-	    $out = '';
-	    socket_write($socket, $in, strlen($in));
-	    $out = @socket_read($socket, 2048, PHP_BINARY_READ);
 
-	    if (!preg_match("/ack(end)?$/",$out))
-	    {
-	        $this->errmsg = _("Bad response from frameworkd").": $in >> $out";
-	        
-	        return FALSE;
-	    }
-	    
-	    // Query until finish nmap job
-	    $in  = 'control action="nmap_status" id="'.$this->id.'"' . "\n";
-	    $out = '';
-	   
-	    $status = 1;
-	    
-	    if (!$quiet)
-	    {
-            echo _("Waiting remote scan status\n");
-	    }
-	    
-		while ($status > 0) 
-		{
-	    	if (!$quiet)
-	    	{
-				echo " .";
-			}
-			
-		    socket_write($socket, $in, strlen($in));
-		    $out = socket_read($socket, 2048, PHP_BINARY_READ);
-						
-		    if ( !preg_match('/ack(end)?$/',$out) ) 
-			{
-		        $this->errmsg = _('Bad response from frameworkd').": $out";
-		        return FALSE;
-		    }
-			
-		    preg_match('/status=\"(.*?)\"/', $out, $found);
-		    
-		    $status=$found[1];
-		    
-		    sleep(10); // 10 seconds between requests
-		}
-		
-		if (!$quiet)
-		{ 
-			echo '<br/><br/>';
-		}
-			
-		// get scans with nmap_report_list
-	    $in  = 'control action="nmap_report_list" id="'.$this->id.'"' . "\n";
-	    $out = '';
-	    socket_write($socket, $in, strlen($in));
-        
-        $exit = FALSE;
-	    while ( !$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE ) 
-		{
-	        $report_list .= $out;
-            if (preg_match('/ackend$/',rtrim($out))) 
-            {
-				$exit = TRUE;
-			}
+        $in .= ($this->autodetect) ? ' autodetect="enabled"' : ' autodetect="disabled"';
+        $in .= ($this->rdns) ? ' rdns="enable"' : ' rdns="disable"';
+
+        if ($this->type == "custom" && $this->ports != '')
+        {
+            $in .= ' scan_ports="'.$this->ports.'"';
         }
-        
-	    if (!preg_match('/ack(end)?$/',$report_list))
-	    {
-	        $this->errmsg = _("Bad response from frameworkd").": $in >> $report_list";
-	        
-	        return FALSE;
-	    }
+        $in .= "\n";
 
-	    // select last report
-		preg_match_all('/report=\"(.*?)\"/',$report_list,$found);
-		
-		foreach ($found[1] as $rpt) 
-		{
-			if ( preg_match("/".$this->prefix."/", $rpt) )
-			{
-				$report = $rpt;
-			}
-		}
-				
-		//
-		// request report results
-		//
-        //echo 'control action="nmap_report_raw_get" id="'.$this->id.'" path="'.$report.'"' . "\n"; // DEBUG report_prefix="'.$this->prefix.'" 
-	    $in         = 'control action="nmap_report_raw_get"  id="'.$this->id.'" path="'.$report.'"' . "\n";
-		
-						
-	    $out        = '';
+        $out = '';
+        socket_write($socket, $in, strlen($in));
+        $out = @socket_read($socket, 2048, PHP_BINARY_READ);
+
+        if (!preg_match("/ack(end)?$/",$out))
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        // Query until finish nmap job
+        $in  = 'control action="nmap_status" id="'.$scanning_sensor_ip.'"' . "\n";
+        $out = '';
+
+        $status = 1;
+
+        if (!$quiet)
+        {
+            echo _("Waiting remote scan status\n");
+        }
+
+        while ($status > 0)
+        {
+            if (!$quiet)
+            {
+                echo " .";
+            }
+
+            socket_write($socket, $in, strlen($in));
+            $out = socket_read($socket, 2048, PHP_BINARY_READ);
+
+            if (!preg_match('/ack(end)?$/',$out))
+            {
+                $last_socket_error = socket_strerror(socket_last_error($socket));
+
+                $out = (empty($out)) ? _('empty response') : $out;
+
+                $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+                $this->set_error('error', $error_msg);
+
+                socket_close($socket);
+
+                return FALSE;
+            }
+
+            preg_match('/status=\"(.*?)\"/', $out, $found);
+
+            $status=$found[1];
+
+            sleep(10); // 10 seconds between requests
+        }
+
+        if (!$quiet)
+        {
+            echo '<br/><br/>';
+        }
+
+        // get scans with nmap_report_list
+        $in  = 'control action="nmap_report_list" id="'.$scanning_sensor_ip .'"' . "\n";
+        $out = '';
+        socket_write($socket, $in, strlen($in));
+
+        $exit = FALSE;
+        while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE)
+        {
+            $report_list .= $out;
+            if (preg_match('/ackend$/',rtrim($out)))
+            {
+                $exit = TRUE;
+            }
+        }
+
+        if (!preg_match('/ack(end)?$/',$report_list))
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Error! Bad response from frameworkd').": $in >> $report_list. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        // Select last report
+        preg_match_all('/report=\"(.*?)\"/',$report_list,$found);
+
+        foreach ($found[1] as $rpt)
+        {
+            if ( preg_match("/".$this->prefix."/", $rpt) )
+            {
+                $report = $rpt;
+            }
+        }
+
+        //
+        // Request report results
+        //
+        //echo 'control action="nmap_report_raw_get" id="'.$scanning_sensor_ip.'" path="'.$report.'"' . "\n"; // DEBUG report_prefix="'.$this->prefix.'"
+        $in         = 'control action="nmap_report_raw_get"  id="'.$scanning_sensor_ip.'" path="'.$report.'"' . "\n";
+
+
+        $out        = '';
         $xml_output = '';
         $output     = '';
         $exit       = FALSE;
-        
-	    socket_write($socket, $in, strlen($in));
-        
-	    while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE) 
-		{
-	        $output .= $out;
-            if ( preg_match('/ackend$/',rtrim($out)) )
+
+        socket_write($socket, $in, strlen($in));
+
+        while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE)
+        {
+            $output .= $out;
+            if (preg_match('/ackend$/',rtrim($out)))
             {
-                $exit=TRUE;
+                $exit = TRUE;
             }
         }
-        
-        //delete remote scan
-        $this->delete_scan($report);
-        
-        $output = trim($output);
 
-        if (!preg_match('/ack(end)?$/',$output))
+        //Delete remote scan
+        $this->delete_scan($report);
+
+        $out = trim($output);
+
+        if (!preg_match('/ack(end)?$/', $out))
         {
-            $this->errmsg = _("Bad response from frameworkd").": $output";
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
 
             return FALSE;
         }
@@ -707,18 +940,17 @@ class Remote_scan
             }
         }
 
-        /* Add sensor information to scan result (Necessary for setting correct cxt to insert new hosts)*/
+        /* Add sensor information to scan result (Necessary for setting correct CTX to insert new hosts)*/
         if (!empty($xml_output))
         {
             $xml = @simplexml_load_string($xml_output);
-            $xml->addAttribute('av_sensor', $this->sensor_cache[$this->id]);
+            $xml->addAttribute('av_sensor', $this->scanning_sensor);
             $xml_output = $xml->asXML();
         }
 
         $this->scan = $xml_output;
 
         //Show results
-
         if (!$quiet)
         {
             $this->print_scan();
@@ -726,54 +958,70 @@ class Remote_scan
         }
 
         socket_close($socket);
+
+        return TRUE;
     }
 
 
     /**
     * This function returns the scan reports
     *
-    * @return array
+    * @return boolean | array
     */
     public function get_scans()
     {
-    	// prepare to launch nmap
-		$socket = socket_create(AF_INET, SOCK_STREAM, 0);
-	    if ($socket < 0)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd").": ". socket_strerror(socket_last_error($socket));
-	        
-	        return FALSE;
-	    }
-	    
-	    /* connect */
-		socket_set_block($socket);
-		socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
-		socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->timeout);
-	    $result = @socket_connect($socket, $this->address, $this->port);
-	    
-	    if (!$result)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd")." ($this->address:$this->port)";
-	        
-	        return FALSE;
-	    }
-	    
-	    /* send nmap_report_list for each id */
-	    $reports = array();
-	    
-	    foreach($this->allids as $idip => $id) 
-	    {
-    	    if (trim($id) != '')
-    	    {
-    		    $idip = $this->sensor_cache[$idip]; // from Sensor id to Sensor ip
-                $in = 'control action="nmap_report_list" id="'.$idip.'"' . "\n";
-    
-    		    $out    = '';
+        // prepare to launch nmap
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        /* connect */
+        socket_set_block($socket);
+        socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->f_config['timeout']);
+        socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->f_config['timeout']);
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        // Send nmap_report_list for each id */
+        $reports = array();
+
+        foreach($this->c_sensors as $cs_id => $cs_name)
+        {
+            if (trim($cs_name) != '')
+            {
+                //Get sensor IP
+                $cs_ip = $this->sensor_cache[$idip];
+                $in = 'control action="nmap_report_list" id="'.$cs_ip.'"' . "\n";
+
+                $out    = '';
                 $output = '';
-    		    socket_write($socket, $in, strlen($in));
-    		    
+                socket_write($socket, $in, strlen($in));
+
                 $exit   = FALSE;
-    
+
                 while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE)
                 {
                     $output .= $out;
@@ -782,22 +1030,31 @@ class Remote_scan
                         $exit = TRUE;
                     }
                 }
-                
-    		    if (!preg_match('/ack(end)?$/', $output))
-    		    {
-    		        $this->errmsg = _("Bad response from frameworkd").": $output";
-    		        
-    		        return FALSE;
-    		    }
-    		    preg_match_all('/report=\"(.*?)\"/', $output,$found);
-    		    $idip = $this->sensor_cache[$idip]; // from Sensor ip to Sensor id
-    		    $reports[$id . '|' . $idip] = $found[1];
-    		}
-		}
-		
-		socket_close($socket);
-	    
-	    return $reports;
+
+                if (!preg_match('/ack(end)?$/', $output))
+                {
+                    $last_socket_error = socket_strerror(socket_last_error($socket));
+
+                    $out = (empty($output)) ? _('empty response') : $output;
+
+                    $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+                    $this->set_error('error', $error_msg);
+
+                    socket_close($socket);
+
+                    return FALSE;
+                }
+
+                preg_match_all('/report=\"(.*?)\"/', $output, $found);
+
+                $reports[$cs_name . '|' . $cs_id] = $found[1];
+            }
+        }
+
+        socket_close($socket);
+
+        return $reports;
     }
 
 
@@ -806,63 +1063,86 @@ class Remote_scan
     *
     * @param string  $report  Report path
     *
-    * @return void
+    * @return boolean
     */
-	public function import_scan($report)
-	{
-    	$this->scan = '';
+    public function import_scan($report)
+    {
+        $this->scan = '';
 
-		$socket = socket_create(AF_INET, SOCK_STREAM, 0);
-	    if ($socket < 0)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd").": ". socket_strerror(socket_last_error($socket));
-	        
-	        return FALSE;
-	    }
-	    
-	    /* connect */
-	    socket_set_block($socket);
-		socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
-		socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->timeout);
-	    $result = @socket_connect($socket, $this->address, $this->port);
-	    
-	    if (!$result)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd")." ($this->address:$this->port)";
-	        
-	        return FALSE;
-	    }
-		
-		//
-		// request report results
-		//
-	    $in         = 'control action="nmap_report_raw_get" id="'.$this->id.'" path="'.$report.'"' . "\n";
-	    $out        = '';
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        // connect
+        socket_set_block($socket);
+        socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->f_config['timeout']);
+        socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->f_config['timeout']);
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+
+        $scanning_sensor_ip = $this->sensor_cache[$this->scanning_sensor];
+
+        //Request report results
+        $in         = 'control action="nmap_report_raw_get" id="'.$scanning_sensor_ip.'" path="'.$report.'"' . "\n";
+        $out        = '';
         $xml_output = '';
         $output     = '';
         $exit       = FALSE;
-        
-	    socket_write($socket, $in, strlen($in));
-        
-	    while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE)
-	    {
-	        $output .= $out;
+
+        socket_write($socket, $in, strlen($in));
+
+        while (!$exit && ($out = @socket_read($socket, 2048, PHP_BINARY_READ)) !== FALSE)
+        {
+            $output .= $out;
             if (preg_match('/ackend$/',rtrim($out)))
             {
                 $exit = TRUE;
             }
         }
-        
+
         $output = trim($output);
-        
+
         if (!preg_match('/ack(end)?$/', $output))
         {
-            $this->errmsg = _("Bad response from frameworkd").": $output";
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($output)) ? _('empty response') : $output;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
             return FALSE;
         }
 
         $lines = explode("\n", $output);
-        
+
         foreach($lines as $line)
         {
             if(preg_match('/line=\"(.*)\"/',  $line, $found))
@@ -875,177 +1155,220 @@ class Remote_scan
         }
 
         $this->scan = $xml_output;
-		        
-		// show results
-		$this->print_scan();
-		
-		socket_close($socket);
+
+        // show results
+        $this->print_scan();
+
+        socket_close($socket);
+
+        return TRUE;
     }
-    
+
 
     /**
     * This function deletes a report
     *
     * @param string  $report  Report path
     *
-    * @return void
+    * @return boolean
     */
     public function delete_scan($report)
     {
-    	// prepare to launch nmap
-		$socket = socket_create(AF_INET, SOCK_STREAM, 0);
-	    if ($socket < 0)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd").": ". socket_strerror(socket_last_error($socket));
-	        
-	        return FALSE;
-	    }
-	    
-	    /* connect */
-		socket_set_block($socket);	    
-		socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
-		socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->timeout);
-	    $result = @socket_connect($socket, $this->address, $this->port);
-	    if (!$result)
-	    {
-	        $this->errmsg = _("Can't connect with frameworkd")." ($this->address:$this->port)";
-	        
-	        return FALSE;
-	    }
-        
-	    $in  = 'control action="nmap_report_delete" id="'.$this->id.'" path="'.$report.'"' . "\n";
-	    $out = '';
-	    socket_write($socket, $in, strlen($in));
-	    $out = @socket_read($socket, 2048, PHP_BINARY_READ);
-	    
-	    if (!preg_match('/ack(end)?$/', $out))
-	    {
-	        $this->errmsg = _("Bad response from frameworkd").": $out";
-	        
-	        return FALSE;
-	    }
-	    
-		socket_close($socket);
+        // prepare to launch nmap
+        $socket = socket_create(AF_INET, SOCK_STREAM, 0);
+        if ($socket < 0)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _('Warning! Unable to create a connection with frameworkd. Reason:').' '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        /* connect */
+        socket_set_block($socket);
+        socket_set_option($socket,SOL_SOCKET,SO_RCVTIMEO,$this->f_config['timeout']);
+        socket_set_option($socket,SOL_SOCKET,SO_SNDTIMEO,$this->f_config['timeout']);
+        $result = @socket_connect($socket, $this->f_config['address'], $this->f_config['port']);
+        if (!$result)
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $error_msg = _("Warning! Can't connect with frameworkd").' ('.$this->f_config['address'].':'.$this->f_config['port'].')';
+            $error_msg .= ' '._('Reason').': '.$last_socket_error;
+
+            $this->set_error('warning', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        $scanning_sensor_ip = $this->sensor_cache[$this->scanning_sensor];
+
+        $in  = 'control action="nmap_report_delete" id="'.$scanning_sensor_ip.'" path="'.$report.'"' . "\n";
+        $out = '';
+        socket_write($socket, $in, strlen($in));
+        $out = @socket_read($socket, 2048, PHP_BINARY_READ);
+
+        if (!preg_match('/ack(end)?$/', $out))
+        {
+            $last_socket_error = socket_strerror(socket_last_error($socket));
+
+            $out = (empty($out)) ? _('empty response') : $out;
+
+            $error_msg = _('Error! Bad response from frameworkd').": $out. "._('Reason:').' '.$last_socket_error;
+
+            $this->set_error('error', $error_msg);
+
+            socket_close($socket);
+
+            return FALSE;
+        }
+
+        socket_close($socket);
+
+        return TRUE;
     }
-    
-    
+
+
     /**
     * This function prints the scan results
     *
     * @return void
     */
-	public function print_scan()
-	{      
-	    $results = $this->nmap_parser->parse_xml($this->scan);
- 
-       foreach($results['scanned_ips'] as $host)
-        {         
+    public function print_scan()
+    {
+        $results = $this->nmap_parser->parse_xml($this->scan);
+
+        foreach($results['scanned_ips'] as $host)
+        {
             $ip = $host['ip'];
-            
+
             if (trim($ip) == '')
             {
                 continue;
             }
-            
+
             $resolv_ip = gethostbyaddr($ip);
-            
+
             echo '<img src="../pixmaps/arrow-315-small.png" align="absmiddle"/>';
             echo "<b>$ip";
-            
-            if ($ip != $resolv_ip) 
+
+            if ($ip != $resolv_ip)
             {
                 echo " ($resolv_ip)";
             }
-            
+
             echo '</b>.. <br/>\n';
-	        
-	        if (isset($host['os']))
-	        {
-	            echo '&nbsp;&nbsp;&nbsp;&nbsp;';
-	            echo 'OS: ' . $host['os'];
-	            echo '<br/>';
-	        }
-	
-	        if (isset($host['mac']))
-	        {
-	            echo '&nbsp;&nbsp;&nbsp;&nbsp;';
-	            echo 'MAC: ' . $host['mac'].' '.($host['mac_vendor']);
-	            echo '<br/>';
-	        }
-	        if (isset($host['services']))
-	        {
-	            echo '&nbsp;&nbsp;&nbsp;&nbsp;';
-	            echo 'Services: ';
-	            foreach ($host['services'] as $k => $service) 
-	            {
-	                echo $k . '&nbsp;';
-	            }
-	            echo '<br/>';
-	        }
-	        
-	        echo '<hr/>';
+
+            if (isset($host['os']))
+            {
+                echo '&nbsp;&nbsp;&nbsp;&nbsp;';
+                echo 'OS: ' . $host['os'];
+                echo '<br/>';
+            }
+
+            if (isset($host['mac']))
+            {
+                echo '&nbsp;&nbsp;&nbsp;&nbsp;';
+                echo 'MAC: ' . $host['mac'].' '.($host['mac_vendor']);
+                echo '<br/>';
+            }
+            if (isset($host['services']))
+            {
+                echo '&nbsp;&nbsp;&nbsp;&nbsp;';
+                echo 'Services: ';
+                foreach ($host['services'] as $k => $service)
+                {
+                    echo $k . '&nbsp;';
+                }
+                echo '<br/>';
+            }
+
+            echo '<hr/>';
         }
-	}
-	
-	
+    }
+
+
     /**
-    * This function returns the last Frameworkd error
+    * This function gets last error
     *
     * @return string
     */
-    public function err()
-    { 
-    	return $this->errmsg;
+    public function get_last_error()
+    {
+        return $this->error;
     }
-    
-	
+
+
     /**
-    * This function returns the last Frameworkd error
+    * This function sets an error
+    *
+    * @param string  $severity  Error severity
+    * @param string  $message   Error message
     *
     * @return string
     */
-    public function save_scan() 
-	{
-        $_SESSION['_scan'] = $this->scan;                    
-          	
-    	file_put_contents($this->xml_output, $this->scan); 
+    public function set_error($severity, $message)
+    {
+        $this->error = array('severity' => $severity, 'data' => $message);
     }
-    
-	
-	/**
-	* This function returns the scan results
-	*
+
+
+    /**
+    * This function gets the last scan
+    *
+    * @return string
+    */
+    public function save_scan()
+    {
+        $_SESSION['_scan'] = $this->scan;
+
+        file_put_contents($this->xml_output, $this->scan);
+
+        @chown($this->xml_output, $this->owner);
+    }
+
+
+    /**
+    * This function returns the scan results
+    *
     * @return array
-	*/
+    */
     public function get_scan()
     {
         if (isset($_SESSION['_scan']))
         {
             $data = $_SESSION['_scan'];
         }
-		else
-		{
+        else
+        {
             $data = $this->scan;
         }
-        
+
         return $this->nmap_parser->parse_xml($data);
     }
-    
-    
-	/**
-	* This function deletes the scan results
-	*
-	* @return void
-	*/
-	public function del_scan()
-	{
+
+
+    /**
+    * This function deletes the scan results
+    *
+    * @return void
+    */
+    public function delete_data()
+    {
         if (isset($_SESSION['_scan']))
         {
             unset($_SESSION['_scan']);
         }
-        
+
         if (file_exists($this->xml_output))
-    	{
+        {
             @unlink($this->xml_output);
         }
     }

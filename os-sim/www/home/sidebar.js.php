@@ -35,9 +35,56 @@ require_once 'av_init.php';
 ?>
 
 var ajax_url      = '/ossim/home/sidebar_ajax.php';
-var OPEN_SIDE_BAR = false;
 var notifRequest  = false;
 var spinner_img   = "<img class='sidebar_spinner' src='<?php echo AV_PIXMAPS_DIR ?>/loader.gif'/>";
+
+//TIMEOUTS FOR EACH ELEM IN THE SIDE BAR
+var TIMEOUT_LIST    = 
+{
+    'notifications' :
+    {
+        'function' : load_notifications,
+        'timeout'  : false,
+        'delay'    : 300000
+    },
+    'alarms' :
+    {
+        'function' : load_unresolved_alarms,
+        'timeout'  : false,
+        'delay'    : 60000
+    },
+    'tickets' :
+    {
+        'function' : load_open_tickets,
+        'timeout'  : false,
+        'delay'    : 60000
+    },
+    'sensors' :
+    {
+        'function' : load_active_sensors,
+        'timeout'  : false,
+        'delay'    : 180000
+    },
+    'eps' :
+    {
+        'function' : load_system_eps,
+        'timeout'  : false,
+        'delay'    : 60000
+    },
+    'devices' :
+    {
+        'function' : load_monitored_devices,
+        'timeout'  : false,
+        'delay'    : 60000
+    },
+    'trend' :
+    {
+        'function' : load_events_trend,
+        'timeout'  : false,
+        'delay'    : 60000
+    }
+};
+
 
 /* SIDE BAR FUNCTIONS */
 
@@ -49,18 +96,526 @@ function load_sidebar_data()
     load_system_eps();
     load_monitored_devices();
     load_events_trend();
-
     load_notifications();
-
-    setTimeout(function()
-    {
-        load_sidebar_data();
-
-    }, 300000);
-
-    return false;
 }
 
+
+function refresh_notifications()
+{
+    load_notifications();
+}
+
+function remove_schedule(type)
+{
+    if (TIMEOUT_LIST[type]['timeout'])
+    {
+        clearTimeout(TIMEOUT_LIST[type]['timeout']);
+        TIMEOUT_LIST[type]['timeout'] = false;
+    }
+}
+
+function schedule_method(type)
+{
+    remove_schedule(type);
+    
+    TIMEOUT_LIST[type]['timeout'] = setTimeout(TIMEOUT_LIST[type]['function'], TIMEOUT_LIST[type]['delay']);   
+}
+
+
+
+/*******************************************/
+
+/********* NOTIFICATION FUNCTIONS **********/
+
+/*******************************************/
+
+
+
+function load_notifications()
+{
+    remove_schedule('notifications');
+    
+    $.ajax({
+        data: {"action": 'notifications', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function(data)
+        {
+            if(notifRequest)
+            {
+                // Aborting previous request
+                notifRequest.abort();
+            }
+            notifRequest = data;
+
+            $('#notif_list').empty().hide();
+            $('#notif_status').html(spinner_img).show();
+            $('#notifications_title').text("<?php echo _('Notifications') ?>");
+        },
+        success: function(response)
+        {
+
+            if(typeof(response) == 'undefined' || response.error  || typeof(response.output) != 'object')
+            {
+                $('#notif_status').html("<?php echo _('It was not possible to load the notifications') ?>");
+                $('#notif_buble').text('0').hide();
+            }
+            else
+            {
+                var notif_list = response.output;
+
+                if ($(notif_list).length > 0)
+                {
+                    //Retrieving notification info from cookie
+                    var num_notif     = 0;
+
+
+
+                    $('#notif_list').empty();
+
+                    $.each(notif_list, function(key, notif)
+                    {
+                        if(typeof(notif) == 'object')
+                        {
+                            var _class = notif.class;
+                            var _msg   = notif.msg;
+
+                            $("<li><a href='javascript:;' class='"+_class+" av_l_main'>"+_msg+"</a></li>").appendTo($('#notif_list'));
+
+                            num_notif++;
+                        }
+                    });
+
+                    $('#notifications_title').html("<?php echo _('Notifications') ?> <span>("+ num_notif +")</span>")
+
+                    $('#notif_buble').text(num_notif).show();
+
+                    $('#notif_status').empty().hide();
+                    $('#notif_list').show();
+                }
+                else
+                {
+                    $('#notif_status').empty().text("<?php echo _('There are no new notifications') ?>");
+                    $('#notif_buble').text('0').hide();
+                }
+            }
+
+        },
+        error: function(data, textStatus, errorThrown)
+        {
+
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $('#notif_buble').text('0').hide();
+            //This is because a notification can be aborted to avoid collisions
+            if (errorThrown != 'abort')
+            {
+                $('#notif_status').html("<?php echo _('It was not possible to load the notifications') ?>");
+            }
+
+        },
+        complete: schedule_method('notifications')
+    });
+}
+
+
+function load_open_tickets()
+{
+    remove_schedule('tickets');
+    
+    var id = '#notif_tickets';
+
+    $.ajax({
+        data: {"action": 'open_tickets', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $(id).html(spinner_img);
+            $(id).removeClass('nl_tickets');
+        },
+        success: function(response)
+        {            
+            if(typeof(response) == 'undefined' || response.error)
+            {
+
+                $(id).text('-');
+            }
+            else
+            {
+                var tickets = response.output
+                
+                $(id).text(tickets.text);
+                $(id).addClass('nl_tickets');
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $(id).text('-');
+
+        },
+        complete: schedule_method('tickets')
+    });
+
+}
+
+
+function load_events_trend()
+{
+    remove_schedule('trend');
+    
+    var id = '#notif_eps';
+
+    $.ajax({
+        data: {"action": 'events_trend', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $(id).html(spinner_img);
+        },
+        success: function(response)
+        {
+
+            if(typeof(response) == 'undefined' || response.error)
+            {
+
+                $(id).text('-');
+            }
+            else
+            {
+                var labels = response.output.labels;
+
+                $('.sparkline').attr('values', response.output.events);
+
+                $('.sparkline').sparkline('html',{
+                    width: 320,
+                    height: 50,
+                    lineColor: 'rgba(148, 207, 5, 1)',
+                    fillColor: 'rgba(237, 237, 237, 1)',
+                    highlightLineColor: 'rgba(22, 167, 201, 1)',
+                    minSpotColor: false,
+                    lineWidth: 1,
+                    maxSpotColor: false,
+                    spotColor: false,
+                    chartRangeMin:0,
+                    tooltipFormatter: function(a,b,c) 
+                    {
+                        var label = c.y + ((c.y == '1')? ' <?php echo _('Event')?>' : ' <?php echo _('Events')?>');
+                        if(typeof(labels[c.x]) != 'undefined')
+                        {
+                            label = labels[c.x] + '<br>' + label;
+                        }
+
+                         return label;
+                    }
+                });
+
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $(id).text('-');
+
+        },
+        complete: schedule_method('trend')
+    });
+
+}
+
+
+function load_system_eps()
+{
+    remove_schedule('eps');
+    
+    var id = '#notif_eps';
+
+    $.ajax({
+        data: {"action": 'system_eps', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $(id).html(spinner_img).removeClass('nl_siem');
+            $('#resume_eps').removeClass('nl_siem');
+            $('.nl_siem').off('click');
+
+        },
+        success: function(response)
+        {            
+            if(typeof(response) == 'undefined' || response.error)
+            {
+                $('#resume_eps').text('-');
+                $(id).text('-');
+            }
+            else
+            {
+                var eps = response.output
+                
+                $('#resume_eps').text(eps.readable).addClass('nl_siem');
+                $(id).text(eps.text + ' EPS').addClass('nl_siem');
+                
+                $('.nl_siem').on('click', nl_siem);
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $('#resume_eps').text('-').removeClass('nl_siem');
+            $(id).text('-');
+
+        },
+        complete: schedule_method('eps')
+    });
+
+}
+
+
+function load_monitored_devices()
+{
+    remove_schedule('devices');
+    
+    var id = '#notif_devices';
+
+    $.ajax({
+        data: {"action": 'monitored_devices', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $(id).html(spinner_img);
+            $(id).removeClass('nl_devices');
+        },
+        success: function(response)
+        {
+
+            if(typeof(response) == 'undefined' || response.error)
+            {
+
+                $(id).text('-');
+            }
+            else
+            {
+                var devices = response.output
+                
+                $(id).text(devices.text);
+                $(id).addClass('nl_devices');
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $(id).text('-');
+        },
+        complete: schedule_method('devices')
+    });
+
+}
+
+
+function load_unresolved_alarms()
+{
+    remove_schedule('alarms');
+    
+    var id = '#notif_alarms';
+
+    $.ajax({
+        data: {"action": 'unresolved_alarms', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $(id).html(spinner_img).removeClass('nl_alarms');
+            $('.nl_alarms').off('click');
+        },
+        success: function(response)
+        {
+
+            if(typeof(response) == 'undefined' || response.error)
+            {
+
+                $('#resume_alarm_count').text('-').removeClass('nl_alarms');
+                $(id).text('-');
+            }
+            else
+            {
+            	if(typeof(response.output) == 'object')
+            	{
+            		var data = response.output;
+
+	                $('#resume_alarm_count').text(data.alarms.readable).addClass('nl_alarms');
+	                
+	                $(id).text(data.alarms.text).addClass('nl_alarms');
+	                
+	                $('.nl_alarms').on('click', nl_alarms);
+
+	                // New Alarms
+				    if (data.new_alarms > 0 && notify.isSupported)
+				    {
+						var new_alarms_desc = data.new_alarms_desc.split("|");
+						for (var i = 0; i < new_alarms_desc.length; i++)
+						{
+							av_notification ('<?php echo Util::js_entities(_("New alarm")) ?>', new_alarms_desc[i], (i % 4) + 1);
+						}
+				    }
+			    }
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $('#resume_alarm_count').text('-').removeClass('nl_alarms');
+            $(id).text('-');
+
+        },
+        complete: schedule_method('alarms')
+    });
+}
+
+
+function load_active_sensors()
+{
+    remove_schedule('sensors');
+    
+    $.ajax({
+        data: {"action": 'sensor_status', "bypassexpirationupdate": "1"},
+        type: "POST",
+        url: ajax_url,
+        dataType: "json",
+        beforeSend: function()
+        {
+            $('#notif_sensors').html(spinner_img);
+            $('.semaphore').css('background-color', '');
+            $('#notif_sensors').removeClass('nl_sensors');
+        },
+        success: function(response)
+        {
+
+            if(typeof(response) == 'undefined' || response.error)
+            {
+
+                $('#notif_sensors').text('- ' + "<?php echo _('Sensors Active') ?>");
+            }
+            else
+            {
+                var sensors = response.output
+                var s_label = sensors.active.text + '/' + sensors.total.text;
+                
+                $('#notif_sensors').text(s_label + ' ' + "<?php echo _('Sensors Active') ?>");
+                $('#notif_sensors').addClass('nl_sensors');
+
+                if (sensors.color == "green")
+                {
+                    $('#semaphore_led1').css('background-color', '#94cf05');
+                    $('#semaphore_led2').css('background-color', '#e3e3e3');
+                    $('#semaphore_led3').css('background-color', '#e3e3e3');
+                }
+                else if (sensors.color == "yellow")
+                {
+                    $('#semaphore_led1').css('background-color', '#fac800');
+                    $('#semaphore_led2').css('background-color', '#fac800');
+                    $('#semaphore_led3').css('background-color', '#e3e3e3');
+                }
+                else if (sensors.color == "red")
+                {
+                    $('#semaphore_led1').css('background-color', '#fa0000');
+                    $('#semaphore_led2').css('background-color', '#fa0000');
+                    $('#semaphore_led3').css('background-color', '#fa0000');
+                }
+                else
+                {
+                    $('#semaphore_led1').css('background-color', '');
+                    $('#semaphore_led2').css('background-color', '');
+                    $('#semaphore_led3').css('background-color', '');
+                }
+            }
+
+        },
+        error: function(data)
+        {
+            //Check expired session
+            var session = new Session(data, '');
+
+            if ( session.check_session_expired() == true )
+            {
+                session.redirect();
+                return;
+            }
+
+            $('#notif_sensors').text('-');
+        },
+        complete: schedule_method('sensors')
+    });
+
+}
+
+
+
+/*******************************************/
+
+/********* BIND NOTIFICATION LINKS *********/
+
+/*******************************************/
 
 function bind_notif_links()
 {
@@ -68,8 +623,16 @@ function bind_notif_links()
     $(document).on('click', '.nl_trial', function()
     {
         var url = "<?php echo AV_MAIN_PATH ?>/session/trial/trial_status.php?window=1";
-
-        LB_show("<?php echo _('Trial Status') ?>", url, '80%', '80%', false, false);
+        
+        params = {
+            caption       : "<?php echo _('Trial Status') ?>", 
+            url           : url, 
+            height        : '80%',
+            width         : '80%',
+            close_overlay : false
+        };
+        
+    	LB_show(params);
 
     });
 
@@ -89,7 +652,7 @@ function bind_notif_links()
 
 	    $(document).on('click', '.nl_updates', function()
 	    {
-	        var url = "<?php echo Menu::get_menu_url('/av_center/index.php?ip=$ip&section=sw_pkg_pending', 'configuration', 'deployment', 'components', 'alienVault_center'); ?>";
+	        var url = "<?php echo Menu::get_menu_url('/av_center/index.php', 'configuration', 'deployment', 'components', 'alienvault_center'); ?>";
 
 	        av_menu.load_content(url);
 
@@ -117,6 +680,15 @@ function bind_notif_links()
             {
                 new_window.focus();
             }
+	    });
+	    
+	    $(document).on('click', '.nl_backup_running', function()
+	    {
+	        var url = "<?php echo Menu::get_menu_url('/backup/index.php', 'configuration', 'administration', 'backup'); ?>";
+
+	        av_menu.load_content(url);
+
+	        return false;
 	    });
 
 
@@ -211,466 +783,6 @@ function nl_alarms(e)
 	return false;
 }
 
-function refresh_notifications()
-{
-    load_notifications();
-}
-
-function load_notifications()
-{
-    $.ajax({
-        data: {"action": 'notifications', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function(data)
-        {
-            if(notifRequest)
-            {
-                // Aborting previous request
-                notifRequest.abort();
-            }
-            notifRequest = data;
-
-            $('#notif_list').empty().hide();
-            $('#notif_status').html(spinner_img).show();
-            $('#notifications_title').text("<?php echo _('Notifications') ?>");
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error  || typeof(response.output) != 'object')
-            {
-                $('#notif_status').html("<?php echo _('It was not possible to load the notifications') ?>");
-                $('#notif_buble').text('0').hide();
-            }
-            else
-            {
-                var notif_list = response.output;
-
-                if ($(notif_list).length > 0)
-                {
-                    //Retrieving notification info from cookie
-                    var num_notif     = 0;
-
-
-
-                    $('#notif_list').empty();
-
-                    $.each(notif_list, function(key, notif)
-                    {
-                        if(typeof(notif) == 'object')
-                        {
-                            var _class = notif.class;
-                            var _msg   = notif.msg;
-
-                            $("<li><a href='javascript:;' class='"+_class+" av_l_main'>"+_msg+"</a></li>").appendTo($('#notif_list'));
-
-                            num_notif++;
-                        }
-                    });
-
-                    $('#notifications_title').html("<?php echo _('Notifications') ?> <span>("+ num_notif +")</span>")
-
-                    $('#notif_buble').text(num_notif).show();
-
-                    $('#notif_status').empty().hide();
-                    $('#notif_list').show();
-                }
-                else
-                {
-                    $('#notif_status').empty().text("<?php echo _('There are no new notifications') ?>");
-                    $('#notif_buble').text('0').hide();
-                }
-            }
-
-        },
-        error: function(data, textStatus, errorThrown)
-        {
-
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $('#notif_buble').text('0').hide();
-            //This is because a notification can be aborted to avoid collisions
-            if (errorThrown != 'abort')
-            {
-                $('#notif_status').html("<?php echo _('It was not possible to load the notifications') ?>");
-            }
-
-        }
-    });
-}
-
-
-function load_open_tickets()
-{
-    var id = '#notif_tickets';
-
-    $.ajax({
-        data: {"action": 'open_tickets', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $(id).html(spinner_img);
-            $(id).removeClass('nl_tickets');
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error)
-            {
-
-                $(id).text('-');
-            }
-            else
-            {
-                $(id).text(format_dot_number(response.output));
-                $(id).addClass('nl_tickets');
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $(id).text('-');
-
-        }
-    });
-
-}
-
-
-function load_events_trend()
-{
-    var id = '#notif_eps';
-
-    $.ajax({
-        data: {"action": 'events_trend', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $(id).html(spinner_img);
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error)
-            {
-
-                $(id).text('-');
-            }
-            else
-            {
-                var labels = response.output.labels;
-
-                $('.sparkline').attr('values', response.output.events);
-
-                $('.sparkline').sparkline('html',{
-                    width: 320,
-                    height: 50,
-                    lineColor: 'rgba(148, 207, 5, 1)',
-                    fillColor: 'rgba(237, 237, 237, 1)',
-                    minSpotColor: false,
-                    lineWidth: 1,
-                    maxSpotColor: false,
-                    spotColor: false,
-                    chartRangeMin:0,
-                    tooltipFormatter: function(a,b,c) {
-
-                        var label = c.y + ((c.y == 1)? ' <?php echo _('Event')?>' : ' <?php echo _('Events')?>');
-                        if(typeof(labels[c.x]) != 'undefined')
-                        {
-                            label = labels[c.x] + '<br>' + label;
-                        }
-
-                         return label;
-                    }
-                });
-
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $(id).text('-');
-
-        }
-    });
-
-}
-
-function load_system_eps()
-{
-    var id = '#notif_eps';
-
-    $.ajax({
-        data: {"action": 'system_eps', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $(id).html(spinner_img).removeClass('nl_siem');
-            $('#resume_eps').removeClass('nl_siem');
-            $('.nl_siem').off('click');
-
-        },
-        success: function(response)
-        {
-            if(typeof(response) == 'undefined' || response.error)
-            {
-                $('#resume_eps').text('-');
-                $(id).text('-');
-            }
-            else
-            {
-                $('#resume_eps').text(number_readable(response.output)).addClass('nl_siem');
-                $(id).text(format_dot_number(response.output) + ' EPS').addClass('nl_siem');
-                
-                $('.nl_siem').on('click', nl_siem);
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $('#resume_eps').text('-').removeClass('nl_siem');
-            $(id).text('-');
-
-        }
-    });
-
-}
-
-
-function load_monitored_devices()
-{
-    var id = '#notif_devices';
-
-    $.ajax({
-        data: {"action": 'monitored_devices', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $(id).html(spinner_img);
-            $(id).removeClass('nl_devices');
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error)
-            {
-
-                $(id).text('-');
-            }
-            else
-            {
-                $(id).text(format_dot_number(response.output));
-                $(id).addClass('nl_devices');
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $(id).text('-');
-        }
-    });
-
-}
-
-
-function load_unresolved_alarms()
-{
-    var id = '#notif_alarms';
-
-    $.ajax({
-        data: {"action": 'unresolved_alarms', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $(id).html(spinner_img).removeClass('nl_alarms');
-            $('.nl_alarms').off('click');
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error)
-            {
-
-                $('#resume_alarm_count').text('-').removeClass('nl_alarms');
-                $(id).text('-');
-            }
-            else
-            {
-            	if(typeof(response.output) == 'object')
-            	{
-            		var data = response.output;
-
-	                $('#resume_alarm_count').text(number_readable(data.alarms)).addClass('nl_alarms');
-	                
-	                $(id).text(format_dot_number(data.alarms)).addClass('nl_alarms');
-	                
-	                $('.nl_alarms').on('click', nl_alarms);
-
-	                // New Alarms
-				    if (data.new_alarms > 0 && window.webkitNotifications)
-				    {
-						var new_alarms_desc = data.new_alarms_desc.split("|");
-						for (var i = 0; i < new_alarms_desc.length; i++)
-						{
-							av_notification ('<?php echo Util::js_entities(_("New alarm")) ?>', new_alarms_desc[i], (i % 4) + 1);
-						}
-				    }
-			    }
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $('#resume_alarm_count').text('-').removeClass('nl_alarms');
-            $(id).text('-');
-
-        }
-    });
-}
-
-
-function load_active_sensors()
-{
-    $.ajax({
-        data: {"action": 'sensor_status', "bypassexpirationupdate": "1"},
-        type: "POST",
-        url: ajax_url,
-        dataType: "json",
-        async: true,
-        beforeSend: function()
-        {
-            $('#notif_sensors').html(spinner_img);
-            $('.semaphore').css('background-color', '');
-            $('#notif_sensors').removeClass('nl_sensors');
-        },
-        success: function(response)
-        {
-
-            if(typeof(response) == 'undefined' || response.error)
-            {
-
-                $('#notif_sensors').text('- ' + "<?php echo _('Sensors Active') ?>");
-            }
-            else
-            {
-                var sensors = response.output.active + '/' + response.output.total;
-                $('#notif_sensors').text(sensors + ' ' + "<?php echo _('Sensors Active') ?>");
-                $('#notif_sensors').addClass('nl_sensors');
-
-                if (response.output.color == "green")
-                {
-                    $('#semaphore_led1').css('background-color', '#94cf05');
-                    $('#semaphore_led2').css('background-color', '#e3e3e3');
-                    $('#semaphore_led3').css('background-color', '#e3e3e3');
-                }
-                else if (response.output.color == "yellow")
-                {
-                    $('#semaphore_led1').css('background-color', '#fac800');
-                    $('#semaphore_led2').css('background-color', '#fac800');
-                    $('#semaphore_led3').css('background-color', '#e3e3e3');
-                }
-                else if (response.output.color == "red")
-                {
-                    $('#semaphore_led1').css('background-color', '#fa0000');
-                    $('#semaphore_led2').css('background-color', '#fa0000');
-                    $('#semaphore_led3').css('background-color', '#fa0000');
-                }
-                else
-                {
-                    $('#semaphore_led1').css('background-color', '');
-                    $('#semaphore_led2').css('background-color', '');
-                    $('#semaphore_led3').css('background-color', '');
-                }
-            }
-
-        },
-        error: function(data)
-        {
-            //Check expired session
-            var session = new Session(data, '');
-
-            if ( session.check_session_expired() == true )
-            {
-                session.redirect();
-                return;
-            }
-
-            $('#notif_sensors').text('-');
-        }
-    });
-
-}
-
 
 
 /*******************************************/
@@ -680,28 +792,17 @@ function load_active_sensors()
 /*******************************************/
 
 
-function RequestPermission (callback)
+function av_notification (title, txt, delay4)
 {
-    window.webkitNotifications.requestPermission(callback);
-}
-
-
-function av_notification (title, body, delay4)
-{
-    if (window.webkitNotifications.checkPermission() > 0)
+    if (notify.permissionLevel() == notify.PERMISSION_GRANTED)
     {
-        RequestPermission(av_notification);
-    }
-    else
-    {
-        var popup = window.webkitNotifications.createNotification('<?php echo AV_PIXMAPS_DIR ?>/statusbar/logo_siem_small.png', title, body);
-        popup.show();
+        var popup = notify.createNotification(title, { body: txt, icon:'<?php echo AV_PIXMAPS_DIR ?>/statusbar/logo_siem_small.png' });
 
         var delay = 5000 * delay4;
 
         setTimeout (function()
         {
-            popup.cancel();
+            popup.close();
 
         }, delay);
     }

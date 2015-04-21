@@ -98,17 +98,17 @@ DROP PROCEDURE create_tag_alarm;
 mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers -w "engine_id in ($ONLYENGINES)" alienvault alarm_taxonomy >> $TMPFILE
 #
 # SENSORS
-SENSORS=`echo "select concat('0x',hex(id)) as sensor from sensor where name != '(null)'"|ossim-db|sed -e '1,${ /^sensor/d }'|xargs|sed 's/ /,/g'`
+SENSORS=`echo "select concat('0x',hex(id)) as sensor from sensor, sensor_properties where sensor_properties.sensor_id=sensor.id AND sensor.name != '(null)' and sensor_properties.version != ''"|ossim-db|sed -e '1,${ /^sensor/d }'|xargs|sed 's/ /,/g'`
 echo "delete sensor.* from sensor,acl_sensors where sensor.id=acl_sensors.sensor_id and acl_sensors.entity_id in ($CTXS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor -w "name != '(null)'" >> $TMPFILE
+mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor -w "id in ($SENSORS)" >> $TMPFILE
 echo "delete from acl_sensors where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault acl_sensors >> $TMPFILE
+mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault acl_sensors -w "sensor_id in ($SENSORS)" >> $TMPFILE
 echo "delete from sensor_properties where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor_properties >> $TMPFILE
+mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault sensor_properties -w "sensor_id in ($SENSORS)" >> $TMPFILE
 echo "delete from locations where ctx in ($CTXS);" >> $TMPFILE
 mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault locations >> $TMPFILE
 echo "delete from location_sensor_reference where sensor_id in ($SENSORS);" >> $TMPFILE
-mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault location_sensor_reference >> $TMPFILE
+mysqldump -h $HOST -u $USER -p$PASS -t --replace --hex-blob --complete-insert --single-transaction --compact --skip-triggers alienvault location_sensor_reference -w "sensor_id in ($SENSORS)" >> $TMPFILE
 #
 # REPAIR SENSOR_ID NULL IN ALIENVAULT.SYSTEM
 echo "
@@ -187,6 +187,5 @@ FILENAME_MD5=/var/lib/alienvault-center/db/sync.md5
 rm -f /var/lib/alienvault-center/db/sync*
 mv $TMPFILE $FILENAME
 md5sum $FILENAME | sed 's/ .*//' > $FILENAME_MD5
-gzip $FILENAME
 chown www-data:www-data /var/lib/alienvault-center/db/sync*
-echo "$FILENAME.gz and $FILENAME_MD5 generated successfully."
+echo "$FILENAME and $FILENAME_MD5 generated successfully."

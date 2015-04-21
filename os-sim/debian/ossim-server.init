@@ -17,7 +17,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DESC="OSSIM Server"
 NAME=ossim-server
 DAEMON=/usr/bin/$NAME
-PIDFILE=/var/run/alienvault/$NAME.pid
+RUNDIR=/var/run
+PIDDIR=$RUNDIR/alienvault
+PIDFILE=$PIDDIR/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 RUNNING_INSTANCE_EXITS_E=2
 
@@ -60,6 +62,32 @@ d_start() {
         then
         log_daemon_msg "WARNING:Not starting $DESC, it has already been started."
         exit $RUNNING_INSTANCE_EXITS_E
+   fi
+
+   if [ ! -d $PIDDIR ]; then
+      mkdir -p -m 0770 "$PIDDIR"
+      chgrp -R alienvault "$PIDDIR"
+   fi
+
+   # Check if /var/run is a symbolic link to determine the Debian configuration
+   if [ -h $RUNDIR ]; then
+      # Wheezy
+      mount | grep "/run type" > /dev/null
+      if [ "$?" != "1" ]; then
+         if [ ! -d $PIDDIR ]; then
+            mkdir -p -m 0770 "$PIDDIR"
+            chgrp -R alienvault "$PIDDIR"
+         fi
+      else
+         log_daemon_msg "ERROR: /run is not mounted yet. The system is not stable. Skipping"
+         exit 1
+      fi
+   else
+      # Squeeze
+      if [ ! -d $PIDDIR ]; then
+         mkdir -p -m 0770 "$PIDDIR"
+         chgrp -R alienvault "$PIDDIR"
+      fi
    fi
 
    # If pidfile exists, we remove it before start.

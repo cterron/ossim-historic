@@ -149,12 +149,7 @@ function VerifyGraphingLib() {
 /* Generates the required SQL from the chart time criteria */
 function ProcessChartTimeConstraint($start_hour, $start_day, $start_month, $start_year, $stop_hour, $stop_day, $stop_month, $stop_year) {
     /* if any of the hour, day criteria is blank ' ', set it to NULL */
-    /**
-     ereg_replace(" ", "", $start_hour);
-     ereg_replace(" ", "", $stop_hour);
-     ereg_replace(" ", "", $start_day);
-     ereg_replace(" ", "", $stop_day);
-     */
+
     $start_hour = trim($start_hour);
     $stop_hour = trim($stop_hour);
     $start_day = trim($start_day);
@@ -495,7 +490,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
             return 0;
         }
         foreach($lines as $line_num => $line) {
-            $line_array[$line_num] = split(' ', rtrim($line));
+            $line_array[$line_num] = preg_split('/\s/', rtrim($line));
             $index = rtrim($line_array[$line_num][0], ':');
             $begin = sprintf("%u", ip2long($line_array[$line_num][1]));
             $end = sprintf("%u", ip2long($line_array[$line_num][2]));
@@ -514,7 +509,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                     // }
                     $index.= " (" . $iso_3166[$index] . ")";
                 }
-                if (!isset($Geo_IPfree_array) || !key_exists($index, $Geo_IPfree_array)) {
+                if (!isset($Geo_IPfree_array) || !array_key_exists($index, $Geo_IPfree_array)) {
                     $Geo_IPfree_array[$index][0] = array(
                         $begin,
                         $end
@@ -640,7 +635,7 @@ function GetTimeDataSet(&$xdata, $chart_type, $data_source, $min_threshold, $cri
                 $countries[$to_search] = $number_of_alerts;
                 return;
             }
-            if (key_exists($to_search, $countries)) {
+            if (array_key_exists($to_search, $countries)) {
                 // if ($debug_mode > 1) {
                     // print $to_search . " does exist.<BR>\n";
                 // }

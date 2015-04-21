@@ -105,7 +105,7 @@ class Ossec_utilities
         {
             $s_id = strtoupper($s_data['sensor_id']);
             
-            if ($s_id != NULL && array_key_exists($s_id, $sensor_list))
+            if ($s_id != NULL && array_key_exists($s_id, $sensor_list) && !array_key_exists($s_id, $res['sensors']))
             {
                 $selected    = ($s_id == $sensor_id) ? ' selected="selected"' : '';
                 $sensor_name = $sensor_list[$s_id]['name'];
@@ -171,8 +171,8 @@ class Ossec_utilities
         $db     = new ossim_db();
         $conn   = $db->connect();
         
-        $admin_ip = Util::get_default_admin_ip();
-        $res      = Av_center::get_system_info_by_ip($conn, $admin_ip);
+        $local_system_id = Util::get_system_uuid();
+        $res             = Av_center::get_system_info_by_id($conn, $local_system_id);
         
         $db->close();
         
@@ -644,8 +644,15 @@ class Ossec_utilities
 
         if ($agent_where != '')
         {
+            $_asset_where = make_asset_filter();
+            $asset_where  = $_asset_where[1];
+            $sensor_where = make_ctx_filter().$asset_where;
+            
+            // Fix filter tablename alias
+            $sensor_where = str_replace('acid_event.', 'a.', $sensor_where);
+            
             $query = "SELECT SUM(a.cnt) AS num_events, day(`day`) AS intervalo, monthname(`day`) AS suf
-                FROM alienvault_siem.ac_acid_event a WHERE a.device_id IN ($agent_where)
+                FROM alienvault_siem.ac_acid_event a WHERE a.device_id IN ($agent_where) $sensor_where
                 AND day BETWEEN '".gmdate("Y-m-d",gmdate("U")-604800)."' AND '".gmdate("Y-m-d")."'
                 AND a.plugin_id between 7000 and 7999
                 GROUP BY day

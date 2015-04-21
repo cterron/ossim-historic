@@ -156,7 +156,7 @@ foreach($agentless_list as $agentless)
 		$status = "<img src='". OSSIM_IMG_PATH."/tables/tick.png' alt='"._('Enabled')."' title='"._('Enabled')."'/>";
 	}
 		
-	$desc = ($agentless->get_descr() == '')? "&nbsp;" :  htmlentities($agentless->get_descr());
+	$desc = ($agentless->get_descr() == '')? "&nbsp;" : $agentless->get_descr();
   
   
     $xml.= "<row id='$ip'>";

@@ -40,7 +40,6 @@ if (!headers_sent())
 {
 	display:none;
 	margin-bottom:15px;
-	margin-top: 5px;
 }
 
 .conf_table
@@ -155,6 +154,12 @@ if (!headers_sent())
 #av_info
 {
     margin-top: 20px;
+}
+
+.t_conf_info ul
+{
+    padding-left: 20px;
+    margin-bottom: 10px;
 }
 
 /* OTX Subsection */

@@ -277,7 +277,9 @@ function get_doc_info($conn, $rel)
 			$sql    = "SELECT title from incident where id=?";
 			$params = array ($rel['key']);
 					
-			if (!$rs = & $conn->Execute ($sql, $params)) 
+            $rs = $conn->Execute ($sql, $params);
+            
+			if (!$rs)
 			{
 				$name = _('Unknown');
 			} 
@@ -325,7 +327,9 @@ function get_doc_info($conn, $rel)
 			$sql = "SELECT $field as name from ".$rel['type']." where id=UNHEX(?)";
 			$params = array ($rel['key']);
 					
-			if (!$rs = &$conn->Execute ($sql, $params)) 
+            $rs = $conn->Execute($sql, $params);
+					
+			if (!$rs)
 			{
 				$name = _('Unknown');
 			} 
@@ -343,8 +347,7 @@ function get_doc_info($conn, $rel)
 			$ptype  = (intval($tax[0]) != 0) ? Product_type::get_name_by_id($conn, $tax[0]) : _('ANY');
 			$cat    = (intval($tax[1]) != 0) ? Category::get_name_by_id($conn, $tax[1])    : _('ANY');
 			$subcat = (intval($tax[2]) != 0) ? Subcategory::get_name_by_id($conn, $tax[2]) : _('ANY');
-			
-			
+
 			$name   = _('Product Type') . ': ' . $ptype . ', ' . _('Category') . ': ' . $cat . ', ' . _('Subcategory') . ': ' . $subcat;
 			
 			break;

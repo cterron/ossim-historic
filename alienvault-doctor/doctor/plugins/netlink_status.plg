@@ -1,0 +1,23 @@
+[properties]
+name=Network link status
+description=Uses mii-tool to check the network link status
+category=network,hardware
+type=command
+command=mii-tool -v
+raw_limit=100
+
+[Link speed]
+pattern=^(eth\d)\:\s(?:negotiated\s)?(\d+)(?:baseT\-\S+|\sMbit)
+conditions=@info@;@int@:>999
+fail_if_empty=True
+severity=High
+warning=Link speed is too low
+advice=Some network interfaces have slower link speeds than the recommended ones. Please check your network configuration.
+
+[Link mode speed]
+pattern=^(eth\d).*\n.*\n\s+basic\smode\:\s+(autonegotiation\senabled|\d+)
+conditions=@info@;@string@:>"999"@or@=="autonegotiation enabled"
+fail_if_empty=True
+severity=Medium
+warning=Link mode is not automatically set, or is too slow
+advice=Some network link modes have been manually configured, or have slower link mode speeds than the recommended ones. Please check your network configuration.

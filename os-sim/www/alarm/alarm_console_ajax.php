@@ -39,11 +39,6 @@ require_once 'alarm_common.php';
 
 Session::logcheck("analysis-menu", "ControlPanelAlarms");
 
-$geoloc = new Geolocation("/usr/share/geoip/GeoLiteCity.dat");
-
-/* connect to db */
-$db   = new ossim_db(TRUE);
-$conn = $db->connect();
 
 //Might be by post or by get. 
 if ($_SESSION["_alarm_keep_pagination"])
@@ -82,29 +77,6 @@ $host_id         = GET('host_id');
 $net_id          = GET('net_id');
 $ctx             = GET('ctx');
 
-$autorefresh     = "";
-$refresh_time    = "";
-
-if (isset($_GET['search']))
-{
-    unset($_SESSION['_alarm_autorefresh']);
-    if (isset($_GET['autorefresh']))
-    {
-        $autorefresh  = (GET('autorefresh') != '1') ? 0 : 1;
-        $refresh_time = GET('refresh_time');
-        $_SESSION['_alarm_autorefresh'] = GET('refresh_time');
-    }
-}
-else
-{
-    if ($_SESSION['_alarm_autorefresh'] != '')
-    {
-        $autorefresh  = 1;
-        $refresh_time = $_SESSION['_alarm_autorefresh'];
-    }
-}
-
-
 $query           = (GET('query') != "") ? GET('query') : "";
 $directive_id    = GET('directive_id');
 $intent          = intval(GET('intent'));
@@ -119,13 +91,6 @@ $ds_name         = GET('ds_name');
 $beep            = intval(GET('beep'));
 $sec             = POST('sEcho');
 
-//$tags            = Tags::get_list($conn);
-$tags_html       = Tags::get_list_html($conn);
-
-if (Session::is_pro() && Session::show_entities()) 
-{
-    list($entities, $_children, $_num_ent) = Acl::get_entities($conn, '', '', true, false);
-}
 
 ossim_valid($order,           OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Order"));
 ossim_valid($torder,          OSS_ALPHA, OSS_NULLABLE,                                      'illegal:' . _("Order Direction"));
@@ -134,8 +99,6 @@ ossim_valid($close,           OSS_HEX, OSS_NULLABLE,                            
 ossim_valid($open,            OSS_HEX, OSS_NULLABLE,                                        'illegal:' . _("Open"));
 ossim_valid($delete_day,      OSS_ALPHA, OSS_SPACE, OSS_PUNC, OSS_NULLABLE,                 'illegal:' . _("Delete_day"));
 ossim_valid($query,           OSS_ALPHA, OSS_PUNC_EXT, OSS_SPACE, OSS_NULLABLE,             'illegal:' . _("Query"));
-ossim_valid($autorefresh,     OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Autorefresh"));
-ossim_valid($refresh_time,    OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Refresh_time"));
 ossim_valid($directive_id,    OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Directive_id"));
 ossim_valid($intent,          OSS_DIGIT, OSS_NULLABLE,                                      'illegal:' . _("Intent"));
 ossim_valid($src_ip,          OSS_IP_ADDRCIDR_0, OSS_NULLABLE,                              'illegal:' . _("Src_ip"));
@@ -162,14 +125,24 @@ if (ossim_error())
 }
 
 
+/* connect to db */
+$db   = new ossim_db(TRUE);
+$conn = $db->connect();
+
+// Timezone correction
+$tz  = Util::get_timezone();
+
+//Geoloc library
+$geoloc = new Geolocation("/usr/share/geoip/GeoLiteCity.dat");
+
+
 // Pagination
 if (empty($inf)) 
 {
     $inf = 0;
 }
 
-$sup = $inf+$num_alarms_page;
-
+$sup = $inf + $num_alarms_page;
 
 
 $parameters['query']                  = "query="          .urlencode($query);
@@ -190,8 +163,6 @@ $parameters['sensor_query']           = "sensor_query="   .$sensor_query;
 $parameters['tag']                    = "tag="            .$tag;
 $parameters['num_events']             = "num_events="     .$num_events;
 $parameters['num_events_op']          = "num_events_op="  .$num_events_op;
-$parameters['refresh_time']           = "refresh_time="   .$refresh_time;
-$parameters['autorefresh']            = "autorefresh="    .$autorefresh;
 $parameters['ds_id']                  = "ds_id="          .$ds_id;
 $parameters['ds_name']                = "ds_name="        .urlencode($ds_name);
 //$parameters['bypassexpirationupdate'] = "bypassexpirationupdate=1";
@@ -209,6 +180,10 @@ if (!empty($_SESSION["_delete_msg"]))
 
 $_SESSION["_no_resolv"]      = $no_resolv;
 $_SESSION["_alarm_criteria"] = implode("&", $parameters);
+
+
+$tags_html = Tags::get_list_html($conn);
+
 
 // Order by
 switch ($order) 
@@ -308,15 +283,12 @@ list($alarm_list, $count) = Alarm::get_list($conn, $criteria, true);
 $total = ($inf>0 && intval($_SESSION["_alarm_count"])>0) ? $_SESSION["_alarm_count"] : $count;
 
 
-// Timezone correction
-$tz = Util::get_timezone();
-
-// 
 $results = array(); 
 
-$sound   = 0;
-$cont_tr = 0;
+$sound      = 0;
+$cont_tr    = 0;
 $time_start = time();
+$show_label = FALSE;
 
 if ($count > 0) 
 {
@@ -329,8 +301,6 @@ if ($count > 0)
         }
         
         $res = array();
-        
-        $res['DT_RowId']  = $alarm->get_backlog_id();
 
             
         $ctx        = $alarm->get_ctx();  //THIS IS THE ENGINE!!!
@@ -385,7 +355,7 @@ if ($count > 0)
 
         $date          = Util::timestamp2date($alarm->get_timestamp());
         $timestamp_utc = Util::get_utc_unixtime($date);
-        $beep_on       = ($beep && $refresh_time_secs>0 && (gmdate("U")-$timestamp_utc<=$refresh_time_secs)) ? true : false;
+
         $date          = gmdate("Y-m-d H:i:s",$timestamp_utc+(3600*$tz));
 
         if ($backlog_id && $id==1505 && $event_count > 0) 
@@ -398,9 +368,26 @@ if ($count > 0)
             $since = $date;
         }
         
+        /* Alarm Beep */
+        $beep_on = FALSE;
+        
+        if ($beep && !$beep_on)
+        {
+            $last_refresh = $_SESSION['_alarm_last_refresh_time'];
+            
+            if ($timestamp_utc >= $last_refresh)
+            {
+                $beep_on = TRUE;
+                
+                $_SESSION['_alarm_last_refresh_time'] = gmdate("U");
+            }
+
+        }
+        
+                
         /* show alarms by days */
-        $date_slices              = split(" ", $date);
-        list($year, $month, $day) = split("-", $date_slices[0]);
+        $date_slices              = preg_split('/\s/', $date);
+        list($year, $month, $day) = preg_split('/\-/', $date_slices[0]);
         $date_unformated          = $year.$month.$day;
         $date_formatted           = Util::htmlentities(strftime("%A %d-%b-%Y", mktime(0, 0, 0, $month, $day, $year)));
 
@@ -427,25 +414,7 @@ if ($count > 0)
         }
         
         $res[] = $input;
-        
-        /*
-        $res["events"] = Util::number_format_locale($event_count_label,0);
-
-        // CTXS
-        if (Session::is_pro() && Session::show_entities()) {
-            foreach ($ctxs as $_ctx) 
-            {
-                if (count($ctxs) < 2 || isset($entities[$_ctx])) 
-                {
-                    $res["entities"][] = (!empty($entities[$_ctx]['name'])) ? $entities[$_ctx]['name'] : _("Unknown");                              
-                }
-            }
-        }
-        else
-        {
-            $res["entities"] = array();
-        }*/
-        
+               
         //$res["since"] = $since." ".Util::timezone($tz);
         //$res["last"]  = $last." ".Util::timezone($tz);
         if ($alarm->get_removable()) {
@@ -463,14 +432,17 @@ if ($count > 0)
         //$res["status_border_color"]     = ($alarm->get_status() == "open") ? "#E6D8D2" : "#D6E6D2";
         
         // TAGS
-        $tgs = "";
+        $tgs = "<div class='a_label_container'>";
         if (count($tags) > 0) 
         {
             foreach ($tags as $id_tag) 
             {
                 $tgs .= $tags_html[$id_tag]." ";
             }
+            
+            $show_label = TRUE;
         }
+        $tgs .= "</div>";
         
         $res[]     = $tgs;
         
@@ -573,6 +545,9 @@ if ($count > 0)
         $res[] = "<img class='go_details' src='../pixmaps/show_details.png' border='0'>";
         
         
+        
+        $res['DT_RowId']  = $alarm->get_backlog_id();
+        
         $results[] = $res;
     }
 }
@@ -584,6 +559,8 @@ $response['iTotalRecords']        = $total;
 $response['iTotalDisplayRecords'] = $total;
 $response['aaData']               = $results;
 $response['iDisplayStart']        = $inf;
+
+$response['show_label']           = $show_label;
 
 echo json_encode($response);
 

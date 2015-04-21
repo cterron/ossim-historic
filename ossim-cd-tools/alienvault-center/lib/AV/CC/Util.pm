@@ -44,7 +44,6 @@ use AV::Log::File;
 use AV::CC::SharedData;
 use AV::ConfigParser;
 use Avstatistic;
-use AV::uuid;
 use Avrepository;
 use Avtools;
 use Avnetwork;

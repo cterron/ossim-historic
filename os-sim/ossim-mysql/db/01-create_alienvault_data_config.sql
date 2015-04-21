@@ -125,7 +125,7 @@ INSERT IGNORE INTO `incident_type` (`id`, `descr`, `keywords`) VALUES
 ('Corporative Net Attack', '', ''),
 ('Expansion Virus', '', ''),
 ('Generic', '', ''),
-('Nessus Vulnerability', '', ''),
+('OpenVAS Vulnerability', '', ''),
 ('Net Performance', '', ''),
 ('Policy Violation', '', ''),
 ('Security Weakness', '', '');
@@ -204,6 +204,21 @@ INSERT IGNORE INTO `tags_alarm` VALUES (1,'\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0','An
 INSERT IGNORE INTO control_panel VALUES ('global_admin','global','day',0,0,FROM_UNIXTIME(UNIX_TIMESTAMP(), '%Y-%m-%d %H:%i:%s'),FROM_UNIXTIME(UNIX_TIMESTAMP(), '%Y-%m-%d %H:%i:%s'),100,100);
 
 --
+-- Default Networks
+--
+SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid;
+INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,UNHEX(REPLACE(@default_ctx,'-','')),'Pvt_192','192.168.0.0/16','2','300','300','0','0','NULL','');
+INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2);
+SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid;
+INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,UNHEX(REPLACE(@default_ctx,'-','')),'Pvt_172','172.16.0.0/12','2','300','300','0','0','NULL','');
+INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2);
+SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid;
+INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,UNHEX(REPLACE(@default_ctx,'-','')),'Pvt_010','10.0.0.0/8','2','300','300','0','0','NULL','');
+INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2);
+
+REPLACE INTO alienvault.host_net_reference SELECT host.id,net_id FROM alienvault.host, alienvault.host_ip, alienvault.net_cidrs WHERE host.id = host_ip.host_id AND host_ip.ip >= net_cidrs.begin AND host_ip.ip <= net_cidrs.end;
+
+--
 -- Data: Config
 --
 INSERT IGNORE INTO config (conf, value) VALUES ('snort_path', '/etc/snort/');
@@ -253,6 +268,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('backup_store', '1');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_dir', '/var/lib/ossim/backup');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_day', '5');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_events', '4000000');
+INSERT IGNORE INTO config (conf, value) VALUES ('backup_hour', '01:00');
 INSERT IGNORE INTO config (conf, value) VALUES ('backup_netflow', '45');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_user', 'ossim');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_pass', 'ossim');
@@ -260,7 +276,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('nessus_host', 'localhost');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_port', '9390');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_path', '/usr/bin/omp');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_updater_path', '/usr/sbin/openvas-nvt-sync');
-INSERT IGNORE INTO config (conf, value) VALUES ('scanner_type', 'openvas3');
+INSERT IGNORE INTO config (conf, value) VALUES ('scanner_type', 'openvas3omp');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_rpt_path', '/usr/share/ossim/www/vulnmeter/');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessus_distributed', '0');
 INSERT IGNORE INTO config (conf, value) VALUES ('nessusrc_path', '/usr/share/ossim/www/vulnmeter/tmp/.nessusrc');
@@ -318,8 +334,9 @@ INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_soc', '0');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_businessprocesses', '1');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_backup', '1');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_alarmgroup', '1');
-INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nagios_mkl_period', '30');
+INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nagios_mkl_period', '300');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_backup_days_lifetime', '30');
+INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_nagiosmklivemanager', '1');
 INSERT IGNORE INTO config (conf, value) VALUES ('email_subject_template', '');
 INSERT IGNORE INTO config (conf, value) VALUES ('email_body_template', '');
 INSERT IGNORE INTO config (conf, value) VALUES ('panel_plugins_dir', '');
@@ -352,6 +369,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('update_checks_pro_source','http
 INSERT IGNORE INTO config (conf, value) VALUES ('repository_upload_dir', "/usr/share/ossim/uploads");
 INSERT IGNORE INTO config (conf, value) VALUES ('first_login', 'yes');
 INSERT IGNORE INTO config (conf, value) VALUES ('alarms_generate_incidents', 'no');
+INSERT IGNORE INTO config (conf, value) VALUES ('incidents_incharge_default', 'admin');
 INSERT IGNORE INTO config (conf, value) VALUES ('from', 'no-reply@localhost.localdomain');
 INSERT IGNORE INTO config (conf, value) VALUES ('smtp_server_address', '127.0.0.1');
 INSERT IGNORE INTO config (conf, value) VALUES ('smtp_port', '25');
@@ -402,6 +420,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('alarms_expire', 'no');
 INSERT IGNORE INTO config (conf, value) VALUES ('logger_storage_days_lifetime', '0');
 INSERT IGNORE INTO config (conf, value) VALUES ('logger_expire', 'no');
 INSERT IGNORE INTO config (conf, value) VALUES ('enable_idm', '0');
+INSERT IGNORE INTO config (conf, value) VALUES ('idm_user_login_timeout', '24');
 INSERT IGNORE INTO config (conf, value) VALUES ('server_reputation', 'no');
 INSERT IGNORE INTO config (conf, value) VALUES ('storage_type', '3');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_keyfile', '/etc/ossim/framework/db_encryption_key');
@@ -422,5 +441,7 @@ INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_usehttps', '0');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_maxdiskusage','90');
 INSERT IGNORE INTO config (conf, value) VALUES ('frameworkd_backup_storage_days_lifetime',5);
 
-REPLACE INTO config (conf, value) VALUES ('last_update', '2014-09-02');
-REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '4.11.0');
+INSERT IGNORE INTO config (conf, value) VALUES ('internet_connection', 1);
+
+REPLACE INTO config (conf, value) VALUES ('last_update', '2015-03-03');
+REPLACE INTO config (conf, value) VALUES ('ossim_schema_version', '4.15.2');

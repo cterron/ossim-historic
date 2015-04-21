@@ -196,6 +196,8 @@ $subtitle_1 .= '. ' . _('Confirm the vendor, model, and version of the device sh
 
 $subtitle_2 = _('Plugin(s) successfully configured. Configure each asset to send logs by clicking on the instructions provided. Once the asset is configured AlienVault should detect the incoming data. When AlienVault receives data for a asset the "Receiving Data" light will turn green. Click "Finish" when you have received data from at least one asset.');
 
+$subtitle_2_empty = _('You have not configured any plugin yet. In order to complete successfully the step, you need to activate at least one plugin in your network devices to start receiving data from it.');
+
 ?>
 
 <script type='text/javascript'>
@@ -245,6 +247,7 @@ $subtitle_2 = _('Plugin(s) successfully configured. Configure each asset to send
     <div class='wizard_subtitle'>
         <span id='screen_1_subtitle'><?php echo $subtitle_1 ?></span>
         <span id='screen_2_subtitle'><?php echo $subtitle_2 ?></span>
+        <span id='screen_2_subtitle_empty'><?php echo $subtitle_2_empty ?></span>
     </div>
 
     <?php
@@ -293,7 +296,7 @@ $subtitle_2 = _('Plugin(s) successfully configured. Configure each asset to send
                     </tbody>
                 </table>
                 
-                <button id='w_apply' disabled class='small'><?php echo _('Enable') ?></button>
+                <button id='w_apply' class='small'><?php echo _('Enable') ?></button>
                 
                 <div class='clear_layer'></div>
                 

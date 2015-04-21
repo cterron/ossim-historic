@@ -64,21 +64,18 @@ fi
 
 invoke-rc.d rsyslog reload > /dev/null 2>&1
 
-#Import official CPE dictionary
 if [ "$FRAMEWORK" = "1" ];then
-	#if [ -f /usr/share/ossim/scripts/update_software_cpe.php ]; then
-	#	php /usr/share/ossim/scripts/update_software_cpe.php
-	#else
-	#	echo "File 'update_software_cpe.php' not found. Ok, setting cron task."
-	#fi
-	cat >/etc/cron.d/av_update_cpe<<-EOF
-0 23 * * *  root /usr/bin/alienvault-update-cpe >/dev/null
-EOF
+
+    # Delete old cron cpe dictionay update file
+    if [ -f "/etc/cron.d/av_update_cpe" ]; then
+        rm -rf /etc/cron.d/av_update_cpe
+    fi
+
 	cat >/etc/cron.daily/alienvault-passvulnupdate<<-EOF
 #!/bin/sh
 cd /usr/share/ossim-cd-tools/cve/
-wget -N http://data.alienvault.com/cve/nvdcve-2.0-current.xml.bz2
-bunzip2 nvdcve-2.0-current.xml.bz2
+wget http://data.alienvault.com/cve/nvdcve-2.0-current.xml.bz2 -O nvdcve-2.0-current.xml.bz2
+bunzip2 -f nvdcve-2.0-current.xml.bz2
 EOF
 	chmod 755 /etc/cron.daily/alienvault-passvulnupdate
 	sh /etc/cron.daily/alienvault-passvulnupdate > /dev/null 2>&1
@@ -140,9 +137,5 @@ fi
 chgrp alienvault /var/lib/ossim/backup
 chmod g+w /var/lib/ossim/backup
 
-if  ! [ -f /etc/ossim/server/reputation.data.stats ]; then
-        touch /etc/ossim/server/reputation.data.stats || /bin/true
-        chown www-data /etc/ossim/server/reputation.data.stats || /bin/true
-fi
 exit 0
 

@@ -1,14 +1,44 @@
-alienvault-dummies-config (4.11.0) stable; urgency=low
+alienvault-dummies-config (4.15.2) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:23:40 -0400
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:40 -0500
 
-alienvault-dummies-config (4.11.0) stable; urgency=low
+alienvault-dummies-config (4.15.1) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 06:41:03 -0400
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:16:03 -0500
+
+alienvault-dummies-config (4.15.0-0) stable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 22 Dec 2014 11:17:37 -0500
+
+alienvault-dummies-config (4.15) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 19 Nov 2014 06:41:44 -0500
+
+alienvault-dummies-config (4.14) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Fri, 24 Oct 2014 13:35:25 -0400
+
+alienvault-dummies-config (4.13) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 24 Sep 2014 10:32:54 -0400
+
+alienvault-dummies-config (4.12) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:34:33 -0400
 
 alienvault-dummies-config (4.11) unstable; urgency=low
 

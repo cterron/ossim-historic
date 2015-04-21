@@ -39,8 +39,7 @@ require_once 'policy_common.php';
 
 
 function get_policy_groups($conn, $data)
-{		
-
+{
 	$ctx = (empty($data['ctx'])) ? Session::get_default_ctx() : $data['ctx'];
 	$id  = $data['id'];
 	
@@ -115,7 +114,7 @@ function get_policy_actions($conn, $data)
 		}
 	}
 	
-	$where = (Session::Am_i_admin()) ? '': "AND ctx=UNHEX('$ctx')";
+	$where = (Session::am_i_admin()) ? '': "AND ctx=UNHEX('$ctx')";
 	
 	if ($action_list2 = Action::get_list($conn, $where))
 	{
@@ -316,7 +315,9 @@ function get_categories($conn, $data)
 
 	$query = "SELECT id, name FROM category";
 	
-	if (!$rs = & $conn->Execute($query)) 
+	$rs = $conn->Execute($query);
+	
+	if (!$rs) 
 	{
 		$return['error'] = TRUE;
 		$return['msg']   = $conn->ErrorMsg();
@@ -362,7 +363,9 @@ function get_subcategories($conn, $data)
 	$query  = "SELECT id, name FROM subcategory where cat_id = ?";
 	$params = array($id);
 	
-	if (!$rs = & $conn->Execute($query, $params)) 
+	$rs = $conn->Execute($query, $params);
+	
+	if (!$rs) 
 	{
 		$return['error'] = TRUE;
 		$return['msg']   = $conn->ErrorMsg();

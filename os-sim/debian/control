@@ -14,7 +14,7 @@ Description: Open Source Security Information Management (Meta-package)
 Package: ossim-server
 Architecture: any
 Pre-Depends: postpone, locate, alienvault-crypto, ossim-utils
-Depends: ${shlibs:Depends}, ${misc:Depends}, libgda-4.0-mysql | libgda-5.0-mysql, sudo, lsb-base (>= 3.0-6), ossim-database-migration, ossim-taxonomy, alienvault-directives-free, alienvault-crosscorrelation-free, ossim-geoip
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgda-4.0-mysql | libgda-5.0-mysql, sudo, lsb-base (>= 3.0-6), ossim-taxonomy, alienvault-directives-free, alienvault-crosscorrelation-free, ossim-geoip
 Suggests: ossim-contrib
 Description: Open Source Security Information Management (Server)
  OSSIM is a distribution of open source products that are integrated
@@ -53,7 +53,7 @@ Description: Open Source Security Information Management (Framework Daemon)
 
 Package: ossim-utils
 Architecture: all
-Depends: ${misc:Depends}, perl (>= 5.8.4), libcompress-zlib-perl, libdbi-perl, libdbd-mysql-perl, librrds-perl (>= 1.1.0), libcrypt-cbc-perl, libmime-lite-perl, libdate-calc-perl, python-ipy, python-pycurl, python-mysqldb
+Depends: ${misc:Depends}, perl (>= 5.8.4), libcompress-zlib-perl, libdbi-perl, libdbd-mysql-perl, librrds-perl (>= 1.1.0), libxml-parser-perl, libcrypt-cbc-perl, libmime-lite-perl, libdate-calc-perl, python-ipy, python-pycurl, python-mysqldb
 Suggests: ossim-contrib
 Description: Open Source Security Information Management (Utils)
  OSSIM is a distribution of open source products that are integrated

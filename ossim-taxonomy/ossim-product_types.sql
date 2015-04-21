@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 UPDATE plugin SET source_type = 'Intrusion Detection', vendor = 'Sourcefire' where id = 1001;
 UPDATE plugin SET source_type = 'Intrusion Detection', vendor = 'Sourcefire' where id = 1002;
 UPDATE plugin SET source_type = 'Intrusion Detection', vendor = 'Sourcefire' where id = 1003;

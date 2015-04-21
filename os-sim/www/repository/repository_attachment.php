@@ -137,10 +137,8 @@ if (GET('id_delete') != "")
 </head>
 
 <body>
+
 <?php
-
-list($title, $doctext, $keywords) = Repository::get_document($conn, $id_document);
-
 if (is_uploaded_file($_FILES['atchfile']['tmp_name'])) 
 {
     // Correct format xxxxxxx.yyy
@@ -155,8 +153,10 @@ if (is_uploaded_file($_FILES['atchfile']['tmp_name']))
 			$updir  = $uploads_dir . "/" . $id_document;
 			$upfile = $updir . "/" . $filename[1];
 			
-			if (!is_dir($updir)) 
-				mkdir("$updir");
+            if (!is_dir($updir)) 
+            {
+                mkdir("$updir");
+            }
 			
 			copy($_FILES['atchfile']['tmp_name'], $upfile);
 		}

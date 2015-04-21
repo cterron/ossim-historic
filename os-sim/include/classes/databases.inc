@@ -146,9 +146,10 @@ class Databases
         $uuid        = Util::get_encryption_key();
 		$select      = ($iffoundrows) ? "SQL_CALC_FOUND_ROWS * , HEX(ip) AS ip, AES_DECRYPT(pass,'$uuid') AS pass_decrypt" : "*, HEX(ip) AS ip, AES_DECRYPT(pass,'$uuid') AS pass_decrypt";
         
-		$query = ossim_query("SELECT $select FROM `databases` $args");
+		$query = ossim_query("SELECT $select FROM `databases` $args");        
+        $rs    = $conn->Execute($query);
         
-		if (!$rs = & $conn->Execute($query)) 
+		if (!$rs) 
 		{
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
         } 
@@ -157,7 +158,9 @@ class Databases
             $foundrows = 0;
             if ($iffoundrows) 
             {
-                if (!$rf = & $conn->Execute("SELECT FOUND_ROWS() AS total")) 
+                $rf = $conn->Execute("SELECT FOUND_ROWS() AS total");
+                
+                if (!$rf) 
                 {
                     Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
                 }
@@ -169,7 +172,7 @@ class Databases
             
             while (!$rs->EOF) 
             {
-                $list[] = new Databases(
+                $list[] = new self(
                     $rs->fields["id"],
                     $rs->fields["name"], 
     				inet_ntop (pack("H*", $rs->fields["ip"])),
@@ -297,8 +300,7 @@ class Databases
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
-        
+                
         
         if (!empty($name))
         {

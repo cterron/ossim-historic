@@ -29,13 +29,13 @@
 #
 
 sections = {
-    'properties' : {'properties' : ['name', 'type']}
+    'properties' : {'properties' : ['name', 'description', 'type', 'category']}
   }
 
 options = {
   'properties' : {
     'type' : {
-      'file' : {'properties' : ['filename']},
+        'file' : {'properties' : ['filename', '!command']},
       'command' : {'properties' : ['command']},
       'db' : {'properties' : ['host', 'user', 'password', 'database']}
       }

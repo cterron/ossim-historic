@@ -47,6 +47,9 @@
  * Function list:
  *
  *   - delete_component($conn, $component_id, $component_type = 'sensor')
+ *   - is_system_reachable($system_id)
+ *   - is_ha_enabled($conn, $system_id)
+ *   - get_ha_node_type($system_id)
  *   - delete_system($system_id)
  *   - delete_orphan_systems()
  *   - add_system($system_id, $password)
@@ -79,7 +82,8 @@
  *   - get_packages_installed(system_id)
  *   - get_packages_pending(system_id, $no_cache = FALSE)
  *   - get_available_logs()
- *   - get_log_file(system_id, $log_url, $num_rows)
+ *   - get_log_file(system_id, $log_file, $num_rows)
+ *   - get_update_rc_log($system_id)
  */
 
 
@@ -172,14 +176,89 @@ class Av_center
      *
      * @return boolean
      */
+    public static function is_system_reachable($system_id)
+    {
+        $reachable = FALSE;
+        $client    = new Alienvault_client();
+
+        $response  = $client->system($system_id)->do_ping();
+        $response  = @json_decode($response, TRUE);
+
+        if (!$response || $response['status'] == 'error')
+        {
+            $exp_msg = $client->get_error_message($response);
+            Av_exception::write_log(Av_exception::USER_ERROR, $exp_msg);
+        }
+        else
+        {
+            if ($response['data']['reachable'] == 'Yes')
+            {
+                $reachable = TRUE;
+            }
+        }
+
+        return $reachable;
+    }
+
+
+    /**
+     * This method returns if system has HA enabled
+     *
+     * @param object $conn       Database access object
+     * @param string $system_id  System ID
+     *
+     * @throws Exception  If an error occurred
+     *
+     * @return boolean
+     */
+    public static function is_ha_enabled($conn, $system_id)
+    {
+        $s_data = self::get_system_info_by_id($conn, $system_id);
+
+        if ($s_data['status'] != 'error')
+        {
+            $ha_enabled = ($s_data['data']['ha_ip'] != NULL) ? TRUE : FALSE;
+        }
+        else
+        {
+            $exp_msg = _('Error! HA information not available');
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+
+        return $ha_enabled;
+    }
+
+
+    /**
+     * This method returns the node type in HA environment (up (active), down (passive) or null (without HA enabled))
+     *
+     * @param string $system_id  System ID
+     *
+     * @throws Exception  If an error occurred
+     *
+     * @return string
+     */
+    public static function get_ha_node_type($system_id)
+    {
+        $_s_data_aux  = self::get_system_status($system_id, 'general');
+
+        return $_s_data_aux['ha_status'];
+    }
+
+
+   /**
+     * This method deletes an alienvault system
+     *
+     * @param string $system_id  System ID
+     *
+     * @throws Exception  If an error occurred
+     *
+     * @return boolean
+     */
     public static function delete_system($system_id)
     {
         $client = new Alienvault_client();
-
-        //Change timeout
-        $client_conn = $client->get_conn();
-        $client_conn->set_timeout(300);
-        $client->set_conn($client_conn);
 
         $response = $client->system($system_id)->delete_system();
         $response = @json_decode($response, TRUE);
@@ -279,7 +358,9 @@ class Av_center
 
         $params = array($component_id, $component_id);
 
-        $query = "SELECT HEX(id) AS system_id FROM alienvault.system WHERE sensor_id = UNHEX(?) OR server_id = UNHEX(?)";
+        //It's necessary to order by 'ha_name' because the systems are duplicated in HA environments
+        $query = "SELECT HEX(id) AS system_id FROM alienvault.system WHERE sensor_id = UNHEX(?) OR server_id = UNHEX(?)
+            ORDER BY ha_name ASC LIMIT 1";
 
         $rs = $conn->Execute($query, $params);
 
@@ -357,32 +438,32 @@ class Av_center
      *
      * @return boolean
      */
-    public static function get_software_updates()
+    public static function get_software_updates($system_id = 'local')
     {
-        $upgrade_pending = FALSE;
+        $pending_updates = array();
 
         try
         {
-            $filters = array(
-                'level'      => 'notification',
-                'message_id' => 10,
-            );
+            // API CALL
+            $client   = new Alienvault_client();
+            $response = $client->system($system_id)->get_software_status();
 
-            $status = new System_status();
+            $response = @json_decode($response, TRUE);
 
-            list($message_list, $total_messages) = $status->get_status_messages($filters);
-
-            if ($total_messages > 0)
+            if (!$response || $response['status'] == 'error')
             {
-                $upgrade_pending = TRUE;
+                $exp_msg = $client->get_error_message($response);
+                Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
             }
+
+            $pending_updates = $response['data'];
         }
         catch(Exception $e)
         {
-            ;
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
         }
 
-        return $upgrade_pending;
+        return $pending_updates;
     }
 
 
@@ -405,11 +486,11 @@ class Av_center
         {
             $is_updated = NULL;
         }
-        
-        return $is_updated;
+
+        return !$is_updated;
      }
-     
-     
+
+
     /**
      * This method returns current software version
      *
@@ -494,9 +575,9 @@ class Av_center
         $res['status'] = 'error';
         $res['data']   = '';
 
-        $query = "SELECT hex(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id,
-            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip),'') AS vpn_ip, name, profile
-            FROM alienvault.system 
+        $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
+            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
+            FROM alienvault.system
             WHERE id = UNHEX(?)";
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
@@ -539,15 +620,14 @@ class Av_center
         $res['status'] = 'error';
         $res['data']   = FALSE;
 
-        $query = "SELECT hex(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id,
-            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip),'') AS vpn_ip, name, profile
+        $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
+            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
             FROM alienvault.system
-            WHERE admin_ip = INET6_PTON(?) OR vpn_ip = INET6_PTON(?)";
-
+            WHERE admin_ip = INET6_PTON(?) OR vpn_ip = INET6_PTON(?) OR ha_ip = INET6_PTON(?)";
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 
-        $rs = $conn->Execute($query, array($admin_ip, $admin_ip));
+        $rs = $conn->Execute($query, array($admin_ip, $admin_ip, $admin_ip));
 
         if (!$rs)
         {
@@ -584,10 +664,10 @@ class Av_center
         $res['status'] = 'error';
         $res['data']   = NULL;
 
-
-        $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, INET6_NTOP(admin_ip) AS admin_ip, 
-            ifnull(INET6_NTOP(vpn_ip),'') AS vpn_ip, name, profile
-            FROM alienvault.system ORDER BY name";
+        $query = "SELECT HEX(id) AS system_id, HEX(sensor_id) AS sensor_id, HEX(server_id) AS server_id, get_ip_by_system_id(HEX(id)) AS current_ip,
+            INET6_NTOP(admin_ip) AS admin_ip, ifnull(INET6_NTOP(vpn_ip), '') AS vpn_ip, ifnull(INET6_NTOP(ha_ip), '') AS ha_ip, name, profile
+            FROM alienvault.system
+            ORDER BY name";
 
         $conn->SetFetchMode(ADODB_FETCH_ASSOC);
 
@@ -685,28 +765,46 @@ class Av_center
             return $res;
         }
 
-        $client = new Alienvault_client();
-
-        if ($type == 'general')
+        try
         {
-            $response = $client->system($system_id)->set_config_general($data);
-        }
-        else
-        {
-            $response = $client->system($system_id)->set_config_alienvault($data);
-        }
+            $ha_node_type = self::get_ha_node_type($system_id);
 
-        $response = @json_decode($response, TRUE);
+            if ($ha_node_type == 'down')
+            {
+                $res['status'] = 'warning';
+                $res['data']   = _('The configuration request cannot be processed because you have HA enabled and this node is a passive node');
+            }
+            else
+            {
+                $client = new Alienvault_client();
 
-        if (!$response || $response['status'] == 'error')
+                if ($type == 'general')
+                {
+                    $response = $client->system($system_id)->set_config_general($data);
+                }
+                else
+                {
+                    $response = $client->system($system_id)->set_config_alienvault($data);
+                }
+
+                $response = @json_decode($response, TRUE);
+
+                if (!$response || $response['status'] == 'error')
+                {
+                    $res['status'] = 'error';
+                    $res['data']   = sprintf(_('System error! Configuration not applied [%s]'), $client->get_error_message($response));
+                }
+                else
+                {
+                    $res['status'] = 'success';
+                    $res['data']   = _('Configuration updated successfully');
+                }
+            }
+        }
+        catch(Exception $e)
         {
             $res['status'] = 'error';
-            $res['data']   = sprintf(_('System error! Configuration not applied [%s]'), $client->get_error_message($response));
-        }
-        else
-        {
-            $res['status'] = 'success';
-            $res['data']   = _('Configuration updated successfully');
+            $res['data']   = $e->getMessage();
         }
 
         return $res;
@@ -745,11 +843,11 @@ class Av_center
             case 'software':
                 $call = 'get_software_status';
             break;
-            
+
             default:
                 return $response;
         }
-        
+
         $client   = new Alienvault_client();
 
         $response = $client->system($system_id)->{$call}($no_cache);
@@ -762,7 +860,19 @@ class Av_center
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
 
-        return $response['data'];
+        $status_rs = array();
+
+        if ($status_type == 'software')
+        {
+            $status_rs = $response['data'][$system_id];
+        }
+        else
+        {
+            $status_rs = $response['data'];
+        }
+
+
+        return $status_rs;
     }
 
 
@@ -836,7 +946,7 @@ class Av_center
     public static function set_general_configuration($system_id, $data)
     {
         $res['status'] = 'error';
-        $res['data']   = _('System error! Configuration not applied [Failed to execute Alienvault Setup]');
+        $res['data']   = _('System error! Configuration not applied [Failed to execute AlienVault Setup]');
 
         //Check Reconfig status
         $reconfig = self::get_task_status($system_id, 'alienvault-reconfig');
@@ -847,19 +957,6 @@ class Av_center
             $res['data']   = _('Reconfig was executed previously, wait for a few minutes and try again');
 
             return $res;
-        }
-
-        //Get System IP
-        $db   = new ossim_db();
-        $conn = $db->connect();
-
-        $system_data = self::get_system_info_by_id($conn, $system_id);
-
-        $db->close();
-
-        if ($system_data['status'] == 'success')
-        {
-            $system_ip = (!empty($system_data['data']['vpn_ip'])) ? $system_data['data']['vpn_ip'] : $system_data['data']['admin_ip'];
         }
 
         $res = self::set_config_data($system_id, $data);
@@ -922,7 +1019,7 @@ class Av_center
     public static function set_network_configuration($system_id, $data)
     {
         $res['status'] = 'error';
-        $res['data']   = _('System error! Configuration not applied [Failed to execute Alienvault Setup]');
+        $res['data']   = _('System error! Configuration not applied [Failed to execute AlienVault Setup]');
 
         //Check Reconfig status
         $reconfig = self::get_task_status($system_id, 'alienvault-reconfig');
@@ -933,19 +1030,6 @@ class Av_center
             $res['data']   = _('Reconfig was executed previously, wait for a few minutes and try again');
 
             return $res;
-        }
-
-        //Get System IP
-        $db   = new ossim_db();
-        $conn = $db->connect();
-
-        $system_data = self::get_system_info_by_id($conn, $system_id);
-
-        $db->close();
-
-        if ($system_data['status'] == 'success')
-        {
-            $system_ip = (!empty($system_data['data']['vpn_ip'])) ? $system_data['data']['vpn_ip'] : $system_data['data']['admin_ip'];
         }
 
         $res = self::set_config_data($system_id, $data);
@@ -1004,7 +1088,7 @@ class Av_center
     public static function set_sensor_configuration($system_id, $data)
     {
         $res['status'] = 'error';
-        $res['data']   = _('System error! Configuration not applied [Failed to execute Alienvault Setup]');
+        $res['data']   = _('System error! Configuration not applied [Failed to execute AlienVault Setup]');
 
         //Check Reconfig status
         $reconfig = self::get_task_status($system_id, 'alienvault-reconfig');
@@ -1059,20 +1143,38 @@ class Av_center
      */
     public static function update_av_system($system_id)
     {
-        $client   = new Alienvault_client();
+        try
+        {
+            $ha_node_type = self::get_ha_node_type($system_id);
 
-        $response = $client->system($system_id)->update_av_system($data);
-        $response = @json_decode($response, TRUE);
+            if ($ha_node_type == 'down')
+            {
+                $res['status'] = 'warning';
+                $res['data']   = _('The update request cannot be processed because you have HA enabled and this node is a passive node');
+            }
+            else
+            {
+                $client   = new Alienvault_client();
 
-        if (!$response || $response['status'] == 'error')
+                $response = $client->system($system_id)->update_av_system($data);
+                $response = @json_decode($response, TRUE);
+
+                if (!$response || $response['status'] == 'error')
+                {
+                    $res['status'] = 'error';
+                    $res['data']   = _("Update process couldn't be executed: ") . $client->get_error_message($response);
+                }
+                else
+                {
+                    $res['status'] = 'success';
+                    $res['data']   = _('Update Process Launched Successfully');
+                }
+            }
+        }
+        catch(Exception $e)
         {
             $res['status'] = 'error';
-            $res['data']   = _("Update process couldn't be executed: ") . $client->get_error_message($response);
-        }
-        else
-        {
-            $res['status'] = 'success';
-            $res['data']   = _('Update Process Launched Successfully');
+            $res['data']   = $e->getMessage();
         }
 
         return $res;
@@ -1088,20 +1190,38 @@ class Av_center
      */
     public static function update_av_feed($system_id)
     {
-        $client   = new Alienvault_client();
+        try
+        {
+            $ha_node_type = self::get_ha_node_type($system_id);
 
-        $response = $client->system($system_id)->update_av_feed($data);
-        $response = @json_decode($response, TRUE);
+            if ($ha_node_type == 'down')
+            {
+                $res['status'] = 'warning';
+                $res['data']   = _('The update request cannot be processed because you have HA enabled and this node is a passive node');
+            }
+            else
+            {
+                $client   = new Alienvault_client();
 
-        if (!$response || $response['status'] == 'error')
+                $response = $client->system($system_id)->update_av_feed($data);
+                $response = @json_decode($response, TRUE);
+
+                if (!$response || $response['status'] == 'error')
+                {
+                    $res['status'] = 'error';
+                    $res['data']   = _("Update process couldn't be executed: ") . $client->get_error_message($response);
+                }
+                else
+                {
+                    $res['status'] = 'success';
+                    $res['data']   = _('Update Process Launched Successfully');
+                }
+            }
+        }
+        catch(Exception $e)
         {
             $res['status'] = 'error';
-            $res['data']   = _("Update process couldn't be executed: ") . $client->get_error_message($response);
-        }
-        else
-        {
-            $res['status'] = 'success';
-            $res['data']   = _('Update Process Launched Successfully');
+            $res['data']   = $e->getMessage();
         }
 
         return $res;
@@ -1137,7 +1257,7 @@ class Av_center
             $status = 'success';
             $tasks  = $response['data']['tasks'];
         }
-        
+
         if ($status == 'success' && $filter != '')
         {
             $tasks = is_array($tasks[$filter]) ? $tasks[$filter] : array();
@@ -1163,7 +1283,7 @@ class Av_center
         $_SESSION[$system_id][$token] = $job_id;
     }
 
-    
+
     /**
      * This method gets a stored job ID related a task from current PHP session
      *
@@ -1180,7 +1300,7 @@ class Av_center
     }
 
 
-   /**
+    /**
      * This method gets the current task status
      *
      * @param string $system_id  System ID
@@ -1218,33 +1338,50 @@ class Av_center
                 return $return;
             }
 
-            //If there is a process running we try to store it in session
-            if ($task['data']['job_status'] == 'running' || $task['data']['job_status'] == 'pending')
+            //If it is a Job ID then we'll get the status checking the job status
+            if (valid_hex32($task['data']['job_id'], TRUE))
             {
-                //We need to check if it is a job_id. It might be a PID
-                if (valid_hex32($task['data']['job_id'], TRUE))
-                {
-                    $job_id = $task['data']['job_id'];
+                //If there is a process running we try to store it in session
+                $job_id = $task['data']['job_id'];
 
-                    //Saving the new job ID
-                    self::set_task_job_id($system_id, $task_type, $job_id);
-                }
-                else //If it is a PID, we can only check that the process is running
+                //Saving the new job ID
+                self::set_task_job_id($system_id, $task_type, $job_id);
+
+                /* The Status will be asked with the Job ID */
+            }
+            else //If it is a PID, we can only check that the process is running
+            {
+                //The process is running
+                if ($task['data']['job_status'] == 'running' || $task['data']['job_status'] == 'pending')
                 {
                     $return['status'] = 'running';
-
-                    return $return;
                 }
-            }
-            else
-            {
-                $return['status'] = 'done';
+                else
+                {
+                    $return['status'] = 'done';
+
+                    //if we are checking the update, we check the update log result.
+
+                    if ($task_type == 'alienvault-update')
+                    {
+                        $update_rc = self::get_update_rc_log($system_id);
+
+                        if ($update_rc != 0)
+                        {
+                            $return['status']   = 'fail';
+                            $return['error_id'] = $update_rc;
+                        }
+                    }
+                }
 
                 return $return;
             }
         }
 
-        //If we find a job id, then we try to retrieve the status of the job
+        /*
+            RETRIEVING STATUS BY JOB ID - The Job ID was found in the previous steps.
+        */
+
         $client = new Alienvault_client();
 
         $response = $client->jobs()->get_job_status($job_id);
@@ -1283,9 +1420,10 @@ class Av_center
             //Cleaning the job stored in session
             self::set_task_job_id($system_id, $task_type, '');
 
-            $return['status'] = 'fail';
-            $return['msg']    = $response['data']['job_message'];
-            $return['log']    = $response['data']['job_log'];
+            $return['status']   = 'fail';
+            $return['msg']      = $response['data']['job_message'];
+            $return['log']      = $response['data']['job_log'];
+            $return['error_id'] = $response['data']['job_error_id'];
         }
 
         return $return;
@@ -1300,46 +1438,55 @@ class Av_center
      *
      * @return array
      */
-    public static function get_update_status($system_id, $max_attempts = 10)
+    public static function get_update_status($system_id, $max_attempts = 1)
     {
-        $res['status'] = 'error';
-        $res['msg']    = _('System error! Unable to connect to Server. Please, try again later');
-
+        $res    = array();
         $update = self::get_task_status($system_id, 'alienvault-update');
 
+        //If running, everything is fine and we need to keep checking
         if ($update['status'] == 'running')
         {
             $res['status'] = 'updating';
             $res['msg']    =  '';
+
         }
+        //If done, the update is finished
         elseif ($update['status'] == 'done')
         {
             $res['status'] = 'finished';
             $res['msg']    =  _('System updated successfully');
             $res['log']    = $update['log'];
+
         }
+        //If fail, there is any kind of error on the update
         elseif ($update['status'] == 'fail')
         {
-            $res['status'] = 'fail';
-            $res['msg']    =  _('There was a problem updating the system.');
-            $res['log']    = $update['log'];
+            /*
+                We check if the process of the update is not running after the fail.
+                If it's running we'll keep waiting until the update is done.
+                If not, we'll show there's an error.
+            */
+
+            $res['status']   = 'fail';
+            $res['msg']      =  _('There was a problem updating the system.');
+            $res['error_id'] = $update['error_id'];
+            $res['log']      = $update['log'];
+
+            if ($max_attempts > 0)
+            {
+                $retry = self::get_update_status($system_id, $max_attempts - 1);
+
+                if ($retry['status'] == 'updating')
+                {
+                    $res = $retry;
+                }
+            }
         }
         else
         {
-            if ($max_attempts > 0)
-            {
-                $w_constant = (1 / $max_attempts) * 60;
-                $w_constant = ceil($w_constant);
-
-                sleep($w_constant);
-                $max_attempts = intval($max_attempts) - 1;
-                $res          = self::get_update_status($system_id, $max_attempts);
-            }
-            else
-            {
-                $res['status'] = 'error';
-                $res['msg']    = _('System timeout - Unable to connect to Server. Please, try again later');
-            }
+            //Force to a new AJAX call
+            $res['status'] = 'updating';
+            $res['msg']    =  '';
         }
 
         return $res;
@@ -1446,7 +1593,7 @@ class Av_center
         $log_files['agent_stats'] = array(
             'section' => 'sensor',
             'name'    => 'agent_stats.log',
-            'url'     => '/var/log/ossim/agent_stats.log',
+            'url'     => '/var/log/alienvault/agent/agent_stats.log',
             'desc'    => _('Contains detailed information on the collection process')
         );
 
@@ -1503,19 +1650,19 @@ class Av_center
      * This method returns information from a log file
      *
      * @param string  $system_id  System ID
-     * @param string  $log_url    Log path
+     * @param string  $log_file   Log file
      * @param integer $num_rows   Number of rows to show
      *
      * @return array
      */
-    public static function get_log_file($system_id, $log_url, $num_rows)
+    public static function get_log_file($system_id, $log_file, $num_rows)
     {
         $res['status'] = 'success';
         $res['data']   = '';
 
         $client   = new Alienvault_client();
 
-        $response = $client->system($system_id)->get_log_lines($log_url, intval($num_rows));
+        $response = $client->system($system_id)->get_log_lines($log_file, intval($num_rows));
         $response = @json_decode($response, TRUE);
 
         if (!$response || $response['status'] == 'error')
@@ -1530,6 +1677,28 @@ class Av_center
         }
 
         return $res;
+    }
+
+
+    /**
+     * This method gets status for current update task
+     *
+     * @param string  $system_id    System ID
+     *
+     * @return array
+     */
+    public static function get_update_rc_log($system_id)
+    {
+       $log_update = self::get_log_file($system_id, 'last_update', 50);
+
+       $result = 0;
+
+       if ($log_update['status'] != 'error')
+       {
+           $result = intval($log_update['data']);
+       }
+
+       return $result;
     }
 }
 

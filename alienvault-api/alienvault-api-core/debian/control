@@ -9,7 +9,7 @@ Standards-Version: 3.8.4
 Package: alienvault-api-core
 Architecture: any
 Pre-Depends: ossim-utils
-Depends: python, libpython2.6, sudo,
+Depends: python, libpython2.6, sudo, python-tz,
  ossim-utils (>= 1:${source:Upstream-Version})
 Provides: alienvault-api-core
 Description: The AlienVault API Core applications package

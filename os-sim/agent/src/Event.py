@@ -116,6 +116,13 @@ class Event:
         self.event["event_type"] = self.EVENT_TYPE
         self.normalized = False
     def __setitem__(self, key, value):
+        
+        #Those fileds were added to handle plugins by device. 
+        if key in ['pid','cpe','device_id']:
+            return 
+
+
+
         if isinstance(value,basestring) and key not in self.EVENT_BASE64:
             value=value.rstrip('\n')
         if key=="sensor":#Back compatibility

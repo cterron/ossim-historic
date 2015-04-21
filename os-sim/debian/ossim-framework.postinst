@@ -58,6 +58,11 @@ then
         echo "www-data ALL=NOPASSWD: /usr/bin/nfsen start" >> /etc/sudoers
 fi
 
+if ! [ `grep -c "nfsen_reconfig.sh" /etc/sudoers` -ne 0 ]
+then
+        echo "www-data ALL=NOPASSWD: /usr/share/ossim/scripts/nfsen_reconfig.sh" >> /etc/sudoers
+fi
+
 sed -i 's:usr/nfsen/bin:usr/bin:g' /etc/sudoers
 
 # Remove ossec references from sudoers

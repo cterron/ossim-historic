@@ -84,7 +84,7 @@ class QueryResultsOutput {
             {
                for(var i=0;i<document.PacketForm.elements.length;i++)
                {
-                  if(document.PacketForm.elements[i].type == "checkbox")
+                  if(document.PacketForm.elements[i].type == "checkbox" && document.PacketForm.elements[i].name != "onoffswitch")
                   {
                     document.PacketForm.elements[i].checked = true;
                   }
@@ -95,7 +95,7 @@ class QueryResultsOutput {
             {
                 for(var i=0;i<document.PacketForm.elements.length;i++)
                 {
-                    if(document.PacketForm.elements[i].type == "checkbox")
+                    if(document.PacketForm.elements[i].type == "checkbox" && document.PacketForm.elements[i].name != "onoffswitch")
                     {
                       document.PacketForm.elements[i].checked = false;
                     }
@@ -264,7 +264,11 @@ function qroPrintEntry($value, $halign = "center", $valign = "top", $passthru = 
 	echo "<TD $bgcolor align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
 }
 function qroPrintEntryTooltip($value, $halign = "center", $valign = "top", $passthru = "", $tooltip = "") {
-	echo "<TD txt='".str_replace("'","\'",$tooltip)."' class='tztooltip' style='padding:5px 4px' align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
+    // Clean and securize tooltip content, htmlentities does not work here
+    $tooltip = str_replace("'","&#39;", $tooltip);
+    $tooltip = preg_replace("/\<(\/)?script([^\>]*)\>/","&amp;lt;\\1script\\2&amp;gt;", $tooltip);
+    
+	echo "<TD txt='".$tooltip."' class='tztooltip' style='padding:5px 4px' align=\"" . $halign . "\" valign=\"" . $valign . "\" " . $passthru . ">\n" . "  $value\n" . "</TD>\n\n";
 }
 function qroPrintEntryFooter() {
     echo '</TR>';

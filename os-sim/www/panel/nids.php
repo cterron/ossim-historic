@@ -24,7 +24,9 @@ $forensic_link = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_al
 $query  = "select count(*) as num_events,p.name,a.plugin_id,a.plugin_sid from alienvault_siem.acid_event a,alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $snort_where $sensor_where group by p.name order by num_events desc limit 10";
 $values = $txts = $urls = "";
 
-if (!$rs = & $conn->CacheExecute($query)) 
+$rs = $conn->CacheExecute($query);
+
+if (!$rs)
 {
     print $conn->ErrorMsg();
     exit();
@@ -54,7 +56,9 @@ $urls   = preg_replace("/,$/","",$urls);
 $query = "select count(a.id) as num_events,p.category_id,c.name from alienvault_siem.acid_event a,alienvault.plugin_sid p,alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $snort_where $sensor_where group by p.category_id order by num_events desc LIMIT 10";
 $txts1 = $urls1 = "";
 
-if (!$rs = & $conn->CacheExecute($query)) 
+$rs = $conn->CacheExecute($query);
+
+if (!$rs)
 {
     print $conn->ErrorMsg();
     exit();
@@ -82,7 +86,9 @@ $urls1 = preg_replace("/,$/","",$urls1);
 $values2  = $txts2 = $urls2 = "";
 $sqlgraph = "select count(a.id) as num_events,a.ip_src as name from alienvault_siem.acid_event a,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $snort_where $sensor_where group by a.ip_src order by num_events desc limit 10";
 
-if (!$rg = & $conn->CacheExecute($sqlgraph))
+$rg = $conn->CacheExecute($sqlgraph);
+
+if (!$rg)
 {
     print $conn->ErrorMsg();
 } 
@@ -107,7 +113,9 @@ $urls2 = preg_replace("/,$/","",$urls2);
 $values3 = $txts3 = $urls3 = "";
 $sqlgraph = "select count(a.id) as num_events,a.ip_dst as name from alienvault_siem.acid_event a,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid $snort_where $sensor_where group by a.ip_dst order by num_events desc limit 10";
 
-if (!$rg = & $conn->Execute($sqlgraph)) 
+$rg = $conn->Execute($sqlgraph);
+
+if (!$rg)
 {
     print $conn->CacheErrorMsg();
 } 

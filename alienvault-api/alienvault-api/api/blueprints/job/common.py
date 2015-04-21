@@ -44,6 +44,7 @@ def job_status(job_id):
     job_result = ""
     job_message = ""
     job_log = ""
+    job_error_id = ""
     if job_full_status:
         status = job_full_status['type']
         if 'result' in job_full_status:
@@ -53,9 +54,10 @@ def job_status(job_id):
                 job_result = result['result']
                 job_message = result['message']
                 job_log = result['log_file']
+                job_error_id = result['error_id']
         else:
             result = ''
-        return api.lib.common.make_ok(job_status=status, job_success=success, job_result=job_result, job_message=job_message, job_log=job_log)
+        return api.lib.common.make_ok(job_status=status, job_success=success, job_result=job_result, job_message=job_message, job_log=job_log, job_error_id=job_error_id)
     else:
         return api.lib.common.make_error("No job found with ID '%s'" % job_id, 404)
 

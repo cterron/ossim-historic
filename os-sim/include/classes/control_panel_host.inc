@@ -135,7 +135,7 @@ class Control_panel_host
                 
                 if (!$rs2->EOF && ($count < $limit)) 
                 {
-                    $list[] = new Control_panel_host($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
+                    $list[] = new self($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
                     
                     $count++;
                     
@@ -214,7 +214,7 @@ class Control_panel_host
                                          
                         if ($cnd_1 && $cnd_2) 
 				        {							
-                            $list[] = new Control_panel_host($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], 
+                            $list[] = new self($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], 
                                 $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
                         }
                     }

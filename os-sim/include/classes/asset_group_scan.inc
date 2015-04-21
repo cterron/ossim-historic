@@ -330,6 +330,18 @@ class Asset_group_scan
         $_hosts_data_aux = $asset_group->get_hosts($conn, '', TRUE);
         $hosts           = array_keys($_hosts_data_aux[0]);
         
+        foreach ($hosts as $host_id)
+        {
+            $query  = 'REPLACE INTO host_scan (host_id, plugin_id, plugin_sid) VALUES (UNHEX(?), 2007, 0)';        
+            $params = array($host_id);           
+            $rs     = $conn->Execute($query, $params);
+        
+            if (!$rs) 
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            } 
+        }
+        
         $q->addNagiosHostGroup(new Nagios_group($group_id, $hosts));
         $q->close();    
     }
@@ -344,9 +356,25 @@ class Asset_group_scan
     *   
     * @return void     
     */
-    private static function delete_group_from_nagios($group_id)
+    private static function delete_group_from_nagios($conn, $group_id)
     {
         $q = new Nagios_adm();
+        
+        $asset_group     = Asset_group::get_object($conn, $group_id);
+        $_hosts_data_aux = $asset_group->get_hosts($conn, '', TRUE);
+        $hosts           = array_keys($_hosts_data_aux[0]);
+        
+        foreach ($hosts as $host_id)
+        {
+            $query  = 'DELETE FROM host_scan WHERE host_id = UNHEX(?) AND plugin_id = 2007 AND plugin_sid = 0';        
+            $params = array($host_id);           
+            $rs     = $conn->Execute($query, $params);
+        
+            if (!$rs) 
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            } 
+        }
         
         $q->delNagiosHostGroup(new Nagios_group($group_id, array()));
         $q->close(); 
@@ -457,7 +485,7 @@ class Asset_group_scan
         //Disable Nagios
         if ($plugin_id == 2007) 
         {            
-            self::delete_group_from_nagios($group_id);
+            self::delete_group_from_nagios($conn, $group_id);
         }
                         
         return TRUE;        
@@ -504,7 +532,7 @@ class Asset_group_scan
         //Disable Nagios        
         if ($enabled_nagios == TRUE)
         {
-            self::delete_group_from_nagios($group_id);  
+            self::delete_group_from_nagios($conn, $group_id);  
         }       
         
         return TRUE;

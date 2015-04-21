@@ -160,7 +160,7 @@ if (!Av_sensor::is_ntop_wrapper($ntop_links['testntop']))
                     while (!feof($fd)) 
                     {
                         $buffer = fgets($fd, 4096);
-                        if (ereg("VALUE=([0-9]+)[^0-9]*$interface.*", $buffer, $regs)) 
+                        if (preg_match("/VALUE=([0-9]+)[^0-9]*$interface.*/", $buffer, $regs)) 
                         {
                             $fd2 = @fopen("$ntop/switch.html?interface=$regs[1]", "r");
                             if ($fd2 != NULL) 

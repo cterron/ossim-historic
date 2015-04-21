@@ -44,7 +44,7 @@
 
 
 
-class Notes 
+class Notes
 {
     /**
      * Note ID
@@ -52,42 +52,48 @@ class Notes
      * @var number
      */
     public $id;
-    
+
+
     /**
      * Type (host, net, group, etc.)
      * 
      * @var string
      */
     public $type;
-    
+
+
     /**
      * Date
      * 
      * @var string
      */
     public $date;
-    
+
+
     /**
      * User
      * 
      * @var string
      */
     public $user;
-    
+
+
     /**
      * Asset ID
      * 
      * @var string
      */
     public $asset_id;
-    
+
+
     /**
      * Txt
      * 
      * @var string
      */
     public $txt;
-    
+
+
     /**
      * This function sets up the class object
      * 
@@ -107,67 +113,74 @@ class Notes
         $this->asset_id = $asset_id;
         $this->txt      = $txt;
     }
-    
+
+
     /**
      * This function returns the id
      * 
      * @return number
      */
-    public function get_id() 
+    public function get_id()
     {
         return $this->id;
     }
     
+
     /**
      * This function returns the type
      * 
      * @return string
      */
-    public function get_type() 
+    public function get_type()
     {
         return $this->type;
     }
-    
+
+
     /**
      * This function returns the date
      * 
      * @return string
      */
-    public function get_date() 
+    public function get_date()
     {
         return $this->date;
     }
-    
+
+
     /**
      * This function returns the user
      * 
      * @return string
      */
-    public function get_user() 
+    public function get_user()
     {
         return $this->user;
     }
     
+
     /**
      * This function returns the asset id
      * 
      * @return string
      */
-    public function get_asset_id() 
+    public function get_asset_id()
     {
         return $this->asset_id;
     }
     
+
     /**
      * This function returns the txt
      * 
      * @return string
      */
-    public function get_txt() 
+    public function get_txt()
     {
         return $this->txt;
     }
-    
+
+
     /**
      * This function returns the notes list
      * 
@@ -176,37 +189,38 @@ class Notes
      * 
      * @return multitype:Notes
      */
-    public static function get_list($conn, $where) 
+    public static function get_list($conn, $where)
     {
         Ossim_db::check_connection($conn);
-        
+
         $list = array();
-        
+
         $tz   = Util::get_timezone();
 
         $query = ossim_query("SELECT *, HEX(asset_id) AS asset_id FROM notes WHERE 1=1 $where");
-        
+
         $rs = $conn->Execute($query);
-        
-        if (!$rs) 
+
+        if (!$rs)
         {
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
         } 
-        else 
+        else
         {
-            while (!$rs->EOF) 
+            while (!$rs->EOF)
             {
                 $rs->fields['date'] = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($rs->fields['date'])+3600*$tz);
                 
-                $list[] = new Notes($rs->fields['id'], $rs->fields['type'], $rs->fields['date'], $rs->fields['user'], 
+                $list[] = new self($rs->fields['id'], $rs->fields['type'], $rs->fields['date'], $rs->fields['user'], 
                     $rs->fields['asset_id'], $rs->fields['note']);
                 
                 $rs->MoveNext();
             }
         }
-        
+
         return $list;
     }
+
     
     /**
      * This function inserts a note into database
@@ -234,15 +248,17 @@ class Notes
         
         $query = 'INSERT INTO notes (type, date, user, asset_id, note) VALUES (?, ?, ?, UNHEX(?), ?)';
         
-        if (!$conn->Execute($query, $params)) 
+        if (!$conn->Execute($query, $params))
         {
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
             return FALSE;
-		}
-						
-		return TRUE;		
+        }
+
+        return TRUE;
     }
-    
+
+
     /**
      * This function updates a note in database
      * 
@@ -253,30 +269,31 @@ class Notes
      * 
      * @return boolean
      */
-	public static function update($conn, $id, $date, $txt) 
-	{
-	    Ossim_db::check_connection($conn);
-	    
-	    if (self::allowed($conn, $id)) 
-	    {        	        	
-        	$params = array($date, strip_tags($txt), $id);
-        	$query  = 'UPDATE notes SET date = ?, note = ? WHERE id = ?';
-        	
-        	if (!$conn->Execute($query, $params)) 
-        	{
-    			Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-    			
-    			return FALSE;
-    		} 
-    		else 
-    		{
-    			return TRUE;
-    		}   	    
-	    }
-	    
-	    return FALSE;
+    public static function update($conn, $id, $date, $txt)
+    {
+        Ossim_db::check_connection($conn);
+        
+        if (self::allowed($conn, $id)) 
+        {
+            $params = array($date, strip_tags($txt), $id);
+            $query  = 'UPDATE notes SET date = ?, note = ? WHERE id = ?';
+
+            if (!$conn->Execute($query, $params))
+            {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+                return FALSE;
+            }
+            else
+            {
+                return TRUE;
+            }
+        }
+
+        return FALSE;
     }
-    
+
+
     /**
      * This function deletes a note in database
      * 
@@ -285,29 +302,30 @@ class Notes
      * 
      * @return boolean
      */
-	public static function delete($conn, $id) 
-	{
-	    Ossim_db::check_connection($conn);
-	    
-	    if (self::allowed($conn, $id)) 
-	    {	
-        	$params = array($id);
-        	$query  = "DELETE FROM notes WHERE id = ?";
-        	
-        	if (!$conn->Execute($query, $params)) 
-        	{
-    			Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
-    			
-    			return FALSE;
-    		} 
-    		else 
-    		{
-    			return TRUE;
-    		}
-	    }
-	    
-	    return FALSE;
+    public static function delete($conn, $id)
+    {
+        Ossim_db::check_connection($conn);
+
+        if (self::allowed($conn, $id))
+        {
+            $params = array($id);
+            $query  = "DELETE FROM notes WHERE id = ?";
+            
+            if (!$conn->Execute($query, $params))
+            {
+                Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+
+                return FALSE;
+            }
+            else
+            {
+                return TRUE;
+            }
+        }
+
+        return FALSE;
     }
+
     
     /**
      * This function returns the count of notes by asset
@@ -318,16 +336,17 @@ class Notes
      * 
      * @return number
      */
-    public static function howmanynotes($conn, $asset_id, $type) 
+    public static function howmanynotes($conn, $asset_id, $type)
     {
         Ossim_db::check_connection($conn);
-        
+
         $params = array($type, $asset_id);
         $query  = "SELECT count(*) FROM notes WHERE type=? AND asset_id=unhex(?)";
-            	
+
         return $conn->getone($query, $params);
     }
-    
+
+
     /**
      * This function returns if the user is allowed to see a note
      * 
@@ -336,21 +355,21 @@ class Notes
      * 
      * @return boolean
      */
-    public static function allowed($conn, $id) 
+    public static function allowed($conn, $id)
     {
         Ossim_db::check_connection($conn);
         
         // Allowed to view/edit user note
         list($note) = self::get_list($conn, " AND id = ".intval($id));
         
-        if (!is_object($note)) 
+        if (!is_object($note))
         {
             return FALSE;
         }
-        
+
         $users = Session::get_users_to_assign($conn);
-        
-        foreach ($users as $user) 
+
+        foreach ($users as $user)
         {
             if ($user->get_login() == $note->get_user())
             {

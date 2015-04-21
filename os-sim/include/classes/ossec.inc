@@ -234,7 +234,7 @@ class Ossec
         {
             $new_conf = preg_replace($pattern, '<email_notification>no</email_notification>', $new_conf);
 
-            $system_name = (Session::is_pro()) ? 'Alienvault' : 'OSSIM';
+            $system_name = (Session::is_pro()) ? 'AlienVault' : 'OSSIM';
             $warning_msg = '<div style="padding: 3px 0px 3px 15px;">'._('OSSEC email notification is not supported. Please, use '.$system_name.' email notifications instead').'.</div>';
 
             $data['status'] = 'warning';
@@ -625,7 +625,7 @@ class Ossec
     }
 
 
-    public function get_ac_type($parents)
+    public static function get_ac_type($parents)
     {
         $pattern = "/^'?var|group|rule'?$/";
         $size    = count($parents);

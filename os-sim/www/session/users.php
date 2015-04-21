@@ -272,7 +272,7 @@ if ($action != "" && $user_id != '')
 							cache: false,
 							error: function(msg){
 								var msg = '<?php echo _('Permission error').' - '._('You can not remove users')?>';
-								notify(msg, 'nf_error');
+								notify(msg, 'nf_error', true);
 								$("#flextable").changeStatus('',false);
 								
 							},
@@ -283,7 +283,7 @@ if ($action != "" && $user_id != '')
 									var msg_type = (msg.status == 'OK') ? 'nf_success' : 'nf_error';
 									
 									$("#flextable").changeStatus('', false);
-                                    notify(msg_text, msg_type);
+                                    notify(msg_text, msg_type, true);
 									$("#flextable").flexReload();
 								}
 							}
@@ -398,19 +398,19 @@ if ($action != "" && $user_id != '')
 			if ($msg == 'created') 
 			{ 
 				?>
-				notify('<?php echo _('The user has been created successfully')?>', 'nf_success');
+				notify('<?php echo _('The user has been created successfully')?>', 'nf_success', true);
 				<?php 
 			} 
 			elseif ($msg == 'updated') 
 			{ 
 				?>
-				notify('<?php echo _('The user has been updated successfully')?>', 'nf_success');
+				notify('<?php echo _('The user has been updated successfully')?>', 'nf_success', true);
 				<?php 
 			}
 			elseif ($msg == 'unknown_error') 
 			{ 
 				?>
-				notify('<?php echo _('Sorry, operation was not completed due to an unknown error')?>', 'nf_error');
+				notify('<?php echo _('Sorry, operation was not completed due to an unknown error')?>', 'nf_error', true);
 				<?php 
 			} 
 			

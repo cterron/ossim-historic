@@ -168,10 +168,10 @@ class Alienvault_client
 
 
     /**
-    * This function returns "Auth" provider
-    *
-    * @return "Auth" object provider 
-    */
+     * This function returns "Auth" provider
+     *
+     * @return "Auth" object provider
+     */
     public function auth()
     {
         $this->providers->set($this->conn, 'auth', $this->common_url.'/auth');
@@ -179,23 +179,25 @@ class Alienvault_client
         return $this->providers->get('auth');
     }
 
+
     /**
-    * This function returns "System" provider
-    *
-    * @return "System" object provider
-    */
+     * This function returns "System" provider
+     *
+     * @return "System" object provider
+     */
     public function system($system_id = 'local')
     {
         $this->providers->set($this->conn, 'system', $this->common_url."/system/$system_id");
 
         return $this->providers->get('system');
     }
-    
+
+
     /**
-    * This function returns "Server" provider
-    *
-    * @return "System" object provider
-    */
+     * This function returns "Server" provider
+     *
+     * @return "System" object provider
+     */
     public function server($system_id = 'local')
     {
         $this->providers->set($this->conn, 'server', $this->common_url."/server/$system_id");
@@ -203,40 +205,65 @@ class Alienvault_client
         return $this->providers->get('server');
     }
 
+
     /**
-    * This function returns "Sensor" provider 
-    *
-    * @return "Sensor" object provider
-    */
+     * This function returns "Sensor" provider 
+     *
+     * @return "Sensor" object provider
+     */
     public function sensor($sensor_id = 'local')
     {
         $this->providers->set($this->conn, 'sensor', $this->common_url."/sensor/$sensor_id");
 
         return $this->providers->get('sensor');
     }
-    
+
+
     /**
-    * This function returns "Data" provider
-    *
-    * @return "Data" object provider
-    */
+     * This function returns "Data" provider
+     *
+     * @return "Data" object provider
+     */
     public function data($context_id = '/local')
     {
         $this->providers->set($this->conn, 'data', $this->common_url."/data$context_id");
 
         return $this->providers->get('data');
     }
-    
+
+
     /**
-    * This function returns "Jobs" provider
-    *
-    * @return "Jobs" object provider
-    */
+     * This function returns "Jobs" provider
+     *
+     * @return "Jobs" object provider
+     */
     public function jobs()
     {
         $this->providers->set($this->conn, 'jobs', $this->common_url.'/job');
 
         return $this->providers->get('jobs');
     }
+
+
+    /**
+     * This function returns "Asec" provider
+     *
+     * @return "Asec" object provider
+     */
+    public function asec()
+    {
+        if (Session::is_pro() == FALSE)
+        {
+            $exp_msg = _('Error! Provider not allowed for this version');
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
+        }
+
+        $this->providers->set($this->conn, 'asec', $this->common_url.'/system/asec');
+
+        return $this->providers->get('asec');
+    }
 }
-?>
+
+/* End of file alienvault_client.inc */
+/* Location: ../include/classes/alienvault_client.inc */

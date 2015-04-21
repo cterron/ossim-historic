@@ -38,6 +38,13 @@ require_once 'data/sections/configuration/utilities.php';
 
 session_write_close();
 
+
+if ($_SERVER['SCRIPT_NAME'] != '/ossim/av_center/data/section.php')
+{
+    exit();
+}
+
+
 $system_id = POST('system_id');
 ossim_valid($system_id, OSS_DIGIT, OSS_LETTER, '-', 'illegal:' . _('System ID'));
 
@@ -51,7 +58,7 @@ if (ossim_error())
                 'cancel_button' => FALSE
             ),
             'style'   => 'margin: auto; width: 90%; text-align: center;'
-        ); 
+        );
 
 
     $nt = new Notification('nt_1', $config_nt);
@@ -80,7 +87,7 @@ if ($general_cnf['status'] == 'error')
                 'cancel_button' => FALSE
             ),
             'style'   => 'margin: 100px auto; width: 550px; text-align: center;'
-        ); 
+        );
 
 
     $nt = new Notification('nt_1', $config_nt);
@@ -122,7 +129,7 @@ else
         <div class="w_overlay" style="height:100%;"></div>
 
         <div class='cnf_header'><div class='cnf_h_title'><?php echo _('General Configuration')?></div></div>
-        
+
         <div class='cnf_body'>
             <form id='f_gc' method='POST'>
                 <input type='hidden' id='system_id' class='vfield' name='system_id' value='<?php echo $system_id?>'/>
@@ -215,12 +222,12 @@ else
 
                     <tr class='cms_options' <?php echo $cms_style?>>
                         <th class='_label pleft_20'><?php display_label($cnf_data['mailserver_relay_passwd'])?></th>
-                        <td class='_data'><input type='password' id='<?php echo $cnf_data['mailserver_relay_passwd']['id']?>' name='<?php echo $cnf_data['mailserver_relay_passwd']['id']?>' class='vfield' value='<?php echo Util::fake_pass($cnf_data['mailserver_relay_passwd']['value'])?>'/></td>
+                        <td class='_data'><input type='password' id='<?php echo $cnf_data['mailserver_relay_passwd']['id']?>' name='<?php echo $cnf_data['mailserver_relay_passwd']['id']?>' class='vfield' value='<?php echo Util::fake_pass($cnf_data['mailserver_relay_passwd']['value'])?>' autocomplete='off'/></td>
                     </tr>
 
                     <tr class='cms_options' <?php echo $cms_style?>>
                         <th class='_label pleft_20'><?php display_label($cnf_data['mailserver_relay_passwd2'])?></th>
-                        <td class='_data'><input type='password' id='<?php echo $cnf_data['mailserver_relay_passwd2']['id']?>' name='<?php echo $cnf_data['mailserver_relay_passwd2']['id']?>' class='vfield' value='<?php echo Util::fake_pass($cnf_data['mailserver_relay_passwd']['value'])?>'/></td>
+                        <td class='_data'><input type='password' id='<?php echo $cnf_data['mailserver_relay_passwd2']['id']?>' name='<?php echo $cnf_data['mailserver_relay_passwd2']['id']?>' class='vfield' value='<?php echo Util::fake_pass($cnf_data['mailserver_relay_passwd']['value'])?>' autocomplete='off'/></td>
                     </tr>
 
                     <tr class='cms_options' <?php echo $cms_style?>>
@@ -278,7 +285,7 @@ else
 
         // Redefine submit_form function
         ajax_validator.submit_form = function (){
-            
+
             if (ajax_validator.check_form() == true)
             {
                 General_cnf.save_cnf('f_gc');
@@ -289,7 +296,7 @@ else
                 {
                     $(".invalid").get(0).focus();
                 }
-                
+
                 return false;
             }
         }
@@ -298,11 +305,11 @@ else
         $('#apply_changes').click(function() {
             ajax_validator.submit_form();
         });
-        
-        $('#<?php echo $cnf_data['yn_mailserver_relay']['id']?>').change(function() { 
+
+        $('#<?php echo $cnf_data['yn_mailserver_relay']['id']?>').change(function() {
             if ($('#<?php echo $cnf_data['yn_mailserver_relay']['id']?>').val() != 'no')
             {
-                
+
                 if ($('#<?php echo $cnf_data['mailserver_relay']['id']?>').val() == 'no')
                 {
                     $('#<?php echo $cnf_data['mailserver_relay']['id']?>').val('');
@@ -315,12 +322,12 @@ else
                 $('#<?php echo $cnf_data['mailserver_relay']['id']?>').val('no');
                 $('.cms_options').hide();
             }
-        }); 
+        });
 
-        $('#<?php echo $cnf_data['yn_ntp_server']['id']?>').change(function() { 
+        $('#<?php echo $cnf_data['yn_ntp_server']['id']?>').change(function() {
             if ($('#<?php echo $cnf_data['yn_ntp_server']['id']?>').val() != 'no')
             {
-                
+
                 if ($('#<?php echo $cnf_data['ntp_server']['id']?>').val() == 'no')
                 {
                     $('#<?php echo $cnf_data['ntp_server']['id']?>').val('');
@@ -345,7 +352,7 @@ else
                 message: "<?php echo _("You have made changes, click <i>Apply Changes</i> to save")?>"
             }
         };
-        
+
 
         change_control = new Change_control(cc_config);
         change_control.change_control();

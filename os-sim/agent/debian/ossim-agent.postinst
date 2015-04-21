@@ -38,14 +38,20 @@ configure_firewall(){
     if [ -f $SENSOR_FIREWALL_CONF ]; then
         if [ ${#framework_ip} != 0 ]; then
             sed -i "s/^#*//g" $SENSOR_FIREWALL_CONF
-            sed -i "s/FRAMEWORKIP/$framework_ip/g" $SENSOR_FIREWALL_CONF
+            ft_counter=$(grep -c FRAMEWORKIP $SENSOR_FIREWALL_CONF | cat)
+            if [ "$ft_counter" != "0" ]; then
+                sed -i "s/FRAMEWORKIP/$framework_ip/g" $SENSOR_FIREWALL_CONF
+            else
+                line_num=$(grep -rne 4949 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
+                old_framework_ip=$(sed -n "$line_num"p $SENSOR_FIREWALL_CONF | cut -d' ' -f14)
+                sed -i "s/$old_framework_ip/$framework_ip/g" $SENSOR_FIREWALL_CONF
+            fi
         else
             echo "framework_ip parameter in ossim_setup.conf is empty. iptables rules using framework_ip value will be skipped"
             for numline in $(grep -rne FRAMEWORKIP $SENSOR_FIREWALL_CONF | cut -d':' -f1); do
                 sed -i "$numline s/^/#/" $SENSOR_FIREWALL_CONF
             done
         fi
-        dpkg-trigger --no-await alienvault-restart-firewall
     else
         echo "$SENSOR_FIREWALL_CONF has not been found. Firewall rules wont be applied"
     fi
@@ -54,37 +60,18 @@ configure_firewall(){
 }
 
 
-update_frameworkip_iptables(){
-    # Updates sensor and db iptables files with the most recent framework ip value
-    framework_ip=$(get_ossim_param_value "framework_ip")
-
-    if [ ${#framework_ip} != 0 ]; then
-        sed -i "s/^#*//g" $SENSOR_FIREWALL_CONF
-
-        ft_counter=$(grep -c FRAMEWORKIP $SENSOR_FIREWALL_CONF | cat)
-        if [ "$ft_counter" != "0" ]; then
-            sed -i "s/FRAMEWORKIP/$framework_ip/g" $SENSOR_FIREWALL_CONF
-        else
-            line_num=$(grep -rne 4949 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
-            old_framework_ip=$(sed -n "$line_num"p $SENSOR_FIREWALL_CONF | cut -d' ' -f14)
-            sed -i "s/$old_framework_ip/$framework_ip/g" $SENSOR_FIREWALL_CONF
-        fi
-    else
-        numline=$(grep -rne 4949 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
-        sed -i "$numline s/^/#/" $SENSOR_FIREWALL_CONF
-        numline=$(grep -rne 9390 $SENSOR_FIREWALL_CONF | cut -d':' -f1)
-        sed -i "$numline s/^/#/" $SENSOR_FIREWALL_CONF
-    fi
-
-    dpkg-trigger --no-await alienvault-restart-firewall
-}
-
 configure_network() {
     CONFIG_CFG_FILE="/etc/ossim/agent/config.cfg"
     ADMIN_IP=$(grep "^admin_ip=.*" "$OSSIM_SETUP_CONF" | cut -d "=" -f 2)
     SENSOR_IP=$(grep "^ip=.*" "$OSSIM_SETUP_CONF" | cut -d "=" -f 2)
+    SERVER_IP=$(grep "^server_ip=.*" "$OSSIM_SETUP_CONF" | cut -d "=" -f 2)
+    FRAMEWORK_IP=$(grep "^framework_ip=.*" "$OSSIM_SETUP_CONF" | cut -d "=" -f 2)
 
-    sed -i "s:^ip=.*:ip=$ADMIN_IP:" "$CONFIG_CFG_FILE"
+    sed -i "/asec/,/ip=/{s/ip=.*/ip=$FRAMEWORK_IP/}" "$CONFIG_CFG_FILE"
+    sed -i "/control-framework/,/ip=/{s/ip=.*/ip=$FRAMEWORK_IP/}" "$CONFIG_CFG_FILE"
+    sed -i "/output-idm/,/ip=/{s/ip=.*/ip=$SERVER_IP/}" "$CONFIG_CFG_FILE"
+    sed -i "/output-server/,/ip=/{s/ip=.*/ip=$SERVER_IP/}" "$CONFIG_CFG_FILE"
+    
     if [ -n "$SENSOR_IP" ]; then
         sed -i "s:^sensor=.*:sensor=$SENSOR_IP:" "$CONFIG_CFG_FILE"
     else
@@ -118,8 +105,7 @@ case "$1" in
         do
             case "$trigger" in
                  alienvault-config-system-admin-ip|alienvault-config-framework-framework-ip|alienvault-config-server-server-ip|alienvault-config-system-vpn-ip)
-                    update_frameworkip_iptables
-                    dpkg-trigger --no-await alienvault-restart-firewall
+                    configure_firewall
                     configure_network
                     ;;
                 alienvault-config-database-pass)

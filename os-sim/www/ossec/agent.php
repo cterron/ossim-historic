@@ -56,10 +56,6 @@ if (!is_array($s_data['sensors']) || empty($s_data['sensors']))
     exit();
 }
 
-
-$conf             = $GLOBALS['CONF'];
-$idm_enabled      = $conf->get_conf('enable_idm');
-$_SESSION['_idm'] = $idm_enabled;
 session_write_close();
 
 ?>

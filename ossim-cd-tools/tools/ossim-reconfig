@@ -37,6 +37,7 @@ use v5.10;
 use DBI;
 use MIME::Base64;
 use Time::Local;
+use Socket;
 
 
 use lib '/usr/share/alienvault-center/lib';
@@ -164,6 +165,13 @@ else {
 
 sub main() {
 	
+    my $hb_notrunning = system("cl_status rscstatus > /dev/null 2>&1") >>8;
+    my $ha_resources = `cl_status rscstatus 2>/dev/null`;
+    $ha_resources =~ s/\n//g;
+    if( ( $hb_notrunning == 0 ) && ( $ha_resources ne "all") ) {
+        print "cannot reconfigure a passive HA node ... exiting.\n";
+        exit 0;
+    }
 
     my $sts
         = `ps -feaww | grep \"/usr/bin/perl\"| egrep "ossim-reconfig\|alienvault-reconfig\" | grep -v vi | grep -v grep | grep -v in-target | grep -v postpone | grep -v "update_sensors" | wc -l`;
@@ -253,20 +261,6 @@ sub main() {
 	#  end antigua current_config y last_config
 	#
 
-
-    foreach my $profile (@profiles_arr){
-
-                given($profile){
-                       when ( m/Database/ ) {
-                            if ( $db_reb eq 'yes' ) {
-                                Avconfig_profile_database::config_database_rebuild($db_reb);
-                                #exit;
-                            }
-                        }
-                }
-    }
-
-
 	foreach my $profile (@profiles_arr){
 
 		given($profile){
@@ -303,6 +297,8 @@ sub main() {
 			verbose_log("Configuring munin");
 			#Include FrameWork
 			my $system_framework_name=`cat /etc/hosts | grep $config{'framework_ip'} | awk '{print \$2}' | head -1`;
+			# Get the current name
+			my $current_name = gethostbyaddr($config{'framework_ip'}, AF_INET);
 			chomp($system_framework_name);
 			my $fw_ip=$config{'framework_ip'};
 			my $fn;
@@ -312,6 +308,14 @@ sub main() {
 			}else{
 				# Munin must work with lowercase hostnames
 				$fn = $system_framework_name;
+			}
+			if (defined($curren_name))
+			{
+				$fn = $current_name;
+			}
+			else
+			{
+				$fn = $fw_ip;
 			}
 			open my $munin_framework_conf_fh, ">", "$munin_conf_file" or die "Error opening file $!";
 			print {$munin_framework_conf_fh} <<EOF;
@@ -505,75 +509,18 @@ my %reset;
 	
 
 	%reset = Avconfig_profile_common::config_common("foother");
-		foreach my $key (keys(%reset)){	$retro{$key} = $reset{$key}; }
-
-
-
-
-
-#foreach my $key (keys(%retro)){	console_log("----------------$key  $retro{$key}");}
-
-
+	foreach my $key (keys(%reset)){	$retro{$key} = $reset{$key}; }
         # services
-        if ( ( $config{'ha_heartbeat_start'} // q{} ) eq "yes" ) {
-
-                # if reset, reload configurations (for example: alienvault-firewall, or mysql new configs)
-                restart_services(%retro);
-                # stop and remove from sysvrc, all services but mysql and alienvault-firewall
-                disable_services();
-
-				if ( $profile_database == 1 ){
-					# mysql must be up for replication:
-					system("update-rc.d mysql defaults  $stdout $stderr ");
-
-					# if profile changed, reboot required, so forget stopping here
-					# }else{ system("/etc/init.d/mysql stop $stdout $stderr "); }
-
-				}
-
-                # handle firewall outside enable_services and outside ossim-ha initscript
-                if ( $config{'firewall_active'} eq "yes" ){
-                    system("update-rc.d alienvault-firewall defaults  $stdout $stderr ");
-                }else{
-                    system("update-rc.d -f alienvault-firewall remove  $stdout $stderr ");
-                }
-
-                # heartbeat (resource 'ossim-ha') starts/stops services
-                if ( -x "/etc/init.d/heartbeat" ){
-                        system ("update-rc.d heartbeat defaults >/dev/null 2>&1 $stdout $stderr");
-                        console_log ("Restarting heartbeat");
-                        system ("/etc/init.d/heartbeat restart >/dev/null &");
-                }
-
-        }else{
-				
-                restart_services(%retro);
-                disable_services();
+        restart_services(%retro);
+        disable_services();
+        if ( ( $config{'ha_heartbeat_start'} // q{} ) ne "yes" ) {
                 enable_services();
-
-                # heartbeat included in disable, not included in enable,
-                # but double check to stop it and remove it from sysvrc
-                if ( -x "/etc/init.d/heartbeat" ){
-                        system ("update-rc.d -f heartbeat remove >/dev/null 2>&1 $stdout $stderr");
-                        if ( -f "/var/run/heartbeat.pid"){
-							console_log ("Stopping heartbeat");
-							system ("/etc/init.d/heartbeat stop >/dev/null &");
-						}
-				}		
-                # rm after stop (if running we need its config to stop)
-                if ( -f "/etc/ha.d/ha.cf" ) {
-                        system ("rm -f /etc/ha.d/ha.cf");
-                }
-                if ( -f "/etc/ha.d/authkeys" ) {
-                        system ("rm -f /etc/ha.d/authkeys");
-                }
-                if ( -f "/etc/ha.d/haresources" ) {
-                        system ("rm -f /etc/ha.d/haresources");
-                }
-
-
-
-        # services end
+        }
+        else
+        {
+            # disable_servicies is removing heartbeat/mysql and mysql from the run level. 
+            system("update-rc.d heartbeat defaults  $stdout $stderr ");
+            system("update-rc.d mysql defaults  $stdout $stderr ");
         }
 
 
@@ -625,10 +572,7 @@ sub parse_argv() {
 			$dialog_active = 0;
 			}
 		elsif ($parms[0] eq "--mysql_replication") {
-            restore_orig_output_descriptors();
-			#system("/bin/bash /usr/share/ossim-installer/auxscripts/ha_mysql_replication.sh");
-			system("av_ha_mysql_replication");
-			exit 0;
+            error("Deprecated.");
 	        	}
 
 		else {
@@ -758,7 +702,6 @@ my $profilecurrent = shift;
 
 sub restart_services(){
 	
-	
 	my %reset = @_;
 # take care on value of the reset flag. if true restart service and add it to sysvrc
  
@@ -877,7 +820,7 @@ sub restart_services(){
 			if($reset{'openvpn'}){
 				console_log("Restarting vpn");dp("Restarting vpn");
 				system("/etc/init.d/openvpn restart $stdout $stderr "); }
-			
+
                         if ( $config{'firewall_active'} eq "yes" ){
                                 if($reset{'iptables'}){
                                         console_log("Restarting firewall");dp("Restarting firewall");
@@ -912,20 +855,6 @@ sub restart_services(){
 				console_log("Restarting postfix");dp("Restarting postfix");
 				system("/etc/init.d/postfix restart  $stdout $stderr ");}
 
-			if($reset{'rsyslog'}){
-				console_log("Restarting rsyslog");dp("Restarting rsyslog");
-				system("/etc/init.d/rsyslog restart  $stdout $stderr ");}
-
-			if($reset{'rsync'}){
-				console_log("Restarting rsync");dp("Restarting rsync");
-			 	system("update-rc.d rsync defaults $stdout $stderr "); 
-				system("/etc/init.d/rsync restart $stdout $stderr ");
-			}else{
-				console_log("Stop rsync");dp("Restart rsync");
-			 	system("update-rc.d -f rsync remove  $stdout $stderr "); 
-				system("/etc/init.d/rsync stop $stdout $stderr ");
-			}
-
 
 			if ($config{'vpn_infraestructure'} eq "yes"){
 				console_log("Restarting openvpn");
@@ -952,7 +881,7 @@ sub restart_services(){
 
     
 sub disable_services(){
-# stop (only if cluster enabled) and disable all services, but mysql and alienvault-firewall
+# stop (only if cluster enabled) and disable all services, but mysql
 
 console_log("Disable services");dp("Disable services");
 
@@ -971,14 +900,13 @@ console_log("Disable services");dp("Disable services");
 	system("update-rc.d -f nfsen remove  $stdout $stderr ");
 	system("update-rc.d -f nfdump remove  $stdout $stderr ");
 	system("update-rc.d -f fprobe remove  $stdout $stderr ");
-	system("update-rc.d -f alienvault-firewall remove  $stdout $stderr ");
 	system("update-rc.d -f openvpn remove  $stdout $stderr ");
 	system("update-rc.d -f heartbeat remove  $stdout $stderr ");
 	system("update-rc.d -f monit remove  $stdout $stderr ");
 =cut
 
 #	my @stopsysvrcl=('monit','ossim-ha','heartbeat','ossim-server','alienvault-idm','ossim-framework','ossim-agent','apache2','nessusd','openvas-scanner','openvas-manager','openvas-administrator','nagios3','snort','suricata','prads','p0f','snmpd','nfsen','nfdump','fprobe','openvpn','ossec','pads','arpwatch','memcached','asec-machete','asec-mixter');
-	my @stopsysvrcl=('monit','ossim-ha','heartbeat','ossim-server','ossim-framework','ossim-agent','apache2','nessusd','nagios3','snort','suricata','prads','snmpd','nfsen','nfdump','fprobe','openvpn','asec-machete','asec-mixter');
+	my @stopsysvrcl=('monit','alienvault-ha','heartbeat','ossim-server','ossim-framework','ossim-agent','apache2','nessusd','nagios3','snort','suricata','prads','snmpd','nfsen','nfdump','fprobe','openvpn','asec-machete','asec-mixter');
 	foreach (@stopsysvrcl){
 		my $command="test -x /etc/init.d/$_ && update-rc.d -f $_ remove >/dev/null 2>&1";
 		debug_log("$command");
@@ -988,16 +916,6 @@ console_log("Disable services");dp("Disable services");
 	my $command="update-rc.d -f mysql remove >/dev/null 2>&1";
 	debug_log("$command");
 	system($command);
-
-	# stop services if cluster enabled
-    if ( ( $config{'ha_heartbeat_start'} // q{} ) eq "yes" ) {
-		foreach (@stopsysvrcl){
-			my $command="test -x /etc/init.d/$_ && /etc/init.d/$_ stop >/dev/null 2>&1";
-			debug_log("$command");
-			system($command);
-		}
-	}
-
 }
 
 
@@ -1048,14 +966,6 @@ console_log("Enable services");dp("Enable services");
 		system("/etc/init.d/snmpd stop  $stdout $stderr "); 
 	}
 
-	if ( $config{'firewall_active'}	eq "yes" ){
-		system("update-rc.d alienvault-firewall defaults  $stdout $stderr "); 
-	}else{
-		system("update-rc.d -f alienvault-firewall remove  $stdout $stderr "); 
-		#system("/etc/init.d/alienvault-firewall stop  $stdout $stderr ");
-			
-	}
-	
 	if ($config{'vpn_infraestructure'} eq "yes"){
 		system("update-rc.d openvpn defaults  $stdout $stderr "); 
 

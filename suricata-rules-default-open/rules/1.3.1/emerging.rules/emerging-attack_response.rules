@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -478,6 +478,9 @@ alert tcp $SQL_SERVERS 3306 -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL 
 alert tcp any any -> any any (msg:"ET ATTACK_RESPONSE Net User Command Response"; flow:established; content:"User accounts for |5C 5C|"; fast_pattern; content:"-------------------------------------------------------------------------------"; distance:0; classtype:successful-user; sid:2017025; rev:3;)
 
 #
+alert udp $HOME_NET 623 -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Possible IPMI 2.0 RAKP Remote SHA1 Password Hash Retreival RAKP message 2 status code Unauthorized Name"; content:"|06 13|"; offset:4; depth:2; content:"|0d|"; distance:11; within:1; classtype:protocol-command-decode; sid:2017121; rev:2;)
+
+#
 alert http any any -> $HOME_NET any (msg:"ET ATTACK_RESPONSE Non-Local Burp Proxy Error"; flow:established,to_client; content:"502"; http_stat_code; content:"Bad gateway"; http_stat_msg; file_data; content:"Burp proxy error|3A 20|"; within:18; reference:url,portswigger.net/burp/proxy.html; classtype:successful-admin; sid:2017148; rev:3;)
 
 #
@@ -485,4 +488,169 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"ET ATTACK_RESPONSE python she
 
 #
 alert tcp $HOME_NET any -> any any (msg:"ET ATTACK_RESPONSE Possible  MS CMD Shell opened on local system 2"; dsize:<200; content:"Microsoft Windows "; depth:40; content:"[Version"; distance:0; within:10; content:"Copyright (c) 2009"; distance:0; content:"Microsoft Corp"; distance:0; reference:url,doc.emergingthreats.net/bin/view/Main/2008953; classtype:successful-admin; sid:2018392; rev:1;)
+
+#
+alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Output of id command from HTTP server"; flow:established; content:"uid="; pcre:"/^\d+[^\r\n\s]+/R"; content:" gid="; within:5; pcre:"/^\d+[^\r\n\s]+/R"; content:" groups="; within:8; classtype:bad-unknown; sid:2019284; rev:3;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft Powershell Banner Outbound"; flow:established; content:"Windows PowerShell"; content:"Copyright |28|C|29| 20"; distance:0; content:"Microsoft Corp"; distance:0; classtype:successful-admin; sid:2020084; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft CScript Banner Outbound"; flow:established; content:"Windows Script Host Version"; content:"Copyright |28|C|29|"; distance:0; content:"Microsoft Corp"; distance:0; classtype:successful-admin; sid:2020085; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft WMIC Prompt Outbound"; flow:established; content:"wmic|3a|root|5c|cli>"; classtype:successful-admin; sid:2020086; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft Netsh Firewall Disable Output Outbound"; flow:established; content:"netsh firewall|22| is deprecated|3b|"; content:"use |22|netsh advfirewall"; distance:0; content:"Ok."; distance:0; classtype:successful-admin; sid:2020087; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SysInternals sc.exe Output Outbound"; flow:established; content:"SERVICE_NAME|3a|"; content:"TYPE"; distance:0; content:"SERVICE_EXIT_CODE"; distance:0; classtype:successful-admin; sid:2020088; rev:1;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQL syntax"; fast_pattern; content:"MySQL"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020506; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"mysql_"; fast_pattern; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020507; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"MySqlException (0x"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020508; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"valid MySQL result"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020509; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"MySqlClient."; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020510; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE MySQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"com.mysql.jdbc.exceptions"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020511; rev:4;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"PostgreSQL"; fast_pattern; content:"ERROR"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020512; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"Wpg_"; fast_pattern; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020513; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"valid PostgreSQL result"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020514; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Npgsql."; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020515; rev:6;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"org.postgresql.util.PSQLException"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020516; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE PostgreSQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"ERROR|3a 20 20|syntax error at or near"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020517; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Driver"; fast_pattern; pcre:"/^ SQL[-_ ]Server/R"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020518; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"OLEDB"; fast_pattern; content:"|20|SQL Server"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020519; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQL Server"; fast_pattern; content:"Driver"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020520; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"mssql_"; fast_pattern; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020521; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; content:"500 Internal Server Error"; file_data; content:"OLE DB Provider for SQL Server"; fast_pattern:only; pcre:"/SQL Server.*?error \x27[0-9a-f]{8}/mi"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020522; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Exception"; fast_pattern; content:"System.Data.SqlClient."; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020523; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft SQL error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Exception"; fast_pattern; content:"Roadhouse.Cms"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020524; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft Access error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Microsoft Access"; fast_pattern; pcre:"/^ \d+ Driver/R"; distance:0; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020525; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft Access error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"JET Database Engine"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020526; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Microsoft Access error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Access Database Engine"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020527; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Oracle error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"ORA-"; fast_pattern:only; pcre:"/ORA-\d{4}/"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020528; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Oracle error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Oracle error"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020529; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Oracle error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Oracle"; fast_pattern; content:"Driver"; distance:0; within:12; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020530; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Oracle error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"oci_"; distance:0; fast_pattern; pcre:"/Warning.*\Woci_/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020531; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Oracle error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"ora_"; fast_pattern; distance:0; pcre:"/Warning.*\Wora_/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020532; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE DB2 error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"CLI Driver"; fast_pattern:only; pcre:"/CLI Driver.*DB2/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020533; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE DB2 error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"DB2 SQL error"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020534; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE DB2 error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"bdb2_"; fast_pattern:only; pcre:"/bdb2_\w+\(/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020535; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Informix error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Exception"; content:"Informix"; fast_pattern; pcre:"/Exception.*Informix/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020536; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Firebird error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Dynamic SQL Error"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020537; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Firebird error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Dynamic SQL Error"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020538; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQLite/JDBCDriver"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020539; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQLite.Exception"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020540; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"System.Data.SQLite.SQLiteException"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020541; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"sqlite_"; fast_pattern; distance:0; pcre:"/Warning.*sqlite_/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020542; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"SQLite3|3a 3a|"; fast_pattern; distance:0; pcre:"/Warning.*SQLite3::/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020543; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SQLite error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"[SQLITE_ERROR]"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020544; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SAP MaxDB error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"SQL error"; fast_pattern; content:"POS("; distance:0; pcre:"/SQL error.*POS\([0-9]+\)/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020545; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE SAP MaxDB error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"maxdb"; fast_pattern; distance:0; pcre:"/Warning.*maxdb/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020546; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Sybase error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"sybase"; fast_pattern; distance:0; pcre:"/i?Warning.*sybase/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020547; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Sybase error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Sybase message"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020548; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Sybase error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Sybase Server message"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020549; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Ingres error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Warning"; content:"ingres_"; fast_pattern; distance:0; pcre:"/Warning.*ingres_/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020550; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Ingres error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Ingres SQLSTATE"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020551; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Ingres error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Ingres"; fast_pattern; content:"Driver"; distance:0; pcre:"/Ingres\W.*Driver/m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020552; rev:2;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE Frontbase error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"Exception (condition )"; content:". Transaction rollback."; fast_pattern; distance:0; pcre:"/Exception (condition )\d+\. Transaction rollback\./m"; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020553; rev:3;)
+
+#
+#alert http $HTTP_SERVERS any -> $EXTERNAL_NET any (msg:"ET ATTACK_RESPONSE HSQLDB error in HTTP response, possible SQL injection point"; flow:from_server,established; file_data; content:"org.hsqldb.jdbc"; fast_pattern:only; threshold:type both,track by_src,count 1,seconds 60; classtype:web-application-attack; sid:2020554; rev:2;)
 

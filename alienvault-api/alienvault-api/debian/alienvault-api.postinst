@@ -29,6 +29,17 @@ then
     echo "key = '$(pwgen -s 24)'" > /usr/share/alienvault/api/secret.py
 fi
 
+
+case "$1" in
+    configure)
+        if [ ! -z "$2" ]; then
+            if dpkg --compare-versions "$2" le "4.12.0"; then
+                kill -9 `pgrep -lf celery.bin.celeryd | awk '{print $1}'`  > /dev/null 2>&1 || true
+                kill -9 `pgrep -lf /usr/share/alienvault/api_core/bin/celerybeat | awk '{print $1}'`  > /dev/null 2>&1 || true
+            fi
+        fi
+esac
+
 #DEBHELPER#
 
 db_stop

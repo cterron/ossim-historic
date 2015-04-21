@@ -42,6 +42,7 @@ from apimethods.system.status import alienvault_status
 from apimethods.system.status import cpu
 from apimethods.system.status import disk_usage
 from apimethods.system.status import package_list
+from apimethods.system.status import ping_system
 import api_log
 
 
@@ -66,8 +67,9 @@ def get_system_status(system_id):
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
     success, result = system_all_info(system_id, no_cache=no_cache)
     if not success:
-        api_log.error("facts: error: " + str(result))
-        return make_error("Cannot retrieve system status", 500)
+        api_log.error("Cannot retrieve system status for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        return make_error("Cannot retrieve system status for system %s" % system_id, 500)
     return make_ok(**result)
 
 
@@ -89,8 +91,9 @@ def get_network_status(system_id):
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
     success, result = network_status(system_id, no_cache=no_cache)
     if not success:
-        api_log.error("facts: error: " + str(result))
-        return make_error("Cannot retrieve network status " + str(result), 500)
+        api_log.error("Cannot retrieve network status for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        return make_error("Cannot retrieve network status for system %s" % system_id, 500)
     return make_ok(**result)
     
     
@@ -114,8 +117,9 @@ def get_alienvault_status(system_id):
     no_cache = True if request.args.get('no_cache', 'false') == 'true' else False
     success, result = alienvault_status(system_id, no_cache=no_cache)
     if not success:
-        api_log.error("facts: error: " + str(result))
-        return make_error("Cannot retrieve AlienVault status " + str(result), 500)
+        api_log.error("Cannot retrieve AlienVault status for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        return make_error("Cannot retrieve AlienVault status for system %s" % system_id, 500)
     return make_ok(**result)
     
     
@@ -138,8 +142,34 @@ def get_alienvault_packages(system_id):
     
     success, result = package_list(system_id)
     if not success:
-        api_log.error("facts: error: " + str(result))
-        return make_error("Cannot retrieve AlienVault status " + str(result), 500)
-        
+        api_log.error("Cannot retrieve installed packages status for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        return make_error("Cannot retrieve installed packages status for system %s" % system_id, 500)
     return make_ok(**result)
+    
+
+@blueprint.route('/<system_id>/status/ping', methods=['GET'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
+def is_system_reachable(system_id):
+    """Find out if a system is reachable or not.
+
+    The blueprint handle the following url:
+    GET /av/api/1.0/system/<system_id>/status/ping
+
+    Args:
+        system_id (str): String with system id (uuid) or local
+
+    """
+    
+    success, result = ping_system(system_id)
+    
+    if not success:
+        api_log.error("Cannot find out if system is reachable for system_id %s. Error: %s" % (system_id, str(result)))
+        api_log.error("Failed API call: remote addr = %s, host addr = %s, blueprint = %s, URL = %s" % (request.remote_addr, request.host, request.blueprint, request.base_url))
+        
+        return make_error("Cannot find out if system is reachable for system %s" % system_id, 500)
+        
+    return make_ok(reachable=result)
     

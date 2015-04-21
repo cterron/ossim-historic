@@ -71,13 +71,19 @@ class ApacheNtopProxyManager:
                 logger.error("Can't connect to database")
                 return
         #read sensor list.
-        query = 'select inet6_ntop(sensor.ip) as ip, sensor.name  as name from sensor join sensor_properties where sensor.id = sensor_properties.sensor_id and sensor_properties.has_ntop=1;'
+        query = 'select inet6_ntop(sensor.ip) as ip,inet6_ntop(system.admin_ip) as admin_ip,inet6_ntop(system.vpn_ip) as vpn_ip,inet6_ntop(system.ha_ip) as ha_ip, sensor.name  as name from sensor left join system on system.sensor_id=sensor.id, sensor_properties where sensor.id = sensor_properties.sensor_id and sensor_properties.has_ntop=1;'
         tmp = None
         tmp = self.__myDB.exec_query(query)
         self.__sensors.clear()
         if tmp is not None:
             for sensor in tmp:
-                self.__sensors[sensor['ip']] = sensor['name'] 
+                self.__sensors[sensor['ip']] = sensor['name']
+                if  sensor['admin_ip']:
+                    self.__sensors[sensor['admin_ip']] = sensor['name']
+                if  sensor['vpn_ip']:
+                    self.__sensors[sensor['vpn_ip']] = sensor['name']
+                if  sensor['ha_ip']:
+                    self.__sensors[sensor['ha_ip']] = sensor['name']
 #        self.__close()
 
     def getNtopLink(self):

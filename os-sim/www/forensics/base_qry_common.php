@@ -220,8 +220,8 @@ function DateTimeRows2sql($field, $cnt, &$s_sql) {
                 addSQLItem($tmp, "timestamp like \"$query_str%\"");
                 /* neither date or time */
                 if ($tmp == "") ErrorMessage("<B>" . gettext("Criteria warning:") . "</B> " . gettext("An operator of") . " '" . $field[$i][1] . "' " . gettext("was selected indicating that some date/time criteria should be matched, but no value was specified."));
-                else if ($i < $cnt - 1) $tmp = $field[$i][0] . $tmp . ')' . $field[$i][8] . CleanVariable($field[$i][9], VAR_ALPHA);
-                else $tmp = $field[$i][0] . $tmp . ')' . $field[$i][8];
+                else if ($i < $cnt - 1) $tmp = $field[$i][0] . $tmp . ') ' . $field[$i][8] . CleanVariable($field[$i][9], VAR_ALPHA);
+                else $tmp = $field[$i][0] . $tmp . ') ' . $field[$i][8];
             }
         } else {
             if (isset($field[$i])) {
@@ -254,6 +254,42 @@ function BalanceBrackets(&$s_sql) {
 }
 
 /**
+ * This function decides if the Grouped view can use the ac_acid_event table instead of acid_event
+ * We can only use it when the timestamp criteria is by entire days, or if it's not present at all
+ *
+ * @return boolean
+ */
+function time_can_use_ac($field)
+{
+    $use_ac = TRUE;
+    
+    if (is_array($field))
+    {
+        foreach ($field as $time_criteria)
+        {
+            $operator = $time_criteria[1];
+            $hour     = $time_criteria[5];
+            $minute   = $time_criteria[6];
+            $second   = $time_criteria[7];
+
+            if (($operator == '>' || $operator == '>=' || $operator == '=' || $operator == '!=')
+                    && ($hour > 0 || $minute > 0 || $second > 0))
+            {
+                $use_ac = FALSE;
+            }
+
+            if (($operator == '<' || $operator == '<=')
+                    && ($hour != 23 || $minute != 59 || $second != 59))
+            {
+                $use_ac = FALSE;
+            }
+        }
+    }
+
+    return $use_ac;
+}
+
+/**
  * This function replaces the parenthesis characters in a string by literals
  * 
  * @param string $str
@@ -261,8 +297,8 @@ function BalanceBrackets(&$s_sql) {
  */
 function parenthesis_encode($str)
 {
-    $str = str_replace('(', 'PARENTHESIS_ESCAPE_LEFT',  $str);
-    $str = str_replace(')', 'PARENTHESIS_ESCAPE_RIGHT', $str);
+    $str = str_replace('(', 'PARENTHESIS#ESCAPE#LEFT',  $str);
+    $str = str_replace(')', 'PARENTHESIS#ESCAPE#RIGHT', $str);
     
     return $str;
 }
@@ -274,8 +310,8 @@ function parenthesis_encode($str)
  */
 function parenthesis_decode($str)
 {
-    $str = str_replace('PARENTHESIS_ESCAPE_LEFT', '(',  $str);
-    $str = str_replace('PARENTHESIS_ESCAPE_RIGHT', ')', $str);
+    $str = str_replace('PARENTHESIS#ESCAPE#LEFT', '(',  $str);
+    $str = str_replace('PARENTHESIS#ESCAPE#RIGHT', ')', $str);
 
     return $str;
 }
@@ -308,7 +344,7 @@ hex <=> ascii.
     }
     return ""; /* should be unreachable */
 }
-function DataRows2sql($field, $cnt, $data_encode, &$s_sql) {
+function DataRows2sql($field, $cnt, $data_encode, &$s_sql, $conn_aux) {
     $tmp2 = "";
     //print "cnt para $field: $cnt<br>";
     for ($i = 0; $i < $cnt; $i++) {
@@ -320,7 +356,15 @@ function DataRows2sql($field, $cnt, $data_encode, &$s_sql) {
                 "ascii",
                 "hex"
             );
-            $search_str  = str_replace("'","\'",FormatPayload($field[$i][2], $data_encode));
+            
+            /*
+             * Prepare search string:
+             * - html_entity_decode() The string here is with htmlentities, chars like &quot; must be "
+             * - escape_sql()
+             */
+            $search_str = FormatPayload($field[$i][2], $data_encode);
+            $search_str = html_entity_decode($search_str, ENT_QUOTES, 'ISO-8859-1');
+            $search_str = escape_sql($search_str, $conn_aux);
             
             $and_str = preg_split("/\s+AND\s+/",$search_str);
             $ands = array();
@@ -715,16 +759,27 @@ function SaveCriteriaReportData($data) {
 //    return $ids;
 //}
 /********************************************************************************************/
-function QueryOssimSignature($q, $cmd, $cmp) {
+function QueryOssimSignature($q, $cmd, $cmp, $conn_aux) {
     //GLOBAL $db;
     $ids = "";
+    
+    /*
+     * Prepare search string:
+    * - html_entity_decode() The string here is with htmlentities, chars like &quot; must be "
+    * - escape_sql()
+    */
+    $q = html_entity_decode($q, ENT_QUOTES, 'ISO-8859-1');
+    $q = escape_sql($q, $conn_aux);
+    
     if (preg_match("/.* OR .*|.* AND .*/",$q)) {
         $or_str = ($cmd == "=") ? "' OR plugin_sid.name = '" : "%' OR plugin_sid.name LIKE '%";
         $and_str = ($cmd == "=") ? "' AND plugin_sid.name = '" : "%' AND plugin_sid.name LIKE '%";
         $q = str_replace(" OR ",$or_str,$q);
         $q = str_replace(" AND ",$and_str,$q);
     }
+    
     $q = parenthesis_encode($q);
+    
     $op = ($cmd == "=") ? "plugin_sid.name = '$q'" : "plugin_sid.name LIKE '%" . $q . "%'";
     // apply ! operator
     $op = str_replace(" = '!"," != '",$op);
@@ -905,7 +960,7 @@ function ProcessCriteria() {
     $rawip_field_cnt = $cs->criteria['rawip_field']->GetFormItemCnt();
     $data = $cs->criteria['data']->criteria;
     $data_cnt = $cs->criteria['data']->GetFormItemCnt();
-    $cs->criteria['data']->data_encode; //$data_encode[0] = "ascii"; $data_encode[1] = "hex";
+    $data_encode = $cs->criteria['data']->data_encode; //$data_encode[0] = "ascii"; $data_encode[1] = "hex";
     /* OSSIM */
     $ossim_type = $cs->criteria['ossim_type']->criteria;
     $ossim_priority = $cs->criteria['ossim_priority']->criteria;
@@ -955,8 +1010,11 @@ function ProcessCriteria() {
     //echo "User Data:$userdata";
     $rpl = array('EQ'=>'=','NE'=>'!=','LT'=>'<','LOE'=>'<=','GT'=>'>','GOE'=>'>=');
     if (trim($userdata[2]) != "")
-    {
-        $_q             = parenthesis_encode(escape_sql($userdata[2], $conn_aux));
+    {        
+        $q_like         = ($userdata[1] == 'like') ? TRUE : FALSE;
+        
+        $_q             = parenthesis_encode(escape_sql($userdata[2], $conn_aux, $q_like));
+
         $sql            = "SELECT acid_event.*, HEX(acid_event.ctx) AS ctx, HEX(acid_event.src_host) AS src_host, 
                                   HEX(acid_event.dst_host) AS dst_host, HEX(acid_event.src_net) AS src_net, 
                                   HEX(acid_event.dst_net) AS dst_net,extra_data.* 
@@ -1070,7 +1128,7 @@ function ProcessCriteria() {
             $pidsid = preg_split("/[\s;]+/",$sig[1]);
             $tmp_meta = $tmp_meta." AND (acid_event.plugin_id=".intval($pidsid[0])." AND acid_event.plugin_sid=".intval($pidsid[1]).")";
         } else { // free string
-            $sig_ids = QueryOssimSignature($sig[1], $sig[0], $sig[2]);
+            $sig_ids = QueryOssimSignature($sig[1], $sig[0], $sig[2], $conn_aux);
             $sig_join = true;
             $tmp_meta = $tmp_meta . " AND ($sig_ids)";
             //if ($sig_ids != "")
@@ -1138,6 +1196,8 @@ function ProcessCriteria() {
     if (DateTimeRows2sql($time, $time_cnt, $time_meta) == 0) $cs->criteria['time']->SetFormItemCnt(0);
     $criteria_sql = $criteria_sql . $tmp_meta;
 	
+    $use_ac = (time_can_use_ac($real_time)) ? $use_ac : FALSE;
+    
     /* ********************** PERMS ************************ */
     // Allowed CTX's y Asset Filter
     $perms_sql = "";
@@ -1210,9 +1270,9 @@ function ProcessCriteria() {
                 }
             }
             /* if have chosen the address type to be both source and destination */
-            if (ereg("ip_both", $tmp)) {
-                $tmp_src = ereg_replace("ip_both", "ip_src", $tmp);
-                $tmp_dst = ereg_replace("ip_both", "ip_dst", $tmp);
+            if (preg_match("/ip_both/", $tmp)) {
+                $tmp_src = preg_replace("/ip_both/", "ip_src", $tmp);
+                $tmp_dst = preg_replace("/ip_both/", "ip_dst", $tmp);
                 if ($ip_addr[$i][2] == '=') $tmp = "(" . $tmp_src . ') OR (' . $tmp_dst . ')';
                 else $tmp = "(" . $tmp_src . ') AND (' . $tmp_dst . ')';
             }
@@ -1347,7 +1407,7 @@ function ProcessCriteria() {
     }
     /* ********************** Payload Criteria ***************************************** */
     //$tmp_payload = "";
-    if (DataRows2sql($data, $data_cnt, $data_encode, $tmp_payload) == 0) $cs->criteria['data']->SetFormItemCnt(0);
+    if (DataRows2sql($data, $data_cnt, $data_encode, $tmp_payload, $conn_aux) == 0) $cs->criteria['data']->SetFormItemCnt(0);
     else $use_ac = false;
 	//echo "<br><br><br>";
 	//print_r($data);

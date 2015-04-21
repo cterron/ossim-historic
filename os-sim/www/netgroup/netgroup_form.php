@@ -67,7 +67,7 @@ if ($id != '')
 		$descr        = $net_group->get_descr();
 		$threshold_c  = $net_group->get_threshold_c();
 		$threshold_a  = $net_group->get_threshold_a();
-		$obj_networks = $net_group->get_networks($conn);
+		$obj_networks = Net_group::get_networks($conn, $net_group->get_id());
 			
 		foreach($obj_networks as $net) 
 		{
@@ -558,7 +558,7 @@ else
                         		
                         		<td class="left noborder" valign="top">
                         			<table class="transparent">
-                        				<tr><td class="nobborder"><?php echo _('Select here the <strong>Networks</strong>') ?>:</td></tr>
+                        				<tr><td class="nobborder"><?php echo _('Select <strong>networks</strong> below') ?>:</td></tr>
                         				<tr>
                         					<td class="nobborder">
                         						<div id="container" style="clear: both;"></div>

@@ -1,0 +1,12 @@
+[properties]
+name=Redis dump.rdb size
+description=Checking Redis Health Status by computing /var/lib/redis/dump.rdb size
+category=alienvault,system
+type=command
+command=stat -c%s /var/lib/redis/dump.rdb
+
+[Redis Dump Size]
+pattern=^(\d+)$
+conditions=@int@:<>0
+warning=There are some problems regarding redis since dump.rdb size = 0
+advice=Review redis configuration

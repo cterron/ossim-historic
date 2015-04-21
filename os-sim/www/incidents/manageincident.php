@@ -122,7 +122,7 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 	
 	//Validation array
 	$validate_1 = array (
-			'title'                => array('validation' => "OSS_ALPHA, OSS_SPACE, OSS_PUNC_EXT, '\>'",              'e_message' => 'illegal:' . _('Title')),
+			'title'                => array('validation' => "OSS_ALPHA, OSS_SPACE, OSS_PUNC_EXT, '\<\>'",              'e_message' => 'illegal:' . _('Title')),
 			'priority'             => array('validation' => 'OSS_DIGIT',                                             'e_message' => 'illegal:' . _('Priority')),
 			'type'                 => array('validation' => 'OSS_ALPHA, OSS_PUNC_EXT, OSS_SPACE, OSS_SCORE',         'e_message' => 'illegal:' . _('Type')),
 			'transferred_user'     => array('validation' => 'OSS_USER_2, OSS_NULLABLE',                              'e_message' => 'illegal:' . _('User')),
@@ -181,7 +181,7 @@ if ($action == 'newincident' || $action == 'editincident') /* Create or modify a
 			'port'         => array('validation' => 'OSS_PORT, OSS_NULLABLE',                                     'e_message' => 'illegal:' . _('Port')),
 			'risk'         => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Risk')),
 			'nessus_id'    => array('validation' => 'OSS_LETTER, OSS_DIGIT, OSS_PUNC, OSS_SPACE, OSS_NULLABLE',   'e_message' => 'illegal:' . _('Nessus/OpenVas ID')),
-			'description'  => array('validation' => "OSS_NULLABLE, OSS_AT, OSS_TEXT, OSS_PUNC_EXT, '~'",          'e_message' => 'illegal:' . _('Description'))
+			'description'  => array('validation' => "OSS_NULLABLE, OSS_AT, OSS_TEXT, OSS_PUNC_EXT, '\<\>~'",          'e_message' => 'illegal:' . _('Description'))
        );
 	}
 	elseif ($ref == 'Custom')
@@ -687,16 +687,16 @@ elseif ($action == 'delincident') /* Remove an incident */
 elseif ($action == 'newticket') /* Create a new ticket */
 {
 	$validate = array (
-		'incident_id'          => array('validation' => 'OSS_DIGIT',                                            'e_message' => 'illegal:' . _('Incident ID')),
-		'prev_prio'            => array('validation' => 'OSS_DIGIT',                                            'e_message' => 'illegal:' . _('Priority')),
-		'priority'             => array('validation' => 'OSS_DIGIT',                                            'e_message' => 'illegal:' . _('Priority')),
-		'prev_status'          => array('validation' => 'OSS_ALPHA',                                            'e_message' => 'illegal:' . _('Status')),
-		'status'               => array('validation' => 'OSS_ALPHA',                                            'e_message' => 'illegal:' . _('Status')),
-		'transferred_user'     => array('validation' => 'OSS_USER, OSS_NULLABLE',                               'e_message' => 'illegal:' . _('User')),
-		'transferred_entity'   => array('validation' => 'OSS_HEX, OSS_NULLABLE',                                'e_message' => 'illegal:' . _('Entity')),
-		'description'          => array('validation' => "OSS_TEXT, OSS_PUNC_EXT, '\<\>\¡\¿\~'",				    'e_message' => 'illegal:' . _('Description')),
-		'action_txt'           => array('validation' => "OSS_TEXT, OSS_PUNC_EXT, '\<\>\¡\¿\~', OSS_NULLABLE", 	'e_message' => 'illegal:' . _('Action')),
-		'tags[]'               => array('validation' => 'OSS_DIGIT, OSS_NULLABLE',                              'e_message' => 'illegal:' . _('Tags'))
+		'incident_id'          => array('validation' => 'OSS_DIGIT',                    'e_message' => 'illegal:' . _('Incident ID')),
+		'prev_prio'            => array('validation' => 'OSS_DIGIT',                    'e_message' => 'illegal:' . _('Priority')),
+		'priority'             => array('validation' => 'OSS_DIGIT',                    'e_message' => 'illegal:' . _('Priority')),
+		'prev_status'          => array('validation' => 'OSS_ALPHA',                    'e_message' => 'illegal:' . _('Status')),
+		'status'               => array('validation' => 'OSS_ALPHA',                    'e_message' => 'illegal:' . _('Status')),
+		'transferred_user'     => array('validation' => 'OSS_USER, OSS_NULLABLE',       'e_message' => 'illegal:' . _('User')),
+		'transferred_entity'   => array('validation' => 'OSS_HEX, OSS_NULLABLE',        'e_message' => 'illegal:' . _('Entity')),
+		'description'          => array('validation' => "OSS_ALL",				        'e_message' => 'illegal:' . _('Description')),
+		'action_txt'           => array('validation' => "OSS_ALL, OSS_NULLABLE", 	    'e_message' => 'illegal:' . _('Action')),
+		'tags[]'               => array('validation' => 'OSS_DIGIT, OSS_NULLABLE',      'e_message' => 'illegal:' . _('Tags'))
 	);
 			
 	if (GET('ajax_validation') == TRUE)
@@ -756,30 +756,9 @@ elseif ($action == 'newticket') /* Create a new ticket */
 		
 		
 		//Cleaning the description and action fields
-		$description = Util::htmlentities(POST('description'), ENT_NOQUOTES);
-		$action      = Util::htmlentities(POST('action_txt'), ENT_NOQUOTES);
+		$description = POST('description');
+		$action      = POST('action_txt');
 		
-		/*			
-					 
-        $pattern     =  array("/&#147;|&#148;/", "/&acute;|`/");
-        $replacement =  array('"', "'");
-        
-		$description = preg_replace($pattern, $replacement, $description);
-		$action      = preg_replace($pattern, $replacement, $action);
-        
-		
-		DEPRECATED
-		$description = html_entity_decode($description, ENT_QUOTES, 'ISO-8859-1');
-		$action      = html_entity_decode($action, ENT_QUOTES, 'ISO-8859-1');
-		
-		$description = Incident_ticket::clean_html_tags($description);
-        $action      = Incident_ticket::clean_html_tags($action);
-		
-				           
-        $description = clean_inc_ic($description, OSS_TEXT, OSS_PUNC_EXT, "\t", "\>", "\<");
-        $action      = clean_inc_ic($action,      OSS_TEXT, OSS_PUNC_EXT, "\t", "\>", "\<");
-        
-        */
         
 		$_POST['description'] = $description;
 		$_POST['action_txt']  = $action;

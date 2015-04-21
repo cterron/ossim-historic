@@ -40,7 +40,7 @@ $validate = array (
 	'id'    	  => array('validation'=>'OSS_ALPHA',                              'e_message' => 'illegal:' . _('Network Group ID')),
 	'ctx'    	  => array('validation'=>'OSS_ALPHA',                              'e_message' => 'illegal:' . _('Entity')),
 	'ngname'      => array('validation'=>'OSS_ALPHA, OSS_PUNC',                    'e_message' => 'illegal:' . _('Group Name')),
-	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_AT, OSS_TEXT',         'e_message' => 'illegal:' . _('Description')),
+	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_ALL',                  'e_message' => 'illegal:' . _('Description')),
 	'nets[]'      => array('validation'=>'OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT', 'e_message' => 'illegal:' . _('Networks')),
 	'rrd_profile' => array('validation'=>'OSS_ALPHA, OSS_NULLABLE, OSS_PUNC',      'e_message' => 'illegal:' . _('RRD Profile')),
 	'threshold_a' => array('validation'=>'OSS_DIGIT',                              'e_message' => 'illegal:' . _('Threshold A')),

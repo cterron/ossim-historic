@@ -203,7 +203,7 @@ class Software
 
         if (!$rs)
         {
-        	Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
 
         // Has LIMIT
@@ -218,15 +218,15 @@ class Software
 
         while (!$rs->EOF)
         {
-        	$this->software[$rs->fields['cpe']] = array(
-        	    'cpe'    => $rs->fields['cpe'],
+            $this->software[$rs->fields['cpe']] = array(
+                'cpe'    => $rs->fields['cpe'],
                 'banner' => $rs->fields['banner'],
                 'name'   => $rs->fields['name'],
                 'line'   => $rs->fields['line'],
                 'plugin' => $rs->fields['plugin']
             );
 
-        	$rs->MoveNext();
+            $rs->MoveNext();
         }
     }
 
@@ -291,9 +291,9 @@ class Software
 
         $vendors = array();
 
-        $sql  = "SELECT DISTINCT substring_index(cpe, ':', 3) as cpe, vendor FROM software_cpe WHERE plugin!='' GROUP BY vendor ORDER BY vendor";
+        $query  = "SELECT DISTINCT substring_index(cpe, ':', 3) as cpe, vendor FROM software_cpe WHERE plugin!='' GROUP BY vendor ORDER BY vendor";
 
-        $rs = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
+        $rs = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
 
         if (!$rs)
         {
@@ -328,10 +328,10 @@ class Software
 
         $models  = array();
 
-        $sql   = "SELECT DISTINCT substring_index(cpe, ':', 4) as mcpe, name FROM software_cpe WHERE cpe LIKE ? AND plugin!='' GROUP BY mcpe ORDER BY name";
+        $query = "SELECT DISTINCT substring_index(cpe, ':', 4) as mcpe, name FROM software_cpe WHERE cpe LIKE ? AND plugin!='' GROUP BY mcpe ORDER BY name";
         $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . '%' );
 
-        $rs = ($cache) ? $conn->CacheExecute($sql, $param) : $conn->Execute($sql, $param);
+        $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
 
         if (!$rs)
         {
@@ -375,10 +375,10 @@ class Software
 
         $versions  = array();
 
-        $sql   = "SELECT DISTINCT cpe, version FROM software_cpe WHERE cpe LIKE ? AND plugin!='' ORDER BY version";
+        $query = "SELECT DISTINCT cpe, version FROM software_cpe WHERE cpe LIKE ? AND plugin!='' ORDER BY version";
         $param = array( preg_replace("/\/[aho]/",'/_',$cpe) . '%' );
 
-        $rs = ($cache) ? $conn->CacheExecute($sql, $param) : $conn->Execute($sql, $param);
+        $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
 
         if (!$rs)
         {
@@ -395,6 +395,9 @@ class Software
         return $versions;
     }
 
+
+    /**
+    /**
     /**
     * This function return documentation link based on vendor and model
     *
@@ -413,10 +416,10 @@ class Software
 
         $link = '';
 
-        $sql   = "SELECT link FROM software_cpe_links WHERE vendor=? AND ? like CONCAT(model,'%')";
+        $query = "SELECT link FROM software_cpe_links WHERE vendor=? AND ? like CONCAT(model,'%')";
         $param = array($vendor,$model);
 
-        $rs = ($cache) ? $conn->CacheExecute($sql, $param) : $conn->Execute($sql, $param);
+        $rs = ($cache) ? $conn->CacheExecute($query, $param) : $conn->Execute($query, $param);
 
         if (!$rs)
         {
@@ -425,25 +428,25 @@ class Software
 
         if (!$rs->EOF)
         {
-        	$link    = $rs->fields['link'];
-        	$default = FALSE;
+            $link    = $rs->fields['link'];
+            $default = FALSE;
         }
         else
         {
-        	// Get default documentation link
-	        $sql = "SELECT link FROM software_cpe_links WHERE vendor='' AND model=''";
+            // Get default documentation link
+            $query = "SELECT link FROM software_cpe_links WHERE vendor='' AND model=''";
 
-	        $rs  = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
+            $rs  = ($cache) ? $conn->CacheExecute($query) : $conn->Execute($query);
 
-	        if (!$rs)
-	        {
-	            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-	        }
-	        if (!$rs->EOF)
-			{
-	        	$link    = $rs->fields['link'];
-	        	$default = TRUE;
-	        }
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+            if (!$rs->EOF)
+            {
+                $link    = $rs->fields['link'];
+                $default = TRUE;
+            }
         }
 
         return array($link, $default);
@@ -464,7 +467,7 @@ class Software
     public static function get_vmv_by_cpe($conn, $cpe, $cache = FALSE)
     {
         Ossim_db::check_connection($conn);
-                       
+
         $vmv = array();
         
         $query  = "SELECT * FROM software_cpe WHERE cpe LIKE ? ORDER BY cpe DESC LIMIT 1";
@@ -495,7 +498,6 @@ class Software
                
         return $vmv; 
     }
-        
 }
 
 /* End of file software.inc */

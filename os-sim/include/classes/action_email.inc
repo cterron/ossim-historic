@@ -59,16 +59,20 @@
 */
 
 
-class Action_email 
+class Action_email
 {
     public $action_id;
+
     public $from;
+
     public $to;
+
     public $subject;
+
     public $message;
-	
-	
-    function __construct($action_id, $from, $to, $subject, $message) 
+
+
+    public function __construct($action_id, $from, $to, $subject, $message)
     {
         $this->action_id = $action_id;
         $this->from      = $from;
@@ -76,116 +80,115 @@ class Action_email
         $this->subject   = $subject;
         $this->message   = $message;
     }
-	
-	
-    function get_action_id() 
+
+
+    public function get_action_id()
     {
         return $this->action_id;
     }
-	
-	
-    function get_from() 
+
+
+    public function get_from()
     {
         return $this->from;
     }
-	
-	
-    function get_to() 
+
+
+    public function get_to()
     {
         return $this->to;
     }
-	
-	
-    function get_subject() 
+
+
+    public function get_subject()
     {
         return $this->subject;
     }
-	
-	
-    function get_message() 
+
+
+    public function get_message()
     {
         return $this->message;
     }
-	
-	
-    function get_list($conn, $args = "") 
+
+
+    public static function get_list($conn, $args = '')
     {
         $query = ossim_query("SELECT *, HEX(action_id) as action_id FROM action_email where 1=1 $args");
-        
-        if (!$rs = & $conn->Execute($query)) 
+
+        $rs = $conn->Execute($query);
+
+        if (!$rs)
         {
-            print $conn->ErrorMsg();
-        } 
-        else 
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        }
+        else
         {
             $list = array();
-            
-            while (!$rs->EOF) 
+
+            while (!$rs->EOF)
             {
-                $list[] = new Action_email($rs->fields["action_id"], $rs->fields["_from"], $rs->fields["_to"], $rs->fields["subject"], $rs->fields["message"]);
-                
+                $list[] = new self($rs->fields["action_id"], $rs->fields["_from"], $rs->fields["_to"], $rs->fields["subject"], $rs->fields["message"]);
+
                 $rs->MoveNext();
             }
         }
+
         return $list;
     }
-	
-	
-    function insert($conn, $id, $from, $to, $subject, $message) 
+
+
+    public static function insert($conn, $id, $from, $to, $subject, $message)
     {
-        $sql = "INSERT INTO action_email (action_id, _from, _to, subject, message)
-                VALUES (UNHEX(?), ?, ?, ?, ?)";
+        $query = "INSERT INTO action_email (action_id, _from, _to, subject, message)
+                    VALUES (UNHEX(?), ?, ?, ?, ?)";
         $params = array(
-			$id,
+            $id,
             $from,
             $to,
             $subject,
             $message
         );
-        
-        if ($conn->Execute($sql, $params) === false) 
+
+        if ($conn->Execute($query, $params) === FALSE)
         {
-            print 'error inserting: ' . $conn->ErrorMsg() . '<BR>';
-            exit;
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
     }
-	
-	
-    function update($conn, $id, $from, $to, $subject, $message) 
+
+
+    public static function update($conn, $id, $from, $to, $subject, $message)
     {
-        $sql = "UPDATE action_email SET _from = ?, _to = ?, subject = ?, message = ? 
-                WHERE action_id = UNHEX(?)";
-                
+        $query = "REPLACE INTO action_email (action_id, _from, _to, subject, message) VALUES (UNHEX(?), ?, ?, ?, ?)";
+
         $params = array(
+            $id,
             $from,
             $to,
             $subject,
             $message,
-            $id
         );
-        
-        if ($conn->Execute($sql, $params) === false) 
+
+        if ($conn->Execute($query, $params) === FALSE)
         {
-            print 'error updating: ' . $conn->ErrorMsg() . '<BR>';
-            exit;
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-        
     }
-	
-	
-	function delete($conn, $id) 
-	{
-        $sql = "DELETE FROM action_email WHERE action_id = UNHEX(?)";
+
+
+    public static function delete($conn, $id)
+    {
+        $query = "DELETE FROM action_email WHERE action_id = UNHEX(?)";
         $params = array(
             $id
         );
-        
-        if ($conn->Execute($sql, $params) === false) 
+
+        if ($conn->Execute($query, $params) === FALSE)
         {
-            print _("error deleting")." ($sql): " . $conn->ErrorMsg() . '<BR>';
-            exit;
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
-		
     }
 }
 
+/* End of file action_email.inc */
+/* Location: ../include/classes/action_email.inc */

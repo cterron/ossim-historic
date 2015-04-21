@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 INSERT IGNORE INTO product_type (id, name) VALUES (1, 'Alarm');
 INSERT IGNORE INTO product_type (id, name) VALUES (2, 'Anomaly Detection');
 INSERT IGNORE INTO product_type (id, name) VALUES (3, 'Antivirus');

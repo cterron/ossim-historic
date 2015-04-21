@@ -495,7 +495,7 @@ class Av_sensor extends Av_component
             $this->get_priority(),
             $this->get_port(),
             $this->get_tzone(),
-            $this->get_descr(),
+            $this->get_descr(FALSE),
             implode(',', array_keys($entities)),
             $properties['version'],
             $properties['has_nagios'],
@@ -560,7 +560,7 @@ class Av_sensor extends Av_component
             }
             catch(Exception $e)
             {
-                Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
             }
         }
 
@@ -1432,7 +1432,7 @@ class Av_sensor extends Av_component
     *
     * @return boolean
     */
-    public function is_ntop_wrapper($url)
+    public static function is_ntop_wrapper($url)
     {
         $data = self::get_ntop_link_content($url);
 
@@ -1565,11 +1565,6 @@ class Av_sensor extends Av_component
         
         $client = new Alienvault_client();
 
-        //Change timeout
-        $client_conn = $client->get_conn();
-        $client_conn->set_timeout(300);
-        $client->set_conn($client_conn);
-
         $response  = $client->system()->set_component($this->get_ip(), $this->get_rpass());
         $response  = @json_decode($response, TRUE);
         
@@ -1592,7 +1587,13 @@ class Av_sensor extends Av_component
         }
          
         $rs->Close();
-
+        
+        //Now we change the sensor name to the system name
+        if ($response['data']['hostname'] != '')
+        {  
+            $this->set_name($response['data']['hostname']);
+        }
+        
         return TRUE;
     }
 
@@ -1761,7 +1762,14 @@ class Av_sensor extends Av_component
         $hosts = array();
         $nets  = array();
 
-        $params = array($id);
+        $params = (!is_array($id)) ? array($id) : $id;
+        
+        $sensor_list = '';
+        foreach ($params as $id)
+        {
+            $sensor_list .= 'UNHEX(?),';
+        }
+        $sensor_list = rtrim($sensor_list, ',');
 
         //Nets
         $q_from  = 'sensor, net_sensor_reference';
@@ -1771,10 +1779,10 @@ class Av_sensor extends Av_component
 
         $query = "SELECT HEX(net_sensor_reference.net_id) AS net_id
             FROM $q_from
-            WHERE sensor.id = UNHEX(?) AND
+            WHERE sensor.id in ( $sensor_list ) AND
             sensor.id = net_sensor_reference.sensor_id $perms_where";
 
-        $rs = $conn->Execute($query, $params);
+        $rs = $conn->Execute($query, $params); 
 
         if (!$rs)
         {
@@ -1797,7 +1805,7 @@ class Av_sensor extends Av_component
 
         $query = "SELECT HEX(host_sensor_reference.host_id) AS host_id
             FROM $q_from
-            WHERE sensor.id = UNHEX(?) AND
+            WHERE sensor.id in ( $sensor_list ) AND
             sensor.id = host_sensor_reference.sensor_id $perms_where";
 
         $rs = $conn->Execute($query, $params);
@@ -2074,7 +2082,7 @@ class Av_sensor extends Av_component
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
 
@@ -2538,7 +2546,7 @@ class Av_sensor extends Av_component
                 'name'      => $rs->fields['name'],
                 'priority'  => $rs->fields['priority'],
                 'port'      => $rs->fields['port'],
-                'descr'     => $rs->fields['descr'],
+                'descr'     => Util::htmlentities($rs->fields['descr']),
                 'tzone'     => $rs->fields['tzone']
             );
 
@@ -2597,7 +2605,7 @@ class Av_sensor extends Av_component
                 'icon'       => NULL,
                 'priority'   => $rs->fields['priority'],
                 'port'       => $rs->fields['port'],
-                'descr'      => $rs->fields['descr'],
+                'descr'      => Util::htmlentities($rs->fields['descr']),
                 'tzone'      => $rs->fields['tzone'],
                 'status'     => $rs->fields['connect'],
                 'properties' => array(
@@ -2658,7 +2666,7 @@ class Av_sensor extends Av_component
                 'icon'       => NULL,
                 'priority'   => $rs->fields['priority'],
                 'port'       => $rs->fields['port'],
-                'descr'      => $rs->fields['descr'],
+                'descr'      => Util::htmlentities($rs->fields['descr']),
                 'tzone'      => $rs->fields['tzone'],
                 'status'     => $rs->fields['connect'],
                 'properties' => array(
@@ -2768,7 +2776,7 @@ class Av_sensor extends Av_component
                 'icon'       => NULL,
                 'priority'   => $rs->fields['priority'],
                 'port'       => $rs->fields['port'],
-                'descr'      => $rs->fields['descr'],
+                'descr'      => Util::htmlentities($rs->fields['descr']),
                 'tzone'      => $rs->fields['tzone'],
                 'status'     => $rs->fields['connect'],
                 'properties' => array(

@@ -39,27 +39,29 @@ Session::logcheck('analysis-menu', 'IncidentsOpen');
 
 require_once 'incident_common.php';
 
-$db   = new ossim_db();
-$conn = $db->connect();
-
-
-//Timezone
-$tz     = Util::get_timezone();
-$timetz = gmdate("U")+(3600*$tz);
  
 $edit         = (GET('action') == 'edit') ? TRUE : FALSE;
 $ref          =  GET('ref');
 $custom_type  =  GET('type');
 
 
-ossim_valid($ref , OSS_LETTER, 'illegal:' . _("Reference"));
-ossim_valid($custom_type, OSS_ALPHA, OSS_SPACE, OSS_NULLABLE, 'illegal:' . _("Custom type"));
+ossim_valid($ref,           OSS_LETTER,                             'illegal:' . _("Reference"));
+ossim_valid($custom_type,   OSS_ALPHA, OSS_SPACE, OSS_NULLABLE,     'illegal:' . _("Custom type"));
 
 if (ossim_error()) 
 {
 	echo ossim_error();
 	exit();
 }
+
+
+$db   = new ossim_db();
+$conn = $db->connect();
+
+//Timezone
+$tz     = Util::get_timezone();
+$timetz = gmdate("U")+(3600*$tz);
+
 
 //Edit incident
 if ($edit) 
@@ -326,7 +328,7 @@ if (is_array($validation_errors) && !empty($validation_errors))
 	exit();
 }
 
-$users    = Session::get_users_to_assign($conn);
+$users    = Session::get_users_to_assign($conn, 'ORDER BY name ASC');
 $entities = Session::get_entities_to_assign($conn);
 
 $form_url = "manageincident.php?action=$action&ref=$ref&incident_id=$incident_id";
@@ -348,16 +350,15 @@ if ($ref == 'Custom' && !empty($custom_type))
 	<script type="text/javascript" src="../js/jquery.min.js"></script>
 	<script type="text/javascript" src="../js/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="../js/jquery.dynatree.js"></script>
-    <!--<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>-->
-	<script type="text/javascript" src=" https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>
+	<script type="text/javascript" src="../js/utils.js"></script>
+
+	<script type="text/javascript" src="../js/av_map.js.php"></script>
 	<script type="text/javascript" src="../js/jquery.autocomplete_geomod.js"></script>
 	<script type="text/javascript" src="../js/geo_autocomplete.js"></script>
-	<script type="text/javascript" src="../js/av_map.js.php"></script>
 	
 	<script type="text/javascript" src="../js/notification.js"></script>
     <script type="text/javascript" src="../js/token.js"></script>
 	<script type="text/javascript" src="../js/ajax_validator.js"></script>
-	<script type="text/javascript" src="../js/utils.js"></script>
 	<script type="text/javascript" src="../js/messages.php"></script>
 	<script type="text/javascript" src="../js/jquery.tipTip.js"></script>
 	

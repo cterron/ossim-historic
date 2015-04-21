@@ -184,11 +184,24 @@ class Plugin(Conf):
     _MAP_REPLACE_TRANSLATIONS = 4
     _MAP_REPLACE_USER_FUNCTIONS = 8
     _MAP_REPLACE_CUSTOM_USER_FUNCTIONS = 16
-    _MAP_REPLACE_CONCAT = 32 #00100000
+    _MAP_REPLACE_CONCAT = 32      #00100000
+    _MAP_REPLACE_TRANSLATE2 = 64  #1000000
+
+    #Regex to check whether is a optional translate section. 
+    __regexIsTranslationSection = re.compile("translation-\S+", re.UNICODE)
+    __regex_check_for_translate2_function = re.compile("\{translate2\((?P<variable>\$[^\)]+),(?P<translate_section>\$[^\)]+)\)\}", re.UNICODE)
+
     def rules(self):
         rules = {}
         for section in sorted(self.sections()):
-            if section.lower() not in Plugin.SECTIONS_NOT_RULES :
+            regexp = self.get(section,"regexp")
+            if self.get("config","source") == "log" and (regexp is None or regexp == ""):
+                continue
+            if Plugin.__regexIsTranslationSection.match(section.lower()) is not None:
+                if section.lower() not in Plugin.SECTIONS_NOT_RULES:
+                    logger.info("Loading new translation section... %s" % section.lower())
+                    Plugin.SECTIONS_NOT_RULES.append(section.lower())
+            if section.lower() not in Plugin.SECTIONS_NOT_RULES:
                 rules[section] = self.hitems(section,True)
 
         return rules
@@ -608,13 +621,53 @@ class Plugin(Conf):
         if re.match("\$CONCAT\((.*)\)",value):
             ret = self._MAP_REPLACE_CONCAT
         return ret
+
+
+    def __replace_translate2_function(self,value,groups):
+        """Replaces the value for the value given in the section.
+        """
+        replaced_value =""
+        m =  self.__regex_check_for_translate2_function.match(value)
+        if m:
+            mdict = m.groupdict()
+            if 'variable' in mdict and 'translate_section' in mdict:
+                variable = mdict['variable'].replace('$','')
+                translate_section = mdict['translate_section'].replace('$','')
+                if variable in groups:
+                    if self.has_section(translate_section):
+                        if self.has_option(translate_section,groups[variable]):
+                            replaced_value = self.get(translate_section, groups[variable])
+                            return replaced_value
+                        else:
+                            logger.warning("Translate2 variable(%s) not found on the translate section %s" % (groups[variable],translate_section))
+                    else:
+                        logger.warning("Translate2 translation_section(%s) not found" % translate_section)
+        replaced_value = value
+
+
+    def __check_for_translate2_function(self,value):
+        """Check whether we need to make a translate2 replacement or not. 
+        @param value: the string in the rule
+        """
+        ret = 0
+        if Plugin.__regex_check_for_translate2_function.match(value) is not None:
+            ret = self._MAP_REPLACE_TRANSLATE2
+        return ret
+
+
+
     def replace_value_assess(self, value):
         ret = self._replace_variables_assess(value)
         ret |= self._replace_translations_assess(value)
         ret |= self._replace_user_functions_assess(value)
         ret |= self._replace_custom_user_functions_assess(value)
         ret |= self.__checkReplaceConcatFunction(value)
+        ret |= self.__check_for_translate2_function(value)
         return ret
+
+
+
+
 
 
     # replace config values matching {$X} with self.groups["X"]
@@ -623,6 +676,8 @@ class Plugin(Conf):
 
         # do we need to replace anything?
         if replace > 0:
+            if replace & self._MAP_REPLACE_TRANSLATE2:
+                value = self.__replace_translate2_function(value, groups)
 
             # replace variables
             if replace & 3:

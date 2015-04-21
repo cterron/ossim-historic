@@ -605,6 +605,15 @@ div.bballoon:hover span.bottom
     border: solid 1px #FC5353 !important;
 }
 
+.error_summary
+{
+    overflow:hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
 .c_av_tooltip
 {
     position:relative;
@@ -624,6 +633,11 @@ div.bballoon:hover span.bottom
 {
     color: #FCFCFC !important;
     background-color: #E25F53;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 500px;
 }
 
 #tiptip_holder.tip_bottom.av_red_tip #tiptip_arrow_inner
@@ -754,41 +768,37 @@ div.bballoon:hover span.bottom
 *************        Breadcrumb        **************
 *****************************************************/
 
-
-.breadcrumb_back 
+.av_breadcrumb
 {
-    padding: 4px 0px;
-    margin: 0 0 0px 15px;
+    padding: 5px 0px;
+    position: relative;
 }
 
-.breadcrumb_item 
+.av_breadcrumb.with_menu
 {
-    float:left;
+    margin: 10px 0 15px 0;
+}
+
+.av_breadcrumb_item 
+{
+    float: left;
     font-size: 14px;
 }
 
-.breadcrumb_separator 
-{
-    float:left;
-    margin: 3px 11px 0 11px;
-}
-
-.breadcrumb_separator img
-{
-    height: 12px;
-    border:none;
-}
-
-.breadcrumb_back .breadcrumb_item:first-child 
-{
-    cursor:pointer;
-}       
-
-.breadcrumb_back .last 
+.av_breadcrumb_item.last 
 {
     font-style: italic;
 }
 
+.av_breadcrumb_separator 
+{
+    float: left;
+    margin: 2px 12px 0 11px;
+    width: 7px;
+    height: 12px;
+    background: transparent url(/ossim/pixmaps/xbreadcrumbs/separator.gif) 0 0 no-repeat;
+    background-size: 7px 12px;
+}
 
 
 /****************************************************

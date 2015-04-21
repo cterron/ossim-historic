@@ -414,29 +414,38 @@ include_once '../local_menu.php';
 $pageTitle = _("Manage Jobs");
 
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 $myhostname="";
 
-$getParams = array( 'disp', 'schedid', 'sortby', 'sortdir', 'viewall', 'setstatus', 'enabled', 'job_id');
+$getParams = array('schedid', 'sortby', 'sortdir', 'viewall', 'setstatus', 'enabled', 'job_id');
 
 $hosts = array();
 //$hosts = host_ip_name($dbconn);
 
 switch ($_SERVER['REQUEST_METHOD']) {
 case "GET" :
-    foreach($getParams as $gp) 
+    foreach($getParams as $gp)
     {
-		if (isset($_GET[$gp])) { 
-			$$gp=htmlspecialchars(mysql_real_escape_string(trim($_GET[$gp])), ENT_QUOTES);
-		} else { 
+		if (isset($_GET[$gp])) {
+			$$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $dbconn));
+		} else {
 			$$gp="";
 		}
     }
-	
+
     $range_start = "";
     $range_end   = "";
-    
+
 	break;
+}
+
+# Handle $disp var separate due to a invalid return value with htmlentities
+$disp = GET('disp');
+ossim_valid($disp, 'play_task', 'pause_task', 'stop_task', 'resume_task', 'delete_task', OSS_NULLABLE, 'Illegal:'._('Disp'));
+if (ossim_error())
+{
+    die(_('Invalid Disp Parameter'));
 }
 
 $version = $conf->get_conf("ossim_server_version");
@@ -455,7 +464,7 @@ if ($pluginscount==0) {
 
 function delete_sched( $schedid ) {
     global $viewall, $sortby, $sortdir, $uroles, $username, $dbconn;
-    
+
     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
 
     $sql_require = "";
@@ -472,7 +481,7 @@ function delete_sched( $schedid ) {
 
         $infolog = array($nname);
         Log_action::log(68, $infolog);
-        
+
     } else {
        //echo "Not Authorized to Delete Reoccuring Schedule <i>\"$nname\"</i>";
  //logAccess( "UNAUTHORIZED ATTEMPT TO DELETED Reoccuring Schedule $nname" );
@@ -480,9 +489,10 @@ function delete_sched( $schedid ) {
     main_page ( $viewall, $sortby, $sortdir );
 }
 
+
 function set_status ( $schedid, $enabled ) {
     global $viewall, $sortby, $sortdir, $uroles, $username, $dbconn;
-    
+
     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
 
     $sql_require = "";
@@ -505,13 +515,13 @@ function set_status ( $schedid, $enabled ) {
 
 
 
-function main_page ( $viewall, $sortby, $sortdir ) 
-{    		
+function main_page ( $viewall, $sortby, $sortdir )
+{
 	global $uroles, $username, $dbconn, $hosts;
     global $arruser, $user;
-    
+
     $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
-    
+
     $tz = Util::get_timezone();
 
     if ($sortby == "" ) { $sortby = "id"; }
@@ -520,27 +530,27 @@ function main_page ( $viewall, $sortby, $sortdir )
     $sql_order="order by $sortby $sortdir";
 
 
-	if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) 
+	if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan"))
 	{
 		?>
 		<div style="width:50%; position: relative; height: 5px; float:left">
-			
+
 			<div style="width:100%; position: absolute; top: -41px;left:0px;">
     			<div style="float:left; height:28px; margin:5px 5px 0px 0px;">
     				<a class="button" href="<?php echo Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?smethod=schedule&hosts_alive=1&scan_locally=1', 'environment', 'vulnerabilities', 'scan_jobs');?>">
                             <?php echo _("New Scan Job");?>
     				</a>
     			</div>
-    			
+
     			<div style="float:left;height:28px;margin:5px 5px 0px -2px;">
     				<a class="greybox button av_b_secondary" href="import_nbe.php" title="<?php echo _("Import nbe file") ?>">
     				        <?php echo _("Import nbe file");?>
     				</a>
     			</div>
-			</div>		
-			
+			</div>
+
 		</div>
-		
+
 		<?php
 	}
 
@@ -565,7 +575,7 @@ if (Vulnerabilities::scanner_type() == "omp") { // We can display scan status wi
     echo Vulnerabilities::get_omp_running_scans($dbconn);
 }
 else { // Nessus
-    all_jobs(0,10, "R"); 
+    all_jobs(0,10, "R");
 }
 ?>
 
@@ -606,18 +616,18 @@ else {
             echo "<th>"._("Action")."</th></tr>";
         }
     }
-    
+
     $colors  = array("#FFFFFF", "#EEEEEE");
     $color   = 0;
-    
-    
+
+
     while (!$result->EOF) {
        list ($profile, $targets, $schedid, $schedname, $schedtype, $sid, $timeout, $user, $schedstatus, $nextscan, $servers )=$result->fields;
-        
+
         $name    = Av_sensor::get_name_by_id($dbconn, $servers);
-        
+
         $servers = ( $name != '' ) ? $name : "unknown";
-        
+
         $targets_to_resolve = explode("\n", $targets);
         $ttargets           = array();
 
@@ -634,10 +644,10 @@ else {
         }
 
         $targets = implode("<BR/>", $ttargets);
-       
+
         $tz = intval($tz);
         $nextscan = gmdate("Y-m-d H:i:s", Util::get_utc_unixtime($nextscan)+(3600*$tz));
-        
+
         preg_match("/\d+\-\d+\-\d+\s(\d+:\d+:\d+)/",$nextscan,$found);
         $time = $found[1];
 
@@ -680,27 +690,27 @@ else {
        default:
           $itext=_("Enable Scheduled Job");
           $isrc="images/play_task.png";
-          $ilink = "manage_jobs.php?disp=setstatus&schedid=$schedid&enabled=1";          
+          $ilink = "manage_jobs.php?disp=setstatus&schedid=$schedid&enabled=1";
           break;
        }
-       
+
         if (!Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
             $ilink = "javascript:return false;";
         }
 
-       if ( $schedstatus ) { 
-          $txt_enabled = "<td><a href=\"$ilink\"><font color=\"green\">"._("Enabled")."</font></a></td>"; 
-       } else { 
-          $txt_enabled = "<td><a href=\"$ilink\"><font color=\"red\">"._("Disabled")."</font></a></td>"; 
+       if ( $schedstatus ) {
+          $txt_enabled = "<td><a href=\"$ilink\"><font color=\"green\">"._("Enabled")."</font></a></td>";
+       } else {
+          $txt_enabled = "<td><a href=\"$ilink\"><font color=\"red\">"._("Disabled")."</font></a></td>";
        }
 
        require_once ('classes/Security.inc');
 
-        if(valid_hex32($user)) 
+        if(valid_hex32($user))
         {
             $user = Session::get_entity_name($dbconn, $user);
         }
-       
+
        echo "<tr bgcolor=\"".$colors[$color%2]."\">";
     if ($profile=="") $profile=_("Default");
     echo "<td><span class=\"tip\" title=\"<b>"._("Owner").":</b> $user<br><b>"._("Server").":</b> $servers<br /><b>"._("Scheduled Job ID").":</b> $schedid<br><b>"._("Profile").":</b> $profile<br><b>"._("Targets").":</b><br>".$targets."\">$schedname</span></td>";
@@ -714,7 +724,7 @@ else {
     <td style="padding-top:2px;"><a href="$ilink"><img alt="$itext" src="$isrc" border=0 title="$itext"></a>&nbsp;
 EOT;
     if (Session::menu_perms("environment-menu", "EventsVulnerabilitiesScan")) {
-    echo "<a href='".Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?disp=edit_sched&sched_id='.$schedid, 'environment', 'vulnerabilities', 'scan_jobs')."'><img src='images/pencil.png' title='"._("Edit Scheduled")."'></a>&nbsp;";
+    echo "<a href='".Menu::get_menu_url(AV_MAIN_PATH . '/vulnmeter/sched.php?disp=edit_sched&sched_id='.$schedid.'&status='.intval($schedstatus), 'environment', 'vulnerabilities', 'scan_jobs')."'><img src='images/pencil.png' title='"._("Edit Scheduled")."'></a>&nbsp;";
     echo "<a href='manage_jobs.php?disp=delete&amp;schedid=$schedid' onclick='return confirmDelete();'><img src='images/delete.gif' title='".gettext("Delete Scheduled")."'></a>";
     }
     echo "</td>";
@@ -741,12 +751,12 @@ $out = all_jobs(($page-1)*$pagesize,$pagesize);
                 if ($out!=0 && $num_pages!=1)
         		{
         			$page_url = "manage_jobs.php";
-        			
-                    if ($page==1 && $page==$num_pages){ 
+
+                    if ($page==1 && $page==$num_pages){
         				echo '<a href="" class="link_paginate_disabled" onclick="return false">< '._("PREVIOUS").'</a>';
-        				echo '<a class="lmargin link_paginate_disabled" href="" onclick="return false">'._("NEXT").' ></a>'; 
-        			} 
-                    elseif ($page==1){ 
+        				echo '<a class="lmargin link_paginate_disabled" href="" onclick="return false">'._("NEXT").' ></a>';
+        			}
+                    elseif ($page==1){
         				echo '<a href="" class="link_paginate_disabled" onclick="return false">< ' . _("PREVIOUS") . '</a>';
         				echo '<a class="lmargin" href="'.$page_url.'?page='.($page+1).'">'._("NEXT").' ></a>&nbsp;';
         			}
@@ -766,13 +776,13 @@ $out = all_jobs(($page-1)*$pagesize,$pagesize);
 <?
 }
 
-$commands = array("play_task", "pause_task", "stop_task", "resume_task", "delete_task"); // OMP commands
+$commands = array('play_task', 'pause_task', 'stop_task', 'resume_task', 'delete_task'); // OMP commands
 
 if ( in_array($disp, $commands) ) { // get server info to manage tasks
 
     $uuid = Util::get_system_uuid();
 
-    $result_server = $dbconn->Execute("SELECT meth_Wcheck FROM vuln_jobs WHERE id=".$job_id );
+    $result_server = $dbconn->Execute("SELECT meth_Wcheck FROM vuln_jobs WHERE id = ?", array($job_id));
     
     preg_match("/.*\s(\d+\.\d+\.\d+\.\d+)<.*/", $result_server->fields['meth_Wcheck'], $found);
     

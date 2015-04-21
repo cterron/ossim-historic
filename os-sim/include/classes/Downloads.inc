@@ -106,37 +106,37 @@ $downloads = array(
         "Name" => "Snare for Windows",
         "Version" => "4.0.1.2",
         "URL" => "SnareForWindows-4.0.1.2-MultiArch.exe",
-        "Homepage" => "http://www.intersectalliance.com/projects/SnareWindows/",
+        "Homepage" => "http://www.snarealliance.com/snare-open-source-agent-downloads",
         "Description" => "Snare for Windows is a Windows NT, Windows 2000, Windows XP, Vista and Windows 2003 compatible service that interacts with the underlying Windows Eventlog subsystem to facilitate remote, real-time transfer of event log information."
     ) ,
     array(
         "Name" => "Snare Config file (audit service takeover)",
         "Version" => "0.1",
         "URL" => "snare_takeover.reg",
-        "Homepage" => "http://www.intersectalliance.com/projects/SnareWindows/",
+        "Homepage" => "http://www.snarealliance.com/snare-open-source-agent-downloads",
         "Description" => "Import this .reg file into every host running snare. It's configure to log against this host's IP, you may edit it to change it. This file takes over control of the windows audit service, allowing for easy policy specifications via Snare's web interface. This is the recommended way of running it."
     ) ,
     array(
         "Name" => "Snare Config file (no audit service takeover)",
         "Version" => "0.1",
         "URL" => "snare_no_takeover.reg",
-        "Homepage" => "http://www.intersectalliance.com/projects/SnareWindows/",
+        "Homepage" => "http://www.snarealliance.com/snare-open-source-agent-downloads",
         "Description" => "Import this .reg file into every host running snare. It's configure to log against this host's IP, you may edit it to change it. This file leave's the hosts audit service settings untouched."
-    ) ,
-    array(
-        "Name" => "FW1 Loggrabber for Linux",
-        "Version" => "1.11.1",
-        "URL" => "fw1-loggrabber-1.11.1-linux.tar.gz",
-        "Homepage" => "http://sourceforge.net/projects/fw1-loggrabber/",
-        "Description" => "FW1-Loggrabber is a command-line tool to grab logfiles from Checkpoint FW-1 remotely using Checkpoints LEA (Log Export Api), which is one part of Checkpoints OPSEC API."
-    ) ,
-    array(
-        "Name" => "FW1 Loggrabber for Windows",
-        "Version" => "1.11.1",
-        "URL" => "fw1-loggrabber-1.11.1-win32.exe",
-        "Homepage" => "http://sourceforge.net/projects/fw1-loggrabber/",
-        "Description" => "FW1-Loggrabber is a command-line tool to grab logfiles from Checkpoint FW-1 remotely using Checkpoints LEA (Log Export Api), which is one part of Checkpoints OPSEC API."
-    )
+    )// ,
+    //array(
+    //    "Name" => "FW1 Loggrabber for Linux",
+    //    "Version" => "1.11.1",
+    //    "URL" => "fw1-loggrabber-1.11.1-linux.tar.gz",
+    //    "Homepage" => "http://sourceforge.net/projects/fw1-loggrabber/",
+    //    "Description" => "FW1-Loggrabber is a command-line tool to grab logfiles from Checkpoint FW-1 remotely using Checkpoints LEA (Log Export Api), which is one part of Checkpoints OPSEC API."
+    //) ,
+    //array(
+    //    "Name" => "FW1 Loggrabber for Windows",
+    //    "Version" => "1.11.1",
+    //    "URL" => "fw1-loggrabber-1.11.1-win32.exe",
+    //    "Homepage" => "http://sourceforge.net/projects/fw1-loggrabber/",
+    //    "Description" => "FW1-Loggrabber is a command-line tool to grab logfiles from Checkpoint FW-1 remotely using Checkpoints LEA (Log Export Api), which is one part of Checkpoints OPSEC API."
+    //)
     // ,
     //array(
     //    "Name" => "OpenVPN Windows",

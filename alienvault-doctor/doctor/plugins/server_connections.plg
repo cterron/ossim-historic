@@ -1,0 +1,21 @@
+[properties]
+name=AlienVault Server profile connections
+description=Test the connections established to the AV Server
+category=alienvault,network
+type=command
+profiles=Server:>4.0
+command=netstat -putn | grep "\:40001.*ossim\-server\|\:40004.*python"
+
+[Server remote connections]
+pattern=tcp\s+\d+\s+\d+\s\S+\:40001\s+(\S+)\:\d+
+fail_if_empty=True
+conditions=@set@:@issupersetof@@connected_systems@
+warning=Missing connections to the AV Server
+advice=Some expected network connections to the AV Server are not present. Please check your configuration and/or network status.
+
+[Forward remote connections]
+pattern=tcp\s+\d+\s+\d+\s\S+\:40004\s+(\S+)\:\d+
+fail_if_empty=True
+conditions=@set@:@issupersetof@@connected_servers@
+warning=Missing connections to the AV Forward
+advice=Some expected network connections to the AV Forward are not present. Please check your configuration and/or network status.

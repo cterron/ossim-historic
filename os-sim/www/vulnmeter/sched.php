@@ -105,18 +105,18 @@ $back_url          = (preg_match("/manage_jobs/", $_SERVER['HTTP_REFERER'])) ? "
 
 $myhostname="";
 
-$getParams = array( 'disp', 'vuln_op', 'rid', 'sname', 'notify_email', 'tarSel', 'targets', 'ip_start',
+$getParams = array( 'vuln_op', 'rid', 'notify_email', 'tarSel', 'targets', 'ip_start',
                     'ip_end', 'named_list', 'subnets',  'schedule_type', 'cred_type', 'job_id', 'sched_id','hosts_alive','scan_locally','smethod', 'net_id'
                    );
 
 
-$postParams = array( 'disp','vuln_op', 'rid', 'sname', 'notify_email', 'schedule_type', 'ROYEAR', 'ROMONTH', 'ROday',
+$postParams = array( 'vuln_op', 'rid', 'notify_email', 'schedule_type', 'ROYEAR', 'ROMONTH', 'ROday',
                     'time_hour', 'time_min', 'dayofweek', 'dayofmonth', 'timeout', 'SVRid', 'sid', 'tarSel',
                      'targets', 'ip_start', 'ip_end', 'named_list', 'subnet', 'system', 'cred_type', 'credid', 'acc',
                      'domain', 'accpass', 'acctype', 'passtype', 'passstore', 'job_id','wpolicies', 'wfpolicies', 
                      'upolicies', 'cidr', 'custadd_type', 'cust_plugins', 'sched_id', 'is_enabled', 'submit', 'process',
                      'isvm', 'sen', 'hostlist', 'pluginlist','user','entity','hosts_alive','scan_locally','nthweekday', 'nthdayofweek', 'time_interval',
-                     'biyear', 'bimonth', 'biday', 'not_resolve', 'semail', 'ssh_credential', 'smb_credential');
+                     'biyear', 'bimonth', 'biday', 'not_resolve', 'semail');
 
  $daysMap = array ( 
      "0" => "NONE", 
@@ -164,7 +164,12 @@ case "GET" :
          $$gp=""; 
       }
    }
+
+   $disp  = GET('disp');
+   $sname = GET('sname');
+
    break;
+
 case "POST" :
 //   echo "<pre>"; print_r($_POST); echo "</pre>";
    foreach ($postParams as $pp) {
@@ -180,7 +185,31 @@ case "POST" :
          $$pp=""; 
       }
    }
+
+   $disp           = POST('disp');
+   $sname          = POST('sname');
+   $ssh_credential = POST('ssh_credential');
+   $smb_credential = POST('smb_credential');
+
    break;
+}
+
+if ($_GET['status'] != '' || $_POST['status'] != '')
+{
+    $scheduled_status = (GET('status') != '') ? GET('status') : POST('status');
+    $scheduled_status = intval($scheduled_status);
+}
+else
+{
+    $scheduled_status = 1; // enable scheduled jobs by default
+}
+
+
+# Handle $disp var separate due to a invalid return value with htmlentities
+ossim_valid($disp, 'create', 'edit_sched', 'delete_scan', 'rerun', OSS_NULLABLE, 'Illegal:'._('Disp'));
+if (ossim_error())
+{
+    die(_('Invalid Disp Parameter'));
 }
 
 $save_scan = (intval($_POST['save_scan'])==1) ? TRUE : FALSE;
@@ -200,7 +229,7 @@ if ($timeout=="") {
     $error_message .= _("Invalid Timeout")."<br/>";
 }
 
-ossim_valid(html_entity_decode($sname), OSS_SCORE, OSS_NULLABLE, OSS_ALPHA, OSS_SPACE, 'illegal:' . _("Job name"));
+ossim_valid($sname, OSS_SCORE, OSS_NULLABLE, OSS_ALPHA, OSS_SPACE, 'illegal:' . _("Job name"));
 if (ossim_error()) {
     $force = TRUE;
     $error_message .= _("Invalid Job name")."<br/>";
@@ -227,6 +256,19 @@ ossim_valid($timeout, OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _("Timeout"));
 if (ossim_error()) {
     $error_message .= _("Invalid timeout")."<br/>";
 }
+
+ossim_set_error(false);
+ossim_valid($ssh_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SSH Credential"));
+if (ossim_error()) {
+    $error_message .= _("Invalid SSH Credential")."<br/>";
+}
+
+ossim_set_error(false);
+ossim_valid($smb_credential, OSS_USER, OSS_SPACE, OSS_AT, '#', OSS_NULLABLE, 'illegal:' . _("SMB Credential"));
+if (ossim_error()) {
+    $error_message .= _("Invalid SMB Credential")."<br/>";
+}
+
 
 $ip_exceptions_list = array();
 $tip_target         = array();
@@ -315,6 +357,14 @@ $not_resolve  = intval($not_resolve);
 			var filter      = "";
 			var length_name = 45;
 			
+            $('#scan_locally').on('click', function()
+            {   
+                if ($('#scan_locally').is(':checked') == false)
+                {
+                    $('#v_info').hide();
+                }
+            });
+			
 			$("#vtree").dynatree(
 			{
                 initAjax: { url: "../tree.php?key=<?php echo $keytree ?>" },
@@ -397,6 +447,8 @@ $not_resolve  = intval($not_resolve);
                 
                 $("#sresult").hide();
                 
+                $('#v_info').hide();
+                
             });
             
             $("#delete_target").on( "click", function() {
@@ -409,6 +461,8 @@ $not_resolve  = intval($not_resolve);
                 
                 if (all_targets.length == 0)
                 {
+                    $('#v_info').hide();
+                
                     $("#hosts_alive").attr('disabled', false);
                         
                     $("#scan_locally").attr('disabled', false);
@@ -608,7 +662,7 @@ $not_resolve  = intval($not_resolve);
             
             <?php
 
-            if(((GET("disp") == "edit_sched" || GET("disp") == "rerun" || !empty($ip_list) || GET("net_id") != "") && !$save_scan) || $force)
+            if((($disp == "edit_sched" || $disp == "rerun" || !empty($ip_list) || GET("net_id") != "") && !$save_scan) || $force)
             {
                 ?> 
                 simulation();
@@ -667,10 +721,13 @@ $not_resolve  = intval($not_resolve);
             
             simulation();
         }
+        
         var flag = 0;
         
 		function simulation() {
-            $('#sresult').html('');
+		    $('#v_info').hide();
+		
+		    $('#sresult').html('');
             
             selectall('targets');
             
@@ -703,7 +760,7 @@ $not_resolve  = intval($not_resolve);
                             scan_server: $('select[name=SVRid]').val(),
                             targets: targets
                         },
-                        success: function(msg) {
+                        success: function(msg) {     
                             $('#loading').hide();
                             var data = msg.split("|");
                             $('#sresult').html("");
@@ -712,6 +769,15 @@ $not_resolve  = intval($not_resolve);
                                                                                 
                             if(data[1]=="1") {
                                 enable_button();
+                            }
+                            
+                            // If any sensor is remote the "pre-scan locally" should be unchecked 
+                            
+                            if ($('#scan_locally').is(':checked') && typeof(data[3]) != 'undefined' && data[3] == 'remote')
+                            {                            
+                                $('#v_info').show();
+                                
+                                show_notification('v_info', "<?php echo _("'Pre-Scan locally' option should be disabled, at least one sensor is external.")?>" , 'nf_info', false, true, 'padding: 3px; width: 80%; margin: 12px auto 12px auto; text-align: center;');
                             }
                             
                             //var h = document.body.scrollHeight || 1000000;window.scrollTo(0,document.body.scrollHeight);
@@ -727,7 +793,6 @@ $not_resolve  = intval($not_resolve);
                     alert("<?php echo Util::js_entities(_("At least one target needed!"))?>");
                 }
             }
-            //else { alert("already running");}
 		}
         
 		function disable_button() 
@@ -966,9 +1031,11 @@ function tab_discovery () {
 	 global $component, $uroles, $editdata, $scheduler, $username, $useremail, $dbconn, $disp,
           $enScanRequestImmediate, $enScanRequestRecur, $timeout, $smethod,$SVRid, $sid, $ip_list, $ip_exceptions_list,
           $schedule_type, $ROYEAR, $ROday, $ROMONTH, $time_hour, $time_min, $dayofweek, $dayofmonth,
-          $sname,$user,$entity,$hosts_alive,$scan_locally,$version,$nthweekday,$semail,$not_resolve,$time_interval,$ssh_credential,$smb_credential,$net_id;
+          $sname,$user,$entity,$hosts_alive,$scan_locally,$version,$nthweekday,$semail,$not_resolve,$time_interval,$ssh_credential,$smb_credential,$net_id,$scheduled_status, $biyear, $bimonth, $biday;
           
      global $pluginOptions, $enComplianceChecks, $profileid;
+     
+     $tz = Util::get_timezone();
      
      $conf = $GLOBALS["CONF"];
 	 
@@ -986,17 +1053,73 @@ function tab_discovery () {
 
      $timeout_selected = $editdata["meth_TIMEOUT"];
      $ip_list_selected = str_replace("\\r\\n", "\n", str_replace(";;", "\n", $ip_list));
+     
      if(count($ip_exceptions_list)>0)
+     {
         $ip_list_selected .= "\n".implode("\n",$ip_exceptions_list);
-     $ROYEAR_selected = $ROYEAR;
-     $ROday_selected = $ROday;
-     $ROMONTH_selected = $ROMONTH;
-     $time_hour_selected = $time_hour;
-     $time_min_selected = $time_min;
-     $dayofweek_selected = $dayofweek;
-     $dayofmonth_selected = $dayofmonth;
-     $sname_selected = $sname;
-
+     }
+     
+     // date to fill "Begin in" field
+     
+     $today  = gmdate("Ymd",gmdate("U") + 3600*$tz);
+     
+     $tyear  = substr($today,0,4);
+     $nyear  = $tyear+1;
+     $tmonth = substr($today,4,2);
+     $tday   = substr($today,6,2);
+     
+     $sname_selected      = $sname;
+     
+     // The user has selected another date by using the form
+     
+     if ($schedule_type != '')
+     {
+         $run_once_year       = $ROYEAR;
+         $run_once_day        = $ROday;
+         $run_once_month      = $ROMONTH;
+         $time_hour_selected  = $time_hour;
+         $time_min_selected   = $time_min;
+         $dayofweek_selected  = $dayofweek;
+         $dayofmonth_selected = $dayofmonth;
+     }
+     else
+     {
+         if (is_numeric($editdata['next_CHECK']))
+         {
+             $nextscan = gmdate('Y-m-d H:i:s', Util::get_utc_unixtime($editdata['next_CHECK']) + (3600*$tz));
+         }
+         else
+         {
+             $nextscan = gmdate("Y-m-d H:i:s",gmdate("U") + 3600*$tz);
+         }
+         
+         preg_match('/(\d+)\-(\d+)\-(\d+)\s(\d+):(\d+):(\d+)/', $nextscan, $found);
+    
+         $run_once_year       = $found[1];
+         $run_once_month      = $found[2];
+         $run_once_day        = ltrim($found[3], '0');
+         $dayofmonth_selected = $found[3];
+         $time_hour_selected  = ltrim($found[4], '0');
+         $time_min_selected   = ltrim($found[5], '0');
+         
+         
+         // date to fill "Begin in" field
+         
+         if (preg_match('/(\d{4})(\d{2})(\d{2})/', $editdata['begin'], $begin ))
+         {       
+            $biyear  = $begin[1];
+            $bimonth = ltrim($begin[2], '0');
+            $biday   = ltrim($begin[3], '0');
+         }
+         else
+         {
+            // select the current date
+            $biyear  = $tyear;
+            $bimonth = $tmonth;
+            $biday   = $tday;
+         }
+     }
+    
     if(preg_match("/^[a-f\d]{32}$/i", $net_id)) { // Autofill new scan job from deployment
         if (Asset_net::is_in_db($dbconn, $net_id)) {
             $sname_selected  = Asset_net::get_name_by_id($dbconn, $net_id);
@@ -1019,17 +1142,10 @@ function tab_discovery () {
      $cquery_like = "";
      if ( $component != "" ) { $cquery_like = " AND component='$component'"; }      
      
-     $today=date("Ymd");
-     $tyear=substr($today,0,4);
-     $nyear=$tyear+1;
-     $tmonth = substr($today,4,2);
-     $tday = substr($today,6,2);
-
      #SET VALUES UP IF EDIT SCHEDULER
      if ( isset($editdata['notify'] )) { $enotify = $editdata['notify']; } else { $enotify = "$useremail"; }
      if ( isset($editdata['time'] )) {
-        list( $time_hour, $time_min, $time_sec) = split(':', $editdata['time'] );
-        $tz = Util::get_timezone();
+        list( $time_hour, $time_min, $time_sec) = preg_split('/:/', $editdata['time'] );
         $time_hour = $time_hour + $tz;
     }
 
@@ -1099,6 +1215,7 @@ function tab_discovery () {
         $nameout = "<input type=text style='width:210px' name='sname' value='".(($sname_selected!="")? "$sname_selected":"$editdata[name]")."'>";
      }
     $discovery = "<input type=\"hidden\" name=\"save_scan\" value=\"1\">";
+    $discovery = "<input type=\"hidden\" name=\"status\" value=\"".intval($scheduled_status)."\">";
     $discovery.= "<input type=\"hidden\" name=\"cred_type\" value=\"N\">";
     $discovery.= "<table width=\"80%\" cellspacing=\"4\">";
     $discovery.= "<tr>";
@@ -1254,21 +1371,31 @@ EOT;
      $discovery .= "<div id=\"idSched8\" class=\"forminput\">";
      $discovery .= "<table cellspacing=\"2\" cellpadding=\"0\" width=\"100%\">";
      $discovery .= "<tr><th width='35%'>"._("Begin in")."</th><td class='noborder' nowrap='nowrap'>".gettext("Year")."&nbsp;<select name='biyear'>";
-     $discovery .= "<option value=\"$tyear\" selected>$tyear</option>";
-     $discovery .= "<option value=\"$nyear\" >$nyear</option>";
+     
+     for ($i=$tyear;$i<=$tyear+1;$i++)
+     {
+        $discovery .= "<option value='$i' ";
+        
+        if ($i==$biyear)
+        {
+            $discovery .= "selected='selected'";
+        }
+        
+        $discovery .= ">$i</option>";
+     }
 
      $discovery .="</select>&nbsp;&nbsp;&nbsp;".gettext("Month")."&nbsp;<select name='bimonth'>";
 
      for ($i=1;$i<=12;$i++) {
         $discovery .= "<option value=\"$i\" ";
-        if ($i==$tmonth) $discovery .= "selected";
+        if ($i==$bimonth) $discovery .= "selected";
         $discovery .= ">$i</option>";
      }
 
      $discovery .= "</select>&nbsp;&nbsp;&nbsp;".gettext("Day")."&nbsp;<select name=\"biday\">";
      for ($i=1;$i<=31;$i++) {
         $discovery .= "<option value=\"$i\" ";
-        if ($i==$tday) $discovery .= "selected";
+        if ($i==$biday) $discovery .= "selected";
          $discovery .= ">$i</option>";
      }
      $discovery .= "</select></td>";
@@ -1282,20 +1409,26 @@ EOT;
 EOT;
             $discovery .="<tr><th width='35%'>"._("Day")."</th><td colspan='6' class='noborder' nowrap='nowrap'>".gettext("Year")."&nbsp;<select name='ROYEAR'>";
 
-            $discovery .="<option value=\"$tyear\" ".(($ROYEAR_selected==""||$ROYEAR_selected==$tyear)? "selected" : "").">$tyear</option>";
-            $discovery .="<option value=\"$nyear\" ".(($ROYEAR_selected==$nyear)? "selected" : "").">$nyear</option>";
+            $discovery .="<option value=\"$tyear\" ".(($run_once_year == '' || $run_once_year == $tyear)? "selected" : "").">$tyear</option>";
+            $discovery .="<option value=\"$nyear\" ".(($run_once_year ==  $nyear)? "selected" : "").">$nyear</option>";
 
             $discovery .="</select>&nbsp;&nbsp;&nbsp;".gettext("Month")."&nbsp;<select name='ROMONTH'>";
 
    for ($i=1;$i<=12;$i++) {
       $discovery .= "<option value=\"$i\" ";
-      if (($i==$tmonth && $ROMONTH_selected=="") || $ROMONTH_selected==$i) $discovery .= "selected";
+      if ( $i == $run_once_month || $run_once_month == '') $discovery .= "selected";
       $discovery .= ">$i</option>";
    }
    $discovery .= "</select>&nbsp;&nbsp;&nbsp;".gettext("Day")."&nbsp;<select name=\"ROday\">";
-   for ($i=1;$i<=31;$i++) {
+   
+   for ($i=1;$i<=31;$i++)
+   {
       $discovery .= "<option value=\"$i\" ";
-      if (($i==$tday && $ROday_selected=="") || $ROday_selected==$i) $discovery .= "selected";
+      
+      if ($i == $run_once_day || $run_once_day == '')
+      {
+          $discovery .= "selected";
+      }
          $discovery .= ">$i</option>";
    }
             $discovery .= <<<EOT
@@ -1393,7 +1526,7 @@ EOT;
       $discovery .= "<span style='margin-right:5px;'>"._("Every")."</span>";
       $discovery .= "<select name='time_interval'>";
       for ($itime = 1; $itime <= 30; $itime++) {
-        $discovery .= "<option value='".$itime."'".(($editdata['time_interval']==$itime) ? " selected":"").">".$itime."</option>";
+        $discovery .= "<option value='".$itime."'".(($editdata['time_interval'] == $itime || $time_interval == $itime) ? " selected":"").">".$itime."</option>";
       }
       $discovery .= "</select>";
       $discovery .= "<span id='days' style='margin-left:5px'>"._("day(s)")."</span><span id='weeks' style='margin-left:5px'>"._("week(s)")."</span>";
@@ -1651,10 +1784,10 @@ function edit_schedule ( $sched_id ) {
     $sql_access = "";
     if ( ! $uroles['admin'] ) { $sql_access = "AND username='$username'"; }
 
-    $query = "SELECT id, name, username, fk_name, job_TYPE, schedule_type, day_of_week, 
+    $query = "SELECT id, name, begin, username, fk_name, job_TYPE, schedule_type, day_of_week,
                      day_of_month, time, email, meth_TARGET, meth_CRED, 
                      meth_VSET, meth_Wcheck, meth_Wfile, meth_Ucheck, 
-		     meth_TIMEOUT, scan_ASSIGNED, resolve_names, time_interval, credentials
+		     meth_TIMEOUT, scan_ASSIGNED, resolve_names, time_interval, credentials, next_CHECK
               FROM vuln_job_schedule 
 	      WHERE id = '$sched_id' $sql_access";
     $result = $dbconn->execute($query);
@@ -1752,7 +1885,7 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
      $time_hour, $time_min, $dayofweek, $dayofmonth, $timeout, $SVRid, $sid, $tarSel, $ip_list, $ip_exceptions_list,
      $ip_start, $ip_end,  $named_list, $cidr, $subnet, $system, $cred_type, $credid, $acc, $domain,
      $accpass, $acctype, $passtype, $passstore, $wpolicies, $wfpolicies, $upolicies, $custadd_type, $cust_plugins,
-     $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential="", $smb_credential="") {
+     $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential = '', $smb_credential = '', $scheduled_status = 1) {
 
      
      global $wdaysMap, $daysMap, $allowscan, $uroles, $username, $schedOptions, $adminmail, $mailfrom, $dbk, $dbconn;
@@ -1824,19 +1957,6 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
      else
         $I3crID = "0";
 
-     // if ( $custadd_type == "" ) { $custadd_type = "N"; }
-     // if ( $custadd_type != "N" && $cust_plugins != "" ) {
-     	  // $plugs_list="";
-          // $vals=preg_split( "/\s+|\r\n|,|;/", $cust_plugins );
-          // foreach($vals as $v) {
-               // $v=trim($v);
-               // if ( strlen($v)>0 ) {
-                    // $plugs_list .= $v . "\n";
-               // }
-          // }
-          // $plugs_list = "'".$plugs_list."'";
-     // }
-
     if($schedule_type != "N") {
        // current datetime in UTC
        
@@ -1860,11 +1980,11 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
 
        $ndays = array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
        
-       $begin_in_seconds   = mktime ( $bihour, $bimin, 0, $bimonth, $biday, $biyear);     // selected datetime by user in UTC
-       $current_in_seconds = mktime ( $hour, $min, 0, $mon, $mday, $year);                // current datetime in UTC
+       $begin_in_seconds   = Util::get_utc_unixtime("$biyear-$bimonth-$biday $time_hour:$time_min:00") - 3600 * $tz;
+       $current_in_seconds = gmdate('U');                // current datetime in UTC
        
-       if(strlen($bimonth)==1) $bimonth = "0".$bimonth;
-       if(strlen($biday)==1)   $biday   = "0".$biday;
+       if(strlen($bimonth)==1) $bimonth = '0' . $bimonth;
+       if(strlen($biday)==1)   $biday   = '0' . $biday;
     }
 
    switch($schedule_type) {
@@ -1877,8 +1997,6 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
    case "O":
    
           $requested_run = sprintf("%04d%02d%02d%06d", $ROYEAR, $ROMONTH, $ROday, $run_time );
-          
-          //error_log("O-> $requested_run\n" ,3,"/tmp/sched.log");
           
           $sched_message = "No reccurring Jobs Necessary";
 
@@ -1898,8 +2016,6 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
           }
           
           $requested_run = sprintf("%08d%06d", $next_day, $run_time );
-          
-          //error_log("D-> $requested_run\n" ,3,"/tmp/sched.log");
 
           $recurring = True;
           $sched_message = "Schedule Reccurring";
@@ -1907,29 +2023,32 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
           
       break;
    case "W":
-
+   
             if( $begin_in_seconds > $current_in_seconds ) { // if it is a future date
                 $wday  = date("w",mktime ( 0, 0, 0, $bimonth, $biday, $biyear)); // make week day for begin day
                 if ($run_wday == $wday) {
                     $next_day = $biyear.$bimonth.$biday;  // selected date by user
                 }
-                else {
+                else
+                {
                     $next_day = gmdate("Ymd", strtotime("next ".$ndays[$run_wday]." GMT",mktime ( 0, 0, 0, $bimonth, $biday, $biyear)));
                 }
             }
             else {
-                if (($run_wday == $wday && $run_time > $timenow) || ($run_wday > $wday)) 
+                if ($run_wday == $wday && $run_time > $timenow)
+                {
                     $next_day = $year.$mon.$mday; // today
+                }               
                 else
+                {
                     $next_day = gmdate("Ymd", strtotime("next ".$ndays[$run_wday]." GMT",gmdate("U"))); // next week
+                }
             }
           
             preg_match("/(\d{4})(\d{2})(\d{2})/", $next_day, $found);
  
             list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." $btime_hour:$btime_min:00",$tz);
             $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
-          
-            //error_log("W-> $requested_run\n" ,3,"/tmp/sched.log");
             
             $recurring = True;
             $sched_message = "Schedule Reccurring";
@@ -1956,8 +2075,6 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
 
           list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." $btime_hour:$btime_min:00",$tz);
           $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
-              
-          //error_log("M-> $requested_run $begin_in_seconds $current_in_seconds\n" ,3,"/tmp/sched.log");
           
           $recurring = True;
           $sched_message = "Schedule Reccurring";
@@ -1977,9 +2094,6 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
 
           list ($b_y,$b_m,$b_d,$b_h,$b_u,$b_s,$b_time) = Util::get_utc_from_date($dbconn,$found[1]."-".$found[2]."-".$found[3]." ".$found[4].":".$found[5].":00",$tz);
           $requested_run = sprintf("%04d%02d%02d%02d%02d%02d", $b_y, $b_m, $b_d, $b_h, $b_u, "00");
-        
-        
-        //error_log("NW-> $requested_run\n" ,3,"/tmp/sched.log");
         
         $dayofmonth = $nthweekday;
         
@@ -2051,6 +2165,16 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
             $IP_ctx[] = $actx."#".$aip;
         }
         
+        if (strlen($bbimonth) == 1 )
+        {
+            $bbimonth = '0' . $bbimonth;
+        }
+        
+        if (strlen($bbiday) == 1 )
+        {
+            $bbiday = '0' . $bbiday;
+        }
+        
         if ( $vuln_op == "editrecurring" && $sched_id > 0 ) {
             $query[] = "DELETE FROM vuln_job_schedule WHERE id='$sched_id'";
            
@@ -2058,12 +2182,13 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
             foreach ($sgr as $notify_sensor => $targets) {
                 $target_list = implode("\n",$targets);
                 $target_list .= "\n".implode("\n",$ip_exceptions_list);
-                $query[] = "INSERT INTO vuln_job_schedule ( name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
+                $query[] = "INSERT INTO vuln_job_schedule ( begin, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
                             time, email, meth_TARGET, meth_CRED, meth_VSET, meth_CUSTOM, meth_CPLUGINS, meth_Wfile, 
-                            meth_Ucheck, meth_TIMEOUT, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ( '$sname', '$username', '".Session::get_session_user()."', '$jobType',
+                            meth_Ucheck, meth_TIMEOUT, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ('$bbiyear$bbimonth$bbiday', '$sname', '$username', '".Session::get_session_user()."', '$jobType',
                             '$schedule_type', '$dayofweek', '$dayofmonth', '$time_value', '$notify_sensor', '$target_list',
                             $I3crID, '$sid', '$custadd_type', $plugs_list, $semail, '$scan_locally',
-                            '$timeout', '$requested_run', '$insert_time', '1', '$resolve_names' ,'$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
+                            '$timeout', '$requested_run', '$insert_time', '" . intval($scheduled_status) . "', '$resolve_names' ,'$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
+                            
                 $sjobs_names [] = $sname.$i;
                 $i++;
             }
@@ -2073,12 +2198,12 @@ function submit_scan( $vuln_op, $sched_id, $sname, $notify_email, $schedule_type
                 foreach ($sgr as $notify_sensor => $targets) {
                     $target_list = implode("\n",$targets);
                     $target_list .= "\n".implode("\n",$ip_exceptions_list);
-                   $query[] = "INSERT INTO vuln_job_schedule ( name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
+                   $query[] = "INSERT INTO vuln_job_schedule ( begin, name, username, fk_name, job_TYPE, schedule_type, day_of_week, day_of_month, 
                                 time, email, meth_TARGET, meth_CRED, meth_VSET, meth_CUSTOM, meth_CPLUGINS, meth_Wfile, 
-                                meth_Ucheck, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ( '$sname', '$username', '".Session::get_session_user()."', '$jobType',
+                                meth_Ucheck, meth_TIMEOUT, scan_ASSIGNED, next_CHECK, createdate, enabled, resolve_names, time_interval, IP_ctx, credentials) VALUES ('$bbiyear$bbimonth$bbiday', '$sname', '$username', '".Session::get_session_user()."', '$jobType',
                                 '$schedule_type', '$dayofweek', '$dayofmonth', '$time_value', '$notify_sensor', '$target_list',
                                 $I3crID, '$sid', '$custadd_type', $plugs_list, $semail, '$scan_locally',
-                                '$timeout', '$SVRid', '$requested_run', '$insert_time', '1', '$resolve_names' , '$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
+                                '$timeout', '$SVRid', '$requested_run', '$insert_time', '" . intval($scheduled_status) . "', '$resolve_names' , '$time_interval', '".implode("\n", $IP_ctx)."', '$credentials') ";
                     
                     $sjobs_names [] = $sname.$i;
                     $i++;
@@ -2229,7 +2354,6 @@ function delete_scan( $job_id ) {
      }
 }
 
-
 switch($disp) {
 
    //case "auth_request":
@@ -2261,7 +2385,7 @@ switch($disp) {
         $time_hour, $time_min, $dayofweek, $dayofmonth, $timeout, $SVRid, $sid, $tarSel, $ip_list, $ip_exceptions_list,
         $ip_start, $ip_end,  $named_list, $cidr, $subnet, $system, $cred_type, $credid, $acc, $domain,
         $accpass, $acctype, $passtype, $passstore, $wpolicies, $wfpolicies, $upolicies, $custadd_type, $cust_plugins,
-        $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential, $smb_credential);
+        $is_enabled, $hosts_alive, $scan_locally, $nthweekday, $semail, $not_resolve, $time_interval, $biyear, $bimonth, $biday, $ssh_credential, $smb_credential, $scheduled_status);
     }
    break;
 

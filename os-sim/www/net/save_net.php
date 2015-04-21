@@ -45,7 +45,7 @@ $validate = array(
     'n_name'        =>  array('validation' => 'OSS_NOECHARS, OSS_NET_NAME',                    'e_message'  =>  'illegal:' . _('Net name')),
     'ips'           =>  array('validation' => 'OSS_IP_CIDR',                                   'e_message'  =>  'illegal:' . _('CIDR')),
     'external'      =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('External Asset')),
-    'descr'         =>  array('validation' => 'OSS_TEXT, OSS_NULLABLE, OSS_AT',                'e_message'  =>  'illegal:' . _('Description')),
+    'descr'         =>  array('validation' => 'OSS_ALL, OSS_NULLABLE',                         'e_message'  =>  'illegal:' . _('Description')),
     'asset_value'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Asset value')),
     'sboxs[]'       =>  array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT',        'e_message'  =>  'illegal:' . _('Sensors')),
     'threshold_a'   =>  array('validation' => 'OSS_DIGIT',                                     'e_message'  =>  'illegal:' . _('Threshold A')),

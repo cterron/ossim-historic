@@ -69,7 +69,7 @@ $types = array(
     "char"
 );
 //$salida = shell_exec('cat test1.txt');
-$lines = split("\n", $salida);
+$lines = preg_split("/\n/", $salida);
 //echo $lines[1];
 if (preg_match("/failed/i", $lines[1]))
 {

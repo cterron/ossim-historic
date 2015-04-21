@@ -31,17 +31,20 @@ from flask import Blueprint, request, current_app
 from api.lib.utils import accepted_url
 from uuid import UUID
 from api.lib.common import make_ok, make_bad_request, make_error, document_using
-from api.lib.auth import admin_permission, logged_permission
+from api.lib.auth import admin_permission
 import api_log
 from apimethods.system import system
+from apimethods.system.system import sync_asec_plugins as api_sync_asec
 from apimethods.system.system import apimethod_get_pending_packges
 from apimethods.system.system import apimethod_get_remote_software_update
+from apimethods.system.system import asynchronous_update
+from apimethods.system.system import check_update_and_reconfig_status
 from apimethods.utils import is_valid_ipv4
 from apimethods.utils import is_json_boolean, is_json_true
-from celerymethods.jobs.system import alienvault_asynchronous_update
 
 
 blueprint = Blueprint(__name__, __name__)
+
 
 @blueprint.route('', methods=['GET'])
 @document_using('static/apidocs/system.html')
@@ -49,10 +52,21 @@ blueprint = Blueprint(__name__, __name__)
 def get_systems():
     (success, system_data) = system.get_all()
     if not success:
-       current_app.logger.error("system: get_systems error: " + str(system_data))
-       return make_error("Cannot retrieve systems info", 500)
+        current_app.logger.error("system: get_systems error: " + str(system_data))
+        return make_error("Cannot retrieve systems info", 500)
 
     return make_ok(systems=system_data)
+
+
+@blueprint.route('/local/info', methods=['GET'])
+@document_using('static/apidocs/system.html')
+def get_local_info():
+    success, system_data = system.get_local_info()
+    if not success:
+        current_app.logger.error("system: get_local_info error: " + str(system_data))
+        return make_error("Cannot retrieve local system info", 500)
+
+    return make_ok(**system_data)
 
 
 @blueprint.route('/<system_id>', methods=['GET'])
@@ -62,7 +76,7 @@ def get_systems():
 def get_system(system_id):
     (success, ip) = system.get(system_id)
     if not success:
-        current_app.logger.error ("system: get_system error: " + str(ip))
+        current_app.logger.error("system: get_system error: " + str(ip))
         return make_error("Cannot retrieve system %s info" % system_id, 500)
 
     return make_ok(info=ip)
@@ -79,8 +93,8 @@ def add_system():
 
     (success, system_data) = system.add_system_from_ip(request.form['system_ip'], request.form['password'])
     if not success:
-       current_app.logger.error("system: add_system error: " + str(system_data))
-       return make_error(system_data, 500)
+        current_app.logger.error("system: add_system error: " + str(system_data))
+        return make_error(system_data, 500)
 
     return make_ok(**system_data)
 
@@ -100,7 +114,8 @@ def delete_system(system_id):
 @blueprint.route('/<system_id>/authenticate', methods=['PUT'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'password': {'type': str, 'optional': False}})
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
+               'password': {'type': str, 'optional': False}})
 def put_system_authenticate(system_id):
 
     password = request.args.get("password")
@@ -117,8 +132,7 @@ def put_system_authenticate(system_id):
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-               'no_cache' : {'type': str, 'optional': False},
-              })
+               'no_cache': {'type': str, 'optional': False}})
 def get_pending_packages(system_id):
     """Get pending update packages from a given AlienVault system
 
@@ -131,9 +145,9 @@ def get_pending_packages(system_id):
     """
     no_cache = request.args.get('no_cache')
     if not is_json_boolean(no_cache):
-        return make_error("Invalid value for the no_cache parameter",500)
+        return make_error("Invalid value for the no_cache parameter", 500)
     no_cache = is_json_true(no_cache)
-    success, result = apimethod_get_pending_packges(system_id,no_cache)
+    success, result = apimethod_get_pending_packges(system_id, no_cache)
     if not success:
         api_log.error("Error: " + str(result))
         return make_error("Cannot retrieve packages status " + str(result), 500)
@@ -143,27 +157,28 @@ def get_pending_packages(system_id):
 @blueprint.route('/<system_id>/status/software', methods=['GET'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
-               'no_cache': {'type': str, 'optional': False},
-              })
+@accepted_url({'system_id': {'type': UUID, 'values': ['local', 'all']},
+               'no_cache': {'type': str, 'optional': False}})
 def get_remote_software_status(system_id):
-    """Get the software status from a given AlienVault system
+    """Get the software status from a given AlienVault system or all systems
 
     The blueprint handle the following url:
     GET /av/api/1.0/system/<system_id>/status/software
 
     Args:
-        system_id (str): String with system id (uuid) or local
+        system_id (str): String with system id (uuid) local or all
 
     """
     no_cache = request.args.get('no_cache')
     if not is_json_boolean(no_cache):
-        return make_error("Invalid value for the no_cache parameter",500)
+        return make_error("Invalid value for the no_cache parameter", 500)
     no_cache = is_json_true(no_cache)
-    success, result = apimethod_get_remote_software_update(system_id,no_cache)
+    
+    success, result = apimethod_get_remote_software_update(system_id, no_cache)
     if not success:
         api_log.error("Error: " + str(result))
         return make_error("Cannot retrieve packages status " + str(result), 500)
+        
     return make_ok(**result)
 
 
@@ -171,7 +186,7 @@ def get_remote_software_status(system_id):
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
-def update_system(system_id):
+def put_system_update(system_id):
     """Blueprint to update system asynchronously
 
     Args:
@@ -196,19 +211,19 @@ def update_system(system_id):
             }
 
     """
-    job = alienvault_asynchronous_update.delay(system_id, only_feed=False)
-    if not job:
-        api_log.error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
+    (success, job_id) = asynchronous_update(system_id, only_feed=False)
+    if not success:
+        api_log.error("Cannot update system %s. %s" % (system_id, job_id))
         return make_error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
-    
-    return make_ok(job_id=job.id)
+
+    return make_ok(job_id=job_id)
 
 
 @blueprint.route('/<system_id>/update/feed', methods=['PUT'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
-def update_system_feed(system_id):
+def put_system_update_feed(system_id):
     """Blueprint to launch local/remote feed update
 
     Args:
@@ -233,19 +248,19 @@ def update_system_feed(system_id):
             }
 
     """
-    job = alienvault_asynchronous_update.delay(system_id, only_feed=True)
-    if not job:
-        api_log.error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
+    (success, job_id) = asynchronous_update(system_id, only_feed=True)
+    if not success:
+        api_log.error("Cannot update system %s: %s" % (system_id, job_id))
         return make_error("Cannot update system %s. Please verify that the system is reachable." % system_id, 500)
 
-    return make_ok(job_id=job.id)
-    
-    
+    return make_ok(job_id=job_id)
+
+
 @blueprint.route('/<system_id>/tasks', methods=['GET'])
 @document_using('static/apidocs/system.html')
-#@admin_permission.require(http_exception=403)
+# @admin_permission.require(http_exception=403)
 @accepted_url({'system_id': {'type': UUID, 'values': ['local']}})
-def get_task_status(system_id):
+def get_tasks(system_id):
     """
     Blueprint to get the status of system tasks
 
@@ -274,35 +289,25 @@ def get_task_status(system_id):
             }
 
     """
-    t_list = {"alienvault-update" : {'task': 'alienvault_asynchronous_update', 'process': 'alienvault-update', 'param_value': system_id,'param_argnum': 0}, 
-              "alienvault-reconfig" : {'task': 'alienvault_asynchronous_reconfigure', 'process': 'alienvault-reconfig', 'param_value': system_id,'param_argnum': 0}}
-    """"
-    This is the list of task to check. the format is the following:
-    {
-        <Name of the task>: {'task': <name of the celery task>, 'process': <name of the process>, 'param_value': <task condition>, 'param_argnum': <position of the condition>}
-    }
-    
-    In this particular case, we check the alienvault-update and alienvault-reconfig. The condition is that the task has to belong to the given system_id
-    """
-    
-    success, tasks = system.apimethod_check_task_status(system_id, t_list)
+    success, tasks = check_update_and_reconfig_status(system_id)
     if not success:
         return make_error("Cannot retrieve task status for system %s. Please verify that the system is reachable." % system_id, 500)
-        
+
     return make_ok(tasks=tasks)
 
 
 @blueprint.route('/<system_id>/log', methods=['GET'])
 @document_using('static/apidocs/system.html')
 @admin_permission.require(http_exception=403)
-@accepted_url({'system_id': {'type': UUID, 'values': ['local']}, 'log_file': {'type': str, 'optional': False}, 
+@accepted_url({'system_id': {'type': UUID, 'values': ['local']},
+               'log_file': {'type': str, 'optional': False},
                'lines': {'type': str, 'optional': False}})
 def get_last_log_lines(system_id):
     """Get a certain number of log lines from a given log file
-    
+
         The blueprint handle the following url:
         GET /av/api/1.0/system/<system_id>/log?log_file=<log_file>&lines=<line_number>
-    
+
         Args:
             system_id (str): String with system id (uuid) or local.
             log_file (str): String with the name of the log file.
@@ -310,9 +315,41 @@ def get_last_log_lines(system_id):
     """
     log_file = request.args.get("log_file")
     lines = request.args.get("lines")
-    
+
     success, msg = system.get_last_log_lines(system_id, log_file, int(lines))
     if not success:
         return make_error("Cannot get log lines for given file: %s" % str(msg), 500)
 
     return make_ok(lines=msg)
+
+
+@blueprint.route('/asec', methods=['PUT'])
+@document_using('static/apidocs/system.html')
+@admin_permission.require(http_exception=403)
+@accepted_url({'plugins': {'type': str, 'optional': False}})
+def sync_asec_plugins():
+    """Send ASEC plugins to all sensors
+
+        The blueprint handle the following url:
+        PUT /av/api/1.0/system/asec?plugins=<plugins>
+
+        Args:
+            plugins (str): Comma separated plugin list
+    """
+    plugins = request.args.get("plugins")
+    plugin_list = plugins.split(',')
+    all_ok = True
+    failed_plugins = []
+    for plugin in plugin_list:
+        (success, msg) = api_sync_asec(plugin=plugin, enable=True)
+        if not success:
+            all_ok = False
+            failed_plugins.append(plugin)
+            api_log.error("Sync failed for plugin %s: %s" % (plugin, msg))
+        else:
+            api_log.debug("Sync OK for plugin %s" % plugin)
+
+    if not all_ok:
+        return make_error("ASEC plugins sync failed for plugins: %s" % ','.join(failed_plugins), 500)
+
+    return make_ok(msg="ASEC plugins sync OK")

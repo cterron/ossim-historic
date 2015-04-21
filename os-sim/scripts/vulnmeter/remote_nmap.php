@@ -39,9 +39,9 @@ require_once 'av_init.php';
 
 
 $scan_modes = array(
-    'ping'   => _('Ping'), 
-    'normal' => _('Normal'), 
-    'fast'   => _('Fast Scan'), 
+    'ping'   => _('Ping'),
+    'normal' => _('Normal'),
+    'fast'   => _('Fast Scan'),
     'full'   => _('Full Scan'),
     'custom' => _('Custom')
 );
@@ -73,118 +73,118 @@ $ports      = $argv[8]; // When type is custom, specific ports
 
 
 // Check targets
-$target_array = explode(" ", $targets);
+$target_array = explode(' ', $targets);
 
-foreach ($target_array as $target) 
-{    
-    ossim_valid($target, OSS_IP_ADDRCIDR, 'illegal:' . _('Target'));
-    
-    if (ossim_error()) 
+foreach ($target_array as $target)
+{
+    //Only IP/CIDR is validated
+    $_target = explode('#', $target);
+    $_target = (count($_target) == 1) ? $_target[0] : $_target[1];
+
+
+    ossim_valid($_target, OSS_IP_ADDRCIDR, 'illegal:' . _('Target'));
+
+    if (ossim_error())
     {
-         $error_message[] = "Incorrect asset format in $target";         
-         ossim_set_error(FALSE);
+        $error_message[] = ossim_get_error_clean();
+        ossim_set_error(FALSE);
     }
 }
 
 // Check remote sensor
-if(!valid_hex32($remote_sensor) && $remote_sensor != 'null' && !empty($remote_sensor)) 
+if(!valid_hex32($remote_sensor) && $remote_sensor != 'null' && !empty($remote_sensor))
 {
     ossim_valid($remote_sensor, OSS_IP_ADDR, 'illegal:' . _('Remote sensor'));
 }
 
-if (ossim_error()) 
+if (ossim_error())
 {
-    $error_message[] = 'Illegal remote sensor';
-    
+    $error_message[] = ossim_get_error_clean();
+
     ossim_set_error(FALSE);
 }
 
 // check timing template
 ossim_valid($timing_template, OSS_NULLABLE, OSS_TIMING_TEMPLATE, 'illegal:' . _('Timing Template'));
-if (ossim_error()) 
+if (ossim_error())
 {
-     $error_message[] = 'Illegal timing template';
-     
-     ossim_set_error(FALSE);
+    $error_message[] = ossim_get_error_clean();
+
+    ossim_set_error(FALSE);
 }
 
 // check scan type
 ossim_valid($scan_type, OSS_NULLABLE, OSS_ALPHA, 'illegal:' . _('Scan type'));
-if (ossim_error()) 
+if (ossim_error())
 {
-     $error_message[] = 'Illegal scan type';
-     
-     ossim_set_error(FALSE);
+    $error_message[] = ossim_get_error_clean();
+
+    ossim_set_error(FALSE);
 }
 
 // check scan file
 ossim_valid($user, OSS_NULLABLE, OSS_USER_2, 'illegal:' . _('User'));
-if (ossim_error()) 
+if (ossim_error())
 {
-     $error_message[] = 'Illegal scan file';
-     
-     ossim_set_error(FALSE);
+    $error_message[] = ossim_get_error_clean();
+
+    ossim_set_error(FALSE);
 }
 
 // check ports
 ossim_valid($ports, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, ',', 'illegal:' . _('Custom Ports'));
-if (ossim_error()) 
+if (ossim_error())
 {
-     $error_message[] = 'Illegal custom ports';
+    $error_message[] = ossim_get_error_clean();
 }
 
-if (!empty($error_message)) 
+if (!empty($error_message))
 {
-    die(implode("\n", $error_message)."\n");
+    $status_message  = _('Scan could not be completed.  We found the following errors').":\n".implode("\n", $error_message);
+
+    die($status_message);
 }
 
-if ($remote_sensor != '' && $remote_sensor != 'null') 
+
+if ($remote_sensor != '' && $remote_sensor != 'null')
 {
-    $rscan = new Remote_scan($targets, $scan_type, $remote_sensor, $user, $timing_template, $autodetect, $rdns, $ports);
-            
+    $scan = new Remote_scan($targets, $scan_type, $remote_sensor, $user, $timing_template, $autodetect, $rdns, $ports);
+
     $quiet = ($timing_template != '') ? FALSE : TRUE;
-    
+
     echo 'Scanning remote networks: '.$targets."\n";
-    
-    $rscan->do_scan($quiet);
-    
-    if ($rscan->err() == '')
-	{
-        $ips = $rscan->get_scan();      
-    } 
-	else 
-	{    
-        $ips = array();
-        echo '<br>\n<b>Unable to run remote scan:</b> '.$rscan->err()."\n";
-    }
-    
-    // delete results (only for vulnerabilities scans)
-    if ($argv[3] == 'vulnscan')
+
+    $scan->do_scan($quiet);
+
+    $last_error = $scan->get_last_error();
+
+    if (is_array($last_error) && !empty($last_error['data']))
     {
-        $rscan->del_scan();
+        $status_message = _('Scan could not be completed.  We found the following errors').":\n".$last_error['data'];
+
+        die($status_message);
     }
-} 
-else 
+}
+else
 {
     echo 'Scanning local networks: '.$targets."\n";
-    
+
     $only_ping = ($scan_type == 'ping' || $argv[3] == 'vulnscan') ? TRUE : FALSE;
-    
     $config    = array('only_ping' => $only_ping, 'user' => $user);
-    
+
     $scan = new Scan($targets, $config);
 
     if ($argv[3] != 'vulnscan')
     {
         // Append Timing
         $scan->append_option($timing_template);
-        
+
         // Append Autodetect
-        if ($autodetect) 
+        if ($autodetect)
         {
             if ($scan_type != 'fast')
             {
-        	    $scan->append_option('-A');
+                $scan->append_option('-A');
             }
             else
             {
@@ -192,45 +192,45 @@ else
             }
         }
         // Append RDNS
-        if (!$rdns) 
+        if (!$rdns)
         {
-        	$scan->append_option('-n');
+            $scan->append_option('-n');
         }
-    
-        if ($scan_type == 'fast') 
-    	{
+
+        if ($scan_type == 'fast')
+        {
             $scan->append_option('-p21,22,23,25,53,80,113,115,135,139,161,389,443,445,554,1194,1241,1433,3000,3306,3389,8080,9390,27017');
-        } 
-    	elseif ($scan_type == 'custom')
+        }
+        elseif ($scan_type == 'custom')
         {
-        	$scan->append_option("-sS -p $ports");
+            $scan->append_option("-sS -p $ports");
         }
-    	elseif ($scan_type == 'normal') 
-    	{
-        	$scan->append_option('-sS');
+        elseif ($scan_type == 'normal')
+        {
+            $scan->append_option('-sS');
         }
-    	elseif ($scan_type == 'full') 
-    	{
-        	$scan->append_option('-sS -p 1-65535');
+        elseif ($scan_type == 'full')
+        {
+            $scan->append_option('-sS -p 1-65535');
         }
     }
-    
+
     // ping scan
     $scan->search_hosts();
-    
+
     $status = $scan->get_status();
-    
+
     while($status == 'Searching Hosts')
     {
         $status = $scan->get_status();
         sleep(2);
     }
 
-    // normal scan
+    // Normal scan
     if ($scan_type != 'ping' && $argv[3] != 'vulnscan')
-    { 
+    {
         $scan->launch_scan();
-    
+
         while($scan->get_status() == 'Scanning Hosts')
         {
             $progress = $scan->get_progress();
@@ -238,23 +238,27 @@ else
             sleep(2);
         }
     }
-           
-	$ips = $scan->get_results();
-	
-    // delete results (only for vulnerabilities scans)
-    if ($argv[3] == 'vulnscan')
+}
+
+
+if ($argv[3] == 'vulnscan')
+{
+    $ips = array();
+
+    if (is_object($scan))
     {
+        // Getting discovered hosts
+        $ips = (get_class($scan) == 'Remote_scan') ? $scan->get_scan() : $scan->get_results();
+
+        // Delete results
         $scan->delete_data();
     }
-}
 
-
-if (is_array($ips['scanned_ips']) && !empty($ips['scanned_ips']))
-{
-    foreach ($ips['scanned_ips'] as $ip => $val) 
+    if (is_array($ips['scanned_ips']) && !empty($ips['scanned_ips']))
     {
-        echo "Host $ip appears to be up\n";
+        foreach ($ips['scanned_ips'] as $ip => $val)
+        {
+            echo "Host $ip appears to be up\n";
+        }
     }
 }
-
-?>

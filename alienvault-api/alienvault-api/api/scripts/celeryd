@@ -21,7 +21,9 @@
 # some commands work asyncronously, so we'll wait this many seconds
 SLEEP_SECONDS=5
 
-DEFAULT_PID_FILE="/var/run/alienvault/celeryd.pid"
+DEFAULT_RUN_DIR=/var/run
+DEFAULT_PID_DIR=$DEFAULT_RUN_DIR/alienvault
+DEFAULT_PID_FILE="$DEFAULT_PID_DIR/celeryd.pid"
 DEFAULT_LOG_FILE="/var/log/alienvault/api/celeryd.log"
 DEFAULT_LOG_LEVEL="INFO"
 DEFAULT_CELERYD="-m celery.bin.celeryd_detach"
@@ -109,14 +111,43 @@ check_paths() {
     if [ $CELERY_CREATE_LOGDIR -eq 1 ]; then
         create_default_dir "$CELERYD_LOG_DIR"
     fi
+
     if [ $CELERY_CREATE_RUNDIR -eq 1 ]; then
-        create_default_dir "$CELERYD_PID_DIR"
+        if [ -h $DEFAULT_RUN_DIR ]; then
+            # Wheezy
+            mount | grep "/run type"
+            if [ "$?" != "1" ]; then
+                if [ ! -d $CELERYD_PID_DIR ]; then
+                    create_default_dir "$CELERYD_PID_DIR"
+                fi
+            fi
+        else
+            # Squeeze
+            if [ ! -d $CELERYD_PID_DIR ]; then
+                create_default_dir "$CELERYD_PID_DIR"
+            fi
+        fi
     fi
 }
 
 create_paths() {
     create_default_dir "$CELERYD_LOG_DIR"
-    create_default_dir "$CELERYD_PID_DIR"
+
+    
+    if [ -h $DEFAULT_RUN_DIR ]; then
+        # Wheezy
+        mount | grep "/run type"
+        if [ "$?" != "1" ]; then
+            if [ ! -d $CELERYD_PID_DIR ]; then
+                create_default_dir "$CELERYD_PID_DIR"
+            fi
+        fi
+    else
+        # Squeeze
+        if [ ! -d $CELERYD_PID_DIR ]; then
+            create_default_dir "$CELERYD_PID_DIR"
+        fi
+    fi
 }
 
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
@@ -180,11 +211,17 @@ check_status () {
     [ "$one_failed" ] && exit 1 || exit 0
 }
 
+clean_jobs_db () {
+    ossim-db alienvault_api <<< "TRUNCATE celery_job;"
+
+}
+
 
 case "$1" in
     start)
         check_dev_null
         check_paths
+        clean_jobs_db
         start_workers
     ;;
 

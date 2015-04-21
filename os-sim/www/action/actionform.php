@@ -269,7 +269,7 @@ else
     {
         $action_type = $action->get_action_type();
 		$ctx         = $action->get_ctx();
-        $cond        = htmlspecialchars($action->get_cond());
+        $cond        = Util::htmlentities($action->get_cond());
         $on_risk     = $action->is_on_risk();
 		$name        = $action->get_name();
 		
@@ -316,7 +316,7 @@ $update  = intval(GET('update'));
     
     <script type='text/javascript'>
        
-        <?php $defaultcond = htmlspecialchars("RISK>=1");?>
+        <?php $defaultcond = Util::htmlentities("RISK>=1");?>
 		
 		var item_focused = '';
 				    
@@ -732,7 +732,7 @@ $update  = intval(GET('update'));
 
 		<tr>
             <th>
-                <span class="s_label" id='only'><?php echo _('Condition')?></label>
+                <span class="s_label" id='only'><?php echo _('Condition')?></span>
             </th>
 			<td style="text-align:center;padding-left:14px;" class="nobborder">
 				<input type="radio" name="only" class="only" id="only_1" onfocus='set_focus(this);' onchange="changecond(1)" <?php echo ($cond != $defaultcond) ? "checked" : ""?>/>
@@ -740,7 +740,6 @@ $update  = intval(GET('update'));
 				
 				<input type="radio" name="only" class="only" id="only_2" onfocus='set_focus(this);' onchange="changecond(2)" <?php echo ($cond == $defaultcond && !$on_risk) ? "checked" : ""?>/>
 				<label for="only_1"><?php echo _('Only if it is an alarm')?></label>
-			
 				
 				<input type="radio" name="only" class="only" id="only_3" onfocus='set_focus(this);' onchange="changecond(3)" <?php echo (!in_array($cond,array($defaultcond, '', 'True')) || $on_risk) ? "checked" : ""?>/>
 				<label for="only_3"><?php echo _('Define logical condition')?></label>
@@ -758,7 +757,7 @@ $update  = intval(GET('update'));
 						</td>
 						
 						<td class="left noborder">
-							<input onfocus='set_focus(this);' type="text" id="cond" name="cond" size="55" class="vfield" value="<?php echo $cond ?>">
+							<input onfocus='set_focus(this);' type="text" id="cond" name="cond" size="50" maxlength="255" class="vfield" value="<?php echo $cond ?>"> <span class="gray"><?php echo "(*) "._("Up to 255 characters") ?></span>
 						</td>
 					</tr>
 					

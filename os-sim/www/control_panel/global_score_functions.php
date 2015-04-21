@@ -53,7 +53,9 @@ function get_score($id, $type)
         $type
     );
     
-    if (!$rs = & $conn->Execute($sql, $params)) 
+    $rs = $conn->Execute($sql, $params);
+    
+    if (!$rs)
     {
         die($conn->ErrorMsg());
     }
@@ -76,7 +78,8 @@ function get_host_qualification($conn)
 	$arr = array();
 	$sql = "SELECT hex(host_id) as host_id, compromise, attack FROM host_qualification where attack>0 or compromise>0";
 	
-	if (!$rs = & $conn->Execute($sql)) 
+	$rs = $conn->Execute($sql);
+	if (!$rs)
 	{
 		die($conn->ErrorMsg());
 	}
@@ -97,7 +100,9 @@ function get_net_qualification($conn)
 	$arr = array();
 	$sql = "SELECT hex(net_id) as net_id, compromise, attack FROM net_qualification";
 	
-	if (!$rs = & $conn->Execute($sql)) 
+	$rs = $conn->Execute($sql);
+	
+	if (!$rs) 
 	{
 		die($conn->ErrorMsg());
 	}
@@ -375,7 +380,9 @@ function html_service_level()
         $range
     );
     
-    if (!$rs = & $conn->Execute($sql, $params)) 
+    $rs = $conn->Execute($sql, $params);
+    
+    if (!$rs) 
     {
         die($conn->ErrorMsg());
     }

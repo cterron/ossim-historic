@@ -76,10 +76,15 @@ $t_name  = "<div>"._('A valid hostname satisfy the following rules (according RF
 
 $t_ips   = '<div>'._("You can type one unique IP Address or a IP list separated by coma: IP1, IP2, IP3...").'</div>';
 
-$t_fqdns = "<div>"._("Notes about fully qualified domain name")." <strong>(FQDN)</strong>:</div>
+$t_fqdns = "<div>"._('A valid FQDN satisfy the following rules (according RFC 952, 1035, 1123 and 2181)').":</div>
             <div>
                 <ul class='ul_tiptip'>
-                    <li>"._("Syntax defined by RFC 1035, RFC 1123 and RFC 2181")."</li>
+                    <li>"._("Hostnames are composed of a series of labels concatenated with dots. Each label is 1 to 63 characters long.")."</li>
+                    <li>"._("It may contain the ASCII letters a-z (in a case insensitive manner), the digits 0-9, and the hyphen ('-').")."</li>
+                    <li>"._("Labels cannot start or end with hyphens (RFC 952).")."</li>
+                    <li>"._("Labels can start with numbers (RFC 1123).")."</li>
+                    <li>"._("Max length of ascii hostname including dots is 253 characters (not counting trailing dot).")."</li>
+                    <li>"._("Underscores ('_') are not allowed in hostnames")."</li>
                     <li>"._("Use comma to separate multiple FQDNs")."</li>
                 </ul>
             </div>";
@@ -182,10 +187,21 @@ $is_ext_ctx   = FALSE;
 $context_type = 'local';
 $ext_ctxs     = Session::get_external_ctxs($conn);
 
+
 if (!empty($ext_ctxs[$ctx]))  
 {
     $is_ext_ctx   = TRUE;
     $context_type = 'remote';
+    $r_server     = Server::get_server_by_ctx($conn, $ctx);
+        
+    if ($r_server)
+    {
+        $r_server_name = $r_server->get_name() . ' ('. $r_server->get_ip() .')';
+    }
+    else
+    {
+        $r_server_name = '';
+    }
 }
 
 $descr	     = $host->get_descr();
@@ -240,8 +256,6 @@ $db->close();
     	<script type="text/javascript" src="../js/jquery.elastic.source.js" charset="utf-8"></script>
     	<script type="text/javascript" src="../js/utils.js"></script>
     	
-    	<!--<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>-->
-        <script type="text/javascript" src=" https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>    
     	<script type="text/javascript" src="../js/jquery.autocomplete_geomod.js"></script> 
     	<script type="text/javascript" src="../js/geo_autocomplete.js"></script> 
     	
@@ -257,8 +271,7 @@ $db->close();
         <script type="text/javascript" src="../js/asset_context_tree.js.php"></script>
         <script type="text/javascript" src="../js/asset_devices.js.php"></script>
         <script type="text/javascript" src="../js/av_map.js.php"></script>
-    
-        <!-- <script type="text/javascript" src="../js/jquery.autocomplete.pack.js"></script> -->
+
     
     	<link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
         <link rel="stylesheet" type="text/css" href="../style/jquery.autocomplete.css" />
@@ -487,7 +500,8 @@ $db->close();
     	</style>
     	
     	<script type='text/javascript'>          
-                      
+            
+            
             /****************************************************
              ******************* AJAX Validator *****************
              ****************************************************/
@@ -500,7 +514,8 @@ $db->close();
             }
     		
                         
-            $(document).ready(function(){
+            $(document).ready(function()
+            {
                 
                /****************************************************
                 ************************ Icon **********************
@@ -550,79 +565,82 @@ $db->close();
                 
                 av_map = new Av_map('c_map');
                                                                                                                              
-                if(Av_map.is_map_available())
-                {                    
-                    av_map.set_location('<?php echo $latitude;?>', '<?php echo $longitude;?>');                    
-                    av_map.set_zoom('<?php echo $zoom?>');   
-                                    
-                    av_map.draw_map();
-                    
-                    if(av_map.get_lat() != '' && av_map.get_lng() != '')
-                    {                        
-                        av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                    }                       
-                    
-                    $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
-    					mapkey: '<?php echo $map_key?>', 
-    					selectFirst: true,
-    					minChars: 3,
-    					cacheLength: 50,
-    					width: 245,
-    					scroll: true,
-    					scrollHeight: 330
-    				}).result(function(_event, _data) {
-    					if (_data) 
-    					{
-    						//Set map coordenate
-                            av_map.map.fitBounds(_data.geometry.viewport);
-                                                        
-                            var aux_lat = _data.geometry.location.lat();
-                            var aux_lng = _data.geometry.location.lng();   
-                            
-                            //console.log(aux_lat);
-                            //console.log(aux_lng);
-                            
-                            av_map.set_location(aux_lat, aux_lng);                            
-                                                        
-                            $('#latitude').val(av_map.get_lat());
-                            $('#longitude').val(av_map.get_lng());
-
-                            //Save address
-                            
-                            av_map.set_address(_data.formatted_address);
-                            
-                            // Marker (Add or update)
-                            
-                            av_map.remove_all_markers();
+                Av_map.is_map_available(function(conn)
+                {   
+                    if (conn) 
+                    {               
+                        av_map.set_location('<?php echo $latitude;?>', '<?php echo $longitude;?>');                    
+                        av_map.set_zoom('<?php echo $zoom?>');   
+                                        
+                        av_map.draw_map();
+                        
+                        if(av_map.get_lat() != '' && av_map.get_lng() != '')
+                        {                        
                             av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                                                                                                            
-                            av_map.map.setZoom(8);		
-    					}
-    				});                                     
-                                                                    
-                    //Latitude and Longitude (Handler Onchange)
-    				av_map.bind_pos_actions();
-    				
-    				//Search box (Handler Keyup and Blur)
-    				av_map.bind_sl_actions();
-    				
-    				<?php
-    				if ($latitude != '' && $longitude != '')
-    				{
-        				?>
-        				// Set address by default in search box
-        				av_map.set_address_by_coordenates(av_map.lat_lng);
+                        }                       
+                        
+                        $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
+        					mapkey: '<?php echo $map_key?>', 
+        					selectFirst: true,
+        					minChars: 3,
+        					cacheLength: 50,
+        					width: 245,
+        					scroll: true,
+        					scrollHeight: 330
+        				}).result(function(_event, _data) {
+        					if (_data) 
+        					{
+        						//Set map coordenate
+                                av_map.map.fitBounds(_data.geometry.viewport);
+                                                            
+                                var aux_lat = _data.geometry.location.lat();
+                                var aux_lng = _data.geometry.location.lng();   
+                                
+                                //console.log(aux_lat);
+                                //console.log(aux_lng);
+                                
+                                av_map.set_location(aux_lat, aux_lng);                            
+                                                            
+                                $('#latitude').val(av_map.get_lat());
+                                $('#longitude').val(av_map.get_lng());
+    
+                                //Save address
+                                
+                                av_map.set_address(_data.formatted_address);
+                                
+                                // Marker (Add or update)
+                                
+                                av_map.remove_all_markers();
+                                av_map.add_marker(av_map.get_lat(), av_map.get_lng());
+                                                                                                                
+                                av_map.map.setZoom(8);		
+        					}
+        				});                                     
+                                                                        
+                        //Latitude and Longitude (Handler Onchange)
+        				av_map.bind_pos_actions();
+        				
+        				//Search box (Handler Keyup and Blur)
+        				av_map.bind_sl_actions();
+        				
         				<?php
-    				}
-    				?>				 				        				        				     			                     
-                }
-                else
-                {
-                    av_map.draw_warning();
-                    
-                    $('#search_location, #latitude, #longitude').attr('disabled', 'disabled');    
-                    
-                }                  
+        				if ($latitude != '' && $longitude != '')
+        				{
+            				?>
+            				// Set address by default in search box
+            				av_map.set_address_by_coordenates(av_map.lat_lng);
+            				<?php
+        				}
+        				?>				 				        				        				     			                     
+                    }
+                    else
+                    {
+                        av_map.draw_warning();
+                        
+                        $('#search_location, #latitude, #longitude').attr('disabled', 'disabled');    
+                        
+                    } 
+                });                 
                            
                 
                /****************************************************
@@ -718,9 +736,9 @@ $db->close();
                 <?php
                 if ('saved' === $msg)
                 {
-                ?>
-                parent.GB_hide();
-                <?php
+                    ?>
+                    parent.GB_close();
+                    <?php
                 }
                 ?>
 
@@ -740,7 +758,7 @@ $db->close();
             if ($is_ext_ctx == TRUE)
             {
             	$config_nt = array(
-                    'content' => _('The properties of this asset can only be modified at the USM:')." <strong>".$external_ctxs[$ctx]."</strong>",
+                    'content' => _('The properties of this asset can only be modified at the USM:')." <strong>$r_server_name</strong>",
                     'options' => array (
                         'type'          => 'nf_warning',
                         'cancel_button' => TRUE
@@ -874,7 +892,7 @@ $db->close();
 					<!-- FQDN textarea -->
                     <tr>
                         <td class="td_left">
-						    <textarea name="fqdns" id="fqdns" class="vfield"><?php echo $fqdns?></textarea>
+						    <textarea name="fqdns" id="fqdns" class="info vfield" title="<?php echo $t_fqdns?>"><?php echo $fqdns?></textarea>
 						</td>
 					</tr>
 					

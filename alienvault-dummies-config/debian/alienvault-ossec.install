@@ -1,0 +1,2 @@
+alienvault-ossec/rules0090-ossec.iptables etc/iptables/
+alienvault-ossec/var/ossec/rules/alienvault-directory-service_rules.xml var/ossec/rules/

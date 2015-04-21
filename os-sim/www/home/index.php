@@ -46,10 +46,11 @@ if (Session::am_i_admin() && Welcome_wizard::run_welcome_wizard())
 $trial_days       = Session::trial_days_to_expire();
 $flag_trial_popup = FALSE;
 
+
 if($pro && ($trial_days == 7 || $trial_days == 2))
 {
-    $db   = new ossim_db();
-    $conn = $db->connect();
+    $db     = new ossim_db();
+    $conn   = $db->connect();
 
     $user   = Session::get_session_user();
 
@@ -73,7 +74,7 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
             $config->set($user, 'popup', '2days', 'simple', 'trial');
         }
     }
-
+    
     $db->close();
 }
 
@@ -89,6 +90,7 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
             $_files = array(
                 array('src' => 'av_common.css?only_common=1',   'def_path' => TRUE),
                 array('src' => 'home.css',                      'def_path' => TRUE),
+                array('src' => 'tipTip.css',                    'def_path' => TRUE),
                 array('src' => 'flexnav.css',                   'def_path' => TRUE),
                 array('src' => 'lightbox.css',                  'def_path' => TRUE),
                 array('src' => 'jquery.vex.css',                'def_path' => TRUE),
@@ -99,6 +101,7 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
             $_files = array(
                 array('src' => 'jquery.min.js',             'def_path' => TRUE),
                 array('src' => 'jquery-ui.min.js',          'def_path' => TRUE),
+                array('src' => 'av_internet_check.js.php',  'def_path' => TRUE),
                 array('src' => 'jquery.cookie.js',          'def_path' => TRUE),
                 array('src' => 'jquery.json-2.2.js',        'def_path' => TRUE),
                 array('src' => 'jquery.sparkline.js',       'def_path' => TRUE),
@@ -107,8 +110,10 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
                 array('src' => 'utils.js',                  'def_path' => TRUE),
                 array('src' => 'lightbox.js',               'def_path' => TRUE),
                 array('src' => 'purl.js',                   'def_path' => TRUE),
+                array('src' => 'jquery.tipTip.js',          'def_path' => TRUE),
                 array('src' => 'jquery.vex.js.php',         'def_path' => TRUE),
                 array('src' => 'av_menu.js.php',            'def_path' => TRUE),
+                array('src' => 'desktop-notify.js',         'def_path' => TRUE),
                 array('src' => '/home/sidebar.js.php',      'def_path' => FALSE),
                 array('src' => '/home/home.js.php',         'def_path' => FALSE)
             );
@@ -116,15 +121,13 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
             Util::print_include_files($_files, 'js');
         ?>
 
-        <!-- this script is to check internet connection -->
-        <script type="text/javascript" src="https://www.alienvault.com/product/help/ping.js"></script>
-
         <script type="text/javascript">
             
             $(document).ready(function()
-    		{        		
-    		        		
+    		{        		                
     		    load_menu_scripts();
+    		    
+    		    $('.tip').tipTip();
 
                 <?php
                 if ($flag_trial_popup)
@@ -135,7 +138,15 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
 
                     setTimeout(function()
                     {
-                    	LB_show("<?php echo _('Trial Status') ?>", url, '80%', '80%', false, false);
+                        params = {
+                            caption       : "<?php echo _('Trial Status') ?>", 
+                            url           : url, 
+                            height        : '80%',
+                            width         : '80%',
+                            close_overlay : false
+                        };
+                        
+                    	LB_show(params);
 
                     }, 2000);
 
@@ -161,8 +172,12 @@ if($pro && ($trial_days == 7 || $trial_days == 2))
 
 
                     <div id='header_options'>
-                        <span id='welcome'><?php echo _('Welcome') . ' ' . Session::get_session_user()?></span>
-                        <span id='sep_ri'>|</span>
+                        <span id='welcome' title="<?php echo Session::get_session_user() ?>" class='tip'>
+                            <?php echo _('Welcome') . ' ' . substr(Session::get_session_user(), 0, 15) ?>
+                        </span>
+                        <span class='sep_ri'>|</span>
+                        <div id="top_system_info"></div>
+                                                
                         <a id='link_settings' href='javascript:void(0);'><?php echo _('Settings') ?></a>
                         <a id='link_support' href='javascript:void(0);'><?php echo _('Support') ?></a>
                         <a href='<?php echo  AV_MAIN_PATH ?>/session/login.php?action=logout'><?php echo _('Logout') ?></a>

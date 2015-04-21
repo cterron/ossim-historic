@@ -37,12 +37,12 @@ require_once 'av_init.php';
 if (!Session::am_i_admin())
 {
      $config_nt = array(
-        'content' => _("You do not have permission to see this section"),
+        'content' => _('You do not have permission to see this section'),
         'options' => array (
             'type'          => 'nf_error',
-            'cancel_button' => false
+            'cancel_button' => FALSE
         ),
-        'style'   => 'width: 60%; margin: 30px auto; text-align:center;'
+        'style' => 'width: 60%; margin: 30px auto; text-align:center;'
     );
 
     $nt = new Notification('nt_1', $config_nt);
@@ -88,19 +88,18 @@ switch ($order)
 
 $torder = (!strcasecmp($torder, 'asc')) ? 'false' : 'true';
 
-ossim_valid($maxrows,       OSS_DIGIT,                          'illegal: Max Rows');
-ossim_valid($search_str,    OSS_INPUT, OSS_NULLABLE,            'illegal: Search String');
-ossim_valid($from,          OSS_DIGIT,                          'illegal: From Param');
-ossim_valid($order,         OSS_ALPHA, OSS_SCORE, OSS_NULLABLE, 'illegal: Order Param');
-ossim_valid($torder,        OSS_ALPHA, OSS_NULLABLE,            'illegal: tOrder Param');
-ossim_valid($sec,           OSS_DIGIT,                          'illegal: Sec Param');
+ossim_valid($maxrows,       OSS_DIGIT,                           'illegal:' . _('Max Rows'));
+ossim_valid($search_str,    OSS_INPUT, OSS_NULLABLE,             'illegal:' . _('Search String'));
+ossim_valid($from,          OSS_DIGIT,                           'illegal:' . _('From Param'));
+ossim_valid($order,         OSS_ALPHA, OSS_SCORE, OSS_NULLABLE,  'illegal:' . _('Order Param'));
+ossim_valid($torder,        OSS_ALPHA, OSS_NULLABLE,             'illegal:' . _('tOrder Param'));
+ossim_valid($sec,           OSS_DIGIT,                           'illegal:' . _('Sec Param'));
 
 
 $response = array();
 
 if (ossim_error())
 {
-
     $response['sEcho']                = 1;
     $response['iTotalRecords']        = 1;
     $response['iTotalDisplayRecords'] = 1;
@@ -113,21 +112,32 @@ if (ossim_error())
 $level = intval(GET('level'));
 switch($level)
 {
-    case 0: $level = 'info,warning,error'; break;
-    case 1: $level = 'info,warning,error'; break;
-    case 2: $level = 'warning,error'; break;
-    case 3: $level = 'error'; break;
+    case 0:
+        $level = 'info,warning,error';
+    break;
+
+    case 1:
+        $level = 'info,warning,error';
+    break;
+
+    case 2:
+        $level = 'warning,error';
+    break;
+
+    case 3:
+        $level = 'error';
+    break;
 }
 
-$page = intval($from/$maxrows) + (( $from % $maxrows == 0 ) ? 1 : 0);
+$page = intval($from/$maxrows) + (($from % $maxrows == 0) ? 1 : 0);
 
 // Call API
 try
 {
     $filters = array(
-        'level'        => $level,
-        'order_by'     => $order,
-        'order_desc'   => $torder
+        'level'      => $level,
+        'order_by'   => $order,
+        'order_desc' => $torder
     );
 
     $pagination = array(

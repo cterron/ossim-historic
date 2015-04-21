@@ -92,8 +92,9 @@ $where = Security_report::make_where($conn,$date_from,$date_to,$plugin_list,$dDB
 $query = "SELECT DISTINCT ip_src AS ip FROM alienvault_siem.acid_event WHERE 1=1 $where 
     UNION SELECT DISTINCT ip_dst as ip FROM alienvault_siem.acid_event WHERE 1=1 $where";
 
+$rs = $conn->Execute($query);
 
-if (!$rs = & $conn->Execute($query)) 
+if (!$rs)
 {
 	error_log($conn->ErrorMsg(), 0);
 	return;

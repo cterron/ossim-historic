@@ -34,15 +34,10 @@ import uuid
 
 from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
 from db.methods.system import get_systems
-from db.methods.data import get_timestamp_last_event_for_each_device
-from db.methods.sensor import get_devices_ids_list_per_sensor
+from db.methods.data import get_timestamp_last_event_for_each_device, get_asset_id_from_ip
 from ansiblemethods.sensor.ossec import get_ossec_agent_data
 from ansiblemethods.sensor.plugin import get_plugin_enabled_by_sensor
-from ansiblemethods.sensor.log import get_devices_logging
-
-
-
-
+from ansiblemethods.sensor.log import get_devices_logging, get_network_devices_for_sensor
 
 import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
@@ -144,13 +139,25 @@ class MonitorSensorAssetLogActivity(Monitor):
 
                 tmp_hash = {}
                 if "contacted" in response:
-                    if sensor_ip in response['contacted']:
+                    if sensor_ip in response['contacted'] and 'data' in response['contacted'][sensor_ip]:
                         tmp_hash = response['contacted'][sensor_ip]['data']
                 plugins_enabled_by_sensor[sensor_ip] = tmp_hash  # plugin_name = [log_file]
-                sensor_devices_list = get_devices_ids_list_per_sensor(sensor_ip,sensor_devices_logging.keys())
-                for device_id, device_ip in sensor_devices_list.iteritems():
-                    if not device_list.has_key(device_id):
-                        device_list[device_id] = device_ip
+
+                # Retrieve network devices logging to sensor
+                sensor_devices_list = get_network_devices_for_sensor(sensor_ip)
+                if sensor_devices_list:
+                    for device_id, device_ip in sensor_devices_list.iteritems():
+                        if device_id and device_ip and not device_list.has_key(device_id):
+                            device_list[device_id] = device_ip
+
+                # The add logging devices that are not yet present in the device list
+                # only if we can find the device_id in the database
+                for asset_ip in sensor_devices_logging.keys():
+                    if asset_ip not in device_list.values():
+                        success, asset_id = get_asset_id_from_ip(asset_ip, sensor_ip)
+                        if success:
+                            device_list[asset_id] = asset_ip
+
 
             # Sensors table has the vpn ip if it exists
             # #10576 -  asset_list = get_asset_list()
@@ -178,8 +185,13 @@ class MonitorSensorAssetLogActivity(Monitor):
                 # Are there any events in the database coming from this device?
                 if last_event_per_host.has_key(device_id_str_with_no_hyphen):
                     has_events = True
+                    has_logs = True
+                    num_of_enabled_plugins = 1
                     # Time in seconds since the last event
-                    td = (now - last_event_per_host[device_id_str_with_no_hyphen])
+                    event_date = last_event_per_host[device_id_str_with_no_hyphen]
+                    td = (now - datetime(year=event_date.year,
+                                         month=event_date.month,
+                                         day=event_date.day))
                     # Is it been over 24 hours since the arrival of the latest event coming from this device?
                     last_event_arrival = td.seconds + td.days * 86400
                 else:

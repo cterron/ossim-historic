@@ -69,6 +69,7 @@ class Menu
     */
     private $user;
 
+
     /**
     * Menu version (Open Source or Professional)
     *
@@ -95,6 +96,7 @@ class Menu
     */
     private $menus;
 
+
     /**
     * Selected menu option
     *
@@ -102,6 +104,7 @@ class Menu
     * @access private
     */
     private $m_option;
+
 
     /**
     * Selected submenu option
@@ -119,6 +122,7 @@ class Menu
     * @access private
     */
     private $h_option;
+
 
     /**
     * Selected lmenu (local menu) option
@@ -350,6 +354,7 @@ class Menu
                     + L_lmenu:
                         + Option:ISO 27001
                         + Option:PCI DSS 2.0
+                        + Option:PCI DSS 3.0
                     + R_lmenu:
                         + Option:Launch scripts
                 + Hmenu:Cross Correlation
@@ -607,8 +612,6 @@ class Menu
 
         $tz        = Util::get_timezone();
         $timetz    = gmdate("U")+(3600*$tz);
-        $date_from = gmdate("Y-m-d", strtotime("-30 day UTC",$timetz));
-        $date_to   = gmdate("Y-m-d", $timetz);
         $tmp_month = gmdate("m", strtotime("-1 day UTC",$timetz));
         $tmp_day   = gmdate("d", strtotime("-1 day UTC",$timetz));
         $tmp_year  = gmdate("Y", strtotime("-1 day UTC",$timetz));
@@ -632,7 +635,7 @@ class Menu
                         "alarms" => array(
                             "name"    => _("List View"),
                             "enabled" => $perm_alarms,
-                            "url"     => "/alarm/alarm_console.php?hide_closed=1&date_from=$date_from&date_to=$date_to",
+                            "url"     => "/alarm/alarm_console.php?hide_closed=1",
                             "b_param" => "/alarm/alarm_detail.php?backlog="
                         ),
                         "alarm_groups" => array(
@@ -1285,7 +1288,7 @@ class Menu
                             "url"     => $url_components,
                             "l_lmenu" => array(
                                 "alienvault_center" => array(
-                                    "name"    => _("Alienvault Center"),
+                                    "name"    => _("AlienVault Center"),
                                     "enabled" => $perm_av_center,
                                     "url"     => "/av_center/index.php"
                                 ),
@@ -1416,7 +1419,13 @@ class Menu
                                 "pci_dss_2" => array(
                                     "name"    => _("PCI DSS 2.0"),
                                     "enabled" => TRUE,
-                                    "url"     => "/compliance/pci-dss.php"
+                                    "url"     => "/compliance/pci-dss.php?pci_version=2"
+                                ),
+                                
+                                "pci_dss_3" => array(
+                                    "name"    => _("PCI DSS 3.0"),
+                                    "enabled" => TRUE,
+                                    "url"     => "/compliance/pci-dss.php?pci_version=3"
                                 )
                             ),
 

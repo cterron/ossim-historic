@@ -31,6 +31,7 @@
     Several methods to manage a ossec deployment
 """
 import traceback
+from tempfile import NamedTemporaryFile
 
 import api_log
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
@@ -45,7 +46,6 @@ import StringIO
 # See PEP8 http://legacy.python.org/dev/peps/pep-0008/#global-variable-names
 # Pylint thinks that a variable at module scope is a constant
 _ansible = Ansible()  # pylint: disable-msg=C0103
-
 
 
 def get_ossec_agent_data(host_list=[], args={}):
@@ -66,10 +66,19 @@ def ossec_win_deploy(sensor_ip, agent_name, windows_ip, windows_username, window
     @windows_password:
     @return: A tuple (success, data).
     """
+
     response = None
 
     try:
+        # Create temporary files outside playbook
+        auth_file = NamedTemporaryFile(delete=False)
+        agent_config_file = NamedTemporaryFile(delete=False)
+        agent_key_file = NamedTemporaryFile(delete=False)
+
         evars = {"target": "%s" % sensor_ip,
+                 "auth_file": "%s" % auth_file.name,
+                 "agent_config_file": "%s" % agent_config_file.name,
+                 "agent_key_file": "%s" % agent_key_file.name,
                  "agent_name": "%s" % agent_name,
                  "windows_ip": "%s" % windows_ip,
                  "windows_username": "%s" % windows_username,
@@ -77,11 +86,16 @@ def ossec_win_deploy(sensor_ip, agent_name, windows_ip, windows_username, window
                  "windows_password": "%s" % windows_password}
 
         response = _ansible.run_playbook(playbook=PLAYBOOKS['OSSEC_WIN_DEPLOY'], host_list=[sensor_ip], extra_vars=evars)
+
+        # Remove temporary files
+        os.remove(auth_file.name)
+        os.remove(agent_config_file.name)
+        os.remove(agent_key_file.name)
+
     except Exception, exc:
         trace = traceback.format_exc()
         api_log.error("Ansible Error: An error occurred while running an windows OSSEC agent deployment:"
                       "%s \n trace: %s" % (exc, trace))
-
     return response
 
 
@@ -338,53 +352,59 @@ def ossec_get_available_agents(system_ip, op_ossec='list_available_agents', agen
     return True, data
 
 
-def ossec_get_check(system_ip, check_type, agent_ip="", agent_name=""):
+def ossec_get_check(system_ip, check_type, agent_name=""):
     """This function checks whether an ossec check has been made or not"""
-    script_second_parameter = ""
+
     if check_type not in ["lastip", "lastscan"]:
         return False, "Invalid check type. Allowed values are [lastip, syscheck, rootcheck]"
-    if check_type == 'lastip':
-        if re.match(r"[a-zA-Z0-9_\-\(\)]+", agent_name) is None:
-            return False, r"Invalid agent name. Allowed characters are [^a-zA-Z0-9_\-()]+"
-        script_second_parameter = agent_name
-    else:
-        if not is_valid_ipv4(agent_ip):
-            return False, "Invalid ossec agent ip. Allowed format is: xxx.yyy.zzz.ddd"
-        script_second_parameter = agent_ip
+
+    if re.match(r"[a-zA-Z0-9_\-\(\)]+", agent_name) is None:
+        return False, r"Invalid agent name. Allowed characters are [^a-zA-Z0-9_\-()]+"
+
     try:
         if check_type == "lastscan":
             # We need to exec TWO results
             result_dict = {}
-            command = "/usr/share/ossim/scripts/ossec_check.sh %s %s" % ("lastscan", script_second_parameter)
+            command = "/usr/share/ossim/scripts/ossec_check.sh %s '%s'" % ("lastscan", agent_name)
             response = _ansible.run_module(host_list=[system_ip], module="shell", args=command, use_sudo=True)
             result, msg = ansible_is_valid_response(system_ip, response)
+
             if not result:
                 return False, msg
+
             script_return_code = int(response['contacted'][system_ip]['rc'])
             script_output = response['contacted'][system_ip]['stdout'].split("\n")
+
             if script_return_code != 0:
                 return False, "[ossec_get_check] Something wrong happened while running ansible command ->'%s'" % str(response)
+
             if len(script_output) != 2: #IP not found
                 return True, {'syscheck':'','rootcheck':''}
-            matched_object = re.match(r"!(?P<start_time>\d{10})!(?P<end_time>\d{10}) Starting \S+ scan.", script_output[0])
+
+            matched_object = re.match(r"Last syscheck scan started at: (?P<s_time>\d{10})",  script_output[0])
             last_syscheck = ""
             if matched_object is not None:
-                last_syscheck = matched_object.groupdict()['start_time']
+                last_syscheck = matched_object.groupdict()['s_time']
             result_dict['syscheck'] = last_syscheck
-            matched_object = re.match(r"!(?P<start_time>\d{10})!(?P<end_time>\d{10}) Starting \S+ scan.", script_output[1])
+
+            matched_object = re.match(r"Last rootcheck scan started at: (?P<r_time>\d{10})",  script_output[1])
             last_rootcheck = ""
             if matched_object is not None:
-                last_rootcheck = matched_object.groupdict()['start_time']
+                last_rootcheck = matched_object.groupdict()['r_time']
             result_dict['rootcheck'] = last_rootcheck
+
             data = result_dict
+
         if check_type == "lastip":
-            command = "/usr/share/ossim/scripts/ossec_check.sh %s %s" % (check_type, script_second_parameter)
+            command = "/usr/share/ossim/scripts/ossec_check.sh %s '%s'" % (check_type, agent_name)
             response = _ansible.run_module(host_list=[system_ip], module="shell", args=command, use_sudo=True)
             result, msg = ansible_is_valid_response(system_ip, response)
+
             if not result:
                 return False, msg
             script_return_code = int(response['contacted'][system_ip]['rc'])
             script_output = response['contacted'][system_ip]['stdout']
+
             if script_return_code != 0:
                 return False, "[ossec_get_check] Something wrong happened while running ansible command ->'%s'" % str(response)
             if not is_valid_ipv4(script_output):#IP not found

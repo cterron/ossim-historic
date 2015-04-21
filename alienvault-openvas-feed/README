@@ -11,6 +11,12 @@ Stop processes:
     /etc/init.d/openvas-scanner stop
     /etc/init.d/openvas-manager stop
 
+Delete old plugins and cache
+    find /var/lib/openvas/plugins -maxdepth 1 -type d -not -wholename /var/lib/openvas/plugins -not -wholename /var/lib/openvas/plugins/private -not -name "." -exec rm -rf {} \;
+    find /var/lib/openvas/plugins -maxdepth 1 -type f -name '*' -print0 | xargs -0 -n 10 rm -f
+    rm -rf /var/cache/openvas
+    mkdir -p /var/cache/openvas
+
 Update plugins:
     openvas-nvt-sync
 

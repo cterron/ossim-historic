@@ -34,7 +34,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import and_
 
 from apimethods.utils import get_bytes_from_uuid, get_ip_str_from_bytes
-from apimethods.decorators import accepted_types, require_db
+from apimethods.decorators import accepted_values, accepted_types, require_db
 
 import db
 from db.models.alienvault import Host, Host_Ip
@@ -110,11 +110,15 @@ def get_asset_events(asset_id, asset_ctx, order_by=True):
 def get_timestamp_last_event_for_each_device():
     """Get the last event for each device"""
     host_last_event = {}
-    query = "select max(timestamp),hex(h.id) from alienvault_siem.acid_event a, alienvault.host h where h.id=a.src_host group by h.id;"
+    query = """
+    SELECT hex(h.host_id), max(a.day)
+    FROM alienvault_siem.device d, alienvault_siem.ac_acid_event a, alienvault.host_ip h
+    WHERE a.device_id = d.id AND d.device_ip = h.ip GROUP BY h.host_id;
+    """
     try:
         data = db.session.connection(mapper=Host).execute(query)
         for row in data:
-            host_last_event[row[1]] = row[0]
+            host_last_event[row[0]] = row[1]
     except Exception:
         host_last_event = {}
         db.session.rollback()
@@ -135,6 +139,44 @@ def get_asset_ip_from_id(asset_id):
         ips = []
         db.session.rollback()
     return ips
+
+
+@require_db
+@accepted_values([], [], ['str', 'bin'])
+def get_asset_id_from_ip(asset_ip, sensor_ip, output='str'):
+    """
+    Return the uuid of an asset using its ip.
+
+    Args:
+        asset_ip (str): Ip of the asset
+        sensor_ip (str): Ip of the sensor for the asset
+
+    Returns:
+        success (bool): True if successful, False elsewhere
+        msg (str): Result message
+    """
+
+    if not asset_ip or not sensor_ip:
+        return False, "Invalid parameters"
+
+    try:
+        query = """
+        SELECT hex(host.id) FROM host, host_ip,host_sensor_reference,sensor
+        WHERE host_sensor_reference.host_id=host.id AND host_ip.host_id=host.id
+        AND host_ip.ip=inet6_pton('%s')
+        AND host_sensor_reference.sensor_id=sensor.id
+        AND sensor.ip=inet6_pton('%s');
+        """ % (asset_ip, sensor_ip)
+        data = db.session.connection(mapper=Host).execute(query)
+        for row in data:
+            asset_id = row[0]
+        if output == 'bin':
+            asset_id = get_bytes_from_uuid(asset_id)
+    except Exception, msg:
+        db.session.rollback()
+        return (False, "Unknown error obtaining host id for ip address '%s': %s" % (str(asset_ip), str(msg)))
+
+    return (True, asset_id)
 
 
 @require_db

@@ -68,7 +68,7 @@ function validate_post_params($conn, $name, $descr, $sids, $imported_sids)
             'illegal:' . _("Name")
         ) ,
         'descr' => array(
-            OSS_TEXT,
+            OSS_ALL,
             OSS_NULLABLE,
             'illegal:' . _("Description")
         ) ,
@@ -77,12 +77,14 @@ function validate_post_params($conn, $name, $descr, $sids, $imported_sids)
     
     ossim_valid($name, $vals['name']);
     ossim_valid($descr, $vals['descr']);
-    $plugins = array();
-    $sids = is_array($sids) ? $sids : array();
+    
+    $plugins  = array();
+    $sids     = is_array($sids) ? $sids : array();
+    $pluginid = intval(POST('pluginid'));
 
-    if (intval(POST('pluginid')) > 0) 
+    if ($pluginid > 0) 
     {
-        $sids[POST('pluginid')] = "0";
+        $sids[$pluginid] = "0";
     }
     
     foreach($sids as $plugin => $sids_str) 

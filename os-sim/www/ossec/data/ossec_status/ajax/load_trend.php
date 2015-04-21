@@ -64,16 +64,9 @@ if (Session::menu_perms($m_perms, $sm_perms))
     //Agents trends
     if ($agent['ip'] == '127.0.0.1')
     {
-        // Get default system uuid
-        $system_id   = Util::get_system_uuid();
-        $system_info = Av_center::get_system_info_by_id($conn, $system_id);
-
-        if ($system_info['status'] == 'success')
-        {
-            $sensor_ip = $system_info['data']['admin_ip'];
-        }
-
-        $ip_cidr = (empty($sensor_ip)) ? $agent['ip'] : $sensor_ip;
+        // Get default sensor IP
+        $sensor_ip = Av_sensor::get_ip_by_id($conn, $sensor_id);
+        $ip_cidr   = (empty($sensor_ip)) ? $agent['ip'] : $sensor_ip;
     }
     else
     {

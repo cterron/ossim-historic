@@ -146,3 +146,9 @@ input[type="text"], input[type="password"]
     margin-left: 15px;
     line-height: 16px;
 }
+
+.pass_container
+{
+    display: inline-block;
+    position: relative;     
+}

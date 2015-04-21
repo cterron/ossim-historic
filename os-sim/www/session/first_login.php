@@ -118,7 +118,7 @@ if ($flag != '')
 	}	
 	elseif (strlen($pass1) < $pass_length_min)
 	{
-		$msg = _('Password is long enough. The minimum is ').$pass_length_min._(' characters');
+		$msg = _('Password is not long enough. The minimum is ').$pass_length_min._(' characters');
 	}
 	elseif (strlen($pass1) > $pass_length_max) 
 	{
@@ -280,6 +280,11 @@ if ($flag != '')
         {
             font-size:13px;
         }
+        
+        #t_login input[type="password"]
+        {
+            width: 100%;
+        }
         		
 	</style>
 	
@@ -334,7 +339,7 @@ if ($flag != '')
                                 if (Session::is_pro())
                                 {
                                     $logo_url  .= '_siem';
-                                    $logo_title = _('Alienvault Logo');
+                                    $logo_title = _('AlienVault Logo');
                                 }                           
                                 
                                 $logo_url .= '.png';					       
@@ -382,7 +387,7 @@ if ($flag != '')
     								<tr>
     									<td class='td_cpass white'> <?php echo _('Current Password');?></td>
     									<td class="noborder">
-    										<input type="password" name="current_passu" id="current_passu" size='25' autocomplete="off"/>
+    										<input type="password" name="current_passu" id="current_passu" autocomplete="off"/>
     										<input type="hidden" name="current_pass" id="current_pass"/>
     									</td>
     								</tr>
@@ -390,7 +395,7 @@ if ($flag != '')
     								<tr>
     									<td class='td_npass white'> <?php 	echo _('New Password');?></td>
     									<td class="noborder">
-    										<input type="password" name="pass1u" id="pass1u" size='25' autocomplete="off"/>
+    										<input type="password" name="pass1u" id="pass1u" autocomplete="off"/>
     										<input type="hidden" name="pass1" id="pass1"/>
     									</td>
     								</tr>
@@ -398,7 +403,7 @@ if ($flag != '')
     								<tr>
     									<td class='td_rnpass white'> <?php echo _('Rewrite Password'); ?> </td>
     									<td class="noborder">
-    										<input type="password" name="pass2u" id="pass2u" size='25' autocomplete="off"/>
+    										<input type="password" name="pass2u" id="pass2u" autocomplete="off"/>
     										<input type="hidden" name="pass2" id="pass2"/>
     									</td>
     								</tr>

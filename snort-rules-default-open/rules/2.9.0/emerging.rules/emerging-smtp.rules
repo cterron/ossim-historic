@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -37,9 +37,6 @@
 #
 
 # This Ruleset is EmergingThreats Open optimized for snort-2.9.0.
-
-#
-#alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP SMTP Hydra Activity Detected"; flow:to_server,established; content:"hydra"; nocase; pcre:"/^(EH|HE)LO\s+hydra\x0D\x0A/smi"; reference:url,www.thc.org/releases.php; classtype:misc-attack; sid:100000167; rev:1;)
 
 #
 alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"GPL SMTP EXPN overflow attempt"; flow:to_server,established; content:"EXPN"; nocase; isdataat:255,relative; content:!"|0a|"; within:255; pcre:"/^EXPN[^\n]{255}/smi"; reference:bugtraq,6991; reference:bugtraq,7230; reference:cve,2002-1337; reference:cve,2003-0161; classtype:attempted-admin; sid:2102259; rev:9;)
@@ -88,6 +85,15 @@ alert tcp $EXTERNAL_NET any -> $SMTP_SERVERS 25 (msg:"ET SMTP IBM Lotus Domino i
 
 #
 alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Abuseat.org Block Message"; flow:established,from_server; content:"abuseat.org"; classtype:not-suspicious; sid:2012982; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Spamcop.net Block Message"; flow:established,from_server; content:"spamcop.net"; classtype:not-suspicious; sid:2012983; rev:2;)
+
+#
+#alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sophos.com Block Message"; flow:established,from_server; content:"sophos.com"; classtype:not-suspicious; sid:2012984; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Sorbs.net Block Message"; flow:established,from_server; content:"sorbs.net"; classtype:not-suspicious; sid:2012985; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET 25 -> $HOME_NET any (msg:"ET SMTP Robtex.com Block Message"; flow:established,from_server; content:"robtex.com"; classtype:not-suspicious; sid:2012986; rev:2;)

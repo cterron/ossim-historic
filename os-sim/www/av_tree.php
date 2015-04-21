@@ -69,7 +69,18 @@ if (ossim_error())
 $cache_exp['asec_pg']  = 1;
 $cache_exp['contexts'] = 1;
 
-$file      = "$key $page $extra_options";
+
+// Getting cached filename
+$file = $key;
+
+if ($aux_filters != 'null')
+{
+    $file .= " $aux_filters";
+}
+
+$file .= " $page $extra_options";
+
+
 $json_tree = NULL;
 
 

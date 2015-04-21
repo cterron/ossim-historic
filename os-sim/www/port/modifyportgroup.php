@@ -39,7 +39,7 @@ $validate = array (
 	"id"          => array("validation"=>"OSS_DIGIT",                       "e_message" => 'illegal:' . _("Port Group ID")),
 	"pgname"      => array("validation"=>"OSS_ALPHA, OSS_SCORE, OSS_PUNC",  "e_message" => 'illegal:' . _("Port Group Name")),
 	"act_ports[]" => array("validation"=>"OSS_PORT",                        "e_message" => 'illegal:' . _("Pair Port-Protocol")),
-	"descr"       => array("validation"=>"OSS_NULLABLE, OSS_AT, OSS_TEXT",  "e_message" => 'illegal:' . _("Description")),
+	"descr"       => array("validation"=>"OSS_NULLABLE, OSS_ALL",           "e_message" => 'illegal:' . _("Description")),
 	"ctx"         => array("validation"=>"OSS_HEX",                         "e_message" => 'illegal:' . _("Entity")));
 	
 if (GET('ajax_validation') == TRUE)

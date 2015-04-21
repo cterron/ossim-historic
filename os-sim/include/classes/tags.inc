@@ -2,7 +2,7 @@
 /**
 * Tags.inc
 *
-* File Tags.inc is used to:
+* File Tags.inc is used to:
 *   - Task 1 (TO DO)
 *   - Task 2 (TO DO)
 *   - Task 3 (TO DO)
@@ -44,37 +44,30 @@
 * @link       https://www.alienvault.com/
 */
 
-/**
-* Function list:
-* - insert()
-* - delete()
-* - get_list()
-*/
-
 class Tags
 {
     /**
      * ID
      * @var number
      */
-	public $id;
+    public $id;
 
-	/**
-	 * Context
-	 * @var string
-	 */
-	public $ctx;
+    /**
+     * Context
+     * @var string
+     */
+    public $ctx;
 
-	/**
-	 * Name
-	 * @var string
-	 */
-	public $name;
+    /**
+     * Name
+     * @var string
+     */
+    public $name;
 
-	/**
-	 * Background color
-	 * @var string
-	 */
+    /**
+     * Background color
+     * @var string
+     */
     public $bgcolor;
 
     /**
@@ -100,8 +93,8 @@ class Tags
      * 
      * @return number
      */
-	public function get_id()
-	{
+    public function get_id()
+    {
         return $this->id;
     }
 
@@ -110,8 +103,8 @@ class Tags
      * 
      * @return string
      */
-	public function get_ctx()
-	{
+    public function get_ctx()
+    {
         return $this->ctx;
     }
 
@@ -130,8 +123,8 @@ class Tags
      * 
      * @return string
      */
-	public function get_bgcolor()
-	{
+    public function get_bgcolor()
+    {
         return $this->bgcolor;
     }
 
@@ -140,8 +133,8 @@ class Tags
      * 
      * @return string
      */
-	public function get_fgcolor()
-	{
+    public function get_fgcolor()
+    {
         return $this->fgcolor;
     }
 
@@ -150,8 +143,8 @@ class Tags
      * 
      * @return boolean
      */
-	public function get_italic()
-	{
+    public function get_italic()
+    {
         return $this->italic;
     }
 
@@ -160,8 +153,8 @@ class Tags
      * 
      * @return boolean
      */
-	public function get_bold()
-	{
+    public function get_bold()
+    {
         return $this->bold;
     }
 
@@ -187,6 +180,7 @@ class Tags
         $this->bold    = $bold;
     }
 
+
     /**
      * This function returns the tags objects list
      * 
@@ -202,10 +196,10 @@ class Tags
         $list  = array();
         $query = ossim_query("SELECT *,hex(ctx) as ctx FROM tags_alarm $args");
 
-		$rs = $conn->Execute($query);
+        $rs = $conn->Execute($query);
 
-	    if (!$rs)
-		{
+        if (!$rs)
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
         else
@@ -222,6 +216,7 @@ class Tags
         return $list;
     }
 
+
     /**
      * This function returns the tags objects list in html format
      * 
@@ -231,17 +226,17 @@ class Tags
      * 
      * @return multitype:string
      */
-	public static function get_list_html($conn, $args = '', $delete = TRUE)
-	{
+    public static function get_list_html($conn, $args = '', $delete = TRUE)
+    {
         Ossim_db::check_connection($conn);
 
         $list  = array();
         $query = ossim_query("SELECT * FROM tags_alarm $args");
 
-		$rs = $conn->Execute($query);
+        $rs = $conn->Execute($query);
 
-	    if (!$rs)
-		{
+        if (!$rs)
+        {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
         else
@@ -264,6 +259,7 @@ class Tags
         return $list;
     }
 
+
     /**
      * This function inserts a new row in tags_alarm table
      * 
@@ -278,23 +274,23 @@ class Tags
      */
     public static function insert($conn, $name, $bgcolor, $fgcolor, $italic, $bold)
     {
-        	Ossim_db::check_connection($conn);
-    
-        	$id = -1;
-    
-        	$params = array(
-        		$name,
-        		$bgcolor,
-        		$fgcolor,
-        		$italic,
-        		$bold
-        	);
-    
-        	$query = "INSERT INTO tags_alarm (name, bgcolor, fgcolor, italic, bold) VALUES (?,?,?,?,?)";
-    
-        	$rs = $conn->Execute($query, $params);
+        Ossim_db::check_connection($conn);
 
-	    if (!$rs)
+        $id = -1;
+
+        $params = array(
+            $name,
+            $bgcolor,
+            $fgcolor,
+            $italic,
+            $bold
+        );
+
+        $query = "INSERT INTO tags_alarm (name, bgcolor, fgcolor, italic, bold) VALUES (?,?,?,?,?)";
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -313,6 +309,7 @@ class Tags
         return $id;
     }
 
+
     /**
      * This function updates a row in tags_alarm table
      * 
@@ -324,24 +321,24 @@ class Tags
      * @param boolean $italic
      * @param boolean $bold
      */
-	public static function update($conn, $id, $name, $bgcolor, $fgcolor, $italic, $bold)
-	{
-        	Ossim_db::check_connection($conn);
-    
-        	$params = array(
-        		$name,
-        		$bgcolor,
-        		$fgcolor,
-        		$italic,
-        		$bold,
-        		$id
-        	);
-    
-        	$query = "UPDATE tags_alarm SET name = ?, bgcolor = ?, fgcolor = ?,italic = ?,bold = ? WHERE id = ?";
-    
-        	$rs = $conn->Execute($query, $params);
+    public static function update($conn, $id, $name, $bgcolor, $fgcolor, $italic, $bold)
+    {
+        Ossim_db::check_connection($conn);
 
-	    if (!$rs)
+        $params = array(
+            $name,
+            $bgcolor,
+            $fgcolor,
+            $italic,
+            $bold,
+            $id
+        );
+
+        $query = "UPDATE tags_alarm SET name = ?, bgcolor = ?, fgcolor = ?,italic = ?,bold = ? WHERE id = ?";
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -353,17 +350,17 @@ class Tags
      * @param object $conn
      * @param number $id
      */
-	public static function delete($conn, $id)
-	{
-        	Ossim_db::check_connection($conn);
-    
-        	$params = array($id);
-    
-        	$query = "DELETE FROM tags_alarm WHERE id = ? AND ctx=unhex('00000000000000000000000000000000')";
-    
-        	$rs = $conn->Execute($query, $params);
+    public static function delete($conn, $id)
+    {
+        Ossim_db::check_connection($conn);
 
-	    if (!$rs)
+        $params = array($id);
+
+        $query = "DELETE FROM tags_alarm WHERE id = ? AND ctx=unhex('00000000000000000000000000000000')";
+
+        $rs = $conn->Execute($query, $params);
+
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -377,6 +374,7 @@ class Tags
         }
     }
 
+
     /**
      * This function links an alarm with a tag
      * 
@@ -386,19 +384,20 @@ class Tags
      */
     public static function set_alarm_tag($conn, $alarm_id, $tag_id)
     {
-        	Ossim_db::check_connection($conn);
-    
-        	$params = array($alarm_id, $tag_id);
+        Ossim_db::check_connection($conn);
+
+        $params = array($alarm_id, $tag_id);
 
         $query = "REPLACE INTO alarm_tags (id_alarm, id_tag) VALUES (UNHEX(?), ?)";
 
         $rs = $conn->Execute($query, $params);
 
-	    if (!$rs)
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
     }
+
 
     /**
      * This function unlinks a tag from an alarm
@@ -407,16 +406,16 @@ class Tags
      * @param string $alarm_id
      * @param number $tag_id
      */
-	public static function del_alarm_tag($conn, $alarm_id, $tag_id = 0)
-	{
-        	Ossim_db::check_connection($conn);
-    
-        	if ($tag_id > 0)
-        	{
-        	   $params = array($alarm_id, abs($tag_id));
-        	   $query  = "DELETE FROM alarm_tags WHERE id_alarm=unhex(?) AND id_tag = ?";
-    
-        	}
+    public static function del_alarm_tag($conn, $alarm_id, $tag_id = 0)
+    {
+        Ossim_db::check_connection($conn);
+
+        if ($tag_id > 0)
+        {
+           $params = array($alarm_id, abs($tag_id));
+           $query  = "DELETE FROM alarm_tags WHERE id_alarm=unhex(?) AND id_tag = ?";
+
+        }
         else
         {
             $params = array($alarm_id);
@@ -425,7 +424,7 @@ class Tags
 
         $rs = $conn->Execute($query, $params);
 
-	    if (!$rs)
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -441,34 +440,34 @@ class Tags
      */
     public static function get_tags_from_list($conn, $alarm_list)
     {
-        	Ossim_db::check_connection($conn);
-    
-        	$list = array();
-        	$ids  = '';
-        	foreach($alarm_list as $alarm)
-        	{
-        		$ids .= ($ids != '') ? ",UNHEX('".$alarm->get_backlog_id()."')" : "UNHEX('".$alarm->get_backlog_id()."')";
-        	}
-    
-        	if ($ids != '')
-        	{
-        	    	$query = "SELECT * FROM alarm_tags WHERE id_alarm IN ($ids)";
-        
-        	    	$rs = $conn->Execute($query);
-        
-        	    	if (!$rs)
-        	    	{
-	            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-	        }
-	        else
-	        {
-		        while (!$rs->EOF)
-		        {
-	                $list[strtoupper(bin2hex($rs->fields['id_alarm']))] = $rs->fields['id_tag'];
+        Ossim_db::check_connection($conn);
 
-	                $rs->MoveNext();
-	            }
-	        }
+        $list = array();
+        $ids  = '';
+        foreach($alarm_list as $alarm)
+        {
+            $ids .= ($ids != '') ? ",UNHEX('".$alarm->get_backlog_id()."')" : "UNHEX('".$alarm->get_backlog_id()."')";
+        }
+
+        if ($ids != '')
+        {
+            $query = "SELECT * FROM alarm_tags WHERE id_alarm IN ($ids)";
+
+            $rs = $conn->Execute($query);
+
+            if (!$rs)
+            {
+                Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            }
+        }
+        else
+        {
+            while (!$rs->EOF)
+            {
+                $list[strtoupper(bin2hex($rs->fields['id_alarm']))] = $rs->fields['id_tag'];
+
+                $rs->MoveNext();
+            }
         }
 
         return $list;
@@ -484,22 +483,22 @@ class Tags
      */
     public static function get_tags_from_alarm($conn, $alarm_id)
     {
-        	Ossim_db::check_connection($conn);
-    
-        	$list   = array();
-    
-        	$query  = "SELECT id_tag FROM alarm_tags WHERE id_alarm = unhex('$alarm_id')";
-    
-        	$rs = $conn->Execute($query);
+        Ossim_db::check_connection($conn);
 
-	    if (!$rs)
+        $list   = array();
+
+        $query  = "SELECT id_tag FROM alarm_tags WHERE id_alarm = unhex('$alarm_id')";
+
+        $rs = $conn->Execute($query);
+
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
         else
         {
-	        while (!$rs->EOF)
-	        {
+            while (!$rs->EOF)
+            {
                 $list[] = $rs->fields['id_tag'];
 
                 $rs->MoveNext();

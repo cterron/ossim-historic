@@ -57,8 +57,9 @@ function SIEM_trend($conn)
 				GROUP BY minute
 				ORDER BY timestamp ASC";
 
-
-    if (!$rg = & $conn->Execute($sql))
+    $rg = $conn->Execute($sql);
+    
+    if (!$rg)
     {
         print $conn->ErrorMsg();
     }
@@ -108,7 +109,9 @@ function calc_system_eps($conn)
     //
     $sql = "SELECT SUM( stat ) AS eps FROM acl_entities_stats WHERE 1 =1 $perms_where";
 
-    if (!$rs = & $conn->Execute($sql))
+    $rs = $conn->Execute($sql);
+
+    if (!$rs)
     {
         $eps = 0;
     }
@@ -117,7 +120,7 @@ function calc_system_eps($conn)
         $eps = (empty($rs->fields['eps'])) ? 0 : $rs->fields['eps'];
     }
 
-    return number_format($eps, 0);
+    return intval($eps);
 }
 
 
@@ -203,21 +206,24 @@ function get_status_messages()
 }
 
 
+
 /**
- * @param object $conn  DataBase access object
- *
- * @return array
- */
+  * This function calculates status of systems with profile sensor enabled
+  *
+  * @param object $conn  DataBase access object
+  *
+  * @return array
+  */
 function calc_sensors_status($conn)
 {
-    // Get component list
+    // Getting system list
     $avc_list = Av_center::get_avc_list($conn);
 
-    $total = count($avc_list['data']);
-    $up    = $total;
-    $down  = 0;
+    $total_sensors = 0;
+    $up_sensors    = array();
+    $down_sensors  = array();
 
-    // Get notifications list
+    // Getting DOWN systems
     $filters = array(
         'level'      => 'notification',
         'message_id' => 11,
@@ -225,7 +231,7 @@ function calc_sensors_status($conn)
 
     $pagination = array(
         'page'       => 1,
-        'page_rows'  => $total
+        'page_rows'  => count($avc_list['data'])
     );
 
     $status = new System_status();
@@ -233,24 +239,69 @@ function calc_sensors_status($conn)
 
     if ($total_notifications > 0)
     {
-        $notification_components = array();
+        $down_systems = array();
         foreach ($notification_list as $notification)
         {
-            $notification_components[$notification['component_id']] = 1;
+            $down_systems[$notification['component_id']] = 1;
         }
+    }
 
+    //Calculating UP and DOWN sensors
+    if (is_array($avc_list['data']) && !empty($avc_list['data']))
+    {
         foreach ($avc_list['data'] as $avc_data)
         {
             if (preg_match('/sensor/i', $avc_data['profile']))
             {
-                if (isset($notification_components[Util::uuid_format($avc_data['system_id'])]))
+                if (isset($down_systems[Util::uuid_format($avc_data['system_id'])]))
                 {
-                    $down++;
-                    $up--;
+                    $down_sensors[$avc_data['sensor_id']] = 1;
+                }
+                else
+                {
+                    $up_sensors[$avc_data['sensor_id']] = 1;
                 }
             }
         }
     }
 
+    $up    = count($up_sensors);
+    $down  = count($down_sensors);
+    $total = $up + $down;
+
     return array($total, $up, $down);
+}
+
+
+function get_pending_updates()
+{
+    $pending_updates = FALSE;
+    $new_updates     = Av_center::get_software_updates('all');
+    
+    foreach ($new_updates as $update)
+    {
+        $cond1 = $update['packages']['pending_feed_updates'] == TRUE;
+        $cond2 = $update['packages']['pending_updates'] == TRUE;
+        
+        if ($cond1 || $cond2)
+        {
+            $pending_updates = TRUE;
+            break;
+        }
+    }
+    
+    return $pending_updates;
+}
+
+
+function format_notif_number($number)
+{
+    $formated = array();
+    
+	$formated['number']   = $number;
+	$formated['text']     = Util::number_format_locale($number);
+	$formated['readable'] = Util::number_format_readable($number);
+	
+	return $formated;	
+
 }

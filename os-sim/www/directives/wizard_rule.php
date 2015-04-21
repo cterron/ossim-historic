@@ -103,7 +103,9 @@ if (POST('name') != "") {
 	if (POST("product") == "LIST") $_POST["product"] = POST("product_list");
 	
 	// Force assets when user perms, cannot be ANY
-	if ((Session::get_host_where() != "" || Session:: get_net_where() != "") && (POST('from') == "ANY" || POST('from_list') == "")) {
+	$has_perms = (Session::get_host_where() != "" || Session::get_net_where() != "") ? TRUE : FALSE;
+	if ($has_perms && (POST('from') == "ANY" || (POST('from') == "LIST" && count($_POST["fromselect"]) < 1)))
+	{
 		$_POST["from"] = "LIST";
 		$assets_aux    = array();
 		
@@ -121,9 +123,10 @@ if (POST('name') != "") {
 			$assets_aux[] = Util::uuid_format($n_id);
 		}
 		
-		$_POST["from_list"] = implode(",", $assets_aux);
+		$_POST["fromselect"] = $assets_aux;
 	}
-	if ((Session::get_host_where() != "" || Session:: get_net_where() != "") && (POST('to') == "ANY" || POST('to_list') == "")) {
+	if ($has_perms && (POST('to') == "ANY" || (POST('to') == "LIST" && count($_POST["toselect"]) < 1)))
+	{
 		$_POST["to"] = "LIST";
 		$assets_aux  = array();
 	    
@@ -141,12 +144,14 @@ if (POST('name') != "") {
 			$assets_aux[] = Util::uuid_format($n_id);
 		}
 		
-		$_POST["to_list"] = implode(",", $assets_aux);
+		$_POST["toselect"] = $assets_aux;
 	}
 	
-    if (POST("from") == "LIST") $_POST["from"] = POST("from_list");
+    // Assets parameters can be multiselect([UUID1, UUID2, ...]) or string(ANY, HOME_NET, ...)
+    $assets_from = (POST("from") == "LIST") ? implode(',', $_POST["fromselect"]) : POST("from");
+    $assets_to   = (POST("to")   == "LIST") ? implode(',', $_POST["toselect"])   : POST("to");
+    
     if (POST("port_from") == "LIST") $_POST["port_from"] = POST("port_from_list");
-    if (POST("to") == "LIST") $_POST["to"] = POST("to_list");
     if (POST("port_to") == "LIST") $_POST["port_to"] = POST("port_to_list");
     if (POST("protocol_any")) {
         $protocol = "ANY";
@@ -183,12 +188,14 @@ if (POST('name') != "") {
     ossim_valid(POST("subcategory"), OSS_DIGIT, OSS_NULLABLE, 'illegal:' . _("Subcategory"));
     ossim_valid(POST("entity"), OSS_FROM, OSS_NULLABLE, 'illegal:' . _("entity"));
     ossim_valid(POST("entity_list"), OSS_HEX, ',', '-', OSS_NULLABLE, 'illegal:' . _("entity list"));
-    ossim_valid(POST("from"), OSS_FROM, OSS_NULLABLE, '-\/', 'illegal:' . _("from"));
-    ossim_valid(POST("from_list"), OSS_FROM, OSS_NULLABLE, '-\/' ,'illegal:' . _("from list"));
+    //ossim_valid(POST("from"), OSS_FROM, OSS_NULLABLE, '-\/', 'illegal:' . _("from"));
+    //ossim_valid(POST("from_list"), OSS_FROM, OSS_NULLABLE, '-\/' ,'illegal:' . _("from list"));
+    ossim_valid($assets_from, OSS_FROM, OSS_NULLABLE, '-\/', 'illegal:' . _("from"));
     ossim_valid(POST("port_from"), OSS_PORT_FROM, OSS_NULLABLE, 'illegal:' . _("port from"));
     ossim_valid(POST("port_from_list"), OSS_PORT_FROM_LIST, OSS_NULLABLE, 'illegal:' . _("port from list"));
-    ossim_valid(POST("to"), OSS_TO, OSS_NULLABLE, '-\/', 'illegal:' . _("to"));
-    ossim_valid(POST("to_list"), OSS_TO, OSS_NULLABLE, '-\/', 'illegal:' . _("to list"));
+    //ossim_valid(POST("to"), OSS_TO, OSS_NULLABLE, '-\/', 'illegal:' . _("to"));
+    //ossim_valid(POST("to_list"), OSS_TO, OSS_NULLABLE, '-\/', 'illegal:' . _("to list"));
+    ossim_valid($assets_to, OSS_TO, OSS_NULLABLE, '-\/', 'illegal:' . _("to"));
     ossim_valid(POST("port_to"), OSS_PORT_TO, OSS_NULLABLE, 'illegal:' . _("port to"));
     ossim_valid(POST("port_to_list"), OSS_PORT_TO_LIST, OSS_NULLABLE, 'illegal:' . _("port from list"));
     ossim_valid(POST("from_rep"), OSS_ALPHA, OSS_NULLABLE, 'illegal:' . _("Reputation from"));
@@ -269,9 +276,9 @@ if (POST('name') != "") {
     		"category"         => POST("category"),
     		"subcategory"      => POST("subcategory"),
     		"entity"           => POST("entity"),
-    		"from"             => POST("from"),
+    		"from"             => $assets_from,
     		"port_from"        => POST("port_from"),
-    		"to"               => POST("to"),
+    		"to"               => $assets_to,
     		"port_to"          => POST("port_to"),
     		"from_rep"         => POST("from_rep"),
     		"to_rep"           => POST("to_rep"),
@@ -685,19 +692,23 @@ function save_network() {
 	var to_list = getselectedcombovalue('toselect');
 	var port_from_list = document.getElementById('port_from_list').value;
 	var port_to_list = document.getElementById('port_to_list').value;
-	if (from_list != "") {
-			document.getElementById('from').value = "LIST";
-			document.getElementById('from_list').value = from_list;
-	} else {
-			document.getElementById('from').value = "ANY";
-			document.getElementById('from_list').value = "";
+
+	if (from_list != "")
+	{
+		document.getElementById('from').value = "LIST";
 	}
-	if (to_list != "") {
-			document.getElementById('to').value = "LIST";
-			document.getElementById('to_list').value = to_list;
-	} else {
-			document.getElementById('to').value = "ANY";
-			document.getElementById('to_list').value = "";
+	else if (document.getElementById('from').value == "")
+	{
+		document.getElementById('from').value = "ANY";
+	}
+
+	if (to_list != "")
+	{
+		document.getElementById('to').value = "LIST";
+	}
+	else if (document.getElementById('to').value == "")
+	{
+		document.getElementById('to').value = "ANY";
 	}
 	if (port_from_list != "" && port_from_list != "ANY") document.getElementById('port_from').value = "LIST";
 	if (port_to_list != "" && port_to_list != "ANY") document.getElementById('port_to').value = "LIST"; 
@@ -887,6 +898,19 @@ function onChangePortSelectBox(id,val) {
 		if (id.match(/port/)) document.getElementById(id+'_input').style.display = 'none';
 		else document.getElementById(id+'_input').style.visibility = 'hidden';
 		document.getElementById(id+'_list').value = val;
+	}
+}
+
+function onChangeSelectBox(id,val)
+{
+	if (val == "LIST")
+	{
+		document.getElementById(id+'_input').style.visibility = 'visible';
+	}
+	else
+	{
+		deleteall(id + 'select');
+		document.getElementById(id+'_input').style.visibility = 'hidden';
 	}
 }
 
@@ -1209,11 +1233,7 @@ function onClickProtocol(id, level) {
 						<table class="transparent">
 							<tr>
 								<td class="container">
-									<input type="hidden" name="from" id="from" value=""></input>
-									<input type="hidden" name="from_list" id="from_list" value=""></input>
 									<input type="hidden" name="port_from" id="port_from" value=""></input>
-									<input type="hidden" name="to" id="to" value=""></input>
-									<input type="hidden" name="to_list" id="to_list" value=""></input>
 									<input type="hidden" name="port_to" id="port_to" value=""></input>
 									<table class="transparent">
 										<tr>
@@ -1272,7 +1292,7 @@ function onClickProtocol(id, level) {
 																<?php if ($level > 1) { ?>
 																<tr>
 																	<td class="center nobborder">
-																	From a parent rule: <select name="from" id="from" style="width:180px" onchange="onChangePortSelectBox('from',this.value)">
+																	From a parent rule: <select name="from" id="from" style="width:180px" onchange="onChangeSelectBox('from',this.value)">
 																	<?php
 																	echo "<option value=\"LIST\"></option>";
 																	for ($i = 1; $i <= $level - 1; $i++) {
@@ -1294,7 +1314,7 @@ function onClickProtocol(id, level) {
 																	</td>
 																</tr>
 																<?php } else { ?>
-																<input type="hidden" name="from" id="from" value="LIST"></input>
+																<input type="hidden" name="from" id="from" value="ANY"></input>
 																<?php } ?>
 															</table>
 														</td>
@@ -1443,7 +1463,7 @@ function onClickProtocol(id, level) {
 																<?php if ($level > 1) { ?>
 																<tr>
 																	<td class="center nobborder">
-																	From a parent rule: <select name="to" id="to" style="width:180px" onchange="onChangePortSelectBox('to',this.value)">
+																	From a parent rule: <select name="to" id="to" style="width:180px" onchange="onChangeSelectBox('to',this.value)">
 																	<?php
 																	echo "<option value=\"LIST\"></option>";
 																	for ($i = 1; $i <= $level - 1; $i++) {
@@ -1465,7 +1485,7 @@ function onClickProtocol(id, level) {
 																	</td>
 																</tr>
 																<?php } else { ?>
-																<input type="hidden" name="to" id="to" value="LIST"/>
+																<input type="hidden" name="to" id="to" value="ANY"/>
 																<?php } ?>
 															</table>
 														</td>

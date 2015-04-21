@@ -42,138 +42,151 @@ Session::logcheck("dashboard-menu", "IPReputation");
 require_once 'classes/Reputation.inc';
 
 
-$act  = GET('act');
-if (empty($act)) $act = "All";
 $type = intval(GET('type'));
+$act  = GET('act');
 
-ossim_valid($act, OSS_INPUT,OSS_NULLABLE, 'illegal: Action');
+if (empty($act)) 
+{
+   $act = "All";
+}
+
+ossim_valid($act,   OSS_INPUT,OSS_NULLABLE,     'illegal: Action');
 
 if (ossim_error()) 
 {
     die(ossim_error());
 }
 
+$nodes      = array();
+$Reputation = new Reputation();
+
+$i = 0;
+if ($Reputation->existReputation()) 
+{
+
+	list($ips,$cou,$order,$total) = $Reputation->get_data($type,$act);
+	session_write_close();
+
+	foreach ($ips as $activity => $ip_data) if ($activity==$act || $act=="All")
+	{
+		foreach ($ip_data as $ip => $latlng) 
+		{
+			if(preg_match("/-?\d+(\.\d+)?,-?\d+(\.\d+)?/",$latlng)) 
+			{
+				$tmp  = explode(",", $latlng);
+				 
+				$node = array(
+				    'ip'  => "$ip [$activity]",
+				    'lat' => $tmp[0],
+				    'lng' => $tmp[1]
+				);
+				
+				$nodes[$ip] = $node;
+			} 
+		}
+	}
+}
+			
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title><?php echo _("IP Reputation")?></title>
-	<link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-	<!--<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>-->
-	<script type="text/javascript" src=" https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>
-	<script type="text/javascript" src="../js/jquery.min.js"></script>
-	<script type="text/javascript" src="../js/notification.js"></script>
-	<script type="text/javascript" src="../js/messages.php"></script>
 	
-	<script type="text/javascript">
+	
+	<?php
+    //CSS Files
+    $_css_files = array(
+        array('src' => 'av_common.css',     'def_path' => TRUE)
+    );
+
+    //JS Files
+    $_js_files = array(
+        array('src' => 'jquery.min.js',         'def_path' => TRUE),
+        array('src' => 'utils.js',              'def_path' => TRUE),
+        array('src' => 'notification.js',       'def_path' => TRUE),
+        array('src' => 'av_map.js.php',         'def_path' => TRUE),
+        array('src' => 'markerclusterer.js',    'def_path' => TRUE),
+        array('src' => 'messages.php',          'def_path' => TRUE)
+    );
     
-		var script = '<script type="text/javascript" src="../js/markerclusterer.js"><' + '/script>';
-		document.write(script);
+    Util::print_include_files($_css_files, 'css');
+    Util::print_include_files($_js_files, 'js');
+    
+    ?>
+    	
+	<script type="text/javascript">
+
+		var otx_url = "<?php echo Reputation::getlabslink('XXXX') ?>";
+		var points  = <?php echo json_encode($nodes) ?>;
 		
-		if ( typeof(google) != 'undefined' && google != null )
+		$(document).ready(function()
 		{
-			<?php
-			$Reputation = new Reputation();
-
-			if ( !$Reputation->existReputation() ) {
-				exit();
-			}
+    		av_map = new Av_map('map');
+    		
+            Av_map.is_map_available(function(conn)
+            {
+                if(conn)
+                {   
+        			av_map.set_zoom(3);
+                    av_map.set_location(37.1833,-3.6141);
+                    av_map.set_center_zoom(false);
+                    
+                    av_map.draw_map();
+                    
+                    var markers = [];
+        			$.each(points, function(i, p)
+        			{        	
+        				var pos    = new google.maps.LatLng(p.lat, p.lng);
+        				var marker = new google.maps.Marker(
+        				{
+        					position: pos,
+        					title: p.ip
+        				});
+        				
+        				google.maps.event.addListener(marker, 'click', function() 
+        				{
+                            try
+                            {
+                                var ip  = this.title.match(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/);
+                                var url = otx_url.replace('XXXX', ip)
+        
+                                var win = window.open(url, '_blank')
+                                win.focus()
+                            }
+                            catch(Err){}  
+                        });
+                        
+                        markers.push(marker);
+        			});
+        			
+        			var mcOptions     = {gridSize: 80, maxZoom: 15};
+        			var markerCluster = new MarkerClusterer(av_map.map, markers, mcOptions);
+        			
+                }
+                else
+                {
+                    av_map.draw_warning();
+                }
+                
+                if (typeof(parent.show_map)=='function') 
+    			{
+    				parent.show_map();
+    			}
+        			
+            });
 			
-			$nodes = array();
-
-			list($ips,$cou,$order,$total) = $Reputation->get_data($type,$act);
-			session_write_close();
-
-			foreach ($ips as $activity => $ip_data) if ($activity==$act || $act=="All")
-			{
-				foreach ($ip_data as $ip => $latlng) {
-					if(preg_match("/-?\d+(\.\d+)?,-?\d+(\.\d+)?/",$latlng)) {
-						$tmp = explode(",", $latlng);
-						$node = "{ ip: '$ip [$activity]', lat: '".$tmp[0]."', lng: '".$tmp[1]."'}";
-						$nodes[$ip] = $node;
-					} 
-				}
-			}
-			?>
-			
-			var points = [ <?php echo implode(",",$nodes) ?> ];
-
-			function init_map() {
-				var map = new google.maps.Map(document.getElementById("map"));
-				map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
-				map.setOptions({
-					navigationControl: true,
-					navigationControlOptions: { style: google.maps.NavigationControlStyle.ZOOM_PAN }
-				});
-				var zoom = 3;
-				var pos = new google.maps.LatLng(37.1833,-3.6141);
-				map.setCenter(pos);	
-				map.setZoom(zoom);
-				
-				var markers = [];
-				for (i in points) {
-					var p = new google.maps.LatLng(points[i].lat, points[i].lng);
-					var marker = new google.maps.Marker({
-						position: p,
-						title: points[i].ip
-					});
-					markers.push(marker);
-				}
-				
-				var mcOptions = {gridSize: 80, maxZoom: 15};
-				var markerCluster = new MarkerClusterer(map, markers, mcOptions);
-				
-				<?php 
-				if ( count($nodes) < 1 ) 
-				{ 
-					?>
-					var marker = new google.maps.Marker({'position': pos});
-					google.maps.event.addListener(marker,'click',function(){
-						var infoWin = new google.maps.InfoWindow({
-							content: "<font style='font-family:arial;font-size:14px'><?php echo _("No external hosts found") ?></font>",
-							position: pos
-						});
-					});
-					<?php 
-				}
-				?>
-			}
-		}	
-		
-		$(document).ready(function(){
-			
-			if ( typeof(google) != 'undefined' && google != null ){
-				init_map();
-			}
-			else
-			{
-				var config_nt = { 
-					content: '<?php echo _("Feature not available, you need Internet connection")?>.', 
-					options: {
-						type:'nf_warning',
-						cancel_button: false
-					},
-					style: 'width: 80%; margin: 150px auto; padding: 5px 0px; text-align: center;'
-				};
-			
-				nt = new Notification('nt_map',config_nt);
-				
-				$('#map').html(nt.show());	
-			}
-			
-			if (typeof(parent.show_map)=='function') {
-				parent.show_map();
-			}
 		});
 	</script>
 	
 	<style type='text/css'>
-	body, html {
-		height:100%;
-		width:100%;
-		margin:0px;
-		padding:0px;
-	}
+    	body, html 
+    	{
+    		height:100%;
+    		width:100%;
+    		margin:0px;
+    		padding:0px;
+    	}
 	</style>
 </head>
 

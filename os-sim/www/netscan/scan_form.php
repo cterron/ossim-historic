@@ -108,7 +108,7 @@ ossim_valid($num_ips, OSS_DIGIT,   'illegal:' . _('Scanned IPs'));
 
 if (ossim_error())
 {
-    echo ossim_error(_('Error! Scan data not found or unallowed'));
+    echo ossim_error();
     exit();
 }
         
@@ -121,8 +121,11 @@ for ($i = 0; $i < $num_ips; $i++)
         $ips[] = POST("ip_$i");
         ossim_clean_error();
     }
-}    
-
+    else if(POST("ip_$i") == "")
+    {
+        $ips[] = '';
+    }
+}
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -391,7 +394,7 @@ for ($i = 0; $i < $num_ips; $i++)
                 list-style-type: square;
                 color: inherit;
             }
-               
+            
         </style>
         
         <script type='text/javascript'>

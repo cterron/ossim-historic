@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 #
 #  License:
 #
-#  Copyright (c) 2013 AlienVault
+#  Copyright (c) 2014 AlienVault
 #  All rights reserved.
 #
 #  This package is free software; you can redistribute it and/or modify
@@ -33,16 +34,19 @@ import hashlib
 
 from os import path
 
-from output import Output
+from netaddr import IPNetwork
 
-SEVERITY = ['High', 'Medium', 'Low']
+import default
+from output import Output
+from wildcard import Wildcard
+from error import CheckError
 
 '''
 Check class.
 Defines a checkpoint for a plugin.
 '''
 class Check:
-  def __init__ (self, plugin, section, verbose):
+  def __init__ (self, plugin, section):
 
     # 'check' properties.
     self.__name = ''
@@ -63,16 +67,16 @@ class Check:
     self.__pivot = False
 
     self.__fail_if_empty = True
+    self.__fail_only_if_all_failed = False
+    self.__split_by_comma = False
     self.__severity = 'Medium'
-    self.__not = False
-    self.__conditions = {'set':[], 'data':[]}
+    self.__conditions = {'basic':[], 'set':[]}
     self.__actions = []
 
     config_file = plugin.get_config_file ()
 
     self.__name = section
     self.__plugin = plugin
-    self.__verbose = verbose > 1
 
     # Parse section options.
     # Different sections or check 'types' are mutually exclusive.
@@ -85,11 +89,12 @@ class Check:
           self.__checksums = [tuple (x.split(':')) for x in value.split(';')]
         elif name == 'pattern':
           self.__type = name
+          value = Wildcard.av_config (value, escape = True)
           self.__regex = re.compile (value, re.MULTILINE)
         elif name == 'query':
           self.__type = name
-          if value.startswith("pivot:"):
-            self.__query = value[6:]
+          if value.startswith("@pivot@:"):
+            self.__query = value[8:]
             self.__pivot = True
           else:
             self.__query = value
@@ -98,8 +103,14 @@ class Check:
         elif name == 'fail_if_empty':
           if value in ['True', 'False']:
             self.__fail_if_empty = eval(value)
+        elif name == 'fail_only_if_all_failed':
+          if value in ['True', 'False']:
+            self.__fail_only_if_all_failed = eval(value)
+        elif name == 'split_by_comma':
+          if value in ['True', 'False']:
+            self.__split_by_comma = eval(value)
         elif name == 'severity':
-          if value in SEVERITY:
+          if value in default.severity:
             self.__severity = value
         elif name == 'conditions':
           self.__init_conditions__ (value)
@@ -111,43 +122,58 @@ class Check:
           self.__advice = value
         else:
           Output.warning ('Unknown field in check "%s": %s' % (self.__name, name))
-    except PluginError:
+    except CheckError:
       raise
     except Exception, msg:
       Output.error ('Cannot parse check "%s" in plugin "%s": %s' % (self.__name, self.__plugin.get_name(), msg))
       raise
 
   def __init_conditions__ (self, value):
-    # Check first if there are @set and other conditions in the same rule.
+    # Check first if there are @set@ and other conditions in the same rule.
     # This is not allowed because standalone data type checks rely on order,
     # while @set tries to match with every field of the resulting regex/db query
     # regardless the order.
-    if ('@set' in value) and \
-        ('@int' in value or '@float' in value or '@string' in value or '@char' in value):
-      raise PluginError ('Forbidden "@set" and any other datatype combination in rule "%s" for plugin "%s"' % (self.__name, self.__plugin.get_name()))
+    if ('@set@' in value) and \
+       ('@int@' in value or '@float@' in value or '@string@' in value or '@char@' in value or '@ipaddr@' in value):
+      raise CheckError ('Forbidden "@set@" and any other datatype combination in rule "%s" for plugin "%s"' % (self.__name, self.__plugin.get_name()), self.__name)
 
-    for condition in value.split(';'):
-      matches = re.findall('^(@\w+):?(\S+)?$', condition)
+    conditions = filter(bool, value.split(';'))
+    for condition in conditions:
+      matches = re.findall(r'^(@[a-zA-Z_]+@)(?:\:(.*))?$', condition)
+      if matches == []:
+        raise CheckError ('Condition "%s" for check "%s" in plugin "%s" is invalid' % (condition, self.__name, self.__plugin.get_name()), self.__name)
       cond_type, cond_str = matches[0]
 
-      if cond_type == '@set':
-        matches = re.findall('(@\w+@)?([^a-zA-Z0-9_\\:\."\'\\/]+)(\S+)', cond_str)
-        cond_neg, cond_op, cond_set = matches[0]
+      # 'Basic' type conditions
+      if cond_type in ['@string@', '@char@', '@int@', '@float@', '@info@', '@ipaddr@']:
+        # Translate first, append later.
+        if cond_type in ['@ipaddr@']:
+          # Do not encapsulate in quotes, as this is an object comparison.
+          cond_str = Wildcard.av_config(cond_str, encapsulate_str = False)
+          cond_str = Wildcard.ipaddr_operation(cond_str)
+        else:
+          cond_str = Wildcard.av_config(cond_str, encapsulate_str = True)
 
-        # Permit a @not@ in @set comparison.
-        self.__not = bool(cond_neg)
+        self.__conditions['basic'].append((cond_type, cond_str.rsplit('@') if cond_str != None and cond_str != '' else None))
 
-        # For sets defined in files.
-        if ',' in cond_set:
-          items = cond_set.split(',')
-        elif path.isfile (cond_set):
+      # 'Set' type conditions
+      elif cond_type == '@set@':
+        matches = re.findall('^(@[a-zA-Z_]+@)(\S+)', cond_str)
+        if matches == []:
+          raise CheckError ('Set condition "%s" for check "%s" in plugin "%s" is invalid' % (condition, self.__name, self.__plugin.get_name()), self.__name)
+
+        cond_op, cond_set = matches[0]
+        cond_set = Wildcard.av_config(cond_set)
+
+        if path.isfile (cond_set):
+          # For sets defined in files.
           desc = open (cond_set, 'r')
           items = desc.read().splitlines()
         else:
-          Output.warning ('Not recognized set type for check "%s" in plugin "%s"' % (self.__name, self.__plugin.get_name()))
-          continue
+          items = cond_set.split(',')
 
         content = set()
+        items = filter(None, items)
         for item in items:
           splitted_item = item.split('|')
           if len(splitted_item) > 1:
@@ -156,12 +182,9 @@ class Check:
             content.add(item)
 
         self.__conditions['set'].append(cond_op + str(content))
-      elif cond_type in ['@string', '@char', '@int', '@float', '@info']:
-        self.__conditions['data'].append((cond_type, cond_str.rsplit('@') if cond_str != None and cond_str != '' else None))
 
       else:
-        Output.warning ('Type "%s" not recognized for check "%s" in plugin "%s"' % (cond_type, self.__name, self.__plugin.get_name()))
-        continue
+        raise CheckError ('Type "%s" not recognized for check "%s" in plugin "%s"' % (cond_type, self.__name, self.__plugin.get_name()), self.__name)
 
   def __init_actions__ (self, value):
     self.__actions = [tuple (x.split(':')) for x in value.split(';')]
@@ -213,132 +236,147 @@ class Check:
 
   # Run a checksum against a file.
   def __run_checksum__ (self):
-    for (func, checksum) in self.__checksums:
-      h = hashlib.new (func[1:])
-      h.update(self.__plugin.get_data())
-      if h.hexdigest() == checksum:
-        self.__run_actions__ ()
-      else:
-        return (False, 'Checksum "%s" failed!' % func[1:])
+    (outcome, description) = (True, '')
 
-    return (True, '')
+    for (func, checksum) in self.__checksums:
+      crypto_func = func[1:-1]
+      h = hashlib.new (crypto_func)
+      h.update(self.__plugin.get_data())
+      if h.hexdigest() != checksum:
+        description = '\n\tChecksum "%s" over "%s" failed' % (crypto_func, self.__plugin.get_filename())
+        outcome = False
+        return (outcome, description)
+
+    description = '\n\tAll checksums over "%s" succeeded' % self.__plugin.get_filename()
+    outcome = True
+    return (outcome, description)
 
   # Check against a regular expression.
   def __run_pattern__ (self):
+    (outcome, description) = (True, '')
+
     matches = self.__regex.findall (self.__plugin.get_data())
 
     if matches != []:
-      return self.__check_conditions__ (matches)
+      (outcome, description) = self.__check_conditions__ (matches)
     else:
-      return (False if self.__fail_if_empty else True, 'Empty match set for pattern "%s"' % self.__regex.pattern)
+      description = '\n\tEmpty match set for pattern "%s" in check "%s"' % (self.__regex.pattern, self.__name)
+      outcome = False if self.__fail_if_empty else True
+
+    return (outcome, description)
 
   # Run a db query and parse the result.
   def __run_query__ (self):
-    ret = True
+    (outcome, description) = (True, '')
+
     results = self.__plugin.run_query (self.__query, result = True)
     if len(results) > 0:
       if not self.__pivot:
-        for result in results:
-          check_res, msg = self.__check_conditions__ (list(result))
-          if (ret & check_res) == False:
-            return (False, msg)
+        outcome, partial_description = self.__check_conditions__ (results)
+        description += partial_description
       else:
         # Pivot results.
-        pivoted = [[] for x in range(len(results))]
-
-        for result in results:
-          for i in range(len(result)):
-            pivoted[i].append(result[i])
-
-      return (ret, self.__warning)
+        pivoted = [tuple(x) for x in zip(*results)]
+        outcome, partial_description = self.__check_conditions__ (pivoted)
+        description += partial_description
     else:
-      return (False if self.__fail_if_empty else True, 'Empty result for query "%s"' % self.__query)
+      outcome = False if self.__fail_if_empty else True
+      description = '\n\tEmpty result for query "%s"' % self.__query
+
+    return (outcome, description)
 
   # Check conditions against a set of 'values'.
   def __check_conditions__ (self, values):
-    (ret, warn) = self.__check_set_conditions__ (values, self.__conditions['set'])
-    if not ret:
-      return (ret, warn)
+    if self.__split_by_comma:
+      values = re.split(',', ','.join(values))
+
+    if self.__conditions['set']:
+      (outcome, description) = self.__check_set_conditions__ (values)
+
+    elif self.__conditions['basic']:
+      (outcome, description) = self.__check_basic_conditions__ (values)
+
     else:
-      return self.__check_data_conditions__ (values, self.__conditions['data'])
+      raise CheckError ('There are no conditions to use in check "%s"' % self.__name, self.__name)
 
-  # Check against a 'set' type.
-  def __check_set_conditions__ (self, values, set_conditions):
-    if set_conditions == []:
-      return (True, '')
+    return (outcome, description)
 
-    ret = True
-    values_set = set(values)
-    values_set_str = str(values_set)
+  # Check regular 'basic' type conditions.
+  def __check_basic_conditions__ (self, values):
+    (outcome, description) = (True, '')
 
-    for condition in set_conditions:
-      try:
-        if self.__not:
-          if bool(eval(values_set_str + condition)):
-            if self.__verbose:
-              Output.warning ('Set condition does not met!')
-            ret &= False
-        else:
-          if not bool(eval(values_set_str + condition)):
-            if self.__verbose:
-              Output.warning ('Set condition does not met!')
-            ret &= False
-
-      except SyntaxError, msg:
-        Output.warning ('Invalid rule syntax in check "%s"' % self.__name)
-        return (False, 'Check "%s" failed because of invalid syntax' % self.__name)
-
-    return (ret, self.__warning)
-
-  def __check_data_conditions__ (self, values, data_conditions):
-    if data_conditions == []:
-      return (True, '')
-
-    ret = True
-    info = []
+    partial = []
 
     for value in values:
+      data = ''
+      info = ''
+      regex = ''
+
       if type(value) == tuple:
-        value = enumerate(value)
+        value = list(enumerate(value))
       else:
         value = [(0, value)]
 
       for j, data in value:
         try:
-          datatype, condition = data_conditions[j]
+          datatype, condition = self.__conditions['basic'][j]
         except IndexError:
-          return (False, 'A pattern for check "%s" does not have the same size as the values set' % (self.__name))
+          raise CheckError ('One of the patterns in check "%s" does not have the same size as the values set' % (self.__name), self.__plugin.get_name())
         except ValueError:
-          datatype, = data_conditions[j]
+          datatype, = self.__conditions['basic'][j]
           condition = None
 
-        # Check type.
-        if datatype == '@info':
-          info = data
+        #
+        # First, check data type retrieved.
+        #
+
+        if datatype == '@info@':
+          info = data if info == '' else info + '/' + data
           continue
-        elif datatype == '@set':
+
+        elif datatype == '@set@':
           continue
-        elif datatype == '@int':
+
+        elif datatype == '@int@':
           try:
             if data != '':
               data = int(data)
             else:
               data = 0
           except:
-            return (False, 'Condition datatype is marked as "int" but is not an integer')
-        elif datatype == '@float':
+            raise CheckError ('Condition datatype is marked as "int" but "%s" is not an integer' % str(data), self.__plugin.get_name())
+
+        elif datatype == '@float@':
           try:
             if data != '':
               data = float(data)
             else:
               data = 0.0
           except:
-            return (False, 'Condition datatype is marked as "float" but is not an floating point integer')
-        elif datatype == '@char' and not data.isalpha():
-          return (False, 'Condition datatype is marked as "char" but is not a character')
+            raise CheckError ('Condition datatype is marked as "float" but "%s" is not a float' % str(data), self.__plugin.get_name())
+
+        elif datatype == '@char@' and not data.isalpha():
+          raise CheckError ('Condition datatype is marked as "char" but "%s" is not a character' % str(data), self.__plugin.get_name())
+
+        elif datatype == '@string@':
+          try:
+            data = data.replace('"', '\\"')
+            data = data.replace("'", "\\'")
+          except:
+            raise CheckError ('Cannot escape quotes in condition "%s"' % str(data), self.__plugin.get_name())
+
+        elif datatype == '@ipaddr@':
+          try:
+            data = repr(IPNetwork(data))
+          except:
+            raise CheckError ('Condition datatype is marked as "ipaddr" but "%s" is not an IP Address' % str(data), self.__plugin.get_name())
+
+        #
+        # Check the second part of the operation (e.g. the condition)
+        #
 
         # Sometimes, conditions are only for checking the match type, so they have
-        # only a type, e.g. '@string;@int:==1'
+        # only a type, e.g. '@string@;@int@:==1'
         if condition == None:
           continue
 
@@ -346,19 +384,18 @@ class Check:
         # Pattern matching does not allow logical operations such as 'and' or 'or'.
         if condition[0].startswith('~'):
           regex = re.compile (condition[0][1:])
-          partial = bool(regex.match (data))
-          ret &= partial
+          partial.append(bool(regex.match (data)))
 
           # Notify the user if a condition doesn't match
-          if not partial and self.__verbose:
-            Output.warning ('Pattern "%s" does not match' % condition[0][1:])
+          if not partial[-1]:
+            description += '\n\tPattern "%s" does not match against "%s"\n' % (condition[0][1:], str(data))
         else:
           eval_str = ''
 
           for item in condition:
             # This condition may have a logical connector ('something'=='anything' or 'whatever')
             if item in ['and', 'or', 'not']:
-              eval_str = eval_str + ' ' + item
+              eval_str = eval_str + ' ' + item + ' '
             else:
               # There are other conditions or 'wildcards' that may be used here.
               # 'position' accepts an integer that represents the position variable in the match tuple.
@@ -373,13 +410,16 @@ class Check:
               if wildcards != None:
                 # 'position' wildcard.
                 if wildcards.group('position') != None:
-                  if datatype == '@int' or datatype == '@float':
-                    pos_value = values[j][int(wildcards.group('pos_value'))]
-                  elif datatype == '@char' or datatype == '@string':
-                    pos_value = '"' + values[j][int(wildcards.group('pos_value'))] + '"'
+                  if int(wildcards.group('pos_value')) > (len(value) - 1):
+                    raise CheckError ('Could not evaluate positional argument in check "%s"' % self.__name, self.__plugin.get_name())
+
+                  if datatype == '@int@' or datatype == '@float@':
+                    pos_value = value[int(wildcards.group('pos_value'))][1]
+                  elif datatype == '@char@' or datatype == '@string@':
+                    pos_value = '"' + value[int(wildcards.group('pos_value'))][1] + '"'
                   else:
                     pos_value = ''
-                  single_cond = single_cond.replace(wildcards.group('position'), wildcards.group('pos_operator') + pos_value)
+                  single_cond = single_cond.replace(wildcards.group('position'), wildcards.group('pos_operator') + str(pos_value))
 
                 # 'count' wildcard.
                 # This uses a pityful trick, because it doesn't check the actual 'data' value but the occurrence count.
@@ -401,41 +441,78 @@ class Check:
                   elif wildcards.group('count_value') == 'odd' and wildcards.group('count_operator') == '==':
                       subs_cond += str(matched_value_count) + ' % 2 != 0'
                   else:
-                    if self.__verbose:
-                      Output.warning ('Condition "%s" is invalid' % item)
+                    raise CheckError ('Condition "%s" is invalid' % item, self.__name)
 
                   single_cond = single_cond.replace(wildcards.group('count'), subs_cond)
 
-              if datatype == '@int' or datatype == '@float':
+              #
+              # Now, finally evaluate the data with the condition
+              #
+
+              if datatype == '@int@' or datatype == '@float@':
+                # Just check if there is anything fishy here.
+                if re.findall(r'([^0-9\.\+\-\*\/\=\<\>]+)', single_cond) != []:
+                  raise CheckError ('Condition "%s" is invalid' % single_cond, self.__name)
                 eval_str = eval_str +  ' ' + str(data) + single_cond
-              elif datatype == '@char' or datatype == '@string':
-                eval_str = eval_str + ' "' + data + '" ' + single_cond
+
+              elif datatype == '@char@' or datatype == '@string@':
+                eval_str = eval_str + '"' + data + '"' + single_cond
+
+              elif datatype == '@ipaddr@':
+                eval_str = eval_str + data + single_cond
+
               else:
-                if self.__verbose:
-                  Output.warning ('Condition datatype "%s" is invalid' % datatype)
-                eval_str = 'False'
+                raise CheckError ('Condition data type "%s" is invalid' % datatype, self.__plugin.get_name())
 
           try:
-            partial = bool(eval(eval_str))
+            partial.append(bool(eval(eval_str)))
           except Exception as e:
-            Output.warning ('Could not evaluate "%s" in check "%s": %s' % (eval_str, self.__name, e))
-            partial = False
+            raise CheckError ('Could not evaluate "%s": %s' % (eval_str, e) ,self.__plugin.get_name())
 
-          ret &= partial
-          if not partial:
-            if self.__verbose:
-              if not info:
-                Output.warning ('Condition "%s" failed!' % eval_str.lstrip())
-              else:
-                Output.warning ('Condition "%s" failed for "%s"' % (eval_str.lstrip(), info))
-          elif self.__verbose:
-            Output.info ('Condition "%s" passed!' % eval_str.lstrip())
+          if not partial[-1]:
+            if not info:
+              description += '\n\tCondition "%s" failed' % eval_str.lstrip()
+            else:
+              description += '\n\tCondition "%s" failed for "%s"' % (eval_str.lstrip(), info)
+          else:
+            if not info:
+              description += '\n\tCondition "%s" passed' % eval_str.lstrip()
+            else:
+              description += '\n\tCondition "%s" passed for "%s"' % (eval_str.lstrip(), info)
 
-    if ret:
-      self.__run_actions__ ()
+    if partial:
+      outcome = reduce(\
+                       lambda x, y: x | y if self.__fail_only_if_all_failed else x & y,\
+                       partial)
+    else:
+      raise CheckError ('No conditions to evaluate', self.__plugin.get_name())
 
-    return (ret, self.__warning)
+    return (outcome, description)
 
+
+  # Check against a 'set' type.
+  def __check_set_conditions__ (self, values):
+    (outcome, description) = (True, '')
+
+    values = filter(None, values)
+    values_set = set(values)
+    values_set_str = str(values_set)
+
+    for condition in self.__conditions['set']:
+      (operation, parsed_condition) = Wildcard.set_operation(condition)
+      if operation is None or parsed_condition is None:
+        raise CheckError ('Unknown set operation: "%s"' % str(condition), self.__plugin.get_name())
+
+      try:
+        diff = eval(values_set_str + parsed_condition)
+
+        if diff != set():
+          description += '\n\tOffending values for operation "%s": %s\n' % (str(operation), ", ".join(str(elem) for elem in diff if elem != ''))
+          outcome = False
+      except SyntaxError, msg:
+        raise CheckError ('Invalid syntax', self.__plugin.get_name())
+
+    return (outcome, description)
 
   # Run actions related to this check.
   def __run_actions__ (self):
@@ -453,4 +530,4 @@ class Check:
         self.__plugin.run_query (action_data)
 
       else:
-        raise PluginError ('Unknown action type: "%s"', action_type)
+        raise CheckError ('Unknown action type: "%s"' % action_type, self.__name)

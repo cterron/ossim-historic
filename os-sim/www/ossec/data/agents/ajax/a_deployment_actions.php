@@ -35,119 +35,29 @@ require_once dirname(__FILE__) . '/../../../conf/config.inc';
 
 Session::logcheck('environment-menu', 'EventsHidsConfig');
 
+$job_id = POST('job_id');
 
-$validation_errors = array();
-$os_type           = $_SESSION['_ossec_os_type'];
+$validate = array ('job_id' => array('validation' => 'OSS_UUID', 'e_message' => 'illegal:' . _('Job ID')));
 
+$validation_errors = validate_form_fields('POST', $validate);
 
-if (!preg_match('/status|abort|list|purge/', POST('order')))
-{
-    
-    $data['status'] = 'error';
-    $data['data']   = _('Error! Action not allowed');
-            
-    echo json_encode($data);
-    exit();
-}
-
-
-$order = POST('order');
-
-switch ($order)
-{
-    case 'status':  
-    case 'abort':    
-        
-        $validate = array (
-            'sensor_ip'   => array('validation' => 'OSS_IP_CIDR_0',      'e_message' => 'illegal:' . _('Sensor IP')),
-            'work_id'     => array('validation' => "OSS_HEXDIGIT, '-'",  'e_message' => 'illegal:' . _('Work ID'))
-        );
-        
-        
-        $d_data = array (
-            'sensor_ip'   => POST('sensor_ip'),
-            'work_id'     => POST('work_id')
-        );
-            
-    break;
-   
-    
-    case 'list':
-    case 'purge':
-        $validate = array (
-            'sensor_ip'   => array('validation' => 'OSS_IP_CIDR_0',      'e_message' => 'illegal:' . _('Sensor IP'))
-        );
-        
-        $d_data = array (
-            'sensor_ip'   => POST('sensor_ip'),
-        );
-        
-    break;
-}  
-
-$validation_errors = validate_form_fields('POST', $validate);    
-    
 if (is_array($validation_errors) && !empty($validation_errors))
-{        
-    $data['status'] = 'warning';
-    $data['data']   = _('Error! Action could not be completed');
-            
-    echo json_encode($data);
-    exit();
-}    
+{
+    $data['status'] = 'error';
+    $data['data']   = $validation_errors;
+}
 else
-{   
-    
-    $db    = new ossim_db();
-    $conn  = $db->connect();        
-    
-    $res = Av_center::get_system_info_by_ip($conn, $d_data['sensor_ip']);    
-     
-    if ($res['status'] == 'success')
-    {
-        $sensor_id = $res['data']['sensor_id'];
-        
-        if (!Ossec_utilities::is_sensor_allowed($conn, $sensor_id))
-        {     
-        	 $data['status'] = 'error';
-        	 $data['data']   = _('Error! Sensor not allowed');            
-        }        
-    }
-    else
-    {
-         $data['status'] = 'error';
-         $data['data']   = _('Error! Unable to validate sensor IP');
-    }
-    
-    
-    if ($data['status'] == 'error')
-    {
-        $db->close();
-        
-        echo json_encode($data);
-        exit();
-    }
-
-    $db->close();
-    
-    
+{
     try
     {
-        if ($order == 'status')
-        {
-            $data = Ossec_agent::check_deployment_status($d_data, $os_type);        
-        }
-        else
-        {    
-            $data = Ossec_agent::execute_deployment_action($d_data, $order, $os_type);   
-        }
+        $data = Ossec_agent::check_deployment_status($job_id);
     }
     catch(Exception $e)
     {
-        $data['status'] = 'warning';
+        $data['status'] = 'error';
         $data['data']   = $e->getMessage();
     }
-            
-    echo json_encode($data);
-    exit();
 }
+
+echo json_encode($data);
+exit();

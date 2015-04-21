@@ -19,9 +19,9 @@ from netinterfaces import get_network_interfaces,get_local_ip_addresses_list
 from logger import Logger
 from utils import *
 import os, stat, grp
-from configparser import AVConfigParser
-from configparsererror import AVConfigParserErrors
-from sysconfig import SysConfig
+from avconfigparser import AVConfigParser
+from avconfigparsererror import AVConfigParserErrors
+from avsysconfig import AVSysConfig
 from uuid import UUID
 
 logger = Logger.logger
@@ -149,9 +149,20 @@ class AVOssimSetupConfigHandler():
     ha_role=master
     ha_virtual_ip=unconfigured"""
     #We only need ha_role and ha_virtual_ip
-    SECTION_HA_HA_VIRTUAL_IP="ha_virtual_ip"
-    SECTION_HA_HA_ROLE="ha_role"
-
+    SECTION_HA_HA_AUTOFAILBACK = "ha_autofailback"
+    SECTION_HA_HA_DEADTIME = "ha_deadtime"
+    SECTION_HA_HA_DEVICE = "ha_device"
+    SECTION_HA_HA_HEARTBEAT_COMM = "ha_heartbeat_comm"
+    SECTION_HA_HA_HEARTBEAT_START = "ha_heartbeat_start"
+    SECTION_HA_HA_KEEPALIVE = "ha_keepalive"
+    SECTION_HA_HA_LOCAL_NODE_IP = "ha_local_node_ip"
+    SECTION_HA_HA_LOG = "ha_log"
+    SECTION_HA_HA_OTHER_NODE_IP = "ha_other_node_ip"
+    SECTION_HA_HA_OTHER_NODE_NAME = "ha_other_node_name"
+    SECTION_HA_HA_PASSWORD = "ha_password"
+    SECTION_HA_HA_PING_NODE = "ha_ping_node"
+    SECTION_HA_HA_ROLE = "ha_role"
+    SECTION_HA_HA_VIRTUAL_IP = "ha_virtual_ip"
 
     # NON OSSIM_SETUP.CONF OPTIONS
     INTERFACES_FILE = 'network/interfaces'
@@ -227,7 +238,7 @@ class AVOssimSetupConfigHandler():
         self.__load_config()
 
         # Non ossim-setup.conf related.
-        self.__sysconfig = SysConfig ()
+        self.__sysconfig = AVSysConfig ()
 
     def __init_logger( self,logfile ):
         """Initiate the logger. """
@@ -873,13 +884,73 @@ class AVOssimSetupConfigHandler():
         return self.__get_variable_value(self.VPN_SECTION_NAME, self.SECTION_VNP_PORT)
 
 
+    def get_ha_ha_autofailback(self):
+        """Returns the '[ha]->ha_autofailback' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_AUTOFAILBACK)
+
+
+    def get_ha_ha_deadtime(self):
+        """Returns the '[ha]->ha_deadtime' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_DEADTIME)
+
+
+    def get_ha_ha_device(self):
+        """Returns the '[ha]->ha_device' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_DEVICE)
+
+
+    def get_ha_ha_heartbeat_comm(self):
+        """Returns the '[ha]->ha_heartbeat_comm' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_HEARTBEAT_COMM)
+
+
+    def get_ha_ha_heartbeat_start(self):
+        """Returns the '[ha]->ha_heartbeat_start' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_HEARTBEAT_START)
+
+
+    def get_ha_ha_keepalive(self):
+        """Returns the '[ha]->ha_heartbeat_start' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_KEEPALIVE)
+
+
+    def get_ha_ha_local_node_ip(self):
+        """Returns the '[ha]->ha_heartbeat_start' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_LOCAL_NODE_IP)
+
+
+    def get_ha_ha_log(self):
+        """Returns the '[ha]->ha_log' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_LOG)
+
+
+    def get_ha_ha_other_node_ip(self):
+        """Returns the '[ha]->ha_other_node_ip' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_OTHER_NODE_IP)
+
+
+    def get_ha_ha_other_node_name(self):
+        """Returns the '[ha]->ha_other_node_name' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_OTHER_NODE_NAME)
+
+
+    def get_ha_ha_password(self):
+        """Returns the '[ha]->ha_password' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_PASSWORD)
+
+
+    def get_ha_ha_ping_node(self):
+        """Returns the '[ha]->ha_ping_node' field"""
+        return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_PING_NODE)
+
+
     def get_ha_ha_role(self):
-        """Returns the '[ha]->ha_role' filed"""
+        """Returns the '[ha]->ha_role' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_ROLE)
 
 
     def get_ha_ha_virtual_ip(self):
-        """Returns the '[ha]->ha_virtual_ip' filed"""
+        """Returns the '[ha]->ha_virtual_ip' field"""
         return self.__get_variable_value(self.HA_SECTION_NAME, self.SECTION_HA_HA_VIRTUAL_IP)
 
 
@@ -1584,7 +1655,7 @@ class AVOssimSetupConfigHandler():
             logger.warning("Sensor profile not present. Cannot set sensor ctx ... %s" % value)
             return result
         #11464 Allow empty values on sensor_ctx
-        if value == "":
+        if value == "" or value is None:
             return result
         try:
             UUID(value)
@@ -2173,6 +2244,8 @@ class AVOssimSetupConfigHandler():
                 local_ips = get_local_ip_addresses_list()
                 # Including admin_ip
                 local_ips.append(self.get_general_admin_ip())
+                # ENG- It could be the famework ip too
+                local_ips.append(self.get_ha_ha_virtual_ip())
                 if value in local_ips:
                     self.__set_option(self.FRAMEWORK_SECTION_NAME, self.SECTION_FRAMEWORK_IP, value)
                 else:
@@ -2430,6 +2503,8 @@ class AVOssimSetupConfigHandler():
                 local_ips = get_local_ip_addresses_list()
                 # Including admin_ip
                 local_ips.append(self.get_general_admin_ip())
+                # ENG- It can be the HA Virtual IP too. 
+                local_ips.append(self.get_ha_ha_virtual_ip())
                 if value in local_ips:
                     self.__set_option(self.SERVER_SECTION_NAME, self.SECTION_SERVER_IP, value)
                 else:
@@ -3155,7 +3230,7 @@ class AVOssimSetupConfigHandler():
     def get_allowed_values_for_sensor_monitors(self):
         """Returns the allowed values for the sensor monitors
         """
-        return get_current_monitor_plugin_list()
+        return get_current_monitor_plugin_list_clean()
 
 
     def get_allowed_values_for_sensor_detectors(self):

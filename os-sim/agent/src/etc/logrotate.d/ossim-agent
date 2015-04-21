@@ -12,7 +12,7 @@ copytruncate
 # for each log which is rotated
 sharedscripts
 
-/var/log/alienvault/agent/*.log /var/log/alienvault/agent/agent-plain.log /var/log/alienvault/agent/agent_stats.log /var/log/ossim/arpalert.log /var/log/ossim/rrd_plugin.log /var/log/snort/alert /var/log/ossim/prads*.log /var/log/suricata/suricata.log /var/log/suricata/suricata-start.log /var/log/suricata/fast.log /var/log/suricata/http.log /var/log/suricata/stats.log {
+/var/log/alienvault/agent/*.log /var/log/ossim/agent-plain.log /var/log/ossim/arpalert.log /var/log/ossim/rrd_plugin.log /var/log/snort/alert /var/log/ossim/prads*.log /var/log/suricata/suricata.log /var/log/suricata/suricata-start.log /var/log/suricata/fast.log /var/log/suricata/http.log /var/log/suricata/stats.log {
     daily
     firstaction
         test -f /var/log/snort/alert || { touch /var/log/snort/alert && chmod 0640 /var/log/snort/alert && chown snort:adm /var/log/snort/alert; } > /dev/null 2>&1

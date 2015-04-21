@@ -740,7 +740,7 @@ class Reputation
     *
     * @return string
     */
-    public function getrepimg($prio, $rel, $act, $ip = '')
+    public static function getrepimg($prio, $rel, $act, $ip = '')
     {
         if (intval($prio) == 0)
         {
@@ -798,7 +798,7 @@ class Reputation
     *
     * @return string
     */ 
-    public function getreptooltip($prio, $rel, $act, $plain = '')
+    public static function getreptooltip($prio, $rel, $act, $plain = '')
     {
         if (intval($prio) == 0)
         {
@@ -931,7 +931,7 @@ class Reputation
     *
     * @return string
     */
-    public function get_reputation_activities($conn, $args = '', $cache_time = 0)
+    public static function get_reputation_activities($conn, $args = '', $cache_time = 0)
     {
         $activities = array();
         $query = ossim_query("SELECT * FROM reputation_activities WHERE 1=1 $args");

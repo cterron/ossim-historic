@@ -41,6 +41,7 @@ import re
 from api.lib.common import make_bad_request,make_error
 valid_user_regex = re.compile("[0-9a-zA-Z_\-\.]+", re.UNICODE)
 # The password is a latin-1 string. When we use python3 string, this would fail
+valid_windows_user_regex = re.compile(r'^[^/\\\[\]:;|=,+*?<>]*$')
 oss_lower="áéíóúýàèìòùäëïöüÿâêîôûãñõ¨åæç½ðøþß".decode('utf-8').encode('latin-1')
 oss_upper="'ÁÉÍÓÚÝÀÈÌÒÙÄËÏÖÜ¾ÂÊÎÔÛÃÑÕÅÆÇ¼ÐØÞ".decode('utf-8').encode('latin-1')
 valid_password_regex = re.compile("[A-Za-z0-9`~!@#$%^&*\(\)_\-+=\{\}\[\]\\|:;\"'<>,\.\?/ºª\s" + oss_lower + oss_upper+chr(160)+"]+")
@@ -150,6 +151,20 @@ def is_valid_user(username):
     if valid_user_regex.match(username) is not None:
         return True
     return False
+
+
+def is_valid_windows_user(username):
+    """ Check whether a windows username is valid
+    Not Allowed characters are: " / \ [ ] : ; | = , + * ? < >
+    """
+    if username is None:
+        return False
+    if username == "":
+        return False
+    if valid_windows_user_regex.match(username) is not None:
+        return True
+    return False
+
 
 def is_valid_user_password(password):
     """Check whether a password is valid or not

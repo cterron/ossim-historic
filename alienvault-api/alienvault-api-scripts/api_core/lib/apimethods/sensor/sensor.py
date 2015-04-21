@@ -34,6 +34,7 @@ from apimethods.utils import  get_base_path_from_system_id
 from ansiblemethods.system.system import set_av_config, ansible_add_system
 from ansiblemethods.sensor.detector import get_sensor_detectors_from_yaml
 from ansiblemethods.sensor.service import get_service_status_by_ip
+from ansiblemethods.sensor.plugin import get_plugin_package_version as ans_get_plugin_package_info
 from celerymethods.jobs.reconfig import job_alienvault_reconfigure
 from apimethods.system.cache import use_cache
 
@@ -112,3 +113,13 @@ def get_service_status_by_id(sensor_id):
 
     return get_service_status_by_ip(ip)
 
+def get_plugin_package_info(sensor_id):
+    """
+        Return the current version of package alienvault-api-sids in
+        sensor with id sensor_id
+    """
+    (success, ip) = get_sensor_ip_from_sensor_id(sensor_id)
+    if success:
+        return ans_get_plugin_package_info (ip)
+    else:
+        return (False, ip)

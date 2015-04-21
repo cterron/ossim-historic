@@ -122,7 +122,7 @@ if ($_SERVER['SCRIPT_NAME'] != "/ossim/asset_details/index.php")
     		</div>
     		
     		<?php 
-    	} 
+    	}
     	?> 
 		
 	</div>
@@ -143,7 +143,7 @@ if ($_SERVER['SCRIPT_NAME'] != "/ossim/asset_details/index.php")
     			<tr>
     				<?php 
     				if ($asset_type == 'net' || $asset_type == 'group') 
-    				{ 
+    				{
     					?>
     					<th><?php echo _('Host')?></th>
     					<?php 
@@ -156,6 +156,7 @@ if ($_SERVER['SCRIPT_NAME'] != "/ossim/asset_details/index.php")
     				} 
     				?>
     				<th><?php echo _('Port')?></th>
+    				<th><?php echo _('Protocol')?></th>
     				<th><?php echo _('Name')?></th>
     				<th><?php echo _('Vulnerable')?></th>
     				<th><?php echo _('Monitoring')?></th>
@@ -211,7 +212,7 @@ if ($_SERVER['SCRIPT_NAME'] != "/ossim/asset_details/index.php")
     			<tr>
     				<?php 
     				if ($asset_type == "net" || $asset_type == "group") 
-    				{ 
+    				{
     					?>
     					<th><?php echo _("Host")?></th>
     					<?php 

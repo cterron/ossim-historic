@@ -149,8 +149,9 @@ if ($type == 'virus')
 	$taxonomy      = make_where($conn,array("Malware" => array("Spyware","Adware","Fake_Antivirus","KeyLogger","Trojan","Virus","Worm","Generic","Backdoor","Virus_Detected"), "Antivirus" => array("Virus_Detected")));
 	$sqlgraph      = "select count(acid_event.id) as num_events, acid_event.ip_src as name from alienvault_siem.acid_event,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND acid_event.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $query_where $taxonomy group by acid_event.ip_src order by num_events desc limit $limit";
 
+	$rg = $conn->CacheExecute($sqlgraph);
 	
-	if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+	if (!$rg)
 	{
 		print $conn->ErrorMsg();
 	} 
@@ -214,7 +215,9 @@ else
 		$query         = "SELECT sum(acid_event.cnt) as num_events, c.cat_id, c.id, c.name FROM alienvault_siem.ac_acid_event acid_event,alienvault.plugin_sid p,alienvault.subcategory c WHERE c.id=p.subcategory_id AND p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND acid_event.day BETWEEN '".gmdate("Y-m-d",$timeutc-$range)."' AND '".gmdate("Y-m-d")."' $query_where TAXONOMY group by c.id,c.name order by num_events desc LIMIT 10";
 		$sqlgraph      = str_replace("TAXONOMY",$taxonomy,$query);	
 			
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+        $rg = $conn->CacheExecute($sqlgraph);
+        
+		if (!$rg)
 		{
 			print $conn->ErrorMsg();
 		} 

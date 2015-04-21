@@ -191,11 +191,20 @@ abstract class Asset
     /**
     * This function returns the asset description
     *
+    * @param boolean  $entities  [Optional] Transform to HTML entities
+    *
     * @return string
     */      
-    public function get_descr()
+    public function get_descr($entities = TRUE)
     {
-        return $this->descr;
+        if ($entities)
+        {
+            return Util::htmlentities($this->descr);
+        }
+        else
+        {
+            return $this->descr;
+        }
     }
       
         
@@ -520,7 +529,7 @@ abstract class Asset
         }
         //Getting port and IP address from server
         
-        $address = $conf->get_conf('server_address');
+        $address = '127.0.0.1';
         $port    = $conf->get_conf('server_port');
         
         

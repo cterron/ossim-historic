@@ -142,3 +142,28 @@ def ansible_is_valid_playbook_response(system_ip, response):
         api_log.error(str(err))
         return False, "Something wrong happened while running ansible command %s" % str(response)
     return True,""
+
+
+def local_copy_file(system_ip, src_file, dst_file):
+    """
+    Make a local copy of a file using the command module.
+    Workaround for ansible "copy" module bug with permissions other=0.
+    Change permissions to 777 after copying so we can use "copy" module 
+    with the resulting copies.
+
+    Args:
+        system_ip (str): system ip
+        src_file (str): path to source file
+        dst_file (str): path to destination file
+
+    """
+    cp_command = "cp -f %s %s" % (src_file, dst_file)
+    chmod_command = "chmod %s %s" % ("777", dst_file)
+    response = ansible.run_module([system_ip], module='command', args=cp_command, use_sudo=True)
+    if system_ip in response['dark']:
+        return (False, "system.local_copy_file : " + response['dark'][host]['msg'])
+    response = ansible.run_module([system_ip], module='command', args=chmod_command, use_sudo=True)
+    if system_ip in response['dark']:
+        return (False, "system.local_copy_file : " + response['dark'][host]['msg'])
+    return (True, '')
+

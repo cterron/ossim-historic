@@ -1,0 +1,15 @@
+[properties]
+name=Agent Plugins
+description=Check the integrity of the agent plugins configuration
+category=alienvault,platform
+profiles=Sensor:>4.0
+type=command
+command=grep \.cfg /etc/ossim/agent/config.yml /etc/ossim/agent/config.cfg
+
+# Plugin files must exist
+[Plugin files]
+fail_if_empty=True
+pattern=^.*(\/etc\/ossim\/agent\/plugins\/[a-zA-Z0-9\_\-]+\.cfg)
+conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/agent_plugins.list
+warning=Some plugins not found
+advice=There at least one reference from configuration files to a plugin file which doesn't exist

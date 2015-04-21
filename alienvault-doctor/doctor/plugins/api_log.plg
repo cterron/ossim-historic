@@ -1,17 +1,23 @@
-# AlienVault API log plugin.
-# Parses the API log for eventual issues.
 [properties]
-name=api_log
+name=AlienVault API log
+description=Parses the API log to search for issues.
 category=alienvault,platform
 type=file
 filename=/var/log/alienvault/api/api.log
-enable=True
 raw_limit=2000
 
 [Number of connection attempts to RabbitMQ]
-pattern=\d{4}-\d{2}-\d{2}\s(?:\d{2}\:?){3}\,\d{3}\sALIENVAULT-API\s\[ERROR\]\:\s(Cannot connect to amqp)
-conditions=@string:<count[10]
+pattern=ALIENVAULT-API\[ERROR\]\:\s(Cannot connect to amqp.*)
+conditions=@string@:<count[10]
 fail_if_empty=False
 severity=Medium
-warning=Too many failed connections to the RabbitMQ server.
+warning=Too many failed connection attempts to the RabbitMQ server.
 advice=RabbitMQ is a queue processing system used by the AlienVault API. Too many failed connections may indicate a problem with the application and lead to an undesired outcome.
+
+[Generic API error message found]
+pattern=ALIENVAULT-API\[ERROR\]\:\s((?!Cannot connect to amqp).*)$
+conditions=@string@:==""
+fail_if_empty=False
+severity=Medium
+warning=Error message found in the API log file.
+advice=Some errors shown in this log file are related to unreachable systems, non completed operations, etc. Please contact support to get more details.

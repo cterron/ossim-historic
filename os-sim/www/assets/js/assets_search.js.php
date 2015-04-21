@@ -287,13 +287,13 @@ function load_search_handlers()
              return false;
         }
         
-        var msg = '<?php echo Util::js_entities(_("You are about to delete ### asset(s). This action cannot be undone. Are you sure you would like to delete these assets?"))?>';
+        var msg = "<?php echo Util::js_entities(_('You are about to delete ### asset(s). This action cannot be undone. Are you sure you would like to delete these assets?'))?>";
         
         var n_assets = $('#num_assets').text();
         
         msg = msg.replace('###', n_assets);
         
-        var keys = {"yes": "<?php echo _('Yes') ?>","no": "<?php echo _('No') ?>"};
+        var keys = {"yes": "<?php echo Util::js_entities(_('Yes')) ?>","no": "<?php echo Util::js_entities(_('No')) ?>"};
         av_confirm(msg, keys).done(delete_all_hosts);
 
     });
@@ -336,13 +336,13 @@ function load_search_handlers()
 
             if (is_ip_cidr(value))
             {
-                var label = "<?php echo _('IP & CIDR:') ?> " + value;
+                var label = "<?php echo Util::js_entities(_('IP & CIDR:')) ?> " + value;
                 set_filter_value(11, value, 0, label);
 
             }
             else
             {
-                var label = "<?php echo _('Hostname & FQDN:') ?> " + value;
+                var label = "<?php echo Util::js_entities(_('Hostname & FQDN:')) ?> " + value;
                 set_filter_value(12, value, 0, label);
 
             }
@@ -394,11 +394,11 @@ function load_search_handlers()
 
         if (id == 3)
         {
-            label = "<?php echo _('Has Alarms') ?>";
+            label = "<?php echo Util::js_entities(_('Has Alarms')) ?>";
         }
         else if (id == 4)
         {
-            label = "<?php echo _('Has Events') ?>";
+            label = "<?php echo Util::js_entities(_('Has Events')) ?>";
         }
 
         set_filter_value(id, id, del, label);
@@ -423,7 +423,7 @@ function load_search_handlers()
 
                 var value = val1 + ';' + val2;
 
-                var label = "<?php echo _('Asset Value:') ?> " + val1 + ' - ' + val2;
+                var label = "<?php echo Util::js_entities(_('Asset Value:')) ?> " + val1 + ' - ' + val2;
 
                 $('#tags_filters li.filter_6').remove();
 
@@ -443,7 +443,7 @@ function load_search_handlers()
 
             var value = v1 + ';' + v2;
 
-            var label = "<?php echo _('Asset Value:') ?> " + v1 + ' - ' + v2;
+            var label = "<?php echo Util::js_entities(_('Asset Value:')) ?> " + v1 + ' - ' + v2;
 
             $('#asset_value_slider .ui-slider').slider('enable');
 
@@ -485,7 +485,7 @@ function load_search_handlers()
                 text1 = $('#vrangeA option:selected').text();
                 text2 = $('#vrangeB option:selected').text();
 
-                var label = "<?php echo _('Vulnerabilities:') ?> " + text1 + ' - ' + text2;
+                var label = "<?php echo Util::js_entities(_('Vulnerabilities:')) ?> " + text1 + ' - ' + text2;
 
                 set_filter_value(5, value, 0, label);
             }
@@ -510,7 +510,7 @@ function load_search_handlers()
             t1 = $('#vrangeA option:selected').text();
             t2 = $('#vrangeB option:selected').text();
 
-            var label = "<?php echo _('Vulnerabilities:') ?> " + t1 + ' - ' + t2;
+            var label = "<?php echo Util::js_entities(_('Vulnerabilities:')) ?> " + t1 + ' - ' + t2;
 
             set_filter_value(5, value, 0, label);
 
@@ -563,11 +563,11 @@ function load_search_handlers()
 
         if (filter == 1)
         {
-            label = "<?php echo _('Assets Added:') ?> " + l_txt;
+            label = "<?php echo Util::js_entities(_('Assets Added:')) ?> " + l_txt;
         }
         else if (filter == 2)
         {
-            label = "<?php echo _('Last Updated:') ?> " + l_txt;
+            label = "<?php echo Util::js_entities(_('Last Updated:')) ?> " + l_txt;
         }
 
         $('#tags_filters li.filter_'+filter).remove();
@@ -837,7 +837,7 @@ function view_asset_group(id)
 /*  Function to open extra filters lightbox  */
 function show_more_filters()
 {
-    GB_show("<?php echo _('More Filters') ?>", __path_ossim + '/assets/filter_list.php', '650', '850');
+    GB_show("<?php echo Util::js_entities(_('More Filters'))?>", __path_ossim + '/assets/filter_list.php', '650', '850');
 }
 
 <?php
@@ -847,13 +847,13 @@ if (Session::can_i_create_assets() == TRUE)
 	/*  Function to open new host form lightbox  */
     function add_host()
     {
-        GB_show("<?php echo _('New Host')?>", __path_ossim + '/host/host_form.php','600','720');
+        GB_show("<?php echo Util::js_entities(_('New Host'))?>", __path_ossim + '/host/host_form.php','600','720');
     }
 
     /*  Function to open import from siem lightbox  */
     function import_siem()
     {
-        GB_show("<?php echo _('Import Hosts from SIEM Events')?>", __path_ossim + '/host/import_all_hosts_from_siem.php', '200', '600');
+        GB_show("<?php echo Util::js_entities(_('Import Hosts from SIEM Events'))?>", __path_ossim + '/host/import_all_hosts_from_siem.php', '200', '600');
     }
     <?php
 }
@@ -896,7 +896,7 @@ function delete_all_hosts()
         {
             $('#asset_notif').empty();
 
-            var _msg = '<?php echo _("Deleting assets ..., please wait")?>';
+            var _msg = '<?php echo Util::js_entities(_("Deleting assets ..., please wait")) ?>';
 
 			show_loading_box('main_container', _msg , '');
         },
@@ -919,7 +919,7 @@ function delete_all_hosts()
 			//There is an unknown error
 			if (cnd_1 || cnd_2)
 			{
-				var _msg  = (cnd_1 == true) ? "<?php echo _("Sorry, operation was not completed due to an unexpected error")?>" : data.data;
+				var _msg  = (cnd_1 == true) ? "<?php echo Util::js_entities(_("Sorry, operation was not completed due to an unexpected error")) ?>" : data.data;
 				var _type = (_msg.match(/policy/)) ? 'nf_warning' : 'nf_error';
 
 			    show_notification('asset_notif', _msg, _type, 15000, true, style);
@@ -947,7 +947,7 @@ function delete_all_hosts()
 
             hide_loading_box();
 
-            var _msg = "<?php echo _("Sorry, operation was not completed due to an unknown error")?>";
+            var _msg = "<?php echo Util::js_entities(_("Sorry, operation was not completed due to an unknown error")) ?>";
 
             show_notification('asset_notif', _msg, 'nf_error', 15000, true, style);
         }
@@ -958,14 +958,14 @@ function delete_all_hosts()
 /*  Function to open import from csv lightbox  */
 function import_csv()
 {
-    GB_show("<?php echo _('Import Hosts from CSV') ?>", __path_ossim + '/host/import_all_hosts.php', '600', '1000');
+    GB_show("<?php echo Util::js_entities(_('Import Hosts from CSV'))?>", __path_ossim + '/host/import_all_hosts.php', '600', '1000');
 }
 
 
 /*  Function to open save group form lightbox  */
 function save_search()
 {
-    GB_show("<?php echo _('Save Asset Group') ?>", __path_ossim + '/assets/save_search.php', '300', '360');
+    GB_show("<?php echo Util::js_entities(_('Save Asset Group'))?>", __path_ossim + '/assets/save_search.php', '300', '360');
 }
 
 

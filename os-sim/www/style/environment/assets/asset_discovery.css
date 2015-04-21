@@ -48,3 +48,9 @@ if (!headers_sent())
 {
 	text-transform: uppercase;
 }
+            
+.ul_tiptip
+{
+   margin: 0px 0px 0px 20px; 
+   padding: 0px;
+}

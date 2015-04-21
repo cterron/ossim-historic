@@ -392,7 +392,7 @@ class Asset_host_ips
                 }
                 catch(Exception $e)
                 {                   
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
         }
@@ -515,7 +515,7 @@ class Asset_host_ips
             }
             catch(Exception $e)
             {                
-                Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
             }
         }
                             
@@ -577,7 +577,7 @@ class Asset_host_ips
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());                    
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());                    
                 }
             } 
         }
@@ -641,7 +641,7 @@ class Asset_host_ips
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());                    
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());                    
                 }
             }   
         }

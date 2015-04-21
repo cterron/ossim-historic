@@ -17,9 +17,55 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+RSYSLOG_DEFAULT_FILE="/etc/default/rsyslog"
+RSYSLOG_CONF_FILE="/etc/rsyslog.conf"
+RSYSLOG_ALIENVAULT_CONF_FILE="/etc/rsyslog.d/alienvault.conf"
+
+
+
+change_rsyslog_default_file() {
+    # Manages all the changes which need to be done in the /etc/default/rsyslog file 
+    echo "# Automatically generated. DO NOT TOUCH!" > "$RSYSLOG_DEFAULT_FILE"
+    echo "# -m 0 disables 'MARK' messages (deprecated, only used in compat mode < 3)" >> "$RSYSLOG_DEFAULT_FILE"
+    echo "# -r enables logging from remote machines (deprecated, only used in compat mode < 3)" >> "$RSYSLOG_DEFAULT_FILE"
+    echo "# -x disables DNS lookups on messages received with -r" >> "$RSYSLOG_DEFAULT_FILE"
+    echo "# -c compatibility mode" >> "$RSYSLOG_DEFAULT_FILE"
+    echo "RSYSLOGD_OPTIONS=\"-c3 -x\"" >> "$RSYSLOG_DEFAULT_FILE"
+}
+
+
+change_rsyslog_conf() {
+    # Manages all the changes which needs to be done in the /etc/rsyslog.conf file
+    sed -i "s/^#\$ModLoad imudp/\$ModLoad imudp/" "$RSYSLOG_CONF_FILE"
+    sed -i "s/^#\$UDPServerRun/\$UDPServerRun/" "$RSYSLOG_CONF_FILE"
+    zasec_found=$(grep "zasec\.conf" "$RSYSLOG_CONF_FILE" || echo "No")
+    if [ "$zasec_found" = "No" ]; then
+        echo "" >> "$RSYSLOG_CONF_FILE"
+        echo "# rsyslog zasec.conf" >> "$RSYSLOG_CONF_FILE"
+        echo "# logs not from 127.0.0.1" >> "$RSYSLOG_CONF_FILE"
+        echo "if not (\$fromhost-ip == '127.0.0.1') then -/var/log/ossim/asec_unk.log" >> "$RSYSLOG_CONF_FILE"
+        echo "if not (\$fromhost-ip == '127.0.0.1') then ~" >> "$RSYSLOG_CONF_FILE"
+        echo "" >> "$RSYSLOG_CONF_FILE"
+        echo "" >> "$RSYSLOG_CONF_FILE"
+    fi
+}
+
+
+change_rsyslog_alienvault_conf() {
+    # Recreates alienvault.conf file in case it has been deleted
+    if [ ! -f "$RSYSLOG_ALIENVAULT_CONF_FILE" ]; then
+        echo "\$MaxMessageSize 64k" > "$RSYSLOG_ALIENVAULT_CONF_FILE"
+    fi
+}
+
+
 
 case "$1" in
     configure)
+        change_rsyslog_default_file
+        change_rsyslog_conf
+        change_rsyslog_alienvault_conf
+        /etc/init.d/rsyslog restart
     ;;
 
     triggered)
@@ -27,6 +73,9 @@ case "$1" in
         do
             case "$trigger" in
                 alienvault-restart-rsyslog)
+                    change_rsyslog_default_file
+                    change_rsyslog_conf
+                    change_rsyslog_alienvault_conf
                     /etc/init.d/rsyslog force-reload || true
                     update-rc.d rsyslog defaults
                 ;;

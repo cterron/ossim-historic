@@ -70,16 +70,27 @@ $h_obj  = Asset_host::get_object($conn, $h_id, TRUE);
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 	<meta http-equiv="Pragma" content="no-cache"/>
 	
-	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui.css"/>
-
-	<script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>
 	
-	<!-- Google Maps: -->
-	<script type="text/javascript" src="https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>
-	<script type="text/javascript" src="/ossim/js/notification.js"></script>
-	<script type="text/javascript" src="/ossim/js/av_map.js.php"></script>    
+	<?php
+    //CSS Files
+    $_css_files = array(
+        array('src' => 'av_common.css',     'def_path' => TRUE),
+        array('src' => 'jquery-ui.css',     'def_path' => TRUE),
+    );
+
+    //JS Files
+    $_js_files = array(
+        array('src' => 'jquery.min.js',     'def_path' => TRUE),
+        array('src' => 'jquery-ui.min.js',  'def_path' => TRUE),
+        array('src' => 'utils.js',          'def_path' => TRUE),
+        array('src' => 'notification.js',   'def_path' => TRUE),
+        array('src' => 'av_map.js.php',     'def_path' => TRUE)
+    );
+    
+    Util::print_include_files($_css_files, 'css');
+    Util::print_include_files($_js_files, 'js');
+    
+    ?>
 
 	<style type="text/css">
 		
@@ -205,82 +216,87 @@ $h_obj  = Asset_host::get_object($conn, $h_id, TRUE);
     		$("#tabs").tabs();
     		
     		var m_index = 0;
+    		
     		av_map = new Av_map('c_map');
     		
-    		if(Av_map.is_map_available())
-            {
-                <?php                                                
-                if (is_array($data['ip']) && !empty($data['ip']))
+    		Av_map.is_map_available(function(conn)
+    		{
+        		if(conn)
                 {
-                    $ips      = array_keys($data['ip']);
-                    $num_ips  = count($ips);
-                    
-                    $first_ip = $ips[0];
-                                      
-                    $record = $gloc->get_location_from_file($first_ip);
-                    $lat = $record->latitude;
-                    $lng = $record->longitude;                 
-                    
-                    if ($num_ips > 1)
+                    <?php                                                
+                    if (is_array($data['ip']) && !empty($data['ip']))
                     {
+                        $ips      = array_keys($data['ip']);
+                        $num_ips  = count($ips);
+                        
+                        $first_ip = $ips[0];
+                                          
+                        $record = $gloc->get_location_from_file($first_ip);
+                        $lat = $record->latitude;
+                        $lng = $record->longitude;                 
+                        
+                        if ($num_ips > 1)
+                        {
+                            ?>
+                            av_map.set_location('', '');                                                               
+                            <?php
+                        }
+                        else
+                        {
+                            ?>
+                            av_map.set_location('<?php echo $lat?>', '<?php echo $lng?>');                            
+                            <?php                        
+                        }                                        
+                        
                         ?>
-                        av_map.set_location('', '');                                                               
-                        <?php
+                        av_map.draw_map();
+                                                                                      
+                        av_map.map.setOptions({draggable: true}); 
+                        <?php                                      
+                                                    
+                        //Add new marker by Ip
+                        foreach($ips as $ip) 
+                        {                            
+                            $record = $gloc->get_location_from_file($ip);
+                            $lat = $record->latitude;
+                            $lng = $record->longitude; 
+                            
+                            if ($lat != '' && $lng != '')
+                            {
+                                ?>                                                                                
+                                av_map.add_marker('<?php echo $lat?>', '<?php echo $lng?>');
+        						av_map.map.setZoom(4);
+        						
+        						m_index = Object.keys(av_map.markers).length - 1;
+        						av_map.markers[m_index].setDraggable(false);
+        						
+        						<?php
+        						if($ip == $h_ip)
+        						{
+                                    ?>
+                                    av_map.markers[m_index].setIcon('../style/img/yellow-dot.png');
+                                    <?php
+        						}    
+                            }                     		   					
+                        }                           
                     }
                     else
                     {
-                        ?>
-                        av_map.set_location('<?php echo $lat?>', '<?php echo $lng?>');                            
-                        <?php                        
-                    }                                        
-                    
-                    ?>
-                    av_map.draw_map();
-                                                                                  
-                    av_map.map.setOptions({draggable: false}); 
-                    <?php                                      
-                                                
-                    //Add new marker by Ip
-                    foreach($ips as $ip) 
-                    {                            
-                        $record = $gloc->get_location_from_file($ip);
-                        $lat = $record->latitude;
-                        $lng = $record->longitude; 
-                        
-                        if ($lat != '' && $lng != '')
-                        {
-                            ?>                                                                                
-                            av_map.add_marker('<?php echo $lat?>', '<?php echo $lng?>');
-    						av_map.map.setZoom(4);
-    						
-    						m_index = Object.keys(av_map.markers).length - 1;
-    						av_map.markers[m_index].setDraggable(false);
-    						
-    						<?php
-    						if($ip == $h_ip)
-    						{
-                                ?>
-                                av_map.markers[m_index].setIcon('../style/img/yellow-dot.png');
-                                <?php
-    						}    
-                        }                     		   					
-                    }                           
-                }
-                else
-                {
-                    //No IPs with geolocation
-                    ?>                         
-                    av_map.set_zoom(2);           
-                    av_map.draw_map();                 
-                    av_map.map.setOptions({draggable: false});                 
-                    <?php                    
-                }            
-                ?>                               
-    		}
-    		else
-    		{
-    		    av_map.draw_warning();
-    		}    							
+                        //No IPs with geolocation
+                        ?>                         
+                        av_map.set_zoom(2);           
+                        av_map.draw_map();                 
+                        av_map.map.setOptions({draggable: false});                 
+                        <?php                    
+                    }            
+                    ?>                               
+        		}
+        		else
+        		{
+        		    av_map.draw_warning();
+        		}
+        		
+            });   							
     	});
 	
 	</script>

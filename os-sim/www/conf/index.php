@@ -75,6 +75,7 @@ $flag_status    = $_GET['status'];
 $error_string   = $_GET['error'];
 $warning_string = $_GET['warning'];
 $word           = (POST('word') != '') ? POST('word') : ((GET('word') != '') ? GET('word') : '');
+$restart_server = 0;
 
 ossim_valid($section, OSS_ALPHA, OSS_NULLABLE,                                                                    'illegal:' . _('Section'));
 ossim_valid($flag_status, OSS_DIGIT, OSS_NULLABLE,                                                                'illegal:' . _('Flag status'));
@@ -112,6 +113,12 @@ foreach ($all_sensors as $sensor_id => $sensor)
 	$sensor_list[$sensor['name']] = $sensor['name'].' ['.$sensor['ip'].']';
 }	
 
+$default_entities['optgroup1'] = _('Users');
+$users = Session::get_list($conn);
+foreach ($users as $usr)
+{
+    $default_entities[$usr->get_login()] = $usr->get_name();
+}
 
 if (Session::is_pro())
 {
@@ -131,19 +138,23 @@ if (Session::is_pro())
     } 
         
     //Entity list
-	$entities_all = Acl::get_entities_to_assign($conn);	
+	$entities_all     = Acl::get_entities_to_assign($conn);	
 	
 	if (is_array($entities_all) && count($entities_all) > 0)
 	{
+		$default_entities['optgroup2'] = _('Entities');
 		foreach ($entities_all as $k => $v )
 		{
+			$default_entities[$k] = $v;
+			
 			if(!Acl::is_logical_entity($conn, $k))
 			{
 				$entities[$k] = $v;
 			}
 		}
 	}
-	else{
+	else
+	{
 		$entities[''] = '- '._('No entities found').' -';	
 	}
 
@@ -183,7 +194,7 @@ else
 
 $CONFIG = array(
     'Ossim Framework' => array(
-        'title' => _('Ossim Framework'),
+        'title' => Session::is_pro() ? _('USM Framework') : _('Ossim Framework'),
         'desc'  => _('PHP Configuration (graphs, acls, database api) and links to other applications'),
         'advanced' => 1,
     	'section' => 'alarms',
@@ -218,6 +229,16 @@ $CONFIG = array(
                     'help' => '' ,
                     'desc' => _('MD5 salt for passwords'),
                     'advanced' => 1
+                ),
+                'internet_connection' => array(
+                    'type'  => array(
+                        '0' => _('No'),
+                        '1' => _('Yes'),
+                        '2' => _('Force Yes')
+                    ),
+                    'help' => _("You can configure if you have an internet connection available so that you can load external libraries.<br/><ul><li>No: It will not load external libraries.</li><li>Yes: It will check if we have internet connection and if so, it will load external libraries.</li><li>Force Yes: It will always try to load external libraries.</li></ul>This option requires to login again."),
+                    'desc' => _('Internet Connection Availability'),
+                    'advanced' => 1
                 )
             )
         ),
@@ -225,43 +246,106 @@ $CONFIG = array(
         'title' => _('Metrics'),
         'desc' => _('Configure metric settings'),
         'advanced' => 0,
-    	'section' => 'metrics',
-        'conf' => array(
-            'recovery' => array(
-                'type' => 'text',
-                'help' => '' ,
-                'desc' => _('Recovery Ratio'),
-                'advanced' => 0 ,
-    			'section' => 'metrics'
-            ),
-            'threshold' => array(
-                'type' => 'text',
-                'help' => '' ,
-                'desc' => _('Global Threshold'),
-                'advanced' => 0 ,
-            	'section' => 'metrics'
-            ),
-            'def_asset' => array(
-                'type' => 'text',
-                'help' => '' ,
-                'desc' => _('Default Asset value'),
-                'advanced' => 0 ,
-            	'section' => 'metrics'
-            ),
-            'server_logger_if_priority' => array(
-                'type' => array(
-                    '0' => 0,
-                    '1' => 1,
-                    '2' => 2,
-                    '3' => 3,
-                    '4' => 4,
-                    '5' => 5
+        'section' => 'metrics',
+            'conf' => array(
+                'recovery' => array(
+                    'type' => 'text',
+                    'help' => '' ,
+                    'desc' => _('Recovery Ratio'),
+                    'advanced' => 0 ,
+                    'section' => 'metrics'
                 ),
-                'help' => _("Store in SIEM if event's priority >= this value").",<br>&nbsp;&nbsp;&nbsp;"._('CLI action required:').' '._('Maintenance->Alienvault Services->Restart Alienvault Server Service'),
-                'desc' => _('Security Events process priority threshold'),
+                'threshold' => array(
+                    'type' => 'text',
+                    'help' => '' ,
+                    'desc' => _('Global Threshold'),
+                    'advanced' => 0 ,
+                	'section' => 'metrics'
+                ),
+                'def_asset' => array(
+                    'help' => '' ,
+                    'desc' => _('Default Asset value'),
+                    'advanced' => 0 ,
+                    'section' => 'metrics'
+                ),
+                'server_logger_if_priority' => array(
+                    'type' => array(
+                        '0' => 0,
+                        '1' => 1,
+                        '2' => 2,
+                        '3' => 3,
+                        '4' => 4,
+                        '5' => 5
+                    ),
+                    'help' => _("Store in SIEM if event´s priority >= this value").",<br>&nbsp;&nbsp;&nbsp;"._('CLI action required:').' '._('Maintenance & Troubleshooting->Restart System Services->Restart AlienVault Server Service'),
+                    'desc' => _('Security Events process priority threshold'),
+                    'advanced' => 1,
+                    'section' => 'metrics',
+                    'disabled' => (Session::is_pro()) ? 0 : 1
+                )
+            )
+        ),
+    'Ossim Framework' => array(
+        'title' => Session::is_pro() ? _('USM Framework') : _('Ossim Framework'),
+        'desc'  => _('PHP Configuration (graphs, acls, database api) and links to other applications'),
+        'advanced' => 1,
+    	'section' => 'alarms',
+            'conf' => array(
+                'use_resolv' => array(
+                    'type' => array(
+                        '0' => _('No'),
+                        '1' => _('Yes')
+                    ),
+                    'help' => '' ,
+                    'desc' => _('Resolve IPs'),
+                    'section' => 'alarms',
+                    'advanced' => 1
+                ),
+                'nfsen_in_frame' => array(
+                    'type'  => array(
+                        '0' => _('No'),
+                        '1' => _('Yes')
+                    ),
+                    'help'  => '',
+                    'desc'  => _('Open Remote NFsen in the same frame'),
+                    'advanced' => 1
+                ),
+                'ntop_link' => array(
+                    'type'  => $sensor_list,
+                    'help'  => '' ,
+                    'desc'  => _('Default Ntop Sensor'),
+                    'advanced' => 1
+                ),             
+                'md5_salt' => array(
+                    'type' => 'text',
+                    'help' => '' ,
+                    'desc' => _('MD5 salt for passwords'),
+                    'advanced' => 1
+                ),
+                'internet_connection' => array(
+                    'type'  => array(
+                        '0' => _('No'),
+                        '1' => _('Yes'),
+                        '2' => _('Force Yes')
+                    ),
+                    'help' => _("You can configure if you have an internet connection available so that you can load external libraries.<br/><ul><li>No: It will not load external libraries.</li><li>Yes: It will check if we have internet connection and if so, it will load external libraries.</li><li>Force Yes: It will always try to load external libraries.</li></ul>This option requires to login again."),
+                    'desc' => _('Internet Connection Availability'),
+                    'advanced' => 1
+                )
+            )
+        ),        
+    'IDM' => array(
+        'title' => _('IDM'),
+        'desc' => _('Configure IDM settings'),
+        'advanced' => 1,
+    	'section' => 'idm',
+        'conf' => array(
+            'idm_user_login_timeout' => array(
+                'type' => 'text',
+                'help' => _('If a user does not log in a host after # hours the IDM will not enrich the events with that user log in information. Set a default session timeout for IDM User Login events. Value 0 disables this feature. The server will be restarted.'),
+                'desc' => _('IDM user login timeout'),
                 'advanced' => 1,
-                'section' => 'metrics',
-                'disabled' => (Session::is_pro()) ? 0 : 1
+    			'section' => 'idm'
             ),
         )
     ),
@@ -301,6 +385,13 @@ $CONFIG = array(
             	'section' => 'siem',
                 'advanced' => 0
             ),            
+            'backup_hour' => array(
+                    'type' => 'text',
+                    'id'   => 'backup_timepicker',
+                    'help' => _('Backup start time in format HH:MM'),
+                    'desc' => _('Backup start time'),
+                    'advanced' => 0
+            ),
             'backup_netflow' => array(
                 'type' => 'text',
                 'help' => _('Number of days to store flows on netflows for'),
@@ -645,6 +736,13 @@ $CONFIG = array(
                 'section' => 'tickets,alarms',
                 'advanced' => 0
             ),
+            'incidents_incharge_default' => array(
+                'type' => $default_entities,
+                'help' => _('The automatic ticket generation will use the selected in-charge user or entity. Admin user by default'),
+                'desc' => _('Automatic ticket generation default in-charge user/entity'),
+                'section' => 'tickets,alarms',
+                'advanced' => 0
+            ),
 			'tickets_send_mail' => array(
                 'type' => array(
                     'yes' => _('Yes'),
@@ -736,40 +834,38 @@ function valid_value($key, $value, $numeric_values)
 function submit()
 {
 	?>
-		<!-- submit -->
-		<input type="button" class='av_b_secondary' id="enable_notifications" onclick="av_notification()" value=" <?php echo _("Enable Desktop Notifications"); ?> "/><br>
-		
-		<script type='text/javascript'>
-		function RequestPermission(callback) 
-		{ 
-		    window.webkitNotifications.requestPermission(callback);     		
-		}
-		
-		
-		function av_notification() 
-		{
-			if (window.webkitNotifications.checkPermission() > 0) 
-			{
-    			RequestPermission(av_notification);
-  			}
-  			notificationw = window.webkitNotifications.createNotification('/ossim/statusbar/av_icon.png',
-  			   "<?php echo Util::js_entities(html_entity_decode(_('Thank you'))) ?>",
-  			   "<?php echo Util::js_entities(html_entity_decode(_('Notifications enabled successfully')))?>");
-  			
-  			notificationw.show();
-  			
-  			setTimeout (function() { notificationw.cancel(); }, '10000');
-		}
-		if (window.webkitNotifications) 
-		{ 
-		    $('#enable_notifications').show(); 
-		}
-		</script>
-		
-		<input type="submit" name="update" id="update" value=" <?php echo _('Update configuration'); ?> "/>
-		
-		<br/><br/>
-		<!-- end sumbit -->
+        <script type='text/javascript'>
+            function av_notification() 
+            {
+                if (notify.permissionLevel() != notify.PERMISSION_GRANTED)
+                {
+                    notify.requestPermission(av_notification);
+                }
+                
+                notificationw = notify.createNotification(
+                    "<?php echo Util::js_entities(html_entity_decode(_('Thank you'))) ?>",
+                    {
+                        body: "<?php echo Util::js_entities(html_entity_decode(_('Notifications enabled successfully')))?>",
+                        icon: "/ossim/pixmaps/statusbar/logo_siem_small.png"
+                    }
+                );
+                
+                setTimeout (function() { notificationw.close(); }, '10000');
+            }
+            
+            $(document).ready(function()
+            {
+                if (notify.isSupported)
+                { 
+                    $('#enable_notifications').show();
+                }
+            });
+        </script>
+        <!-- submit -->
+        <input type="button" class='av_b_secondary' id="enable_notifications" onclick="av_notification()" value=" <?php echo _("Enable Desktop Notifications"); ?> "/>
+        
+        <input type="submit" name="update" id="update" value=" <?php echo _('Update configuration'); ?> "/>
+        <!-- end sumbit -->
 	<?php
 }
 if (POST('update'))
@@ -782,6 +878,7 @@ if (POST('update'))
         'backup_netflow',
         'server_port',
         'use_resolv',
+        'internet_connection',
         'use_ntop_rewrite',
         'use_munin',
         'frameworkd_port',
@@ -814,7 +911,8 @@ if (POST('update'))
         'failed_retries',
         'unlock_user_interval',
         'tickets_max_days',
-        'smtp_port'
+        'smtp_port',
+        'idm_user_login_timeout'
     );
 
     $passwords = array(
@@ -947,6 +1045,12 @@ if (POST('update'))
 					if (POST("value_$i") != $before_value)
 					{ 
 						Log_action::log(7, array("variable: ".POST("conf_$i")));
+						
+						// Special case
+						if (POST("conf_$i") == 'idm_user_login_timeout')
+						{
+    						$restart_server = 1;
+						}
 					}
 				}
 			}
@@ -970,8 +1074,15 @@ if (POST('update'))
     }
 
     
-    
-	header("Location: " . $_SERVER['SCRIPT_NAME'] . "?word=" . $word . "&section=" . $section . "&status=" . $flag_status . "&error=" . urlencode($error_string) . "&warning=" . urlencode($warning_string));
+    $url = $_SERVER['SCRIPT_NAME'] . "?word=" . $word . "&section=" . $section . "&status=" . $flag_status . "&error=" . urlencode($error_string) . "&warning=" . urlencode($warning_string);
+    if ($restart_server)
+    {
+        header("Location: ".AV_MAIN_PATH."/conf/reload.php?what=directives&back=".urlencode($url));
+    }
+    else
+    {
+        header("Location: $url");
+    }
 
     exit();
 }
@@ -1012,7 +1123,8 @@ $default_open = intval(GET('open'));
         $_files = array(
             array('src' => 'av_common.css',                 'def_path' => TRUE),
             array('src' => 'jquery-ui.css',                 'def_path' => TRUE),
-            array('src' => 'tipTip.css',                    'ef_path' => TRUE)
+            array('src' => 'tipTip.css',                    'def_path' => TRUE),
+            array('src' => 'jquery.timepicker.css',         'def_path' => TRUE)
         );
     
         Util::print_include_files($_files, 'css');
@@ -1023,11 +1135,13 @@ $default_open = intval(GET('open'));
             array('src' => 'jquery.min.js',                 'def_path' => TRUE),
             array('src' => 'jquery-ui.min.js',              'def_path' => TRUE),
             array('src' => 'utils.js',                      'def_path' => TRUE),
-            array('src' => 'notification.js',               'def_path' => TRUE),
+            //array('src' => 'notification.js',               'def_path' => TRUE),
             array('src' => 'token.js',                      'def_path' => TRUE),
             array('src' => 'jquery.tipTip.js',              'def_path' => TRUE),
             array('src' => 'jquery.placeholder.js',         'def_path' => TRUE),
-            array('src' => 'greybox',                       'def_path' => TRUE)
+            array('src' => 'greybox.js',                    'def_path' => TRUE),
+            array('src' => 'jquery.timepicker.js',          'def_path' => TRUE),
+            array('src' => 'desktop-notify.js',             'def_path' => TRUE) // Include ubobstructive notification functions
         );
     
         Util::print_include_files($_files, 'js');
@@ -1036,6 +1150,7 @@ $default_open = intval(GET('open'));
 
 	<script type='text/javascript'>
 		var IE = document.all ? true : false
+		
 		if (!IE) 
 		{
 		    document.captureEvents(Event.MOUSEMOVE)
@@ -1089,14 +1204,13 @@ $default_open = intval(GET('open'));
 		function show_tooltips()
 		{                
                 
-            $(".conf_help").each(function(index) {
-            
-            	var help_id = '#'+$(this).attr('id');
-            	var id      = $(this).attr('id').replace('help_', '');
-            	var info_id = '#info_' + id;
+            $(".conf_help").each(function(index) 
+            {
+            	var help_id   = '#'+$(this).attr('id');
+            	var id        = $(this).attr('id').replace('help_', '');
+            	var info_id   = '#info_' + id;
             	           	           	
-            	var data = $(info_id).text().split('###');  
-            	            	          	
+            	var data      = $(info_id).html().split('###');  
             	var conf_info = '<table class="t_conf_info" border="0" cellpadding="1" cellspacing="1">' +
             	                      '<tr>' +
             	                            '<td>' +
@@ -1105,7 +1219,6 @@ $default_open = intval(GET('open'));
             	                      '</tr>' + 
             	                 '</table>'
                         	
-            	
             	$(help_id).tipTip({defaultPosition: 'top', maxWidth: "400px", content: conf_info, edgeOffset: 3});
             });                
         }        
@@ -1369,63 +1482,62 @@ $default_open = intval(GET('open'));
 	        data['token'] = $('#otx_token').val();
 	            
 	        var ctoken = Token.get_token("configuration_main");
-        	    	$.ajax(
-        	    	{
-        	    		url: "<?php echo AV_MAIN_PATH ?>/conf/ajax/get_otx_user.php?token="+ctoken,
-        	    		data: data,
-        	    		type: "POST",
-        	    		dataType: "json",
-        	    		beforeSend: function()
-        	    		{
-        	        		$('#send_otx_token').addClass('av_b_processing');
-        	    		},
-        	    		success: function(data)
-        	    		{    		    
-        	        		if (typeof data != 'undefined' && data != null)
-        	        		{
-        	        		    $('#send_otx_token').removeClass('av_b_processing');
-        	        		    
-        	            		if (data.error)
-        	            		{
-        	                		show_notification('av_info', data.msg, 'nf_error', 5000);
-        	                		
-        	                		return false;
-        	            		}
-        	            		// Successfully activated in OTX
-        	            		else
-        	            		{
-                	            	$('#otx_contribute').hide();
-                	            	$('#otx_select').show();
-                    	            $('#otx_username').html(data.msg);
-                    	            $('.otx').removeAttr('disabled');
-                    	            $('.otx').css('color', '');
-                    	            $('#send_otx_token').val('<?php echo _('Submit') ?>');
-                    	            $('#send_otx_token').attr('disabled', true);
-                    	            
-                    	            if (typeof parent.load_notifications == 'function')
-                    	            {
-                        	            parent.load_notifications();
-                    	            }
-        	            		}
-        	            }
-        	                
-        	    		},
-        	    		error: function(XMLHttpRequest, textStatus, errorThrown) 
-        	    		{	
-        	    		    $('#send_otx_token').removeClass('av_b_processing');
-        	    		    
-        	            //Checking expired session
-        	        		var session = new Session(XMLHttpRequest, '');
-    	                if (session.check_session_expired() == true)
-    	                {
-    	                    session.redirect();
-    	                    return;
-    	                }
+	    	$.ajax(
+	    	{
+	    		url: "<?php echo AV_MAIN_PATH ?>/conf/ajax/get_otx_user.php?token="+ctoken,
+	    		data: data,
+	    		type: "POST",
+	    		dataType: "json",
+	    		beforeSend: function()
+	    		{
+	        		$('#send_otx_token').addClass('av_b_processing');
+	    		},
+	    		success: function(data)
+	    		{    		    
+	        		if (typeof data != 'undefined' && data != null)
+	        		{
+	        		    $('#send_otx_token').removeClass('av_b_processing');
+	        		    
+	            		if (data.error)
+	            		{
+	                		show_notif('av_info', data.msg, 'nf_error', 10000, true);
+	                		
+	                		return false;
+	            		}
+	            		// Successfully activated in OTX
+	            		else
+	            		{
+        	            	$('#otx_contribute').hide();
+        	            	$('#otx_select').show();
+            	            $('#otx_username').html(data.msg);
+            	            $('.otx').removeAttr('disabled');
+            	            $('.otx').css('color', '');
+            	            $('#send_otx_token').val('<?php echo _('Submit') ?>');
+            	            $('#send_otx_token').attr('disabled', true);
+            	            
+            	            if (typeof parent.load_notifications == 'function')
+            	            {
+                	            parent.load_notifications();
+            	            }
+	            		}
+	                }
+	    		},
+	    		error: function(XMLHttpRequest, textStatus, errorThrown) 
+	    		{	
+	    		    $('#send_otx_token').removeClass('av_b_processing');
+	    		    
+    	            //Checking expired session
+    	        		var session = new Session(XMLHttpRequest, '');
+                    if (session.check_session_expired() == true)
+                    {
+                        session.redirect();
+                        return;
+                    }
     
-    	                show_notification('av_info', errorThrown, 'nf_error', 5000);
-        	                
-        	    		}
-        	    	});
+                    show_notif('av_info', errorThrown, 'nf_error', 10000, true);
+	                
+	    		}
+	    	});
 	    }
 	    
         $(document).ready(function()
@@ -1435,7 +1547,7 @@ $default_open = intval(GET('open'));
             {
                 $('.conf_table').addClass('gb_conf_table');
             }
-            
+
 			<?php 
             if (GET('section') == "" && POST('section') == "" ) 
             { 
@@ -1552,6 +1664,13 @@ $default_open = intval(GET('open'));
             {
                 get_otx_user();
             });
+
+            // Initialize time inputs
+            $('#backup_timepicker').timepicker({
+                timeFormat: 'H:i',
+                disableFocus: true,
+                maxTime: '23:30'
+            }).on("timeFormatError", function() { $(this).val('01:00') });
             
             show_tooltips();
               
@@ -1732,18 +1851,32 @@ $default_open = intval(GET('open'));
 													$input.= "<option value=''></option>";
 												}
 												
+												$grp = false;
 												foreach($type['type'] as $option_value => $option_text)
 												{
+    												if ( preg_match("/^optgroup\d+/",$option_value) )
+    												{
+        												if ($grp)
+        												{
+            												$input.= "</optgroup>";
+        												}
+        												$input .= "<optgroup label=\"$option_text\">";
+        												$grp = true;
+        												continue;
+    												}
 													$input.= "<option ";
 													
 													if ($conf_value == $option_value)
 													{ 
-														$input.= " selected='selected' ";
+														$input.= " selected=\"selected\" ";
 													}
 													
-													$input.= "value='$option_value'>$option_text</option>";
+													$input.= "value=\"$option_value\">$option_text</option>";
 												}
-												
+												if ($grp)
+												{
+    												$input.= "</optgroup>";
+												}
 												$input.= "</select>";
 											}
 										}
@@ -1765,11 +1898,12 @@ $default_open = intval(GET('open'));
 										/* input */
 										else
 										{
-											$conf_value = ($type['type']=="password") ? Util::fake_pass($conf_value) : $conf_value;
+											$conf_value = ($type['type']=="password") ? Util::fake_pass($conf_value) : str_replace("'", "&#39;", $conf_value);
+											$autocomplete = ($type['type']=="password") ? "autocomplete='off'" : "";
 											$select_change = ($type['onchange'] != "") ? "onchange=\"".$type['onchange']."\"" : "";
 											$input_id = ($type['id'] != '') ? "id=\"".$type['id']."\"" : "";
 											$classname = ($type['classname'] != '') ? "class=\"".$type['classname']."\"" : "";
-											$input.= "<input type='" . $type['type'] . "' size='30' name='value_$count' $style $input_id $classname value='$conf_value' $select_change $disabled/>";
+											$input.= "<input type='" . $type['type'] . "' size='30' name='value_$count' $style $input_id $classname value='$conf_value' $select_change $disabled $autocomplete/>";
 										}
 										
 										echo $input;

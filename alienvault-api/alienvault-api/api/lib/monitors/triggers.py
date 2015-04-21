@@ -27,7 +27,7 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 from __future__ import print_function
-import traceback
+
 import yaml
 import json
 import re
@@ -35,10 +35,10 @@ from datetime import datetime
 import celery.utils.log
 
 from api.lib.monitors.monitor import Monitor, MonitorTypes
-from db.methods.api import save_current_status_message, \
-                        purge_current_status_message, \
-                        add_current_status_messages, \
-                        get_all_monitor_data
+from db.methods.api import (save_current_status_message,
+                            purge_current_status_message,
+                            add_current_status_messages,
+                            get_all_monitor_data)
 from db.models.alienvault_api import Current_Status
 
 logger = celery.utils.log.get_logger("celery")
@@ -56,8 +56,11 @@ class TriggerCondition(object):
         "MONITOR_DNS": 8,
         "MONITOR_REMOTE_CERTIFICATES": 9,
         "MONITOR_PENDING_UPDATES": 11,
+        "MONITOR_PLUGINS_VERSION": 12,
+        "MONITOR_PLUGINS_CHECK_INTEGRITY" : 13,
         "CHECK_TRIGGERS": 1500,
     }
+
     def __init__(self):
         """Constructor"""
         self.__message_id = ""
@@ -77,6 +80,7 @@ class TriggerCondition(object):
     @property
     def when(self):
         return self.__when
+
     @when.setter
     def when(self, value):
         self.__when = value
@@ -156,7 +160,6 @@ class TriggerCondition(object):
         # $monitor.variable
 
         search = self.__regex_monitor.findall(self.when)
-        eval_conditions = []
 
         logger.info("Running condition... %s" % self.name)
         self.purge_messages()
@@ -165,28 +168,30 @@ class TriggerCondition(object):
         component_monitors = {}
 
         for monitor_data in result_set:
-            if not component_monitors.has_key(monitor_data.component_id):
+            if monitor_data.component_id not in component_monitors:
                 component_monitors[monitor_data.component_id] = {}
 
-            if not component_monitors[monitor_data.component_id].has_key(monitor_data.monitor_id):
-                component_monitors[monitor_data.component_id][monitor_data.monitor_id] = json.loads(monitor_data.data)
+            if monitor_data.monitor_id not in component_monitors[monitor_data.component_id]:
+                component_monitors[monitor_data.component_id][monitor_data.monitor_id] = {
+                    'data': json.loads(monitor_data.data),
+                    'type': monitor_data.component_type}
 
         logger.info("Let's start working... %s" % self.name)
-        #For each component evaluates the condition
+        # For each component evaluates the condition
         for component_id, monitors in component_monitors.iteritems():
             replacements = {}
             for m in search:
                 if len(m) < 2:
                     continue
-                #m[0] = monitor name
-                #m[1] = param_name
+                # m[0] = monitor name
+                # m[1] = param_name
                 monitor_name = m[0]
                 param_name = m[1]
                 if monitor_name in self.__AVAILABLE_MONITORS.keys():
                     monitor_id = self.__AVAILABLE_MONITORS[monitor_name]
                     monitor_data = None
                     try:
-                        monitor_data = monitors[monitor_id]
+                        monitor_data = monitors[monitor_id]['data']
                         #logger.info(monitor_data)
                     except KeyError:
                         monitor_data = None
@@ -199,11 +204,16 @@ class TriggerCondition(object):
             if len(replacements) == len(search):
                 condition = self.when
                 for replacement, new_value in replacements.iteritems():
+                    if isinstance(new_value, unicode) or isinstance(new_value, str):
+                        new_value = '\"' + new_value + '\"'
                     condition = condition.replace(replacement, str(new_value))
                 if eval(condition):
-                    #logger.info("Condition (%s) evaluated to TRUE -> Send message" % self.when)
-                    #TODO: Modify yaml syntax to specify the component type
-                    self.append_trigger_message(component_id, 'system', self.message_id, json.dumps({"condition":condition}))
+                    # logger.info("Condition (%s) evaluated to TRUE -> Send message" % self.when)
+                    # TODO: Modify yaml syntax to specify the component type
+                    self.append_trigger_message(component_id,
+                                                monitors[monitor_id]['type'],
+                                                self.message_id,
+                                                json.dumps({"condition": condition}))
 
         logger.info("Condition has been evaluated.... Saving data..")
         self.commit_data()
@@ -214,12 +224,15 @@ class Trigger(object):
         self.__id = 0
         self.__name = ""
         self.__conditions = []
+
     @property
     def id(self):
         return self.__id
+
     @id.setter
     def id(self, value):
         self.__id = value
+
     @property
     def name(self):
         return self.__name
@@ -234,7 +247,7 @@ class Trigger(object):
             self.__conditions.append(condition)
 
     def __repr__(self):
-        trigger_repr =  "<trigger id=%s name=%s><conditions>" % (self.id, self.name)
+        trigger_repr = "<trigger id=%s name=%s><conditions>" % (self.id, self.name)
         for condition in self.__conditions:
             trigger_repr += str(condition)
         trigger_repr += "</conditions><trigger>"
@@ -248,24 +261,30 @@ class Trigger(object):
 
 class TriggerReader(object):
     """Loads the triggers file"""
-    #Defined at #10062
+    # Defined at #10062
     MESSAGE = {
-        "$MESSAGE_INFO_ASSET_NOT_SENDING_LOGS":1,
+        "$MESSAGE_INFO_ASSET_NOT_SENDING_LOGS": 1,
         "$MESSAGE_INFO_LOGS_BUT_NOT_PLUGIN_ENABLED": 2,
-        "$MESSAGE_WARNING_24_HOURS_WITHOUT_EVENTS":3,
-        "$MESSAGE_WARNING_SATURATION":4,
-        "$MESSAGE_WARNING_DROPPED_PACKAGES":5,
-        "$MESSAGE_WARNING_DISK_SPACE":6,
-        "$MESSAGE_ERROR_DISK_SPACE":7,
-        "$MESSAGE_EXTERNAL_DNS_CONFIGURED":8,
-        "$MESSAGE_SYSTEM_UNREACHEABLE_OR_UNAVAILABLE":9,
-        "$MESSAGE_PENDING_UPDATES":10,
-        "$MESSAGE_SENSOR_UNREACHEABLE_OR_UNAVAILABLE":11
+        "$MESSAGE_WARNING_24_HOURS_WITHOUT_EVENTS": 3,
+        "$MESSAGE_WARNING_SATURATION": 4,
+        "$MESSAGE_WARNING_DROPPED_PACKAGES": 5,
+        "$MESSAGE_WARNING_DISK_SPACE": 6,
+        "$MESSAGE_ERROR_DISK_SPACE": 7,
+        "$MESSAGE_EXTERNAL_DNS_CONFIGURED": 8,
+        "$MESSAGE_SYSTEM_UNREACHEABLE_OR_UNAVAILABLE": 9,
+        "$MESSAGE_PENDING_UPDATES": 10,
+        "$MESSAGE_SENSOR_UNREACHEABLE_OR_UNAVAILABLE": 11,
+        "$MESSAGE_PLUGINS_VERSION": 12,
+        "$MESSAGE_PLUGINS_CHECK_INTEGRITY" : 13,
+        "$MESSAGE_PLUGINS_CHECK_INSTALLED" : 14,
+        "$MESSAGE_PLUGINS_RSYSLOG_CHECK_INTEGRITY" : 15,
+        "$MESSAGE_PLUGINS_RSYSLOG_CHECK_INSTALLED" : 16
+
     }
+
     def __init__(self, triggers_file):
         self.__trigger_file = triggers_file
         self.__triggers = []
-
 
     def get_trigger_from_ymldata(self, yaml_data, trigger_id):
         """Parses the yml_data for a trigger and returns a new Trigger object
@@ -293,7 +312,7 @@ class TriggerReader(object):
         """
         trigger = None
 
-        if 'trigger' in  yaml_data:
+        if 'trigger' in yaml_data:
             trigger = Trigger()
             trigger.id = trigger_id
             trigger.name = yaml_data['trigger']
@@ -303,7 +322,7 @@ class TriggerReader(object):
                     c.name = condition['name']
                     c.when = condition['when']
                     message_id = 0
-                    if TriggerReader.MESSAGE.has_key(condition['trigger_message_id']):
+                    if condition['trigger_message_id'] in TriggerReader.MESSAGE:
                         message_id = TriggerReader.MESSAGE[condition['trigger_message_id']]
                     c.message_id = message_id
                     trigger.append_condition(c)
@@ -333,6 +352,7 @@ class TriggerReader(object):
             logger.error("Error loading the triggers file: %s" % str(e))
             rt = False
         return rt
+
     @property
     def triggers(self):
         return self.__triggers
@@ -343,6 +363,7 @@ class CheckTriggers(Monitor):
     def __init__(self):
         Monitor.__init__(self, MonitorTypes.CHECK_TRIGGERS)
         self.message = 'Sensor Dropped Packages monitor started'
+
     def start(self):
         """
             Starts the monitor activity
@@ -359,7 +380,7 @@ class CheckTriggers(Monitor):
 
         except Exception, e:
             logger.error("Something wrong happen while running the monitor..%s, %s" % (self.get_monitor_id(),
-                str(e)))
+                                                                                       str(e)))
             rt = False
 
         return rt

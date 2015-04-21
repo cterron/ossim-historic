@@ -70,7 +70,10 @@ function html_service_level($conn)
         "global_$user",
         $range
     );
-    if (!$rs = & $conn->Execute($sql, $params)) 
+    
+    $rs = $conn->Execute($sql, $params);
+    
+    if (!$rs) 
     {
         echo "error";
         die($conn->ErrorMsg());
@@ -108,7 +111,10 @@ function get_siem_events($conn,$date,$pid=0,$sid=0)
     } 
     
     $params = array( $date );
-    if (!$rs = & $conn->Execute($sql, $params)) 
+    
+    $rs = $conn->Execute($sql, $params);
+    
+    if (!$rs) 
     {
         die($conn->ErrorMsg());
     }
@@ -126,7 +132,9 @@ function get_siem_events($conn,$date,$pid=0,$sid=0)
     $events = 0;
     $sql = "SELECT COUNT(*) as num_events FROM alienvault_siem.acid_event";
     
-    if (!$rs = & $conn->Execute($sql)) 
+    $rs = $conn->Execute($sql);
+    
+    if (!$rs)
     {
         die($conn->ErrorMsg());
     }
@@ -149,7 +157,9 @@ function global_score($conn)
     //
     $sql = "SELECT sum(compromise) as compromise, sum(attack) as attack FROM host_qualification hq, host h WHERE ( hq.attack>0 OR hq.compromise>0 ) AND hq.host_id=h.id $perms_where";
     
-    if (!$rs = & $conn->CacheExecute($sql)) 
+    $rs = $conn->CacheExecute($sql);
+    
+    if (!$rs) 
     {
         die($conn->ErrorMsg());
     }
@@ -208,7 +218,9 @@ function top_siem_events($conn,$limit)
     }
     $query = "SELECT sum(ac.cnt) as num, plugin_sid.name FROM alienvault_siem.ac_acid_event AS ac LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=ac.plugin_id AND plugin_sid.sid=ac.plugin_sid $perms_sql GROUP BY name ORDER BY num DESC LIMIT $limit";
     
-    if (!$rs = & $conn->Execute($query)) 
+    $rs = $conn->Execute($query);
+    
+    if (!$rs) 
     {
         echo "error";
         die($conn->ErrorMsg());

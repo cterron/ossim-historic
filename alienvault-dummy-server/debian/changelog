@@ -1,8 +1,38 @@
-alienvault-dummy-server (4.11.0-0) stable; urgency=low
+alienvault-dummy-server (4.15.2-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:23:43 -0400
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:42 -0500
+
+alienvault-dummy-server (4.15.1-0) stable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:23:25 -0500
+
+alienvault-dummy-server (4.15.0-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 19 Nov 2014 06:41:47 -0500
+
+alienvault-dummy-server (4.14-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Fri, 24 Oct 2014 13:35:27 -0400
+
+alienvault-dummy-server (4.13-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 24 Sep 2014 10:32:56 -0400
+
+alienvault-dummy-server (4.12-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:34:35 -0400
 
 alienvault-dummy-server (4.11-0) unstable; urgency=low
 

@@ -39,7 +39,6 @@ use AV::Log;
 use Config::Tiny;
 use Perl6::Slurp;
 
-use AV::uuid;
 
 use DateTime;
 
@@ -54,8 +53,7 @@ my $profile_sensor = 0;
 my $profile_framework = 0;
 my $profile_database = 0;
 
-my $host_uuid = `echo "select value from config where conf=\'server_id\'" | ossim-db | grep -v value | tr -d '\n'`;
-$host_uuid = `/usr/bin/alienvault-system-id` if ($host_uuid eq '');
+my $server_uuid = `/usr/bin/alienvault-system-id`;
 
 my %config;
 my %config_last;
@@ -100,6 +98,13 @@ sub config_profile_server() {
     $db_host         = $config{'database_ip'};
     $db_pass         = $config{'database_pass'};
     $db_pass_last    = $config_last{'database_pass'};
+    my $ha_ip        = $config{'ha_virtual_ip'};
+
+    # HA slave case
+    if ($config{'ha_heartbeat_start'} eq 'yes' && $ha_ip =~ /\d+\.\d+\.\d+\.\d+/) {
+        my $current_uuid = `echo "select LOWER(CONCAT(LEFT(hex(id), 8), '-', MID(hex(id), 9,4), '-', MID(hex(id), 13,4), '-', MID(hex(id), 17,4), '-', RIGHT(hex(id), 12))) as uuid from alienvault.server where inet6_ntop(ip)='$ha_ip'" | ossim-db | tail -1 | tr -d '\n'`;
+        $server_uuid = $current_uuid if ($current_uuid);
+    }
 
     $ossim_user = "root";
     $snort_user = "root";
@@ -132,14 +137,12 @@ sub config_profile_server() {
     console_log("Configuring Server Profile");
     dp("Configuring Server Profile");
 
-    verbose_log("System UUID: $host_uuid");
+    verbose_log("System UUID: $server_uuid");
 
-    configure_server_crtkey();
-    build_server_crtkey();
     configure_server_config_file();
     configure_server_reputation();
     configure_server_database();
-    configure_server_new_path();
+    # configure_server_new_path();
     configure_server_monit();
     configure_server_add_host();
     configure_server_reputation_cron();
@@ -165,50 +168,13 @@ sub config_profile_server() {
 
 ###################################################
 
-sub configure_server_crtkey(){
-
-	if ( $db_pass ne $db_pass_last ) {
-		console_log("Server profile: detected database password change");
-
-        my $currentdt = DateTime->now( time_zone => 'local' );
-		#verbose_log($currentdt);
-
-		if ( ! -d "/var/ossim/keys/history/$currentdt" ) {
-			my $command=qq{mkdir -p /var/ossim/keys/history/$currentdt};
-			debug_log($command);
-			system($command);
-			$command=qq{mv /var/ossim/keys/rsa* /var/ossim/keys/history/$currentdt};
-			debug_log($command);
-			system($command);
-		}
-	}
-}
-
-sub build_server_crtkey() {
-
-    if ( !-f "/var/ossim/keys/rsaprv.pem" ) {
-        console_log("Server profile: rebuild server crt and key");
-
-        my $command = <<'END_OF_COMMAND';
-mkdir -p /var/ossim/keys
-openssl genrsa -des3 -passout pass:`grep "^pass=" /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | grep -v ^$` -out /var/ossim/keys/rsaprv.pem 1024;
-openssl rsa  -passout pass:`grep "^pass=" /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | grep -v ^$`  -passin pass:`grep "^pass=" /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | grep -v ^$`  -in /var/ossim/keys/rsaprv.pem -pubout -out /var/ossim/keys/rsapub.pem;
-yes | openssl req -new -key /var/ossim/keys/rsaprv.pem -out /var/ossim/keys/rsacsr.csr -batch -passin pass:`grep "^pass=" /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | grep -v ^$`;
-cp /var/ossim/keys/rsaprv.pem /var/ossim/keys/rsaprv.pem.orig;
-openssl rsa -in /var/ossim/keys/rsaprv.pem.orig -out /var/ossim/keys/rsaprv.pem -passin pass:`grep "^pass=" /etc/ossim/ossim_setup.conf | cut -f 2 -d "=" | grep -v ^$`;
-openssl x509 -req -days 365 -in /var/ossim/keys/rsacsr.csr -signkey /var/ossim/keys/rsaprv.pem -out /var/ossim/keys/rsacrt.crt;
-END_OF_COMMAND
-        debug_log($command);
-        system($command);
-    }
-}
 
 sub configure_server_config_file(){
 
     # TODO: this can be removed when ossim-server.postinst handles db configuration triggers, hostname trigger 
     if ( -f $servercfg ) {
         my $command
-            = "sed -i \"s:<server .*:<server port=\\\"$server_port\\\" name=\\\"$server_hostname\\\" ip=\\\"0.0.0.0\\\" id=\\\"$host_uuid\\\"\/>:\" $servercfg";
+            = "sed -i \"s:<server .*:<server port=\\\"$server_port\\\" name=\\\"$server_hostname\\\" ip=\\\"0.0.0.0\\\" id=\\\"$server_uuid\\\"\/>:\" $servercfg";
         debug_log("$command");
         system($command);
         $command
@@ -305,7 +271,14 @@ sub configure_server_database(){
     debug_log(
         "Server Profile: Updating alienvault.config table (server_id)");
     my $command
-        = "echo \"INSERT IGNORE INTO config (conf, value) VALUES ('server_id', \'$host_uuid\');\" | ossim-db";
+        = "echo \"INSERT IGNORE INTO config (conf, value) VALUES ('server_id', \'$server_uuid\');\" | ossim-db";
+    debug_log($command);
+    system($command);
+
+    debug_log(
+        "Server Profile: Updating default policy");
+    $command
+        = "echo \"UPDATE policy_target_reference SET target_id = UNHEX(REPLACE('$server_uuid','-','')) WHERE target_id = 0x00000000000000000000000000000000;\" | ossim-db";
     debug_log($command);
     system($command);
 
@@ -368,20 +341,20 @@ sub configure_server_database(){
 
     # -- server
     # n fwd servers could be inserted before local server entry, by avcenter, so we need to search for local uuid
-    my $nentry = `echo "SELECT count(*) FROM alienvault.server WHERE (REPLACE(\'$host_uuid\','-','')) = hex(id);" | ossim-db | grep -v count`;
+    my $nentry = `echo "SELECT count(*) FROM alienvault.server WHERE (REPLACE(\'$server_uuid\','-','')) = hex(id);" | ossim-db | grep -v count`;
     $nentry =~ s/\n//;
 
     if ( $nentry eq "0" ) {
 
         # -- server_role
         verbose_log("Server Profile: Updating server_role");
-        $command = "echo \"REPLACE INTO alienvault.server_role (server_id) VALUES (UNHEX(REPLACE('$host_uuid','-','')));\" | ossim-db";
+        $command = "echo \"REPLACE INTO alienvault.server_role (server_id) VALUES (UNHEX(REPLACE('$server_uuid','-','')));\" | ossim-db";
         debug_log($command);
         system($command);
 
-        verbose_log("Server Profile: no entry found for uuid $host_uuid in alienvault.server. Inserting");
+        verbose_log("Server Profile: no entry found for uuid $server_uuid in alienvault.server. Inserting");
         my $command
-            = "echo \"REPLACE INTO alienvault.server (name, ip, port, id) VALUES (\'$server_hostname\', inet6_pton(\'$config{'admin_ip'}\'), \'$server_port\', UNHEX(REPLACE(\'$host_uuid\',\'-\',\'\')));\" | ossim-db $stdout $stderr";
+            = "echo \"REPLACE INTO alienvault.server (name, ip, port, id) VALUES (\'$server_hostname\', inet6_pton(\'$config{'admin_ip'}\'), \'$server_port\', UNHEX(REPLACE(\'$server_uuid\',\'-\',\'\')));\" | ossim-db $stdout $stderr";
         debug_log($command);
         system($command);
         
@@ -397,12 +370,9 @@ sub configure_server_database(){
     $profiles .= ',Sensor' if ($profile_sensor);
     $profiles .= ',Database' if ($profile_database);
 
-    my $sip    = ( ( $config{'ha_heartbeat_start'} // "" ) eq "yes" ) ? $config{'ha_local_node_ip'} : $config{'admin_ip'};
-    my $haip   = ( ( $config{'ha_heartbeat_start'} // "" ) eq "yes" ) ? $config{'ha_virtual_ip'} : '';
-    my $harole = ( ( $config{'ha_heartbeat_start'} // "" ) eq "yes" ) ? $config{'ha_role'} : '';        
-    #my $command = "echo \"REPLACE INTO alienvault.system (id,name,admin_ip,vpn_ip,ha_ip,profile) VALUES (UNHEX(\'$s_uuid\'),\'$server_hostname\',inet6_pton(\'$sip\'),NULL,inet6_pton(\'$haip\'),\'$profiles\');\" | ossim-db $stdout $stderr";
+    my $admin_ip    = $config{'admin_ip'};
 
-    $command = "echo \"CALL system_update(\'$s_uuid\',\'$server_hostname\',\'$sip\',\'\',\'$profiles\',\'$haip\',\'$server_hostname\',\'$harole\',\'\',\'$host_uuid\')\" | ossim-db $stdout $stderr";
+    $command = "echo \"CALL system_update(\'$s_uuid\',\'$server_hostname\',\'$admin_ip\',\'\',\'$profiles\',\'\',\'$server_hostname\',\'\',\'\',\'$server_uuid\')\" | ossim-db $stdout $stderr";
     debug_log($command);
     system($command);
         
@@ -484,7 +454,7 @@ sub configure_server_add_host(){
                 = `echo "SELECT COUNT(*) FROM alienvault.host WHERE hostname = \'$config{'hostname'}\';" | ossim-db | grep -v COUNT`; $nentry =~ s/\n//;
                 debug_log("Server Profile: nentry: $nentry");
 
-                if ( $nentry == "0" ) {
+                if ( $nentry eq "0" && $profile_sensor == 0) {
                         verbose_log("Server Profile: Inserting into host, host_ip");
                         my $command
                             = "echo \"SET \@uuid\:= UNHEX(REPLACE(UUID(),'-','')); INSERT IGNORE INTO alienvault.host (id,ctx,hostname,asset,threshold_c,threshold_a,alert,persistence,nat,rrd_profile,descr,lat,lon,av_component) VALUES (\@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),\'$server_hostname\',\'2\',\'30\',\'30\',\'0\',\'0\',\'\',\'\',\'\',\'0\',\'0\',1); INSERT IGNORE INTO alienvault.host_ip (host_id,ip) VALUES (\@uuid,inet6_pton(\'$config{'admin_ip'}\'));\" | ossim-db $stdout $stderr ";

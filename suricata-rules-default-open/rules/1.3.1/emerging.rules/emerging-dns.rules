@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -137,6 +137,12 @@ alert udp ![$SMTP_SERVERS,$DNS_SERVERS] any -> $DNS_SERVERS 53 (msg:"ET DNS DNS 
 alert udp $HOME_NET any -> any 53 (msg:"ET DNS Hiloti DNS CnC Channel Successful Install Message"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|05|empty"; nocase; distance:0; content:"|0C|explorer_exe"; nocase; distance:0; reference:url,sign.kaffenews.com/?p=104; reference:url,blog.fortinet.com/hiloti-the-botmaster-of-disguise/; classtype:bad-unknown; sid:2011911; rev:2;)
 
 #
+alert udp $HOME_NET any -> any 53 (msg:"ET DNS DNS Query for a Suspicious Malware Related Numerical .in Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|in|00|"; fast_pattern; nocase; distance:0; pcre:"/\x00[0-9]{4,7}\x02in\x00/i"; reference:url,sign.kaffenews.com/?p=104; reference:url,www.isc.sans.org/diary.html?storyid=10165; classtype:bad-unknown; sid:2012115; rev:6;)
+
+#
+alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS DNS Query to a .tk domain - Likely Hostile"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|tk|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2012811; rev:2;)
+
+#
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS DNS Query to a Suspicious *.vv.cc domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|vv|02|cc|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2012826; rev:1;)
 
 #
@@ -212,13 +218,16 @@ alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS Query for Suspicious .n
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS Query for Suspicious .xe.cx Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|xe|02|cx"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2013862; rev:1;)
 
 #
+alert udp any 53 -> $DNS_SERVERS any (msg:"ET DNS Excessive DNS Responses with 1 or more RR's (100+ in 10 seconds) to google.com.br possible Cache Poisoning Attempt"; byte_test:2,>,0,6; byte_test:2,>,0,10; threshold: type both, track by_src, count 100, seconds 10; content:"|06|google|03|com|02|br|00|"; reference:url,www.securelist.com/en/blog/208193214/Massive_DNS_poisoning_attacks_in_Brazil; reference:url,www.zdnet.com/blog/security/massive-dns-poisoning-attack-in-brazil-serving-exploits-and-malware/9780; classtype:bad-unknown; sid:2013894; rev:5;)
+
+#
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS Query for Suspicious .noip.cn Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|03|noip|02|cn|00|"; fast_pattern; nocase; distance:0; classtype:bad-unknown; sid:2013970; rev:1;)
 
 #
 alert udp $HOME_NET any -> any 53 (msg:"ET DNS DNS Query for Suspicious .ch.vu Domain"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|02|ch|02|vu"; fast_pattern; nocase; distance:0; reference:url,google.com/safebrowsing/diagnostic?site=ch.vu; classtype:bad-unknown; sid:2014285; rev:4;)
 
 #
-alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS Non-DNS or Non-Compliant DNS traffic on DNS port Opcode 6 or 7 set - Likely Kazy"; byte_test:1,!&,64,2; byte_test:1,&,32,2; byte_test:1,&,16,2; threshold: type limit, count 1, seconds 120, track by_dst; reference:md5,a56ec0f9bd46f921f65e4f6e598e5ed0; reference:url,www.emergingthreatspro.com/bot-of-the-day/kazy-part-deux-revenge-of-the-clear-plastic-tarp/; reference:url,vrt-blog.snort.org/2008/08/checking-multiple-bits-in-flag-field_29.html; classtype:policy-violation; sid:2014701; rev:9;)
+alert udp $HOME_NET !9987 -> $EXTERNAL_NET 53 (msg:"ET DNS Non-DNS or Non-Compliant DNS traffic on DNS port Opcode 6 or 7 set - Likely Kazy"; byte_test:1,!&,64,2; byte_test:1,&,32,2; byte_test:1,&,16,2; threshold: type limit, count 1, seconds 120, track by_dst; reference:md5,a56ec0f9bd46f921f65e4f6e598e5ed0; reference:url,www.emergingthreatspro.com/bot-of-the-day/kazy-part-deux-revenge-of-the-clear-plastic-tarp/; reference:url,vrt-blog.snort.org/2008/08/checking-multiple-bits-in-flag-field_29.html; classtype:policy-violation; sid:2014701; rev:10;)
 
 #
 alert udp $HOME_NET any -> $EXTERNAL_NET 53 (msg:"ET DNS Non-DNS or Non-Compliant DNS traffic on DNS port Opcode 8 through 15 set - Likely Kazy"; byte_test:1,&,64,2; threshold: type limit, count 1, seconds 120, track by_dst; reference:md5,a56ec0f9bd46f921f65e4f6e598e5ed0; reference:url,www.emergingthreatspro.com/bot-of-the-day/kazy-part-deux-revenge-of-the-clear-plastic-tarp/; reference:url,vrt-blog.snort.org/2008/08/checking-multiple-bits-in-flag-field_29.html; classtype:policy-violation; sid:2014702; rev:7;)

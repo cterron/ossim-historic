@@ -125,6 +125,7 @@ $assets_filters = get_asset_filters($conn, $winfo['asset']);
 $data  = array();	//The widget's data itself.
 $label = array();	//Widget's label such as legend in charts, titles in tag clouds, etc...
 $links = array();	//Links of each element of the widget.
+$dates = array();   //Numeric dates of each Y tick, to compare with logger last indexed date (only 'siemlogger')
 
 
 /*
@@ -140,8 +141,9 @@ switch($type){
 		
 		Session::logcheck("analysis-menu", "EventsForensics");
 		
-		$query_where = Security_report::make_where($conn, '', '', array(), $assets_filters, "", "", false);
-		$height      = $winfo['height'];
+		$query_where    = Security_report::make_where($conn, '', '', array(), $assets_filters, "", "", false);
+		$height         = $winfo['height'];
+		$widget_refresh = $winfo['refresh'];	//Widget's refresh.
 		
 		include ("../draw/radar.php");			
 			
@@ -167,8 +169,10 @@ switch($type){
 		$sqlgraph      = "SELECT sum( acid_event.cnt ) as num_events,c.id,c.name FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin p, alienvault.product_type c WHERE c.id=p.product_type AND p.id=acid_event.plugin_id $query_where AND acid_event.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' group by c.id having num_events > 0 order by num_events desc LIMIT $limit";
 
 		$ac = $txt_pt = array();
-	
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+	   
+	    $rg = $conn->CacheExecute($sqlgraph);
+	    
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -217,7 +221,9 @@ switch($type){
 		//TO DO: Use parameters in the query.
 		$sqlgraph     = "SELECT sum( acid_event.cnt ) as num_events,p.category_id,c.name FROM alienvault_siem.ac_acid_event as acid_event, alienvault.plugin_sid p, alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=acid_event.plugin_id AND p.sid=acid_event.plugin_sid AND acid_event.day BETWEEN '".gmdate("Y-m-d",$timeutc-$range)."' AND '".gmdate("Y-m-d")."' $query_where group by p.category_id having num_events > 0 order by num_events desc LIMIT $limit";
 			
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		$rg = $conn->CacheExecute($sqlgraph);	
+			
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -250,40 +256,56 @@ switch($type){
 		
 		//Type of graph. In this case is the simple raphael.
 		$js    = "analytics_duo";
+		$fdate = gmdate("Y-m-d H",$timetz-(3600*($max-1)));
 		
 		//Retrieving the data of the widget
-		$trend1 = (Session::menu_perms("analysis-menu", "EventsForensics")) ? SIEM_trends($max, $assets_filters) : array();
+		$trend1 = array();
+		if (Session::menu_perms("analysis-menu", "EventsForensics"))
+		{
+    		$trend1 = SIEM_trends($max, $assets_filters, $fdate);
+		}
+		
 		//Empty logger if any user perms over ctx, host, net
 		$trend2 = array();
+		$logger_last_date = gmdate("YmdHis", $timetz);
 		
 		if (Session::is_pro() && Session::menu_perms("analysis-menu", "ControlPanelSEM")) 
 		{
-			$trend2 = Logger_trends();
+			list($trend2, $logger_last_date) = Logger_trends();
 		}
-		
+
 		for ($i=$max-1; $i>=0; $i--) 
 		{
-			$h        = gmdate("j G",$timetz-(3600*$i))."h";
-			$label[]  = preg_replace("/^\d+ /","",$h);
+		    $tref     = $timetz-(3600*$i);
+		
+			$h        = gmdate("j G",$tref)."h";
+			
+			$lbl      = preg_replace("/^\d+ /","",$h);
+			$label[]  = $lbl;
 			$data1[]  = ($trend1[$h]!="") ? $trend1[$h] : 0;
 			$data2[]  = ($trend2[$h]!="") ? $trend2[$h] : 0;
+			$dates[]  = gmdate("YmdHis", $tref);
+			
+    		$siem_link     = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time[0][0]=+&time[0][1]=>%3D&time[0][2]=".gmdate("m",$timetz)."&time[0][3]=".gmdate("d",$tref)."&time[0][4]=".gmdate("Y",$tref)."&time[0][5]=".gmdate("H",$tref)."&time[0][6]=00&time[0][7]=00&time[0][8]=+&time[0][9]=AND&time[1][0]=+&time[1][1]=<%3D&time[1][2]=".gmdate("m",$tref)."&time[1][3]=".gmdate("d",$tref)."&time[1][4]=".gmdate("Y",$tref)."&time[1][5]=".gmdate("H",$tref)."&time[1][6]=59&time[1][7]=59&time[1][8]=+&time[1][9]=+&submit=Query+DB&num_result_rows=-1&time_cnt=2&sort_order=time_d&hmenu=Forensics&smenu=Forensics", 'analysis', 'security_events');
+    		
+    		if (Session::is_pro())
+    		{
+    			$logger_link   = Menu::get_menu_url('/ossim/sem/index.php?start='.urlencode(gmdate("Y-m-d H", $tref).":00:00").'&end='.urlencode(gmdate("Y-m-d H", $tref).":59:59"), 'analysis', 'raw_logs');
+            }
+            else
+            {
+            	$logger_link    = "'" . Menu::get_menu_url('/ossim/ossem/index.php', 'analysis', 'raw_logs') . "'";
+            }
+			
+			$siem_links[$lbl]   = $siem_link;
+			$logger_links[$lbl] = $logger_link;
 		}
+		
+		$siem_url     = $siem_links;
+		$logger_url   = $logger_links;
 		
 		$data[]       = $data1;
 		$data[]       = $data2;
-		$siem_url     = "'".Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time[0][0]=+&time[0][1]=>%3D&time[0][2]=".gmdate("m",$timetz)."&time[0][3]=".gmdate("d",$timetz)."&time[0][4]=".gmdate("Y",$timetz)."&time[0][5]=HH&time[0][6]=00&time[0][7]=00&time[0][8]=+&time[0][9]=AND&time[1][0]=+&time[1][1]=<%3D&time[1][2]=".gmdate("m",$timetz)."&time[1][3]=".gmdate("d",$timetz)."&time[1][4]=".gmdate("Y",$timetz)."&time[1][5]=HH&time[1][6]=59&time[1][7]=59&time[1][8]=+&time[1][9]=+&submit=Query+DB&num_result_rows=-1&time_cnt=2&sort_order=time_d&hmenu=Forensics&smenu=Forensics", 'analysis', 'security_events') ."'";
-		$siem_url_y   = "'".Menu::get_menu_url("/ossim/forensics/base_qry_main.php?clear_allcriteria=1&time_range=range&time[0][0]=+&time[0][1]=>%3D&time[0][2]=".gmdate("m",$timetz-86400)."&time[0][3]=".gmdate("d",$timetz-86400)."&time[0][4]=".gmdate("Y",$timetz-86400)."&time[0][5]=HH&time[0][6]=00&time[0][7]=00&time[0][8]=+&time[0][9]=AND&time[1][0]=+&time[1][1]=<%3D&time[1][2]=".gmdate("m",$timetz-86400)."&time[1][3]=".gmdate("d",$timetz-86400)."&time[1][4]=".gmdate("Y",$timetz-86400)."&time[1][5]=HH&time[1][6]=59&time[1][7]=59&time[1][8]=+&time[1][9]=+&submit=Query+DB&num_result_rows=-1&time_cnt=2&sort_order=time_d&hmenu=Forensics&smenu=Forensics", 'analysis', 'security_events') ."'";    
-		
-		if (Session::is_pro())
-		{
-			$logger_url   = "'".Menu::get_menu_url('/ossim/sem/index.php?start='.urlencode(gmdate("Y-m-d",$timetz)." HH:00:00").'&end='.urlencode(gmdate("Y-m-d",$timetz)." HH:59:59"), 'analysis', 'raw_logs') ."'";
-       		$logger_url_y = "'".Menu::get_menu_url('/ossim/sem/index.php?start='.urlencode(gmdate("Y-m-d",$timetz-86400)." HH:00:00").'&end='.urlencode(gmdate("Y-m-d",$timetz-86400)." HH:59:59"), 'analysis', 'raw_logs') ."'";       
-        }
-        else
-        {
-        	$logger_url   = "'" . Menu::get_menu_url('/ossim/ossem/index.php', 'analysis', 'raw_logs') . "'";
-       		$logger_url_y = "'" . Menu::get_menu_url('/ossim/ossem/index.php', 'analysis', 'raw_logs') . "'";
-        }
 		
 		$colors = "'#94CF05'";
 		
@@ -376,7 +398,9 @@ switch($type){
 
 			//echo $query;
 			
-			if (!$rs = & $conn->CacheExecute($query)) 
+			$rs = $conn->CacheExecute($query);
+			
+			if (!$rs)
 			{
 				print $conn->ErrorMsg();
 				exit();

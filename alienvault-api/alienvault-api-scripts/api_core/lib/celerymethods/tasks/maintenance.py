@@ -30,8 +30,9 @@
 from celery.utils.log import get_logger
 from celerymethods.tasks import celery_instance
 
-from db.methods.system import get_systems, get_config_backup_days
-from ansiblemethods.system.maintenance import remove_old_files
+from db.methods.system import get_systems, get_config_backup_days, get_system_ip_from_local
+from ansiblemethods.system.maintenance import remove_old_files, ansible_launch_compliance_procedure
+from logger_maintenance import clean_logger
 
 logger = get_logger("celery")
 
@@ -59,3 +60,28 @@ def remove_old_database_files():
         logger.warning("Error performing a maintenance task (remove old files): %s" % str(systems))
         all_task_ok = False
     return all_task_ok
+
+
+@celery_instance.task
+def clean_old_loggger_entries():
+    """
+        Task to clean the logger data.
+    """
+    result = True
+    if not clean_logger():
+        logger.error("An error occurred while cleaning the logger logs.")
+        result = False
+    return result
+
+
+@celery_instance.task
+def launch_compliance_procedure():
+    """
+    Task to run compliance procedure
+    """
+    success, system_ip = get_system_ip_from_local()
+    if not success:
+        return False, "[launch_compliance_procedure] Error obtaining local IP"
+    rc, msg = ansible_launch_compliance_procedure(system_ip)
+    return (rc, msg)
+

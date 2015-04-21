@@ -297,7 +297,7 @@ class SingleElementCriteria extends BaseCriteria {
         				}
         			}
         		} else {
-        			$this->criteria[$i] = Util::htmlentities($criteria_aux[$i]);
+        			$this->criteria[$i] = $criteria_aux[$i];
         		}
         	}
         // String mode (signature, payload...)
@@ -407,18 +407,18 @@ class MultipleElementCriteria extends BaseCriteria {
     function PrintForm($field_list, $blank_field_string, $add_button_string) {
         for ($i = 0; $i < $this->criteria_cnt; $i++) {
             if (!is_array($this->criteria[$i])) $this->criteria = array();
-            echo '    <SELECT NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][0]">';
+            echo '    <SELECT NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][0]">';
             echo '      <OPTION VALUE=" " ' . chk_select($this->criteria[$i][0], " ") . '>__</OPTION>';
             echo '      <OPTION VALUE="(" ' . chk_select($this->criteria[$i][0], "(") . '>(</OPTION>';
             echo '    </SELECT>';
-            echo '    <SELECT NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][1]">';
+            echo '    <SELECT NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][1]">';
             echo '      <OPTION VALUE=" "      ' . chk_select($this->criteria[$i][1], " ") . '>' . $blank_field_string . '</OPTION>';
             reset($field_list);
             foreach($field_list as $field_name => $field_human_name) {
                 echo '   <OPTION VALUE="' . Util::htmlentities($field_name) . '" ' . chk_select($this->criteria[$i][1], $field_name) . '>' . Util::htmlentities($field_human_name) . '</OPTION>';
             }
             echo '    </SELECT>';
-            echo '    <SELECT NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][2]">';
+            echo '    <SELECT NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][2]">';
             echo '      <OPTION VALUE="="  ' . chk_select($this->criteria[$i][2], "=") . '>=</OPTION>';
             echo '      <OPTION VALUE="!=" ' . chk_select($this->criteria[$i][2], "!=") . '>!=</OPTION>';
             echo '      <OPTION VALUE="<"  ' . chk_select($this->criteria[$i][2], "<") . '><</OPTION>';
@@ -426,18 +426,18 @@ class MultipleElementCriteria extends BaseCriteria {
             echo '      <OPTION VALUE=">"  ' . chk_select($this->criteria[$i][2], ">") . '>></OPTION>';
             echo '      <OPTION VALUE=">=" ' . chk_select($this->criteria[$i][2], ">=") . '>>=</OPTION>';
             echo '    </SELECT>';
-            echo '    <INPUT TYPE="text" NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][3]" SIZE=5 VALUE="' . $this->criteria[$i][3] . '">';
-            echo '    <SELECT NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][4]">';
+            echo '    <INPUT TYPE="text" NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][3]" SIZE=5 VALUE="' . $this->criteria[$i][3] . '">';
+            echo '    <SELECT NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][4]">';
             echo '      <OPTION VALUE=" " ' . chk_select($this->criteria[$i][4], " ") . '>__</OPTION';
             echo '      <OPTION VALUE="(" ' . chk_select($this->criteria[$i][4], "(") . '>(</OPTION>';
             echo '      <OPTION VALUE=")" ' . chk_select($this->criteria[$i][4], ")") . '>)</OPTION>';
             echo '    </SELECT>';
-            echo '    <SELECT NAME="' . htmlspecialchars($this->export_name) . '[' . $i . '][5]">';
+            echo '    <SELECT NAME="' . Util::htmlentities($this->export_name) . '[' . $i . '][5]">';
             echo '      <OPTION VALUE=" "   ' . chk_select($this->criteria[$i][5], " ") . '>__</OPTION>';
             echo '      <OPTION VALUE="OR" ' . chk_select($this->criteria[$i][5], "OR") . '>' . gettext("OR") . '</OPTION>';
             echo '      <OPTION VALUE="AND" ' . chk_select($this->criteria[$i][5], "AND") . '>' . gettext("AND") . '</OPTION>';
             echo '    </SELECT>';
-            if ($i == $this->criteria_cnt - 1) echo '    <INPUT TYPE="submit" class="button av_b_secondary" NAME="submit" onclick="adv_search_autosubmit()" VALUE="' . htmlspecialchars($add_button_string) . '">';
+            if ($i == $this->criteria_cnt - 1) echo '    <INPUT TYPE="submit" class="button av_b_secondary" NAME="submit" onclick="adv_search_autosubmit()" VALUE="' . Util::htmlentities($add_button_string) . '">';
             echo '<BR>';
         }
     }
@@ -537,7 +537,7 @@ class SignatureCriteria extends SingleElementCriteria {
         echo '<SELECT NAME="sig[2]"><OPTION VALUE="="  ' . chk_select(@$this->criteria[2], "=") . '>=';
         echo '                      <OPTION VALUE="!="     ' . chk_select(@$this->criteria[2], "!=") . '>!=';
         echo '</SELECT>';
-        echo '<INPUT TYPE="text" NAME="sig[1]" SIZE=40 VALUE="' . htmlspecialchars(@$this->criteria[1]) . '"><BR>';
+        echo '<INPUT TYPE="text" NAME="sig[1]" SIZE=40 VALUE="' . Util::htmlentities(@$this->criteria[1]) . '"><BR>';
         if ($GLOBALS['use_sig_list'] > 0) {
             $temp_sql = "SELECT DISTINCT sig_name FROM signature";
             if ($GLOBALS['use_sig_list'] == 1) {
@@ -1123,7 +1123,7 @@ class UserDataCriteria extends SingleElementCriteria {
 	        ));
 	    $this->criteria[1] = CleanVariable($this->criteria[1], "", array("EQ","NE","LT","LOE","GT","GOE","like"));
 	    if ($this->criteria[1]=="") $this->criteria[1] = "like";
-        $this->criteria[2] = CleanVariable($this->criteria[2], VAR_ALPHA | VAR_SPACE | VAR_PUNC | VAR_AT);
+        //$this->criteria[2] = CleanVariable($this->criteria[2], VAR_ALPHA | VAR_SPACE | VAR_PUNC | VAR_AT);
     }
     function PrintForm() {
     }
@@ -1134,14 +1134,14 @@ class UserDataCriteria extends SingleElementCriteria {
     {
         $tmp = "";
         $rpl = array('EQ'=>'=','NE'=>'!=','LT'=>'<','LOE'=>'<=','GT'=>'>','GOE'=>'>=');
-        if ($this->criteria[2] != " " && $this->criteria[2] != "") $tmp = $this->cs->GetClearCriteriaString2($this->export_name) . $this->criteria[0] .' '. strtr($this->criteria[1],$rpl) . ' ' . $this->criteria[2];
+        if ($this->criteria[2] != " " && $this->criteria[2] != "") $tmp = $this->cs->GetClearCriteriaString2($this->export_name) . $this->criteria[0] .' '. strtr($this->criteria[1],$rpl) . ' ' . Util::htmlentities($this->criteria[2]);
         return $tmp;
     }
     
     function Description() {
         $tmp = "";
         $rpl = array('EQ'=>'=','NE'=>'!=','LT'=>'<','LOE'=>'<=','GT'=>'>','GOE'=>'>=');
-        if ($this->criteria[2] != " " && $this->criteria[2] != "") $tmp = $tmp . _("Extra data") . ' = (' . $this->criteria[0] .' '. strtr($this->criteria[1],$rpl) . ' ' . $this->criteria[2] . ')'. $this->cs->GetClearCriteriaString($this->export_name) . '<BR>';
+        if ($this->criteria[2] != " " && $this->criteria[2] != "") $tmp = $tmp . _("Extra data") . ' = (' . $this->criteria[0] .' '. strtr($this->criteria[1],$rpl) . ' ' . Util::htmlentities($this->criteria[2]) . ')'. $this->cs->GetClearCriteriaString($this->export_name) . '<BR>';
         return $tmp;
     }
 }; /* UserDataCriteria */
@@ -1330,11 +1330,11 @@ class TimeCriteria extends MultipleElementCriteria {
             echo '                               <OPTION VALUE="10" ' . chk_select(@$this->criteria[$i][2], "10") . '>' . gettext("Oct");
             echo '                               <OPTION VALUE="11" ' . chk_select(@$this->criteria[$i][2], "11") . '>' . gettext("Nov");
             echo '                               <OPTION VALUE="12" ' . chk_select(@$this->criteria[$i][2], "12") . '>' . gettext("Dec") . '</SELECT>';
-            echo '<INPUT TYPE="text" NAME="time[' . $i . '][3]" SIZE=2 VALUE="' . htmlspecialchars(@$this->criteria[$i][3]) . '">';
+            echo '<INPUT TYPE="text" NAME="time[' . $i . '][3]" SIZE=2 VALUE="' . Util::htmlentities(@$this->criteria[$i][3]) . '">';
             echo '<SELECT NAME="time[' . $i . '][4]">' . dispYearOptions(@$this->criteria[$i][4]) . '</SELECT>';
-            echo '<INPUT TYPE="text" NAME="time[' . $i . '][5]" SIZE=2 VALUE="' . htmlspecialchars(@$this->criteria[$i][5]) . '"><B>:</B>';
-            echo '<INPUT TYPE="text" NAME="time[' . $i . '][6]" SIZE=2 VALUE="' . htmlspecialchars(@$this->criteria[$i][6]) . '"><B>:</B>';
-            echo '<INPUT TYPE="text" NAME="time[' . $i . '][7]" SIZE=2 VALUE="' . htmlspecialchars(@$this->criteria[$i][7]) . '">';
+            echo '<INPUT TYPE="text" NAME="time[' . $i . '][5]" SIZE=2 VALUE="' . Util::htmlentities(@$this->criteria[$i][5]) . '"><B>:</B>';
+            echo '<INPUT TYPE="text" NAME="time[' . $i . '][6]" SIZE=2 VALUE="' . Util::htmlentities(@$this->criteria[$i][6]) . '"><B>:</B>';
+            echo '<INPUT TYPE="text" NAME="time[' . $i . '][7]" SIZE=2 VALUE="' . Util::htmlentities(@$this->criteria[$i][7]) . '">';
             echo '<SELECT NAME="time[' . $i . '][8]"><OPTION VALUE=" " ' . chk_select(@$this->criteria[$i][8], " ") . '>__';
             echo '                               <OPTION VALUE="(" ' . chk_select(@$this->criteria[$i][8], "(") . '>(';
             echo '                               <OPTION VALUE=")" ' . chk_select(@$this->criteria[$i][8], ")") . '>)</SELECT>';
@@ -1370,7 +1370,7 @@ class TimeCriteria extends MultipleElementCriteria {
             $tmp = "";
             for ($i = 0; $i < $this->criteria_cnt; $i++) {
                 if (isset($this->criteria[$i][1]) && $this->criteria[$i][1] != " ") {
-                    $tmp = $tmp . '' . htmlspecialchars($this->criteria[$i][0]) . ' time ' . htmlspecialchars($this->criteria[$i][1]) . ' [ ';
+                    $tmp = $tmp . '' . Util::htmlentities($this->criteria[$i][0]) . ' time ' . Util::htmlentities($this->criteria[$i][1]) . ' [ ';
                     /* date */
                     if ($this->criteria[$i][2] == " " && $this->criteria[$i][3] == "" && $this->criteria[$i][4] == " ") $tmp = $tmp . " <I>".gettext("any date")."</I>";
                     else $tmp = $tmp . (($this->criteria[$i][2] == " ") ? "* / " : $this->criteria[$i][2] . " / ") . (($this->criteria[$i][3] == "") ? "* / " : $this->criteria[$i][3] . " / ") . (($this->criteria[$i][4] == " ") ? "*  " : $this->criteria[$i][4] . " ");
@@ -1393,7 +1393,7 @@ class TimeCriteria extends MultipleElementCriteria {
         $tmp = "";
         for ($i = 0; $i < $this->criteria_cnt; $i++) {
             if (isset($this->criteria[$i][1]) && $this->criteria[$i][1] != " ") {
-                $tmp = $tmp . '' . htmlspecialchars($this->criteria[$i][0]) . ' time ' . htmlspecialchars($this->criteria[$i][1]) . ' [ ';
+                $tmp = $tmp . '' . Util::htmlentities($this->criteria[$i][0]) . ' time ' . Util::htmlentities($this->criteria[$i][1]) . ' [ ';
                 /* date */
                 if ($this->criteria[$i][2] == " " && $this->criteria[$i][3] == "" && $this->criteria[$i][4] == " ") $tmp = $tmp . " <I>".gettext("any date")."</I>";
                 else $tmp = $tmp . (($this->criteria[$i][2] == " ") ? "* / " : $this->criteria[$i][2] . " / ") . (($this->criteria[$i][3] == "") ? "* / " : $this->criteria[$i][3] . " / ") . (($this->criteria[$i][4] == " ") ? "*  " : $this->criteria[$i][4] . " ");
@@ -1411,7 +1411,7 @@ class TimeCriteria extends MultipleElementCriteria {
 	function Description_full() {
         $tmp = "";
         if (isset($this->criteria[1][1]) && $this->criteria[1][1] != " ") {
-        	$tmp = $tmp . '' . htmlspecialchars($this->criteria[0][0]) . ' Date of events between <b>';
+        	$tmp = $tmp . '' . Util::htmlentities($this->criteria[0][0]) . ' Date of events between <b>';
             /* date */
         	$i = 0;
             if ($this->criteria[$i][2] == " " && $this->criteria[$i][3] == "" && $this->criteria[$i][4] == " ") $tmp = $tmp . " <I>".gettext("any date")."</I>";
@@ -1436,7 +1436,7 @@ class TimeCriteria extends MultipleElementCriteria {
         	$op = $this->criteria[$i][1];
             $op = str_replace(">=","after",$op);
             $op = str_replace("<=","before",$op);
-            $tmp = $tmp . '' . htmlspecialchars($this->criteria[$i][0]) . ' Date of events ' . $op . ' <b>';
+            $tmp = $tmp . '' . Util::htmlentities($this->criteria[$i][0]) . ' Date of events ' . $op . ' <b>';
             /* date */
             if ($this->criteria[$i][2] == " " && $this->criteria[$i][3] == "" && $this->criteria[$i][4] == " ") $tmp = $tmp . " <I>".gettext("any date")."</I>";
             else $tmp = $tmp . (($this->criteria[$i][2] == " ") ? "* / " : $this->criteria[$i][2] . " / ") . (($this->criteria[$i][3] == "") ? "* / " : $this->criteria[$i][3] . " / ") . (($this->criteria[$i][4] == " ") ? "*  " : $this->criteria[$i][4] . " ");
@@ -1481,39 +1481,19 @@ class IPAddressCriteria extends MultipleElementCriteria {
 		$this->criteria_cnt = $_SESSION['ip_addr_cnt'];
 
 		for ($i = 0; $i < $this->criteria_cnt; $i++) {
-            if ((isset($this->criteria[$i][3])) && (ereg("([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)", $this->criteria[$i][3]))) {
-                // The code below is deprecated and is giving functionality errors
-                // There's no need to filter here by allowed nets, the main query will do it
-                /*
-                if (($use_ossim_session) && (Session::allowedNets())) {
-                    $domain = Session::allowedNets();
-                    if ($domain != "") {
-                        $tmp_myip = $this->criteria[$i][3];
-                        $myip = strtok($tmp_myip, "/");
-                        if (Asset_host::is_ip_in_nets($myip, $domain)) {
-                            $tmp_ip_str = $this->criteria[$i][7] = $this->criteria[$i][3];
-                            $this->criteria[$i][2] = "=";
-                            $this->criteria[$i][3] = strtok($tmp_ip_str, ".");
-                            $this->criteria[$i][4] = strtok(".");
-                            $this->criteria[$i][5] = strtok(".");
-                            $this->criteria[$i][6] = strtok("/");
-                            $this->criteria[$i][10] = strtok("");
-                            $empty = 0;
-                            $vals[] = $this->criteria[$i];
-                        }
-                    }
-                } else {
-                */
-                    $tmp_ip_str = $this->criteria[$i][7] = $this->criteria[$i][3];
-                    $this->criteria[$i][3] = strtok($tmp_ip_str, ".");
-                    $this->criteria[$i][4] = strtok(".");
-                    $this->criteria[$i][5] = strtok(".");
-                    $this->criteria[$i][6] = strtok("/");
-                    $this->criteria[$i][10] = strtok("");
-                    $empty = 0;
-                    $vals[] = $this->criteria[$i];
-                //}
-            } elseif (is_array($this->criteria[$i]) && array_key_exists(7, $this->criteria[$i]) && ereg("([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)", $this->criteria[$i][7])) {
+            if ((isset($this->criteria[$i][3])) && (preg_match("/([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)/", $this->criteria[$i][3])))
+            {
+                $tmp_ip_str = $this->criteria[$i][7] = $this->criteria[$i][3];
+                $this->criteria[$i][3] = strtok($tmp_ip_str, ".");
+                $this->criteria[$i][4] = strtok(".");
+                $this->criteria[$i][5] = strtok(".");
+                $this->criteria[$i][6] = strtok("/");
+                $this->criteria[$i][10] = strtok("");
+                $empty = 0;
+                $vals[] = $this->criteria[$i];
+            }
+            elseif (is_array($this->criteria[$i]) && array_key_exists(7, $this->criteria[$i]) && preg_match("/([0-9]*)\.([0-9]*)\.([0-9]*)\.([0-9]*)/", $this->criteria[$i][7]))
+            {
                 $empty = 0;
                 $vals[] = $this->criteria[$i];
             }
@@ -1521,29 +1501,7 @@ class IPAddressCriteria extends MultipleElementCriteria {
         //print_r ($this->criteria);
         $this->criteria = $vals;
         $this->criteria_cnt = count($vals);
-        /*if (($use_ossim_session) && ($empty)) {
-            $domain = Session::allowedNets();
-            if ($domain != "") {
-                $nets = explode(",", $domain);
-                $this->criteria = Array();
-                for ($i = 0; $i < count($nets); $i++) {
-                    $tmp_ip_str = $tmp[7] = $nets[$i];
-                    $tmp[0] = " ";
-                    $tmp[1] = "ip_both";
-                    $tmp[2] = "=";
-                    $tmp[3] = strtok($tmp_ip_str, ".");
-                    $tmp[4] = strtok(".");
-                    $tmp[5] = strtok(".");
-                    $tmp[6] = strtok("/");
-                    $tmp[10] = strtok("");
-                    $tmp[8] = " ";
-                    if ($i == (count($nets) - 1)) $tmp[9] = " ";
-                    else $tmp[9] = "OR";
-                    $this->criteria[$this->criteria_cnt] = $tmp;
-                    $this->criteria_cnt++;
-                }
-            }
-        }*/
+
         $new = ImportHTTPVar("new", VAR_DIGIT);
         $submit = ImportHTTPVar("submit", VAR_ALPHA | VAR_SPACE);
         if (($new == 1) && ($submit == "")) {
@@ -1611,13 +1569,13 @@ class IPAddressCriteria extends MultipleElementCriteria {
                     <OPTION VALUE="="  ' . chk_select(@$this->criteria[$i][2], "=") . '>=
                     <OPTION VALUE="!=" ' . chk_select(@$this->criteria[$i][2], "!=") . '>!=
                    </SELECT>';
-            if ($GLOBALS['ip_address_input'] == 2) echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][3]" SIZE=16 VALUE="' . htmlspecialchars(@$this->criteria[$i][7]) . '">';
+            if ($GLOBALS['ip_address_input'] == 2) echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][3]" SIZE=16 VALUE="' . Util::htmlentities(@$this->criteria[$i][7]) . '">';
             else {
-                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][3]" SIZE=3 VALUE="' . htmlspecialchars(@$this->criteria[$i][3]) . '"><B>.</B>';
-                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][4]" SIZE=3 VALUE="' . htmlspecialchars(@$this->criteria[$i][4]) . '"><B>.</B>';
-                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][5]" SIZE=3 VALUE="' . htmlspecialchars(@$this->criteria[$i][5]) . '"><B>.</B>';
-                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][6]" SIZE=3 VALUE="' . htmlspecialchars(@$this->criteria[$i][6]) . '"><!--<B>/</B>';
-                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][7]" SIZE=3 VALUE="' . htmlspecialchars(@$this->criteria[$i][7]) . '">-->';
+                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][3]" SIZE=3 VALUE="' . Util::htmlentities(@$this->criteria[$i][3]) . '"><B>.</B>';
+                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][4]" SIZE=3 VALUE="' . Util::htmlentities(@$this->criteria[$i][4]) . '"><B>.</B>';
+                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][5]" SIZE=3 VALUE="' . Util::htmlentities(@$this->criteria[$i][5]) . '"><B>.</B>';
+                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][6]" SIZE=3 VALUE="' . Util::htmlentities(@$this->criteria[$i][6]) . '"><!--<B>/</B>';
+                echo '    <INPUT TYPE="text" NAME="ip_addr[' . $i . '][7]" SIZE=3 VALUE="' . Util::htmlentities(@$this->criteria[$i][7]) . '">-->';
             }
             echo '    <SELECT NAME="ip_addr[' . $i . '][8]"><OPTION VALUE=" " ' . chk_select(@$this->criteria[$i][8], " ") . '>__';
             echo '                                      <OPTION VALUE="(" ' . chk_select(@$this->criteria[$i][8], "(") . '>(';
@@ -2086,18 +2044,18 @@ class DataCriteria extends MultipleElementCriteria {
         $curArr = $this->criteria[$i];
         // Sanitize the array
 
-        $curArr[2] = str_replace("\"",'$$$$',$curArr[2]);
+        //$curArr[2] = str_replace("\"",'$$$$',$curArr[2]);
 
         $this->criteria[$i][0] = CleanVariable($curArr[0], VAR_OPAREN);
         $this->criteria[$i][1] = CleanVariable($curArr[1], "", array_keys($this->valid_field_list));
-        $this->criteria[$i][2] = CleanVariable($curArr[2], VAR_FSLASH | VAR_PERIOD | VAR_DIGIT | VAR_PUNC | VAR_LETTER | VAR_AT);
+        //$this->criteria[$i][2] = CleanVariable($curArr[2], VAR_FSLASH | VAR_PERIOD | VAR_DIGIT | VAR_PUNC | VAR_LETTER | VAR_AT);
         $this->criteria[$i][3] = CleanVariable($curArr[3], VAR_OPAREN | VAR_CPAREN);
         $this->criteria[$i][4] = CleanVariable($curArr[4], "", array(
             "AND",
             "OR"
         ));
 
-        $this->criteria[$i][2] = str_replace('$$$$','"',$this->criteria[$i][2]);
+        //$this->criteria[$i][2] = str_replace('$$$$','"',$this->criteria[$i][2]);
 
         // Destroy the copy
         unset($curArr);
@@ -2120,7 +2078,7 @@ class DataCriteria extends MultipleElementCriteria {
             echo '<SELECT NAME="data[' . $i . '][1]"><OPTION VALUE=" "  ' . chk_select(@$this->criteria[$i][1], " ") . '>' . gettext("{ payload }");
             echo '                               <OPTION VALUE="LIKE"     ' . chk_select(@$this->criteria[$i][1], "LIKE") . '>' . gettext("has");
             echo '                               <OPTION VALUE="NOT LIKE" ' . chk_select(@$this->criteria[$i][1], "NOT LIKE") . '>' . gettext("has not") . '</SELECT>';
-            echo '<INPUT TYPE="text" NAME="data[' . $i . '][2]" SIZE=45 VALUE="' . htmlspecialchars(@$this->criteria[$i][2]) . '">';
+            echo '<INPUT TYPE="text" NAME="data[' . $i . '][2]" SIZE=45 VALUE="' . Util::htmlentities(@$this->criteria[$i][2]) . '">';
             echo '<SELECT NAME="data[' . $i . '][3]"><OPTION VALUE=" " ' . chk_select(@$this->criteria[$i][3], " ") . '>__';
             echo '                               <OPTION VALUE="(" ' . chk_select(@$this->criteria[$i][3], "(") . '>(';
             echo '                               <OPTION VALUE=")" ' . chk_select(@$this->criteria[$i][3], ")") . '>)</SELECT>';
@@ -2153,7 +2111,7 @@ class DataCriteria extends MultipleElementCriteria {
         }
         for ($i = 0; $i < $this->criteria_cnt; $i++)
         {
-            if ($this->criteria[$i][1] != " " && $this->criteria[$i][2] != "") $tmp = $tmp . $this->criteria[$i][0] . $human_fields[$this->criteria[$i][1]] . ' "' . $this->criteria[$i][2] . '" ' . $this->criteria[$i][3] . ' ' . $this->criteria[$i][4] . ' ';
+            if ($this->criteria[$i][1] != " " && $this->criteria[$i][2] != "") $tmp = $tmp . $this->criteria[$i][0] . $human_fields[$this->criteria[$i][1]] . ' "' .  Util::htmlentities($this->criteria[$i][2]) . '" ' . $this->criteria[$i][3] . ' ' . $this->criteria[$i][4] . ' ';
         }
         if ($tmp != "") $tmp = $this->cs->GetClearCriteriaString2($this->export_name) . $tmp;
         return $tmp;
@@ -2170,7 +2128,7 @@ class DataCriteria extends MultipleElementCriteria {
             $tmp = $tmp . ')<BR>';
         } else $tmp = $tmp . ' ' . gettext("(no data conversion, assuming criteria in DB native encoding)") . '<BR>';
         for ($i = 0; $i < $this->criteria_cnt; $i++) {
-            if ($this->criteria[$i][1] != " " && $this->criteria[$i][2] != "") $tmp = $tmp . $this->criteria[$i][0] . $human_fields[$this->criteria[$i][1]] . ' "' . $this->criteria[$i][2] . '" ' . $this->criteria[$i][3] . ' ' . $this->criteria[$i][4] . ' ';
+            if ($this->criteria[$i][1] != " " && $this->criteria[$i][2] != "") $tmp = $tmp . $this->criteria[$i][0] . $human_fields[$this->criteria[$i][1]] . ' "' .  Util::htmlentities($this->criteria[$i][2]) . '" ' . $this->criteria[$i][3] . ' ' . $this->criteria[$i][4] . ' ';
         }
         if ($tmp != "") $tmp = $tmp . $this->cs->GetClearCriteriaString($this->export_name) . '<BR>';
         return $tmp;
@@ -2187,13 +2145,11 @@ class OssimPriorityCriteria extends SingleElementCriteria {
         $this->criteria[0] = CleanVariable($this->criteria[0], "", array(
             "=",
             "!=",
-            "&lt;",
-            "&lt;=",
-            "&gt;",
-            "&gt;="
+            "<",
+            "<=",
+            ">",
+            ">="
         ));
-        $this->criteria[0] = preg_replace("/\&lt\;/", "<", $this->criteria[0]);
-        $this->criteria[0] = preg_replace("/\&gt\;/", ">", $this->criteria[0]);
 
         $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array(
             "null"
@@ -2202,7 +2158,6 @@ class OssimPriorityCriteria extends SingleElementCriteria {
     function PrintForm() {
         if ($this->db->baseGetDBVersion() >= 103) {
             echo '<SELECT NAME="ossim_priority[0]">
-                <OPTION VALUE=" " ' . chk_select($this->criteria[0], "=") . '>__</OPTION>
                 <OPTION VALUE="=" ' . chk_select($this->criteria[0], "=") . '>==</OPTION>
                 <OPTION VALUE="!=" ' . chk_select($this->criteria[0], "!=") . '>!=</OPTION>
                 <OPTION VALUE="<"  ' . chk_select($this->criteria[0], "<") . '><</OPTION>
@@ -2340,13 +2295,11 @@ class OssimReliabilityCriteria extends SingleElementCriteria {
         $this->criteria[0] = CleanVariable($this->criteria[0], "", array(
             "=",
             "!=",
-            "&lt;",
-            "&lt;=",
-            "&gt;",
-            "&gt;="
+            "<",
+            "<=",
+            ">",
+            ">="
         ));
-        $this->criteria[0] = preg_replace("/\&lt\;/", "<", $this->criteria[0]);
-        $this->criteria[0] = preg_replace("/\&gt\;/", ">", $this->criteria[0]);
 
         $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array(
             "null"
@@ -2355,7 +2308,6 @@ class OssimReliabilityCriteria extends SingleElementCriteria {
     function PrintForm() {
         if ($this->db->baseGetDBVersion() >= 103) {
             echo '<SELECT NAME="ossim_reliability[0]">
-                <OPTION VALUE=" " ' . chk_select($this->criteria[0], "=") . '>__</OPTION>
                 <OPTION VALUE="=" ' . chk_select($this->criteria[0], "=") . '>==</OPTION>
                 <OPTION VALUE="!=" ' . chk_select($this->criteria[0], "!=") . '>!=</OPTION>
                 <OPTION VALUE="<"  ' . chk_select($this->criteria[0], "<") . '><</OPTION>
@@ -2461,13 +2413,11 @@ class OssimAssetDstCriteria extends SingleElementCriteria {
         $this->criteria[0] = CleanVariable($this->criteria[0], "", array(
             "=",
             "!=",
-            "&lt;",
-            "&lt;=",
-            "&gt;",
-            "&gt;="
+            "<",
+            "<=",
+            ">",
+            ">="
         ));
-        $this->criteria[0] = preg_replace("/\&lt\;/", "<", $this->criteria[0]);
-        $this->criteria[0] = preg_replace("/\&gt\;/", ">", $this->criteria[0]);
 
         $this->criteria[1] = CleanVariable($this->criteria[1], VAR_DIGIT, array(
             "null"
@@ -2476,7 +2426,6 @@ class OssimAssetDstCriteria extends SingleElementCriteria {
     function PrintForm() {
         if ($this->db->baseGetDBVersion() >= 103) {
             echo '<SELECT NAME="ossim_asset_dst[0]">
-                <OPTION VALUE=" " ' . chk_select($this->criteria[0], "=") . '>__</OPTION>
                 <OPTION VALUE="=" ' . chk_select($this->criteria[0], "=") . '>==</OPTION>
                 <OPTION VALUE="!=" ' . chk_select($this->criteria[0], "!=") . '>!=</OPTION>
                 <OPTION VALUE="<"  ' . chk_select($this->criteria[0], "<") . '><</OPTION>

@@ -189,11 +189,11 @@ function insert_net($conn, $data)
 {
     $cidrs = preg_replace('/\s*/', '', $data['cidr']);
     $name  = utf8_decode($data['name']);
-    $descr = utf8_decode($data['descr']);
+    $descr = $data['descr'];
     
     ossim_valid($cidrs,	OSS_IP_CIDR,	                    'illegal:' . _("CIDR"));
     ossim_valid($name,	OSS_NOECHARS, OSS_NET_NAME,	        'illegal:' . _("Name"));
-    ossim_valid($descr,	OSS_NULLABLE, OSS_AT, OSS_TEXT,     'illegal:' . _("Description"));
+    ossim_valid($descr,	OSS_NULLABLE, OSS_ALL,              'illegal:' . _("Description"));
 
     check_ossim_error();
 
@@ -301,11 +301,7 @@ function insert_host($conn, $data)
     $host->save_in_db($conn);
 
     // Device Type
-    if ($dtype == 'server')
-    {
-        Asset_host_devices::save_device_in_db($conn, $uuid, 1);
-    }
-    elseif ($dtype == 'networkdevice')
+    if ($dtype == 'networkdevice')
     {
         Asset_host_devices::save_device_in_db($conn, $uuid, 4);
     }
@@ -338,24 +334,21 @@ function change_htype($conn, $data)
     if (empty($dtype) && empty($os))
     {
         Asset_host_devices::delete_all_from_db($conn, $uuid);
-        Asset_host_properties::delete_property_from_db($conn, $uuid, 3);
+        Asset_host_properties::delete_property_from_db($conn, $uuid, 3, '', TRUE);
     }
     else
     {
         // Device Type
-        if ($dtype == 'server')
+        if ($dtype == 'networkdevice')
         {
-            Asset_host_devices::save_device_in_db($conn, $uuid, 1);
+            Asset_host_devices::save_device_in_db($conn, $uuid, 4); //Adding the device type
+            Asset_host_properties::delete_property_from_db($conn, $uuid, 3, '', TRUE); //Removing the previous OS
         }
-        elseif ($dtype == 'networkdevice')
+        elseif ($os == 'windows' || $os == 'linux') //OS
         {
-            Asset_host_devices::save_device_in_db($conn, $uuid, 4);
-        }
-    
-        // OS
-        if ($os == 'windows' || $os == 'linux')
-        {
-            Asset_host_properties::save_property_in_db($conn, $uuid, 3, ucfirst($os), 1, TRUE);
+            Asset_host_devices::delete_device_from_db($conn, $uuid, 4); //Removing device type
+            Asset_host_properties::delete_property_from_db($conn, $uuid, 3); //Removing previous OS
+            Asset_host_properties::save_property_in_db($conn, $uuid, 3, ucfirst($os), 1, TRUE); //Adding the new OS
         }
     }
 
@@ -508,14 +501,10 @@ function get_otx_user ($data)
     ossim_valid($token, OSS_ALPHA, 'illegal:' . _("OTX auth-token"));
 
     check_ossim_error();
-
+    
+    /* The try-catch check is done when the function is called in the main */
     $response['error'] = FALSE;
     $response['msg']   = Util::get_otx_username($token);
-        
-    if ($response['msg'])
-    {
-        $response['error'] = TRUE;
-    }
 
     return $response;
 }

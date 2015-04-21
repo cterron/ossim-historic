@@ -103,11 +103,14 @@ class OssimDB:
                 continue_working = False
                 retries = max_retries +1   
                 cursor.close()
-            except _mysql_exceptions.OperationalError, e:
-                logger.error('OPE:\n----> %s \n----> [%s]' % (query, e))
+            except _mysql_exceptions.OperationalError, (exc, msg):
+                logger.debug('MySQL Operational Error executing query:\n----> %s \n----> [(%d, %s)]' % (query, exc, msg))
+                if exc != 2006:
+                    logger.error('MySQL Operational Error executing query')
                 self.__close()
             except Exception, e:
-                logger.error('Error executing query:\n----> %s \n----> [%s]' % (query, e))
+                logger.debug('Error executing query:\n----> %s \n----> [%s]' % (query, e))
+                logger.error('Error executing query')
                 self.__close()
             if retries >= max_retries:
                 continue_working = False

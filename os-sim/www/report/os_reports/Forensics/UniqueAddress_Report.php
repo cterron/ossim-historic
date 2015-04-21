@@ -47,9 +47,11 @@ if ( Session::menu_perms("analysis-menu", "EventsForensics") )
 	$db     = new ossim_db();
 	$conn   = $db->connect();
 	
-	$conn->SetFetchMode(ADODB_FETCH_ASSOC);	
+	$conn->SetFetchMode(ADODB_FETCH_ASSOC);
+	
+	$rs = $conn->Execute($query, $params);
 
-	if (!$rs = & $conn->Execute($query, $params)){
+	if (!$rs){
 		$htmlPdfReport->set("<table class='w100' cellpadding='0' cellspacing='0'>
                                 <tr><td class='w100' align='center' valign='top'>"._("No data available")."</td></tr>
                              </table>\n");

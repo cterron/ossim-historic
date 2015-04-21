@@ -9,6 +9,7 @@ Package: alienvault-api
 Architecture: all
 Depends: rabbitmq-server, python-augeas, augeas-tools, libapache2-mod-wsgi, apache2,
  alienvault-api-core (>= ${source:Upstream-Version}),
+ alienvault-api-scripts (>= ${source:Upstream-Version}),
  alienvault-i18n-messages (>= ${source:Upstream-Version}),
  alienvault-redis-server (>= ${source:Upstream-Version})
 Provides: alienvault-api

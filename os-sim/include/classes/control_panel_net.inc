@@ -137,10 +137,9 @@ class Control_panel_net
                 
                 if (!$rs2->EOF && ($count < $limit)) 
                 {
-                    $list[] = new Control_panel_net($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
+                    $list[] = new self($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
                     
-                    $count++;
-                    
+                    $count++;                    
                 }
                 
                 $rs->MoveNext();
@@ -231,7 +230,7 @@ class Control_panel_net
                                          
                         if ($cnd_1 && $cnd_2) 
 				        {							
-                            $list[] = new Control_panel_net($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], 
+                            $list[] = new self($rs->fields['id'], $rs->fields['time_range'], $rs->fields['max_c'], 
                                 $rs->fields['max_a'], $rs->fields['max_c_date'], $rs->fields['max_a_date']);
                         }
                     }

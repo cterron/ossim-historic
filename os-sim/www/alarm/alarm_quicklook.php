@@ -87,8 +87,6 @@ $alarm_open_url    = "open_alarm('$backlog_id');";
 
 $alarm_delete_url  = "tray_delete('$backlog_id');";
 
-$alarm_labels_url  = "tray_labels('$backlog_id');";
-
 /* Source Home */
 $_home_src         = Asset_host::get_extended_name($conn, $geoloc, $alarm->get_src_ip(), $ctx, $event["_SRC_HOST"], $event["_SRC_NET"]);
 
@@ -110,17 +108,14 @@ else
 }
 	
 $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['dst']['ip']), $_home_src['is_internal'], $_home_dst['is_internal']));
-
 ?>
+
 <div id="tray_container">
     <div class="tray_triangle"></div>
     
     <table id="tray_table" class=''>
     <tr>
         <td style="width:60px">
-            <!--<div>
-                <?php echo (!$removable) ? '<img align="absmiddle" src="/ossim/alarm/style/img/correlating.gif" class="img_cor_d">' : '' ?>
-            </div>-->
             <div>
                 <?php echo $alarm_image; ?>
             </div>        
@@ -196,23 +191,23 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
             <div class="tray_font_big second-div"><?php echo $alarm_life_number ?></div>
             <div class="padding-top"><?php echo  strtoupper($alarm_life_unit) ?></div>
         </td>
-        <td style="width:120px;">
+        <td class="tray_alarm_actions" style="width:120px;">
             <div class="padding-right">
-                <input type="button" class="testbutton" value="<?php echo _("View Details")?>" onclick="<?php echo $alarm_detail_url ?>">
+                <button type="button" onclick="<?php echo $alarm_detail_url ?>"><?php echo _("View Details")?></button>
             </div>
             <?php 
             if (!$removable)
             {
             ?>
-            <div class="padding-right padding-top">
-                <input type="button" class="button_dissabled testbutton av_b_secondary" value="<?php echo _("Close")?>" disabled="disabled">
-            </div>
-            <div class="padding-right padding-top">
-                <input type="button" class="button_dissabled testbutton av_b_secondary" value="<?php echo _("Delete")?>" disabled="disabled">
-            </div>
-             <div class="padding-right padding-top" style="position:relative">
-                <input type="button" class="button_dissabled testbutton av_b_secondary" value="<?php echo _("Apply Label") ?>" disabled="disabled">
-            </div>
+                <div class="padding-right padding-top">
+                    <button class="button_dissabled av_b_secondary" disabled="disabled"><?php echo _("Close")?></button>
+                </div>
+                <div class="padding-right padding-top">
+                    <button class="button_dissabled av_b_secondary" disabled="disabled"><?php echo _("Delete")?></button>
+                </div>
+                 <div class="padding-right padding-top" style="position:relative">
+                    <button class="button_dissabled av_b_secondary" disabled="disabled"><?php echo _("Apply Label") ?></button>
+                </div>
             <?php
             }
             else
@@ -221,7 +216,9 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
                 {
                 ?>
                     <div class="padding-right padding-top">
-                        <input type="button" class="testbutton av_b_secondary" value="<?php echo _("Close")?>" onclick="<?php echo $alarm_close_url ?>">
+                        <button class="av_b_secondary" onclick="<?php echo $alarm_close_url ?>">
+                            <?php echo _("Close") ?>
+                        </button>
                     </div>
                 <?php  
                 }
@@ -229,19 +226,22 @@ $promiscous_title = _(is_promiscous(count($stats['src']['ip']), count($stats['ds
                 {
                 ?>
                     <div class="padding-right padding-top">
-                        <input type="button" class="testbutton av_b_secondary" value="<?php echo _("Open")?>" onclick="<?php echo $alarm_open_url ?>">
+                        <button class="av_b_secondary" onclick="<?php echo $alarm_open_url ?>">
+                            <?php echo _("Open") ?>
+                        </button>
                     </div>
                 <?php      
                 }
             ?>
             
-            <div class="padding-right padding-top">
-                <input type="button" class="testbutton av_b_secondary" value="<?php echo _("Delete")?>" onclick="<?php echo $alarm_delete_url ?>">
-            </div>
-            <div class="padding-right padding-top" style="position:relative">
-                <input type="button" class="testbutton av_b_secondary" value="<?php echo _("Apply Label")." &#x25BC;"?>" onclick="<?php echo $alarm_labels_url ?>">
-                <div id="tags_content_<?php echo $backlog_id ?>" class='apply_label_layer' style="position:absolute;z-index:99999;left:2px;top:32px"></div>
-            </div> 
+                <div class="padding-right padding-top">
+                    <button class="av_b_secondary" onclick="<?php echo $alarm_delete_url ?>"><?php echo _("Delete")?></button>
+                </div>
+                <div class="padding-right padding-top" style="position:relative">
+                    <button class="button_labels av_b_secondary" data-backlog="<?php echo $backlog_id ?>" data-dropdown="#dropdown-2">
+                        <?php echo _("Apply Label") ?>
+                    </button>
+                </div> 
             <?php            
             }
             ?>

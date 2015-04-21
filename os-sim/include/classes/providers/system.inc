@@ -173,10 +173,13 @@ class System_provider extends Provider
      */
     public function license_trial_activation($email)
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         $params = array('email' => $email);
 
         $response = $this->conn->do_request($this->common_url.'/license/trial', $params);
-
+        
         return $response;
     }
 
@@ -190,6 +193,9 @@ class System_provider extends Provider
      */
     public function license_key_activation($key)
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         $params = array('key' => $key);
 
         $response = $this->conn->do_request($this->common_url.'/license/pro', $params);
@@ -197,7 +203,27 @@ class System_provider extends Provider
         return $response;
     }
 
+    
+    /*****************************************************************
+     ************************** OTX **********************************
+     *****************************************************************/
 
+
+    /**
+     * This method returns the general system configuration
+     *
+     * @return string in JSON format
+     */
+    public function get_otx_user($token)
+    {
+        $params   = array('token' => $token);
+        
+        $response = $this->conn->do_request('/system/otx/username', $params);
+
+        return $response;
+    }
+    
+    
     /*****************************************************************
      ********************* CONFIGURATION *****************************
      *****************************************************************/
@@ -275,17 +301,29 @@ class System_provider extends Provider
     /**
      * This method attach a new component setting remote certificates
      *
-     * @param string $ip   Component IP
-     * @param string $pass Component password
+     * @param string $ip    Component IP
+     * @param string $key   ssh public key or password
+     * @param string $type  'password' or 'key'
      *
      * @return object
      */
-    public function set_component($ip, $pass)
+    public function set_component($ip, $key, $type='password')
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         $params = array(
-            'system_ip' => $ip,
-            'password'  => $pass
+            'system_ip' => $ip
         );
+        
+        if ($type == 'password')
+        {
+            $params['password'] = $key;
+        }
+        else
+        {
+            $params['ssh_key'] = $key;
+        }
 
         $response = $this->conn->do_request('/system', $params, 'POST');
 
@@ -303,6 +341,21 @@ class System_provider extends Provider
         $params = array();
 
         $response = $this->conn->do_request('/system', $params);
+
+        return $response;
+    }
+    
+    
+    /**
+     * This method gets some basic info from the local system 
+     *
+     * @return object
+     */
+    public function get_local_system_info()
+    {
+        $params = array();
+
+        $response = $this->conn->do_request('/system/local/info', $params);
 
         return $response;
     }
@@ -421,6 +474,23 @@ class System_provider extends Provider
 
         return $response;
     }
+    
+    
+    /**
+     * This method pings a system
+     *
+     * @param boolean $no_cache  [Optional] Not use cached information
+     *
+     * @return string JSON string
+     */
+    public function do_ping()
+    {
+        $params = array();
+        
+        $response = $this->conn->do_request($this->common_url.'/status/ping', $params);
+
+        return $response;
+    }
 
     /*****************************************************************
      ************************ SUPPORT ********************************
@@ -437,6 +507,9 @@ class System_provider extends Provider
      */
     public function launch_support_tool($system_id, $ticket_number)
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         $params = array('ticket' => $ticket_number);
 
         $response = $this->conn->do_request('/system/'.$system_id.'/doctor/support', $params);
@@ -474,19 +547,23 @@ class System_provider extends Provider
      */
     public function delete_system()
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         $response = $this->conn->do_request($this->common_url, array(), 'DELETE');
 
         return $response;
     } 
     
+
     /**
-    * This function returns a certain number of lines of a given log file
-    *
-    * @param string   $log_file     Log file ID
-    * @param integer  $lines        Number of lines to display
-    *
-    * @return object
-    */
+     * This function returns a certain number of lines of a given log file
+     *
+     * @param string   $log_file  Log file ID
+     * @param integer  $lines     Number of lines to display
+     *
+     * @return object
+     */
     public function get_log_lines($log_file, $lines)
     {
         $params = array(
@@ -501,10 +578,10 @@ class System_provider extends Provider
     
     
     /**
-    * This function updates AlienVault
-    *
-    * @return string in JSON format
-    */
+     * This function updates AlienVault
+     *
+     * @return string in JSON format
+     */
     public function update_av_system()
     {
         $response = $this->conn->do_request($this->common_url . '/update', array(), 'PUT');
@@ -514,32 +591,29 @@ class System_provider extends Provider
     
     
     /**
-    * This function updates the AlienVault Feed
-    *
-    * @return string in JSON format
-    */
+     * This function updates the AlienVault Feed
+     *
+     * @return string in JSON format
+     */
     public function update_av_feed()
-    {        
+    {
         $response = $this->conn->do_request($this->common_url . '/update/feed', array(), 'PUT');
-        
+
         return $response;
     } 
-    
-    
+
+
     /**
-    * This function check if there is an AlienVault Update/Reconfig running
-    *
-    * @return string in JSON format
-    */
+     * This function check if there is an AlienVault Update/Reconfig running
+     *
+     * @return string in JSON format
+     */
     public function get_tasks()
-    {        
+    {
         $response = $this->conn->do_request($this->common_url . '/tasks', array(), 'GET');
-        
+
         return $response;
-    } 
-    
-    
-    
+    }
 }
 
 /* End of file system.inc */

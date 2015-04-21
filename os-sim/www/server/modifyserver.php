@@ -37,27 +37,27 @@ require_once 'av_init.php';
 Session::logcheck("configuration-menu", "PolicyServers");
 
 $validate = array (
-	"id"        	  => array("validation"=>"OSS_HEX",                                          "e_message" => 'illegal:' . _("ID")),
-	"sname"  	      => array("validation"=>"OSS_ALPHA, OSS_PUNC",                              "e_message" => 'illegal:' . _("Name")),
-	"ip"        	  => array("validation"=>"OSS_IP_ADDR",                                      "e_message" => 'illegal:' . _("Ip")),
-	"port"      	  => array("validation"=>"OSS_PORT",                                         "e_message" => 'illegal:' . _("Port number")),
-	"descr"     	  => array("validation"=>"OSS_TEXT, OSS_NULLABLE, OSS_AT",                   "e_message" => 'illegal:' . _("Description")),
-	"correlate"       => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Correlation")),
-	"cross_correlate" => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Cross Correlation")),
-	"store" 		  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Store")),
-	"reputation"	  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Reputation")),
-	"qualify" 		  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Qualify")),
-	"resend_alarms"   => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Resend Alarms")),
-	"resend_events"   => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Resend Events")),
-	"sign" 			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Sign")),
-	"multi"			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Multilevel")),
-	"sem" 			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Log")),
-	"sim"			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Security Events")),
-	"alarm_to_syslog" => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("Alarm to Syslog")),
-	"remoteadmin"     => array("validation"=>"OSS_ALPHA, OSS_PUNC, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Remote Admin")),
-	"remotepass"      => array("validation"=>"OSS_PASSWORD, OSS_NULLABLE",                       "e_message" => 'illegal:' . _("Remote Password")),
-	"remoteurl"       => array("validation"=>"OSS_ALPHA, OSS_PUNC, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Remote URL")),
-	"setssh"		  => array("validation"=>"OSS_DIGIT, OSS_NULLABLE",                          "e_message" => 'illegal:' . _("setssh")));
+	"id"        	  => array("validation"=>"OSS_HEX",                                "e_message" => 'illegal:' . _("ID")),
+	"sname"  	      => array("validation"=>"OSS_ALPHA, OSS_PUNC",                    "e_message" => 'illegal:' . _("Name")),
+	"ip"        	  => array("validation"=>"OSS_IP_ADDR",                            "e_message" => 'illegal:' . _("Ip")),
+	"port"      	  => array("validation"=>"OSS_PORT",                               "e_message" => 'illegal:' . _("Port number")),
+	"descr"     	  => array("validation"=>"OSS_ALL, OSS_NULLABLE",                  "e_message" => 'illegal:' . _("Description")),
+	"correlate"       => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Correlation")),
+	"cross_correlate" => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Cross Correlation")),
+	"store" 		  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Store")),
+	"reputation"	  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Reputation")),
+	"qualify" 		  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Qualify")),
+	"resend_alarms"   => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Resend Alarms")),
+	"resend_events"   => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Resend Events")),
+	"sign" 			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Sign")),
+	"multi"			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Multilevel")),
+	"sem" 			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Log")),
+	"sim"			  => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Security Events")),
+	"alarm_to_syslog" => array("validation"=>"OSS_ALPHA, OSS_NULLABLE",                "e_message" => 'illegal:' . _("Alarm to Syslog")),
+	"remoteadmin"     => array("validation"=>"OSS_ALPHA, OSS_PUNC, OSS_NULLABLE",      "e_message" => 'illegal:' . _("Remote Admin")),
+	"remotepass"      => array("validation"=>"OSS_PASSWORD, OSS_NULLABLE",             "e_message" => 'illegal:' . _("Remote Password")),
+	"remoteurl"       => array("validation"=>"OSS_ALPHA, OSS_PUNC, OSS_NULLABLE",      "e_message" => 'illegal:' . _("Remote URL")),
+	"setssh"		  => array("validation"=>"OSS_DIGIT, OSS_NULLABLE",                "e_message" => 'illegal:' . _("setssh")));
 	
 	
 if (GET('ajax_validation') == TRUE)
@@ -112,11 +112,11 @@ if (!isset($_POST['ajax_validation_all']) || POST('ajax_validation_all') == FALS
 }
 
     
-$id              =  POST('id');
-$sname           =  POST('sname');
-$ip              =  POST('ip');
-$port            =  POST('port');
-$descr           =  POST('descr');
+$id              = POST('id');
+$sname           = POST('sname');
+$ip              = POST('ip');
+$port            = POST('port');
+$descr           = POST('descr');
 $correlate       = (POST('correlate')) ? 1 : 0;
 $cross_correlate = (POST('cross_correlate')) ? 1 : 0;
 $store           = (POST('store')) ? 1 : 0;
@@ -129,11 +129,11 @@ $multi           = (POST('multi')) ? 1 : 0;
 $sem             = (POST('sem')) ? 1 : 0;
 $sim             = (POST('sim')) ? 1 : 0;
 $alarm_to_syslog = (POST('alarm_to_syslog')) ? 1 : 0;
-$remoteadmin     =  POST('remoteadmin');
-$remotepass      =  POST('remotepass');
-$remoteurl       =  POST('remoteurl');
+$remoteadmin     = POST('remoteadmin');
+$remotepass      = POST('remotepass');
+$remoteurl       = POST('remoteurl');
 $setssh          = (POST('setssh')) ? 1 : 0;
-$rservers        =  POST('rservers');
+$rservers        = POST('rservers');
 
 $rservers = $_POST['rservers'];
 unset($_POST['rservers']);
@@ -196,10 +196,19 @@ else
 
 <html>
 <head>
-	<title> <?php echo gettext("OSSIM Framework"); ?> </title>
+	<title> <?php echo _('AlienVault ' . (Session::is_pro() ? 'USM' : 'OSSIM')); ?> </title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 	<meta http-equiv="Pragma" content="no-cache"/>
-	<link type="text/css" rel="stylesheet" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
+	
+	<?php
+        //CSS Files
+        $_files = array(
+            array('src' => 'av_common.css',     'def_path' => TRUE)
+        );
+
+        Util::print_include_files($_files, 'css');
+
+    ?>
 </head>
 
 <body>
@@ -225,7 +234,7 @@ if (POST('insert') && empty($data['data']['id']))
 		$nt = new Notification('nt_1', $config_nt);
 		$nt->show();
 		
-		Util::make_form("POST", "newserverform.php?id=$id");
+		Util::make_form("POST", "modifyserverform.php?id=$id");
 		exit();
 	}
 		
@@ -258,7 +267,7 @@ if (POST('insert') && empty($data['data']['id']))
         }
         else
         {
-            document.location.href="newserverform.php?id=<?php echo $id?>&update=1";
+            document.location.href="modifyserverform.php?id=<?php echo $id?>&update=1";
         }      
     </script>
 	<?php

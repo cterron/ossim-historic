@@ -18,7 +18,6 @@ from scp import SCPClient
 from functools import partial
 import fcntl
 import struct
-import paramiko
 import tarfile
 DEFAULT_FPROBE_CONFIGURATION_FILE = "/etc/default/fprobe"
 DEFAULT_NETFLOW_REMOTE_PORT = 555
@@ -133,7 +132,7 @@ def is_valid_domain(value):
         return False
     if not is_ascii_characters(value):
         return False
-    if re.match('[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{1,63})*', value):
+    if re.match('^[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{1,63})*$', value):
         return True
     return False
 
@@ -480,48 +479,6 @@ def get_systems_without_vpn():
         print "error: %s" % str(e)
 
     return systems
-
-def createSSHClient(server, port, user, password):
-    """Full credit for this function:
-    http://stackoverflow.com/questions/250283/how-to-scp-in-python
-    """
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(server, port, user, password)
-    return client
-
-
-def get_remote_file_using_ssh(remote_ip, remote_port, remote_user, remote_pass, remote_file, local_file):
-    """Gets a remote file usin ssh protocol
-    """
-    ssh = createSSHClient(remote_ip, int(remote_port), remote_user, remote_pass)
-    scp = SCPClient(ssh.get_transport())
-    scp.get(remote_path=remote_file, local_path=local_file)
-
-def configure_vpn(server_ip, server_ssh_port, server_user, server_pass, local_ip):
-    """
-    cmd=alienvault-reconfig --add_vpnnode=192.168.2.23
-    fichero generado /etc/openvpn/nodes/192.168.2.23.tar.gz
-    destino: /etc/openvpn/ y descomprimir.
-    """
-    rt = False
-    try:
-        cmd = "alienvault-reconfig --add_vpnnode=%s " % local_ip
-        tmp_dir = "/tmp/"
-        end_vpnfilename = "%s.tar.gz" % local_ip
-        vpnfile = "/etc/openvpn/nodes/%s" % end_vpnfilename
-        dir_to_extract = "/etc/openvpn/"
-        if subprocess.call(cmd, shell=True) == 0:#success
-            get_remote_file_using_ssh(server_ip, server_ssh_port, server_user, server_pass, vpnfile, tmp_dir)
-            if os.path.isfile(tmp_dir + end_vpnfilename):
-                tfile = tarfile.open(tmp_dir + end_vpnfilename, 'r:gz')
-                tfile.extractall(dir_to_extract)
-                os.remove(tmp_dir + end_vpnfilename)
-                rt = True
-    except Exception, e:
-        print str(e)
-    return rt
 
 
 #if __name__ == "__main__":

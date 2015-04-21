@@ -62,7 +62,8 @@ class Plugin_reference
      * @access public
      */
     public $plugin_id;
-    
+
+
     /**
      * Plugin SID
      *
@@ -70,7 +71,8 @@ class Plugin_reference
      * @access public
      */
     public $plugin_sid;
-    
+
+
     /**
      * Reference ID
      *
@@ -78,7 +80,8 @@ class Plugin_reference
      * @access public
      */
     public $reference_id;
-    
+
+
     /**
      * Reference SID
      *
@@ -86,7 +89,8 @@ class Plugin_reference
      * @access public
      */
     public $reference_sid;
-    
+
+
     /**
      * Class constructor
      *
@@ -170,7 +174,7 @@ class Plugin_reference
         
         $sql = "SELECT count(*) FROM plugin_reference";
         
-        $rs = & $conn->Execute($sql);
+        $rs = $conn->Execute($sql);
         
         if (!$rs)
         {
@@ -181,7 +185,8 @@ class Plugin_reference
             return $rs->fields["count(*)"];
         }
     }
-	
+
+
     /**
      * This function returns the list of references
      *
@@ -190,7 +195,7 @@ class Plugin_reference
      * 
      * @return int
      */
-	function get_list($conn, $args = "")
+	static function get_list($conn, $args = "")
 	{
 	    Ossim_db::check_connection($conn);
 		
@@ -204,7 +209,7 @@ class Plugin_reference
 		
 		$list = array();
 		
-		$rs = & $conn->Execute($query);
+		$rs = $conn->Execute($query);
 		
         if (!$rs)
         {
@@ -215,7 +220,7 @@ class Plugin_reference
 			$foundrows = 0;
 			if ($iffoundrows) 
 			{
-			    $rf = & $conn->Execute("SELECT FOUND_ROWS() as total");
+			    $rf = $conn->Execute("SELECT FOUND_ROWS() as total");
                 if (!$rf)
                 {
 					Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
@@ -228,7 +233,7 @@ class Plugin_reference
 		
             while (!$rs->EOF)
             {
-                $list[] = new Plugin_reference(
+                $list[] = new self(
                     $rs->fields["plugin_id"], 
                     $rs->fields["plugin_sid"], 
                     $rs->fields["reference_id"], 
@@ -240,7 +245,8 @@ class Plugin_reference
         }
         return $list;
     }
-		
+
+	
     /**
      * This function inserts a new row in plugin_reference table
      * 
@@ -252,7 +258,7 @@ class Plugin_reference
      * 
      * @return int
      */
-	function new_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2) 
+	static function new_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
 	{
 	    Ossim_db::check_connection($conn);
 	    
@@ -273,7 +279,8 @@ class Plugin_reference
             return 0;
         }
 	}
-	
+
+
 	/**
 	 * This function deletes a row from the plugin_reference table
 	 * 
@@ -285,7 +292,7 @@ class Plugin_reference
 	 * 
 	 * @return int
 	 */
-	function delete_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
+	static function delete_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2)
 	{
 	    Ossim_db::check_connection($conn);
 	    
@@ -294,7 +301,7 @@ class Plugin_reference
         
 		$params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2);
 		
-		$rs = & $conn->Execute($query, $params);
+		$rs = $conn->Execute($query, $params);
 		
         if (!$rs)
         {
@@ -307,7 +314,8 @@ class Plugin_reference
             return 0;
         }
 	}
-	
+
+
 	/**
 	 * This function modifies a rule in plugin_reference table
 	 * 
@@ -323,7 +331,7 @@ class Plugin_reference
 	 * 
 	 * @return int
 	 */
-	function change_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2, $id1, $id2, $sid1, $sid2)
+	static function change_rule($conn, $plugin_id1, $plugin_id2, $plugin_sid1, $plugin_sid2, $id1, $id2, $sid1, $sid2)
 	{
 	    Ossim_db::check_connection($conn);
 	    
@@ -332,7 +340,7 @@ class Plugin_reference
 		
 		$params = array($plugin_id1, $plugin_sid1, $plugin_id2, $plugin_sid2, $id1, $id2, $sid1, $sid2);
 		
-		$rs = & $conn->Execute($query, $params);
+		$rs = $conn->Execute($query, $params);
 		
         if (!$rs)
         {

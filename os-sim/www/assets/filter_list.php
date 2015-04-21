@@ -83,12 +83,12 @@ Asset_filter_list::create_filter_copy();
             
             var __filters = 
             {
-                "7" : {"filter": "network",     "name": "<?php echo _('Network') ?>",     "full_search": false },
-                "8" : {"filter": "device_type", "name": "<?php echo _('Device Type') ?>", "full_search": false },
-                "14": {"filter": "sensor",      "name": "<?php echo _('Sensor') ?>",      "full_search": false },
-                "9" : {"filter": "software",    "name": "<?php echo _('Software') ?>",    "full_search": true },
-                "10": {"filter": "service",     "name": "<?php echo _('Service') ?>",     "full_search": false },
-                "13": {"filter": "location",    "name": "<?php echo _('Location') ?>",    "full_search": false }
+                "7" : {"filter": "network",     "name": "<?php echo Util::js_entities(_('Network')) ?>",     "full_search": false },
+                "8" : {"filter": "device_type", "name": "<?php echo Util::js_entities(_('Device Type')) ?>", "full_search": false },
+                "14": {"filter": "sensor",      "name": "<?php echo Util::js_entities(_('Sensor')) ?>",      "full_search": false },
+                "9" : {"filter": "software",    "name": "<?php echo Util::js_entities(_('Software')) ?>",    "full_search": true },
+                "10": {"filter": "service",     "name": "<?php echo Util::js_entities(_('Service')) ?>",     "full_search": false },
+                "13": {"filter": "location",    "name": "<?php echo Util::js_entities(_('Location')) ?>",    "full_search": false }
             };
             
             var __filter_id    = 7;

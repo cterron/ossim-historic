@@ -125,8 +125,10 @@ $sql = "SELECT
         WHERE
             net_group_reference.net_id = net.id AND
             net_group_reference.net_group_id = net_group.id $net_group_where AND net_group.id=UNHEX('$group_id')";
-            
-if (!$rs = & $conn->Execute($sql)) 
+
+$rs = $conn->Execute($sql);
+
+if (!$rs) 
 {
     die($conn->ErrorMsg());
 }
@@ -249,7 +251,9 @@ $params = array(
     $range
 );
 
-if (!$rs = & $conn->Execute($sql, $params)) 
+$rs = $conn->Execute($sql, $params);
+
+if (!$rs)
 {
     die($conn->ErrorMsg());
 }

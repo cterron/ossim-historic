@@ -31,7 +31,6 @@ from celery.utils.log import get_logger
 
 from celerymethods.tasks import celery_instance
 from db.methods.system import get_systems,get_system_ip_from_local
-from logger_maintenance import clean_logger
 import logging
 
 logger = get_logger("celery")
@@ -95,10 +94,6 @@ def make_backup(bk_type):
             all_backups_ok = False
             notifier.error("Backup(%s) Fails: %s" % (bk_type,backup_error))
     #TODO: It should throw an alarm
-    # Don't launch the clean logger if backup fails
-    if all_backups_ok:
-        if not clean_logger():
-            notifier.error("An error occurred while cleaning the logger logs.")
     return all_backups_ok
 
 

@@ -1,0 +1,95 @@
+#!/bin/bash
+
+ERROR_STRING=( "Successful update"
+"Update requested with unknown parameters"
+"No /etc/ossim/ossim_setup.conf file was found"
+"No profiles in /etc/ossim/ossim_setup.conf were found"
+"Could not resynchronize package index files. Please try again in a few minutes"
+"apt-get update failed"
+"Error while removing ocs inventory"
+"The update process is unavailable for this machine. Are you trying to update a trial installation?"
+"Error rewriting sources list while executing apt-get update"
+"Error while removing libio-socket-inet6-perl"
+"Error while installing alienvault-license"
+"Error while installing alienvault-professional"
+"Error stopping monit"
+"Error removing suricata and alienvault-dummy-sensor when trying to remove libhtp1"
+"Error reinstalling suricata and alienvault-dummy-sensor after libhtp1 was removed"
+"Error removing php5-suhosin"
+"Error setting linux-image to 'On Hold' state"
+"Error installing libmysqlclient16"
+"Error: unknown libmysqlclient16 version"
+"Error setting libmysqlclient16 to 'On Hold'"
+"Error unsetting apache2 from 'On Hold' state"
+"Error reinstalling daq"
+"Error looking for perconadb password"
+"Error while doing buildload preseed conf"
+"Error in debconf selections while reconfiguring dash"
+"Error installing dash"
+"Error installing mailbsdx"
+"Error while downloading packages prior to a dist-upgrade operation"
+"Error during a dist-upgrade operation"
+"Error while updating igb-pfring"
+"Error while uninstalling squid2"
+"Error while autoremoving unnecessary packages"
+"Error while purging files/packages not needed any more")
+
+ALIENVAULT_UPDATE_ERROR_STRING=( "Error: There is an update instance running. Aborting update"
+"Error: Invalid signature for upgrade file (AV3)"
+"Error: Signature unavailable for upgrade file (AV3)"
+"Error: Invalid key. Are you trying to use an AV3 key?"
+"Error: Please enter a valid AV key"
+"Error: Invalid signature for upgrade file (AV4)"
+"Error: Signature unavailable for upgrade file (AV4)"
+"Error: Invalid signature for upgrade file (feed)"
+"Error: Signature unavailable for upgrade file (feed)"
+"Error: System running in HA Mode. Aborting update")
+
+function update_system() {
+
+    dpkg -l | grep alienvault-dummy-framework | grep ^i > /dev/null
+    if [ $? -eq 0 ]; then
+        invoke-rc.d apache2 stop
+        [ -d /var/lib/php5 ] && find /var/lib/php5/ -type f -delete
+    fi
+
+    # Handling this error from here as alienvault-update needs this file to be properly loaded
+    if [ ! -f /etc/ossim/ossim_setup.conf ]; then
+        echo ${ERROR_STRING[2]} > "/etc/ossim/.update_result"
+        exit 2
+    fi
+
+    alienvault-update
+    code=$?
+    case "$code" in
+        50|51|52|53|54|55|56|57|58|59)
+            aux_code=$(( code - 50 ))
+            echo ${ALIENVAULT_UPDATE_ERROR_STRING[aux_code]} > "/etc/ossim/.update_result"
+            exit $code
+            ;;
+        *)
+            if [ $code != 0 ]; then
+                echo ${ERROR_STRING[code]} > "/etc/ossim/.update_result"
+                exit $code
+            fi
+            ;;
+    esac
+
+    dpkg -l |grep alienvault-dummy-framework|grep ^i > /dev/null
+    if [ $? -eq 0 ]; then
+        invoke-rc.d apache2 start
+    fi
+}
+
+function analyze_update() {
+
+    echo "OOOOOPS: There was an error updating the system"
+    [ -f /etc/ossim/.update_result ] && cat "/etc/ossim/.update_result" || true
+    rm -f "/etc/ossim/.update_result"
+}
+
+[ $1 == "--us" ] && update_system
+[ $1 == "--au" ] && analyze_update
+
+exit 0
+

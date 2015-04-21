@@ -201,8 +201,28 @@ class Ossim_conf
         
         return NULL;
     }
-    
-    
+
+
+    /**
+     * This function gets the db configuration value of $type
+     *
+     * @param $type
+     *
+     * @return string|null
+     */
+    public function get_db_conf($type)
+    {
+        if (array_key_exists($type, $this->db_conf))
+        {
+            return $this->db_conf[$type];
+        }
+
+        $this->errors[] = _('Warning! Undefiend config value '.$type);
+
+        return NULL;
+    }
+
+
     /**
     * This function checks if config value $type exists in a config file
     *

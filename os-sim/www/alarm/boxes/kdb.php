@@ -72,7 +72,7 @@ if($plugin_id != '' && $plugin_sid != '')
 	$docs = count($repository_list['directive']) + count($repository_list['plugin_sid']) + count($repository_list['taxonomy']);
 	
 	
-	$db_kdb->close($conn_kdb);
+	$db_kdb->close();
 }
 ?>
 
@@ -239,12 +239,12 @@ else
 	
 		<div class='text_container'>
 		
-    		<strong><?php echo $doc['title'] ?></strong>
+    		<strong><?php echo $doc->get_title() ?></strong>
     		
     		<br/><br/>
     		
     		<?php
-    			$parser->proccess_file($doc['text']);
+    			$parser->proccess_file($doc->get_text(FALSE));
     			
     			echo $parser->print_text();
     		?>
@@ -264,7 +264,9 @@ else
 						<?php echo _('Document') . ':' ?> 
 					</td>
 					<td class='txt'>
-						<a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc['id'] ?>"><?php echo $doc['title'] ?></a>
+                        <a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc->get_id() ?>">
+                            <?php echo $doc->get_title() ?>
+                        </a>
 					</td>
 				</tr>
 				<tr>
@@ -272,7 +274,7 @@ else
 						<?php echo _('Visibility') . ':' ?> 
 					</td>
 					<td class='txt'>
-						<?php echo $doc['in_charge'] ?>
+						<?php echo $doc->get_visibility() ?>
 					</td>
 				</tr>
 				<tr>
@@ -280,7 +282,7 @@ else
 						<?php echo _('Date') . ':' ?> 
 					</td>
 					<td class='txt'>
-						<?php echo $doc['date'] ?>
+						<?php echo $doc->get_date() ?>
 					</td>
 				</tr>
 				<tr>
@@ -289,14 +291,19 @@ else
 					</td>
 					<td class='txt'>
 					<?php 
-						if($doc['num_atch'] > 0) 
+    					$num_attach = count($doc->get_attach());
+						if($num_attach > 0) 
 						{
 						?>
 
-						(<?php echo $doc['num_atch'] ?>)<a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc['id'] ?>"><img src="/ossim/repository/images/attach.gif" alt="" border="0" align='absmiddle'/></a>
+    						(<?php echo $num_attach ?>)
+                            <a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc->get_id() ?>">
+                                <img src="/ossim/repository/images/attach.gif" alt="" border="0" align='absmiddle'/>
+                            </a>
 			
 						<?php 
-						} else 
+						}
+						 else 
 						{
 							echo '-';
 						}
@@ -321,7 +328,7 @@ else
 		<div id='accordion' style='display:none;padding-top:5px;'>
 			<?php
 			$k = 1;
-			foreach($repository_list as $type=>$repository_type) 
+			foreach($repository_list as $type => $repository_type) 
 			{
 				switch($type) 
 				{
@@ -341,17 +348,17 @@ else
 						$type = _('Unknown');
 				}
 				
-				foreach($repository_type as $repository)
+				foreach($repository_type as $doc)
 				{ 
 				?>
 				
-					<h3><a href='#'><strong><?php echo $repository['title'] ?></strong> [<?php echo $type ?>]</a></h3>
+					<h3><a href='#'><strong><?php echo $doc->get_title() ?></strong> [<?php echo $type ?>]</a></h3>
 					
 					<div>
 					
 						<div class='text_container'>
 						<?php
-							$parser->proccess_file($repository['text']);
+							$parser->proccess_file($doc->get_text(FALSE));
 							
 							echo $parser->print_text();
 						?>
@@ -369,7 +376,9 @@ else
 										<?php echo _('Document') . ':' ?> 
 									</td>
 									<td class='txt'>
-										<a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $repository['id'] ?>"><?php echo $repository['title'] ?></a>
+                                        <a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc->get_id() ?>">
+                                            <?php echo $doc->get_title() ?>
+                                        </a>
 									</td>
 								</tr>
 								<tr>
@@ -377,7 +386,7 @@ else
 										<?php echo _('Visibility') . ':' ?> 
 									</td>
 									<td class='txt'>
-										<?php echo $repository['in_charge'] ?>
+										<?php echo $doc->get_visibility() ?>
 									</td>
 								</tr>
 								<tr>
@@ -385,7 +394,7 @@ else
 										<?php echo _('Date') . ':' ?> 
 									</td>
 									<td class='txt'>
-										<?php echo $repository['date'] ?>
+										<?php echo $doc->get_date() ?>
 									</td>
 								</tr>
 								<tr>
@@ -393,12 +402,16 @@ else
 										<?php echo _('Attachements') . ':' ?>  
 									</td>
 									<td class='txt'>
-									<?php 
-										if($repository['num_atch'] > 0) 
+									<?php
+    									$num_attach = count($doc->get_attach());
+										if($num_attach > 0) 
 										{
 										?>
 										
-											(<?php echo $repository['num_atch'] ?>)<a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $repository['id'] ?>"><img src="/ossim/repository/images/attach.gif" alt="" border="0" align='absmiddle'/></a>
+                                            (<?php echo $num_attach ?>)
+                                            <a class='lbox' href="/ossim/repository/repository_document.php?id_document=<?php echo $doc->get_id() ?>">
+                                                <img src="/ossim/repository/images/attach.gif" alt="" border="0" align='absmiddle'/>
+                                            </a>
 										
 										<?php 
 										} 

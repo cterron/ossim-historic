@@ -89,7 +89,7 @@ class Inventory extends Socket
             $GLOBALS['CONF'] = $conf;
         }        
         
-        $this->address = $conf->get_conf('frameworkd_address');
+        $this->address = '127.0.0.1';
         $this->port    = $conf->get_conf('frameworkd_port');
     }
 
@@ -106,7 +106,7 @@ class Inventory extends Socket
     *
     * @return array      
     */ 
-    public function get_list($conn, $sensor_id = '', $task_type = '', $args= '') 
+    public static function get_list($conn, $sensor_id = '', $task_type = '', $args = '')
     {
         Ossim_db::check_connection($conn);
         
@@ -168,7 +168,7 @@ class Inventory extends Socket
     *
     * @return array      
     */   
-    public function get_object($conn, $id)
+    public static function get_object($conn, $id)
     {
     	Ossim_db::check_connection($conn);
     	
@@ -177,7 +177,8 @@ class Inventory extends Socket
     	$query  = "SELECT *, HEX(task_sensor) as task_sensor FROM task_inventory WHERE task_id = ?";
     	$params = array($id);
     	
-    	if (! $rs = & $conn->Execute ( $query, $params ))
+    	$rs = $conn->Execute ($query, $params);
+    	if (!$rs)
     	{
 			Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
 		}
@@ -255,7 +256,8 @@ class Inventory extends Socket
             $last_id = $rs->fields['id'];
         }     
 
-		self::refresh();		
+		self::refresh();
+
 		return $last_id;     
     }
     
@@ -304,7 +306,8 @@ class Inventory extends Socket
 			Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
 		}
 
-		self::refresh();		
+		self::refresh();
+
 		return TRUE;
     }
     
@@ -334,6 +337,7 @@ class Inventory extends Socket
 		}
 		
 		self::refresh();
+
 		return TRUE;
     }
     

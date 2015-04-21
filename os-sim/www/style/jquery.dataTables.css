@@ -103,6 +103,7 @@ table.dataTable td.left, table.dataTable th.left
 	padding-right: 1px !important;
 	border-top: solid 1px #CCCCCC !important;
 	padding-top: 10px;
+	white-space: nowrap;
 }
 
 .dataTables_wrapper .dt_footer *

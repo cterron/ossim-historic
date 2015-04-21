@@ -121,20 +121,43 @@ if (jQuery) (function ($) {
             
             dropdown.css('min-width', min_w + 'px');
         }
+
         // Position the dropdown relative-to-parent...
-        if (dropdown.hasClass('dropdown-relative')) {
+        if (dropdown.hasClass('dropdown-relative')) 
+        {
             dropdown.css({
                 left: dropdown.hasClass('dropdown-anchor-right') ?
 					trigger.position().left - (dropdown.outerWidth(true) - trigger.outerWidth(true)) - parseInt(trigger.css('margin-right'), 10) + hOffset :
 					trigger.position().left + parseInt(trigger.css('margin-left'), 10) + hOffset,
                 top: trigger.position().top + trigger.outerHeight(true) - parseInt(trigger.css('margin-top'), 10) + vOffset
             });
-        } else {
-            // ...or relative to document
-            dropdown.css({
-                left: dropdown.hasClass('dropdown-anchor-right') ?
-					trigger.offset().left - (dropdown.outerWidth() - trigger.outerWidth()) + hOffset : trigger.offset().left + hOffset,
-                top: trigger.offset().top + trigger.outerHeight() + vOffset
+        } 
+        else // ...or relative to document
+        {
+            var left     = 0
+            var top      = trigger.offset().top + trigger.outerHeight() + vOffset //Getting vertical position
+            var d_height = dropdown.height()
+            
+            //Getting horizontal position
+            if (dropdown.hasClass('dropdown-anchor-right'))
+            {
+                left = trigger.offset().left - (dropdown.outerWidth() - trigger.outerWidth()) + hOffset
+            }
+            else
+            {
+                left = trigger.offset().left + hOffset
+            }
+            
+            //Check the menu is not higher than the window size
+            if ((top + d_height) > $(window).height())
+            {
+                top = trigger.offset().top - vOffset - d_height
+            }
+            
+            dropdown.css(
+            {
+                left: left,
+                top: top
             });
         }
     }

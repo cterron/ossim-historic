@@ -64,7 +64,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
     $data['date']   = ' - ' ;
     $data['data']   = $query_temp['dayCompromiseGlobal'];
         
-    createTable($data, &$htmlPdfReport);
+    createTable($data, $htmlPdfReport);
     
     $htmlPdfReport->set('</table>');    
               
@@ -85,7 +85,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
             $query_temp['dayCompromiseHost'] = $pdf->MetricsNoPDF('day', 'compromise', 'host', $filter, $dates_filter['max_c_date']);
             $data['data'] = $query_temp['dayCompromiseHost'];
             
-            createTable($data, &$htmlPdfReport);
+            createTable($data, $htmlPdfReport);
         }
         $htmlPdfReport->set('</table>');
     }  
@@ -106,7 +106,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
             $query_temp['dayCompromiseNet'] = $pdf->MetricsNoPDF('day', 'compromise', 'net', $filter, $dates_filter['max_c_date']);
             $data['data'] = $query_temp['dayCompromiseNet'];			
             
-            createTable($data, &$htmlPdfReport);
+            createTable($data, $htmlPdfReport);
         }
         
         $htmlPdfReport->set('</table>');
@@ -133,7 +133,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
     $data['date']   = ' - ' ;
     $data['data']   = $query_temp['dayAttackGlobal'];
     
-    createTable($data, &$htmlPdfReport);
+    createTable($data, $htmlPdfReport);
         
     $htmlPdfReport->set('</table>');
     
@@ -154,7 +154,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
             $query_temp['dayAttackHost'] = $pdf->MetricsNoPDF('day', 'attack', 'host', $filter, $dates_filter['max_a_date']);
             $data['data'] = $query_temp['dayAttackHost'];
             
-            createTable($data, &$htmlPdfReport);
+            createTable($data, $htmlPdfReport);
         }
         
         $htmlPdfReport->set('</table>');
@@ -175,7 +175,7 @@ if (Session::menu_perms('dashboard-menu', 'ControlPanelMetrics'))
             $query_temp['dayAttackNet'] = $pdf->MetricsNoPDF('day', 'attack', 'net', $filter, $dates_filter['max_a_date']);
             $data['data'] = $query_temp['dayAttackNet'];
             
-            createTable($data, &$htmlPdfReport);
+            createTable($data, $htmlPdfReport);
         }
     	
     	    $htmlPdfReport->set('</table>');

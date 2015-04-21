@@ -52,6 +52,10 @@ def set_sensor_detectors (system_ip, plugins):
     @param Comma separate list of detector plugins to activate. Must exists in the machine
     @return A tuple (sucess|error, data|msgerror)
     """
+    # Need to flush namespace "system" as alienvault_config is cached in that namespace and
+    # is used to show the active plugins, so we flush it to refresh the active plugins
+    flush_cache(namespace="system")
+
     response = ansible.run_module(host_list=[system_ip],
                                   module="av_config",
                                   args="sensor_detectors=%s op=set" % plugins)

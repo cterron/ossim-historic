@@ -37,7 +37,6 @@ use warnings;
 
 use Perl6::Slurp;
 
-use AV::uuid;
 use AV::ConfigParser;
 
 use AV::Gel;

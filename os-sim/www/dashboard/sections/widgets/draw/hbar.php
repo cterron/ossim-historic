@@ -63,6 +63,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
     $_files = array(
         array('src' => 'jqplot/jquery-1.4.2.min.js',                            'def_path' => TRUE),
         array('src' => 'jqplot/jquery.jqplot.min.js',                           'def_path' => TRUE),
+        array('src' => '/dashboard/js/widget.js.php',                           'def_path' => FALSE),
         array('src' => 'jqplot/plugins/jqplot.barRenderer.js',                  'def_path' => TRUE),
         array('src' => 'jqplot/plugins/jqplot.categoryAxisRenderer.min.js',     'def_path' => TRUE),
         array('src' => 'jqplot/plugins/jqplot.pointLabels.min.js',              'def_path' => TRUE),
@@ -112,25 +113,39 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 				
 		function myMoveHandler(ev, gridpos, datapos, neighbor, plot) 
 		{
-			if (neighbor == null) 
-			{
-				$('#myToolTip').hide().empty();
-				
-				isShowing = -1;
-			}
-
 			if (neighbor != null) 
 			{
 				if (neighbor.pointIndex!=isShowing) 
 				{
-					var class_name = $('#chart').attr('class');
-					var k = (class_name.match('bar')) ? 1 : 0;
-																							
-					$('#myToolTip').html(neighbor.data[k]).css({left:gridpos.x, top:gridpos.y-5}).show();
+    				isShowing = neighbor.pointIndex
+    				
+    				try
+                    {
+                        var index   = neighbor.data[1] - 1;
+                        var tooltip = plot.axes.yaxis.ticks[index];
+                        
+                        tooltip += '<br/>';
+                        tooltip +=  '<strong>(' + format_dot_number(neighbor.data[0]) +  ')</strong>';
+                    }
+                    catch(Err)
+                    {
+                        var tooltip = '';
+                    }
+                    
+    				jqplot_show_tooltip($('#myToolTip'), tooltip, ev, plot);
 					
-					isShowing = neighbor.pointIndex
 				}
 			}
+			else
+			{
+    			myLeaveHandler()
+			}
+		}
+		
+		function myLeaveHandler()
+		{
+    		$('#myToolTip').hide().empty();
+            isShowing = -1;
 		}
 						
 		$(document).ready(function()
@@ -207,6 +222,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 			
 
 			$('#chart').append('<div id="myToolTip"></div>');
+			$('#chart').mouseleave(myLeaveHandler);
 				
 		});
 		

@@ -62,50 +62,6 @@ $_SESSION['av_inventory_type'] = $s_type;
 	<link rel="stylesheet" type="text/css" href="../style/jquery-ui-1.7.custom.css"/>
 	<link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>	
 	<link rel="stylesheet" type="text/css" href="../style/flexigrid.css"/>
-	<style type='text/css'>
-		
-		body 
-		{ 
-			margin: 0px;
-		}
-		
-		#headerh1
-		{
-			width:100%;
-			
-			height:1px;
-		}
-		
-		#container
-		{
-    		position:relative;
-    		margin:10px auto;
-		}
-		
-		#flextable
-		{
-			display:none;
-		}		
-	
-		table, th, tr, td 
-		{
-			background:transparent;			
-			border:none;
-			padding:0px; 
-			margin:0px;
-		}
-		
-		input, select 
-		{			
-			border: 1px solid #8F8FC6;
-			font-size:12px; 
-			font-family:arial; 
-			vertical-align:middle;
-			padding:0px; 
-			margin:0px;
-		}
-	</style>
-	
 	
 	<script type="text/javascript">
 	
@@ -156,6 +112,11 @@ $_SESSION['av_inventory_type'] = $s_type;
 									notify(msg_text, msg_type);
 									
 									$("#flextable").flexReload();
+
+									if (msg.status == 'OK')
+									{
+									    $('#button_apply').show();
+									}
 								}
 							}
 						});
@@ -181,13 +142,6 @@ $_SESSION['av_inventory_type'] = $s_type;
 			{
 				document.location.href = 'task_edit.php?s_type=<?php echo $s_type?>';
 			}
-			else if (com == '<?php echo _('Apply')?>') 
-			{
-				<?php $back = preg_replace ('/&msg\=(\w+)/', '', $_SERVER["REQUEST_URI"]);?>
-				
-				document.location.href = '../conf/reload.php?what=tasks&back=<?php echo urlencode($back); ?>';
-			}
-			
 		}
 	
 		function linked_to(rowid) 
@@ -254,6 +208,11 @@ $_SESSION['av_inventory_type'] = $s_type;
 									notify(msg_text, msg_type);
 									
 									$("#flextable").flexReload();
+
+									if (msg.status == 'OK')
+									{
+									    $('#button_apply').show();
+									}
 								}
 							}
 						});
@@ -301,6 +260,21 @@ $_SESSION['av_inventory_type'] = $s_type;
 			<?php 
 		} 	
 		?>
+
+		//Apply
+        $('#button_apply').on('click', function()
+        {
+            <?php $back_url = preg_replace ('/([&|\?]msg\=)(\w+)/', '\\1', $_SERVER["REQUEST_URI"]);?>
+            document.location.href = '/ossim/conf/reload.php?what=tasks&back=<?php echo $back_url ?>';
+        });
+		<?php
+        if (Web_indicator::is_on("Reload_tasks"))
+        {
+        ?>
+        $('#button_apply').show();
+        <?php
+		}
+	    ?>
 
 		$("#flextable").flexigrid({
 			url: 'get_tasks.php?s_type=<?php echo $s_type ?>',
@@ -398,7 +372,10 @@ $_SESSION['av_inventory_type'] = $s_type;
             </li>
         </ul>
             
-    	<table id="flextable"></table>    	
+    	<table id="flextable"></table>
+    	
+    <button class='button' id='button_apply'><?php echo _("Apply Changes") ?></button>
+    	   	
     </div>
 </body>
 </html>

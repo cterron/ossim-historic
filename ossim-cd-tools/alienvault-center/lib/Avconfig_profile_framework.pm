@@ -332,6 +332,10 @@ sub configure_adjusting_permissions(){
     system("find /etc/ossim/server -type f -exec chmod -v 0664 {} \\;");
     system("find /etc/ossim/server -type d -exec chmod -v 0775 {} \\;");
 
+    # Do not allow to read server configuration file to "others"
+    system("chown root:alienvault /etc/ossim/server/config.xml");
+    system("chmod o-rwx /etc/ossim/server/config.xml");
+
     system(
         "[ -e /tmp/default_filter.cache ] && chown -R www-data:${avgroup} /tmp/default_filter.cache || touch /tmp/default_filter.cache ; chown -R www-data:${avgroup} /tmp/default_filter.cache"
     );
@@ -1172,6 +1176,8 @@ NameVirtualHost *:80
                 Allow from all
         </Directory>
 
+        FileETag MTime
+
         LogLevel warn
         CustomLog /var/log/apache2/access.log combined
         ErrorLog /var/log/apache2/error.log
@@ -1184,7 +1190,7 @@ NameVirtualHost *:80
 	$SSLCertificateFiles
 
         # Disable Weak Ciphers
-        SSLProtocol -All +SSLv3 +TLSv1
+        SSLProtocol All -SSLv2 -SSLv3
         SSLCipherSuite HIGH:!SSLv2:!ADH:!aNULL:!eNULL:!NULL
 
         <FilesMatch "\\.(cgi|shtml|phtml|php)\$">
@@ -1516,12 +1522,11 @@ sub configure_add_framework_host_in_db(){
 
 
 			}else{
-				my $nentry
-                = `echo "SELECT count(*) FROM alienvault.host WHERE hostname = \'$config{'hostname'}\';" | ossim-db | grep -v count`; $nentry =~ s/\n//;
+				my $nentry = `echo "SELECT count(*) FROM alienvault.host WHERE hostname = \'$config{'hostname'}\';" | ossim-db | grep -v count`; $nentry =~ s/\n//;
 
 				debug_log("nentry: $nentry");
 
-				if ( $nentry == "0" ) {
+                if ( $nentry eq "0" && $profile_sensor == 0) {
                     verbose_log("Framework Profile: Inserting into host, host_ip");
                     my $command
                         = "echo \"SET \@uuid\:= UNHEX(REPLACE(UUID(),'-','')); INSERT IGNORE INTO alienvault.host (id,ctx,hostname,asset,threshold_c,threshold_a,alert,persistence,nat,rrd_profile,descr,lat,lon,av_component) VALUES (\@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),\'$server_hostname\',\'2\',\'30\',\'30\',\'0\',\'0\',\'\',\'\',\'\',\'0\',\'0\',1); INSERT IGNORE INTO alienvault.host_ip (host_id,ip) VALUES (\@uuid,inet6_pton(\'$config{'admin_ip'}\'));\" | ossim-db $stdout $stderr ";

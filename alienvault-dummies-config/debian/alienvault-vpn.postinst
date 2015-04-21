@@ -70,7 +70,7 @@ case "$1" in
         for trigger in $2
         do
             case "$trigger" in
-                alienvault-config-vpn-vpn-infraestructure)
+                alienvault-config-vpn-vpn-infraestructure|alienvault-config-vpn-vpn-port)
                     configure_firewall
                     ;;
                 *)

@@ -71,49 +71,56 @@ class Log_action
      * @var string
      */
     private $login;
-    
+
+
     /**
      * From
      * 
      * @var number
      */
     private $from;
-    
+
+
     /**
      * Date
      * 
      * @var string
      */
     private $date;
-    
+
+
     /**
      * Code
      * 
      * @var number
      */
     private $code;
-    
+
+
     /**
      * Info
      * 
      * @var string
      */
     private $info;
-    
+
+
     /**
      * Description
      * 
      * @var string
      */
     private $descr;
-    
+
+
     /**
      * Priority
      * 
      * @var number
      */
     private $priority;
-    
+
+
     /**
      * This function sets up the class object
      * 
@@ -135,7 +142,8 @@ class Log_action
         $this->descr    = $descr;
         $this->priority = $priority;
     }
-    
+
+
     /**
      * This function returns the login
      * 
@@ -145,7 +153,8 @@ class Log_action
     {
         return $this->login;
     }
-    
+
+
     /**
      * This function returns the from
      * 
@@ -155,7 +164,8 @@ class Log_action
     {
         return $this->from;
     }
-    
+
+
     /**
      * This function returns the date
      * 
@@ -165,7 +175,8 @@ class Log_action
     {
         return $this->date;
     }
-    
+
+
     /**
      * This function returns the code
      * 
@@ -175,7 +186,8 @@ class Log_action
     {
         return $this->code;
     }
-    
+
+
     /**
      * This function returns the info
      * 
@@ -185,7 +197,8 @@ class Log_action
     {
         return $this->info;
     }
-    
+
+
     /**
      * This function returns the description
      * 
@@ -195,7 +208,8 @@ class Log_action
     {
         return $this->descr;
     }
-    
+
+
     /**
      * This function returns the priority
      * 
@@ -205,7 +219,8 @@ class Log_action
     {
         return $this->priority;
     }
-    
+
+
     /**
      * This function inserts a row into log_action table and a new line in syslog file
      * 
@@ -250,6 +265,7 @@ class Log_action
         }
         
         $info = Log_action::get_loginfo($conn, $log_code);
+        
         $info = Log_action::log_action_replace($info, $extrainfo);
         $log_syslog = $conf->get_conf("log_syslog");
         
@@ -276,7 +292,8 @@ class Log_action
         
         return TRUE;
     }
-    
+
+
     /**
      * This function returns the log number for an action into database
      * 
@@ -305,7 +322,8 @@ class Log_action
             return (intval($rs->fields['log']));
         }
     }
-    
+
+
     /**
      * This function returns the client IP address
      * 
@@ -320,7 +338,8 @@ class Log_action
         
         return $_SERVER['REMOTE_ADDR'];
     }
-    
+
+
     /**
      * This function returns the list of actions
      * 
@@ -361,7 +380,8 @@ class Log_action
         
         return $list;
     }
-    
+
+
     /**
      * This function returns the last password by user
      * 
@@ -401,7 +421,8 @@ class Log_action
 		
         return $list;
     }
-    
+
+
     /**
      * This function returns the number of log actions
      * 
@@ -425,7 +446,8 @@ class Log_action
         
         return $rs->fields["count"];
     }
-    
+
+
     /**
      * This function replaces the variables into the log message string
      * 
@@ -448,7 +470,8 @@ class Log_action
         
         return $infostr;
     }
-    
+
+
     /**
      * This function returns the description of a log entry
      * 
@@ -474,7 +497,8 @@ class Log_action
         
         return $rs->fields["descr"];
     }
-    
+
+
     /**
      * This function deletes a log action entry by date and info
      * 
@@ -498,7 +522,8 @@ class Log_action
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
     }
-    
+
+
     /**
      * This function deletes a log entry by user and code
      * 

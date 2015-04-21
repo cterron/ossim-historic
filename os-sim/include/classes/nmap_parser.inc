@@ -80,6 +80,7 @@ class Nmap_parser
     */
     private $result;
 
+
     /**
     * The class constructor
     *
@@ -91,6 +92,7 @@ class Nmap_parser
         ;
     }
     
+
 
     /**
     * This function extracts useful information from Nmap xml
@@ -269,7 +271,11 @@ class Nmap_parser
                         if (valid_fqdns($fqdn) == TRUE) 
                         {
                             $this->result['scanned_ips'][$asset_key]['fqdn'] = $fqdn;
-                        }            
+                        }
+                        else
+                        {
+                            ossim_clean_error();
+                        }
                     }
                 }
                 

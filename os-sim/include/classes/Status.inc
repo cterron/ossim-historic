@@ -58,7 +58,7 @@ class Status
 	}
 	
 	
-    function get_siem_ctx_filter($ctx = '') 
+    public static function get_siem_ctx_filter($ctx = '')
     {
         $where    = '';
         $ctx_list = '';
@@ -183,7 +183,7 @@ class Status
 	}    
 	
 	
-	function get_siem_resume ($ip_src = '', $ip_dst = '', $date_from = '', $date_to = '', $ctx = '', $src_host = '', $dst_host = '',$src_net = '', $dst_net = '') 
+	public static function get_siem_resume ($ip_src = '', $ip_dst = '', $date_from = '', $date_to = '', $ctx = '', $src_host = '', $dst_host = '',$src_net = '', $dst_net = '')
 	{        		
 		$dbsock = new ossim_db();
 		$db     = $dbsock->snort_connect();
@@ -259,7 +259,7 @@ class Status
 	}
 	
 	
-	function get_siem_clouds ($ip_src = '', $ip_dst = '', $date_range = NULL, $ctx = '',$src_host = '', $dst_host = '', $src_net = '', $dst_net = '') 
+	public static function get_siem_clouds ($ip_src = '', $ip_dst = '', $date_range = NULL, $ctx = '',$src_host = '', $dst_host = '', $src_net = '', $dst_net = '')
 	{				
 		$dbsock = new ossim_db();
 		$db     = $dbsock->snort_connect();
@@ -350,7 +350,7 @@ class Status
 	}
 	
 	
-	function get_unknown_sid_name($db, $plugin_id, $plugin_sid) 
+	static function get_unknown_sid_name($db, $plugin_id, $plugin_sid)
 	{
 		$plugin_name = '';
 		
@@ -378,7 +378,7 @@ class Status
 	}
 	
 	
-	function get_siem_unique ($ip_src, $ip_dst, $date_from = '',$date_to = '',$limit = 5, $ctx = '',$host_src = '',$host_dst = '',$net_src = '',$net_dst = '')
+	public static  function get_siem_unique ($ip_src, $ip_dst, $date_from = '',$date_to = '',$limit = 5, $ctx = '',$host_src = '',$host_dst = '',$net_src = '',$net_dst = '')
 	{		
 		$dbsock = new ossim_db();
 		$db     = $dbsock->snort_connect();
@@ -498,11 +498,11 @@ class Status
 	}
 	
 	
-	function get_siem_plot($ip_src = '',$ip_dst = '',$date_from = '',$date_to = '',$ctx='',$host_src = '',$host_dst = '',$net_src = '',$net_dst = '') 
+	public static function get_siem_plot($ip_src = '',$ip_dst = '',$date_from = '',$date_to = '',$ctx='',$host_src = '',$host_dst = '',$net_src = '',$net_dst = '')
 	{		
 		$dbsock = new ossim_db();
 		$db     = $dbsock->snort_connect();
-		
+
 		if($date_from != '' && $date_to != '')
 		{
 			$date_from  = $date_range['date_from']  = ( preg_match("/^\d+\-\d+\-\d+$/",$date_from) ) ?  $date_from." 00:00:00" : $date_from;
@@ -614,7 +614,7 @@ class Status
 	}	
       
 	
-	function get_vul_events($conn, $host, $date_from = '', $date_to = '', $truncate = 1, $ctx = '') 
+	public static function get_vul_events($conn, $host, $date_from = '', $date_to = '', $truncate = 1, $ctx = '')
 	{		
 		if( $host != 'any' && $host != '' )
 		{
@@ -705,8 +705,9 @@ class Status
 		$risks["-"] = 0;
         $foundrows  = 0;
         
+        $rs = $conn->Execute($sql);
 
-		if (!$rs = & $conn->Execute($sql)) 
+		if (!$rs) 
 		{
             print $conn->ErrorMsg();
         }

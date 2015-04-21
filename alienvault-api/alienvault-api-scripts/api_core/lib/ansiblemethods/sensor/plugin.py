@@ -29,7 +29,9 @@
 #
 
 import api_log
+import re
 from ansiblemethods.ansiblemanager import Ansible
+from ansiblemethods.helper import ansible_is_valid_response
 
 ansible = Ansible()
 
@@ -148,4 +150,107 @@ def get_all_available_plugins(system_ip, only_detectors=False):
                 plugin_list.append(value['pname'])
             except Exception:
                 pass
-    return (True, plugin_list)
+    return (True, list(set(plugin_list)))
+
+def get_plugin_package_version(system_ip):
+    """
+        Return the current version of package alienvault-plugin-sids in the system
+    """
+    command = """dpkg -s alienvault-plugin-sids | grep 'Version' | awk {'print $2'}"""
+    response = ansible.run_module(host_list=[system_ip], module="shell", args=command)
+    if system_ip in response['contacted']:
+        version = response['contacted'][system_ip]['stdout'].split('\n')[0] # Only first line
+        result = (True, version)
+    else:
+        result = (False, str(response['dark'][system_ip]))
+    return result
+
+
+def get_plugin_package_info(system_ip):
+    """
+        If exists, return the md5sum of INSTALLED VERSION of package alienvault-plugin-sid
+        IMPORTANT NOTE: The file must be called alienvault-plugin_<version>_all.deb
+    """
+    (success, version) = get_plugin_package_version(system_ip)
+    if success:
+        command = """md5sum /var/cache/apt/archives/alienvault-plugin-sids_%s_all.deb|awk {'print $1'}""" % version
+        response = ansible.run_module(host_list=[system_ip], module="shell", args=command)
+        if system_ip in response['contacted']:
+            if response['contacted'][system_ip]['rc'] == 0:
+                md5 = response['contacted'][system_ip]['stdout'].split('\n')[0] # Only first line
+            else:
+                api_log.warning("Can't obtanin md5 for alienvault-plugin-sids")
+                md5 = ''
+            result = (True,{'version':version, 'md5':md5})
+        else:
+            result = (False, str(response['dark'][system_ip]))
+    else:
+        result = (False, "Can't obtain package version")
+    return result
+
+
+def ansible_check_plugin_integrity(system_ip):
+    """
+    Check if installed agent plugins and agent rsyslog files have been modified or removed locally
+    :param system_ip: System IP
+
+    :return: JSON with all integrity checks
+
+    """
+    rc = True
+    output = {}
+
+    try:
+        
+        #alienvault-doctor -l agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg --output-type=ansible        
+        doctor_args = {}
+        doctor_args['plugin_list'] = 'agent_rsyslog_conf_integrity.plg,agent_plugins_integrity.plg'
+        doctor_args['output_type'] = 'ansible'
+         
+        response = ansible.run_module(host_list=[system_ip], module="av_doctor", args=doctor_args)
+        
+        success, msg = ansible_is_valid_response(system_ip, response)
+
+        if not success:
+            return False, msg
+                           
+        data = response['contacted'][system_ip]
+        if data['rc'] != 0:
+            return False, data['stderr']
+            
+        #Parse ouptut        
+        pattern = re.compile('failed for \"(?P<plugin_name>[^\s]+)\"')        
+                
+        output = {
+            'command' : data['cmd'],
+            'rsyslog_integrity_check_passed' : True,
+            'rsyslog_files_modified' : [],          
+            'all_rsyslog_files_installed' : True,
+            'rsyslog_files_removed' : [],
+            'plugins_integrity_check_passed' : True,
+            'plugins_modified' : [],
+            'all_plugins_installed' : True,
+            'plugins_removed' : []
+        }
+                        
+        if data['data'][0]['checks']['Default agent rsyslog files integrity']['result'] == False:
+            output['rsyslog_integrity_check_passed'] = False
+            output['rsyslog_files_changed'] = pattern.findall(data['data'][0]['checks']['Default agent rsyslog files integrity']['detail'])
+            
+        if data['data'][0]['checks']['Default agent rsyslog files installed']['result'] == False:
+            output['all_rsyslog_files_installed'] = False
+            output['rsyslog_files_removed']  = pattern.findall(data['data'][0]['checks']['Default agent rsyslog files installed']['detail'])        
+        
+        if data['data'][1]['checks']['Default agent plugins integrity']['result'] == False:
+            output['plugins_integrity_check_passed'] = False
+            output['plugins_changed'] = pattern.findall(data['data'][1]['checks']['Default agent plugins integrity']['detail'])
+            
+        if data['data'][1]['checks']['Default agent plugins installed']['result'] == False:
+            output['all_plugins_installed'] = False
+            output['plugins_removed'] = pattern.findall(data['data'][1]['checks']['Default agent plugins installed']['detail'])
+ 
+    except Exception, e:
+        response = "Error checking agent plugins and agent rsyslog files integrity: %s" % str(e)
+        rc = False
+
+    return rc, output

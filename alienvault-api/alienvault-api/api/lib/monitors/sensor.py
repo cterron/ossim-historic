@@ -31,9 +31,11 @@ from api.lib.monitors.monitor import Monitor, MonitorTypes, ComponentTypes
 #from api.lib.messages import *
 #from ansiblemethods.system.system import get_service_status
 from ansiblemethods.sensor.network import get_pfring_stats
+from apimethods.sensor.plugin import get_plugin_package_info_from_sensor_id, get_plugin_package_info_local, check_plugin_integrity
+from apimethods.utils import compare_dpkg_version
 
 #from db.methods.data import get_snort_suricata_events_in_the_last_24_hours
-from db.methods.system import get_systems
+from db.methods.system import get_systems,get_sensor_id_from_system_id
 from apimethods.utils import get_uuid_string_from_bytes
 import celery.utils.log
 logger = celery.utils.log.get_logger("celery")
@@ -304,5 +306,91 @@ class MonitorSensorDroppedPackages(Monitor):
 
         return rt
 
+class MonitorPluginsVersion(Monitor):
+    """
+        Contact with each sensor, download the alienvault-plugins packages, compare
+        version with the local alienvault-plugins-sid package and store data in
+        monitor data
+    """
+    def __init__ (self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_PLUGINS_VERSION)
+        self.message = 'Sensor Plugin Monitor info started'
+        
+    def start(self):
+        """
+            Start monitor
+        """
+        rt = True
+        try:
+            self.remove_monitor_data()
+            logger.info("Monitor %s Working..." % self.monitor_id)
+            rc, sensor_list = get_systems(system_type="Sensor")
+            (success, version) = get_plugin_package_info_local()
+            if not success:
+                raise Exception(str(version))
+            (success, local_version) = get_plugin_package_info_local()
+            for (system_id, _) in sensor_list:
+                (success, sensor_id) = get_sensor_id_from_system_id(system_id)
+                #logger.info("INFO => " + str(sensor_id))
+                if success:
+                    if sensor_id == '':
+                        logger.warning("Sensor (%s) ID not found" % sensor_id)
+                        continue
+                    (success, info) = get_plugin_package_info_from_sensor_id(sensor_id)
+                    if success:
+                        if  info['version'] != '':
+                            data_sensor = {'version': info['version'], 'md5': info['md5'], 'comparison':compare_dpkg_version(info['version'], local_version['version'])}
+                        else:
+                            data_sensor = {'version': info['version'], 'md5': info['md5'], 'comparison':''}
+                        if not self.save_data(sensor_id,  ComponentTypes.SENSOR, self.get_json_message(data_sensor)):
+                            logger.error("Can't save monitor info for sensor '%s'" % sensor_id)
+                    else:
+                        logger.warning ("Can't obtain plugin version for sensor '%s'", sensor_id)
+                else:
+                        logger.warning ("Can't obtain sensor_id for system_id '%s'", system_id)
+                
+        except Exception, e:
+            logger.error("Something wrong happen while running the monitor..%s, %s" % (self.get_monitor_id(),
+                    str(e)))
+            rt = False
+        return rt
 
 
+
+class MonitorPluginIntegrity(Monitor):
+    """ 
+        Check if installed sensor plugins and sensor rsyslog files have been modified or removed locally
+    """
+    def __init__(self):
+        Monitor.__init__(self, MonitorTypes.MONITOR_PLUGINS_CHECK_INTEGRITY)
+        self.message = 'Plugin Integrity Monitor started'
+
+    def start(self):
+        """ Starts the monitor activity
+        """
+        #Remove the previous monitor data.
+        self.remove_monitor_data()
+
+        # Iterate over the sensors.
+        result, systems = get_systems(system_type="Sensor")
+
+        if not result:
+            logger.error("Can't retrieve the system info: %s" % str(systems))
+            return False
+
+        for (system_id, system_ip) in systems:
+            (success, info) = check_plugin_integrity(system_id)
+
+            if success:
+                try:
+                    #Create the JSON data to store the monitor info
+                    monitor_data = info
+
+                    #Save the data to the monitor_data table
+                    self.save_data(system_id, ComponentTypes.SENSOR, self.get_json_message(monitor_data))
+                except Exception as e:
+                    logger.error("[MonitorPluginIntegrity] Error: %s" % str(e))
+            else:
+                logger.error ("Can't obtain integrity plugin information for system '%s'", system_id)
+
+        return True

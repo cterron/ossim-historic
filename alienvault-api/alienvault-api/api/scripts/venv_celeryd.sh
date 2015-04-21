@@ -2,10 +2,33 @@
 
 VIRTUALENV="/usr/share/alienvault/api_core"
 CELERYD="/usr/share/alienvault/api/scripts/celeryd"
-PIDFILE="/var/run/alienvault/celeryd.pid"
+RUNDIR="/var/run"
+PIDDIR="$RUNDIR/alienvault"
+PIDFILE="$PIDDIR/celeryd.pid"
 
 do_start ()
 {
+    # Check if /var/run is a symbolic link to determine the Debian configuration
+    if [ -h $RUNDIR ]; then
+       # Wheezy
+       mount | grep "/run type"
+       if [ "$?" != "1" ]; then
+          if [ ! -d $PIDDIR ]; then
+             mkdir -p -m 0770 "$PIDDIR"
+             chgrp -R alienvault "$PIDDIR"
+          fi
+       else
+          log_daemon_msg "ERROR: /run is not mounted yet. The system is not stable. Skipping"
+          exit 1
+       fi
+    else
+       # Squeeze
+       if [ ! -d $PIDDIR ]; then
+          mkdir -p -m 0770 "$PIDDIR"
+          chgrp -R alienvault "$PIDDIR"
+       fi
+    fi
+
     $CELERYD start > /dev/null 2>&1
     if [ $? != 0 ]; then
         ps ax | grep 'celeryd' | grep -v grep > /dev/null

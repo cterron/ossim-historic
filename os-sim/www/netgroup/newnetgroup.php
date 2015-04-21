@@ -38,7 +38,7 @@ Session::logcheck("environment-menu", "PolicyNetworks");
 
 $validate = array (
 	'ngname'      => array('validation'=>'OSS_NOECHARS, OSS_ALPHA, OSS_PUNC',      'e_message' => 'illegal:' . _('Group Name')),
-	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_AT, OSS_TEXT',         'e_message' => 'illegal:' . _('Description')),
+	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_ALL',                  'e_message' => 'illegal:' . _('Description')),
 	'ctx'    	  => array('validation'=>'OSS_HEX',                                'e_message' => 'illegal:' . _('Entity')),
 	'nets[]'      => array('validation'=>'OSS_ALPHA',                              'e_message' => 'illegal:' . _('Networks')),
 	'rrd_profile' => array('validation'=>'OSS_ALPHA, OSS_NULLABLE, OSS_PUNC',      'e_message' => 'illegal:' . _('RRD Profile')),

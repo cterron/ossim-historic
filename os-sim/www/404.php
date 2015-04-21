@@ -179,7 +179,7 @@ $logo   = "ossim".$logo_type.'.png';
                         </div>                            
                         <hr>						
                         <p class='p_help'>
-                        <?php echo _("If you need help, send a email to")?> <a href='mailto:support@alienvault.com'><?php echo _("Alienvault Support")?></a>  
+                        <?php echo _("If you need help, send a email to")?> <a href='mailto:support@alienvault.com'><?php echo _("AlienVault Support")?></a>  
                         <?php echo _("or visit")?> <a href="http://forums.alienvault.com/" target='_blank'><?php echo _("AlienVault OSSIM Forums")?></a>
                         </p>
                     </td>		

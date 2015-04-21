@@ -78,7 +78,7 @@ if (!$conf)
 }
 
 /* Get the port and IP address of the server */
-$address = $conf->get_conf('server_address');
+$address = '127.0.0.1';
 $port    = $conf->get_conf('server_port');
 
 
@@ -113,8 +113,6 @@ if (strncmp($out, 'ok id="1"', 9) != 0)
     {
         Web_indicator::set_off('Reload_policies');
         Web_indicator::set_off('Reload_sensors');
-        Web_indicator::set_off('Reload_plugins');
-        Web_indicator::set_off('Reload_directives');
         Web_indicator::set_off('Reload_servers');
     }
     else
@@ -122,17 +120,44 @@ if (strncmp($out, 'ok id="1"', 9) != 0)
         Web_indicator::set_off('Reload_' . $what);
     }
     
+    // ReloadPolicy key deprecated, now using Reload_policies always
     // Reset main indicator if no more policy reload need
+    /*
     if (!Web_indicator::is_on('Reload_policies') && !Web_indicator::is_on('Reload_sensors') && !Web_indicator::is_on('Reload_plugins') && !Web_indicator::is_on('Reload_directives') && !Web_indicator::is_on('Reload_servers')) {
         Web_indicator::set_off('ReloadPolicy');
     }
+    */
     
     $error  = sprintf(_("Unable to connect to %s server. Please, wait until it's available again or check if it's running at %s"), Session::is_pro() ? "USM" : "OSSIM", "$address:$port");
     echo ossim_error($error);
     exit();
 }
 
-if ($what != 'tasks') 
+// ********** Reload action: 3 modes ***********
+// Note: Since 01/09/2014 the Directive_editor::reload_directives() is unified here
+//       And reload_plugins does the same action (ossim-server restart)
+
+// 1-. Frameworkd socket mode
+if($what == 'tasks')
+{
+    try
+    {
+        $frcon = new Frameworkd_socket();
+        $frcon->write("control action=\"refresh_inventory_task\"\n");
+    }
+    catch(Exception $e)
+    {
+        $error = _('An error occurred while updating Agent cache...');
+        echo ossim_error($error);
+    }
+}
+// 2-. Server daemon hard restart mode
+elseif ($what == 'directives' || $what == 'plugins')
+{
+    exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+}
+// 3-. Server socket mode
+else
 {
     $in  = 'reload-' . $what . ' id="2"' . "\n";
     $out = '';
@@ -156,8 +181,6 @@ if ($what == 'all')
 {
     Web_indicator::set_off('Reload_policies');
     Web_indicator::set_off('Reload_sensors');
-    Web_indicator::set_off('Reload_plugins');
-    Web_indicator::set_off('Reload_directives');
     Web_indicator::set_off('Reload_servers');
 } 
 else
@@ -165,26 +188,14 @@ else
     Web_indicator::set_off('Reload_' . $what);
 }
 
+// ReloadPolicy key deprecated, now using Reload_policies always
 // Reset main indicator if no more policy reload need
+/*
 if (!Web_indicator::is_on('Reload_policies') && !Web_indicator::is_on('Reload_sensors') && !Web_indicator::is_on('Reload_plugins') 
     && !Web_indicator::is_on('Reload_directives') && !Web_indicator::is_on('Reload_servers')) {
     Web_indicator::set_off('ReloadPolicy');
 }
-
-
-if($what == 'tasks') 
-{    
-    try
-    {
-        $frcon = new Frameworkd_socket();
-        $frcon->write("control action=\"refresh_inventory_task\"\n");
-    }
-    catch(Exception $e)
-    {
-        $error = _('An error occurred while updating Agent cache...');
-        echo ossim_error($error);
-    }
-}
+*/
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

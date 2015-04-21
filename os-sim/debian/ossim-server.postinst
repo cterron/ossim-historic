@@ -42,8 +42,15 @@ configure_db(){
 
 configure_reputation_data(){
     REPUTATION_DATA_FILE="/etc/ossim/server/reputation.data"
+    REPUTATION_DATA_STATS_FILE="/etc/ossim/server/reputation.data.stats"
+
+    [ -f "$REPUTATION_DATA_FILE" ] || touch "$REPUTATION_DATA_FILE"
     chgrp alienvault "$REPUTATION_DATA_FILE"
     chmod g+w "$REPUTATION_DATA_FILE"
+
+    [ -f "$REPUTATION_DATA_STATS_FILE" ] || touch "$REPUTATION_DATA_STATS_FILE"
+    chgrp alienvault "$REPUTATION_DATA_STATS_FILE"
+    chmod g+w "$REPUTATION_DATA_STATS_FILE"
 }
 
 case "$1" in

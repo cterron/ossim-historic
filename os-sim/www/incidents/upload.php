@@ -56,42 +56,40 @@ if ( ossim_error() )
 	
 $ticket_id = $conn->GetOne('SELECT max(id)+1 FROM incident_ticket');
 
-if(isset($_FILES['inline_upload_file']) && !empty($_FILES['inline_upload_file']['name'])){
-
+if(isset($_FILES['inline_upload_file']) && !empty($_FILES['inline_upload_file']['name']))
+{
 	$image_val = getimagesize($_FILES['inline_upload_file']['tmp_name']);
-	if(!empty($image_val)){
-
-		if(filesize($_FILES['inline_upload_file']['tmp_name']) < 250000){
-
+	
+	if(!empty($image_val))
+	{
+		if(filesize($_FILES['inline_upload_file']['tmp_name']) < 512000)
+		{
 			$name        = time();
 			$name        = "Incident-$id-$ticket_id-$name" . str_replace("image/", ".", $image_val['mime']);
 			$upload_path = "../uploads/$name";
 										
 			if (move_uploaded_file($_FILES['inline_upload_file']['tmp_name'], $upload_path))
 			{
-			  
-			  $response['status'] = 'success';
-			  $response['src'] = "/ossim/uploads/$name";
-
+                $response['status'] = 'success';
+                $response['src'] = "/ossim/uploads/$name";
 			}
 			else
 			{
-			  $response['status'] = 'error';
-			  $response['msg'] = $_FILES['inline_upload_file']['error'];
+                $response['status'] = 'error';
+                $response['msg'] = $_FILES['inline_upload_file']['error'];
 			}
 
-			
-		} else {
-
+		} 
+		else 
+		{
 			$response['status'] = 'error';
-			$response['msg']    =  _("Invalid Size of Image.");
+			$response['msg']    =  _("Invalid Image Size. Maximum size allowed is 500 Kb");
 		}
-		
-	} else {
-
+	} 
+	else 
+	{
 		$response['status'] = 'error';
 		$response['msg']    =  _("Invalid Image.");
-		
 	}
 }
 

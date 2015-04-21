@@ -692,7 +692,7 @@ class Alarm {
     *
     * @return integer
     */
-    public function get_count($conn, $src_ip = "", $dst_ip = "", $hide_closed = 1,  $cache = FALSE)
+    public static function get_count($conn, $src_ip = "", $dst_ip = "", $hide_closed = 1,  $cache = FALSE)
     {
         Ossim_db::check_connection($conn);
 
@@ -960,7 +960,10 @@ class Alarm {
         if ($_SESSION["ports_cache"]=="")
         {
             $ports = array();
-            if (!$rsp = & $conn->Execute("SELECT * FROM port"))
+            
+            $rsp = $conn->Execute("SELECT * FROM port");
+            
+            if (!$rsp)
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
@@ -990,7 +993,7 @@ class Alarm {
     *
     * @return boolean
     */
-    public function has_alarms($conn, $type, $id)
+    public static function has_alarms($conn, $type, $id)
     {
         Ossim_db::check_connection($conn);
         
@@ -1088,7 +1091,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_list($conn, $params, $cache = FALSE)
+    public static function get_list($conn, $params, $cache = FALSE)
     {
         // OLD PARAMETERS
         // $src_ip, $dst_ip, $hide_closed = 1, $order, $inf = NULL, $sup = NULL, $from_date = NULL, $to_date = NULL, $query = "", $directive_id = "", $intent = 0, $sensor = "", $tag = "", $num_events = "", $num_events_op = "", $recursive = 0, $plugin_id = '', $plugin_sid = '', $ctx = "", $host = "", $net = "", $cache = FALSE
@@ -1415,7 +1418,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_max_byfield($conn, $field, $from_date = "", $to_date = "", $host_id = "", $net_id = "", $ip_cidr = "", $ctx = "")
+    public static function get_max_byfield($conn, $field, $from_date = "", $to_date = "", $host_id = "", $net_id = "", $ip_cidr = "", $ctx = "")
     {
         Ossim_db::check_connection($conn);
 
@@ -1502,7 +1505,10 @@ class Alarm {
         $sql_where = count($where) ? "WHERE " . implode(" AND ", $where) : "WHERE 1=1";
         $query = ossim_query("SELECT HEX(a.backlog_id) as backlog_id,a.$field FROM alarm a $ctx_join $event_join $sql_where ORDER BY a.$field DESC LIMIT 1");
         //echo $query;
-        if (!$rs = & $conn->Execute($query))
+        
+        $rs = $conn->Execute($query);
+        
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -1539,7 +1545,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_events($conn, $backlog_id, $show_all, $event_id, $from, $max, $alarms_numbering, $cache = FALSE)
+    public static function get_events($conn, $backlog_id, $show_all, $event_id, $from, $max, $alarms_numbering, $cache = FALSE)
     {
         Ossim_db::check_connection($conn);
         
@@ -1679,7 +1685,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarms_numbering($conn, $backlog_id)
+    public static function get_alarms_numbering($conn, $backlog_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -1689,8 +1695,10 @@ class Alarm {
                 WHERE backlog_event.backlog_id = unhex(?)
                 AND event.id = backlog_event.event_id
                 AND event.plugin_id = 1505 ORDER BY event.id DESC";
+        
+        $rs = $conn->Execute($query, array($backlog_id));
 
-        if (!$rs = & $conn->Execute($query, array($backlog_id)))
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -1719,7 +1727,7 @@ class Alarm {
     *
     * @return integer
     */
-    public function get_total_events($conn, $backlog_id, $cache = FALSE)
+    public static function get_total_events($conn, $backlog_id, $cache = FALSE)
     {
         Ossim_db::check_connection($conn);
 
@@ -1753,7 +1761,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_intents($conn, $cache = TRUE)
+    public static function get_intents($conn, $cache = TRUE)
     {
         Ossim_db::check_connection($conn);
 
@@ -1787,7 +1795,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_strategies($conn, $cache = TRUE)
+    public static function get_strategies($conn, $cache = TRUE)
     {
         Ossim_db::check_connection($conn);
 
@@ -1821,7 +1829,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarm_graph_by_taxonomy($conn, $cache = TRUE)
+    public static function get_alarm_graph_by_taxonomy($conn, $cache = TRUE)
     {
         Ossim_db::check_connection($conn);
 
@@ -1833,13 +1841,23 @@ class Alarm {
         }
 
         $tzc = Util::get_tzc();
-
+        
+        $_from_date = $_SESSION["_alarm_from_date"];
+        $_to_date   = $_SESSION["_alarm_to_date"];
+        
+        if ($_from_date == '' && $_to_date == '')
+        {
+            $timetz     = gmdate("U")+(3600*$tzc);
+            $_from_date = gmdate("Y-m-d", strtotime("-30 day UTC",$timetz));
+            $_to_date   = gmdate("Y-m-d", $timetz);
+        }
+        
         // Date range calculation
-        if ($_SESSION["_alarm_from_date"]!='' && $_SESSION["_alarm_to_date"]!='')
+        if ($_from_date != '' && $_to_date != '')
         {
             // Calc min and max dates
-            $sql = 'SELECT convert_tz(\''.$_SESSION["_alarm_from_date"].' 00:00:00\',\''.$tzc.'\',\'+00:00\') as min, convert_tz(\''.$_SESSION["_alarm_to_date"].' 23:59:59\',\''.$tzc.'\',\'+00:00\') as max';
-            $rs = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
+            $sql = "SELECT convert_tz('$_from_date 00:00:00','$tzc','+00:00') as min, convert_tz('$_to_date 23:59:59','$tzc','+00:00') as max";
+            $rs  = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
 
             if ($rs && !$rs->EOF)
             {
@@ -1852,15 +1870,16 @@ class Alarm {
 
             if (!$days["min"] || !$days["max"])
             {
-                $days["min"]  = gmdate("Y-m-d H:i:s",strtotime($_SESSION["_alarm_from_date"].' 00:00:00 '.$tzc));
-                $days["max"]  = gmdate("Y-m-d H:i:s",strtotime($_SESSION["_alarm_to_date"].' 23:59:59 '.$tzc));                
+                $days["min"]  = gmdate("Y-m-d H:i:s",strtotime($_from_date.' 00:00:00 '.$tzc));
+                $days["max"]  = gmdate("Y-m-d H:i:s",strtotime($_to_date.' 23:59:59 '.$tzc));                
             }
 
         }
         else
         {
             // Calc min and max dates
-            $sql = 'SELECT min(convert_tz(a.timestamp,\'+00:00\',\''.$tzc.'\')) as min, max(convert_tz(a.timestamp,\'+00:00\',\''.$tzc.'\')) as max '.$_SESSION["_alarm_perms_from"].' '.$_SESSION["_alarm_perms_where"].' AND a.plugin_id=1505';
+            $sql = "SELECT min(convert_tz(a.timestamp,'+00:00\','$tzc')) as min, max(convert_tz(a.timestamp,'+00:00','$tzc')) as max ".$_SESSION['_alarm_perms_from'] . ' ' . $_SESSION['_alarm_perms_where'] . ' AND a.plugin_id=1505';
+            
             $rs = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
 
             if (!$rs)
@@ -1889,6 +1908,8 @@ class Alarm {
                 $days["range"] = "month"; // Force a month range
             }
         }
+        
+        
         $diff         = gmdate("U",strtotime($days["max"]. " GMT")) - gmdate("U",strtotime($days["min"]. " GMT"));
         $days["diff"] = intval($diff / 86400) + (($diff % 86400 > 0) ? 1 : 0);
 
@@ -1899,7 +1920,7 @@ class Alarm {
         if ( $days["diff"] <= 31 )
         {
             // Hour range - 6 points/day - every 4 hours
-            $sql = 'SELECT count(distinct a.backlog_id) AS occurrences, hour(convert_tz(a.timestamp,\'+00:00\',\''.$tzc.'\')) as hour, date(convert_tz(a.timestamp,\'+00:00\',\''.$tzc.'\')) as day, ta.kingdom, ta.category '.$_SESSION["_alarm_perms_from"].' '.$_SESSION["_alarm_perms_where"].' AND a.plugin_id=1505 GROUP BY ta.kingdom,ta.category,day,hour';
+            $sql = "SELECT count(distinct a.backlog_id) AS occurrences, hour(convert_tz(a.timestamp,'+00:00','$tzc')) as hour, date(convert_tz(a.timestamp,'+00:00','$tzc')) as day, ta.kingdom, ta.category " . $_SESSION['_alarm_perms_from'] . ' ' . $_SESSION['_alarm_perms_where'] . ' AND a.plugin_id=1505 GROUP BY ta.kingdom,ta.category,day,hour';
 
             $rs = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
             if (!$rs)
@@ -1925,7 +1946,7 @@ class Alarm {
         {
 
             // Day range - 1 points/day
-            $sql = 'SELECT count(distinct a.backlog_id) AS occurrences, date(convert_tz(a.timestamp,\'+00:00\',\''.$tzc.'\')) as day, ta.kingdom, ta.category '.$_SESSION["_alarm_perms_from"].' '.$_SESSION["_alarm_perms_where"].' AND a.plugin_id=1505 GROUP BY ta.kingdom,ta.category,day';
+            $sql = "SELECT count(distinct a.backlog_id) AS occurrences, date(convert_tz(a.timestamp,'+00:00','$tzc')) as day, ta.kingdom, ta.category " .$_SESSION['_alarm_perms_from'] .' '. $_SESSION['_alarm_perms_where'] . ' AND a.plugin_id=1505 GROUP BY ta.kingdom,ta.category,day';
 
             $rs = ($cache) ? $conn->CacheExecute($sql) : $conn->Execute($sql);
             if (!$rs)
@@ -1985,7 +2006,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarm_resume($conn, $backlog_id, $clevel, $cache = FALSE)
+    public static function get_alarm_resume($conn, $backlog_id, $clevel, $cache = FALSE)
     {
         Ossim_db::check_connection($conn);
 
@@ -2051,7 +2072,7 @@ class Alarm {
     *
     * @return void
     */
-    public function open($conn, $backlog_id)
+    public static function open($conn, $backlog_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2081,7 +2102,7 @@ class Alarm {
     *
     * @return void
     */
-    public function close($conn, $backlog_id)
+    public static function close($conn, $backlog_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2109,7 +2130,7 @@ class Alarm {
     *
     * @return string
     */
-    public function close_all()
+    public static function close_all()
     {
         $from_alarm  = $_SESSION["_alarm_perms_from"];
         $where_alarm = $_SESSION["_alarm_perms_where"];
@@ -2152,7 +2173,7 @@ class Alarm {
     *
     * @return void
     */
-    public function delete($conn, $event_id)
+    static public function delete($conn, $event_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2190,7 +2211,7 @@ class Alarm {
     *
     * @return boolean
     */
-    public function delete_backlog($conn, $backlog_id)
+    public static function delete_backlog($conn, $backlog_id)
     {
 
         Ossim_db::check_connection($conn);
@@ -2256,7 +2277,7 @@ class Alarm {
     *
     * @return string
     */
-    public function delete_all_backlog($conn, $conds = array())
+    public static function delete_all_backlog($conn, $conds = array())
     {
         Ossim_db::check_connection($conn);
 
@@ -2373,7 +2394,9 @@ class Alarm {
     {
         Ossim_db::check_connection($conn);
 
-        if ($rs = &$conn->Execute("SELECT backlog_id FROM alarm WHERE backlog_id = unhex(?) AND removable=1",array($backlog_id)))
+        $rs = $conn->Execute("SELECT backlog_id FROM alarm WHERE backlog_id = unhex(?) AND removable=1",array($backlog_id));
+
+        if ($rs)
         {
             if ($rs->EOF)
             {
@@ -2385,8 +2408,10 @@ class Alarm {
         {
             return TRUE;
         }
+        
+        $rs = $conn->Execute("SELECT count(*) FROM event e, backlog_event b WHERE b.backlog_id = unhex(?) AND b.event_id = e.id",array($backlog_id));
 
-        if ($rs = &$conn->Execute("SELECT count(*) FROM event e, backlog_event b WHERE b.backlog_id = unhex(?) AND b.event_id = e.id",array($backlog_id)))
+        if ($rs)
         {
             if (!$rs->EOF)
             {
@@ -2417,7 +2442,9 @@ class Alarm {
 
         $sql = "SELECT count(*) FROM event e, backlog_event b WHERE b.backlog_id = unhex(?) AND b.event_id = e.id $where";
 
-        if ($rs = &$conn->Execute($sql,array($backlog_id)))
+        $rs = $conn->Execute($sql,array($backlog_id));
+
+        if ($rs)
         {
             if (!$rs->EOF)
             {
@@ -2439,7 +2466,7 @@ class Alarm {
     *
     * @return string
     */
-    public function clean_orphans($conn, $exec = TRUE)
+    public static function clean_orphans($conn, $exec = TRUE)
     {
 
         Ossim_db::check_connection($conn);
@@ -2485,7 +2512,7 @@ class Alarm {
     *
     * @return string
     */
-    public function event_allowed($conn, $ctx, $src_host, $dst_host, $src_net, $dst_net)
+    public static function event_allowed($conn, $ctx, $src_host, $dst_host, $src_net, $dst_net)
     {
         Ossim_db::check_connection($conn);
 
@@ -2532,7 +2559,10 @@ class Alarm {
         if (empty($this->event_data))
         {
             $sql = "SELECT filename,username,userdata1,userdata2,userdata3,userdata4,userdata5,userdata6,userdata7,userdata8,userdata9 FROM alienvault_siem.extra_data WHERE event_id=unhex('".$this->event_id."')";
-            if (!$rs = & $conn->Execute($sql))
+            
+            $rs = $conn->Execute($sql);
+            
+            if (!$rs)
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
@@ -2556,14 +2586,16 @@ class Alarm {
     *
     * @return array
     */
-    public function get_event ($conn, $event_id)
+    public static function get_event ($conn, $event_id)
     {
         Ossim_db::check_connection($conn);
 
         /* get main events id */
         $query = ossim_query("SELECT *, HEX(agent_ctx) AS agent_ctx, HEX(src_host) AS src_host, HEX(dst_host) AS dst_host, HEX(src_net) AS src_net, HEX(dst_net) as dst_net FROM event WHERE id=unhex('$event_id')");
 
-        if (!$rs = & $conn->Execute($query))
+        $rs = $conn->Execute($query);
+
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2586,7 +2618,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarm_detail($conn, $backlog_id)
+    public static function get_alarm_detail($conn, $backlog_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2599,8 +2631,10 @@ class Alarm {
 
         $query  = "SELECT *, HEX(event_id) as event_id, HEX(corr_engine_ctx) as corr_engine_ctx, ki.id as kid, ki.name as kingdom, ca.name as category, ta.subcategory from alarm LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON alarm.plugin_sid=ta.sid AND alarm.corr_engine_ctx=ta.engine_id WHERE 1=1 $where AND backlog_id=unhex(?)";
         $params = array($backlog_id);
+        
+        $rs = $conn->Execute($query, $params);
 
-        if (!$rs = & $conn->Execute($query, $params))
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2647,8 +2681,10 @@ class Alarm {
                     WHERE id = UNHEX(?)
                 ";
         $params = array($ev_id);
+        
+        $rs = $conn->Execute($query, $params);
 
-        if (!$rs = & $conn->Execute($query, $params))
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2705,7 +2741,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarm_trend ($conn, $plugin_id, $plugin_sid, $limit=15)
+    public static function get_alarm_trend ($conn, $plugin_id, $plugin_sid, $limit=15)
     {
         Ossim_db::check_connection($conn);
 
@@ -2725,7 +2761,10 @@ class Alarm {
             $plugin_sid,
             $day ." 00:00:00"
         );
-        if (!$rs = & $conn->Execute($sql, $params))
+        
+        $rs = $conn->Execute($sql, $params);
+        
+        if (!$rs)
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
@@ -2753,7 +2792,7 @@ class Alarm {
     *
     * @return array
     */
-    public function get_alarm_name ($taxonomy, $icon = TRUE)
+    public static function get_alarm_name ($taxonomy, $icon = TRUE)
     {
         // Get alarm name with intent-strategy-method if exists or single alarm name
         if ($taxonomy["kingdom"] != "" && $taxonomy["category"] != "")
@@ -2779,7 +2818,7 @@ class Alarm {
     *
     * @return string
     */
-    public function transform_alarm_name ($conn, $name)
+    public static function transform_alarm_name ($conn, $name)
     {
         Ossim_db::check_connection($conn);
 
@@ -2791,7 +2830,9 @@ class Alarm {
             $params = array(
                 $alarm_tax[0]
             );
-            if (!$rs = & $conn->Execute($sql, $params))
+            
+            $rs = $conn->Execute($sql, $params);
+            if (!$rs)
             {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             }
@@ -2819,7 +2860,7 @@ class Alarm {
     *
     * @return boolean
     */
-    public function clone_taxonomy ($conn, $engine_id)
+    public static function clone_taxonomy ($conn, $engine_id)
     {
         Ossim_db::check_connection($conn);
 
@@ -2845,7 +2886,7 @@ class Alarm {
     *
     * @return boolean
     */
-    public function delete_from_taxonomy ($conn, $engine_id)
+    public static function delete_from_taxonomy ($conn, $engine_id)
     {
         Ossim_db::check_connection($conn);
 

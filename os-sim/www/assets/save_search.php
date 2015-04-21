@@ -41,16 +41,15 @@ Session::logcheck('environment-menu', 'PolicyHosts');
         <title> <?php echo _('AlienVault USM') ?> </title>
         <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
         <meta http-equiv="Pragma" content="no-cache"/>
-    
+
         <?php
-    
             //CSS Files
             $_files = array(
                 array('src' => 'av_common.css',             'def_path' => TRUE),
                 array('src' => 'jquery-ui.css',             'def_path' => TRUE),
                 array('src' => '/assets/asset_search.css',  'def_path' => TRUE)
             );
-            
+
             Util::print_include_files($_files, 'css');
 
 
@@ -62,56 +61,56 @@ Session::logcheck('environment-menu', 'PolicyHosts');
                 array('src' => 'notification.js',           'def_path' => TRUE),
                 array('src' => 'token.js',                  'def_path' => TRUE)
             );
-            
+
             Util::print_include_files($_files, 'js');
-    
         ?>
-        
-        
+
+
         <script type='text/javascript'>
-            
+
             function close_window()
             {
                 if (typeof parent.GB_close == 'function')
                 {
                     parent.GB_close();
                 }
-                
+
                 return false;
             }
 
-            
+
             function save_group()
             {
-                var name  = $('#ag_name').val();
-                var descr = $('#ag_descr').val();
-                
-                if (name != '')
+                var form_data = $('#f_save_group').serializeArray();
+
+                var data = {
+                    'name'  : form_data[0]['value'],
+                    'descr' : form_data[1]['value']
+                };
+
+                if (data['name'] != '')
                 {
-                    var params = {};
-                    var data   = {};
                     var ctoken = Token.get_token("asset_filter_value");
-                    
-                    data["name"]  = name;
-                    data["descr"] = descr;
-                    
-                    params["action"] = "save_filter";
-                    params["data"]   = data;
-                
-                	$.ajax(
-                	{
-                		data: params,
-                		type: "POST",
-                		url: "ajax/asset_filter_ajax.php?token="+ctoken,
-                		dataType: "json",
-                		success: function(data)
-                		{
-                			if (!data.error)
-                			{
-                    			if (typeof parent.GB_hide == 'function')
+
+                    var params = {
+                        'action' : 'save_filter',
+                        'data' : data
+                    };
+
+                    $.ajax(
+                    {
+                        data: params,
+                        type: "POST",
+                        url: "ajax/asset_filter_ajax.php?token="+ctoken,
+                        dataType: "json",
+                        success: function(data)
+                        {
+                            if (!data.error)
+                            {
+                                if (typeof parent.GB_hide == 'function')
                                 {
-                                    var params   = new Array();
-                                    
+                                    var params = new Array();
+
                                     if (typeof data.id != 'undefined' && data.id != null)
                                     {
                                         params['id'] = data.id;
@@ -120,7 +119,7 @@ Session::logcheck('environment-menu', 'PolicyHosts');
                                     {
                                         params['id'] = '';
                                     }
-                                    
+
                                     parent.GB_hide(params);
                                 }
                             }
@@ -128,20 +127,20 @@ Session::logcheck('environment-menu', 'PolicyHosts');
                             {
                                 show_notification('save_ag_notif', data.msg, 'nf_error', 5000, true);
                             }
-                		},
-                		error: function(XMLHttpRequest, textStatus, errorThrown) 
-                		{	
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown)
+                        {
                             //Checking expired session
-                    		var session = new Session(XMLHttpRequest, '');
+                            var session = new Session(XMLHttpRequest, '');
                             if (session.check_session_expired() == true)
                             {
                                 session.redirect();
                                 return;
-                            }					
+                            }
                             show_notification('save_ag_notif', errorThrown, 'nf_error', 5000, true);
-                		}
-                	});
-                	
+                        }
+                    });
+
                 }
                 else
                 {
@@ -149,35 +148,43 @@ Session::logcheck('environment-menu', 'PolicyHosts');
                 }
             }
 
+            $(document).ready(function(){
+
+                $('#save').click(function(event){
+                    event.preventDefault();
+                    save_group();
+                })
+
+                $('#cancel').click(function(event){
+                    event.preventDefault();
+                    close_window();
+                })
+            });
+
         </script>
-        
+
     </head>
-    
-    <body>    
+
+    <body>
         <div id="save_ag_notif"></div>
         <div id='ag_save_container'>
-        
-            <!-- Asset Group Name -->
-            <div class='field_title'>
-                <?php echo _('Asset Group Name'); ?>
-            </div>
-            <input class='field_input' type="text" name='ag_name' id='ag_name'>
+            <form name='f_save_group' id='f_save_group'>
+                <!-- Asset Group Name -->
+                <div class='field_title'><?php echo _('Asset Group Name');?></div>
+                <input class='field_input' type="text" name='ag_name' id='ag_name' value=''/>
 
-            <div class='field_separator'></div>
-            
-            <!-- Asset Group Description -->
-            <div class='field_title'>
-                <?php echo _('Description'); ?>
-            </div>
-            <textarea class='field_input' name='ag_descr' id='ag_descr'> </textarea>
-            
-            <div id='save_button_set'>
-                <button class='av_b_secondary' onclick="close_window()"><?php echo _('Cancel'); ?></button>
-                <button onclick="save_group()"><?php echo _('Save'); ?></button>
-            </div>
+                <div class='field_separator'></div>
 
+                <!-- Asset Group Description -->
+                <div class='field_title'><?php echo _('Description');?></div>
+
+                <textarea class='field_input' name='ag_descr' id='ag_descr'></textarea>
+
+                <div id='save_button_set'>
+                    <button id='cancel' name='cancel' class='av_b_secondary'><?php echo _('Cancel'); ?></button>
+                    <button id='save' name='save'><?php echo _('Save'); ?></button>
+                </div>
+            </form>
         </div>
-
     </body>
-    
 </html>

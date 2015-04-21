@@ -81,7 +81,6 @@ dragon=/etc/ossim/agent/plugins/dragon.cfg
 exchange=/etc/ossim/agent/plugins/exchange.cfg
 forensics-db-1=/etc/ossim/agent/plugins/forensics-db-1.cfg
 fortigate=/etc/ossim/agent/plugins/fortigate.cfg
-fw1ngr60=/etc/ossim/agent/plugins/fw1ngr60.cfg
 fw1-alt=/etc/ossim/agent/plugins/fw1-alt.cfg
 gfi=/etc/ossim/agent/plugins/gfi.cfg
 heartbeat=/etc/ossim/agent/plugins/heartbeat.cfg

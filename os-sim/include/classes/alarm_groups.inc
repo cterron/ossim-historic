@@ -334,7 +334,7 @@ class Alarm_groups
     
     
     /* deprecated */
-	function get_grouped_alarms($conn, $group_type, $show_options, $hide_closed, $from_date, $to_date, $ip_src="", $ip_dst="", 
+	static function get_grouped_alarms($conn, $group_type, $show_options, $hide_closed, $from_date, $to_date, $ip_src="", $ip_dst="",
 	   $sensor="", $query="", $directive_id="", $intent = 0, $num_events="", $num_events_op="", $tag="", $limit="LIMIT 0,10", $cache=false) 
    {
 	
@@ -395,13 +395,11 @@ class Alarm_groups
         }
 		elseif ($show_options == 3) 
         {
-            $groups_join  = ", alarm_groups g";
-            $groups_where = " AND $_gcond NOT IN(Select group_id FROM alarm_groups WHERE owner IS NOT NULL AND owner <> '')";
+            $groups_where = " AND $_gcond NOT IN(Select group_id FROM alarm_groups WHERE owner IS NOT NULL AND owner<>'')";
 		}
 		elseif ($show_options == 4) 
         {
-            $groups_join = ", alarm_groups g";
-            $groups_where = " AND ( ($_gcond=g.group_id AND g.owner='".$_SESSION['_user']."') OR ($_gcond NOT IN(Select group_id FROM alarm_groups WHERE owner IS NOT NULL AND owner <> '') ) )";	
+            $groups_where = " AND $_gcond NOT IN(Select group_id FROM alarm_groups WHERE owner<>'".$_SESSION['_user']."' AND owner IS NOT NULL AND owner<>'')";   
 		}
 
 		// Date
@@ -417,11 +415,11 @@ class Alarm_groups
 		// IP
 		$ip_where = "";
         /* ip filter */
-        if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/', $ip_src)) $ip_src.= "/32";
-        if (preg_match('/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/', $ip_dst)) $ip_dst.= "/32";
-
-        if (isset($ip_src)) list($source_start, $source_end) = Cidr::expand_CIDR($ip_src, "SHORT", "IP");
-        if (isset($ip_dst)) list($dest_start, $dest_end)     = Cidr::expand_CIDR($ip_dst, "SHORT", "IP");
+        if (valid_ip_2($ip_src)) $ip_src.= "/32";
+        if (valid_ip_2($ip_dst)) $ip_dst.= "/32";
+        
+        if ($ip_src) list($source_start, $source_end) = Cidr::expand_CIDR($ip_src, "SHORT", "IP");
+        if ($ip_dst) list($dest_start, $dest_end)     = Cidr::expand_CIDR($ip_dst, "SHORT", "IP");
 
         /* If both src and dst are equal, try to find all alarms where src OR dst are equal to the IP */
         if ($ip_src && $ip_dst)
@@ -437,7 +435,7 @@ class Alarm_groups
         {
             $ip_where .= ($dest_start == $dest_end) ? " AND unhex('".bin2hex(inet_pton($dest_start))."') = a.dst_ip " : " AND  (unhex('".bin2hex(inet_pton($dest_start))."') <= a.dst_ip AND unhex('".bin2hex(inet_pton($dest_end))."') >= a.dst_ip)";
         }
-		
+
 		// Alarm Name
 		$name_where = "";
 		if ($query != "") 
@@ -657,8 +655,8 @@ class Alarm_groups
                     "group_count" => $rs->fields['howmany'],
                     "name"        => (( $rs->fields['name'] == '' ) ? _('Unknown Directive') : $rs->fields['name']),
                     "date"        => $rs->fields['day'],
-                    "ip_src"      => @inet_ntop($rs->fields['src_ip']),
-                    "ip_dst"      => @inet_ntop($rs->fields['dst_ip']),
+                    "ip_src"      => $rs->fields['src_ip'],
+                    "ip_dst"      => $rs->fields['dst_ip'],
                     "id_tag"      => $tag,
                     "max_risk"    => $rs->fields['max_risk']
 				);
@@ -671,7 +669,7 @@ class Alarm_groups
 	
 	    
     // $query parameter can be similar field or alarm name
-	function get_alarms ($conn, $sensor, $src_ip, $dst_ip, $hide_closed, $order, $inf = null, $sup = null, $from_date = null, 
+	static function get_alarms ($conn, $sensor, $src_ip, $dst_ip, $hide_closed, $order, $inf = null, $sup = null, $from_date = null,
 	$to_date = null, $query = "", $group_id = "", $directive_id ="", $tag = null, $cache=false, $num_events="", $num_events_op="") 
 	{
 
@@ -687,7 +685,10 @@ class Alarm_groups
         $where = array();
         // Pre-Selected Ports (Granada 27 de mayo 2009)
         $ports = array();
-        if (!$rsp = & $conn->Execute("SELECT * FROM port")) 
+        
+        $rsp = $conn->Execute("SELECT * FROM port");
+        
+        if (!$rsp)
         {
             print $conn->ErrorMsg();
             return array(array(),0);
@@ -700,11 +701,11 @@ class Alarm_groups
         }
         
         /* ip filter */
-        if (valid_ip($src_ip)) $src_ip.= "/32";
-        if (valid_ip($dst_ip)) $dst_ip.= "/32";
+        if (valid_ip_2($src_ip)) $src_ip.= "/32";
+        if (valid_ip_2($dst_ip)) $dst_ip.= "/32";
         
-        if (isset($src_ip)) list($source_start, $source_end) = CIDR::expand_CIDR($src_ip, "SHORT", "IP");
-        if (isset($dst_ip)) list($dest_start, $dest_end)     = CIDR::expand_CIDR($dst_ip, "SHORT", "IP");
+        if ($src_ip) list($source_start, $source_end) = CIDR::expand_CIDR($src_ip, "SHORT", "IP");
+        if ($dst_ip) list($dest_start, $dest_end)     = CIDR::expand_CIDR($dst_ip, "SHORT", "IP");
         
         /* If both src and dst are equal, try to find all alarms where src OR dst are equal to the IP */
 		if ($src_ip && $dst_ip) 
@@ -773,7 +774,7 @@ class Alarm_groups
             elseif (preg_match("/mdash/",$query)) // taxonomy
             {
                 $tax     = explode(" &mdash; ",$query);
-                $where[] = '(ki.name = "'.escape_sql($tax[0],$conn).'" and ca.name = "'.escape_sql($tax[1],$conn).'" and ta.subcategory = "'.escape_sql($tax[2],$conn).'")';                
+                $where[] = '(ki.name = "'.escape_sql($tax[0],$conn).'" and ca.name = "'.escape_sql($tax[1],$conn).'" and ta.subcategory = "'.escape_sql($tax[2],$conn, FALSE).'")';                
             }
             else // sid name
             {
@@ -943,7 +944,7 @@ class Alarm_groups
     }
 
 
-    function delete_alarms_from_groups($conn, $data = array())
+    static function delete_alarms_from_groups($conn, $data = array())
     {
         $from_alarm   = $_SESSION["_alarm_perms_from"];
 
@@ -1016,7 +1017,7 @@ class Alarm_groups
     
     
     //To do: build up this function from a scratch.
-    function get_group_status ($conn, $sensor="", $src_ip="", $dst_ip="", $from_date = null, $to_date = null, $name = "") 
+    static function get_group_status ($conn, $sensor="", $src_ip="", $dst_ip="", $from_date = null, $to_date = null, $name = "")
     {
         $tz  = Util::get_timezone();
 		$tzc = Util::get_tzc($tz);
@@ -1025,11 +1026,11 @@ class Alarm_groups
         $st    = array();
         
         /* ip filter */
-        if (valid_ip($src_ip)) $src_ip.= "/32";
-        if (valid_ip($dst_ip)) $dst_ip.= "/32";
+        if (valid_ip_2($src_ip)) $src_ip.= "/32";
+        if (valid_ip_2($dst_ip)) $dst_ip.= "/32";
         
-        if (isset($src_ip)) list($source_start, $source_end) = CIDR::expand_CIDR($src_ip, "SHORT", "IP");
-        if (isset($dst_ip)) list($dest_start, $dest_end)     = CIDR::expand_CIDR($dst_ip, "SHORT", "IP");
+        if ($src_ip) list($source_start, $source_end) = CIDR::expand_CIDR($src_ip, "SHORT", "IP");
+        if ($dst_ip) list($dest_start, $dest_end)     = CIDR::expand_CIDR($dst_ip, "SHORT", "IP");
         
         /* If both src and dst are equal, try to find all alarms where src OR dst are equal to the IP */
 		if ($src_ip && $dst_ip) 
@@ -1107,8 +1108,9 @@ class Alarm_groups
 		} 
 		
         $sql = "SELECT DISTINCT a.status AS status, count(a.status) AS cont_status FROM alarm a LEFT JOIN plugin_sid p ON a.plugin_id = p.plugin_id AND a.plugin_sid = p.sid LEFT JOIN ( alarm_taxonomy ta LEFT JOIN alarm_kingdoms ki ON ta.kingdom=ki.id LEFT JOIN alarm_categories ca ON ta.category=ca.id ) ON a.plugin_sid=ta.sid AND a.corr_engine_ctx=ta.engine_id $sensor_join $sql_where GROUP BY a.status";
-
-        if (!$rs = & $conn->Execute($sql)) 
+        
+        $rs = $conn->Execute($sql);
+        if (!$rs) 
         {
             print $conn->ErrorMsg();
             return "";
@@ -1133,10 +1135,13 @@ class Alarm_groups
     }
     
     
-	function get_dbgroups ($conn) {
+	static function get_dbgroups ($conn) {
 		$sql = "SELECT * FROM alarm_groups";
 		$ret = array();
-		if (!$rs = & $conn->Execute($sql)) 
+		
+		$rs = $conn->Execute($sql);
+		
+		if (!$rs) 
 		{
             print $conn->ErrorMsg();
             return array();
@@ -1155,7 +1160,7 @@ class Alarm_groups
 	}
 	
 	
-	function take_group ($conn, $group_id, $user) 
+	static function take_group ($conn, $group_id, $user)
 	{
 		$sql = "INSERT INTO alarm_groups (group_id,owner,description) VALUES (?,?,'') ON DUPLICATE KEY UPDATE owner=?";
 		
@@ -1166,7 +1171,7 @@ class Alarm_groups
 	}
 	
 	
-	function release_group ($conn, $group_id) 
+	static function release_group ($conn, $group_id)
 	{
 		$sql = "UPDATE alarm_groups SET owner='' WHERE group_id=?";
 		
@@ -1177,7 +1182,7 @@ class Alarm_groups
 	}
 	
 	
-	function delete_group ($conn, $group_id, $user) 
+	static function delete_group ($conn, $group_id, $user)
 	{
 		$sql = "DELETE FROM alarm_groups WHERE group_id=? AND owner=?";
 		
@@ -1188,7 +1193,7 @@ class Alarm_groups
 	}
 	
 	
-	function change_descr ($conn, $descr, $group_id) 
+	static function change_descr ($conn, $descr, $group_id)
 	{
 		$sql = "UPDATE alarm_groups SET description=? WHERE group_id=?";
 		
@@ -1199,7 +1204,7 @@ class Alarm_groups
 	}
 	
 	
-	function change_status($groups, $status) 
+	static function change_status($groups, $status)
 	{
         $groups     = (empty($groups))? "''" : $groups;
         
@@ -1208,7 +1213,7 @@ class Alarm_groups
         $_hash = $_SESSION["_alarmgroup_hash"];
 
         $where_alarm = preg_replace("/AND a.status='open'/", '', $_SESSION["_alarm_perms_where"]);
-        $where_alarm = $_SESSION["_alarm_perms_where"] . " AND $_hash IN ($groups)";
+        $where_alarm = $_SESSION["_alarm_perms_where"] . " AND a.removable=1 AND $_hash IN ($groups)";
 
         $sql         = "UPDATE $from_alarm SET a.status='$status' $where_alarm ; \n";
 

@@ -59,7 +59,6 @@ $action      = GET('action');
 $date_from   = GET('date_from');
 $date_to     = GET('date_to');
 
-$myself      = Session::get_session_user();
 
 ossim_valid($order, OSS_ALPHA, OSS_SPACE, OSS_SCORE,      'illegal:' . _("order"));
 ossim_valid($inf, OSS_DIGIT,                            'illegal:' . _("inf"));
@@ -79,7 +78,7 @@ if (ossim_error())
 $filter = '';
 $usersf = array();
 
-$users  = Session::get_users_to_assign($conn, $myself);
+$users  = Session::get_users_to_assign($conn);
 foreach($users as $k => $v)
 {
 	$usersf[$v->get_login()] = "'".$v->get_login()."'";
@@ -148,7 +147,7 @@ $log_list = Log_action::get_list($conn, $filter, " ORDER by $order", $inf, $sup)
     	<?php
     	if ($date_from != '') 
     	{
-    		$aux = split("-",$date_from);
+    		$aux = preg_split("/\-/",$date_from);
     		$y = $aux[0]; $m = $aux[1]; $d = $aux[2];
     	} 
     	else
@@ -160,7 +159,7 @@ $log_list = Log_action::get_list($conn, $filter, " ORDER by $order", $inf, $sup)
     	}
     	if ($date_to != '') 
     	{
-    		$aux = split("-",$date_to);
+    		$aux = preg_split("/\-/",$date_to);
     		$y2 = $aux[0]; $m2 = $aux[1]; $d2 = $aux[2];
     	} 
     	else 

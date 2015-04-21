@@ -23,7 +23,7 @@ include_once ("$BASE_path/base_stat_common.php");
 require_once 'classes/geolocation.inc';
 
 if(GET('fqdn') == 'yes' || GET('fqdn') == 'no')
-{ 
+{
     $_SESSION['siem_default_group'] = "base_stat_iplink.php?sort_order=events_d&fqdn=" . GET('fqdn');
 }
 
@@ -116,13 +116,13 @@ if ($qs->num_result_rows > 0)
     $qro->PrintHeader();
 }
 $i = 0;
-$report_data = array(); // data to fill report_data 
+$report_data = array(); // data to fill report_data
 
 if (is_array($_SESSION["server"]) && $_SESSION["server"][0]!="")
 	$_conn = $dbo->custom_connect($_SESSION["server"][0],$_SESSION["server"][2],$_SESSION["server"][3]);
 else
 	$_conn = $dbo->connect();
-	
+
 while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
     $sip = $myrow[0]; $ip_sip = inet_ntop($sip);
     $dip = $myrow[1]; $ip_dip = inet_ntop($dip);
@@ -148,7 +148,7 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
         $num_unique = $myrow[6];
         /* Print out */
         qroPrintEntryHeader($i);
-        $tmp_ip_criteria = '&amp;ip_addr%5B0%5D%5B0%5D=+&amp;ip_addr%5B0%5D%5B1%5D=ip_src&amp;ip_addr%5B0%5D%5B2%5D=%3D' . '&amp;ip_addr%5B0%5D%5B3%5D=' . $ip_sip . '&amp;ip_addr%5B0%5D%5B8%5D=+&amp;ip_addr%5B0%5D%5B9%5D=AND' . '&amp;ip_addr%5B1%5D%5B0%5D=+&amp;ip_addr%5B1%5D%5B1%5D=ip_dst&amp;ip_addr%5B1%5D%5B2%5D=%3D' . '&amp;ip_addr%5B1%5D%5B3%5D=' . $ip_dip . '&amp;ip_addr%5B1%5D%5B8%5D=+&amp;ip_addr%5B1%5D%5B9%5D=+' . '&amp;ip_addr_cnt=2'; //&amp;layer4=' . IPProto2str($proto);
+        $tmp_ip_criteria = '&amp;ip_addr%5B0%5D%5B0%5D=+&amp;ip_addr%5B0%5D%5B1%5D=ip_src&amp;ip_addr%5B0%5D%5B2%5D=%3D' . '&amp;ip_addr%5B0%5D%5B3%5D=' . $ip_sip . '&amp;ip_addr%5B0%5D%5B8%5D=+&amp;ip_addr%5B0%5D%5B9%5D=AND' . '&amp;ip_addr%5B1%5D%5B0%5D=+&amp;ip_addr%5B1%5D%5B1%5D=ip_dst&amp;ip_addr%5B1%5D%5B2%5D=%3D' . '&amp;ip_addr%5B1%5D%5B3%5D=' . $ip_dip . '&amp;ip_addr%5B1%5D%5B8%5D=+&amp;ip_addr%5B1%5D%5B9%5D=+' . '&amp;ip_addr_cnt=2';
         $tmp_rowid = $sip . "_" . $dip . "_" . $proto;
         //echo '    <TD><INPUT TYPE="checkbox" NAME="action_chk_lst[' . $i . ']" VALUE="' . $tmp_rowid . '"></TD>';
         //echo '        <INPUT TYPE="hidden" NAME="action_lst[' . $i . ']" VALUE="' . $tmp_rowid . '">';
@@ -165,9 +165,9 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
             $s_country_img = "";
             $slnk          = "";
         }
-        
+
         $div1 = '<div id="'.$ip_sip.';'.$ip_sip.';'.$src_host.'" ctx="'.$ctx.'" class="HostReportMenu">'; $bdiv1 = '</div>';
-        
+
         $geo_info = Asset_host::get_extended_location($_conn, $geoloc, $ip_dip);
         if ($geo_info['html_icon'] != "")
         {
@@ -179,14 +179,24 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
             $d_country_img = "";
             $dlnk          = "";
         }
-        
-		$div2 = '<div id="'.$ip_dip.';'.$ip_dip.';'.$dst_host.'" ctx="'.$ctx.'" class="HostReportMenu">'; $bdiv2 = '</div>';        
+
+		$div2 = '<div id="'.$ip_dip.';'.$ip_dip.';'.$dst_host.'" ctx="'.$ctx.'" class="HostReportMenu">'; $bdiv2 = '</div>';
         if ($fqdn=="yes") qroPrintEntry('<FONT>' . $sip_fqdn . '</FONT>');
         qroPrintEntry($div1 . $s_country_img . BuildAddressLink($ip_sip , 32) . $ip_sip . '</A>'. $bdiv1, "", "", "nowrap");
         qroPrintEntry('<img src="images/dash.png" border="0">');
         qroPrintEntry($div2 . $d_country_img . BuildAddressLink($ip_dip , 32) . $ip_dip . '</A>' . $bdiv2, "", "", "nowrap");
-        if ($fqdn=="yes") qroPrintEntry('<FONT>' . $dip_fqdn . '</FONT>');
-        qroPrintEntry('<FONT>' . IPProto2str($proto) . '</FONT>');
+        if ($fqdn == "yes")
+        {
+            qroPrintEntry('<FONT>' . $dip_fqdn . '</FONT>');
+        }
+
+        $p_name = Protocol::get_protocol_by_number($proto, TRUE);
+        if (FALSE === $p_name)
+        {
+            $p_name = _('UNKNOWN');
+        }
+        qroPrintEntry('<FONT>'.$p_name.'</FONT>');
+
         $tmp = '<A HREF="base_stat_ports.php?port_type=2&amp;proto=' . $proto . $tmp_ip_criteria . '">';
         qroPrintEntry($tmp . $num_unique_dport . '</A>');
         $tmp = '<A HREF="base_stat_alerts.php?foo=1' . $tmp_ip_criteria . '">';
@@ -196,12 +206,31 @@ while (($myrow = $result->baseFetchRow()) && ($i < $qs->GetDisplayRowCnt())) {
         qroPrintEntryFooter();
     }
     $i++;
-    
+
     // report_data
+
+    $p_name = Protocol::get_protocol_by_number($proto, TRUE);
+    if (FALSE === $p_name)
+    {
+        $p_name = '';
+    }
+
     $report_data[] = array (
-        $ip_sip, '', $ip_dip, '', IPProto2str($proto),
-        "", "", "", "", "", "",
-        $num_unique_dport, $num_unique, $num_occurances, ($s_country_img!=''||$d_country_img!='') ? $s_country_img."####".$d_country_img : ''
+        $ip_sip,
+        '',
+        $ip_dip,
+        '',
+        $p_name,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        $num_unique_dport,
+        $num_unique,
+        $num_occurances,
+        ($s_country_img!=''||$d_country_img!='') ? $s_country_img."####".$d_country_img : ''
     );
 }
 $result->baseFreeRows();

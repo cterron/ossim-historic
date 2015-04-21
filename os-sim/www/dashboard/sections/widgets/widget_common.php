@@ -50,8 +50,10 @@ function getNewId($dbconn, $tab)
 		$tab,
 		$user
 	);
+	
+	$rs = $dbconn->Execute($query, $params);
 		
-	if (!$rs = & $dbconn->Execute($query, $params))
+	if (!$rs)
 	{
 	    print $dbconn->ErrorMsg();
 		exit();
@@ -116,8 +118,10 @@ function getColumn($dbconn, $id)
 	$params = array(
 		$id
 	);
-		
-	if (!$rs = & $dbconn->Execute($query, $params))
+    
+    $rs = $dbconn->Execute($query, $params);
+    
+	if (!$rs)
 	{
 	    print 'Error retrieving the Widget Column: ' . $dbconn->ErrorMsg() . '<br/>';
 		exit();
@@ -143,8 +147,10 @@ function getOrder($dbconn, $id)
 	$params = array(
 		$id
 	);
-		
-	if (!$rs = & $dbconn->Execute($query, $params))
+    
+    $rs = $dbconn->Execute($query, $params);
+    
+	if (!$rs)
 	{
 	    print $dbconn->ErrorMsg();
 		exit();

@@ -65,6 +65,8 @@ def get_profile ():
         profile.append('database')
     if sub.call("dpkg -l alienvault-dummy-sensor | grep '^i'", shell=True) == 0:
         profile.append('sensor')
+    if sub.call("dpkg -l alienvault-dummy-sensor-ids | grep '^i'", shell=True) == 0:
+        profile.append('sensor')
     if sub.call("dpkg -l alienvault-dummy-server | grep '^i'", shell=True) == 0:
         profile.append('server')
     if sub.call("dpkg -l alienvault-dummy-framework | grep '^i'", shell=True) == 0:

@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -10185,7 +10185,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_A
 
 #by evilghost
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS OS Commerce 2.2 RC2 Potential Anonymous Remote Code Execution"; flow:established,to_server; content:"POST "; depth:5; uricontent:".php/"; pcre:"/\/[a-z_]+\.php\/[a-z_]+\.php/U"; reference:url,seclists.org/fulldisclosure/2009/Nov/169; reference:url,seclists.org/fulldisclosure/2009/Nov/170; reference:url,www.milw0rm.com/exploits/9556; reference:url,doc.emergingthreats.net/2010341; classtype:web-application-attack; sid:2010341; rev:2;)
+#alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS OS Commerce 2.2 RC2 Potential Anonymous Remote Code Execution"; flow:established,to_server; content:"POST "; depth:5; uricontent:".php/"; pcre:"/\/[a-z_]+\.php\/[a-z_]+\.php/U"; reference:url,seclists.org/fulldisclosure/2009/Nov/169; reference:url,seclists.org/fulldisclosure/2009/Nov/170; reference:url,doc.emergingthreats.net/2010341; classtype:web-application-attack; sid:2010341; rev:4;)
 
 #by evilghost and Kevin Ross
 #
@@ -18210,73 +18210,13 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_A
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS PHPNuke Forum viewtopic SQL insertion attempt"; flow:to_server,established; uricontent:"/modules.php"; nocase; content:"name=Forums"; content:"file=viewtopic"; pcre:"/forum=.*'/"; reference:bugtraq,7193; classtype:web-application-attack; sid:2102654; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS SAP WAS syscmd access"; flow:to_server,established; content:"/sap/bc/BSp/sap/menu/frameset.htm"; http_uri; nocase; content:"sap-syscmd"; http_uri; nocase; reference:url,www.cybsec.com/vuln/CYBSEC_Security_Advisory_Multiple_XSS_in_SAP_WAS.pdf; classtype:web-application-activity; sid:100000183; rev:3;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS BASE base_include.inc.php remote file include"; flow:to_server,established; content:"/base_include.inc.php"; http_uri; nocase; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:100000358; rev:6;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS BASE base_qry_common.php remote file include"; flow:to_server,established; content:"/base_qry_common.php"; http_uri; nocase; fast_pattern:only; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:100000356; rev:6;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS BASE base_stat_common.php remote file include"; flow:to_server,established; content:"/base_stat_common.php"; nocase; http_uri; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:100000357; rev:5;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS Geeklog BlackList.Examine.class.php remote file include"; flow:to_server,established; content:"plugins/spamx/BlackList.Examine.class.php"; nocase; http_uri; content:"$_CONF[path]="; nocase; http_uri; pcre:"/\$_CONF\[path\]=(?:(?:ht|f)tps?|data|php)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000730; rev:5;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog DeleteComment.Action.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/DeleteComment.Action.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000731; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog EditHeader.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/EditHeader.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000737; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog EditIP.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/EditIP.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000738; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog EditIPofURL.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/EditIPofURL.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000732; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog IPofUrl.Examine.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/IPofUrl.Examine.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000739; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog Import.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/Import.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000740; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog LogView.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/LogView.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000741; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog MTBlackList.Examine.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/MTBlackList.Examine.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000733; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog MailAdmin.Action.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/MailAdmin.Action.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000735; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog MassDelTrackback.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/MassDelTrackback.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000736; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog MassDelete.Admin.class.php remote file include"; flow:to_server,established; uricontent:"plugins/spamx/MassDelete.Admin.class.php"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000734; rev:3;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS Geeklog functions.inc remote file include"; flow:to_server,established; content:"plugins/links/functions.inc"; fast_pattern:7,20; nocase; http_uri; content:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(?:(?:ht|f)tps?|data|php)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000728; rev:6;)
-
-#
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS Geeklog functions.inc remote file include"; flow:to_server,established; content:"plugins/polls/functions.inc"; nocase; http_uri; fast_pattern:7,20; content:"$_CONF[path]="; nocase; http_uri; pcre:"/\$_CONF\[path\]=(?:(?:ht|f)tps?|data|php)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000729; rev:5;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Geeklog functions.inc remote file include"; flow:to_server,established; uricontent:"plugins/staticpages/functions.inc"; nocase; uricontent:"$_CONF[path]="; nocase; pcre:"/\$_CONF\[path\]=(https?|ftp)/Ui"; reference:bugtraq,18740; classtype:web-application-attack; sid:100000742; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS WEB-PHP phpMyWebmin create_file script remote file include"; flow:to_server,established; content:"create_file.php?"; http_uri; nocase; content:"target="; http_uri; nocase; pcre:"/target=(https?|ftp)/Ui"; reference:url,www.securityfocus.com/bid/20281/info; classtype:web-application-attack; sid:100000908; rev:2;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS BASE base_stat_common.php remote file include"; flow:to_server,established; content:"/base_stat_common.php"; nocase; http_uri; content:"BASE_path="; http_uri; nocase; pcre:"/BASE_path=(?:(?:ht|f)tps?|data|php)/Ui"; reference:url,secunia.com/advisories/20300/; classtype:web-application-attack; sid:2019524; rev:6;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS NetScreen SA 5000 delhomepage.cgi access"; flow:to_server,established; content:"/delhomepage.cgi"; http_uri; reference:bugtraq,9791; classtype:web-application-activity; sid:2103062; rev:4;)
 
 #
 #alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"GPL WEB_SPECIFIC_APPS oracle web arbitrary command execution attempt"; flow:to_server,established; content:"/ows-bin/"; nocase; http_uri; content:"?&"; http_uri; reference:bugtraq,1053; reference:cve,2000-0169; reference:nessus,10348; classtype:web-application-attack; sid:2101193; rev:13;)
-
-#
-alert http any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SPECIFIC_APPS Linksys apply.cgi overflow attempt"; flow:to_server,established; content:"/apply.cgi"; http_uri; fast_pattern:only; content:"Content-Length|3A|";  isdataat:1000,relative; content:!"|0a|"; within:1000; reference:bugtraq,14822; reference:cve,2005-2799; reference:nessus,20096; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=19389; classtype:web-application-attack; sid:100000177; rev:6;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Euchia CMS catalogo.php id_livello Parameter Cross Site Scripting Attempt"; flow:established,to_server; uricontent:"/catalogo.php?"; nocase; uricontent:"id_livello="; nocase; pcre:"/id_livello\x3d.+(script|onmouse[a-z]+|onkey[a-z]+|onload|onunload|ondragdrop|onblur|onfocus|onclick|ondblclick|onsubmit|onreset|onselect|onchange|style\x3D)/Ui"; reference:url,inj3ct0r.com/exploits/13028; classtype:web-application-attack; sid:2011571; rev:1;)
@@ -19974,7 +19914,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS iBr
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS PHool mainnav Parameter Remote File inclusion Attempt"; flow:established,to_server; content:"GET"; http_method; content:"/includes/layout/plain.footer.php?"; nocase; http_uri; content:"mainnav="; nocase; http_uri; pcre:"/mainnav=\s*(ftps?|https?|php)\:\//Ui"; reference:url,packetstormsecurity.org/files/106073/sportsphool-rfi.txt; classtype:web-application-attack; sid:2013815; rev:3;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Joomla YJ Contact Local File Inclusion Vulnerability"; flow:established,to_server; content:"GET"; http_method; content:"/index.php?"; nocase; http_uri; content:"option=com_yjcontactus"; http_uri; content:"view="; nocase; http_uri; content:"|2e 2e 2f|"; depth:200; reference:url,/packetstormsecurity.org/files/106222/joomlayjcontact-lfi.txt; classtype:web-application-attack; sid:2013816; rev:3;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Joomla YJ Contact Local File Inclusion Vulnerability"; flow:established,to_server; content:"GET"; http_method; content:"/index.php?"; nocase; http_uri; content:"option=com_yjcontactus"; http_uri; content:"view="; nocase; http_uri; content:"|2e 2e 2f|"; depth:200; reference:url,packetstormsecurity.org/files/106222/joomlayjcontact-lfi.txt; classtype:web-application-attack; sid:2013816; rev:4;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Wordpress Easy Stats plugin homep Parameter Remote File inclusion Attempt"; flow:established,to_server; content:"GET"; http_method; content:"/wp-content/plugins/wpeasystats/export.php?"; nocase; http_uri; content:"homep="; nocase; http_uri; pcre:"/homep=\s*(ftps?|https?|php)\:\//Ui"; reference:url,secunia.com/advisories/46069; reference:url,spareclockcycles.org/2011/09/18/exploitring-the-wordpress-extension-repos; classtype:web-application-attack; sid:2013817; rev:3;)
@@ -20658,7 +20598,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Adm
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Simplemachines view parameter Cross Site Scripting Attempt"; flow:established,to_server; content:"/ssi_examples.php?"; nocase; http_uri; fast_pattern:only; content:"view="; nocase; http_uri; pcre:"/view\x3d.+?(?:on(?:(?:s(?:elec|ubmi)|rese)t|d(?:blclick|ragdrop)|(?:mouse|key)[a-z]|c(?:hange|lick)|(?:un)?load|focus|blur)|s(?:cript|tyle=))/Ui"; reference:url,packetstormsecurity.org/files/117618/SMF-2.0.2-Cross-Site-Scripting.html; classtype:web-application-attack; sid:2016036; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Possible WordpressPingbackPortScanner detected "; flow:established,to_server; content:"POST"; http_method; nocase; content:"/xmlrpc.php"; http_uri; content:"pingback.ping"; http_client_body; nocase; threshold: type both, track by_src, seconds 60, count 5; reference:url,seclists.org/bugtraq/2012/Dec/101; reference:url,github.com/FireFart/WordpressPingbackPortScanner/; reference:url,www.acunetix.com/blog/web-security-zone/wordpress-pingback-vulnerability/; classtype:web-application-attack; sid:2016061; rev:3;)
+#alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Possible WordpressPingbackPortScanner detected "; flow:established,to_server; content:"POST"; http_method; nocase; content:"/xmlrpc.php"; http_uri; content:"pingback.ping"; http_client_body; nocase; threshold: type both, track by_src, seconds 60, count 5; reference:url,seclists.org/bugtraq/2012/Dec/101; reference:url,github.com/FireFart/WordpressPingbackPortScanner/; reference:url,www.acunetix.com/blog/web-security-zone/wordpress-pingback-vulnerability/; classtype:web-application-attack; sid:2016061; rev:4;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS WordPress Video Lead Form plugin errMsg parameter Cross Site Scripting Attempt"; flow:established,to_server; content:"/wp-admin/admin.php?"; nocase; http_uri; content:"page=video-lead-form"; nocase; http_uri; fast_pattern:5,15; content:"errMsg="; nocase; http_uri; pcre:"/errMsg\x3d.+?(?:on(?:(?:s(?:elec|ubmi)|rese)t|d(?:blclick|ragdrop)|(?:mouse|key)[a-z]|c(?:hange|lick)|(?:un)?load|focus|blur)|s(?:cript|tyle=))/Ui"; reference:url,packetstormsecurity.org/files/118466/WordPress-Video-Lead-Form-0.5-Cross-Site-Scripting.html; classtype:web-application-attack; sid:2016076; rev:2;)
@@ -20910,7 +20850,7 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS JCE
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SPECIFIC_APPS TimThumb Remote Command Execution"; flow:established,to_server; content:".php"; http_uri; content:"webshot="; fast_pattern:only; http_uri; content:"src="; http_uri; content:"|24 28|"; http_uri; pcre:"/[&?]src=https?[^&]+\x24\x28/U"; reference:url,cxsecurity.com/issue/WLB-2014060134; classtype:attempted-user; sid:2018605; rev:2;)
 
 #
-alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Cacti Superlinks Plugin SQL Injection"; flow:established,to_server; content:"/superlinks.php?"; http_uri; nocase; fast_pattern:only; pcre:"/[?&]id=\d*?[^\d]\d*?(?:(&|$))/Ui"; reference:url,www.exploit-db.com/exploits/33809/; classtype:attempted-user; sid:2018612; rev:2;)
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Cacti Superlinks Plugin SQL Injection"; flow:established,to_server; content:"/superlinks.php?"; http_uri; nocase; fast_pattern:only; pcre:"/[?&]id=\d*?[^\d]\d*?(?:&|$)/Ui"; reference:url,www.exploit-db.com/exploits/33809/; classtype:attempted-user; sid:2018612; rev:3;)
 
 #
 alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Possible WP Plug-in MailPoet  Arbitrary File Upload/Auth Bypass Vulnerability"; flow:established,to_server; content:"/wp-admin/admin-post.php"; http_uri; content:"page=wysija_campaigns"; http_uri; content:"action=themes"; http_uri; content:"|0d 0a|PK"; http_client_body; content:"style.css"; http_client_body; reference:url,www.exploit-db.com/exploits/33991/; classtype:web-application-attack; sid:2018648; rev:3;)
@@ -20920,4 +20860,37 @@ alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Ora
 
 #
 alert http any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SPECIFIC_APPS Wordpress Custom Contact Forms DB Upload/Download Auth Bypass"; flow:established,to_server; content:"POST"; http_method; content:"/wp-admin/admin-post.php?"; http_uri; nocase; content:"page=ccf_settings"; http_uri; nocase; fast_pattern; pcre:"/ccf_(?:(?:clear|merge)_im|ex)port/Pi"; reference:url,blog.sucuri.net/2014/08/database-takeover-in-custom-contact-forms.html; classtype:web-application-attack; sid:2018975; rev:5;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Possible WP CuckooTap Arbitrary File Download"; flow:established,to_server; content:"/wp-admin/admin-ajax.php"; http_uri; content:"action=revslider_show_image"; http_uri; content:"img=|2e 2e 2f|"; http_raw_uri; reference:url,exploit-db.com/exploits/34511/; classtype:web-application-attack; sid:2019137; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS WordPress Huge IT Image Gallery 1.0.0 SQL Injection"; flow:established,to_server; content:"wp-admin/admin.php"; http_uri; content:"page=gallerys_huge_it_gallery"; http_uri; fast_pattern:only; content:"task=edit_cat"; http_uri; content:"removeslide="; http_uri; reference:url,packetstormsecurity.com/files/128118/wphugeitig-sql.txt; classtype:web-application-attack; sid:2019139; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Webmin Directory Traversal"; flow:to_server,established; content:"POST"; http_method; content:"/save_env.cgi"; http_uri; fast_pattern:only; content:"&user="; http_client_body; content:"|2e 2e 2f|"; distance:0; http_client_body; reference:url,sites.utexas.edu/iso/2014/09/09/arbitrary-file-deletion-as-root-in-webmin/; classtype:misc-attack; sid:2019157; rev:3;)
+
+#
+alert http any any -> $HOME_NET any (msg:"ET WEB_SPECIFIC_APPS Bugzilla token.cgi HPP e-mail validation bypass Attempt URI"; flow:to_server,established; content:"/token.cgi"; http_uri; nocase; content:"&realname=login_name"; http_uri; nocase; fast_pattern:only; reference:url,blog.gerv.net/2014/10/new-class-of-vulnerability-in-perl-web-applications/; classtype:web-application-attack; sid:2019364; rev:2;)
+
+#
+alert http any any -> $HOME_NET any (msg:"ET WEB_SPECIFIC_APPS Bugzilla token.cgi HPP e-mail validation bypass Attempt Client Body"; flow:to_server,established; content:"/token.cgi"; http_uri; nocase; content:"&realname=login_name"; http_client_body; nocase; fast_pattern:only; reference:url,blog.gerv.net/2014/10/new-class-of-vulnerability-in-perl-web-applications/; classtype:web-application-attack; sid:2019365; rev:5;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Wordpress Slideshow Gallery 1.4.6 - Shell Upload"; flow:established,to_server; content:"POST"; http_method; content:"application/x-httpd-php"; http_client_body; fast_pattern:only; content:"Content-Disposition|3a 20|form-data|3b 20|"; http_client_body;  pcre:"/^[^\r]*?name=[\x22\x27]image_file"\x3b[^(?>\r\n|\n|\r)]*?(?>\r\n|\n|\r)(?>\r\n|\n|\r)?Content-Type: application/x-httpd-php/RPsi"; reference:url,www.exploit-db.com/exploits/34681/; reference:cve,2014-5460; classtype:trojan-activity; sid:2019728; rev:3;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Pandora FMS SQLi"; flow:to_server,established; content:"POST"; http_method; content:"/pandora_console/mobile/index.php"; http_uri; content:"action=login"; http_client_body; fast_pattern; content:"user="; http_client_body; distance:0; pcre:"/[^&]*(?:S(?:HOW.+(?:C(?:HARACTER.+SET|UR(DATE|TIME))|(?:VARI|T)ABLES)|ELECT.+(?:FROM|USER))|U(?:NION.+SELEC|PDATE.+SE)T|DELETE.+FROM|INSERT.+INTO|\/\*.+\*\/|EXEC)/PRi"; reference:url,www.rapid7.com/db/modules/exploit/linux/http/pandora_fms_sqli; classtype:attempted-admin; sid:2019903; rev:3;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS ManageEngine Desktop Central Administrator Account Creation"; flow:established,to_server; content:"/servlets/DCPluginServelet?"; nocase; http_uri; content:"action=addPlugInUser"; nocase; http_uri; content:"role="; nocase; http_uri; content:"userName="; nocase; http_uri; content:"email="; nocase; http_uri; content:"password="; nocase; http_uri; content:"salt="; nocase; http_uri; reference:cve,CVE-2014-7862; reference:url,seclists.org/fulldisclosure/2015/Jan/2; classtype:trojan-activity; sid:2020092; rev:2;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS WP Generic revslider Arbitrary File Download"; flow:established,to_server; content:"/admin-ajax.php?"; http_uri; fast_pattern:only; content:"slider_show_image"; http_uri; pcre:"/^[^\r\n]*(?:%2(?:52e(?:%2(?:52e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/)|e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/))|\.(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/))|e(?:%2(?:52e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/)|e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/))|\.(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/)))|\.(?:%2(?:52e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/)|e(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/))|\.(?:%(?:c(?:0%af|1%9c)|(?:25)?2f)|5c|\/)))/RUim"; reference:url,blog.sucuri.net/2014/09/slider-revolution-plugin-critical-vulnerability-being-exploited.html; classtype:web-application-attack; sid:2020221; rev:4;)
+
+#
+alert http $EXTERNAL_NET any -> $HTTP_SERVERS any (msg:"ET WEB_SPECIFIC_APPS Wordpress PingBack Possible GHOST attempt"; flow:established,to_server; content:"/xmlrpc.php"; http_uri; nocase; content:"pingback.ping"; nocase; http_client_body; fast_pattern:only; content:"<string>"; http_client_body; pcre:"/^\s*?https?\x3a\/\//PRs"; isdataat:1024,relative; content:!"|2f|"; http_client_body; within:1024; content:!"</string>"; http_client_body; within:1033; pcre:"/^\d[\d\x2e]{255}/PR"; classtype:web-application-attack; sid:2020327; rev:6;)
+
+#
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET WEB_SPECIFIC_APPS FancyBox Remote Code Inclusion POST Request"; flow:to_server,established; content:"POST"; http_method; content:"/admin-post.php?page=fancybox-for-wordpress"; http_uri; fast_pattern:only; content:"INPUTBODY|3a|"; http_client_body; content:"action=update"; http_client_body; content:"mfbfw"; http_client_body; content:"extraCalls"; http_client_body; nocase; reference:url,blog.sucuri.net/2015/02/zero-day-in-the-fancybox-for-wordpress-plugin.html; classtype:attempted-admin; sid:2020368; rev:5;)
 

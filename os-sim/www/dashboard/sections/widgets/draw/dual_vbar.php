@@ -64,6 +64,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
     $_files = array(
         array('src' => 'jqplot/jquery-1.4.2.min.js',                            'def_path' => TRUE),
         array('src' => 'jqplot/jquery.jqplot.min.js',                           'def_path' => TRUE),
+        array('src' => '/dashboard/js/widget.js.php',                           'def_path' => FALSE),
         array('src' => 'jqplot/plugins/jqplot.barRenderer.js',                  'def_path' => TRUE),
         array('src' => 'jqplot/plugins/jqplot.categoryAxisRenderer.min.js',     'def_path' => TRUE),
         array('src' => 'jqplot/plugins/jqplot.pointLabels.min.js',              'def_path' => TRUE),
@@ -119,23 +120,28 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 		var isShowing = -1;
 		
 		function myMoveHandler(ev, gridpos, datapos, neighbor, plot) 
-		{
-			if (neighbor == null) 
-			{
-				$('#myToolTip').hide().empty();
-				
-				isShowing = -1;
-			}
-			
+		{			
 			if (neighbor != null) 
 			{
 				if (neighbor.pointIndex != isShowing) 
 				{
-					$('#myToolTip').html(neighbor.data[1]).css({left:gridpos.x, top:gridpos.y-5}).show();
-					
-					isShowing = neighbor.pointIndex
+    				isShowing = neighbor.pointIndex
+    				
+    				var val = format_dot_number(neighbor.data[1]);
+    				
+					jqplot_show_tooltip($('#myToolTip'), val, ev, plot);
 				}
 			}
+			else
+			{
+    			myLeaveHandler();
+			}
+		}
+		
+		function myLeaveHandler()
+		{
+    		$('#myToolTip').hide().empty();
+            isShowing = -1;
 		}
 		
 		$(document).ready(function()
@@ -236,6 +242,7 @@ Session::logcheck("dashboard-menu", "ControlPanelExecutive");
 			});
 			
 			$('#chart').append('<div id="myToolTip"></div>');
+			$('#chart').mouseleave(myLeaveHandler);
 
 		});
 	</script>

@@ -67,19 +67,23 @@ $conn = $db->connect();
 
 
 $filters = array(
-    'where' => "h.id = UNHEX('$asset_id') AND host_services.port = $port AND host_services.service = '".escape_sql($service, $conn)."'"
+    'where' => "h.id = UNHEX('$asset_id') AND host_services.port = $port AND host_services.service = '".escape_sql($service, $conn, FALSE)."'"
 );
 
 $_list_data = Asset_host_services::get_list($conn, $filters);
 $services   = $_list_data[0];
 
-if (empty($services[$asset_id][0]))
+
+if (!is_array($services[$asset_id]) || empty($services[$asset_id]))
 {
     $db->close();
     throw new Exception(_('Service not found'));
 }
 
-$service_data = $services[$asset_id][0];
+$service_key  = key($services[$asset_id]);
+$service_data = $services[$asset_id][$service_key];
+
+
 $_host_aux    = Asset_host::get_object($conn, $asset_id);
 $_ips_aux     = array_keys($_host_aux->get_ips()->get_ips());
 $_ctx_aux     = $_host_aux->get_ctx();

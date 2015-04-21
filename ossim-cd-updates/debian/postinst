@@ -16,9 +16,6 @@ a2enmod headers
 sed "s/TraceEnable On/TraceEnable Off/g" </etc/apache2/conf.d/security > /etc/apache2/conf.d/security_tmp; mv /etc/apache2/conf.d/security_tmp /etc/apache2/conf.d/security
 
 apache2ctl restart
-
-sed -i 's/^skip-bdb/#skip-bdb/g' /etc/mysql/my.cnf
-
 /etc/init.d/nfdump stop
 update-rc.d nfdump remove
 update-rc.d nfscan remove

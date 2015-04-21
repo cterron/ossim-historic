@@ -118,7 +118,7 @@ class Traffic_capture
 
         // Get the port and IP address of the frameworkd
         
-        $this->address = $ossim_conf->get_conf('frameworkd_address');
+        $this->address = '127.0.0.1';
 
         $this->port    = $ossim_conf->get_conf('frameworkd_port');
 

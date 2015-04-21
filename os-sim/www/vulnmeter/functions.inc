@@ -38,6 +38,7 @@
 */
 
 require_once 'av_init.php';
+require_once 'ossim_sql.inc';
 
 function get_hosts($dbconn) {
     $hosts = array();
@@ -45,7 +46,8 @@ function get_hosts($dbconn) {
     
     $dbconn->SetFetchMode(ADODB_FETCH_NUM);
     
-    if (!$result = & $dbconn->Execute ( $query )) {
+    $result = $dbconn->Execute($query);
+    if (!$result) {
         print $dbconn->ErrorMsg();
     } else {
         while (!$result->EOF) {
@@ -64,7 +66,8 @@ function hosts_to_insert($dbconn, $report_id, $hosts=array()) {
 
     $dbconn->SetFetchMode(ADODB_FETCH_ASSOC);
 
-    if (!$result = & $dbconn->Execute ( $query, array($report_id) )) {
+    $result = $dbconn->Execute($query, array($report_id));
+    if (!$result) {
         print $dbconn->ErrorMsg();
     } 
     else 
@@ -336,8 +339,15 @@ function sanitize($input) {
    } else {
       $tmp = $input;
    }
-   $output = mysql_real_escape_string($tmp);
-   $output = htmlspecialchars( $output , ENT_QUOTES);
+
+   $db   = new ossim_db();
+   $conn = $db->connect();
+   
+   $output = escape_sql($tmp, $conn);
+   
+   $db->close();
+   
+   $output = Util::htmlentities($output);
    return $output;
 }
 
@@ -1294,7 +1304,7 @@ function all_jobs($offset, $pageSize, $status=""){
             }
 
             $add_info = "ct=$curtime st=$start_date fd=$end_date";
-            $arrIP = split('[/.]', $nname);
+            $arrIP = preg_split('/[\/\.]/', $nname);
 
             $searchIP = "$arrIP[0].$arrIP[1].$arrIP[2].";
           
@@ -1334,14 +1344,14 @@ function all_jobs($offset, $pageSize, $status=""){
                     $html_link = "";
                 }
           
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" $html_link title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".html_entity_decode($nname)."</a>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" $html_link title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a>";
                 $sInfo .= "</td>";
             }
             else if ($nstatus=="F") {
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".html_entity_decode($nname)."</a></td>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."<br/>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
             }
             else { // $nstatus == "R"
-                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."</br>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".html_entity_decode($nname)."</a></td>";
+                $sInfo .= "<td style=\"text-align:center;\"><a class=\"tip\" style=\"text-decoration:none;\" href='javascript:;' title=\"<b>"._("Owner").":</b> $nusername<br><b>"._("Server").":</b> $shostname<br>$job_status<b>"._("Job ID").":</b> $nid<br><b>"._("Profile").":</b> $profile<br><b>"._("Failed attempts").":</b> $failed_attempts<br><b>"._("Targets").":</b><br>".tooltip_hosts($meth_TARGETorig,$hosts)."</br>".(($meth_Wcheck!="")? "<b>"._("Messages").":</b><br>".nl2br(trim($meth_Wcheck)) : "")."\">".$nname."</a></td>";
             }
             
             $sInfo .= "<td>$submit_date</td>
@@ -2103,12 +2113,12 @@ function hostLink($host, $ip, $type = "name", $edit = FALSE) {
 function validateip($ip) {
     $retip=0;
 
-    if (ereg('^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$',$ip,$r)) {
+    if (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
         $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
         if ($ip1<>0) {
             $retip=1;
         }
-    } elseif (ereg('^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$',$ip,$r)) {
+    } elseif (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
 
         $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
         $ip2=intval($r[5])*16777216+intval($r[6])*65536+intval($r[7])*256+intval($r[8]);
@@ -2125,7 +2135,7 @@ function validateip($ip) {
 function inrange($ip, $dbconn) {
     $check=0;
     // check for single IP address, and split it into the octets
-    if (ereg('^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$',$ip,$r)) {
+    if (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
 
         $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
         $ip2=0;
@@ -2135,7 +2145,7 @@ function inrange($ip, $dbconn) {
         }
     // check for range of IP address, and split them into the two sets of
     // octets (for ip1 and ip2)
-    } elseif (ereg('^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$',$ip,$r)) {
+    } elseif (preg_match('/^([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])-([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])\.([0-9]{1,2}|[01][0-9]{2,3}|2[0-4][0-9]|25[0-5])$/',$ip,$r)) {
 
         $ip1=intval($r[1])*16777216+intval($r[2])*65536+intval($r[3])*256+intval($r[4]);
         $ip2=intval($r[5])*16777216+intval($r[6])*65536+intval($r[7])*256+intval($r[8]);
@@ -2147,7 +2157,7 @@ function inrange($ip, $dbconn) {
 
     if ($check==1) {
         // get the username
-        $uname=htmlspecialchars(mysql_real_escape_string(trim($_SESSION['user'])), ENT_QUOTES);
+        $uname=Util::htmlentities(escape_sql(trim($_SESSION['user']), $dbconn));
         $found=0;
 
         // get the ranges for all the Network Zones that the user has
@@ -2309,8 +2319,8 @@ function datediff($interval, $date1, $date2)
 
    switch($interval) {
        case "y":
-           list($year1, $month1, $day1) = split('-', $date1);
-           list($year2, $month2, $day2) = split('-', $date2);
+           list($year1, $month1, $day1) = preg_split('/\-/', $date1);
+           list($year2, $month2, $day2) = preg_split('/\-/', $date2);
            $time1 = (date('H',$date1)*3600) + (date('i',$date1)*60) + (date('s',$date1)
 );
            $time2 = (date('H',$date2)*3600) + (date('i',$date2)*60) + (date('s',$date2)
@@ -2330,8 +2340,8 @@ function datediff($interval, $date1, $date2)
            }
            break;
        case "m":
-           list($year1, $month1, $day1) = split('-', $date1);
-           list($year2, $month2, $day2) = split('-',$date2);
+           list($year1, $month1, $day1) = preg_split('/\-/', $date1);
+           list($year2, $month2, $day2) = preg_split('/\-/', $date2);
            $time1 = (date('H',$date1)*3600) + (date('i',$date1)*60) + (date('s',$date1)
 );
            $time2 = (date('H',$date2)*3600) + (date('i',$date2)*60) + (date('s',$date2)

@@ -12,7 +12,7 @@ import os
 import sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))))
 from ossimsetupconfig import AVOssimSetupConfigHandler
-from configparsererror import AVConfigParserErrors
+from avconfigparsererror import AVConfigParserErrors
 from  utils import *
 TEST_FILES_PATH = os.path.abspath(os.path.join(__file__, os.pardir))+"/test_data/"
 

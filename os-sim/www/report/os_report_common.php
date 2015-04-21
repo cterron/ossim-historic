@@ -596,7 +596,7 @@ function get_report_data($id = NULL)
         'Net Performance'         => array ('text' => _('Net Performance')),
         'Applications and Systems Failures'  => array ('text' => _('Applications and Systems Failures')),
         'Anomalies'                          => array ('text' => _('Anomalies')),
-        'Nessus Vulnerability'               => array ('text' => _('Nessus Vulnerability'))
+        'OpenVAS Vulnerability'              => array ('text' => _('OpenVAS Vulnerability'))
     );
 
 
@@ -676,7 +676,8 @@ function get_report_data($id = NULL)
             'threat_overview'   => array('id' => 'threat_overview',    'name' => _('Threat overview'),             'report_file' => 'os_reports/BusinessAndComplianceISOPCI/ThreatOverview.php'),
             'bri_risks'         => array('id' => 'bri_risks',          'name' => _('Business real impact risks'),  'report_file' => 'os_reports/BusinessAndComplianceISOPCI/BusinessPotentialImpactsRisks.php'),
             'ciap_impact'       => array('id' => 'ciap_impact',        'name' => _('C.I.A Potential impact'),      'report_file' => 'os_reports/BusinessAndComplianceISOPCI/CIAPotentialImpactsRisks.php'),
-            'pci_dss'           => array('id' => 'pci_dss',            'name' => _('PCI-DSS'),                     'report_file' => 'os_reports/BusinessAndComplianceISOPCI/PCI-DSS.php'),
+            'pci_dss'           => array('id' => 'pci_dss',            'name' => _('PCI-DSS 2.0'),                 'report_file' => 'os_reports/BusinessAndComplianceISOPCI/PCI-DSS.php'),
+            'pci_dss3'          => array('id' => 'pci_dss3',           'name' => _('PCI-DSS 3.0'),                 'report_file' => 'os_reports/BusinessAndComplianceISOPCI/PCI-DSS3.php'),
             'trends'            => array('id' => 'trends',             'name' => _('Trends'),                      'report_file' => 'os_reports/BusinessAndComplianceISOPCI/Trends.php'),
             'iso27002_p_impact' => array('id' => 'iso27002_p_impact',  'name' => _('ISO27002 Potential impact'),   'report_file' => 'os_reports/BusinessAndComplianceISOPCI/ISO27002PotentialImpact.php'),
             'iso27001'          => array('id' => 'iso27001',           'name' => _('ISO27001'),                    'report_file' => 'os_reports/BusinessAndComplianceISOPCI/ISO27001.php')

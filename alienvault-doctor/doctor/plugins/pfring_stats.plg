@@ -1,0 +1,17 @@
+[properties]
+name=pf_ring statistics
+description=Collects statistics from the pf_ring driver
+category=network,hardware
+type=command
+command=find /proc/net/pf_ring/ -maxdepth 1 -regex '.*\-eth[0-9]\.[0-9]+$' -exec cat {} \;
+profiles=Sensor:>4.0
+raw_limit=100
+
+[Packets lost]
+pattern=Bound\sDevice\(s\)\s+\:\s+(eth\d)\n.*\n.*\n.*\n.*\n.*\nAppl\.\sName\s+\:\s+(Suricata|Snort)\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\n.*\nTot\sPackets\s+\:\s(\d+)\nTot\sPkt\sLost\s+\:\s(\d+)
+conditions=@info@;@info@;@int@:>0;@int@:<position[2]*0.1
+fail_if_empty=False
+severity=High
+warning=Too many lost packets using the pf_ring driver.
+advice=The pf_ring driver enables high speed network packet capture. Too many lost packets may be a sympton of a failing driver or a misconfiguration in the network.
+

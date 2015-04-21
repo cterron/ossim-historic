@@ -268,7 +268,7 @@ if ($mode == 'insert')
         }
         catch(Exception $e)
         {
-            error_log($e->getMessage(), 0);                    
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());                   
         }
     }
     

@@ -40,15 +40,17 @@ $sm_perms = array ('EventsHids', 'EventsHidsConfig');
 $sensor_id  = POST('sensor_id');
 $agent_id   = POST('agent_id');
 $agent_ip   = POST('agent_ip');
+$agent_name = POST('agent_name');
 
 
 if (Session::menu_perms($m_perms, $sm_perms))
 {
     try
     {
-        ossim_valid($agent_id, OSS_DIGIT,  'illegal:' . _('Agent ID'));
-        ossim_valid($sensor_id, OSS_HEX,   'illegal:' . _('Sensor ID'));
-
+        ossim_valid($agent_id, OSS_DIGIT,                                                         'illegal:' . _('Agent ID'));
+        ossim_valid($sensor_id, OSS_HEX,                                                          'illegal:' . _('Sensor ID'));
+        ossim_valid($agent_name, OSS_SCORE, OSS_LETTER, OSS_DIGIT, OSS_DOT, OSS_SPACE, "(", ")",  'illegal:' . _('Agent Name'));
+        
         if ($agent_ip != 'any')
         {
             ossim_valid($agent_ip, OSS_IP_CIDR_0,   'illegal:' . _('Agent IP'));
@@ -67,13 +69,12 @@ if (Session::menu_perms($m_perms, $sm_perms))
             $db->close();
         }
 
+        $more_info       = Ossec_agent::get_info($sensor_id, $agent_id);
 
-        $more_info        = Ossec_agent::get_info($sensor_id, $agent_id);
-        $last_scan_dates  = '';
-        
-        if (Asset_host_ips::valid_ip($agent_ip))
-        {        
-            $last_scan_dates = Ossec_agent::get_last_scans($sensor_id, $agent_ip);
+        $last_scan_dates = array();
+        if ($agent_ip != '127.0.0.1')
+        {
+            $last_scan_dates = Ossec_agent::get_last_scans($sensor_id, $agent_name);
         }
 
         if (is_array($more_info) && !empty($more_info))

@@ -46,19 +46,20 @@ $error_msg     = NULL;
 try
 {
     //Get software information
-
     $no_cache = ($id_section == 'sw_pkg_checking') ? TRUE : FALSE;
     $res_si   = Av_center::get_system_status($system_id, 'software', $no_cache);
-
-    $packages_info = Av_center::get_packages_pending($system_id, TRUE);
-    $release_info  = Av_center::get_release_info($system_id);
+    
+    if ($res_si['packages']['pending_updates'] == TRUE)
+    {
+        $packages_info = Av_center::get_packages_pending($system_id, TRUE);
+        $release_info  = Av_center::get_release_info($system_id);
+    }
+    
 }
 catch (\Exception $e)
 {
     $error_msg = $e->getMessage();
 }
-
-
 
 ?>
 
@@ -142,7 +143,7 @@ catch (\Exception $e)
 
             <thead>
                 <tr>
-                    <th class='t_header'><?php echo _('Alienvault Package Information')?></th>
+                    <th class='t_header'><?php echo _('AlienVault Package Information')?></th>
                 </tr>
             </thead>
 
@@ -176,13 +177,16 @@ catch (\Exception $e)
 
             <div class='rbtn'>
                 <?php 
-                if ($res_si['packages']['pending_updates'] == TRUE)
+                $cond1 = is_array($packages_info) && !empty($packages_info); //Package list condition
+                $cond2 = $res_si['packages']['pending_updates'] == TRUE; //Pending updates condition
+                
+                if ($cond1 && $cond2)
                 {
                     if ($res_si['packages']['pending_feed_updates'] == TRUE)
                     {
-                        ?>
+                    ?>
                         <input type='button' id='install_rules' name='install_rules' class='av_b_secondary' value='<?php echo _('Update feed only')?>'/>
-                        <?php
+                    <?php
                     }
                     ?>
 
@@ -274,7 +278,7 @@ catch (\Exception $e)
                 }
 
 
-                var title = "<div class='dt_title' style='top:10px;'><?php echo _('Alienvault Package Information') ?></div>";
+                var title = "<div class='dt_title' style='top:10px;'><?php echo _('AlienVault Package Information') ?></div>";
                 $('div.dt_header').prepend(title);
             }
         });

@@ -2,7 +2,9 @@
 
 VIRTUALENV="/usr/share/alienvault/api_core"
 CELERYBEAT="/usr/share/alienvault/api/scripts/celerybeat"
-PIDFILE="/var/run/alienvault/beat.pid"
+RUNDIR="/var/run"
+PIDDIR="$RUNDIR/alienvault"
+PIDFILE="$PIDDIR/beat.pid"
 SCHEDFILE="/tmp/celerybeat-schedule"
 API_LOG="/var/log/alienvault/api/api.log"
 API_USER="avapi"
@@ -12,6 +14,27 @@ do_start ()
     # Delete old scheduler file, if exists.
     if [ -f $SCHEDFILE ]; then
         rm $SCHEDFILE
+    fi
+
+    # Check if /var/run is a symbolic link to determine the Debian configuration
+    if [ -h $RUNDIR ]; then
+       # Wheezy
+       mount | grep "/run type"
+       if [ "$?" != "1" ]; then
+          if [ ! -d $PIDDIR ]; then
+             mkdir -p -m 0770 "$PIDDIR"
+             chgrp -R alienvault "$PIDDIR"
+          fi
+       else
+          log_daemon_msg "ERROR: /run is not mounted yet. The system is not stable. Skipping"
+          exit 1
+       fi
+    else
+       # Squeeze
+       if [ ! -d $PIDDIR ]; then
+          mkdir -p -m 0770 "$PIDDIR"
+          chgrp -R alienvault "$PIDDIR"
+       fi
     fi
 
     sudo -u $API_USER $CELERYBEAT start > /dev/null 2>&1

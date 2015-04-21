@@ -240,7 +240,7 @@ $CONFIG{'DBK'} = "UWjiGNlEE0y5BxGk3dJAR7INx8IAf00MS3/3kR1QUVMazTXl4hqNPds/";
 $CONFIG{'MAXPORTSCANS'} = 8;
 $CONFIG{'ROOTDIR'} = $nessus_vars{'nessus_rpt_path'};
 
-
+$CONFIG{'MAX_HOSTS'} = 4095;
 
 #GLOBAL VARIABLES
 my $debug                    = 0;
@@ -271,6 +271,7 @@ my $xml_output = $CONFIG{'ROOTDIR'}."tmp/tmp_nessus_jobs$$.xml";
 
 my $cred_name = "";
 my $no_results = FALSE;
+my $max_targets = 0;
 my $scan_timeout = FALSE;
 my $omp_scan_timeout = FALSE;
 
@@ -533,7 +534,7 @@ sub select_job {
         $serv_code = $vuln_nessus_servers->{$serverid}->{'site_code'};
         $feed = $vuln_nessus_servers->{$serverid}->{'server_feedtype'};
         #ONLY START JOBS ASSIGNED TO SERVER OR NOT ASSIGNED A SERVER
-        my $sql_filter = "AND ( t1.scan_ASSIGNED='$serverid' OR t1.scan_ASSIGNED IS Null OR t1.scan_ASSIGNED='Null' ) ";
+        my $sql_filter = "AND ( t1.notify='$serverid')";
         #IF NOT A DIRECT/PROFESSIONAL FEED - DO NOT START A COMPLIANCE AUDIT
         if ( $feed !~ /[direct|professional]/i ) {
             #$sql_filter .= "AND ( t1.meth_Wcheck IS NULL AND t1.meth_Wfile IS NULL AND t1.meth_Ucheck IS NULL) ";
@@ -676,11 +677,7 @@ sub run_job {
 
     my ( $sql, $sth_sel, $sth_upd );
 
-    $serverid = get_server_credentials( $sel_servid );  #GET THE SERVER ID'S FOR WORK PROCESSING
-    #if ($serverid == 0 ) {  #CHECK FOR AVAILABLE SCAN SLOTS (AN ID WOULD BE RETURNED)
-    #    logwriter( "WARNING: Currently Not Enough Free scan slots to run cron job", 4 );
-    #    return;
-    #}
+    get_server_credentials( $sel_servid );  #GET THE SERVER ID'S FOR WORK PROCESSING
 
     my $startdate = getCurrentDateTime();
 
@@ -690,6 +687,8 @@ sub run_job {
     logwriter( $sql, 5 );
     $sth_sel = $dbh->prepare( $sql );
     $sth_sel->execute(  );
+    
+    # jbfk_name is the sensor ID
     
     my ( $Jname, $juser, $jbfk_name, $Jtype, $host_list, $Jvset, $jtimout, $meth_CRED, $scan_locally, $resolve_names) = $sth_sel->fetchrow_array(  );
     
@@ -765,7 +764,7 @@ sub run_job {
 
     logwriter( "A SCHEDULED SCAN #$job_id WILL BEGIN SHORTLY FOR THE SELECTED HOSTS", 4 );
     logwriter( "\n-----------------\n<HOSTLIST>\n$host_list\n</HOSTLIST>\n", 4 );
-    logwriter( "Available Server=$serverid", 4 );
+    logwriter( "Available Server=$sel_servid", 4 );
 
     $sql = qq{ UPDATE vuln_jobs SET status='R', scan_START='$startdate' WHERE id='$job_id' };
     safe_db_write ( $sql, 4 );            #use insert/update routine
@@ -794,13 +793,6 @@ sub setup_scan {
     my ( $targetinfo, @results, $job_title, $nessusok, $scantime, $already_marked );
     
     $already_marked = FALSE;
-
-    #INIT DEFAULT VALUES (CRON SCAN DEFAULTS)
-    #$fk_name="";
-
-    #UPDATE JOB_ID with SERVER PROCESS INFO
-    $sql = qq{ UPDATE vuln_jobs SET scan_SERVER='$serverid', scan_PID=$$ WHERE id='$job_id' };
-    safe_db_write ( $sql, 4 );            #use insert/update routine
 
     $job_title = "$job_id - $Jname";
 
@@ -920,13 +912,19 @@ sub setup_scan {
         safe_db_write ( $sql, 4 );            #use insert/update routine
         $already_marked = TRUE;
     }
-    
-    if (!$nessusok && $already_marked == FALSE) {
+
+    if ($no_results == TRUE && $max_targets>=$CONFIG{'MAX_HOSTS'} && $txt_meth_wcheck ne "") {
+        # MAX EXCEED
+        $sql = qq{ UPDATE vuln_jobs SET status='F', meth_Wcheck=CONCAT(meth_Wcheck, '$txt_meth_wcheck'), scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' }; #MARK FAILED
+        safe_db_write ( $sql, 1 );
+        exit;
+    }    
+    elsif (!$nessusok && $already_marked == FALSE) {
         my $retries_allowed = 0;
         if ( $CONFIG{'failedRetries'} ) { $retries_allowed = $CONFIG{'failedRetries'}; }
         if ( $Jtype =~ /c/i ) { $retries_allowed = 0; }
 
-        if ( $retries_allowed eq "0" ) {;
+        if ( $retries_allowed eq "0" ) {
             # MARK SCAN AS FAILED
             $sql = qq{ UPDATE vuln_jobs SET status='F', scan_END=now(), scan_NEXT=NULL WHERE id='$job_id' };
             safe_db_write ( $sql, 4 );            #use insert/update routine
@@ -1202,7 +1200,7 @@ sub run_nessus {
 	    if ($best_server ne "") {
 	    	$fk_name = $best_server;
 	    	$serverid = $best_server_id;
-	        $sql = qq{ UPDATE vuln_jobs SET scan_SERVER='$serverid' WHERE id='$job_id' };
+	        $sql = qq{ UPDATE vuln_jobs SET scan_SERVER='$best_server_id' WHERE id='$job_id' };
 	        safe_db_write ( $sql, 4 );
 	    }    
     }
@@ -1253,14 +1251,21 @@ sub run_nessus {
     }
     print TARGET "$targets"; 
     close TARGET;
-	logwriter("targets: $targets", 4);
+    logwriter("targets: $targets", 4);
+    
     
     if($nessushostip =~ m/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/) {
         $sql = qq{ UPDATE vuln_jobs SET meth_Wcheck=CONCAT(meth_Wcheck, 'Scan Server Selected: $nessushostip<br />') WHERE id='$job_id' };
         safe_db_write ( $sql, 4 );
     }
-    
-    if($targets ne "") {
+
+    $max_targets = int(`cat "$targetfile" | wc -l`);
+    if ($max_targets>=$CONFIG{'MAX_HOSTS'}) {
+        $txt_meth_wcheck = "The selected target exceeds $CONFIG{'MAX_HOSTS'} alive hosts. Please select a different target.";
+        @issues = ();
+        $no_results = TRUE;
+    }    
+    elsif($targets ne "") {
         if ($CONFIG{'NESSUSPATH'} !~ /omp\s*$/) {
             logwriter("Selected sid: $sid", 4);
             create_profile( \%nes_prefs, \@nes_plugins, $nessus_cfg, $username, $sid ); 
@@ -3008,10 +3013,11 @@ sub process_results {
             logwriter( $sql_update, 5 );
             $sth_update=$dbh->prepare( $sql_update );
             $sth_update->execute;
-            my $vuln_host = $sth_update->fetchrow_array;
+            my ($vuln_host) = $sth_update->fetchrow_array;
+            $vuln_host = 0 if (!defined $vuln_host);
             
             # update vulns into vuln_nessus_latest_reports - sort facility
-            $sql_update = qq{ UPDATE vuln_nessus_latest_reports SET results_sent=$vuln_host WHERE hostIP='$hip' AND ctx=UNHEX('$ctx') AND username='$username' };
+            $sql_update = qq{ UPDATE vuln_nessus_latest_reports SET results_sent='$vuln_host' WHERE hostIP='$hip' AND ctx=UNHEX('$ctx') AND username='$username' };
             logwriter( $sql_update, 5 );
             $sth_update = $dbh->prepare( $sql_update );
             $sth_update->execute;
@@ -4867,7 +4873,7 @@ sub update_ossim_incidents {
             }
             my $priority = calc_priority($risk, $hostid, $scanid);
             $sql_inc = qq{ INSERT INTO incident(uuid, ctx, title, date, ref, type_id, priority, status, last_update, in_charge, submitter, event_start, event_end)
-                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'Nessus Vulnerability', '$priority', 'Open', now(), '$username', 'nessus', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
+                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'OpenVAS Vulnerability', '$priority', 'Open', now(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
             safe_db_write ($sql_inc, 4);
             # TODO: change this for a sequence
             $sql_inc = qq{ SELECT MAX(id) id from incident };

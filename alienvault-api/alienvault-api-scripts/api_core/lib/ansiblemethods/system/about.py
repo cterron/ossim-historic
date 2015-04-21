@@ -30,13 +30,15 @@
 
 import ConfigParser
 
+from time import ctime
 from ansiblemethods.ansiblemanager import Ansible
 from ansiblemethods.system.system import get_system_id, get_profile
 from ansiblemethods.helper import fetch_file
 
 ansible = Ansible()
 
-def get_alienvault_version (system_ip):
+
+def get_alienvault_version(system_ip='127.0.0.1'):
     """ Return the alienvault version
     @system_ip: The IP address of the system
     """
@@ -46,30 +48,60 @@ def get_alienvault_version (system_ip):
           else pro="OSSIM";
         fi;
         version=$(dpkg -l | grep ossim-cd-tools | awk '{print $3}' | awk -F'-' '{ print $1 }');
-        echo "$pro $version"
+        extravers=$(dpkg -l | grep "alienvault-vmware\|alienvault-hw\|alienvault-ami\|ossim-ami" |  awk '{print $2}')
+        if dpkg -l | grep "alienvault-vmware\|alienvault-hw\|alienvault-ami\|ossim-ami" > /dev/null;
+            then echo "$pro $version ($extravers)";
+            else echo "$pro $version";
+        fi;
         """
     response = ansible.run_module([system_ip], "shell", command)
-    if system_ip in response ['dark'] :
+    if system_ip in response['dark']:
         return (False, "get_alienvault_version: " + response['dark'][system_ip]['msg'])
     version = response['contacted'][system_ip]['stdout']
     return (True, version)
 
-def get_installation_date (system_ip='127.0.0.1'):
+
+def get_is_professional(system_ip='127.0.0.1'):
+    """ Return if the system is professional
+    @system_ip: The IP address of the system
+    """
+    command = """
+    executable=/bin/bash dpkg -l alienvault-professional > /dev/null
+    """
+    try:
+        response = ansible.run_module([system_ip], "shell", command)
+        if system_ip in response['dark']:
+            return False, response['dark'][system_ip]['msg']
+        if 'failed' in response['contacted'][system_ip]:
+            return False, response['contacted'][system_ip]['msg']
+
+        is_pro = response['contacted'][system_ip]['rc'] == 0
+    except Exception, e:
+        return False, "[get_is_professional] %s" % str(e)
+
+    return True, is_pro
+
+
+def get_installation_date(system_ip='127.0.0.1'):
     """ Return the string with the system installation information
     @system_ip: The IP address of the system
     """
-    command = """executable=/bin/bash
-    date=$(ls -latr /etc/ossim/.ossim_installer_version | cut -d' ' -f5,6,7,8);
-    cd=$(cat /etc/ossim/.ossim_installer_version);
-    echo "$date ($cd)"
-    """
-    response = ansible.run_module([system_ip], "shell", command)
-    if system_ip in response ['dark'] :
-        return (False, "get_installation_date" + response['dark'][system_ip]['msg'])
-    installation_date = response['contacted'][system_ip]['stdout']
-    return (True, installation_date)
+    installer_file = "/etc/ossim/.ossim_installer_version"
 
-def get_license_info (system_ip='127.0.0.1'):
+    response = ansible.run_module([system_ip], "stat", "path=%s" % installer_file)
+    if system_ip in response['dark']:
+        return (False, "get_installation_date" + response['dark'][system_ip]['msg'])
+    installation_date = response['contacted'][system_ip]['stat']['mtime']
+
+    response = ansible.run_module([system_ip], "command", "cat %s" % installer_file)
+    if system_ip in response['dark']:
+        return (False, "get_installation_date" + response['dark'][system_ip]['msg'])
+    installation_version = response['contacted'][system_ip]['stdout']
+
+    return (True, "%s (%s)" % (ctime(installation_date), installation_version))
+
+
+def get_license_info(system_ip='127.0.0.1'):
     """
     Return a dictionary with the license information on '[appliance]' section
     @system_ip: The IP address of the system
@@ -87,7 +119,7 @@ def get_license_info (system_ip='127.0.0.1'):
     return (True, license_info)
 
 
-def get_about_info (system_ip='127.0.0.1'):
+def get_about_info(system_ip='127.0.0.1'):
     """ Return the about string of system with system_ip
     @system_ip: The IP address of the system
     """
@@ -108,7 +140,7 @@ def get_about_info (system_ip='127.0.0.1'):
     (success, profiles) = get_profile(system_ip)
     profile_str = ""
     if len(profiles) == 4:
-        profile_str+="All In One"
+        profile_str += "All In One"
     else:
         profile_str += ','.join(x for x in profiles)
 

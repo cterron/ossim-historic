@@ -1,0 +1,15 @@
+[properties]
+name=AlienVault Agent log
+description=Parses the Agent log to search for errors.
+category=alienvault,platform
+type=file
+filename=/var/log/alienvault/agent/agent.log
+raw_limit=2000
+
+[Errors in agent.log]
+pattern=Alienvault\-Agent\[ERROR\]\:\s(.*)$
+conditions=@string@:==""
+fail_if_empty=False
+severity=High
+warning=Error(s) were found in the AlienVault Agent log file
+advice=Errors in the AlienVault Agent log file may be a symptom of misconfigured plugins, unavailable data sources or missing packages, among others.

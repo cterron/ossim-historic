@@ -145,6 +145,7 @@ foreach ($services as $host_id => $services_list)  // Loop by Services
         $data[] = array(
                 '<span id="hostid_'.$host_id.'">'.$_host.'</span>',
                 $sw['port'],
+                strtoupper($sw['protocol']['name']),
                 $sw['service'],
                 $has_vulns,
                 $has_nagios,

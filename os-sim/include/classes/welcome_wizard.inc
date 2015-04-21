@@ -196,7 +196,6 @@ class Welcome_wizard
         
         //Then we clean all the date stored related to steps that are greater than the current step
         $this->_clean_data();
-
     }
     
     
@@ -246,7 +245,6 @@ class Welcome_wizard
         $this->save_status();
         
         return $this->is_wizard_finish();
-
     }
 
 
@@ -290,7 +288,6 @@ class Welcome_wizard
      */
     public function get_step_file()
     {
-
         $file = 'step_' . $this->_step . '.php';
 
         return $file;
@@ -358,7 +355,6 @@ class Welcome_wizard
         {
             unset($this->_step_data[$step]);
         }
-        
     }
 
 
@@ -411,7 +407,6 @@ class Welcome_wizard
      */
     protected function _validate_wizard()
     {
-
         $function = '_validate_step_' . $this->_step;
         
         //If the validation function is defined then we validate
@@ -1072,7 +1067,6 @@ class Welcome_wizard
             {
 
             }
-
         }
 
         $db->close();
@@ -1089,7 +1083,7 @@ class Welcome_wizard
             
             foreach ($default_nets as $net_id => $_net)
             {
-        	    Asset_net::delete_from_db($conn, $net_id, FALSE);
+                Asset_net::delete_from_db($conn, $net_id, FALSE);
             }
             
             Asset::report_changes($conn, 'net');

@@ -134,6 +134,9 @@ if($total > 0)
 	list($conds_list, $pol_conds) = Policy::get_conditions_hash($conn, $ctx);
 }
 
+$server_sign_line = Policy::is_allowed_sign_line($conn);
+
+$value_any = '<span style="color:#AAA;font-weight:bold">'. _('ANY') .'</span>';
 
 foreach($policy_list as $policy) 
 {
@@ -147,22 +150,40 @@ foreach($policy_list as $policy)
 	$pname  = $policy->get_descr();
 	$pname  = (empty($pname)) ? _("Unknown") : "<a href='newpolicyform.php?ctx=$ctx&id=$id'>$pname</a>";
 	
-	/*Checking if the policy has a conflict */
+	/*Warning Tooltip */
+	$tooltip    = '';
+	
+	//Role list
+	$role_list  = $policy->get_role($conn);
+	
+	if (is_object($role_list[0]))
+	{
+    	if ($role_list[0]->get_sign() == 1 && !$server_sign_line)
+    	{
+        	$tooltip .= _('- This policy is trying to use Log Line Sign and the AlienVault Server only allows Log Block Sign. In order to get the policy working, you can modify the Log Sign method in Deployment -> Servers.');
+    	}
+	}
+	
+	//Checking if the policy has a conflict 
 	$md5        = $pol_conds[$id];
 	$collisions = $conds_list[$md5];
-
+    
 	if(count($collisions) > 1)
 	{
-		$tooltip = _('A collision was found in the next policies') . ':<br><ul>';
+        $tooltip .= (empty($tooltip)) ? '' : '<br/><br/>';
+ 		$tooltip .= _('- A collision was found in the next policies') . ":<br/><ul id='policy_collision_list'>";
 		
 		foreach($collisions as $c)
 		{
 			$tooltip .= "<li>$c</li>";
 		}
 		$tooltip .= "</ul>";
-		
-		$pname   = "<a href='javascript:;' class='tiptip' title='$tooltip'><img src='../pixmaps/tables/warning.png' align='absbottom'/></a> ".$pname;
 	}	
+	
+	if (!empty($tooltip))
+	{
+	    $pname = '<a href="javascript:;" class="tiptip" title="'. Util::htmlentities($tooltip) .'"><img src="../pixmaps/tables/warning.png"/></a> ' . $pname;
+	}
 	
 	
 	/****************************************/
@@ -217,8 +238,9 @@ foreach($policy_list as $policy)
     		}
     	}
     	
-    	if (empty($source)) {
-        	$source = "<img src='../pixmaps/theme/host.png' align=absbottom />"._('ANY');
+    	if (empty($source)) 
+    	{
+        	$source = "<img src='../pixmaps/theme/host.png' align=absbottom />$value_any";
         }
     	
         $xml.= "<cell><![CDATA[" . $source . "]]></cell>";
@@ -272,7 +294,7 @@ foreach($policy_list as $policy)
     	
     	if (empty($dest)) 
     	{
-        	$dest = "<img src='../pixmaps/theme/host.png' align=absbottom />"._('ANY');
+        	$dest = "<img src='../pixmaps/theme/host.png' align=absbottom />$value_any";
         }
     	
         $xml.= "<cell><![CDATA[" . $dest . "]]></cell>";
@@ -293,7 +315,7 @@ foreach($policy_list as $policy)
         
         if (empty($ports)) 
         {
-            $ports = "<font color='#AAAAAA'><b>"._('ANY')."</b></font>";
+            $ports = $value_any;
         }
         
         $xml.= "<cell><![CDATA[" . $ports . "]]></cell>";
@@ -314,7 +336,7 @@ foreach($policy_list as $policy)
         
         if (empty($ports)) 
         {
-            $ports = "<font color='#AAAAAA'><b>"._('ANY')."</b></font>";
+            $ports = $value_any;
         }
 
         $xml.= "<cell><![CDATA[" . $ports . "]]></cell>";
@@ -328,11 +350,17 @@ foreach($policy_list as $policy)
 	//DS Groups
     $plugingroups = "";
     
-    foreach($policy->get_plugingroups($conn, $policy->get_id()) as $group) 
+    if ($policy_pgroups = $policy->get_plugingroups($conn, $policy->get_id()))
     {
-        $plugingroups.= ($plugingroups == "" ? "" : "<br/>") . "<a href='javascript:;' onclick='GB_show(\""._("Plugin groups")."\",\"plugingroups.php?id=" . $group['id'] . "&collection=1#".$group['id']."\",500,\"90%\");return false;'>" . $group['name'] . "</a>";
+        foreach($policy_pgroups as $group) 
+        {
+            $plugingroups.= ($plugingroups == "" ? "" : "<br/>") . "<a href='javascript:;' onclick='GB_show(\""._("Plugin groups")."\",\"plugingroups.php?id=" . $group['id'] . "&collection=1#".$group['id']."\",500,\"90%\");return false;'>" . $group['name'] . "</a>";
+        }
     }
-
+    else
+    {
+        $plugingroups = $value_any;
+    }
    
 	//Taxonomy
 	$taxonomy = '';
@@ -358,7 +386,7 @@ foreach($policy_list as $policy)
     	$event_types = "<b>" . _('Taxonomy') . ":</b><br>"  . $taxonomy;
     }
    
-   $xml.= "<cell><![CDATA[" . $event_types . "]]></cell>";
+    $xml.= "<cell><![CDATA[" . $event_types . "]]></cell>";
 
     if ($engine != 'engine')
     {
@@ -376,8 +404,8 @@ foreach($policy_list as $policy)
         			
         			if($sensor_exist[$sensor->get_sensor_id()]=='false')
         			{
-        				$sensors='<div title="'._('sensor non-existent').'">'.$sensors;
-        				$sensors.= '<a href="newpolicyform.php?id='.$id.'&sensorNoExist=true#tabs-5"><img style="vertical-align: middle" src="../pixmaps/tables/cross-small-circle.png" /></a></div>';
+        				$sensors  ='<div title="'._('sensor non-existent').'">' . $sensors;
+        				$sensors .= '<a href="newpolicyform.php?id='.$id.'&sensorNoExist=true#tabs-5"><img style="vertical-align: middle" src="../pixmaps/tables/cross-small-circle.png" /></a></div>';
         			}
         		}
             }
@@ -385,7 +413,7 @@ foreach($policy_list as $policy)
         
     	if (empty($sensors)) 
     	{
-        	$sensors = "<font color='#AAAAAA'><b>ANY</b></font>";
+        	$sensors = $value_any;
         }
         
         $xml.= "<cell><![CDATA[" . $sensors . "]]></cell>";
@@ -463,7 +491,7 @@ foreach($policy_list as $policy)
     } 
     else 
     {
-        $xml.= "<cell><![CDATA[null]]></cell>";
+        $xml.= "<cell><![CDATA[$value_any]]></cell>";
     }
     
     $targets = "";
@@ -481,12 +509,11 @@ foreach($policy_list as $policy)
 	
 	if (empty($targets))
 	{
-    	$targets = "<font color='#AAAAAA'><b>ANY</b></font>";
+    	$targets = $value_any;
     }
 	
     $xml.= "<cell><![CDATA[" . $targets . "]]></cell>";
-    $role_list = $policy->get_role($conn);
-    
+        
     if (count($role_list) < 1) 
     {
 			$xml.= "<cell></cell>";
@@ -497,7 +524,12 @@ foreach($policy_list as $policy)
 			$xml.= "<cell></cell>";
 			$xml.= "<cell></cell>";
 			//$xml.= "<cell></cell>";
-			$xml.= "<cell></cell>";
+			
+            if ($engine != 'engine')
+            {
+                $xml.= "<cell></cell>";
+            }
+            
 			$xml.= "<cell></cell>";
 			$xml.= "<cell></cell>";
 	} 
@@ -512,8 +544,13 @@ foreach($policy_list as $policy)
 			$xml.= "<cell><![CDATA[" . ($role->get_cross_correlate() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
 			$xml.= "<cell><![CDATA[" . ($role->get_store() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
 			//$xml.= "<cell><![CDATA[" . ($role->get_reputation() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
-			$xml.= "<cell><![CDATA[" . ($role->get_sem() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
-			$xml.= "<cell><![CDATA[" . ($role->get_sign() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
+			
+			if ($engine != 'engine')
+			{
+    			$xml.= "<cell><![CDATA[" . ($role->get_sem() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
+    		}
+    		
+			$xml.= "<cell><![CDATA[" . ($role->get_sign() ? _('Line') : _('Block')) . "]]></cell>";
 			$xml.= "<cell><![CDATA[" . ($role->get_resend_event() ? "<img src='../pixmaps/tables/tick-small-circle.png'>" : "<img src='../pixmaps/tables/cross-small-circle.png'>") . "]]></cell>";
 			break;
 		}

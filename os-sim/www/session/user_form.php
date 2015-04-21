@@ -238,7 +238,6 @@ if ($login != '')
 		{
 			$_SESSION['user_in_db'] = $login;
 		}
-		
 	}
 	else
 	{
@@ -340,16 +339,18 @@ if ($login != '')
 				myselect.remove(delems[i]);
 			}
 		}
-	
+
+
 		function add_entity(value, text)
 		{
 			addto('entities',text,value);
 			load_tree('');
 			deleteall('assets');
 			deleteall('sensors');
+			selectall('entities');
 		}
-		
-		
+
+
 		function add_select_item(select_id,val,text)
 		{
 			if (!exists_in_combo(select_id,text,val))
@@ -562,10 +563,10 @@ if ($login != '')
 				<?php 
 			} 
 			else 
-			{ 
-				?>				
+			{
+				?>
 				var entity  = "<?php echo Session::get_default_ctx()?>";
-				<?php 
+				<?php
 			} 
 			?>
 			
@@ -573,17 +574,17 @@ if ($login != '')
 			
 			$('#td_assets').css('vertical-align', 'top');
 			$('#td_assets').append('<div id="assets_tree" style="width:100%"></div>');
-			
-			if (entity != '') 
+
+			if (entity != '')
 			{
 				var key = <?php echo '"e_"+entity+"_assets|' . (($pro) ? 'se_"+entity' : 'sensors"') ?>;
-				
+
 				$("#assets_tree").dynatree({
 					initAjax: { url: "../tree.php?key="+key },
 					clickFolderMode: 2,
 					minExpandLevel:  2,
 					onActivate: function(dtnode) {
-						if (dtnode.data.key.match(/net_/) || dtnode.data.key.match(/host_/)) 
+						if (dtnode.data.key.match(/net_/) || dtnode.data.key.match(/host_/))
 						{
 							k = dtnode.data.key.replace(/(host|net)_/, '');
 							addto(combo,dtnode.data.val,k);
@@ -1043,14 +1044,14 @@ if ($login != '')
 						if ($login != '' && (!$duplicate && $_GET['load_cookies'] != '1'))
 						{ 
 							?>
-							<input type="text" name="text_login" id="text_login" class='text_login' disabled='disabled' readonly='readonly' autocomplete="off" value="<?php echo $login?>"/>
+							<input type="text" name="text_login" id="text_login" class='text_login' maxlength="64" disabled='disabled' readonly='readonly' autocomplete="off" value="<?php echo $login?>"/>
 							<input type="hidden" class='vfield' name="login" id="login" value="<?php echo $login ?>"/>
 							<?php 
 						} 
 						else 
 						{ 
 							?>
-							<input type="text" name="login" id="login" class='vfield' autocomplete="off" value="<?php echo $login?>"/>
+							<input type="text" name="login" id="login" class='vfield' maxlength="64" autocomplete="off" value="<?php echo $login?>"/>
 							<?php 
 						} 
 						?>
@@ -1071,7 +1072,7 @@ if ($login != '')
 				<tr>
 					<th><label for="email"><?php echo _('User email');?><img style='margin-left: 3px;' src="../pixmaps/email_icon.gif"/></label></th>
 					<td class="nobborder">
-						<input type="text" autocomplete="off" class='vfield' name="email" id="email" value="<?php echo $email?>"/>
+						<input type="text" autocomplete="off" class='vfield' name="email" id="email" maxlength="255" value="<?php echo $email?>"/>
 					</td>
 				</tr>
 	

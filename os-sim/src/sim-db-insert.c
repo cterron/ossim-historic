@@ -984,8 +984,8 @@ sim_db_insert_sensor_properties (SimDatabase  * database,
   {
     gchar *query;
 
-    query = g_strdup_printf("INSERT INTO sensor_properties (sensor_id, version) "
-                            "VALUES (%s, '%d.%d.%d') ON DUPLICATE KEY UPDATE version = '%d.%d.%d'",
+    query = g_strdup_printf("INSERT INTO sensor_properties (sensor_id, version, has_nagios) "
+                            "VALUES (%s, '%d.%d.%d', 1) ON DUPLICATE KEY UPDATE version = '%d.%d.%d'",
                              sim_uuid_get_db_string (sim_sensor_get_id (sensor)),
                              version->major, version->minor, version->micro,
                              version->major, version->minor, version->micro);

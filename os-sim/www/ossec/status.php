@@ -62,10 +62,6 @@ if (!is_array($s_data['sensors']) || empty($s_data['sensors']))
 $db->close();
 
 $sensor_opt = $s_data['sensor_opt'];
-
-$conf = $GLOBALS['CONF'];
-
-$_SESSION['_idm'] = $idm_enabled = $conf->get_conf('enable_idm');
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

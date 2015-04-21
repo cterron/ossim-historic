@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -72,7 +72,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP SIP UDP Softphone IN
 
 #by Blake Hartstein of Demarc
 #
-alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP MultiTech SIP UDP Overflow"; content:"INVITE"; nocase; depth:6; isdataat:65,relative; content:!"|0a|"; within:61; reference:cve,2005-4050; reference:url,doc.emergingthreats.net/2003237; classtype:attempted-user; sid:2003237; rev:8;)
+#alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP MultiTech SIP UDP Overflow"; content:"INVITE"; nocase; depth:6; isdataat:65,relative; content:!"|0a|"; within:61; reference:cve,2005-4050; reference:url,doc.emergingthreats.net/2003237; classtype:attempted-user; sid:2003237; rev:8;)
 
 #from the rules at nextsoft.cz
 #intended to catch unusual numbers of unauthorized responses from sip servers
@@ -85,19 +85,16 @@ alert tcp $HOME_NET 5060 -> $EXTERNAL_NET any (msg:"ET VOIP Multiple Unauthorize
 alert udp $HOME_NET 5060 -> $EXTERNAL_NET any (msg:"ET VOIP Multiple Unauthorized SIP Responses UDP"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_src, count 5, seconds 360; reference:url,doc.emergingthreats.net/2009700; classtype:attempted-dos; sid:2009700; rev:1;)
 
 #
-alert ip any any -> any 5060 (msg:"GPL VOIP SIP 401 Unauthorized Flood"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:100000162; rev:2;)
+alert ip any 5060 -> any any (msg:"GPL VOIP SIP 401 Unauthorized Flood"; content:"SIP/2.0 401 Unauthorized"; depth:24; threshold: type both, track by_dst, count 100, seconds 60; classtype:attempted-dos; sid:2100162; rev:5;)
 
 #
-alert ip any any -> any 5060 (msg:"GPL VOIP SIP 407 Proxy Authentication Required Flood"; content:"SIP/2.0 407 Proxy Authentication Required"; depth:42; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:100000163; rev:2;)
+alert ip any any -> any 5060 (msg:"GPL VOIP SIP 407 Proxy Authentication Required Flood"; content:"SIP/2.0 407 Proxy Authentication Required"; depth:42; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100163; rev:4;)
 
 #
-alert ip any any -> any 5060 (msg:"GPL VOIP SIP INVITE message flooding"; content:"INVITE"; depth:6; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:100000158; rev:2;)
+alert ip any any -> any 5060 (msg:"GPL VOIP SIP INVITE message flooding"; content:"INVITE"; depth:6; threshold: type both, track by_src, count 100, seconds 60; classtype:attempted-dos; sid:2100158; rev:4;)
 
 #
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 1720 (msg:"GPL VOIP Q.931 Invalid Call Reference Length Buffer Overflow"; flow:established; content:"|08|"; depth:1; byte_test:1,>,4,1; reference:url,www.ethereal.com/news/item_20050504_01.html; reference:url,www.elook.org/internet/126.html; classtype:attempted-dos; sid:100000892; rev:2;)
-
-#
-alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:100000223; rev:1;)
+alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"GPL VOIP EXPLOIT SIP UDP Softphone overflow attempt"; content:"|3B|branch|3D|"; content:"a|3D|"; pcre:"/^a\x3D[^\n]{1000,}/smi"; reference:bugtraq,16213; reference:cve,2006-0189; classtype:misc-attack; sid:2100223; rev:2;)
 
 #
 alert udp $EXTERNAL_NET any -> $HOME_NET 5060 (msg:"ET VOIP Possible Modified Sipvicious OPTIONS Scan"; content:"OPTIONS "; depth:8; content:"ccxllrlflgig|22|<sip|3A|100"; nocase; distance:0; reference:url,code.google.com/p/sipvicious/; reference:url,blog.sipvicious.org/; classtype:attempted-recon; sid:2011422; rev:2;)

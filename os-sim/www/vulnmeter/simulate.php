@@ -54,33 +54,35 @@ $id_targets   = explode(',', $targets);
 
 unset($_SESSION['_vuln_targets']);
 
-$error_message = '';
-$targets       = array();
+$error_message   = '';
+$targets         = array();
+$selected_ids    = array(); // This array will content all the selected sensor IDs
+$local_sensor_id = NULL;
 
 foreach($id_targets as $id_target) if (trim($id_target) != '')
 {
     $id_target = trim($id_target);
-    
+
     ossim_set_error(false);
-    
+
     if (preg_match("/^!/",$target))
     {
         continue;
     }
-    
+
     else if(preg_match("/^[a-f\d]{32}#\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/i", $id_target))
     {
         list($asset_id, $ip_target) = explode("#", $id_target);
-            
+
         ossim_valid($asset_id, OSS_HEX, OSS_NULLABLE , 'illegal: Asset id'); // asset id
-        
+
         if (ossim_error())
         {
             $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) . "<br/>";
         }
 
         ossim_valid($ip_target, OSS_NULLABLE, OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_ALPHA, OSS_PUNC, '\.\,\/\!', 'illegal:' . _("Target"));
-        
+
         if (ossim_error())
         {
             $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) ."<br/>";
@@ -89,7 +91,7 @@ foreach($id_targets as $id_target) if (trim($id_target) != '')
     else if(!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/",$id_target))
     {
         ossim_valid($id_target, OSS_FQDNS , 'illegal: Host name'); // asset id
-        
+
         if (ossim_error())
         {
             $error_message .= _("Invalid target").": " . Util::htmlentities($id_target) . "<br/>";
@@ -111,8 +113,8 @@ if(empty($targets))
                 'cancel_button' => false
             ),
             'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
-        ); 
-                        
+        );
+
     $nt = new Notification('nt_1', $config_nt);
     $nt->show();
 
@@ -137,8 +139,8 @@ if(!empty($error_message)) {
                 'cancel_button' => false
             ),
             'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
-        ); 
-                        
+        );
+
     $nt = new Notification('nt_1', $config_nt);
     $nt->show();
 
@@ -170,47 +172,47 @@ $sensor_error            = false;
 ?>
 
 <style type="text/css">
-    
+
     .sstatus{
         text-align:center;
         padding:5px 10px;
         vertical-align:text-top;
     }
-    
+
     #total_hosts{
-	    text-align:left;
-	    color:rgba(195,195,195,0.98);
-	    float:left;
+        text-align:left;
+        color:rgba(195,195,195,0.98);
+        float:left;
     }
-    
+
     .pright{
-	    float:right;
+        float:right;
     }
-    
+
     .pcenter {
-	    margin: 0px auto;
-	    width: 100px;
+        margin: 0px auto;
+        width: 100px;
     }
-    
+
     .stable {
         width: 250px;
     }
-    
+
     #tminutes, #thosts {
-	    color:rgba(128,128,128,0.98);
+        color:rgba(128,128,128,0.98);
     }
-    
+
     table.gray_border2 {
         border-left: 1px solid #DFDFDF;
         border-right: 1px solid #DFDFDF;
         border-bottom: 1px solid #DFDFDF;
         border-top: 1px solid #C4C0BB;
     }
-    
+
     #sconnection:hover {
-        background-color: transparent !important;   
+        background-color: transparent !important;
     }
-    
+
 </style>
 
 <table class="transparent" cellpadding="0" cellspacing="0" width="80%">
@@ -229,68 +231,66 @@ $sensor_error            = false;
     <th><?=_("Nmap Scan")?></th>
     <th><?=_("Load")?></th>
 </tr>
-    <?
-    
-    // get available sensors
-    
+    <?php
+
+    // Getting available sensors (connected sensors)
     $_list_data = Av_sensor::get_list($conn);
     $all_sensors = $_list_data[0];
-    
-    // remote nmap
-    $rscan = new Remote_scan('', '');
-    $rscan->available_scan();
-    
-    $ids = array();
 
-    if ( is_array($rscan->get_sensors()) && count(array_keys($rscan->get_sensors())) > 0 )
+    // Remote nmap
+    $rscan = new Remote_scan();
+
+    $ids = array();
+    $agents = $rscan->get_sensors();
+
+    if (is_array($agents) && !empty($agents))
     {
-        $agents = $rscan->get_sensors();
-        
-        foreach ($agents as $asid => $agent)
-        {
-            $ids[] = $asid;
-        }
+        $ids = array_keys($agents);
     }
 
     $withnmapforced = 0;
-    if (valid_hex32($scan_server) && !$hosts_alive && $sensor_id!="")
+    if (valid_hex32($scan_server) && !$hosts_alive && $sensor_id != '')
     {
         $ids = array_merge(array($sensor_id), $ids);
-        
+
         $withnmapforced = 1;
     }
 
     // targets
-    
+
     $total_host = 0; // count total targets to scan
-    
-    
+
     foreach($targets as $target)
     {
         $sensors = array();
-        
+
         if($scan_server != '')
         {
             $sensors = array($scan_server); // force sensor
         }
-    
-        if (preg_match("/^!/",$target)) continue;
-        
+
+        if (preg_match("/^!/",$target))
+        {
+            continue;
+        }
+
+
         // target_id#cidr_or_ip
-        
-        $unresolved = (!preg_match("/\d+\.\d+\.\d+\.\d+/",$target) && $not_resolve) ? true : false;
-        
-        if(preg_match("/([a-f\d]+)#(.*)/i", $target, $found)) {
+        $unresolved = (!preg_match("/\d+\.\d+\.\d+\.\d+/",$target) && $not_resolve) ? TRUE : FALSE;
+
+        if(preg_match("/([a-f\d]+)#(.*)/i", $target, $found))
+        {
             $asset_id   = $found[1];
             $ip_cidr    = $found[2];
         }
-        else {
+        else
+        {
             $asset_id   = '';
             $ip_cidr    = $target;
         }
-        
+
         $net_id = $host_id = '';
-        
+
         if(!empty($asset_id))
         {
             if(preg_match("/\//", $ip_cidr))
@@ -308,73 +308,73 @@ $sensor_error            = false;
                 }
             }
         }
-        
-        
+
+
         if (!empty($net_id))
-        {   
+        {
             // Net with ID
-        	$total_host += Util::host_in_net($ip_cidr);
-        	
+            $total_host += Util::host_in_net($ip_cidr);
+
             $name = Asset_net::get_name_by_id($conn, $net_id);
-            
+
             $perm = Session::netAllowed($conn, $net_id);
-            
+
             if (count($sensors) == 0)
             {
                 $sensors = array_keys(Asset_net_sensors::get_sensors_by_id($conn, $net_id));
             }
-        } 
+        }
         else if (!empty($host_id))
-        {   
+        {
             // Host with ID
-        	$total_host++;
-                        
+            $total_host++;
+
             $name = Asset_host::get_name_by_id($conn, $host_id);
-            
+
             $perm = ($unresolved) ? TRUE : Session::hostAllowed($conn, $host_id);
-            
+
             if(count($sensors)==0)
             {
                 $sensors = array_keys(Asset_host_sensors::get_sensors_by_id($conn, $host_id));
             }
         }
         else if (preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}?$/",$ip_cidr))
-        { 
+        {
             // Net without ID
             $total_host += Util::host_in_net($ip_cidr);
-            
+
             $name = $target;
-            
+
             $perm = TRUE;
         }
         else if (preg_match("/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/",$ip_cidr))
         {
             // Host without ID
             $total_host++;
-            
+
             $name = $target;
-            
+
             $perm = TRUE;
-            
+
             if (count($sensors)==0)
             {
                 $closetnet_id = key(Asset_host::get_closest_net($conn, $ip_cidr));
-                
+
                 $sensors      = array_keys(Asset_net_sensors::get_sensors_by_id($conn, $closetnet_id));
             }
         }
         else if ($unresolved)
-        { 
+        {
             // the target is a hostname
-        	
-        	$total_host++;
-            
+
+            $total_host++;
+
             $perm = true;
-            
+
             $name = '-';
-            
-            
-            
+
+
+
             if(count($sensors) == 0)
             {
                 $sensors = $ids;
@@ -382,83 +382,87 @@ $sensor_error            = false;
         }
 
         $sname = $vs = $sperm = $snmap = $load = array();
-        
+
         $selected = FALSE;
-        
+
         // reorder sensors with load
-        
+
         if (!valid_hex32($scan_server))
         {
             $sensors    = Av_sensor::reorder_vs_by_load($conn, $sensors);
-            
+
             array_unique($sensors);
         }
         else
         {
-            // User has selected a sensor 
-            
+            // User has selected a sensor
+
             $sensor_obj = Av_sensor::get_object($conn, $scan_server);
-            
+
             $sensors    = array($scan_server => $sensor_obj->get_vs_load($conn));
         }
 
         // info per each related sensor
-        
+
         $ttargets[$target]['perm'] = $perm;
-        
-        
-        
+
+
+
         if(!empty($sensors) && preg_match("/[\da-f]{32}/i", key($sensors)))
         {
             foreach ($sensors as $sid => $sload)
-            { 
+            {
                 $withnmap         = in_array($sid, $ids) || $unresolved;
 
                 $sensor_object    = Av_sensor::get_object($conn, $sid);
-                
+
                 $has_vuln_scanner = 0;
-                
+
                 if($sensor_object !== NULL)
                 {
                     $load[]      = $sload;
-                   
+
                     $sensor_ip   = $sensor_object->get_ip();
-                    
+
                     $has_vuln_scanner = $sensor_object->get_property('has_vuln_scanner');
-                    
+
                     $sensor_name = $sensor_ip . ' [' . $sensor_object->get_name() . ']';
-                    
+
                     $sclass      = 'class="sensor_' . md5($sensor_ip) . '"'; // Sensor allowed for Selenium tests
-                    
+
                     $vsclass     = 'class="vs_' . md5($sensor_ip).'"';       // Vuln scanner for Selenium tests
-                    
+
                     $nmsclass    = 'class="nms_' . md5($sensor_ip).'"';      // Nmap Scan for Selenium tests
                 }
-                else {
+                else
+                {
                     $load[]      = 'N/A';
-                    
+
                     $sensor_name = $all_sensors[strtoupper($sid)];
-                    
+
                     $sclass      = '';
-                    
+
                     $vsclass     = '';
-                    
+
                     $nmsclass    = '';
                 }
-                
+
                 if (!$selected && (Session::sensorAllowed($sid) || valid_hex32($scan_server)) && ($has_vuln_scanner || valid_hex32($scan_server)))
                 {
                     $selected = TRUE;
-                    
+
                     $_SESSION['_vuln_targets'][$target] = $sid;
-                    
+
                     $sensor_name = '<strong>' . $sensor_name . '</strong>';
-                    
+
+                    $selected_ids[$sid]++;
+
                     $ttargets[$target]['sensor'] = $sid;
-                
-                    if(preg_match("/omp\s*$/i", $nessus_path)) {
+
+                    if(preg_match("/omp\s*$/i", $nessus_path))
+                    {
                         // check connection
-                        
+
                         $connection = (!array_key_exists($sid, $ctest)) ? $sensor_object->check_vs_connection($conn): $ctest[$sid];
 
                         if( $connection == '')
@@ -470,7 +474,7 @@ $sensor_error            = false;
                         {
                             // connection ko
                             $ctest[$sid]  = $connection;
-                            
+
                             $sensor_error = TRUE;
                         }
                     }
@@ -479,37 +483,41 @@ $sensor_error            = false;
 
                 $sperm[] = "<img $sclass src='../pixmaps/".(Session::sensorAllowed($sid) ? "tick" : "cross").".png' border='0'>";
                 $vs[]    = "<img $vsclass src='../pixmaps/".((valid_hex32($scan_server) && $sid==$sensor_id) ? "tick" : (($has_vuln_scanner) ? "tick" : "cross")).".png' border='0'>";
-                
+
                 if(!$hosts_alive)
-                { 
+                {
                     // don't do a Nmap scan
                     $snmap[] = '<span style="font-size:9px;color:gray">'._('No selected') . '</span>';
                 }
-                else {
-                    
+                else
+                {
                     $snmap[] = "<img $nmsclass align='absmiddle' src='../pixmaps/".(($scan_locally || ($withnmap && $withnmapforced)) ? "tick": (($withnmap) ? "tick" : "cross")).".png' border='0'>".
                     (($scan_locally || ($withnmap && $withnmapforced)) ? "<span style='font-size:9px;color:gray'>$message_pre_scan</span>": (($withnmap) ? "" : "<span style='font-size:9px;color:gray'>$message_force_pre_scan</span>"));
                 }
-                
-                if( $ttargets[$target]['sensor'] == $sid ) {
+
+                if($ttargets[$target]['sensor'] == $sid)
+                {
                     $ttargets[$target]['sperm'] = Session::sensorAllowed($sid) ? TRUE : FALSE;
                     $ttargets[$target]['vs']    = (valid_hex32($scan_server) && $sid==$sensor_id) ? TRUE : (($has_vuln_scanner) ? TRUE : FALSE);
-                    
+
                     if(!$hosts_alive)
                     {
                         $ttargets[$target]['snmap'] = TRUE;
                     }
-                    else {
+                    else
+                    {
                         $ttargets[$target]['snmap'] = ($scan_locally || ($withnmap && $withnmapforced)) ? TRUE: (($withnmap) ? TRUE : FALSE);
                     }
                 }
             }
+
             $snames = implode('<br><br>', $sname);
         }
-        else {
+        else
+        {
             $snames = '<span style="font-weight:bold;color:#ff0000">' . _('Sensor not found') . '</span>';
         }
-        
+
         $sperms = implode('<br>', $sperm);
         $vulns  = implode('<br>', $vs);
         $nmaps  = implode('<br>', $snmap);
@@ -523,7 +531,7 @@ $sensor_error            = false;
         <td style="padding-left:4px;padding-right:4px;" nowrap><?php echo $name;?></td>
         <td><img class="<?php echo "perm_".md5($target);?>" src="../pixmaps/<?=($perm) ? "tick" : "cross"?>.png" border="0"></td>
         <td style="padding-left:4px;padding-right:4px" nowrap><?=$snames?></td>
-        <td><?php echo $sperms ?></td>        
+        <td><?php echo $sperms ?></td>
         <td><?php echo $vulns ?></td>
         <td style="text-align:center;" nowrap><?php echo $nmaps ?></td>
         <td style="padding-left:4px;padding-right:4px" nowrap><?php echo $load ?></td>
@@ -533,86 +541,88 @@ $sensor_error            = false;
     ?>
     </table>
     <?php
-    
-    if(count($ctest) > 0) {
+
+    if(count($ctest) > 0)
+    {
     ?>
-    <table class="transparent">
-    <tr>
-    	<td style="padding-top:12px" colspan="8" id="sconnection">
-    		<?php
-    		if($total_host>255 && $hosts_alive===1) {
-    		?>
-	    		 <div id="total_hosts">
-		    		 <?php
-		    		 
-		    		 $time_per_host = 0.34770202636719; // seconds
-		    		 
-		    		 $total_minutes = ceil(($total_host*$time_per_host)/60);
-		    		 
-		    		 $nmap_message  = _('You are about to scan a big number of hosts (<span id="thosts">#HOSTS#</span> hosts).<br /> This scan could take a long time depending on your network and the number of assets <br /> that are up.');
-		    		 
-		    		 $nmap_message  =  str_replace("#HOSTS#", $total_host, $nmap_message);
-		    		 
-		    		 //$nmap_message  =  str_replace("#MINUTES#", $total_minutes, $nmap_message);
-		    		 
-		    		 echo $nmap_message;
-		    		 ?>
-	    		 </div>
-    		 <?php
-    		 }
-    		 ?>
-    		 <div <?php echo ($total_host>255 && $hosts_alive===1) ? 'class="pright"': '' ?>>
-    		    <table class="table_list stable" <?php echo ($total_host>255 && $hosts_alive===1) ? '': 'align="center"' ?> cellpadding="0" cellspacing="0">
-                   <tr>
-                      <th>
-                         <strong><?php echo _('Scanner IP');?></strong>
-                      </th>
-                      <th>
-                         <strong><?php echo _('Scanner connection');?></strong>
-                      </th>
-                  </tr>
-                  <?php
-                  foreach ($ctest as $k => $v)
-                  {
-                     $sensor_ip = Av_sensor::get_ip_by_id($conn, $k);
-                  
-                     if ($v == '')
-                     {
-                        echo '<tr><td class="nobborder" style="text-align:center;padding:0px 10px;">' . $sensor_ip . '</td>';
-                        echo '<td class="nobborder" style="text-align:center;padding:0px 10px;"><img class="vcheck_'.md5($sensor_ip).'" src="../pixmaps/tick.png" border="0" /></td></tr>';
-                     }
-                     else
-                     {
-                        $nf_type = "nf_error";
+        <table class="transparent">
+        <tr>
+            <td style="padding-top:12px" colspan="8" id="sconnection">
+                <?php
+                if($total_host > 255 && $hosts_alive === 1)
+                {
+                    ?>
+                    <div id="total_hosts">
+                    <?php
 
-                        echo "<tr><td class='nobborder sstatus' >".$sensor_ip."</td>";
-                        echo "<td width='300' class='nobborder sstatus' >";
+                        $time_per_host = 0.34770202636719; // seconds
 
-                        if ( preg_match("/Failed to acquire socket/", $v) )
+                        $total_minutes = ceil(($total_host*$time_per_host)/60);
+
+                        $nmap_message  = _('You are about to scan a big number of hosts (<span id="thosts">#HOSTS#</span> hosts).<br /> This scan could take a long time depending on your network and the number of assets <br /> that are up.');
+
+                        $nmap_message  =  str_replace("#HOSTS#", $total_host, $nmap_message);
+
+                        //$nmap_message  =  str_replace("#MINUTES#", $total_minutes, $nmap_message);
+
+                        echo $nmap_message;
+                    ?>
+                 </div>
+                 <?php
+             }
+             ?>
+             <div <?php echo ($total_host>255 && $hosts_alive===1) ? 'class="pright"': '' ?>>
+                <table class="table_list stable" <?php echo ($total_host>255 && $hosts_alive===1) ? '': 'align="center"' ?> cellpadding="0" cellspacing="0">
+                    <tr>
+                        <th>
+                            <strong><?php echo _('Scanner IP');?></strong>
+                        </th>
+                        <th>
+                            <strong><?php echo _('Scanner connection');?></strong>
+                        </th>
+                    </tr>
+                    <?php
+                    foreach ($ctest as $k => $v)
+                    {
+                        $sensor_ip = Av_sensor::get_ip_by_id($conn, $k);
+
+                        if ($v == '')
                         {
-                           $v       = 'Unable to connect to vulnerability scanner. If the system has been updated recently the vulnerability scanner is rebuilding its database. Please wait a few minutes.';
-                           $nf_type = 'nf_warning'; 
+                            echo '<tr><td class="nobborder" style="text-align:center;padding:0px 10px;">' . $sensor_ip . '</td>';
+                            echo '<td class="nobborder" style="text-align:center;padding:0px 10px;"><img class="vcheck_'.md5($sensor_ip).'" src="../pixmaps/tick.png" border="0" /></td></tr>';
                         }
+                        else
+                        {
+                            $nf_type = "nf_error";
 
-                        $config_nt = array(
-                            'content' => _($v),
-                            'options' => array (
-                                'type'          => $nf_type,
-                                'cancel_button' => false
-                            ),
-                            'style'   => 'width: 80%; margin: 10px auto; text-align: left;'); 
-                                        
-                        $nt = new Notification('nt_2', $config_nt);
-                        $nt->show();
+                            echo "<tr><td class='nobborder sstatus' >".$sensor_ip."</td>";
+                            echo "<td width='300' class='nobborder sstatus' >";
 
-                        echo '</td></tr>';
-                     }
-                  }
-               ?>
+                            if (preg_match("/Failed to acquire socket/", $v))
+                            {
+                               $v       = 'Unable to connect to vulnerability scanner. If the system has been updated recently the vulnerability scanner is rebuilding its database. Please wait a few minutes.';
+                               $nf_type = 'nf_warning';
+                            }
+
+                            $config_nt = array(
+                                'content' => _($v),
+                                'options' => array (
+                                    'type'          => $nf_type,
+                                    'cancel_button' => false
+                                ),
+                                'style'   => 'width: 80%; margin: 10px auto; text-align: left;');
+
+                            $nt = new Notification('nt_2', $config_nt);
+                            $nt->show();
+
+                            echo '</td></tr>';
+                        }
+                    }
+                    ?>
                 </table>
-              </div>
-           </td>
-       </tr>
+            </div>
+        </td>
+        </tr>
     </table>
     <?php
     }
@@ -620,7 +630,7 @@ $sensor_error            = false;
 $test_ok = TRUE;
 
 foreach ($ttargets as $target_data)
-{ 
+{
     // Check if all targets can be scanned
     if($target_data['perm'] && $target_data['sperm'] && $target_data['vs'] && $target_data['snmap'])
     {
@@ -630,7 +640,7 @@ foreach ($ttargets as $target_data)
     {
         $test_ok = FALSE;
     }
-    
+
     if(!$test_ok)
     {
         break;
@@ -641,17 +651,35 @@ foreach ($ttargets as $target_data)
 
 <?
 if($test_ok && !$sensor_error)
-{ 
-// we can enable button to run job
+{
+    // we can enable button to run job
     echo '|1|';
 }
-else 
+else
 {
     echo '|0|';
     unset($_SESSION['_vuln_targets']); // clean scan targets
 }
 
-echo $total_host;
+// If any sensor is remote the "pre-scan locally" must be disabled
 
-$db->close($conn);
-?>
+$local_system_id  = Util::get_default_uuid();
+
+$system_info      = Av_center::get_system_info_by_id($conn, $local_system_id);
+
+if ($system_info['status'] == 'success')
+{
+   $local_sensor_id = $system_info['data']['sensor_id'];
+}
+
+$l_array   = array($local_sensor_id);
+
+$s_array   = array_keys($selected_ids);
+
+// nmap type required: Local or Remote
+
+$nmap_type = (count( array_diff($s_array, $l_array)) ==0 ) ? 'local' : 'remote';
+
+echo $total_host . '|' . $nmap_type;
+
+$db->close();

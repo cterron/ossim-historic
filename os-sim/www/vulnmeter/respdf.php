@@ -81,6 +81,7 @@ require_once 'av_init.php';
 require_once 'inc/pdf.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 Session::logcheck("environment-menu", "EventsVulnerabilities");
 
@@ -121,7 +122,7 @@ switch ($_SERVER['REQUEST_METHOD'])
 case "GET" :
    foreach($getParams as $gp) {
 	   if (isset($_GET[$gp])) { 
-         $$gp=htmlspecialchars(mysql_real_escape_string(trim($_GET[$gp])), ENT_QUOTES); 
+         $$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $dbconn));
       } else {
          $$gp = "";
       }
@@ -201,7 +202,7 @@ if ($scansubmit!="") {
    $result=$dbconn->execute($query);
    $ids = array();
    while ( !$result->EOF ) {
-   list( $report_id ) = $result->fields;
+        $report_id = $result->fields['report_id'];
         $ids[] = $report_id;
         $result->MoveNext();
    }
@@ -214,7 +215,7 @@ else if (empty($report_id)) {
                 $query_by_user LIMIT 1";
                 
     $result=$dbconn->execute($query);
-    list ( $report_id ) = $result->fields;
+    $report_id = $result->fields['report_id'];
 }
 
 if ( empty($report_id) ) 
@@ -243,12 +244,12 @@ if ( empty($report_id) )
     exit(0);
 }
 
-$query = "select count(scantime) from vuln_nessus_results t1
+$query = "select count(scantime) as count from vuln_nessus_results t1
        where report_id  in ($report_id) and falsepositive='N'";
 
 $result=$dbconn->execute($query);
 
-list ( $numofresults ) = $result->fields;
+$numofresults = $result->fields['count'];
 
 if ( $numofresults < 1 ) 
 {
@@ -310,7 +311,7 @@ if (!empty($report_id)) {
     $profile = $dbconn->GetOne( $query );
     $feed    = ($profile=="-1" && exists_feed_tables($dbconn)) ? "_feed" : "";
 
-    $query ="SELECT t1.username, t1.name, t2.name, t2.description
+    $query ="SELECT t1.username, t1.name as jobname, t2.name as profilename, t2.description
         FROM vuln_jobs t1
         LEFT JOIN vuln_nessus_settings t2 on t1.meth_VSET=t2.id
         WHERE t1.report_id in ($report_id) 
@@ -318,8 +319,12 @@ if (!empty($report_id)) {
         order by t1.SCAN_END DESC";
         
     $result=$dbconn->execute($query);
+
+    $query_uid    = $result->fields['username'];
+    $job_n        = $result->fields['jobname'];
+    $profile_name = $result->fields['profilename'];
+    $profile_desc = $result->fields['description'];
     
-    list ($query_uid, $job_n, $profile_name, $profile_desc) = $result->fields;
     
 	//$pdf->Cell(70,6,"Owner: $query_uid",1,1,'L');
     
@@ -470,7 +475,13 @@ if (!empty($report_id)) {
     $colorarray = array();
     $risk_in_graph = array();
 
-    while ( list($riskcount, $risk, $hostIP, $ctx) = $result->fields ) {
+    while ($result->fields)
+    {
+        $riskcount = $result->fields['count'];
+        $risk      = $result->fields['risk'];
+        $hostIP    = $result->fields['hostIP'];
+        $ctx       = $result->fields['ctx'];
+    
         if(Session::hostAllowed_by_ip_ctx($dbconn, $hostIP, $ctx)) {
             //$pdf->MultiCell(70, 6, "".getrisk($risk)." : $riskcount" ,0,0,'C');
             $riskArray [getrisk($risk)] += $riskcount;
@@ -587,7 +598,11 @@ if (!empty($report_id)) {
        $prevrisk=0;
        $Eriskcount=0;
 
-       while(list($riskcount, $risk )=$result1->fields) {
+       while($result1->fields)
+       {
+          $riskcount = $result1->fields['count'];
+          $risk      = $result1->fields['risk'];
+           
        	  if ( $ecount > 0 ) {
              $Eriskcount += $ecount;
              $riskcount -= $ecount;
@@ -650,8 +665,19 @@ if (!empty($report_id)) {
    
    $arrResults = array();
 
-   while( list($hostIP, $hostctx, $service, $service_num, $service_proto, $app, $risk, $scriptid, $pname, $msg) = $result->fields) {
-   
+   while($result->fields)
+   {
+    $hostIP        = $result->fields['hostIP'];
+    $hostctx       = $result->fields['ctx'];
+    $service       = $result->fields['service'];
+    $service_num   = $result->fields['port'];
+    $service_proto = $result->fields['protocol'];
+    $app           = $result->fields['app'];
+    $risk          = $result->fields['risk'];
+    $scriptid      = $result->fields['scriptid'];
+    $pname         = $result->fields['name'];
+    $msg           = $result->fields['msg'];
+       
     if(Session::hostAllowed_by_ip_ctx($dbconn, $hostIP, $hostctx)) {
       $arrResults[$hostIP."#".$hostctx][]=array(
           'service'  => $service,
@@ -737,13 +763,19 @@ if (!empty($report_id)) {
             $msg = str_replace("\\r", "", $msg);
             $info .= $msg;
             
-            $plugin_info = $dbconn->execute("SELECT t2.name, t3.name, t1.copyright, t1.summary, t1.version 
+            $plugin_info = $dbconn->execute("SELECT t2.name as familyname, t3.name as categoryname, t1.copyright, t1.summary, t1.version 
                     FROM vuln_nessus_plugins$feed t1
                     LEFT JOIN vuln_nessus_family$feed t2 on t1.family=t2.id
                     LEFT JOIN vuln_nessus_category$feed t3 on t1.category=t3.id
                     WHERE t1.id='".$vuln["scriptid"]."'");
 
-            list($pfamily, $pcategory, $pcopyright, $psummary, $pversion) = $plugin_info->fields;
+            $pfamily    = $plugin_info->fields['familyname'];
+            $pcategory  = $plugin_info->fields['categoryname'];
+            $pcopyright = $plugin_info->fields['copyright'];
+            $psummary   = $plugin_info->fields['summary'];
+            $pversion   = $plugin_info->fields['version'];
+            
+            
             $info .= "\n";
             if ($pfamily!="")    { $info .= "\nFamily name: ".$pfamily;} 
             if ($pcategory!="")  { $info .= "\nCategory: ".$pcategory; }

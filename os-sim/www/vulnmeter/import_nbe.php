@@ -164,7 +164,7 @@ if ($_FILES['nbe_file']['tmp_name']!="" && $_FILES['nbe_file']['size']>0)
 			{
 				case 1:
 					$type     = "nf_error";
-					$message  = ossim_error($error_importing);
+					$message  = $error_importing;
 					break;
 				case 2:
 				

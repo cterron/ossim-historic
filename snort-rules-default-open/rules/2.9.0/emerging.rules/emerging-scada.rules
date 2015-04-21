@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -52,13 +52,19 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 910 (msg:"ET SCADA DATAC RealWin SCADA 
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA ICONICS WebHMI ActiveX Stack Overflow"; flow:to_client,established; file_data; content:"D25FCAFC-F795-4609-89BB-5F78B4ACAF2C"; nocase; distance:0; content:"SetActiveXGUID"; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*D25FCAFC-F795-4609-89BB-5F78B4ACAF2C/si"; reference:url,www.security-assessment.com/files/documents/advisory/ICONICS_WebHMI.pdf; reference:url,www.exploit-db.com/exploits/17240/; classtype:attempted-user; sid:2012787; rev:2;)
 
 #
+alert tcp $EXTERNAL_NET any -> $HOME_NET 910 (msg:"ET SCADA DATAC RealWin SCADA Server 2 On_FC_CONNECT_FCS_a_FILE Buffer Overflow Vulnerability"; flow:established,to_server; content:"GetFlexMLangIResourceBrowser"; isdataat:1000,relative; content:!"|0A|"; within:1000; reference:url,exploit-db.com/exploits/17417/; classtype:denial-of-service; sid:2013074; rev:2;)
+
+#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 7580 (msg:"ET SCADA Siemens FactoryLink 8 CSService Logging  Buffer Overflow Vulnerability"; flow:established,to_server; content:"CSService"; nocase; isdataat:1000,relative; content:!"|0A|"; within:1000; reference:url,packetstormsecurity.org/files/view/102579/factorylink_csservice.rb.txt; classtype:denial-of-service; sid:2013120; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA PcVue Activex Control Insecure method (AddPage)"; flow:to_client,established; file_data; content:"<OBJECT "; nocase; distance:0; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"083B40D3-CCBA-11D2-AFE0-00C04F7993D6"; nocase; distance:0; content:".AddPage"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*083B40D3-CCBA-11D2-AFE0-00C04F7993D6/si"; reference:url,exploit-db.com/exploits/17896; classtype:attempted-user; sid:2013730; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 4444 (msg:"ET SCADA Golden FTP Server PASS Command Remote Buffer Overflow Attempt"; flow:established,to_server; content:"PASS"; nocase; isdataat:1000,relative; content:!"|0A|"; within:1000; reference:bugtraq,45957; classtype:denial-of-service; sid:2013235; rev:2;)
 
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA PcVue Activex Control Insecure method (DeletePage)"; flow:to_client,established; file_data; content:"<OBJECT "; nocase; distance:0; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"083B40D3-CCBA-11D2-AFE0-00C04F7993D6"; nocase; distance:0; content:".DeletePage"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*083B40D3-CCBA-11D2-AFE0-00C04F7993D6/si"; reference:url,exploit-db.com/exploits/17896; classtype:attempted-user; sid:2013731; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA PcVue Activex Control Insecure method (AddPage)"; flow:to_client,established; file_data;  content:"083B40D3-CCBA-11D2-AFE0-00C04F7993D6"; nocase; distance:0; content:".AddPage"; nocase; content:"<OBJECT"; nocase; pcre:"/^[^>]*?classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*?083B40D3-CCBA-11D2-AFE0-00C04F7993D6/Rsi"; reference:url,exploit-db.com/exploits/17896; classtype:attempted-user; sid:2013730; rev:5;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA PcVue Activex Control Insecure method (DeletePage)"; flow:to_client,established; file_data; content:"083B40D3-CCBA-11D2-AFE0-00C04F7993D6"; nocase; distance:0; content:".DeletePage"; nocase; content:"<OBJECT"; pcre:"/^[^>]*?classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*083B40D3-CCBA-11D2-AFE0-00C04F7993D6/Rsi"; reference:url,exploit-db.com/exploits/17896; classtype:attempted-user; sid:2013731; rev:4;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET SCADA PcVue Activex Control Insecure method (SaveObject)"; flow:to_client,established; file_data; content:"<OBJECT "; nocase; distance:0; content:"classid"; nocase; distance:0; content:"CLSID"; nocase; distance:0; content:"2BBD45A5-28AE-11D1-ACAC-0800170967D9"; nocase; distance:0; content:".SaveObject"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*2BBD45A5-28AE-11D1-ACAC-0800170967D9/si"; reference:url,exploit-db.com/exploits/17896; classtype:attempted-user; sid:2013732; rev:3;)

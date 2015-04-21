@@ -41,12 +41,6 @@
 * @link       https://www.alienvault.com/
 */
 
-require_once 'auth.inc';
-require_once 'data.inc';
-require_once 'jobs.inc';
-require_once 'sensor.inc';
-require_once 'system.inc';
-require_once 'server.inc';
 
 /**
 * The goal of this class is to define the providers common functions and attributes
@@ -320,54 +314,70 @@ class Provider_factory
         {
             // Auth
             case 'auth':
+                require_once 'auth.inc';
 
                 $result = new Auth_provider($conn, $common_url);
 
-                break;
-                
+            break;
+
             // Sensor
             case 'sensor':
+                require_once 'sensor.inc';
 
                 $result = new Sensor_provider($conn, $common_url);
 
-                break;
+            break;
 
 
             // System
             case 'system':
-                
+                require_once 'system.inc';
+
                 $result = new System_provider($conn, $common_url);
 
-                break;
-                
+            break;
+
             // Server
             case 'server':
-                
+                require_once 'server.inc';
+
                 $result = new Server_provider($conn, $common_url);
 
-                break;
+            break;
 
             // Data
             case 'data':
-            
+                require_once 'data.inc';
+
                 $result = new Data_provider($conn, $common_url);
 
-                break;
+            break;
 
             // Jobs
             case 'jobs':
-                
+                require_once 'jobs.inc';
+
                 $result = new Jobs_provider($conn, $common_url);
 
-                break;
+            break;
+
+
+            // ASEC
+            case 'asec':
+                require_once 'asec.inc';
+
+                $result = new Asec_provider($conn, $common_url);
+
+            break;
 
             default:
 
                 $result = NULL;
         }
-        
+
         return $result;
     }
 }
   
-?>
+/* End of file provider.inc */
+/* Location: ../include/classes/providers/provider.inc */

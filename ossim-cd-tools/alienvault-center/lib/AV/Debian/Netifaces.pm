@@ -139,9 +139,9 @@ sub network_config_apply {
     my $interface_last = $config_last{'interface'};
 
     console_log("Restarting interface $interface");
-    system "ifdown $interface";
+    system "ifdown --force $interface";
     if ( $? == 0 ) {
-        system "ifup $interface";
+        system "ifup --force $interface";
         if ( $interface ne $interface_last ) {
             console_log("Taking down previously configured interface $interface_last");
             system "ifconfig $interface_last down";

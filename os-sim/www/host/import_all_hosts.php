@@ -69,11 +69,13 @@ function print_form($import_type)
             ),
             'help' => array(                
                 'Version 4.x.x' => array(
-                    'format'  => _('"IP*(IP1,IP2,...)";"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Types(Type1,Type2,...)"'),
+                    'format'  => _('"IPs(IP1,IP2,...)"*;"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Types(Type1,Type2,...)"'),
+                    'header'  => '"IPs";"Hostname";"FQDNs";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Type"',
                     'example' => '"192.168.10.3";"Host_1";"www.example-1.es,www.example-2.es";"'._('Short description').'";"2";"Windows";"23.78";"121.45";"379D45C0BBF22B4458BD2F8EE09ECCC2";0;"Server:Mail Server"'
                 ),
                 'Version 3.x.x' => array(
-                    'format'  => _('"IP"*;"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset value";"Sensors(Sensor1,Sensor2,...)"*;"Operating System";"Latitude";"Longitude"'),
+                    'format'  => _('"IP"*;"Hostname";"FQDNs(FQDN1,FQDN2,...)";"Description";"Asset Value";"Sensors(Sensor1,Sensor2,...)"*;"Operating System";"Latitude";"Longitude"'),
+                    'header'  => '"IP";"Hostname";"FQDNs";"Description";"Asset Value";"Sensors";"Operating System";"Latitude";"Longitude"',
                     'example' => '"192.168.10.3";"Host_1";"www.example-1.es,www.example-2.es";"'._('Short description').'";"2";"192.168.10.2,192.168.10.3";"Windows";"23.78";"121.45"'
                 )               
             )         
@@ -89,7 +91,8 @@ function print_form($import_type)
             ),
             'help' => array(               
                 'Version 4.x.x' => array(
-                    'format'  => _('"IP*(IP1,IP2,...)";"Hostname";"Description";"Operating System";"Device Type(Type1,Type2,...)"'),
+                    'format'  => _('"IPs(IP1,IP2,...)"*;"Hostname";"Description";"Operating System";"Device Type(Type1,Type2,...)"'),
+                    'header'  => _('"IPs";"Hostname";"Description";"Operating System";"Device Type"'),
                     'example' => '"192.168.10.3";"Host_1";"'._('Short description').'";"Windows";"Server,Network Device"'
                 )            
             )         
@@ -208,15 +211,29 @@ function print_form($import_type)
                                 
                                 <tr>
                 				    <td class='td_format'>
+                				        <strong><?php echo _('Format')?>:</strong>
                 				        <?php echo $help_data['format']?>
                 				    </td>      				    
                                 </tr>
                                 
                                 <tr>
+                				    <td class='td_header'>
+                				        <strong><?php echo _('Header')?>:</strong>
+                				        <?php echo $help_data['header']?>
+                				    </td>      				    
+                                </tr>
+                                
+                                <tr>
                 				    <td class='td_example'>
+                				        <strong><?php echo _('Example')?>:</strong>
                 				       <?php echo $help_data['example']?>
                 				    </td>      				    
                                 </tr>
+                                
+                                <tr>
+                				    <td></td>      				    
+                                </tr>
+                                
                                 <?php	
                             }			
                             ?>
@@ -457,12 +474,29 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
 		//Clean values
 		$param = array();
 		
+		$index     = 0;
+		$max_index = count($v) - 1;
+		
 		foreach ($v as $field)
 		{
 			$parameter = trim($field);
-			$pattern   = '/^\"|\"$|^\'|\'$/';
-			$param[] = preg_replace($pattern, '', $parameter);
-		}	
+			
+                        if ($index == 0)
+                        {
+                            $pattern   = '/^\"|^\'/';
+			    $param[]   = preg_replace($pattern, '', $parameter);
+			}
+			else if ($index == $max_index)
+			{
+                            $pattern   = '/\"$|\'$/';
+			    $param[]   = preg_replace($pattern, '', $parameter);			
+			}
+		        else
+		        {
+                            $param[] = $parameter;
+                        }
+                        $index++;
+                }	
 		
 		//Values
 		$is_in_db = FALSE;
@@ -596,7 +630,7 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
 		}
 		
 		//Description	
-		if (!ossim_valid($descr, OSS_NULLABLE, OSS_AT, OSS_TEXT, '\t', 'illegal:' . _('Description')))
+		if (!ossim_valid($descr, OSS_NULLABLE, OSS_ALL, 'illegal:' . _('Description')))
 		{						
 			$summary['by_hosts'][$num_line]['errors']['Description'] = ossim_get_error_clean();			
 			$summary['general']['statistics']['errors']++;
@@ -922,7 +956,7 @@ function import_assets_from_csv($filename, $iic, $ctx, $import_type)
         }
         catch(Exception $e)
         {
-            error_log($e->getMessage(), 0);                    
+            Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());                    
         }
 	}
 	else
@@ -1117,11 +1151,12 @@ if ($_POST['import_assets'] == 1)
     		padding-top: 5px;
     		font-style: normal;
     		font-weight: bold;
+    		font-sixe: 12px;
 		}
 		
-		.td_format, .td_example
+		.td_format, .td_header, .td_example
 		{ 
-			padding: 5px 0px 0px 10px; 
+			padding: 5px 0px 0px 15px; 
 			font-style: italic;		
 		}
 		

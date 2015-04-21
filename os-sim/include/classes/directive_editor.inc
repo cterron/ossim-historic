@@ -283,7 +283,7 @@ class Directive_editor {
             foreach ($dom->getElementsByTagName('directive') as $dir) {
                 if ($dir->getAttribute('id') == $directive_id) {
                     $dir_node = $dir;
-                    $directive = new Directive($dir->getAttribute('id') , $dir->getAttribute('name') , $dir->getAttribute('priority') , &$tab_rules, $dir_node);
+                    $directive = new Directive($dir->getAttribute('id') , $dir->getAttribute('name') , $dir->getAttribute('priority') , $tab_rules, $dir_node);
                 }
             }
         }
@@ -291,7 +291,7 @@ class Directive_editor {
         if ($directive != NULL)
         {
             $_POST['dir_id'] = $directive->id;
-            $this->_init_directive($dir_node, &$tab_rules, 1, 0);
+            $this->_init_directive($dir_node, $tab_rules, 1, 0);
             $nb_child = 0;
             /* count the number of child of each rule */
             for ($i = 1; $i <= count($tab_rules); $i++) {
@@ -382,7 +382,7 @@ class Directive_editor {
                     if ($rule->hasChildNodes()) {
                         $rules = $rule->childNodes;
                         foreach($rules as $rule) {
-                            $this->_init_directive($rule, &$tab_rules, $level + 1, $ind);
+                            $this->_init_directive($rule, $tab_rules, $level + 1, $ind);
                         }
                     }
                 }
@@ -534,7 +534,7 @@ class Directive_editor {
                     $new_node = $new_directive->appendChild($new_node);
                     $tab_rules[$id_rule]->rule = $new_node;
                     if ($tab_rules[$id_rule]->nb_child > 0) {
-                        $this->_do_rules($id_rule, &$tab_rules, $dom);
+                        $this->_do_rules($id_rule, $tab_rules, $dom);
                     }
                 }
             }
@@ -582,7 +582,7 @@ class Directive_editor {
                     $new_node = $new_directive->appendChild($new_node);
                     $tab_rules[$id_rule]->rule = $new_node;
                     if ($tab_rules[$id_rule]->nb_child > 0) {
-                        $this->_do_rules($id_rule, &$tab_rules, $dom);
+                        $this->_do_rules($id_rule, $tab_rules, $dom);
                     }
                 }
             }
@@ -616,7 +616,7 @@ class Directive_editor {
                 $node = $direct->appendChild($node);
                 $tab_rules[$id_rule]->rule = $node;
                 if ($tab_rules[$id_rule]->nb_child > 0) {
-                    $this->_do_rules($id_rule, &$tab_rules, $dom);
+                    $this->_do_rules($id_rule, $tab_rules, $dom);
                 }
             }
         }
@@ -645,7 +645,7 @@ class Directive_editor {
                         $node = $rule->appendChild($node);
                         $tab_rules[$id_rule2]->rule = $node;
                         if ($tab_rules[$id_rule2]->nb_child > 0) {
-                            $this->_do_rules($id_rule2, &$tab_rules, $dom);
+                            $this->_do_rules($id_rule2, $tab_rules, $dom);
                         }
                     }
                 }
@@ -855,7 +855,7 @@ class Directive_editor {
             $direct->removeChild($rule);
         }
         
-        $this->_do_directive($directive, &$tab_rules, $dom);
+        $this->_do_directive($directive, $tab_rules, $dom);
         return $this->save_xml($XML_FILE, $dom, "DOMXML");
     }
     
@@ -956,7 +956,7 @@ class Directive_editor {
             {
                 $direct->removeChild($rule);
             }
-            $this->_do_directive($directive, &$tab_rules, $dom);
+            $this->_do_directive($directive, $tab_rules, $dom);
         }
         else
         {            
@@ -1029,7 +1029,7 @@ class Directive_editor {
                 $direct->removeChild($rule);
             }
     
-            $this->_do_directive($directive, &$tab_rules, $dom);
+            $this->_do_directive($directive, $tab_rules, $dom);
         }
         else
         {            
@@ -1115,7 +1115,7 @@ class Directive_editor {
                 foreach($rules as $rule) {
                     $direct->removeChild($rule);
                 }
-                $this->_do_directive($directive, &$tab_rules, $dom);
+                $this->_do_directive($directive, $tab_rules, $dom);
             }
             else
             {
@@ -1162,7 +1162,7 @@ class Directive_editor {
             }
             if ($ind < count($stock) - 1) 
             {
-                $this->up($dom, $stock[$ind + 1], &$tab_rules, $directive);
+                $this->up($dom, $stock[$ind + 1], $tab_rules, $directive);
             }
             
         }
@@ -1478,7 +1478,7 @@ class Directive_editor {
      * 
      * @param string $uuid
      */
-    public function init_engine($uuid)
+    public static function init_engine($uuid)
     {    
         mkdir(_MAIN_PATH."/$uuid");
         
@@ -1526,7 +1526,7 @@ SYSTEM \''._MAIN_PATH.'/directives.dtd\'
      * 
      * @param string $uuid
      */
-    public function remove_engine($uuid)
+    public static function remove_engine($uuid)
     {
         $files = scandir(_MAIN_PATH."/$uuid");
         foreach ($files as $_file) if (preg_match("/\.xml$/", $_file))
@@ -1661,7 +1661,8 @@ SYSTEM \''._MAIN_PATH.'/directives.dtd\'
      * 
      * @return array Error msg if there was an error
      */
-    function restart_directives()
+    // DEPRECATED: Now using /conf/reload.php?what=directives
+    static function restart_directives()
     {
         exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
         
@@ -1684,7 +1685,7 @@ SYSTEM \''._MAIN_PATH.'/directives.dtd\'
         
         $dtd_file = (file_exists(_MAIN_PATH."/directives.dtd")) ? _MAIN_PATH."/directives.dtd" : '';
         
-        $directive_editor = new Directive_editor($engine_id);
+        $directive_editor = new self($engine_id);
         $categories = $directive_editor->get_categories();
         foreach ($categories as $category) {
             $file = (file_exists($directive_editor->engine_path."/".$category['xml_file'])) ? $directive_editor->engine_path."/".$category['xml_file'] : $directive_editor->main_path."/".$category['xml_file'];

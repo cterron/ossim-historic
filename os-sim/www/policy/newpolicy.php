@@ -97,7 +97,6 @@ require_once 'policy_common.php';
 	$qualify         = POST('qualify');
 	$resend_alarms   = POST('resend_alarms');
 	$resend_events   = ($pro)? POST('resend_events') : 0;
-	$target_any      = POST('target_any');
 	$sign            = POST('sign');
 	$sem             = POST('sem');
 	$sim             = POST('sim');
@@ -467,14 +466,13 @@ require_once 'policy_common.php';
 	/* targets (servers) */
 	$targets_ser = array();
 	
-	$default_server = Server::get_deafault_server($conn);
+	$default_server = Server::get_default_server($conn, FALSE);
 	if(!empty($default_server))
 	{
-		$default_server = str_replace('-', '', $default_server);
 		$targets_ser[]  = $default_server;
 	}
 	
-	if (!count($targets_ser)) 
+	if (count($targets_ser) < 1) 
 	{
 		die(ossim_error(_("At least one Target is required")));
 	}
@@ -528,7 +526,7 @@ require_once 'policy_common.php';
 	$event_list  = POST('evfilters');
 	
 	
-	if(is_array($event_list) && !empty($event_list))
+	if(is_array($event_list) && !empty($event_list) && $pro)
 	{
 		foreach($event_list as $event) 
 		{
@@ -639,7 +637,11 @@ require_once 'policy_common.php';
 	
 	}
 
-
+	if ($is_engine) 
+	{
+		$sem = 0;
+	}
+	
 	/* actions */
 	$policy_action = array();
 	$actions_list  = POST('actions');

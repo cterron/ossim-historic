@@ -43,3 +43,49 @@ if (!headers_sent())
 	width: 100%;
 	margin-top: 3px;
 }
+
+#t_backup{
+    width: 98%; 
+    background: transparent;
+    margin: 10px auto;
+}
+
+#backup_info
+{
+    margin-top: 10px;
+}
+
+.box_title
+{
+    padding: 15px 0 5px 0;
+    font-size: 17px;
+    line-heigh: 18px;
+}
+
+.box_subtitle
+{
+    font-size: 13px;
+    padding:0 0 5px 0;
+    line-height: 17px;
+}
+
+.box_single_button
+{
+    text-align: center;
+    position: absolute;
+    bottom:10px;
+    left:0;
+    right:0;
+}
+
+#backup_activity_bar
+{
+    width:50%;
+    margin: 10% auto 0 auto;
+}
+
+#backup_activity_bar_legend
+{
+    text-align: center;
+    margin-top: 5px;
+}

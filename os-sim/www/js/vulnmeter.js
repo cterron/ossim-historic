@@ -39,15 +39,32 @@ function showPluginsByFamily(filter,profile){
                     document.getElementById('tick1').style.display = 'block';
                     document.getElementById('tick2').style.display = 'none';
                     
+                    $('#cve').val('0');
                     document.getElementById('cve').style.display = 'block';
                     document.getElementById('cve').selected=true;
-                    // $(".scriptinfo").simpletip({
-                        // position: 'right',
-                        // onBeforeShow: function() { 
-                            // var id = this.getParent().attr('lid');
-                            // this.load('lookup.php?id=' + id);
-                        // }
-                    // });
+
+                    $('.scriptinfo').tipTip({
+                         defaultPosition:"right",
+                         maxWidth:'400px',
+                         delay_load: 100,
+                         maxWidth: "auto",
+                         edgeOffset: 3,
+                         keepAlive:true,
+                         content: function (e) {               
+                             var id = $(this).attr('lid');
+          
+                             $.ajax({
+                                 type: 'GET',
+                                 data: 'id='+id,
+                                 url: 'lookup.php',
+                                 success: function (response) {                                                                                                                          
+                                     e.content.html(response); // the var e is the callback function data (see above)
+                                 }
+                              });
+                              
+                              return 'Searching...';
+                         }
+                     });
                 }
         });
     }
@@ -67,15 +84,33 @@ function showPluginsByCVE(filter,profile){
                     document.getElementById('tick1').style.display = 'none';
                     document.getElementById('tick2').style.display = 'block';
                     
+                    $('#family').val('0');
                     document.getElementById('family').style.display = 'block';
                     document.getElementById('family').selected=true;
-                    $(".scriptinfo").simpletip({
-                        position: 'right',
-                        onBeforeShow: function() { 
-                            var id = this.getParent().attr('lid');
-                            this.load('lookup.php?id=' + id);
-                        }
-                    });
+                    
+                    $('.scriptinfo').tipTip({
+                         defaultPosition:"right",
+                         maxWidth:'400px',
+                         delay_load: 100,
+                         maxWidth: "auto",
+                         edgeOffset: 3,
+                         keepAlive:true,
+                         content: function (e) {
+                             var id = $(this).attr('lid');
+
+                             $.ajax({
+                                 type: 'GET',
+                                 data: 'id='+id,
+                                 url: 'lookup.php',
+                                 success: function (response) {
+                                     e.content.html(response); // the var e is the callback function data (see above)
+                                 }
+                              });
+                              
+                              return 'Searching...';
+                         }
+                     });
+
                     $('.updatepluginsajax').bind('click', function() { 
                         $('#div_updateplugins').show();
                     });

@@ -1079,7 +1079,7 @@ sub update_ossim_incidents {
             }
             my $priority = calc_priority($risk, $hostid, $scanid);
             $sql_inc = qq{ INSERT INTO incident(uuid, ctx, title, date, ref, type_id, priority, status, last_update, in_charge, submitter, event_start, event_end)
-                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'Nessus Vulnerability', '$priority', 'Open', now(), '$username', 'nessus', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
+                            VALUES(UNHEX(REPLACE(UUID(), '-', '')), UNHEX('$ctx'), "$vuln_name", now(), 'Vulnerability', 'OpenVAS Vulnerability', '$priority', 'Open', now(), '$username', 'openvas', '0000-00-00 00:00:00', '0000-00-00 00:00:00') };
             safe_db_write ($sql_inc, 4);
             # TODO: change this for a sequence
             $sql_inc = qq{ SELECT MAX(id) id from incident };

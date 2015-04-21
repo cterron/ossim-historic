@@ -150,7 +150,10 @@ $links_to_vulns = array();
 
 if (!empty($report_id)) {
     $query = ossim_query ( "SELECT report_id, scantime, report_key  FROM vuln_nessus_reports t1 WHERE t1.report_id=$report_id LIMIT 1" );
-    if (! $rs = & $dbconn->Execute ( $query )) {
+    
+    $rs = $dbconn->Execute ($query);
+    
+    if (!$rs) {
         print $dbconn->ErrorMsg();
     } else {
         if (! $rs->EOF) {

@@ -1,9 +1,7 @@
-# VM requirements plugin
-# Issues a warning if a VM does not meet the required hardware to run.
 [properties]
-name=vm_requirements
+name=VM requirements
+description=Issues a warning if a VM does not meet the required hardware to run.
 category=system
 type=command
-requires=@files:/usr/bin/lshw;@hardware:@vm,@cpunum@>=4,@memsize@>=8388608
+requires=@files:/usr/bin/lshw;@hardware:@is_vm@,@cores@>=4,@mem@>=8388608
 command=lshw
-enable=True

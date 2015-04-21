@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -218,9 +218,6 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 445 (msg:"ET NETBIOS LSA exploit"; flow
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 1024: (msg:"GPL NETBIOS DCERPC Workstation Service direct service bind attempt"; flow:to_server,established; content:"|05 00 0B|"; depth:3; byte_test:1,&,16,1,relative; content:"|98 D0 FF|k|12 A1 10|6|98|3F|C3 F8|~4Z"; within:16; distance:29; reference:bugtraq,9011; reference:cve,2003-0812; reference:url,www.microsoft.com/technet/security/bulletin/MS03-049.mspx; classtype:misc-attack; sid:2102315; rev:7;)
 
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCEPRC ORPCThis request flood attempt"; flow:to_server,established; content:"|05|"; content:"|00|"; within:1; distance:1; byte_test:1,&,1,0,relative; content:"|05|"; within:1; distance:21; content:"MEOW"; flowbits:isset,dce.isystemactivator.bind.call.attempt; threshold:type both, track by_dst, count 20, seconds 60; reference:bugtraq,8811; reference:cve,2003-0813; reference:nessus,12206; reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx; classtype:misc-attack; sid:2494; rev:8;)
-
 #Cleaned up the distance/within/depth/offset issues - Daniel Clemens
 alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC CoGetInstanceFromFile little endian overflow attempt"; flow:established,to_server; flowbits:isset,smb.tree.bind.msqueue; content:"|05|"; depth:1; byte_test:1,&,16,3,relative; content:"|00|"; offset:1;depth:1;  content:"|01 00|";distance:19; within:2; byte_test:4,>,128,20,relative,little; reference:cve,2003-0995; reference:url,www.eeye.com/html/Research/Advisories/AD20030910.html; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2103158; rev:6;)
 
@@ -237,13 +234,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC IActivatio
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC ISystemActivator bind attempt"; flow:to_server,established; content:"|05|"; content:"|0B|"; within:1; distance:1; byte_test:1,&,1,0,relative; content:"|A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00|F"; within:16; distance:29; flowbits:set,dce.isystemactivator.bind.attempt; flowbits:noalert; reference:bugtraq,8205; reference:cve,2003-0352; reference:nessus,11808; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:protocol-command-decode; sid:2102192; rev:12;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC ISystemActivator path overflow attempt big endian unicode"; flow:to_server,established; content:"|05|"; depth:1; byte_test:1,<,16,3,relative; content:"|5C 00 5C 00|"; byte_test:4,>,256,-8,relative; flowbits:isset,dce.isystemactivator.bind; reference:bugtraq,8205; reference:cve,2003-0352; reference:nessus,11808; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2352; rev:10;)
-
-#
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC ISystemActivator path overflow attempt big endian"; flow:to_server,established; content:"|05|"; byte_test:1,<,16,3,relative; content:"|5C 00 5C 00|"; byte_test:4,>,256,-8,relative; flowbits:isset,dce.isystemactivator.bind; reference:bugtraq,8205; reference:cve,2003-0352; reference:nessus,11808; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2103198; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC ISystemActivator path overflow attempt little endian unicode"; flow:to_server,established; content:"|05|"; depth:1; byte_test:1,&,16,3,relative; content:"|5C 00 5C 00|"; byte_test:4,>,256,-8,little,relative; flowbits:isset,dce.isystemactivator.bind; reference:bugtraq,8205; reference:cve,2003-0352; reference:nessus,11808; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2351; rev:11;)
 
 #
 #alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"GPL NETBIOS DCERPC ISystemActivator path overflow attempt little endian"; flow:to_server,established; content:"|05|"; byte_test:1,&,16,3,relative; content:"|5C 5C|"; byte_test:4,>,256,-8,little,relative; flowbits:isset,dce.isystemactivator.bind; reference:bugtraq,8205; reference:cve,2003-0352; reference:nessus,11808; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2103197; rev:4;)
@@ -297,25 +288,13 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS NT NULL session";
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS RFParalyze Attempt"; flow:to_server,established; content:"BEAVIS"; content:"yep yep"; reference:bugtraq,1163; reference:cve,2000-0347; reference:nessus,10392; classtype:attempted-recon; sid:2101239; rev:10;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB ADMIN$ andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,!&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"ADMIN|24 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2980; rev:3;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB ADMIN$ share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,!&,128,6,relative; byte_jump:2,34,little,relative; content:"ADMIN|24 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2100532; rev:14;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB ADMIN$ unicode andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"A|00|D|00|M|00|I|00|N|00 24 00 00 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2981; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB ADMIN$ unicode share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,&,128,6,relative; byte_jump:2,34,little,relative; content:"A|00|D|00|M|00|I|00|N|00 24 00 00 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2102473; rev:9;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB C$ andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,!&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"C|24 00|"; distance:2; nocase; content:!"IPC|24 00|"; within:5; distance:-5; nocase; classtype:protocol-command-decode; sid:2976; rev:3;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB C$ share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,!&,128,6,relative; byte_jump:2,34,little,relative; content:"C|24 00|"; distance:2; nocase; content:!"IPC|24 00|"; within:5; distance:-5; nocase; classtype:protocol-command-decode; sid:2100533; rev:17;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB C$ unicode andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"C|00 24 00 00 00|"; distance:2; nocase; content:!"I|00|P|00|C|00 24 00 00 00|"; within:10; distance:-10; nocase; classtype:protocol-command-decode; sid:2977; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB C$ unicode share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,&,128,6,relative; byte_jump:2,34,little,relative; content:"C|00 24 00 00 00|"; distance:2; nocase; content:!"I|00|P|00|C|00 24 00 00 00|"; within:10; distance:-10; nocase; classtype:protocol-command-decode; sid:2102470; rev:12;)
@@ -375,25 +354,10 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB CoGetInstance
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB CoGetInstanceFromFile unicode overflow attempt"; flow:established,to_server; flowbits:isset,smb.tree.bind.msqueue; content:"|00|"; depth:1; content:"|FF|SMB%"; within:5; distance:3; byte_test:1,&,128,6,relative; content:"&|00|"; within:2; distance:56; content:"|5C 00|P|00|I|00|P|00|E|00 5C 00 00 00|"; distance:4; nocase; byte_jump:2,-17,relative,from_beginning,little; content:"|05|"; distance:4; within:1; byte_test:1,!&,16,3,relative; content:"|00|"; within:1; distance:1; content:"|00 01|"; within:2; distance:19; byte_test:4,>,256,20,relative; reference:cve,2003-0995; reference:url,www.eeye.com/html/Research/Advisories/AD20030910.html; reference:url,www.microsoft.com/technet/security/bulletin/MS03-026.mspx; classtype:attempted-admin; sid:2103178; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB D$ andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,!&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"D|24 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2972; rev:3;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB D$ share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,!&,128,6,relative; byte_jump:2,34,little,relative; content:"D|24 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2100536; rev:13;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB D$ unicode andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"D|00 24 00 00 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2973; rev:3;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB D$ unicode share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,&,128,6,relative; byte_jump:2,34,little,relative; content:"D|00 24 00 00 00|"; distance:2; nocase; classtype:protocol-command-decode; sid:2102467; rev:9;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB DCEPRC ORPCThis request flood attempt"; flow:to_server,established; content:"|05|"; content:"|00|"; within:1; distance:1; byte_test:1,&,1,0,relative; content:"|05|"; within:1; distance:21; content:"MEOW"; flowbits:isset,dce.isystemactivator.bind.call.attempt; threshold:type both, track by_dst, count 20, seconds 60; reference:bugtraq,8811; reference:cve,2003-0813; reference:nessus,12206; reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx; classtype:misc-attack; sid:2495; rev:8;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB DCERPC ISystemActivator bind attempt"; flow:to_server,established; content:"|00|"; depth:1; content:"|FF|SMB%"; depth:5; offset:4; nocase; byte_test:2,^,1,5,relative; content:"&|00|"; within:2; distance:56; content:"|5C|PIPE|5C 00 05 00 0B|"; within:10; distance:4; byte_test:1,&,16,1,relative; content:"|A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00|F"; within:16; distance:29; flowbits:set,dce.isystemactivator.bind.call.attempt; reference:bugtraq,8811; reference:cve,2003-0813; reference:nessus,12206; reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx; classtype:protocol-command-decode; sid:2492; rev:7;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB DCERPC ISystemActivator unicode bind attempt"; flow:to_server,established; content:"|00|"; depth:1; content:"|FF|SMB%"; depth:5; offset:4; nocase; byte_test:2,&,1,5,relative; content:"&|00|"; within:2; distance:56; content:"|5C 00|P|00|I|00|P|00|E|00 5C 00 05 00 0B|"; within:15; distance:4; byte_test:1,&,16,1,relative; content:"|A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00|F"; within:16; distance:29; flowbits:set,dce.isystemactivator.bind.call.attempt; reference:bugtraq,8811; reference:cve,2003-0813; reference:nessus,12206; reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx; classtype:protocol-command-decode; sid:2493; rev:7;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB DCERPC LSASS DsRolerUpgradeDownlevelServer exploit attempt"; flow:to_server,established; flowbits:isset,netbios.lsass.bind.attempt; content:"|FF|SMB"; depth:4; offset:4; nocase; content:"|05|"; distance:59; content:"|00|"; within:1; distance:1; content:"|09 00|"; within:2; distance:19; reference:bugtraq,10108; reference:cve,2003-0533; reference:url,www.microsoft.com/technet/security/bulletin/MS04-011.mspx; classtype:attempted-admin; sid:2102511; rev:10;)
@@ -438,13 +402,7 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IActivation u
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IActivation unicode little endian bind attempt"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB%"; within:5; distance:3; byte_test:1,&,128,6,relative; content:"&|00|"; within:2; distance:56; content:"|5C 00|P|00|I|00|P|00|E|00 5C 00 00 00|"; distance:4; nocase; byte_jump:2,-17,relative,from_beginning,little; isdataat:4,relative; content:"|05|"; byte_test:1,&,16,3,relative; content:"|0B|"; within:1; distance:1; content:"|B8|J|9F|M|1C|}|CF 11 86 1E 00| |AF|n|7C|W"; within:16; distance:29; flowbits:set,dce.iactivation.bind; flowbits:noalert; classtype:protocol-command-decode; sid:2103380; rev:4;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IPC$ andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,!&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"IPC|24 00|"; distance:2; nocase; flowbits:set,smb.tree.connect.ipc; classtype:protocol-command-decode; sid:2952; rev:3;)
-
-#
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IPC$ share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,!&,128,6,relative; byte_jump:2,34,little,relative; content:"IPC|24 00|"; distance:2; nocase; flowbits:set,smb.tree.connect.ipc; classtype:protocol-command-decode; sid:2100537; rev:17;)
-
-#
-alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IPC$ unicode andx share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMB"; within:4; distance:3; pcre:"/^(\x2d|\x2f|\x73|\xa2|\x2e|\x24|\x74)/sR"; byte_test:1,&,128,6,relative; content:"u"; depth:1; offset:39; byte_jump:2,0,little,relative; byte_jump:2,7,little,relative; content:"I|00|P|00|C|00 24 00 00 00|"; distance:2; nocase; flowbits:set,smb.tree.connect.ipc; classtype:protocol-command-decode; sid:2953; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 139 (msg:"GPL NETBIOS SMB IPC$ unicode share access"; flow:established,to_server; content:"|00|"; depth:1; content:"|FF|SMBu"; within:5; distance:3; byte_test:1,&,128,6,relative; byte_jump:2,34,little,relative; content:"I|00|P|00|C|00 24 00 00 00|"; distance:2; nocase; flowbits:set,smb.tree.connect.ipc; classtype:protocol-command-decode; sid:2100538; rev:17;)

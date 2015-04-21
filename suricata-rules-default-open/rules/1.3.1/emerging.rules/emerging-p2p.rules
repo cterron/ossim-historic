@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -49,7 +49,7 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P Ares traffic"; flow:e
 #by Jeff Kell. Depth is correct, it's got 2 byte sway to compensate for 36 or 38 byte offset
 #fixed distance/offset problems - Daniel Clemens
 #
-alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P Ares over UDP"; content:"Ares "; offset:36; depth:7; reference:url,doc.emergingthreats.net/bin/view/Main/2003437; classtype:policy-violation; sid:2003437; rev:7;)
+alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P Ares over UDP"; content:"Ares "; offset:36; depth:7; threshold: type limit, count 1, seconds 300, track by_src; reference:url,doc.emergingthreats.net/bin/view/Main/2003437; classtype:policy-violation; sid:2003437; rev:8;)
 
 #by Christopher Campesi
 #
@@ -85,7 +85,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P BitTorrent peer sync";
 
 #By Chich Thierry
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P BitTorrent Traffic"; flow: established; content:"|0000400907000000|"; depth:8; reference:url,bitconjurer.org/BitTorrent/protocol.html; reference:url,doc.emergingthreats.net/bin/view/Main/2000357; classtype:policy-violation; sid:2000357; rev:8;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P BitTorrent Traffic"; flow: established; content:"|0000400907000000|"; depth:8; threshold: type limit, count 1, seconds 120, track by_src; reference:url,bitconjurer.org/BitTorrent/protocol.html; reference:url,doc.emergingthreats.net/bin/view/Main/2000357; classtype:policy-violation; sid:2000357; rev:9;)
 
 #By Chich Thierry
 #
@@ -202,19 +202,11 @@ alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey 
 
 #Matt Jonkman
 #
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Search Request (any type file)"; dsize:>19; content:"|e3 0e|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003317; classtype:policy-violation; sid:2003317; rev:3;)
-
-#Matt Jonkman
-#
 alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Get Sources Request (by hash)"; dsize:19; content:"|e3 9a|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003318; classtype:policy-violation; sid:2003318; rev:3;)
 
 #Matt Jonkman
 #
 alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Edonkey Search Request (search by name)"; dsize:>5; content:"|e3 98|"; depth:2; content:"|01|"; within:3; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003319; classtype:policy-violation; sid:2003319; rev:3;)
-
-#Matt Jonkman
-#
-alert udp $EXTERNAL_NET 1024:65535 -> $HOME_NET 1024:65535 (msg:"ET P2P Edonkey Search Results"; dsize:>21; content:"|e3 99|"; depth:2; reference:url,www.giac.org/certified_professionals/practicals/gcih/0446.php; reference:url,doc.emergingthreats.net/bin/view/Main/2003320; classtype:policy-violation; sid:2003320; rev:3;)
 
 #Matt Jonkman
 #
@@ -375,7 +367,7 @@ alert tcp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P Vuze BT 
 
 #by Christopher Campesi
 #fixed distance/within/depth/offset issues  - Daniel Clemens
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET any (msg:"ET P2P Vuze BT UDP Connection"; dsize:<80; content:!"|00 22 02 00|"; depth: 4; content:"|00 00 04|"; distance:8; within:3; content:"|00 00 00 00 00|"; distance:6; within:5; reference:url,vuze.com; reference:url,doc.emergingthreats.net/2010140; classtype:policy-violation; sid:2010140; rev:5;)
+alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET any (msg:"ET P2P Vuze BT UDP Connection"; dsize:<80; content:!"|00 22 02 00|"; depth: 4; content:"|00 00 04|"; distance:8; within:3; content:"|00 00 00 00 00|"; distance:6; within:5; threshold: type limit, count 1, seconds 120, track by_src; reference:url,vuze.com; reference:url,doc.emergingthreats.net/2010140; classtype:policy-violation; sid:2010140; rev:6;)
 
 #by Christopher Campesi
 #
@@ -391,7 +383,7 @@ alert udp $EXTERNAL_NET any -> $HOME_NET 1024:65535 (msg:"ET P2P Vuze BT UDP Con
 
 #by Christopher Campesi
 #
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET any (msg:"ET P2P Vuze BT UDP Connection (5)"; dsize:<20; content:"|00 00 04 17 27 10 19 80 00 00 00 00|"; depth:12; reference:url,vuze.com; reference:url,doc.emergingthreats.net/2010144; classtype:policy-violation; sid:2010144; rev:5;)
+alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET any (msg:"ET P2P Vuze BT UDP Connection (5)"; dsize:<20; content:"|00 00 04 17 27 10 19 80 00 00 00 00|"; depth:12; threshold: type limit, count 1, seconds 120, track by_src; reference:url,vuze.com; reference:url,doc.emergingthreats.net/2010144; classtype:policy-violation; sid:2010144; rev:6;)
 
 #by christopher campesi
 #
@@ -408,10 +400,6 @@ alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule KA
 #by christopher campesi
 #
 alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule Kademlia Hello Request"; dsize:<48; content:"|e4 11|"; depth:2; threshold: type limit, count 5, seconds 600, track by_src; reference:url,emule-project.net; reference:url,doc.emergingthreats.net/2009970; classtype:policy-violation; sid:2009970; rev:4;)
-
-#by christopher campesi
-#
-alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 1024:65535 (msg:"ET P2P eMule KAD Network Hello Request (2)"; dsize:27; content:"|e4 10|"; depth:2; byte_test:2,<,65535,0,relative; threshold: type limit, count 5, seconds 600, track by_src; reference:url,emule-project.net; reference:url,doc.emergingthreats.net/2009971; classtype:policy-violation; sid:2009971; rev:6;)
 
 #by christopher campesi
 #
@@ -505,6 +493,12 @@ alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P QVOD P2P Sharing Traf
 
 #
 alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"ET P2P BitTorrent - Torrent File Downloaded"; flow:established,to_client; content:"|0d 0a 0d 0a|d8|3a|announce"; classtype:policy-violation; sid:2014734; rev:2;)
+
+#
+#alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P QVOD P2P Sharing Traffic detected (udp) beacon"; content:"|13|QVOD protocol|00 00 00 00 00 00 00 00 00 00 00 00 00 00|"; depth:42; reference:md5,816a02a1250d90734059ed322ace72c7; classtype:policy-violation; sid:2015966; rev:2;)
+
+#
+#alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"ET P2P QVOD P2P Sharing Traffic detected (udp) payload"; content:"QVOD"; depth:32; reference:md5,816a02a1250d90734059ed322ace72c7; classtype:policy-violation; sid:2015967; rev:2;)
 
 #
 #alert udp $HOME_NET any -> any 53 (msg:"ET P2P Possible Bittorrent Activity - Multiple DNS Queries For tracker hosts"; content:"|01 00 00 01 00 00 00 00 00 00|"; depth:10; offset:2; content:"|07|tracker"; fast_pattern; distance:0; threshold: type both, count 3, seconds 10, track by_src; classtype:policy-violation; sid:2016662; rev:3;)

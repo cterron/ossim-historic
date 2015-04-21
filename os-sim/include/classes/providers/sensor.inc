@@ -387,14 +387,14 @@ class Sensor_provider extends Provider
     /**
      * This method returns the last scan dates (rootcheck and syscheck) which launched an OSSEC agent
      *
-     * @param string  $agent_ip  Agent IP
+     * @param string  $agent_name  Agent name
      *
      * @return object
      */
-    public function get_last_agent_scans($agent_ip)
+    public function get_last_agent_scans($agent_name)
     {
         $params = array(
-            'agent_ip'   => $agent_ip,
+            'agent_name' => $agent_name,
             'check_type' => 'lastscan'
         );
 
@@ -557,6 +557,9 @@ class Sensor_provider extends Provider
     */
     public function ossec_control($action)
     {
+        //Increasing the API timeout
+        $this->conn->set_timeout(300);
+        
         //Configuration array
         $config = array(
             'status'      => array('url' => '/status',  'method' => 'GET', 'params' => array()),

@@ -41,6 +41,9 @@ $type_widget    = $winfo['wtype'];		//Widget's type.
 $height         = $winfo['height'];		//Widget's height.
 $widget_refresh = $winfo['refresh'];	//Widget's refresh.
 
+/*
+    $hide_x_axis is specified in each type of pod.
+*/
 
 //If the widget is empty bcz there is no data, a message will be displayed to inform about it.
 if (!is_array($data) || empty($data))
@@ -178,11 +181,11 @@ switch ($type_widget)
 			//Raphael
 			case 'raphael':
 			
-				$empty        = true;			
-				$logger_url   = ($logger_url != '')? $logger_url : "''";
-				$logger_url_y = ($logger_url_y != '')? $logger_url_y : "''";     
-				$siem_url     = ($siem_url != '')? $siem_url : "''";
-				$siem_url_y   = ($siem_url_y != '')? $siem_url_y : "''";
+				$empty        = true;
+						
+				$logger_url   = (is_array($logger_url) && !empty($logger_url)) ? $logger_url : array();
+				$siem_url     = (is_array($siem_url) && !empty($siem_url)) ? $siem_url : array();
+
 				//$colors       = "'#444444'";	
 
 				if ($js == "analytics")
@@ -245,7 +248,7 @@ switch ($type_widget)
 		{
 			$cloud[$i]['object'] = $label[$i];
 			$cloud[$i]['num']    = $data[$i];
-			$cloud[$i]['title']  = $label[$i] . ' ' . _("returned a count of") . ' ' .$data[$i];
+			$cloud[$i]['title']  = $label[$i] . ' ' . _("returned a count of") . ' ' . Util::number_format_locale($data[$i]);
 			$cloud[$i]['url']    = $links[$label[$i]];	
 		
 		} 

@@ -97,6 +97,19 @@ def get_all_monitor_data():
         monitors = None
     return monitors
 
+@require_db
+def get_monitor_data(monitor_id):
+    """
+        Return data from :monitor_id: monitor
+    """
+    try:
+        monitors_raw = db.session.query(Monitor_Data).filter(Monitor_Data.monitor_id == monitor_id).all()
+        monitors_data = [x.serialize for x in   monitors_raw]
+    except Exception:
+        db.session.rollback()
+        monitors_data = None
+    return monitors_data
+
 
 @require_db
 def purge_current_status_message(message_id):

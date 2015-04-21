@@ -52,12 +52,14 @@
 * - get_action_id()
 * - get_list()
 * - insert()
+* - is_action_in_policies()
 */
 
 class Policy_action 
 {
 	public $policy_id;
-	
+
+
     public $action_id;
 
 
@@ -80,7 +82,7 @@ class Policy_action
     }
 	
 	
-	function get_list($conn, $policy_id) 
+	static function get_list($conn, $policy_id)
 	{
         $list      = array();
         $query     = "SELECT HEX(policy_id) AS policy_id, HEX(action_id) AS action_id FROM policy_actions WHERE policy_id = UNHEX(?)";
@@ -88,7 +90,7 @@ class Policy_action
 		
         if (!$rs = $conn->Execute($query, $params)) 
         {
-            print $conn->ErrorMsg();
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
         } 
         else 
         {
@@ -96,7 +98,7 @@ class Policy_action
             
             while (!$rs->EOF) 
             {
-                $list[] = new Policy_action($rs->fields["policy_id"], $rs->fields["action_id"]);
+                $list[] = new self($rs->fields["policy_id"], $rs->fields["action_id"]);
                 
                 $rs->MoveNext();
             }
@@ -106,7 +108,7 @@ class Policy_action
     }
 	
     
-    function insert($conn, $action_id, $policy_id) 
+    static function insert($conn, $action_id, $policy_id)
     {
         $sql    = "INSERT INTO policy_actions (policy_id, action_id) VALUES  (UNHEX(?), UNHEX(?))";
         $params = array(
@@ -116,14 +118,15 @@ class Policy_action
         
         if ($conn->Execute($sql, $params) === false) 
         {
-            print 'error inserting: ' . $conn->ErrorMsg() . '<BR>';
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+            
             exit;
         }
         
     }
 	
 	
-	function delete($conn, $policy_id) 
+	static function delete($conn, $policy_id)
 	{
 		$sql    = "DELETE FROM policy_actions WHERE policy_id=UNHEX(?)";
         $params = array(
@@ -132,13 +135,13 @@ class Policy_action
         
         if ($conn->Execute($sql, $params) === false) 
         {
-            print 'error inserting: ' . $conn->ErrorMsg() . '<BR>';
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             exit;
         }
 	}
 	
 	
-	function delete_by_action($conn, $action_id) 
+	static function delete_by_action($conn, $action_id)
 	{
 		$sql    = "DELETE FROM policy_actions WHERE action_id=UNHEX(?)";
         $params = array(
@@ -147,8 +150,32 @@ class Policy_action
         
         if ($conn->Execute($sql, $params) === false) 
         {
-            print 'error inserting: ' . $conn->ErrorMsg() . '<BR>';
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
             exit;
         }
 	}
+	
+	static function is_action_in_policies($conn, $action_id)
+	{
+        $list      = array();
+        $query     = "SELECT 1 FROM policy_actions pa,policy p WHERE p.id=pa.policy_id AND p.active=1 AND pa.action_id = UNHEX(?)";
+		$params    = array($action_id);
+		
+        if (!$rs = $conn->Execute($query, $params)) 
+        {
+            Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        } 
+        else 
+        {
+            if (!$rs->EOF) 
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }	
 }
+
+/* End of file policy_action.inc */
+/* Location: ../include/classes/policy_action.inc */

@@ -852,6 +852,8 @@ class Asset_host extends Asset
 
         $is_in_db = self::is_in_db($conn, $id);
 
+        Util::disable_perm_triggers($conn, TRUE);
+
         //Begin transaction
         $conn->StartTrans();
 
@@ -938,7 +940,7 @@ class Asset_host extends Asset
         if ($is_in_db == TRUE)
         {
             //Host services
-            $host_services = new Asset_host_services($conn, $id);
+            $host_services = new Asset_host_services($id);
             $host_services->load_from_db($conn);
             $services = $host_services->get_services();
 
@@ -990,6 +992,8 @@ class Asset_host extends Asset
         //Finish transaction
         if ($conn->CompleteTrans())
         {
+            Util::disable_perm_triggers($conn, FALSE);
+
             $infolog = array($name, '[' . $ips_string . ']');
 
             if ($is_in_db == TRUE)
@@ -1009,7 +1013,7 @@ class Asset_host extends Asset
                 }
                 catch (Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
         }
@@ -1579,7 +1583,7 @@ class Asset_host extends Asset
                 }
                 catch (Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
         }
@@ -1734,7 +1738,7 @@ class Asset_host extends Asset
                 }
                 catch(Exception $e)
                 {
-                    Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());
+                    Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
                 }
             }
 
@@ -2284,7 +2288,7 @@ class Asset_host extends Asset
                 return TRUE;
             }
 
-            list($net, $mask) = split('/', $n);
+            list($net, $mask) = preg_split('/\//', $n);
 
             $val1 = Asset_host_ips::ip2ulong($ip);
             $val2 = Asset_host_ips::ip2ulong($net);
@@ -2725,7 +2729,6 @@ class Asset_host extends Asset
                         //Host has several IPs
                         $hosts[$rs->fields['h_id']][2] .= ', '.$rs->fields['ip'];
                     }
-
                 }
 
                 $rs->MoveNext();

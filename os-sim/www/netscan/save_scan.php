@@ -48,7 +48,7 @@ Session::logcheck('environment-menu', 'PolicyHosts');
 
 $validate = array (
 	'group_name'    => array('validation' => 'OSS_SCORE, OSS_INPUT, OSS_NULLABLE',         'e_message' => 'illegal:' . _('Group name')),	
-	'descr'         => array('validation' => 'OSS_TEXT, OSS_NULLABLE, OSS_AT',             'e_message' => 'illegal:' . _('Description')),
+	'descr'         => array('validation' => 'OSS_ALL, OSS_NULLABLE',                      'e_message' => 'illegal:' . _('Description')),
 	'asset_value'   => array('validation' => 'OSS_DIGIT',                                  'e_message' => 'illegal:' . _('Asset value')),
 	'external'      => array('validation' => 'OSS_DIGIT',                                  'e_message' => 'illegal:' . _('External Asset')),
 	'sboxs[]'       => array('validation' => 'OSS_ALPHA, OSS_SCORE, OSS_PUNC, OSS_AT',     'e_message' => 'illegal:' . _('Sensors')),
@@ -153,7 +153,7 @@ if (empty($validation_errors))
     	{
     		if (!Av_sensor::is_allowed($conn, $sensor)) 
     		{
-    			$validation_errors['sboxs[]'] = _('Error! Net could not be saved because there are unallowed sensors');
+    			$validation_errors['sboxs[]'] = _('Error! Host could not be saved because there are unallowed sensors');
     		}
     	}    	
 	}
@@ -291,6 +291,7 @@ else
         
             $group = new Asset_group($new_group_id);        
             $group->set_name($group_name);
+            $group->set_descr($descr);
             $group->set_ctx($ctx);
            
             $group->save_in_db($conn);

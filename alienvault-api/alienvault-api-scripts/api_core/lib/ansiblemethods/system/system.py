@@ -34,8 +34,10 @@ import time
 import os.path
 import api_log
 from base64 import b64decode
+from os.path import basename
 from ansiblemethods.ansiblemanager import Ansible, PLAYBOOKS
 from ansiblemethods.helper import parse_av_config_response, read_file, ansible_is_valid_response, ansible_is_valid_playbook_response
+from ansiblemethods.helper import copy_file, remove_file
 from ansiblemethods.ansibleinventory import AnsibleInventoryManager
 
 ansible = Ansible()
@@ -47,13 +49,13 @@ def get_system_id(system_ip):
     host_list = []
     host_list.append(system_ip)
     uuid_regex = re.compile('^[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}$')
-    
+
     # 1- Try alienvault-system-id
     response = ansible.run_module([system_ip], "command", "/usr/bin/alienvault-system-id")
     success, msg = ansible_is_valid_response(system_ip, response)
     if success:
         system_id = response['contacted'][system_ip]['stdout']
-    
+
     # 2- When error, try the old way
     else:
         # 2.1- Read center file
@@ -68,13 +70,13 @@ def get_system_id(system_ip):
                     system_id = response['contacted'][system_ip]['ansible_facts']['ansible_product_uuid'].lower()
                 else:
                     return (False, "[get_system_id]: Error getting system ID")
-    
+
     # Check the system_id is valid
     if not system_id or not uuid_regex.match(system_id):
         return (False, "[get_system_id]: Error getting system ID")
-    
+
     return (True, system_id)
-    
+
 
 def get_system_load(system_ip):
     """
@@ -122,6 +124,12 @@ if [ $RETVAL -eq 0 ]
     PROFILES="$PROFILES DATABASE,"
 fi
 dpkg -l alienvault-dummy-sensor| grep '^ii' > /dev/null 2>&1
+RETVAL=$?
+if [ $RETVAL -eq 0 ]
+  then
+    PROFILES="$PROFILES SENSOR,"
+fi
+dpkg -l alienvault-dummy-sensor-ids| grep '^ii' > /dev/null 2>&1
 RETVAL=$?
 if [ $RETVAL -eq 0 ]
   then
@@ -307,6 +315,9 @@ def ansible_add_system(local_system_id, remote_system_ip, password):
         response = "Cannot access public key file"
         return (result, response)
 
+    success, message = ansible_remove_key_from_known_host_file("127.0.0.1", remote_system_ip)
+    if not success:
+        return success,message
     evars = {"remote_system_ip": "%s" % remote_system_ip,
              "local_system_id": "%s" % local_system_id}
 
@@ -337,7 +348,7 @@ def ping_system(system_ip):
         response = ansible.run_module(host_list=[system_ip],
                                       module="ping", args="")
     except Exception as err:
-        return False, "Something wrong happen while pingin the system:%s %s" % (system_ip, str(err))
+        return False, "Something wrong happened while pinging the system:%s %s" % (system_ip, str(err))
     if 'dark' in response and system_ip in response['dark'] or 'unreachable' in response:
         return False, "System unreacheable"
     if 'contacted' in response and system_ip in response['contacted'] and 'pong' \
@@ -355,13 +366,13 @@ def ansible_remove_certificates(system_ip, system_id_to_remove):
         response = ansible.run_module(host_list=[system_ip], module="shell", args=command,use_sudo=True)
         success, msg = ansible_is_valid_response(system_ip,response)
         if not success:
-            return False,"Something wrong happen while removing the ssl folder: %s" % str(msg)
+            return False,"Something wrong happened while removing the ssl folder: %s" % str(msg)
         return_code = int(response['contacted'][system_ip]['rc'])
         output_error = response['contacted'][system_ip]['stderr']
         if return_code != 0:
-            return False, "Something wrong happen while removing the ssl folder: %s" % str(output_error)
+            return False, "Something wrong happened while removing the ssl folder: %s" % str(output_error)
     except Exception as err:
-        return False,"Something wrong happen while removing the ssl folder: %s" % str(err)
+        return False,"Something wrong happened while removing the ssl folder: %s" % str(err)
     return True,""
 
 
@@ -401,9 +412,23 @@ def restart_mysql(system_ip):
     """
     rc = True
     try:
-        response = ansible.run_module(host_list=[system_ip], module="service", args="name=mysql state=restarted")
+        response = ansible.run_module(host_list=[system_ip], module="service", args="name=mysql state=restarted", use_sudo=True)
     except Exception, e:
-        response = "Error restarting the alienvault agent: %s" % str(e)
+        response = "Error restarting the MySQL database: %s" % str(e)
+        rc = False
+    return (rc, str(response['contacted'][system_ip]['state']))
+
+
+def restart_ossim_server(system_ip):
+    """
+    Restart Ossim server
+    :param system_ip: System IP
+    """
+    rc = True
+    try:
+        response = ansible.run_module(host_list=[system_ip], module="service", args="name=ossim-server state=restarted", use_sudo=True)
+    except Exception, e:
+        response = "Error restarting ossim server: %s" % str(e)
         rc = False
     return (rc, str(response['contacted'][system_ip]['state']))
 
@@ -427,30 +452,31 @@ def generate_sync_sql(system_ip, restart=False):
     (success, msg) = ansible_is_valid_response(system_ip, response)
     return success, msg
 
-def ansible_run_async_reconfig(system_ip, log_file="/tmp/system_reconfigure.log"):
+def ansible_run_async_reconfig(system_ip, log_file="/var/log/alienvault/update/system_reconfigure.log"):
     """Runs an asynchronous reconfigure on the given system
 
     Args:
       system_ip(str): The system_ip of the system to configure.
-      log_file(str): The path where the the alienvault-reconfig command should throw the logs. 
+      log_file(str): The path where the the alienvault-reconfig command should throw the logs.
 
     Returns:
       (boolean, str): A tuple containing the result of the execution. On success msg will be the remote log file.
 
     Examples:
 
-      >>> ansible_run_async_update("192.168.5.123","/tmp/update.log")
-      (True,"/tmp/update.log")
+      >>> ansible_run_async_update("192.168.5.123","/var/log/alienvault/update/update.log")
+      (True,"/var/log/alienvault/update/update.log")
 
-      >>> ansible_run_async_update("192.168.5.999","/tmp/update.log")
+      >>> ansible_run_async_update("192.168.5.999","/var/log/alienvault/update/update.log")
       (False, "Something wrong happened while running ansible command {'192.168.1.198': {'unreachable': 1, 'skipped': 0, 'ok': 0, 'changed': 0, 'failures': 0}}")
     """
 
-    log_file = "/tmp/system_reconfigure_%10.2f.log" % time.time()
+    log_file = "/var/log/alienvault/update/system_reconfigure_%10.2f.log" % time.time()
     evars = {"target": "%s" % system_ip,
              "log_file": "%s" % log_file}
 
 
+    ansible_purge_logs(system_ip, 'reconfigure')
     response = ansible.run_playbook(playbook=PLAYBOOKS['ASYNC_RECONFIG'],
                                     host_list=[system_ip],
                                     extra_vars=evars,
@@ -462,12 +488,12 @@ def ansible_run_async_reconfig(system_ip, log_file="/tmp/system_reconfigure.log"
     return success, log_file
 
 
-def ansible_run_async_update(system_ip, log_file="/tmp/system_update.log", only_feed=False, update_key=""):
+def ansible_run_async_update(system_ip, log_file="/var/log/alienvault/update/system_update.log", only_feed=False, update_key=""):
     """Runs an asynchronous update on the given system
 
     Args:
       system_ip(str): The system_ip of the system to update.
-      log_file(str): The path where the the alienvault-update command should throw the logs. 
+      log_file(str): The path where the the alienvault-update command should throw the logs.
       only_feed(boolean): Update only the feed
       update_key(str): Upgrade key
 
@@ -476,22 +502,22 @@ def ansible_run_async_update(system_ip, log_file="/tmp/system_update.log", only_
 
     Examples:
 
-      >>> ansible_run_async_update("192.168.5.123","/tmp/update.log")
-      (True,"/tmp/update.log")
+      >>> ansible_run_async_update("192.168.5.123","/var/log/alienvault/update/update.log")
+      (True,"/var/log/alienvault/update/update.log")
 
-      >>> ansible_run_async_update("192.168.5.123","/tmp/update.log",only_feed=True)
-      (True,"/tmp/update.log")
+      >>> ansible_run_async_update("192.168.5.123","/var/log/alienvault/update/update.log",only_feed=True)
+      (True,"/var/log/alienvault/update/update.log")
 
-      >>> ansible_run_async_update("192.168.5.999","/tmp/update.log")
+      >>> ansible_run_async_update("192.168.5.999","/var/log/alienvault/update/update.log")
       (False, "Something wrong happened while running ansible command {'192.168.1.198': {'unreachable': 1, 'skipped': 0, 'ok': 0, 'changed': 0, 'failures': 0}}")
 
     """
 
-    log_file = "/tmp/system_update_%10.2f.log" % time.time()
+    log_file = "/var/log/alienvault/update/system_update_%10.2f.log" % time.time()
     if only_feed:
-        log_file = "/tmp/system_update_feed_%10.2f.log" % time.time()
+        log_file = "/var/log/alienvault/update/system_update_feed_%10.2f.log" % time.time()
     if update_key!="":
-        log_file = "/tmp/system_update_uc_%10.2f.log" % time.time()
+        log_file = "/var/log/alienvault/update/system_update_uc_%10.2f.log" % time.time()
 
     evars = {"target": "%s" % system_ip,
              "log_file": "%s" % log_file,
@@ -499,6 +525,7 @@ def ansible_run_async_update(system_ip, log_file="/tmp/system_update.log", only_
              "update_key": update_key}
 
 
+    ansible_purge_logs(system_ip, 'update')
     response = ansible.run_playbook(playbook=PLAYBOOKS['ASYNC_UPDATE'],
                                     host_list=[system_ip],
                                     extra_vars=evars,
@@ -515,7 +542,7 @@ def ansible_check_if_process_is_running(system_ip, ps_filter):
     Args:
       system_ip(str): The system IP where we would like to run the ps filter
       ps_filter(str): Filter to grep the ps aux command
-    
+
     Returns:
       (boolean,int): A tuple containing whether the operation was well or not and the number the process running that meet the filter
     """
@@ -525,6 +552,8 @@ def ansible_check_if_process_is_running(system_ip, ps_filter):
         cmd = 'ps aux | grep "%s" | grep -v grep | grep -v tail | wc -l' % re.escape(ps_filter)
         response = ansible.run_module(host_list=[system_ip], module="shell", use_sudo="True", args=cmd)
         (success, msg) = ansible_is_valid_response(system_ip, response)
+        if not success:
+            return False, msg
         rc = int(response['contacted'][system_ip]['stdout'])
     except Exception as exc:
         api_log.error("ansible_check_if_process_is_running: <%s>" % str(exc))
@@ -563,27 +592,27 @@ def ansible_get_process_pid(system_ip, ps_filter):
 
 
 def ansible_check_asynchronous_command_return_code(system_ip, rc_file):
-    """Check the return code of a previously asychronous command 
+    """Check the return code of a previously asychronous command
     Args:
       system_ip(str): The system IP where we would like to run
-      rc_file(str): The return code file 
-    
+      rc_file(str): The return code file
+
     Returns:
-      (boolean,int): A tuple containing whether the operation was well 
+      (boolean,int): A tuple containing whether the operation was well
     """
-    reg = r"/tmp/system_(update|update_feed|update_uc|reconfigure)_\d{10}\.\d{2}\.log.rc"
+    reg = r"/var/log/alienvault/update/system_(update|update_feed|update_uc|reconfigure)_\d{10}\.\d{2}\.log.rc"
     if re.match(reg, rc_file) is None:
         return False, "Invalid return code file"
     try:
-        destination_path = "/tmp/ansible/"
+        destination_path = "/var/log/alienvault/ansible/logs/"
         response = ansible.run_module(host_list=[system_ip], module="fetch", args="dest=%s src=%s flat=yes" % (destination_path, rc_file), use_sudo=True)
         result, msg = ansible_is_valid_response(system_ip, response)
 
         if not result or not 'dest' in  response['contacted'][system_ip]:
-            return False, "Something wrong happen while fetching the return code file: %s" % msg
+            return False, "Something wrong happened while fetching the return code file: %s" % msg
 
         # The content of the return code file should be a number.
-        # The content of the return code file should be 0 for success. 
+        # The content of the return code file should be 0 for success.
         rc_file_path= response['contacted'][system_ip]['dest']
         if not os.path.exists(rc_file_path):
             return False, "The local return code file doesn't exist"
@@ -594,9 +623,9 @@ def ansible_check_asynchronous_command_return_code(system_ip, rc_file):
         try:
             rc_code = int(data)
         except:
-            return False, "The return code file doesn't contain a return code" 
+            return False, "The return code file doesn't contain a return code"
         if rc_code != 0:
-            return False, "Rerturn code is different from 0 <%s>" % str(rc_code)
+            return False, "Return code is different from 0 <%s>" % str(rc_code)
 
     except Exception as err:
         return False, "An error occurred while retrieving the return code file <%s>" % str(err)
@@ -613,23 +642,23 @@ def ansible_get_asynchronous_command_log_file(system_ip, log_file):
       (boolean,int): A tuple containing whether the operation was well
     """
 
-    reg = r"/tmp/system_(update|update_feed|update_uc|reconfigure)_\d{10}\.\d{2}\.log"
+    reg = r"/var/log/alienvault/update/system_(update|update_feed|update_uc|reconfigure)_\d{10}\.\d{2}\.log"
     if re.match(reg, log_file) is None:
-        return False, "Invalid return code file"
+        return False, "Invalid async command log file"
     try:
-        destination_path = "/tmp/ansible/logs/"
+        destination_path = "/var/log/alienvault/ansible/logs/"
         response = ansible.run_module(host_list=[system_ip], module="fetch", args="dest=%s src=%s flat=yes" % (destination_path, log_file), use_sudo=True)
         result, msg = ansible_is_valid_response(system_ip, response)
         if not result or not 'dest' in  response['contacted'][system_ip]:
-            return False, "Something wrong happen while fetching the return code file: %s" % msg
+            return False, "Something wrong happened while fetching the async command log file: %s" % msg
         # The content of the return code file should be a number.
         # The content of the return code file should be 0 for success.
         rc_file_path = response['contacted'][system_ip]['dest']
         if not os.path.exists(rc_file_path):
-            return False, "The local return code file doesn't exist"
+            return False, "The local async command log file doesn't exist"
 
     except Exception as err:
-        return False, "An error occurred while retrieving the return code file <%s>" % str(err)
+        return False, "An error occurred while retrieving the async command log file <%s>" % str(err)
 
     return True, rc_file_path
 
@@ -699,13 +728,13 @@ def ansible_download_release_info(system_ip):
 
 def ansible_get_log_lines(system_ip, logfile, lines):
     """Get a certain number of log lines from a given log file
-    
+
         Args:
             system_ip (str): String with system ip.
             log_file (str): String with the name of the log file.
             lines (integer): Integer with the number of lines to display.
     """
-    
+
     command = "tail -%s %s | base64" % (str(lines), logfile)
 
     try:
@@ -713,18 +742,116 @@ def ansible_get_log_lines(system_ip, logfile, lines):
     except Exception, exc:
         api_log.error("Ansible Error: An error occurred retrieving the log file: %s" % str(exc))
         return False, "Ansible Error: An error occurred retrieving the log file: %s" % str(exc)
-        
+
     (success, msg) = ansible_is_valid_response(system_ip, response)
     if not success:
-        return False,"Something wrong happen retrieving the log file: %s" % str(msg)
-        
+        return False,"Something wrong happened retrieving the log file: %s" % str(msg)
+
     return_code = int(response['contacted'][system_ip]['rc'])
     if return_code != 0:
-        return False, "Something wrong happen retrieving the log file: %s" % str(response['contacted'][system_ip]['stderr'])
+        return False, "Something wrong happened retrieving the log file: %s" % str(response['contacted'][system_ip]['stderr'])
 
     output = unicode(b64decode(response['contacted'][system_ip]['stdout']), "utf-8", errors='replace')
-    
+
     if output is not None:
         output = output.split("\n")
-       
+
     return success, output
+
+
+def ansible_remove_key_from_known_host_file(system_ip, system_ip_to_remove):
+    """Remove the given system ip ssh key from the knownhost file
+
+        Args:
+            system_ip (str): String with system ip.
+            system_ip_to_remove (str): The system ip key to remove
+    """
+
+    command = "ssh-keygen -R %s" % str(system_ip_to_remove)
+
+    try:
+        response = ansible.run_module(host_list=[system_ip], module="shell", use_sudo=False, args=command)
+    except Exception, exc:
+        api_log.error("Ansible Error: An error occurred while remove the ssh key: %s" % str(exc))
+        return False, "Ansible Error: An error occurred while remove the ssh key: %s" % str(exc)
+    (success, msg) = ansible_is_valid_response(system_ip, response)
+    if not success:
+        return False,"An error occurred while remove the ssh key: %s" % str(msg)
+    return_code = int(response['contacted'][system_ip]['rc'])
+    if return_code != 0:
+        return False, "An error occurred while remove the ssh key: %s" % str(response['contacted'][system_ip]['stderr'])
+    return success, ""
+
+
+def ansible_install_plugin(system_ip, plugin_path, sql_path):
+
+    if not (system_ip or plugin_path or sql_path):
+        return False, "[ansible_install_plugin]: Missing arguments"
+
+    # Copy plugin file to plugins dir
+    remote_plugin_path = "/etc/ossim/agent/plugins/" + basename(plugin_path)
+    cmd_args = "src=%s dest=%s force=yes owner=root group=alienvault mode=644" % (plugin_path, remote_plugin_path)
+    (success, msg) = copy_file([system_ip], cmd_args)
+    if not success:
+        return False, "[ansible_install_plugin] Failed to copy plugin file: %s" % msg
+
+    # Copy SQL file to tmp dir
+    remote_sql_path = "/tmp/tmp_" + basename(sql_path)
+    cmd_args = "src=%s dest=%s force=yes owner=root group=alienvault mode=644" % (sql_path, remote_sql_path)
+    (success, msg) = copy_file([system_ip], cmd_args)
+    if not success:
+        return False, "[ansible_install_plugin] Failed to copy sql file: %s" % msg
+
+    # Apply SQL file
+    cmd_args = "/usr/bin/ossim-db < %s" % remote_sql_path
+    response = ansible.run_module(host_list=[system_ip], module="shell", use_sudo=True, args=cmd_args)
+    (success, msg) = ansible_is_valid_response(system_ip, response)
+    if not success:
+        return False, "[ansible_install_plugin] Failed to apply sql file: %s" % msg
+
+    # Delete SQL file
+    (success, msg) = remove_file([system_ip], remote_sql_path)
+    if not success:
+        return False, "[ansible_install_plugin] Failed to delete sql file: %s" % msg
+
+    return True, "[ansible_install_plugin] Plugin installed OK"
+
+
+def ansible_purge_logs(system_ip, log_type):
+    """
+    Delete update/reconfigure log files older than a year
+
+    Args:
+        system_ip(str): System IP
+        log_type (str): reconfigure or update
+
+    Returns:
+        success (bool): OK/ERROR
+        msg (str): info message
+    """
+
+    if not (system_ip or log_type):
+        return False, "[ansible_purge_logs]: Missing arguments"
+
+    response = ansible.run_module(host_list=[system_ip], module="av_purge_logs", use_sudo=True, args="log_type=%s" % log_type)
+    success, msg = ansible_is_valid_response(system_ip, response)
+    if success:
+        if response['contacted'][system_ip]['changed']:
+            api_log.info(response['contacted'][system_ip]['msg'])
+        return True, "[ansible_purge_logs] Purge logs OK"
+    return False, "[ansible_purge_logs] Purge logs error: %s" 
+
+def ansible_restart_frameworkd(system_ip):
+    """
+    Restart frameworkd daemon
+    :param system_ip: System IP
+
+    :return:
+    """
+    rc = True
+    try:
+        response = ansible.run_module(host_list=[system_ip], module="service", args="name=ossim-framework state=restarted")
+    except Exception, e:
+        response = "Error restarting frameworkd: %s" % str(e)
+        rc = False
+    return (rc,response)

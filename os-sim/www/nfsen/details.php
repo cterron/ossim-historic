@@ -95,6 +95,14 @@ $LimitScale	  = array ( '-', 'K', 'M', 'G', 'T' );
 
 $OutputFormatOption = array ( 'auto', 'line', 'long', 'extended');
 
+// Fix problem with default profile (live) start and end values
+$_SESSION['profileinfo']['tstart'] = $_SESSION['profileinfo']['tstart'] - ($_SESSION['profileinfo']['tstart'] % 300);
+$_SESSION['profileinfo']['tend']   = $_SESSION['profileinfo']['tend'] - ($_SESSION['profileinfo']['tend'] % 300);
+$_SESSION['tstart']                = $_SESSION['tstart'] - ($_SESSION['tstart'] % 300);
+$_SESSION['tend']                  = $_SESSION['tend'] - ($_SESSION['tend'] % 300);
+$_SESSION['tleft']                 = $_SESSION['tleft'] - ($_SESSION['tleft'] % 300);
+$_SESSION['tright']                = $_SESSION['tright'] - ($_SESSION['tright'] % 300);
+
 
 function get_tit_col($run){
 	
@@ -1100,7 +1108,7 @@ function DisplayDetails () {
 ?>
 	</tr>
 	<tr>
-		<td colspan='4' align="center"   valign="top">
+		<td colspan='4' align="center" valign="top" style='padding:0;'>
 			<br>
 			<img id='MainGraph' style='position:relative; top:0px; left:0px;' onclick="DragCursor.set(event);" src=rrdgraph.php?cmd=get-detailsgraph&profile=<?php echo Util::htmlentities($_SESSION['profileswitch']); ?>&arg=<?php echo $arg?> border='0' alt='main-graph'>
 			<img id="CursorDragHandle" style="position:absolute;display:none; " src="icons/cursor-line.png" alt="Line Cursor">
@@ -1115,7 +1123,7 @@ function DisplayDetails () {
 				<input type="hidden" name="tright" id="tright" value="">
 			</form>
 		</td>
-		<td style="vertical-align: bottom;"> 
+		<td style="vertical-align:bottom;padding:0;"> 
 				<table style="margin-bottom:1pt;border:none;width:100%">
 				<tr>
 					<td><span style='font-size:14px;font-weight:bold;margin-bottom:1pt'>
@@ -1640,7 +1648,7 @@ function DisplayDetails () {
 		SetCookieValue("statvisible", <?php echo $detail_opts['statvisible'] ? 1 : 0 ?>);
 		var curdate = new Date();
 		GMToffset  = <?php echo $GMToffset;?> + curdate.getTimezoneOffset() * 60;
-		CursorMode = <?php echo Util::htmlentities($detail_opts['cursor_mode']);?>;
+		CursorMode = <?php echo intval($detail_opts['cursor_mode']) ?>;
 		if ( CursorMode == 0 )
 			SlotSelectInit(<?php echo preg_replace('/[,\)]/', '', Util::htmlentities($_SESSION['tstart'])) . ", " . preg_replace('/[,\)]/', '', Util::htmlentities($_SESSION['tend'])). ", " . preg_replace('/[,\)]/', '', Util::htmlentities($_SESSION['profileinfo']['tstart'])) . ", " . preg_replace('/[,\)]/', '', Util::htmlentities($_SESSION['tleft'])). ",576, $RRDoffset" ?>);
 		else
@@ -1803,7 +1811,7 @@ if( $_SESSION["detail_opts"]["linegraph"] != "" ) {?>
 					$display_filter[0] = preg_replace("/src ip \d+\.\d+\.\d+\.\d+ or dst ip \d+\.\d+\.\d+\.\d+/",$filter,$display_filter[0]);
 				}
 				foreach ( $display_filter as $line ) {
-					print str_replace("&amp;", "&", Util::htmlentities(htmlspecialchars(stripslashes($line)))) . "\n";
+					print str_replace("&amp;", "&", Util::htmlentities(stripslashes($line))) . "\n";
 				}
 			?></textarea>
 			<?php
@@ -2360,8 +2368,8 @@ if( $_SESSION["detail_opts"]["linegraph"] != "" ) {?>
                                 {
                                     $_SESSION["_repinfo_ips"][$ip] = $rep->get_data_by_ip($ip);                                
                                 }
-                                $rep_icon    = $rep->getrepimg($_SESSION["_repinfo_ips"][$ip][0],$_SESSION["_repinfo_ips"][$ip][1],$_SESSION["_repinfo_ips"][$ip][2],$ip);
-                                $rep_bgcolor = $rep->getrepbgcolor($_SESSION["_repinfo_ips"][$ip][0]);
+                                $rep_icon    = Reputation::getrepimg($_SESSION["_repinfo_ips"][$ip][0],$_SESSION["_repinfo_ips"][$ip][1],$_SESSION["_repinfo_ips"][$ip][2],$ip);
+                                $rep_bgcolor = Reputation::getrepbgcolor($_SESSION["_repinfo_ips"][$ip][0]);
                         	    
 
                         	    $style_aux = ($homelan) ? 'style="font-weight:bold"' : '';

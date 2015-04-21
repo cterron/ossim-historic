@@ -64,7 +64,7 @@ function server_get_sensors_script()
 	$allowed_sensors = explode (',', Session::allowedSensors());
        
     /* Get port and IP address */
-    $address = $ossim_conf->get_conf('frameworkd_address');
+    $address = '127.0.0.1';
     $port    = $ossim_conf->get_conf('server_port');
         
     $list = array();
@@ -126,7 +126,7 @@ function server_get_sensors_socket()
 	}
 	
     /* get the port and IP address of the server */
-    $address = $ossim_conf->get_conf('server_address');
+    $address = '127.0.0.1';
     $port    = $ossim_conf->get_conf('server_port');
     
     /* create socket */
@@ -208,7 +208,7 @@ function server_get_name_byip($ip)
 		
 	$sname = '';
 	
-	$frameworkd_address = $ossim_conf->get_conf('frameworkd_address');
+	$frameworkd_address = '127.0.0.1';
 	
 	$cmd    = 'echo "control action=\"getconnectedagents\"" | nc '.$frameworkd_address.' 40003 -w1';
 	$output = explode("\n", `$cmd`);
@@ -250,7 +250,7 @@ function send_msg($cmd, $ip, $id)
 	}	
 	
 	/* get the port and IP address of the server */
-	$address = $ossim_conf->get_conf('server_address');
+	$address = '127.0.0.1';
 	$port    = $ossim_conf->get_conf('server_port');
 	/* create socket */
 	$socket = socket_create(AF_INET, SOCK_STREAM, 0);
@@ -286,8 +286,6 @@ function send_msg($cmd, $ip, $id)
 	{
 		$err_msg = '<strong>'._('Bad response from server').'</strong>';
         echo ossim_error($err_msg, AV_WARNING);
-        
-		break;
 	}
 	/* send command */
 	$msg = "sensor-plugin-$cmd sensor=\"$ip\" plugin_id=\"$id\"\n";
@@ -311,7 +309,7 @@ function server_get_sensor_plugins($sensor_ip = "")
 		
     /* get the port and IP address of the server */
     
-    $address = $ossim_conf->get_conf('server_address');
+    $address = '127.0.0.1';
     $port    = $ossim_conf->get_conf('server_port');
     
     /* create socket */

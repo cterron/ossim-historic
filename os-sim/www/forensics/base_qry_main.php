@@ -105,7 +105,8 @@ if ($submit == gettext("Signature") && $_GET['search_str'] != '')
 
 } elseif ($submit == "Payload") {
 
-    $search_str = ImportHTTPVar("search_str", VAR_DIGIT | VAR_PUNC | VAR_LETTER | VAR_AT);
+    //$search_str = ImportHTTPVar("search_str", VAR_DIGIT | VAR_PUNC | VAR_LETTER | VAR_AT);
+    $search_str = $_GET['search_str'];
     $_GET["search"] = 1;
     $_GET["data_cnt"] = 1;
     $_GET["data"][0] = array("","LIKE",str_replace('$$$$','"',$search_str),"","");

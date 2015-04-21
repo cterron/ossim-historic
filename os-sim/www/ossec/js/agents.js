@@ -88,10 +88,8 @@ function get_idm_data(that)
             $('.td_c_ud', that).html(current_user_domain);
 
             //Updating the datatable value but do not redraw the table
-
             dt_table.fnUpdate(current_ip, that, 4, false, false);
             dt_table.fnUpdate(current_user_domain, that, 5, false, false);
-
         }
     });
 }
@@ -99,28 +97,17 @@ function get_idm_data(that)
 
 function get_agent_info(that)
 {
-    var sensor_id  = $('#sensors').val();
-    var agent_id   = $(that).parent().find('td:nth-child(2)').text();
-    var agent_ip   = '';
-    
-    if ($('.th_ci').length > 0)
-    {
-        ip       = $(that).parent().find('td:nth-child(5) div').text();
-        agent_ip = (ip.match(/-/)) ? '' : ip;
-    }
-    
-    //If current IP is empty, we use the agent IP
-    if (agent_ip == '')
-    {
-        agent_ip = $(that).parent().find('td:nth-child(4)').text();
-    }
-
     $(that).tipTip({
        defaultPosition: "top",
        maxWidth: "auto",
        edgeOffset: 3,
        content: function(e){
-          
+
+            var sensor_id  = $('#sensors').val();
+            var agent_id   = $(that).parent().find('td:nth-child(2)').text();
+            var agent_name = $(that).parent().find('td:nth-child(3)').text();
+            var agent_ip   = $(that).parent().find('td:nth-child(4)').text();
+
             var loading_content = "<table class='t_agent_mi'>" +
                             "<tr>" +
                                 "<td class='td_loading'>" +
@@ -137,16 +124,16 @@ function get_agent_info(that)
             else
             {
                 if (typeof(xhr) == 'object' && xhr != 'null')
-                {    
+                {
                     xhr.abort();
                 }
-                
+
                 xhr = $.ajax({
                   type: 'POST',
-                  data: 'sensor_id='+sensor_id+'&agent_id='+agent_id+'&agent_ip='+agent_ip,
+                  data: 'sensor_id='+sensor_id+'&agent_id='+agent_id+'&agent_name='+agent_name+'&agent_ip='+agent_ip,
                   url: 'data/agents/ajax/agent_info.php',
                   success: function (response) {
-                    
+
                     var base64_c = Base64.encode(response);
                     $(that).append("<div style='display:none;'>"+base64_c+"</div>");
 
@@ -170,7 +157,7 @@ function add_agent()
     show_loading_box('tabs', ossec_msg['add_agent'], '');
     
     var token = Token.get_token('f_agents');
-                
+
     $.ajax({
         type: "POST",
         url: "data/agents/ajax/agent_actions.php",
@@ -199,6 +186,8 @@ function add_agent()
             $("#c_info").html(notify_error(ossec_msg['unknown_error']));
 
             $("#c_info").fadeIn(4000);
+
+            $('#'+form_id)[0].reset();
 
             window.scrollTo(0,0);
         },
@@ -247,6 +236,8 @@ function add_agent()
                 else
                 {
                     $("#c_info").html(notify_success(status[0]));
+
+                    $('#'+form_id)[0].reset();
                 }
 
                 $("#c_info").fadeIn(4000);
@@ -258,7 +249,6 @@ function add_agent()
         }
     });
 }   
-
 
 function get_action(id)
 {
@@ -276,7 +266,10 @@ function get_action(id)
     }
     else if (id.match("_del##") != null)
     {
-        send_action(id, 'delete_agent');
+        var keys = {"yes": labels['yes'], "no": labels['no']};
+        av_confirm(ossec_msg['delete_agent'], keys).done(function(){
+            send_action(id, 'delete_agent');
+        });
     }
     else if (id.match("_check##") != null)
     {
@@ -304,7 +297,7 @@ function get_action(id)
     }
     else if (id.match("_w_deployment_##") != null)
     {
-        show_deployment_form(id, 'windows');
+        show_w_deployment_form(id);
     }
     else if (id.match("_u_installer_##") != null)
     {
@@ -314,12 +307,12 @@ function get_action(id)
 
 
 function send_action(id, action)
-{   
-    var sensor_id = $('#sensors').val();    
+{
+    var sensor_id = $('#sensors').val();
     var id        = id.split("##");
-     
+
     show_loading_box('tabs', ossec_msg['p_action'], '');
-    
+
     var token = Token.get_token('f_agents');
         
     $.ajax({
@@ -335,27 +328,27 @@ function send_action(id, action)
             
             clearTimeout(timer);
         },
-        error: function(data){            
+        error: function(data){
             
             //Check expired session
-            var session = new Session(data, '');            
+            var session = new Session(data, '');
             
             if (session.check_session_expired() == true)
             {
                 session.redirect();
                 return;
             } 
-            
+
             $("#changes_in_files").html('');
             $("#c_info").html('');
-            
-            hide_loading_box(); 
-            
+
+            hide_loading_box();
+
             var nt = notify_error(ossec_msg['unknown_error']);
             
             $("#c_info").html(notify_success(status[0]));
             $("#c_info").fadeIn(4000);
-                    
+
             window.scrollTo(0,0);
         },
         success: function(data){
@@ -382,12 +375,13 @@ function send_action(id, action)
                     case "extract_key":
                         $("#changes_in_files").html(notify_info(data.data));
                         $("#changes_in_files").fadeIn(4000);
+                        $("#changes_in_files div:first").css('width', '95%');
                     break;
 
                     case "delete_agent":
                         var row_id = 'cont_agent_'+ id[1]
-                        var tr     = document.getElementById(row_id);                        
-                                                
+                        var tr     = document.getElementById(row_id);
+
                         if (tr != null)
                         {
                             $('#agent_table').dataTable().fnDeleteRow(tr, null, true);
@@ -421,7 +415,7 @@ function send_action(id, action)
                     case "modified_reg_files":
                     case "rootcheck":
                         $("#changes_in_files").html(data.data);
-                        
+
                         $("#tf").tablePagination({
                             currPage : 1, 
                             rowsPerPage : 25,
@@ -431,7 +425,7 @@ function send_action(id, action)
                             lastArrow : (new Image()).src="/ossim/pixmaps/last.gif",
                             nextArrow : (new Image()).src="/ossim/pixmaps/next.gif"
                         });
-                        
+
                         $("#changes_in_files").fadeIn(4000);
                     break;
                 }
@@ -476,69 +470,70 @@ function download_agent(id, os_type)
 }
 
 
-function show_deployment_form(id, os_type)
-{        
+function show_w_deployment_form(id)
+{
     $('#c_info').html('');
     $("#c_info").stop(true, true);
-    
+
     clearTimeout(timer);
-            
-    var sensor_id = $('#sensors').val();
-    var id        = id.split('##');
-    var agent_ip  = id[1];
-    
-    
-    var parameters = "sensor_id="+sensor_id+"&os_type="+os_type+"&agent_ip="+agent_ip;
+
+    var sensor_id  = $('#sensors').val();
+    var f_data     = id.split('##');
+    var agent_data = f_data[1];
+
+
+    var parameters = "sensor_id="+sensor_id+"&agent_data="+agent_data;
     var url        ='data/agents/a_deployment_form.php?'+parameters;
-       
-    GB_show(ossec_msg['a_deployment_w'], url, 500, "95%");
+
+    GB_show(ossec_msg['a_deployment_w'], url, 500, "80%");
 }
 
 
-function deployment_agent()
-{   
+function deploy_windows_agent()
+{
     var form_id = $('form[method="post"]').attr("id");
-                
+
     $.ajax({
         type: "POST",
         url: "ajax/a_deployment.php",
         data: $('#'+form_id).serialize(),
         dataType: "json",
         beforeSend: function(xhr) {
-            
-            show_loading_box('container_center', ossec_msg['deploying_agent']);            
-                                    
+
+            show_loading_box('container_center', ossec_msg['deploying_agent']);
+
             $("#c_info").html('');
             $("#c_info").stop(true, true);
-            
+
             $("#c_help").html('');
-                        
+
             clearTimeout(timer);
         },
         error: function(data){
-            
-            hide_loading_box(); 
-                    
+
+            hide_loading_box();
+
             $("#c_info").html(notify_error(ossec_msg['unknown_error']));
-                    
             $("#c_info").fadeIn(4000);
-                    
+
             window.scrollTo(0,0);
-            
+
             Token.add_to_forms();
         },
         success: function(data){
-                        
+
             var cnd_1  = (typeof(data) == 'undefined' || data == null);
             var cnd_2  = (typeof(data) != 'undefined' && data != null && data.status != 'success');
-                
+
             if (cnd_1 || cnd_2)
             {
                 hide_loading_box();
-                
+
                 var error_msg = (cnd_1 == true) ? ossec_msg['unknown_error'] : data.data;
-                    error_msg = "<div style='padding-left: 10px;'>"+error_msg+"</div>";
-                    
+                    error_msg = "<div style='padding-left:15px; text-align: left;'>" + error_msg + "</div>";
+
+                    error_msg = "<div style='text-align: left; padding-left:5px;'>" + ossec_msg['error_header'] + "</div>" + error_msg;
+
                 if (data.status == 'error')
                 {
                     $("#c_info").html(notify_error(error_msg));
@@ -547,185 +542,84 @@ function deployment_agent()
                 {
                     $("#c_info").html(notify_warning(error_msg));
                 }
-                
+
                 Token.add_to_forms();
             }
             else
             {
-                var sensor_ip = $('#sensor_ip').val();
-                var work_id   = data.data;
-                
-                check_deployment_status(sensor_ip, work_id);
+                var job_id = data.data['job_id'];
+
+                check_deployment_status(job_id);
             }
-            
+
             window.scrollTo(0,0);
         }
     });
 }
 
 
-function check_deployment_status(sensor_ip, work_id)
-{       
+function check_deployment_status(job_id)
+{
      $.ajax({
         type: "POST",
         url: "ajax/a_deployment_actions.php",
-        data: "sensor_ip="+sensor_ip+"&work_id="+work_id+"&order=status",
+        data: "job_id=" + job_id,
         dataType: "json",
         beforeSend: function(xhr) {
             clearTimeout(timer);
         },
         error: function(data){
 
-            hide_loading_box(); 
+            hide_loading_box();
 
             $("#c_info").html(notify_error(ossec_msg['unknown_error']));
-                    
+
             $("#c_info").fadeIn(4000);
-                    
+
             window.scrollTo(0,0);
-            
+
             Token.add_to_forms();
         },
         success: function(data){
 
             var cnd_1  = (typeof(data) == 'undefined' || data == null);
-            var cnd_2  = (typeof(data) != 'undefined' && data != null && data.status != 'success');
-                
+            var cnd_2  = (typeof(data) != 'undefined' && data != null && data.status == 'error');
+
             if (cnd_1 || cnd_2)
             {
                 hide_loading_box();
-                
-                if (cnd_1 == true)
-                {
-                    var error_msg = "<div style='padding-left: 10px;'>"+ossec_msg['unknown_error']+"</div>";
-                }
-                else
-                {
-                    if (typeof(data.data.txt) != 'undefined')
-                    {
-                        var error_msg = "<div style='padding-left: 10px;'>"+data.data.txt+"</div>";
-                    }
-                    else
-                    {
-                        var error_msg = "<div style='padding-left: 10px;'>"+data.data+"</div>";
-                    }
-                }
 
-                if (data.status == 'error')
+                Token.add_to_forms();
+
+                var error_msg = (cnd_1 == true) ? ossec_msg['unknown_error'] : data.data;
+                    error_msg = "<div style='padding-left:15px; text-align: left;'>" + error_msg + "</div>";
+
+                    error_msg = "<div style='text-align: left; padding-left:5px;'>" + ossec_msg['error_header'] + "</div>" + error_msg;
+
+                $("#c_info").html(notify_error(error_msg));
+
+                if (typeof(data.data.help) != 'undefined')
                 {
-                    $("#c_info").html(notify_error(error_msg));
-                    
-                    if (typeof(data.data.help) != 'undefined')
-                    {
-                        $("#c_help").html(notify_info(data.data.help));
-                    }
-                    
-                }
-                else
-                {
-                    $("#c_info").html(notify_warning(error_msg));
+                    $("#c_help").html(notify_info(data.data.help));
                 }
             }
             else
             {
-                var code = String(data.data.code);
-                
-                switch (code)
+                switch (data.status)
                 {
-                    case "-1":
+                    case "success":
                         hide_loading_box();
 
-                        $("#c_info").html(notify_error(data.data.txt));
-
-                        purge_deployments(sensor_ip, false);
-
-                        if (typeof(data.data.help) != 'undefined')
-                        {
-                            $("#c_help").html(notify_info(data.data.help));
-                        }
+                        $("#c_info").html(notify_success(data.data));
 
                         Token.add_to_forms();
+                        window.scrollTo(0,0);
                     break;
 
-                    case "0":
-                        hide_loading_box();
-                        
-                        $("#c_info").html(notify_success(data.data.txt));
-                        
-                        purge_deployments(sensor_ip, false);
-                    break;
-
-                    case "1":
-                    case "2":
-                    case "3":
-                    case "4":
-                    case "5":
+                    case "in_progress":
                         $('.r_lp').html(data.data.txt);
-                        timer = setTimeout("check_deployment_status('"+sensor_ip+"', '"+work_id+"');", 2000); 
+                        timer = setTimeout(function(){ check_deployment_status(job_id); }, 2000);
                     break;
-                    
-                    default:
-                        hide_loading_box();
-                        
-                        $("#c_info").html(notify_success(data.data.txt));
-                        
-                        purge_deployments(sensor_ip, false);
-                }
-            }
-
-            Token.add_to_forms();
-            
-            window.scrollTo(0,0);
-        }
-    });
-}
-
-
-function purge_deployments(sensor_ip, show_notification)
-{
-     $.ajax({
-        type: "POST",
-        url: "ajax/a_deployment_actions.php",
-        data: "sensor_ip="+sensor_ip+"&order=purge",
-        dataType: "json",
-        beforeSend: function(xhr){
-            clearTimeout(timer);
-        },
-        error: function(data){
-            
-            hide_loading_box(); 
-                    
-            $("#c_info").html(notify_error(ossec_msg['unknown_error']));
-                    
-            $("#c_info").fadeIn(4000);
-                    
-            window.scrollTo(0,0);
-        },
-        success: function(data){
-
-            if (show_notification == true)
-            {
-                var cnd_1  = (typeof(data) == 'undefined' || data == null);
-                var cnd_2  = (typeof(data) != 'undefined' && data != null && data.status != 'success');
-                
-                hide_loading_box();
-
-                if (cnd_1 || cnd_2)
-                {
-                    var error_msg = (cnd_1 == true) ? ossec_msg['unknown_error'] : data.data;
-                        error_msg = "<div style='padding-left: 10px;'>"+error_msg+"</div>";
-
-                    if (data.status == 'error'){
-                        $("#c_info").html(notify_error(error_msg));
-                    }
-                    else
-                    {
-                        $("#c_info").html(notify_warning(error_msg));
-                    }
-                }
-                else
-                {
-                    $("#c_info").html(notify_success(data.data));
                 }
             }
         }

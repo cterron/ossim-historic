@@ -168,6 +168,28 @@ button.av_b_gray:hover
 	margin-right: 10px;
 }
 
+#views_container
+{
+	position: absolute;
+	right: 5px;
+}
+#views
+{
+	position: absolute;
+	right: -5px;
+	top: 0px;
+	display: none;
+	max-height: 450px;
+	overflow-y: auto;
+}
+#custom_view_info
+{
+	position:absolute;
+	margin-top:10px;
+	width: 100%;
+	z-index:99;
+}
+
 /* Event details layout */
 .siem_detail_table
 {
@@ -320,6 +342,25 @@ button.av_b_gray:hover
 	height: 25px;
 }
 
+/* Prevent horizontal overflow when long userdata cell */
+.siem_detail_fixed
+{
+	table-layout: fixed;
+}
+.siem_detail_fixed:td
+{
+	word-wrap: break-word;
+}
+.siem_ellipsis
+{
+	max-width: 250px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding-bottom: 2px;
+	padding-top: 2px;
+	white-space: nowrap;
+}
+
 /* Search form elements */
 #search_str
 {
@@ -405,4 +446,10 @@ button.av_b_gray:hover
 #search_opt_tip li
 {
     margin-left: 20px; 
+}
+
+#backup_info
+{
+	float: right;
+	text-align: right;
 }

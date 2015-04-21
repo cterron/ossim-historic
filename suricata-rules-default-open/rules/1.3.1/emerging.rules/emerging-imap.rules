@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -37,12 +37,6 @@
 #
 
 # This Ruleset is EmergingThreats Open optimized for suricata-1.3.
-
-#
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP GNU Mailutils imap4d hex attempt"; flow:established,to_server; content:"SEARCH TOPIC %"; reference:cve,2005-2878; reference:bugtraq,14794; reference:nessus,19605; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=19306; classtype:misc-attack; sid:100000207; rev:3;)
-
-#
-#alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP MDaemon authentication multiple packet overflow attempt"; flow:to_server,established; flowbits:isset,community_imap.auth; isdataat:342; pcre:"/[^\x0A]{342,}/"; reference:bugtraq,14317; classtype:attempted-admin; sid:100000153; rev:4;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET 143 (msg:"GPL IMAP Overflow Attempt"; flow:to_server,established; content:"|E8 C0 FF FF FF|/bin/sh"; classtype:attempted-admin; sid:2100293; rev:8;)

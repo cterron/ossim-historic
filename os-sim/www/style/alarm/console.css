@@ -39,6 +39,15 @@ body
 	cursor: default !important;
 }
 
+#alarm_list
+{
+    width:100%;
+    margin: 20px 0 20px 0;
+    min-height: 450px;
+    position: relative;
+}
+
+
 .label_filter_l 
 { 
 	text-align: left;
@@ -270,18 +279,32 @@ div.dataTables_processing {
 .slideThree input[type=checkbox]:checked + label {
 	left: 43px;
 }
-		
-ul.labels {
-    background-color:#11829D;
-    padding:5px;
-    margin:0px;
-}
 
+ul.labels
+{
+    padding: 0px 10px 5px 5px !important;
+    background-color: rgb(17, 130, 157);
+    max-height: 250px;
+    overflow: auto !important;
+}
+		
 ul.labels li {
     list-style: none;
-    margin:1px 2px;
-    padding:5px 0px;
-    cursor:pointer;
+    margin: 0 2px;
+    padding: 5px !important;
+}
+
+ul.labels li > div 
+{
+    display: block !important;
+    text-align: center !important;
+    cursor: pointer;
+}
+
+.tagedit a
+{
+    display: inline !important;
+    padding: 0 1px !important;
 }
 
 table.quicklook {
@@ -384,6 +407,17 @@ div.quicklook_box span.small {
 {
     padding:5px 0px;
     color: #545351 !important;
+}
+
+#tray_btn_label .apply_label_layer
+{
+    position:absolute;
+    z-index:99999;
+    right:17px;
+    top:30px;
+    max-height: 200px;
+    overflow: auto;
+    text-align: right;
 }
 
 
@@ -515,13 +549,31 @@ div.fright
     text-transform: uppercase;
 }
 
-.testbutton
+.tray_alarm_actions button
 {
     width:110px !important;
 }
 
-button.button span
+
+/* Styles for the menu buttons of DataTables */
+
+#alarm_console_button_list
 {
-    font-family: "open_sans","MuliRegular","Lucida Sans","Lucida Grande",Lucida,sans-serif,Verdana,arial;
-    color:white !important;
+    position: absolute;
+    right:0;
+    top:0;
+    z-index: 999;
+}
+
+#btn_ds img, #btn_cs img
+{
+    height: 14px;
+    padding-right:8px;
+    vertical-align: sub;
+}
+
+.button_labels:after
+{
+    content: "\25be";
+    padding-left: 5px;
 }

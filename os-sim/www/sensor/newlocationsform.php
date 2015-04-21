@@ -131,8 +131,7 @@ if ($locations_id != '')
 	<script type="text/javascript" src="../js/utils.js"></script>
 	<script type="text/javascript" src="../js/jquery.dynatree.js"></script>
 	<script type="text/javascript" src="../js/token.js"></script>
-
-    <script type="text/javascript" src=" https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>    
+   
 	<script type="text/javascript" src="../js/jquery.autocomplete_geomod.js"></script> 
 	<script type="text/javascript" src="../js/geo_autocomplete.js"></script>
 	<script type="text/javascript" src="../js/av_map.js.php"></script>
@@ -179,98 +178,101 @@ if ($locations_id != '')
 			/* Google Map */			   
             
             av_map = new Av_map('c_map');
-                                                                                                                
-            if(Av_map.is_map_available())
-            {             
-                av_map.set_location('<?php echo $latitude?>', '<?php echo $longitude?>');                    
-                av_map.set_zoom(<?php echo $zoom?>);
-                av_map.set_address('<?php echo $location?>');  
-                
-                av_map.draw_map();
+            
+            Av_map.is_map_available(function (conn)
+            {                                                                                        
+                if(conn)
+                {             
+                    av_map.set_location('<?php echo $latitude?>', '<?php echo $longitude?>');                    
+                    av_map.set_zoom(<?php echo $zoom?>);
+                    av_map.set_address('<?php echo $location?>');  
                     
-                if(av_map.get_lat() != '' && av_map.get_lng() != '')
-                {                        
-                    av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                                        
-                    // Change title
-                    av_map.markers[0].setTitle('<?php echo _('Sensor Location')?>');
-                    av_map.markers[0].setMap(av_map.map);                    
-                }
-                                            
-                $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
-					mapkey: '<?php echo $map_key?>', 
-					selectFirst: true,
-					minChars: 3,
-					cacheLength: 50,
-					width: 300,
-					scroll: true,
-					scrollHeight: 330,					                  				
-				}).result(function(_event, _data) {
-																	
-					if (_data)
-					{ 						    						
-						//Set map coordenate
-                        av_map.map.fitBounds(_data.geometry.viewport);
-                                                    
-                        var aux_lat = _data.geometry.location.lat();
-                        var aux_lng = _data.geometry.location.lng();   
+                    av_map.draw_map();
                         
-                        //console.log(aux_lat);
-                        //console.log(aux_lng);
-                        
-                        av_map.set_location(aux_lat, aux_lng);                            
-                                                    
-                        $('#latitude').val(av_map.get_lat());
-                        $('#longitude').val(av_map.get_lng());
-
-                        //Save address
-                        
-                        av_map.set_address(_data.formatted_address);
-                                                
-                        //Save country
-						
-						var country = '';
-                        var i       = _data.address_components.length-1;
-                                                                        
-                        for(i; i >= 0; i--)
-                        {
-                            var item = _data.address_components[i];
-                            
-                            if(item.types[0] == 'country')
-                            {
-                                country = item.short_name;
-                                
-                                break;
-                            }
-                        }
-                        
-                        $('#country').val(country);
-                        
-                        // Marker (Add or update)
-                        
-                        av_map.remove_all_markers();
+                    if(av_map.get_lat() != '' && av_map.get_lng() != '')
+                    {                        
                         av_map.add_marker(av_map.get_lat(), av_map.get_lng());
-                        
+                                            
                         // Change title
                         av_map.markers[0].setTitle('<?php echo _('Sensor Location')?>');
-                        av_map.markers[0].setMap(av_map.map);  
-                                                                                                        
-                        av_map.map.setZoom(8);											
-					}
-				});
-															
-				//Latitude and Longitude (Handler Onchange)
-				av_map.bind_pos_actions();
-				
-				//Search box (Handler Keyup and Blur)
-				av_map.bind_sl_actions();				
-								           
-            }
-            else
-            {
-                av_map.draw_warning();
-                $('#send, #search_location, #latitude, #longitude').attr('disabled', 'disabled');          
-            }
+                        av_map.markers[0].setMap(av_map.map);                    
+                    }
+                                                
+                    $('#search_location').geo_autocomplete(new google.maps.Geocoder, {
+    					mapkey: '<?php echo $map_key?>', 
+    					selectFirst: true,
+    					minChars: 3,
+    					cacheLength: 50,
+    					width: 300,
+    					scroll: true,
+    					scrollHeight: 330,					                  				
+    				}).result(function(_event, _data) {
+    																	
+    					if (_data)
+    					{ 						    						
+    						//Set map coordenate
+                            av_map.map.fitBounds(_data.geometry.viewport);
+                                                        
+                            var aux_lat = _data.geometry.location.lat();
+                            var aux_lng = _data.geometry.location.lng();   
+                            
+                            //console.log(aux_lat);
+                            //console.log(aux_lng);
+                            
+                            av_map.set_location(aux_lat, aux_lng);                            
+                                                        
+                            $('#latitude').val(av_map.get_lat());
+                            $('#longitude').val(av_map.get_lng());
+    
+                            //Save address
+                            
+                            av_map.set_address(_data.formatted_address);
+                                                    
+                            //Save country
+    						
+    						var country = '';
+                            var i       = _data.address_components.length-1;
+                                                                            
+                            for(i; i >= 0; i--)
+                            {
+                                var item = _data.address_components[i];
+                                
+                                if(item.types[0] == 'country')
+                                {
+                                    country = item.short_name;
+                                    
+                                    break;
+                                }
+                            }
+                            
+                            $('#country').val(country);
+                            
+                            // Marker (Add or update)
+                            
+                            av_map.remove_all_markers();
+                            av_map.add_marker(av_map.get_lat(), av_map.get_lng());
+                            
+                            // Change title
+                            av_map.markers[0].setTitle('<?php echo _('Sensor Location')?>');
+                            av_map.markers[0].setMap(av_map.map);  
+                                                                                                            
+                            av_map.map.setZoom(8);											
+    					}
+    				});
+    															
+    				//Latitude and Longitude (Handler Onchange)
+    				av_map.bind_pos_actions();
+    				
+    				//Search box (Handler Keyup and Blur)
+    				av_map.bind_sl_actions();				
+    								           
+                }
+                else
+                {
+                    av_map.draw_warning();
+                    $('#send, #search_location, #latitude, #longitude').attr('disabled', 'disabled');          
+                }
+            });
             
             						
 			// Entities tree

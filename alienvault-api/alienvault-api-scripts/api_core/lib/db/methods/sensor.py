@@ -29,24 +29,29 @@
 #
 
 from uuid import UUID
+import json
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 import db
 from db.models.alienvault import Sensor, Host_Sensor_Reference, System, Sensor_Properties
 from db.methods.system import get_system_id_from_system_ip, get_system_ip_from_local
-
+from db.methods.api import get_monitor_data
 import api_log
 from apimethods.decorators import accepted_values, accepted_types, require_db
 from apimethods.utils import (get_bytes_from_uuid,
                               get_ip_str_from_bytes,
                               get_ip_bin_from_str,
-                              get_uuid_string_from_bytes)
+                              get_uuid_string_from_bytes,
+                              compare_dpkg_version
+                              )
 
 from avconfig.ossimsetupconfig import AVOssimSetupConfigHandler
 ossim_setup = AVOssimSetupConfigHandler()
-
-
+#
+# I would prefer this constant defined in one file
+#
+MONITOR_PLUGINS_VERSION = 12
 @require_db
 @accepted_types(UUID)
 @accepted_values([], ['str', 'bin'])
@@ -57,7 +62,7 @@ def get_system_id_from_sensor_id(sensor_id, output='str'):
     sensor_id_bin = get_bytes_from_uuid(sensor_id)
 
     try:
-        sensor_ip = db.session.query(Sensor).filter(Sensor.id == sensor_id_bin).one().ip
+        sensor_ids = [x.id for x in db.session.query(System).filter(System.sensor_id == sensor_id_bin).order_by(System.id).all()]
     except NoResultFound, msg:
         return (False, "No sensor ip address found with sensor id '%s'" % str(sensor_id))
     except MultipleResultsFound, msg:
@@ -65,13 +70,10 @@ def get_system_id_from_sensor_id(sensor_id, output='str'):
     except Exception, msg:
         db.session.rollback()
         return (False, "Error captured while querying for sensor id '%s': %s" % (str(sensor_id), str(msg)))
-
-    try:
-        sensor_ip_str = get_ip_str_from_bytes(sensor_ip)
-    except Exception, msg:
-        return (False, "Cannot convert supposed sensor ip '%s' to its string form: %s" % (str(sensor_ip), str(msg)))
-
-    return (get_system_id_from_system_ip(sensor_ip_str, output=output))
+    if output == 'str':
+        return (True, get_uuid_string_from_bytes (sensor_ids[0]))
+    else:
+        return (True, sensor_ids[0])
 
 
 @require_db
@@ -130,12 +132,28 @@ def get_sensors_for_asset(host_id):
 
 
 @require_db
-def get_devices_ids_list_per_sensor(sensor_ip, device_ips):
+def get_ids_of_logging_devices_per_sensor(sensor_ip, device_ips):
     devices = {}
     ip_list = ','.join("inet6_pton(\"%s\")" % i for i in device_ips)
     query = "SELECT DISTINCT hex(host.id), inet6_ntop(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
             "acl_sensors.sensor_id=sensor.id AND host.ctx=acl_sensors.entity_id AND host.id=host_ip.host_id AND " \
             "host_ip.ip IN (%s) AND sensor.ip=inet6_pton(\"%s\");" % (ip_list, sensor_ip)
+    try:
+        data = db.session.connection(mapper=Sensor).execute(query)
+        for row in data:
+            devices[row[0]] = row[1]
+    except Exception:
+        devices = {}
+        db.session.rollback()
+    return devices
+
+
+@require_db
+def get_list_of_device_ids_per_sensor(sensor_ip):
+    devices = {}
+    query = "SELECT DISTINCT hex(host.id), inet6_ntop(host_ip.ip) FROM host, host_ip, acl_sensors, sensor WHERE " \
+            "acl_sensors.sensor_id=sensor.id AND host.ctx=acl_sensors.entity_id AND host.id=host_ip.host_id AND " \
+            "sensor.ip=inet6_pton(\"%s\");" % sensor_ip
     try:
         data = db.session.connection(mapper=Sensor).execute(query)
         for row in data:
@@ -284,3 +302,34 @@ def set_sensor_properties_passive_inventory(sensor_id, value):
 
 def set_sensor_properties_netflow(sensor_id, value):
     return set_sensor_properties_value(sensor_id, 'netflows', value)
+
+def get_newest_plugin_system():
+    """
+        Get the current stored plugin packages version. Check all sensor
+        and compared with all sensors. Return the newest information. Here we can have several
+        scenarios we have to manage. This function can be called in a system with framework and without
+        sensors - no sense, but this scenario can exists in a instalation -, we must be sure that
+    """
+    current_sensors = get_monitor_data(MONITOR_PLUGINS_VERSION)
+    system_id = None 
+    md5 = None
+    max_sensor = None
+    system_id = None
+    if current_sensors is not None:
+        system_id = current_sensors[0]['component_id']
+        monitor_data = json.loads(current_sensors[0]['data'])
+        md5 = monitor_data['md5']
+        version = monitor_data['version']
+        for sensor in current_sensors[1:]:
+            check_monitor_data = json.loads(sensor['data'])
+            check_version = check_monitor_data['version']
+            if compare_dpkg_version(check_version, version) == "greater":
+                result, system_id = get_system_id_from_sensor_id(sensor['component_id'])
+                if result:
+                    md5 = check_monitor_data['md5']
+                    version = check_version
+                else:
+                    system_id = None
+                    md5 = None
+            
+    return (system_id, md5)

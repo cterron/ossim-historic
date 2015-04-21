@@ -450,13 +450,19 @@ sim_engine_load_all (SimEngine  *engine)
   directive_dir = g_strdup_printf("/etc/ossim/server/%s", default_engine_id);
   if (!(g_file_test (directive_dir, G_FILE_TEST_IS_DIR)))
   {
-    if (g_mkdir_with_parents (directive_dir, 0770) == 0)
-    {
+    if (g_mkdir_with_parents (directive_dir, 0700) == 0)
+     {
+      // Change permissions.
+      if (chmod (directive_dir, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0)
+      {
+        g_warning ("Cannot change the engine directory permissions");
+      }
+
       GError * error = NULL;
       gchar * dst_directives_xml_file = g_strdup_printf("%s/directives.xml", directive_dir);
       gchar * dst_user_xml_file = g_strdup_printf("%s/user.xml", directive_dir);
-      const gchar * src_directives_xml_file = "/usr/share/alienvault-directives-pro/d_clean/templates/directives.xml";
-      const gchar * src_user_xml_file = "/usr/share/alienvault-directives-pro/d_clean/templates/user.xml";
+      const gchar * src_directives_xml_file = "/usr/share/alienvault-directives-free/d_clean/templates/directives.xml";
+      const gchar * src_user_xml_file = "/usr/share/alienvault-directives-free/d_clean/templates/user.xml";
       GFile * src_directives = g_file_new_for_path (src_directives_xml_file);
       GFile * src_user = g_file_new_for_path (src_user_xml_file);
       GFile * dst_directives = g_file_new_for_path ((const gchar *)dst_directives_xml_file);

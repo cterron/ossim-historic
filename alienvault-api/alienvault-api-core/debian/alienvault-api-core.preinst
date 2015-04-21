@@ -29,7 +29,7 @@ notify_conffile_changed() {
 case "$1" in
     install|upgrade)
         # Clean up .py[co]
-        find /usr/share/alienvault/api_core/ -name "*.py[co]" -exec rm -f {} \; || true
+        # find /usr/share/alienvault/api_core/ -name "*.py[co]" -exec rm -f {} \; || true
         notify_conffile_changed "alienvault-api-core" "/etc/rsyslog.d/av-filter-avapi.conf" "alienvault-restart-rsyslog"
     ;;
 

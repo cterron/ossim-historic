@@ -167,15 +167,15 @@ def get_current_version():
 
 def get_packages_info():
     state = {
-            'total_packages':get_total_packages(),
-            'total_packages_with_updates_available':0,
-            'pending_updates':False, 
-            'pending_feed_updates':False,
-            'current_version':get_current_version(),
-            'last_update': None,
-            'available_updates':[],
+            'total_packages': get_total_packages(),
+            'total_packages_with_updates_available': 0,
+            'pending_updates': False,
+            'pending_feed_updates': False,
+            'current_version': get_current_version(),
+            'last_update': get_last_time_update(),
+            'available_updates': [],
             'success': True,
-            'error':"",
+            'error': "",
             }
     rc, output, error = run_apt_get_update()
     if rc != 0:
@@ -193,9 +193,9 @@ def get_packages_info():
         state['pending_updates'] = True
         state['total_packages_with_updates_available'] = len(output)
         package_name_list = [x['package-name'] for x in state['available_updates']]
-        feed = ["alienvault-crosscorrelation", "alienvault-directives" , "snort-rules-default", "suricata-rules-default"]
+        feed = ["alienvault-crosscorrelation", "alienvault-directives", "snort-rules-default", "suricata-rules-default", "alienvault-cpe", "alienvault-plugins", "alienvault-plugin-sids"]
         state['pending_feed_updates'] = any(x in feed for x in package_name_list)
-    state['last_update'] = get_last_time_update()
+
     return True, state
 
 

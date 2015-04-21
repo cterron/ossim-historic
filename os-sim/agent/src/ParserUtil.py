@@ -142,7 +142,7 @@ def resolv_port(port):
     """Translate a port name into it's number."""
 
     try:
-        port = socket.getservbyname(port)
+        port = socket.getservbyname(port.lower())
 
     except socket.error:
         return port
@@ -253,9 +253,6 @@ DATE_REGEXPS = [
     re.compile(r'(?P<year>\d+)-(?P<month>\d+)-(?P<day>\d+)T(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d).+'),
     # SonicWall -- 2011-05-12 07 59 01
     re.compile(r'(?P<year>\d{4})-(?P<month>\d+)-(?P<day>\d+)\s(?P<hour>\d+)\s(?P<minute>\d+)\s(?P<second>\d+)'),
-    # Lilian Date -- 11270 02:00:16
-    # Lilian is the number of days since the beginning of the Gregorian Calendar on October 15, 1582,
-    re.compile(r'(?P<lilian>\d{5})\s+(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})'),
     # CSV format date -- 09/30/2011,10:56:11
         re.compile('(?P<month>[0-9][0-9])/(?P<day>[0-3][0-9])/(?P<year>\d{4})\,(?P<hour>[0-2][0-9]):(?P<minute>[0-6][0-9]):(?P<second>[0-6][0-9])'),
     # honeyd -- 2011-05-17-09:42:24
@@ -268,8 +265,11 @@ DATE_REGEXPS = [
     re.compile(r'(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2}) (?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})'),
     #SNMPTRAP -- mar 07 feb, 2012 - 08:39:49
     re.compile(r'\S+\s+(?P<day>\d{2})\s(?P<month>\w+),\s(?P<year>\d{4})\s-\s(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})'),
-    #CheckPoint-LML-raw - 1Feb2012;0:05:58
-    re.compile(r'(?P<day>\d{1,2})(?P<month>\w+)(?P<year>\d{4});(?P<hour>\d{1,2}):(?P<minute>\d{1,2}):(?P<second>\d{1,2})'),
+    #CheckPoint-LML-raw - 1Feb2012;0:05:58/1Feb2012 0:05:58
+    re.compile(r'(?P<day>\d{1,2})(?P<month>\w+)(?P<year>\d{4})(?:\s|;)+(?P<hour>\d{1,2}):(?P<minute>\d{1,2}):(?P<second>\d{1,2})'),
+    # Lilian Date -- 11270 02:00:16
+    # Lilian is the number of days since the beginning of the Gregorian Calendar on October 15, 1582,
+    re.compile(r'(?P<lilian>\d{5})\s+(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})'),
     #bluecoat -- 2011-05-17 09:42:24
     re.compile(r'(?P<year>\d{4})-(?P<month>\d+)-(?P<day>\d+)\s+(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)'),
     #suricata -- 03/20/2012-12:12:24.376349

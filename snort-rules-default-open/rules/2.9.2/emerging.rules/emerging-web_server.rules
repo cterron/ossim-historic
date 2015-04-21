@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -41,6 +41,11 @@
 #by mike cox
 #
 alert tcp $HOME_NET $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER RFI Scanner Success (Fx29ID)"; flow:established,from_server; content:"FeeLCoMzFeeLCoMz"; fast_pattern:only; reference:url,doc.emergingthreats.net/2010463; reference:url,opinion.josepino.com/php/howto_website_hack1; classtype:successful-user; sid:2010463; rev:7;)
+
+#by matt jonkman, re http://www.incidents.org/diary.html?storyid=4405
+#Mass File Injection attacks
+#
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible File Injection Compromise (HaCKeD By BeLa & BodyguarD)"; flow:established,to_server; content:"HaCKeD By BeLa & BodyguarD"; fast_pattern:only; reference:url,www.incidents.org/diary.html?storyid=4405; classtype:web-application-attack; sid:2008207; rev:5;)
 
 #Mark Tombaugh
 #
@@ -208,7 +213,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER IBM
 
 #by mike cox
 #
-alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET 1024: (msg:"ET WEB_SERVER Possible HTTP 401 XSS Attempt (Local Source)"; flow:from_server,established; content:"401"; http_stat_code; content:"Unauthorized";  nocase; file_data; content:"<script"; nocase; depth:280; reference:url,doc.emergingthreats.net/2010513; classtype:web-application-attack; sid:2010513; rev:8;)
+alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET 1024: (msg:"ET WEB_SERVER Possible HTTP 401 XSS Attempt (Local Source)"; flow:from_server,established; content:"401"; http_stat_code; content:"Unauthorized";  nocase; file_data; content:"<script"; nocase; depth:280; threshold:type threshold,track by_src,count 10,seconds 60; reference:url,doc.emergingthreats.net/2010513; classtype:web-application-attack; sid:2010513; rev:9;)
 
 #by mike cox
 #
@@ -454,7 +459,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP
 
 #by David Wharton
 #pcre updated to use \.php anchor  reduces load on average by about 10% still very expensive sig due to generic uricontent
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Remote File Inclusion (monster list http)"; flow:established,to_server; content:".php"; nocase; http_uri; content:"http"; nocase; http_uri;  pcre:"/\.php.+(path|page|lib|dir|file|root|icon|lang(uage)?|folder|type|agenda|gallery|domain|calendar|settings|news|name|auth|prog|config|cfg|incl|ext|fad|mod|sbp|rf|id|df|[a-z](\[.*\])+)\s*=\s*https?/Ui"; reference:url,www.sans.org/top20/; reference:url,doc.emergingthreats.net/2002997; classtype:web-application-attack; sid:2002997; rev:9;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP Remote File Inclusion (monster list http)"; flow:established,to_server; content:".php"; nocase; http_uri; content:"http"; nocase; http_uri;  pcre:"/\.php.+?(?:c(?:(?:onfi|f)g|alendar)|p(?:a(?:ge|th)|rog)|l(?:ang(uage)?|ib)|f(?:older|ile|ad)|d(?:omain|ir|f)|s(?:ettings|bp)|a(?:genda|uth)|i(?:con|ncl|d)|n(?:ame|ews)|r(?:oot|f)|gallery|type|ext|mod|[a-z](\[.*\])+?)\s*=\s*https?/Ui"; reference:url,www.sans.org/top20/; reference:url,doc.emergingthreats.net/2002997; classtype:web-application-attack; sid:2002997; rev:10;)
 
 #by Jared Braverman
 #
@@ -483,7 +488,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Pos
 #by Reg Quinton at UW. These are intended to be an overall catch for suspected sql injection
 #in web urls. There are more specific sigs for many of these, but these will catch all
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible SQL Injection Attempt UPDATE SET"; flow:established,to_server; content:"UPDATE"; nocase; http_uri; content:"SET"; nocase; http_uri; pcre:"/[&\?].*UPDATE.+SET\x20*[A-Za-z0-9]*\x20*\x3d/Ui"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2006447; classtype:web-application-attack; sid:2006447; rev:12;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible SQL Injection Attempt UPDATE SET"; flow:established,to_server; content:"UPDATE"; nocase; http_uri; content:"SET"; nocase; distance:0; http_uri; pcre:"/\WUPDATE\s+[A-Za-z0-9$_].*?\WSET\s+[A-Za-z0-9$_].*?\x3d/Ui"; reference:url,en.wikipedia.org/wiki/SQL_injection; reference:url,doc.emergingthreats.net/2006447; classtype:web-application-attack; sid:2006447; rev:14;)
 
 #by Adam Pointon from SentinelSecurity.com.au
 #
@@ -615,7 +620,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Pos
 
 #by evilghost
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .php source disclosure vulnerability"; flow:established,to_server; content:"GET"; http_method; nocase; content:".php~"; nocase; http_uri; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009955; classtype:web-application-attack; sid:2009955; rev:10;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Tilde in URI, potential .php~ source disclosure vulnerability"; flow:established,to_server; content:"GET"; http_method; nocase; content:".php~"; nocase; http_uri; reference:url,seclists.org/fulldisclosure/2009/Sep/0321.html; reference:url,doc.emergingthreats.net/2009955; classtype:web-application-attack; sid:2009955; rev:11;)
 
 #by evilghost
 #
@@ -676,10 +681,10 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER /bi
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER /bin/ksh In URI Possible Shell Command Execution Attempt"; flow:established,to_server; content:"/bin/ksh"; http_uri; nocase; classtype:web-application-attack; sid:2011467; rev:7;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP"; flow:to_server,established; content:"http|3a|//127.0.0.1"; fast_pattern:only; pcre:"/http\x3A\/\/127\.0\.0\.1\/.*\.asp/i"; reference:cve,2005-2678; classtype:web-application-activity; sid:100000139; rev:4;)
+#alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER WEB-IIS Remote IIS Server Name spoof attempt loopback IP"; flow:to_server,established; content:"http|3a|//127.0.0.1"; fast_pattern:only; pcre:"/http\x3A\/\/127\.0\.0\.1\/.*\.asp/i"; reference:cve,2005-2678; classtype:web-application-activity; sid:2100139; rev:6;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER WEB-PHP phpinfo access"; flow:to_server,established; content:"/phpinfo.php"; fast_pattern:only; http_uri; nocase; reference:bugtraq,5789; reference:cve,2002-1149; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=3356; classtype:successful-recon-limited; sid:100000186; rev:4;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER WEB-PHP phpinfo access"; flow:to_server,established; content:"/phpinfo.php"; fast_pattern:only; http_uri; nocase; reference:bugtraq,5789; reference:cve,2002-1149; reference:url,www.osvdb.org/displayvuln.php?osvdb_id=3356; classtype:successful-recon-limited; sid:2019526; rev:5;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"GPL WEB_SERVER TRACE attempt"; flow:to_server,established; content:"TRACE"; http_method; reference:bugtraq,9561; reference:nessus,11213; reference:url,www.whitehatsec.com/press_releases/WH-PR-20030120.pdf; classtype:web-application-attack; sid:2102056; rev:6;)
@@ -880,7 +885,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER vi
 #alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"GPL WEB_SERVER webalizer access"; flow:established,to_server; content:"/webalizer/"; nocase; http_uri; reference:bugtraq,3473; reference:cve,2001-0835; reference:nessus,10816; classtype:web-application-activity; sid:2101847; rev:11;)
 
 #
-alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; classtype:attempted-recon; sid:2101201; rev:9;)
+alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"GPL WEB_SERVER 403 Forbidden"; flow:from_server,established; content:"403"; http_stat_code; content:" 403";  classtype:attempted-recon; sid:2101201; rev:11;)
 
 #
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> any any (msg:"ET WEB_SERVER Phoenix Exploit Kit - Admin Login Page Detected Outbound"; flow:established,to_client; content:"<title>Phoenix Exploit's Kit - Log In</title>"; classtype:bad-unknown; sid:2011280; rev:2;)
@@ -1021,31 +1026,31 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PUT
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER DNS changer cPanel attempt"; flow:to_server,established; content:"pwCfm=Dn5Ch4ng3"; http_client_body; classtype:web-application-attack; sid:2013921; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (system() function used)"; flow:to_server,established; content:"QHN5c3Rl"; fast_pattern; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013937; rev:3;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (system() function used)"; flow:to_server,established; content:"QHN5c3Rl"; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013937; rev:5;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (passthru() function used)"; flow:to_server,established; content:"cGFzc3Ro"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013938; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (passthru() function used)"; flow:to_server,established; content:"cGFzc3Ro"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013938; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (shell_exec() function used)"; flow:to_server,established; content:"aGVsbF9l"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013939; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (shell_exec() function used)"; flow:to_server,established; content:"aGVsbF9l"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013939; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (proc_open() function used)"; flow:to_server,established; content:"JHAgPSBhcnJheShhcnJh"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013940; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (proc_open() function used)"; flow:to_server,established; content:"JHAgPSBhcnJheShhcnJh"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013940; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (popen() function used)"; flow:to_server,established; content:"JGggPSBwb3Bl"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013941; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (popen() function used)"; flow:to_server,established; content:"JGggPSBwb3Bl"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013941; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (python_eval() function used)"; flow:to_server,established; content:"QHB5dGhvbl9l"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013942; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (python_eval() function used)"; flow:to_server,established; content:"QHB5dGhvbl9l"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013942; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (pcntl_exec() function used)"; flow:to_server,established; content:"JGFyZ3MgPSBh"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013943; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (pcntl_exec() function used)"; flow:to_server,established; content:"JGFyZ3MgPSBh"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013943; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (perl->system() function used)"; flow:to_server,established; content:"JHBlcmwgPSBuZXcg"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013944; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (perl->system() function used)"; flow:to_server,established; content:"JHBlcmwgPSBuZXcg"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013944; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (exec() function used)"; flow:to_server,established; content:"ZXhlYygn"; http_header; content:"Referer|3a| http|3a|//www.google.com/url?sa="; http_header; reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013945; rev:2;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Weevely PHP backdoor detected (exec() function used)"; flow:to_server,established; content:"ZXhlYygn"; http_header;  reference:url,bechtsoudis.com/security/put-weevely-on-the-your-nids-radar; classtype:web-application-activity; sid:2013945; rev:3;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER JBoss jmx-console Probe"; flow:to_server,established; content:"HEAD"; http_method; content:"/jmx-console/HtmlAdaptor?"; http_uri; nocase; reference:cve,2010-0738; classtype:web-application-activity; sid:2014017; rev:1;)
@@ -1108,6 +1113,9 @@ alert tcp $HOME_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Magento
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Brutus Scan Inbound"; flow:established,to_server; content:"Brutus/AET"; http_header; classtype:attempted-recon; sid:2015703; rev:1;)
 
 #
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHPMyAdmin BackDoor Access"; flow:established,to_server; content:"POST"; http_method; content:"/server_sync.php?"; fast_pattern:only; http_uri; content:"c="; http_uri; pcre:"/\/server_sync.php\?(?:.+?&)?c=/Ui"; reference:url,www.phpmyadmin.net/home_page/security/PMASA-2012-5.php; classtype:attempted-admin; sid:2015737; rev:5;)
+
+#
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Possible Oracle SQL Injection utl_inaddr call in URI"; flow:established,to_server; content:"utl_inaddr.get_host"; nocase; http_uri; fast_pattern:only; classtype:attempted-admin; sid:2015749; rev:1;)
 
 #
@@ -1144,6 +1152,9 @@ alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER WebShel
 alert tcp $HTTP_SERVERS any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER PIWIK Backdored Version calls home"; flow:established,to_server; content:"POST"; http_method; content:"prostoivse.com|0d 0a|"; http_header; nocase; content:"/x.php"; http_uri; content:"reff="; http_client_body; nocase; reference:url,piwik.org/blog/2012/11/security-report-piwik-org-webserver-hacked-for-a-few-hours-on-2012-nov-26th/; reference:url,forum.piwik.org/read.php?2,97666; classtype:web-application-attack; sid:2015953; rev:3;)
 
 #
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Joomla Component SQLi Attempt"; flow:established,to_server; content:"option=com_"; http_uri; nocase; content:"union"; http_uri; nocase; distance:0; content:"select"; nocase; http_uri; distance:0; content:"from"; nocase; http_uri; distance:0; content:"jos_users"; distance:0; http_uri; nocase; fast_pattern; classtype:web-application-attack; sid:2015984; rev:2;)
+
+#
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell - JSP RAT"; flow:established,to_client; file_data; content:"<table id=\"filetable\" class=\"filelist\" cellspacing=\"1px\" cellpadding=\"0px\">"; classtype:attempted-user; sid:2016151; rev:2;)
 
 #
@@ -1162,10 +1173,16 @@ alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER ColdFusion ad
 alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER ColdFusion administrator access"; flow:established,to_server; content:"GET"; http_method; nocase; content:"/CFIDE/administrator"; http_uri; nocase; reference:url,www.adobe.com/support/security/advisories/apsa13-01.html; classtype:web-application-attack; sid:2016184; rev:3;)
 
 #
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2013-0156 Ruby On Rails XML YAML tag with !ruby"; flow:established,to_server; content:" type"; nocase; fast_pattern; content:"yaml"; distance:0; nocase; content:"!ruby"; nocase; distance:0; pcre:"/<(?P<tname>[^\s]+)[^>]*?\stype\s*=\s*(?P<q>[\x22\x27])yaml(?P=q)((?!<\/(?P=tname)).+?)!ruby/si"; reference:url,groups.google.com/forum/?hl=en&fromgroups=#!topic/rubyonrails-security/61bkgvnSGTQ; classtype:web-application-attack; sid:2016204; rev:4;)
+
+#
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell - Symlink_Sa"; flow:established,to_client; file_data; content:"<title>Symlink_Sa"; classtype:bad-unknown; sid:2016244; rev:1;)
 
 #
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell - Generic - c99shell based header"; flow:established,to_client; file_data; content:"<b>Software|3a|"; content:"<b>uname -a|3a|"; content:"<b>uid="; classtype:bad-unknown; sid:2016245; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Ruby on Rails CVE-2013-0333 Attempt"; flow:established,to_server; content:"|0d 0a|Content-Type|3a|"; nocase; pcre:"/^[^\r\n]*(?:application\/json(?:request)?|text\/x-json)/Ri"; content:"!ruby/"; nocase; distance:0; content:"NamedRouteCollection"; nocase; distance:0; reference:url,gist.github.com/4660248; classtype:web-application-activity; sid:2016305; rev:6;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP tag in UA"; flow:established,to_server; content:"<?php"; http_header; nocase; fast_pattern:only; pcre:"/^User-Agent\x3a[^\r\n]\<\?php/Hmi"; reference:url,blog.spiderlabs.com/2013/02/honeypot-alert-user-agent-field-php-injection-attacks.html; classtype:bad-unknown; sid:2016415; rev:1;)
@@ -1423,7 +1440,7 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER ATT
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Coldfusion 9 Auth Bypass CVE-2013-0632"; flow:to_server; content:"POST"; http_method; content:"/adminapi/administrator.cfc?"; http_uri; nocase; content:"method"; http_uri; nocase; content:"login"; http_uri; nocase; content:"rdsPasswordAllowed"; nocase; http_client_body; fast_pattern:only; pcre:"/rdsPasswordAllowed[\r\n\s]*?=[\r\n\s]*?(true|1)/Pi"; reference:url,www.exploit-db.com/exploits/27755/; reference:cve,2013-0632; classtype:attempted-user; sid:2017366; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WebShell - ASPyder - Auth Creds"; flow:established,to_server; content:"code="; http_client_body; depth:5; content:"&submit="; distance:0; http_client_body; classtype:trojan-activity; sid:2017389; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WebShell - ASPyder - Auth Creds"; flow:established,to_server; content:"code="; http_client_body; depth:5; content:"&submit="; distance:0; http_client_body; classtype:trojan-activity; sid:2017389; rev:3;)
 
 #
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER WebShell - ASPyder - File Browser - Interface"; flow:established,to_client; file_data; content:"document.myform.txtpath.value"; classtype:trojan-activity; sid:2017390; rev:2;)
@@ -1642,7 +1659,7 @@ alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER ATT
 alert tcp $HTTP_SERVERS $HTTP_PORTS -> $EXTERNAL_NET any (msg:"ET WEB_SERVER SUSPICIOUS Possible WebShell Login Form (Outbound)"; flow:established,from_server; file_data; content:"<pre align=center><form method=post>Password|3a| <input type=password name=pass><input type=submit value=|27|>>|27|></form></pre>"; within:120; isdataat:!2,relative; reference:url,blog.malwaremustdie.org/2014/05/elf-shared-so-dynamic-library-malware.html; classtype:trojan-activity; sid:2018459; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HOME_NET 9200 (msg:"ET WEB_SERVER Possible CVE-2014-3120 Elastic Search Remote Code Execution Attempt"; flow:established,to_server; content:"search"; nocase; content:"source="; nocase; distance:0; content:"script_fields"; nocase; distance:0; content:"import"; distance:0; nocase; content:"java."; nocase; distance:0; reference:url,bouk.co/blog/elasticsearch-rce/; classtype:attempted-admin; sid:2018495; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET [9200,9292] (msg:"ET WEB_SERVER Possible CVE-2014-3120 Elastic Search Remote Code Execution Attempt"; flow:established,to_server; content:"search"; nocase; content:"source="; nocase; distance:0; content:"script_fields"; nocase; distance:0; content:"import"; distance:0; nocase; content:"java."; nocase; distance:0; reference:url,bouk.co/blog/elasticsearch-rce/; classtype:attempted-admin; sid:2018495; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER c99 Shell Backdoor Var Override URI"; flow:to_server,established; content:"c99shcook["; nocase; http_uri; fast_pattern:only; pcre:"/[&?]c99shcook\[/Ui"; reference:url,thehackerblog.com/every-c99-php-shell-is-backdoored-aka-free-shells/; classtype:trojan-activity; sid:2018601; rev:1;)
@@ -1660,5 +1677,197 @@ alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP
 alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Adobe Flash Player Rosetta Flash compressed CWS in URI"; flow:established,to_server; urilen:>70; content:"callback=CWS"; nocase; http_uri; content:"hC"; nocase; distance:5; within:2; http_uri; pcre:"/callback=CWS[a-z0-9\.\_]{5}hC[a-z0-9\.\_]{50}/Ui"; reference:url,miki.it/blog/2014/7/8/abusing-jsonp-with-rosetta-flash/; reference:cve,2014-4671; classtype:attempted-user; sid:2018740; rev:1;)
 
 #
-alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER HOIC with booster inbound"; flow:to_server,established; content:"GET"; http_method; content:"HTTP/1.0|0d 0a|Accept|3a 20|*/*|0d 0a|Accept-Language|3a 20|"; content:"If-Modified-Since|3a 20 20|"; http_raw_header; content:"Keep-Alive|3a 20 20|"; http_raw_header; content:"Connection|3a 20 20|"; http_raw_header; content:"User-Agent|3a 20 20|"; http_raw_header; threshold: type both, count 1, seconds 60, track by_dst; reference:md5,23fc64a5cac4406d7143ea26e8c4c7ab; reference:url,blog.spiderlabs.com/2012/01/hoic-ddos-analysis-and-detection.html; classtype:trojan-activity; sid:2018978; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Likely Malicious Request for /proc/self/fd/"; flow:established,to_server; content:"/proc/self/fd/"; nocase; http_uri; fast_pattern:only; classtype:web-application-attack; sid:2019110; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER HTTP POST Generic eval of base64_decode"; flow:established,to_server; content:"base64_decode"; nocase; http_client_body; fast_pattern:only; content:"eval"; nocase; pcre:"/^[\r\n\s]*?\x28[\r\n\s]*?base64_decode/Rsi"; classtype:trojan-activity; sid:2019182; rev:1;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in URI"; flow:established,to_server; content:"|28 29 20 7b|"; http_uri; fast_pattern:only; pcre:"/[=?&\x2f]\s*?\x28\x29\x20\x7b/U"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019231; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in Headers"; flow:established,to_server; content:"|28 29 20 7b|"; http_header; fast_pattern:only; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019232; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in Client Body"; flow:established,to_server; content:"|28 29 20 7b|"; http_client_body; fast_pattern:only; pcre:"/(?:^|[=?&])\s*?\x28\x29\x20\x7b/P"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019233; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in Client Body 2"; flow:established,to_server; content:"|25|28|25|29|25|20|25|7b|25|20"; http_client_body; fast_pattern:only; pcre:"/(:?(:?\x5e|%5e)|(:?[=?&]|\x25(:?3d|3f|26)))\s*?(:?%28|\x28)(:?%29|\x29)(:?%20|\x20)(:?%7b|\x7b)(:?%20|\x20)/Pi"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019234; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP Version Number"; flow:established,to_server; content:"|20 28 29 20 7b|"; fast_pattern:only; pcre:"/^[^\s]+\s+[^\s]+\s+\x28\x29\x20\x7b[^\r\n]*?\r?$/m"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019236; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP Cookie"; flow:established,to_server; content:"|28 29 20 7b|"; fast_pattern:only; content:"|28 29 20 7b|"; http_cookie; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019239; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in Client Body 3"; flow:established,to_server; content:"()|25|20|25|7b"; http_client_body; fast_pattern:only; pcre:"/(:?(?:\x5e|%5e)|([=?&]|\x25(?:3d|3f|26)))\s*?\(\)(?:%20|\x20)(?:%7b|\x7b)/Pi"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019241; rev:4;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 1"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29|20|{|20|"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019244; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 2"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29|20|{%20"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019245; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 3"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29|20|%7b|20|"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019246; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 4"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29|20|%7b%20"; nocase; fast_pattern; within:13; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019247; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 5"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29%20{|20|"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019248; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 6"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29%20{%20"; nocase; fast_pattern; within:13; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019249; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 7"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29%20%7b|20|"; nocase; fast_pattern; within:13; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019250; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 8"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%29%20%7b%20"; nocase; fast_pattern; within:15; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019251; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 9"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28|20|{|20|"; nocase; fast_pattern; within:6; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019252; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 10"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28|20|{%20"; nocase; fast_pattern; within:8; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019253; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 11"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28|20|%7b|20|"; nocase; fast_pattern; within:8; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019254; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 12"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28|20|%7b%20"; nocase; fast_pattern; within:10; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019255; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 13"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%20{|20|"; nocase; fast_pattern; within:8; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019256; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 14"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%20{%20"; nocase; fast_pattern; within:10; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019257; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 15"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%20%7b|20|"; nocase; fast_pattern; within:10; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019258; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 16"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"%28%20%7b%20"; nocase; fast_pattern; within:12; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019259; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 17"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29|20|{|20|"; nocase; fast_pattern; within:7; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019260; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 18"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29|20|{%20"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019261; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 19"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29|20|%7b|20|"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019262; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 20"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29|20|%7b%20"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019263; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 21"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29%20{|20|"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019264; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 22"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29%20{%20"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019265; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 23"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29%20%7b|20|"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019266; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 24"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"(%29%20%7b%20"; nocase; fast_pattern; within:13; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019267; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 25"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()|20|{%20"; nocase; fast_pattern; within:7; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019268; rev:3;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 26"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()|20|%7b|20|"; nocase; fast_pattern; within:7; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019269; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 27"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()|20|%7b%20"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019270; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 28"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()%20{|20|"; nocase; fast_pattern; within:7; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019271; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 29"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()%20%7b|20|"; nocase; fast_pattern; within:9; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019272; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible CVE-2014-6271 Attempt in HTTP URLENCODE Generic 30"; flow:established,to_server; pcre:"/[\?\=\x3a\s\x2f]/"; content:"()%20%7b%20"; nocase; fast_pattern; within:11; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019273; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible bash shell piped to dev tcp Inbound to WebServer"; flow:established,to_server; content:"/dev/tcp/"; fast_pattern:only; classtype:bad-unknown; sid:2019285; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER CVE-2014-6271 Attempt In HTTP Headers Line Continuation Evasion LF"; flow:to_server,established; content:"|28 29 0a 20 7b|"; fast_pattern:only; http_header; reference:url,www.invisiblethreat.ca/2014/09/cve-2014-6271/; classtype:attempted-admin; sid:2019291; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER CVE-2014-6271 Attempt In HTTP Headers Line Continuation Evasion CRLF"; flow:to_server,established; content:"|28 29 0d 0a 20 7b|"; fast_pattern:only; http_header; reference:url,www.invisiblethreat.ca/2014/09/cve-2014-6271/; classtype:attempted-admin; sid:2019292; rev:2;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER CURL Command Specifying Output in HTTP Headers"; flow:established,to_server; content:"curl "; fast_pattern:only; http_header; pcre:"/(?!^User-Agent\x3a)\bcurl\s[^\r\n]*?-(?:[Oo]|-(?:remote-name|output))[^\r\n]+(?:\x3b|&&)/Hm"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019308; rev:1;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WGET Command Specifying Output in HTTP Headers"; flow:established,to_server; content:"wget "; fast_pattern:only; http_header; pcre:"/(?!^User-Agent\x3a)\bwget\s[^\r\n]+(?:\x3b|&&)/Hm"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019309; rev:1;)
+
+#
+alert tcp any any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WGET Command Specifying Output in HTTP Headers"; flow:established,to_server; content:"lwp-download "; fast_pattern:only; http_header; pcre:"/(?!^User-Agent\x3a)\blwp-download\s[^\r\n]+(?:\x3b|&&)/Hm"; reference:url,blogs.akamai.com/2014/09/environment-bashing.html; classtype:attempted-admin; sid:2019310; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible bash shell piped to dev udp Inbound to WebServer"; flow:established,to_server; content:"/dev/udp/"; fast_pattern:only; classtype:bad-unknown; sid:2019314; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MongoDB Negated Parameter Server Side JavaScript Injection Attempt"; flow:established,to_server; content:"[$ne]"; http_uri; fast_pattern:only; reference:url,blog.imperva.com/2014/10/nosql-ssji-authentication-bypass.html; reference:url,docs.mongodb.org/manual/reference/operator/query/ne/; classtype:web-application-attack; sid:2019460; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Possible Cookie Based BackDoor Used in Drupal Attacks"; flow:established,to_server; content:"preg_replace"; http_cookie; nocase; reference:url,www.kahusecurity.com/2014/drupal-7-sql-injection-info/; classtype:attempted-user; sid:2019627; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER FOX-SRT - Backdoor - CryptoPHP Shell C2 POST"; flow:established,to_server; content:"POST"; http_method; content:"Content-Disposition|3a| form-data|3b| name=|22|serverKey|22|"; http_client_body; fast_pattern:28,20; content:"Content-Disposition|3a| form-data|3b| name=|22|data|22|"; http_client_body; content:"Content-Disposition|3a| form-data|3b| name=|22|key|22|"; http_client_body; content:!"Referer|3a| "; http_header; content:!"User-Agent"; http_header; content:!"Cookie|3a|"; threshold: type limit, track by_src, count 1, seconds 600; reference:url,blog.fox-it.com/2014/11/18/cryptophp-analysis-of-a-hidden-threat-inside-popular-content-management-systems/; classtype:trojan-activity; sid:2019748; rev:1;)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER FOX-SRT - Backdoor - CryptoPHP Shell C2 POST (fsockopen)"; flow:established,to_server; content:"POST"; http_method; content:"Content-Type: application/x-www-form-urlencoded"; http_header; content:"Connection|3a| close"; http_header; content:"serverKey="; fast_pattern; content:"data="; content:"key="; content:!"Referer|3a|"; http_header; content:!"User-Agent"; http_header; content:!"Cookie|3a|"; threshold: type limit, track by_src, count 1, seconds 600; reference:url,blog.fox-it.com/2014/11/18/cryptophp-analysis-of-a-hidden-threat-inside-popular-content-management-systems/; classtype:trojan-activity; sid:2019749; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP.//Input in HTTP POST"; flow:established,to_server; content:"POST"; http_method; content:"php|3a 2f 2f|input"; http_raw_uri; content:"<?"; http_client_body; depth:2; reference:url,www.deependresearch.org/2014/07/another-linux-ddos-bot-via-cve-2012-1823.html; classtype:trojan-activity; sid:2019804; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER Double Encoded Characters in URI (../)"; flow:to_server,established; content:"%252E%252E%252F"; nocase; http_raw_uri; content:"%252E%252E%252F"; nocase; fast_pattern; classtype:misc-attack; sid:2019880; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Insomnia Shell HTTP Request"; flow:to_server,established; content:"POST"; http_method; content:".aspx"; http_uri; content:"txtRemoteHost="; http_client_body; fast_pattern; content:"txtRemotePort="; http_client_body; distance:0; content:"txtBindPort="; http_client_body; distance:0; content:"txtPipeName="; http_client_body; distance:0; reference:url,www.insomniasec.com/releases; classtype:trojan-activity; sid:2019899; rev:1;)
+
+#
+alert tcp $HOME_NET !21:23 -> $EXTERNAL_NET any (msg:"ET WEB_SERVER Insomnia Shell Outbound CMD Banner"; flow:to_server,established; content:"Shell enroute......."; depth:20; content:"Microsoft Windows "; content:"Copyright |28|c|29| 20"; distance:0; content:"Microsoft Corp"; distance:0; reference:url,www.insomniasec.com/releases; classtype:trojan-activity; sid:2019900; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER MorXploit Shell Command"; flow:established,to_server; content:"?cmd=ZXhpdA=="; http_uri; fast_pattern; content:"User-Agent|3a 20|Mozilla 5"; http_header; reference:url,seclists.org/fulldisclosure/2014/Nov/78; classtype:bad-unknown; sid:2019951; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Generic PHP Remote File Include"; flow:to_server,established; content:"POST"; http_method; content:"allow_url_include"; http_uri; content:"safe_mode"; http_uri; content:"php|3a 2f 2f|input"; http_raw_uri; content:"<?php"; fast_pattern:only; http_client_body; content:"chmod 777"; http_client_body; classtype:attempted-user; sid:2019957; rev:1;)
+
+#
+alert tcp any $HTTP_PORTS -> any any (msg:"ET WEB_SERVER ATTACKER WebShell - 1337w0rm - Landing Page"; flow:established,to_client; file_data; content:"cPanel Cracker"; classtype:trojan-activity; sid:2020096; rev:1;)
+
+#
+alert tcp any any -> any $HTTP_PORTS (msg:"ET WEB_SERVER ATTACKER WebShell - 1337w0rm - cPanel Cracker"; flow:established,to_server; content:"user=CRACKER"; http_client_body; classtype:trojan-activity; sid:2020097; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER PHP System Command in HTTP POST"; flow:established,to_server; content:"POST"; http_method; content:"<?"; http_client_body; content:"system|28|"; http_client_body; distance:0; classtype:web-application-attack; sid:2020102; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER Heimdallbot Attack Tool Inbound"; flow:established,to_server; content:"Heimdallbot"; http_header; nocase; fast_pattern:only; pcre:"/^User-Agent\x3a[^\r\n]*?Heimdallbot/Hmi"; threshold: type limit, count 1, seconds 60, track by_src; classtype:web-application-attack; sid:2020323; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"ET WEB_SERVER WPScan User Agent"; flow:established,to_server; content:"User-Agent|3a 20|WPScan v"; http_header; fast_pattern:12,8; threshold: type limit, count 1, seconds 60, track by_src; reference:url,github.com/wpscanteam/wpscan; classtype:web-application-attack; sid:2020338; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HTTP_SERVERS any (msg:"ET WEB_SERVER ATTACKER WebShell - Weevely - Downloaded"; flow:established,to_client; file_data; content:"<?php|0A|$"; content:"="; distance:4; within:2; content:" str_replace("; distance:0; classtype:trojan-activity; sid:2020555; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER ATTACKER WebShell - Weevely - POSTed"; flow:established,to_server; content:"<?php|0A|$"; http_client_body; content:"="; distance:4; within:2; http_client_body; content:" str_replace("; distance:0; http_client_body; classtype:trojan-activity; sid:2020556; rev:1;)
+
+#
+alert tcp any any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET WEB_SERVER ATTACKER WebShell - Weevely - Cookie"; flow:established,to_server; content:"ing|3a| identity|0D 0A|Host|3a|"; http_header; content:"SESS="; http_cookie; content:"|3B| SID="; distance:0; http_cookie; content:"|3B| PREF="; distance:0; http_cookie; content:"|3B|SSID="; distance:0; http_cookie; classtype:trojan-activity; sid:2020557; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET any -> $HTTP_SERVERS $HTTP_PORTS (msg:"ET WEB_SERVER WebShell - ASPyder - File Create - POST Structure"; flow:established,to_server; content:"POST"; http_method; content:"Fname="; http_client_body; depth:6; content:"&cmd="; http_client_body; classtype:trojan-activity; sid:2020572; rev:3;)
 

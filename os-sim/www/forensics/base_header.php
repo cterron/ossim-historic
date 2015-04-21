@@ -284,7 +284,7 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
                                 <div>
                                     <table>
 
-                                        <thea>
+                                        <thead>
                                             <tr>
                                                 <th id='title'>
                                                     <div id='c_close'>
@@ -561,6 +561,8 @@ if (count($database_servers)>0 && Session::menu_perms("configuration-menu", "Pol
 			             <div class="float_right padding_right_5 task_info">
 			                <span id="task" style="display:none;"><?php echo _("No pending tasks") ?>.</span>
 			             </div>
+			             
+			             <div id="backup_info"></div>
 			             
 			        </div>
 			

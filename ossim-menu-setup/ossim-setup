@@ -36,7 +36,7 @@ from IPy import IP
 sys.path.append("/usr/share/alienvault-center/av-libs/avconfig")
 
 from ossimsetupconfig import AVOssimSetupConfigHandler
-from configparsererror import AVConfigParserErrors
+from avconfigparsererror import AVConfigParserErrors
 import utils
 
 os.environ["LC_CTYPE"] = "C"
@@ -87,6 +87,7 @@ class Menu(object):
     OPTION_PRO            = "pro"
     OPTION_LICENSED       = "licensed"
     OPTION_PROFILE        = "profile"
+    OPTION_NOT_PROFILE    = "not_profile"
     OPTION_LABEL          = "label"
     OPTION_TITLE          = "title"
     OPTION_TEXT           = "text"
@@ -411,7 +412,7 @@ class Menu(object):
         if not self.__default_style:
             return ""
 
-	backtitle = "Hostname '%s' (%s)" % (str(self.__setup_config.get_general_hostname()),str(self.__setup_config.get_general_admin_ip()))
+        backtitle = "Hostname '%s' (%s)" % (str(self.__setup_config.get_general_hostname()),str(self.__setup_config.get_general_admin_ip()))
         if self.__version_string is not None:
             backtitle += " :: " + self.__version_string
         if self.__setup_config.get_dirty():
@@ -457,6 +458,12 @@ class Menu(object):
                 return False
             elif not licensed and self.check_licensed():
                 return False
+
+        if self.__data.has_option(option, Menu.OPTION_NOT_PROFILE):
+            option_not_profiles = self.__data.get(option, Menu.OPTION_NOT_PROFILE).split(",")
+            for option_not_profile in option_not_profiles:
+                if option_not_profile.lower() in [x.lower() for x in self.__setup_config.get_general_profile().replace(' ', '').split(',')]:
+                    return False
 
         if not self.__data.has_option(option, Menu.OPTION_PROFILE):
             return True
@@ -578,6 +585,9 @@ class Menu(object):
                     success = Menu.DIALOG_CANCEL
             else:
                 self.show_next(option, cmd_success)
+
+            # Reload the config file, just in case.
+            self.load_setup_config()
 
         if success == Menu.DIALOG_CANCEL:
             self.cancel_sequence(option)
@@ -966,7 +976,11 @@ class Menu(object):
         command = self.__data.get(option, Menu.OPTION_CMD)
         # Replace
         for var,value in self.__stored_var.items():
-            command = command.replace('%%'+ var +'%%',value)
+            esc_value = ""
+            for ch in value:
+                if ch not in [';', '|', '&', '<', '>', '\n','(',')','[',']','{','}','?','*','^','\\']:
+                    esc_value = esc_value + ch
+            command = command.replace('%%'+ var +'%%',esc_value)
 
         return_code = self.exec_external_command(option, command)
 
@@ -1253,6 +1267,12 @@ class Menu(object):
                     if profile.lower() not in Menu.PROFILES:
                         self.__errors.append("[%s] bad profile name '%s'" % (section, profile))
 
+            # Not Profile (Check for rigth labels)
+            if self.__data.has_option(section, Menu.OPTION_NOT_PROFILE):
+                for profile in self.__data.get(section, Menu.OPTION_NOT_PROFILE).split(','):
+                    if profile.lower() not in Menu.PROFILES:
+                        self.__errors.append("[%s] bad not_profile name '%s'" % (section, profile))
+
             # Options (Check text and get, set and get_allowed_values method)
             if self.__data.has_option(section, Menu.OPTION_OPTIONS):
                 self.ini_file_check_section_options (section, [Menu.OPTION_TEXT])
@@ -1351,6 +1371,19 @@ class Menu(object):
             return Menu.DIALOG_CANCEL
         else:
             return Menu.DIALOG_OK
+
+    def is_vpn_server_enabled(self):
+        """
+            Check if the VPN is enabled AND we
+            don't have any pending changes
+        """
+        if self.__setup_config.get_vpn_vpn_infraestructure() == 'yes' and not self.__setup_config.get_dirty():
+            return (True,"VPN server is enabled")
+        else:
+            return (False,"VPN server is disabled")
+        
+        
+        
 
 
 def main():

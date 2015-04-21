@@ -44,7 +44,7 @@ $validate = array (
 	'priority'       => array('validation' => 'OSS_DIGIT',           			       'e_message' => 'illegal:' . _('Priority')),
 	'port'           => array('validation' => 'OSS_PORT',                              'e_message' => 'illegal:' . _('Port number')),
 	'tzone'          => array('validation' => "OSS_DIGIT, OSS_SCORE, OSS_DOT, '\+'",   'e_message' => 'illegal:' . _('Timezone')),
-	'descr'          => array('validation' => 'OSS_NULLABLE, OSS_AT, OSS_TEXT',        'e_message' => 'illegal:' . _('Description')),
+	'descr'          => array('validation' => 'OSS_NULLABLE, OSS_ALL',                 'e_message' => 'illegal:' . _('Description')),
 	'isolated'       => array('validation' => 'OSS_NULLABLE, OSS_DIGIT',               'e_message' => 'illegal:' . _('Isolated')),
 	'neighborsensor' => array('validation' => 'OSS_NULLABLE, OSS_HEX',                 'e_message' => 'illegal:' . _('Neighbor sensor')),
 	'newcontext'     => array('validation' => 'OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT', 'e_message' => 'illegal:' . _('New context')),
@@ -249,6 +249,7 @@ else
 
             $new = new Av_Sensor($sensor_id);
             $new->set_properties($cproperties);
+            //This name will be replaced by the system name when we add the system if we can get the name in set_component
             $new->set_name      ($sname);
             $new->set_ip        ($ip);
             $new->set_priority  ($priority);

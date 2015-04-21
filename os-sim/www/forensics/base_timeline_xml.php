@@ -87,7 +87,7 @@ while( !$rs->EOF ) {
 	$inside .= "<br/><a href='./base_qry_alert.php?submit=%23".$rs->fields['dataI1']."-".$rs->fields['dataV10']."&amp;sort_order=time_d' target='main'>"._("View event detail")."</a></div>";
 	
 
-	$xml .= htmlentities($inside)."</event>"; 
+	$xml .= Util::htmlentities($inside)."</event>";
 	$rs->MoveNext();
 }
 			

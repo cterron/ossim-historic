@@ -148,6 +148,7 @@ function draw_hosts_by_nets_os($conn, $data)
     global $empty_tree;
     
     $tree = array();
+    $prm  = array();
     
     $os   = $data['os'];
     $id   = $data['net'];
@@ -161,11 +162,15 @@ function draw_hosts_by_nets_os($conn, $data)
     	
     	return $empty_tree;
     }
-    
-        
-    $prm  = array(
-        '%"'. $os . '%'
-    );
+
+    if ($os == 'windows')
+    {
+        $os_sql = 'AND hp.value LIKE "%\"windows%"';
+    }
+    else
+    {
+        $os_sql = 'AND hp.value LIKE "%\"linux%"';
+    }
     
     if ($id == '0')
     {
@@ -181,7 +186,7 @@ function draw_hosts_by_nets_os($conn, $data)
                 FROM host_properties hp, host h
                 LEFT JOIN host_net_reference hn ON hn.host_id=h.id
                 LEFT JOIN net n ON n.id=hn.net_id
-                WHERE h.id=hp.host_id AND hp.property_ref=3 AND hp.value LIKE ? $id_sql";
+                WHERE h.id=hp.host_id AND hp.property_ref=3 $os_sql $id_sql";
                 
     
     //Always cached

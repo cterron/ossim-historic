@@ -127,28 +127,23 @@ def get_ossec_rootcheck(sensor_id, agent_id):
 @document_using('static/apidocs/ossec.html')
 @logged_permission.require(http_exception=401)
 @accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
-               'agent_ip': {'type': str, 'optional': True},
                'agent_name': {'type': str, 'optional': True},
                'check_type': {'type': str, 'optional': True}})
 def get_ossec_check(sensor_id):
-    """Creates a new preconfigured agent and return the local path
+    """Get additional information(Last syscheck or rootcheck date and/or last IP used) about an agent
     :param sensor_id: Sensor id
-    :param agent_id: Agent id. Must be a string that match [0-9]{1,4}
-    :param agent_type: Type of agent to be generated.
     """
-    agent_ip = request.args.get("agent_ip", None)
     agent_name = request.args.get("agent_name", None)
     check_type = request.args.get("check_type", None)
+
     if check_type not in ["lastscan", "lastip"]:
         return make_bad_request("Invalid check_type value. Allowed values are(lastscan, lastip)")
-    if check_type == 'lastip':
-        if agent_name is None:
-            return make_bad_request("Agent name not specified. Allowed characters are [^a-zA-Z0-9_\\-()]+")
-        if re.match(r"[a-zA-Z0-9_\-\(\)]+", agent_name) is None:
-            return make_bad_request("Invalid agent name. Allowed characters are [^a-zA-Z0-9_\\-()]+")
-    elif not is_valid_ipv4(agent_ip):
-        return make_bad_request("Invalid agent_ip value. It should be a valid IP v4 dotted address")
-    (result, data) = ossec_get_check(sensor_id=sensor_id, agent_ip=agent_ip, agent_name=agent_name, check_type=check_type)
+    if agent_name is None:
+        return make_bad_request("Agent name not specified. Allowed characters are [^a-zA-Z0-9_\\-()]+")
+    if re.match(r"[a-zA-Z0-9_\-\(\)]+", agent_name) is None:
+        return make_bad_request("Invalid agent name. Allowed characters are [^a-zA-Z0-9_\\-()]+")
+
+    (result, data) = ossec_get_check(sensor_id=sensor_id, agent_name=agent_name, check_type=check_type)
     if result:
         return make_ok(check=data)
     return make_error(data, 500)

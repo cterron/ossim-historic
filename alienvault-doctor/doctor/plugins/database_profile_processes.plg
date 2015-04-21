@@ -1,0 +1,16 @@
+[properties]
+name=AlienVault Database profile processes
+description=Check for misbehaviours in AlienVault Database profile related processes.
+category=alienvault,system
+type=command
+profiles=Database:>4.0
+requires=@files:/usr/bin/mysql
+command=ps aux
+
+# Check for MySQL memory usage.
+[MySQL process]
+pattern=mysql\s+(?:\S+\s+){2}(\d+\.\d+)\s+(?:\S+\s+){7}
+conditions=@string@:<"90.0"
+fail_if_empty=True
+warning=MySQL process is using too much memory
+advice=MySQL memory usage should be limited to a 60 percent maximum. Please check your system, your MySQL configuration or contact your vendor

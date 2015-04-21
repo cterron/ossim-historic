@@ -127,7 +127,7 @@ $title      = _('AlienVault '.($opensource ? 'OSSIM' : 'USM'));
                             if (Session::is_pro())
                             {
                                 $logo_url  .= '_siem';
-                                $logo_title = _('Alienvault Logo');
+                                $logo_title = _('AlienVault Logo');
                             }                           
                             
                             $logo_url .= '.png';					       

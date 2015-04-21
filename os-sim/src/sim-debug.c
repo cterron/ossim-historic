@@ -58,13 +58,15 @@ void
 sim_debug_init_signals (void)
 {
   struct sigaction callback;
+  struct sigaction ignore;
 
   memset (&callback, '\0', sizeof(callback));
   callback.sa_sigaction = &sim_debug_on_signal;
   callback.sa_flags = SA_SIGINFO;
+  ignore.sa_handler = SIG_IGN;
 
   sigaction (SIGINT, &callback, NULL);
-  sigaction (SIGHUP, &callback, NULL);
+  sigaction (SIGHUP, &ignore, NULL);
   sigaction (SIGQUIT, &callback, NULL);
   sigaction (SIGABRT, &callback, NULL);
   sigaction (SIGILL, &callback, NULL);
@@ -107,15 +109,9 @@ static void
 sim_debug_on_signal (gint signum, siginfo_t * siginfo, gpointer context)
 {
   (void)context;
-  g_message ("Received signal %d from PID %d, UID %d",
-             signum, (gint)siginfo->si_pid, (gint)siginfo->si_uid);
 
   switch (signum)
   {
-	case SIGHUP: //FIXME: reload directives, policy, and so on.
-		// reopen log file
-		sim_log_reopen();
-		break;
 	case SIGPIPE:
 		g_message ("Error: SIGPIPE in comms");
 		break;

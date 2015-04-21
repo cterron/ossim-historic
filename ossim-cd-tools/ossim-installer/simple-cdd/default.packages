@@ -68,7 +68,6 @@ binutils
 netdiag
 ossim-cd-tools
 ossim-cd-configs
-ossim-database-migration
 chkconfig
 firmware-bnx2
 ifrename

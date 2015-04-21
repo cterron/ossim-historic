@@ -87,6 +87,7 @@ def __run_module(module):
     dataregex = \
         re.compile(r"# Plugin (?P<pname>\S+) id:(?P<pid>\d+) version: (?P<pversion>\S+)")
     getplugintyperegex = re.compile(r"type=(?P<ptype>detector|monitor)")
+    getpluginidregex = re.compile(r"plugin_id=(?P<pid>\d+)")
     for pfile in plugin_files:
         pname = os.path.splitext(os.path.basename(pfile))[0]
         pfile = open(pfile, 'r')
@@ -112,10 +113,25 @@ def __run_module(module):
                 else:
                     plugins[pname] = ptype.groupdict()
                 has_type = True
-            
+            pid = getpluginidregex.match(line)
+            if pid:
+                if plugins.has_key(pname) and not plugins[pname].has_key('pid)'):
+                    plugins[pname].update(pid.groupdict())
+                else:
+                    plugins[pname] = pid.groupdict()
             # Break the file
             if has_type and has_info:
                 break
+        # If we couldn't get info from header, use info from file name
+        else:
+            if plugins.has_key(pname) and not plugins[pname].has_key('pname'):
+                plugins[pname].update({'pname':pname})
+                plugins[pname].update({'pversion':'-'})
+                if pname in detectors_enabled or pname in monitors_enabled:
+                    plugins[pname].update({'enabled': True})
+                else:
+                    plugins[pname].update({'enabled':False})
+
         pfile.close()
     # Filter the result
     result  = {}

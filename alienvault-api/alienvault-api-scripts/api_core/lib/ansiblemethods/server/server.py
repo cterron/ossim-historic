@@ -146,7 +146,7 @@ def ansible_nfsen_reconfigure(system_ip):
       (boolean,int): A tuple containing whether the operation was well or not
     """
     try:
-        cmd ='/usr/bin/nfsen reconfig'
+        cmd ='/usr/share/ossim/scripts/nfsen_reconfig.sh'
         response = ansible.run_module(host_list=[system_ip], module="shell", use_sudo="True", args=cmd)
         (success, msg) = ansible_is_valid_response(system_ip, response)
         rc = int(response['contacted'][system_ip]['rc'])

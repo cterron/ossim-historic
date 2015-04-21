@@ -123,12 +123,6 @@ struct _SimCommand {
     struct {
       gint            id;
 			gchar						*servername; 
-      guint           num_events;
-    } sensor_get_events;
-
-    struct {
-      gint            id;
-			gchar						*servername; 
       gchar          *sensor;
       gint            plugin_id;
       gboolean        enabled;
@@ -488,7 +482,6 @@ gboolean          sim_command_is_valid                        (SimCommand      *
 gboolean (*sim_command_get_remote_server_scan(void))(SimCommand*,GScanner*);
 gboolean (*sim_command_get_agent_scan(void))(SimCommand*,GScanner*);
 gboolean (*sim_command_get_default_scan(void))(SimCommand*,GScanner*);
-//gboolean sim_command_sensor_get_events_scan (SimCommand    *command, GScanner      *scanner,gchar* session_ip_str);
 void sim_command_append_inets (SimRadixNode *node, void *string);
 GScanner *sim_command_start_scanner (void);
 

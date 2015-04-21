@@ -282,6 +282,9 @@ if(!$error)
 	<!-- Token -->
 	<script type="text/javascript" src="/ossim/js/utils.js"></script>
 	<script type="text/javascript" src="/ossim/js/token.js"></script>
+	
+	<!-- Bread Crumb -->
+	<script type="text/javascript" src="../js/av_breadcrumb.js.php"></script>
 
 	<link rel="stylesheet" type="text/css" href="/ossim/style/alarm/detail.css"/>
 
@@ -445,7 +448,17 @@ if(!$error)
     		{
         		top.av_menu.set_bookmark_params('<?php echo $backlog_id ?>');
     		}
-    		
+    					
+			var items       = {};
+            items['all']    = {'title': "<?php echo _('Alarms') ?>", 'action': go_back};
+            items['ticket'] = {'title': "<?php echo Util::js_entities($directive_name) ?>", 'action': ''};
+                
+            $('#bread_crumb_alarm').AVbreadcrumb(
+            {
+                'items': items
+            });
+            
+            
 			//Jquery TABS
 			$( "#tabs-list" ).tabs({
 				ajaxOptions: {
@@ -590,25 +603,14 @@ if ($error)
 
 <div id='container'>
 
-	<div id='bread_crumb_alarm' class='breadcrumb_back'>
-		<div class='breadcrumb_item'>
-			<a href='javascript:;' onclick='go_back();'><?php echo _('Alarms') ?></a>
-		</div>
-		<div class='breadcrumb_separator'>
-			<img src='/ossim/pixmaps/xbreadcrumbs/separator.gif' />
-		</div>
-		<div class='breadcrumb_item last'>
-			<?php echo $directive_name ?>
-		</div>
-		<div style='clear:both;'>&nbsp;</div>
-	</div>
+	<div id='bread_crumb_alarm'></div>
 
 	<div id='notification'></div>
 
 	<div id='detail'>
 
 		<div id='alarm_name'>
-			<div style='margin-left:15px'>
+			<div>
 				<?php
 
 					if(!$removable)

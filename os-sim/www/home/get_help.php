@@ -36,7 +36,7 @@ require_once 'av_init.php';
 
 Session::useractive();
 
-$default_section = _('Alienvault Wiki');
+$default_section = _('AlienVault Wiki');
 $default_url     = 'https://www.alienvault.com/help/product/';
 
 $m_opt  = POST('m_opt');

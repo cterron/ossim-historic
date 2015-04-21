@@ -6,13 +6,13 @@
 ;--------------------------------
 ;General
 
-!define VERSION "2.7"
+!define VERSION "2.8"
 !define NAME "Ossec HIDS"
 !define /date CDATE "%b %d %Y at %H:%M:%S"
 
 
 Name "${NAME} Windows Agent v${VERSION}"
-BrandingText "Copyright (C) 2010 Trend Micro Inc."
+BrandingText "Copyright (C) 2003 - 2014 Trend Micro Inc."
 OutFile "ossec-agent-alienvault-installer.exe"
 
 

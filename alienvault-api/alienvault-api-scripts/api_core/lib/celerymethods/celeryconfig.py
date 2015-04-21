@@ -76,6 +76,7 @@ CELERY_SEND_TASK_SENT_EVENT = True
 CELERY_TIMEZONE = 'Europe/Madrid'
 CELERY_ENABLE_UTC = True
 PERIOD_1_DAY = 86400
+PERIOD_4_HOURS = 14400
 PERIOD_1_HOUR = 3600
 PERIOD_30_MINS = 1800
 PERIOD_10_MINS = 600
@@ -106,6 +107,11 @@ CELERYBEAT_SCHEDULE = {
          'task': 'celerymethods.tasks.backup_tasks.backup_environment',
          'schedule':crontab(hour=7, minute=00), #Every day at 7:00h
          'args': [],
+     },
+     'logger_clean_up': {
+        'task': 'celerymethods.tasks.maintenance.clean_old_loggger_entries',
+        'schedule': crontab(hour=8, minute=00), # Every day at 8:00h
+        'args': [],
      },
      'celery_maintenance': {
          'task': 'celerymethods.tasks.celery_tasks.cleanup_db_celery_jobs',
@@ -152,6 +158,11 @@ CELERYBEAT_SCHEDULE = {
           'schedule': timedelta(seconds=PERIOD_5_MINS),
           'args': [],
      },
+     'monitor_plugins_version': {
+          'task': 'celerymethods.tasks.monitor_tasks.monitor_plugins_version',
+          'schedule': timedelta(seconds=PERIOD_1_DAY),
+          'args': [],
+     },
      'sync_databases': {
           'task': 'celerymethods.tasks.system_tasks.sync_databases',
           'schedule': timedelta(seconds=PERIOD_2_MINS),
@@ -162,4 +173,14 @@ CELERYBEAT_SCHEDULE = {
           'schedule': timedelta(seconds=PERIOD_1_DAY),
           'args': [],
      },
+     'launch_compliance': {
+        'task': 'celerymethods.tasks.maintenance.launch_compliance_procedure',
+        'schedule': timedelta(seconds=PERIOD_4_HOURS),
+        'args': [],
+     },
+     'monitor_plugin_integrity': {
+       'task': 'celerymethods.tasks.monitor_tasks.monitor_check_plugin_integrity',
+       'schedule': timedelta(seconds=PERIOD_1_DAY),
+       'args': [],
+     }
 }

@@ -271,6 +271,6 @@ function XSSPrintSafe($item) {
         for ($i = 0; $i < count($item); $i++) $item[$i] = XSSPrintSafe($item[$i]);
         return $item;
     }
-    return htmlspecialchars($item);
+    return Util::htmlentities($item);
 }
 ?>

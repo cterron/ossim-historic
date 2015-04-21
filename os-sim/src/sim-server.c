@@ -70,8 +70,6 @@ struct _SimServerPrivate
 
   GCond			* sessions_cond;		//condition & mutex to control fully_stablished var.
   GMutex		* sessions_mutex;
-
-  GHashTable  	* individual_sensors; //there will be one of this for each agent. Needed to know the number of events sended by each agent
 };
 
 typedef struct {
@@ -104,8 +102,6 @@ sim_server_impl_finalize (GObject  *gobject)
 
   if (server->_priv->ip)
     g_object_unref (server->_priv->ip);
-
-	g_hash_table_destroy (server->_priv->individual_sensors);
 
   g_free (server->_priv);
 
@@ -145,8 +141,6 @@ sim_server_instance_init (SimServer * server)
 
   server->_priv->sessions_cond = g_cond_new();
   server->_priv->sessions_mutex = g_mutex_new();
-
-  server->_priv->individual_sensors = g_hash_table_new_full (sim_inet_hash, sim_inet_equal, g_object_unref, NULL);
 }
 
 /* Public Methods */
@@ -823,14 +817,6 @@ sim_server_set_port (SimServer   *server,
   g_return_if_fail (SIM_IS_SERVER (server));
 
 	server->_priv->port = port;
-}
-
-GHashTable*
-sim_server_get_individual_sensors (SimServer   *server)
-{
-  g_return_val_if_fail (SIM_IS_SERVER (server), NULL);
-
-  return server->_priv->individual_sensors;
 }
 
 /*

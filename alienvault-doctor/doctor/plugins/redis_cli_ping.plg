@@ -1,0 +1,12 @@
+[properties]
+name=Redis Health Status
+description=Checking Health Status by pinging through redis-cli
+category=alienvault,system
+type=command
+command=redis-cli ping
+
+[Redis Health Status]
+pattern=^(\S+)$
+conditions=@string@:=="PONG"
+warning=There are some problems regarding redis connectivity
+advice=Review redis configuration

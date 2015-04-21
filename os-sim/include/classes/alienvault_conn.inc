@@ -158,9 +158,11 @@ class Alienvault_conn {
     /**
     * This function set timeout in seconds
     *
+    * @param integer $seconds Rest API timeout
+    *
     * @return void
     */
-    public function set_timeout($seconds)
+    public function set_timeout($seconds = 60)
     {
         $this->timeout = $seconds;
     }
@@ -306,6 +308,9 @@ class Alienvault_conn {
             }
             
         }
+        
+        //Setting the timeout to the default value
+        $this->set_timeout();
         
         return $response;
     }

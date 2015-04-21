@@ -189,8 +189,9 @@ $sql = "SELECT
             net_group_reference.net_id = net.id AND
             net_group_reference.net_group_id = net_group.id $net_group_where";
 
+$rs = $conn->Execute($sql);
 
-if (!$rs = & $conn->Execute($sql)) 
+if (!$rs)
 {
     die($conn->ErrorMsg());
 }
@@ -283,7 +284,9 @@ while (!$rs->EOF)
 ////////////////////////////////////////////////////////////////
 $sql = "SELECT hex(net_id) as net_id FROM net_group_reference";
 
-if (!$rs = & $conn->Execute($sql)) 
+$rs = $conn->Execute($sql);
+
+if (!$rs)
 {
     die($conn->ErrorMsg());
 }
@@ -325,8 +328,9 @@ $sql = "SELECT
         WHERE
             1=1 $net_where $net_limit";
 
- 
-if (!$rs = & $conn->Execute($sql)) 
+$rs = $conn->Execute($sql);
+
+if (!$rs)
 {
     die($conn->ErrorMsg());
 }
@@ -410,7 +414,9 @@ $params = array(
     $range
 );
 
-if (!$rs = & $conn->Execute($sql, $params)) 
+$rs = $conn->Execute($sql, $params);
+
+if (!$rs)
 {
     die($conn->ErrorMsg());
 }

@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 REPLACE INTO category (ctx, id, name) VALUES (0x0, 1, 'Exploit');
 REPLACE INTO category (ctx, id, name) VALUES (0x0, 2, 'Authentication');
 REPLACE INTO category (ctx, id, name) VALUES (0x0, 3, 'Access');

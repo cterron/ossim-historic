@@ -161,32 +161,47 @@ $system_ip   = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	<title><?php echo _('Asset Details')?></title>
+	<title><?php echo _('Asset Details') ?></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 	<meta http-equiv="Pragma" content="no-cache"/>
-	<script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/ossim/js/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/ossim/js/jquery.editinplace.js"></script>
-	<script type="text/javascript" src="/ossim/js/notification.js"></script>
-	<script type="text/javascript" src="/ossim/js/greybox.js"></script>
-	<script type="text/javascript" src="/ossim/js/utils.js"></script>
-	<script type="text/javascript" src="/ossim/js/token.js"></script>
-	<script type="text/javascript" src="/ossim/js/messages.php"></script>
-	<script type="text/javascript" src="/ossim/js/jquery.tipTip-ajax.js"></script>
-	<script type="text/javascript" src="https://maps-api-ssl.google.com/maps/api/js?sensor=false"></script>	
-	<script type="text/javascript" src="/ossim/js/jquery.dataTables.js"></script>
-	<script type="text/javascript" src="/ossim/js/av_scan.js.php"></script>
-	<script type="text/javascript" src="/ossim/js/av_map.js.php"></script>
+	
+	<?php	
+        //CSS Files
+        $_files = array(
+            array('src' => 'av_common.css',                 'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.css',         'def_path' => TRUE),
+            array('src' => '/assets/asset_details.css',     'def_path' => TRUE),
+            array('src' => 'jquery-ui.css',                 'def_path' => TRUE),
+            array('src' => 'tipTip.css',                    'def_path' => TRUE)
+        );
+        
+        Util::print_include_files($_files, 'css');
+
+
+        //JS Files
+        $_files = array(
+            array('src' => 'jquery.min.js',             'def_path' => TRUE),
+            array('src' => 'jquery-ui.min.js',          'def_path' => TRUE),
+            array('src' => 'jquery.editinplace.js',     'def_path' => TRUE),
+            array('src' => 'notification.js',           'def_path' => TRUE),
+            array('src' => 'greybox.js',                'def_path' => TRUE),
+            array('src' => 'utils.js',                  'def_path' => TRUE),
+            array('src' => 'token.js',                  'def_path' => TRUE),
+            array('src' => 'messages.php',              'def_path' => TRUE),
+            array('src' => 'jquery.tipTip-ajax.js',     'def_path' => TRUE),
+            array('src' => 'jquery.dataTables.js',      'def_path' => TRUE),
+            array('src' => 'av_scan.js.php',            'def_path' => TRUE),
+            array('src' => 'av_map.js.php',             'def_path' => TRUE),
+            array('src' => 'av_breadcrumb.js.php',      'def_path' => TRUE),
+        );
+        
+        Util::print_include_files($_files, 'js');
+
+    ?>
+
 	<script type="text/javascript">
 	   <?php require_once 'js/asset_details.js.php';?>
 	</script>
-	
-	<link rel="stylesheet" type="text/css" href="/ossim/style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/top.css"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery.dataTables.css"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/assets/asset_details.css"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/jquery-ui.css"/>
-	<link rel="stylesheet" type="text/css" href="/ossim/style/tipTip.css"/>
 	
 	<style type="text/css">
 
@@ -240,7 +255,6 @@ $system_ip   = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin
 	</style>
 	
 	
-    
 	<script type='text/javascript'>
  
     	/**
@@ -253,6 +267,15 @@ $system_ip   = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin
                 top.av_menu.set_bookmark_params("<?php echo $id ?>");
             }        
     
+            var items       = {};
+            items['all']    = {'title': "<?php echo Util::js_entities($breadcrumb['section']) ?>", 'action': go_back};
+            items['ticket'] = {'title': "<?php echo Util::js_entities($breadcrumb['current']) ?>", 'action': ''};
+                
+            $('#asset_breadcrumb').AVbreadcrumb(
+            {
+                'items': items
+            });
+            
             // General info background load
             load_info();
         	
@@ -486,22 +509,9 @@ $system_ip   = @$system_list['data'][strtolower(Util::get_system_uuid())]['admin
 <body>
 <?php require '../host_report_menu.php';?>
 
-<!-- Path -->
-<div class='breadcrumb_back top_margin'>
-    <div class='breadcrumb_item'>
-        <a href='javascript:;' onclick='go_back();'><?php echo $breadcrumb['section'] ?></a>
-    </div>
-    
-    <div class='breadcrumb_separator'>
-        <img src='/ossim/pixmaps/xbreadcrumbs/separator.gif' />
-    </div>
-    
-    <div class='breadcrumb_item last'>
-        <?php echo $breadcrumb['current'] ?>
-    </div>
-    
-    <div style='clear:both;'>&nbsp;</div>
-</div>
+
+<!-- BreadCrumb -->
+<div id='asset_breadcrumb'></div>
 
 <div class='detail_container'>
 

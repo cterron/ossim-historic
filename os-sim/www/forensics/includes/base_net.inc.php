@@ -245,7 +245,7 @@ function baseProcessWhoisRaw($response, &$org, &$email, $server) {
         for ($i = 1; $i < sizeof($response_l); $i++) {
             $line = explode(" ", $response_l[$i]);
             for ($j = 0; $j < sizeof($line); $j++) {
-                if (eregi("^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$", $line[$j])) {
+                if (preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/i", $line[$j])) {
                     if ($email == "") $email = $line[$j];
                     else $email = $email . ", " . $line[$j];
                 }

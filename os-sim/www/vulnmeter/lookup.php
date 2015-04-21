@@ -73,6 +73,7 @@
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 Session::logcheck("environment-menu", "EventsVulnerabilities");
 
@@ -80,12 +81,15 @@ $pageTitle = "Lookup";
 
 $getParams = array( "disp", "id", "op", "nid", "lookup", "eventid", "org", "site", "showlive", "last30" );
 
+$db   = new ossim_db();
+$conn = $db->connect();
+
 switch ($_SERVER['REQUEST_METHOD'])
 {
 case "GET" :
    foreach($getParams as $gp) {
 	   if (isset($_GET[$gp])) { 
-         $$gp=htmlspecialchars(mysql_real_escape_string(trim($_GET[$gp])), ENT_QUOTES); 
+         $$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $conn)); 
       } else { 
          $$gp=""; 
       }
@@ -93,6 +97,7 @@ case "GET" :
    break;
 }
 
+$db->close();
 
 function subtractTime($hours=0, $minutes=0, $seconds=0, $months=0, $days=0, $years=0) {
 	$totalHours = date("H") - $hours;
@@ -132,10 +137,10 @@ $result=$dbconn->Execute("SELECT t1.id, t1.name, t2.name, t3.name, t1.copyright,
 	WHERE t1.id='$id'");
 list($pid, $pname, $pfamily, $pcategory, $pcopyright, $psummary, $pdescription, $pversion, $pcve_id, $pbugtraq_id)= $result->fields;
 
-$pdescription=htmlspecialchars($pdescription, ENT_QUOTES);
+$pdescription = Util::htmlentities($pdescription);
 
 echo "
-<center><B>Nessus plugin details</B></center>
+<center><B>Plugin details</B></center>
 <B>ID:</B> $pid<BR>
 <B>Name:</B> $pname<BR>
 <B>Family:</B> $pfamily<BR>

@@ -48,3 +48,22 @@ triggers:
   - name: There are pending updates
     when: $MONITOR_PENDING_UPDATES.pending_updates == True
     trigger_message_id: $MESSAGE_PENDING_UPDATES
+- trigger: Check for obsolete plugins
+  conditions:
+  - name: Plugin versions out of date
+    when: $MONITOR_PLUGINS_VERSION.comparison == "greater"
+    trigger_message_id: $MESSAGE_PLUGINS_VERSION
+- trigger: Check sensor plugins and rsyslog files integrity
+  conditions:
+  - name: Some of the default Agent plugins have been modified
+    when: $MONITOR_PLUGINS_CHECK_INTEGRITY.plugins_integrity_check_passed == False
+    trigger_message_id: $MESSAGE_PLUGINS_CHECK_INTEGRITY
+  - name: Some of the default Agent plugins have not been properly installed
+    when: $MONITOR_PLUGINS_CHECK_INTEGRITY.all_plugins_installed == False
+    trigger_message_id: $MESSAGE_PLUGINS_CHECK_INSTALLED
+  - name: Some of the default Agent rsyslog files have been modified
+    when: $MONITOR_PLUGINS_CHECK_INTEGRITY.rsyslog_integrity_check_passed == False
+    trigger_message_id: $MESSAGE_PLUGINS_RSYSLOG_CHECK_INTEGRITY
+  - name: Some of the default Agent rsyslog files have not been properly installed
+    when: $MONITOR_PLUGINS_CHECK_INTEGRITY.all_rsyslog_files_installed == False
+    trigger_message_id: $MESSAGE_PLUGINS_RSYSLOG_CHECK_INSTALLED

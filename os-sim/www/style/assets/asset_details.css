@@ -78,6 +78,7 @@ header("Content-type: text/css");
 {
     background-color:white;
 }
+
 .cell_vulns_title:hover 
 {
     background-color:white;
@@ -106,6 +107,7 @@ header("Content-type: text/css");
     text-align: center;
     border-radius: 100%;
 }
+
 #snap_vulns
 {
 	cursor: default;
@@ -121,6 +123,7 @@ header("Content-type: text/css");
 {
     padding:5px;
 }
+
 .detail_container
 {
 	float: left;
@@ -260,6 +263,7 @@ header("Content-type: text/css");
     margin-top: 10px;
     width: 80px;
 }
+
 .detail_edit_column
 {
 	float: right;
@@ -478,6 +482,11 @@ header("Content-type: text/css");
 	padding-left: 20px;
 }
 
+#c_add_assets_msg
+{
+    position: relative;
+}
+
 #add_assets_msg
 {
 	position: absolute;
@@ -489,7 +498,8 @@ header("Content-type: text/css");
 {
     color: white !important;
     float: left;
-    padding: 3px 10px !important;
+    font-family: 'open_sans' !important;
+        
 }
 
 .section
@@ -689,22 +699,6 @@ header("Content-type: text/css");
 .detail_led_right
 {
 	float: left;
-}
-
-/* Breadcrumb overwrite */
-.breadcrumb_item
-{
-	font-size: 12px;
-}
-
-.breadcrumb_back 
-{
-    margin-left:5px;
-}
-
-.breadcrumb_separator img
-{
-    height: 10px;
 }
 
 /* Disabling buttons in groups*/

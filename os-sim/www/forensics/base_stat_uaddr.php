@@ -156,11 +156,14 @@ if (Session::show_entities()) {
     $sql = "SELECT SQL_CALC_FOUND_ROWS $addr_type_name, device_id, COUNT(acid_event.id) as num_events, COUNT( DISTINCT acid_event.plugin_id, acid_event.plugin_sid ) as num_sig, ";
     if ($addr_type == DEST_IP) $sql = $sql . " COUNT( DISTINCT ip_src ) as num_sip ";
     else                       $sql = $sql . " COUNT( DISTINCT ip_dst ) as num_dip ";
+    $from  .= ', device ';
+    $where .= ' AND device.id=acid_event.device_id';
     $sql .= ", $addr_type_id";
-    $sql = $sql . $sort_sql[0] . $from . ",device " . $where . " AND device.id=acid_event.device_id GROUP BY $addr_type_name, device.sensor_id HAVING num_events>0 " . $sort_sql[1];
+    $sql = $sql . $sort_sql[0] . $from . $where . " GROUP BY $addr_type_name, device.sensor_id HAVING num_events>0 " . $sort_sql[1];
 }
 
 // Save WHERE in session for Mapping
+$_SESSION['_siem_mapping_from']  = $from;
 $_SESSION['_siem_mapping_where'] = preg_replace("/\s+WHERE\s+1/","",$where);
 
 //print_r($sql);

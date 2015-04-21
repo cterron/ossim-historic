@@ -60,9 +60,7 @@ if (ossim_error())
 
 // From 'Insert' link detected by server
 if ($ip != '' && $id == '')
-{
-    require_once 'get_sensors.php';
-    
+{   
     $unregistered_sensors = Av_sensor::get_unregistered($conn);
     
     foreach($unregistered_sensors as $s_data)
@@ -82,13 +80,7 @@ if ($ip != '' && $id == '')
     if ($id != '')
     {
         $disable_inputs = TRUE;
-        
-        $sname = server_get_name_byip($ip);
-        
-        if ($sname == '')
-        {
-            $sname = 'sensor-'.str_replace('.', '-', $ip);
-        }
+        $sname = 'sensor-'.str_replace('.', '-', $ip);
     }
 }
 
@@ -126,7 +118,7 @@ if ($id != '')
 	}
 }
 
-$action   = ($id != '') ? "modifysensor.php?sensor_id=$id&s_not_configured=$s_not_configured" : "newsensor.php";
+$action   = ($id != '') ? "modifysensor.php?sensor_id=$id" : "newsensor.php";
 $back_url = Menu::get_menu_url("/ossim/sensor/sensor.php", "configuration", "deployment", "components", "sensors");
 
 ?>
@@ -209,53 +201,42 @@ $back_url = Menu::get_menu_url("/ossim/sensor/sensor.php", "configuration", "dep
 						on_submit:{
 							id: 'send',
 							success: '<?php echo _('SAVE')?>',
-							checking: '<?php echo _('Updating')?>'
+							checking: '<?php echo _('Saving')?>'
 						}
 					}
 				};
 
 				ajax_validator = new Ajax_validator(config);
 
-				$('#send').click(function() {
-
+				$('#send').click(function() 
+				{
 					<?php
 					if (Session::show_entities() && !$disable_inputs && !$is_ossim_sensor)
 					{
-						?>
+					?>
 						selectall('entities');
 
 						if ($('#entities option').length > 0)
 						{
 							$('#num_entities_check').val('1');
 						}
-						<?php
+						
+					<?php
 					}
 					?>
-
-					if ( ajax_validator.check_form() == true )
-					{
-						$('#'+config.form.id).submit();
-						return true;
-					}
-					else
-					{
-						var height = $.getDocHeight();
-						$(parent.document).find('#sensor_f').css('height', height);
-
-						if ( $(".invalid").length >= 1 ){
-							$(".invalid").get(0).focus();
-						}
-
-						return false;
-					}
+					
+					ajax_validator.submit_form();
+					
 				});
 
-				$('#isolated').click(function() {
+				$('#isolated').click(function() 
+				{
 				    $('#neighborsensor').attr('disabled','disabled');
 				    ajax_validator.reset();
 				});
 
-				$('#neighbor').click(function(event) {
+				$('#neighbor').click(function(event) 
+				{
 				    $('#neighborsensor').removeAttr('disabled').focus();
 				    ajax_validator.reset();
 				});
@@ -289,7 +270,7 @@ $back_url = Menu::get_menu_url("/ossim/sensor/sensor.php", "configuration", "dep
     		height: 45px;
 		}
 
-        .text_ip, .text_name
+        .text_ip
         {
 			cursor: default !important;
 			font-style: italic !important;
@@ -431,35 +412,30 @@ $back_url = Menu::get_menu_url("/ossim/sensor/sensor.php", "configuration", "dep
     			<?php
     			if ($id != '')
     			{
-    				?>
-    				<input type="hidden" name="sensor_id" id="sensor_id" class='vfield'value="<?php echo $id ?>">
-    				<?php
+    				echo '<input type="hidden" name="sensor_id" id="sensor_id" class="vfield" value="'. $id .'">';
     			}
+    			if ($disable_inputs)
+                {
+                    echo '<input type="hidden" class="vfield" name="sname" id="sname" value="'. $sname .'">';
+                }
     			?>
 
-    			<tr>
-    				<th>
-    					<label for='sname'><?php echo _('Name') . required();?></label>
-    				</th>
-    				<td class="left">
-    					<?php
-                        if ( $disable_inputs )
-                        {
-                            ?>
-                            <input type="text" class='text_name' name="text_name" id="text_name" value="<?php echo $sname?>" readonly='readonly' disabled='disabled'/>
-                            <input type="hidden" class='vfield' name="sname" id="sname" value="<?php echo $sname?>"/>
-                            <?php
-                        }
-                        else
-                        {
-                            ?>
-                            <input type="text" class='vfield' name="sname" id="sname" value="<?php echo $sname?>"/>
-                            <?php
-                        }
-                        ?>
-    				</td>
-    			</tr>
-
+    			<?php
+                if (!$disable_inputs)
+                {
+                ?>
+                    <tr>
+        				<th>
+        					<label for='sname'><?php echo _('Name') . required();?></label>
+        				</th>
+        				<td class="left">
+                            <input type="text" class='vfield' name="sname" id="sname" value="<?php echo $sname?>">
+        				</td>
+        			</tr>
+                <?php  
+                }
+                ?>    			
+                
     			<tr>
     				<th>
     					<label for='ip'><?php echo _('IP') . required();?></label>
@@ -737,7 +713,7 @@ $back_url = Menu::get_menu_url("/ossim/sensor/sensor.php", "configuration", "dep
 					<td class="center noborder" valign="top" colspan="2" style="padding-top:10px;font-size:13px">
 					    <label for="rpass"><?php echo _('Please enter the root password of the remote system in order to configure it.')?></label>
 					    <br>
-					    <input type="password" class='vfield' style="margin-top:10px;width:180px" name="rpass" id="rpass">
+					    <input type="password" class='vfield' style="margin-top:10px;width:180px" name="rpass" id="rpass" autocomplete="off">
 					</td>
 				</tr>
 				<?php

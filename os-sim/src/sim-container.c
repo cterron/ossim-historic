@@ -34,6 +34,7 @@
 #include <netdb.h>
 #include <glib/gstdio.h>
 #include <glib.h>
+#include <errno.h>
 
 #include "os-sim.h"
 #include "sim-xml-directive.h"
@@ -60,6 +61,7 @@ static void       sim_container_add_sensor_to_hash_table_ul  (SimContainer * con
                                                               SimSensor    * sensor);
 static void       sim_container_free_servers              (SimContainer     *container);
 static void       sim_container_load_taxonomy_products    (SimContainer     *container);
+static void       sim_container_load_protocols            (SimContainer * container);
 
 
 extern SimMain  ossim;
@@ -109,6 +111,8 @@ struct _SimContainerPrivate
 
   // Taxonomy products
   GHashTable *taxonomy_products;
+  GHashTable       *proto_by_name; /* Use to resolve protocols by name to number */
+  GHashTable       *proto_by_number; /* Use to resolve number to protocol */
 };
 
 typedef
@@ -172,7 +176,11 @@ sim_container_impl_finalize (GObject  *gobject)
 
   if (container->_priv->taxonomy_products)
     g_hash_table_destroy (container->_priv->taxonomy_products);
-
+  if (container->_priv->proto_by_name)
+    g_hash_table_destroy (container->_priv->proto_by_name);
+  if (container->_priv->proto_by_number)
+    g_hash_table_destroy (container->_priv->proto_by_number);
+  
   g_free (container->_priv);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -236,10 +244,44 @@ sim_container_instance_init (SimContainer *container)
 
   container->_priv->taxonomy_products = g_hash_table_new_full (g_direct_hash, g_direct_equal,
                                                                NULL, (GDestroyNotify) g_list_free);
-
+  container->_priv->proto_by_name = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+  container->_priv->proto_by_number = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
 }
 
+
+
 /* Public Methods */
+/**
+  @brief Get the protocol number from a protocol name
+  @param name of protocol
+  @return Protocol number or -1 if we can't find the name
+*/
+
+gint sim_container_get_proto_by_name(SimContainer *container, const gchar *name)
+{
+  gint result = -1;
+  gpointer key = NULL;
+  gint *pnumber = NULL;
+  g_return_val_if_fail (container != NULL, -1);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), -1);
+  g_return_val_if_fail (name != NULL, -1);
+  if (g_hash_table_lookup_extended (container->_priv->proto_by_name, name, (gpointer *)&key,(gpointer *)&pnumber))
+    result = GPOINTER_TO_INT(pnumber);
+  else
+    g_message ("Unknown protocol name '%s'", name);
+  return result;
+}
+
+const gchar *  sim_container_get_proto_by_number (SimContainer *container, gint number)
+{
+  const gchar *result = NULL;
+  gpointer key = NULL;
+  g_return_val_if_fail (number >= 0, NULL);
+  g_return_val_if_fail (container != NULL, NULL);
+  g_return_val_if_fail (SIM_IS_CONTAINER (container), NULL);
+  g_hash_table_lookup_extended (container->_priv->proto_by_number, GINT_TO_POINTER(number), (gpointer*)&key, (gpointer *)&result);
+  return result;
+}
 
 guint
 sim_container_get_backlog_id(SimContainer *container)
@@ -338,6 +380,8 @@ sim_container_init (SimContainer *container,
   g_return_val_if_fail (SIM_IS_CONFIG (config), FALSE);
   g_return_val_if_fail (SIM_IS_DATABASE (database), FALSE);
 
+  sim_container_load_protocols (container); /* Must be called before*/
+
   sim_db_update_server_version (database, ossim.version);
 
 
@@ -376,24 +420,6 @@ sim_container_init (SimContainer *container,
   ossim_debug ("%s: End loading data.", __func__);
 
   return TRUE;
-}
-
-/*
- *
- *
- *
- *
- */
-void
-sim_container_db_delete_plugin_sid_directive_ul (SimContainer  *container,
-                                                 SimDatabase   *database)
-{
-  gchar         *query = "DELETE FROM plugin_sid WHERE plugin_id = 1505";
-
-  g_return_if_fail (SIM_IS_CONTAINER (container));
-  g_return_if_fail (SIM_IS_DATABASE (database));
-
-  sim_database_execute_no_query (database, query);
 }
 
 /*
@@ -1903,6 +1929,82 @@ sim_container_reload_host_plugin_sids (SimContainer *container)
 
   sim_context_reload_host_plugin_sids (container->_priv->context);
 }
+
+/**
+  @brief Load the current protocols info 
+  @param container
+*/
+static
+void sim_container_load_protocols (SimContainer * container)
+{
+  g_return_if_fail (container != NULL);
+  g_return_if_fail (SIM_IS_CONTAINER (container));
+  int err = 0;
+  gchar *buf = NULL;
+  int len = 1024;
+  struct protoent proto;
+  struct protoent *result;
+  char **aliases = NULL;
+  /* Init */
+  memset (&proto, 0, sizeof (struct protoent));
+  /* Must be defined _BSD_SOURCE || _SVID_SOURCE */
+  do{
+    if ((buf = (gchar *)malloc (len)) == NULL)
+    {
+      g_message ("Can't alloc memory\n");
+      err = -1;
+      break;
+    }
+    while (1)
+    {
+      err = getprotoent_r (&proto, buf, len, &result);
+      if (err != 0)
+      { 
+        if (err == ERANGE)
+        {
+          char *temp = NULL;
+          len += 1024;
+          if ((temp = realloc (buf, len)) == NULL)
+          {
+            err = -1;
+            break;
+          }
+          else
+          { 
+            buf = temp;
+            continue;
+          }
+        }
+        else if (err == ENOENT)
+        {
+          err = 0;
+          break;
+        }
+        else
+        {
+          err = -1;
+          break;
+        }
+      }
+      /* Insert the data */
+      g_hash_table_insert (container->_priv->proto_by_name, g_strdup (proto.p_name), GINT_TO_POINTER (proto.p_proto));
+      aliases = proto.p_aliases;
+      while (*aliases)
+      {
+        g_hash_table_insert (container->_priv->proto_by_name, g_strdup (*aliases), GINT_TO_POINTER (proto.p_proto));
+        aliases++;
+      }
+      g_hash_table_insert (container->_priv->proto_by_number,GINT_TO_POINTER (proto.p_proto), g_strdup (proto.p_name));
+    }
+    
+    
+  
+  }while (0);
+  if (err == -1)
+    g_warning ("Can't load protocols info");
+  g_free (buf);
+}
+
 
 // vim: set tabstop=2:
 

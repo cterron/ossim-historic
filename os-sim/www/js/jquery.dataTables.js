@@ -999,7 +999,16 @@
 				{
 					$(oData.nTr).addClass( oData._aData.DT_RowClass );
 				}
-		
+				
+				
+				if ( oData._aData.DT_RowData ) 
+				{
+				    $.each(oData._aData.DT_RowData, function(index, val)
+				    {
+    				    $(oData.nTr).data( index, val );
+    				});
+    			}
+    		
 				/* Process each column */
 				for ( var i=0, iLen=oSettings.aoColumns.length ; i<iLen ; i++ )
 				{

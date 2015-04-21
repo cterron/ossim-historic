@@ -630,7 +630,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
         function nfsen_config()
         {            
             var msg_confirm  = '<?php echo Util::js_entities(_('Sensor will be configured as a flow collector.'))?>' + "<br/><br/>";
-                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, Nfsen Reconfig is needed. Do you want to achieve this action?'))?>';                            
+                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, NfSen reconfig is needed. Do you want to achieve this action?'))?>';                            
             
             var keys         = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"};
 
@@ -697,6 +697,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                             netflow_notification(error_msg, 'nf_error', 10000, true);
                             
                             $('#netflow_hdr').html(status_info);
+                            
+                            hide_loading_box();
                         }
                         else
                         {                                                                                    
@@ -712,11 +714,10 @@ foreach ($sensor_ctxs as $e_id => $e_name)
 
         function del_nfsen()
         {
-            var aux = $('#netflow_hdr').html();
-            
+            var status_info = $('#netflow_hdr').html();
             
             var msg_confirm  = '<?php echo Util::js_entities(_('Sensor will be removed as a flow collector.'))?>' + "<br/><br/>";
-                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, Nfsen Reconfig is needed. Do you want to achieve this action?'))?>';                            
+                msg_confirm += '<?php echo Util::js_entities(_('In order to apply the changes, NfSen reconfig is needed. Do you want to achieve this action?'))?>';                            
             
             var keys         = {"yes": "<?php echo _('Yes') ?>", "no": "<?php echo _('No') ?>"};
                   
@@ -727,7 +728,8 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                 {
                     type: "POST",
                     url: "nfsen_config.php",
-                    data: {
+                    data: 
+                    {
                         "sensor_id" : "<?php echo $nfsen_id?>",
                         "action"    : "delete"              
                     },
@@ -767,7 +769,12 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                         
                         if (cnd_1 || cnd_2)
                         {                        
-                            $('#netflow_hdr').html(aux);
+                            $('#netflow_hdr').html(status_info);
+                            
+                            hide_loading_box();
+                                                        
+                            var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : data.data
+                            netflow_notification(error_msg, 'nf_error', 10000, true);
                         }
                         else
                         {                            
@@ -787,19 +794,17 @@ foreach ($sensor_ctxs as $e_id => $e_name)
             {
                 type: "POST",
                 url: "nfsen_config.php",
-                data: {                    
-                    "action" : "restart"              
-                },
+                data: {"action": "restart"},
                 dataType: 'json',
                 beforeSend: function()
                 {                    
                     if ($('#s_box').length > 0)
                     {
-                        $('#s_box .r_lp').html("<?php echo _('Restarting NFSEN ...')?>")
+                        $('#s_box .r_lp').html("<?php echo _('Restarting NfSen ...')?>")
                     }
                     else
                     {
-                        show_loading_box('container_si', "<?php echo _('Restarting NFSEN ...')?>", ''); 
+                        show_loading_box('container_si', "<?php echo _('Restarting NfSen ...')?>", ''); 
                     }
                     
                     $('#netflow_button').off('click').prop('disabled', true);                        
@@ -818,7 +823,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                     hide_loading_box();                                                 
                 }, 
                 success: function(data)
-                {                
+                {          
                     hide_loading_box();
                     
                     var cnd_1 = (typeof(data) == 'undefined' || data == null);
@@ -829,14 +834,13 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                         var error_msg = (cnd_1 == true) ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : data.data
                         
                         netflow_notification(error_msg, 'nf_error', 10000, true);
-                        
                     }
                     else
                     {
-                        colorize_flows(true);
-                        
                         netflow_notification(data.data, 'nf_success', 10000, true);
-                    }          
+                    }       
+                    
+                    colorize_flows(true);   
                 }
             });
         }
@@ -858,11 +862,11 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                     
                     if ($('#s_box').length > 0)
                     {
-                        $('#s_box .r_lp').html("<?php echo _('Executing AlienVault Reconfig ...')?>")
+                        $('#s_box .r_lp').html("<?php echo _('Executing NfSen reconfig...')?>")
                     }
                     else
                     {
-                        show_loading_box('container_si', "<?php echo _('Executing Nfsen Reconfig ...')?>", ''); 
+                        show_loading_box('container_si', "<?php echo _('Executing NfSen reconfig...')?>", ''); 
                     }                                        
 
                                     
@@ -918,7 +922,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                         {
                             if (data.data != '')
                             {
-                                netflow_notification(data.data, 'nf_warning', 15000, true);
+                                netflow_notification(data.data, 'nf_warning', 7000, true);
                             }
                             
                             $('#netflow_hdr').html("<?php echo "<span class='bold' style='color:red'>"._('is not running')."</span>"?>");
@@ -1584,38 +1588,58 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                     <th><?php echo _("Kismet"); ?></th>
                                     <th><?php echo _("Action"); ?></th>
                                 </tr>
-        
+
                                 <tr>
                                     <?php
                                     $properties = $sensor_obj->get_properties();
-        
+
                                     $chk_nagios = ($properties['has_nagios'] == '1')       ? ' checked="checked"' : '';
                                     $chk_vulns  = ($properties['has_vuln_scanner'] == '1') ? ' checked="checked"' : '';
                                     $chk_ntop   = ($properties['has_ntop'] == '1')         ? ' checked="checked"' : '';
                                     $chk_kismet = ($properties['has_kismet'] == '1')       ? ' checked="checked"' : '';
+
+                                    // Force disable Nagios option for remote OSSIM sensors
+                                    $usm_sensor = (empty($properties['version'])) ? FALSE : TRUE;
+
+                                    try
+                                    {
+                                        $local_system_id = Util::get_system_uuid();
+                                        $system_ids      = Av_center::get_component_id_by_system($conn, $local_system_id, 'sensor');
+                                        $local_sensor_id = $system_ids['non-canonical'];
+                                    }
+                                    catch(Exception $e)
+                                    {
+                                        $local_sensor_id = NULL;
+                                    }
+
+                                    if ($usm_sensor == TRUE && $sensor_id != $local_sensor_id)
+                                    {
+                                        $chk_nagios               .= ' disabled';
+                                        $properties['has_nagios']  = '0';
+                                    }
                                     ?>
-        
+
                                     <td class="center noborder">
                                         <input type="checkbox" id="has_nagios" name="has_nagios" value="1"<?php echo $chk_nagios?>/>
                                     </td>
-        
+
                                     <td class="center noborder">
                                         <input type="checkbox" name="has_ntop" value="1"<?php echo $chk_ntop?>/>
                                     </td>
-        
+
                                     <td class="center noborder">
                                         <input type="checkbox" id="has_vuln_scanner" name="has_vuln_scanner" value="1"<?php echo $chk_vulns?>/>
                                     </td>
-        
+
                                     <td class="center noborder">
                                         <input type="checkbox" name="has_kismet" value="1"<?php echo $chk_kismet?>/>
                                     </td>
-        
+
                                     <td class="center noborder">
                                         <input type="submit" name="update" class="av_b_secondary small" value="<?php echo _('Update')?>"/>
                                     </td>
                                 </tr>
-        
+
                                 <?php
                                 $show_vulns_options = ($properties['has_vuln_scanner'] == '1') ? '' : 'style="display:none;"';
                                 
@@ -1623,7 +1647,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                 $vuln_scanner_options['password']  = Util::fake_pass($vuln_scanner_options['password']);
                                 $vuln_scanner_options['max_scans'] = ($vuln_scanner_options['max_scans'] != '') ? $vuln_scanner_options['max_scans'] : '5';
                                 ?>
-        
+
                                 <tr>
                                     <td colspan="5" style="text-align:center;" class="noborder">                                        
                                         <div id="vuln_scanner_option" <?php echo $show_vulns_options?>>
@@ -1650,7 +1674,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                                                 </td>
             
                                                                 <td class="noborder">
-                                                                    <input type="password" name="vuln_pass" value="<?php echo $vuln_scanner_options['password']?>"/>
+                                                                    <input type="password" name="vuln_pass" value="<?php echo $vuln_scanner_options['password']?>" autocomplete="off"/>
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -1713,7 +1737,7 @@ foreach ($sensor_ctxs as $e_id => $e_name)
                                                                 </td>
                                                                 
                                                                 <td class="noborder">
-                                                                    <input type="password" id="nagios_pass" name="nagios_pass" value="<?php echo $nagios_options['password']?>"/>
+                                                                    <input type="password" id="nagios_pass" name="nagios_pass" value="<?php echo $nagios_options['password']?>" autocomplete="off"/>
                                                                 </td>
                                                             </tr>
                                                             <tr>

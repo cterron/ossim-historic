@@ -83,7 +83,7 @@ function populate_filters(page)
     		{
         		$('.filter_column').empty();
         		$('#filter_loading_layer').hide();
-        		$('#filter_list_msg').text("<?php echo _('No Results Found.') ?>").show();
+        		$('#filter_list_msg').text("<?php echo Util::js_entities(_('No Results Found.')) ?>").show();
         		
         		$('#filter_paginator').hide();
         		set_pagination(0, 1);
@@ -232,8 +232,8 @@ function load_filters_handlers()
         items: 0,
         itemsOnPage: 30,
         cssStyle: "av-theme",
-        prevText: "<?php echo _('< Previous') ?>",
-        nextText: "<?php echo _('Next >') ?>",
+        prevText: "<?php echo Util::js_entities(_('< Previous')) ?>",
+        nextText: "<?php echo Util::js_entities(_('Next >')) ?>",
         onPageClick: function(pageNumber, event)
         {
             populate_filters(pageNumber);
@@ -375,7 +375,7 @@ function fill_filter_list(data, page)
     
     if (total == 0)
     {
-        $('#filter_list_msg').text("<?php echo _('No Results Found.') ?>").show();
+        $('#filter_list_msg').text("<?php echo Util::js_entities(_('No Results Found.')) ?>").show();
         
         set_pagination(0, 1);
         

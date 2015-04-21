@@ -67,16 +67,18 @@ def accepted_values(*values):
         return new_f
     return check_accepts
 
-def require_db (func=None, accept_local=False):
+
+def require_db(func=None, accept_local=False):
     """
     Check if this profile has access to the DB
     """
     if func is None:
         return partial(require_db, accept_local=accept_local)
+
     @wraps(func)
     def f(*args, **kwargs):
-        # Lame way to check for a Server profile
-        if not os.path.isfile('/usr/bin/ossim-server'):
+        # Lame way to check for a Server or Database profile
+        if not os.path.isfile('/usr/bin/ossim-server') and not os.path.isfile('/usr/bin/mysql'):
             if accept_local:
                 is_local_valid = ['system_id', 'server_id', 'sensor_id']
                 local_params = [x for x in is_local_valid if x in kwargs.keys() and kwargs[x].lower() == 'local'] + [y for y in args if y.lower() == 'local']

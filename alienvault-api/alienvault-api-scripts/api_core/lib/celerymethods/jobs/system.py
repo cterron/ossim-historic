@@ -29,95 +29,133 @@
 #
 
 import time
-import ast
 import traceback
 from celery.utils.log import get_logger
-from celery.task.control import inspect
 from celery import current_task
 from celerymethods.tasks import celery_instance
 from celerymethods.utils import exist_task_running, JobResult
-from apimethods.system.system import asynchronous_reconfigure as api_run_reconfigure
-from apimethods.system.system import asynchronous_update as api_run_update
-from apimethods.system.system import check_if_process_is_running as api_check_if_process_is_running
-from apimethods.system.system  import apimethod_get_asynchronous_command_log_file
-from apimethods.system.system  import apimethod_check_asynchronous_command_return_code
+from celerymethods.errors import SYSTEM_UPDATE_ERROR_STRINGS
+
 from apimethods.system.cache import flush_cache
+
+from ansiblemethods.system.system import ansible_run_async_reconfig
+from ansiblemethods.system.system import ansible_run_async_update
+from ansiblemethods.system.system import ansible_check_if_process_is_running
+from ansiblemethods.system.system import ansible_get_asynchronous_command_log_file
+from ansiblemethods.system.system import ansible_check_asynchronous_command_return_code
+
 logger = get_logger("celery")
 
+
 @celery_instance.task
-def alienvault_asynchronous_reconfigure(system_id):
+def alienvault_asynchronous_reconfigure(system_ip, new_system_ip):
     """Runs an asynchronous  alienvault reconfig
     Args:
-      system_id (str): The system ID where we would like to run the alienvault-reconfig
+      system_ip (str): The system IP where we would like to run the alienvault-reconfig
+      system_ip (str): The new system admin IP. This is used for the case of changing the ansible IP
     Returns:
-      rt (boolean): True if success false otherwise
-    , job_log=job_log"""
-    if exist_task_running(task_type='alienvault_asynchronous_reconfigure', current_task_request=current_task.request, param_to_compare=system_id, argnum=0):
-        return JobResult(False, "An existing task running", "").serialize
+      success (boolean): True if success false otherwise
+    , job_log=job_log
+    """
+    running = exist_task_running(task_type='alienvault_asynchronous_reconfigure',
+                                 current_task_request=current_task.request,
+                                 param_to_compare=system_ip,
+                                 argnum=0)
+    if running:
+        return JobResult(False, "An existing task running", "", "0").serialize
 
     try:
-        logger.info("Start asynchronous reconfigure <%s>" % system_id)
-        rt, error_str = api_run_reconfigure(system_id)
-        # -- When the task has been launched properly the error_str variable will contain the log file.
-        if not rt:
-            return JobResult(False, "Something wrong happend while running the alienvault reconfig %s" % error_str, "").serialize
+        logger.info("Start asynchronous reconfigure <%s>" % system_ip)
+        (success, log_file) = ansible_run_async_reconfig(system_ip)
+        if not success:
+            logger.error("Error running alienvault reconfig: %s" % log_file)
+            return JobResult(False, "Something wrong happend while running alienvault reconfig %s" % log_file, log_file, "0").serialize
 
-        logger.info("reconfigure <%s> waiting to finish...." % system_id)
-        time.sleep(1) # Wait until the task is lauched.
+        logger.info("reconfigure <%s> waiting to finish...." % system_ip)
+
+        # Wait until the task is launched.
+        time.sleep(1)
+
+        # Wait until the process is finished
         n_process = 1
         while n_process > 0:
-            success, n_process = api_check_if_process_is_running(system_id, error_str)
+            (success, n_process) = ansible_check_if_process_is_running(system_ip, log_file)
+            if not success:
+                if new_system_ip is not None and system_ip != new_system_ip:
+                    system_ip = new_system_ip
+                else:
+                    logger.error("Cannot retrieve the process status from %s" % system_ip)
+                    return JobResult(False, "Cannot retrieve the process status from %s" % system_ip, log_file, "0").serialize
             time.sleep(1)
-        logger.info("Running alienvault-reconfig ... end %s - %s" % (rt, error_str))
 
-        rt, log_file = apimethod_get_asynchronous_command_log_file(system_id, error_str)
-        if not rt:
-            return JobResult(False, "Something wrong happend while retrieving the alienvault-reconfig log file %s" % log_file, "").serialize
-        rt, return_code_msg = apimethod_check_asynchronous_command_return_code(system_id, error_str+".rc")
-        if not rt:
-            return JobResult(False, "Something wrong happend while retrieving the return code", log_file).serialize
+        logger.info("Running alienvault-reconfig ... end %s - %s" % (success, log_file))
+
+        # Get the log file
+        (success, log_file_path) = ansible_get_asynchronous_command_log_file(system_ip, log_file)
+        if not success:
+            return JobResult(False, "Something wrong happened while retrieving the alienvault-reconfig log file %s" % log_file_path, log_file, "0").serialize
+
+        # Get the return code
+        success, return_code_msg = ansible_check_asynchronous_command_return_code(system_ip, log_file + ".rc")
+        if not success:
+            logger.error("Something wrong happened while retrieving the alienvault-reconfig return code %s" % return_code_msg)
+            return JobResult(False, "Something wrong happened while retrieving the return code %s" % return_code_msg, log_file, "0").serialize
 
     except Exception, e:
         logger.error("An error occurred running alienvault-reconfig: %s, %s" % (str(e), traceback.format_exc()))
-        return JobResult(False, "An error occurred running alienvault-reconfig:  %s" % (str(e)), "").serialize
-    return JobResult(True, "Success!!", log_file).serialize
+        return JobResult(False, "An error occurred running alienvault-reconfig:  %s" % (str(e)), "", "0").serialize
+
+    return JobResult(True, "Success!!", log_file_path, "0").serialize
 
 
 @celery_instance.task
-def alienvault_asynchronous_update(system_id, only_feed=False,update_key=""):
+def alienvault_asynchronous_update(system_ip, only_feed=False, update_key=""):
     """Runs an asynchronous  alienvault update
     Args:
-      system_id (str): The system ID where we would like to run the alienvault-update
+      system_ip (str): The system IP where we would like to run the alienvault-update
       only_feed (boolean): A boolean indicatin whether we should update only the feed or not.
     Returns:
       rt (boolean): True if success false otherwise
     """
-    if exist_task_running(task_type='alienvault_asynchronous_update',current_task_request=current_task.request, param_to_compare=system_id,argnum=0):
-        return JobResult(False, "An existing task running","").serialize
+    running = exist_task_running(task_type='alienvault_asynchronous_update',
+                                 current_task_request=current_task.request,
+                                 param_to_compare=system_ip,
+                                 argnum=0)
+    if running:
+        return JobResult(False, "An existing task running", "", "300090").serialize
 
     try:
-        logger.info("Start asynchronous update <%s>" % system_id)
-        rt, error_str = api_run_update(system_id, only_feed=only_feed,update_key=update_key)
-        # When the task has been launched properly the error_str variable will contain the log file. 
+        logger.info("Start asynchronous update <%s>" % system_ip)
+
+        rt, error_str = ansible_run_async_update(system_ip, only_feed=only_feed, update_key=update_key)
+        # When the task has been launched properly the error_str variable will contain the log file.
         if not rt:
-            return JobResult( False, "Something wrong happend while running the alienvault update %s" % error_str,"").serialize
-        logger.info(" alienvault-update <%s> waiting to finish...." % system_id)
-        time.sleep(1) # Wait until the task is lauched.
+            return JobResult(False, "Something wrong happend while running the alienvault update %s" % error_str, "", "300091").serialize
+        logger.info(" alienvault-update <%s> waiting to finish...." % system_ip)
+        time.sleep(1)  # Wait until the task is lauched.
         n_process = 1
         while n_process > 0:
-            success,n_process = api_check_if_process_is_running(system_id, error_str)
+            success, n_process = ansible_check_if_process_is_running(system_ip, error_str)
             time.sleep(1)
 
-        rt, log_file = apimethod_get_asynchronous_command_log_file(system_id, error_str)
+        flush_cache(namespace='system_packages')
+
+        rt, log_file = ansible_get_asynchronous_command_log_file(system_ip, error_str)
         if not rt:
-            return JobResult(False, "Something wrong happend while retrieving the alienvault-update log file %s" % log_file,"").serialize
-        rt, return_code_msg = apimethod_check_asynchronous_command_return_code(system_id,error_str+".rc")
+            return JobResult(False, "Something wrong happened while retrieving the alienvault-update log file %s" % log_file, "", "300092").serialize
+        rt, return_code_msg = ansible_check_asynchronous_command_return_code(system_ip, error_str+".rc")
         if not rt:
-            return JobResult(False,"Something wrong happend while retrieving the alienvault-return code <%s>" % str(return_code_msg) , log_file).serialize
-        flush_cache(namespace="system_packages")
-        logger.info("Running alienvault-update ... end %s - %s" % (rt,error_str))
+            error_msg = "Something wrong happened while retrieving the alienvault-return code <%s>" % str(return_code_msg)
+            error_id = "300093"
+            if return_code_msg.startswith("Return code is different from 0"):
+                return_code = return_code_msg.split("<")[1].split(">")[0]
+                error_msg = SYSTEM_UPDATE_ERROR_STRINGS[return_code][1]
+                error_id = SYSTEM_UPDATE_ERROR_STRINGS[return_code][0]
+
+            return JobResult(False, error_msg, log_file, error_id).serialize
+        logger.info("Running alienvault-update ... end %s - %s" % (rt, error_str))
 
     except Exception, e:
-        logger.error("An error occurred running alienvault-reconfig: %s, %s" % (str(e), traceback.format_exc()))
-        return JobResult(False, "An error occurred running alienvault-update <%s>" % str(e),"").serialize
-    return JobResult(True,"Success!!",log_file).serialize
+        logger.error("An error occurred running alienvault-update: %s, %s" % (str(e), traceback.format_exc()))
+        return JobResult(False, "An error occurred running alienvault-update <%s>" % str(e), "", "300099").serialize
+    return JobResult(True, "Success!!", log_file, "0").serialize

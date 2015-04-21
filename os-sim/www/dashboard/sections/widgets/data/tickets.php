@@ -401,7 +401,7 @@ switch($type)
 			foreach ($dates as $date)
 			{
     			list($month, $day) = explode('-', $date);
-    			$xaxis_text[]      = Util::html_entities2utf8(sprintf(_("$month-%d"), $day));
+    			$xaxis_text[]      = Util::html_entities2utf8(_("$month"));
 			}
 			
 			$colors      = get_widget_colors(count($data));

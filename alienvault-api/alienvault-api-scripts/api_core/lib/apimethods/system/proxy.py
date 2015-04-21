@@ -98,7 +98,7 @@ class AVProxy:
                 proxy_full_url += "%s:%s@" % (self.__proxy_user, self.__proxy_pass)
             proxy_full_url += self.__proxy_url
 
-            self.__proxy_handler = urllib2.ProxyHandler({'http' : proxy_full_url})
+            self.__proxy_handler = urllib2.ProxyHandler({'http': proxy_full_url, 'https': proxy_full_url})
         else:
             self.__proxy_handler = urllib2.ProxyHandler({})
 
@@ -143,7 +143,7 @@ class AVProxy:
     def open(self, request, timeout=None, retries=0):
         """ Open the request url.
         @param request: urllib2.Request object with the request or an url string
-        @param timeout: timeout for opening the url
+        @param timeout: timeout in seconds for opening the url
         @param retries: number of retries if the open statement fails
         @return a urllib2.Response
         """

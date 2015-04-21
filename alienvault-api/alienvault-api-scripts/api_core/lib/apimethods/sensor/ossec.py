@@ -166,12 +166,12 @@ def ossec_rootcheck(sensor_id, agent_id):
     return ans_ossec_rootcheck(system_ip, agent_id)
 
 
-def ossec_get_check(sensor_id, agent_ip, agent_name, check_type):
+def ossec_get_check(sensor_id, agent_name, check_type):
     (success, system_ip) = get_sensor_ip_from_sensor_id(sensor_id)
     if not success:
         return False, "Invalid sensor id" % sensor_id
 
-    return ans_ossec_get_check(system_ip=system_ip, check_type=check_type, agent_ip=agent_ip, agent_name=agent_name)
+    return ans_ossec_get_check(system_ip=system_ip, check_type=check_type, agent_name=agent_name)
 
 
 def ossec_get_available_agents(sensor_id, op_ossec, agent_id=''):

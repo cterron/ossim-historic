@@ -191,7 +191,6 @@ etc/cron.daily/Makefile
 etc/init.d/Makefile
 etc/logrotate.d/Makefile
 db/Makefile
-db/plugins/Makefile
 pixmaps/Makefile
 include/Makefile
 www/Makefile

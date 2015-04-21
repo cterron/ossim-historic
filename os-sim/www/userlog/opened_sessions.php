@@ -72,10 +72,10 @@ function get_country($ccode)
 
 
 function get_user_icon($login, $pro)
-{		
-	$$pixmaps = '../pixmaps/user-green.png';
-	
-	$db    = new ossim_db();
+{
+    $pixmaps = '../pixmaps/user-green.png';
+
+    $db    = new ossim_db();
     $conn  = $db->connect();
      
 	$user  = Session::get_list($conn, "WHERE login='$login'");
@@ -397,7 +397,7 @@ $allowed_users = Session_activity::get_list($conn, $where.' ORDER BY activity DE
 									<td class='ops_user' $me><img class='user_icon' src='".get_user_icon($user->get_login(), $pro)."' alt='"._('User icon')."' title='"._('User icon')."' align='absmiddle'/> ".$user->get_login()."</td>
 									<td class='ops_ip'>".$user->get_ip()."</td>
 									<td class='ops_host'>".$host.$flag."</td>
-									<td class='ops_agent'><a title='".htmlentities($agent[1])."' class='info_agent'>".htmlentities($agent[0])."</a></td>
+									<td class='ops_agent'><a title='".Util::htmlentities($agent[1])."' class='info_agent'>".Util::htmlentities($agent[0])."</a></td>
 									<td class='ops_id'>".$user->get_id()." $expired</td>
 									<td class='ops_logon'>".$logon_date."</td>					
 									<td class='ops_activity'>"._(TimeAgo($activity_date, gmdate('U')))."</td>

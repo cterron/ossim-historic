@@ -39,7 +39,7 @@ Session::logcheck('analysis-menu', 'EventsForensics');
 
 function get_tags($idm = FALSE) 
 {
-    return array(
+    $tags = array(
         'ENTITY'                 => _('Context'),
         'DATE'                   => _('Received event date'),
         'PLUGIN_ID'              => _('Data Source'),
@@ -91,6 +91,11 @@ function get_tags($idm = FALSE)
 		'REP_ACT_SRC'            => _('Reputation: Source IP Activity'),
 		'REP_ACT_DST'            => _('Reputation: Destination IP Activity')
     );
+    
+    // Order by ascending column titles
+    asort($tags);
+    
+    return $tags;
 }
 
 
@@ -100,7 +105,8 @@ $version     = $conf->get_conf('ossim_server_version');
 $opensource  = (!preg_match('/pro|demo/i',$version)) ? TRUE : FALSE;
 $idm_enabled = ($conf->get_conf('enable_idm', FALSE)) ? TRUE : FALSE;
 
-$msg = '';
+$msg      = '';
+$msg_type = '';
 
 $edit                   = GET('edit');
 $save                   = GET('save');
@@ -133,19 +139,23 @@ if ($save == 'insert')
 {
 	if ($name == '') 
 	{
-		$msg = "<font style='color:red'>"._("Please, insert a name for the view.")."</font>";
+		$msg      = _("Please, insert a name for the view.");
+		$msg_type = 'nf_error';
 	} 
 	elseif ($columns == '') 
 	{
-		$msg = "<font style='color:red'>"._("You must select one column at least.")."</font>";
+		$msg      = _("You must select one column at least.");
+		$msg_type = 'nf_error';
 	} 
 	elseif ($_SESSION['views'][$name] != '') 
 	{
-		$msg = "<font style='color:red'><b>$name</b> "._("already exists, try another view name.")."</font>";
+		$msg      = "<b>$name</b> "._("already exists, try another view name.");
+		$msg_type = 'nf_error';
 	} 
 	elseif($opensource && (in_array("PLUGIN_SOURCE_TYPE",$columns_arr) || in_array("PLUGIN_SID_CATEGORY",$columns_arr) || in_array("PLUGIN_SID_SUBCATEGORY",$columns_arr))) 
 	{
-		$msg = "<font style='color:red'>"._("You can only select taxonomy columns in Pro version.")."</font>";
+		$msg      = _("You can only select taxonomy columns in Pro version.");
+		$msg_type = 'nf_error';
 	} 
 	else 
 	{		
@@ -186,11 +196,13 @@ elseif ($save == 'modify')
 {
 	if ($name == '') 
 	{
-		$msg = "<font style='color:red'>"._("Please, insert a name for the view.")."</font>";
+		$msg      = _("Please, insert a name for the view.");
+		$msg_type = 'nf_error';
 	} 
 	elseif($columns == '') 
 	{
-		$msg = "<font style='color:red'>"._("You must select one column at least.")."</font>";	
+		$msg      = _("You must select one column at least.");
+		$msg_type = 'nf_error';
 	} 
 	else 
 	{		
@@ -199,24 +211,37 @@ elseif ($save == 'modify')
 		$conn = $db->connect();
 		$config = new User_config($conn);
 		if ($name != $oldname) 
-		{
-			//print_r($_SESSION['views'][$_SESSION['current_cview']]);
-			$_SESSION['views'][$name]['data'] = $_SESSION['views'][$_SESSION['current_cview']]['data'];
-			$_SESSION['current_cview'] = $name;
-			unset($_SESSION['views'][$oldname]);
-			$_SESSION['view_name_changed'] = $name; // Uses when closes greybox
+        {
+            // Check if the new name already exists
+            if (!empty($_SESSION['views'][$name]))
+            {
+                $msg      = "<b>$name</b> "._("already exists, try another view name.");
+                $msg_type = 'nf_error';
+            }
+            else
+            {
+                $_SESSION['views'][$name]['data'] = $_SESSION['views'][$_SESSION['current_cview']]['data'];
+                $_SESSION['current_cview'] = $name;
+                unset($_SESSION['views'][$oldname]);
+                $_SESSION['view_name_changed'] = $name; // Uses when closes greybox
+            }
 		}
-		$_SESSION['views'][$name]['cols'] = $columns_arr;
 		
-		if (!$save_criteria) 
-		{
-			$_SESSION['views'][$name]['data'] = array();
-		}
-		$config->set($login, 'custom_views', $_SESSION['views'], 'php', 'siem');
-		$db->close();
-		
-		$edit = 1;
-		$msg = "<font style='color:green'>"._("The view has been successfully updated.")."</font>";
+        if ($msg == '')
+        {
+            $_SESSION['views'][$name]['cols'] = $columns_arr;
+            
+            if (!$save_criteria) 
+            {
+                $_SESSION['views'][$name]['data'] = array();
+            }
+            $config->set($login, 'custom_views', $_SESSION['views'], 'php', 'siem');
+            $db->close();
+            
+            $edit = 1;
+            $msg      = _("The view has been successfully updated.");
+            $msg_type = 'nf_success';
+        }
 	}
 } 
 elseif ($save == _('Default view')) 
@@ -232,13 +257,15 @@ elseif ($save == _('Default view'))
     $db->close();
     
     $edit = 1;
-    $msg = "<font style='color:green'>"._("The view has been successfully updated.")."</font>";
+    $msg      = _("The view has been successfully updated.");
+    $msg_type = 'nf_success';
 } 
 elseif ($save == 'delete') 
 {
 	if ($_SESSION['current_cview'] == "default") 
 	{
-		$msg = "<font style='color:red'>"._("You cannot delete 'default' view.")."</font>";
+		$msg      = _("You cannot delete 'default' view.");
+		$msg_type = 'nf_error';
 	}
 	else 
 	{		
@@ -259,79 +286,116 @@ elseif ($save == 'delete')
 } 
 elseif ($save == 'report' && Session::am_i_admin()) 
 {
-	$columns = implode(",",$columns_arr);
-	$query1 = $_SESSION['siem_current_query'];
-	$query1 = preg_replace("/AND \( timestamp \>\='[^\']+'\s*AND timestamp \<\='[^\']+' \) /i",'',$query1);
-	$query1 = preg_replace("/AND \( timestamp \>\=\'[^\']+\' \)\s*/",'',$query1);
-	$query2 = $_SESSION['siem_current_query_graph'];
-	$query2 = preg_replace("/AND \( timestamp \>\='[^\']+'\s*AND timestamp \<\='[^\']+' \) /i",'',$query2);
-	$query2 = preg_replace("/AND \( timestamp \>\=\'[^\']+\' \)\s*/",'',$query2);
-	
-	// Diferent name than the view name
-	if ($savereport_custom_name != '') 
-	{
-		$name = $savereport_custom_name;
-	}
-	
-	if ($query1 != '' && $query2 != '' && $columns != '') 
-	{
-		$db = new ossim_db();
-		$conn = $db->connect();
-		
-		$curid = 0;
-		$name  = str_replace('"','',$name);
-		$query = "SELECT id FROM custom_report_types WHERE name=\"$name\" and file='SIEM/CustomList.php'";
-		
-		$rs = $conn->Execute($query);
-		if (!$rs) 
-		{
-            error_log($conn->ErrorMsg(), 0);
-	    } 
-	    else 
-	    {
-	        if (!$rs->EOF) 
-	        {
-	            $curid = $rs->fields['id'];
-	        }
-	    }
-		
-		$id = 3000;
-	    $result = $conn->Execute("select max(id)+1 from custom_report_types where id>2999");
-	    if (!$result->EOF) 
-	    {
-	        $id = intval($result->fields[0]);
-	        if (!$id) 
-	        {
-	           $id=3000;
-	        }
-	    }
-		
-		if ($curid > 0) 
-		{
-	    	$sql    = "UPDATE custom_report_types SET name=?,type='Custom Security Events',file='SIEM/CustomList.php',inputs='Number of Events:top:text:OSS_DIGIT:25:1000',custom_report_types.sql=? WHERE id=?";
-	    	$params = array($name,"$query1;$query2;$columns",$curid);
-		} 
-		else 
-		{
-			$sql    = "INSERT INTO custom_report_types (id,name,type,file,inputs,custom_report_types.sql) VALUES (?,?,'Custom Security Events','SIEM/CustomList.php','Number of Events:top:text:OSS_DIGIT:25:1000',?)";
-			$params = array($id,$name,"$query1;$query2;$columns");
-		}
-		if ($conn->Execute($sql,$params)) 
-		{
-			$msg = ($curid > 0) ? "<font style='color:green'>"._("Report Module")." <b>'Custom Security Events - $name'</b> "._("successfully updated")."</font>" : "<font style='color:green'>"._("Report Module successfully created as")." <b>'Custom Security Events - $name'</b></font>";
-		} 
-		else 
-		{
-			$msg = "<font style='color:red'>"._("Error creating a new report type.")."</font>";
-		}
-		
-		$db->close();
-	} 
-	else 
-	{
-		$msg = "<font style='color:red'>"._("Error creating a new report type.")."</font>";
-	}
-	
+    /**
+    Get the custom views from another admin users
+    We'll prevent module overwrite between several admins
+    If another admin has the same view name
+    there can be a collision if both of them create modules
+    */
+    $db = new ossim_db();
+    $conn = $db->connect();
+    
+    $others_where  = "WHERE login != '".Session::get_session_user()."' 
+                      AND (is_admin = 1 OR login = '".AV_DEFAULT_ADMIN."')";
+    $others_admins = Session::get_list($conn, $others_where);
+    
+    if (count($others_admins) > 0)
+    {
+        $config = new User_config($conn);
+        
+        foreach ($others_admins as $other_admin)
+        {
+            $other_admin_views = $config->get($other_admin->get_login(), 'custom_views', 'php', 'siem');
+            
+            // Another admin has one view with the same name
+            if (!empty($other_admin_views[$name]))
+            {
+                $msg      = _("The view name already exists for another user. If you want to create a report module, please try with another View Name");
+                $msg_type = 'nf_error';
+            }
+        }
+    }
+    
+    $db->close();
+    
+    if ($msg == '')
+    {
+        	$columns = implode(",",$columns_arr);
+        	$query1 = $_SESSION['siem_current_query'];
+        	$query1 = preg_replace("/AND \( timestamp \>\='[^\']+'\s*AND timestamp \<\='[^\']+' \) /i",'',$query1);
+        	$query1 = preg_replace("/AND \( timestamp \>\=\'[^\']+\' \)\s*/",'',$query1);
+        	$query2 = $_SESSION['siem_current_query_graph'];
+        	$query2 = preg_replace("/AND \( timestamp \>\='[^\']+'\s*AND timestamp \<\='[^\']+' \) /i",'',$query2);
+        	$query2 = preg_replace("/AND \( timestamp \>\=\'[^\']+\' \)\s*/",'',$query2);
+        	
+        	// Diferent name than the view name
+        	if ($savereport_custom_name != '') 
+        	{
+        		$name = $savereport_custom_name;
+        	}
+        	
+        	if ($query1 != '' && $query2 != '' && $columns != '') 
+        	{
+        	    $db = new ossim_db();
+        	    $conn = $db->connect();
+        	    
+        		$curid = 0;
+        		$name  = str_replace('"','',$name);
+        		$query = "SELECT id FROM custom_report_types WHERE name=\"$name\" and file='SIEM/CustomList.php'";
+        		
+        		$rs = $conn->Execute($query);
+        		if (!$rs) 
+        		{
+                    error_log($conn->ErrorMsg(), 0);
+        	    } 
+        	    else 
+        	    {
+        	        if (!$rs->EOF) 
+        	        {
+        	            $curid = $rs->fields['id'];
+        	        }
+        	    }
+        	    
+        		$id = 3000;
+        	    $result = $conn->Execute("select max(id)+1 from custom_report_types where id>2999");
+        	    if (!$result->EOF) 
+        	    {
+        	        $id = intval($result->fields[0]);
+        	        if (!$id) 
+        	        {
+        	           $id=3000;
+        	        }
+        	    }
+        		
+        		if ($curid > 0) 
+        		{
+        	    	$sql    = "UPDATE custom_report_types SET name=?,type='Custom Security Events',file='SIEM/CustomList.php',inputs='Number of Events:top:text:OSS_DIGIT:25:1000',custom_report_types.sql=? WHERE id=?";
+        	    	$params = array($name,"$query1;$query2;$columns",$curid);
+        		} 
+        		else 
+        		{
+        			$sql    = "INSERT INTO custom_report_types (id,name,type,file,inputs,custom_report_types.sql) VALUES (?,?,'Custom Security Events','SIEM/CustomList.php','Number of Events:top:text:OSS_DIGIT:25:1000',?)";
+        			$params = array($id,$name,"$query1;$query2;$columns");
+        		}
+        		if ($conn->Execute($sql,$params)) 
+        		{
+        			$msg      = ($curid > 0) ? _("Report Module")." <b>'Custom Security Events - $name'</b> "._("successfully updated") : _("Report Module successfully created as")." <b>'Custom Security Events - $name'</b>";
+        			$msg_type = 'nf_success';
+        		} 
+        		else 
+        		{
+        			$msg      = _("Error creating a new report type.");
+        			$msg_type = 'nf_error';
+        		}
+        		
+        		$db->close();
+        	} 
+        	else 
+        	{
+        		$msg      = _("Error creating a new report type.");
+        		$msg_type = 'nf_error';
+        	}
+    }
 }
 $tags = get_tags($idm_enabled);
 
@@ -379,6 +443,7 @@ if ($opensource)
     <script type="text/javascript" src="../js/jquery.tmpl.1.1.1.js"></script>
     <script type="text/javascript" src="../js/ui.multiselect.js"></script>
     <script type="text/javascript" src="../js/combos.js"></script>    
+    <script type="text/javascript" src="../js/notification.js"></script> 
     <script type="text/javascript">
 		$(document).ready(function(){
 			$(".multiselect").multiselect({
@@ -394,11 +459,23 @@ if ($opensource)
     			<?php 
     		} 
     		?>
+
+            <?php
+            // Show success or error message
+            if ($msg != '')
+            {
+    			?>
+            var nf_style = 'padding: 3px; width: 90%; margin: auto; text-align: center;';
+            show_notification('custom_view_info', "<?php echo $msg ?>", '<?php echo $msg_type ?>', <?php echo ($msg_type == 'nf_error') ? 0 : 2000 ?>, 1, nf_style);
+    			<?php
+            }
+    			?>
+    		
         });
     </script>
 </head>
 <body>
-
+<div id='custom_view_info'></div>
 <table id='t_container'>
 <?php 
 if ($created) 
@@ -473,7 +550,6 @@ else
         		</select>
         	</div>
             </td></tr>
-        	<tr><td class="center nobborder" id="msg">&nbsp;<?=$msg?></td></tr>
             <tr><td class="center nobborder"><input type="checkbox" name="save_criteria" value="1" checked='checked'></input> <?php echo _("Include custom search criteria in this predefined view") ?></td></tr>
             <tr><td class="center nobborder">
     		<?php 
@@ -499,7 +575,7 @@ else
         		if ($edit && $_SESSION['current_cview'] != 'default') 
         		{ 
             		?> 
-            		<input type="button" class="small av_b_secondary" onclick="document.fcols.save.value='insert';document.fcols.selected_cols.value=getselectedcombovalue('cols');document.fcols.submit()" value="<?php echo _("Save As")?>" id="saveasbutton" style="color:gray" disabled='disabled'> 
+            		<input type="button" class="small av_b_secondary" onclick="document.fcols.save.value='insert';document.fcols.selected_cols.value=getselectedcombovalue('cols');document.fcols.submit()" value="<?php echo _("Save As")?>" id="saveasbutton" disabled='disabled'> 
             		<input type="button" class="small av_b_secondary" onclick="if(confirm('<?php echo  Util::js_entities(_("Are you sure?"))?>')) { document.fcols.save.value='delete';document.fcols.submit() }" value="<?=_("Delete")?>">
             		<?php 
                 } 

@@ -37,7 +37,7 @@ require_once 'av_init.php';
 ?>
 var av_menu    = null;
 var h_window   = null;
-
+var __internet = null;
 
 function load_menu_scripts()
 {
@@ -46,6 +46,11 @@ function load_menu_scripts()
     av_menu.show();
 
     //console.log(av_menu);
+    av_menu.display_system_name();
+    
+    //Internet
+    __internet = new Av_internet_check();
+    
     <?php
 
     $av_menu = unserialize($_SESSION['av_menu']);
@@ -118,6 +123,11 @@ function load_menu_scripts()
 
             av_menu.load_content(url);
         }
+        else
+        {
+            av_menu.set_bookmark();
+        }
+        
     });
 
 
@@ -189,7 +199,7 @@ function load_menu_scripts()
 
          var w_parameters = "left="+left+", top="+top+", height="+height+", width="+width+", location=no, menubar=no, resizable=yes, scrollbars=yes, status=no, titlebar=no";
 
-         h_window = window.open('/ossim/loading.php', 'Alienvault Wiki', w_parameters);
+         h_window = window.open('/ossim/loading.php', 'AlienVault Wiki', w_parameters);
          h_window.focus();
 
          setTimeout(function(){av_menu.show_help(h_window)}, 200);
@@ -220,6 +230,7 @@ function load_menu_scripts()
     //Handlers for the sidebar
     $('#notif_bt').on('click', function(){
 
+        var win_width = $(window).width();
         //Opening the side bar
         if ($('#notif_layer').hasClass('notif_closed'))
         {
@@ -227,15 +238,27 @@ function load_menu_scripts()
 
             $('#notif_layer').show();
 
-
-            $('#notif_resume').animate({ 'left': '0px' }, 600, function()
+            if (win_width > 1335)
+            {
+                $('#notif_resume').animate({ 'left': '0px' }, 600, function()
+                {
+                    $('#notif_container').animate({ 'margin-right': '350px' }, 750, function()
+                    {
+                        $('#notif_bt').removeClass('notif_closed');
+                        $('#notif_bt').addClass('notif_open');
+                    });
+                });
+            }
+            else
             {
                 $('#notif_container').animate({ 'margin-right': '350px' }, 750, function()
                 {
                     $('#notif_bt').removeClass('notif_closed');
                     $('#notif_bt').addClass('notif_open');
                 });
-            });
+                
+                $('#notif_resume').css('left', '0px');
+            }
 
 
             $('#notif_layer').addClass('notif_open');
@@ -251,11 +274,18 @@ function load_menu_scripts()
 
                 $('#notif_bt').removeClass('notif_open');
                 $('#notif_bt').addClass('notif_closed');
-
-                $('#notif_resume').animate({ 'left': '-49px' }, 600, function()
+                
+                if (win_width > 1335)
                 {
-                    $(this).css("left", "-50px"); //Hack to avoid blurred text
-                });
+                    $('#notif_resume').animate({ 'left': '-49px' }, 600, function()
+                    {
+                        $(this).css("left", "-50px"); //Hack to avoid blurred text
+                    });
+                }
+                else
+                {
+                    $('#notif_resume').css("left", "-50px");
+                }
 
             });
 

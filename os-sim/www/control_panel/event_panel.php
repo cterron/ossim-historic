@@ -51,9 +51,11 @@ function get_idm_data($conn, $id)
     
     $query = "SELECT rep_prio_src, rep_prio_dst, rep_act_src, rep_act_dst FROM idm_data WHERE event_id = UNHEX(?)";
     
-    $params = array($id);       
+    $params = array($id);
+    
+    $rs = $conn->Execute($query, $params); 
         
-    if ($rs = & $conn->Execute($query, $params)) 
+    if ($rs) 
     {
        $idm_data[] = $rs->fields['rep_prio_src'];
        $idm_data[] = $rs->fields['rep_act_src'];
@@ -168,8 +170,9 @@ if (GET('modo') == 'responder')
         FROM alienvault_siem.device, sensor, $acid_table $key_index LEFT JOIN alienvault.plugin_sid ON plugin_sid.plugin_id=$acid_table.plugin_id AND plugin_sid.sid=$acid_table.plugin_sid WHERE sensor.id=device.sensor_id AND device.id = $acid_table.device_id " . $where . " order by timestamp desc limit $max_rows";
 		
 		// QUERY DEBUG:
+		$rs = $conn->Execute($sql);
 		
-		if (!$rs = & $conn->Execute($sql)) 
+		if (!$rs) 
         {
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());         
         }
@@ -530,17 +533,17 @@ else
         
             // Protocol list
 
-            if ($protocol_list = Protocol::get_list($conn)) 
+            if ($protocol_list = Protocol::get_list())
             {
                 echo "var protocols = new Array(" . count($protocol_list) . ")\n";
                 
                 foreach ($protocol_list as $proto) 
                 {
                     //$_SESSION[$id] = $plugin->get_name();
-                    echo "protocols['proto_" . $proto->get_id() . "'] = '" . $proto->get_name() . "'\n";
+                    echo "protocols['proto_" . $proto['id'] . "'] = '" . $proto['name'] . "'\n";
                     
                     //Load available protocols (Autocompleted)
-                    $p_list .= '{ txt: "Protocol:'.$proto->get_name().'", id: "'.$proto->get_id().'" },';
+                    $p_list .= '{ txt: "Protocol:'.$proto['name'].'", id: "'.$proto['id'].'" },';
                 }
             }
             

@@ -1,0 +1,14 @@
+[properties]
+name=Agent Cache Disk
+description=Check the disk space used by the agent cache
+category=alienvault,platform
+type=command
+command=echo $(du -b /var/ossim/agent_events | cut -f1)*100/$(df -B1 | grep sda1 | awk '{ print $3 }') | bc
+requires=@dpkg:alienvault-professional
+
+# Check the disk space for agent cache directory
+[Agent cache disk space]
+pattern=(\d+)
+conditions=@int@:<31
+warning=The disk usage of agent cache files is too high
+advice=Some cache files must be removed to free disk space

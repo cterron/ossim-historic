@@ -84,7 +84,6 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
     try:
         response = ansible.run_module(host_list=[local_ip], module='stat', args="path="+local_file_path)
     except Exception, exc:
-        api_log.error("Ansible Error: An error occurred while running stat module: %s" % str(exc))
         return False, "Ansible Error: An error occurred while running stat module: %s" % str(exc)
 
     (success, msg) = ansible_is_valid_response(local_ip, response)
@@ -98,7 +97,6 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
     try:
         response = ansible.run_module(host_list=[remote_ip], module='stat', args="path="+remote_file_path)
     except Exception, exc:
-        api_log.error("Ansible Error: An error occurred while running stat module: %s" % str(exc))
         return False, "Ansible Error: An error occurred while running stat module: %s" % str(exc)
 
     (success, msg) = ansible_is_valid_response(remote_ip, response)
@@ -115,7 +113,6 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
             fetch_args = "src=%s dest=%s flat=yes validate_md5=yes" % (remote_file_path, local_file_path)
             response = ansible.run_module(host_list=[remote_ip], module='fetch', args=fetch_args)
         except Exception, exc:
-            api_log.error("Ansible Error: An error occurred while running fetch module: %s" % str(exc))
             return False, "Ansible Error: An error occurred while running fetch module: %s" % str(exc)
 
         (success, msg) = ansible_is_valid_response(remote_ip, response)
@@ -123,3 +120,35 @@ def fetch_if_changed(remote_ip, remote_file_path, local_ip, local_file_path):
             return (success, "File retrieved")
         else:
             return (success, msg)
+
+
+def rsync_pull(remote_ip, remote_file_path, local_ip, local_file_path):
+    """ Rsync pull remote file to local path
+    :param remote_ip: The system ip where the remote file is
+    :param remote_file_path: Path to remote file
+    :param local_ip: The local system ip
+    :param local_file_path: Path to local file
+    :returns True if the file was fetched, False elsewhere
+    """
+    # Check parameters
+    if not local_ip or not remote_ip or not remote_file_path or not local_file_path:
+        return False, "Invalid parameters"
+
+    local_md5, remote_md5 = None, None
+    ssh_key_file = '/var/ossim/ssl/local/private/cakey_avapi.pem'
+    # Use -i option to know if the file has changed
+    rsync_command = 'rsync -aizPe "ssh -i %s" %s:%s %s' % (ssh_key_file, remote_ip, remote_file_path, local_file_path)
+
+    # Rsync pull remote file
+    try:
+        response = ansible.run_module(host_list=[local_ip], module='command', args=rsync_command, use_sudo=False)
+    except Exception, exc:
+        return False, "Ansible Error: An error occurred while rsyncing file: %s" % str(exc)
+
+    (success, msg) = ansible_is_valid_response(local_ip, response)
+    if not success or response['contacted'][local_ip]['stderr'] != '':
+        return (success, "Could't retrieve file")
+    elif response['contacted'][local_ip]['stdout'] == '':
+        return (False, "Files already in sync")
+    else:
+        return (success, "File retrieved")

@@ -108,6 +108,7 @@ else //If we cannot, we start the wizard
             $_files = array(
                 array('src' => 'jquery.min.js',                                 'def_path' => TRUE),
                 array('src' => 'jquery-ui.min.js',                              'def_path' => TRUE),
+                array('src' => 'av_internet_check.js.php',                      'def_path' => TRUE),
                 array('src' => 'utils.js',                                      'def_path' => TRUE),
                 array('src' => 'notification.js',                               'def_path' => TRUE),
                 array('src' => 'token.js',                                      'def_path' => TRUE),
@@ -128,16 +129,17 @@ else //If we cannot, we start the wizard
             Util::print_include_files($_files, 'js');
     
         ?>
-
-        <script type="text/javascript" src="https://www.alienvault.com/product/help/ping.js"></script>
     
         <script type='text/javascript'>
             
             var __timeout      = null;
             var __current_step = <?php echo intval($step) ?>;
+            var __internet     = null;
             
             $(document).ready(function() 
             {
+                __internet = new Av_internet_check();
+                
                 <?php 
                 //Start a new wizard
                 if ($start_wizard)

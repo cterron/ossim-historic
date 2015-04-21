@@ -175,17 +175,21 @@ if($tab == '#tab2')
         if ($v == '')
         {
             continue;
-        }        
+        }
 
         foreach ($regex as $i => $r)
         {
             if (preg_match("/$r/", $k, $match))
             {
-                $indexes[$i]         = $indexes[$i]++;
+                $indexes[$i] = $indexes[$i]++;
+
+                //Auto-remove '\' to avoid a syntax error
+                $v = preg_replace('/\\\\+$/', '', $v);
+
                 $keys[$i][$match[1]] = $v;
-                                
+
                 ossim_valid($v, OSS_ALPHA, OSS_PUNC_EXT, OSS_SLASH, OSS_NULLABLE, 'illegal:' . $err_msn[$i]);
-                
+
                 if (ossim_error())
                 {
                     $info_error[] = ossim_get_error().'. Input num. ' . $indexes[$i]; 
@@ -196,7 +200,8 @@ if($tab == '#tab2')
             }
         }
     }
-    
+
+
     if (!empty($info_error))
     {
         $data['status'] = 'error';

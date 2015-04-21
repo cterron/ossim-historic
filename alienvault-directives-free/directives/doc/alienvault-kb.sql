@@ -1,6 +1,7 @@
 -- 
 -- DIRECTIVES
 -- 
+SET UNIQUE_CHECKS=0;
 DELETE FROM repository_relationships WHERE id_document<=50113;
 REPLACE INTO repository (id, title, text, date, creator, keywords, in_charge) VALUES (30003, 'AV-FREE Network scan, SIP service discovery activity from SRC_IP', '<b>Description:</b><br><br>A SIP scan has been detected on your network. This may indicate someone trying to hack or disrupt your systems.<br><br>Countermeasures:<br><br>- Apply the necessary patches to mitigate this threat or visit the software vendor Web site for a recommended solution or program update.<br>- Disable unusued services<br>- Create an access list to prevent unknown computers accessing this service and restrict remote access.<br>', '2012-01-01', '0', 'network reconnaisse, service reconnaisse', '0');
 INSERT IGNORE INTO repository_relationships (id, id_document, type, keyname) VALUES (null, 30003, 'directive', '30003');

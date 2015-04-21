@@ -80,14 +80,28 @@ define('HIGH_LIMIT', 100);
 class Tree 
 {    
     public $conn;
-    
+
+
     public $keys;
+
+
     public $page;
+
+
     public $section;
+
+
     public $filter;
+
+
     public $length_name;
+
+
     public $extra_options;
+
+
     public $external_ctxs;
+
     
     /* Constructor: creates a tree object
      * Parameters:
@@ -101,8 +115,8 @@ class Tree
      * - page: for tree pagination
      * 
      */
-    public function __construct($keys, $page = 1, $filter = '', $section = '', $length_name = 0, $extra_options = '') {
-        
+    public function __construct($keys, $page = 1, $filter = '', $section = '', $length_name = 0, $extra_options = '')
+    {
         /* Connect to db */
         $db             = new ossim_db(TRUE);
         $this->conn     = $db->connect();
@@ -114,7 +128,6 @@ class Tree
         $this->length_name   = (empty($length_name)) ? LENGTH_NAME : $length_name;
         $this->extra_options = $extra_options;
         $this->external_ctxs = Session::get_external_ctxs($this->conn);
-
     }
     
     /* Draw the tree object as defined in his key field
@@ -160,15 +173,16 @@ class Tree
      * - se_UUID: Sensors by Entity ID
      * - engineservers
      */
-    function draw() {
+    public function draw()
+    {
         $filter = $this->filter;
         echo "[";
         $flag = false;
 
         foreach ($this->keys as $key) 
         {
-            $entity_id = (preg_match("/^u?e_([^_]+)/", $key, $found)) ? $found[1] : "";
-            $sensor_id = (preg_match("/^s_([^_]+)/", $key, $found))   ? $found[1] : "";
+            $entity_id = (preg_match("/^u?e_([^_]+)/", $key, $found)) ? $found[1] : '';
+            $sensor_id = (preg_match("/^s_([^_]+)/", $key, $found))   ? $found[1] : '';
             
             // Note: entity_id could be a list of IDs
             ossim_valid($entity_id, OSS_NULLABLE, OSS_HEX, ',', 'illegal:' . _("Entity ID"));
@@ -195,7 +209,7 @@ class Tree
             elseif ($key == "contexts") { // Context
                 $this->draw_entities(FALSE, FALSE, TRUE);
             } 
-            elseif (preg_match("/^engineservers_(.*)/",$key,$found)) {
+            elseif (preg_match("/^engineservers_(.*)/",$key,$found)){
                 $server_id = $found[1];
                 ossim_valid($server_id, OSS_HEX, '\,', 'illegal:' . _("Server ID"));
                 if (ossim_error()) {
@@ -216,23 +230,23 @@ class Tree
                 $this->draw_alienvault_components();
             } 
             elseif ($key == "host") { // HOSTS
-                $this->draw_hosts("", "", "", $filter);
+                $this->draw_hosts('', '', '', $filter);
             } 
             elseif (preg_match("/^e_[^_]+_host$/", $key)) { // By Entity
-                $this->draw_hosts($entity_id, "", "", $filter);
+                $this->draw_hosts($entity_id, '', '', $filter);
             
             } 
             elseif (preg_match("/^e_[^_]+_hostup$/", $key)) { // By Entity UP (for entities_edit.php)
-                $this->draw_hosts($entity_id, "", "", $filter, "up");
+                $this->draw_hosts($entity_id, '', '', $filter, "up");
             
             } 
             elseif (preg_match("/^s_[^_]+_host$/", $key)) { // By Sensor
-                $this->draw_hosts("", $sensor_id, "", $filter);
+                $this->draw_hosts('', $sensor_id, '', $filter);
             } 
             elseif (preg_match("/^(e_.+_)?p_(.+:.*)_host(_.+)?$/", $key, $found)) // By Property
             {
                 $property_key = $found[2];
-                $cclass       = preg_replace("/^_/", "", $found[3]);
+                $cclass       = preg_replace("/^_/", '', $found[3]);
                 ossim_valid($cclass,       OSS_DIGIT, OSS_DOT, OSS_NULLABLE,      'illegal:' . _("cclass"));
                 ossim_valid($property_key, OSS_NULLABLE, OSS_ALPHA, OSS_PUNC_EXT, 'illegal:' . _("Property Key")); 
                 
@@ -241,11 +255,12 @@ class Tree
                 }
                 
                 // Search in new hostgroup form
-                if ($cclass == "" && $filter != "") {
-                		$cclass = $filter;
+                if ($cclass == '' && $filter != '')
+                {
+                    $cclass = $filter;
                 }
                 
-                $this->draw_hosts($entity_id, "", $property_key, $cclass);
+                $this->draw_hosts($entity_id, '', $property_key, $cclass);
             }
             elseif (preg_match("/(_|^)host(up)?_(.*)/", $key, $found)) // By Class
             {
@@ -257,19 +272,19 @@ class Tree
                     die(ossim_error());
                 }
                 
-                $this->draw_hosts($entity_id, $sensor_id, "", $cclass, $up);
+                $this->draw_hosts($entity_id, $sensor_id, '', $cclass, $up);
             }
             elseif ($key == "net") { // All Networks
-                $this->draw_nets("", "", $filter);
+                $this->draw_nets('', '', $filter);
             } 
             elseif (preg_match("/e_.+_net$/", $key)) { // By Entity
-                $this->draw_nets($entity_id, "", $filter);
+                $this->draw_nets($entity_id, '', $filter);
             } 
             elseif (preg_match("/e_.+_netup$/", $key)) { // By Entity UP (for entities_edit.php)
-                $this->draw_nets($entity_id, "", $filter, "up");
+                $this->draw_nets($entity_id, '', $filter, "up");
             } 
             elseif (preg_match("/^s_.+_net$/", $key)) { // By Sensor
-                $this->draw_nets("", $sensor_id, $filter);
+                $this->draw_nets('', $sensor_id, $filter);
             }
             elseif (preg_match("/^net(up)?_(\d+\.?\d*\.?\d*)$/", $key, $found) || preg_match("/^[es]_.+_net(up)?_(\d+\.?\d*\.?\d*)/", $key, $found)) // By Class
             {
@@ -368,62 +383,72 @@ class Tree
             {
                 $this->draw_databases();
             }
-            elseif ($key == "sensors") { // Sensors
+            elseif ($key == "sensors")
+            {
+                // Sensors
                 $this->draw_sensors();
             }
             elseif (preg_match("/^sensor_(.*)/",$key,$found))  // Toggle Sensor Assets
             {
                 $sensor_id = $found[1];
                 ossim_valid($sensor_id, OSS_HEX, 'illegal:' . _("Sensor ID"));
-                
-                if (ossim_error()) {
+
+                if (ossim_error())
+                {
                     die(ossim_error());
                 }
-                
-                $this->draw_assets("", $sensor_id);
+
+                $this->draw_assets('', $sensor_id);
             }
-            
-            elseif (preg_match("/^se_(.*)/",$key,$found)) {
+            elseif (preg_match("/^se_(.*)/", $key, $found))
+            {
                 $entity_id = $found[1];
                 ossim_valid($entity_id, OSS_HEX, '\,', 'illegal:' . _("Entity ID"));
-                if (ossim_error()) {
+
+                if (ossim_error())
+                {
                     die(ossim_error());
                 }
+
                 $this->draw_sensors($entity_id);
             }
-            elseif ($key == "ports") { //Ports
+            elseif ($key == "ports")
+            {
+                //Ports
                 $this->draw_portgroups();
             }
-            elseif (preg_match("/asec_pg(_[df]_)?(.*)/", $key, $found)) { //  //Asec - Plugins generated
+            elseif (preg_match("/asec_pg(_[df]_)?(.*)/", $key, $found))
+            {
+                //  //Asec - Plugins generated
                 $this->draw_asec_plugins($found[2]);
             }
-            elseif ($key == "any") { // Any
+            elseif ($key == "any")
+            {
+                // Any
                 $this->draw_any_option();
             }
-                                    
+
             $flag = TRUE;
         }
         
         echo "]";
     }
-    
 
 
-    function compare_ip($a, $b)
+    public static function compare_ip($a, $b)
     {
-        $ip_a = preg_replace("/;.*/", "", $a);
-        $ip_b = preg_replace("/;.*/", "", $b);
+        $ip_a = preg_replace("/;.*/", '', $a);
+        $ip_b = preg_replace("/;.*/", '', $b);
 
         return (ip2long($ip_a) > ip2long($ip_b));
     }
 
 
-    function get_cclass_host_where($conn, $entity_id = "", $property_key = "", $entity_direction = "down", $cclass = '')
-    {       
+    public static function get_cclass_host_where($conn, $entity_id = '', $property_key = '', $entity_direction = "down", $cclass = '')
+    {
         $_tables          = array();
         $_conds           = array();
         $entity_direction = (empty($entity_direction)) ? "down" : $entity_direction;
-
 
         if($cclass != '')
         {
@@ -435,7 +460,6 @@ class Tree
 
             $_conds[]           = " hi.ip >= UNHEX('$_cclass_a') and hi.ip <= UNHEX('$_cclass_b') ";
         }
-            
 
         if(!empty($entity_id) && Session::is_pro())
         {
@@ -582,14 +606,14 @@ class Tree
      * Return:
      * - $all_cclass_hosts['192.168.10'] = array(host_object_1, host_object_2...)
      */
-    function get_cclass_hosts($conn, $entity_id = "", $sensor_id = "", $property_key = "", $filter = "", $entity_direction = "down") {
-        
+    public static function get_cclass_hosts($conn, $entity_id = '', $sensor_id = '', $property_key = '', $filter = '', $entity_direction = "down")
+    {
         $entity_direction     = (empty($entity_direction)) ? "down" : $entity_direction;
         $aux_all_cclass_hosts = array();
         $all_cclass_hosts     = array();
         $cclass_keys          = array();
         
-        list($tables,$where)  = Tree::get_cclass_host_where($conn, $entity_id, $property_key, $entity_direction);
+        list($tables,$where)  = self::get_cclass_host_where($conn, $entity_id, $property_key, $entity_direction);
         $host_list            = Asset_host::get_list_tree($conn, $tables, array('where' => $where), TRUE, TRUE);
               
         if (count($host_list) > 0)
@@ -601,10 +625,10 @@ class Tree
                 $host_name = $host[3];
 
                 // Entity and search filter
-                if ($filter == "" || ($filter != "" && (preg_match("/$filter/i", $host_ip || preg_match("/$filter/i", $host_name)))))
+                if ($filter == '' || ($filter != '' && (preg_match("/$filter/i", $host_ip || preg_match("/$filter/i", $host_name)))))
                 {
                     // Sensor filter
-                    if ($sensor_id != "") 
+                    if ($sensor_id != '') 
                     {
                         $sensor_filtered = TRUE;
                         $sensors = Asset_host_sensors::get_sensors_by_id($conn, $host_id);
@@ -628,10 +652,10 @@ class Tree
                     * Deprecated filter: See av_tree.inc 
                     *  
                     ***********************************************/
-                    if ($property_key != "" && $property_key != "0:")
+                    if ($property_key != '' && $property_key != "0:")
                     {
                         continue;
-                    }                 
+                    }
 
                     $cclass = preg_replace("/(\d+\.)(\d+\.)(\d+)\.\d+/", "\\1\\2\\3", trim($host_ip));
 
@@ -655,13 +679,12 @@ class Tree
     }
 
 
-    function toggle_cclass($conn, $cclass, $entity_id = "", $sensor_id = "", $property_key = "", $filter = "", $entity_direction = "down")
+    public static function toggle_cclass($conn, $cclass, $entity_id = '', $sensor_id = '', $property_key = '', $filter = '', $entity_direction = "down")
     {
-
         $toggled_host        = array();
         $entity_direction    = (empty($entity_direction)) ? "down" : $entity_direction;
 
-        list($tables,$where) = Tree::get_cclass_host_where($conn, $entity_id, $property_key, $entity_direction, $cclass);
+        list($tables,$where) = self::get_cclass_host_where($conn, $entity_id, $property_key, $entity_direction, $cclass);
         $host_list           = Asset_host::get_list_tree($conn, $tables, array('where' => $where), TRUE, TRUE);
         
         if (count($host_list) > 0)
@@ -673,10 +696,10 @@ class Tree
                 $host_name = $host[3];
 
                 // Entity and search filter
-                if ($filter == "" || ($filter != "" && (preg_match("/$filter/i", $host_ip) || preg_match("/$filter/i", $host_name))))
+                if ($filter == '' || ($filter != '' && (preg_match("/$filter/i", $host_ip) || preg_match("/$filter/i", $host_name))))
                 {
                     // Sensor filter
-                    if ($sensor_id != "") 
+                    if ($sensor_id != '') 
                     {
                         $sensor_filtered = TRUE;
                         $sensors         = Asset_host_sensors::get_sensors_by_id($conn, $host_id);
@@ -701,10 +724,10 @@ class Tree
                     * Deprecated filter: See av_tree.inc 
                     *  
                     ***********************************************/
-                    if ($property_key != "" && $property_key != "0:")
+                    if ($property_key != '' && $property_key != "0:")
                     {
                         continue;
-                    }                               
+                    }
 
                     $h_key                = $host_ip . ";" . $host_id;
                     $toggled_host[$h_key] = $host;               
@@ -712,13 +735,11 @@ class Tree
             }
             
             uksort($toggled_host, "Tree::compare_ip");
-           
         }
 
         return $toggled_host;
     }
 
-        
 
     /** 
     * Draw a host tree list (usually toggled from a cclass host)
@@ -729,33 +750,34 @@ class Tree
     *       - entity_direction: get the hosts up or down from the entities tree
     * @return void
     */
-    function draw_hosts($entity_id = "", $sensor_id = "", $property_key = "", $filter = "", $entity_direction = "") {
-
+    public function draw_hosts($entity_id = '', $sensor_id = '', $property_key = '', $filter = '', $entity_direction = '')
+    {
         $conn = $this->conn;
         $page = $this->page;
-        $prefilter = "";
+        $prefilter = '';
         
         // Check CCLASS filter
-        $cclass_filter = (preg_match("/^\d+\.\d+\.\d+$/", $filter)) ? $filter : "";
-        
-        
-        if ($property_key != ""){
+        $cclass_filter = (preg_match("/^\d+\.\d+\.\d+$/", $filter)) ? $filter : '';
+
+        if ($property_key != '')
+        {
             $prefilter = 'p_'.$property_key.'_';
         }
         
-        if ($sensor_id != ""){
+        if ($sensor_id != '')
+        {
             $prefilter = 's_'.$sensor_id.'_';
         }
         
-        if ($entity_id != "" && Session::is_pro()) 
+        if ($entity_id != '' && Session::is_pro()) 
         {
             // Get all entities for specify a children host
-            list($entities,$children,$num_rows) = Acl::get_entities($conn, "", "", TRUE, FALSE);
+            list($entities,$children,$num_rows) = Acl::get_entities($conn, '', '', TRUE, FALSE);
             $prefilter = 'e_'.$entity_id.'_';
         }
         
-                            
-        $html     = "";
+
+        $html     = '';
         $j        = 0;
         $i        = 0;
         $h        = '680';
@@ -764,9 +786,9 @@ class Tree
         $nextpage = $page + 1;
                         
         
-        if ($filter == "") // Show hosts grouped by CCLASS
+        if ($filter == '') // Show hosts grouped by CCLASS
         {
-            $all_cclass_hosts = Tree::get_cclass_hosts($conn, $entity_id, $sensor_id, $property_key, $filter, $entity_direction);
+            $all_cclass_hosts = self::get_cclass_hosts($conn, $entity_id, $sensor_id, $property_key, $filter, $entity_direction);
 
             foreach($all_cclass_hosts as $cclass => $hg) 
             {
@@ -774,7 +796,7 @@ class Tree
                 {
                     $title   = $cclass." <span style='font-weight:normal;font-size:80%'>(".count($hg)." "._("hosts").")</span>";
                     $li = '"key" :"'.$prefilter.'host'.$entity_direction.'_'.$cclass.'", "isLazy" : true, "isFolder" : true, "icon" :"../../pixmaps/theme/host_add.png", "title" : "'.$title.'"'."\n";
-                    $buffer .= (($j > $from) ? "," : "") . "{ $li }\n";
+                    $buffer .= (($j > $from) ? "," : '') . "{ $li }\n";
                 }
                 $j++;
             }
@@ -789,22 +811,22 @@ class Tree
         } 
         else  // Toggle a host CCLASS
         {
-            $all_toggled_hosts = Tree::toggle_cclass($conn, $cclass_filter, $entity_id, $sensor_id, $property_key, $filter, $entity_direction);
+            $all_toggled_hosts = self::toggle_cclass($conn, $cclass_filter, $entity_id, $sensor_id, $property_key, $filter, $entity_direction);
                     
             foreach($all_toggled_hosts as $ip_id => $host) 
             {
                 if ($i>=$from && $i<$to) 
                 {
                     $host_name = $host[3];
-                    $ip        = preg_replace("/;.*/", "", $ip_id);
-                    $id        = preg_replace("/.*;/", "", $ip_id);
-                    $ctx_name  = (Session::is_pro()) ? Acl::get_entity_name($conn, $host[1], TRUE) : "";
+                    $ip        = preg_replace("/;.*/", '', $ip_id);
+                    $id        = preg_replace("/.*;/", '', $ip_id);
+                    $ctx_name  = (Session::is_pro()) ? Acl::get_entity_name($conn, $host[1], TRUE) : '';
                            
                     $aux_hname = (strlen($host_name) > $this->length_name) ? substr($host_name, 0, $this->length_name)."..." : $host_name;
                                                                                     
                     $title     = ($host_name == '') ? $ip : "$ip <span style='font-size:80%'>(".Util::utf8_encode2($aux_hname).")</span>";
                     
-                    if ($entity_id != "" && $host[1] != $entity_id) 
+                    if ($entity_id != '' && $host[1] != $entity_id) 
                     {
                         $title .= " <span style='font-size:80%;font-weight:bold'>[".$entities[$host[1]]['name']."]</span>";
                     }
@@ -812,7 +834,7 @@ class Tree
                     $tooltip    = ($host_name == '') ? $ip : $ip." (".Util::utf8_encode2($host_name).")";
                     
                     $_url       = "/ossim/asset_details/index.php?id=$id";
-                    $url_link   = Menu::get_menu_url($_url,"environment", "assets", "hosts");
+                    $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");
                     
                                                     
                     $html      .= '{ "key" : "host_'.$id.'", "val" : "'.$host_name.' ('.$ip.')", "h" : "'.$h.'", "ctx" : "'.$host[1].'", "ctx_name" : "'.$ctx_name.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" },'."\n";
@@ -821,27 +843,28 @@ class Tree
             }
 
             
-            if ($i>$to) {
+            if ($i>$to)
+            {
                 $html .= '{ "key" : "'.$prefilter.'host'.$entity_direction.'_'.$filter.'", "page" :"'.$nextpage.'", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_group.png", "title" : "'._("Next").' '.MAX_RESULTS.' '._("hosts").'"} ';
             }
             
-            if ($html != ""){ 
-                $buffer .= preg_replace("/,$/", "", $html);
+            if ($html != '')
+            { 
+                $buffer .= preg_replace("/,$/", '', $html);
             }
-            
         }
 
         
-        if ($buffer == "" || $buffer == "[]"){
+        if ($buffer == '' || $buffer == "[]")
+        {
             $buffer = '{"title" : "'._("No Hosts Found").'", "noLink" : true, "key" : ""}';
         }
-        
-        
+
         echo $buffer;
     }
 
 
-    function compare_c_cidr($a, $b)
+    public static function compare_c_cidr($a, $b)
     {
         $ip_a = $a . '.0';
         $ip_b = $b . '.0';
@@ -849,7 +872,8 @@ class Tree
         return (ip2long($ip_a) > ip2long($ip_b));
     }
 
-    function compare_b_cidr($a, $b)
+    
+    public static function compare_b_cidr($a, $b)
     {
         $ip_a = $a . '.0.0';
         $ip_b = $b . '.0.0';
@@ -857,13 +881,15 @@ class Tree
         return (ip2long($ip_a) > ip2long($ip_b));
     }
 
-    function compare_a_cidr($a, $b)
+    
+    public static function compare_a_cidr($a, $b)
     {
         $ip_a = $a . '.0.0.0';
         $ip_b = $b . '.0.0.0';
 
         return (ip2long($ip_a) > ip2long($ip_b));
     }
+
 
     /* Get a list with cclass networks
      * Parameters:
@@ -875,9 +901,8 @@ class Tree
      * Return:
      * - $all_cclass_nets['192.168.10._/_'] = array(net_object_1, net_object_2...)
      */
-    function get_xclass_nets($conn, $entity_id = "", $sensor_id = "", $filter = "", $entity_direction = "down") 
+    public static function get_xclass_nets($conn, $entity_id = '', $sensor_id = '', $filter = '', $entity_direction = "down") 
     {
-        
         $all_cclass_nets = array();
         $cclasses        = array();
         $bclasses        = array();
@@ -886,7 +911,7 @@ class Tree
         $where           = '';
         $_conds          = array();
 
-        if ($entity_direction == "")
+        if ($entity_direction == '')
         {
             $entity_direction = "down";
         }
@@ -902,7 +927,7 @@ class Tree
             $filter_name  = quotemeta($filter);
             $filter_class = $filter_name;
         }
-        
+
         if (!empty($entity_id)  && Session::is_pro())
         {
             if (preg_match("/\,/", $entity_id)) 
@@ -944,7 +969,6 @@ class Tree
                         {
                              $cond_array[] = ' (' . implode(' OR ', $cond_aux). ')';
                         }
-                       
                     }
                 }   
 
@@ -981,7 +1005,7 @@ class Tree
 
                         $cond_aux[] = "net.ctx=UNHEX('$c')";
                     }
-                    
+
                     $_conds[] = ' (' . implode(' OR ', $cond_aux). ')';
                 }
                 
@@ -995,14 +1019,14 @@ class Tree
         
         foreach ($net_list as $net) 
         {
-            $net_id   = $net[0];           
+            $net_id   = $net[0];
             $cidrs    = $net[2];
             $net_name = $net[3];
-            
+
             $acidrs   = explode(",", $cidrs);
 
             // Entity and search filter
-            if ($filter != "") 
+            if ($filter != '') 
             {
                 $_flag  = TRUE;
                 foreach($acidrs as $_cidr)
@@ -1020,7 +1044,7 @@ class Tree
             } 
                 
             // Sensor filter
-            if ($sensor_id != "") 
+            if ($sensor_id != '') 
             {
                 $sensor_filtered = TRUE;
                 $sensors = Asset_net_sensors::get_sensors_by_id($conn, $net_id);
@@ -1041,7 +1065,7 @@ class Tree
             {
                 $data = explode(".", $cidr);
                 
-                if ($filter != "") 
+                if ($filter != '') 
                 {
                     if (!$already[$net_id] && (preg_match("/$filter_class/i", $cidr) || preg_match("/$filter_name/i", $net_name))) 
                     {
@@ -1052,7 +1076,6 @@ class Tree
                         $cclasses[$data[0].".".$data[1].".".$data[2]]++;
                         $bclasses[$data[0].".".$data[1]]++;
                         $aclasses[$data[0]]++;
-                        
                     }
                 } 
                 else 
@@ -1084,49 +1107,52 @@ class Tree
      * - entity_direction: get the nets up or down from the entities tree
      * Return: void
      */
-    function draw_nets($entity_id = "", $sensor_id = "", $filter = "", $entity_direction = "") {
-        
+    public function draw_nets($entity_id = '', $sensor_id = '', $filter = '', $entity_direction = '')
+    {
         $conn = $this->conn;
         
-        $prefilter = "";        
+        $prefilter = '';        
        
-        if ($entity_id != "") 
+        if ($entity_id != '') 
         {
             $prefilter = 'e_'.$entity_id.'_';
         }
-        if ($sensor_id != "") 
+        if ($sensor_id != '') 
         {
             $prefilter = 's_'.$sensor_id.'_';
         }
         
         
-        list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = Tree::get_xclass_nets($conn, $entity_id, $sensor_id, $filter, $entity_direction);
+        list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = self::get_xclass_nets($conn, $entity_id, $sensor_id, $filter, $entity_direction);
         
-        if (count($all_cclass_nets) > 0) {
-        
+        if (count($all_cclass_nets) > 0)
+        {
             // Already toggled: draw by filter ACLASS, BCLASS, CCLASS
-            if ($filter != "") {
+            if ($filter != '') {
                 // aclass: toggle in bclass
-                if (preg_match("/^\d+$/", $filter)) {
+                if (preg_match("/^\d+$/", $filter))
+                {
                     foreach($bclasses as $bclass => $v)
                         $buffer .= '{ "key" :"'.$prefilter.'net'.$entity_direction.'_'.$bclass.'", "isFolder" : true, "isLazy" : true, "icon" :"../../pixmaps/theme/net.png", "title" : "'.$bclass.'.---.---./--"},';
-                    $buffer = preg_replace("/,$/", "", $buffer);
+                    $buffer = preg_replace("/,$/", '', $buffer);
                 }
                 // bclass: toggle in cclass
-                elseif (preg_match("/^\d+\.\d+$/", $filter)) {
+                elseif (preg_match("/^\d+\.\d+$/", $filter))
+                {
                     foreach($cclasses as $cclass => $v)
                         $buffer .= '{ "key" :"'.$prefilter.'net'.$entity_direction.'_'.$cclass.'", "isFolder" : true, "isLazy" : true, "icon" :"../../pixmaps/theme/net.png", "title" : "'.$cclass.'.---/--"},';
-                    $buffer = preg_replace("/,$/", "", $buffer);
+                    $buffer = preg_replace("/,$/", '', $buffer);
                 }
                 // cclass: toggle in entire networks
-                else {
+                else
+                {
                     foreach($all_cclass_nets[$filter] as $net) 
                     {
                         $net_id   = $net[0];
                         $net_ctx  = $net[1];
                         $net_ips  = $net[2];
                         $net_name = $net[3];
-                        $ctx_name = (Session::is_pro()) ? Acl::get_entity_name($conn, $net_ctx, TRUE) : "";
+                        $ctx_name = (Session::is_pro()) ? Acl::get_entity_name($conn, $net_ctx, TRUE) : '';
                         
                         
                         $net_title = Util::utf8_encode2($net_name);
@@ -1138,7 +1164,7 @@ class Tree
                         $title     = (strlen($net_name) > $this->length_name) ? substr($net_name, 0, $this->length_name)."..." : $net_name;   
                         $title     = Util::utf8_encode2($title)." ".$ips;
                        
-                        if ($entity_id != "" && $net_ctx != $entity_id) {
+                        if ($entity_id != '' && $net_ctx != $entity_id) {
                             $title .= " <span style='font-size:80%;font-weight:bold'>[".$ctx_name."]</span>";
                         }
                                 
@@ -1147,7 +1173,7 @@ class Tree
                         if($urltype == 0)
                         {
                             $_url = "/ossim/asset_details/index.php?id=$net_id";
-                            $url  = Menu::get_menu_url($_url,"environment", "assets", "networks");
+                            $url  = Menu::get_menu_url($_url,"environment", "assets_groups", "networks");
                         }
                         else if ($urltype == 1)
                         {
@@ -1159,35 +1185,45 @@ class Tree
                         }
                                 
                         // Do not toggle if we are in entities
-                        if ($entity_id != "") {
+                        if ($entity_id != '')
+                        {
                             $buffer .= '{ "key" : "'.$net_key.'", "val" : "'.$net_name.' ('.$net_ips.')", "h" :"'.$h.'", "ctx" : "'.$net_ctx.'", "ctx_name" : "'.$ctx_name.'", "url" : "'.$url.'", "icon" : "../../pixmaps/theme/net.png", "title" : "'.$title.'", "tooltip" : "'.$tooltip.'" },';
-                        } else {
+                        }
+                        else
+                        {
                             $buffer .= '{ "key" : "'.$net_key.'", "val" : "'.$net_name.' ('.$net_ips.')", "isLazy" : true, "h" :"'.$h.'", "ctx" : "'.$net_ctx.'", "ctx_name" : "'.$ctx_name.'", "url" : "'.$url.'", "icon" : "../../pixmaps/theme/net.png", "title" : "'.$title.'", "tooltip" : "'.$tooltip.'" },';
                         }
                     }
     
-                    $buffer = preg_replace("/,$/", "", $buffer);
+                    $buffer = preg_replace("/,$/", '', $buffer);
                 }
 
             // Filter is empty, draw CLASS by the best usability about number of networks
-            } else {
-                if (count($bclasses) <= LOW_LIMIT) {
+            } 
+            else
+            {
+                if (count($bclasses) <= LOW_LIMIT)
+                {
                     foreach($cclasses as $cclass => $v) {
                         $buffer .= '{ "key" : "'.$prefilter.'net'.$entity_direction.'_'.$cclass.'", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/net.png", "title" : "'.$cclass.'.---/--"},';
                     }
                 }
-                else if (count($bclasses) > LOW_LIMIT && count($bclasses) <= HIGH_LIMIT) {
+                else if (count($bclasses) > LOW_LIMIT && count($bclasses) <= HIGH_LIMIT)
+                {
                     foreach($bclasses as $bclass => $v)
                         $buffer .= '{ "key" :"'.$prefilter.'net'.$entity_direction.'_'.$bclass.'", "isFolder" : true, "isLazy" : true, "icon" :"../../pixmaps/theme/net.png", "title" : "'.$bclass.'.---.---./--"},';
-                } else {
+                } 
+                else
+                {
                     foreach ($aclasses as $aclass => $v)
                         $buffer .= '{ "key" :"'.$prefilter.'net'.$entity_direction.'_'.$aclass.'", "isFolder" : true, "isLazy" : true, "icon" :"../../pixmaps/theme/net.png", "title" : "'.$aclass.'.---.---.---/--"},';
                 }
-                $buffer = preg_replace("/,$/", "", $buffer);
+
+                $buffer = preg_replace("/,$/", '', $buffer);
             }
         }
         
-        if ($buffer == "" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Networks found").'", "noLink" : true, "key" : "" }';
 
         echo $buffer;
@@ -1197,8 +1233,8 @@ class Tree
      * Parameters:
      * - net_id: Network ID
      */
-    function toggle_net($net_id) {
-        
+    public function toggle_net($net_id)
+    {
         $conn = $this->conn;
         $page = $this->page;
         
@@ -1218,7 +1254,7 @@ class Tree
                 $ip         = $host[2];
                 $host_name  = $host[3];
                 
-                $hname      = ($host_name == $ip) ? "" : $host_name;
+                $hname      = ($host_name == $ip) ? '' : $host_name;
                            
                 $aux_hname  = (strlen($hname) > $this->length_name) ? substr($hname, 0, $this->length_name)."..." : $hname;
                                     
@@ -1228,15 +1264,15 @@ class Tree
                 $h          = '580';   
                 
                 $_url       = "/ossim/asset_details/index.php?id=$id";
-                $url_link   = Menu::get_menu_url($_url,"environment", "assets", "hosts");      
+                $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");      
                 
                 $html      .= '{ "key" : "host_'.$id.'", "val" : "'.$host_name.' ('.$ip.')", "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" },'."\n";
             }
             $k++;
         }
         
-        if ($html != "") 
-            $buffer .= preg_replace("/,$/", "", $html);
+        if ($html != '') 
+            $buffer .= preg_replace("/,$/", '', $html);
         
         if ($k>$to) 
         {
@@ -1244,7 +1280,7 @@ class Tree
             $buffer .= ",{ $li }\n";
         }
     
-        if ($buffer == "" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Hosts Found").'", "noLink" : true}';
         
         echo $buffer;
@@ -1254,16 +1290,16 @@ class Tree
      * Parameters:
      * - entity_id: ctx filter, will return all entity assets
      */
-    function draw_hostgroups($entity_id = "") {
-        
+    public function draw_hostgroups($entity_id = '')
+    {
         $conn = $this->conn;
         $page = $this->page;
-        $prefilter = "";
+        $prefilter = '';
         
         $to         = $page * MAX_RESULTS;
         $from       = $to - MAX_RESULTS;
         $nextpage   = $page + 1;
-        if ($entity_id != "") {
+        if ($entity_id != '') {
             $prefilter = 'e_'.$entity_id.'_';
         }
         
@@ -1283,7 +1319,7 @@ class Tree
                     }
                     else
                     {
-                        $cond_array[] = ($_entity != "") ? " h.ctx=UNHEX('$_entity') " : "";
+                        $cond_array[] = ($_entity != '') ? " h.ctx=UNHEX('$_entity') " : '';
                     }
                 }   
 
@@ -1300,7 +1336,7 @@ class Tree
                 }
                 else
                 {
-                    $condition = ($entity_id != "") ? "h.ctx=UNHEX('$entity_id')" : "";
+                    $condition = ($entity_id != '') ? "h.ctx=UNHEX('$entity_id')" : '';
                 }
 
                 $_log_key  = ';' . $entity_id;
@@ -1308,11 +1344,13 @@ class Tree
             }
         }
         
+        $tables = '';
         if ($condition != '')
         {
-            $condition .= " AND h.id=hr.host_id AND g.id=hr.host_group_id";
+            $condition .= ' AND h.id=hr.host_id AND g.id=hr.host_group_id';
+            $tables     = ', host h, host_group_reference hr';
         }
-        list($hg_list, $hg_total) = Asset_group::get_list($conn, ', host h, host_group_reference hr', array('order_by' => 'name', 'where' => $condition), TRUE);
+        list($hg_list, $hg_total) = Asset_group::get_list($conn, $tables, array('order_by' => 'name', 'where' => $condition), TRUE);
         
         if ($hg_total>0) 
         {
@@ -1333,12 +1371,12 @@ class Tree
                     
                     $h        = '585';
                     
-                    $_url     = "/ossim/group/group_form.php?id=". $hg_id;
-                    $url_link = Menu::get_menu_url($_url,"environment", "assets", "host_groups");
+                    $_url     = "/ossim/asset_details/index.php?id=". $hg_id;
+                    $url_link = Menu::get_menu_url($_url,"environment", "assets_groups", "host_groups");
                 
-                    $li       = '"key" : "'.$hg_key.'", "val" : "'.$hg_name.'", "isLazy" : true, "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host_group.png", "title" : "'.$title.'", "tooltip" : "'.$tooltip.'"'."\n";
+                    $li       = '"key" : "'.$hg_key.'", "val" : "'.Util::js_entities($hg_name).'", "isLazy" : true, "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host_group.png", "title" : "'.$title.'", "tooltip" : "'.$tooltip.'"'."\n";
     
-                    $buffer .= (($j > $from) ? "," : "") . "{ $li }\n";
+                    $buffer .= (($j > $from) ? "," : '') . "{ $li }\n";
                 }
                 $j++;
             }
@@ -1350,18 +1388,19 @@ class Tree
             }
         }
         
-        if ($buffer =="" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Host groups found").'", "noLink" : true, "key" : ""}';
             
         echo $buffer;
     }
-    
+
+
     /* Draw a tree with hosts belongs to a group
      * Parameters:
      * - hostgroup_id: Host Group ID
      */
-    function toggle_hostgroup($hostgroup_id, $entity_id='') {
-        
+    public function toggle_hostgroup($hostgroup_id, $entity_id='')
+    {
         $conn = $this->conn;
         $page = $this->page;
         
@@ -1396,7 +1435,7 @@ class Tree
         if ($hg_total > 0) 
         {
             $k         = 0;
-            $html      = "";
+            $html      = '';
             $h         = '585';            
             
             foreach($hg_hosts as $id => $host) 
@@ -1406,23 +1445,23 @@ class Tree
                     $ip         = $host['ips'];
                     $host_name  = $host['name'];
                     
-                    $hname      = ($host_name != '') ? $host_name : "";
+                    $hname      = ($host_name != '') ? $host_name : '';
                                
                     $aux_hname  = (strlen($hname) > $this->length_name) ? substr($hname, 0, $this->length_name)."..." : $hname;
                                     
-                    $title      = ($host_name == "") ? $ip : "$ip <span style='font-size:80%'>(".Util::utf8_encode2($aux_hname).")</span>";
-                    $tooltip    = ($host_name == "") ? $ip : $ip." (".Util::utf8_encode2($hname).")";
+                    $title      = ($host_name == '') ? $ip : "$ip <span style='font-size:80%'>(".Util::utf8_encode2($aux_hname).")</span>";
+                    $tooltip    = ($host_name == '') ? $ip : $ip." (".Util::utf8_encode2($hname).")";
                     
                     $_url       = "/ossim/asset_details/index.php?id=$id";
-                    $url_link   = Menu::get_menu_url($_url,"environment", "assets", "hosts");
+                    $url_link   = Menu::get_menu_url($_url,"environment", "assets", "assets");
                                 
                     $html   .= '{ "key" : "host_'.$id.'", "val" : "'.$host_name.' ('.$ip.')", "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" },'."\n";
                 }
                 $k++;
             }
             
-            if ($html != "") 
-                $buffer .= preg_replace("/,$/", "", $html);
+            if ($html != '') 
+                $buffer .= preg_replace("/,$/", '', $html);
             
             if ($k>$to) 
             {
@@ -1431,26 +1470,29 @@ class Tree
             }
         }
        
-        if ($buffer == "" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Hosts Found").'", "noLink" : true}';
             
         echo $buffer;
     }
-    
+
+
     /* Draw a tree with network groups
      * Parameters:
      * - entity_id: ctx filter, will return all entity assets
      */
-    function draw_netgroups($entity_id = "") {
-        
+    public function draw_netgroups($entity_id = '')
+    {
         $conn = $this->conn;
         $page = $this->page;
         
         $to         = $page * MAX_RESULTS;
         $from       = $to - MAX_RESULTS;
         $nextpage   = $page + 1;
-        $prefilter  = "";
-        if ($entity_id != "") {
+        $prefilter  = '';
+
+        if ($entity_id != '')
+        {
             $prefilter = "e_".$entity_id."_";
         }
         
@@ -1470,7 +1512,7 @@ class Tree
                     }
                     else
                     {
-                        $cond_array[] = ($_entity != "") ? " n.ctx=UNHEX('$_entity') " : "";
+                        $cond_array[] = ($_entity != '') ? " n.ctx=UNHEX('$_entity') " : '';
                     }
                 }   
                 
@@ -1489,7 +1531,7 @@ class Tree
                 }
                 else
                 {
-                    $condition = ($entity_id != "") ? "n.ctx=UNHEX('$entity_id')" : "";
+                    $condition = ($entity_id != '') ? "n.ctx=UNHEX('$entity_id')" : '';
                 }
 
                 $_log_key  = ';' . $entity_id;
@@ -1516,10 +1558,10 @@ class Tree
                     $tooltip  = $ng_title;
                     
                     $_url     = "/ossim/netgroup/netgroup_form.php?id=". $net_group->get_id();
-                    $url_link = Menu::get_menu_url($_url,"environment", "assets", "network_groups");
+                    $url_link = Menu::get_menu_url($_url,"environment", "assets_groups", "network_groups");
                                     
                     $li      = '"key" : "'.$ng_key.'", "val" : "'.$ng_name.'", "isLazy" : true, "h" : "'.$h.'", "url" : "'. $url_link .'", "icon" : "../../pixmaps/theme/host.png", "title" : "'. $title.'", "tooltip" : "'.$tooltip.'" '."\n";
-                    $buffer .= (($j > $from) ? "," : "") . "{ $li }\n";
+                    $buffer .= (($j > $from) ? "," : '') . "{ $li }\n";
                 }
                 $j++;
             }
@@ -1532,18 +1574,19 @@ class Tree
             
         }
         
-        if ($buffer == "" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Network Groups Found").'", "noLink" : true, "key" : ""}';
         
         echo $buffer;
     }
-    
+
+
     /* Draw a tree with networks belongs to a group
      * Parameters:
      * - netgroup_id: Network Group ID
      */
-    function toggle_netgroup($netgroup_id, $entity_id='') {
-        
+    public function toggle_netgroup($netgroup_id, $entity_id='')
+    {
         $conn = $this->conn;
         $page = $this->page;
         
@@ -1597,7 +1640,7 @@ class Tree
             $tooltip   = $net_title." (".$ips_data.")";
             
             $_url       = "/ossim/asset_details/index.php?id=$net_id";
-            $url_link   = Menu::get_menu_url($_url,"environment", "assets", "networks");
+            $url_link   = Menu::get_menu_url($_url,"environment", "assets_groups", "networks");
 
             if ($j>=$from && $j<$to) 
             {
@@ -1619,19 +1662,20 @@ class Tree
             $buffer .= ",{ $li }\n";
         }
         
-        if ($buffer == "" || $buffer == "[]")
+        if ($buffer == '' || $buffer == "[]")
             $buffer = '{"title" : "'._("No Networks Found").'", "noLink" : true}';
         
         echo $buffer;
     }
-    
+
+
     /* Draw an entity tree element with its assets
      * Parameters:
      * - entity_id
      * - sensor_id
      */
-    function draw_assets_complete($entity_id = "", $sensor_id = "") {
-        
+    public function draw_assets_complete($entity_id = '', $sensor_id = '')
+    {
         $conn = $this->conn;
         
         // Entity list
@@ -1639,29 +1683,31 @@ class Tree
             $condition = "ctx IN (UNHEX('".str_replace(",", "'),UNHEX('", $entity_id)."'))";
         // Unique entity ID
         } else {
-            $condition = ($entity_id != "") ? "ctx=UNHEX('$entity_id')" : "";
+            $condition = ($entity_id != '') ? "ctx=UNHEX('$entity_id')" : '';
         }
         
-        $all_cclass_hosts                = Tree::get_cclass_hosts($conn, $entity_id);
+        $all_cclass_hosts                = self::get_cclass_hosts($conn, $entity_id);
         list($all_hostgroups, $hg_total) = Asset_group::get_list($conn, '', array("order_by" => "name", "where" => $condition), TRUE);
-        list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = Tree::get_xclass_nets($conn, $entity_id);
+        list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = self::get_xclass_nets($conn, $entity_id);
         $all_netgroups                   = Net_group::get_list($conn, $condition, "ORDER BY name", TRUE);
         $_node_name                      = _("All Assets");
         
-        if ($entity_id != "")
+        if ($entity_id != '')
         {
             $uoe        = "e_".$entity_id."_";
             $_e_name    = Util::utf8_encode2(Session::get_entity_name($conn, $entity_id));
             $_node_name = ($_e_name != _('Unknown entity')) ? _("Assets from") . ' ' . $_e_name : _("Assets");
         } 
-        elseif ($sensor_id != "") {
+        elseif ($sensor_id != '')
+        {
             $uoe = "s_".$sensor_id."_";
         } 
-        else {
-            $uoe = "";
+        else
+        {
+            $uoe = '';
         }
         
-        $buffer = "";
+        $buffer = '';
         
         if (count($all_cclass_hosts) > 0 || count($all_hostgroups) > 0 || count($all_cclass_nets) > 0 || count($all_netgroups) > 0) {
             
@@ -1670,13 +1716,13 @@ class Tree
             if (count($all_cclass_hosts) > 0) {
                 $aux_children[] = '{ "key" : "'.$uoe.'host", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host.png", "title" : "'._("Assets").'"}';
             }
-            if (count($all_hostgroups) > 0 && $sensor_id == "") {
+            if (count($all_hostgroups) > 0 && $sensor_id == '') {
                 $aux_children[] = '{ "key" : "'.$uoe.'hostgroup", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_group.png", "title" :"'._("Asset Groups").'"}';
             }
             if (count($all_cclass_nets) > 0) {
                 $aux_children[] = '{ "key" : "'.$uoe.'net", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/net.png", "title" : "'._("Networks").'"}';
             }
-            if (count($all_netgroups) > 0 && $sensor_id == "") {
+            if (count($all_netgroups) > 0 && $sensor_id == '') {
                 $aux_children[] = '{ "key" : "'.$uoe.'netgroup", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/net_group.png", "title" : "'._("Network Groups").'"}';
             }
             
@@ -1690,24 +1736,27 @@ class Tree
         echo $buffer;
     }
 
-    function draw_assets($entity_id = "", $sensor_id = "") {
-        
+
+    public function draw_assets($entity_id = '', $sensor_id = '')
+    {
         $conn       = $this->conn;
         
         $_node_name = _("All Assets");
 
-        if ($entity_id != "")
+        if ($entity_id != '')
         {
             $uoe        = "e_".$entity_id."_";
             $_e_name    = Util::utf8_encode2(Session::get_entity_name($conn, $entity_id));
             $_node_name = ($_e_name != _('Unknown entity')) ? _("Assets from") . ' ' . $_e_name : _("Assets");
 
         } 
-        elseif ($sensor_id != "") {
+        elseif ($sensor_id != '')
+        {
             $uoe = "s_".$sensor_id."_";
         } 
-        else {
-            $uoe = "";
+        else
+        {
+            $uoe = '';
         }
         
         $buffer = '{"title" : "'. $_node_name .'", "key" : "key1", "icon" : "../../pixmaps/theme/any.png", "noLink" : true, "expand" : true, "children" : ['."\n";
@@ -1720,20 +1769,20 @@ class Tree
 
         echo $buffer;
     }
-        
+
+
     /* Draw an entity tree element with its assets UP the tree
      * Parameters:
      * - entity_id
      */
-    function draw_assets_up($entity_id = "") 
-    {        
-                
-        //$all_cclass_hosts = Tree::get_cclass_hosts($conn, $entity_id, "", "", "", "up");
-        //list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = Tree::get_xclass_nets($conn, $entity_id, "", "", "up");
+    public function draw_assets_up($entity_id = '') 
+    {
+        //$all_cclass_hosts = self::get_cclass_hosts($conn, $entity_id, '', '', '', "up");
+        //list($all_cclass_nets, $cclasses, $bclasses, $aclasses) = self::get_xclass_nets($conn, $entity_id, '', '', "up");
         
-        $prefilter = ($entity_id != "") ? "e_".$entity_id."_" : "";        
+        $prefilter = ($entity_id != '') ? "e_".$entity_id."_" : '';        
                
-        $buffer = "";        
+        $buffer = '';        
         
         $buffer .= '{"title" : "'._("All Assets").'", "key" : "key1", "icon" : "../../pixmaps/theme/any.png", "expand" : true, "children" : ['."\n";
         $buffer .= '{ "key" : "'.$prefilter.'hostup", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host.png", "title" : "'._("Assets").'"}';
@@ -1743,89 +1792,96 @@ class Tree
 
         echo $buffer;
     }
-    
-    /* Draw a tree with sensors
-     */
-    function draw_sensors($entity_id = "") {
-        
+
+
+    /* Draw a tree with sensors */
+    public function draw_sensors($entity_id = '')
+    {
         $conn = $this->conn;
-        
-        $condition = "";
+
+        $q_where = '';
 
         // Entity list
         if (preg_match("/\,/", $entity_id))
         {
-            $condition = "acl_sensors.entity_id IN (UNHEX('".str_replace(",", "'),UNHEX('", $entity_id)."'))";
+            $q_where = "sensor.id = acl_sensors.sensor_id AND acl_sensors.entity_id IN (UNHEX('".str_replace(",", "'), UNHEX('", $entity_id)."'))";
         // Unique entity ID
         }
         else
         {
-            $condition = ($entity_id != "") ? "acl_sensors.entity_id =UNHEX('$entity_id')" : "";
+            $q_where = ($entity_id != '') ? "sensor.id = acl_sensors.sensor_id AND acl_sensors.entity_id = UNHEX('$entity_id')" : '';
         }
+
 
         $j = 0;
         $h = '550';
-    
-        list($sensors,$s_total) = Av_sensor::get_list($conn, array('where' => $condition, 'order_by' => 'name'), TRUE);
-        
+
+        $q_filters = array(
+            'where'    => $q_where,
+            'order_by' => 'name'
+        );
+
+        list($sensors, $s_total) = Av_sensor::get_list($conn, $q_filters, TRUE);
+
         if ($s_total == 0)
         {
             $buffer = '{"title" : "'._("No Sensors Found").'", "noLink" : true, "key" : ""}';
         }
         else
         {
-            $buffer = '{"title": "'._("Sensor list").'", "key":"key1", "icon":"../../pixmaps/theme/ports.png", "expand":true'."\n";
+            $buffer  = '{"title": "'._("Sensor list").'", "key":"key1", "icon":"../../pixmaps/theme/ports.png", "expand":true'."\n";
             $buffer .= ', "children":[';
+
             $already = array(); // Repeats when several entities selected
+
             foreach ($sensors as $sensor_id => $sensor)
             {
                 $icon = "../../pixmaps/server.png";
-                    
-                $sensor_name    = $sensor['name'];
-                $sensor_ip      = $sensor['ip'];
-                
-                $_url           = "/ossim/sensor/newsensorform.php?id=$sensor_id";
-                $sensor_url     = Menu::get_menu_url($_url, "configuration", "deployment", "components");
-                
+
+                $sensor_name = $sensor['name'];
+                $sensor_ip   = $sensor['ip'];
+
+                $_url        = "/ossim/sensor/newsensorform.php?id=$sensor_id";
+                $sensor_url  = Menu::get_menu_url($_url, "configuration", "deployment", "components");
+
                 if ($already[$sensor_id])
                 {
                     continue;
                 }
-                
+
                 $s_title  = Util::utf8_encode2($sensor_name);
-                    
-                $title    = (strlen($sensor_name) > $this->length_name) ? substr($sensor_name, 0, $this->length_name)."..." : $sensor_name;   
-                $title    = Util::utf8_encode2($title);     
-                
-                $tooltip  = $s_title;           
-    
+
+                $title    = (strlen($sensor_name) > $this->length_name) ? substr($sensor_name, 0, $this->length_name)."..." : $sensor_name;
+                $title    = Util::utf8_encode2($title);
+
+                $tooltip  = $s_title;
+
                 $li = '"title" : "'.$title.'", "tooltip" : "'.$tooltip.'", "icon" : "'.$icon.'", "h" : "'.$h.'", "key" : "sensor_'.$sensor_id.'" , "val" : "'.utf8_encode($sensor_name).'", "ip" : "'.$sensor_ip.'" , "url" : "'.$sensor_url.'"';
 
-                
-                $buffer .= (($j > 0) ? "," : "") . "{ $li }";
-                
+                $buffer .= (($j > 0) ? "," : '') . "{ $li }";
+
                 $j++;
                 $already[$sensor_id] = TRUE;
             }
-            
+
             $buffer .= "] }";
         }
-        
+
         echo $buffer;
     }
     
-    
+
     /* Draw a tree with alienvault components
      */
-    function draw_alienvault_components() {
-        
+    public function draw_alienvault_components()
+    {
         $conn = $this->conn;
         
-        echo '{"title" : "<span style=\'font-weight:normal\'>'._("Alienvault Components").'</span>", "isFolder" : true, "icon" : "../../pixmaps/theme/server_role.png", "expand" : true, "children" :[';
+        echo '{"title" : "<span style=\'font-weight:normal\'>'._("AlienVault Components").'</span>", "isFolder" : true, "icon" : "../../pixmaps/theme/server_role.png", "expand" : true, "children" :[';
         
         if (Session::am_i_admin())
         {
-            echo '{ "key" : "servers", "page" :"", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_os.png", "title" : "'._("Servers").'" },';
+            echo '{ "key" : "servers", "page" : "", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/theme/host_os.png", "title" : "'._("Servers").'" },';
             $databases = Databases::get_list($conn, "ORDER BY name");
             if (count($databases) > 0) {
                 echo '{ "key" : "databases", "page" : "", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/databases.png", "title" : "'._("Databases").'" },';
@@ -1835,24 +1891,25 @@ class Tree
         echo '{ "key" : "sensors", "page" : "", "isFolder" : true, "isLazy" : true, "icon" : "../../pixmaps/server.png", "title" :"'._("Sensors").'" }';
         echo "]}";
     }
-    
+
+
     /* Draw a tree with users
      * Parameters:
      * - entity_id: ctx filter, will draw all entity users
      */
-    function draw_users($entity_id = "") {
-        
+    public function draw_users($entity_id = '')
+    {
         $conn = $this->conn;
                         
         $admin_users   = array();
-        $entities      = Acl::get_entities($conn, "", "", TRUE, FALSE);
+        $entities      = Acl::get_entities($conn, '', '', TRUE, FALSE);
         $entities_list = $entities[0];
         
         foreach ($entities_list as $entity) {
             $admin_users[$entity["id"]] = $entity["admin_user"];
         }
         
-        if ($entity_id != ""){
+        if ($entity_id != ''){
             $user_list = Acl::get_users_by_entity($conn, $entity_id);
         } else {
             $user_list = Acl::get_orph_users($conn);
@@ -1903,7 +1960,7 @@ class Tree
             
             $li  = '"title" : "'.$title.'", '.$u_link.', "icon" : "'.$icon.'", "tooltip" : "'.$tooltip.'", "key" : '.$u_key;
                                     
-            $buffer .= (($j > 0) ? "," : "") . "{ $li }";
+            $buffer .= (($j > 0) ? "," : '') . "{ $li }";
             $j++;
         }
         
@@ -1913,13 +1970,13 @@ class Tree
         
         echo $buffer;
     }
-    
-    
+
+
     /* Draw a tree with users
      * 
      */
-    function draw_all_users() {
-        
+    public function draw_all_users()
+    {
         $conn          = $this->conn;
         $pro           = Session::is_pro();
         $user_list     = Session::get_users_to_assign($conn);
@@ -1959,7 +2016,7 @@ class Tree
             
             $li  = '"title" : "'.$title.'", "noLink" : false, "icon" : "'.$icon.'", "tooltip" : "'.$tooltip.'", "key" : "'.$u_key.'"';
                                     
-            $buffer .= (($j > 0) ? "," : "") . "{ $li }";
+            $buffer .= (($j > 0) ? "," : '') . "{ $li }";
             $j++;
         }
         
@@ -1969,21 +2026,22 @@ class Tree
         
         echo $buffer;
     }
-    
-    /* Draw a tree with servers
-     */
-    function draw_servers() {
-        
+
+
+    /* Draw a tree with servers */
+    public function draw_servers()
+    {
         $conn = $this->conn;
-    
-        if ( Session::am_i_admin())
+
+        if (Session::am_i_admin())
         {
             $h = '600';
             $j = 0;
-            
+
             $servers = Server::get_list($conn, "ORDER BY name");
-            
-            if (count($servers) == 0){  
+
+            if (count($servers) == 0)
+            {
                 $buffer .= '{"title" : "'._("No Servers Found").'", "noLink" : true}';
             }
             else
@@ -1991,82 +2049,87 @@ class Tree
                 foreach ($servers as $server)
                 {
                     $icon = "../../pixmaps/theme/host.png";
-                    
+
                     $server_name = $server->get_name();
                     $serv_title  = Util::utf8_encode2($server_name);
-                    $_url        = "/ossim/server/newserverform.php?id=".$server->get_id();
+                    $_url        = "/ossim/server/modifyserverform.php?id=".$server->get_id();
                     $server_url  = Menu::get_menu_url($_url, "configuration", "deployment", "components");
-                    
-                    $title   = (strlen($server_name) > $this->length_name) ? substr($server_name, 0, $this->length_name)."..." : $server_name;    
+
+                    $title   = (strlen($server_name) > $this->length_name) ? substr($server_name, 0, $this->length_name)."..." : $server_name;
                     $title   = Util::utf8_encode2($title);
-                    
+
                     $tooltip = $serv_title;
-                                
+
                     $li      = '"title" : "'.$title.'", "tooltip" : "'.$tooltip.'", "icon" : "'.$icon.'", "h" : "'.$h.'", "url" : "'.$server_url.'"';
-                    $buffer .= (($j > 0) ? "," : "") . "{ $li }";
+                    $buffer .= (($j > 0) ? "," : '') . "{ $li }";
                     $j++;
                 }
             }
-        } 
-        else 
+        }
+        else
         {
             $buffer .= '{"title" : "'._("No Servers Found").'", "noLink" : true}';
         }
-        
+
         echo $buffer;
     }
-    
+
+
     /* Draw a tree with databases
      */
-    function draw_databases() {
-        
+    public function draw_databases()
+    {
         $conn = $this->conn;
-        
+
         if ( Session::am_i_admin())
         {
             $j = 0;
             $h = '550';
-            
+
             $databases = Databases::get_list($conn, "ORDER BY name");
-            
-            if (count($databases) == 0) 
-            {  
+
+            if (count($databases) == 0)
+            {
                 $buffer .= '{"title" : "'._("No Databases Found").'", "noLink" : true}';
-            } 
-            else 
+            }
+            else
             {
                 foreach ($databases as $database)
                 {
                     $icon     = "../../pixmaps/database.png";
                     $db_name  = $database->get_name();
                     $db_title = Util::utf8_encode2($db_name);
-                    
+
                     $title    = (strlen($db_name) > $this->length_name) ? substr($db_name, 0, $this->length_name)."..." : $db_name;
-                    $title    = Util::utf8_encode2($title);         
-                    
+                    $title    = Util::utf8_encode2($title);
+
                     $tooltip  = $db_title;
-                                
-                    $li       = '"title" : "'.$title.'", "tooltip" : "'.$tooltip.'", "icon" : "'.$icon.'", "h" : "'.$h.'", "url" : "../server/newdbsform.php?name='.urlencode($db_name).'"';
-                    
-                    $buffer  .= (($j > 0) ? "," : "") . "{ $li }";
+
+                    $_url       = '../server/newdbsform.php?id='.$database->get_id();
+                    $url_link   = Menu::get_menu_url($_url, "analysis", "security_events", "databases");
+
+                    $li       = '"title" : "'.$title.'", "tooltip" : "'.$tooltip.'", "icon" : "'.$icon.'", "h" : "'.$h.'", "url" : "'.$url_link.'"';
+
+                    $buffer  .= (($j > 0) ? "," : '') . "{ $li }";
                     $j++;
                 }
             }
-            
-        } 
-        else {
+        }
+        else
+        {
             $buffer .= '{"title" : "'._("No Databases Found").'", "noLink" : true}';
         }
-        
+
         echo $buffer;
     }
-    
-    function draw_portgroups() {
-        
+
+
+    public function draw_portgroups()
+    {
         $conn = $this->conn;
         
         $port_groups = array();
-        $buffer      = "";
+        $buffer      = '';
         
         if ($port_group_list = Port_group::get_list($conn, "ORDER BY name")) 
         {
@@ -2082,7 +2145,7 @@ class Tree
                 }
                 else
                 {
-                    $port_groups[] = array($pg_name, $pg_name, "");
+                    $port_groups[] = array($pg_name, $pg_name, '');
                 }
             }
         }
@@ -2098,18 +2161,18 @@ class Tree
             {
                 $pg_name   = utf8_encode($pg[1]);
                 $pg_key    = "pg_".$pg[0];
-                $tooltip   = ($pg[2] != '') ? ',"tooltip":"'.$pg[2].'"' : "";
+                $tooltip   = ($pg[2] != '') ? ',"tooltip":"'.$pg[2].'"' : '';
                 
-                $html     = "";
+                $html     = '';
                 if ($pg_name == "ANY")
                     $li = '"key":"ANY", "url":"'.$pg_name.'", "icon":"../../pixmaps/theme/ports.png", "title":"'.$pg_name.'", "tooltip":"'.$pg_name.'"'."\n";
                 else
                     $li = '"key":"'.$pg_key.'", "url":"'.$pg_name.'", "icon":"../../pixmaps/theme/ports.png", "title":"'.$pg_name.'" '.$tooltip."\n";
     
-                if ($html != "") 
-                    $buffer .= (($j > 1) ? "," : "") . '{ '.$li.', "children":[ ' . preg_replace("/,$/", "", $html) . ' ] }'."\n";
+                if ($html != '') 
+                    $buffer .= (($j > 1) ? "," : '') . '{ '.$li.', "children":[ ' . preg_replace("/,$/", '', $html) . ' ] }'."\n";
                 
-                else $buffer .= (($j > 1) ? "," : "") . "{ $li }\n";
+                else $buffer .= (($j > 1) ? "," : '') . "{ $li }\n";
                 
                 $j++;
             }
@@ -2119,29 +2182,31 @@ class Tree
         
         echo $buffer;
     }
-     
+
+    
     /* Return if we ca draw an external ctxs or not
      * Parameters:
      * - e_id: entity uuid
      */    
-    function can_see_external_ctx($e_id) 
+    public function can_see_external_ctx($e_id) 
     {
-        
-        if ($this->extra_options == "")                                             return TRUE;
+        if ($this->extra_options == '')                                             return TRUE;
         if ($this->extra_options =="remote" && !empty($this->external_ctxs[$e_id])) return TRUE;
         if ($this->extra_options =="local"  &&  empty($this->external_ctxs[$e_id])) return TRUE;
-        return FALSE;
         
+        return FALSE;
     }
+
+
     /* Draw a recursive tree with entities
      * Parameters:
      * - with_assets: can toggle assets by each entity
      * - with_users: can toggle users by each entity
      */
-    function draw_entities($with_assets = FALSE, $with_users = FALSE, $only_contexts=FALSE) {
-                        
+    public function draw_entities($with_assets = FALSE, $with_users = FALSE, $only_contexts=FALSE)
+    {
         $conn          = $this->conn;
-        $entities      = Acl::get_entities($conn, "", "", TRUE, FALSE);
+        $entities      = Acl::get_entities($conn, '', '', TRUE, FALSE);
         $my_entities   = Acl::get_my_entities($conn, '', FALSE);
         $num_entities  = count($my_entities);
         $entities_root = Acl::get_entities_root($conn);
@@ -2162,7 +2227,7 @@ class Tree
             $flag = FALSE;
             foreach ($entities_root as $e_id => $e_data){
             
-                if ($entities_visibility[$e_id] > 0 && Tree::can_see_external_ctx($e_id))
+                if ($entities_visibility[$e_id] > 0 && self::can_see_external_ctx($e_id))
                 {
                     if ($flag){ 
                         echo ",";
@@ -2194,7 +2259,7 @@ class Tree
                     $h       = "700";
                                 
                     echo '{"title" : "'.$title.'", "h" : "'.$h.'", '.$e_link.', "tooltip" : "'.$tooltip.'", "key" : "'.$e_key.'", "val" : "'.$e_name.'", "icon" : "'.$icon.'", "expand" : true,  "url" : '.$e_url.', "name" : "'.$e_name.'"';
-                            Tree::echochildrens($entities, $e_id, $with_assets, $with_users, $only_contexts);
+                            self::echochildrens($entities, $e_id, $with_assets, $with_users, $only_contexts);
                     echo "}";
                 
                 } 
@@ -2212,9 +2277,10 @@ class Tree
             echo '{"title": "'._("No contexts found in your system").'", "icon":"../../pixmaps/company.png"}'; 
         }
     }
-    
-    function draw_engines_server($server){
-        
+
+
+    public function draw_engines_server($server)
+    {
         $conn    = $this->conn;
         $engines = Acl::get_engines_by_server($conn,$server);
 
@@ -2264,11 +2330,11 @@ class Tree
             
             echo '{"title" : "'._("No Engines Found").'", "noLink" : true}';
         }
-    
     }
-    
-    function draw_asec_plugins($directory){
-                        
+
+
+    public function draw_asec_plugins($directory)
+    {
         $buffer      = '';
         $plugin_path = '/var/lib/asec/plugins/';
                 
@@ -2300,7 +2366,7 @@ class Tree
                             $key     = "asec_pg_d_".base64_encode($directory."/".$file);
                             $icon    = '../../pixmaps/theme/folder.png';
                             $title   = "<span class='cursive'>".Util::htmlentities($file)."</span>";
-                            $tooltip = htmlentities($file);
+                            $tooltip = Util::htmlentities($file);
                     
                             $d_buffer[] = '{ "key" : "'.$key.'", "icon" : "'.$icon.'", "title" : "'. $title.'", "isLazy" : true, "tooltip" : "'.$tooltip.'", "isFolder" : true}';
                         }
@@ -2309,7 +2375,7 @@ class Tree
                             $key     = "asec_pg_f_".base64_encode($directory."/".$file);
                             $icon    = '../../asec/images/file_tree/db.png';
                             $title   = "<span class='cursive'>".Util::htmlentities($file)."</span>";
-                            $tooltip = htmlentities($file);
+                            $tooltip = Util::htmlentities($file);
                                                                             
                             $f_buffer[] = '{ "key" : "'.$key.'", "icon" : "'.$icon.'", "title" : "'. $title.'", "isLazy" : false, "tooltip" : "'.$tooltip.'", "isFolder" : false}';
                         }
@@ -2330,17 +2396,17 @@ class Tree
         {
             $buffer .= '{"title" : "'._("No entries found").'", "noLink" : true, "expand" : false}';
         }
-            
-            
+
+
         if (empty($directory))
         {
             $buffer .= '] }';       
         }   
-                
+
         echo $buffer;
     }
-            
-    
+
+
     /* Recursive draw for draw_entities
      * Parameters:
      * - entities: Array with all entities
@@ -2348,8 +2414,8 @@ class Tree
      * - with_assets: can toggle assets by each entity
      * - with_users: can toggle users by each entity 
      */
-    function echochildrens($entities, $parent_id, $with_assets, $with_users, $only_contexts=false) {
-        
+    public function echochildrens($entities, $parent_id, $with_assets, $with_users, $only_contexts=false)
+    {
         echo ',"children" : [';
         
         /* Connect to db */
@@ -2422,10 +2488,10 @@ class Tree
                 
                 $child_name = (preg_match('/&#(\d{4,5});/',$child['name'])) ? mb_convert_encoding($child['name'],'UTF-8','HTML-ENTITIES') : $child['name'] ;
                 $child_sn   = (strlen($child_name) > $this->length_name)  ? substr($child_name, 0, $this->length_name)."..." : $child_name;   
-                                                
+
                 $ch_name    = Util::utf8_encode2($child_sn);    
-                            
-                if ($child['parent_id'] == $parent_id && Tree::can_see_external_ctx($child_id))
+
+                if ($child['parent_id'] == $parent_id && self::can_see_external_ctx($child_id))
                 {
                     $title   = "<span style='font-weight:bold;'>".$ch_name."</span>";
                     $tooltip = $ch_name;
@@ -2436,7 +2502,7 @@ class Tree
                     $h    = "700";                  
                     
                     echo '{"title" : "'.$title.'", "h" :"'.$h.'", '.$child_link.', "url" : '.$child_url.', "tooltip" : "'.$tooltip.'", "key" : "'.$child_key.'", "val" : "'.$ch_name.'", "icon" : "'.$icon.'", "name" : "'.$ch_name.'"';
-                        Tree::echochildrens($entities, $child_id, $with_assets, $with_users, $only_contexts);
+                        self::echochildrens($entities, $child_id, $with_assets, $with_users, $only_contexts);
                     echo "}";
                 }   
             }
@@ -2445,13 +2511,15 @@ class Tree
         
         $db->close();
     }
-    
-    
-    function draw_any_option(){
+
+
+    public function draw_any_option()
+    {
         echo '{"title": "'._("ANY").'", "key":"ANY", "icon":"../../pixmaps/theme/host.png", "val": "'._("ANY").'"}';
     }
     
 }
 
 
-?>
+/* End of file tree.inc */
+/* Location: ../include/classes/tree.inc */

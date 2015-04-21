@@ -486,7 +486,7 @@ class Action(threading.Thread):
 
                 # Check if this context has an IRS webservice linked.
                 ticket_data = {'type': '', 'op': 'INSERT', 'incident_id': last_id, 'date': time.asctime(), 'in_charge': in_charge, 'description': descr, 'status': 'Open'}
-                ws_query = "SELECT id, type FROM webservice WHERE ctx = UNHEX('%s') AND type IN (%s)" % (ctx, '(' + ','.join(IRS_TYPES) + ')')
+                ws_query = "SELECT id, type FROM webservice WHERE ctx = UNHEX('%s') AND type IN ('%s')" % (ctx, ','.join(IRS_TYPES))
                 ws_data = self.__db.exec_query(ws_query)
                 for item in ws_data:
                     ticket_data['type'] = ws_data['type']

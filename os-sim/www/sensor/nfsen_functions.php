@@ -175,24 +175,26 @@ function nfsen_start()
 {   
     include '/usr/share/ossim/www/nfsen/conf.php';
     
-	$cmd = "sudo $nfsen_bin stop";
-	system($cmd);
-	$cmd = "sudo $nfsen_bin start";
-	$fp  = popen("$cmd 2>>/dev/null", "r");
+    $lines = array();
+    //Stopping NfSen
+	exec("sudo $nfsen_bin stop");
+	//Starting NfSen
+	exec("sudo $nfsen_bin start 2>&1", $lines, $status);
 	
-	$lines = '';
-	
-	while (!feof($fp)) 
-    {
-		$line = trim(fgets($fp));
-		
-		$lines .= $line."\n";
+	if ($status == 0)
+	{
+    	$data['status'] = 'success';
+    	$data['data']   = _('NfSen restarted successfully.');
 	}
-
-	fclose($fp);
-		
-	$data['status'] = 'success';
-	$data['data']   = $lines;
+	else
+	{
+    	$data['status'] = 'error';
+    	$data['data']   = implode("\n", $lines);
+	}
+	
+	
+	
+	return $data;
 }
 
 
@@ -200,7 +202,7 @@ function nfsen_reset()
 {
     include '/usr/share/ossim/www/nfsen/conf.php';
     
-    $cmd = "echo y | sudo $nfsen_bin reconfig > /tmp/nfsen.log 2>&1";
+    $cmd = "echo y | sudo $nfsen_bin reconfig > /var/tmp/nfsen.log 2>&1";
 	
 	system($cmd);    
 }

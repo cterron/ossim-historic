@@ -51,14 +51,14 @@ $conn       = $db->snort_connect();
 $conn_ossim = $db->connect();
 $insert    = Array();
 $delete    = Array();
-$executing = Array();
+$executing = Array();  
 
 if (!is_dir($backup_dir)) {
     die(ossim_error(_("Could not access backup dir") . ": <b>$backup_dir</b>"));
 }
 $dir = dir($backup_dir);
 
-$query = ossim_query("SELECT DISTINCT DATE_FORMAT(timestamp, '%Y%m%d') as day FROM acid_event ORDER BY timestamp DESC");
+$query = ossim_query("SELECT DISTINCT DATE_FORMAT(day, '%Y%m%d') as day FROM ac_acid_event WHERE cnt > 0 ORDER BY day DESC");
 if (!$rs = $conn->Execute($query)) {
     print 'error: ' . $conn->ErrorMsg() . '<BR>';
     exit;
@@ -100,69 +100,78 @@ $users    = Session::get_users_to_assign($conn_ossim);
 $entities = Session::get_entities_to_assign($conn_ossim);
 
 // Clear Data Tables button
-if (GET('cleardatatables') != "" && Session::am_i_admin()) {
-
-    // kill all deleting tasks
-    
-    $pids = array();
-
-    exec("ps ax -o pid,command | grep bg_purge_from_siem | grep -v grep | grep -v 'sh -c' |  awk '{print $1\":\"$4}'", $pids);
-    
-    if(!empty($pids))
+if (GET('cleardatatables') != '' && Session::am_i_admin()) {
+    if (!Token::verify('tk_delete_events', GET('token')))
     {
-        foreach($pids as $pdata)
-        {
-            list($pid, $name_file) = explode(":", $pdata);
-            
-            exec("ps -o pid --no-headers --ppid $pid", $cpids);
-            
-            foreach($cpids as $cpid)
-            {
-                posix_kill($cpid, 9);
-            }
-            
-            posix_kill($pid, 9);
-            
-            if(file_exists("/var/tmp/" . $name_file))
-            {
-                unlink("/var/tmp/" . $name_file);
-            }
-            
-            preg_match("/del_(\d+)$/", $name_file, $res);
-            
-            if(file_exists("/var/tmp/delsql_" . $res[1]))
-            {
-                unlink("/var/tmp/delsql_" . $res[1]);
-            }
-            
-            $conn->Execute("DROP TABLE IF EXISTS " . $name_file);
-        }  
-        $conn->Execute("TRUNCATE deletetmp");
-        
-        $_SESSION["deletetask"] = "";
+	    Token::show_error();
+	    exit();
     }
+    else
+    {
+        // kill all deleting tasks
+        
+        $pids = array();
     
-    $conn->Execute("SET AUTOCOMMIT=0");
-    $conn->Execute("BEGIN");
-	$conn->Execute("TRUNCATE acid_event");
-	$conn->Execute("TRUNCATE ac_acid_event");
-	$conn->Execute("TRUNCATE device");
-	$conn->Execute("REPLACE INTO device (id, device_ip, interface, sensor_id) VALUES (999999, 0x0, '', 0x0)");
-	$conn->Execute("UPDATE device SET id = 0 WHERE id = 999999");
-	$conn->Execute("TRUNCATE extra_data");
-	$conn->Execute("TRUNCATE reputation_data");
-	$conn->Execute("TRUNCATE idm_data");
-	$conn->Execute("COMMIT");
-	$conn->Execute("SET AUTOCOMMIT=1");
-    Util::memcacheFlush();
-    session_write_close();
-    exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+        exec("ps ax -o pid,command | grep bg_purge_from_siem | grep -v grep | grep -v 'sh -c' |  awk '{print $1\":\"$4}'", $pids);
+        
+        if(!empty($pids))
+        {
+            foreach($pids as $pdata)
+            {
+                list($pid, $name_file) = explode(":", $pdata);
+                
+                exec("ps -o pid --no-headers --ppid $pid", $cpids);
+                
+                foreach($cpids as $cpid)
+                {
+                    posix_kill($cpid, 9);
+                }
+                
+                posix_kill($pid, 9);
+                
+                if(file_exists("/var/tmp/" . $name_file))
+                {
+                    unlink("/var/tmp/" . $name_file);
+                }
+                
+                preg_match("/del_(\d+)$/", $name_file, $res);
+                
+                if(file_exists("/var/tmp/delsql_" . $res[1]))
+                {
+                    unlink("/var/tmp/delsql_" . $res[1]);
+                }
+                
+                $conn->Execute("DROP TABLE IF EXISTS " . $name_file);
+            }  
+            $conn->Execute("TRUNCATE deletetmp");
+            
+            $_SESSION["deletetask"] = "";
+        }
+        
+        $conn->Execute("SET AUTOCOMMIT=0");
+        $conn->Execute("BEGIN");
+    	$conn->Execute("TRUNCATE acid_event");
+    	$conn->Execute("TRUNCATE ac_acid_event");
+    	$conn->Execute("TRUNCATE ah_acid_event");
+    	$conn->Execute("TRUNCATE device");
+    	$conn->Execute("REPLACE INTO device (id, device_ip, interface, sensor_id) VALUES (999999, 0x0, '', 0x0)");
+    	$conn->Execute("UPDATE device SET id = 0 WHERE id = 999999");
+    	$conn->Execute("TRUNCATE extra_data");
+    	$conn->Execute("TRUNCATE reputation_data");
+    	$conn->Execute("TRUNCATE idm_data");
+    	$conn->Execute("COMMIT");
+    	$conn->Execute("SET AUTOCOMMIT=1");
+        Util::memcacheFlush();
+        session_write_close();
+        exec('sudo /etc/init.d/ossim-server restart > /dev/null 2>&1 &');
+    }
 }
+
+$run_data = Backup::is_running($conn_ossim);
+$run = $run_data[0];
 
 $db->close($conn);
 $db->close($conn_ossim);
-
-$run = Backup::is_running();
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
@@ -170,34 +179,53 @@ $run = Backup::is_running();
 		<title><?php echo _('Backup')?></title>
  		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
   		<meta http-equiv="Pragma" content="no-cache">
-  		<link rel="stylesheet" type="text/css" href="../style/av_common.css?t=<?php echo Util::get_css_id() ?>"/>
-		<script type="text/javascript" src="../js/jquery.min.js"></script>
   		
-		<style type='text/css'>
-			#t_backup{
-				width: 98%; 
-				background: transparent;
-				margin: 10px auto;
-			}
-		</style>
+  		<?php
+  		
+  		//CSS Files
+  		$_files = array(
+            array('src' => 'av_common.css',                         'def_path' => TRUE),
+            array('src' => 'fancybox/jquery.fancybox-1.3.4.css',    'def_path' => TRUE),
+            array('src' => 'progress.css',                          'def_path' => TRUE)
+  		);
+  		
+  		Util::print_include_files($_files, 'css');
+  		
+  		
+  		//JS Files
+  		$_files = array(
+            array('src' => 'jquery.min.js',                          'def_path' => TRUE),
+            array('src' => 'token.js',                               'def_path' => TRUE),
+            array('src' => 'utils.js',                               'def_path' => TRUE),
+            array('src' => 'fancybox/jquery.fancybox-1.3.4.pack.js', 'def_path' => TRUE),
+            array('src' => 'notification.js',                        'def_path' => TRUE),
+            array('src' => 'combos.js',                              'def_path' => TRUE),
+            array('src' => 'av_progress_bar.js.php',                 'def_path' => TRUE),
+            array('src' => '/backup/js/backup_functions.js.php',             'def_path' => FALSE)
+  		);
+  		
+  		Util::print_include_files($_files, 'js');
+  		
+  		?>
 		
 		<script type='text/javascript'>
-  			function boton (form, act) {
-  				form.perform.value = act;
-  				form.submit();
-  			}
-			
-  			function reload_backup() {
-				document.location.href="index.php";
-  			}
-			
-			function switch_status() {
-				document.location.href="index.php?status_log=" + $('#status_log').val();
-			}		
+            $(document).ready(function() {
+                var dtoken = Token.get_token("delete_events");
+                $('#token').val(dtoken);
+
+                $('#button_restore').click(function(){
+                    launch_backup('insert');
+                });
+                $('#button_purge').click(function(){
+                    launch_backup('delete');
+                });
+
+                show_backup_status();
+			});
   		</script>
   	</head>
   	<body>
-		
+		<div id='backup_info'></div>
 		</br>
 		<table id='t_backup' cellpadding='0' cellspacing='0' class="noborder">   <!-- table for center -->
 			<tr valign="top">
@@ -207,7 +235,7 @@ $run = Backup::is_running();
 						echo "<b><span style='color:#FFA500'>".$message."</span></b><br><br>";
 					}
 					?>
-					<form name="backup" action="launch.php?run=<?php echo $run?>" target="process_iframe" method="post">
+					<form name="backup">
 					<div class='sec_title'><?php echo gettext("Backup Manager");?></div>
 					<table class='table_module'>
 						<tr>
@@ -220,7 +248,7 @@ $run = Backup::is_running();
 								<table class="transparent" style="width:100%">
 									<tr>
 										<td class="nobborder" style="text-align:center">
-											<select name="insert[]" size="<?php echo ($pro) ? "7" : "10" ?>" multiple='multiple' style='width: 100%;'>
+											<select name="insert[]" id="insert_combo" size="<?php echo ($pro) ? "7" : "10" ?>" multiple='multiple' style='width: 100%;'>
 												<?php
 												if (count($insert) > 0) 
 												{
@@ -247,7 +275,7 @@ $run = Backup::is_running();
 										?>
 										<tr>
 											<td class="nobborder">
-												<select name="user" style="width: 200px;">
+												<select name="user" id="user" style="width: 200px;">
 													<option value="">- <?php echo _("All Users") ?> -</option>
 													<?php 
 													foreach ($users as $k => $v) 
@@ -257,12 +285,12 @@ $run = Backup::is_running();
 													?>
 												</select>
 												&nbsp;
-												<select name="entity" style="width: 200px;">
+												<select name="entity" id="entity" style="width: 200px;">
 													<option value="">- <?php echo _("All Entities") ?> -</option>
 													<?php
 													foreach ($entities as $k => $v)
 													{
-														echo "<option value='$k'>$v</option>";
+														echo "<option value='".Util::uuid_format($k)."'>$v</option>";
 													}
 													?>
 												</select>
@@ -274,7 +302,7 @@ $run = Backup::is_running();
 								</table>
 							</td>
 							<td class="nobborder" style="text-align:center;padding-top:3px" valign="top">
-								<select name="delete[]" size="10" multiple='multiple' style='width: 100%;'>
+								<select name="delete[]" id="delete_combo" size="10" multiple='multiple' style='width: 100%;'>
 									<?php
 									if (count($delete) > 0) 
 									{
@@ -298,11 +326,11 @@ $run = Backup::is_running();
 						
 						<tr>
 							<td class="nobborder" style="text-align:center">
-								<input type="button" name="insertB" value="<?php echo gettext("Restore"); ?>" onclick="boton(this.form, 'insert')" <?php echo ($isDisabled) ? "disabled" : "" ?> />
+								<input type="button" id="button_restore" value="<?php echo gettext("Restore"); ?>" />
 							</td>
 							
 							<td class="nobborder" style="text-align:center">
-								<input type="button" name="deleteB" value="<?php echo gettext("Purge"); ?>" onclick="boton(this.form, 'delete')"  <?php echo ($isDisabled) ? "disabled" : "" ?> />
+								<input type="button" id="button_purge" value="<?php echo gettext("Purge"); ?>" />
 							</td>
 						</tr>
 				
@@ -321,16 +349,9 @@ $run = Backup::is_running();
 					<input type="hidden" name="perform" value=""/>
 					</form>
 			
-					<table class="transparent"  style="width: 100%;">
-						<tr>
-							<td class="nobborder">
-								<iframe name="process_iframe" id="process_iframe" src="launch.php" height="50" frameborder="0" style="width: 100%;"></iframe>
-							</td>
-						</tr>
-					</table>
-			
 					<?php if (Session::am_i_admin()) { ?>
 					<form name="fclean">
+    				<input type="hidden" name="token" id="token" />
 					<input type="hidden" name="cleardatatables" value="1"/>
 					<table class="transparent"  style="width: 100%;">
 						<tr><td style="padding-bottom:30px"><input type="button" class='av_b_secondary' value="<?php echo _("Clear SIEM Database") ?>" onclick="if (confirm('<?php echo _("This will delete all data in the SIEM Database. Would you like to continue?") ?>')) document.fclean.submit();" /></td></tr>
@@ -386,7 +407,7 @@ $run = Backup::is_running();
 								?>
 									<tr>
 										<td><?php echo $rs1["users"] ?></td>
-										<td nowrap='nowrap'><?php echo Util::timestamp2date($rs1["date"]) ?></td>
+										<td nowrap='nowrap'><?php echo gmdate("Y-m-d H:i:s",strtotime($rs1["date"])+(3600*$tz)) ?></td>
 										<td><?php echo str_replace(",",", ",$rs1["data"]) ?></td>
 										<?php
 										if ($rs1["status"] == 1) 
@@ -436,6 +457,9 @@ $run = Backup::is_running();
 					case 2:
 						$status_log = " -- WARNING --";
 						break;
+					case 3:
+						$status_log = " -- ERROR --";
+						break;
 					default:
 						$status_log = " -- ";
 						$status_flag = 0;
@@ -457,6 +481,7 @@ $run = Backup::is_running();
 													<option value="0" <?php echo ( $status_flag == 0) ? "selected='selected'" : "" ?> ><?php echo _("ALL") ?></option>
 													<option value="1" <?php echo ( $status_flag == 1) ? "selected='selected'" : "" ?> ><?php echo _("INFO") ?></option>
 													<option value="2" <?php echo ( $status_flag == 2) ? "selected='selected'" : "" ?> ><?php echo _("WARNING") ?></option>
+													<option value="3" <?php echo ( $status_flag == 3) ? "selected='selected'" : "" ?> ><?php echo _("ERROR") ?></option>
 												</select> 
 											</th>
 											<th><?php echo _("Message") ?></th>

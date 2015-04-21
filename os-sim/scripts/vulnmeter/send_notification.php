@@ -142,8 +142,9 @@ else
                 
                 $query = ossim_query ("SELECT hostname FROM host, host_ip WHERE host.id = host_ip.host_id AND host_ip.ip = UNHEX(?) AND host.ctx = UNHEX(?)");
                 
+                $rs = $dbconn->Execute ($query, array (bin2hex(inet_pton($hostip)), $hostctx));
                 
-                if (! $rs = & $dbconn->Execute ($query, array (bin2hex(inet_pton($hostip)), $hostctx))) 
+                if (!$rs)
                 {
                     print $dbconn->ErrorMsg();
                 } 
@@ -237,7 +238,10 @@ else
         {
             // generate PDF
             $query = ossim_query ("SELECT scantime, report_key FROM vuln_nessus_reports WHERE report_id=$report_id");
-            if (! $rs = & $dbconn->Execute ($query)) 
+            
+            $rs = $dbconn->Execute($query);
+            
+            if (!$rs) 
             {
                 print $dbconn->ErrorMsg();
             } 
@@ -362,7 +366,10 @@ function get_email ($dbconn, $login)
     $user_email = "";
 
     $query = ossim_query ( "SELECT email FROM users WHERE login=?" );
-    if (! $rs = & $dbconn->Execute ( $query, array ($login) )) 
+    
+    $rs = $dbconn->Execute($query, array ($login));
+    
+    if (!$rs) 
     {
         print $dbconn->ErrorMsg();
     } 

@@ -77,7 +77,7 @@ class Asset_host_qualification
     }
     
     
-    public function get_ip_attack($conn, $id) 
+    public static function get_ip_attack($conn, $id)
     {
         Ossim_db::check_connection($conn);
         
@@ -104,7 +104,7 @@ class Asset_host_qualification
     }
     
     
-    public function get_ip_compromise($conn, $id) 
+    public static function get_ip_compromise($conn, $id)
     {
         Ossim_db::check_connection($conn);
         
@@ -185,19 +185,19 @@ class Asset_host_qualification
     }
     
     
-    public function get_global_compromise($conn) 
+    public static function get_global_compromise($conn)
     {
         return self::__get_global($conn, 'compromise');
     }
     
     
-    public function get_global_attack($conn) 
+    public static function get_global_attack($conn)
     {
         return self::__get_global($conn, 'attack');
     }
     
         
-    public function get_list($conn, $where = '', $order = '') 
+    public static function get_list($conn, $where = '', $order = '')
     {
         Ossim_db::check_connection($conn);
         
@@ -225,7 +225,9 @@ class Asset_host_qualification
         $query = ossim_query("SELECT *, HEX(host_id) AS host_id 
             FROM host_qualification, host $where AND host.id=host_qualification.host_id $order");
         
-        if (!$rs = & $conn->Execute($query)) 
+        $rs = $conn->Execute($query);
+        
+        if (!$rs) 
         {
             Av_exception::write_log(Av_exception::DB_ERROR, $conn->ErrorMsg());
         } 

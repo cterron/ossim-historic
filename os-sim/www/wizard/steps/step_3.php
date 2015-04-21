@@ -188,7 +188,7 @@ $first_tab    = key($deploy_tabs);
                 
                 <div class='form_elem'>
                     <?php echo _('Password') ?><br/>
-                    <input type="password" id="password" name="password"/>
+                    <input type="password" id="password" name="password" autocomplete="off"/>
                 </div>
                 
                 <div class='form_elem' id='form_domain'> <!-- #form_domain Visible or not -->

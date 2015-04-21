@@ -45,15 +45,32 @@
 class Omp
 {
     private $binary_location;
+
+
     private $latest_binary_location;
+
+
     private $ip;
+
+
     private $port;
+
+
     private $user;
+
+
     private $password;
+
+
     private $db;
+
+
     private $conn;
+
+
     private $error_message;
-    
+
+
     public function __construct($host = '', $port = '', $user = '', $pass = '', $path = '') {
 
         require_once "ossim_db.inc";
@@ -67,10 +84,10 @@ class Omp
         }
         
         if($path=="") { $this->binary_location = $conf->get_conf("nessus_path", FALSE); }
-            else { $this->binary_location = $path; }
+        else { $this->binary_location = $path; }
         
         if($host=="") { $this->ip = $conf->get_conf("nessus_host", FALSE); }
-            else { $this->ip = $host; }
+        else { $this->ip = $host; }
         
         if($port=="") { $this->port = $conf->get_conf("nessus_port", FALSE); }
         else { $this->port = $port; }
@@ -87,11 +104,13 @@ class Omp
         $this->error_message = "";
         
     }
-    
+
+
     function __destruct(){
         $this->db->close($this->conn);
     }
-    
+
+
     // ------  private functions ------
     
     public function execute_command ($command, $sinput=TRUE) {
@@ -145,7 +164,8 @@ class Omp
 
         return $xml;
     }
-    
+
+
     public function get_config_id_by_sid($sid) {
  
         $config_id = "";
@@ -167,7 +187,8 @@ class Omp
         }
         return $config_id;
     }
-    
+
+
     private function delete_tasks_by_config_id($config) {
         
         $delete_tasks = array();
@@ -192,7 +213,8 @@ class Omp
             return FALSE;
         }
     }
-    
+
+
     private function get_allowed_users() {
     
         $users    = Session::get_users_to_assign($this->conn);
@@ -209,8 +231,8 @@ class Omp
           
         return $allowed_users_entities;
     }
-    
-    
+
+
     public function get_results_by_ips($task_id) {
         
         $results_by_ips = array();
@@ -251,7 +273,8 @@ class Omp
         
         return $results_by_ips;
     }
-    
+
+
     // ------  public functions ------
     
     public function get_config_id_by_name_comment($name, $comment="") {
@@ -272,8 +295,8 @@ class Omp
         }
         return $config_id;
     }
-    
-    
+
+
     public function set_plugins_by_family ($sid, $fam = "") {
     
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -351,7 +374,8 @@ class Omp
         
         return ( array( "status" => "OK", "message" => "") );
     }
-    
+
+
     public function set_preferences ($sid) {
         
         require_once 'classes/Util.inc';
@@ -427,6 +451,17 @@ class Omp
         
         return ( array( "status" => "OK", "message" => "") );
     }
+
+    public function are_there_pending_tasks() {
+        $xml = $this->execute_command("<get_tasks />");
+        
+        foreach ($xml->task as $task) { 
+            return true;
+        }
+        
+        return false;
+    }
+
     public function get_tasks_using_config($sid) {
         $running_tasks = array();
         
@@ -442,6 +477,8 @@ class Omp
         
         return $running_tasks;
     }
+
+
     public function check_connection() {
         $xml = $this->execute_command("<help />");
         
@@ -452,6 +489,8 @@ class Omp
             return "";
         }
     }
+
+
     public function get_used_sids() {
     
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -483,6 +522,8 @@ class Omp
         }
         return $sids;
     }
+
+
     public function create_new_config($sid, $clone_id) {
     
         $default_profiles = array('1' => 'Deep', '2' => 'Default', '3' => 'Ultimate');
@@ -539,6 +580,8 @@ class Omp
         
         return ( array("message" => "", "status" => "OK") );
     }
+
+
     public function play_task($job_id){
     
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -549,6 +592,8 @@ class Omp
         $this->execute_command ("<start_task task_id=\"$config_id\" />");
 
     }
+
+
     public function pause_task($job_id){
     
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -559,7 +604,8 @@ class Omp
         $this->execute_command ("<pause_task task_id=\"$config_id\" />");
 
     }
-    
+
+
     public function stop_task($job_id){
         
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -570,7 +616,8 @@ class Omp
         $this->execute_command ("<stop_task task_id=\"$config_id\" />");
 
     }
-    
+
+
     public function delete_task($job_id){
         
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -587,7 +634,8 @@ class Omp
             $this->execute_command ("<delete_task task_id=\"$config_id\" />");
         }
     }
-    
+
+
     public function resume_task($job_id) {
     
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -604,6 +652,8 @@ class Omp
             $this->execute_command ("<resume_paused_task task_id=\"$config_id\" />");
         }
     }
+
+
     public function get_task_status($job_id) {
         
         $this->conn->SetFetchMode(ADODB_FETCH_BOTH);
@@ -623,6 +673,8 @@ class Omp
         return ($status);
 
     }
+
+
     public function get_number_of_results($states, $job_id = ''){
         
 		if($job_id == '' ) {
@@ -708,6 +760,7 @@ class Omp
 
         return $total;
     }
+
 
     public function get_tasks_details($states){
         
@@ -913,8 +966,8 @@ class Omp
             
         return $tasks_info;
     }
-    
-    
+
+
     public function get_task_detail_by_id($states, $job_id = '', $plain_text = FALSE) 
     {
 		if($job_id == '')
@@ -1117,8 +1170,8 @@ class Omp
             return (array("total" => "0|0|0|0|0", "detail" => ""));
         }
     }
-    
-    
+
+
     public function delete_config($sid) 
     {
         $config_id = $this->get_config_id_by_sid($sid);
@@ -1139,8 +1192,8 @@ class Omp
         
         return (array("status" => "OK", "message" => ""));
     }
-    
-    
+
+
     public function set_server_properties($ip, $port, $user, $password) 
     {
         $this->ip       = $ip;
@@ -1151,8 +1204,8 @@ class Omp
         $this->user     = str_replace("'","'\"'\"'",$this->user);
         $this->password = str_replace("'","'\"'\"'",$this->password);
     }
-    
-    
+
+
     public function update_preferences_sqlite($uuid, $category, $pref_name, $pref_value) 
     {
         $sqlite = new Omp_sqlite("/var/lib/openvas/mgr/tasks.db");

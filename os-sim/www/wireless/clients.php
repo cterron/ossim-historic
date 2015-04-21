@@ -141,7 +141,7 @@ if (!isset($_SESSION["knownmac"]))
 	$clients = Wireless::get_wireless_clients($ossim,$order,$sensors,$aps);
 	$c = 0;
 	
-	if (is_array($networks) && !empty($networks))
+	if (is_array($clients) && !empty($clients))
 	{		
     	foreach ($clients as $data) 
     	{		

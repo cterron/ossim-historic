@@ -62,7 +62,9 @@ $dev_perms = array();
 
 $query1    = "SELECT d.id,s.ip as sensor_ip, s.name, HEX(s.id) as sensor_id FROM alienvault_siem.device d, alienvault.sensor s WHERE d.sensor_id=s.id";
 
-if (!$rs = & $conn->Execute($query1)) 
+$rs = $conn->Execute($query1);
+
+if (!$rs)
 {
     print $conn->ErrorMsg();
     exit();
@@ -97,8 +99,9 @@ $query_where = preg_replace('/AND \(timestamp.*/', '', $query_where);
 $query = "SELECT DISTINCT device_id, plugin_id, name, sum( acid_event.cnt ) as event_cnt FROM alienvault.plugin, alienvault_siem.ac_acid_event as acid_event $criteria_sql $query_where GROUP BY device_id, plugin_id ORDER BY event_cnt DESC";
 //print_r($query);
 
+$rs = $conn->Execute($query);
 
-if (!$rs = & $conn->Execute($query)) 
+if (!$rs)
 {
     print $conn->ErrorMsg();
     exit();
@@ -216,9 +219,15 @@ $forensic_url = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?&hmenu=Fo
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en">
+<html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<?php
+    if (isset($widget_refresh) && $widget_refresh != 0)
+    {
+        echo('<meta http-equiv="refresh" content="'.$widget_refresh.'">');
+    }
+    ?>
 	<title><?php echo _("Radar Chart")?></title>
 	
     <?php
@@ -234,6 +243,7 @@ $forensic_url = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?&hmenu=Fo
         //JS Files
         $_files = array(
             array('src' => 'jquery.min.js',                             'def_path' => TRUE),
+            array('src' => '/dashboard/js/widget.js.php',               'def_path' => FALSE),
             array('src' => '/dashboard/js/jquery.flot.js',              'def_path' => FALSE),
             array('src' => '/dashboard/js/jquery.flot.highlighter.js',  'def_path' => FALSE),
             array('src' => '/dashboard/js/jquery.flot.spider.js',       'def_path' => FALSE)
@@ -360,22 +370,32 @@ $forensic_url = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?&hmenu=Fo
 		
 		function showTooltip(x, y, contents) 
 		{
-			$('<div id="tooltip">' + contents + '</div>').css(
+			var div = $('<div id="tooltip">' + contents + '</div>').css(
 			{
 				position: 'absolute',
-				display: 'none',
 				top: y + 5,
 				left: x + 5,
 				border: 'none',
 				font: '11px Arial, Sans-Serif',
 				padding: '5px',
-				'background-color': '#88C557',
-				opacity: 0.80,
-				'-moz-border-radius': '8px',
-				'-khtml-border-radius': '8px', 
-				'-webkit-border-radius': '8px',
+				'background-color': 'rgba(136, 197, 87, 0.8)',
 				'border-radius': '8px',
-			}).appendTo("body").fadeIn(200);
+			}).appendTo("body");
+			
+			var t_h = div.outerHeight() + y + 5;
+			var t_w = div.outerWidth() + x + 5;
+
+			if (t_w > $(window).width())
+    		{
+        		var offset = x - div.outerWidth() - 10;
+        		div.css('left', offset + 'px')
+    		}
+    		
+    		if (t_h > $(window).height())
+    		{
+        		var offset = y - div.outerHeight() - 10;
+        		div.css('top', offset + 'px')
+    		}
 		}
 		
 		function click_handler(url)
@@ -424,7 +444,7 @@ $forensic_url = Menu::get_menu_url("/ossim/forensics/base_qry_main.php?&hmenu=Fo
 					var label  = item.series.spider.legs.data;
 					var index  = item.dataIndex
 
-					var value  = data[index][1];
+					var value  = format_dot_number(data[index][1]);
 					var label  = label[index].label;
 					
 					var message = "<b>Sensor:</b> " + item.series.label + "<br><b>Source:</b> " + label + "<br><b>Value:</b> " + value;

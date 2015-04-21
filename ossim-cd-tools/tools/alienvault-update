@@ -50,6 +50,22 @@ my $wget_useragent = q{};
 my $alienvault_useragent = '/usr/bin/alienvault-useragent';
 my $REL3=q{RELEASES};
 
+#
+# Error codes are defined in:
+# alienvault-api/alienvault-api-scripts/api_core/lib/celerymethods/errors.py
+# alienvault-ossim/ossim/www/av_center/data/sections/common/code_translation.php
+#
+my $ERROR_INSTANCE_RUNNING = 50;
+my $ERROR_INVALID_SIGNATURE3 = 51;
+my $ERROR_UNAVAILABLE_SIGNATURE3 = 52;
+my $ERROR_INVALID_KEY = 53;
+my $ERROR_INVALID_KEY_ALT = 54;
+my $ERROR_INVALID_SIGNATURE4 = 55;
+my $ERROR_UNAVAILABLE_SIGNATURE4 = 56;
+my $ERROR_INVALID_SIGNATURE_FEED = 57;
+my $ERROR_UNAVAILABLE_SIGNATURE_FEED = 58;
+my $ERROR_HA_RUNNING = 59;
+
 # function
 sub main();             # main program body
 sub parse_argv();       # requires defined %config
@@ -70,7 +86,13 @@ sub main() {
     chomp $running_instance;
     if ( $running_instance > 1 ) {
         console_log("$program_name is already running ... exiting");
-        exit 1;
+        exit $ERROR_INSTANCE_RUNNING;
+    }
+
+    my $ha_not_running = system("cl_status rscstatus > /dev/null 2>&1") >>8;
+    if ( $ha_not_running == 0 ) {
+        console_log("System running in HA mode. If you want to update your system, please stop the HA system by running alienvault-ha-assistant --stop, and then update.");
+        exit $ERROR_HA_RUNNING;
     }
 
 	console_log("Checking APT status");
@@ -123,11 +145,11 @@ sub main() {
                     my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$_.sig");
                     if ($valid_sig != 0) {
                       say("Invalid signature for upgrade file $_");
-                      exit 1;
+                      exit $ERROR_INVALID_SIGNATURE3;
                     }
                 } else {
                     say("Signature not available for upgrade file $_");
-                    exit 1;
+                    exit $ERROR_UNAVAILABLE_SIGNATURE3;
 		}
             }
         }
@@ -170,17 +192,17 @@ sub main() {
 
                                 }else{
                                     say("Invalid key. Are you trying to use an AV3 key?");
-                                    exit 1;
+                                    exit $ERROR_INVALID_KEY;
                                 }
 
                             }else{
                                 say ("Please enter a valid AlienVault key");
-                                exit 1;
+                                exit $ERROR_INVALID_KEY_ALT;
                             }
 
                         }
 
-                    }else{say("Please enter a valid AlienVault key");exit 1;}
+                    }else{say("Please enter a valid AlienVault key");exit $ERROR_INVALID_KEY_ALT;}
                 }
 #            $vpost = get_current_oct_version();
             console_log("Finished");
@@ -238,16 +260,22 @@ sub main() {
 					my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig");
 					if ($valid_sig != 0) {
 						say("Invalid signature for upgrade file $script_name");
-						exit 1;
+						exit $ERROR_INVALID_SIGNATURE4;
 					}
 				} else {
 					say("Signature not available for upgrade file $script_name");
-					exit 1;
+					exit $ERROR_UNAVAILABLE_SIGNATURE4;
 				}
 
 				verbose_log("Exec: $tmppath/$script_name");
 				$flag_processed = ( $flag // q{} );
-				system("/bin/bash $tmppath/$script_name $flag_processed");
+				my $code_result = system("/bin/bash $tmppath/$script_name $flag_processed");
+                                my $update_result = $code_result >> 8; 
+                                if ($update_result != 0) {
+                                    console_log("There was an error updating the system");
+                                    exit $update_result;
+                                }
+                                    
 
 				my $info_version_file="/etc/alienvault-center/alienvault-info-version";
 				if ( -s "$info_version_file" ){
@@ -427,8 +455,20 @@ sub feed_update() {
     system("wget -U $wget_useragent -O $tmppath/$script_name $dataserver/$REL3/$script_name");
 
     if ( -s "$tmppath/$script_name" ) {
-        verbose_log("Exec: $tmppath/$script_name");
-        system("/bin/bash $tmppath/$script_name");
+        system("wget -U $wget_useragent -O $tmppath/$script_name.sig $dataserver/$REL3/$script_name.sig");
+	if ( -s "$tmppath/$script_name.sig"){
+            my $valid_sig = system("gpg --verify --keyring /etc/apt/trusted.gpg $tmppath/$script_name.sig");
+	    if ($valid_sig != 0) {
+		    say("Invalid signature for upgrade file $script_name");
+		    exit $ERROR_INVALID_SIGNATURE_FEED;
+	    }
+
+            verbose_log("Exec: $tmppath/$script_name");
+            system("/bin/bash $tmppath/$script_name");
+	} else {
+            say("Signature not available for upgrade file $script_name");
+            exit $ERROR_UNAVAILABLE_SIGNATURE_FEED;
+	}
     }
 
     console_log("Done.");

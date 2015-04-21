@@ -150,7 +150,9 @@ switch($type)
 				$range
 			);
 			
-			if (!$rs = & $conn->CacheExecute($sql, $params)) 
+			$rs = $conn->CacheExecute($sql, $params);
+			
+			if (!$rs)
 			{
 				die($conn->ErrorMsg());
 			}
@@ -172,7 +174,9 @@ switch($type)
 					$range
 				);
 				
-				if (!$rs = & $conn->CacheExecute($sql, $params)) 
+				$rs = $conn->CacheExecute($sql, $params);
+				
+				if (!$rs) 
 				{
 					die($conn->ErrorMsg());
 				}
@@ -191,7 +195,9 @@ switch($type)
 					$range
 				);
 				
-				if (!$rs = & $conn->CacheExecute($sql, $params)) 
+				$rs = $conn->CacheExecute($sql, $params);
+				
+				if (!$rs)
 				{
 					die($conn->ErrorMsg());
 				}
@@ -322,9 +328,12 @@ switch($type)
 		
 		$operator = ($chart_info['type'] != '')? $chart_info['type'] : 'max';
 
-		$sqlgraph = "SELECT $operator(a.risk) as level FROM alienvault.alarm a $ajoin where 1=1 $awhere";
+		$sqlgraph = "SELECT $operator(a.risk) as level FROM alienvault.alarm a $ajoin where a.status='open' $awhere";
 		
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		
+		$rg = $conn->CacheExecute($sqlgraph);
+		
+		if (!$rg)
 		{
 			print $conn->ErrorMsg();
 		}

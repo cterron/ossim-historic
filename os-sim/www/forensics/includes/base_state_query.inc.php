@@ -376,7 +376,7 @@ class QueryState {
             if ($this->current_view > 0) { // Previous button
                 $i = $this->current_view - 1;
                 echo '<TD><INPUT TYPE="submit" name="submit" style="display:none" id="pag' . $i . '" value="' . $i . '">
-                      <a href="" onclick="$(\'#pag' . $i . '\').click()">&lt; ' . _("PREVIOUS") . '</a>' . "\n</TD>";
+                      <a href="" onclick="$(\'#pag' . $i . '\').click();return false">&lt; ' . _("PREVIOUS") . '</a>' . "\n</TD>";
             } else {
                 echo '<TD><a href="" class="link_paginate_disabled" onclick="return false">&lt; ' . _("PREVIOUS") . '</a>' . "\n</TD>";
             }

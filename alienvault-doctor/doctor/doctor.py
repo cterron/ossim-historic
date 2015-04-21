@@ -2,7 +2,7 @@
 #  License:
 #
 #  Copyright (c) 2003-2006 ossim.net
-#  Copyright (c) 2007-2013 AlienVault
+#  Copyright (c) 2007-2014 AlienVault
 #  All rights reserved.
 #
 #  This package is free software; you can redistribute it and/or modify
@@ -31,7 +31,6 @@
 import sys, os, time, json, pwd, grp
 import subprocess
 import re
-import platform
 from optparse import OptionParser, OptionGroup
 from ConfigParser import RawConfigParser
 import random
@@ -44,7 +43,9 @@ from base64 import b64encode
 import default
 
 from output import *
-from plugin import Plugin, PluginError, PluginConfigParserError
+from sysinfo import Sysinfo
+from plugin import Plugin
+from error import PluginError, PluginConfigParserError, CheckError
 
 '''
 Class Doctor.
@@ -57,7 +58,7 @@ class Doctor:
     self.__config = {}
     self.__plugin_list = []
     self.__category_list = []
-    self.__ossim_config = {}
+    self.__alienvault_config = {}
     self.__summary = []
     self.__output_file = ''
     self.__rc = 0
@@ -81,6 +82,9 @@ class Doctor:
     parser.add_option_group(output_group)
 
     (options, args) = parser.parse_args()
+
+    self.__sysinfo = Sysinfo()
+    self.__alienvault_config = self.__sysinfo.get_alienvault_config()
 
     # Disable normal output for 'ansible' and 'support' output options.
     if options.output_type in ['ansible', 'support']:
@@ -134,11 +138,8 @@ class Doctor:
     else:
       Output.warning ('"%s" is not a valid output type, messages will be shown in stdout only' % options.output_type)
 
-    # Parse ossim_setup for profiles.
-    self.__parse_ossim_setup__ ()
-
     # Show some system info.
-    self.__show_platform_info__ ()
+    self.__sysinfo.show_platform_info (extended=bool(options.verbose))
 
     # Run a list of plugins or categories of plugins
     self.__plugin_list = options.plugin_list.split(',')
@@ -166,17 +167,24 @@ class Doctor:
 
     # Show summary only for screen output.
     if options.output_type == default.output_type:
-      Output.emphasized ('\nHooray! The Doctor has diagnosed you, check out the results...', ['Doctor'], [GREEN])
+      if self.__summary != []:
+        Output.emphasized ('\nHooray! The Doctor has diagnosed you, check out the results...', ['Doctor'], [GREEN])
+      else:
+        Output.emphasized ('\nThe Doctor has finished, nothing to see here though', ['Doctor'], [GREEN])
 
       for result in self.__summary:
-        plugin_name = result['plugin']
+        plugin_name = result.get('plugin', None)
+        plugin_description = result.get('description', None)
 
         if (not 'checks' in result.keys()) and ('warning' in result.keys()):
           Output.emphasized ('\n     Plugin %s didn\'t run: %s' % (plugin_name, result['warning']), [plugin_name])
         else:
           checks = result['checks']
+          header = '\n     Plugin: %s' % plugin_name
+          if plugin_description:
+            header += '\n             %s' % plugin_description
 
-          Output.emphasized ('\n     Plugin: %s' % plugin_name, [plugin_name])
+          Output.emphasized (header, [plugin_name])
           for (check_name, check_result) in checks.items():
             if check_result['result'] == False:
               if check_result['severity'] == 'High':
@@ -188,11 +196,11 @@ class Doctor:
               else:
                 severity_color = YELLOW
 
-              Output.emphasized ('%s[*] %s: %s' % ((' '*10), check_name, check_result['warning']), ['*', check_name], [severity_color, EMPH])
+              Output.emphasized ('%s[*] %s: %s' % ((' '*9), check_name, check_result['warning']), ['*', check_name], [severity_color, EMPH])
               if check_result['advice'] != '':
-                Output.emphasized ('%sWord of advice: %s' % ((' '*14), check_result['advice']), ['Word of advice'])
+                Output.emphasized ('%sWord of advice: %s' % ((' '*13), check_result['advice']), ['Word of advice'])
             else:
-              Output.emphasized ('          [*] %s: All good' % check_name, ['*', check_name], [GREEN, EMPH])
+              Output.emphasized ('%s[*] %s: All good' % ((' '*9), check_name), ['*', check_name], [GREEN, EMPH])
     elif options.output_type in ['file', 'support']:
       output_data = plain_data = json.dumps(self.__summary, sort_keys=True, indent=4, separators=(',', ': ')) + '\n'
 
@@ -240,98 +248,23 @@ class Doctor:
     parser.read (default.doctor_cfg_file)
     self.__config = parser._sections['main']
 
-  # Parse ossim configuration file and return profiles & versions.
-  def __parse_ossim_setup__ (self):
-    setup_file = open(default.ossim_setup_file, 'r').read()
-
-    # Find profiles and versions.
-    line = setup_file[(setup_file.find('\nprofile=') + 9):]
-    profiles = line[:line.find('\n')].split(',')
-    self.__ossim_config['profiles'] = []
-    self.__ossim_config['versions'] = []
-    self.__ossim_config['@version'] = ''
-    cmd = ['dpkg', '-l']
-
-    if profiles is []:
-      Output.error ('There are no defined profiles in ossim_setup.conf')
-      sys.exit (default.error_codes['undef_ossim_profiles'])
-
-    for profile in profiles:
-      profile = profile.replace(' ', '')
-      if profile == 'Server':
-        cmd.append('ossim-server')
-      elif profile == 'Sensor':
-        cmd.append('ossim-agent')
-      elif profile == 'Framework':
-        cmd.append('ossim-framework')
-      elif profile == 'Database':
-        cmd.append('ossim-mysql')
-      else:
-        Output.error ('"%s" is not a valid profile' % profile)
-        sys.exit (default.error_codes['invalid_ossim_profile'])
-
-      proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      output, err = proc.communicate()
-      parsed_output = output.split('\n')[5].split()
-
-      self.__ossim_config['profiles'].append(profile)
-      version = re.findall("^\d+:(\d+(?:\.\d+){1,3})[\-\+]\S+", parsed_output[2])[0]
-      self.__ossim_config['versions'].append(version)
-
-      # Ossim version translate (this is an ugly hack, hope we'll fix this soon with a standarized ossim version file)
-      if (self.__ossim_config['@version'] == '') or (version < self.__ossim_config['@version']):
-        self.__ossim_config['@version'] = '\"' + version + '\"'
-
-    # Parse file for translates.
-
-    # Find MySQL properties.
-    try:
-      line = setup_file[(setup_file.index('\npass=') + 6):]
-      self.__ossim_config['@pass'] = line[:line.index('\n')]
-      line = setup_file[(setup_file.index('\nuser=') + 6):]
-      self.__ossim_config['@user'] = line[:line.index('\n')]
-      line = setup_file[(setup_file.index('\ndb_ip=') + 7):]
-      self.__ossim_config['@db_ip'] = line[:line.index('\n')]
-    except ValueError:
-      Output.error ('Missing MySQL configuration field, check your ossim_setup.conf file')
-      sys.exit (default.error_codes['missing_mysql_config'])
-
-    # Sensor configuration.
-    line = setup_file[(setup_file.index('\ndetectors=') + 11):]
-    self.__ossim_config['@detectors'] = line[:line.index('\n')].split(',')
-
-  # System info.
-  def __show_platform_info__ (self):
-    platform_info = [
-      ('AlienVault version', self.__ossim_config['versions'][0]),
-      ('Installed profiles', ','.join(self.__ossim_config['profiles'])),
-      ('Operating system', platform.system ()),
-      ('Hardware platform', platform.machine ()),
-      ('Hostname', platform.node ()),
-    ]
-
-    for (field, value) in platform_info:
-      rjustify = 60 - len (field)
-      Output.emphasized ('     %s: %s' % (field, value.rjust(rjustify, ' ')), [value])
-
   # Run a plugin.
   def __run_plugin__ (self, filename, verbose, raw):
     try:
-      plugin = Plugin (filename, self.__ossim_config, self.__severity_list, verbose, raw)
-    except (PluginError, PluginConfigParserError) as e:
-      if verbose > 0:
-        print ''
-        Output.warning (e.msg)
-      else:
-        self.__summary.append ({'plugin': e.plugin, 'warning': e.msg})
-    except Exception as e:
-      print ''
-      Output.error ('Unknown error parsing plugin "%s": %s' % (filename, str(e)))
-    else:
-      if (plugin.get_enable()) and (plugin.get_checks_len() > 0) and (plugin.check_category (self.__category_list)):
+      plugin = Plugin (filename, self.__alienvault_config, self.__severity_list, verbose, raw)
+      if (plugin.get_checks_len() > 0) and (plugin.check_category (self.__category_list)):
         self.__summary.append (plugin.run ())
       else:
         del plugin
+
+    except (PluginError, PluginConfigParserError, CheckError) as e:
+      if verbose > 0:
+        Output.warning (e.msg)
+      else:
+        self.__summary.append ({'plugin': e.plugin, 'warning': e.msg})
+    except Exception, msg:
+      print ''
+      Output.error ('Unknown error parsing plugin "%s": %s' % (filename, str(msg)))
 
   # Compress some data.
   def __compress__ (self, data):

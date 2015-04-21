@@ -36,17 +36,58 @@ require_once 'scan_util.php';
 
 Session::logcheck('environment-menu', 'ToolsScan');
 
+
+$scan_path_log = "/tmp/nmap_scanning_".md5(Session::get_secure_id()).'.log';
+
+
+$data['status'] = 'success';
+$data['data']   = NULL;
+
+if (file_exists($scan_path_log))
+{
+    $log_file = file_get_contents($scan_path_log);
+
+    if (preg_match('/Scan could not be completed.(.*)/s', $log_file, $matches))
+    {
+        $data['status'] = 'error';
+        $data['data']   = nl2br($matches[0]);
+
+        @unlink($scan_path_log);
+
+        echo json_encode($data);
+        exit();
+    }
+
+    @unlink($scan_path_log);
+}
+
+
 $db   = new ossim_db();
 $conn = $db->connect();
 
 $scan     = new Scan();
 $lastscan = $scan->get_results();
 
+
+
 if (!empty($lastscan['scanned_ips']))
 {
+    ob_start();
+
     scan2html($conn, $lastscan);
+
+    $data['data'] = ob_get_contents();
+
+    ob_end_clean();
+}
+else
+{
+    $data['status'] = 'warning';
+    $data['data']   = _("The scan has been completed. We couldn't find any host within the selected networks");
+
+    $scan->delete_data();
 }
 
 $db->close();
 
-?>
+echo json_encode($data);

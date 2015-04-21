@@ -77,7 +77,7 @@ class Av_exception
     * @access private
     */  
     private static $_error_types = array(
-        '1' => array('USER ERROR',     'Operation was not completed due to an error'),
+        '1' => array('USER ERROR',     'Error thrown by user'),
         '2' => array('DATABASE ERROR', 'Operation was not completed due to a database error'),
         '3' => array('PHP ERROR',      'Operation was not completed due to an error')
     );

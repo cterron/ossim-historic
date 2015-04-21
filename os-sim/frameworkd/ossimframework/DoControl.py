@@ -55,6 +55,7 @@ class ControlManager:
     def __init__(self, conf):
         logger.debug("Initialising ControlManager...")
         self.control_agents = {}
+        self.__control_agents_connection_ip_vs_sensor_ip = {}
         self.transaction_map = {}
         self.__myconf = conf
         self.__myDB = OssimDB(conf[VAR_DB_HOST],
@@ -120,6 +121,20 @@ class ControlManager:
         except Exception,e:
             logger.info(str(e))
 
+    def get_agent_ip_from_sensor_table(self, requestor_ip):
+        """When an agent connects to the framework it could use an virtual ip or the physical one. 
+        we need to know the one in the sensor table"""
+        if not Util.isIPV4(requestor_ip):
+            return requestor_ip
+        query="SELECT INET6_NTOP(ip) as ip FROM alienvault.system, alienvault.sensor WHERE sensor_id = sensor.id AND (admin_ip = INET6_PTON('%s') OR vpn_ip = INET6_PTON('%s') OR ha_ip = INET6_PTON('%s')) ORDER BY ha_name LIMIT 1;" % (requestor_ip, requestor_ip,requestor_ip)
+        if not self.__myDB_connected:
+            self.__myDB_connected = self.__myDB.connect ()
+        data = self.__myDB.exec_query(query)
+        agent_ip = requestor_ip
+        if len(data) == 1:
+            if 'ip' in data[0]:
+                agent_ip = data[0]['ip']
+        return agent_ip
 
     def refreshAgentCache(self, requestor, agent_ip, agent_name):
         if not self.__myDB_connected:
@@ -274,6 +289,7 @@ class ControlManager:
                 logger.debug("Adding control agent %s to the list., with key %s [%s]" % (id, requestor.getRequestorIP(),requestor.get_sensorID()))
                 # add this connection to our control agent collection
                 self.control_agents[requestor.getRequestorIP()] = requestor
+                self.__control_agents_connection_ip_vs_sensor_ip[self.get_agent_ip_from_sensor_table(requestor.getRequestorIP())] = requestor.getRequestorIP()
                 # indicate we're good to go
                 response = 'ok id="%s"\n' % id
                 self.__ntop_apache_manager.refreshDefaultNtopConfiguration(first_sensor_name=id, must_reload=True)
@@ -297,7 +313,7 @@ class ControlManager:
                     keys.sort()
                     names = ""
                     for key in keys:
-                        names += "%s=%s|" % (self.control_agents[key].getRequestorID(), key)
+                        names += "%s=%s|" % (self.control_agents[key].getRequestorID(), self.get_agent_ip_from_sensor_table(key))
                     names = names[:-1]
                 else:
                     names = ""
@@ -345,7 +361,7 @@ class ControlManager:
                         real_size = len(page_keys)
                         names = ""
                         for key in page_keys:
-                            names += "%s=%s|" % (self.control_agents[key].getRequestorID(), key)
+                            names += "%s=%s|" % (self.control_agents[key].getRequestorID(), self.get_agent_ip_from_sensor_table(key))
                         names = names[:-1]
                         #names = "|".join(page_keys)
                     else:
@@ -406,14 +422,15 @@ class ControlManager:
 
                                 # append the transaction to the message for tracking
                                 try:
-                                    self.control_agents[key].wfile.write(line + ' transaction="%s"\n' % transaction)                                    
+                                    self.control_agents[key].wfile.write(line + ' transaction="%s"\n' % transaction)
                                     logger.info("Sending command to agents: %s" % ( key))
                                 except socket.error, e:
                                     logger.warning("It can't write on requestor socket...")
-                                    
-                    elif id in self.control_agents:
-                        logger.debug("Broadcasting to %s ..." % id)
 
+                    elif id in self.control_agents or id in self.__control_agents_connection_ip_vs_sensor_ip:
+                        logger.debug("Broadcasting to %s ..." % id)
+                        if id not in self.control_agents:
+                            id = self.__control_agents_connection_ip_vs_sensor_ip[id] # retrieve the connection ip
                         # add this connection to the transaction map
                         transaction = self.__transaction_id_get()
                         self.transaction_map[transaction] = {'socket':requestor, 'time':time.time()}

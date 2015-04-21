@@ -1101,22 +1101,7 @@ sub current_config {
         $cw = 0;
     }
 
-    if ( defined( $config{'ha_heartbeat_start'} ) ) {
-        if ( $config{'ha_heartbeat_start'} eq "yes" ) {
-            if ( $config{'ha_virtual_ip'} ne "unconfigured" ) {
-                $config{'admin_ip'} = $config{'ha_virtual_ip'};
-                if ( $profile_framework == 1 ) {
-                    $config{'framework_ip'} = $config{'ha_virtual_ip'};
-                }
-                if ( $profile_server == 1 ) {
-                    $config{'server_ip'} = $config{'ha_virtual_ip'};
-                }
-                #if ( $profile_sensor == 1 ) {
-                #    $config{'sensor_ip'} = $config{'ha_virtual_ip'};
-                #}
-            }
-        }
-    }
+
 
     return %config;
 }

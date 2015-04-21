@@ -34,7 +34,7 @@
 #
 import locale, re
 import commands
-
+import socket
 from datetime import datetime
 from pytz import timezone
 
@@ -60,6 +60,13 @@ def get_var(regex, line):
 def get_vars(regex, line):
     return re.findall(regex, line)
 
+def isIPV4(string_ip):
+    ipv4 = True
+    try:
+        socket.inet_pton(socket.AF_INET, string_ip)
+    except:
+        ipv4 = False
+    return ipv4
 
 def isIpInNet(host, net_list):
     ipv4_regex= "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"

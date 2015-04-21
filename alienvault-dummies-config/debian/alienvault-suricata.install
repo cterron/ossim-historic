@@ -1,1 +1,7 @@
 alienvault-suricata/reference.config etc/suricata
+alienvault-suricata/pfring.yaml.template etc/suricata/templates
+alienvault-suricata/afpacket.yaml.template etc/suricata/templates
+alienvault-suricata/cuda.yaml.template etc/suricata/templates
+alienvault-suricata/engine_analysis.yaml.template etc/suricata/templates
+alienvault-suricata/flow.yaml.template etc/suricata/templates
+alienvault-suricata/applayer.yaml.template etc/suricata/templates

@@ -73,27 +73,35 @@
 * - GDImage()
 */
 
-$path_conf = $GLOBALS['CONF'];
+/*$path_conf = $GLOBALS['CONF'];
 $fpdf_path = $path_conf->get_conf('fpdf_path');
 
-if (!is_dir($fpdf_path)) 
+if (!is_dir($fpdf_path))
 {
     $fpdf_path=' /usr/share/fpdf' ;
-}
+}*/
+
+// The path has been changed to read our modified version of fpdf.php for PHP 5.4
+$fpdf_path = '/usr/share/ossim/www/pdf';
 
 define('FPDF_FONTPATH', 'font/');
 define('DEFAULT_LINE_HEIGTH', 6);
-include_once ($fpdf_path . '/fpdf.php');
+include_once($fpdf_path.'/fpdf.php');
 
 class Pdf extends FPDF 
 {
     public $ossim_conn;
-    
+
+
     public $snort_conn;
-    
+
+
     public $conf;
-    
+
+
     public $security_report;
+
+
     /*
     Function PDF
     $title = Title given to the PDF report
@@ -136,8 +144,8 @@ class Pdf extends FPDF
         /* Log pdf created */
         Log_action::log(19, NULL);
     }
-	
-	
+
+
     public function Header() 
     {
         $www_base = $this->conf->get_conf('base_dir');
@@ -147,7 +155,8 @@ class Pdf extends FPDF
         $this->Cell(0, 6, $this->title, 'B', 0, 'R');
         $this->Ln(20);
     }
-	
+
+
     public function Footer() 
     {
         $this->SetY(-15);
@@ -155,8 +164,8 @@ class Pdf extends FPDF
         $this->Cell(0, 10, strftime("%d-%b-%Y", time()) , 0, 0, 'L');
         $this->Cell(0, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
     }
-	
-	
+
+
     public function __WriteBold($text, $color = '') 
     {
         $this->SetFont('Arial', 'B', 12);
@@ -178,8 +187,8 @@ class Pdf extends FPDF
         $this->SetFont('Arial', '', 12);
         $this->SetTextColor(0);
     }
-	
-	
+
+
     public function __WriteTitle($title, $color = 'blue') 
     {
         $this->SetFont('Arial', 'B', 14);
@@ -202,8 +211,8 @@ class Pdf extends FPDF
         $this->SetFont('', '', 10);
         $this->Ln();
     }
-    
-    
+
+
     /*
     __WriteTable()
     
@@ -312,8 +321,8 @@ class Pdf extends FPDF
         
         $this->Ln(5);
     }
-    
-	
+
+
     public function __AttackHosts($title, $ip_target, $limit, $color, $type, $date_from, $date_to) 
     {
     	if ($limit == '')
@@ -350,8 +359,8 @@ class Pdf extends FPDF
         
         $this->__WriteTable($title, $length, $content, 1, $color);
     }
-	
-	
+
+
     public function AttackedHosts($limit, $type, $date_from, $date_to) 
     {    
     	if ($limit == '')
@@ -364,8 +373,8 @@ class Pdf extends FPDF
         }
         $this->__AttackHosts("Top $limit Attacked Hosts", 'ip_dst', $limit, 'red', $type, $date_from, $date_to);
     }
-    
-	
+
+
     public function AttackerHosts($limit, $type, $date_from, $date_to) 
     {
     	if ($limit == '')
@@ -380,8 +389,8 @@ class Pdf extends FPDF
         
         $this->__AttackHosts("Top $limit Attacker Hosts", "ip_src", $limit, "blue", $type, $date_from, $date_to);
     }
-	
-    
+
+
     public function Events($limit, $type, $date_from, $date_to) 
     {
     	if ($limit == '')
@@ -401,8 +410,8 @@ class Pdf extends FPDF
         
         $this->__WriteTable("Top $limit Events", $length, $content, 1);
     }
-	
-    
+
+
     public function Ports($limit, $type, $date_from, $date_to) 
     {
     	if ($limit == '')
@@ -421,8 +430,8 @@ class Pdf extends FPDF
         
         $this->__WriteTable("Top $limit Destination Ports", $length, $content, 1, 'orange');
     }
-	
-    
+
+
     public function EventsByRisk($limit, $type, $date_from, $date_to) 
     {
     	if ($limit == '')
@@ -441,9 +450,8 @@ class Pdf extends FPDF
         
         $this->__WriteTable("Top $limit Events by risk", $length, $content, 1);
     }
-	
-	
-	
+
+
     /*
     * INCIDENTS
     */
@@ -550,8 +558,8 @@ class Pdf extends FPDF
         
         return $ids;
     }
-	
-	
+
+
 	public function IncidentSummaryNoPDF($title, $ref, $summary, $priority, $fil, $assets = NULL, $conn = NULL, $user = NULL) 
 	{
         $ids = array();
@@ -594,8 +602,8 @@ class Pdf extends FPDF
 
         return $returnContent;
     }
-	
-	
+
+
     public function Incident($incident_id) 
     {
         $incident_list = Incident::get_list($this->ossim_conn, " AND incident.id = $incident_id");
@@ -769,9 +777,8 @@ class Pdf extends FPDF
             } 
         }
     }
-   
-    
-    
+
+
     public function IncidentNoPDF($incident_id) 
     {
         $incident_list = Incident::get_list($this->ossim_conn, " AND incident.id = $incident_id");
@@ -853,8 +860,8 @@ class Pdf extends FPDF
         
         return $content;
     }
-    
-     
+
+
     /*
     PRE:
     time_range = day, week, month, year
@@ -996,8 +1003,8 @@ class Pdf extends FPDF
         
         $this->__WriteTable("Metrics last $time_range", $length, $content, 0, $color);
     }
-    
-    
+
+
     /* JASPER */
     public function MetricsNoPDF($time_range = 'week', $type = 'attack', $target = 'host', $assets_filter = '', $dates_filter = '', $user = '') 
     {       

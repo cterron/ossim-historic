@@ -30,6 +30,9 @@
 ---
 # OSSEC Windows deployment
 # Input params:
+# auth_file: path to temporary auth file
+# agent_config_file: path to temporary agent configuration file
+# agent_key_file: path to temporary agent keys file
 # agent_name: agent name
 # windows_ip: windows ip
 # windows_username: windows user
@@ -38,6 +41,9 @@
 # target: Host where should be done the deployment
 # Sample of usage:
 # ansible-playbook -c local  -vv --extra-vars='target=127.0.0.1
+#                                              auth_file=xxx
+#                                              agent_config_file=xxx
+#                                              agent_key_file=xxx
 #                                              agent_name=xxx
 #                                              windows_ip=192.168.1.221
 #                                              windows_username=Administrator
@@ -52,7 +58,7 @@
 
   vars:
     downloads_dir: /usr/share/ossim/www/downloads/
-    ossec_agent_binary_file: ossec-win32-agent_avmod_20130218085020.exe
+    ossec_agent_binary_file: ossec-win32-agent.exe
     ossec_agent_config_template: /etc/ossim/agent/ossecagentconfig.cfg
     ossec_server_key_file: /var/ossec/etc/client.keys
     osser_server_manage: /var/ossec/bin/manage_agents
@@ -61,8 +67,13 @@
   #Task list
 
   tasks:
+
+    - name: Generate authentication file
+      template: src=auth_file_template.j2 dest={{auth_file}}
+#      sudo: yes
+
     - name: Get Program Files
-      action: shell executable=/bin/bash winexe --user={{windows_domain}}/{{windows_username}}%{{windows_password}} --configfile={{smb_winexec_config_file}} //{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles=" | cut -b 14-
+      action: shell executable=/bin/bash program_files_x86=$(winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles(x86)=" | cut -d'=' -f 2-); program_files_x64=$(winexe  --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c set' | grep "^ProgramFiles=" | cut -d'=' -f 2-); [[ $program_files_x86 ]] && echo $program_files_x86 || echo $program_files_x64
       register: PROGRAM_FILES
 
     - name: Cannot retrieve Program Files location from windows host
@@ -93,52 +104,60 @@
       sudo: yes
 
     - name: Restart server
-      action: command /etc/init.d/ossec restart
+      action: service name=ossec state=restarted
       sudo: yes
 
     - name: Send agent installer
-      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --user={{windows_username}}%{{windows_password}} --workgroup={{windows_domain}} --configfile={{smb_winexec_config_file}} --command='lcd {{downloads_dir}}; put {{ossec_agent_binary_file}}'
+      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='lcd {{downloads_dir}}; put {{ossec_agent_binary_file}}'
+
+    - name: Stop the ossec agent if it is working.
+      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
+      register: stop_result
+      ignore_errors: True
+
+
+    - name: Kill the manager if it is working. When the manager is working the install process doesn't work
+      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c taskkill /IM win32ui.exe /F > nul 2>&1'
+      register: install_result
+      ignore_errors: True
 
     - name: Install agent
-      action: command winexe --user={{windows_domain}}/{{windows_username}}%{{windows_password}} --configfile={{smb_winexec_config_file}} //{{windows_ip}} 'cmd /c {{PROGRAM_FILES_DRIVE.stdout}}:\{{ossec_agent_binary_file}} /S'
+      action: command winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c {{PROGRAM_FILES_DRIVE.stdout}}:\{{ossec_agent_binary_file}} /S'
+      register: install_result
+
+    - debug: msg="Falla al instalar  {{install_result}}"
 
     - name: Remove agent installer
-      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --user={{windows_username}}%{{windows_password}} --workgroup={{windows_domain}} --configfile={{smb_winexec_config_file}} --command='rm {{ossec_agent_binary_file}}'
+      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='rm {{ossec_agent_binary_file}}'
 
-    - name: Generate agent configuration file
-      action: command mktemp
-      register: CONFIG_FILE
+    - name: Get server inteface
+      action: shell executable=/bin/bash ip route get {{windows_ip}}|head -1 |grep -oP 'dev\s(.*?)\s'| sed -e 's/dev //g'
+      register: IFACE_SERVER
+
+    - name: Get server interface IP
+      action: shell executable=/bin/bash ip addr show {{IFACE_SERVER.stdout}} | sed   -e '/inet/h; $!d; x' -e 's/.*inet\s\(.*\)\/.*/\1/'
+      register: SERVER_IP
 
     - name: Generate agent configuration
-      template: src=ossecagentconfig.cfg dest={{CONFIG_FILE.stdout}}
+      template: src=ossecagentconfig.cfg dest={{agent_config_file}}
 
     - name: Send agent configuration
-      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --user={{windows_username}}%{{windows_password}} --workgroup={{windows_domain}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{CONFIG_FILE.stdout}} ossec.conf'
-
-    - name: Remove local agent configuration
-      file: path={{CONFIG_FILE.stdout}} state=absent
-      sudo: yes
-
-    - name: Generate agent keys files
-      action: command mktemp
-      register: KEYS_FILE
+      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{agent_config_file}} ossec.conf'
 
     - name: Generate agent keys
-      action: shell executable=/bin/bash grep {{windows_ip}} {{ossec_server_key_file}} > {{KEYS_FILE.stdout}}
+      action: shell executable=/bin/bash grep -w {{windows_ip}} {{ossec_server_key_file}} > {{agent_key_file}}
       sudo: yes
 
     - name: Send agent keys
-      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --user={{windows_username}}%{{windows_password}} --workgroup={{windows_domain}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{KEYS_FILE.stdout}} client.keys'
+      action: command smbclient //{{windows_ip}}/{{PROGRAM_FILES_DRIVE.stdout}}$ --authentication-file={{auth_file}} --configfile={{smb_winexec_config_file}} --command='cd "{{PROGRAM_FILES_DIR.stdout}}\ossec-agent"; put {{agent_key_file}} client.keys'
 
-    - name: Remove local agent keys
-      file: path={{KEYS_FILE.stdout}} state=absent
-      sudo: yes
+    - name: Stop the agent
+      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net stop OssecSvc > nul 2>&1'
+      register: stop_result
+      ignore_errors: True
 
-    - name: Stop agent
-      action: shell executable=/bin/bash echo $'\n' | winexe --user={{windows_domain}}/{{windows_username}}%{{windows_password}} --configfile={{smb_winexec_config_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}" & ossec-agent\service-stop > nul 2>&1'
-
-    - name: Start agent
-      action: shell executable=/bin/bash echo $'\n' | winexe --user={{windows_domain}}/{{windows_username}}%{{windows_password}} --configfile={{smb_winexec_config_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}" & ossec-agent\service-start > nul 2>&1'
+    - name: Start the agent
+      action: shell executable=/bin/bash echo $'\n' | winexe --authentication-file={{auth_file}} //{{windows_ip}} 'cmd /c cd "{{PROGRAM_FILES_DRIVE.stdout}}:\{{PROGRAM_FILES_DIR.stdout}}\ossec-agent" & net start OssecSvc > nul 2>&1'
 
     - name: Set ossim agent plugin configuration
       action: command /usr/share/ossim/scripts/ossec_set_plugin_config.sh

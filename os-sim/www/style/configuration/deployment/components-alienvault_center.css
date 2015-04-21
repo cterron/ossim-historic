@@ -811,7 +811,6 @@ span.dynatree-active .t_label
 
 .ui-multiselect ul.selected
 { 
-    position: relative;
     padding: 0;
     overflow: auto;
     overflow-x: hidden;
@@ -819,7 +818,6 @@ span.dynatree-active .t_label
     margin: 0;
     list-style: none;
     border: 0;
-    position: relative;
     width: 100%;
 }
 
@@ -876,8 +874,7 @@ span.dynatree-active .t_label
 }
 
 .ui-multiselect ul.available
-{ 
-    position: relative;
+{
     padding: 0;
     overflow: auto;
     overflow-x: hidden;

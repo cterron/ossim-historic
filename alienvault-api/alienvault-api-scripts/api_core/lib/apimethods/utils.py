@@ -36,7 +36,7 @@ import pwd
 import grp
 import stat
 import api_log
-
+from subprocess import check_call,CalledProcessError
 
 valid_ip4_cidr_regex = re.compile('^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(\d|[1-2]\d|3[0-2]))?$')
 valid_ossec_agent_id_regex = re.compile('^[0-9]{1,4}$')
@@ -233,3 +233,21 @@ def is_valid_integer(value):
     except:
         return False
     return True
+
+def compare_dpkg_version(v1,v2):
+    """
+        Compare two dpkg version v1 and v2
+        Execute on LOCAL!!!!
+    """
+    try:
+        check_call(["dpkg","--compare-versions",v1,"eq",v2])
+        return "equal"
+    except CalledProcessError:
+        pass 
+    try:
+        check_call(["dpkg","--compare-versions",v1,"gt",v2])
+        return "greater"
+    except CalledProcessError:
+        pass
+    return "less"
+

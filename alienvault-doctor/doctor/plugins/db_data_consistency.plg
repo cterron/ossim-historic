@@ -1,0 +1,40 @@
+[properties]
+name=DB data consistency
+description=Check for data consistency in a database.
+category=alienvault,database
+type=db
+host=localhost
+user=@dbuser@
+password=@dbpass@
+database=alienvault
+profiles=Database:>4.0
+raw_limit=100
+
+[Server DB configuration]
+query=select conf, value from config where conf = 'server_id' or conf = 'server_address' or conf = 'ossim_server_version'
+conditions=@info@;@string@:!=""
+actions=@command:echo "There are null fields in your config table" | mailx -s "Null config fields alert" root
+warning=There are null fields in your config table
+advice=Some critical fields from the alienvault.config table are empty. Please check your installation and/or update the related packages properly
+
+[Event sensor null fields]
+query=select count(id) from event where sensor_id is null and plugin_id != 1505
+conditions=@int@:==0
+warning=Some events in your database have null sensor_id fields
+advice=Events without an associated sensor_id are a sign of misconfigured plugins and/or sensor properties. Please check both in your system
+
+[Entry number]
+query=@pivot@:SELECT TABLE_ROWS FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'alienvault_siem' AND TABLE_NAME IN ('acid_event', 'extra_data', 'reputation_data');
+conditions=@float@;@float@:<position[0]*1.1@or@==position[0];@float@:<position[0]@or@==position[0]
+fail_if_empty=False
+severity=High
+warning=Different number of rows between SIEM tables
+advice=Different number of rows in the SIEM database could be a result of a failed backup, or even a corrupt database. Please check your database health
+
+[Event backup window]
+query=SELECT TABLE_ROWS, VALUE FROM INFORMATION_SCHEMA.TABLES, alienvault.config WHERE TABLE_SCHEMA = 'alienvault_siem' AND TABLE_NAME = 'acid_event' AND CONF = 'backup_events';
+conditions=@float@:<position[1]*2;@float@
+fail_if_empty=False
+severity=High
+warning=Current event window is way higher that the backup one
+advice=A malfunctioning backup system may lead to a general failure. Please check your backup configuration

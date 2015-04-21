@@ -168,7 +168,7 @@ case "$1" in
         for trigger in $2
         do
             case "$trigger" in
-                alienvault-restart-apache2)
+                alienvault-restart-apache2|alienvault-crypto-new)
                     /etc/init.d/apache2 force-reload || true
                     update-rc.d apache2 defaults
                 ;;

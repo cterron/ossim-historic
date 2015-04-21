@@ -133,16 +133,16 @@ class Util
             '/PLUGIN_ID/'  => array('func' => 'get_plugin_id', 'parameters' => array()),
             '/PLUGIN_SID/' => array('func' => 'get_plugin_sid', 'parameters' => array()),
             '/FILENAME/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'filename')),
-            '/USERNAME/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'username')),
-            '/USERNAME1/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username1')),
-            '/USERNAME2/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username2')),
-            '/USERNAME3/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username3')),
-            '/USERNAME4/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username4')),
-            '/USERNAME5/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username5')),
-            '/USERNAME6/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username6')),
-            '/USERNAME7/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username7')),
-            '/USERNAME8/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username8')),
-            '/USERNAME9/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'username9'))
+            '/USERDATA/'   => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata')),
+            '/USERDATA1/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata1')),
+            '/USERDATA2/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata2')),
+            '/USERDATA3/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata3')),
+            '/USERDATA4/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata4')),
+            '/USERDATA5/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata5')),
+            '/USERDATA6/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata6')),
+            '/USERDATA7/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata7')),
+            '/USERDATA8/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata8')),
+            '/USERDATA9/'  => array('func' => 'get_event_data', 'parameters' => array($conn, 'userdata9'))
         );
 
         foreach ($translations as $k => $v)
@@ -154,7 +154,7 @@ class Util
                     $d_param = call_user_func_array(array($alarm, $v['func']), $v['parameters']);
 
                     $parameters  = array($d_param);
-                    $replacement = call_user_func_array('getprotobynumber', $parameters);
+                    $replacement = call_user_func_array('Protocol::get_protocol_by_number', $parameters);
 
                     break;
 
@@ -598,7 +598,51 @@ class Util
             $ip
         ) . "&what=$what&start=$start&end=$end&type=$type&zoom=$zoom";
     }
-
+    
+    /**
+     * Function number_format_locale
+     *
+     * @param int|string $number
+     * @param int        $decimals
+     *
+     * @return string
+     */
+    public static function get_number_mark()
+    {
+        $locale = (isset($_COOKIE['locale']) ? $_COOKIE['locale'] : $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        $lang   = explode(",", $locale);
+        $lang   = strtolower(substr($lang[0], 0, 2));
+        
+        $set_lang = array(
+            'en' => 1,
+            'ja' => 1,
+            'zh' => 1,
+            'ko' => 1
+        );
+        
+        if ($set_lang[$lang])
+        {
+            $decimal   = '.';
+            $thousands = ',';
+        }
+        else
+        {
+            $decimal   = ',';
+            $thousands = '.';
+        }
+                
+        return array(
+            $decimal,
+            $thousands    
+        );
+        
+        /*
+            Another options to get the locale:
+            setlocale(LC_NUMERIC, 0); //Get the server locale
+            localeconv(); //Get the default numeric settings for the current locale
+        */
+    }
+    
     /**
      * Function number_format_locale
      *
@@ -608,22 +652,8 @@ class Util
      * @return string
      */
     public static function number_format_locale($number, $decimals = 0)
-    {
-        $locale    = (isset($_COOKIE['locale']) ? $_COOKIE['locale'] : $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-        $languages = explode(",", $locale);
-
-        switch ($languages[0])
-        {
-            case 'es-es':
-            case 'de-de':
-            case 'es-mx':
-                $decimal   = ',';
-                $thousands = '.';
-                break;
-            default:
-                $decimal   = '.';
-                $thousands = ',';
-        }
+    { 
+        list($decimal, $thousands) = self::get_number_mark();
 
         return number_format($number, $decimals, $decimal, $thousands);
     }
@@ -660,12 +690,12 @@ class Util
     public static function make_form($method, $action, $target='', $button_name='Back')
     {
         echo "<div style='margin:auto; width:90%'>
-				<form method='$method' action='$action' target='$target'>
-					<div style='margin:auto; text-align: center;'>
-						<input type='submit' name='send' id='send' class='button' value='" . _($button_name) . "'/>
-					</div>
-				</form>
-			</div>";
+                <form method='$method' action='$action' target='$target'>
+                    <div style='margin:auto; text-align: center;'>
+                        <input type='submit' name='send' id='send' class='button' value='" . _($button_name) . "'/>
+                    </div>
+                </form>
+            </div>";
     }
 
     /**
@@ -757,10 +787,10 @@ class Util
     {
         $out = str_replace('directive_event: ', '', $data);
         $out = str_replace('rrd_anomaly: ', '', $out);
-        
+
         return $out;
-    }  
-      
+    }
+
 
     /**
      * Function utf8_encode2
@@ -790,36 +820,34 @@ class Util
         return (self::is_utf8($string)) ? utf8_decode($string) : $string;
     }
 
+
     /**
      * Function htmlentities
      *
-     * @param string $string
-     * @param int    $flag
-     * @param string $charset
+     * @param string    $string   String to convert
+     * @param integer   $flag     [Optional]  A bitmask which specify how to handle quotes, invalid code unit sequences, ...
+     * @param string    $charset  [Optional]  Encoding used when converting characters.
      *
      * @return string
      */
     public static function htmlentities($string, $flag = ENT_QUOTES, $charset = 'ISO-8859-1')
     {
-        $string = (mb_detect_encoding($string . " ", 'UTF-8,ISO-8859-1') == 'ISO-8859-1') ? mb_convert_encoding(
-            $string,
-            'UTF-8',
-            'ISO-8859-1'
-        ) : $string;
-        $string = mb_convert_encoding($string, "HTML-ENTITIES", "UTF-8");
+        if (mb_detect_encoding($string.' ', 'UTF-8,ISO-8859-1') == 'ISO-8859-1')
+        {
+            $string = mb_convert_encoding($string, 'UTF-8', 'ISO-8859-1');
+        }
 
-        $string = preg_replace('/&#(\d{4,5});/', '#_#$1;', $string);
-        $string = html_entity_decode($string, $flag, 'ISO-8859-1');
-        $string = @htmlentities($string, $flag, $charset, FALSE);
+        $string = mb_convert_encoding($string, 'HTML-ENTITIES', 'UTF-8');
 
-        return preg_replace('/#_#/', '&#', $string);
+        return @htmlentities($string, $flag, $charset, FALSE);
     }
+
 
     /**
      * Function htmlentities_url
      *
      * This function is sensible with the complex URLs with parameters
-     * It doesn't encode de ampersand character to &amp;
+     * It doesn't encode the ampersand character to &amp;
      *
      * @param string $string
      *
@@ -829,6 +857,7 @@ class Util
     {
         return str_replace("&amp;", "&", self::htmlentities($string));
     }
+
 
     /**
      * Function js_entities
@@ -890,11 +919,14 @@ class Util
      */
     public static function utf8entities($str)
     {
-        return html_entity_decode(
-            preg_replace('/&#(\d{4,5});/', '&amp;#$1;', @mb_convert_encoding($str, 'HTML-ENTITIES', 'UTF-8'))
-        );
+        $str = @mb_convert_encoding($str, 'HTML-ENTITIES', 'UTF-8');
+        $str = preg_replace('/&#(\d{4,5});/', '&amp;#$1;', $str);
+
+        return self::html_entities2utf8($str);
+
+        //return html_entity_decode(preg_replace('/&#(\d{4,5});/', '&amp;#$1;', @mb_convert_encoding($str, 'HTML-ENTITIES', 'UTF-8')));
     }
-    
+
     /**
      * Function html_entities2utf8
      *
@@ -1171,7 +1203,7 @@ class Util
         $ossim_link = AV_MAIN_PATH;
         if ($ossim_link == '')
         {
-            $conf       = $GLOBALS['CONF'];           
+            $conf       = $GLOBALS['CONF'];
             $ossim_link = ($conf->get_conf('ossim_link') != '') ? $conf->get_conf('ossim_link') : "/ossim";
         }
 
@@ -1245,7 +1277,7 @@ class Util
     public static function get_system_uuid()
     {
         $uuid = strtoupper(trim(`/usr/bin/alienvault-system-id`));
-        
+
         if (!valid_uuid($uuid))
         {
             $uuid = self::get_encryption_key();
@@ -1282,7 +1314,7 @@ class Util
         }
 
         $db->close();
-        
+
         return $uuid;
     }
 
@@ -1309,13 +1341,28 @@ class Util
     public static function uuid_format($uuid)
     {
         $uuid = strtolower($uuid);
-        
+
         if (preg_match("/(........)-(....)-(....)-(....)-(............)/", $uuid) == FALSE)
         {
             $uuid = preg_replace("/(........)(....)(....)(....)(............)/", "\\1-\\2-\\3-\\4-\\5", $uuid);
         }
-        
-        return $uuid;        
+
+        return $uuid;
+    }
+
+    /**
+     * Function uuid_format_nc
+     *
+     * Format a canonical UUID into a non-canonical format
+     *
+     * @param string $uuid
+     *
+     * @return string
+     */
+    public static function uuid_format_nc($uuid)
+    {
+
+        return strtoupper(str_replace('-', '', $uuid));
     }
 
     /**
@@ -1473,9 +1520,9 @@ class Util
             $avcenters = Av_center::get_avc_list($conn);
 
             if ($avcenters['status'] == 'success')
-            {                
+            {
                 $av_data = array_shift($avcenters['data']);
-                $uuid    = $av_data['system_id'];              
+                $uuid    = $av_data['system_id'];
             }
 
             // Get the system uuid
@@ -1643,13 +1690,13 @@ class Util
             }
 
             return FALSE;
-        } 
+        }
         catch (phpmailerException $e)
         {
             echo $e->errorMessage(); //Pretty error messages from PHPMailer
 
             return FALSE;
-        } 
+        }
         catch (Exception $e)
         {
             echo $e->getMessage(); //Boring error messages from anything else!
@@ -1683,11 +1730,11 @@ class Util
             while ($omega >= $alpha)
             {
                 #if($order == SORT_ASC) {
-                #	while($array[$alpha][$column] < $guess) $alpha++;
-                #	while($array[$omega][$column] > $guess) $omega--;
+                #   while($array[$alpha][$column] < $guess) $alpha++;
+                #   while($array[$omega][$column] > $guess) $omega--;
                 #} else {
-                #	while($array[$alpha][$column] > $guess) $alpha++;
-                #	while($array[$omega][$column] < $guess) $omega--;
+                #   while($array[$alpha][$column] > $guess) $alpha++;
+                #   while($array[$omega][$column] < $guess) $omega--;
                 #}
                 if ($order == SORT_ASC)
                 {
@@ -2232,11 +2279,11 @@ class Util
 
             if ($current_data['status'] == 'success')
             {
-                $proxy_conf = $current_data['data']['update_proxy'];
-                $proxy_url  = $current_data['data']['update_proxy_dns'];
-                $proxy_user = $current_data['data']['update_proxy_user'];
-                $proxy_pass = $current_data['data']['update_proxy_pass'];
-                $proxy_port = $current_data['data']['update_proxy_port'];
+                $proxy_conf = $current_data['data']['update_update_proxy'];
+                $proxy_url  = $current_data['data']['update_update_proxy_dns'];
+                $proxy_user = $current_data['data']['update_update_proxy_user'];
+                $proxy_pass = $current_data['data']['update_update_proxy_pass'];
+                $proxy_port = $current_data['data']['update_update_proxy_port'];
             }
         }
 
@@ -2328,33 +2375,17 @@ class Util
         return $admin_ip;
     }
 
+
     /**
-    * Function get_default_uuid
-    *
-    * Returns the default uuid
-    *
-    * @return string
-    */
-    // DEPRECATED: now using Util::get_system_uuid() (Ticket ENG-95685)
+     * This method returns local system UUID (Alias of Util::get_system_uuid() (Ticket ENG-95685))
+     *
+     * @return string
+     */
     public static function get_default_uuid()
     {
-        $uuid = '';
-
-        $db   = new ossim_db();
-        $conn = $db->connect();
-
-        $admin_ip = self::get_default_admin_ip();
-        $res      = Av_center::get_system_info_by_ip($conn, $admin_ip);
-
-        if ($res['status'] == 'success')
-        {
-            $uuid = $res['data']['system_id'];
-        }
-
-        $db->close();
-
-        return $uuid;
+        return self::get_system_uuid();
     }
+    
 
     /**
      * Function clean_wiki_tags
@@ -2529,7 +2560,7 @@ class Util
      *
      * @return integer
      */
-    function compare_av_version($v1, $v2)
+    public static function compare_av_version($v1, $v2)
     {
         //Formating first version
         $v1 = trim($v1);
@@ -2557,7 +2588,7 @@ class Util
      *
      * @return string
      */
-    function get_packages_version()
+    public static function get_packages_version()
     {
 
         $version = @`dpkg -l | grep ossim-cd-tools | awk '{print $3}' | awk -F '-' '{print $1}'`;
@@ -2565,7 +2596,7 @@ class Util
         return $version;
 
     }
-    
+
     /**
     * Function group_nums
     *
@@ -2575,32 +2606,32 @@ class Util
     *
     * @return array
     */
-    function group_nums($array) { 
-        
-        $ret  = array(); 
-        $temp = array(); 
-       
+    public static function group_nums($array) {
+
+        $ret  = array();
+        $temp = array();
+
         foreach($array as $val)
-        {     
-            if (next($array) == ($val + 1)) 
+        {
+            if (next($array) == ($val + 1))
             {
-                $temp[] = $val; 
+                $temp[] = $val;
             }
             else if (count($temp) > 0)
-            { 
-                $temp[] = $val; 
-                $ret[]  = $temp[0].'-'.end($temp); 
-                $temp   = array(); 
-            } 
+            {
+                $temp[] = $val;
+                $ret[]  = $temp[0].'-'.end($temp);
+                $temp   = array();
+            }
             else
             {
-                $ret[] = $val; 
+                $ret[] = $val;
             }
-       } 
-       return $ret; 
-    } 
-    
-    
+       }
+       return $ret;
+    }
+
+
     /**
      * This function try to activate a OTX user
      *
@@ -2610,45 +2641,51 @@ class Util
      */
     public static function get_otx_username($token)
     {
-        $handle = curl_init();
+        // API CALL
+        $client = new Alienvault_client();
 
-        curl_setopt($handle, CURLOPT_URL,             'https://www.alienvault.com/apps/API/V1/get_username/'.$token);
-        curl_setopt($handle, CURLOPT_SSL_VERIFYPEER,  FALSE);
-        curl_setopt($handle, CURLOPT_SSL_VERIFYHOST,  FALSE);
-        curl_setopt($handle, CURLOPT_FOLLOWLOCATION,  TRUE);
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER,  TRUE);   
-        curl_setopt($handle, CURLOPT_SSLVERSION,      1); 
-        curl_setopt($handle, CURLOPT_SSL_CIPHER_LIST, 'TLSv1'); 
-        curl_setopt($handle, CURLOPT_TIMEOUT,         30); //timeout in seconds
-
-        $response = curl_exec($handle);
-        $error    = curl_error($handle);
+        $response = $client->system()->get_otx_user($token);
+        $response = @json_decode($response, TRUE);
         
-        curl_close($handle);
-        
-        // Error?
-        if ($error)
+        if (!$response || $response['status'] == 'error')
         {
-            return $error;
+            $exp_msg = $client->get_error_message($response);
+    
+            switch ($exp_msg)
+            {
+                case 'ERROR_CONNECTION':
+                    $error_msg = _('Limited or no connectivity: Make sure your network connection is active and try again.');
+                    break;
+                
+                case 'ERROR_NOT_REGISTERED_TOKEN':
+                    $error_msg = _('The OTX token you have entered is not valid.');
+                    break;
+                
+                default:
+                    $error_msg = _('Unexpected Error Found') . " [$exp_msg]." . _('Please Try Again Later.');
+                
+            }
+
+            Av_exception::throw_error(Av_exception::USER_ERROR, $error_msg);
         }
         
-        // Check answer        
-        $user = @json_decode( $response, TRUE );
-        if (!$user || $user['username'] == '')
+        $username = $response['data']['username'];
+        
+        if (empty($username))
         {
-            return _('Unable to activate user or Invalid OTX auth-token');
+            Av_exception::throw_error(Av_exception::USER_ERROR, _('The OTX token you have entered is not valid.'));
         }
         
         // Set token & username
         $config = new Config();
         $config->update("open_threat_exchange", "yes");
-        $config->update("open_threat_exchange_username", $user['username']);
+        $config->update("open_threat_exchange_username", $username);
         $config->update("open_threat_exchange_key", $token);
         $config->update("open_threat_exchange_last", '');
-
-        return "";
+        
+        return $username;
     }
-    
+
     /**
      * This function set @disable_calc_perms variable to enable/disable user perm calculation
      *
@@ -2661,8 +2698,8 @@ class Util
      */
     public static function disable_perm_triggers($conn, $enable=TRUE)
     {
-        Ossim_db::check_connection($conn); 
-        
+        Ossim_db::check_connection($conn);
+
         if ($enable)
         {
             $conn->Execute("SET @disable_calc_perms=1");
@@ -2670,16 +2707,16 @@ class Util
         else
         {
             $conn->Execute("SET @disable_calc_perms=NULL");
-            $rs = $conn->Execute("CALL update_all_users()"); 
+            $rs = $conn->Execute("CALL update_all_users()");
             $rs->Close();
         }
-        
+
         return $enable;
-        
-    }    
-    
+
+    }
+
 }
 
 
 /* End of file Util.inc */
-/* Location: ../include/classes/Util.inc */ 
+/* Location: ../include/classes/Util.inc */

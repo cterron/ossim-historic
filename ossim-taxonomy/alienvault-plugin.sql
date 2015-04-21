@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 UPDATE plugin SET product_type = 13, vendor = 'Sourcefire' where id = 1001;
 UPDATE plugin SET product_type = 13, vendor = 'Sourcefire' where id = 1002;
 UPDATE plugin SET product_type = 13, vendor = 'Sourcefire' where id = 1003;

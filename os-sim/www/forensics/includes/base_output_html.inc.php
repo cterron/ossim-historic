@@ -234,6 +234,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             <script type="text/javascript" src="../js/jquery.autocomplete.pack.js" language="javascript"></script>
             <!-- <script type="text/javascript" src="../js/jquery.simpletip.js"></script> -->
             <script type="text/javascript" src="../js/jquery.tipTip-ajax.js"></script>
+            <script type="text/javascript" src="../js/notification.js"></script>
             
             <!-- jSlider -->
             <script type="text/javascript" src="../js/jslider/jshashtable-2.1_src.js"></script>
@@ -322,22 +323,45 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             			type: "GET",
             			url: "base_bgtask.php",
             			data: "",
-            			success: function(msg) {
-                            var redirection = false;
-            				if (msg.match(/No pending tasks/)) {
-                                if($("#task").is(":visible")) { // check if there was a pending task
-                                    var redirection = true;
+            			success: function(msg)
+            			{
+                        var redirection = false;
+                        if (msg.match(/No pending tasks/))
+                        {
+                            // check if there was a pending task
+                            if($("#task").is(":visible"))
+                            {
+                                var redirection = true;
+                            }
+
+                            if ($("#task").is(":visible")) $("#task").toggle();
+                            __timeout = setTimeout("bgtask()",5000);
+
+                            if(redirection)
+                            {
+                                <?php
+                                // Refresh to Grouped by
+                                if (preg_match('/base_stat_[^\.]+.php/', $_SERVER['SCRIPT_NAME']))
+                                {
+                                    $_current_url = ($_SESSION["siem_default_group"] != "") ? 
+                                                     $_SESSION["siem_default_group"] : 
+                                                     $_SERVER['SCRIPT_NAME']."?sort_order=occur_d";
                                 }
-            					if ($("#task").is(":visible")) $("#task").toggle();
-            					setTimeout("bgtask()",5000);
-                                if(redirection) {
-                                    load_link('./base_qry_main.php?num_result_rows=-1&submit=Query+DB&current_view=-1');
+                                // Refresh to Main
+                                else
+                                {
+                                    $_current_url = 'base_qry_main.php?num_result_rows=-1&submit=Query+DB&current_view=-1';
                                 }
-            				} else {
+                                ?>
+                                load_link('./<?php echo $_current_url ?>');
+                            }
+                        }
+                        else
+                        {
             					if ($("#task").is(":hidden")) $("#task").toggle();
             					$("#task").html("<img style='border: none' src='./images/sandglass.png'> Deleting in background...");
-            					setTimeout("bgtask()",5000);
-            				}
+            					__timeout = setTimeout("bgtask()",5000);
+                        }
             			}
             		});
             	}
@@ -912,6 +936,15 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             				return $(this).attr('txt')
             			}
             	    });
+
+                $('#views_link').click(function()
+                {
+                    $('#views').css({top: -1*$('#views').outerHeight(true)}).toggle();
+                });
+                $('#views_close').click(function()
+                {
+                    $('#views').hide();
+                });
             	    
             		// AUTOCOMPLETE SEARCH FACILITY FOR SENSOR
             	    <?php
@@ -952,6 +985,18 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
 				
 				$db_aux = new ossim_db();
 				$conn_aux = $db_aux->connect();
+				
+				
+                // Purge or Restore backup action is running
+                list($backup_status, $backup_mode, $backup_progress) = Backup::is_running($conn_aux);
+                if ($backup_status > 0)
+                {
+                ?>
+                show_backup_status();
+                <?php
+                }
+				
+				
 				if (Session::is_pro())
                 {
 				    $my_entities = Acl::get_entities_to_assign($conn_aux);
@@ -1176,7 +1221,54 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
                 		}
             	    });
             	}
-    
+
+            // Check backup status with interval while is running
+            function show_backup_status()
+            {
+                var form_data = 'action=status';
+                
+                $.ajax({
+                    type: 'GET',
+                    url: '<?php echo AV_MAIN_PATH ?>/backup/ajax/backup_actions.php',
+                    dataType: 'json',
+                    data: form_data,
+                    success: function(data)
+                    {
+                        if (typeof(data) != 'undefined' && typeof(data.message) != 'undefined' && data.message != '')
+                        {
+                            var url         = "<?php echo Menu::get_menu_url(AV_MAIN_PATH.'/backup/index.php', 'configuration', 'administration', 'backup'); ?>";
+                            var backup_link = '<a href="' + url + '">' + data.message + '</a>';
+                            var msg         = 'A background task could be affecting to the performance<br/>' + backup_link;
+
+                            show_notification(msg, 'backup_info', 'nf_warning', 'padding: 2px; width: 100%; margin: auto; text-align: left');
+                            setTimeout('show_backup_status()', 10000);
+                        }
+                        else
+                        {
+                            $('#backup_info').html('');
+                        }
+                    }
+                });
+            }
+            function show_notification (msg, container, nf_type, style)
+            {
+                var nt_error_msg = (msg == '')   ? '<?php echo _('Sorry, operation was not completed due to an unknown error')?>' : msg;
+                var style        = (style == '' ) ? 'width: 80%; text-align:center; padding: 5px 5px 5px 22px; margin: 20px auto;' : style;
+
+                var config_nt = { content: nt_error_msg,
+                        options: {
+                            type: nf_type,
+                        },
+                        style: style
+                    };
+
+                var nt_id         = 'nt_ns';
+                var nt            = new Notification(nt_id, config_nt);
+                var notification  = nt.show();
+
+                $('#'+container).html(notification);
+            }
+            
             	function report_launcher(data,type) {
             		var url = '<?=urlencode((preg_match("/\?/",$_SERVER["REQUEST_URI"]) ? $_SERVER["REQUEST_URI"] : $_SERVER["REQUEST_URI"]."?".$_SERVER["QUERY_STRING"])."&complete=1")?>';
             		var dates = '<?=($y1!="") ? "&date_from=".urlencode("$y1-$m11-$d1") : "&date_from="?><?=($y2!="") ? "&date_to=".urlencode("$y2-$m21-$d2") : "&date_to="?>';
@@ -1185,7 +1277,7 @@ function PrintBASESubHeader($page_title, $page_name, $back_link, $refresh = 0, $
             	}
             
             // bgtask check
-            <?php if ($_SESSION["deletetask"] != "") echo "bgtask();\n"; else echo "// Not running"; ?>
+            <?php if ($_SESSION["deletetask"] != "") echo "if (!__timeout) bgtask();\n"; else echo "// Not running"; ?>
             
             $('document').ready(function()
             {                                
@@ -1291,11 +1383,11 @@ function PrintPredefinedViews()
 	$default_view = ($config->get($login, 'custom_view_default', 'php', "siem") != "") ? $config->get($login, 'custom_view_default', 'php', "siem") : (($idm_enabled) ? 'IDM' : 'default');
 	$db_aux->close($conn_aux);	
 ?>
-   <a style='cursor:pointer' class='ndc riskinfo' txt="<?php echo _("Predefined Views").$current_str ?>" onclick="$('#views').css({top: -1*$('#views').outerHeight(true)}).toggle()"><img src="../pixmaps/forensic_views.png" border="0"/></a>
+   <a style='cursor:pointer' class='ndc riskinfo' txt="<?php echo _("Predefined Views").$current_str ?>" id="views_link"><img src="../pixmaps/forensic_views.png" border="0"/></a>
    <br/>
       
-   <div style='position: absolute; height: 1px; width: 1px;'>
-       <div id="views" style="position:absolute; right:-5px; top:0px; display:none;">
+   <div id="views_container">
+       <div id="views">
     		<table cellpadding='0' cellspacing='0' align="center" >
     			<tr>
     				<th style="padding-right:3px">
@@ -1303,7 +1395,7 @@ function PrintPredefinedViews()
     						<tr>
     							<td width="10"></td>
     							<td><?php echo _("Select View")?></td>
-    							<td width="10"><a style="cursor:pointer; text-align: right;" onclick="$('#views').toggle()"><img src="../pixmaps/cross-circle-frame.png" alt="<?php echo _("Close"); ?>" title="<?php echo _("Close"); ?>" border="0" align='absmiddle'/></a></td>
+    							<td width="10"><a style="cursor:pointer; text-align: right;" id="views_close"><img src="../pixmaps/cross-circle-frame.png" alt="<?php echo _("Close"); ?>" title="<?php echo _("Close"); ?>" border="0" align='absmiddle'/></a></td>
     						</tr>
     					</table>
     				</th>
@@ -1363,7 +1455,7 @@ function PrintPredefinedViews()
 
 function PrintFreshPage($refresh_stat_page, $stat_page_refresh_time) {
     if ($refresh_stat_page)
-    //echo '<META HTTP-EQUIV="REFRESH" CONTENT="'.$stat_page_refresh_time.'; URL='. htmlspecialchars(CleanVariable($_SERVER["REQUEST_URI"], VAR_FSLASH | VAR_PERIOD | VAR_DIGIT | VAR_PUNC | VAR_LETTER), ENT_QUOTES).'">'."\n";
+    //echo '<META HTTP-EQUIV="REFRESH" CONTENT="'.$stat_page_refresh_time.'; URL='. Util::htmlentities(CleanVariable($_SERVER["REQUEST_URI"], VAR_FSLASH | VAR_PERIOD | VAR_DIGIT | VAR_PUNC | VAR_LETTER)).'">'."\n";
     echo '<META HTTP-EQUIV="REFRESH" CONTENT="' . Util::htmlentities($stat_page_refresh_time) . '">';
 }
 function chk_select($stored_value, $current_value) {

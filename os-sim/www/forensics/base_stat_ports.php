@@ -21,7 +21,7 @@ include_once ("$BASE_path/base_common.php");
 include_once ("$BASE_path/base_qry_common.php");
 require_once ('classes/Util.inc');
 
-if((GET('proto')=='6' || GET('proto')=='17') && (GET('port_type')=='1' || GET('port_type')=='2'))
+if((GET('proto')=='6' || GET('proto')=='17' || GET('proto')=='-1') && (GET('port_type')=='1' || GET('port_type')=='2'))
 { 
     $_SESSION["siem_default_group"] = "base_stat_ports.php?sort_order=occur_d&port_type=" . GET('port_type') . "&proto=" . GET('proto');
 }

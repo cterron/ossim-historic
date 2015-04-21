@@ -1,3 +1,6 @@
+<?php
+header("Content-type: text/javascript");
+
 /**
 *
 * License:
@@ -29,6 +32,9 @@
 * Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 *
 */
+
+require_once 'av_init.php';
+?>
 
 var __av_plugin_ajax_url = "/ossim/asset_details/ajax/plugin_ajax.php";
 
@@ -171,15 +177,15 @@ var __av_plugin_ajax_url = "/ossim/asset_details/ajax/plugin_ajax.php";
             
             if (name == 'vendor')
             {
-                place_holder = "<?php echo _('Select Vendor') ?>";
+                place_holder = "<?php echo Util::js_entities(_('Select Vendor')) ?>";
             }
             else if (name == 'model')
             {
-                place_holder = "<?php echo _('Select Model') ?>";
+                place_holder = "<?php echo Util::js_entities(_('Select Model')) ?>";
             }
             else if (name == 'version')
             {
-                place_holder = "<?php echo _('Select Version') ?>";
+                place_holder = "<?php echo Util::js_entities(_('Select Version')) ?>";
             }
             
             $(elem).select2(

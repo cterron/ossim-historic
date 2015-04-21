@@ -1,0 +1,24 @@
+[properties]
+name=Ntop init file
+description=Parses /var/lib/ntop/init.cfg searching for errors
+category=network,platform
+type=file
+filename=/var/lib/ntop/init.cfg
+raw_limit=100
+
+[Spaces in interface syntax]
+pattern=^INTERFACES\=\".*(,?[ ],?).*"$
+conditions=@string@:==""
+fail_if_empty=False
+severity=Medium
+warning=Spaces in the init.cfg Ntop file stops it from working
+advice=Ntop cannot parse spaces in the INTERFACES init.cfg file. Please remove it and restart the service.
+
+[Network interfaces]
+pattern=^INTERFACES\=\"(.*)"$
+conditions=@set@:@issubsetof@@network_interfaces@
+split_by_comma=True
+fail_if_empty=True
+severity=Medium
+warning=Some interfaces set for Ntop are missing from the AV configuration files
+advice=AV configuration files determine how the system is configured. Having interfaces in the Ntop init.cfg file that are not in the AV files may result in unexpected behaviour.

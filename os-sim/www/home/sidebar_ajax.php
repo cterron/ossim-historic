@@ -39,13 +39,16 @@ Session::useractive();
 
 require_once 'sidebar_functions.php';
 
+session_write_close();
+
+
 function get_open_tickets($conn) 
 {
 	Incident::search($conn, array('status' => 'not_closed'), 'life_time', 'ASC', 1, 10);
     $tickets = Incident::search_count($conn);
 	
 	$return['error']  = FALSE ;
-	$return['output'] = intval($tickets);
+	$return['output'] = format_notif_number(intval($tickets));
 
 	return  $return;
 }
@@ -64,11 +67,12 @@ function get_unresolved_alarms($conn)
 	{
 		$new_alarms = 0;
 	}
-
+    
+    session_start();
 	$_SESSION['_unresolved_alarms'] = $alarms;	
+	session_write_close();
 	
-	
-	$data['alarms']          = $alarms;
+	$data['alarms']          = format_notif_number($alarms);
 	$data['new_alarms']      = $new_alarms;
 	$data['new_alarms_desc'] = '';
 	
@@ -97,7 +101,8 @@ function get_unresolved_alarms($conn)
             'host'          => '',
             'net'           => '',
             'host_group'    => ''            
-        );	
+        );
+        
 		list($alarm_list, $count) = Alarm::get_list($conn, $criteria);		
 		
 		$alarm_string = '';
@@ -155,8 +160,8 @@ function get_sensor_status($conn)
 		$sensors_color = 'off';
 	}
 
-	$data['total']  = $sensors_total;
-	$data['active'] = $sensors_up;
+	$data['total']  = format_notif_number($sensors_total);
+	$data['active'] = format_notif_number($sensors_up);
 	$data['color']  = $sensors_color;
 
 	$return['error']  = FALSE ;
@@ -171,7 +176,7 @@ function get_monitored_devices($conn)
 	$devices          = calc_devices_total($conn);
 	
 	$return['error']  = FALSE ;
-	$return['output'] = $devices;
+	$return['output'] = format_notif_number($devices);
 
 	return  $return;
 }
@@ -182,7 +187,7 @@ function get_system_eps($conn)
 	$sys_eps          = calc_system_eps($conn);
 	
 	$return['error']  = FALSE ;
-	$return['output'] = $sys_eps;
+	$return['output'] = format_notif_number($sys_eps);
 
 	return  $return;
 }
@@ -232,9 +237,9 @@ function get_notifications($conn)
     		$notifications[$notif['class']] = $notif;
     	}
 
-        $new_updates = get_only_updates();
+        $new_updates = get_pending_updates();
 
-        if ($new_updates == TRUE)
+        if ($new_updates === TRUE)
         {
             $notif['msg']   = _('New Updates Available');
             $notif['class'] = 'nl_updates';
@@ -264,16 +269,25 @@ function get_notifications($conn)
     	
     	$devices = calc_devices_total($conn);
     	$max_dev = intval($_SESSION["_max_devices"]); //This val is loaded when the users log in. (session.inc)
-
+    	
+    	
     	if ($max_dev > 0 && $devices > $max_dev)
     	{
-        	$over           = $devices - $max_dev;
+        	$over           = Util::number_format_locale($devices - $max_dev);
         	$notif['msg']   = _("License Violation - $over Assets Over");
     		$notif['class'] = 'nl_device_exceed';
     
     		$notifications[$notif['class']] =  $notif;
     	}
     	
+    	    $backup_status = Backup::is_running($conn);
+    	    if ($backup_status[0] > 0)
+    	    {
+    	        $notif['msg']   = ($backup_status[1] == 'insert') ? _('Backup Restore is running') : _('Backup Purge is running');
+    	        $notif['class'] = 'nl_backup_running';
+    	        
+    	        $notifications[$notif['class']] =  $notif;
+    	    }
     	
 	}	
 	
@@ -282,18 +296,6 @@ function get_notifications($conn)
 	$return['output'] = $notifications;
 
 	return  $return;
-}
-
-
-// Check only the updates balloon to be shown
-function get_only_updates()
-{
-    $new_updates      = Av_center::get_software_updates();
-
-    $return['error']  = FALSE;
-    $return['output'] = $new_updates;
-
-    return $return;
 }
 
 
@@ -317,7 +319,6 @@ $conn   = $db->connect();
 if($action != '' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
 {	
 	$check_perms = array(
-        'only_updates'      => array('func' => 'Session::am_i_admin',  'parameters' => array()),
         'open_tickets'      => array('func' => 'Session::menu_perms',  'parameters' => array('analysis-menu', 'IncidentsOpen')),
         'unresolved_alarms' => array('func' => 'Session::menu_perms',  'parameters' => array('analysis-menu', 'ControlPanelAlarms')),
         'sensor_status'     => array('func' => 'Session::menu_perms',  'parameters' => array('configuration-menu', 'PolicySensors')),
@@ -341,10 +342,6 @@ if($action != '' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SER
 
     switch($action)
     {
-        case 'only_updates':
-            $response = get_only_updates();
-        break;
-
         case 'open_tickets':
             $response = get_open_tickets($conn);
         break;

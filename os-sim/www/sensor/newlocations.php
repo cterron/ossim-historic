@@ -49,7 +49,7 @@ $ctx       =  POST('ctx');
 
 $validate = array (
 	"name"              => array("validation" => "OSS_ALPHA, OSS_SPACE, OSS_SCORE, OSS_DOT"  , "e_message" => 'illegal:' . _("Name")),
-	"desc"              => array("validation" => "OSS_TEXT, OSS_NULLABLE"                    , "e_message" => 'illegal:' . _("Description")),
+	"desc"              => array("validation" => "OSS_ALL, OSS_NULLABLE"                     , "e_message" => 'illegal:' . _("Description")),
 	"search_location"   => array("validation" => "OSS_TEXT"                                  , "e_message" => 'illegal:' . _("Location")),
 	"latitude"          => array("validation" => "OSS_DIGIT, '\.-', OSS_NULLABLE"            , "e_message" => 'illegal:' . _("Latitude")),
 	"longitude"         => array("validation" => "OSS_DIGIT, '\.-', OSS_NULLABLE"            , "e_message" => 'illegal:' . _("Longitude")),

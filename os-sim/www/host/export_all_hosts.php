@@ -84,12 +84,9 @@ if (isset($_GET['get_data']))
 		$id = $host['id'];
 		
 		//Description
-		$descr = html_entity_decode($host['descr']);
 		
-		if (preg_match('/&#(\d{4,5});/', $descr))
-		{
-			$descr = mb_convert_encoding($descr, 'UTF-8', 'HTML-ENTITIES');
-		}
+		$descr = $host['descr'];
+		$descr = mb_convert_encoding($descr, 'UTF-8', 'HTML-ENTITIES');
 		
 		//Operating System
 		$os = Asset_host_properties::get_property_from_db($conn, $host['id'], 3);
@@ -138,7 +135,7 @@ elseif (isset($_GET['download_data']))
 	$file = $_SESSION['_csv_file_hosts'];
 	unset($_SESSION['_csv_file_hosts']);
 	
-	$csv_data = '"IPs";"hostname";"FQDNs";"Description";"Asset value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Type"'."\r\n";
+	$csv_data = '"IPs";"Hostname";"FQDNs";"Description";"Asset Value";"Operating System";"Latitude";"Longitude";"Host ID";"External Asset";"Device Type"'."\r\n";
 	
 	if (file_exists($file))
 	{

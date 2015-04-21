@@ -110,6 +110,16 @@ if (!empty($ext_ctxs[$ctx]))
 {
     $is_ext_ctx   = TRUE;
     $context_type = 'remote';
+    $r_server     = Server::get_server_by_ctx($conn, $ctx);
+        
+    if ($r_server)
+    {
+        $r_server_name = $r_server->get_name() . ' ('. $r_server->get_ip() .')';
+    }
+    else
+    {
+        $r_server_name = '';
+    }
 }
 
 $descr = $net->get_descr();
@@ -507,9 +517,9 @@ $db->close();
         <?php
         if ('saved' === $msg)
         {
-        ?>
-        parent.GB_hide();
-        <?php
+            ?>
+            parent.GB_close();
+            <?php
         }
         ?>
 
@@ -529,7 +539,7 @@ $db->close();
     if ($is_ext_ctx == TRUE)
     {
         $config_nt = array(
-            'content' => _('The properties of this asset can only be modified at the USM:') . " <strong>" . $external_ctxs[$ctx] . "</strong>",
+            'content' => _('The properties of this asset can only be modified at the USM:') . " <strong>$r_server_name</strong>",
             'options' => array(
                 'type'          => 'nf_warning',
                 'cancel_button' => TRUE

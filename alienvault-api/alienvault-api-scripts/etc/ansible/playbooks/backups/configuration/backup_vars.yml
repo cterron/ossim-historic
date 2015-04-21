@@ -6,5 +6,5 @@ alienvault_asec:
   tables: []
 avcenter:
   tables: []
-fulldatabases: ['ISO27001An','PCI','avcenter']
+fulldatabases: ['ISO27001An','PCI']
 files: ['/etc/alienvault/system-id']

@@ -42,79 +42,81 @@ $data = array();
 
 if (Scan::scanning_now())
 {
-	// Scan Status
-	$scanning_assets = Scan::scanning_what();
+    // Scan Status
+    $scanning_assets = Scan::scanning_what();
 
-	if (count($scanning_assets) > 0) 
-	{	
-		foreach ($scanning_assets as $rsensor_ip) // $rsensor_ip = remote_sensor#ip
-		{
+    if (count($scanning_assets) > 0)
+    {
+        foreach ($scanning_assets as $rsensor_ip) // $rsensor_ip = remote_sensor#ip
+        {
             $tdata     = explode('#', $rsensor_ip);
-			$assets[]  = $tdata[1];
-		
-		    $sensor_id = $tdata[0];
-		}
-		
-		$sc_asset = implode(', ', $assets);
-		
-		
-		if ($sensor_id != '' && $sensor_id != 'null') // With remote sensor
-		{				
-			$sensor_ip = Av_sensor::get_ip_by_id($conn, $sensor_id);
-		
-			$data['state']      = 'remote_scan_in_progress';
-	        $data['message']    = sprintf(_('Scanning network: <strong>%s</strong> with a remote sensor [<strong>%s</strong>], please wait...'), $sc_asset, $sensor_ip);
-	        $data['progress']   = NULL;
-	        $data['debug_info'] = NULL;
-		} 
-		else  // With local sensor
-		{
-		    $obj      = new Scan();
-		    
-		    if ($obj->get_status() == 'Scanning Hosts')
-		    {
-    		    $data['state'] = 'local_scan_in_progress';
-    		    $task          = 'Scanning hosts';
-		    }
-		    else if ($obj->get_status() == 'Searching Hosts')
-		    {
-    		    $data['state'] = 'local_search_in_progress';
-    		    $task  =  _('Searching hosts'); 
-		    }
-		    else if ($obj->get_status() == 'Scan Finished')
-		    {
-    		    $data['state'] = 'finished';
-    		    $task  =  _('Scan Finished');
-		    }
-		    else if ($obj->get_status() == 'Search Finished')
-		    {
-		        if ($obj->get_only_ping() == FALSE)
-		        {
-        		    $data['state'] = 'local_search_in_progress';
-        		    $task  =  _('Searching hosts');
-    		    }
-    		    else
-    		    {
-    		        $data['state'] = 'finished';
-    		        $task  =  _('Scan Finished');
-    		    }
-		    }
-            
+            $assets[]  = $tdata[1];
+
+            $sensor_id = $tdata[0];
+        }
+
+        $sc_asset = implode(', ', $assets);
+        $sc_asset = preg_replace('/\/32/', '', $sc_asset);
+
+        if ($sensor_id != '' && $sensor_id != 'null') // With remote sensor
+        {
+            $sensor_ip = Av_sensor::get_ip_by_id($conn, $sensor_id);
+
+            $data['state']      = 'remote_scan_in_progress';
+            $data['message']    = sprintf(_('Scanning network: <strong>%s</strong> with a remote sensor [<strong>%s</strong>], please wait...'), $sc_asset, $sensor_ip);
+            $data['progress']   = NULL;
+            $data['debug_info'] = NULL;
+        }
+        else
+        {
+            // With local sensor
+
+            $obj = new Scan();
+
+            if ($obj->get_status() == 'Scanning Hosts')
+            {
+                $data['state'] = 'local_scan_in_progress';
+                $task          = 'Scanning hosts';
+            }
+            else if ($obj->get_status() == 'Searching Hosts')
+            {
+                $data['state'] = 'local_search_in_progress';
+                $task  =  _('Searching hosts');
+            }
+            else if ($obj->get_status() == 'Scan Finished')
+            {
+                $data['state'] = 'finished';
+                $task  =  _('Scan Finished');
+            }
+            else if ($obj->get_status() == 'Search Finished')
+            {
+                if ($obj->get_only_ping() == FALSE)
+                {
+                    $data['state'] = 'local_search_in_progress';
+                    $task  =  _('Searching hosts');
+                }
+                else
+                {
+                    $data['state'] = 'finished';
+                    $task  =  _('Scan Finished');
+                }
+            }
+
             if ($data['state'] != 'launching_local_scan')
-            {            
+            {
                 $data['message']    = sprintf(_('%s: <strong>%s</strong> with local sensor, please wait...'), $task, $sc_asset);
-    	        $progress   = $obj->get_progress();
-    	        
-    	        $data['progress']['percent'] = round(($progress['hosts_scanned'] / $progress['total_hosts']) * 100);
-    	        $data['progress']['current'] = $progress['hosts_scanned'];
-    	        $data['progress']['total']   = $progress['total_hosts'];
-    	        
+                $progress   = $obj->get_progress();
+
+                $data['progress']['percent'] = round(($progress['hosts_scanned'] / $progress['total_hosts']) * 100);
+                $data['progress']['current'] = $progress['hosts_scanned'];
+                $data['progress']['total']   = $progress['total_hosts'];
+
                 if ($progress['remaining'] == -1)
                 {
                     $data['progress']['time'] = _('Calculating Remaining Time');
                 }
                 else
-                {   
+                {
                     $data['progress']['time'] = Welcome_wizard::format_time($progress['remaining']) . ' ' . _('remaining');
                 }
             }
@@ -122,51 +124,69 @@ if (Scan::scanning_now())
             {
                 $data['message']    = NULL;
                 $data['progress']   = NULL;
-                $data['debug_info'] = NULL;    
+                $data['debug_info'] = NULL;
             }
-	                                                                                
-	        $data['debug_info'] = NULL;	
-		}
-	}
-}
-else 
-{
-    $scan     = new Scan();
 
-	if (preg_match('/finished/i', $scan->get_status()))
-	{	
-	    $lastscan = $scan->get_results();
-	
-		$debug_info = '';
-		
-		if(is_array($lastscan['nmap_data']) && !empty($lastscan['nmap_data']) )
-		{
-			$debug_info = $lastscan['nmap_data']['cmd'] . '|' . $lastscan['nmap_data']['version'] . '|' . $lastscan['nmap_data']['xmloutputversion'];
-			
-			unset($lastscan['nmap_data']);
-		}
-		
+            $data['debug_info'] = NULL;
+        }
+    }
+}
+else
+{
+    $scan = new Scan();
+
+    //Scan has finished with errors
+    $scan_path_log = "/tmp/nmap_scanning_".md5(Session::get_secure_id()).'.log';
+
+    if (file_exists($scan_path_log))
+    {
+        $log_file = file_get_contents($scan_path_log);
+
+        if (preg_match('/Scan could not be completed./s', $log_file))
+        {
+            $data['state']      = 'finished_with_errors';
+            $data['message']    = NULL;
+            $data['progress']   = NULL;
+            $data['debug_info'] = NULL;
+
+            echo json_encode($data);
+            exit();
+        }
+    }
+
+    //Scan has finished without errors
+    if (preg_match('/finished/i', $scan->get_status()))
+    {
+        $lastscan = $scan->get_results();
+
+        $debug_info = '';
+
+        if(is_array($lastscan['nmap_data']) && !empty($lastscan['nmap_data']) )
+        {
+            $debug_info = $lastscan['nmap_data']['cmd'] . '|' . $lastscan['nmap_data']['version'] . '|' . $lastscan['nmap_data']['xmloutputversion'];
+
+            unset($lastscan['nmap_data']);
+        }
+
         $data['state']      = 'finished';
         $data['message']    = NULL;
         $data['progress']   = NULL;
         $data['debug_info'] = $debug_info;
-        
+
         if (is_array($lastscan['scanned_ips']) && count($lastscan['scanned_ips']) == 0)
         {
             $scan->delete_data();
         }
     }
-	else
-	{
-            $data['state']      = 'idle';
-            $data['message']    = NULL;
-	        $data['progress']   = NULL;
-	        $data['debug_info'] = NULL;	
-	}
+    else
+    {
+        $data['state']      = 'idle';
+        $data['message']    = NULL;
+        $data['progress']   = NULL;
+        $data['debug_info'] = NULL;
+    }
 }
 
 echo json_encode($data);
 
 $db->close();
-
-?>

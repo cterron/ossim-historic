@@ -85,7 +85,7 @@ class Asset_net_qualification
     }
     
     
-    public function get_list($conn, $where, $order = '') 
+    public static function get_list($conn, $where, $order = '')
     {
         Ossim_db::check_connection($conn);
         
@@ -140,7 +140,7 @@ class Asset_net_qualification
     }
     
     
-    public function insert($conn, $net_id, $compromise, $attack) 
+    public static function insert($conn, $net_id, $compromise, $attack)
     {
         Ossim_db::check_connection($conn);
         

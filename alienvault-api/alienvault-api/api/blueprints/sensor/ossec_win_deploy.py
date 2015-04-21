@@ -27,61 +27,76 @@
 #  Otherwise you can read it here: http://www.gnu.org/licenses/gpl-2.0.txt
 #
 
-import flask
-import flask.ext.login
-import api
-import api.lib.common
-import api.lib.auth
+# import api
+# import api.lib.common
 import celerymethods.jobs.ossec_win_deploy
 
-import celery.result
-import celery.task.control
+# import celery.result
+#  import celery.task.control
 
-#cm = api.lib.celery_manager.CeleryManager()
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request
 from db.methods.sensor import get_sensor_ip_from_sensor_id
-from api.lib.utils import accepted_url
+from api.lib.utils import accepted_url, is_valid_windows_user, is_valid_user_password
 from uuid import UUID
+import api_log
 from api.lib.auth import admin_permission
+from api.lib.common import make_ok, make_bad_request, make_error
+
 
 blueprint = Blueprint(__name__, __name__)
 
 
 @blueprint.route('/<sensor_id>/ossec/deploy', methods=['PUT'])
 @admin_permission.require(http_exception=403)
-@accepted_url(
-    {'sensor_id': {'type': UUID, 'values': ['local']}, 'agent_name': str, 'windows_ip': str, 'windows_username': str,
-     'windows_domain': str, 'windows_password': str})
+@accepted_url({'sensor_id': {'type': UUID, 'values': ['local']},
+               'agent_name': str,
+               'windows_ip': str,
+               'windows_username': str,
+               'windows_domain': str,
+               'windows_password': str})
 def ossec_win_deploy(sensor_id):
-    # First obtain the admin_ip
-    param_names = ['agent_name', 'windows_ip', 'windows_username', 'windows_domain', 'windows_password']
+
+    param_names = ['agent_name',
+                   'windows_ip',
+                   'windows_username',
+                   'windows_domain',
+                   'windows_password']
+
     (result, sensor_ip) = get_sensor_ip_from_sensor_id(sensor_id, local_loopback=False)
     if result is False:
-        current_app.logger.error("ossec_win_deploy: ossec_win_deploy error: " % str(sensor_ip))
-        return api.lib.common.make_error("Error deploying ossec from sensor %s" % sensor_ip, 404)
-    # Now the params. We need
-    # agent_name
-    # windows_ip
-    # windows_user
-    # windows_domain
-    # windows_password
-    for k in param_names:
-        if request.args.get(k) is None:
-            current_app.logger.error("ossec_win_deploy: ossec_win_deploy error: Bad param %s" % k)
-            return api.lib.common.make_error("Bad param %s" % k, 400)
-    # Ok, all params presents and with value
-    job = celerymethods.jobs.ossec_win_deploy.ossec_win_deploy.delay(sensor_ip, request.args['agent_name'],
-                                                           request.args['windows_ip'],
-                                                           request.args['windows_username'],
-                                                           request.args['windows_domain'],
-                                                           request.args['windows_password'])
+        api_log.error("ossec_win_deploy: ossec_win_deploy error: " % str(sensor_ip))
+        return make_error("Error deploying ossec from sensor %s" % sensor_ip, 404)
+
+    for param in param_names:
+        if request.args.get(param) is None:
+            api_log.error("ossec_win_deploy: bad request: Missing param '%s'" % param)
+            return make_bad_request("Missing param '%s'" % param)
+
+    if not is_valid_windows_user(request.args['windows_username']):
+        api_log.error("ossec_win_deploy: bad username '%s'" % request.args['windows_username'])
+        return make_bad_request("Bad username")
+
+    if not is_valid_user_password(request.args['windows_password']):
+        api_log.error("ossec_win_deploy: bad password '%s'" % request.args['windows_password'])
+        return make_bad_request("Bad password")
+
+    job = celerymethods.jobs.ossec_win_deploy.ossec_win_deploy.delay(sensor_ip,
+                                                                     request.args['agent_name'],
+                                                                     request.args['windows_ip'],
+                                                                     request.args['windows_username'],
+                                                                     request.args['windows_domain'],
+                                                                     request.args['windows_password'])
 
     current_job_id = job.id
     is_finished = False
     job_status = job.status
     job_data = job.info
-    jobs_active = None
+    active_jobs = None
     msg = "Job launched!"
 
-    return api.lib.common.make_ok(job_id=current_job_id, finished=is_finished, status=job_status, task_data=job_data,
-                                  active_jobs=jobs_active, message=msg)
+    return make_ok(job_id=current_job_id,
+                   finished=is_finished,
+                   status=job_status,
+                   task_data=job_data,
+                   active_jobs=active_jobs,
+                   message=msg)

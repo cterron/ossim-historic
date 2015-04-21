@@ -181,7 +181,7 @@ if ($error == TRUE)
 				
 		#t_ftags
 		{
-            width: 500px;
+            width: 530px;
             margin: 10px auto 20px auto;	
 		}
 		
@@ -225,7 +225,7 @@ if ($action == 'new1step' || $action == 'mod1step')
         <?php echo _('Values marked with (*) are mandatory');?>
     </div>	
 	
-	<form method="post" action="?action=<?php echo $action ?>&id=<?php echo $id ?>" name="f">
+	<form method="post" action="?action=<?php echo $action ?>&id=<?php echo Util::htmlentities($id) ?>" name="f">
 		<table id='t_ftags'>
     		<tr>
     			<th class='headerpr_no_bborder' colspan="2"><?php echo gettext("Ticket Tags");?></th>
@@ -233,13 +233,13 @@ if ($action == 'new1step' || $action == 'mod1step')
 			<tr>
 				<th><?php echo _("Name") ?></th>
 				<td class="left">
-					<input type="text" name="name" id="name" value="<?php echo $name ?>"/>
+					<input type="text" name="name" id="name" value="<?php echo Util::htmlentities($name) ?>"/>
 					<span style="padding-left: 3px;">*</span>
 				</td>
 			</tr>
 			<tr>
 				<th><?php echo _("Description") ?></th>
-				<td class="left"><textarea id='descr' name="descr" rows="5"><?php echo $descr?></textarea></td>
+				<td class="left"><textarea id='descr' name="descr" rows="5"><?php echo Util::htmlentities($descr) ?></textarea></td>
 			</tr>
 			<tr>
 				<td colspan="2" class="nobborder center" style='padding:10px 0px;'>

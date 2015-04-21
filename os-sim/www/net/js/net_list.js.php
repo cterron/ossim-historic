@@ -94,7 +94,7 @@ if (Session::can_i_create_assets() == TRUE)
 	/*  Function to open the new net form lightbox  */
     function add_net()
     {
-        GB_show("<?php echo _('Add Network') ?>", __path_ossim + '/net/net_form.php', '700', '720');
+        GB_show("<?php echo Util::js_entities(_('Add Network'))?>", __path_ossim + '/net/net_form.php', '700', '720');
         
         return false;
     }
@@ -114,7 +114,7 @@ function export_net()
 /*  Function to open CSV importation lightbox  */
 function import_csv()
 {
-    GB_show("<?php echo _('Import CSV') ?>", __path_ossim + '/net/import_all_nets.php', '700', '900');
+    GB_show("<?php echo Util::js_entities(_('Import CSV')) ?>", __path_ossim + '/net/import_all_nets.php', '700', '900');
     
     return false;
 }

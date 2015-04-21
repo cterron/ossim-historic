@@ -31,8 +31,6 @@
 *
 */
 
-$refresh_time_secs = 300;
-
 function colorize_risk($risk)
 {
 
@@ -131,8 +129,6 @@ function is_promiscous($src_count, $dst_count, $src_home = false, $dst_home = fa
 
 	return ($scenario . ' ' . $pattern);
 }
-
-
 
 ?>
 

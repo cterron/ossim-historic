@@ -41,6 +41,7 @@
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 require_once '../graphs/jpgraph/jpgraph.php';
 require_once '../graphs/jpgraph/jpgraph_pie.php';
 require_once '../graphs/jpgraph/jpgraph_pie3d.php';
@@ -51,19 +52,24 @@ Session::logcheck("environment-menu", "EventsVulnerabilities");
 //                    "risk6", "risk7" );
                     
 $getParams = array( "risk1", "risk2", "risk3", "risk6", "risk7" );
-                    
+
+$db   = new ossim_db();
+$conn = $db->connect();
+               
 switch ($_SERVER['REQUEST_METHOD'])
 {
 case "GET" :
    foreach($getParams as $gp) {
 	   if (isset($_GET[$gp])) { 
-         $$gp=htmlspecialchars(mysql_real_escape_string(trim($_GET[$gp])), ENT_QUOTES); 
+         $$gp=Util::htmlentities(escape_sql(trim($_GET[$gp]), $conn)); 
       } else { 
          $$gp = ""; 
       }
    }
 	break;
 }
+
+$db->close();
 
 $w = GET("w");
 ossim_valid($w, OSS_NULLABLE, OSS_DIGIT, 'illegal:' . _("Parameter w"));

@@ -38,6 +38,25 @@ Depends: ${misc:Depends}
 Pre-Depends: augeas-tools
 Description: Configuration package for augeas
 
+Package: alienvault-crypto
+Architecture: all
+Pre-Depends: openssh-client,
+ ossim-utils (>= 1:${source:Upstream-Version}),
+ alienvault-openssl (>= ${source:Upstream-Version})
+Depends: ${misc:Depends}
+Description: Configuration package for the AlienVault CA, client certificates and keys
+
+Package: alienvault-openssh
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: openssh-client, openssh-server
+Description: Configuration package for OpenSSH
+
+Package: alienvault-depmod
+Architecture: all
+Depends: ${misc:Depends}
+Description: Configuration package for certain kernel modules, to let them be properly loaded in boot
+
 Package: alienvault-firewall
 Architecture: all
 Depends: ${misc:Depends}
@@ -50,12 +69,6 @@ Depends: ${misc:Depends}
 Pre-Depends: alienvault-firewall, fprobe
 Replaces: alienvault-fprobe
 Description: Configuration package for fprobe
-
-Package: alienvault-ha
-Architecture: all
-Depends: alienvault-firewall
-Replaces: alienvault-ha
-Description: Configuration package for ha infraestructure
 
 Package: alienvault-logrotate
 Architecture: all
@@ -84,15 +97,28 @@ Description: Configuration package for MongoDB
 Package: alienvault-mysql
 Architecture: all
 Depends: ${misc:Depends}
-#Pre-Depends:
 Replaces: alienvault-mysql
 Description: Configuration package for MySQL
 
+Package: alienvault-nagios
+Architecture: all
+Depends: ${misc:Depends}, percona-nagios-plugins
+Pre-Depends: nagios3, nagios3-cgi, nagios-images, nagios-plugins
+Description: Configuration package for nagios
+
 Package: alienvault-network
 Architecture: all
+Pre-Depends: ipcalc, augeas-tools
 Depends: ${misc:Depends}, resolvconf
 Replaces: alienvault-network
 Description: Configuration package for network settings
+
+Package: alienvault-nfsen
+Architecture: all
+Pre-Depends: nfsen
+Depends: ${misc:Depends}, libmailtools-perl
+Replaces: nfsen
+Description: Configuration package for nfsen
 
 Package: alienvault-ntop
 Architecture: all
@@ -109,8 +135,8 @@ Description: Configuration package for OpenSSL
 
 Package: alienvault-openvas
 Architecture: all
-Depends: ${misc:Depends}, sqlite3
-Pre-Depends: openvas-cli, openvas-scanner, openvas-manager, openvas-administrator, rng-tools, xsltproc
+Depends: ${misc:Depends}
+Pre-Depends: openvas-cli, openvas-scanner, openvas-manager, openvas-administrator, rng-tools, sqlite3, xsltproc
 Description: Configuration package for OpenVAS
 
 Package: alienvault-ossec
@@ -118,6 +144,13 @@ Architecture: all
 Depends: ${misc:Depends}
 Pre-Depends: ossec-hids
 Description: Configuration package for Ossec
+Replaces: ossec-hids
+
+Package: alienvault-pam
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: libpam-modules
+Description: Configuration package for pam
 
 Package: alienvault-php5
 Architecture: all
@@ -125,11 +158,37 @@ Depends: ${misc:Depends}
 Pre-Depends: php5, php5-common
 Description: Configuration package for php5
 
+Package: alienvault-plymouth
+Architecture: all
+Pre-Depends: plymouth, initramfs-tools
+Depends: ${misc:Depends}
+Replaces: plymouth
+Description: Graphical boot animation for AlienVault appliances
+
 Package: alienvault-postfix
 Architecture: all
 Depends: ${misc:Depends}
 Pre-Depends: postfix
 Description: Configuration package for postfix
+
+Package: alienvault-prads
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: prads
+Description: Configuration package for prads
+
+Package: alienvault-prads-mysql
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: ossim-framework
+Description: Prads database configuration package
+
+Package: alienvault-redis-server
+Architecture: all
+Depends: ${misc:Depends}
+Pre-Depends: redis-server
+Description: Configuration package for redis-server
+Replaces: redis-server
 
 Package: alienvault-rsyslog
 Architecture: all
@@ -140,7 +199,7 @@ Description: Configuration package for rsyslog
 Package: alienvault-suricata
 Architecture: all
 Depends: ${misc:Depends}
-Pre-Depends: suricata
+Pre-Depends: suricata, ossim-agent
 Replaces: suricata, suricata-rules-default-pro, suricata-rules-default-open
 Description: Configuration package for Suricata IDS
 
@@ -156,46 +215,13 @@ Depends: ${misc:Depends}
 Pre-Depends: procps
 Description: Configuration package for sysctl
 
+Package: alienvault-system-benchmark
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, sysbench, mbw
+Description: AlienVault System Benchmark
+
 Package: alienvault-vpn
 Architecture: all
 Depends: alienvault-firewall (>= ${source:Upstream-Version})
 Replaces: alienvault-vpn
 Description: Configuration package for vpn infraestructure
-
-#Package: alienvault-nfsen
-#Architecture: all
-#Depends: ${misc:Depends}
-#Description: Configuration package for nfsen
-
-Package: alienvault-redis-server
-Architecture: all
-Depends: ${misc:Depends}
-Pre-Depends: redis-server
-Description: Configuration package for redis-server
-Replaces: redis-server
-
-Package: alienvault-crypto
-Architecture: all
-Pre-Depends: openssh-client,
- ossim-utils (>= 1:${source:Upstream-Version}),
- alienvault-openssl (>= ${source:Upstream-Version})
-Depends: ${misc:Depends}
-Description: Configuration package for the AlienVault CA, client certificates and keys
-
-Package: alienvault-plymouth
-Architecture: all
-Pre-Depends: plymouth, initramfs-tools
-Depends: ${misc:Depends}
-Replaces: plymouth
-Description: Graphical boot animation for AlienVault appliances
-
-Package: alienvault-system-benchmark
-Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends},sysbench, mbw
-Description: AlienVault System Benchmark
-
-Package: alienvault-nagios
-Architecture: all
-Depends: ${misc:Depends}, percona-nagios-plugins
-Pre-Depends: nagios3, nagios3-cgi, nagios-images, nagios-plugins
-Description: Configuration package for nagios

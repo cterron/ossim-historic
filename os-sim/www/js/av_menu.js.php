@@ -50,19 +50,18 @@ function Av_menu()
 
     try
     {
-       $av_menu = unserialize($_SESSION['av_menu']);
-
-       if (!is_object($av_menu))
-       {
-            $db   = new ossim_db();
-            $conn = $db->connect();
-
+        $db      = new ossim_db();
+        $conn    = $db->connect();
+        
+        $av_menu = unserialize($_SESSION['av_menu']);
+        
+        if (!is_object($av_menu))
+        {
             $av_menu = new Menu($conn);
-
-            $db->close();
-       }
-
-       $h_menus = $av_menu->get_hmenus_info();
+        }
+        $h_menus = $av_menu->get_hmenus_info();
+        
+        $db->close();
 
     }
     catch(Exception $e)
@@ -70,6 +69,17 @@ function Av_menu()
         $error_msg = $e->getMessage();
     }
 
+    try
+    {
+        list($s_name, $s_ip) = Session::get_local_sysyem_info();
+        $s_show = TRUE;
+    }
+    catch (Exception $e)
+    {
+        $s_name = '';
+        $s_ip = '';
+        $s_show = FALSE;
+    }
 
     if ($error_msg != '')
     {
@@ -151,8 +161,13 @@ function Av_menu()
     var resize_timeout;
     var iframe_height;
 
-    var bookmark_param = '';
-
+    /* Bookmark Variables */
+    this.bookmark_param = '';
+    
+    /* System Name Variables */
+    this.system_name = "<?php echo $s_name ?>";
+    this.system_ip = "<?php echo $s_ip ?>";
+    this.show_system_info = <?php echo ($s_show) ? 'true' : 'false' ?>;
 
     this.show = function()
     {
@@ -679,15 +694,18 @@ function Av_menu()
         
         $('#link_remote_interfaces').off('click')
         
-        $('#link_remote_interfaces').click(function(event){
-             event.preventDefault();
-             
-             var caption = '<?php echo _("Launch Remote Interfaces")?>';
-             var url     = '../remote_interfaces/launch_ri.php';
-             var height  = '600';
-             var width   = '700';
-
-             LB_show(caption, url, height, width);
+        $('#link_remote_interfaces').click(function(event)
+        {
+            event.preventDefault();
+            
+            params = {
+                caption : "<?php echo _('Launch Remote Interfaces')?>", 
+                url     : '../remote_interfaces/launch_ri.php', 
+                height  : 600,
+                width   : 700
+            };
+            
+            LB_show(params);
         });
     };
 
@@ -771,8 +789,14 @@ function Av_menu()
             {
                 if ($(this).hasClass('m_greybox'))
                 {
-                    url = that.url_base + url;
-                    parent.LB_show(caption, url, height, width);
+                    url    = that.url_base + url;
+                    params = {
+                        caption : caption, 
+                        url     : url, 
+                        height  : height,
+                        width   : width
+                    };
+                    parent.LB_show(params);
                 }
                 else
                 {
@@ -848,7 +872,8 @@ function Av_menu()
     {
         //Getting the current hash
         var hash = location.hash;
-
+            hash = clean_hash(hash);
+            
         //Getting the new hash.
         bookmark = this.get_new_hash();
         
@@ -859,16 +884,18 @@ function Av_menu()
         }
 
         bookmark = '#' + bookmark;
-
-        //Removing param if already exist
-        bookmark = bookmark.replace(/(\-[A-Z0-9]+)$/, '');
-        
-        if (bookmark_param != '')
+       
+        if (this.bookmark_param != '')
         {
             //Adding the parameter
-            bookmark += '-' + bookmark_param;
-
-            bookmark_param = '';
+            bookmark += '-' + this.bookmark_param;
+            this.bookmark_param = '';
+        }
+        
+        //Adding the system info
+        if (this.show_system_info)
+        {
+            bookmark += '    --    [' + this.system_name + ' - ' + this.system_ip + ']'; 
         }
 
         //If the current hash is not equal to the new hash, then we set up the new hash.
@@ -897,7 +924,7 @@ function Av_menu()
             return false;
         }
 
-        bookmark_param = param;
+        this.bookmark_param = param;
     }
 
 
@@ -935,6 +962,8 @@ function Av_menu()
     {
         //Getting the current hash
         var _hash  = location.hash;
+        
+        _hash = clean_hash(_hash);
 
         //If the hash is empty, the url to load is empty
         if(_hash == '' || _hash == '#')
@@ -961,10 +990,16 @@ function Av_menu()
         var _sm_option = aux_hash[0]+'-'+aux_hash[1];
         var _h_option  = aux_hash[2];
 
-        var _url = this.h_menus[_sm_option]['items'][_h_option]['bookmark'];
+        try
+        {
+            var _url = this.h_menus[_sm_option]['items'][_h_option]['bookmark'];
+        }
+        catch(err)
+        {
+            var _url = null;
+        }
 
-
-        if(typeof(_url) == 'object')
+        if(typeof(_url) == 'object' && _url != null)
         {
             var url = '';
 
@@ -1041,6 +1076,61 @@ function Av_menu()
         }
 
         return url;
+    }
+    
+    
+    function clean_hash(hash)
+    {
+        return hash.replace(/\s+.*$/, '');
+    }
+    
+    
+    /*  FUNCTION TO IDENTIFY THE SYSTEM ON THE TOP BAR */
+        
+    this.display_system_name = function(max_length)
+    {
+        $('#top_system_info').empty();
+        
+        if (!this.show_system_info)
+        {
+            return false;
+        }
+        
+        if (typeof max_length != 'number')
+        {
+            max_length = 15;
+        }
+        
+        var hostname = this.system_name;
+        
+        if (hostname.length > max_length) 
+        {
+            hostname = hostname.substr(0, max_length) + '&#8230;';
+        }
+        
+        var elem = $('#top_system_info');
+        
+        var name = $('<span/>', 
+        {
+            'title': this.system_name + '   ' + this.system_ip,
+            'html' : hostname + '  ' + this.system_ip
+        }).appendTo(elem);
+        
+        if (typeof $.fn.tipTip == 'function')
+        {
+            name.tipTip();
+        }
+        
+        $('<span/>', 
+        {
+            'class': 'sep_ri',
+            'text' : '|'
+        }).appendTo(elem);
+        
+        var title = document.title;
+            title = title.replace('/\s+\[.*?\]$/', ''); 
+        
+        document.title = title + ' [' + this.system_name + ' - ' + this.system_ip + ']';
     }
 };
 

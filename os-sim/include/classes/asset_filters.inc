@@ -2291,8 +2291,8 @@ class Filter_port_service extends Asset_filter
             
             $id       = $this->_id . '###' . $port . ';' . $protocol . ';' . $service;
                          
-            $protocol = getprotobynumber($protocol);
-            $protocol = (empty($protocol)) ? _('Unknown') : $protocol;
+            $protocol = Protocol::get_protocol_by_number($protocol);
+            $protocol = (FALSE === $protocol) ? _('Unknown') : $protocol;
 
             $label    = _('Service:') . ' ' . $port .'/'. $protocol . ' ('. $service . ')'; 
         

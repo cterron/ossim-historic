@@ -80,11 +80,6 @@ class Ossec_control
     {
         $client = new Alienvault_client();
 
-        //Increase timeout
-        $conn = $client->get_conn();
-        $conn->set_timeout(300);
-        $client->set_conn($conn);
-
         $response = $client->sensor($sensor_id)->ossec_control($action);
         $response = @json_decode($response, TRUE);
 

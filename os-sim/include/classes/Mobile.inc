@@ -59,12 +59,12 @@ class Mobile
     {            
     }
     
-    function get_version() 
+    static function get_version()
     {
 	   return trim(`dpkg -l ossim-framework | cut -f 2 -d ":"|sed 's/ .*//'|grep ^4`);
     }
     
-    function is_mobile_device() 
+    static function is_mobile_device()
     {
         return preg_match('/Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune/',$_SERVER['HTTP_USER_AGENT']);
     }
@@ -114,14 +114,17 @@ function siem_unique_events($date_from, $date_to, $top, $dDB, $dDBdata)
     $cntsql = "SELECT count(*) $where";
 	
     //echo "<b>SQL</b>: $query<br>";
+    $rs = $conn->Execute($query);
     
-	if (!$rs = & $conn->Execute($query)) 
+	if (!$rs)
 	{
         print $conn->ErrorMsg();
     } 
     else 
     {
-        if (!$rf = & $conn->Execute($cntsql)) 
+        $rf = $conn->Execute($cntsql);
+        
+        if (!$rf)
         {
             print $conn->ErrorMsg();
         }

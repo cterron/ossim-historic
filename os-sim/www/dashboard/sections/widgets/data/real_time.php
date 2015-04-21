@@ -48,7 +48,9 @@ function get_idm_data($conn, $id)
        
     //$conn->SetFetchMode(ADODB_FETCH_ASSOC);
     
-    if ($rs = & $conn->Execute($query, $params)) 
+    $rs = $conn->Execute($query, $params);
+    
+    if ($rs)
     {
        $idm_data[] = $rs->fields['rep_prio_src'];
        $idm_data[] = $rs->fields['rep_act_src'];
@@ -213,7 +215,9 @@ if (GET('modo') == "responder")
 		
 		// QUERY DEBUG:
 		
-		if (!$rs = & $conn->Execute($sql)) 
+		$rs = $conn->Execute($sql);
+		
+		if (!$rs) 
         {
             echo "// Query error: $sql\n// " . $conn->ErrorMsg() . "\n";
             return;
@@ -698,17 +702,17 @@ else
            
             // Protocol list
 
-            if ($protocol_list = Protocol::get_list($conn)) 
+            if ($protocol_list = Protocol::get_list())
             {
                 echo "var protocols = new Array(" . count($protocol_list) . ")\n";
                 
                 foreach($protocol_list as $proto) 
                 {
                     //$_SESSION[$id] = $plugin->get_name();
-                    echo "protocols['proto_" . $proto->get_id() . "'] = '" . $proto->get_name() . "'\n";
+                    echo "protocols['proto_" . $proto['id'] . "'] = '" . $proto['name'] . "'\n";
                     
                     //Load available protocols (Autocompleted)
-                    $p_list .= '{ txt: "Protocol:'.$proto->get_name().'", id: "'.$proto->get_id().'" },';
+                    $p_list .= '{ txt: "Protocol:'.$proto['name'].'", id: "'.$proto['id'].'" },';
                 }
             }
             
@@ -1131,7 +1135,7 @@ else
 				
             </div>    
 
-			<div id='message_filter'>
+			<div id='message_filter' style='<?php echo ($_SESSION['_db_show_edit']) ? 'display:none' : '' ?>'>
 				<span><img align="absmiddle" border="0" src="/ossim/pixmaps/arrow_green.gif"><b><a href='javascript:;' class='uppercase' onclick='javascript:toogle_filters();'>Show Filters</a></b></span>
 			</div>
 		   

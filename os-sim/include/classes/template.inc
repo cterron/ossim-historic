@@ -117,12 +117,12 @@ class Template
         $rs = $conn->Execute($query);
         
         if (!$rs) 
-		{			
+        {
             $exp_msg = _('Error! Permission structure is not available');
 
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
-		}       
-                        
+        }       
+
         while (!$rs->EOF) 
         {
             $this->structure[$rs->fields['name']][$rs->fields['value']] = array(
@@ -182,6 +182,7 @@ class Template
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
     }
+
     
     /**
     * This function sets the new template ID
@@ -205,8 +206,8 @@ class Template
             Av_exception::throw_error(Av_exception::USER_ERROR, $exp_msg);
         }
     }
-    
-    
+
+
     /**
     * This function returns the template structure
     *
@@ -225,10 +226,10 @@ class Template
     */
     public function get_perms()
     {
-         return $this->perms;       
+        return $this->perms;       
     }
-    
-    
+
+
     /**
     * This function sets the template data from database
     *
@@ -267,11 +268,11 @@ class Template
                   ORDER BY p.ord";
 
         $rs = $conn->Execute($query, array($this->id));
-	
-	if (!$rs)
-	{
-		Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-	}
+
+    if (!$rs)
+    {
+        Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+    }
 
         while (!$rs->EOF) 
         {
@@ -280,8 +281,8 @@ class Template
             $rs->MoveNext();
         }
     }
-    
-    
+
+
     /**
     * This function sets the new template perms
     *
@@ -342,8 +343,8 @@ class Template
                 
         return $res;
     }
-        
-    
+
+
     /**
     * This function enables all perms of template
     *
@@ -361,8 +362,8 @@ class Template
             }         
         }
     }      
-            
-    
+
+
     /**
     * This function saves the template from database
     *
@@ -411,15 +412,15 @@ class Template
             $query = 'INSERT INTO acl_templates_perms (ac_templates_id, ac_perm_id) VALUES ('.implode('),(', $q_perms).');';            
                                    
             $rs = $conn->Execute($query);
-            
+
             if (!$rs)
-            {            
+            {
                 Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-            }         
-        }                      
-    }    
-    
-    
+            }
+        }
+    }
+
+
     /**
     * This function deletes a template from database
     *
@@ -437,15 +438,15 @@ class Template
         $params = array($id);
         $query  = "SELECT name, 'users' AS type FROM users 
             WHERE template_id = UNHEX(?)";
-        
+
         $rs = $conn->Execute($query, $params);
         
         $num_rows = $conn->Affected_Rows();
-            
+
         if ($num_rows >= 1) 
         {
             $users = array();
-            
+
             while (!$rs->EOF) 
             {
                 $users[] = utf8_encode($rs->fields['name']);
@@ -475,8 +476,8 @@ class Template
             Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
         }
     }
-    
-    
+
+
     /**
     * This function checks if template exists
     *
@@ -488,30 +489,30 @@ class Template
     * @return void      
     */ 
     public static function is_in_db($conn, $id)
-	{ 	
-    	Ossim_db::check_connection($conn);
+    {   
+        Ossim_db::check_connection($conn);
 
-    	$res = FALSE;
-    	
-    	$query  = 'SELECT count(*) AS found FROM acl_templates WHERE id = UNHEX(?)';
-    	$params = array($id);
-    	
-    	$rs = $conn->Execute($query, $params);
-        
+        $res = FALSE;
+
+        $query  = 'SELECT count(*) AS found FROM acl_templates WHERE id = UNHEX(?)';
+        $params = array($id);
+
+        $rs = $conn->Execute($query, $params);
+
         if (!$rs) 
-		{
-			Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
-		} 
+        {
+            Av_exception::throw_error(Av_exception::DB_ERROR, $conn->ErrorMsg());
+        } 
         
         if (intval($rs->fields['found']) > 0)
         {
             $res = TRUE;
         }
         
-        return $res;  	
-	}
-    
-    
+        return $res;    
+    }
+
+
     /**
     * This function deletes a template permissions from database (only permissions) 
     *
@@ -539,8 +540,8 @@ class Template
         
         return TRUE;
     }
-    
-    
+
+
     /**
     * This function returns an array of templates that satisfies the filter
     *
@@ -554,9 +555,9 @@ class Template
     * @return array      
     */  
     public static function get_list($conn, $from = 0, $max = 20, $filter = '')
-    {     
+    {
         Ossim_db::check_connection($conn);
-                
+
         $list      = array();
         $num_rows  = 0;
         
@@ -653,10 +654,10 @@ class Template
             
             $params   =  array($rs->fields['id']);
             $query    = "SELECT count(*) AS num FROM acl_templates_perms 
-                WHERE ac_templates_id = UNHEX(?)";            
+                WHERE ac_templates_id = UNHEX(?)";
             
             $rs_total = $conn->Execute($query, $params);
-            
+
             if (!$rs_total->EOF) 
             {
                 $count_perms = $rs_total->fields['num'];
@@ -673,11 +674,10 @@ class Template
             );
             
             $rs->MoveNext();
-            
-        }   
-        
+        }
+
         return array($list, $num_rows);    
-    }    
+    }
 }
 
 /* End of file template.inc */

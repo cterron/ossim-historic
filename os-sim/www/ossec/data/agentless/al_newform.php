@@ -34,7 +34,7 @@
 
 require_once dirname(__FILE__) . '/../../conf/config.inc';
 
-Session::logcheck('environment-menu', 'EventsHidsConfig');  
+Session::logcheck('environment-menu', 'EventsHidsConfig');
 
 $db    = new ossim_db();
 $conn  = $db->connect();
@@ -53,26 +53,12 @@ $validate_step  = GET ('step');
 $back           = (!empty($_POST['back'])) ? 1 : NULL;
 $info_error     = NULL;
 
-/*
-Test values
-
-$hostname    = "Host";
-$ip          = "192.168.10.15";
-$user        = "admin"; 
-$pass        = "pass";
-$passc       = "pass";
-$ppass       = "pass";
-$ppassc      = "pass";
-$descr       = "hola";
-
-*/
-
 if ($step == 1)
 {
     $action_form = 'al_newform.php?step=1';
 }
 else
-{   
+{
     $action_form = 'al_newform.php';
 }
 
@@ -94,7 +80,7 @@ else
         'ip'          => array('validation' => 'OSS_IP_ADDR',                                             'e_message' => 'illegal:' . _('IP')),
         'sensor'      => array('validation' => 'OSS_HEX',                                                 'e_message' => 'illegal:' . _('Sensor')),
         'user'        => array('validation' => 'OSS_NOECHARS, OSS_ALPHA, OSS_PUNC_EXT',                   'e_message' => 'illegal:' . _('User')),
-        'descr'       => array('validation' => 'OSS_NOECHARS, OSS_TEXT, OSS_SPACE, OSS_AT, OSS_NULLABLE', 'e_message' => 'illegal:' . _('Description')),
+        'descr'       => array('validation' => 'OSS_ALL, OSS_NULLABLE',                                   'e_message' => 'illegal:' . _('Description')),
         'pass'        => array('validation' => 'OSS_PASSWORD',                                            'e_message' => 'illegal:' . _('Password')),
         'passc'       => array('validation' => 'OSS_PASSWORD',                                            'e_message' => 'illegal:' . _('Pass confirm')),
         'ppass'       => array('validation' => 'OSS_PASSWORD, OSS_NULLABLE',                              'e_message' => 'illegal:' . _('Privileged Password')),
@@ -129,13 +115,13 @@ if (POST('ajax_validation_all') == TRUE || $step == 1)
         {
             $validation_errors['pass'] = _('Password fields are different');
         }
-                
+
         if (!empty($_POST['ppass']) && (POST('ppass') != POST('ppassc')))
         {
             $validation_errors['ppass'] = _('Privileged Password fields are different');
         }
     }
-    
+
     $data['data'] = $validation_errors;
 
     if (POST('ajax_validation_all') == TRUE)
@@ -150,7 +136,7 @@ if (POST('ajax_validation_all') == TRUE || $step == 1)
             $data['status'] = 'OK';
             echo json_encode($data);
         }
-        
+
         exit();
     }
     else
@@ -168,7 +154,7 @@ if (POST('ajax_validation_all') == TRUE || $step == 1)
         {
             $info_error = '<div>'._('We Found the following errors').':</div><div style="padding:10px;">'.implode('<br/>', $validation_errors).'</div>';
         }
-    }   
+    }
 }
 
 //Form actions
@@ -178,15 +164,15 @@ if(empty($step))
 
     $sensor_id = GET('sensor');
     ossim_valid($sensor_id, OSS_HEX, 'illegal:' . _('Sensor'));
-    
-    if (!ossim_error()) 
-    {   
+
+    if (!ossim_error())
+    {
         if (!Ossec_utilities::is_sensor_allowed($conn, $sensor_id))
         {
             ossim_set_error(_('Error! Sensor not allowed'));
-        } 
+        }
     }
-    
+
     if (ossim_error())
     {
         $info_error = ossim_get_error();
@@ -194,7 +180,7 @@ if(empty($step))
     else
     {
         $sensor_name  = Av_sensor::get_name_by_id($conn, $sensor_id);
-        
+
         $_SESSION['_al_new']['sensor']      = $sensor_id;
         $_SESSION['_al_new']['sensor_name'] = $sensor_name;
     }
@@ -212,11 +198,11 @@ elseif ($step == 1 || ($step == 2 && !empty($back)))
     $descr       = $_SESSION['_al_new']['descr']    = POST('descr');
     $sensor_id   = $_SESSION['_al_new']['sensor'];
     $sensor_name = $_SESSION['_al_new']['sensor_name'];
-    
+
     if ($step == 1)
     {
         if (empty($info_error))
-        {   
+        {
             try
             {
                 $res = Ossec_agentless::save_in_db($conn, $ip, $sensor_id, $hostname, $user, $pass, $ppass, $use_su, $descr);
@@ -226,7 +212,7 @@ elseif ($step == 1 || ($step == 2 && !empty($back)))
                 $info_error = $e->getMessage();
             }
         }
-        
+
         if (!empty($ip))
         {
             try
@@ -267,9 +253,9 @@ $db->close();
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
     <meta http-equiv="Pragma" content="no-cache"/>
 
-    <script type="text/javascript" src="/ossim/js/jquery.min.js"></script>  
+    <script type="text/javascript" src="/ossim/js/jquery.min.js"></script>
     <script type="text/javascript" src="/ossim/js/jquery.elastic.source.js" charset="utf-8"></script>
-    <script type="text/javascript" src="/ossim/js/jquery.tipTip-ajax.js"></script>
+    <script type="text/javascript" src="/ossim/js/jquery.tipTip.js"></script>
 
     <!-- Own libraries: -->
     <script type="text/javascript" src="/ossim/js/notification.js"></script>
@@ -289,22 +275,22 @@ $db->close();
         function add_monitoring()
         {
             var form_id = $('form[method="post"]').attr("id");
-            
+
             if (ajax_validator.check_form() != true)
             {
                 if ($(".invalid").length >= 1)
                 {
                     $(".invalid").get(0).focus();
                 }
-                
+
                 return false;
             }
-            
+
             //Show load info
-            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['add_m_entry']+'</span>';                                        
-            
+            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['add_m_entry']+'</span>';
+
             $("#al_load").html(l_content);
-            
+
             var token = Token.get_token('al_entries');
 
             $.ajax({
@@ -316,11 +302,11 @@ $db->close();
 
                     $("#info_error").html(notify_error(ossec_msg['unknown_error']));
                     $('#info_error').show();
-                    
+
                     $('.add').val(labels['add']);
                 },
                 success: function(html){
-                    
+
                     $("#al_load").html('');
 
                     if (typeof(html) != 'undefined' && html != null)
@@ -345,34 +331,34 @@ $db->close();
                             $('#info_error').html('');
 
                             if ($('.al_no_added').length >= 1){
-                                $('.al_no_added').remove(); 
+                                $('.al_no_added').remove();
                             }
-                            
+
                             $('#t_body_mt').append(html.data);
-                            
+
                             $('#t_body_mt tr td').removeClass('odd even');
                             $('#t_body_mt tr:even td').addClass('even');
                             $('#t_body_mt tr:odd td').addClass('odd');
-                            
+
                             //Add new token
                             Token.add_to_forms();
-                        }  
+                        }
                     }
 
                     $('.add').val(labels['add']);
                 }
             });
         }
-    
-    
+
+
         function delete_monitoring(id)
-        {           
+        {
             //Show load info
-            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['delete_m_entry']+'</span>';                                     
-            
+            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['delete_m_entry']+'</span>';
+
             $("#al_load").html(l_content);
 
-            
+
             var form_id = $('form[method="post"]').attr("id");
             var token   = Token.get_token('al_entries');
 
@@ -386,18 +372,18 @@ $db->close();
 
                     $("#info_error").html(notify_error(ossec_msg['unknown_error']));
                     $('#info_error').show();
-                    
+
                     $('.add').off('click');
-                            
+
                     $('.add').val(labels['add']);
                     $('.add').click(function() {
                         add_monitoring(id);
                     });
                 },
                 success: function(html){
-                    
+
                     $("#al_load").html('');
-                    
+
                     if (typeof(html) != 'undefined' && html != null)
                     {
                         if (html.status == 'error')
@@ -410,7 +396,7 @@ $db->close();
                             else
                             {
                                 $("#info_error").html('');
-                                
+
                                 $("#al_load").html("<div class='cont_al_message'><div class='al_message'>"+notify_error(html.data)+"</div></div>");
                                 $("#al_load").fadeIn(2000);
                                 $("#al_load").fadeOut(4000);
@@ -419,7 +405,7 @@ $db->close();
                         else
                         {
                             $("#info_error").html('');
-                            
+
                             $('#m_entry_'+id).remove();
 
                             if ($('#t_body_mt tr').length == 0)
@@ -433,10 +419,10 @@ $db->close();
                                 $('#t_body_mt tr:even td').addClass('even');
                                 $('#t_body_mt tr:odd td').addClass('odd');
                             }
-                            
+
                             //Add new token
                             Token.add_to_forms();
-                        }  
+                        }
                     }
 
                     $('.add').off('click');
@@ -445,63 +431,63 @@ $db->close();
                     $('.add').click(function() {
                         add_monitoring(id);
                     });
-                    
+
                 }
             });
         }
-        
-        
+
+
         function add_values(id)
         {
             var type       = $("#al_type_"+id).text();
             var frequency  = $("#al_frequency_"+id).text();
             var state      = $("#al_state_"+id).text();
             var arguments  = $("#al_arguments_"+id).text();
-            
+
             $('#type option').each(function(index) {
                 if ($(this).text() == type)
                 {
                     $('#type').val($(this).attr('value'));
                 }
             });
-            
+
             change_type(type);
-            
+
             $('#frequency').val(frequency);
             $('#state').val(state);
             $('#arguments').val(arguments);
-            
+
             $('.add').unbind('click');
             $('.add').val(labels['update']);
-            
+
             $('.add').bind('click', function() {
                 modify_monitoring(id);
             });
         }
-        
-        
+
+
         function modify_monitoring(id)
         {
             var form_id = $('form[method="post"]').attr("id");
-            
+
             if (ajax_validator.check_form() != true)
             {
                 if ($(".invalid").length >= 1)
                 {
                     $(".invalid").get(0).focus();
                 }
-                
+
                 $('.next').val(labels['add']);
                 return false;
             }
-            
+
             //Show load info
-            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['update_m_entry']+'</span>';                                     
-            
+            var l_content = '<img src="<?php echo OSSEC_IMG_PATH?>/loading.gif" border="0" align="absmiddle"/><span style="padding-left: 5px;">'+ossec_msg['update_m_entry']+'</span>';
+
             $("#al_load").html(l_content);
-            
+
             var token = Token.get_token('al_entries');
-                        
+
             $.ajax({
                 type: "POST",
                 url: "ajax/actions.php",
@@ -509,21 +495,21 @@ $db->close();
                 dataType: "json",
                 error: function(data){
                     $("#al_load").html('');
-                    
+
                     $("#info_error").html(notify_error(ossec_msg['unknown_error']));
                     $('#info_error').show();
-                    
+
                     $('.add').off('click');
-                            
+
                     $('.add').val(labels['add']);
                     $('.add').click(function() {
                         add_monitoring(id);
                     });
                 },
                 success: function(html){
-                    
+
                     $("#al_load").html('');
-                                        
+
                     if (typeof(html) != 'undefined' && html != null)
                     {
                         if (html.status == 'error')
@@ -536,7 +522,7 @@ $db->close();
                             else
                             {
                                 $("#info_error").html('');
-                                
+
                                 $("#al_load").html("<div class='cont_al_message'><div class='al_message'>"+notify_error(html.data)+"</div></div>");
                                 $("#al_load").fadeIn(2000);
                                 $("#al_load").fadeOut(4000);
@@ -545,20 +531,20 @@ $db->close();
                         else
                         {
                             $("#info_error").html('');
-                            
+
                             $('#m_entry_'+id).html(html.data);
-                            
+
                             $('#t_body_mt tr').removeClass('odd even');
                             $('#t_body_mt tr:even').addClass('even');
                             $('#t_body_mt tr:odd').addClass('odd');
-                            
+
                             //Add new token
                             Token.add_to_forms();
-                        }  
+                        }
                     }
-                    
+
                     $('.add').off('click');
-                            
+
                     $('.add').val(labels['add']);
                     $('.add').click(function() {
                         add_monitoring(id);
@@ -566,8 +552,8 @@ $db->close();
                 }
             });
         }
-        
-        
+
+
         function change_type(t_value)
         {
             if (t_value != '')
@@ -579,7 +565,7 @@ $db->close();
             {
                 var type = $('#type').val();
             }
-                
+
             if (type.match("_diff") != null)
             {
                 $('#state_txt').text("Periodic_diff");
@@ -594,11 +580,11 @@ $db->close();
                 }
             }
         }
-        
+
         function change_arguments()
         {
             var type = $('#type').val();
-                                    
+
             if (type.match("_diff") != null)
             {
                 $('#arguments').text("");
@@ -607,15 +593,15 @@ $db->close();
             {
                 $('#arguments').text("/bin /etc /sbin");
             }
-        }   
+        }
 
         $(document).ready(function(){
-            
-            
-            $('#ppass').on('blur', function() 
+
+
+            $('#ppass').on('blur', function()
             {
                 var val = $(this).val();
-                
+
                 if(val == '')
                 {
                     $('#use_su').prop('checked', false);
@@ -625,13 +611,13 @@ $db->close();
                     $('#use_su').prop('checked', true);
                 }
             });
-            
+
             //Add token to form
             Token.add_to_forms();
 
             $('textarea').elastic();
-                
-            var config = {   
+
+            var config = {
                 validation_type: 'complete', // single|complete
                 errors:{
                     display_errors: 'all', //  all | summary | field-errors
@@ -649,16 +635,16 @@ $db->close();
                     }
                 }
             };
-        
+
             ajax_validator = new Ajax_validator(config);
-            
+
             $('.next').bind('click', function() {
-                
+
                 if (ajax_validator.check_form() == true)
                 {
                     var form_id = $('form[method="post"]').attr("id");
-                    
-                    $('#'+form_id).submit(); 
+
+                    $('#'+form_id).submit();
                 }
                 else
                 {
@@ -666,7 +652,7 @@ $db->close();
                     {
                         $(".invalid").get(0).focus();
                     }
-                    
+
                     $('#info_error').show();
                     $('.next').val("<?php echo _("Next >>")?>");
                 }
@@ -676,16 +662,16 @@ $db->close();
                 add_monitoring();
                 $('.add').val(labels['add']);
             });
-            
+
             $('#type').change(function() {
                 change_type('');
                 change_arguments();
             });
-            
+
             $('#t_body_mt tr').removeClass('odd even');
             $('#t_body_mt tr:even').addClass('even');
             $('#t_body_mt tr:odd').addClass('odd');
-            
+
             $("#arguments").tipTip({maxWidth: 'auto'});
         });
 
@@ -704,7 +690,7 @@ $db->close();
             border: solid 1px #D4D4D4 !important;
             border-collapse: collapse;
         }
-        
+
         .container_st2
         {
             width: 650px !important;
@@ -723,15 +709,15 @@ $db->close();
         {
             margin-right: 3px;
         }
-        
-        .cont_next 
+
+        .cont_next
         {
             border: none;
             padding: 10px;
         }
 
         .fleft
-        { 
+        {
             width: 48%;
             float: left;
             text-align: left !important;
@@ -748,7 +734,7 @@ $db->close();
         {
             border: solid 1px #D4D4D4 !important;
         }
-        
+
     </style>
 </head>
 
@@ -765,7 +751,7 @@ $db->close();
 
 <div id='info_error' style="<?php echo $display?>">
     <?php
- 
+
     if (!empty($info_error))
     {
         $config_nt = array(
@@ -775,10 +761,10 @@ $db->close();
                     'cancel_button' => FALSE
                 ),
                 'style'   => 'width: 80%; margin: 20px auto; text-align: left;'
-            ); 
+            );
 
         $nt = new Notification('nt_1', $config_nt);
-        
+
         $nt->show();
     }
     ?>
@@ -786,12 +772,12 @@ $db->close();
 
 <div class="legend">
     <?php echo _('Values marked with (*) are mandatory');?>
-</div>  
-  
+</div>
+
 <form method="POST" name="al_new_form" id="al_new_form" action="<?php echo $action_form;?>">
 
     <?php
-         
+
     if (empty($step) || ($step == 2 && !empty($back)))
     {
         ?>
@@ -804,7 +790,7 @@ $db->close();
                 <input type='hidden' name='step' id='step' value='1'/>
             </th>
         </tr>
-        
+
         <tr>
             <td>
                 <table class='subsection'>
@@ -815,15 +801,15 @@ $db->close();
                         <td class="left">
                             <input type="text" class='vfield' name="hostname" id="hostname" value="<?php echo Util::htmlentities($hostname) ?>"/>
                         </td>
-                    </tr>   
-                    
+                    </tr>
+
                     <tr>
                         <th>
                             <label for='ip'><?php echo _('IP') . required();?></label>
                         </th>
-                        
+
                         <td class="left">
-                            <?php 
+                            <?php
                             if ($step == 2 && !empty($back))
                             {
                                 ?>
@@ -851,7 +837,7 @@ $db->close();
                                 <?php echo $sensor_name;?>
                             </div>
                         </td>
-                    </tr>  
+                    </tr>
                     <tr>
                         <th>
                             <label for='user'><?php echo _('User') . required();?></label>
@@ -860,7 +846,7 @@ $db->close();
                             <input type="text" class='vfield' name="user" id="user" value="<?php echo Util::htmlentities($user) ?>"/>
                         </td>
                     </tr>
-                    
+
                     <tr>
                         <th>
                             <label for='pass'><?php echo _('Password') . required();?></label>
@@ -881,7 +867,7 @@ $db->close();
                             <div class='al_advice'><?php echo _('(*) If you want to use public key authentication instead of passwords, you need to provide NOPASS as Normal Password ') ?></div>
                         </td>
                     </tr>
-                        
+
                     <tr>
                         <th>
                             <label for='ppass'><?php echo _('Privileged Password');?></label>
@@ -891,7 +877,7 @@ $db->close();
                             <input type="password" class='vfield' name="ppass" id="ppass" value="<?php echo $ppass;?>" autocomplete="off"/>
                         </td>
                     </tr>
-                    
+
                     <tr>
                         <th>
                             <label for='ppassc'><?php echo _('Privileged Password confirm');?></label>
@@ -903,7 +889,7 @@ $db->close();
                         </td>
                         </td>
                     </tr>
-                    
+
                     <tr>
                         <th>
                             <label for='use_su'><?php echo _('Enable use_su option');?></label>
@@ -918,12 +904,12 @@ $db->close();
                             <label for='descr'><?php echo _('Description');?></label>
                         </th>
                         <td class="left noborder">
-                            <textarea name="descr" id="descr" class='vfield'><?php echo Util::htmlentities($descr) ?></textarea>
+                            <textarea name="descr" id="descr" class='vfield'><?php echo Util::htmlentities($descr)?></textarea>
                         </td>
                     </tr>
-                    
+
                     <tr><td class='al_sep' colspan='2'></td></tr>
-                    
+
                     <tr>
                         <td colspan="2" class="cont_next">
                             <div class='fright'><input type="button" class="next" id='send' value="<?php echo _('Next')." >>" ?>"/></div>
@@ -933,15 +919,15 @@ $db->close();
             </td>
         </tr>
     </table>
-    
-    <?php 
-    } 
+
+    <?php
+    }
     elseif ($step == 1)
     {
         ?>
-    
+
     <table class='container_st2' id='table_form'>
-    
+
         <tr>
             <th class='headerpr'>
                 <img src='<?php echo OSSIM_IMG_PATH?>/wand.png' alt='Wizard' style='vertical-align:middle; margin-right: 3px;'/>
@@ -959,7 +945,7 @@ $db->close();
                 <input type='hidden' name='descr'    id='descr'    value='<?php echo Util::htmlentities($descr)?>'/>
             </th>
         </tr>
-    
+
         <tr>
             <td class='noborder'>
                 <table class='subsection'>
@@ -984,7 +970,7 @@ $db->close();
                             <input type="text" class='vfield' name="frequency" id="frequency" value="86400"/>
                         </td>
                     </tr>
-            
+
                     <tr>
                         <th>
                             <label for='state'><?php echo _('State');?></label>
@@ -994,7 +980,7 @@ $db->close();
                             <input type="hidden" class="state vfield" id='state' name='state' value="periodic"/>
                         </td>
                     </tr>
-        
+
                     <tr>
                         <th>
                             <label for='arguments'><?php echo _('Arguments'); ?></label>
@@ -1028,18 +1014,18 @@ $db->close();
                             <textarea name="arguments" id="arguments" class='vfield' title="<?php echo $arg_info?>">/bin /etc /sbin</textarea>
                         </td>
                     </tr>
-        
+
                     <tr>
                         <td colspan='2' style='padding:5px 5px 5px 0px;' class='right noborder'>
                             <input type="button" class="small av_b_secondary add" name='add' id='send' value="<?php echo _('Add')?>"/>
                         </td>
                     </tr>
-                        
-                        
+
+
                     </tr>
-                    
+
                     <tr><td class='al_sep' id='al_load' colspan='2'></td></tr>
-                    
+
                     <tr>
                         <td class='noborder' colspan='2'>
                             <table class='subsection noborder' id='monitoring_table'>
@@ -1054,7 +1040,7 @@ $db->close();
                                     </tr>
                                 </thead>
                                 <tbody id='t_body_mt'>
-                                    <?php 
+                                    <?php
                                     if (count($monitoring_entries) > 0)
                                     {
                                         foreach ($monitoring_entries as $k => $v)
@@ -1068,7 +1054,7 @@ $db->close();
                                                         <a onclick=\"add_values('".$v['id']."')\"><img src='".OSSIM_IMG_PATH."/pencil.png' align='absmiddle' alt='"._('Modify monitoring entry')."' title='"._('Modify monitoring entry')."'/></a>
                                                         <a onclick=\"delete_monitoring('".$v['id']."')\" style='margin-right:5px;'><img src='".OSSIM_IMG_PATH."/delete.gif' align='absmiddle' alt='"._('Delete monitoring entry')."' title='"._('Delete monitoring entry')."'/></a>
                                                     </td>
-                                                </tr>"; 
+                                                </tr>";
                                         }
                                     }
                                     else
@@ -1081,23 +1067,23 @@ $db->close();
                             </table>
                         </td>
                     </tr>
-                    
+
                     <tr><td class='al_sep' colspan='2'></td></tr>
-                    
+
                     <tr>
                         <td colspan='2' class='cont_next'>
                             <div class='fleft'><input type="submit" class='av_b_secondary' id='back' name='back' value="<?php echo "<< "._('Back') ?>"/></div>
                             <div class='fright'><input type="submit" id='finish' name='finish' value="<?php echo _('Finish') ?>"/></div>
                         </td>
                     </tr>
-                    
+
                 </table>
             </td>
         </tr>
     </table>
-    <?php 
-    } 
-?>  
+    <?php
+    }
+?>
 
 </form>
 

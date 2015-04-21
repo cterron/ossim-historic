@@ -93,7 +93,7 @@ class Agent:
         self.detector_objs = []
         self.watchdog = None
         self.shutdown_running = False
-        self.__outputServerConneciton = None
+        self.__outputServerConnection = None
         self.__outputIDMConnection = None
         self.__frameworkConnection = None
         self.__keep_working = True
@@ -396,7 +396,7 @@ class Agent:
             Connect to framewokd
         '''
 
-        frmk_tmp_id, frmk_tmp_ip, frmk_tmp_port = self.__outputServerConneciton.get_framework_data()
+        frmk_tmp_id, frmk_tmp_ip, frmk_tmp_port = self.__outputServerConnection.get_framework_data()
         tryConnect = False
         if self.__frameworkConnection is None:
             self.__frameworkConnection = FrameworkConn( self.conf, frmk_tmp_id, frmk_tmp_ip, frmk_tmp_port ,self.__sensorID)
@@ -648,8 +648,8 @@ class Agent:
             if hasattr( parser, 'stop' ):
                 parser.stop()
         #Stop server connection.
-        if self.__outputServerConneciton is not None:
-            self.__outputServerConneciton.close()
+        if self.__outputServerConnection is not None:
+            self.__outputServerConnection.close()
         #Stop IDM connection
         if self.__outputIDMConnection is not None:
             self.__outputIDMConnection.close()
@@ -699,10 +699,10 @@ class Agent:
                     framework_ip = self.conf.get( "control-framework", "ip" )
                     framework_port = self.conf.get( "control-framework", "port" )
                     framework_hostname = socket.gethostname()
-                self.__outputServerConneciton = ServerConn( server_ip, server_port, server_priority, allow_frmk_data, sendEvents, self.__plugins, self.__pluginStopEvent ,self.__sensorID,self.__systemUUIDFile)
-                Output.add_server_output(self.__outputServerConneciton)
+                self.__outputServerConnection = ServerConn( server_ip, server_port, server_priority, allow_frmk_data, sendEvents, self.__plugins, self.__pluginStopEvent ,self.__sensorID,self.__systemUUIDFile)
+                Output.add_server_output(self.__outputServerConnection)
                 if framework_data:
-                    self.__outputServerConneciton.set_framework_data( framework_hostname, \
+                    self.__outputServerConnection.set_framework_data( framework_hostname, \
                                                            framework_ip, \
                                                            framework_port )
     def __readOutputIDM( self ):
@@ -740,18 +740,20 @@ class Agent:
         while self.__keep_working:
             if self.__outputIDMConnection is not None and not self.__outputIDMConnection.get_is_alive():
                 self.__outputIDMConnection.connect()
-            if not self.__outputServerConneciton.get_is_alive():
+            if not self.__outputServerConnection or not self.__outputServerConnection.get_is_alive():
+
                 self.__stop_server_counter +=1
                 
             
             if self.__stop_server_counter >= maxStopCounter:
-                logger.info( "Server %s:%s has reached %s stops, trying to reconnect!" % ( self.__outputServerConneciton.get_server_ip(), self.__outputServerConneciton.get_server_port(), maxStopCounter ) )
-                self.__outputServerConneciton.connect( attempts = 3, waittime = 10 )
-                Stats.server_reconnect( self.__outputServerConneciton.get_server_ip() )
+                if  self.__outputServerConnection:
+                    logger.info("Server %s:%s has reached %s stops, trying to reconnect!" % (self.__outputServerConnection.get_server_ip(), self.__outputServerConnection.get_server_port(), maxStopCounter))
+                    self.__outputServerConnection.connect( attempts = 3, waittime = 10 )
+                    Stats.server_reconnect( self.__outputServerConnection.get_server_ip() )
                 self.__stop_server_counter = 0
                 if self.__keep_working:
                     time.sleep(3)
-            if self.__outputServerConneciton.get_is_alive():
+            if self.__outputServerConnection and self.__outputServerConnection.get_is_alive():
                 self.connect_framework()
             if self.__keep_working:
                 time.sleep( timeBeetweenChecks )

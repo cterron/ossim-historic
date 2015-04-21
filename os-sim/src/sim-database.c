@@ -300,7 +300,6 @@ sim_database_execute_no_query  (SimDatabase  *database,
     ret = gda_connection_execute_non_select_command (database->_priv->conn, buffer, &error);
     if (error)
     {
-      g_message ("Query: %s error: %s", buffer, error->message);
       if (error->domain == GDA_SERVER_PROVIDER_ERROR)
       {
         switch (error->code)
@@ -309,9 +308,17 @@ sim_database_execute_no_query  (SimDatabase  *database,
           // Malformed query check.
           if (g_strcmp0 ("MySQL server has gone away", error->message)
               && g_strcmp0 ("Lost connection to MySQL server during query", error->message))
+          {
             recoverable_error = FALSE;
+            g_message ("Query: %s error: %s", buffer, error->message);
+          }
+          else
+          {
+            ossim_debug ("Query: %s message: %s", buffer, error->message);
+          }
           break;
         default:
+          g_message ("Query: %s error: %s", buffer, error->message);
           break;
         }
       }
@@ -400,7 +407,6 @@ sim_database_execute_single_command (SimDatabase  *database,
   model = gda_execute_select_command (database->_priv->conn, buffer, &error);
   if (error)
   {
-    g_message ("%s: query: %s error: %s", __func__, buffer, error->message);
     if (error->domain == GDA_SERVER_PROVIDER_ERROR)
     {
       switch (error->code)
@@ -409,9 +415,17 @@ sim_database_execute_single_command (SimDatabase  *database,
           // Malformed query check.
           if (g_strcmp0 ("MySQL server has gone away", error->message)
               && g_strcmp0 ("Lost connection to MySQL server during query", error->message))
+          {
             recoverable_error = FALSE;
+            g_message ("%s: query: %s error: %s", __func__, buffer, error->message);
+          }
+          else
+          {
+            ossim_debug ("%s: query: %s message: %s", __func__, buffer, error->message);
+          }
           break;
         default:
+          g_message ("%s: query: %s error: %s", __func__, buffer, error->message);
           break;
       }
     }

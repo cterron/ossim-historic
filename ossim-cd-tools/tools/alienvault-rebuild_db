@@ -24,6 +24,7 @@ my $db_pass           = $config{'database_pass'};
 my $rebuild_db_host   = '127.0.0.1';
 my $config_file       = "/etc/ossim/ossim_setup.conf";
 
+$full = 0;
 # Parse and check arguments
 parse_argv();
 if ( config_check() )
@@ -64,12 +65,6 @@ sub main()
 
     #stop_services();
 
-    # increase thread_stack (for net_cidr and related procedures)
-    verbose_log("Database Profile: thread_stack");
-    $command = "sed -i \"s:thread_stack.*:thread_stack=384K:\" /etc/mysql/my.cnf";
-    debug_log("$command");
-    system($command);
-
     # we are not using $config{'innodb'} today
     # mysql restart to clean mysql process (db will be rebuilt)
     verbose_log("Database Profile: Starting MySQL");
@@ -84,28 +79,47 @@ sub main()
     # alienvault struct (old ossim)
     verbose_log("Database Profile: Create alienvault database");
 	dp("Creating alienvault...");
-	system("echo \"DROP DATABASE IF EXISTS alienvault; CREATE DATABASE alienvault DEFAULT CHARACTER SET utf8;\" | ossim-db");
+	system("echo \"DROP DATABASE IF EXISTS alienvault; CREATE DATABASE alienvault DEFAULT CHARACTER SET utf8;\" | ossim-db mysql");
     system("zcat /usr/share/doc/ossim-mysql/contrib/00-create_alienvault_tbls_mysql.sql.gz | ossim-db alienvault");
 
     # alienvault data config
     debug_log("Database Profile: alienvault data");
     system("zcat /usr/share/doc/ossim-mysql/contrib/01-create_alienvault_data_data.sql.gz | ossim-db alienvault");
-    #system("zcat /usr/share/doc/ossim-mysql/contrib/01-create_alienvault_data_config.sql.gz | ossim-db alienvault");
-    #system("zcat /usr/share/doc/ossim-mysql/contrib/02-create_alienvault_data_data.sql.gz | ossim-db alienvault");
-    system("zcat /usr/share/doc/ossim-mysql/contrib/03-create_alienvault_data_croscor_snort_nessus.sql.gz | ossim-db alienvault");
-	system("zcat /usr/share/doc/ossim-mysql/contrib/04-create_alienvault_data_vulnerabilities.sql.gz | ossim-db alienvault");
-	
-	# admin timezone
-	my $tmz = `cat /etc/timezone`;
-	$tmz =~ s/\n//g;
-	$tmz =~ s/ //g;
-	system("echo \"update alienvault.users set timezone='$tmz' where login='admin'\" | ossim-db alienvault");    	
+    
+    if ($full)
+    {
+        system("zcat /usr/share/doc/ossim-mysql/contrib/01-create_alienvault_data_config.sql.gz | ossim-db alienvault");
+        system("zcat /usr/share/doc/ossim-mysql/contrib/02-create_alienvault_data_data.sql.gz | ossim-db alienvault");
+        system("zcat /usr/share/doc/ossim-mysql/contrib/03-create_alienvault_data_croscor_snort_nessus.sql.gz | ossim-db alienvault");
+    }
+    system("zcat /usr/share/doc/ossim-mysql/contrib/04-create_alienvault_data_vulnerabilities.sql.gz | ossim-db alienvault");
+    
+    # Software cpe feed
+    if ( -f "/usr/share/alienvault/cpe/software_cpe.sql.gz" )
+    {
+        system("zcat /usr/share/alienvault/cpe/software_cpe.sql.gz | ossim-db alienvault");
+    }
+    else
+    {
+        system("cat /usr/share/alienvault/cpe/software_cpe.sql | ossim-db alienvault");
+    }
+
+    # admin timezone
+    my $tmz = `cat /etc/timezone`;
+    $tmz =~ s/\n//g;
+    $tmz =~ s/ //g;
+    system("echo \"update alienvault.users set timezone='$tmz' where login='admin'\" | ossim-db alienvault");    	
 
     # Plugins
     debug_log("Database Profile: Update plugins");
     dp("Loading plugins data (please wait)...");
     system("find /usr/share/doc/ossim-mysql/contrib/plugins/ -type f -iname \\*.sql -printf 'INSERT %f \n' -exec sh -c 'cat {}| ossim-db' \\;");
     system("find /usr/share/doc/ossim-mysql/contrib/plugins/ -type f -iname \\*.sql.gz -printf 'INSERT %f \n' -exec sh -c 'zcat {}| ossim-db' \\;");
+    if ( -s "/var/lib/dpkg/info/alienvault-cpe.postinst" )
+    {
+        verbose_log("Reconfiguring alienvault-cpe");
+        system("/bin/bash /var/lib/dpkg/info/alienvault-cpe.postinst configure");
+    }
 	
     # alienvault_siem struct (old snort)
     debug_log("Database Profile: Create alienvault_siem");
@@ -253,38 +267,6 @@ sub main()
     	system($command);
     }
 
-	verbose_log("Database Profile: Add default networks");
-	my $netnum = `echo "SELECT COUNT(*) FROM net;" | ossim-db | grep -v COUNT`; $netnum =~ s/\n//;
-
-	if ( $netnum eq "0" )
-	{
-		my @query_array = (
-				q{SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid},
-				q{INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),'Pvt_192','192.168.0.0/16','2','300','300','0','0','NULL','')},
-				q{INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2)},
-				q{SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid},
-				q{INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),'Pvt_172','172.16.0.0/12','2','300','300','0','0','NULL','')},
-				q{INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2)},
-				q{SELECT UNHEX(REPLACE(UUID(),'-','')) into @uuid},
-				q{INSERT IGNORE INTO net (id,ctx,name,ips,asset,threshold_c,threshold_a,alert,persistence,rrd_profile,descr) VALUES (@uuid,(SELECT UNHEX(REPLACE(value,'-','')) FROM alienvault.config WHERE conf = 'default_context_id'),'Pvt_010','10.0.0.0/8','2','300','300','0','0','NULL','')},
-				q{INSERT IGNORE INTO net_qualification (net_id,compromise,attack) VALUES (@uuid,2,2)},
-				);
-
-		Avtools::execute_query_without_return(@query_array);
-
-        ## net_cidrs
-		if ( -f "/usr/share/doc/ossim-mysql/contrib/misc/net_cidrs.sql" )
-		{
-			verbose_log("Database Profile: Inserting into net_cidrs (running net_cidrs.sql)");
-			system("cat /usr/share/doc/ossim-mysql/contrib/misc/net_cidrs.sql | ossim-db");
-		}
-
-	}
-	else
-	{
-	    verbose_log("Database Profile: Already inserted");
-    }
-
     system("echo \"CREATE FUNCTION inet6_ntop RETURNS STRING SONAME 'mysql_udf_ipv6.so';\" | ossim-db > /dev/null 2>&1");
     system("echo \"CREATE FUNCTION inet6_pton RETURNS STRING SONAME 'mysql_udf_ipv6.so';\" | ossim-db > /dev/null 2>&1");
     system("echo \"CREATE FUNCTION inet6_lookup RETURNS STRING SONAME 'mysql_udf_ipv6.so';\" | ossim-db > /dev/null 2>&1");
@@ -340,6 +322,10 @@ sub parse_argv()
         if (($parms[0] eq "--help") || ($parms[0] eq "-h"))
         {
             help();
+        }
+        elsif ($parms[0] eq "--full")
+        {
+            $full = 1;
         }
         else
         {

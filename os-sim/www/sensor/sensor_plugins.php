@@ -409,7 +409,7 @@ if ((!empty($cmd)) && (!empty($id)) && (!empty($ip_get)))
 // Sensors perm check
 if (!Session::menu_perms('configuration-menu', 'PolicySensors')) 
 {
-	echo ossim_error(_("You need permissions of section '")."<b>"._("Configuration -> Alienvault Components -> Sensors")."</b>"._("' to see this page. Contact with the administrator."), AV_NOTICE);
+	echo ossim_error(_("You need permissions of section '")."<b>"._("Configuration -> AlienVault Components -> Sensors")."</b>"._("' to see this page. Contact with the administrator."), AV_NOTICE);
 	exit();
 }
 
@@ -567,16 +567,16 @@ if (!empty($info_error))
 						{
 							$munin_link = "/munin/";
 						}
-						
-						$server_ip = trim(`grep ^admin_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`);
-						
-						if ($server_ip == '') 
-						{
-						    $server_ip = trim(`grep ^framework_ip /etc/ossim/ossim_setup.conf | cut -f 2 -d "="`);
-				        }
-						
+
+                        $server_ip = Util::get_default_admin_ip();
+
+                        if ($server_ip == '')
+                        {
+                            $server_ip = $ossim_conf->get_conf('frameworkd_address');
+                        }
+
                         $protocol = 'http';
-                        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') 
+                        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')
                         {
                             $protocol = 'https';
                         }
@@ -593,7 +593,7 @@ if (!empty($info_error))
 						{
 							
 							$munin_url = $protocol.'://'.$_SERVER['SERVER_NAME'].$port.$munin_link;
-							$munin_url = str_replace('localhost', $ip, $munin_url);							
+							$munin_url = str_replace('localhost', $ip, $munin_url);
 							$testmunin = $protocol.'://' . $ip . '/munin/';
 						} 
 						else 

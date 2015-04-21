@@ -60,7 +60,7 @@ define('FTW_PING_OPTIONS', '-T3');
 */
 
 class Scan
-{    
+{
     /**
     * Networks and hosts for frameworkd
     *
@@ -68,7 +68,7 @@ class Scan
     * @access private
     */
     private $targets;
-        
+
     /**
     * Nmap binary path
     *
@@ -76,7 +76,7 @@ class Scan
     * @access private
     */
     private $nmap;
-    
+
      /**
     * Nmap options
     *
@@ -84,23 +84,23 @@ class Scan
     * @access private
     */
     private $options;
-	
+
      /**
     * Nmap parser object
     *
     * @var object
     * @access private
     */
-	private $nmap_parser;
-	
+    private $nmap_parser;
+
      /**
     * Nmap XML output file
     *
     * @var string
     * @access private
     */
-	private $xml_output;
-	
+    private $xml_output;
+
      /**
     * Nmap targets file
     *
@@ -108,7 +108,7 @@ class Scan
     * @access private
     */
     private $targets_file;
-    
+
      /**
     * Nmap scan status
     *
@@ -116,7 +116,7 @@ class Scan
     * @access private
     */
     private $status;
-    
+
      /**
     * Number of hosts to be scanned
     *
@@ -124,7 +124,7 @@ class Scan
     * @access private
     */
     private $num_of_host;
-    
+
      /**
     * Array with hosts_statuses
     *
@@ -132,7 +132,7 @@ class Scan
     * @access private
     */
     private $hosts_statuses;
-    
+
      /**
     * If this variable is TRUE we only will do a ping scan
     *
@@ -140,7 +140,15 @@ class Scan
     * @access private
     */
     private $only_ping;
-      
+
+     /**
+    * www-data to change files with chown
+    *
+    * @var string
+    * @access private
+    */
+    private $owner;
+
      /**
     * Class constructor
     *
@@ -152,31 +160,30 @@ class Scan
     function __construct($targets = '', $config = array())
     {
         // choose files names
-	    
-	    $user = ($config['user'] != '') ? $config['user'] : Session::get_session_user();
-	    $this->secure_id_md5 = ($user != '') ? md5(Session::get_secure_id($user)) : Util::uuid();      
+
+        $user = ($config['user'] != '') ? $config['user'] : Session::get_session_user();
+        $this->secure_id_md5 = ($user != '') ? md5(Session::get_secure_id($user)) : Util::uuid();
 
         $this->xml_output    = '/var/tmp/nmap_scan_' . $this->secure_id_md5 . '.xml';
         $this->targets_file  = '/var/tmp/nmap_scan_' . $this->secure_id_md5 . '_targets_file';
         $this->data_file     = '/var/tmp/nmap_scan_' . $this->secure_id_md5 . '_datafile';
-    
-        // nmap binary
-        
+        $this->owner         = 'www-data';
+
+        // Nmap binary
         if (!$GLOBALS['CONF'])
-        { 
+        {
            $GLOBALS['CONF'] = new Ossim_conf();
         }
-	    
-	    $conf = $GLOBALS['CONF'];
-		
+
+        $conf = $GLOBALS['CONF'];
+
         $this->nmap = $conf->get_conf('nmap_path');
-        
-        // object to parse Nmap results
-        
+
+        // Object to parse Nmap results
         $this->nmap_parser = new Nmap_parser();
-        
-        // load parameter from file if targets is empty
-        
+
+        // Load parameter from file if targets is empty
+
         if (empty($targets))
         {
             $this->load_data();
@@ -185,21 +192,67 @@ class Scan
         {
             // Host statuses
             $this->hosts_statuses = array();
-        
+
             // Nmap options
-	        $this->options = '';
-	        
-	        // Nmap targets
-            $this->targets = preg_replace('/\s*\,\s*/', ' ', $targets);
-            
-	        // Scan configuration
-	        $this->only_ping = ($config['only_ping'] == TRUE) ? TRUE : FALSE;
-            
+            $this->options = '';
+
+
+            //Normalize targets
+            $this->targets = array(
+                'nmap_format' => '',
+                'av_format'   => $av_format
+            );
+
+            if (!empty($targets))
+            {
+                $assets      = explode(' ', $targets);
+                $nmap_format = array();
+                $av_format   = array();
+
+                foreach($assets as $asset)
+                {
+                    if (preg_match('/(.*)#((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/\d{1,2})?)/', $asset, $fnd))
+                    {
+                        $type       = ($fnd[4] == '/32') ? 'host' : 'net';
+                        $id         = trim($fnd[1]);
+                        $ip_cidr    = ($type == 'host') ? trim($fnd[3]) : trim($fnd[2]);
+                        $namp_asset = trim($fnd[2]);
+                    }
+                    elseif(preg_match('/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\/\d{1,2})?$/', $asset, $fnd))
+                    {
+                        $type       = ($fnd[2] == '/32') ? 'host' : 'net';
+                        $id         = NULL;
+                        $ip_cidr    = ($type == 'host') ? trim($fnd[1]) : trim($fnd[0]);
+                        $namp_asset = trim($fnd[0]);
+                    }
+
+                    if (!empty($ip_cidr))
+                    {
+                        $av_format[$asset] = array(
+                            'type'    => $type,
+                            'ip_cidr' => $ip_cidr,
+                            'id'      => $id
+                        );
+
+                        $nmap_format[$namp_asset] = $namp_asset;
+                    }
+                }
+
+                $this->targets = array(
+                    'nmap_format' => implode(' ', $nmap_format),
+                    'av_format'   => $av_format
+                );
+            }
+
+            // Scan configuration
+            $this->only_ping = ($config['only_ping'] == TRUE) ? TRUE : FALSE;
+
             $this->save_data();
-            
+
             touch($this->targets_file);
+            @chown($this->targets_file, $this->owner);
         }
-        
+
         // get scan status
         $this->get_status();
     }
@@ -209,7 +262,7 @@ class Scan
     *
     * @param string  $options  Scanning options
     *
-    * @return void     
+    * @return void
     */
     public function append_option($options)
     {
@@ -221,68 +274,73 @@ class Scan
         {
             $this->options = $options;
         }
-        
+
         $this->save_data();
     }
-    
+
     /**
     * This function returns only_ping variable
     *
-    * @return boolean     
+    * @return boolean
     */
     public function get_only_ping()
-    {   
+    {
         return $this->only_ping;
     }
-    
+
     /**
     * This function load the scan data
     *
     * @return  void
-    */ 
+    */
     private function load_data()
     {
         //Getting the content of the file
-        
+
         if (file_exists($this->data_file))
-        {      
+        {
             $file_content  = file_get_contents($this->data_file);
             $data          = unserialize($file_content);
-            
-            $this->options        = $data['options'];
+
             $this->targets        = $data['targets'];
+            $this->options        = $data['options'];
             $this->only_ping      = $data['only_ping'];
             $this->num_of_host    = $data['num_of_host'];
             $this->hosts_statuses = $data['hosts_statuses'];
         }
         else
-        {   
+        {
+            $this->targets = array(
+                'nmap_format' => '',
+                'av_format'   => $av_format
+            );
             $this->options        = '';
-            $this->targets        = '';
             $this->only_ping      = FALSE;
             $this->num_of_host    = 0;
-            $this->hosts_statuses = array();  
+            $this->hosts_statuses = array();
         }
     }
-    
+
     /**
     * This function saves the scan data
     *
     * @return  void
-    */ 
+    */
     private function save_data()
     {
         $data  = array();
-        
+
         $data['options']        = $this->options;
         $data['targets']        = $this->targets;
         $data['only_ping']      = $this->only_ping;
         $data['num_of_host']    = $this->num_of_host;
         $data['hosts_statuses'] = $this->hosts_statuses;
-        
+
         @file_put_contents($this->data_file, serialize($data));
+
+        @chown($this->data_file, $this->owner);
     }
-    
+
     /**
     * This function searches for hosts to scan
     *
@@ -291,36 +349,39 @@ class Scan
     public function search_hosts()
     {
         // kill Nmap processes
-        
+
         $this->stop();
         $this->delete_data(FALSE);
-    
+
         $result = FALSE;
-        
-	    touch($this->targets_file);
-	    touch($this->xml_output);	    
-	    
+
+        touch($this->targets_file);
+        @chown($this->targets_file, $this->owner);
+
+        touch($this->xml_output);
+        @chown($this->xml_output, $this->owner);
+
         if (!empty($this->options) && $this->only_ping == TRUE) // It is a custom ping scan
-        {  
-            $command = sprintf(NMAP_PING, $this->nmap, $this->options, $this->xml_output, $this->targets);
-	    }
-	    else // this scan is used in FTW and in Asset Discovery when the type of scan isn't ping
-	    {
-    	    $command = sprintf(NMAP_PING, $this->nmap, FTW_PING_OPTIONS, $this->xml_output, $this->targets);
-	    }
-	    
-	    exec('sudo ' . $command . ' > /dev/null 2>&1 &', $output , $result);
-        
+        {
+            $command = sprintf(NMAP_PING, $this->nmap, $this->options, $this->xml_output, $this->targets['nmap_format']);
+        }
+        else // this scan is used in FTW and in Asset Discovery when the type of scan isn't ping
+        {
+            $command = sprintf(NMAP_PING, $this->nmap, FTW_PING_OPTIONS, $this->xml_output, $this->targets['nmap_format']);
+        }
+
+        exec('sudo ' . $command . ' > /dev/null 2>&1 &', $output , $result);
+
         if ($result === 0)
         {
             usleep(500000);
-        
+
             $result       = TRUE;
             $this->status = 'Searching Hosts';
         }
-        
+
         return $result;
-    }	
+    }
 
 
     /**
@@ -328,28 +389,29 @@ class Scan
     *
     * @return boolean
     */
-	public function launch_scan()
-	{   
+    public function launch_scan()
+    {
         $result = FALSE;
-        
+
         if ($this->num_of_host > 0)
         {
             if (file_exists($this->xml_output))
             {
                 @unlink($this->xml_output);
             }
-	    
-	        touch($this->xml_output);
-	        
-	        if ($this->num_of_host >= 1 && $this->num_of_host <= 255)
-	        {
-    	        $max_hostgroup = '--max-hostgroup=4';
-	        }
-	        else
-	        {
-    	        $max_hostgroup = '--max-hostgroup=8';
-	        }
-            
+
+            touch($this->xml_output);
+            @chown($this->xml_output, $this->owner);
+
+            if ($this->num_of_host >= 1 && $this->num_of_host <= 255)
+            {
+                $max_hostgroup = '--max-hostgroup=4';
+            }
+            else
+            {
+                $max_hostgroup = '--max-hostgroup=8';
+            }
+
             if (!empty($this->options)) // It is a custom scan
             {
                 $command = sprintf(NMAP_SCAN, $this->nmap, $this->targets_file, $this->xml_output, $max_hostgroup, $this->options);
@@ -357,14 +419,14 @@ class Scan
             else // this scan is used in FTW
             {
                 $command = sprintf(NMAP_SCAN, $this->nmap, $this->targets_file, $this->xml_output, $max_hostgroup, FTW_SCAN_OPTIONS);
-	        }
-	 
+            }
+
             exec('sudo ' . $command . ' > /dev/null 2>&1 &', $output , $result);
-        
+
             if ($result === 0)
             {
                 usleep(500000);
-                
+
                 $result       = TRUE;
                 $this->status = 'Scanning Hosts';
             }
@@ -373,182 +435,184 @@ class Scan
         {
             $this->status  = 'Scan Finished';
         }
-    
+
         return $result;
-	}
-	
-	
+    }
+
+
     /**
     * This function scans stops the scan
     *
     * @return boolean
     */
-	public function stop()
-	{ 
+    public function stop()
+    {
         $result = FALSE;
 
         $status = $this->get_status();
 
         if ($status == 'Scanning Hosts' || $status == 'Searching Hosts')
         {
-	        $action = ($status == 'Scanning Hosts') ? 'stop_scan' : 'stop_search';
-	        
-	        exec('sudo /usr/share/ossim/scripts/stop_nmap.sh ' . $action . ' ' . $this->secure_id_md5, $output , $result);
-        
+            $action = ($status == 'Scanning Hosts') ? 'stop_scan' : 'stop_search';
+
+            exec('sudo /usr/share/ossim/scripts/stop_nmap.sh ' . $action . ' ' . $this->secure_id_md5, $output , $result);
+
             if ($result === 0)
             {
                 $result = TRUE;
             }
-	        
-	        if ($status == 'Scanning Hosts')
-	        {
+
+            if ($status == 'Scanning Hosts')
+            {
                 $config = array(
                           'indent'     => TRUE,
                           'input-xml'  => TRUE,
                           'output-xml' => TRUE,
                           'wrap'       => FALSE);
-                  
+
                 $tidy = new tidy();
-        
+
                 $repaired = $tidy->repairfile($this->xml_output, $config);
-                
+
                 $this->status = 'Scan Finished';
-        
-                file_put_contents($this->xml_output, $repaired);	        
-	        }
-	        else
-	        {   
-	            $this->status = 'Idle';
+
+                file_put_contents($this->xml_output, $repaired);
+
+                @chown($this->xml_output, $this->owner);
+            }
+            else
+            {
+                $this->status = 'Idle';
                 $this->delete_data();
                 $this->num_of_host = 0;
-	        }
+            }
         }
-        
+
         return $result;
-	}
-	
-	
+    }
+
+
     /**
     * This function returns the scan results
     *
     * @return array
     */
-	public function get_results()
-	{
-	    $attempts = 0;
-	     
-	    if ($this->xml_formatted() == FALSE && $attempts <=3)
-	    {
-	        usleep(500000);
+    public function get_results()
+    {
+        $attempts = 0;
+
+        if ($this->xml_formatted() == FALSE && $attempts <=3)
+        {
+            usleep(500000);
             $attempts++;
-	    }
-	    
-	    $repair_file = ($this->xml_formatted() == FALSE) ? TRUE : FALSE;
-	
-	    $result      = $this->nmap_parser->parse_xml($this->xml_output, $repair_file);
-	
-            foreach ($result["scanned_ips"] as $ip => $ip_data)
+        }
+
+        $repair_file = ($this->xml_formatted() == FALSE) ? TRUE : FALSE;
+
+        $result      = $this->nmap_parser->parse_xml($this->xml_output, $repair_file);
+
+        foreach ($result["scanned_ips"] as $ip => $ip_data)
+        {
+            if (strcasecmp($ip_data['status'], 'up') != 0)
             {
-                if (strcasecmp($ip_data['status'], 'up') != 0)
-                {
-                    unset($result["scanned_ips"][$ip]);
-                }
+                unset($result["scanned_ips"][$ip]);
             }
-	    
-	    return $result;
-	}
-	
-	
+        }
+
+        return $result;
+    }
+
+
     /**
     * This function returns the number of hosts
     *
     * @return integer
     */
-	public function get_num_of_hosts()
-	{
+    public function get_num_of_hosts()
+    {
         return $this->num_of_host;
-	}
-	
+    }
+
     /**
     * This function returns the hosts statuses
     *
     * @return integer
     */
-	public function get_hosts_statuses()
-	{
+    public function get_hosts_statuses()
+    {
         return $this->hosts_statuses;
-	}
-	
-	
+    }
+
+
     /**
     * This function returns the scan progress
     *
     * @return array
     */
-	public function get_progress()
-	{
-	    $result = array('hosts_scanned' => '-1', 'total_hosts' => '-1', 'remaining' => '-1');
-        
+    public function get_progress()
+    {
+        $result = array('hosts_scanned' => '-1', 'total_hosts' => '-1', 'remaining' => '-1');
+
         if ($this->get_status() == 'Scanning Hosts' && $this->num_of_host > 0 && file_exists($this->xml_output))
         {
             exec('cat '. $this->xml_output . ' | grep endtime | wc -l', $output);
-	        
-	        $hosts  = array_shift($output);
-	        
-	        $result['hosts_scanned'] = $hosts;
-	        
-	        $result['total_hosts']   = $this->num_of_host;
 
-	        if (intval($hosts) > 0)
-	        {
-    	        exec('cat '. $this->xml_output . ' | grep nmaprun | grep startstr', $output);
-    	        
-    	        preg_match("/start=\"(\d+)\"/", array_shift($output), $found);
-    	        
-    	        $start_time = $found[1];     
-    	        
-    	        if (is_numeric($start_time))
-    	        {
-    	            exec('cat '. $this->xml_output . ' | grep endtime | perl -npe \'s/.*endtime="(\d+)".*/$1/ if (/endtime/)\' | sort -r | head -1', $output);
-    	        
-    	            $end_time = trim(array_shift($output));
-    	        
-        	        $seconds_per_host    = round(($end_time - $start_time) / $hosts);
-        	        
-        	        $result['remaining'] = ($this->num_of_host - $hosts) * $seconds_per_host;
-    	        }
-	        }
+            $hosts  = array_shift($output);
+
+            $result['hosts_scanned'] = $hosts;
+
+            $result['total_hosts']   = $this->num_of_host;
+
+            if (intval($hosts) > 0)
+            {
+                exec('cat '. $this->xml_output . ' | grep nmaprun | grep startstr', $output);
+
+                preg_match("/start=\"(\d+)\"/", array_shift($output), $found);
+
+                $start_time = $found[1];
+
+                if (is_numeric($start_time))
+                {
+                    exec('cat '. $this->xml_output . ' | grep endtime | perl -npe \'s/.*endtime="(\d+)".*/$1/ if (/endtime/)\' | sort -r | head -1', $output);
+
+                    $end_time = trim(array_shift($output));
+
+                    $seconds_per_host    = round(($end_time - $start_time) / $hosts);
+
+                    $result['remaining'] = ($this->num_of_host - $hosts) * $seconds_per_host;
+                }
+            }
         }
-        
+
         return $result;
     }
-    
-	
+
+
     /**
     * This function checks if the xml output is valid
     *
     * @return boolean
     */
-	private function xml_formatted()
-	{
-	    $result = FALSE;
-	    
-	    if (file_exists($this->xml_output))
-	    {	
-        	exec('cat '. $this->xml_output . ' | grep "</nmaprun>"', $output);
-                
+    private function xml_formatted()
+    {
+        $result = FALSE;
+
+        if (file_exists($this->xml_output))
+        {
+            exec('cat '. $this->xml_output . ' | grep "</nmaprun>"', $output);
+
             $line = array_shift($output);
-                
+
             if (preg_match("/<\/nmaprun>/", $line))
             {
-        	   $result = TRUE;
+               $result = TRUE;
             }
         }
-        
+
         return $result;
-	}
-	
-	
+    }
+
+
     /**
     * This function creates the Nmap targets file
     *
@@ -556,102 +620,104 @@ class Scan
     *
     * @return void
     */
-	private function get_targets()
-	{
-	    $attempts = 0;
-	     
-	    if ($this->xml_formatted() == FALSE && $attempts <=3)
-	    {
-	        usleep(500000);
+    private function get_targets()
+    {
+        $attempts = 0;
+
+        if ($this->xml_formatted() == FALSE && $attempts <=3)
+        {
+            usleep(500000);
             $attempts++;
-	    }
-	    
+        }
+
         $config = array(
                   'indent'     => TRUE,
                   'input-xml'  => TRUE,
                   'output-xml' => TRUE,
                   'wrap'       => FALSE);
-          
+
         $tidy = new tidy();
 
         $repaired = $tidy->repairfile($this->xml_output, $config);
 
-        file_put_contents($this->xml_output, $repaired);    	    
-	
+        file_put_contents($this->xml_output, $repaired);
+
+        @chown($this->xml_output, $this->owner);
+
         if (file_exists($this->targets_file))
         {
             @unlink($this->targets_file);
         }
 
         $this->num_of_host = 0;
-        
+
         $arr    = array();
-        
+
         $result = $this->nmap_parser->parse_xml($this->xml_output);
-        
+
         if (@is_array($result["scanned_ips"]))
         {
             foreach ($result["scanned_ips"] as $ip => $ip_data)
             {
-                if (strcasecmp($ip_data['status'], 'up') == 0) 
+                if (strcasecmp($ip_data['status'], 'up') == 0)
                 {
                     $this->num_of_host++;
                     $arr[] = $ip;
                 }
-                
+
                 if (preg_match('/unreach/', $ip_data['status']) || preg_match('/unreach/', $ip_data['reason']))
                 {
                     $ip_data['status'] = 'unreachable';
                 }
-                
+
                 $this->hosts_statuses[$ip_data['status']]++;
             }
-        } 
-        
+        }
+
         $this->save_data();
-        
-        file_put_contents($this->targets_file, implode("\n", $arr));    	
-	}
-	
-	
+
+        file_put_contents($this->targets_file, implode("\n", $arr));
+    }
+
+
     /**
     * This function returns the Nmap scan status
     *
     * @return string
     */
-	public function get_status()
-	{    
-        // Status default value 
+    public function get_status()
+    {
+        // Status default value
 
         $this->status = 'Idle';
-     
+
         // Is Nmap scan running?
-        
+
         exec("ps -eo pid,args | grep -w -e 'nmap' | grep nmap_scan_" . $this->secure_id_md5 . " | grep _targets_file | grep -v sudo | awk '{print $1}'", $output);
-        
+
         if (preg_match("/^\d+$/", array_shift($output)))
         {
-	        $this->status = 'Scanning Hosts';	        
-        }
-        
-        if ($this->status == 'Idle')
-        {	        
-            // Is Nmap searching hosts?
-            
-            exec("ps -eo pid,args | grep -w -e 'nmap' | grep nmap_scan_" . $this->secure_id_md5 . " | grep -v _targets_file | grep -v sudo | awk '{print $1}'", $output);
-	        
-	        if (preg_match('/^\d+$/', array_shift($output)))
-	        {
-    	        $this->status  = 'Searching Hosts';
-	        }
+            $this->status = 'Scanning Hosts';
         }
 
         if ($this->status == 'Idle')
         {
-	        // Search finished or Scan finished
-	        
-	        if (file_exists($this->xml_output))
-	        {
+            // Is Nmap searching hosts?
+
+            exec("ps -eo pid,args | grep -w -e 'nmap' | grep nmap_scan_" . $this->secure_id_md5 . " | grep -v _targets_file | grep -v sudo | awk '{print $1}'", $output);
+
+            if (preg_match('/^\d+$/', array_shift($output)))
+            {
+                $this->status  = 'Searching Hosts';
+            }
+        }
+
+        if ($this->status == 'Idle')
+        {
+            // Search finished or Scan finished
+
+            if (file_exists($this->xml_output))
+            {
                 $config = array(
                   'indent'     => TRUE,
                   'input-xml'  => TRUE,
@@ -663,13 +729,15 @@ class Scan
                 $repaired = $tidy->repairfile($this->xml_output, $config);
 
                 file_put_contents($this->xml_output, $repaired);
-	        
-	            if ($this->only_ping == FALSE)
-	            {	        
+
+                @chown($this->xml_output, $this->owner);
+
+                if ($this->only_ping == FALSE)
+                {
                     exec('grep -E -o "stats\-every" ' . $this->xml_output . ' | wc -l', $output);
-                    
+
                     $lines = array_shift($output);
-    
+
                     if (intval($lines) > 0)
                     {
                         $this->status  = 'Scan Finished';
@@ -677,7 +745,7 @@ class Scan
                     else
                     {
                         $this->status  = 'Search Finished';
-                        
+
                         if ($this->num_of_host == 0)
                         {
                             $this->get_targets();
@@ -688,11 +756,11 @@ class Scan
                 {
                     $this->status  = 'Scan Finished';
                 }
-	        }
+            }
         }
 
         return $this->status;
-	}
+    }
 
 
     /**
@@ -700,77 +768,76 @@ class Scan
     *
     * @return void
     */
-	public function delete_data($delete_config = TRUE)
-	{	
+    public function delete_data($delete_config = TRUE)
+    {
         if (file_exists($this->xml_output))
-    	{
+        {
             @unlink($this->xml_output);
         }
-        
+
         if(file_exists($this->targets_file))
         {
             @unlink($this->targets_file);
         }
-        
+
         if ($delete_config == TRUE && file_exists($this->data_file))
-    	{
+        {
             @unlink($this->data_file);
         }
-	}
-	
+    }
+
     /**
     * This function checks the running scans with remote_nmap.php script
     *
     * @param string  $ip  Target to search
     *
-    * @return boolean      
-    */ 
-	public static function scanning_now()
-	{
-	    $user = Session::get_session_user();
-	
-		$cmd = ($user != '') ? "ps ax | grep remote_nmap.php | grep $user | egrep -v 'grep|vulnscan'" : "ps ax | grep remote_nmap.php | egrep -v 'grep|vulnscan'";
-		
-		$output = explode("\n",`$cmd`);
-		
+    * @return boolean
+    */
+    public static function scanning_now()
+    {
+        $user = Session::get_session_user();
+
+        $cmd = ($user != '') ? "ps ax | grep remote_nmap.php | grep $user | egrep -v 'grep|vulnscan'" : "ps ax | grep remote_nmap.php | egrep -v 'grep|vulnscan'";
+
+        $output = explode("\n",`$cmd`);
+
         return (preg_match('/remote\_nmap/',$output[0])) ? 1 : 0;
-		
-	}
-	
-	
+    }
+
+
     /**
     * This function returns the hosts that are being scanned with the sensor ID
     *
-    * @return array      
+    * @return array
     */
-	public static function scanning_what()
-	{
-	    $user = Session::get_session_user();
-	
-		$cmd  = ($user != '') ? "ps ax | grep remote_nmap.php | grep $user | egrep -v 'grep|vulnscan'" : "ps ax | grep remote_nmap.php | egrep -v 'grep|vulnscan'";
-		
-		$output = explode("\n",`$cmd`);
-		
-		$ips    = array();
-		
-		foreach($output as $line) 
-		{
-			if (preg_match_all('/(\d+\.\d+\.[^ ]+\/\d+) /',$line,$found)) 
-			{
+    public static function scanning_what()
+    {
+        $user = Session::get_session_user();
+
+        $cmd  = ($user != '') ? "ps ax | grep remote_nmap.php | grep $user | egrep -v 'grep|vulnscan'" : "ps ax | grep remote_nmap.php | egrep -v 'grep|vulnscan'";
+
+        $output = explode("\n",`$cmd`);
+
+        $ips    = array();
+
+        foreach($output as $line)
+        {
+            if (preg_match_all('/(\d+\.\d+\.[^ ]+\/\d+) /',$line,$found))
+            {
                 preg_match('/\s([A-Z0-9]{32})\s/', $line, $data); // get sensor ID
-				foreach($found as $fnd)
-				{
-					foreach ($fnd as $cidr)
-					{
-						$ips[] = trim($data[1].'#'.$cidr);
-					}
-				}
-			}
-		}
-		
-		return array_unique($ips);
-	}
-    
+                foreach($found as $fnd)
+                {
+                    foreach ($fnd as $cidr)
+                    {
+                        $ips[] = trim($data[1].'#'.$cidr);
+                    }
+                }
+            }
+        }
+
+        return array_unique($ips);
+    }
+
     /**
     * This function saves scanned hosts into database
     *
@@ -781,19 +848,19 @@ class Scan
     *
     * @throws Exception  If an error occurred
     *
-    * @return array      
-    */ 
+    * @return array
+    */
     public static function save_hosts_in_db($conn, $scan_results, $host_data, $report_changes = TRUE)
     {
-        Ossim_db::check_connection($conn);        
-                
-        //Ips to insert/update        
+        Ossim_db::check_connection($conn);
+
+        //Ips to insert/update
         $s_ips  = $host_data['ips'];
-        
+
         //Number of IPs to insert/update
         $num_ips = count($s_ips);
-                      
-        //Process status      
+
+        //Process status
         $data = array(
             'general' => array(
                 'status'         => '',
@@ -801,127 +868,125 @@ class Scan
                 'hosts_in_group' => array(),
                 'total_hosts'    => 0
              ),
-            'by_host' => array()       
+            'by_host' => array()
         );
-                
-        Util::disable_perm_triggers($conn, TRUE);   
-        
+
+        Util::disable_perm_triggers($conn, TRUE);
+
         //Host information
         $scan = $scan_results['scanned_ips'];
-        $ctx  = $scan_results['sensor']['ctx'];       
-                             
-        for ($i = 0; $i < $num_ips; $i++) 
+        $ctx  = $scan_results['sensor']['ctx'];
+
+        for ($i = 0; $i < $num_ips; $i++)
         {
             if (trim($s_ips[$i]) != '')
             {
                 $data['general']['total_hosts']++;
-                
-                $ip = $s_ips[$i];           
-                
+
+                $ip = $s_ips[$i];
+
                 //There is a validation error (Host could not be saved)
                 ossim_valid($ip, OSS_IP_ADDR, 'illegal:' . _('IP address'));
-                
+
                 if (ossim_error())
-                {                    
+                {
                     ossim_clean_error();
-                    
+
                     $data['by_host'][$ip]['status']     = 'error';
-            		$data['by_host'][$ip]['data']['ip'] = ossim_get_error_clean();
-            		 
-            		continue;            
-                }                             
-                
+                    $data['by_host'][$ip]['data']['ip'] = ossim_get_error_clean();
+
+                    continue;
+                }
+
                 //Initialize variables
                 $host          = NULL;
                 $ips           = array();
                 $name          = $scan[$ip]['hostname'];
                 $fqdn          = $scan[$ip]['fqdn'];
                 $descr         = $host_data['descr'];
-                $mac           = $scan[$ip]['mac'];                
+                $mac           = $scan[$ip]['mac'];
                 $os            = $scan[$ip]['os'];
                 $asset_value   = $host_data['asset_value'];
                 $external      = $host_data['external'];
                 $threshold_c   = $host_data['threshold_c'];
                 $threshold_a   = $host_data['threshold_a'];
-                $sensors       = $host_data['sboxs'];           
+                $sensors       = $host_data['sboxs'];
                 $nmap_devices  = $scan[$ip]['device_types'];
                 $hardware_cpes = $scan[$ip]['hardware_cpes'];
                 $software_cpes = $scan[$ip]['software_cpes'];
                 $services      = $scan[$ip]['services'];
                 $nagios        = $host_data['nagios'];
-                                
-                //Save host with new data 
-                try 
-                {                                         
+
+                //Save host with new data
+                try
+                {
                     $host_ids = Asset_host::get_id_by_ips($conn, $ip, $ctx);
                     $id       = key($host_ids);
-                    
+
                     $is_in_db = Asset_host::is_in_db($conn, $id);
-                                                            
-                    //Host already exists                            
-                                                                              
+
+                    //Host already exists
+
                     if ($is_in_db == TRUE)
-                    {                                           
-                        $can_i_create_assets = TRUE;                              
-                        
-                        //Updating specific attributes (Only name and FQDNs)                                              
+                    {
+                        $can_i_create_assets = TRUE;
+
+                        //Updating specific attributes (Only name and FQDNs)
                         $host = new Asset_host($conn, $id);
-                        $host->load_from_db($conn);                                                
-                        
-                        $h_fqdn  = $host->get_fqdns();                     
+                        $host->load_from_db($conn);
+
+                        $h_fqdn  = $host->get_fqdns();
                         $h_descr = $host->get_descr();
-                        
+
                         if (!empty($fqdn))
                         {
                             $host->set_fqdns($fqdn);
-                            $h_fqdn  = $host->get_fqdns();
+                            $h_fqdn = $host->get_fqdns();
                         }
-                        
-                        
+
+
                         // Use FQDNs as host name (See checkbox on Asset Discovery)
-                                            
-                        
                         if(!empty($h_fqdn) && !empty($host_data["fqdn_$i"]))
                         {
-                            $aux   = explode('.', $fqdn);
-                            $name  = $aux[0];
+                            $aux  = explode('.', $fqdn);
+                            $name = $aux[0];
                             $host->set_name($name);
-                        }                      
-                        
-                        
+                        }
+
+
                         //Only if old description is empty
                         if (!empty($descr) && empty($h_descr))
                         {
                             $host->set_descr($descr);
-                        }                                      
-                        
+                        }
+
                         $host_ips = $host->get_ips();
-            			$ips      = $host_ips->get_ips();
-            			    
+                        $ips      = $host_ips->get_ips();
+
                         $ips[$ip] = array(
-            			    'ip'   =>  $ip,
-            			    'mac'  =>  NULL,
-        			    );
-        			    
-        			    if (!empty($mac))
-        			    {
-            			    $ips[$ip]['mac'] = $mac;     
-        			    }
-        			    
-        			    $host->set_ips($ips);		        			                                                                            
+                            'ip'  => $ip,
+                            'mac' => NULL,
+                        );
+
+                        if (!empty($mac))
+                        {
+                            $ips[$ip]['mac'] = $mac;
+                        }
+
+                        $host->set_ips($ips);
                     }
                     else
-                    {                                                                    
+                    {
                         $can_i_create_assets = Session::can_i_create_assets();
-                                             
+
                         if ($can_i_create_assets == TRUE)
                         {
-                            //Creating new host and updating specific attributes 
+                            //Creating new host and updating specific attributes
                             $id = Util::uuid();
-                            
+
                             $host = new Asset_host($conn, $id);
-                            $host->set_ctx($ctx);                            
-                            
+                            $host->set_ctx($ctx);
+
                             // Use FQDNs as host name (See checkbox on Asset Discovery)
                             if(!empty($fqdn) && !empty($host_data["fqdn_$i"]))
                             {
@@ -932,228 +997,294 @@ class Scan
                             else
                             {
                                 $host->set_name($name);
-                            }  
-                            
+                            }
+
                             if (!empty($fqdn))
                             {
                                 $host->set_fqdns($fqdn);
-                            }                                               
-                            
+                            }
+
                             $ips[$ip] = array(
-                			    'ip'   =>  $ip,
-                			    'mac'  =>  NULL,
-            			    );
-            			    
-            			    if (!empty($mac))
-            			    {
-                			    $ips[$ip]['mac'] = $mac;     
-            			    }
-            			    
-            			    $host->set_ips($ips);
-            			  
-                            
+                                'ip'   => $ip,
+                                'mac'  => NULL,
+                            );
+
+                            if (!empty($mac))
+                            {
+                                $ips[$ip]['mac'] = $mac;
+                            }
+
+                            $host->set_ips($ips);
+
+
                             $host->set_descr($descr);
-                                                
+
                             $host->set_sensors($sensors);
-                            
+
                             $host->set_asset_value($asset_value);
-                            
+
                             $host->set_threshold_c($threshold_c);
-                            
+
                             $host->set_threshold_a($threshold_a);
-                            
-                            $host->set_external($external);                                                                                                           
-                        }                                                        
-                    }      
-                                                                  
-                                      
+
+                            $host->set_external($external);
+                        }
+                    }
+
+
                     $cnd_1 = (is_object($host) && !empty($host));
                     $cnd_2 = ($can_i_create_assets == TRUE);
-                    
+
                     if ($cnd_1 && $cnd_2)
-                    {                    
+                    {
                         //Updating common attributes (Devices, Software and Services)
-                                            
+
                         //Adding new NMAP devices
                         if (is_array($nmap_devices) && !empty($nmap_devices))
                         {
                             foreach($nmap_devices as $nmap_device_id)
                             {
                                 $host->get_devices()->add_nmap_device($nmap_device_id);
-                            }                              
-                        }       
-                                                                                               
-                        $host->save_in_db($conn, FALSE);                                                                                
-                        
+                            }
+                        }
+
+                        $host->save_in_db($conn, FALSE);
+
                         //Adding host to new asset group
-                        $data['general']['hosts_in_group'][$ip] = $id;                            
-                        
+                        $data['general']['hosts_in_group'][$ip] = $id;
+
                         $data['by_host'][$ip]['status'] = 'success';
-                        
+
                         if ($is_in_db == TRUE)
                         {
-                            $data['by_host'][$ip]['data'] = _('Host updated');                             
+                            $data['by_host'][$ip]['data'] = _('Host updated');
                         }
                         else
                         {
-                            $data['by_host'][$ip]['data'] = _('New host inserted');                                
+                            $data['by_host'][$ip]['data'] = _('New host inserted');
                         }
-                             
-                        
+
+
                         //Initialize warning array
-                        $warnings = array();                                                                           
-                                                                                    
+                        $warnings = array();
+
                         //Insert/Updating Operating System
-                       	if (!empty($os))
-                       	{
+                        if (!empty($os))
+                        {
                             try
-                            {                               
+                            {
                                 $save_os = TRUE;
-                                
+
                                 if ($is_in_db == TRUE)
                                 {
+                                    //Inserting SO with less relevance than current one
                                     $filters = array(
-                                        'where' => "host_properties.host_id = UNHEX('$id') 
-                                                    AND host_properties.property_ref = 3 
-                                                    AND host_properties.source_id = hsr.id 
+                                        'where' => "host_properties.host_id = UNHEX('$id')
+                                                    AND host_properties.property_ref = 3
+                                                    AND host_properties.source_id = hsr.id
                                                     AND hsr.relevance > 7"
                                     );
-                                    
+
                                     $_p3_list = Asset_host_properties::get_list($conn, $filters);
-                                    $total_p3 = $_p3_list[1]; 
-                                    
+                                    $total_p3 = $_p3_list[1];
+
                                     if ($total_p3 > 0)
                                     {
-                                        $save_os = FALSE;                                        
-                                       
-                                        $warnings['os_error'] = _('OS could not be saved because the host is associated to another with more relevance');
-                                    }                                                                  
+                                        $save_os = FALSE;
+
+                                        $warnings['os_error'] = _('OS could not be updated [More relevant OS was previously inserted]');
+                                    }
                                 }
-                                
+
                                 if ($save_os == TRUE)
                                 {
-                                    Asset_host_properties::delete_all_from_db($conn, $id);
+                                    Asset_host_properties::delete_property_from_db($conn, $id, 3);
                                     Asset_host_properties::save_property_in_db($conn, $id, 3, $os, 5);
-                                }                            
-                           	}
-                           	catch(Exception $e)
-                           	{
-                               	$warnings['os_error'] = _('Operating System could not be saved');
-                           	}               
-                       	}
-                            
-                                                                                    
-                        //Insert Nagios (Only for new hosts)                           
-                                               
+                                }
+                            }
+                            catch(Exception $e)
+                            {
+                                $warnings['os_error'] = _('Operating System could not be saved');
+                            }
+                        }
+
+
+                        //Insert Nagios (Only for new hosts)
                         if ($is_in_db == FALSE && !empty($nagios))
-                    	{
+                        {
                             try
                             {
                                 Asset_host_scan::save_plugin_in_db($conn, $id, 2007);
                             }
                             catch(Exception $e)
-                           	{
-                               	$warnings['ng_error'] = _('Nagios could not be enabled');
-                           	}                                                  
-                       	}                         
-                            
-                            
-                        //Insert/Updating Hardware CPEs
-                        if(is_array($hardware_cpes) && !empty($hardware_cpes)) 
-                       	{                           
-                            foreach($hardware_cpes as $h_cpe) 
                             {
-                                $s_data = array(
-                                    'cpe'        => $h_cpe,
-                                    'banner'     => '',
-                                    'source_id'  => 5,
-                                    'extra'      => ''
-                                );                                        
-                                
-                                try
-                                {
-                                    Asset_host_software::save_software_in_db($conn, $id, $s_data);
-                                }
-                                catch(Exception $e)
-                               	{
-                                   	$warnings['hd_error'] = _('Some hardware could not be saved');
-                               	}                         
+                                $warnings['ng_error'] = _('Nagios could not be enabled');
                             }
-            			}
-                			
-                			
-            			//Insert/Updating Software CPEs
-                        if(is_array($software_cpes) && !empty($software_cpes)) 
-                       	{                           
-                            foreach($software_cpes as $s_cpe) 
+                        }
+
+
+                        //Inserting/updating hardware CPEs
+                        if(is_array($hardware_cpes) && !empty($hardware_cpes))
+                        {
+                            //Getting previous hardware
+                            $previous_hcpes = array();
+                            $total_hcpes    = 0;
+
+                            if ($is_in_db == TRUE)
                             {
-                                $s_data = array(
-                                    'cpe'        => $s_cpe,
-                                    'banner'     => '',
-                                    'source_id'  => 5,
-                                    'extra'      => ''
-                                );                                        
-                                
-                                try
-                                {
-                                    Asset_host_software::save_software_in_db($conn, $id, $s_data);
-                                }
-                                catch(Exception $e)
-                                {
-                                    $warnings['sf_error'] = _('Some software could not be saved');
-                                }                           
+                                //Inserting hardware with less relevance than current ones
+                                $filters = array(
+                                    'where' => "h.id = UNHEX('$id') AND host_source_reference.relevance > 7"
+                                );
+
+                                list($previous_hcpes, $total_hcpes) = Asset_host_software::get_list($conn, $filters);
                             }
-            			}
-                             
-                            
+
+                            foreach($hardware_cpes as $h_cpe)
+                            {
+                                if ($total_hcpes == 0 || ($total_hcpes > 0 && empty($previous_hcpes[$id][$h_cpe])))
+                                {
+                                    $s_data = array(
+                                        'cpe'        => $h_cpe,
+                                        'banner'     => '',
+                                        'source_id'  => 5,
+                                        'extra'      => ''
+                                    );
+
+                                    try
+                                    {
+                                        Asset_host_software::save_software_in_db($conn, $id, $s_data);
+                                    }
+                                    catch(Exception $e)
+                                    {
+                                        $warnings['hd_error'] = _('Some hardware could not be saved');
+                                    }
+                                }
+                                else
+                                {
+                                    $warnings['hd_error'] = _('Some hardware CPEs could not be updated [More relevant hardware CPEs were previously inserted]');
+                                }
+                            }
+                        }
+
+
+                        //Inserting/updating Software CPEs
+                        if(is_array($software_cpes) && !empty($software_cpes))
+                        {
+                            //Getting previous software
+                            $previous_scpes = array();
+                            $total_scpes    = 0;
+
+                            if ($is_in_db == TRUE)
+                            {
+                                //Inserting software with less relevance than current ones
+                                $filters = array(
+                                    'where' => "h.id = UNHEX('$id') AND host_source_reference.relevance > 7"
+                                );
+
+                                list($previous_scpes, $total_scpes) = Asset_host_software::get_list($conn, $filters);
+                            }
+
+                            foreach($software_cpes as $s_cpe)
+                            {
+                                if ($total_scpes == 0 || ($total_scpes > 0 && empty($previous_scpes[$id][$s_cpe])))
+                                {
+                                    $s_data = array(
+                                        'cpe'        => $s_cpe,
+                                        'banner'     => '',
+                                        'source_id'  => 5,
+                                        'extra'      => ''
+                                    );
+
+                                    try
+                                    {
+                                        Asset_host_software::save_software_in_db($conn, $id, $s_data);
+                                    }
+                                    catch(Exception $e)
+                                    {
+                                        $warnings['sf_error'] = _('Some software could not be saved');
+                                    }
+                                }
+                                else
+                                {
+                                    $warnings['sf_error'] = _('Some software CPEs could not be updated [More relevant software CPEs were previously inserted]');
+                                }
+                            }
+                        }
+
+
                         //Adding services
-                       	if(is_array($services) && !empty($services)) 
-                       	{
-                            foreach($services as $service) 
+                        if(is_array($services) && !empty($services))
+                        {
+                            //Getting previous services
+                            $previous_services = array();
+                            $total_services    = 0;
+
+                            if ($is_in_db == TRUE)
                             {
-                                $s_data = array(
-                                    'ip'        => $ip,
-                                    'service'   => $service['service'],
-                                    'port'      => $service['port'],
-                                    'protocol'  => getprotobyname(trim(strtolower($service['proto']))),
-                                    'version'   => $service['version'],
-                                    'source_id' => 5,
-                                    'nagios'    => $nagios
-                                );                                                                                                                                                        
-                                
-                                try
+                                //Inserting services with less relevance than current ones
+                                $filters = array(
+                                    'where' => "h.id = UNHEX('$id') AND host_services.host_ip = inet6_pton('$ip') AND host_source_reference.relevance > 7"
+                                );
+
+                                list($previous_services, $total_services) = Asset_host_services::get_list($conn, $filters);
+                            }
+
+                            foreach($services as $service)
+                            {
+                                $p_id  = Protocol::get_protocol_by_name($service['proto']);
+                                $s_key = $ip.'-'.$service['port'].'-'.$p_id;
+
+                                if ($total_services == 0 || ($total_services > 0 && empty($previous_services[$id][$s_key])))
                                 {
-                                    Asset_host_services::save_service_in_db($conn, $id, $s_data);
+                                    $s_data = array(
+                                        'ip'        => $ip,
+                                        'service'   => $service['service'],
+                                        'port'      => $service['port'],
+                                        'protocol'  => $p_id,
+                                        'version'   => $service['version'],
+                                        'source_id' => 5,
+                                        'nagios'    => $nagios
+                                    );
+
+                                    try
+                                    {
+                                        Asset_host_services::save_service_in_db($conn, $id, $s_data);
+                                    }
+                                    catch(Exception $e)
+                                    {
+                                        $warnings['service_error'] = _('Some services could not be saved');
+                                    }
                                 }
-                                catch(Exception $e)
+                                else
                                 {
-                                    $warnings['service_error'] = _('Some services could not be saved');
-                                }                                                                   
-                            }                   
-            			} 
-            			                			
-            			//Setting host status and general status
-            			if (is_array($warnings) && !empty($warnings))
-            			{                    			                    			
-                			$data['by_host'][$ip]['status'] = 'warning';
-                			$data['by_host'][$ip]['data']   = $warnings;                   			
-            			}                        
+                                    $warnings['service_error'] = _('Some services could not be updated [More relevant services were previously inserted]');
+                                }
+                            }
+                        }
+
+                        //Setting host status and general status
+                        if (is_array($warnings) && !empty($warnings))
+                        {
+                            $data['by_host'][$ip]['status'] = 'warning';
+                            $data['by_host'][$ip]['data']   = $warnings;
+                        }
                     }
                     else
-                    {                                            
+                    {
                         $data['by_host'][$ip]['status'] = 'error';
-                		$data['by_host'][$ip]['data']   = array ('no_create_asset' => _('No permissions to create assets'));      
-                    }                    
+                        $data['by_host'][$ip]['data']   = array ('no_create_asset' => _('No permissions to create assets'));
+                    }
                 }
                 catch(Exception $e)
-                {                
+                {
                     $data['by_host'][$ip]['status'] = 'error';
-            		$data['by_host'][$ip]['data']   = array ('php_exception' => $e->getMessage());                     
+                    $data['by_host'][$ip]['data']   = array ('php_exception' => $e->getMessage());
                 }
             }
-        } 
-        
-        
+        }
+
+
         if (count($data['general']['hosts_in_group']) > 0 && $report_changes == TRUE)
         {
             try
@@ -1162,14 +1293,14 @@ class Scan
             }
             catch(Exception $e)
             {
-                Av_exception::write_log(Av_exception::DB_ERROR, $e->getMessage());                    
+                Av_exception::write_log(Av_exception::USER_ERROR, $e->getMessage());
             }
-        } 
-        
+        }
+
         Util::disable_perm_triggers($conn, FALSE);
 
-        return $data;  
-    } 
+        return $data;
+    }
 }
 
 /* End of file scan.inc */

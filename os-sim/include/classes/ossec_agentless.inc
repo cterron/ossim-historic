@@ -247,11 +247,20 @@ class Ossec_agentless
     /**
     * This function returns the description of the agentless
     *
+    * @param boolean  $entities  [Optional] Transform to HTML entities
+    *
     * @return string
     */
-    public function get_descr()
+    public function get_descr($entities = TRUE)
     {
-        return $this->descr;
+        if ($entities)
+        {
+            return Util::htmlentities($this->descr);
+        }
+        else
+        {
+            return $this->descr;
+        }
     }
 
 
@@ -276,7 +285,7 @@ class Ossec_agentless
         $pass      = $this->get_pass();
         $ppass     = $this->get_ppass();
         $use_su    = $this->get_use_su();
-        $descr     = html_entity_decode($this->get_descr());
+        $descr     = $this->get_descr(FALSE);
 
         $res = self::save_in_db($conn, $ip, $sensor, $hostname, $user, $pass, $ppass, $use_su, $descr, $status);
 
@@ -530,7 +539,7 @@ class Ossec_agentless
                 $pass,
                 $ppass,
                 intval($use_su),
-                Util::utf8_decode2($descr),
+                $descr,
                 intval($status)
             );
             
@@ -571,7 +580,7 @@ class Ossec_agentless
                 $params[] = $ppass;
             }
             
-            $params[] = Util::utf8_decode2($descr);
+            $params[] = $descr;
             $params[] = intval($status);
             $params[] = intval($use_su);
             $params[] = $ip;
@@ -913,7 +922,7 @@ class Ossec_agentless
             $user = Session::get_session_user();
             
             //Error file
-            $agenteless_error_log = "/tmp/_agentless_error_$user".'.log';
+            $agenteless_error_log = "/var/tmp/_agentless_error_$user".'.log';
             
             $info_error = '<b>' . _('Error trying to syncronize ossec conf files and agentless values stored in db') . ": </b>\n" . $info_error;
             @file_put_contents($agenteless_error_log, $info_error);

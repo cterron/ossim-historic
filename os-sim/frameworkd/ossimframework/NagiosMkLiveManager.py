@@ -226,12 +226,11 @@ class NagiosMkLiveManager(threading.Thread):
         self.connection = None #Unix socket connection ->nagios socket.
         self.host_list = [] # BP asset host member list
         self.host_list_groups=[] # BP asset host_group members list
-        self.interval = 30.0 # check interval.
+        self.interval = 300.0 # check interval - Every 5 minutes
         try:
-            self.__interval = int(_CONF[VAR_NAGIOS_MKL_PERIOD])
+            self.interval = int(_CONF[VAR_NAGIOS_MKL_PERIOD])
         except ValueError:
             logger.error("Invalid value for: %s" % _CONF[VAR_NAGIOS_MKL_PERIOD])
-        
         threading.Thread.__init__(self)
 
 

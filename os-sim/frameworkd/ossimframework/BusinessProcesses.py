@@ -114,7 +114,7 @@ class BPMember:
         tmp_availability = 0
         for host in host_list:
             #look for the host inside the network.
-            query = "select c.cidr from net_cidrs c,net n where n.ips=c.cidr and c.begin<=inet6_pton('%s') and c.end>=inet6_pton('%s') and hex(n.id)='%s' order by hex(c.end)-hex(c.begin) asc;" % (host['ip'], host['ip'], net_id)
+            query = "select c.cidr from net_cidrs c,net n where n.id=c.net_id and c.begin<=inet6_pton('%s') and c.end>=inet6_pton('%s') and hex(n.id)='%s' order by hex(c.end)-hex(c.begin) asc;" % (host['ip'], host['ip'], net_id)
             result = _DB.exec_query(query)
             if result != []:
                 query = "select severity as ha from bp_member_status where member_id=unhex('%s') and measure_type='host_availability';" % host['id']
@@ -149,15 +149,16 @@ class BPMemberHost(BPMember):
         self.member_type = 'host'
         measure_list = MeasureList(self.member,self.ip)
         self.measures = [
-            measure_list['host_alarm'],
-            measure_list['host_metric'], # 1
-            measure_list['host_vulnerability'], # 2
-            measure_list['host_incident'],
-            measure_list['host_incident_alarm'],
-            measure_list['host_incident_event'],
-            measure_list['host_incident_metric'],
-            measure_list['host_incident_anomaly'],
-            measure_list['host_incident_vulns'],
+            # We are currently using metric and vulnerability only, so comment out the others
+#            measure_list['host_alarm'],
+            measure_list['host_metric'], # 0
+            measure_list['host_vulnerability'], # 1
+#            measure_list['host_incident'],
+#            measure_list['host_incident_alarm'],
+#            measure_list['host_incident_event'],
+#            measure_list['host_incident_metric'],
+#            measure_list['host_incident_anomaly'],
+#            measure_list['host_incident_vulns'],
 #            measure_list['host_availability'], #Use nagios mklive
         ]
 
@@ -171,9 +172,9 @@ class BPMemberHost(BPMember):
 #                net_measure_list['net_vulnerability'])
 
         # add global->metric and global->vulnerability alternative measures
-        self.measures[1].add_alternative_measure(
+        self.measures[0].add_alternative_measure(
             measure_list['global_metric'])
-        self.measures[2].add_alternative_measure(
+        self.measures[1].add_alternative_measure(
             measure_list['global_vulnerability'])
 
 #    def get_member_nets(self):
@@ -250,6 +251,18 @@ class MeasureList:
 
     def __init__(self, member,ip = ""):
         self.member = member
+        # Look for associated host_id if we are sensor and use it instead.
+        # If no host_id is found, use member_id instead (it could be a host_id already)
+        host_id_query = """
+        select hex(h.id) as hid from host h, host_ip hi, host_sensor_reference r, sensor s where h.id=r.host_id and
+        hi.host_id=h.id and hi.ip=s.ip and r.sensor_id=s.id and s.id=unhex('%s')
+        """ % self.member
+        result = _DB.exec_query(host_id_query)
+        host_id = None
+        for row in result:#Must by only one row.
+            host_id = row['hid']
+        if not host_id:
+            host_id = self.member
         self.ip = ip
         self.measures = {
             ### host measures ###
@@ -260,7 +273,7 @@ class MeasureList:
                     SELECT MAX(risk) AS host_alarm FROM alarm, host_ip WHERE status='open' AND  alarm.src_ip=host_ip.ip AND host_ip.host_id = unhex('%s')
                     UNION
                     SELECT MAX(risk) AS host_alarm FROM alarm, host_ip WHERE status='open' AND  alarm.dst_ip=host_ip.ip AND host_ip.host_id = unhex('%s');
-                    """ % (self.member,self.member),
+                    """ % (host_id,host_id),
 #                    request="""
 #                SELECT MAX(risk) AS host_alarm FROM alarm
 #                    WHERE (dst_ip in (select host_ip.ip from host_ip where host_ip.host_id = unhex('%s'))  OR
@@ -276,7 +289,7 @@ class MeasureList:
                 SELECT compromise + attack AS host_metric
                     FROM host_qualification
                     WHERE host_id = unhex('%s');
-                    """ % (self.member),
+                    """ % (host_id),
                     severity_max=int(_CONF["threshold"]) * 2
                 ),
             'host_vulnerability': \
@@ -285,7 +298,7 @@ class MeasureList:
                     request="""
                 SELECT vulnerability AS host_vulnerability
                     FROM host_vulnerability WHERE host_id = unhex('%s') ORDER BY scan_date DESC;
-                    """ % (self.member),
+                    """ % (host_id),
                     severity_max=10
                 ),
             'host_incident': \
@@ -294,7 +307,7 @@ class MeasureList:
                     request="""
                 SELECT priority AS host_incident FROM incident
                     WHERE title LIKE '%%%s%%' AND status = 'Open';
-                    """ % (self.member),
+                    """ % (host_id),
                     severity_max=7
                 ),
 
@@ -309,7 +322,7 @@ class MeasureList:
                         (incident_alarm.src_ips LIKE "%%%s" OR 
                          incident_alarm.dst_ips LIKE "%%%s") AND
                         incident.status = 'Open';
-                    """ % (self.member, self.member),
+                    """ % (host_id, host_id),
                     severity_max=7
                 ),
             'host_incident_event': \
@@ -322,7 +335,7 @@ class MeasureList:
                         (incident_event.src_ips LIKE "%%%s" OR 
                          incident_event.dst_ips LIKE "%%%s") AND
                         incident.status = 'Open';
-                    """ % (self.member, self.member),
+                    """ % (host_id, host_id),
                     severity_max=7
                 ),
             'host_incident_metric': \

@@ -144,7 +144,7 @@ foreach($net_group_list as $net_group)
     $xml .= "<cell><![CDATA[" . $link_modify . "]]></cell>";
     $nets = "";
     
-	if ($network_list = $net_group->get_networks($conn))
+	if ($network_list = Net_group::get_networks($conn, $net_group->get_id()))
 	{
 		foreach($network_list as $network)
 		{
@@ -161,7 +161,7 @@ foreach($net_group_list as $net_group)
 		}
     }
 	
-    $xml.= "<cell><![CDATA[" . html_entity_decode($nets) . "]]></cell>";
+    $xml.= "<cell><![CDATA[" . $nets . "]]></cell>";
     $xml.= "<cell><![CDATA[" . $net_group->get_threshold_c() . "]]></cell>";
     $xml.= "<cell><![CDATA[" . $net_group->get_threshold_a() . "]]></cell>";
     /* Nessus
@@ -178,7 +178,7 @@ foreach($net_group_list as $net_group)
 		$desc = "&nbsp;";
 	}
 	
-    $xml.= "<cell><![CDATA[" . utf8_encode($desc) . "]]></cell>";
+    $xml.= "<cell><![CDATA[" . Util::utf8_encode2($desc) . "]]></cell>";
     
     // KDB
     $rep = '';
@@ -189,7 +189,7 @@ foreach($net_group_list as $net_group)
     
 	$rep.= "<a href=\"javascript:;\" onclick=\"GB_edit('../repository/asset_repository.php?id=" . $id . "&name=" . urlencode($name) . "&linktype=net_group')\"><img src=\"../pixmaps/tables/table_row_insert.png\" border=0 title=\"Add KDB\" alt=\"Add KDB\" align=\"absmiddle\"></a>";
     
-    $xml.= "<cell><![CDATA[" . utf8_encode($rep) . "]]></cell>";    
+    $xml.= "<cell><![CDATA[" . Util::utf8_encode2($rep) . "]]></cell>";    
 
     // Notes
     $rep = '';
@@ -199,7 +199,7 @@ foreach($net_group_list as $net_group)
     }
     
     $rep .= "<a href=\"javascript:;\" onclick=\"GB_notes('../asset_details/ajax/view_notes.php?type=net_group&id=" . $id . "')\"><img src=\"../pixmaps/notes.png\" border=0 title=\"View Notes\" alt=\"View Notes\" width='16px' align=\"absmiddle\"></a>";
-    $xml.= "<cell><![CDATA[" . utf8_encode($rep) . "]]></cell>";
+    $xml.= "<cell><![CDATA[" . Util::utf8_encode2($rep) . "]]></cell>";
        
     $xml.= "</row>\n";
 }

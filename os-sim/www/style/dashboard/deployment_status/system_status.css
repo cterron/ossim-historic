@@ -48,12 +48,14 @@ if (!headers_sent())
 	text-align: center;
 }
 
-#system_loading {
+#system_loading
+{
 	font-weight: bold;
 	text-align:center;
 }
 
-.loading_panel, .dataTables_processing {
+.loading_panel, .dataTables_processing
+{
     border-radius: 5px;
    -moz-border-radius: 5px;
    -webkit-border-radius: 5px;
@@ -74,7 +76,8 @@ if (!headers_sent())
 	padding: 5px 10px;
 }
 
-#noti_Container {
+#noti_Container
+{
 	position:relative;     /* This is crucial for the absolutely positioned element */
 	border:none; /* This is just to show you where the container ends */
 	width:18px;
@@ -82,7 +85,8 @@ if (!headers_sent())
 	font-family: verdana;
 }
 
-.noti_bubble {
+.noti_bubble
+{
 	position:absolute;    /* This breaks the div from the normal HTML document. */
 	top: -7px;
 	right: -8px;
@@ -94,6 +98,12 @@ if (!headers_sent())
 	text-align: center;
 	border-radius: 2px;
 	box-shadow:1px 1px 1px #aaa;
+}
+
+.l_label
+{
+    vertical-align:middle;
+    margin-right: 5px;
 }
 
 .table_data tbody tr

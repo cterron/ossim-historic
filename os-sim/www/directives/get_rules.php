@@ -60,7 +60,7 @@ if (preg_match("/^\d+-\d+-\d+$/", $rule)) {
 		$dom = $directive_editor->get_xml($filepath, "DOMXML");
 	    $direct = $directive_editor->getDirectiveFromXML($dom, $directive_id);
 	    $tab_rules = $direct->rules;
-	    $directive_editor->delrule($rule, &$tab_rules);
+	    $directive_editor->delrule($rule, $tab_rules);
 	    if (!$directive_editor->save_xml($filepath, $dom, "DOMXML")) {
 	    	echo "<!-- ERRORDELETE -->";
 	    }
@@ -82,19 +82,19 @@ if (preg_match("/^\d+-\d+-\d+$/", $rule)) {
 	    $tab_rules = $direct->rules;
 	    switch (GET('direction')) {
 	        case 'left':
-	            $directive_editor->left($dom, $rule, &$tab_rules, $direct);
+	            $directive_editor->left($dom, $rule, $tab_rules, $direct);
 	            break;
 	
 	        case 'right':
-	            $directive_editor->right($dom, $rule, &$tab_rules, $direct);
+	            $directive_editor->right($dom, $rule, $tab_rules, $direct);
 	            break;
 	
 	        case 'up':
-	            $directive_editor->up($dom, $rule, &$tab_rules, $direct);
+	            $directive_editor->up($dom, $rule, $tab_rules, $direct);
 	            break;
 	
 	        case 'down':
-	            $directive_editor->down($dom, $rule, &$tab_rules, $direct);
+	            $directive_editor->down($dom, $rule, $tab_rules, $direct);
 	            break;
 	    }
 	    $directive_editor->save_xml($filepath, $dom, "DOMXML");
@@ -169,7 +169,7 @@ $rules = $directive_editor->get_rules($directive_id, $file);
 	$kdocs = Repository::get_linked_by_directive($directive_editor->conn,$directive_id);
 	if (count($kdocs) > 0) {
 	?>
-	<tr><td style="padding:3px;text-align:left"><a href="" onclick="toggle_directive_kdb(<?php echo $directive_id ?>);return false"><img id="kdb_arrow_<?php echo $directive_id ?>" src="../pixmaps/arrow_green.gif" align="absmiddle" border="0"/> <b><?php echo _("Knowledge DB") ?></b></a></td></tr>
+	<tr><td style="padding:3px;text-align:left"><a href="" onclick="toggle_directive_kdb(<?php echo $directive_id ?>);return false"><img id="kdb_arrow_<?php echo $directive_id ?>" src="../pixmaps/arrow_green.gif" align="absmiddle" border="0"/> <b><?php echo _("KNOWLEDGE DB") ?></b></a></td></tr>
 	<tr>
 		<td id="kdb_<?php echo $directive_id ?>"></td>
 	</tr>

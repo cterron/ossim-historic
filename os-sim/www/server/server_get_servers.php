@@ -46,7 +46,7 @@ function check_server()
     
     
     /* get the port and IP address of the server */
-    $address = $ossim_conf->get_conf('server_address');
+    $address = '127.0.0.1';
     $port    = $ossim_conf->get_conf('server_port');
 	
     /* create socket */

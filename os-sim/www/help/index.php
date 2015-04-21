@@ -111,7 +111,7 @@ if ($v)
                 {
                     ?>
                     content = "<div> \
-                        <span><?php echo _("If you need help")?>, <a class='lnk_info' href='mailto:<?php echo $s_email?>'><?php echo  _("email Alienvault Support")?><a/></span> \
+                        <span><?php echo _("If you need help")?>, <a class='lnk_info' href='mailto:<?php echo $s_email?>'><?php echo  _("email AlienVault Support")?><a/></span> \
                         </div>";
                     
                     <?php                    

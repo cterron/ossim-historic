@@ -45,3 +45,4 @@ ipaddress==1.0.6
 psutil==2.1.0
 redis==2.7.1
 redis-simple-cache==0.0.6
+IPy==0.81

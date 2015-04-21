@@ -27,7 +27,6 @@
 * - BuildUniqueAlertLink()
 * - BuildAddressLink()
 * - AddCriteriaFormRow()
-* - IPProto2str()
 * - TCPOption2str()
 * - IPOption2str()
 * - ICMPType2str()
@@ -46,12 +45,9 @@
 */
 
 
-/* OSSIM session */
-if ($use_ossim_session) 
-{
-    require_once 'av_init.php';
-    Session::logcheck($ossim_acid_aco_section, $ossim_acid_aco, $ossim_login_path);
-}
+require_once 'av_init.php';
+
+Session::logcheck($ossim_acid_aco_section, $ossim_acid_aco, $ossim_login_path);
 
 function GetEntityName($ctx) {
     GLOBAL $entities;
@@ -119,7 +115,7 @@ function _GetSensorPluginSids($db,$sensor_keys) {
     $tmp_result = $db->baseExecute($temp_sql);
     while ($myrow = $tmp_result->baseFetchRow())
 	    if (preg_match("/-/", $myrow["hostname"])) {
-	        $ipname = split("-", $myrow["hostname"], 2);
+	        $ipname = preg_split('/\-/', $myrow["hostname"], 2);
 	        $ipname[1] = preg_replace("/^ossec.*/","ossec",$ipname[1]);
 	        $ip = ($myrow["sensor"]!="") ? $myrow["sensor"] : $ipname[0];
 	        //check perms on sensor
@@ -559,67 +555,14 @@ function BuildIDMLink($idmvalue, $field, $source="both") {
 }
 
 /* Adds another blank row to a given criteria element */
-function AddCriteriaFormRow(&$submit, $submit_value, &$cnt, &$criteria_array, $max) {
+function AddCriteriaFormRow(&$submit, $submit_value, &$cnt, &$criteria_array, $max)
+{
     $submit = $submit_value;
     ++$cnt;
     InitArray($criteria_array[$cnt - 1], $max, 0, "");
 }
-function IPProto2str($ipproto_code) {
-    switch ($ipproto_code) {
-        case 0:
-            return "IP";
-        case 1:
-            return "ICMP";
-        case 2:
-            return "IGMP";
-        case 4:
-            return "IPIP tunnels";
-        case 6:
-            return "TCP";
-        case 8:
-            return "EGP";
-        case 12:
-            return "PUP";
-        case 17:
-            return "UDP";
-        case 22:
-            return "XNS UDP";
-        case 29:
-            return "SO TP Class 4";
-        case 41:
-            return "IPv6 header";
-        case 43:
-            return "IPv6 routing header";
-        case 44:
-            return "IPv6 fragmentation header";
-        case 46:
-            return "RSVP";
-        case 47:
-            return "GRE";
-        case 50:
-            return "IPSec ESP";
-        case 51:
-            return "IPSec AH";
-        case 58:
-            return "ICMPv6";
-        case 59:
-            return "IPv6 no next header";
-        case 60:
-            return "IPv6 destination options";
-        case 92:
-            return "MTP";
-        case 98:
-            return "Encapsulation header";
-        case 103:
-            return "PIM";
-        case 108:
-            return "COMP";
-        case 255:
-            return "Raw IP";
-        default:
-            return $ipproto_code;
-    }
-}
+
+
 function TCPOption2str($tcpopt_code)
 /* per RFC 1072, 1323, 1644 */ {
     switch ($tcpopt_code) {
@@ -885,7 +828,7 @@ function ICMPCode2str($icmp_type, $icmp_code) {
 function PrintPayloadChar($char, $output_type) {
     if ($char >= 32 && $char <= 127) {
         if ($output_type == 2) return chr($char);
-        else return htmlspecialchars(chr($char));
+        else return Util::htmlentities(chr($char));
     } else return '.';
 }
 function PrintBase64PacketPayload($encoded_payload, $output_type) {
@@ -988,7 +931,7 @@ function PrintCleanHexPacketPayload($encoded_payload, $output_type) {
 function PrintCleanPayloadChar($char, $output_type) {
     if ($char >= 32 && $char <= 127) {
         if ($output_type == 2) return chr($char);
-        else return htmlspecialchars(chr($char));
+        else return Util::htmlentities(chr($char));
     } else return '<br>';
 }
 // ************************************************************************************
@@ -1307,7 +1250,10 @@ function getrepbgcolor($prio,$style=0) {
 function get_plugin_list($conn) {
     $query = "SELECT id,name FROM plugin";
     $list = array();
-    if (!$rs = & $conn->Execute($query)) {
+    
+    $rs = $conn->Execute($query);
+    
+    if (!$rs) {
         print $conn->ErrorMsg();
     } else {
         while (!$rs->EOF) {

@@ -23,3 +23,5 @@ END ;;
 DELIMITER ;
 CALL net_convert;
 DROP PROCEDURE IF EXISTS net_convert;
+REPLACE INTO alienvault.host_net_reference SELECT host.id,net_id FROM alienvault.host, alienvault.host_ip, alienvault.net_cidrs WHERE host.id = host_ip.host_id AND host_ip.ip >= net_cidrs.begin AND host_ip.ip <= net_cidrs.end;
+    

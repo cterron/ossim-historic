@@ -40,7 +40,7 @@ $validate = array (
 	'id'          => array('validation'=>'OSS_HEX',                            'e_message' => 'illegal:' . _('ID')),	
 	'ag_name'     => array('validation'=>'OSS_ALPHA, OSS_PUNC',                'e_message' => 'illegal:' . _('Asset group name')),
 	'owner'       => array('validation'=>'OSS_ALPHA, OSS_PUNC, OSS_NULLABLE',  'e_message' => 'illegal:' . _('Owner')),	
-	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_AT, OSS_TEXT',     'e_message' => 'illegal:' . _('Description')),
+	'descr'       => array('validation'=>'OSS_NULLABLE, OSS_ALL',              'e_message' => 'illegal:' . _('Description')),
 	'threshold_a' => array('validation'=>'OSS_DIGIT',                          'e_message' => 'illegal:' . _('Threshold A')),
 	'threshold_c' => array('validation'=>'OSS_DIGIT',                          'e_message' => 'illegal:' . _('Threshold C')),
     'nagios'      => array('validation'=>'OSS_DIGIT, OSS_NULLABLE',            'e_message' => 'illegal:' . _('Nagios'))
@@ -89,7 +89,7 @@ if (!isset($_POST['ajax_validation_all']) || POST('ajax_validation_all') == FALS
 
 
 $id           = POST('id');
-$name         = POST('ag_name');
+$name         = trim(POST('ag_name'));
 $owner        = POST('owner');
 $descr        = POST('descr');
 $threshold_a  = POST('threshold_a');
@@ -98,6 +98,20 @@ $nagios       = POST('nagios');
 
 
 $validation_errors = validate_form_fields('POST', $validate);
+
+if (empty($validation_errors))
+{
+    $db   = new ossim_db();
+    $conn = $db->connect();
+
+    if (Asset_group::is_group_name_duplicated($conn, $id, $name))
+    {
+        $agn_msg = sprintf(_('The group "%s" already exists. Please choose a different name for your group.'), Util::htmlentities($name));
+        $validation_errors['ag_name'] = $agn_msg;
+    }    
+    
+    $db->close(); 
+}
 
 $data['status']    = 'OK';
 $data['data']      = $validation_errors;
@@ -155,39 +169,21 @@ else
                                      
             $asset_group->save_in_db($conn);
             
-            $_hosts_data_aux = $asset_group->get_hosts($conn, '', TRUE);
-            $hosts           = array_keys($_hosts_data_aux[0]);
-            
             if (!empty($nagios))
             {
+                                                
                 if (Asset_group_scan::is_plugin_in_group($conn, $id, 2007))
                 {
                     Asset_group_scan::delete_plugin_from_db($conn, $id, 2007);
                 }
             
                 Asset_group_scan::save_plugin_in_db($conn, $id, 2007);
-            
-                foreach ($hosts as $host_id)
-                {
-                    if (!Asset_host_scan::is_plugin_in_host($conn, $host_id, 2007))
-                    {
-                        Asset_host_scan::save_plugin_in_db($conn, $host_id, 2007);
-                    }
-                }
             }
             else
             {
                 if (Asset_group_scan::is_plugin_in_group($conn, $id, 2007))
                 {
                     Asset_group_scan::delete_plugin_from_db($conn, $id, 2007);
-                }
-            
-                foreach ($hosts as $host_id)
-                {
-                    if (Asset_host_scan::is_plugin_in_host($conn, $host_id, 2007))
-                    {
-                        Asset_host_scan::delete_plugin_from_db($conn, $host_id, 2007);
-                    }
                 }
             }
                          

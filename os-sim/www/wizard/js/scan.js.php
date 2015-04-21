@@ -62,7 +62,7 @@ function scan_step_3()
     $("#scan_scheduler").select2(
     {
         allowClear: true,
-        placeholder: "<?php echo _('Select a Schedule Option') ?>",
+        placeholder: "<?php echo Util::js_entities(_('Select a Schedule Option')) ?>",
     });
         
     $('#finish_scan').on('click', function()
@@ -169,7 +169,6 @@ function do_ping()
 
 function check_scan_progress()
 {
-    
     var ctoken = Token.get_token("welcome_wizard");
     
     __ajax_request = $.ajax(
@@ -207,9 +206,9 @@ function check_scan_progress()
             	
             	progressBar(percent, $('#progressbar'));
             	
-            	$('#progress_current').text(current);
-            	$('#progress_total').text(total);
-            	$('#progress_remaining').text(time);
+            	$('#progress_current').html(current);
+            	$('#progress_total').html(total);
+            	$('#progress_remaining').html(time);
             	
             	__check_timeout = setTimeout("check_scan_progress();", 5000);
 
@@ -289,7 +288,7 @@ function stop_scan_handler()
     
     $('#cancel_scan').on('click', function()
     {
-        var msg_stop = "<?php echo _('Stopping the scan now will discard all the assets discovered so far. Are you sure you want to continue?') ?>";
+        var msg_stop = "<?php echo Util::js_entities(_('Stopping the scan now will discard all the assets discovered so far. Are you sure you want to continue?')) ?>";
         
         if (confirm(msg_stop))
         {

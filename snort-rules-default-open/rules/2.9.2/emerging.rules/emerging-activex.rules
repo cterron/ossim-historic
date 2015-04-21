@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -634,10 +634,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX ChilkatHtt
 #Updated references and revision numbers for Cisco, CVE and BID and changed message to something more informative
 #
 ##alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX IBM Access Support ActiveX GetXMLValue Stack Overflow Attempt"; flow:established,to_client; file_data; content:"74FFE28D-2378-11D5-990C-006094235084"; nocase; distance:0; content:"GetXMLValue"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*74FFE28D-2378-11D5-990C-006094235084/si"; reference:url,dev.metasploit.com/redmine/projects/framework/repository/entry/modules/exploits/windows/browser/ibmegath_getxmlvalue.rb; reference:url,www.kb.cert.org/vuls/id/340420; reference:url,tools.cisco.com/security/center/viewAlert.x?alertId=17871; reference:cve,2009-0215; reference:url,doc.emergingthreats.net/2010483; classtype:attempted-user; sid:2010483; rev:8;)
-
-#by Chandan at Stillsecure
-#
-##alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX IBiz E-Banking Integrator V2 ActiveX Edition Insecure Method"; flow:to_client,established; file_data; content:"24445430-F789-11CE-86F8-0020AFD8C6DB"; nocase; distance:0; pcre:"/.*\.(ini|exe|dll|bat|com|cab|txt)/i"; content:"WriteOFXDataFile"; nocase; distance:0; reference:url,www.milw0rm.com/exploits/5416; reference:url,doc.emergingthreats.net/2008126; classtype:web-application-attack; sid:2008126; rev:11;)
 
 #Submitted 2006-09-18 by Christian Seifert, updated 2/5/07
 #
@@ -1442,23 +1438,23 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SaschArt S
 
 #by stillsecure
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX stack overfow Function call Attempt"; flow:from_server,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"SoftArtisans.FileManager.1"; distance:0; nocase; pcre:"/(Buildpath|GetDriveName|DriveExists|DeleteFile)/i"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,/www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010745; classtype:attempted-user; sid:2010745; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX stack overfow Function call Attempt"; flow:from_server,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"SoftArtisans.FileManager.1"; distance:0; nocase; pcre:"/(Buildpath|GetDriveName|DriveExists|DeleteFile)/i"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010745; classtype:attempted-user; sid:2010745; rev:3;)
 
 #by stillsecure
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX Buildpath method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"BuildPath"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,/www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010746; classtype:attempted-user; sid:2010746; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX Buildpath method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"BuildPath"; nocase; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010746; classtype:attempted-user; sid:2010746; rev:3;)
 
 #by stillsecure
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX GetDriveName method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"GetDriveName"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,/www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010747; classtype:attempted-user; sid:2010747; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX GetDriveName method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"GetDriveName"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010747; classtype:attempted-user; sid:2010747; rev:3;)
 
 #by stillsecure
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX DriveExists method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"DriveExists"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,/www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010748; classtype:attempted-user; sid:2010748; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX DriveExists method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"DriveExists"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010748; classtype:attempted-user; sid:2010748; rev:3;)
 
 #by stillsecure
 #
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX DeleteFile method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"DeleteFile"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,/www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010749; classtype:attempted-user; sid:2010749; rev:3;)
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX SoftArtisans XFile FileManager ActiveX DeleteFile method stack overflow Attempt"; flow:established,to_client; file_data; content:"clsid"; nocase; distance:0; content:"E7B62F4E-82F4-11D2-BD41-00105A0A7E89"; nocase; distance:0; content:"DeleteFile"; nocase; distance:0; pcre:"/<OBJECT\s+[^>]*classid\s*=\s*[\x22\x27]?\s*clsid\s*\x3a\s*\x7B?\s*E7B62F4E-82F4-11D2-BD41-00105A0A7E89/si"; reference:url,www.kb.cert.org/vuls/id/914785; reference:url,www.packetstormsecurity.nl/0911-exploits/softartisans_getdrivename.rb.txt; reference:url,osvdb.org/47794; reference:url,doc.emergingthreats.net/2010749; classtype:attempted-user; sid:2010749; rev:3;)
 
 #by stillsecure
 #
@@ -1471,9 +1467,6 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Visagesoft
 #by stillsecure
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Viscom Movie Player Pro SDK ActiveX DrawText method Buffer Overflow Function Call"; flow:to_client,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"MOVIEPLAYER.MoviePlayerCtrl.1"; nocase; distance:0; content:"DrawText"; nocase; distance:0; reference:url,www.shinnai.net/exploits/X6hU4E0E7P5H3qH5yXrn.txt; reference:url,secunia.com/advisories/38156/; reference:url,doc.emergingthreats.net/2010944; classtype:attempted-user; sid:2010944; rev:3;)
-
-#
-alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX WEB-CLIENT tsuserex.dll COM Object Instantiation Vulnerability"; flow:from_server,established; file_data; content:"E2E9CAE6-1E7B-4B8E-BABD-E9BF6292AC29"; nocase; distance:0; reference:url,www.xsec.org/index.php?module=Releases&act=view&type=1&id=14; classtype:web-application-attack; sid:100000864; rev:7;)
 
 #
 #alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"GPL ACTIVEX Norton antivirus sysmspam.dll load attempt"; flow:to_client,established; file_data; content:"clsid|3A|"; nocase; distance:0; content:"0534CF61-83C5-4765-B19B-45F7A4E135D0"; nocase; distance:0; reference:bugtraq,9916; reference:cve,2004-0363; classtype:attempted-admin; sid:2102485; rev:12;)
@@ -1504,6 +1497,15 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Softek Bar
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Softek Barcode Reader Toolkit ActiveX Control Format String Function Call"; flow:to_client,established; content:"ActiveXObject"; nocase; content:"SoftekATL.CBarcode"; nocase; distance:0; content:".DebugTraceFile"; nocase; reference:url,exploit-db.com/exploits/15071/; classtype:attempted-user; sid:2011870; rev:1;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX J-Integra Remote Code Execution"; flow:established,to_client; content:"clsid"; nocase; content:"F21507A7-530F-4A89-8FE4-9D989670FD2C"; nocase; distance:0; pcre:"/<object\s*[^>]*\s*classid\s*=\s*(\x22|\x27)\s*clsid\s*\x3a\s*{?\s*F21507A7-530F-4A89-8FE4-9D989670FD2C\s*}?\s*(.*)(\s|)/si"; pcre:"/\x2e[RemoveAccessPermission|AddLaunchPermission|AddAccessPermission|RemoveLaunchPermission]/"; reference:url,www.exploit-db.com/exploits/15648; classtype:attempted-user; sid:2012095; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX WMITools ActiveX Remote Code Execution"; flow:established,to_client; content:"clsid"; nocase; content:"2745E5F5-D234-11D0-847A-00C04FD7BB08"; nocase; distance:0; content:"|2e|AddContextRef"; distance:0; pcre:"/<object\s*[^>]*\s*classid\s*=\s*[\x22|\x27]\s*clsid\s*\x3a\s*{?\s*2745E5F5-D234-11D0-847A-00C04FD7BB08\s*}?(.*)\>/si"; reference:url,www.exploit-db.com/exploits/15809/; classtype:attempted-user; sid:2012097; rev:2;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX J-Integra ActiveX SetIdentity Buffer Overflow"; flow:established,to_client; content:"clsid"; nocase; content:"8234E54E-20CB-4A88-9AB6-7986F99BE243"; nocase; content:"|2e|SetIdentity"; distance:0; pcre:"/<object\s*[^>]*\s*classid\s*=\s*[\x22|\x27]\s*clsid\s*\x3a\s*{?\s*8234E54E-20CB-4A88-9AB6-7986F99BE243\s*}?\s*(.*)(\s|>)/si"; reference:url,www.exploit-db.com/exploits/15655; classtype:attempted-user; sid:2012098; rev:2;)
 
 #
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Image Viewer CP Gold Image2PDF Buffer Overflow"; flow:established,to_client; file_data; content:"clsid"; nocase; content:"E589DA78-AD4C-4FC5-B6B9-9E47B110679E"; nocase; content:"|2e|Image2PDF"; distance:0; pcre:"/<object\s*[^>]*\s*classid\s*=\s*[\x22\x27]\s*clsid\s*\x3a\s*{?\s*E589DA78-AD4C-4FC5-B6B9-9E47B110679E\s*}?\s*(.*)(\s|>)/si"; reference:url,www.exploit-db.com/exploits/15658/; classtype:attempted-user; sid:2012102; rev:3;)
@@ -1663,6 +1665,9 @@ alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Oracle Aut
 
 ##by StillSecure
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX Oracle AutoVue Activex Insecure method (ExportEdaBom) Format String Function Call"; flow:to_client,established; file_data; content:"ActiveXObject"; nocase; distance:0; content:"AUTOVUEX.AutoVueXCtrl.1"; nocase; distance:0; content:".ExportEdaBom"; content:"|2E 2E 2F|"; reference:url,packetstormsecurity.org/files/106065/9sg_autovueiii.tgz; classtype:attempted-user; sid:2013814; rev:3;)
+
+#
+alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX HP Easy Printer Care Software XMLCacheMgr ActiveX Control Remote Code Execution Attempt"; flow:established,to_client; content:"ActiveXObject"; nocase; content:"HPESPRIT.XMLCacheMgr.1"; nocase; distance:0; content:"CacheDocumentXMLWithId"; nocase; distance:0; reference:bid,51396; reference:cve,2011-4786; classtype:attempted-user; sid:2014132; rev:2;)
 
 ##by Still Secure
 alert tcp $EXTERNAL_NET $HTTP_PORTS -> $HOME_NET any (msg:"ET ACTIVEX ASUS Net4Switch ipswcom.dll ActiveX Stack Buffer Overflow"; flow:to_client,established; file_data; content:"CLSID"; nocase; distance:0; content:"1B9E86D8-7CAF-46C8-9938-569B21E17A8E"; nocase; distance:0; content:"CxDbgPrint"; nocase; reference:url,packetstormsecurity.org/files/110296/ASUS-Net4Switch-ipswcom.dll-ActiveX-Stack-Buffer-Overflow.html; classtype:attempted-user; sid:2014325; rev:3;)

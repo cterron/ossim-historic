@@ -1,3 +1,4 @@
+SET UNIQUE_CHECKS=0;
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 1, 1, 'Shellcode');
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 2, 1, 'SQL_Injection');
 REPLACE INTO subcategory (ctx, id, cat_id, name) VALUES (0x0, 3, 1, 'Browser');

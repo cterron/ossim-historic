@@ -81,7 +81,7 @@ switch(GET('type'))
     case "source_type":
         $types = $ac = array();
 
-        if (!$rp = & $conn->CacheExecute("SELECT plugin.id, product_type.name AS source_type FROM alienvault.plugin, alienvault.product_type WHERE product_type.id = plugin.product_type"))
+        if (!$rp = $conn->CacheExecute("SELECT plugin.id, product_type.name AS source_type FROM alienvault.plugin, alienvault.product_type WHERE product_type.id = plugin.product_type"))
         {
             print $conn->ErrorMsg();
         }
@@ -111,7 +111,7 @@ switch(GET('type'))
 
         //echo $sqlgraph;
 
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -153,7 +153,7 @@ switch(GET('type'))
             $sqlgraph = "SELECT sum(a.cnt) as num_events,p.category_id,c.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin_sid p,alienvault.category c WHERE c.id=p.category_id AND p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' group by p.category_id order by num_events desc LIMIT 10";
         }
 
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -194,7 +194,7 @@ switch(GET('type'))
             $sqlgraph = "SELECT sum(a.cnt) as num_events,p.id,p.name FROM alienvault_siem.ac_acid_event a,alienvault.plugin p WHERE p.id=a.plugin_id AND a.day BETWEEN '".gmdate("Y-m-d",gmdate("U")-$range)."' AND '".gmdate("Y-m-d")."' $plugins AND a.cnt > 0 group by p.name order by num_events desc LIMIT 8";
         }
         
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -224,7 +224,7 @@ switch(GET('type'))
         $taxonomy = make_where($conn,array("Authentication" => array("Login","Failed")));
         $sqlgraph = str_replace("TAXONOMY",$taxonomy,$query);
         //print_r($sqlgraph);
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -256,7 +256,7 @@ switch(GET('type'))
 
         $sqlgraph = str_replace("TAXONOMY",$taxonomy,$query);
         //print_r($sqlgraph);
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -287,7 +287,7 @@ switch(GET('type'))
         $taxonomy = make_where($conn,array("Access" => array("Firewall_Permit","Firewall_Deny","ACL_Permit","ACL_Deny")));
         $sqlgraph = str_replace("TAXONOMY",$taxonomy,$query);
         //print_r($sqlgraph);
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -320,7 +320,7 @@ switch(GET('type'))
         $sqlgraph = "SELECT count(a.id) as num_events,inet_ntoa(a.ip_src) as name FROM alienvault_siem.acid_event a,alienvault.plugin_sid p LEFT JOIN alienvault.subcategory c ON c.cat_id=p.category_id AND c.id=p.subcategory_id WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $taxonomy group by a.ip_src order by num_events desc limit 10";
 
         //print_r($sqlgraph);
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -354,7 +354,7 @@ switch(GET('type'))
         $sqlgraph = str_replace("TAXONOMY",$taxonomy,$query);
         //print_r($sqlgraph);
 
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -387,7 +387,7 @@ switch(GET('type'))
 
         $sqlgraph = str_replace("TAXONOMY",$taxonomy,$query);
         //print_r($sqlgraph);
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -420,7 +420,7 @@ switch(GET('type'))
 
         $sqlgraph = "select count(*) as num_events,pl.name,pl.id as plugin_id FROM alienvault_siem.acid_event a, alienvault.plugin pl, alienvault.plugin_sid p WHERE p.plugin_id=a.plugin_id AND p.sid=a.plugin_sid AND p.plugin_id=pl.id AND p.category_id=19 AND a.timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-$range)."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where group by p.plugin_id order by num_events desc limit 10";
 
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -460,7 +460,7 @@ switch(GET('type'))
         $country_names = array();
 
         //echo $sqlgraph;
-        if (!$rg = & $conn->CacheExecute($sqlgraph))
+        if (!$rg = $conn->CacheExecute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }
@@ -504,7 +504,7 @@ switch(GET('type'))
 
         //echo $sqlgraph;
 
-        if (!$rg = & $conn->Execute($sqlgraph))
+        if (!$rg = $conn->Execute($sqlgraph))
         {
             print $conn->ErrorMsg();
         }

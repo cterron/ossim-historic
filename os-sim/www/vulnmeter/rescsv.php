@@ -76,6 +76,7 @@ ini_set("max_execution_time","720");
 require_once 'av_init.php';
 require_once 'config.php';
 require_once 'functions.inc';
+require_once 'ossim_sql.inc';
 
 /** Include PHPExcel */
 require_once 'classes/PHPExcel.php';
@@ -99,31 +100,34 @@ if (!function_exists('htmlspecialchars_decode'))
      }
 }
 
+$dbconn->disconnect();
+$dbconn = $db->connect();
+
 switch ($_SERVER['REQUEST_METHOD'])
 {
 case "GET" :
      if (isset($_GET['scantime'])) { 
-          $scantime=htmlspecialchars(mysql_real_escape_string(trim($_GET['scantime'])), ENT_QUOTES); 
+          $scantime=Util::htmlentities(escape_sql(trim($_GET['scantime']), $dbconn)); 
      } else { $scantime=""; }
      
      if (isset($_GET['scantype'])) { 
-          $scantype=htmlspecialchars(mysql_real_escape_string(trim($_GET['scantype'])), ENT_QUOTES); 
+          $scantype=Util::htmlentities(escape_sql(trim($_GET['scantype']), $dbconn)); 
      } else { $scantype=""; }
      
      if (isset($_GET['key'])) { 
-          $report_key=htmlspecialchars(mysql_real_escape_string(trim($_GET['key'])), ENT_QUOTES); 
+          $report_key=Util::htmlentities(escape_sql(trim($_GET['key']), $dbconn)); 
      } else { $report_key=""; }
      
      if (isset($_GET['critical'])) { 
-          $critical=htmlspecialchars(mysql_real_escape_string(trim($_GET['critical'])), ENT_QUOTES); 
+          $critical=Util::htmlentities(escape_sql(trim($_GET['critical']), $dbconn)); 
      } else { $critical="0"; }
      
      if (isset($_GET['filterip'])) { 
-          $filterip=htmlspecialchars(mysql_real_escape_string(trim($_GET['filterip'])), ENT_QUOTES); 
+          $filterip=Util::htmlentities(escape_sql(trim($_GET['filterip']), $dbconn)); 
      } else { $filterip=""; }
      
      if (isset($_GET['scansubmit'])) { 
-          $scansubmit=htmlspecialchars(mysql_real_escape_string(trim($_GET['scansubmit'])), ENT_QUOTES); 
+          $scansubmit=Util::htmlentities(escape_sql(trim($_GET['scansubmit']), $dbconn)); 
      } else { $scansubmit=""; }
      
      break;
@@ -132,10 +136,6 @@ case "GET" :
 if ( $critical ) {
      $query_critical = "AND risk <= '$critical'";
 }
-
-
-$dbconn->disconnect();
-$dbconn = $db->connect();
 
 $dbconn->SetFetchMode(ADODB_FETCH_BOTH);
 
@@ -179,7 +179,7 @@ if ($scansubmit!="") {
               AND scantype='$scantype'".((empty($arruser)) ? "":" AND r.username in ($user)");
     $result=$dbconn->execute($query);
     while ( !$result->EOF ) {
-        list( $report_id ) = $result->fields;
+        $report_id = $result->fields['report_id'];
         $ids[] = $report_id;
         $result->MoveNext();
     }
@@ -190,7 +190,7 @@ else {
             AND scantype='$scantype' ".((empty($arruser))? "":" AND username in ($user)")." LIMIT 1";
 
     $result=$dbconn->execute($query);
-    list ( $report_id ) = $result->fields;
+    $report_id = $result->fields['report_id'];
 }
 
 //Generated date
@@ -202,10 +202,10 @@ if ( ! $report_id ) {
     die(_("Report not found"));
 }
 
-$query = "select count(scantime) from vuln_nessus_results where report_id in ($report_id) and falsepositive='N'";
+$query = "select count(scantime) as total from vuln_nessus_results where report_id in ($report_id) and falsepositive='N'";
        
 $result=$dbconn->execute($query);
-list ( $numofresults ) = $result->fields;
+$numofresults = $result->fields['total'];
 
 if ($numofresults<1) {
     //logAccess( "NESSUS REPORT [ $report_id / NO RESULTS ] ACCESSED" );
@@ -228,16 +228,19 @@ $scanhour  = substr($localtime, 8, 2);
 $scanmin   = substr($localtime, 10, 2);
 $scansec   = substr($localtime, 12);
 
-$query = "select distinct t1.username, t3.name, t2.name, t2.description
+$query = "select distinct t1.username, t3.name as jobname, t2.name as profilename, t2.description
     FROM vuln_nessus_reports t1
     LEFT JOIN vuln_nessus_settings t2 on t1.sid=t2.id
     LEFT JOIN vuln_jobs t3 on t3.report_id = t1.report_id
-    where t1.report_id in ($report_id) $query_host  ".((empty($arruser))? "":" AND t1.username in ($user)")."
-    order by scantime DESC";
+    where t1.report_id in ($report_id) $query_host order by scantime DESC";
 
 $result = $dbconn->execute($query);
     
-list($query_uid, $job_name, $profile_name, $profile_desc) = $result->fields;
+$query_uid    = $result->fields['username'];
+$job_name     = $result->fields['jobname'];
+$profile_name = $result->fields['profilename'];
+$profile_desc = $result->fields['description'];
+
 if($job_name=="") { // imported report
    $query_imported_report = "SELECT name FROM vuln_nessus_reports WHERE scantime='$scantime' and report_key='$key'"; 
    $result_imported_report=$dbconn->execute($query_imported_report);
@@ -354,7 +357,10 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
     
     $result = $dbconn->execute($query);
 
-    while ( list($hostip, $ctx) = $result->fields ) {
+    while ($result->fields)
+    {
+        $hostip = $result->fields['hostip'];
+        $ctx    = $result->fields['ctx'];
 
         $query1 = "select distinct t1.hostIP, HEX(t1.ctx) AS ctx, t1.service, t1.risk, t1.falsepositive, t1.scriptid, v.name, t1.msg, v.cve_id FROM vuln_nessus_results t1
                  LEFT JOIN vuln_nessus_plugins$feed as v ON v.id=t1.scriptid
@@ -365,7 +371,17 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
         $result1 = $dbconn->execute($query1);
         $arrResults="";
 
-        while ( list( $hostip, $hostctx, $service, $risk, $falsepositive, $scriptid, $pname, $msg, $cve_id) = $result1->fields ){
+        while ($result1->fields)
+        {    
+            $hostip        = $result1->fields['hostIP'];
+            $hostctx       = $result1->fields['ctx'];
+            $service       = $result1->fields['service'];
+            $risk          = $result1->fields['risk'];
+            $falsepositive = $result1->fields['falsepositive'];
+            $scriptid      = $result1->fields['scriptid'];
+            $pname         = $result1->fields['name'];
+            $msg           = $result1->fields['msg'];
+            $cve_id        = $result1->fields['cve_id'];
         
             $row = array();
           
@@ -422,13 +438,17 @@ $objPHPExcel->setActiveSheetIndex(0)->getColumnDimension('M')->setWidth(25);
              
                 $row[] = $risk_txt;
              
-                $plugin_info = $dbconn->execute("SELECT t2.name, t3.name, t1.copyright, t1.summary, t1.version 
+                $plugin_info = $dbconn->execute("SELECT t2.name as familyname, t3.name as categoryname, t1.copyright, t1.summary, t1.version 
                                     FROM vuln_nessus_plugins$feed t1
                                     LEFT JOIN vuln_nessus_family$feed t2 on t1.family=t2.id
                                     LEFT JOIN vuln_nessus_category$feed t3 on t1.category=t3.id
-                                    WHERE t1.id='$scriptid'"); 
-
-                list($pfamily, $pcategory, $pcopyright, $psummary, $pversion) = $plugin_info->fields; 
+                                    WHERE t1.id='$scriptid'");
+                
+                $pfamily    = $plugin_info->fields['familyname'];
+                $pcategory  = $plugin_info->fields['categoryname'];
+                $pcopyright = $plugin_info->fields['copyright'];
+                $psummary   = $plugin_info->fields['summary'];
+                $pversion   = $plugin_info->fields['version'];
 
                 $pinfo = array();
                 if ($pfamily!="")    { $pinfo[] = 'Family name: '.trim(strip_tags($pfamily));} 

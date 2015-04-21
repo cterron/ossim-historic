@@ -67,7 +67,8 @@ if(intval($job_id)>0) {  // export job to nbe
 
     $sql = "select * from vuln_jobs where id=$job_id $user_name_filter";
     
-    if (!$rs = & $dbconn->Execute($sql)) {
+    $rs = $dbconn->Execute($sql);
+    if (!$rs) {
         print _('error reading vuln_jobs information').' '.$conn->ErrorMsg() . '<BR>';
         exit;
     }
@@ -80,8 +81,9 @@ if(intval($job_id)>0) {  // export job to nbe
 }
 else if(intval($report_id)>0) {
     $sql = "select * from vuln_nessus_reports where report_id=$report_id $user_name_filter";
- 
-    if (!$rs = & $dbconn->Execute($sql)) {
+    
+    $rs = $dbconn->Execute($sql);
+    if (!$rs) {
         print _('error reading vuln_nessus_reports information').' '.$conn->ErrorMsg() . '<BR>';
         exit;
     }
@@ -111,7 +113,8 @@ if($name!="" && intval($job_id)>0) {
     
     $sql = "SELECT *, HEX(ctx) as hctx from vuln_nessus_results WHERE report_id = ".$rs->fields["report_id"]." ORDER BY hostIP DESC";
     
-    if (!$rs = & $dbconn->Execute($sql)) {
+    $rs = $dbconn->Execute($sql);
+    if (!$rs) {
         print _('error reading vuln_nessus_results information').' '.$dbconn->ErrorMsg() . '<BR>';
         exit;
     }

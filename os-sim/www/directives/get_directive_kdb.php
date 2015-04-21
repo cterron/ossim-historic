@@ -71,10 +71,12 @@ $kdocs = Repository::get_linked_by_directive($conn, $directive_id);
 				
 					<tr>
 						<td>
-							<?php echo $doc['date'] ?>
+							<?php echo $doc->get_date() ?>
 						</td>
 						<td>
-							<a href="../repository/repository_document.php?id_document=<?php echo $doc['id'] ?>&maximized=1" class="greybox_kdb"><?php echo $doc['title'] ?></a>
+							<a href="../repository/repository_document.php?id_document=<?php echo $doc->get_id() ?>&maximized=1" class="greybox_kdb">
+    							<?php echo $doc->get_title() ?>
+    						</a>
 						</td>
 					</tr>
 					

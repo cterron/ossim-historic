@@ -65,10 +65,8 @@ if (Session::menu_perms($m_perms, $sm_perms))
     
     //Current sensor
     $_SESSION['ossec_sensor'] = $sensor_id;
-    
-    $idm_enabled = (isset($_SESSION['_idm']) && !empty($_SESSION['_idm'])) ? TRUE : FALSE;
     ?>
-    
+
     <table class='table_data' id='agent_table'>
         <thead>
             <tr>
@@ -76,15 +74,8 @@ if (Session::menu_perms($m_perms, $sm_perms))
                 <th class='th_id'><?php echo _('ID')?></th>
                 <th class='th_name'><?php echo _('Name')?></th>
                 <th class='th_ip'><?php echo _('IP/CIDR')?></th>
-                <?php 
-                if ($idm_enabled)
-                { 
-                    ?>
-                    <th class='th_ci'><?php echo _('Current IP')?></th>
-                    <th class='th_cu'><?php echo _('Current User@Domain')?></th>
-                    <?php 
-                } 
-                ?>
+                <th class='th_ci'><?php echo _('Current IP')?></th>
+                <th class='th_cu'><?php echo _('Current User@Domain')?></th>
                 <th class='th_status'><?php echo _('Status')?></th>
                 <th style='text-align: center;'>
                     <?php echo _('Trend')?>&nbsp;<span style='position: relative; margin: 0px;font-size:10px;font-weight:normal'><?php echo '['._('Time UTC').']'?></span>
@@ -120,20 +111,13 @@ if (Session::menu_perms($m_perms, $sm_perms))
                             <td id='agent_<?php echo $a_unique_id?>'><?php echo $agent_id?></td>
                             <td><?php echo $a_data['name']?></td>
                             <td><?php echo $a_data['ip']?></td>
-                            <?php
-                            if ($idm_enabled)
-                            {
-                                ?>
-                                <td>
-                                    <div style='text-align: center !important'> - </div>
-                                </td>
+                            <td>
+                                <div style='text-align: center !important'> - </div>
+                            </td>
 
-                                <td>
-                                    <div style='text-align: center !important'> - </div>
-                                </td>
-                                <?php
-                            }
-                            ?>
+                            <td>
+                                <div style='text-align: center !important'> - </div>
+                            </td>
                             <td><?php echo $a_data['status']?></td>
                             <td class='td_cp' id='cont_plot_<?php echo $a_unique_id?>'>
                                 <div class='cont_plot'>
@@ -170,15 +154,8 @@ if (Session::menu_perms($m_perms, $sm_perms))
                 { "bSortable": false },
                 { "bSortable": true },
                 { "bSortable": true },
-                <?php
-                if ($idm_enabled)
-                { 
-                    ?>
-                    { "bSortable": false },
-                    { "bSortable": false },
-                    <?php
-                }
-                ?>
+                { "bSortable": false },
+                { "bSortable": false },
                 { "bSortable": false },
                 { "bSortable": true },
                 { "bSortable": false }
@@ -218,6 +195,8 @@ if (Session::menu_perms($m_perms, $sm_perms))
             },
             "fnRowCallback": function(nRow, aData, iDrawIndex, iDataIndex)
             {
+                $(nRow).find("td:nth-child(1)").addClass('td_mi');
+
                 //Load trend graphs
 
                 if ($(nRow).find("td:last img").hasClass('loading_plot'))
@@ -226,21 +205,21 @@ if (Session::menu_perms($m_perms, $sm_perms))
                 }
 
                 //IDM data
-                if ($(nRow).find("td").length > 6)
+                if(!$(nRow).find("td:nth-child(5)").hasClass('td_c_ip') && !$(nRow).find("td:nth-child(6)").hasClass('td_c_ud'))
                 {
-                    if(!$(nRow).find("td:nth-child(5)").hasClass('td_c_ip') && !$(nRow).find("td:nth-child(6)").hasClass('td_c_ud'))
-                    {
-                        $(nRow).find("td:nth-child(5)").addClass('td_c_ip');
-                        $(nRow).find("td:nth-child(6)").addClass('td_c_ud');
+                    $(nRow).find("td:nth-child(5)").addClass('td_c_ip');
+                    $(nRow).find("td:nth-child(6)").addClass('td_c_ud');
 
-                        get_idm_data(nRow);
-                    }
+                    get_idm_data(nRow);
                 }
-
+                
+                //Bind Agent information handler
                 $(nRow).find("td:nth-child(1)").addClass('td_mi');
 
                 if ($(nRow).find("td:nth-child(1) img").hasClass('info'))
                 {
+                    $(nRow).find("td:nth-child(1) img").removeClass('disabled');
+    
                     get_agent_info($(nRow).find("td:nth-child(1)"));
                 }
             }

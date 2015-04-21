@@ -57,7 +57,7 @@ PrintBASESubHeader($page_title, $page_title, $cs->GetBackLink() , 1);
 $mssp = Session::show_entities(); //intval($conf->get_conf("alienvault_mssp", FALSE));
 
 // Use accumulate tables only when timestamp criteria is not hour sensitive
-$use_ac = can_use_accumulated_table();
+$use_ac = $criteria_clauses[3];
 
 if ($use_ac) { // use ac_acid_event
     $from    = " FROM ac_acid_event as acid_event " . $criteria_clauses[0].", device LEFT JOIN alienvault.sensor ON sensor.id=device.sensor_id";

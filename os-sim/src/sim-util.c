@@ -124,58 +124,54 @@ guint8 *sim_hex2bin(gchar *data){
  *
  *
  */
-SimProtocolType
+
+gint
 sim_protocol_get_type_from_str (const gchar  *str)
 {
-  g_return_val_if_fail (str, SIM_PROTOCOL_TYPE_NONE);
-
-  if (!g_ascii_strcasecmp (str, "ICMP"))
-    return SIM_PROTOCOL_TYPE_ICMP;
-  else if (!g_ascii_strcasecmp (str, "UDP"))
-    return SIM_PROTOCOL_TYPE_UDP;
-  else if (!g_ascii_strcasecmp (str, "TCP"))
-    return SIM_PROTOCOL_TYPE_TCP;
-  else if (!g_ascii_strcasecmp (str, "Host_ARP_Event"))
-    return SIM_PROTOCOL_TYPE_HOST_ARP_EVENT;
-  else if (!g_ascii_strcasecmp (str, "Host_OS_Event"))
-    return SIM_PROTOCOL_TYPE_HOST_OS_EVENT;
-  else if (!g_ascii_strcasecmp (str, "Host_Service_Event"))
-    return SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT;
-  else if (!g_ascii_strcasecmp (str, "Information_Event"))
-    return SIM_PROTOCOL_TYPE_INFORMATION_EVENT;
-  else if (!g_ascii_strcasecmp (str, "OTHER"))
-    return SIM_PROTOCOL_TYPE_OTHER;
- 
-  return SIM_PROTOCOL_TYPE_NONE;
+	gint proto;
+	gchar *endp;
+  g_return_val_if_fail (str, -1);
+	/* Well:
+		str can be a protocol name ('tcp', 'udp', 'icmp') or can be A NUMBER associated by this protocol. 
+		we must to cope with the two optiosn
+	*/
+	/* Use atoi */
+	proto = strtol (str, &endp, 10);
+	if (*str != '\0' && *endp == '\0')
+	{
+		if (sim_container_get_proto_by_number (ossim.container, proto) == NULL)
+		{	
+			g_message ("Can't get proto number from name '%s'", str);
+			return -1;
+		}
+		else
+			return proto;
+	}
+	else	
+		return sim_container_get_proto_by_name (ossim.container, str);
 }
+
 
 /*
  *
  *
  */
 gchar*
-sim_protocol_get_str_from_type (SimProtocolType type)
+sim_protocol_get_str_from_type (gint type)
 {
-  switch (type)
-    {
-    case SIM_PROTOCOL_TYPE_ICMP:
-      return g_strdup ("ICMP");
-    case SIM_PROTOCOL_TYPE_UDP:
-      return g_strdup ("UDP");
-    case SIM_PROTOCOL_TYPE_TCP:
-      return g_strdup ("TCP");
-    case SIM_PROTOCOL_TYPE_HOST_ARP_EVENT:
-      return g_strdup ("Host_ARP_Event");
-    case SIM_PROTOCOL_TYPE_HOST_OS_EVENT:
-      return g_strdup ("Host_OS_Event");
-    case SIM_PROTOCOL_TYPE_HOST_SERVICE_EVENT:
-      return g_strdup ("Host_Service_Event");
-    case SIM_PROTOCOL_TYPE_INFORMATION_EVENT:
-      return g_strdup ("Information_Event");
-    default:
-      return g_strdup ("OTHER");
-    }
+  const char *pname = NULL;
+  if ((pname = sim_container_get_proto_by_number (ossim.container, type)) != NULL)
+  {
+    return g_strdup (pname);
+  }
+  else
+  {
+		g_warning ("Can't get proto name for number '%d'", type);
+    return NULL;
+  }
 }
+
+
 
 /*
  *

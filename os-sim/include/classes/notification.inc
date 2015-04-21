@@ -62,8 +62,8 @@ class Notification
     * @access private
     */
 	private $wrapper_id;
-	
-	
+
+
 	/**
     * Notification configuration
     *
@@ -71,8 +71,8 @@ class Notification
     * @access private
     */
 	private $config;
-		
-	
+
+
 	/**
     * Notification CSS Style
     *
@@ -100,9 +100,8 @@ class Notification
     * @access private
     */	
 	private static $instance = NULL;
-    
-    
-    
+
+
     /**
     * Class constructor
     *
@@ -125,8 +124,8 @@ class Notification
 		
 		$this->set_wrapper_id($wrapper_id);
 	}
-	
-	
+
+
 	/**
     * This function returns the wrapper ID 
     *
@@ -136,8 +135,8 @@ class Notification
 	{
 		return $this->wrapper_id;
 	}
-	
-	
+
+
 	/**
     * This function returns notification configuration 
     *
@@ -147,8 +146,8 @@ class Notification
 	{
 		return $this->config;
 	}		
-	
-	
+
+
 	/**
     * This function sets wrapper ID
     *
@@ -160,8 +159,8 @@ class Notification
 	{
 		$this->wrapper_id = (!empty($wrapper_id)) ? $wrapper_id : 'wrapper_nt';
 	}
-	
-		
+
+
 	/**
     * This function sets notification configuration 
     *
@@ -188,7 +187,8 @@ class Notification
 			$this->config['options']['cancel_button'] = FALSE;
 		}
 	}
-	
+
+
     /**
     * This function shows or returns HTML notification 
     *

@@ -48,17 +48,19 @@ echo "var ossec_msg = new Array();
 		  ossec_msg['add_agent']            = '"._("Adding agent")." ...';
 		  ossec_msg['p_action']             = '"._("Processing action")." ...';
 		  ossec_msg['cnf_a_error']          = '"._("Error! OSSEC configuration not updated successfully")."';
-		  ossec_msg['delete_row']           = '".Util::js_entities(_("Are you sure to delete this row"))."?';
-		  ossec_msg['delete_file']          = '".Util::js_entities(_("Are you sure to delete this file"))."?';
+		  ossec_msg['delete_row']           = '".Util::js_entities(_("Are you sure you want to delete this row?"))."';
+		  ossec_msg['delete_file']          = '".Util::js_entities(_("Are you sure you want to delete this file?"))."';
+		  ossec_msg['delete_agent']         = '".Util::js_entities(_("Are you sure you want to delete this agent?"))."';
 		  ossec_msg['i_action']             = '"._("Illegal action")."';
 		  ossec_msg['add_m_entry']          = '"._("Adding Monitoring entry")." ...';
 		  ossec_msg['delete_m_entry']       = '"._("Deleting Monitoring entry")." ...';
 		  ossec_msg['update_m_entry']       = '"._("Updating Monitoring entry")." ...';
 		  ossec_msg['load_agent']           = '"._("Loading agent information")." ...';
+		  ossec_msg['error_header']         = '"._("We found the following errors:")."';
 		  ossec_msg['d_oc_action_w']        = '"._("Generating preconfigured agent for Windows")." ...';
 		  ossec_msg['d_oc_action_u']        = '"._("Generating preconfigured agent for UNIX")." ...';
 		  ossec_msg['a_deployment_w']       = '"._("Automatic deployment for Windows")."';
-		  ossec_msg['deploying_agent']      = '"._("Deploying agent")." ...';
+		  ossec_msg['deploying_agent']      = '"._("Deploying OSSEC agent")." ...';
 		  "; 		  
 
 echo "var labels = new Array();
@@ -81,6 +83,7 @@ echo "var labels = new Array();
 		  labels['name']                 = '"._("Name")."';
 		  labels['value']                = '"._("Value")."';
 		  labels['actions']              = '"._("Actions")."';
-	      ";		  
-
+		  labels['yes']                  = '"._("Yes")."';
+		  labels['no']                   = '"._("No")."';
+	      ";
 ?>

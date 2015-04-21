@@ -32,7 +32,6 @@ import MySQLdb
 import re
 import json
 
-from xml.etree import ElementTree
 from os import path
 
 import ConfigParser
@@ -41,18 +40,9 @@ from distutils.version import LooseVersion
 
 import dependency
 from output import Output
+from wildcard import Wildcard
 from check import Check
-
-'''
-Class PluginConfigParserError.
-Exceptions for dependencies.
-'''
-class PluginConfigParserError (Exception):
-  def __init__(self, msg, plugin):
-    self.msg = msg
-    self.plugin = plugin
-  def __repr__ (self):
-    return self.msg
+from error import PluginError, PluginConfigParserError, CheckError
 
 '''
 Class PluginConfigParser.
@@ -106,31 +96,20 @@ class PluginConfigParser (RawConfigParser):
 
 
 '''
-PluginError class.
-Define an error exception for the Plugin class.
-'''
-class PluginError (Exception):
-  def __init__ (self, msg, plugin):
-    self.msg = msg
-    self.plugin = plugin
-  def __repr__ (self):
-    return self.msg
-
-'''
 Plugin class.
 Defines a plugin with a set of conditions/actions.
 '''
 class Plugin:
-  def __init__ (self, filename, ossim_config, severity_list, verbose, raw):
+  def __init__ (self, filename, alienvault_config, severity_list, verbose, raw):
 
     # Common properties.
     self.__config_file = None
-    self.__ossim_config = None
+    self.__alienvault_config = {}
     self.__severity_list = []
     self.__verbose = 0
     self.__raw = False
-    self.__enable = False
     self.__name = ''
+    self.__description = ''
     self.__type = ''
     self.__category = []
     self.__requires = []
@@ -163,7 +142,7 @@ class Plugin:
     if not filename.endswith ('.plg'):
       raise PluginError ('File extension is not .plg', filename)
 
-    self.__ossim_config = ossim_config
+    self.__alienvault_config = alienvault_config
     self.__severity_list = severity_list
     self.__verbose = verbose
     self.__raw = raw
@@ -172,31 +151,19 @@ class Plugin:
       # Parse the plugin configuration file.
       self.__config_file = PluginConfigParser ()
       self.__config_file.read (filename)
+    except PluginConfigParserError:
+      raise
     except Exception as e:
       raise PluginError ('Cannot parse plugin file "%s": %s' % (filename, str(e)), filename)
 
-    # Check first if this plugin is enabled.
-    if self.__config_file.has_option('properties', 'enable'):
-      self.__enable = eval(self.__config_file.get ('properties', 'enable'))
-      if not self.__enable:
-        return
-    else:
-      return
-
-    # Parse for translates.
-    # Very inefficient, yes.
-    for section in self.__config_file.sections():
-      for option, value in self.__config_file.items(section):
-        if not option in ['warning', 'advice']:
-          for key in self.__ossim_config.keys():
-            if key in value:
-              new_value = value.replace(key, self.__ossim_config[key])
-              self.__config_file.set(section, option, new_value)
-
     try:
       self.__name = self.__config_file.get ('properties', 'name')
+      self.__description = self.__config_file.get ('properties', 'description')
       self.__type = self.__config_file.get ('properties', 'type')
       self.__category = self.__config_file.get ('properties', 'category').split(',')
+
+      if self.__verbose > 0:
+        Output.emphasized ('\nRunning plugin "%s"...\n' % self.__name, [self.__name])
 
       if self.__config_file.has_option('properties', 'requires'):
         self.__requires = self.__config_file.get('properties', 'requires').split(';')
@@ -208,32 +175,29 @@ class Plugin:
 
       # Check for the 'limit' option (in kbytes), used in combination with the raw data output. '0' means no limit.
       if self.__raw and self.__config_file.has_option('properties', 'raw_limit'):
-        try:
-          self.__raw_limit = int(self.__config_file.get ('properties', 'raw_limit'))
-        except Exception, e:
-          raise PluginError ('"raw_limit" property is not an integer' % profile, self.__name)
+        self.__raw_limit = int(self.__config_file.get ('properties', 'raw_limit'))
 
       # Check for profile & version where this plugin is relevant.
       if self.__config_file.has_option('properties', 'profiles'):
         profiles_versions = self.__config_file.get ('properties', 'profiles')
-        self.__profiles = [tuple (x.split(':')) for x in profiles_versions.split(';')]
+        self.__profiles = [(x.partition(':')[0], x.partition(':')[2]) for x in profiles_versions.split(';')]
 
-        for (i, (profile, version)) in enumerate (self.__profiles):
-          if not profile in self.__ossim_config['profiles']:
+        for (profile, version) in self.__profiles:
+          if profile == '' or version == '':
+            raise PluginError ('Empty profile or version in "profiles" field', self.__name)
+
+          if not profile in self.__alienvault_config['profiles']:
             raise PluginError ('Profile "%s" does not match installed profiles' % profile, self.__name)
 
           if version.startswith('>'):
-            ret = LooseVersion(self.__ossim_config['versions'][i]) > LooseVersion (version[1:])
+            ret = LooseVersion(self.__alienvault_config['version']) > LooseVersion (version[1:])
           elif version.startswith('<'):
-            ret = LooseVersion(self.__ossim_config['versions'][i]) < LooseVersion (version[1:])
+            ret = LooseVersion(self.__alienvault_config['version']) < LooseVersion (version[1:])
           elif version.startswith('=='):
-            ret = LooseVersion(self.__ossim_config['versions'][i]) == LooseVersion (version[2:])
+            ret = LooseVersion(self.__alienvault_config['version']) == LooseVersion (version[2:])
           elif version.startswith('!='):
-            ret = LooseVersion(self.__ossim_config['versions'][i]) != LooseVersion (version[2:])
+            ret = LooseVersion(self.__alienvault_config['version']) != LooseVersion (version[2:])
           else:
-            ret = False
-
-          if not ret:
             raise PluginError ('Profile "%s" version does not match installed profiles' % profile, self.__name)
 
       # Ugly...
@@ -250,7 +214,7 @@ class Plugin:
       sections = self.__config_file.sections()
       for section in sections:
         if section != 'properties':
-          check = Check (self, section, self.__verbose)
+          check = Check (self, section)
           if check.check_severity (self.__severity_list):
             self.__checks.append (check)
           else:
@@ -262,8 +226,11 @@ class Plugin:
     except PluginConfigParserError:
       raise
 
-    except Exception as e:
-      raise PluginError ('Cannot initialize plugin: %s' % e, filename)
+    except CheckError:
+      raise
+
+    except Exception, msg:
+      raise PluginError ('Cannot initialize plugin: %s' % str(msg), filename)
 
   # Check for plugin requirements.
   # Currently, requirement types could be 'modules', 'files', 'dpkg', 'hardware'.
@@ -297,59 +264,19 @@ class Plugin:
       else:
         raise PluginError ('Unknown requirement type: %s' % req_type, self.__name)
 
-  # Check for hardware requirements (using lshw).
+  # Check for hardware requirements.
   # Items in the list are defined this way: hardware/attribute/value
   def __check_hardware_requirements__ (self, hw_list):
-    if not path.exists('/usr/bin/lshw'):
-      raise PluginError ('Command "lshw" is needed to check hardware requirements', self.__name)
-
-    proc = subprocess.Popen('/usr/bin/lshw -xml', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    data, err = proc.communicate()
-    if err != '':
-      raise PluginError ('Cannot check hardware requirements', self.__name)
-
-    try:
-      root = ElementTree.fromstring (data)
-    except Exception, msg:
-      raise PluginError ('Cannot parse output from "lshw": %s' % msg, self.__name)
-
-    # Check requirements.
-    for hw in hw_list:
-      if hw == '@vm@':
-        # Check if this is a VM using the 'hypervisor' CPU capability.
-        capabilities = root.findall('node/node/capabilities/capability')
-        hypervisor = [x for x in capabilities if x.get('id') == 'hypervisor']
-        if hypervisor == []:
-          raise PluginError ('The host has to be a virtual machine', self.__name)
-
-      elif hw.startswith('@cpunum@'):
-        # Check for a number of cpus/cores
-        nodes = root.findall('node/node/')
-        cpunum = len([x for x in nodes if x.get('class') == 'processor'])
-        expr = re.sub('@cpunum@', str(cpunum), hw)
-        try:
-          res = eval(expr)
-        except:
-          raise PluginError ('Expression "%s" cannot be evaluated' % expr, self.__name)
-
-        if res != True:
-          raise PluginError ('Cpu/cores requirement is not met', self.__name)
-
-      elif hw.startswith('@memsize@'):
-        nodes = root.findall('node/node/')
-        for node in nodes:
-          if node.get('class') == 'memory':
-            size = node.find('size').text
-            break
-
-        expr = re.sub('@memsize@', size, hw)
-        try:
-          res = eval(expr)
-        except:
-          raise PluginError ('Expression "%s" cannot be evaluated' % expr, self.__name)
-
-        if res != True:
-          raise PluginError ('Memory requirement is not met', self.__name)
+    # Check hardware requirements.
+    for hw_req in hw_list:
+      (hw_req_pretty, eval_str) = Wildcard.hw_config(hw_req)
+      try:
+        if not eval(eval_str):
+          raise PluginError (hw_req_pretty, self.__name)
+      except PluginError:
+        raise
+      except:
+        raise PluginError ('Expression "%s" cannot be evaluated' % eval_str, self.__name)
 
   # Initialize 'file' type plugin properties.
   def __init_file__ (self):
@@ -365,6 +292,7 @@ class Plugin:
   # Initialize 'command' type plugin properties.
   def __init_command__ (self):
     self.__command = self.__config_file.get ('properties', 'command')
+    self.__command = Wildcard.av_config(self.__command)
 
     try:
       proc = subprocess.Popen(self.__command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -375,9 +303,9 @@ class Plugin:
 
   # Initialize 'db' type plugin properties.
   def __init_db__ (self):
-    self.__host = self.__config_file.get ('properties', 'host')
-    self.__user = self.__config_file.get ('properties', 'user')
-    self.__password = self.__config_file.get('properties', 'password')
+    self.__host = Wildcard.av_config(self.__config_file.get ('properties', 'host'))
+    self.__user = Wildcard.av_config(self.__config_file.get ('properties', 'user'))
+    self.__password = Wildcard.av_config(self.__config_file.get('properties', 'password'))
     self.__database = self.__config_file.get ('properties', 'database')
 
     try:
@@ -390,8 +318,8 @@ class Plugin:
   def get_name (self):
     return self.__name
 
-  def get_enable (self):
-    return self.__enable
+  def get_description (self):
+    return self.__description
 
   def get_category (self):
     return self.__category
@@ -404,6 +332,9 @@ class Plugin:
 
   def get_checks_len (self):
     return len(self.__checks)
+
+  def get_filename (self):
+    return self.__filename
 
   # Check if any of the categories match with the plugin ones.
   def check_category (self, categories):
@@ -435,45 +366,46 @@ class Plugin:
         Output.warning ('Cannot run query for plugin "%s": %s' % (self.__name, e))
         return []
 
-    self.__data += query + '\n' + str(rows) + '\n\n'
-    return rows
+      self.__data += query + '\n' + str(rows) + '\n\n'
+      return list(rows)
+
+    return []
 
   # Run checks.
   def run (self):
     total = 0
     passed = 0
 
-    json_msg = {'plugin': self.__name, 'checks': {}}
+    json_msg = {'plugin': self.__name, 'description': self.__description, 'checks': {}}
 
     if self.__raw:
-      json_msg['source'] = self.__data[-(self.__raw_limit * 1024):]
-
-    if self.__verbose > 0:
-      Output.emphasized ('\nRunning checks for plugin "%s"...' % self.__name, [self.__name])
+      json_msg['source'] = unicode(self.__data[-(self.__raw_limit * 1024):], errors='replace')
 
     for check in self.__checks:
       total += 1
       result, msg = check.run()
+
       if not result:
         if self.__verbose == 2:
-          Output.error ('Check "%s" failed: %s!' % (check.get_name(), msg))
+          Output.error ('Check "%s" failed: %s' % (check.get_name(), msg))
         elif self.__verbose == 1:
-          Output.error ('Check "%s" failed!' % check.get_name())
-        json_msg['checks'][check.get_name()] = {'result': False, 'severity': check.get_severity(), 'warning': check.get_warning(), 'advice': check.get_advice()}
+          Output.error ('Check "%s" failed' % check.get_name())
+
+        json_msg['checks'][check.get_name()] = {'result': False, 'severity': check.get_severity(), 'warning': check.get_warning(), 'advice': check.get_advice(), 'detail': msg.lstrip().replace('\n\t', ';')}
 
         # Exit the loop if one check has failed.
         if self.__cutoff:
           break
       else:
         if self.__verbose > 0:
-          Output.info ('Check "%s" passed!' % check.get_name())
+          Output.info ('Check "%s" passed' % check.get_name())
         json_msg['checks'][check.get_name()] = {'result': True}
         passed += 1
 
     if self.__verbose > 0:
       if passed == total:
-        Output.info ('All tests passed')
+        Output.emphasized ('\nAll checks passed for plugin "%s".' % self.__name, [self.__name])
       else:
-        Output.info ('%d out of %d tests passed' % (passed, total))
+        Output.emphasized ('\n%d out of %d checks passed for plugin "%s".' % (passed, total, self.__name), [self.__name])
 
     return (json_msg)

@@ -82,7 +82,7 @@ $dbconn = $db->connect();
 // get the config data from the database
 
 $scanner = $GLOBALS["CONF"]->get_conf("scanner_type");
-//$vuln_scan_only_users_hosts = $GLOBALS["CONF"]->db_conf["vuln_scan_only_users_hosts"];
+//$vuln_scan_only_users_hosts = $GLOBALS["CONF"]->get_db_conf("vuln_scan_only_users_hosts");
 
 if(preg_match("/omp/i", $scanner))
     $_SESSION["scanner"]="omp";

@@ -9,7 +9,7 @@
 #  as follows:
 #
 #*************************************************************
-#  Copyright (c) 2003-2014, Emerging Threats
+#  Copyright (c) 2003-2015, Emerging Threats
 #  All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the 
@@ -252,7 +252,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"ET CHAT Skype User-Ag
 
 #by Reg Quinton
 #
-#alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 33033 (msg:"ET CHAT Skype Bootstrap Node (udp)";  reference:url,www1.cs.columbia.edu/~library/TR-repository/reports/reports-2004/cucs-039-04.pdf; reference:url,doc.emergingthreats.net/2003022; classtype:policy-violation; sid:2003022; rev:4;)
+#alert udp $HOME_NET 1024:65535 -> $EXTERNAL_NET 33033 (msg:"ET CHAT Skype Bootstrap Node (udp)"; threshold: type both, count 5, track by_src, seconds 120; reference:url,www1.cs.columbia.edu/~library/TR-repository/reports/reports-2004/cucs-039-04.pdf; reference:url,doc.emergingthreats.net/2003022; classtype:policy-violation; sid:2003022; rev:5;)
 
 #spyware/trojan/backdoors all reported here. sig by matt jonkman
 #
@@ -334,10 +334,10 @@ alert tcp $EXTERNAL_NET 5050 -> $HOME_NET any (msg:"GPL CHAT Yahoo Messenger Fil
 alert tcp $EXTERNAL_NET 5100 -> $HOME_NET any (msg:"GPL CHAT Yahoo IM conference watch"; flow:from_server,established; content:"|0D 00 05 00|"; depth:4; classtype:policy-violation; sid:2102461; rev:5;)
 
 #
-alert tcp $EXTERNAL_NET 5222 -> $HOME_NET any (msg:"GPL CHAT Jabber/Google Talk Incoming Message"; flow:to_client,established; content:"<message"; offset:0; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000236; rev:2;)
+alert tcp $EXTERNAL_NET 5222 -> $HOME_NET any (msg:"GPL CHAT Jabber/Google Talk Incoming Message"; flow:to_client,established; content:"<message"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100236; rev:3;)
 
 #
-alert tcp $EXTERNAL_NET 5222 -> $HOME_NET any (msg:"GPL CHAT Jabber/Google Talk Logon Success"; flow:to_client,established; content:"<success"; offset:0; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000235; rev:2;)
+alert tcp $EXTERNAL_NET 5222 -> $HOME_NET any (msg:"GPL CHAT Jabber/Google Talk Logon Success"; flow:to_client,established; content:"<success"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100235; rev:3;)
 
 #
 alert tcp $HOME_NET any -> $AIM_SERVERS any (msg:"GPL CHAT AIM login"; flow:to_server,established; content:"*|02|"; depth:2; content:"|00 17 00 06|"; within:8; distance:4; classtype:policy-violation; sid:2101631; rev:9;)
@@ -346,7 +346,7 @@ alert tcp $HOME_NET any -> $AIM_SERVERS any (msg:"GPL CHAT AIM login"; flow:to_s
 #alert tcp $HOME_NET any -> $AIM_SERVERS any (msg:"GPL CHAT AIM send message"; flow:to_server,established; content:"*|02|"; depth:2; content:"|00 04 00 06|"; depth:4; offset:6; classtype:policy-violation; sid:2101632; rev:7;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"GPL CHAT Google Talk Version Check"; flow: established,to_server; content:"/googletalk/google-talk-versioncheck.txt?"; http_uri; nocase; classtype:policy-violation; sid:100000876; rev:3;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"GPL CHAT Google Talk Version Check"; flow: established,to_server; content:"/googletalk/google-talk-versioncheck.txt?"; http_uri; nocase; classtype:policy-violation; sid:2100876; rev:4;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET 1863 (msg:"GPL CHAT MSN login attempt"; flow:to_server,established; content:"USR "; depth:4; nocase; content:" TWN "; distance:1; nocase; threshold:type limit, track by_src, count 1, seconds 60; classtype:policy-violation; sid:2101991; rev:3;)
@@ -370,22 +370,22 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET 5050 (msg:"GPL CHAT Yahoo IM ping"; flo
 alert tcp $HOME_NET any -> $EXTERNAL_NET 5100 (msg:"GPL CHAT Yahoo IM conference request"; flow:to_server,established; content:"<R"; depth:2; pcre:"/^\x3c(REQIMG|RVWCFG)\x3e/ism"; classtype:policy-violation; sid:2102460; rev:5;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Google Talk Logon"; flow:to_server,established; content:"<stream|3a|stream to=\"gmail.com\""; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000232; rev:3;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Google Talk Logon"; flow:to_server,established; content:"<stream|3a|stream to=\"gmail.com\""; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100232; rev:4;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Google Talk Startup"; flow: established,to_server; content:"google.com"; nocase; content:"jabber|3A|client"; nocase; threshold: type limit, track by_src, count 1, seconds 300; classtype:policy-violation; sid:100000877; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Google Talk Startup"; flow: established,to_server; content:"google.com"; nocase; content:"jabber|3A|client"; nocase; threshold: type limit, track by_src, count 1, seconds 300; classtype:policy-violation; sid:2100877; rev:3;)
 
 #
-#alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Log Out"; flow:to_server,established; content:"</stream"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000234; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Log Out"; flow:to_server,established; content:"</stream"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100234; rev:3;)
 
 #
-#alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Outgoing Auth"; flow:to_server,established; content:"<auth"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000231; rev:2;)
+#alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Outgoing Auth"; flow:to_server,established; content:"<auth"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100231; rev:3;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT MISC Jabber/Google Talk Outgoing Traffic"; flow:to_server,established; content:"<stream"; nocase; reference:url,www.google.com/talk/; classtype:not-suspicious; sid:100000230; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Outgoing Traffic"; flow:to_server,established; content:"<stream"; nocase; reference:url,www.google.com/talk/; classtype:not-suspicious; sid:2100230; rev:3;)
 
 #
-alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Outoing Message"; flow:to_server,established; content:"<message"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:100000233; rev:2;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET 5222 (msg:"GPL CHAT Jabber/Google Talk Outoing Message"; flow:to_server,established; content:"<message"; nocase; reference:url,www.google.com/talk/; classtype:policy-violation; sid:2100233; rev:3;)
 
 #
 alert tcp $HOME_NET any -> $EXTERNAL_NET 6666:7000 (msg:"GPL CHAT IRC DCC chat request"; flow:to_server,established; content:"PRIVMSG "; depth:8; nocase; content:" |3A|.DCC CHAT chat"; nocase; flowbits:set,is_proto_irc; classtype:policy-violation; sid:2101640; rev:10;)

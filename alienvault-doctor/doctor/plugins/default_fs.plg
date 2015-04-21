@@ -1,0 +1,14 @@
+[properties]
+name=Default mounted file systems
+description=Check the mounted file systems.
+category=system
+type=command
+requires=@files:/bin/mount
+command=mount
+raw_limit=100
+
+[Default file systems]
+pattern=^.*type\s+(\S*)\s
+conditions=@set@:@issubsetof@/etc/ossim/doctor/plugins/default_fs.list
+warning=Some mounted file systems are not standard
+advice=Some mounted file systems are not standard. Please check all mounted file systems

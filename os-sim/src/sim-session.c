@@ -54,6 +54,7 @@
 #include "sim-debug.h"
 #include "sim-db-command.h"
 #include "sim-geoip.h"
+#include "sim-idm.h"
 
 G_LOCK_EXTERN (s_mutex_config);
 G_LOCK_EXTERN (s_mutex_plugins);
@@ -1771,28 +1772,6 @@ sim_session_cmd_plugin_disabled (SimSession  *session,
   }
 }
 
-
-// This will return the number of events that the server has received in this session
-static void
-sim_session_cmd_sensor_get_events (SimSession  *session,
-                                   SimCommand  *command)
-{
-  SimCommand  *cmd;
-
-  g_return_if_fail (SIM_IS_SESSION (session));
-  g_return_if_fail (SIM_IS_COMMAND (command));
-
-  cmd = sim_command_new_from_type (SIM_COMMAND_TYPE_SENSOR_GET_EVENTS);
-  cmd->id = command->id;
-
-  gpointer aux = g_hash_table_lookup (sim_server_get_individual_sensors (session->_priv->server), sim_session_get_ia (session));
-
-  cmd->data.sensor_get_events.num_events = GPOINTER_TO_INT (aux);
-  ossim_debug ( "sim_session_cmd_sensor_get_events: %u",  GPOINTER_TO_INT (aux));
-  sim_session_write (session, cmd);
-  g_object_unref (cmd);
-}
-
 /*
  *
  *
@@ -2101,6 +2080,7 @@ sim_session_cmd_reload_hosts (SimSession  *session,
     {
       SimContext *context = sim_container_get_context (ossim.container, NULL);
       sim_context_reload_hosts (context);
+			sim_idm_context_reload ();
       sim_context_check_host_plugin_sids (context);
 
       g_message ("Host reloaded");
@@ -2173,6 +2153,7 @@ sim_session_cmd_reload_nets (SimSession  *session,
     {
       SimContext *context = sim_container_get_context (ossim.container, NULL);
       sim_context_reload_nets (context);
+			sim_idm_context_reload ();
       sim_context_check_host_plugin_sids (context);
 
       g_message ("Nets reloaded");
@@ -2320,11 +2301,6 @@ sim_session_cmd_reload_directives (SimSession  *session,
     {
       SimEngine *engine = sim_container_get_engine (ossim.container, NULL);
 
-// Directives are replaced in db if they exist !
-//      sim_container_db_delete_plugin_sid_directive_ul (ossim.container, ossim.dbossim);
-
-//      sim_container_db_delete_backlogs_ul (ossim.container, ossim.dbossim);
-
       sim_engine_free_backlogs (engine);
 
       sim_engine_reload_directives (engine);
@@ -2469,9 +2445,10 @@ sim_session_cmd_reload_all (SimSession  *session,
       // sim_container_db_load_plugins (ossim.container, ossim.dbossim);
       // sim_container_db_load_plugin_sids (ossim.container, ossim.dbossim);
 
-      /* Reload all data in context */
-      sim_engine_reload_all (engine);
+      /* Reload all data in context and engine */
       sim_context_reload_all (context);
+			sim_idm_context_reload ();
+      sim_engine_reload_all (engine);
 
       sim_server_reload (session->_priv->server, context);
     }
@@ -3225,31 +3202,6 @@ GIOStatus sim_session_read_event(SimSession *session, gchar *buffer, gsize *n)  
 	return status;
 }
 
-
-/*
- * This function set to 0 the event count of this specific sensor. This will be updated by any sensor instances sensor with the same IP (so, they're the same sensor)
- */
-void
-sim_session_initialize_count (SimSession  *session)
-{
-  g_return_if_fail (SIM_IS_SESSION (session));
-  g_hash_table_replace (sim_server_get_individual_sensors (session->_priv->server), g_object_ref (sim_session_get_ia (session)), GINT_TO_POINTER (0));
-}
-
-/*
- * This function increases the event count of this specific sensor. This is shared by all the sensor threads (it depends on the IP)
- */
-void
-sim_session_increase_count (SimSession  *session)
-{
-  g_return_if_fail (SIM_IS_SESSION (session));
-
-  gpointer aux = g_hash_table_lookup (sim_server_get_individual_sensors (session->_priv->server), sim_session_get_ia (session));
-  guint aux2 = GPOINTER_TO_INT (aux);
-  aux2++;
-  g_hash_table_replace	(sim_server_get_individual_sensors (session->_priv->server), g_object_ref (sim_session_get_ia (session)), GINT_TO_POINTER (aux2));
-}
-
 gboolean
 sim_session_check_iochannel_status (SimSession  * session, GIOStatus status)
 {
@@ -3432,7 +3384,6 @@ sim_session_read (SimSession  *session)
 	
 			case SIM_COMMAND_TYPE_CONNECT:															//from children server / frameworkd / sensor
 						sim_session_cmd_connect (session, cmd);
-						sim_session_initialize_count (session);
 						break;
 			case SIM_COMMAND_TYPE_SERVER_GET_SENSORS:										//from frameworkd / master server
 						sim_session_cmd_server_get_sensors (session, cmd);
@@ -3509,9 +3460,6 @@ sim_session_read (SimSession  *session)
 			case SIM_COMMAND_TYPE_PLUGIN_DISABLED:											//from sensor
 						sim_session_cmd_plugin_disabled (session, cmd);
 						break;
-			case SIM_COMMAND_TYPE_SENSOR_GET_EVENTS:					    			//from sensor
-						sim_session_cmd_sensor_get_events (session, cmd);
-						break;
 						
 			case SIM_COMMAND_TYPE_EVENT:																//from sensor / server children
 						sim_session_cmd_event (session, cmd);
@@ -3519,15 +3467,12 @@ sim_session_read (SimSession  *session)
 						break;
 					
 			case SIM_COMMAND_TYPE_HOST_OS_EVENT:								        // from sensor / children server
-						sim_session_increase_count (session);
 						sim_session_cmd_host_os_event (session, cmd);
 						break;
 			case SIM_COMMAND_TYPE_HOST_MAC_EVENT:												// from sensor / children server	
-						sim_session_increase_count (session);
 						sim_session_cmd_host_mac_event (session, cmd);
 						break;
 			case SIM_COMMAND_TYPE_HOST_SERVICE_EVENT:										// from sensor / children server
-						sim_session_increase_count (session);
 						sim_session_cmd_host_service_event (session, cmd);
 						break;
 			case SIM_COMMAND_TYPE_OK:																		//from *
@@ -3546,7 +3491,6 @@ sim_session_read (SimSession  *session)
 						ossim_debug ( "%s: SIM_COMMAND_TYPE_DATABASE_ANSWER deprecated", __func__);
             break;
 			case SIM_COMMAND_TYPE_SNORT_EVENT:
-						sim_session_increase_count (session);
 					  sim_session_cmd_event (session, cmd);
 		   		break;
       case SIM_COMMAND_TYPE_AGENT_DATE:                           //from sensor. still it doesn't do nothing

@@ -78,6 +78,12 @@ from celerymethods.celery_manager import CeleryManager
 cm = CeleryManager()
 cm.start()
 
+from apimethods.system.cache import flush_cache
+try:
+    flush_cache(namespace='system_packages')
+except Exception, msg:
+    app.logger.warning("Error flushing system_packages namespace: %s" % (msg))
+    
 # This is the recommended way of packaging a Flask app.
 # This seems to be a hack to avoid circulat imports.
 # See http://flask.pocoo.org/docs/patterns/packages/

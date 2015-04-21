@@ -1,8 +1,44 @@
-alienvault-agent-generator (4.11.0-0) stable; urgency=low
+alienvault-agent-generator (4.15.2-0) stable; urgency=low
 
   * New release
 
- -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:23:41 -0400
+ -- OSSIM Integration Team <ossim@ossim.net>  Thu, 05 Feb 2015 06:14:41 -0500
+
+alienvault-agent-generator (4.15.1-0) stable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 26 Jan 2015 05:16:04 -0500
+
+alienvault-agent-generator (4.15.0-0) stable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Mon, 22 Dec 2014 11:17:38 -0500
+
+alienvault-agent-generator (4.15-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 19 Nov 2014 06:41:45 -0500
+
+alienvault-agent-generator (4.14-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Fri, 24 Oct 2014 13:35:26 -0400
+
+alienvault-agent-generator (4.13-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Wed, 24 Sep 2014 10:32:55 -0400
+
+alienvault-agent-generator (4.12-0) unstable; urgency=low
+
+  * New release
+
+ -- OSSIM Integration Team <ossim@ossim.net>  Sat, 16 Aug 2014 11:34:34 -0400
 
 alienvault-agent-generator (4.11-0) unstable; urgency=low
 

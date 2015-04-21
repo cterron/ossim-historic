@@ -10,8 +10,8 @@ Homepage: http://www.alienvault.com/
 Package: alienvault-dummy-database
 Architecture: all
 Pre-Depends: alienvault-dummy-common
-Depends: ${shlibs:Depends}, ${misc:Depends}, percona-server-client-5.5, percona-server-server-5.5, percona-server-common-5.5, ossim-mysql-ext, mytop, libconfig-tiny-perl, dialog, debconf-utils, check-mk-livestatus, snort-rules-default, suricata-rules-default, mysql-udf-ipv6,
+Depends: ${shlibs:Depends}, ${misc:Depends}, percona-server-client-5.5, percona-server-server-5.5, percona-server-common-5.5, ossim-mysql-ext, mytop, libconfig-tiny-perl, dialog, debconf-utils, snort-rules-default, suricata-rules-default, mysql-udf-ipv6,
  ossim-mysql (>= 1:${source:Upstream-Version}),
- alienvault-mysql (>= ${source:Upstream-Version})
+ alienvault-mysql
 Description: MetaPackage for alienvault database components
  This package installs all the needed packages for alienvault database profile.

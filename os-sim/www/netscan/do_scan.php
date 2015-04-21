@@ -39,8 +39,10 @@ Session::logcheck('environment-menu', 'ToolsScan');
 
 ini_set('max_execution_time','1200');
 
-$assets          = array();
-$info_error      = array();
+
+$data['status']  = 'success';
+$data['data']    = NULL;
+
 
 $assets          = GET('assets');
 $scan_mode       = GET('scan_mode');
@@ -48,139 +50,132 @@ $timing_template = GET('timing_template');
 $custom_ports    = GET('custom_ports');
 $sensor          = GET('sensor');
 $only_stop       = intval(GET('only_stop'));
-$only_status     = intval(GET('only_status'));
 $autodetect      = (GET('autodetect') == '1') ? 1 : 0;
 $rdns            = (GET('rdns') == '1') ? 1 : 0;
 $custom_ports    = str_replace(' ', '', $custom_ports);
-        
+
 ossim_valid($scan_mode,       OSS_ALPHA, OSS_SCORE, OSS_NULLABLE,                 'illegal:' . _('Full scan'));
 ossim_valid($timing_template, OSS_ALPHA, OSS_PUNC, OSS_NULLABLE,                  'illegal:' . _('Timing_template'));
 ossim_valid($custom_ports,    OSS_DIGIT, OSS_SPACE, OSS_SCORE, OSS_NULLABLE, ',', 'illegal:' . _('Custom Ports'));
 ossim_valid($sensor,          OSS_HEX, OSS_ALPHA, OSS_NULLABLE,                   'illegal:' . _('Sensor'));
 ossim_valid($only_stop,       OSS_DIGIT, OSS_NULLABLE,                            'illegal:' . _('Only stop'));
-ossim_valid($only_status,     OSS_DIGIT, OSS_NULLABLE,                            'illegal:' . _('Only status'));
+
 
 if (ossim_error())
-{ 
+{
     $data['status']  = 'error';
-	$data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
-						<div class='error_item'>".ossim_get_error_clean()."</div>";
-	
-	echo json_encode($data);
-	exit();
+    $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
+                        <div class='error_item'>".ossim_get_error_clean()."</div>";
+
+    echo json_encode($data);
+    exit();
 }
 
 
-$assets_string = '';
+//Stop scan
+if ($only_stop)
+{
+    $scan = new Scan();
+    $scan->stop();
 
-$data['status'] = 'OK';
-$data['data']   = NULL;
+    $data['status'] = 'success';
+    $data['data']   = NULL;
+
+    echo json_encode($data);
+    exit();
+}
 
 
-$error = FALSE;
-$aux   = array();
+$scan_path_log = "/tmp/nmap_scanning_".md5(Session::get_secure_id()).'.log';
 
-$db    = new ossim_db();
-$conn  = $db->connect();
+$assets_string = array();
 
-
-if (is_array($assets) && count($assets) > 0) 
+if (is_array($assets) && count($assets) > 0)
 {
     foreach ($assets as $asset)
-    {                
-        ossim_valid($asset, OSS_IP_ADDRCIDR, 'illegal:' . _('Asset'));
-            
+    {
+        //Only IP/CIDR is validated
+        $_asset = explode('#', $asset);
+        $_asset = (count($_asset) == 1) ? $_asset[0] : $_asset[1];
+
+        ossim_valid($_asset, OSS_IP_ADDRCIDR, 'illegal:' . _('Asset'));
+
         if (ossim_error())
         {
             $data['status']  = 'error';
-			$data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
-						<div class='error_item'>".ossim_get_error_clean()."</div>";
-	
-			echo json_encode($data);
-			exit();
-		}
+            $data['data']    = "<div style='text-align: left; padding: 0px 0px 3px 10px;'>"._('We found the following errors').":</div>
+                        <div class='error_item'>".ossim_get_error_clean()."</div>";
+
+            echo json_encode($data);
+            exit();
+        }
         else
         {
-            if (!preg_match('/\/\d{1,2}$/', $asset))
-            {
-                $aux[] = $asset . '/32';
-            }
-            else 
-            {
-                $aux[] = $asset;
-            }
+            //IP_CIDR and ID is pushed
+            array_push($assets_string, $asset);
         }
     }
 }
 
 
-$assets_string .= implode(' ', $aux);
+$assets_p = implode(' ', $assets_string);
 
-$db->close();
-
-$assets        = $assets_string;
-$scan_path_log = "/tmp/nmap_scanning_".md5(Session::get_secure_id()).'.log';
-
-// Only Stop
-if ($only_stop) 
+if($sensor == 'auto' || valid_hex32($sensor))
 {
-	$scan = new Scan();
-	$scan->stop();
-	
-	$data['status'] = 'OK';
-	$data['data']   = NULL;
-	
-	echo json_encode($data);
-	exit();
-}
+    //We use a remote sensor to perform the scan or Frameworkd machine if the local sensor is selected
+    $rscan = new Remote_scan($assets_p, 'normal', $sensor);
 
-// Launch scan
-if (!$only_status && !$only_stop) 
-{
-	// This object is only for checking available sensors
-	
-    $rscan         = new Remote_scan($assets, ($scan_mode == 'full') ? 'root' : 'ping');
-    
-    $available     = $rscan->available_scan(preg_match('/^[0-9A-F]{32}$/i', $sensor) ? $sensor : '');
-		
-    $remote_sensor = "null"; // default runs local scan
-    
-    unset($_SESSION['_remote_sensor_scan']);
+    $last_error = $rscan->get_last_error();
 
-    if (preg_match('/[0-9A-F]{32}/i', $sensor)) //Selected sensor
-	{ 
-        if ($available == '') // Not available remote scans, runs local
-		{ 
-            $remote_sensor = 'null';
-           			
-			$data['status']  = 'warning';
-			$data['data']    = _('Warning! The selected sensor is not available for remote scan. Using automatic option...');
-		} 
-		else //Runs remote
-		{   
-            $remote_sensor = $sensor;
-            $_SESSION['_remote_sensor_scan'] = $sensor;
+    if (!empty($last_error['data']))
+    {
+        $data['status'] = $last_error['severity'];
+        $data['data']   = $last_error['data'];
+    }
+    else
+    {
+        //Scanning sensor
+        $scanning_sensor = $rscan->get_scanning_sensor();
+
+        // Getting local sensor ID
+        $db   = new Ossim_db();
+        $conn = $db->connect();
+
+        $admin_ip = Util::get_default_admin_ip();
+        $res      = Av_center::get_system_info_by_ip($conn, $admin_ip);
+
+        if ($res['status'] == 'success')
+        {
+            $local_sensor_id = $res['data']['sensor_id'];
+        }
+
+        $db->close();
+
+        if ($scanning_sensor == $local_sensor_id)
+        {
+            $scanning_sensor = NULL;
         }
     }
+}
+else
+{
+    //We use Frameworkd machine to perform the scan
+    $scanning_sensor = NULL;
+}
 
-    if ($sensor == 'auto' && $available != '') // runs auto select
-	{ 
-        $remote_sensor = $available;
-        $_SESSION['_remote_sensor_scan'] = $available;
-    }
-		
+
+if ($data['status'] == 'success')
+{
+    //Delete previous scan
     $scan = new Scan();
-	$scan->delete_data();
-		
-    // Launch scan in background
+    $scan->delete_data();
 
-	$cmd = "/usr/bin/php /usr/share/ossim/scripts/vulnmeter/remote_nmap.php '$assets' '$remote_sensor' '$timing_template' '$scan_mode' '" . Session::get_session_user() . "' '$autodetect' '$rdns' '$custom_ports' > $scan_path_log 2>&1 &";
-	
-	system($cmd);	
+    // Launch scan in background
+    $cmd = "/usr/bin/php /usr/share/ossim/scripts/vulnmeter/remote_nmap.php '$assets_p' '$scanning_sensor' '$timing_template' '$scan_mode' '" . Session::get_session_user() . "' '$autodetect' '$rdns' '$custom_ports' > $scan_path_log 2>&1 &";
+
+    system($cmd);
 }
 
 session_write_close();
 
 echo json_encode($data);
-exit();
-?>

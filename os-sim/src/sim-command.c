@@ -83,7 +83,6 @@ static const struct
   { "sensor-plugin-stop", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_STOP },
   { "sensor-plugin-enable", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_ENABLE },
   { "sensor-plugin-disable", SIM_COMMAND_SYMBOL_SENSOR_PLUGIN_DISABLE },
-  { "sensor-get-events", SIM_COMMAND_SYMBOL_SENSOR_GET_EVENTS },
   { "plugin-process-started", SIM_COMMAND_SYMBOL_PLUGIN_STATE_STARTED },
   { "plugin-process-unknown", SIM_COMMAND_SYMBOL_PLUGIN_STATE_UNKNOWN },
   { "plugin-process-stopped", SIM_COMMAND_SYMBOL_PLUGIN_STATE_STOPPED },
@@ -288,14 +287,6 @@ static const struct
   { "servername", SIM_COMMAND_SYMBOL_SERVERNAME },
   { "sensor", SIM_COMMAND_SYMBOL_SENSOR },
   { "plugin_id", SIM_COMMAND_SYMBOL_PLUGIN_ID }
-};
-
-static const struct
-{
-  gchar *name;
-  guint token;
-} sensor_get_events_symbols[] = {
-  { "id", SIM_COMMAND_SYMBOL_ID }
 };
 
 static const struct
@@ -872,9 +863,6 @@ static gboolean sim_command_plugin_enabled_scan					(SimCommand    *command,
 static gboolean sim_command_plugin_disabled_scan				(SimCommand    *command,
 																										      GScanner      *scanner,
 																										      gchar* session_ip_str);
-static gboolean sim_command_sensor_get_events_scan (SimCommand    *command,
-																	  								GScanner      *scanner,
-																	  								gchar* session_ip_str);
 static gboolean sim_command_event_scan_base64						(SimCommand    *command,
 																											    GScanner      *scanner);
 
@@ -1876,10 +1864,6 @@ sim_command_start_scanner(void)
   for (i = 0; i < G_N_ELEMENTS (sensor_plugin_disable_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_PLUGIN_DISABLE, sensor_plugin_disable_symbols[i].name, GINT_TO_POINTER (sensor_plugin_disable_symbols[i].token));
 
-/* Added sensor get events (a message from the sensor to the server asking how many events has it received from this session) symbols */
-  for (i = 0; i < G_N_ELEMENTS (sensor_get_events_symbols); i++)
-    g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_SENSOR_GET_EVENTS, sensor_get_events_symbols[i].name, GINT_TO_POINTER (sensor_get_events_symbols[i].token));
-
   /* Added plugin start symbols */
   for (i = 0; i < G_N_ELEMENTS (plugin_state_started_symbols); i++)
     g_scanner_scope_add_symbol (scanner, SIM_COMMAND_SCOPE_PLUGIN_STATE_STARTED, plugin_state_started_symbols[i].name, GINT_TO_POINTER (plugin_state_started_symbols[i].token));
@@ -2161,10 +2145,6 @@ sim_command_scan (SimCommand    *command,
 					  if (!sim_command_plugin_disabled_scan (command, scanner,session_ip_str_dup))
 							OK=FALSE;
         	  break;
-	    case SIM_COMMAND_SYMBOL_SENSOR_GET_EVENTS: //May be that this is called also from framework or master servers in a future?
-					  if (!sim_command_sensor_get_events_scan (command, scanner,session_ip_str_dup))
-							OK=FALSE;
-          	break;
 
 			/*Commands from sensors or Children Servers*/
 						
@@ -5043,57 +5023,6 @@ sim_command_event_scan_base64 (SimCommand    *command,
 
 /*
  *
- * 
- *
- */
-gboolean
-sim_command_sensor_get_events_scan (SimCommand    *command,
-																	  GScanner      *scanner,
-																	  gchar* session_ip_str)
-{
-  g_return_val_if_fail (SIM_IS_COMMAND (command), FALSE);
-  g_return_val_if_fail (scanner != NULL, FALSE);
-
-  command->type = SIM_COMMAND_TYPE_SENSOR_GET_EVENTS;
-
-  g_scanner_set_scope (scanner, SIM_COMMAND_SCOPE_SENSOR_GET_EVENTS);
-  do
-  {
-    g_scanner_get_next_token (scanner);
- 
-    switch ((SimCommandSymbolType) scanner->token)
-    {
-      case SIM_COMMAND_SYMBOL_ID:
-						g_scanner_get_next_token (scanner); /* = */
-						g_scanner_get_next_token (scanner); /* value */
-
-						ossim_debug ( "sim_command_sensor_get_events_scan: scanning id...");
-						if (scanner->token != G_TOKEN_STRING)
-							break;
-
-            if (sim_string_is_number (scanner->value.v_string, 0))
-              command->id = strtol (scanner->value.v_string, (char **) NULL, 10);
-            else
-            {
-              g_message("Error: sensor get events incorrect. Please check the id issued from the agent: -> value: %s,session_ip:%s", scanner->value.v_string,session_ip_str);
-              return FALSE;
-            }
-						break;
-
-			default:
-						if (scanner->token == G_TOKEN_EOF)
-							break;
-						ossim_debug ( "sim_command_sensor_get_events_scan: error symbol unknown. Session ip:%s",session_ip_str);
-						return FALSE;
-    }
-  }
-  while(scanner->token != G_TOKEN_EOF);
-	return TRUE;
-}
-
-
-/*
- *
  *
  *
  */
@@ -7361,9 +7290,6 @@ sim_command_get_string (SimCommand    *command)
     case SIM_COMMAND_TYPE_SENSOR_PLUGIN_DISABLE:
 		      str = g_strdup_printf ("sensor-plugin-disable plugin_id=\"%d\"\n", command->data.sensor_plugin_disable.plugin_id);
 				  break;
-	  case SIM_COMMAND_TYPE_SENSOR_GET_EVENTS:
-		      str = g_strdup_printf ("sensor-get-events id=\"%u\" num_events=\"%u\"\n", command->id, command->data.sensor_get_events.num_events); 
-				  break;
     case SIM_COMMAND_TYPE_DATABASE_QUERY:
           g_message ("%s: SIM_COMMAND_TYPE_DATABASE_QUERY is deprecated, cannot get the string", __func__);
           break;
@@ -7634,7 +7560,7 @@ sim_command_get_event (SimCommand     *command)
         event->protocol = (SimProtocolType) atoi(command->data.event.protocol);
       else
       {
-        event->protocol = SIM_PROTOCOL_TYPE_OTHER;
+        event->protocol = SIM_PROTOCOL_TYPE_TCP;
       }
     }
   }

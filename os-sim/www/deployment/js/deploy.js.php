@@ -81,7 +81,7 @@ function goto_help(id) {
 		case 'service_passive':
 		case 'service_ids':
 			
-			caption = '<?php echo _("Alienvault Center")?>';
+			caption = '<?php echo _("AlienVault Center")?>';
 			link    = '<?php echo Menu::get_menu_url("../av_center/index.php", "configuration", "deployment", "components")?>';
 			
 			break;
@@ -121,7 +121,7 @@ function goto_help(id) {
             var height  = '70%';
             var width   = '65%';    
             
-            parent.LB_show(caption, link, height, width);
+            GB_show(caption, link, height, width);
 		});	
 	}
 	

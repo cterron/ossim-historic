@@ -54,15 +54,16 @@ function Av_map(map_id)
     //Google Maps Objects
     this.map       = null;
     this.markers   = [];
-    this.lat_lng   = new google.maps.LatLng(_lat, _lng);
+    this.lat_lng   = null;
     
     
     //Inputs
-    var _lat_id     = '#latitude';
-    var _lng_id     = '#longitude';
-    var _country_id = '#country';
-    var _sl_id      = '#search_location';
-    var _zoom_id    = '#zoom';
+    var _lat_id      = '#latitude';
+    var _lng_id      = '#longitude';
+    var _country_id  = '#country';
+    var _sl_id       = '#search_location';
+    var _zoom_id     = '#zoom';    
+    var _center_zoom = true;
     
     // Set options
     this.set_options = function(options)
@@ -131,6 +132,13 @@ function Av_map(map_id)
     };
     
     
+    //Set center on zoom option
+    this.set_center_zoom = function(opt)
+    {
+        _center_zoom = (opt === false) ? false : true;
+    };
+    
+    
     // Get Longitude
     this.get_lng = function()
     {
@@ -178,6 +186,12 @@ function Av_map(map_id)
     {
         return _zoom_id;
     };
+    
+    // Get Zoom ID
+    this.get_center_zoom = function()
+    {
+        return _center_zoom;
+    };
         
     
     // Draw warning message if system doesn't have internet connection        
@@ -207,7 +221,7 @@ function Av_map(map_id)
         
         var map_obj = document.getElementById(this.get_map_id().replace('#', ''));        
                                            
-        if(Av_map.is_map_available() == false || typeof(map_obj) == 'undefined' || map_obj == null)
+        if(typeof(map_obj) == 'undefined' || map_obj == null)
         {
             return false;
         }
@@ -233,8 +247,12 @@ function Av_map(map_id)
             var zoom_id = that.get_zoom_id();
                 
             that.set_zoom(this.getZoom());
-            this.setCenter(that.lat_lng);
             
+            if (that.get_center_zoom())
+            {
+                this.setCenter(that.lat_lng);
+            }
+
             $(zoom_id).val(that.get_zoom());
         });
         
@@ -567,6 +585,8 @@ function Av_map(map_id)
  *************** Geolocation utilities **************
  ****************************************************/
 
+var __maps_callback = null;
+
 // Format coordenate (5 decimal)
 Av_map.format_coordenate = function(coordenate)
 {
@@ -580,9 +600,41 @@ Av_map.format_coordenate = function(coordenate)
     return c;
 }
 
-Av_map.is_map_available = function()
-{ 
-    return (typeof(google) != 'undefined' && google != null) ? true : false;
+
+Av_map.is_map_available = function(callback)
+{     
+    __maps_callback = callback
+    
+    if (typeof is_internet_available == 'function')
+    {
+        if (is_internet_available() && (typeof(google) == 'undefined' || google == null))
+        {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://maps-api-ssl.google.com/maps/api/js?sensor=false&callback=Av_map.load_map_callback';
+            document.body.appendChild(script);
+
+            return false;
+        }
+    }
+
+    Av_map.load_map_callback()
+
+}
+
+Av_map.load_map_callback = function()
+{
+    var load = false;
+    
+    if (typeof(google) != 'undefined' && google != null)
+    {
+        load = true;
+    }
+
+    if (typeof __maps_callback == 'function')
+    {
+        __maps_callback(load)
+    }
 }
 
 

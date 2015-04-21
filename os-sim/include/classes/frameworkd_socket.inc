@@ -106,7 +106,7 @@ class Frameworkd_socket extends Socket
             $GLOBALS['CONF'] = $conf;
         }        
         
-        $this->address = $conf->get_conf('frameworkd_address');
+        $this->address = '127.0.0.1';
         $this->port    = $conf->get_conf('frameworkd_port');
     }
 }

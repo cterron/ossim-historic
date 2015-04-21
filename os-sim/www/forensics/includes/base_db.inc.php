@@ -251,7 +251,7 @@ class baseCon {
         if (preg_match("/\s+(WHERE|AND)\s+1\s*=\s*1\s*$/i", $sql)) $sql = preg_replace("/(WHERE|AND)\s+1\s*=\s*1\s*$/i", "", $sql);
         GLOBAL $debug_mode, $sql_trace_mode;
         /* ** Begin DB specific SQL fix-up ** */
-        if ($this->DB_type == "mssql") $sql = eregi_replace("''", "NULL", $sql);
+        if ($this->DB_type == "mssql") $sql = preg_replace("/''/i", "NULL", $sql);
         $this->lastSQL = $sql;
         $limit_str = "";
         $cache_secs = (preg_match("/FOUND_ROWS/i", $sql)) ? -1 : $this->DB_memcache;

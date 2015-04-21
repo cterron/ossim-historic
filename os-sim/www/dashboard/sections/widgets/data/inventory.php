@@ -135,7 +135,9 @@ switch ($type)
 						
 		$sqlgraph = "select count(*) as num, osname from ocsweb.hardware group by osname order by num desc limit 10;";
 		
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		$rg = $conn->CacheExecute($sqlgraph);
+		
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 
@@ -170,8 +172,9 @@ switch ($type)
 
 		$sqlgraph = "select count(*) as num, name from ocsweb.softwares group by name order by num desc limit 10;";
 			
+        $rg = $conn->CacheExecute($sqlgraph);
 			
-		if (!$rg = & $conn->CacheExecute($sqlgraph)) 
+		if (!$rg)
 		{
 		    print $conn->ErrorMsg();
 		} 

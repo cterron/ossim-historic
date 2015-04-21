@@ -77,7 +77,9 @@ function SIEM_trends($h = 24)
 	   WHERE timestamp BETWEEN '".gmdate("Y-m-d H:i:s",gmdate("U")-(3600*$h))."' AND '".gmdate("Y-m-d H:i:s")."' $sensor_where 
 	   GROUP BY suf, intervalo";
 	
-	if (!$rg = & $dbconn->CacheExecute($sqlgraph)) 
+	$rg = $dbconn->CacheExecute($sqlgraph);
+	
+	if (!$rg)
 	{
 	    Av_exception::write_log(Av_exception::DB_ERROR, $dbconn->ErrorMsg());
 	} 
@@ -138,7 +140,9 @@ function SIEM_trends_week($param = '')
         GROUP BY suf, intervalo 
         ORDER BY suf, intervalo";
 	
-	if (!$rg = & $dbconn->CacheExecute($sqlgraph)) 
+	$rg = $dbconn->CacheExecute($sqlgraph);
+	
+	if (!$rg)
 	{
 	    Av_exception::write_log(Av_exception::DB_ERROR, $dbconn->ErrorMsg());
 	} 

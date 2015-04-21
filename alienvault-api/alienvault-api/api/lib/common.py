@@ -78,6 +78,8 @@ def make_ok(**kwargs):
 def make_error(message, status_code, additional_headers=None):
     """Return a suitable HTML or JSON error message response."""
     short_message, long_message = HTTP_CODES.get(status_code, ('', ''))
+    if message == '':
+        message = long_message
     result = dict(
         status='error',
         message=message,

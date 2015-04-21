@@ -39,6 +39,7 @@ from ansiblemethods.system.status import alienvault_status as ans_alienvault_sta
 from ansiblemethods.system.status import cpu as ans_cpu
 from ansiblemethods.system.status import disk_usage as ans_disk_usage
 from ansiblemethods.system.status import package_list as ans_package_list
+from ansiblemethods.system.system import ping_system as ans_ping_system
 from collections import namedtuple
 from ansiblemethods.system.system import get_system_setup_data
 from apimethods.system.cache import use_cache
@@ -226,4 +227,18 @@ def package_list(system_id):
         api_log.error(str(msg))
         return False, msg
 
+    return True, msg
+    
+    
+def ping_system(system_id):
+    """
+    get all the registered systems and ping information
+    """
+    (success, system_ip) = get_system_ip_from_system_id(system_id)
+    if not success:
+        return False, system_ip
+        
+    reachable, msg = ans_ping_system(system_ip)
+    msg = 'Yes' if reachable else 'No'
+    
     return True, msg

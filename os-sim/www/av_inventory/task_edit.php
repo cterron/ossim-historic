@@ -286,6 +286,7 @@ if (GET('mode') == 'delete')
 	else
 	{
 		Inventory::delete($conn, $delete);
+		Web_indicator::set_on('Reload_tasks');
 		$data['status'] = 'OK';
 		$data['data']   = _('Task removed successfully');
 	}
@@ -463,6 +464,7 @@ $sensors = Av_sensor::get_basic_list($conn);
 	<script type="text/javascript" src="../js/jquery.tipTip.js"></script>
 	<script type="text/javascript" src="../js/token.js"></script>
 	<script type="text/javascript" src="../js/utils.js"></script>
+	<script type="text/javascript" src="/ossim/js/av_breadcrumb.js.php"></script>
 	<?php		
 	if ($s_type == 'nmap')
 	{ 
@@ -542,12 +544,6 @@ $sensors = Av_sensor::get_basic_list($conn);
 		{ 
     		height: 16px; 
 		}			
-
-		.c_back_button 
-		{
-			left:6px;
-			top:6px;
-		}
 		
 		.r_loading
         { 
@@ -677,6 +673,15 @@ $sensors = Av_sensor::get_basic_list($conn);
 		
 		$(document).ready(function()
 		{			
+            var items       = {};
+            items['all']    = {'title': "<?php echo _('Scheduler') ?>", 'action': go_back};
+            items['ticket'] = {'title': "<?php echo Util::js_entities(strtoupper($s_type)) ?>", 'action': ''};
+                
+            $('#task_breadcrumb').AVbreadcrumb(
+            {
+                'items': items
+            });
+            
             /****************************************************
              ****************** AJAX Validator ******************
              ****************************************************/
@@ -760,19 +765,8 @@ $sensors = Av_sensor::get_basic_list($conn);
 </head>
 
 <body>
-
-    <div class='c_back_button breadcrumb_back'>
-		<div class='breadcrumb_item'>
-			<a href='javascript:;' onclick='go_back();'><?php echo _('Scheduler') ?></a>
-		</div>
-		<div class='breadcrumb_separator'>
-			<img src='/ossim/pixmaps/xbreadcrumbs/separator.gif' />
-		</div>
-		<div class='breadcrumb_item last'>
-			<?php echo strtoupper($s_type) ?>
-		</div>
-		<div style='clear:both;'>&nbsp;</div>
-	</div>
+    
+    <div id='task_breadcrumb'></div>
 
 	<div id='avi_container'>
 
